@@ -329,7 +329,7 @@ With Nx, I do not need to explicitly install any testing library, so I can dive 
 
 ## Learn more
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Community Discord](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

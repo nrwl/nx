@@ -135,7 +135,7 @@ export function createCommitMessageValues(
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
     const releaseVersion = new ReleaseVersion({
       version: projectVersionData.newVersion,
-      releaseTagPattern: releaseGroup.releaseTagPattern,
+      releaseTagPattern: releaseGroup.releaseTag.pattern,
     });
     commitMessageValues[0] = interpolate(commitMessageValues[0], {
       version: releaseVersion.rawVersion,
@@ -161,7 +161,7 @@ export function createCommitMessageValues(
       const projectVersionData = versionData[releaseGroupProjectNames[0]];
       const releaseVersion = new ReleaseVersion({
         version: projectVersionData.newVersion,
-        releaseTagPattern: releaseGroup.releaseTagPattern,
+        releaseTagPattern: releaseGroup.releaseTag.pattern,
         projectName: releaseGroupProjectNames[0],
       });
       commitMessageValues[0] = interpolate(commitMessageValues[0], {
@@ -197,7 +197,7 @@ export function createCommitMessageValues(
         if (projectVersionData.newVersion !== null) {
           const releaseVersion = new ReleaseVersion({
             version: projectVersionData.newVersion,
-            releaseTagPattern: releaseGroup.releaseTagPattern,
+            releaseTagPattern: releaseGroup.releaseTag.pattern,
             projectName: project,
           });
           commitMessageValues.push(
@@ -213,7 +213,7 @@ export function createCommitMessageValues(
     if (projectVersionData.newVersion !== null) {
       const releaseVersion = new ReleaseVersion({
         version: projectVersionData.newVersion,
-        releaseTagPattern: releaseGroup.releaseTagPattern,
+        releaseTagPattern: releaseGroup.releaseTag.pattern,
       });
       commitMessageValues.push(
         `- release-group: ${releaseGroup.name} ${releaseVersion.rawVersion}`
@@ -239,7 +239,7 @@ function stripPlaceholders(str: string, placeholders: string[]): string {
 export function shouldPreferDockerVersionForReleaseGroup(
   releaseGroup: ReleaseGroupWithName
 ): boolean | 'both' {
-  return releaseGroup.releaseTagPatternPreferDockerVersion;
+  return releaseGroup.releaseTag.preferDockerVersion;
 }
 
 export function shouldSkipVersionActions(
@@ -280,7 +280,7 @@ export function createGitTagValues(
             // Create tags for both docker and semver versions
             if (projectVersionData.dockerVersion) {
               tags.push(
-                interpolate(releaseGroup.releaseTagPattern, {
+                interpolate(releaseGroup.releaseTag.pattern, {
                   version: projectVersionData.dockerVersion,
                   projectName: project,
                 })
@@ -288,7 +288,7 @@ export function createGitTagValues(
             }
             if (projectVersionData.newVersion) {
               tags.push(
-                interpolate(releaseGroup.releaseTagPattern, {
+                interpolate(releaseGroup.releaseTag.pattern, {
                   version: projectVersionData.newVersion,
                   projectName: project,
                 })
@@ -297,7 +297,7 @@ export function createGitTagValues(
           } else {
             // Use either docker version or semver version based on preference
             tags.push(
-              interpolate(releaseGroup.releaseTagPattern, {
+              interpolate(releaseGroup.releaseTag.pattern, {
                 version: preferDockerVersion
                   ? projectVersionData.dockerVersion
                   : projectVersionData.newVersion,
@@ -322,7 +322,7 @@ export function createGitTagValues(
         // Create tags for both docker and semver versions
         if (projectVersionData.dockerVersion) {
           tags.push(
-            interpolate(releaseGroup.releaseTagPattern, {
+            interpolate(releaseGroup.releaseTag.pattern, {
               version: projectVersionData.dockerVersion,
               releaseGroupName: releaseGroup.name,
             })
@@ -330,7 +330,7 @@ export function createGitTagValues(
         }
         if (projectVersionData.newVersion) {
           tags.push(
-            interpolate(releaseGroup.releaseTagPattern, {
+            interpolate(releaseGroup.releaseTag.pattern, {
               version: projectVersionData.newVersion,
               releaseGroupName: releaseGroup.name,
             })
@@ -339,7 +339,7 @@ export function createGitTagValues(
       } else {
         // Use either docker version or semver version based on preference
         tags.push(
-          interpolate(releaseGroup.releaseTagPattern, {
+          interpolate(releaseGroup.releaseTag.pattern, {
             version: preferDockerVersion
               ? projectVersionData.dockerVersion
               : projectVersionData.newVersion,

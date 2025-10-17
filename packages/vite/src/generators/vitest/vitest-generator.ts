@@ -3,11 +3,11 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   joinPathFragments,
   logger,
   offsetFromRoot,
   ProjectType,
-  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -70,11 +70,10 @@ export async function vitestGeneratorInternal(
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
 
-  const pkgJson = readJson(tree, 'package.json');
-  const useViteV5 =
-    major(coerce(pkgJson.devDependencies['vite']) ?? '7.0.0') === 5;
-  const useViteV6 =
-    major(coerce(pkgJson.devDependencies['vite']) ?? '7.0.0') === 6;
+  const viteVersion =
+    getDependencyVersionFromPackageJson(tree, 'vite') ?? '7.0.0';
+  const useViteV5 = major(coerce(viteVersion)) === 5;
+  const useViteV6 = major(coerce(viteVersion)) === 6;
   const initTask = await initGenerator(tree, {
     projectRoot: root,
     skipFormat: true,
@@ -405,9 +404,10 @@ function tryFindSetupFile(tree: Tree, projectRoot: string) {
 }
 
 function isAngularV20(tree: Tree) {
-  const { dependencies, devDependencies } = readJson(tree, 'package.json');
-  const angularVersion =
-    dependencies?.['@angular/core'] ?? devDependencies?.['@angular/core'];
+  const angularVersion = getDependencyVersionFromPackageJson(
+    tree,
+    '@angular/core'
+  );
 
   if (!angularVersion) {
     // assume the latest version will be installed, which will be 20 or later

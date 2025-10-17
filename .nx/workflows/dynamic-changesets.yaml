@@ -1,5 +1,5 @@
 distribute-on:
-  default: auto linux-large, 1 linux-extra-large
+  default: 8 linux-large, 1 linux-extra-large
 assignment-rules:
   # e2e-release tests must run sequentially due to shared git state and publishing operations
   - projects:
@@ -25,9 +25,6 @@ assignment-rules:
       - e2e-next
       - e2e-web
       - e2e-eslint
-      - e2e-remix
-      - e2e-cypress
-      - e2e-docker
     targets:
       - e2e-ci**react-package**
       - e2e-ci**react.test**
@@ -39,13 +36,6 @@ assignment-rules:
       - e2e-ci**web**
       - e2e-ci**remix-ts-solution**
       - e2e-ci**linter**
-      - e2e-ci**module-federation/misc-rspack-interoperability**
-      - e2e-ci**module-federation/dynamic-federation.webpack**
-      - e2e-ci**docker**
-      - e2e-ci**module-federation/misc-rspack-interoperability** 
-      - e2e-ci**cypress-legacy**
-      - e2e-ci**nx-remix**
-      - e2e-ci**cypress**
     run-on:
         - agent: linux-large
           parallelism: 1

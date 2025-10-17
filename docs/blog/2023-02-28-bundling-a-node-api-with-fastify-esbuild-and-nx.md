@@ -237,11 +237,11 @@ In this post, we saw how easy it is to go from zero code to a deployed server us
 4.  Docker support is provided out of the box via the `--docker` option, and Nx understands that Docker build depends on the app to be bundled. Run it via `npx nx docker-build`.
 5.  Deploying to Fly (or other platforms) is easy since we have a Docker image.
 
-To learn more about Nx and what else it can do, refer to the [intro page](/getting-started/intro) in the docs.
+To learn more about Nx and what else it can do, refer to the [intro page](/docs/getting-started/intro) in the docs.
 
 ## Learn more
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)

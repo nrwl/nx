@@ -9,6 +9,7 @@ import { sidebar } from './sidebar.mts';
 
 const BASE = '/docs';
 
+// This is exposed as window.__CONFIG
 const PUBLIC_CONFIG = {
   cookiebotDisabled: process.env.COOKIEBOT_DISABLED === 'true',
   cookiebotId: process.env.COOKIEBOT_ID ?? null,
@@ -49,6 +50,7 @@ export default defineConfig({
         dark: './src/assets/nx/Nx-light.png',
         replacesTitle: true,
       },
+      disable404Route: true,
       head: [
         {
           tag: 'script',

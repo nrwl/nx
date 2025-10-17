@@ -201,7 +201,8 @@ export const webpack = async (
   );
   const finalConfig = configure(baseWebpackConfig, {
     options: builderOptions,
-    context: { root: workspaceRoot } as ExecutorContext, // The context is not used here.
+    // TODO(JamesHenry): replace as any type assertion with as ExecutorContext once the nx repo is updated to use https://github.com/nrwl/nx/pull/33095
+    context: { root: workspaceRoot } as any, // The context is not used here.
   });
 
   return {

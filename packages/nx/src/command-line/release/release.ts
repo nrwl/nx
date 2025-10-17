@@ -15,7 +15,6 @@ import {
   handleNxReleaseConfigError,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
-import { filterReleaseGroups } from './config/filter-release-groups';
 import {
   readRawVersionPlans,
   setResolvedVersionPlansOnGroups,
@@ -40,22 +39,33 @@ import {
 } from './version';
 
 export const releaseCLIHandler = (args: VersionOptions) =>
-  handleErrors(args.verbose, () => createAPI({})(args));
+  handleErrors(args.verbose, () => createAPI({}, false)(args));
 
-export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
-  const releaseVersion = createReleaseVersionAPI(overrideReleaseConfig);
-  const releaseChangelog = createReleaseChangelogAPI(overrideReleaseConfig);
-  const releasePublish = createReleasePublishAPI(overrideReleaseConfig);
+export function createAPI(
+  overrideReleaseConfig: NxReleaseConfiguration,
+  ignoreNxJsonConfig: boolean
+) {
+  const releaseVersion = createReleaseVersionAPI(
+    overrideReleaseConfig,
+    ignoreNxJsonConfig
+  );
+  const releaseChangelog = createReleaseChangelogAPI(
+    overrideReleaseConfig,
+    ignoreNxJsonConfig
+  );
+  const releasePublish = createReleasePublishAPI(
+    overrideReleaseConfig,
+    ignoreNxJsonConfig
+  );
 
   return async function release(
     args: ReleaseOptions
   ): Promise<NxReleaseVersionResult | number> {
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-    const nxJson = readNxJson();
-    const userProvidedReleaseConfig = deepMergeJson(
-      nxJson.release ?? {},
-      overrideReleaseConfig ?? {}
-    );
+    const overriddenConfig = overrideReleaseConfig ?? {};
+    const userProvidedReleaseConfig = ignoreNxJsonConfig
+      ? overriddenConfig
+      : deepMergeJson(readNxJson().release ?? {}, overriddenConfig);
 
     const hasVersionGitConfig =
       Object.keys(userProvidedReleaseConfig.version?.git ?? {}).length > 0;
@@ -93,27 +103,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       });
     }
 
-    const {
-      error: filterError,
-      filterLog,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-    } = filterReleaseGroups(
-      projectGraph,
-      nxReleaseConfig,
-      args.projects,
-      args.groups
-    );
-    if (filterError) {
-      output.error(filterError);
-      process.exit(1);
-    }
-    if (filterLog) {
-      output.note(filterLog);
-    }
-    // Do not repeat the filter log in the release subcommands
-    process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG = 'true';
-
     const rawVersionPlans = await readRawVersionPlans();
 
     if (args.specifier && rawVersionPlans.length > 0) {
@@ -136,15 +125,12 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     const shouldCreateWorkspaceRemoteRelease = shouldCreateRemoteRelease(
       nxReleaseConfig.changelog.workspaceChangelog
     );
-    // If the workspace or any of the release groups specify that a remote release should be created, we need to push the changes to the remote
-    const shouldPush =
-      (shouldCreateWorkspaceRemoteRelease ||
-        releaseGroups.some((group) =>
-          shouldCreateRemoteRelease(group.changelog)
-        )) ??
-      false;
 
-    const versionResult: NxReleaseVersionResult = await releaseVersion({
+    const {
+      workspaceVersion,
+      projectsVersionData,
+      releaseGraph,
+    }: NxReleaseVersionResult = await releaseVersion({
       ...args,
       stageChanges: shouldStage,
       gitCommit: false,
@@ -152,10 +138,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       deleteVersionPlans: false,
     });
 
+    // Suppress the filter log for the changelog command as it would have already been printed by the version command
+    process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG = 'true';
+
     const changelogResult = await releaseChangelog({
       ...args,
-      versionData: versionResult.projectsVersionData,
-      version: versionResult.workspaceVersion,
+      // Re-use existing release graph
+      releaseGraph,
+      versionData: projectsVersionData,
+      version: workspaceVersion,
       stageChanges: shouldStage,
       gitCommit: false,
       gitTag: false,
@@ -166,7 +157,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
     await setResolvedVersionPlansOnGroups(
       rawVersionPlans,
-      releaseGroups,
+      releaseGraph.releaseGroups,
       Object.keys(projectGraph.nodes),
       args.verbose
     );
@@ -174,8 +165,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     // Validate version plans against the filter after resolution
     const versionPlanValidationError =
       validateResolvedVersionPlansAgainstFilter(
-        releaseGroups,
-        releaseGroupToFilteredProjects
+        releaseGraph.releaseGroups,
+        releaseGraph.releaseGroupToFilteredProjects
       );
     if (versionPlanValidationError) {
       output.error(versionPlanValidationError);
@@ -183,8 +174,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     const planFiles = new Set<string>();
-    releaseGroups.forEach((group) => {
-      const filteredProjects = releaseGroupToFilteredProjects.get(group);
+    releaseGraph.releaseGroups.forEach((group) => {
+      const filteredProjects =
+        releaseGraph.releaseGroupToFilteredProjects.get(group);
 
       if (group.resolvedVersionPlans) {
         // Check each version plan individually to see if it should be deleted
@@ -244,9 +236,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         nxReleaseConfig.git.commitMessage;
 
       const commitMessageValues: string[] = createCommitMessageValues(
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        versionResult.projectsVersionData,
+        releaseGraph.releaseGroups,
+        releaseGraph.releaseGroupToFilteredProjects,
+        projectsVersionData,
         commitMessage
       );
 
@@ -263,9 +255,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
       // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
       const gitTagValues: string[] = createGitTagValues(
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        versionResult.projectsVersionData
+        releaseGraph.releaseGroups,
+        releaseGraph.releaseGroupToFilteredProjects,
+        projectsVersionData
       );
       handleDuplicateGitTags(gitTagValues);
 
@@ -281,6 +273,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     let hasPushedChanges = false;
+    // If the workspace or any of the release groups specify that a remote release should be created, we need to push the changes to the remote
+    const shouldPush =
+      (shouldCreateWorkspaceRemoteRelease ||
+        releaseGraph.releaseGroups.some((group) =>
+          shouldCreateRemoteRelease(group.changelog)
+        )) ??
+      false;
     if (shouldPush) {
       output.logSingleLine(`Pushing to git remote "origin"`);
       await gitPush({
@@ -322,7 +321,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       );
     }
 
-    for (const releaseGroup of releaseGroups) {
+    for (const releaseGroupName of releaseGraph.sortedReleaseGroups) {
+      const releaseGroup = releaseGraph.releaseGroups.find(
+        (g) => g.name === releaseGroupName
+      );
+      if (!releaseGroup) {
+        continue;
+      }
       const shouldCreateProjectRemoteReleases = shouldCreateRemoteRelease(
         releaseGroup.changelog
       );
@@ -338,7 +343,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
         const projects = args.projects?.length
           ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group
-            Array.from(releaseGroupToFilteredProjects.get(releaseGroup))
+            Array.from(
+              releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
+            )
           : // Otherwise, we use the full list of projects within the release group
             releaseGroup.projects;
         const projectNodes = projects.map((name) => projectGraph.nodes[name]);
@@ -375,14 +382,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
     let hasNewVersion = false;
     // null means that all projects are versioned together but there were no changes
-    if (versionResult.workspaceVersion !== null) {
-      hasNewVersion = Object.values(versionResult.projectsVersionData).some(
+    if (workspaceVersion !== null) {
+      hasNewVersion = Object.values(projectsVersionData).some(
         (version) =>
           /**
            * There is a scenario where applications will not have a newVersion created by VerisonActions,
            * however, there will still be a dockerVersion created from the docker release.
            */
-
           version.newVersion !== null || version.dockerVersion !== null
       );
     }
@@ -398,7 +404,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     if (shouldPublish) {
       const publishResults = await releasePublish({
         ...args,
-        versionData: versionResult.projectsVersionData,
+        versionData: projectsVersionData,
       });
       const allExitOk = Object.values(publishResults).every(
         (result) => result.code === 0
@@ -411,7 +417,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       output.logSingleLine('Skipped publishing packages.');
     }
 
-    return versionResult;
+    return {
+      workspaceVersion,
+      projectsVersionData,
+      releaseGraph,
+    };
   };
 }
 

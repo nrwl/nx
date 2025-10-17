@@ -46,8 +46,8 @@ Like many open source projects, one of the bigger challenges to sustainability i
 
 Open Source projects can:
 
-- Get all Powerpack features as well as fully managed remote caching (and more) via the free Nx Cloud OSS plan. [Learn more here](/nx-enterprise/powerpack/licenses-and-trials#powerpack-for-oss-projects).
-- Get self-hosted remote caches via the according Nx plugins. [Learn more in the docs](/recipes/running-tasks/self-hosted-caching).
+- Get all Powerpack features as well as fully managed remote caching (and more) via the free Nx Cloud OSS plan. [Learn more here](/docs/enterprise/powerpack/licenses-and-trials#powerpack-for-oss-projects).
+- Get self-hosted remote caches via the according Nx plugins. [Learn more in the docs](/docs/guides/tasks--caching/self-hosted-caching).
 
 ## How to Get Nx Powerpack
 
@@ -57,13 +57,13 @@ Are you a startup? If these features make sense for your team but the cost is a 
 
 ## Got Questions?
 
-If you're curious to learn more about these changes for Nx and how to get started, [check out our docs](/nx-enterprise/powerpack).
+If you're curious to learn more about these changes for Nx and how to get started, [check out our docs](/docs/enterprise/powerpack).
 
 ## Learn more
 
 - [Nx Powerpack](/powerpack)
 - [Blog: Introducing Nx Powerpack](/blog/introducing-nx-powerpack)
-- [Docs: Powerpack features](/getting-started/intro)
+- [Docs: Powerpack features](/docs/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)

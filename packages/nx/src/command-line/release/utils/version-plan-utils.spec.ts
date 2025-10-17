@@ -21,11 +21,13 @@ describe('version-plan-utils', () => {
       projectsRelationship: 'independent',
       changelog: false,
       version: createVersionConfig(),
-      releaseTagPattern: '',
-      releaseTagPatternCheckAllBranchesWhen: undefined,
-      releaseTagPatternRequireSemver: true,
-      releaseTagPatternStrictPreid: false,
-      releaseTagPatternPreferDockerVersion: undefined,
+      releaseTag: {
+        pattern: '',
+        checkAllBranchesWhen: undefined,
+        requireSemver: true,
+        strictPreid: false,
+        preferDockerVersion: undefined,
+      },
       versionPlans: true,
       resolvedVersionPlans: false,
     };

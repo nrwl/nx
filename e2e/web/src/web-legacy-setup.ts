@@ -1,7 +1,7 @@
 import { cleanupProject, newProject } from '@nx/e2e-utils';
 
 export function setupWebLegacyTest() {
-  newProject();
+  newProject({ packages: ['@nx/web', '@nx/react'] });
 }
 
 export function cleanupWebLegacyTest() {
