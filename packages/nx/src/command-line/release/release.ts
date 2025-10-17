@@ -39,22 +39,33 @@ import {
 } from './version';
 
 export const releaseCLIHandler = (args: VersionOptions) =>
-  handleErrors(args.verbose, () => createAPI({})(args));
+  handleErrors(args.verbose, () => createAPI({}, false)(args));
 
-export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
-  const releaseVersion = createReleaseVersionAPI(overrideReleaseConfig);
-  const releaseChangelog = createReleaseChangelogAPI(overrideReleaseConfig);
-  const releasePublish = createReleasePublishAPI(overrideReleaseConfig);
+export function createAPI(
+  overrideReleaseConfig: NxReleaseConfiguration,
+  ignoreNxJsonConfig: boolean
+) {
+  const releaseVersion = createReleaseVersionAPI(
+    overrideReleaseConfig,
+    ignoreNxJsonConfig
+  );
+  const releaseChangelog = createReleaseChangelogAPI(
+    overrideReleaseConfig,
+    ignoreNxJsonConfig
+  );
+  const releasePublish = createReleasePublishAPI(
+    overrideReleaseConfig,
+    ignoreNxJsonConfig
+  );
 
   return async function release(
     args: ReleaseOptions
   ): Promise<NxReleaseVersionResult | number> {
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-    const nxJson = readNxJson();
-    const userProvidedReleaseConfig = deepMergeJson(
-      nxJson.release ?? {},
-      overrideReleaseConfig ?? {}
-    );
+    const overriddenConfig = overrideReleaseConfig ?? {};
+    const userProvidedReleaseConfig = ignoreNxJsonConfig
+      ? overriddenConfig
+      : deepMergeJson(readNxJson().release ?? {}, overriddenConfig);
 
     const hasVersionGitConfig =
       Object.keys(userProvidedReleaseConfig.version?.git ?? {}).length > 0;

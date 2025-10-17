@@ -24,7 +24,7 @@ One of the key features of the Nx task scheduling system is that it is able to a
 These target defaults can be defined
 
 - globally at the `nx.json` level for all the projects in the workspace
-- per project level in the `project.json`/`package.json` depending whether you use the [project.json config option](/reference/project-configuration) or [package.json](/reference/project-configuration)
+- per project level in the `project.json`/`package.json` depending whether you use the [project.json config option](/docs/reference/project-configuration) or [package.json](/docs/reference/project-configuration)
 
 You can still use the same notation as you did until now:
 
@@ -159,7 +159,7 @@ Although most of the time you might want to use one, it is not mandatory any mor
 
 ## Speeding up workspace config computation
 
-Project configuration calculations can take up quite some time in large workspaces. Starting with v14.4 we offloaded that part to the [Nx Daemon](/concepts/nx-daemon), optimizing the overall command execution time in particular for large workspaces.
+Project configuration calculations can take up quite some time in large workspaces. Starting with v14.4 we offloaded that part to the [Nx Daemon](/docs/concepts/nx-daemon), optimizing the overall command execution time in particular for large workspaces.
 
 ## New NX_PROJECT_GRAPH_CACHE_DIRECTORY
 

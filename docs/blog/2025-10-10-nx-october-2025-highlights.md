@@ -31,7 +31,7 @@ nx configure-ai-agents
 
 This command [sets up your workspace](/docs/getting-started/ai-setup#automatic-ai-setup) with the necessary configuration files so AI assistants can leverage Nx's deep understanding of your monorepo's project relationships, dependencies, and tasks. Your AI coding assistant gets instant access to the bigger picture, moving beyond simple file edits to understand how your entire codebase fits together.
 
-[Learn more about enhancing AI assistants with Nx](/features/enhance-AI)
+[Learn more about enhancing AI assistants with Nx](/docs/features/enhance-ai)
 
 ## Enhanced graph UI and controls
 
@@ -41,9 +41,9 @@ We've significantly improved the graph experience with a redesigned control pane
 
 The graph renders in composite mode by default, which provides two key benefits: it looks cleaner and prevents crashes when visualizing large workspaces. For workspaces with thousands of projects, the composite mode makes the graph usable again!
 
-The workflow for exploring your graph has been streamlined too. Left-click to select a project and open the details panel, or right-click for quick actions via context menu. When you start tracing dependencies between projects, the UI intelligently shows you a list of traceable projects, so you don't have to hunt through the visualization. Click on edges to navigate between connected projects, making it easier to understand how your workspace fits together.
+The workflow for exploring your graph has been streamlined too. Left-click to select a project and open the details panel. When you start tracing dependencies between projects, the UI intelligently shows you a list of traceable projects, so you don't have to hunt through the visualization. Click on edges to navigate between connected projects, making it easier to understand how your workspace fits together.
 
-[Explore the project graph documentation](/features/explore-graph)
+[Explore the project graph documentation](/docs/features/explore-graph)
 
 ## Terminal UI improvements
 
@@ -57,11 +57,11 @@ We've also refined the visual experience with improved title styling when panels
 
 Atomized tests help lower your [Time to Green](/docs/guides/nx-cloud/optimize-your-ttg) by running more in parallel during CI, but they do come with one downside: your test logs are now split over multiple task results. To simplify this, Nx can now merge the results of atomized tests so you get the best of both worlds.
 
-For [Playwright users](/technologies/test-tools/playwright/recipes/merge-atomized-outputs), Nx now automatically infers a new task (`e2e-ci--merge-reports`) to merge reports from atomized test runs. This means you can split your test suite across multiple machines for faster CI runs, and Nx handles combining the results for you.
+For [Playwright users](/docs/technologies/test-tools/playwright/guides/merge-atomized-outputs), Nx now automatically infers a new task (`e2e-ci--merge-reports`) to merge reports from atomized test runs. This means you can split your test suite across multiple machines for faster CI runs, and Nx handles combining the results for you.
 
 These improvements make it easier to scale your test suites without sacrificing the detailed reporting you need. We're working on guidance for other testing tools that provide atomized tests, stay tuned for more.
 
-[Learn more about atomizing tasks](/ci/features/split-e2e-tasks)
+[Learn more about atomizing tasks](/docs/features/ci-features/split-e2e-tasks)
 
 ## **BREAKING CHANGE:** Webpack SVGR changes
 
@@ -88,7 +88,7 @@ Remember that you can always migrate to the latest version of Nx while maintaini
 nx migrate latest --interactive
 ```
 
-[See our Angular version matrix for compatibility details](/technologies/angular/recipes/angular-nx-version-matrix)
+[See our Angular version matrix for compatibility details](/docs/technologies/angular/guides/angular-nx-version-matrix)
 
 ## Vite 7 support
 
@@ -96,7 +96,7 @@ Staying current with the JavaScript ecosystem is crucial, and we're excited to a
 
 Whether you're building React, Vue, or vanilla JavaScript applications, you can now leverage Vite 7's performance improvements in your Nx workspace. Simply upgrade to the latest version of Nx to get started.
 
-[Check out our Vite plugin documentation](/technologies/build-tools/vite/introduction)
+[Check out our Vite plugin documentation](/docs/technologies/build-tools/vite/introduction)
 
 ## Gradle performance improvements
 
@@ -104,7 +104,7 @@ For Java developers using Gradle, these releases bring significant performance i
 
 The `@nx/gradle` plugin now also supports custom test targets, giving you more flexibility in how you structure your Java projects within your Nx workspace.
 
-[Explore the Gradle plugin](/technologies/java/introduction)
+[Explore the Gradle plugin](/docs/technologies/java/introduction)
 
 ## Nx 22 coming soon
 
@@ -124,7 +124,7 @@ After updating your dependencies, run any necessary migrations:
 nx migrate --run-migrations
 ```
 
-Or use the [Migrate UI in Nx Console](/recipes/nx-console/console-migrate-ui) for a more visual migration experience.
+Or use the [Migrate UI in Nx Console](/docs/guides/nx-console/console-migrate-ui) for a more visual migration experience.
 
 ## What's next
 
@@ -132,7 +132,7 @@ These updates set the stage for even more improvements coming to Nx. Keep an eye
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 🌩️ [Nx Cloud](/nx-cloud)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)

@@ -597,7 +597,7 @@ ${jslib}();
         `generate @nx/nest:app ${nestapp} --linter=eslint --unitTestRunner=jest`
       );
 
-      packageInstall('@nestjs/swagger', undefined, '^7.0.0');
+      packageInstall('@nestjs/swagger', undefined, '^11.0.0');
 
       updateJson(join('apps', nestapp, 'project.json'), (config) => {
         config.targets.build.options.tsPlugins = ['@nestjs/swagger/plugin'];
@@ -716,7 +716,7 @@ ${jslib}();
         `generate @nx/nest:lib libs/${nestlib} --buildable --linter=eslint --unitTestRunner=jest`
       );
 
-      packageInstall('@nestjs/swagger', undefined, '^7.0.0');
+      packageInstall('@nestjs/swagger', undefined, '^11.0.0');
 
       updateJson(join('libs', nestlib, 'project.json'), (config) => {
         config.targets.build.options.transformers = [

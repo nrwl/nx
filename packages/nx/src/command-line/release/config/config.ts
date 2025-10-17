@@ -1406,7 +1406,10 @@ function validateChangelogConfig(
     rootChangelogConfig.workspaceChangelog &&
     typeof rootChangelogConfig.workspaceChangelog !== 'boolean'
   ) {
-    if (rootChangelogConfig.workspaceChangelog.renderer?.length) {
+    if (
+      typeof rootChangelogConfig.workspaceChangelog.renderer === 'string' &&
+      rootChangelogConfig.workspaceChangelog.renderer.length > 0
+    ) {
       uniqueRendererPaths.add(rootChangelogConfig.workspaceChangelog.renderer);
     }
     const createReleaseError = validateCreateReleaseConfig(
@@ -1420,7 +1423,10 @@ function validateChangelogConfig(
     rootChangelogConfig.projectChangelogs &&
     typeof rootChangelogConfig.projectChangelogs !== 'boolean'
   ) {
-    if (rootChangelogConfig.projectChangelogs.renderer?.length) {
+    if (
+      typeof rootChangelogConfig.projectChangelogs.renderer === 'string' &&
+      rootChangelogConfig.projectChangelogs.renderer.length > 0
+    ) {
       uniqueRendererPaths.add(rootChangelogConfig.projectChangelogs.renderer);
     }
     const createReleaseError = validateCreateReleaseConfig(
@@ -1433,7 +1439,10 @@ function validateChangelogConfig(
 
   for (const group of Object.values(releaseGroups)) {
     if (group.changelog && typeof group.changelog !== 'boolean') {
-      if (group.changelog.renderer?.length) {
+      if (
+        typeof group.changelog.renderer === 'string' &&
+        group.changelog.renderer.length > 0
+      ) {
         uniqueRendererPaths.add(group.changelog.renderer);
       }
       const createReleaseError = validateCreateReleaseConfig(group.changelog);

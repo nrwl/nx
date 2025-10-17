@@ -9,11 +9,9 @@ import {
 } from '@heroicons/react/24/outline';
 
 export function WebinarNotifier(): ReactElement | null {
-  return null;
-
   const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState<boolean>(true);
-  const localStorageKey = 'workshop-september-24-2025--notifier-closed';
+  const localStorageKey = 'webinar-october-27-2025--notifier-closed';
 
   useEffect(() => {
     setIsMounted(true);
@@ -63,17 +61,17 @@ export function WebinarNotifier(): ReactElement | null {
               aria-hidden="true"
               className="size-8 flex-shrink-0"
             />
-            <span>Join our webinar on September 24th</span>
+            <span>Unlock the Full 70% of Your CI Gains</span>
           </motion.h3>
           <motion.div key="live-event" className="mt-4 space-y-4">
             <p className="mb-2 text-sm">
-              Learn what modern monorepo development looks like in our September
-              webinar.
+              Join our Oct. 27th webinar to learn how modern CI should work—and
+              how Nx Cloud makes it happen.
             </p>
             <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-4">
               <a
                 title="Signup"
-                href="https://bit.ly/3JX0gzB"
+                href="https://bit.ly/48iV9DZ"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-pink-600 px-2 py-2 text-sm font-semibold text-white transition hover:bg-pink-700 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:text-black/70 md:px-4"

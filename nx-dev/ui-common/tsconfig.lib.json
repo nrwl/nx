@@ -21,6 +21,9 @@
   "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
   "references": [
     {
+      "path": "../ui-animations/tsconfig.lib.json"
+    },
+    {
       "path": "../ui-references/tsconfig.lib.json"
     },
     {

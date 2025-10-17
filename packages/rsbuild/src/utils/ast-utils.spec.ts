@@ -3,6 +3,7 @@ import {
   addHtmlTemplatePath,
   addCopyAssets,
   addExperimentalSwcPlugin,
+  addSourceDefine,
 } from './ast-utils';
 
 describe('ast-utils', () => {
@@ -428,6 +429,110 @@ export default defineConfig({
         					['@swc/plugin-styled-jsx', {}]]
                 }
               }
+            }
+          }
+        });"
+      `);
+    });
+  });
+  describe('addSourceDefine', () => {
+    it('should add the define property to the config when source object does not exist', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'apps/my-app/rsbuild.config.ts',
+        `import { defineConfig } from '@rsbuild/core';
+export default defineConfig({
+});`
+      );
+
+      addSourceDefine(
+        tree,
+        'apps/my-app/rsbuild.config.ts',
+        'import.meta.vitest',
+        'undefined'
+      );
+
+      expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { defineConfig } from '@rsbuild/core';
+        export default defineConfig({
+        	source: {
+        		define: {
+        			'import.meta.vitest': 'undefined',
+        		},
+        	},
+        });"
+      `);
+    });
+
+    it('should add the define property to the config when source object exists but define does not', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'apps/my-app/rsbuild.config.ts',
+        `import { defineConfig } from '@rsbuild/core';
+export default defineConfig({
+  source: {
+    entry: {
+      index: './src/main.tsx'
+    }
+  }
+});`
+      );
+
+      addSourceDefine(
+        tree,
+        'apps/my-app/rsbuild.config.ts',
+        'import.meta.vitest',
+        'undefined'
+      );
+
+      expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { defineConfig } from '@rsbuild/core';
+        export default defineConfig({
+          source: {
+        		define: {
+        			'import.meta.vitest': 'undefined',
+        		},
+        		
+            entry: {
+              index: './src/main.tsx'
+            }
+          }
+        });"
+      `);
+    });
+
+    it('should add the define property to the config when both source and define objects exist', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'apps/my-app/rsbuild.config.ts',
+        `import { defineConfig } from '@rsbuild/core';
+export default defineConfig({
+  source: {
+    define: {
+      'process.env.NODE_ENV': '"production"'
+    }
+  }
+});`
+      );
+
+      addSourceDefine(
+        tree,
+        'apps/my-app/rsbuild.config.ts',
+        'import.meta.vitest',
+        'undefined'
+      );
+
+      expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { defineConfig } from '@rsbuild/core';
+        export default defineConfig({
+          source: {
+            define: {
+        			'import.meta.vitest': 'undefined',
+        			
+              'process.env.NODE_ENV': '"production"'
             }
           }
         });"

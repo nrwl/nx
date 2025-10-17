@@ -274,7 +274,7 @@ Using it, you get the native look, a11y, and theme-aware styling for free! Thank
 
 One big upside of using a webview is the huge Javascript ecosystem is available to you! To make sure that no regressions are introduced later on, we use [Cypress](https://www.cypress.io/). We can mock the editor communication and provide different schemas, make sure the form is rendered correctly and the right messages are sent back to the IDE.
 
-While there's no particular Lit integration for Cypress, the tool itself is framework agnostic so it still works perfectly fine. Using the [`@nx/cypress`](/technologies/test-tools/cypress/introduction) executors did most of the work for us so setup was pretty quick too.
+While there's no particular Lit integration for Cypress, the tool itself is framework agnostic so it still works perfectly fine. Using the [`@nx/cypress`](/docs/technologies/test-tools/cypress/introduction) executors did most of the work for us so setup was pretty quick too.
 
 ### Results: Comparing Performance
 
@@ -327,7 +327,7 @@ If the prettier UI and better performance haven't convinced you, this surely wil
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
@@ -610,7 +610,7 @@ Using it, you get the native look, a11y, and theme-aware styling for free! Thank
 
 One big upside of using a webview is the huge Javascript ecosystem is available to you! To make sure that no regressions are introduced later on, we use [Cypress](https://www.cypress.io/). We can mock the editor communication and provide different schemas, make sure the form is rendered correctly and the right messages are sent back to the IDE.
 
-While there’s no particular Lit integration for Cypress, the tool itself is framework agnostic so it still works perfectly fine. Using the [`@nx/cypress`](/technologies/test-tools/cypress/introduction) executors did most of the work for us so setup was pretty quick too.
+While there’s no particular Lit integration for Cypress, the tool itself is framework agnostic so it still works perfectly fine. Using the [`@nx/cypress`](/docs/technologies/test-tools/cypress/introduction) executors did most of the work for us so setup was pretty quick too.
 
 ### Results: Comparing Performance
 
@@ -663,7 +663,7 @@ If the prettier UI and better performance haven’t convinced you, this surely w
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)

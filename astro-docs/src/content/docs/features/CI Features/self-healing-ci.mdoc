@@ -37,9 +37,9 @@ Next, check the [Nx Cloud workspace settings](https://cloud.nx.app/go/workspace/
 
 ### Configure your CI pipeline
 
-To enable Self-Healing CI, add the following lines to your CI configuration:
+To enable Self-Healing CI, add the `npx nx fix-ci` command to your CI configuration:
 
-```yaml {% meta="{10,14,15}" %}
+```yaml {% meta="{11,12}" %}
 # .github/workflows/ci.yml
 name: CI
 
@@ -48,16 +48,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       ...
-      - name: Start CI Run
-      - run: npx nx start-ci-run --no-distribution
-      ...
       - run: npx nx affected -t lint test build
 
       - run: npx nx fix-ci
         if: always()
 ```
-
-If you're already using [Nx Agents](/docs/features/ci-features/distribute-task-execution), then you can omit the `--no-distribution` flag and use your existing Nx Agents configuration.
 
 ### Enable Auto-fixing
 

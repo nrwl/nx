@@ -12,7 +12,7 @@ It's Friday, and you absolutely, positively have to deploy to production. But yo
 
 ## Your ticket to fast error debugging
 
-"[Explain with AI](/ci/features/explain-with-ai)" is a new feature for all Nx Cloud Pro users that is going to help you troubleshoot those pesky failing tasks. Whenever you get an error message on CI, look for the "Explain with AI" button on the upper right-hand corner:
+"[Explain with AI](/docs/features/ci-features/explain-with-ai)" is a new feature for all Nx Cloud Pro users that is going to help you troubleshoot those pesky failing tasks. Whenever you get an error message on CI, look for the "Explain with AI" button on the upper right-hand corner:
 
 ![Explain with AI button](/blog/images/2024-07-29/explain-with-ai-button.avif)
 
@@ -22,7 +22,7 @@ Once you hit that button, we collect the terminal output and other Nx task infor
 
 No more switching back and forth between a dozen tabs with different solutions. No more providing the right context for your masterfully written chat prompt. **Get your suggested fix and get back to work.**
 
-Also make sure [to check out our docs](/ci/features/explain-with-ai) for more information.
+Also make sure [to check out our docs](/docs/features/ci-features/explain-with-ai) for more information.
 
 ## How can I start using this today?
 
@@ -47,7 +47,7 @@ This is just the first of a series of AI-powered features that we're going to be
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)

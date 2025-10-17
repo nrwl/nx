@@ -68,6 +68,7 @@ export type ChangelogOptions = NxReleaseArgs &
     from?: string;
     interactive?: string;
     createRelease?: false | 'github' | 'gitlab';
+    replaceExistingContents?: boolean;
     // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
     releaseGraph?: ReleaseGraph;
   };
@@ -317,6 +318,12 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
             description:
               'Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level.',
             choices: ['all', 'workspace', 'projects'],
+          })
+          .option('replace-existing-contents', {
+            type: 'boolean',
+            description:
+              'Whether to overwrite the existing changelog contents instead of prepending to them.',
+            default: false,
           })
           .check((argv) => {
             if (!argv.version) {
