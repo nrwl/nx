@@ -28,7 +28,7 @@ Note: We reserve the right to remove unmaintained plugins from the registry.  If
 
 ## Steps to Submit Your Plugin
 - Use the following commit message template: `chore(core): nx plugin submission [PLUGIN_NAME]`
-- Update the `/astro-docs/src/content/approved-community-plugins.json` file with a new entry for your plugin that includes `name`, `url`, `description`:
+- Update the `astro-docs/src/content/approved-community-plugins.json` file with a new entry for your plugin that includes `name`, `url`, `description`:
 
 Example:
 
