@@ -13,23 +13,27 @@
   "targets": {
     "build": {
       "command": "node ./scripts/copy-readme.js dotnet packages/dotnet/README.md__tmpl__ packages/dotnet/README.md",
-      "outputs": ["{projectRoot}/README.md"]
+      "outputs": ["{projectRoot}/README.md"],
+      "inputs": ["{projectRoot}/README.md__tmpl__"],
+      "cache": true
     },
     "build-analyzer": {
       "executor": "nx:run-commands",
-      "outputs": ["{projectRoot}/dist/lib"],
+      "outputs": ["{workspaceRoot}/dist/msbuild-analyzer"],
+      "inputs": ["{projectRoot}/analyzer/**"],
+      "cache": true,
       "options": {
         "commands": [
-          "dotnet publish {projectRoot}/analyzer/MsbuildAnalyzer.csproj -c Release -o {projectRoot}/dist/lib --self-contained false",
-          "node scripts/chmod.js {projectRoot}/dist/lib/MsbuildAnalyzer"
+          "dotnet publish {projectRoot}/analyzer/MsbuildAnalyzer.csproj -c Release -o dist/msbuild-analyzer --self-contained false",
+          "node scripts/chmod.js dist/msbuild-analyzer/MsbuildAnalyzer"
         ],
         "parallel": false
       }
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
-      "dependsOn": ["build-analyzer"],
-      "outputs": ["{projectRoot}/dist/**", "!{projectRoot}/dist/lib/**"],
+      "dependsOn": ["build-base", "build-analyzer"],
+      "outputs": ["{projectRoot}/dist"],
       "options": {
         "tsConfig": "./tsconfig.lib.json",
         "outputPath": "dist",
@@ -45,6 +49,12 @@
               "executors.json",
               "migrations.json"
             ]
+          },
+          {
+            "input": "dist/msbuild-analyzer",
+            "glob": "*",
+            "output": "/lib/",
+            "includeIgnoredFiles": true
           }
         ]
       }

@@ -17,11 +17,9 @@ import {
 } from './utils/create-dotnet-project';
 
 describe('.NET Plugin - Advanced MSBuild Features', () => {
-  let projectName = uniq('dotnet-advanced');
-
   beforeAll(() => {
     newProject({ packages: [] });
-    runCLI(`add @nx/dotnet`);
+    runCLI(`add @nx/dotnet`, { verbose: true });
   });
 
   afterAll(() => cleanupProject());

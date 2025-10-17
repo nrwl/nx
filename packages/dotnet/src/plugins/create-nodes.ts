@@ -38,6 +38,7 @@ export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
       if (isAnalysisErrorResult(result)) {
         throw result.error;
       }
+
       const { nodesByFile } = result;
 
       // Return array of [configFile, result] tuples

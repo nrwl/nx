@@ -275,10 +275,8 @@ export async function analyzeProjects(
     // a different error when reading the cached result to createDependencies.
     // Instead, we'll find a cached error and know that it was printed earlier.
     // We DO NOT save error results to the on-disk cache to allow retries without
-    // running `nx reset`.
-    const errorResult: AnalysisResult = {
-      nodesByFile: {},
-      referencesByRoot: {},
+    // running `nx reset`
+    const errorResult: AnalysisErrorResult = {
       error: err,
     };
     cache = {

@@ -15,7 +15,7 @@ describe('.NET Plugin - Multi-Project Scenarios', () => {
   beforeAll(() => {
     console.log('Creating new Nx workspace');
     newProject({ packages: [] });
-    runCLI(`add @nx/dotnet`);
+    runCLI(`add @nx/dotnet`, { verbose: true });
     console.log('Nx workspace created');
   });
 
