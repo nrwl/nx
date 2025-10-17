@@ -13,15 +13,15 @@ function detectMavenExecutable(workspaceRoot: string): string {
     `[Maven Analyzer] Detecting Maven executable in workspace: ${workspaceRoot}`
   );
 
-  // // First priority: Check for Maven Daemon
-  // try {
-  //     const {execSync} = require('child_process');
-  //     execSync('mvnd --version', {stdio: 'pipe'});
-  //     logger.verbose(`[Maven Analyzer] Found Maven Daemon, using: mvnd`);
-  //     return 'mvnd';
-  // } catch (error) {
-  //     logger.verbose(`[Maven Analyzer] Maven Daemon not available`);
-  // }
+  // First priority: Check for Maven Daemon
+  try {
+    const { execSync } = require('child_process');
+    execSync('mvnd --version', { stdio: 'pipe' });
+    logger.verbose(`[Maven Analyzer] Found Maven Daemon, using: mvnd`);
+    return 'mvnd';
+  } catch (error) {
+    logger.verbose(`[Maven Analyzer] Maven Daemon not available`);
+  }
 
   // Second priority: Check for Maven wrapper
   if (process.platform === 'win32') {
@@ -63,7 +63,7 @@ export async function runMavenAnalysis(
     `[Maven Analyzer] Workspace data directory: ${workspaceDataDirectory}`
   );
 
-  // Detect Maven executable (mvnw > mvn)
+  // Detect Maven executable (mvnd > mvnw > mvn)
   const mavenExecutable = detectMavenExecutable(workspaceRoot);
 
   const mavenArgs = [
