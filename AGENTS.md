@@ -180,6 +180,9 @@ Fixes #ISSUE_NUMBER
 - For complex changes, you can request a dedicated Nx release by mentioning the Nx team
 - Always link the related issue using "Fixes #ISSUE_NUMBER" to automatically close it when merged
 
+<!-- nx configuration start-->
+<!-- Leave the start & end comments to automatically receive updates. -->
+
 # General Guidelines for working with Nx
 
 - When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
@@ -197,3 +200,5 @@ If the user wants help with fixing an error in their CI pipeline, use the follow
 - If there are any errors, use the `nx_cloud_fix_cipe_failure` tool to retrieve the logs for a specific task
 - Use the task logs to see what's wrong and help the user fix their problem. Use the appropriate tools if necessary
 - Make sure that the problem is fixed by running the task that you passed into the `nx_cloud_fix_cipe_failure` tool
+
+<!-- nx configuration end-->
