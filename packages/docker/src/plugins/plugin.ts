@@ -13,15 +13,25 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
+import { getLatestCommitSha } from 'nx/src/utils/git-utils';
+import { interpolateObject } from '../utils/interpolate-pattern';
+
+export interface DockerTargetOptions {
+  name: string;
+  args?: string[];
+  env?: Record<string, string>;
+  envFile?: string;
+  cwd?: string;
+}
 
 export interface DockerPluginOptions {
-  buildTarget?: string;
-  runTarget?: string;
+  buildTarget?: string | DockerTargetOptions;
+  runTarget?: string | DockerTargetOptions;
 }
 
 interface NormalizedDockerPluginOptions {
-  buildTarget: string;
-  runTarget: string;
+  buildTarget: DockerTargetOptions;
+  runTarget: DockerTargetOptions;
 }
 
 type DockerTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -104,6 +114,47 @@ async function createNodesInternal(
   };
 }
 
+function interpolateDockerTargetOptions(
+  options: DockerTargetOptions,
+  projectRoot: string,
+  imageRef: string,
+  context: CreateNodesContext
+): DockerTargetOptions {
+  const commitSha = getLatestCommitSha();
+  const projectName = getProjectName(projectRoot, context.workspaceRoot);
+
+  const tokens = {
+    projectRoot,
+    projectName,
+    imageRef,
+    currentDate: new Date(),
+    commitSha,
+    shortCommitSha: commitSha.slice(0, 7),
+  };
+
+  return interpolateObject(options, tokens);
+}
+
+function getProjectName(projectRoot: string, workspaceRoot: string): string {
+  const projectJsonPath = join(workspaceRoot, projectRoot, 'project.json');
+  if (existsSync(projectJsonPath)) {
+    const projectJson = readJsonFile(projectJsonPath);
+    if (projectJson.name) {
+      return projectJson.name;
+    }
+  }
+
+  const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
+  if (existsSync(packageJsonPath)) {
+    const packageJson = readJsonFile(packageJsonPath);
+    if (packageJson.name) {
+      return packageJson.name;
+    }
+  }
+
+  return projectRoot.replace(/^[\\/]/, '').replace(/[\\/\s]+/g, '-');
+}
+
 async function createDockerTargets(
   projectRoot: string,
   options: NormalizedDockerPluginOptions,
@@ -111,25 +162,44 @@ async function createDockerTargets(
 ) {
   const imageRef = projectRoot.replace(/^[\\/]/, '').replace(/[\\/\s]+/g, '-');
 
+  const interpolatedBuildTarget = interpolateDockerTargetOptions(
+    options.buildTarget,
+    projectRoot,
+    imageRef,
+    context
+  );
+  const interpolatedRunTarget = interpolateDockerTargetOptions(
+    options.runTarget,
+    projectRoot,
+    imageRef,
+    context
+  );
+
   const namedInputs = getNamedInputs(projectRoot, context);
   const targets: Record<string, TargetConfiguration> = {};
   const metadata = {
     targetGroups: {
       ['Docker']: [
-        `${options.buildTarget}`,
-        `${options.runTarget}`,
+        interpolatedBuildTarget.name,
+        interpolatedRunTarget.name,
         'nx-release-publish',
       ],
     },
   };
 
-  targets[options.buildTarget] = {
+  const buildOptions = {
+    cwd: interpolatedBuildTarget.cwd ?? projectRoot,
+    args: [`--tag ${imageRef}`, ...(interpolatedBuildTarget.args ?? [])],
+    ...(interpolatedBuildTarget.env && { env: interpolatedBuildTarget.env }),
+    ...(interpolatedBuildTarget.envFile && {
+      envFile: interpolatedBuildTarget.envFile,
+    }),
+  };
+
+  targets[interpolatedBuildTarget.name] = {
     dependsOn: ['build', '^build'],
     command: `docker build .`,
-    options: {
-      cwd: projectRoot,
-      args: [`--tag ${imageRef}`],
-    },
+    options: buildOptions,
     inputs: [
       ...('production' in namedInputs
         ? ['production', '^production']
@@ -150,12 +220,19 @@ async function createDockerTargets(
     },
   };
 
-  targets[options.runTarget] = {
-    dependsOn: [options.buildTarget],
+  const runOptions = {
+    cwd: interpolatedRunTarget.cwd ?? projectRoot,
+    ...(interpolatedRunTarget.args && { args: interpolatedRunTarget.args }),
+    ...(interpolatedRunTarget.env && { env: interpolatedRunTarget.env }),
+    ...(interpolatedRunTarget.envFile && {
+      envFile: interpolatedRunTarget.envFile,
+    }),
+  };
+
+  targets[interpolatedRunTarget.name] = {
+    dependsOn: [interpolatedBuildTarget.name],
     command: `docker run {args} ${imageRef}`,
-    options: {
-      cwd: projectRoot,
-    },
+    options: runOptions,
     inputs: [
       ...('production' in namedInputs
         ? ['production', '^production']
@@ -185,8 +262,21 @@ async function createDockerTargets(
 function normalizePluginOptions(
   options: DockerPluginOptions
 ): NormalizedDockerPluginOptions {
+  const normalizeTarget = (
+    target: string | DockerTargetOptions | undefined,
+    defaultName: string
+  ): DockerTargetOptions => {
+    if (typeof target === 'string') {
+      return { name: target };
+    }
+    if (target && typeof target === 'object') {
+      return { ...target, name: target.name ?? defaultName };
+    }
+    return { name: defaultName };
+  };
+
   return {
-    buildTarget: options.buildTarget ?? 'docker:build',
-    runTarget: options.runTarget ?? 'docker:run',
+    buildTarget: normalizeTarget(options.buildTarget, 'docker:build'),
+    runTarget: normalizeTarget(options.runTarget, 'docker:run'),
   };
 }
