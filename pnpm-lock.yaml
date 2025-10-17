@@ -3516,6 +3516,9 @@ importers:
       '@nx/rsbuild':
         specifier: workspace:*
         version: link:../rsbuild
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../webpack
       nx:
         specifier: workspace:*
         version: link:../nx
