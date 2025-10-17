@@ -87,7 +87,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
     });
 
     it('should pack with Debug configuration when specified', () => {
-      const output = runCLI('pack MyLibrary --configuration Debug', {
+      const output = runCLI('pack MyLibrary--configuration debug', {
         verbose: true,
       });
       checkFilesMatchingPatternExist(
@@ -98,7 +98,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
 
     it('should build:release dependency with matching configuration', () => {
       // When packing with Debug, build:release should also use Debug
-      const output = runCLI('pack MyLibrary --configuration Debug', {
+      const output = runCLI('pack MyLibrary--configuration debug', {
         verbose: true,
       });
       expect(output).toContain('Build succeeded');
@@ -130,8 +130,8 @@ describe('.NET Plugin - Configuration Behavior', () => {
   });
 
   describe('configuration flag variations', () => {
-    it('should accept --configuration=Release (with equals)', () => {
-      const output = runCLI('build MyApp --configuration=Release', {
+    it('should accept --configuration=release (with equals)', () => {
+      const output = runCLI('build MyApp --configuration=release', {
         verbose: true,
       });
       expect(output).toContain('Build succeeded');

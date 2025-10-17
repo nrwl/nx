@@ -11,7 +11,7 @@ import {
 import * as http from 'node:http';
 import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
-import open = require('open');
+import * as open from 'open';
 import {
   basename,
   dirname,
