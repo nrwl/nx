@@ -7,7 +7,7 @@
       "continuous": true,
       "dependsOn": [
         {
-          "projects": ["devkit", "create-nx-workspace", "dotnet"],
+          "projects": ["devkit", "create-nx-workspace", "dotnet", "maven"],
           "target": "build"
         }
       ],
@@ -19,7 +19,7 @@
     "build": {
       "dependsOn": [
         {
-          "projects": ["devkit", "create-nx-workspace", "dotnet"],
+          "projects": ["devkit", "create-nx-workspace", "dotnet", "maven"],
           "target": "build"
         }
       ],
