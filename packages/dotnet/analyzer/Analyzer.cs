@@ -25,20 +25,23 @@ public static class Analyzer
     {
         // Read nx.json from workspace root
         NxJsonConfig? nxJson = null;
-        var nxJsonPath = Path.Combine(workspaceRoot, "nx.json");
-        if (File.Exists(nxJsonPath))
+        using (PerfLogger.Start("analyze workspace > read nx.json"))
         {
-            try
+            var nxJsonPath = Path.Combine(workspaceRoot, "nx.json");
+            if (File.Exists(nxJsonPath))
             {
-                var nxJsonContent = File.ReadAllText(nxJsonPath);
-                nxJson = System.Text.Json.JsonSerializer.Deserialize<NxJsonConfig>(nxJsonContent, new System.Text.Json.JsonSerializerOptions
+                try
                 {
-                    PropertyNameCaseInsensitive = true
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Warning: Failed to read nx.json: {ex.Message}");
+                    var nxJsonContent = File.ReadAllText(nxJsonPath);
+                    nxJson = System.Text.Json.JsonSerializer.Deserialize<NxJsonConfig>(nxJsonContent, new System.Text.Json.JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Warning: Failed to read nx.json: {ex.Message}");
+                }
             }
         }
 
@@ -47,78 +50,85 @@ public static class Analyzer
             .Select(p => Path.Combine(workspaceRoot, p))
             .ToList();
 
-        var projectGraph = new ProjectGraph(absoluteProjectFiles);
+        ProjectGraph projectGraph;
+        using (var graphPerf = PerfLogger.Start("analyze workspace > create project graph"))
+        {
+            projectGraph = new ProjectGraph(absoluteProjectFiles);
+        }
 
         var nodesByFile = new Dictionary<string, NxProjectGraphNode>();
         var referencesByRoot = new Dictionary<string, ReferencesInfo>();
 
-        foreach (var node in projectGraph.ProjectNodes)
+        using (var analyzeProjectsPerf = PerfLogger.Start($"analyze workspace > transform {projectGraph.ProjectNodes.Count} projects"))
         {
-            try
+            foreach (var node in projectGraph.ProjectNodes)
             {
-                if (node.ProjectInstance is null)
+                try
                 {
-                    throw new InvalidOperationException("ProjectInstance is null.");
-                }
-                var projectPath = node.ProjectInstance.FullPath;
-                if (string.IsNullOrEmpty(projectPath))
-                {
-                    continue;
-                }
-
-                var projectRoot = ProjectUtilities.GetRelativeProjectRoot(projectPath, workspaceRoot);
-                var relativeProjectFile = ProjectUtilities.GetRelativeProjectFile(projectPath, workspaceRoot);
-
-                // Collect package references
-                var packageRefs = CollectPackageReferences(node.ProjectInstance!);
-
-                // Collect project references
-                var projectRefs = CollectProjectReferences(node, projectPath, workspaceRoot);
-
-                // Collect MSBuild properties
-                var properties = CollectProperties(node.ProjectInstance!);
-
-                // Determine project type
-                var isTest = IsTestProject(properties, packageRefs);
-                var isExe = IsExecutableProject(properties);
-
-                // Build targets
-                var projectName = ProjectUtilities.GetProjectName(node.ProjectInstance);
-                var targets = TargetBuilder.BuildTargets(
-                    projectName,
-                    Path.GetFileName(projectPath),
-                    isTest,
-                    isExe,
-                    packageRefs,
-                    properties,
-                    workspaceRoot,
-                    pluginOptions,
-                    nxJson
-                );
-
-                nodesByFile[relativeProjectFile] = new NxProjectGraphNode
-                {
-                    Name = projectName,
-                    Root = projectRoot,
-                    Targets = targets,
-                    Metadata = new Models.ProjectMetadata
+                    if (node.ProjectInstance is null)
                     {
-                        Technologies = ProjectUtilities.GetTechnologies(projectPath)
+                        throw new InvalidOperationException("ProjectInstance is null.");
                     }
-                };
-
-                if (projectRefs.Any())
-                {
-                    referencesByRoot[projectRoot] = new ReferencesInfo
+                    var projectPath = node.ProjectInstance.FullPath;
+                    if (string.IsNullOrEmpty(projectPath))
                     {
-                        Refs = projectRefs,
-                        SourceConfigFile = relativeProjectFile
+                        continue;
+                    }
+
+                    var projectRoot = ProjectUtilities.GetRelativeProjectRoot(projectPath, workspaceRoot);
+                    var relativeProjectFile = ProjectUtilities.GetRelativeProjectFile(projectPath, workspaceRoot);
+
+                    // Collect package references
+                    var packageRefs = CollectPackageReferences(node.ProjectInstance!);
+
+                    // Collect project references
+                    var projectRefs = CollectProjectReferences(node, projectPath, workspaceRoot);
+
+                    // Collect MSBuild properties
+                    var properties = CollectProperties(node.ProjectInstance!);
+
+                    // Determine project type
+                    var isTest = IsTestProject(properties, packageRefs);
+                    var isExe = IsExecutableProject(properties);
+
+                    // Build targets
+                    var projectName = ProjectUtilities.GetProjectName(node.ProjectInstance);
+                    var targets = TargetBuilder.BuildTargets(
+                        projectName,
+                        Path.GetFileName(projectPath),
+                        isTest,
+                        isExe,
+                        packageRefs,
+                        properties,
+                        workspaceRoot,
+                        pluginOptions,
+                        nxJson
+                    );
+
+                    nodesByFile[relativeProjectFile] = new NxProjectGraphNode
+                    {
+                        Name = projectName,
+                        Root = projectRoot,
+                        Targets = targets,
+                        Metadata = new Models.ProjectMetadata
+                        {
+                            Technologies = ProjectUtilities.GetTechnologies(projectPath)
+                        }
                     };
+
+                    if (projectRefs.Count > 0)
+                    {
+                        referencesByRoot[projectRoot] = new ReferencesInfo
+                        {
+                            Refs = projectRefs,
+                            SourceConfigFile = relativeProjectFile
+                        };
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error analyzing {node.ProjectInstance?.FullPath}: {ex.Message}");
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Error analyzing {node.ProjectInstance?.FullPath}: {ex.Message}");
+                }
             }
         }
 

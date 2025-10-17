@@ -1,5 +1,5 @@
 export {
   createNodesV2,
-  DotNetPluginOptions,
+  createNodes,
   createDependencies,
 } from './plugins/plugin';

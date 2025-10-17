@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Microsoft.Build.Locator;
 using MsbuildAnalyzer;
 using MsbuildAnalyzer.Models;
+using MsbuildAnalyzer.Utilities;
 
 // Parse input - either from stdin or command line arguments
 // Format (stdin): Read newline-separated list of project files from stdin
@@ -86,6 +87,8 @@ pluginOptions ??= new PluginOptions();
 // Register MSBuild BEFORE any MSBuild types are referenced
 try
 {
+    using var msbuildRegisterPerf = PerfLogger.Start("MSBuild registration");
+
     var queryOptions = new VisualStudioInstanceQueryOptions
     {
         AllowAllDotnetLocations = true,
@@ -137,16 +140,24 @@ catch (Exception ex)
     return 2;
 }
 
-// Run the analyzer
-var result = Analyzer.AnalyzeWorkspace(projectFiles, workspaceRoot, pluginOptions);
-
-// Serialize and output results
-var options = new JsonSerializerOptions
+// JSON serialization options (cached for reuse)
+var jsonOptions = new JsonSerializerOptions
 {
     WriteIndented = false,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
 };
 
-Console.WriteLine(JsonSerializer.Serialize(result, options));
+// Run the analyzer
+AnalysisResult result;
+using (var analyzePerf = PerfLogger.Start("analyze workspace"))
+{
+    result = Analyzer.AnalyzeWorkspace(projectFiles, workspaceRoot, pluginOptions);
+}
+
+// Serialize and output results
+using (PerfLogger.Start("serialize results"))
+{
+    Console.WriteLine(JsonSerializer.Serialize(result, jsonOptions));
+}
 return 0;

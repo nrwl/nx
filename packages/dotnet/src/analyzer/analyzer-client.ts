@@ -197,6 +197,11 @@ function runAnalyzer(
       );
     }
 
+    // Output stderr (includes performance logs when NX_PERF_LOGGING=true)
+    if (result.stderr) {
+      console.error(result.stderr);
+    }
+
     output = result.stdout;
 
     return JSON.parse(output) as AnalysisSuccessResult;
