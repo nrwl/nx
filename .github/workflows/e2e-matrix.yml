@@ -2,12 +2,12 @@ name: E2E matrix
 
 on:
   schedule:
-    - cron: "0 5 * * *"
+    - cron: '0 5 * * *'
   workflow_dispatch:
     inputs:
       debug_enabled:
         type: boolean
-        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
         required: false
         default: false
 
@@ -60,7 +60,7 @@ jobs:
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ matrix.node_version }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -104,7 +104,7 @@ jobs:
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           lookup-only: true
-          path: "${{ github.workspace }}/.cypress"
+          path: '${{ github.workspace }}/.cypress'
           key: ${{ runner.os }}-cypress
 
       - name: Install Cypress
@@ -163,7 +163,7 @@ jobs:
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ matrix.node_version }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install Rust
         if: ${{ matrix.os != 'windows-latest' }}
@@ -179,7 +179,7 @@ jobs:
       - name: Setup .NET 9
         uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
         with:
-          dotnet-version: "9.0.x"
+          dotnet-version: '9.0.x'
 
       - name: Install bun
         if: ${{ matrix.os != 'windows-latest' }}
@@ -222,7 +222,7 @@ jobs:
         id: cache-cypress
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
-          path: "${{ github.workspace }}/.cypress"
+          path: '${{ github.workspace }}/.cypress'
           key: ${{ runner.os }}-cypress
 
       - name: Install Cypress
@@ -344,13 +344,13 @@ jobs:
         timeout-minutes: ${{ matrix.os_timeout }}
         env:
           NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
-          NX_DAEMON: "true"
-          NX_PERF_LOGGING: "false"
-          NX_E2E_VERBOSE_LOGGING: "true"
-          NX_NATIVE_LOGGING: "false"
-          NX_E2E_RUN_E2E: "true"
-          NX_CLOUD_NO_TIMEOUTS: "true"
-          NX_E2E_SKIP_CLEANUP: "true"
+          NX_DAEMON: 'true'
+          NX_PERF_LOGGING: 'false'
+          NX_E2E_VERBOSE_LOGGING: 'true'
+          NX_NATIVE_LOGGING: 'false'
+          NX_E2E_RUN_E2E: 'true'
+          NX_CLOUD_NO_TIMEOUTS: 'true'
+          NX_E2E_SKIP_CLEANUP: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: ${{ matrix.package_manager }}
           npm_config_registry: http://localhost:4872
@@ -370,17 +370,17 @@ jobs:
 
         env:
           NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
-          NX_PERF_LOGGING: "false"
-          NX_CI_EXECUTION_ENV: "macos"
-          NX_E2E_VERBOSE_LOGGING: "true"
-          NX_NATIVE_LOGGING: "false"
-          NX_E2E_RUN_E2E: "true"
-          NX_E2E_SKIP_CLEANUP: "true"
+          NX_PERF_LOGGING: 'false'
+          NX_CI_EXECUTION_ENV: 'macos'
+          NX_E2E_VERBOSE_LOGGING: 'true'
+          NX_NATIVE_LOGGING: 'false'
+          NX_E2E_RUN_E2E: 'true'
+          NX_E2E_SKIP_CLEANUP: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
-          SELECTED_PM: "npm"
+          SELECTED_PM: 'npm'
           npm_config_registry: http://localhost:4872
           YARN_REGISTRY: http://localhost:4872
-          DEVELOPER_DIR: "/Applications/Xcode.app/Contents/Developer"
+          DEVELOPER_DIR: '/Applications/Xcode.app/Contents/Developer'
           CI: true
 
       - name: Save matrix config in file
@@ -406,8 +406,8 @@ jobs:
         with:
           name: ${{ matrix.os_name}}-${{ matrix.node_version}}-${{ matrix.package_manager}}-${{ matrix.project }}
           overwrite: true
-          if-no-files-found: "ignore"
-          path: "outputs/matrix.json"
+          if-no-files-found: 'ignore'
+          path: 'outputs/matrix.json'
 
       - name: Setup tmate session
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
@@ -463,10 +463,10 @@ jobs:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
-          status: "failure"
-          message_format: "${{ needs.process-result.outputs.message }}"
-          notification_title: "Golden Test Failure"
-          footer: "<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>"
+          status: 'failure'
+          message_format: '${{ needs.process-result.outputs.message }}'
+          notification_title: 'Golden Test Failure'
+          footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
           mention_groups: ${{ needs.process-result.outputs.codeowners }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
@@ -481,10 +481,10 @@ jobs:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
-          status: "success"
-          message_format: "${{ needs.process-result.outputs.message }}"
-          notification_title: "✅ Golden Tests: All Passed!"
-          footer: "<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>"
+          status: 'success'
+          message_format: '${{ needs.process-result.outputs.message }}'
+          notification_title: '✅ Golden Tests: All Passed!'
+          footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
@@ -498,9 +498,9 @@ jobs:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
-          status: "skipped"
-          message_format: "${{ needs.process-result.outputs.pm_duration }}"
-          notification_title: "⌛ Total duration per package manager (ubuntu only)"
+          status: 'skipped'
+          message_format: '${{ needs.process-result.outputs.pm_duration }}'
+          notification_title: '⌛ Total duration per package manager (ubuntu only)'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
@@ -514,8 +514,8 @@ jobs:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
-          status: "skipped"
-          message_format: "${{ needs.process-result.outputs.proj_duration }}"
-          notification_title: "⌛ E2E Project duration stats"
+          status: 'skipped'
+          message_format: '${{ needs.process-result.outputs.proj_duration }}'
+          notification_title: '⌛ E2E Project duration stats'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}

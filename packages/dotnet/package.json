@@ -1,6 +1,6 @@
 {
   "name": "@nx/dotnet",
-  "version": "22.0.0",
+  "version": "0.0.1",
   "private": false,
   "description": "The Nx Plugin for .NET containing graph support for working with .NET projects in an Nx workspace.",
   "keywords": [
