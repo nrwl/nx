@@ -55,11 +55,11 @@ Alternatively, **if you happen to use CRA already**, you can easily convert to a
 $ npx nx@latest init
 ```
 
-You can pass `--vite=false` if you still want to keep the Webpack configuration or pass `--integrated` if you already plan to have a monorepo instead of a single-project setup. The [Nx docs go into more detail here](/recipes/adopting-nx/adding-to-existing-project).
+You can pass `--vite=false` if you still want to keep the Webpack configuration or pass `--integrated` if you already plan to have a monorepo instead of a single-project setup. The [Nx docs go into more detail here](/docs/guides/adopting-nx/adding-to-existing-project).
 
 ## Generating a Tailwind Setup
 
-Once you have a [Nx-based React](/getting-started/tutorials/react-monorepo-tutorial) setup, adding Tailwind is as easy as running:
+Once you have a [Nx-based React](/docs/getting-started/tutorials/react-monorepo-tutorial) setup, adding Tailwind is as easy as running:
 
 ```shell
 $ npx nx g @nrwl/react:setup-tailwind
@@ -79,13 +79,13 @@ You'll get
 
 You should be all setup and ready now! Here are some related resources to explore:
 
-- [Nx docs: React Monorepo tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+- [Nx docs: React Monorepo tutorial](/docs/getting-started/tutorials/react-monorepo-tutorial)
 - [Youtube: Is CRA Dead](https://youtu.be/fkTz6KJxhhE)
-- [Nx docs: Migrate CRA to React and Vite](/recipes/adopting-nx/adding-to-existing-project)
+- [Nx docs: Migrate CRA to React and Vite](/docs/guides/adopting-nx/adding-to-existing-project)
 
 ## Learn more
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

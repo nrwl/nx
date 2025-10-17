@@ -98,6 +98,6 @@ Adopting a monorepo powered by Nx on its own does not solve build speeds or CI p
 
 ## Further reading
 
-- [Project size in monorepos](/concepts/decisions/project-size)
-- [Folder structure for project](/concepts/decisions/folder-structure)
-- [Defining dependency rules between projects](/concepts/decisions/project-dependency-rules)
+- [Project size in monorepos](/docs/concepts/decisions/project-size)
+- [Folder structure for project](/docs/concepts/decisions/folder-structure)
+- [Defining dependency rules between projects](/docs/concepts/decisions/project-dependency-rules)

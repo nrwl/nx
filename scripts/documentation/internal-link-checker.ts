@@ -170,38 +170,6 @@ function headerToAnchor(line: string): string {
     .toLocaleLowerCase();
 }
 
-function readApiJson(manifestFileName: string): string[] {
-  const manifest = JSON.parse(
-    readFileContents(
-      join(
-        workspaceRoot,
-        'dist/nx-dev/nx-dev/public/documentation/generated/manifests',
-        manifestFileName
-      )
-    )
-  );
-  let entries = Object.entries(manifest);
-  return entries
-    .filter(
-      ([url, details]: [string, any]) =>
-        !!details.file &&
-        existsSync(join(workspaceRoot, 'docs', details.file + '.md'))
-    )
-    .flatMap(([url, details]: [string, any]) => {
-      const headers = readFileContents(
-        join(workspaceRoot, 'docs', details.file + '.md')
-      )
-        .split('\n')
-        .filter((line) => line.startsWith('#'))
-        .map(headerToAnchor)
-        .map((line) => url + '#' + line);
-      return headers;
-    });
-}
-
-const anchorUrls = ['nx.json', 'ci.json', 'extending-nx.json'].flatMap(
-  (manifestFileName) => readApiJson(manifestFileName)
-);
 const ignoreAnchorUrls = [
   '/reference/core-api',
   '/technologies',
@@ -230,8 +198,7 @@ for (let file in documentLinks) {
       link.includes('#') &&
       !ignoreAnchorUrls.some((ignoreAnchorUrl) =>
         link.startsWith(ignoreAnchorUrl)
-      ) &&
-      !anchorUrls.includes(link)
+      )
     ) {
       errors.push({ file, link });
     } else if (

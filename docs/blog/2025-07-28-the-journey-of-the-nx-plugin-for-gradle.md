@@ -61,8 +61,8 @@ What began as an off-the-cuff prototype at a conference has matured into a serio
 
 Learn more:
 
-- 🌌 [Nx Plugin for Gradle Tutorial](/getting-started/tutorials/gradle-tutorial)
-- 📖 [API for the Nx plugin for Gradle](/technologies/java/api)
+- 🌌 [Nx Plugin for Gradle Tutorial](/docs/getting-started/tutorials/gradle-tutorial)
+- 📖 [API for the Nx plugin for Gradle](/docs/technologies/angular/guides/angular-nx-version-matrix)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)

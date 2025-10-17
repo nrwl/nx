@@ -20,7 +20,7 @@ If you're not familiar, [Advent of Code](https://adventofcode.com/) is a special
 
 Specifically, our goal is to give developers an easy to use starting point that allows them to focus on solving the puzzles, and handing the rest over to Nx instead of wrestling with setting up tools, file i/o, and the like.
 
-This year, we were able to further reduce the nx-specific config needed, using the new [Nx Project Crystal](/concepts/inferred-tasks) enhancements that landed earlier this year!
+This year, we were able to further reduce the nx-specific config needed, using the new [Nx Project Crystal](/docs/concepts/inferred-tasks) enhancements that landed earlier this year!
 
 ## Packages Landed!
 
@@ -84,7 +84,7 @@ Sometimes the second part of the problem simply builds on top of the first. On t
 
 ### New Feature for 2.0.0: File Watching!
 
-We've also added file watching (using [`nx watch`](/reference/core-api/nx/documents/watch) behind the scenes!)
+We've also added file watching (using [`nx watch`](/docs/reference/nx-commands) behind the scenes!)
 
 Simply add `watch-` to the start of any of the commands and aliases listed above to start any of them in watch mode, so they automatically re-run as soon as any changes to the file system are detected! Example:
 
@@ -111,8 +111,8 @@ For example, if I wanted to create a data set called `foo`, I'd create in the fi
 
 ## Learn more
 
-- [Tutorial: Creating Your Own Plugin With Inferred Tasks](/extending-nx/tutorials/tooling-plugin#create-an-inferred-task)
-- [Nx Docs](/getting-started/intro)
+- [Tutorial: Creating Your Own Plugin With Inferred Tasks](/docs/extending-nx/tooling-plugin#create-an-inferred-task)
+- [Nx Docs](/docs/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools)
 - [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)

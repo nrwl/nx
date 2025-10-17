@@ -29,7 +29,7 @@ This is where **Conformance** comes in.
 
 ## What Is Conformance?
 
-[Conformance](/nx-enterprise/powerpack/conformance) is part of Nx Cloud's Polygraph suite: a collection of features that extend the benefits of Nx workspaces to your entire organization. Conformance allows you to write **technology-agnostic rules** that you can enforce across your organization, no matter what technology you're using.
+[Conformance](/docs/enterprise/powerpack/conformance) is part of Nx Cloud's Polygraph suite: a collection of features that extend the benefits of Nx workspaces to your entire organization. Conformance allows you to write **technology-agnostic rules** that you can enforce across your organization, no matter what technology you're using.
 
 Think of it as automated governance for your entire codebase. Platform teams can now:
 
@@ -60,11 +60,11 @@ You have two options for storing Conformance rules:
 
 **Add Conformance rules to an existing workspace**
 
-You can check out the [full details in our docs](/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud), but here's an overview of adding Conformance rules to an existing workspace.
+You can check out the [full details in our docs](/docs/enterprise/powerpack/publish-conformance-rules-to-nx-cloud), but here's an overview of adding Conformance rules to an existing workspace.
 
 1. Open your existing Nx workspace.
 2. Add the `@nx/conformance` plugin: `npx nx add @nx/conformance`.
-3. [Set up a new library project](/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud) for your conformance rules.
+3. [Set up a new library project](/docs/enterprise/powerpack/publish-conformance-rules-to-nx-cloud) for your conformance rules.
 4. Run `npx nx login` in your workspace.
 5. Be sure to bundle your rules using the `@nx/conformance:bundle-rules` executor (covered in the above docs).
 6. Publish the rules using the `nx-cloud` CLI: `npx nx-cloud publish-conformance-rules /path/to/rule-outputs`.
@@ -230,7 +230,7 @@ npx nx conformance check
 
 ### Retrieve a personal access token
 
-Because publishing Conformance rules is a privileged action, you'll need to have a [personal access token](/ci/recipes/security/personal-access-tokens). Run `npx nx login` to retrieve this.
+Because publishing Conformance rules is a privileged action, you'll need to have a [personal access token](/docs/guides/nx-cloud/personal-access-tokens). Run `npx nx login` to retrieve this.
 
 ### Publishing Rules to Nx Cloud
 
@@ -262,18 +262,18 @@ You can start with "evaluated" mode to see current compliance levels, then sched
 
 ![Screenshot of custom workflows](/blog/images/2025-07-17/custom-workflows.avif)
 
-Here's where Conformance really shines. Instead of requiring every team to add Conformance checks to their CI pipelines, you can use **[Custom Workflows](/ci/recipes/enterprise/custom-workflows)** to run these checks automatically.
+Here's where Conformance really shines. Instead of requiring every team to add Conformance checks to their CI pipelines, you can use **[Custom Workflows](/docs/enterprise/custom-workflows)** to run these checks automatically.
 
 Custom Workflows allow you to:
 
 - **Run Conformance checks on any repository** without requiring local configuration changes
 - **Schedule recurring checks** (daily, weekly, etc.) to maintain compliance
-- **Apply rules to non-Nx repositories** through [metadata-only workspaces](/ci/recipes/enterprise/metadata-only-workspace)
+- **Apply rules to non-Nx repositories** through [metadata-only workspaces](/docs/enterprise/metadata-only-workspace)
 - **Collect compliance data** without impacting individual team workflows
 
 ### Supporting Non-Nx Repositories
 
-One of the most powerful aspects of Conformance is that it works with **any repository**, even those that don't use Nx. You can connect legacy repositories as [metadata-only workspaces](/ci/recipes/enterprise/metadata-only-workspace) and apply the same Conformance rules.
+One of the most powerful aspects of Conformance is that it works with **any repository**, even those that don't use Nx. You can connect legacy repositories as [metadata-only workspaces](/docs/enterprise/metadata-only-workspace) and apply the same Conformance rules.
 
 This means your platform team can enforce standards across your entire organization's codebase, regardless of the underlying technology or build system.
 
@@ -329,7 +329,7 @@ Together, these features bring the power of monorepo-level visibility and effici
 
 Learn more:
 
-- 📄 [Conformance Documentation](/ci/recipes/enterprise/polygraph#conformance)
+- 📄 [Conformance Documentation](/docs/enterprise/polygraph#conformance)
 - 📄 [More about Polygraph](/blog/nx-cloud-introducing-polygraph)
 - 🌩️ [Nx Cloud](/nx-cloud)
 - 🌩️ [Nx Cloud Live demo](https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview)
