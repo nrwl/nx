@@ -1,9 +1,4 @@
-import {
-  e2eConsoleLogger,
-  isWindows,
-  runCommand,
-  tmpProjPath,
-} from '@nx/e2e-utils';
+import { e2eConsoleLogger, runCommand, tmpProjPath } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs-extra';
 import { join } from 'path';
@@ -37,6 +32,8 @@ export function createDotNetProject({
       cwd,
     })
   );
+
+  runCommand(`dotnet restore`, { cwd: projectPath });
 
   return projectPath;
 }
@@ -83,13 +80,14 @@ export function addProjectReference(
     `dotnet add ${fromProject}/${fromProject}.csproj reference ${toProject}/${toProject}.csproj`,
     { cwd }
   );
+  runCommand(`dotnet restore`, { cwd: join(cwd, fromProject) });
 }
 
 export function addPackageReference(
   project: string,
   packageName: string,
-  version?: string,
-  cwd: string = tmpProjPath()
+  version: string | null,
+  cwd: string
 ) {
   e2eConsoleLogger(`Adding package ${packageName} to ${project}`);
   const versionFlag = version ? `--version ${version}` : '';
@@ -97,6 +95,7 @@ export function addPackageReference(
     `dotnet add ${project}/${project}.csproj package ${packageName} ${versionFlag}`,
     { cwd }
   );
+  runCommand(`dotnet restore`, { cwd: join(cwd, project) });
 }
 
 // Pre-defined project templates for common scenarios
@@ -130,8 +129,13 @@ export function createWebApiWorkspace(cwd: string = tmpProjPath()) {
   addProjectReference('WebApi.Tests', 'WebApi', cwd);
 
   // Add common test packages
-  addPackageReference('Core.Tests', 'FluentAssertions', cwd);
-  addPackageReference('WebApi.Tests', 'Microsoft.AspNetCore.Mvc.Testing', cwd);
+  addPackageReference('Core.Tests', 'FluentAssertions', null, cwd);
+  addPackageReference(
+    'WebApi.Tests',
+    'Microsoft.AspNetCore.Mvc.Testing',
+    null,
+    cwd
+  );
 
   return result;
 }

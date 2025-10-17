@@ -4,10 +4,8 @@ import {
   cleanupProject,
   newProject,
   runCLI,
-  runCommand,
   tmpProjPath,
   uniq,
-  updateJson,
   readJson,
   updateFile,
   readFile,
@@ -17,7 +15,6 @@ import {
   createDotNetProject,
   addProjectReference,
 } from './utils/create-dotnet-project';
-import { join } from 'path';
 
 describe('.NET Plugin - Advanced MSBuild Features', () => {
   let projectName = uniq('dotnet-advanced');
@@ -25,11 +22,6 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
   beforeAll(() => {
     newProject({ packages: [] });
     runCLI(`add @nx/dotnet`);
-    updateJson('nx.json', (json) => {
-      json.plugins ??= [];
-      json.plugins.push('@nx/dotnet');
-      return json;
-    });
   });
 
   afterAll(() => cleanupProject());
@@ -51,10 +43,12 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
   </PropertyGroup>
 </Project>`
       );
+
+      runCLI('run-many -t restore');
     });
 
     it('should detect artifacts output configuration', () => {
-      const projectDetails = runCLI(`show project artifacts-app --json`);
+      const projectDetails = runCLI(`show project ArtifactsApp --json`);
       const details = JSON.parse(projectDetails);
 
       // Build outputs should point to artifacts directory relative to workspace root
@@ -67,7 +61,7 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
     });
 
     it('should build to artifacts directory', () => {
-      const output = runCLI('build artifacts-app', {
+      const output = runCLI('build ArtifactsApp', {
         verbose: true,
         env: { NX_DAEMON: 'false' },
       });
@@ -101,7 +95,7 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
     });
 
     it('should use custom artifacts path', () => {
-      const projectDetails = runCLI(`show project custom-path-app --json`);
+      const projectDetails = runCLI(`show project CustomPathApp --json`);
       const details = JSON.parse(projectDetails);
 
       expect(details.targets.build.outputs).toEqual(
@@ -113,7 +107,7 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
     });
 
     it('should build to custom artifacts directory', () => {
-      const output = runCLI('build custom-path-app', {
+      const output = runCLI('build CustomPathApp', {
         verbose: true,
         env: { NX_DAEMON: 'false' },
       });
@@ -149,10 +143,12 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
   </PropertyGroup>
 </Project>`
       );
+
+      runCLI('run-many -t restore');
     });
 
     it('should detect multi-targeting configuration', () => {
-      const projectDetails = runCLI(`show project multi-target-lib --json`);
+      const projectDetails = runCLI(`show project MultiTargetLib --json`);
       const details = JSON.parse(projectDetails);
 
       // Should have detected multi-targeting configuration
@@ -160,7 +156,7 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
     });
 
     it('should build for all target frameworks', () => {
-      const output = runCLI('build multi-target-lib', {
+      const output = runCLI('build MultiTargetLib', {
         verbose: true,
         env: { NX_DAEMON: 'false' },
       });
@@ -197,10 +193,11 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
 </PropertyGroup>`
       );
       updateFile('CustomOutputApp/CustomOutputApp.csproj', updatedCsproj);
+      runCLI('run-many -t restore');
     });
 
     it('should detect custom output paths', () => {
-      const projectDetails = runCLI(`show project custom-output-app --json`);
+      const projectDetails = runCLI(`show project CustomOutputApp --json`);
       const details = JSON.parse(projectDetails);
 
       expect(details.targets.build.outputs).toEqual(
@@ -212,7 +209,7 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
     });
 
     it('should build to custom output directory', () => {
-      const output = runCLI('build custom-output-app', {
+      const output = runCLI('build CustomOutputApp', {
         verbose: true,
         env: { NX_DAEMON: 'false' },
       });
@@ -246,7 +243,7 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
     });
 
     it('should detect custom test results directory', () => {
-      const projectDetails = runCLI(`show project custom-test-results --json`);
+      const projectDetails = runCLI(`show project CustomTestResults --json`);
       const details = JSON.parse(projectDetails);
 
       expect(details.targets.test.outputs).toEqual(
@@ -290,6 +287,8 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
   </PropertyGroup>
 </Project>`
       );
+
+      runCLI('run-many -t restore');
     });
 
     it('should detect all project dependencies', () => {
@@ -297,29 +296,29 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
       const { graph } = readJson('graph.json');
 
       // ApiGateway should depend on UserService and OrderService
-      const apiDeps = graph.dependencies['api-gateway'] || [];
+      const apiDeps = graph.dependencies['ApiGateway'] || [];
       expect(apiDeps).toContainEqual(
-        expect.objectContaining({ target: 'user-service' })
+        expect.objectContaining({ target: 'UserService' })
       );
       expect(apiDeps).toContainEqual(
-        expect.objectContaining({ target: 'order-service' })
+        expect.objectContaining({ target: 'OrderService' })
       );
 
       // UserService should depend on Shared
-      const userServiceDeps = graph.dependencies['user-service'] || [];
+      const userServiceDeps = graph.dependencies['UserService'] || [];
       expect(userServiceDeps).toContainEqual(
-        expect.objectContaining({ target: 'shared' })
+        expect.objectContaining({ target: 'Shared' })
       );
 
       // OrderService should depend on Shared
-      const orderServiceDeps = graph.dependencies['order-service'] || [];
+      const orderServiceDeps = graph.dependencies['OrderService'] || [];
       expect(orderServiceDeps).toContainEqual(
-        expect.objectContaining({ target: 'shared' })
+        expect.objectContaining({ target: 'Shared' })
       );
     });
 
     it('should build in correct dependency order', () => {
-      const output = runCLI('build api-gateway', {
+      const output = runCLI('build ApiGateway', {
         verbose: true,
         env: { NX_DAEMON: 'false' },
       });
@@ -352,7 +351,7 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
     });
 
     it('should use artifacts path for NuGet packages', () => {
-      const projectDetails = runCLI(`show project nu-get-package --json`);
+      const projectDetails = runCLI(`show project NuGetPackage --json`);
       const details = JSON.parse(projectDetails);
 
       expect(details.targets.pack.outputs).toEqual(
@@ -364,10 +363,10 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
 
     it('should create NuGet package in artifacts directory', () => {
       // Build first
-      runCLI('build nu-get-package', { env: { NX_DAEMON: 'false' } });
+      runCLI('build NuGetPackage', { env: { NX_DAEMON: 'false' } });
 
       // Then pack
-      const output = runCLI('pack nu-get-package', {
+      const output = runCLI('pack NuGetPackage', {
         verbose: true,
         env: { NX_DAEMON: 'false' },
       });
@@ -396,7 +395,7 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
     });
 
     it('should use artifacts path for publish output', () => {
-      const projectDetails = runCLI(`show project publish-app --json`);
+      const projectDetails = runCLI(`show project PublishApp --json`);
       const details = JSON.parse(projectDetails);
 
       expect(details.targets.publish.outputs).toEqual(
@@ -408,10 +407,10 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
 
     it('should publish to artifacts directory', () => {
       // Build first
-      runCLI('build publish-app', { env: { NX_DAEMON: 'false' } });
+      runCLI('build PublishApp', { env: { NX_DAEMON: 'false' } });
 
       // Then publish
-      const output = runCLI('publish publish-app', {
+      const output = runCLI('publish PublishApp', {
         verbose: true,
         env: { NX_DAEMON: 'false' },
       });

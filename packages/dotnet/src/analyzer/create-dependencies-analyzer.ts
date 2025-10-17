@@ -20,7 +20,7 @@ function createProjectRootMappings(
   return rootMap;
 }
 
-export const createDependenciesAnalyzer: CreateDependencies<
+export const createDependencies: CreateDependencies<
   DotNetPluginOptions
 > = async (_, ctx) => {
   const dependencies: RawProjectGraphDependency[] = [];

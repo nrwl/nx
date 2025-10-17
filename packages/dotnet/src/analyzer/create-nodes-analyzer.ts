@@ -12,12 +12,25 @@ export interface DotNetPluginOptions {
 
 const dotnetProjectGlob = '**/*.{csproj,fsproj,vbproj}';
 
-export const createNodesV2Analyzer: CreateNodesV2<DotNetPluginOptions> = [
+export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
   dotnetProjectGlob,
-  async (configFilePaths) => {
+  async (configFilePaths, options, context) => {
     // Analyze all projects - the C# analyzer builds the complete Nx structure
     try {
-      const { nodesByFile } = await analyzeProjects([...configFilePaths]);
+      // Normalize options with defaults
+      const normalizedOptions = {
+        buildTargetName: options?.buildTargetName ?? 'build',
+        testTargetName: options?.testTargetName ?? 'test',
+        cleanTargetName: options?.cleanTargetName ?? 'clean',
+        restoreTargetName: options?.restoreTargetName ?? 'restore',
+        publishTargetName: options?.publishTargetName ?? 'publish',
+        packTargetName: options?.packTargetName ?? 'pack',
+      };
+
+      const { nodesByFile } = await analyzeProjects(
+        [...configFilePaths],
+        normalizedOptions
+      );
 
       // Return array of [configFile, result] tuples
       return configFilePaths.map((configFile) => {

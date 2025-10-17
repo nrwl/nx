@@ -1,5 +1,5 @@
 import { promisify } from 'util';
-import treeKill = require('tree-kill');
+import * as treeKill from 'tree-kill';
 import { logError, logInfo, logSuccess } from './log-utils';
 import { check as portCheck } from 'tcp-port-used';
 

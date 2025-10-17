@@ -20,11 +20,6 @@ describe('.NET Plugin - Configuration Behavior', () => {
     console.log('Creating new Nx workspace for configuration tests');
     newProject({ packages: [] });
     runCLI(`add @nx/dotnet`);
-    updateJson('nx.json', (json) => {
-      json.plugins ??= [];
-      json.plugins.push('@nx/dotnet');
-      return json;
-    });
     console.log('Nx workspace created');
 
     // Create test projects
@@ -40,7 +35,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
 
   describe('build target defaults', () => {
     it('should build with Debug configuration by default', () => {
-      const output = runCLI('build my-app', { verbose: true });
+      const output = runCLI('build MyApp', { verbose: true });
       expect(output).toContain('Build succeeded');
 
       // Verify Debug outputs exist
@@ -51,7 +46,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
     });
 
     it('should build with Release configuration when specified', () => {
-      const output = runCLI('build my-app --configuration release', {
+      const output = runCLI('build MyApp --configuration release', {
         verbose: true,
       });
       expect(output).toContain('Build succeeded');
@@ -65,7 +60,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
 
     it('should build dependencies with matching configuration', () => {
       // Build MyApp with Release - MyLibrary should also build with Release
-      const output = runCLI('build my-app --configuration release', {
+      const output = runCLI('build MyApp --configuration release', {
         verbose: true,
       });
       expect(output).toContain('Build succeeded');
@@ -84,7 +79,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
 
   describe('pack target configuration', () => {
     it('should pack with Release configuration by default', () => {
-      const output = runCLI('pack my-library', { verbose: true });
+      const output = runCLI('pack MyLibrary', { verbose: true });
       checkFilesMatchingPatternExist(
         '.*/MyLibrary.dll',
         tmpProjPath('MyLibrary/bin/Release')
@@ -92,7 +87,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
     });
 
     it('should pack with Debug configuration when specified', () => {
-      const output = runCLI('pack my-library --configuration Debug', {
+      const output = runCLI('pack MyLibrary --configuration Debug', {
         verbose: true,
       });
       checkFilesMatchingPatternExist(
@@ -103,7 +98,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
 
     it('should build:release dependency with matching configuration', () => {
       // When packing with Debug, build:release should also use Debug
-      const output = runCLI('pack my-library --configuration Debug', {
+      const output = runCLI('pack MyLibrary --configuration Debug', {
         verbose: true,
       });
       expect(output).toContain('Build succeeded');
@@ -136,7 +131,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
 
   describe('configuration flag variations', () => {
     it('should accept --configuration=Release (with equals)', () => {
-      const output = runCLI('build my-app --configuration=Release', {
+      const output = runCLI('build MyApp --configuration=Release', {
         verbose: true,
       });
       expect(output).toContain('Build succeeded');
@@ -147,7 +142,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
     });
 
     it('should accept --configuration release (with space)', () => {
-      const output = runCLI('build my-app --configuration release', {
+      const output = runCLI('build MyApp --configuration release', {
         verbose: true,
       });
       expect(output).toContain('Build succeeded');
@@ -158,7 +153,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
     });
 
     it('should be case-insensitive for configuration names', () => {
-      const output = runCLI('build my-app --configuration release', {
+      const output = runCLI('build MyApp --configuration release', {
         verbose: true,
       });
       expect(output).toContain('Build succeeded');
@@ -171,7 +166,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
 
   describe('target metadata', () => {
     it('should show configurations in project details for build target', () => {
-      const projectDetails = runCLI(`show project my-app --json`);
+      const projectDetails = runCLI(`show project MyApp --json`);
       const details = JSON.parse(projectDetails);
 
       expect(details.targets.build).toBeDefined();
@@ -181,7 +176,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
     });
 
     it('should show configurations in project details for pack target', () => {
-      const projectDetails = runCLI(`show project my-library --json`);
+      const projectDetails = runCLI(`show project MyLibrary --json`);
       const details = JSON.parse(projectDetails);
 
       expect(details.targets.pack).toBeDefined();
@@ -191,7 +186,7 @@ describe('.NET Plugin - Configuration Behavior', () => {
     });
 
     it('should show build:release target exists', () => {
-      const projectDetails = runCLI(`show project my-app --json`);
+      const projectDetails = runCLI(`show project MyApp --json`);
       const details = JSON.parse(projectDetails);
 
       expect(details.targets['build:release']).toBeDefined();
@@ -201,21 +196,21 @@ describe('.NET Plugin - Configuration Behavior', () => {
 
   describe('task graph behavior', () => {
     it('should show pack depends on build:release', () => {
-      const projectDetails = runCLI(`show project my-library --json`);
+      const projectDetails = runCLI(`show project MyLibrary --json`);
       const details = JSON.parse(projectDetails);
 
       expect(details.targets.pack.dependsOn).toContain('build:release');
     });
 
     it('should show publish depends on build:release', () => {
-      const projectDetails = runCLI(`show project my-app --json`);
+      const projectDetails = runCLI(`show project MyApp --json`);
       const details = JSON.parse(projectDetails);
 
       expect(details.targets.publish.dependsOn).toContain('build:release');
     });
 
     it('should show build:release depends on ^build:release', () => {
-      const projectDetails = runCLI(`show project my-app --json`);
+      const projectDetails = runCLI(`show project MyApp --json`);
       const details = JSON.parse(projectDetails);
 
       expect(details.targets['build:release'].dependsOn).toContain(

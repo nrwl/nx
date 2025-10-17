@@ -33,6 +33,8 @@ export const pluginToTechnology: Record<string, string> = {
   gradle: 'java',
   maven: 'java',
 
+  dotnet: 'dotnet',
+
   'module-federation': 'module-federation',
 
   eslint: 'eslint',

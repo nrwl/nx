@@ -125,6 +125,7 @@ test-results
 
 # TypeScript build info files
 *.tsbuildinfo
-/packages/dotnet/src/lib
+
+# .NET build output
 /packages/dotnet/analyzer/bin
 /packages/dotnet/analyzer/obj

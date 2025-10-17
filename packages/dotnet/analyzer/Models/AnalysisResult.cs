@@ -8,7 +8,7 @@ public record AnalysisResult
     /// <summary>
     /// Maps project file path (relative to workspace root) to node configuration.
     /// </summary>
-    public Dictionary<string, ProjectNode> NodesByFile { get; init; } = new();
+    public Dictionary<string, NxProjectGraphNode> NodesByFile { get; init; } = new();
 
     /// <summary>
     /// Maps project root (relative to workspace root) to referenced project roots.

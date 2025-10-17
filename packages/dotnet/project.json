@@ -17,7 +17,7 @@
     },
     "build-analyzer": {
       "executor": "nx:run-commands",
-      "outputs": ["{projectRoot}/src/lib"],
+      "outputs": ["{projectRoot}/dist/lib"],
       "options": {
         "commands": [
           "dotnet publish {projectRoot}/analyzer/MsbuildAnalyzer.csproj -c Release -o {projectRoot}/dist/lib --self-contained false",
@@ -29,6 +29,7 @@
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "dependsOn": ["build-analyzer"],
+      "outputs": ["{projectRoot}/dist/**", "!{projectRoot}/dist/lib/**"],
       "options": {
         "tsConfig": "./tsconfig.lib.json",
         "outputPath": "dist",
@@ -37,7 +38,13 @@
           {
             "input": "{projectRoot}/src",
             "glob": "**/*.{d.ts,json}",
-            "output": "/"
+            "output": "/",
+            "ignore": [
+              ".eslintrc.json",
+              "generators.json",
+              "executors.json",
+              "migrations.json"
+            ]
           }
         ]
       }

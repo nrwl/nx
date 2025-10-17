@@ -3,7 +3,7 @@ namespace MsbuildAnalyzer.Models;
 /// <summary>
 /// Represents an Nx project node for a .NET project.
 /// </summary>
-public record ProjectNode
+public record NxProjectGraphNode
 {
     /// <summary>
     /// The Nx project name (kebab-case).

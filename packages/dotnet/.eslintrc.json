@@ -23,23 +23,7 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": [
-              "nx",
-              "@nx/jest",
-              "@nx/rollup",
-              "@nx/web",
-              "@nx/webpack",
-              "@nx/cypress",
-              "@nx/playwright",
-              "@nx/detox",
-              "typescript",
-              "eslint",
-              "expo",
-              "react",
-              "@expo/cli",
-              "eas-cli",
-              "util" // This is coming from @storybook/builder-manager since it uses the browser polyfill
-            ]
+            "ignoredDependencies": ["eslint"]
           }
         ]
       }

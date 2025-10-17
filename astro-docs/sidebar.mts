@@ -112,6 +112,11 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         items: getPluginItems('gradle', 'java'),
       },
       {
+        label: '.NET',
+        collapsed: true,
+        items: getPluginItems('dotnet'),
+      },
+      {
         label: 'Module Federation',
         collapsed: true,
         items: getPluginItems('module-federation'),

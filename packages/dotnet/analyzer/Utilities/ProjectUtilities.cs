@@ -1,3 +1,5 @@
+using Microsoft.Build.Execution;
+
 namespace MsbuildAnalyzer.Utilities;
 
 /// <summary>
@@ -26,58 +28,57 @@ public static class ProjectUtilities
 
     /// <summary>
     /// Generates an Nx project name from a project file path.
-    /// Converts PascalCase to kebab-case.
+    /// Prefers the Name property from the Nx PropertyGroup, falls back to MSBuildProjectName.
     /// </summary>
-    public static string GetProjectName(string projectPath)
+    public static string GetProjectName(ProjectInstance project)
     {
-        var filename = Path.GetFileNameWithoutExtension(projectPath);
+        var nxXml = project.GetPropertyValue("Nx");
+        if (!string.IsNullOrEmpty(nxXml))
+        {
+            // Parse the XML to extract the Name element
+            using (var reader = System.Xml.XmlReader.Create(new StringReader(nxXml)))
+            {
+                while (reader.Read())
+                {
+                    if (reader.IsStartElement("Name"))
+                    {
+                        return reader.ReadElementContentAsString();
+                    }
+                }
+            }
+        }
 
-        // Convert PascalCase to kebab-case
-        var result = System.Text.RegularExpressions.Regex.Replace(
-            filename,
-            "([a-z])([A-Z])",
-            "$1-$2"
-        );
+        // Fall back to MSBuildProjectName
+        var msbuildProjectName = project.GetPropertyValue("MSBuildProjectName");
+        if (string.IsNullOrEmpty(msbuildProjectName))
+        {
+            throw new ArgumentException("ProjectInstance must have a valid MSBuildProjectName.");
+        }
 
-        // Replace non-alphanumeric characters with hyphens
-        result = System.Text.RegularExpressions.Regex.Replace(
-            result,
-            "[^a-z0-9\\-]",
-            "-",
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase
-        );
-
-        // Collapse multiple hyphens
-        result = System.Text.RegularExpressions.Regex.Replace(result, "-+", "-");
-
-        return result.Trim('-').ToLowerInvariant();
+        return msbuildProjectName;
     }
 
     /// <summary>
     /// Gets the list of technologies for a project based on its file type and characteristics.
     /// </summary>
-    public static List<string> GetTechnologies(string projectPath, bool isTest)
+    public static List<string> GetTechnologies(string projectPath)
     {
         var techs = new List<string> { "dotnet" };
 
         var ext = Path.GetExtension(projectPath).ToLowerInvariant();
         if (ext == ".csproj")
         {
-            techs.Add("csharp");
+            techs.Add("C#");
         }
         else if (ext == ".fsproj")
         {
-            techs.Add("fsharp");
+            techs.Add("F#");
         }
         else if (ext == ".vbproj")
         {
-            techs.Add("vb");
+            techs.Add("VB");
         }
 
-        if (isTest)
-        {
-            techs.Add("test");
-        }
 
         return techs;
     }

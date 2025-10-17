@@ -15,11 +15,11 @@ assignment-rules:
     targets:
       - e2e-ci**
     run-on:
-        - agent: linux-large
-          parallelism: 1
-        - agent: linux-extra-large
-          parallelism: 1
-  
+      - agent: linux-large
+        parallelism: 1
+      - agent: linux-extra-large
+        parallelism: 1
+
   - projects:
       - e2e-react
       - e2e-next
@@ -37,20 +37,10 @@ assignment-rules:
       - e2e-ci**remix-ts-solution**
       - e2e-ci**linter**
     run-on:
-        - agent: linux-large
-          parallelism: 1
-        - agent: linux-extra-large
-          parallelism: 1
-
-  - projects:
-      - e2e-dotnet
-    targets:
-      - e2e-ci**
-    run-on:
-        - agent: linux-large
-          parallelism: 1
-        - agent: linux-extra-large
-          parallelism: 1
+      - agent: linux-large
+        parallelism: 1
+      - agent: linux-extra-large
+        parallelism: 1
 
   # All other e2e tests can run in parallel
   - targets:
@@ -85,7 +75,7 @@ assignment-rules:
         parallelism: 6
 
   - targets:
-      - '*'
+      - "*"
     run-on:
       - agent: linux-large
         parallelism: 3

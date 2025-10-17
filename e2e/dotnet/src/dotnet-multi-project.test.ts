@@ -2,31 +2,20 @@ import {
   checkFilesExist,
   checkFilesMatchingPatternExist,
   cleanupProject,
-  createFile,
   newProject,
   readJson,
-  renameFile,
   runCLI,
   runCommand,
   tmpProjPath,
-  uniq,
-  updateFile,
-  updateJson,
 } from '@nx/e2e-utils';
 
 import { createDotNetProject } from './utils/create-dotnet-project';
-import { mkdirSync } from 'fs';
 
 describe('.NET Plugin - Multi-Project Scenarios', () => {
   beforeAll(() => {
     console.log('Creating new Nx workspace');
     newProject({ packages: [] });
     runCLI(`add @nx/dotnet`);
-    updateJson('nx.json', (json) => {
-      json.plugins ??= [];
-      json.plugins.push('@nx/dotnet');
-      return json;
-    });
     console.log('Nx workspace created');
   });
 
@@ -73,19 +62,19 @@ describe('.NET Plugin - Multi-Project Scenarios', () => {
       const { graph } = readJson('complex-graph.json');
 
       // Verify dependency chain
-      const webApiDeps = graph.dependencies['web-api'] || [];
-      expect(webApiDeps.some((dep) => dep.target === 'application')).toBe(true);
+      const webApiDeps = graph.dependencies['WebApi'] || [];
+      expect(webApiDeps.some((dep) => dep.target === 'Application')).toBe(true);
 
-      const appDeps = graph.dependencies['application'] || [];
-      expect(appDeps.some((dep) => dep.target === 'core')).toBe(true);
-      expect(appDeps.some((dep) => dep.target === 'infrastructure')).toBe(true);
+      const appDeps = graph.dependencies['Application'] || [];
+      expect(appDeps.some((dep) => dep.target === 'Core')).toBe(true);
+      expect(appDeps.some((dep) => dep.target === 'Infrastructure')).toBe(true);
 
-      const infraDeps = graph.dependencies['infrastructure'] || [];
-      expect(infraDeps.some((dep) => dep.target === 'core')).toBe(true);
+      const infraDeps = graph.dependencies['Infrastructure'] || [];
+      expect(infraDeps.some((dep) => dep.target === 'Core')).toBe(true);
     });
 
     it('should build projects in correct order', () => {
-      const output = runCLI('build web-api --verbose', { verbose: true });
+      const output = runCLI('build WebApi --verbose', { verbose: true });
       expect(output).toContain('Build succeeded');
 
       // All dependencies should have been built
@@ -109,7 +98,7 @@ describe('.NET Plugin - Multi-Project Scenarios', () => {
     });
 
     it('should run tests with proper dependencies', () => {
-      const output = runCLI('test application-tests', { verbose: true });
+      const output = runCLI('test Application.Tests', { verbose: true });
       expect(output).toContain('Test run for');
       expect(output).toMatch(/Passed!|Total tests:/);
     });

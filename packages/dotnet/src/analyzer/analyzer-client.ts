@@ -15,6 +15,15 @@ export interface AnalysisResult {
   >;
 }
 
+export interface DotNetPluginOptions {
+  buildTargetName?: string;
+  testTargetName?: string;
+  cleanTargetName?: string;
+  restoreTargetName?: string;
+  publishTargetName?: string;
+  packTargetName?: string;
+}
+
 interface AnalyzerCache {
   hash: string;
   result: AnalysisResult;
@@ -78,7 +87,10 @@ function shouldUseStdin(projectFiles: string[]): boolean {
  * Run the msbuild-analyzer and return the results.
  * Uses stdin for large file lists to avoid ARG_MAX issues.
  */
-function runAnalyzer(projectFiles: string[]): AnalysisResult {
+function runAnalyzer(
+  projectFiles: string[],
+  options?: DotNetPluginOptions
+): AnalysisResult {
   if (projectFiles.length === 0) {
     return { nodesByFile: {}, referencesByRoot: {} };
   }
@@ -113,9 +125,17 @@ function runAnalyzer(projectFiles: string[]): AnalysisResult {
   try {
     let output: string;
 
+    // Prepare CLI arguments
+    const args = [analyzerPath, workspaceRoot];
+
+    // Add plugin options as JSON string if provided
+    if (options) {
+      args.push(JSON.stringify(options));
+    }
+
     // Use stdin mode for large file lists to avoid ARG_MAX issues
     const input = projectFiles.join('\n');
-    const result = spawnSync('dotnet', [analyzerPath, workspaceRoot], {
+    const result = spawnSync('dotnet', args, {
       input,
       encoding: 'utf-8',
       maxBuffer: 10 * 1024 * 1024, // 10MB buffer
@@ -156,7 +176,8 @@ function runAnalyzer(projectFiles: string[]): AnalysisResult {
  * This should be called by createNodes to populate the cache.
  */
 export async function analyzeProjects(
-  projectFiles: string[]
+  projectFiles: string[],
+  options?: DotNetPluginOptions
 ): Promise<AnalysisResult> {
   const hash = await calculateProjectFilesHash(projectFiles);
 
@@ -166,7 +187,7 @@ export async function analyzeProjects(
   }
 
   // Run the analyzer
-  const result = runAnalyzer(projectFiles);
+  const result = runAnalyzer(projectFiles, options);
 
   // Update cache
   cache = {

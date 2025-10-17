@@ -16,9 +16,32 @@ public static class Analyzer
     /// </summary>
     /// <param name="projectFiles">Relative paths to project files from workspace root.</param>
     /// <param name="workspaceRoot">Absolute path to the workspace root.</param>
+    /// <param name="pluginOptions">Plugin options for target customization.</param>
     /// <returns>Analysis results containing node configurations and project references.</returns>
-    public static AnalysisResult AnalyzeWorkspace(List<string> projectFiles, string workspaceRoot)
+    public static AnalysisResult AnalyzeWorkspace(
+        List<string> projectFiles,
+        string workspaceRoot,
+        PluginOptions pluginOptions)
     {
+        // Read nx.json from workspace root
+        NxJsonConfig? nxJson = null;
+        var nxJsonPath = Path.Combine(workspaceRoot, "nx.json");
+        if (File.Exists(nxJsonPath))
+        {
+            try
+            {
+                var nxJsonContent = File.ReadAllText(nxJsonPath);
+                nxJson = System.Text.Json.JsonSerializer.Deserialize<NxJsonConfig>(nxJsonContent, new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Warning: Failed to read nx.json: {ex.Message}");
+            }
+        }
+
         // Convert relative paths to absolute for MSBuild
         var absoluteProjectFiles = projectFiles
             .Select(p => Path.Combine(workspaceRoot, p))
@@ -26,14 +49,18 @@ public static class Analyzer
 
         var projectGraph = new ProjectGraph(absoluteProjectFiles);
 
-        var nodesByFile = new Dictionary<string, ProjectNode>();
+        var nodesByFile = new Dictionary<string, NxProjectGraphNode>();
         var referencesByRoot = new Dictionary<string, ReferencesInfo>();
 
         foreach (var node in projectGraph.ProjectNodes)
         {
             try
             {
-                var projectPath = node.ProjectInstance?.FullPath;
+                if (node.ProjectInstance is null)
+                {
+                    throw new InvalidOperationException("ProjectInstance is null.");
+                }
+                var projectPath = node.ProjectInstance.FullPath;
                 if (string.IsNullOrEmpty(projectPath))
                 {
                     continue;
@@ -56,7 +83,7 @@ public static class Analyzer
                 var isExe = IsExecutableProject(properties);
 
                 // Build targets
-                var projectName = ProjectUtilities.GetProjectName(projectPath);
+                var projectName = ProjectUtilities.GetProjectName(node.ProjectInstance);
                 var targets = TargetBuilder.BuildTargets(
                     projectName,
                     Path.GetFileName(projectPath),
@@ -64,17 +91,19 @@ public static class Analyzer
                     isExe,
                     packageRefs,
                     properties,
-                    workspaceRoot
+                    workspaceRoot,
+                    pluginOptions,
+                    nxJson
                 );
 
-                nodesByFile[relativeProjectFile] = new ProjectNode
+                nodesByFile[relativeProjectFile] = new NxProjectGraphNode
                 {
                     Name = projectName,
                     Root = projectRoot,
                     Targets = targets,
                     Metadata = new Models.ProjectMetadata
                     {
-                        Technologies = ProjectUtilities.GetTechnologies(projectPath, isTest)
+                        Technologies = ProjectUtilities.GetTechnologies(projectPath)
                     }
                 };
 
