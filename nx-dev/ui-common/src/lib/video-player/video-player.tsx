@@ -327,6 +327,7 @@ export function VideoPlayerThumbnail({
  */
 export function VideoPlayerButton({
   variant = 'blue-pink',
+  size = 'md',
   text,
   onClick,
   className,
@@ -335,15 +336,16 @@ export function VideoPlayerButton({
   const { openModal } = useVideoPlayer();
   const styles = VARIANT_STYLES[variant];
 
+  const isSmall = size === 'sm';
   const parent = {
     initial: {
-      width: 82,
+      width: isSmall ? 41 : 82,
       transition: {
         when: 'afterChildren',
       },
     },
     hover: {
-      width: 296,
+      width: isSmall ? 148 : 296,
       transition: {
         duration: 0.125,
         type: 'tween',
@@ -393,7 +395,9 @@ export function VideoPlayerButton({
           <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#FFFFFF_0%,#3B82F6_50%,#FFFFFF_100%)] dark:bg-[conic-gradient(from_90deg_at_50%_50%,#FFFFFF_0%,#0EA5E9_50%,#FFFFFF_100%)]" />
         ) : (
           <MovingBorder duration={5000} rx="5%" ry="5%">
-            <div className={cx('size-20', styles.gradient)} />
+            <div
+              className={cx(isSmall ? 'size-10' : 'size-20', styles.gradient)}
+            />
           </MovingBorder>
         )}
       </div>
@@ -402,7 +406,8 @@ export function VideoPlayerButton({
         whileHover="hover"
         variants={parent}
         className={cx(
-          'relative isolate flex size-20 cursor-pointer items-center justify-center gap-6 rounded-full border-2 p-6 antialiased backdrop-blur-xl',
+          'relative isolate flex cursor-pointer items-center justify-center rounded-full antialiased backdrop-blur-xl',
+          isSmall ? 'size-10 gap-3 border p-3' : 'size-20 gap-6 border-2 p-6',
           styles.backgroundColor,
           styles.textColor,
           styles.borderColor
@@ -413,10 +418,26 @@ export function VideoPlayerButton({
         role="button"
         aria-label={`${text.primary}. ${text.secondary}`}
       >
-        <PlayIcon aria-hidden="true" className="absolute left-6 top-6 size-8" />
-        <motion.div variants={child} className="absolute left-20 top-4 w-48">
-          <p className="text-base font-medium">{text.primary}</p>
-          <p className="text-xs">{text.secondary}</p>
+        <PlayIcon
+          aria-hidden="true"
+          className={cx(
+            'absolute',
+            isSmall ? 'left-3 top-3 size-4' : 'left-6 top-6 size-8'
+          )}
+        />
+        <motion.div
+          variants={child}
+          className={cx(
+            'absolute',
+            isSmall ? 'left-10 top-3 w-48' : 'left-20 top-4 w-48'
+          )}
+        >
+          <p className={cx('font-medium', isSmall ? 'text-xs' : 'text-base')}>
+            {text.primary}
+          </p>
+          <p className={cx(isSmall ? 'sr-only' : 'text-xs')}>
+            {text.secondary}
+          </p>
         </motion.div>
       </motion.div>
     </div>
@@ -577,6 +598,7 @@ export function VideoPlayerModal({
  */
 export function VideoPlayerInlineButton({
   variant = 'blue-pink',
+  size = 'md',
   text,
   onClick,
   className,
@@ -585,15 +607,16 @@ export function VideoPlayerInlineButton({
   const { startPlaying } = useVideoPlayer();
   const styles = VARIANT_STYLES[variant];
 
+  const isSmall = size === 'sm';
   const parent = {
     initial: {
-      width: 82,
+      width: isSmall ? 41 : 82,
       transition: {
         when: 'afterChildren',
       },
     },
     hover: {
-      width: 296,
+      width: isSmall ? 148 : 296,
       transition: {
         duration: 0.125,
         type: 'tween',
@@ -643,7 +666,9 @@ export function VideoPlayerInlineButton({
           <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#FFFFFF_0%,#3B82F6_50%,#FFFFFF_100%)] dark:bg-[conic-gradient(from_90deg_at_50%_50%,#FFFFFF_0%,#0EA5E9_50%,#FFFFFF_100%)]" />
         ) : (
           <MovingBorder duration={5000} rx="5%" ry="5%">
-            <div className={cx('size-20', styles.gradient)} />
+            <div
+              className={cx(isSmall ? 'size-10' : 'size-20', styles.gradient)}
+            />
           </MovingBorder>
         )}
       </div>
@@ -652,7 +677,10 @@ export function VideoPlayerInlineButton({
         whileHover="hover"
         variants={parent}
         className={cx(
-          'relative isolate flex size-20 cursor-pointer items-center justify-center gap-6 rounded-full border-2 p-6 antialiased backdrop-blur-xl',
+          cx(
+            'relative isolate flex cursor-pointer items-center justify-center rounded-full antialiased backdrop-blur-xl',
+            isSmall ? 'size-10 gap-3 border p-3' : 'size-20 gap-6 border-2 p-6'
+          ),
           styles.backgroundColor,
           styles.textColor,
           styles.borderColor
@@ -663,10 +691,26 @@ export function VideoPlayerInlineButton({
         role="button"
         aria-label={`${text.primary}. ${text.secondary}`}
       >
-        <PlayIcon aria-hidden="true" className="absolute left-6 top-6 size-8" />
-        <motion.div variants={child} className="absolute left-20 top-4 w-48">
-          <p className="text-base font-medium">{text.primary}</p>
-          <p className="text-xs">{text.secondary}</p>
+        <PlayIcon
+          aria-hidden="true"
+          className={cx(
+            'absolute',
+            isSmall ? 'left-3 top-3 size-4' : 'left-6 top-6 size-8'
+          )}
+        />
+        <motion.div
+          variants={child}
+          className={cx(
+            'absolute',
+            isSmall ? 'left-10 top-2 w-24' : 'left-20 top-4 w-48'
+          )}
+        >
+          <p className={cx('font-medium', isSmall ? 'text-sm' : 'text-base')}>
+            {text.primary}
+          </p>
+          <p className={cx(isSmall ? 'text-[10px]' : 'text-xs')}>
+            {text.secondary}
+          </p>
         </motion.div>
       </motion.div>
     </div>

@@ -1,7 +1,7 @@
 import { Tree } from 'nx/src/generators/tree';
 import type { Linter as EsLintLinter } from 'eslint';
 import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
-import { typescriptESLintVersion } from '@nx/eslint/src/utils/versions';
+import { getTypeScriptEslintVersionToInstall } from '@nx/eslint/src/utils/version-utils';
 import { joinPathFragments } from 'nx/src/utils/path';
 import {
   addDependenciesToPackageJson,
@@ -70,7 +70,8 @@ export async function addLinting(
             },
           } as unknown // languageOptions is not in eslintrc format but for flat config
         );
-        devDependencies['@typescript-eslint/parser'] = typescriptESLintVersion;
+        devDependencies['@typescript-eslint/parser'] =
+          getTypeScriptEslintVersionToInstall(host);
       }
 
       addIgnoresToLintConfig(host, options.projectRoot, [

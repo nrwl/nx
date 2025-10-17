@@ -33,7 +33,7 @@ At that point, we'll create the second application using the components exposed 
 
 The idea is to show how different applications can still use the same components and have them styled differently using **Tailwind CSS**. Both applications in this blog post will share the same layout, but the approach explained here would apply to applications with different layouts sharing the same UI components.
 
-> Discussing the different types of libraries and the motivation to use them goes beyond the scope of this blog post. We'll use the three different types just to showcase how to use **Tailwind CSS** with each of them. To know more about them, please check [/concepts/decisions/project-size](/concepts/decisions/project-size) and [/concepts/buildable-and-publishable-libraries](/concepts/buildable-and-publishable-libraries).
+> Discussing the different types of libraries and the motivation to use them goes beyond the scope of this blog post. We'll use the three different types just to showcase how to use **Tailwind CSS** with each of them. To know more about them, please check [/concepts/decisions/project-size](/docs/concepts/decisions/project-size) and [/concepts/buildable-and-publishable-libraries](/docs/concepts/buildable-and-publishable-libraries).
 
 ## Setting up the Nx workspace
 
@@ -317,7 +317,7 @@ At this point, if we serve again the application, everything should still be wor
 
 Similar to the previous section we are going to start by creating a new library to add the card component to. The only difference is that this library is going to be buildable.
 
-> If you are not aware of what buildable libraries are or what problem do they intend to solve, please make sure to read [/technologies/angular/recipes/setup-incremental-builds-angular](/technologies/angular/recipes/setup-incremental-builds-angular).
+> If you are not aware of what buildable libraries are or what problem do they intend to solve, please make sure to read [/technologies/angular/recipes/setup-incremental-builds-angular](/docs/technologies/angular/guides/setup-incremental-builds-angular).
 
 Run the following command to generate the library:
 
@@ -420,7 +420,7 @@ And finally, replace the existing markup for the cards in the `apps/app1/src/app
 
 With that in place, we can serve the application and it should be working exactly as before, but our application is still not fully set up to consume the library build output. As it stands right now, when the application that's consuming it is built, the library will be built together with it and its files will be processed as part of the application build pipeline.
 
-To finish the buildable library setup, we can follow the instructions in [/technologies/angular/recipes/setup-incremental-builds-angular](/technologies/angular/recipes/setup-incremental-builds-angular). We need to install the `@nrwl/web` package, change the application `build` target executor to `@nrwl/angular:webpack-browser`, and change the application `serve` target executor to `@nrwl/web:file-server`:
+To finish the buildable library setup, we can follow the instructions in [/technologies/angular/recipes/setup-incremental-builds-angular](/docs/technologies/angular/guides/setup-incremental-builds-angular). We need to install the `@nrwl/web` package, change the application `build` target executor to `@nrwl/angular:webpack-browser`, and change the application `serve` target executor to `@nrwl/web:file-server`:
 
 ```shell
 yarn add -D @nrwl/web@latest
@@ -611,7 +611,7 @@ We now only have to maintain our theme in a single place as opposed to keeping i
 
 This happens because the file server is watching for changes under the `apps` and `libs` folders. The preset configuration is not under those directories, it's in the root of the workspace.
 
-It would be better if we place the preset configuration in a small shared library. By doing that, we not only solve the issue regarding detecting changes on it, but we also make its library appear on the [**Nx** project graph](/concepts/mental-model), and with that, we benefit from all the goodies associated with the project graph (affected commands, enforcing module boundaries constraints, etc.).
+It would be better if we place the preset configuration in a small shared library. By doing that, we not only solve the issue regarding detecting changes on it, but we also make its library appear on the [**Nx** project graph](/docs/concepts/mental-model), and with that, we benefit from all the goodies associated with the project graph (affected commands, enforcing module boundaries constraints, etc.).
 
 This library is only going to contain the `tailwind.config.js` file and no targets in the project configuration. There's no generator among the **Nx** core plugins that generate such an empty library. We could use one of the library generators and remove some content, but let's create it manually.
 

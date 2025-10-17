@@ -641,30 +641,7 @@ function createLongerHeading(
 }
 
 async function getLegacyPaths(): Promise<WalkEntry[]> {
-  const mapJson = await import( '../../../../docs/map.json').then((m) => m.default);
-  const manifestsCI = await import('../../../../docs/generated/manifests/ci.json' ).then((m) => m.default);
-  const manifestsExtending =await import ('../../../../docs/generated/manifests/extending-nx.json' ).then((m) => m.default);
-  const manifestsNx = await import('../../../../docs/generated/manifests/nx.json' ).then((m) => m.default);
-  const manifestsPackages = await import( '../../../../docs/generated/manifests/new-nx-api.json' ).then((m) => m.default);
-  const manifestsTags = await import('../../../../docs/generated/manifests/tags.json' ).then((m) => m.default);
-
-  console.log('Using legacy mode - reading from docs/ and manifests');
-  // Ensures that indentityMap gets populated first
-  let legacyPaths = [...getAllFilesWithItemList(manifestsNx)];
-
-  legacyPaths = [
-    ...legacyPaths,
-    ...getAllFilesFromMapJson(mapJson),
-    ...getAllFilesWithItemList(manifestsCI),
-    ...getAllFilesWithItemList(manifestsExtending),
-    ...getAllFilesWithItemList(manifestsPackages),
-    ...getAllFilesWithItemList(manifestsTags)
-  ].filter(
-    (entry) =>
-      !entry.path.includes('sitemap') && !entry.path.includes('deprecated')
-  );
-
-  return legacyPaths;
+  throw new Error('Legacy mode is no longer supported, please use --mode=astro');
 }
 
 async function createMarkdownForCommunityPlugins(): Promise<{

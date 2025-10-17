@@ -3,7 +3,7 @@ import { readJson } from '../../generators/utils/json';
 import type { CatalogManager } from './manager';
 import { getCatalogManager } from './manager-factory';
 
-export { getCatalogManager };
+export { type CatalogManager, getCatalogManager };
 
 /**
  * Detects which packages in a package.json use catalog references

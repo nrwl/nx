@@ -1828,39 +1828,18 @@ importers:
       '@nx/nx-dev-data-access-documents':
         specifier: workspace:*
         version: link:../data-access-documents
-      '@nx/nx-dev-data-access-menu':
-        specifier: workspace:*
-        version: link:../data-access-menu
-      '@nx/nx-dev-data-access-packages':
-        specifier: workspace:*
-        version: link:../data-access-packages
       '@nx/nx-dev-feature-ai':
         specifier: workspace:*
         version: link:../feature-ai
       '@nx/nx-dev-feature-analytics':
         specifier: workspace:*
         version: link:../feature-analytics
-      '@nx/nx-dev-feature-doc-viewer':
-        specifier: workspace:*
-        version: link:../feature-doc-viewer
       '@nx/nx-dev-feature-feedback':
         specifier: workspace:*
         version: link:../feature-feedback
-      '@nx/nx-dev-feature-package-schema-viewer':
-        specifier: workspace:*
-        version: link:../feature-package-schema-viewer
       '@nx/nx-dev-feature-search':
         specifier: workspace:*
         version: link:../feature-search
-      '@nx/nx-dev-models-document':
-        specifier: workspace:*
-        version: link:../models-document
-      '@nx/nx-dev-models-menu':
-        specifier: workspace:*
-        version: link:../models-menu
-      '@nx/nx-dev-models-package':
-        specifier: workspace:*
-        version: link:../models-package
       '@nx/nx-dev-ui-ai-landing-page':
         specifier: workspace:*
         version: link:../ui-ai-landing-page
@@ -1963,6 +1942,9 @@ importers:
       '@nx/nx-dev-util-ai':
         specifier: workspace:*
         version: link:../util-ai
+      ai:
+        specifier: 3.0.19
+        version: 3.0.19(react@19.1.0)(solid-js@1.9.7)(svelte@5.35.5)(vue@3.5.17(typescript@5.9.2))(zod@3.25.76)
 
   nx-dev/ui-ai-landing-page:
     dependencies:
@@ -2270,6 +2252,9 @@ importers:
 
   nx-dev/ui-powerpack:
     dependencies:
+      '@nx/nx-dev-feature-analytics':
+        specifier: workspace:*
+        version: link:../feature-analytics
       '@nx/nx-dev-ui-animations':
         specifier: workspace:*
         version: link:../ui-animations
@@ -3899,6 +3884,9 @@ importers:
       picomatch:
         specifier: ^4.0.2
         version: 4.0.2
+      semver:
+        specifier: ^7.6.3
+        version: 7.7.2
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
@@ -36898,6 +36886,27 @@ snapshots:
       vue: 3.5.17(typescript@5.9.2)
       zod: 3.25.76
 
+  ai@3.0.19(react@19.1.0)(solid-js@1.9.7)(svelte@5.35.5)(vue@3.5.17(typescript@5.9.2))(zod@3.25.76):
+    dependencies:
+      '@types/json-schema': 7.0.15
+      eventsource-parser: 1.1.2
+      json-schema: 0.4.0
+      jsondiffpatch: 0.6.0
+      nanoid: 3.3.6
+      secure-json-parse: 2.7.0
+      solid-swr-store: 0.10.7(solid-js@1.9.7)(swr-store@0.10.6)
+      sswr: 2.0.0(svelte@5.35.5)
+      swr: 2.2.0(react@19.1.0)
+      swr-store: 0.10.6
+      swrv: 1.0.4(vue@3.5.17(typescript@5.9.2))
+      zod-to-json-schema: 3.22.5(zod@3.25.76)
+    optionalDependencies:
+      react: 19.1.0
+      solid-js: 1.9.7
+      svelte: 5.35.5
+      vue: 3.5.17(typescript@5.9.2)
+      zod: 3.25.76
+
   ajv-errors@3.0.0(ajv@8.17.1):
     dependencies:
       ajv: 8.17.1
@@ -51571,6 +51580,11 @@ snapshots:
       react: 18.3.1
       use-sync-external-store: 1.5.0(react@18.3.1)
 
+  swr@2.2.0(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      use-sync-external-store: 1.5.0(react@19.1.0)
+
   swrev@4.0.0: {}
 
   swrv@1.0.4(vue@3.5.17(typescript@5.9.2)):
@@ -52728,6 +52742,10 @@ snapshots:
   use-sync-external-store@1.5.0(react@18.3.1):
     dependencies:
       react: 18.3.1
+
+  use-sync-external-store@1.5.0(react@19.1.0):
+    dependencies:
+      react: 19.1.0
 
   utf8-byte-length@1.0.5: {}
 
