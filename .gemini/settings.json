@@ -5,5 +5,5 @@
       "command": "npx",
       "args": ["nx", "mcp"]
     }
-  },
+  }
 }
