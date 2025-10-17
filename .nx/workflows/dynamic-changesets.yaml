@@ -27,6 +27,7 @@ assignment-rules:
       - e2e-eslint
       - e2e-remix
       - e2e-cypress
+      - e2e-docker
     targets:
       - e2e-ci**react-package**
       - e2e-ci**react.test**
@@ -39,6 +40,9 @@ assignment-rules:
       - e2e-ci**remix-ts-solution**
       - e2e-ci**linter**
       - e2e-ci**module-federation/misc-rspack-interoperability**
+      - e2e-ci**module-federation/dynamic-federation.webpack**
+      - e2e-ci**docker**
+      - e2e-ci**module-federation/misc-rspack-interoperability** 
       - e2e-ci**cypress-legacy**
       - e2e-ci**nx-remix**
       - e2e-ci**cypress**
