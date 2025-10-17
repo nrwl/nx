@@ -13,7 +13,7 @@ import { join } from 'path';
 
 describe('file-server', () => {
   beforeAll(() => {
-    newProject({ name: uniq('fileserver') });
+    newProject({ name: uniq('fileserver'), packages: ['@nx/web'] });
   });
 
   afterAll(() => cleanupProject());
