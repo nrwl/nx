@@ -2,13 +2,13 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   getProjects,
   installPackagesTask,
   NxJsonConfiguration,
   ProjectConfiguration,
   readJson,
   readNxJson,
-  removeDependenciesFromPackageJson,
   Tree,
   updateJson,
   updateProjectConfiguration,
@@ -248,7 +248,20 @@ function processConvertedConfig(
     eslint: eslint9__eslintVersion,
     'eslint-config-prettier': eslintConfigPrettierVersion,
     'typescript-eslint': eslint9__typescriptESLintVersion,
+    '@typescript-eslint/eslint-plugin': eslint9__typescriptESLintVersion,
+    '@typescript-eslint/parser': eslint9__typescriptESLintVersion,
   };
+
+  if (getDependencyVersionFromPackageJson(tree, '@typescript-eslint/utils')) {
+    devDependencies['@typescript-eslint/utils'] =
+      eslint9__typescriptESLintVersion;
+  }
+  if (
+    getDependencyVersionFromPackageJson(tree, '@typescript-eslint/type-utils')
+  ) {
+    devDependencies['@typescript-eslint/type-utils'] =
+      eslint9__typescriptESLintVersion;
+  }
 
   // add missing packages
   if (addESLintRC) {
@@ -260,10 +273,4 @@ function processConvertedConfig(
   }
 
   addDependenciesToPackageJson(tree, {}, devDependencies);
-
-  removeDependenciesFromPackageJson(
-    tree,
-    ['@typescript-eslint/eslint-plugin', '@typescript-eslint/parser'],
-    ['@typescript-eslint/eslint-plugin', '@typescript-eslint/parser']
-  );
 }
