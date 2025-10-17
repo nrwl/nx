@@ -30,12 +30,15 @@ assignment-rules:
       - e2e-cypress
       - e2e-docker
       - e2e-js
+      - e2e-nx-init
     targets:
       - e2e-ci**react-package**
       - e2e-ci**react.test**
       - e2e-ci**react-router-ts-solution**
       - e2e-ci**next-e2e-and-snapshots**
       - e2e-ci**next-generation**
+      - e2e-ci**next-storybook**
+      - e2e-ci**next-styles**
       - e2e-ci**next-ts-solutions**
       - e2e-ci**next-webpack**
       - e2e-ci**web**
@@ -45,6 +48,7 @@ assignment-rules:
       - e2e-ci**module-federation/dynamic-federation.webpack**
       - e2e-ci**docker**
       - e2e-ci**cypress-legacy**
+      - e2e-ci**nx-init-angular**
       - e2e-ci**nx-remix**
       - e2e-ci**cypress**
       - e2e-ci**src/cypress-component-tests-buildable.test**
