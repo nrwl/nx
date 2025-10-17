@@ -189,7 +189,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
 
 describe('Workspace Tests', () => {
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/workspace', '@nx/js'] });
   });
 
   afterAll(() => cleanupProject());
