@@ -1,5 +1,5 @@
 import { isCI } from './is-ci';
-import { globalSpinner } from './spinner';
+import { globalSpinner, SHOULD_SHOW_SPINNERS } from './spinner';
 
 export type DelayedSpinnerOptions = {
   delay?: number;
@@ -87,8 +87,6 @@ export class DelayedSpinner {
     this.timeouts.forEach((t) => clearTimeout(t));
   }
 }
-
-const SHOULD_SHOW_SPINNERS = process.stdout.isTTY && !isCI();
 
 function normalizeDelayedSpinnerOpts(
   opts: DelayedSpinnerOptions | null | undefined

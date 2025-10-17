@@ -1,10 +1,16 @@
 import * as ora from 'ora';
+import { isCI } from './is-ci';
+
+export const SHOULD_SHOW_SPINNERS = process.stdout.isTTY && !isCI();
 
 class SpinnerManager {
   #ora!: ReturnType<typeof ora>;
   #prefix: string | undefined;
 
   start(text?: string, prefix?: string): SpinnerManager {
+    if (!SHOULD_SHOW_SPINNERS) {
+      return this;
+    }
     if (prefix !== undefined) {
       this.#prefix = prefix;
     }
@@ -19,21 +25,21 @@ class SpinnerManager {
   }
 
   succeed(text?: string) {
-    this.#ora.succeed(text);
+    this.#ora?.succeed(text);
   }
 
   stop() {
-    this.#ora.stop();
+    this.#ora?.stop();
   }
 
   fail(text?: string) {
-    this.#ora.fail(text);
+    this.#ora?.fail(text);
   }
 
   updateText(text?: string) {
     if (this.#ora) {
       this.#ora.text = text;
-    } else {
+    } else if (SHOULD_SHOW_SPINNERS) {
       this.#createOra(text);
     }
   }
