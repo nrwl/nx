@@ -7,7 +7,12 @@ import {
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs-extra';
 import { join } from 'path';
-import { readFileSync, writeFileSync as fsWriteFileSync, unlinkSync } from 'fs';
+import {
+  readFileSync,
+  writeFileSync as fsWriteFileSync,
+  unlinkSync,
+  chmodSync,
+} from 'fs';
 import * as extract from 'extract-zip';
 
 async function downloadFile(
@@ -146,6 +151,9 @@ export async function createMavenProject(
 
   updateFile('mvnw', readFile('app/mvnw'));
   updateFile('mvnw.cmd', readFile('app/mvnw.cmd'));
+
+  chmodSync(join(cwd, 'mvnw'), 0o755);
+  chmodSync(join(cwd, 'mvnw.cmd'), 0o755);
 
   e2eConsoleLogger('Created multi-module Maven project with Spring Boot');
 }
