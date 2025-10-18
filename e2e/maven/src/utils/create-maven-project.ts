@@ -151,7 +151,10 @@ export async function createMavenProject(
 
   updateFile('mvnw', readFile('app/mvnw'));
   updateFile('mvnw.cmd', readFile('app/mvnw.cmd'));
-  updateFile('.mvn/wrapper/maven-wrapper.properties', readFile('app/.mvn/wrapper/maven-wrapper.properties'));
+  updateFile(
+    '.mvn/wrapper/maven-wrapper.properties',
+    readFile('app/.mvn/wrapper/maven-wrapper.properties')
+  );
 
   chmodSync(join(cwd, 'mvnw'), 0o755);
   chmodSync(join(cwd, 'mvnw.cmd'), 0o755);
