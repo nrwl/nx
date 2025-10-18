@@ -360,8 +360,6 @@ export async function* nodeExecutor(
         await addToQueue(null, Promise.resolve(event.value));
         await debouncedProcessQueue.trigger();
         if (event.done && !options.watch) {
-          next({ success: true });
-          done();
           break;
         }
       }
