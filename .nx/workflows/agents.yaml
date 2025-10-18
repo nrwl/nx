@@ -16,6 +16,11 @@ launch-templates:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
 
+      - name: Install Node
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node/main.yaml'
+        inputs:
+          node_version: '22.16'
+
       - name: Check Node Version
         script: node --version
 
@@ -107,6 +112,11 @@ launch-templates:
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+
+      - name: Install Node
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node/main.yaml'
+        inputs:
+          node_version: '22.16'
 
       - name: Check Node Version
         script: node --version
