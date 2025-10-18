@@ -18,6 +18,12 @@
       "cache": true
     },
     "build-analyzer": {
+      "command": "node ./scripts/build-msbuild-analyzer.js",
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/msbuild-analyzer"],
+      "inputs": ["{projectRoot}/analyzer/**", { "env": "SKIP_ANALYZER_BUILD" }]
+    },
+    "_build-analyzer": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/msbuild-analyzer"],
       "inputs": ["{projectRoot}/analyzer/**"],
