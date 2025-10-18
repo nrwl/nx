@@ -5,6 +5,5 @@
       "command": "npx",
       "args": ["nx", "mcp"]
     }
-  },
-  "contextFileName": "AGENTS.md"
+  }
 }
