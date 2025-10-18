@@ -22,13 +22,13 @@ First, you need a main Storybook instance that will serve as the host for other 
 
 ### Generate a host library
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/react:library storybook-host --bundler=none --unitTestRunner=none
 ```
 
 ### Configure Storybook for the host
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/storybook:configuration storybook-host --uiFramework=@storybook/react-vite
 ```
 
@@ -105,14 +105,14 @@ To see your composed Storybooks in action:
 
 1. Start each composed Storybook on its designated port:
 
-```shell {% frame="none" %}
+```shell
 nx storybook ui-lib-1
 nx storybook ui-lib-2
 ```
 
 2. Start the main Storybook:
 
-```shell {% frame="none" %}
+```shell
 nx storybook storybook-host
 ```
 

@@ -30,7 +30,7 @@ are specific to your operating system.
 
 To verify that Gradle was installed correctly, run this command:
 
-```shell {% frame="none" %}
+```shell
 gradle --version
 ```
 
@@ -41,21 +41,21 @@ To streamline this tutorial, we'll install Nx globally on your system. You can u
 
 Make sure [Homebrew is installed](https://brew.sh/), then install Nx globally with these commands:
 
-```shell {% frame="none" %}
+```shell
 brew install nx
 ```
 
 {% /tabitem %}
 {% tabitem label="Chocolatey (Windows)" %}
 
-```shell {% frame="none" %}
+```shell
 choco install nx
 ```
 
 {% /tabitem %}
 {% tabitem label="apt (Ubuntu)" %}
 
-```shell {% frame="none" %}
+```shell
 sudo add-apt-repository ppa:nrwl/nx
 sudo apt update
 sudo apt install nx
@@ -67,7 +67,7 @@ sudo apt install nx
 
 Install node from the [NodeJS website](https://nodejs.org/en/download), then install Nx globally with this command:
 
-```shell {% frame="none" %}
+```shell
 npm install --global nx
 ```
 
@@ -80,7 +80,7 @@ This tutorial picks up where [Spring framework](https://spring.io/)'s guide for 
 
 Fork [the sample repository](https://github.com/nrwl/gradle-tutorial/fork), and then clone it on your local machine:
 
-```shell {% frame="none" %}
+```shell
 git clone https://github.com/<your-username>/gradle-tutorial.git
 ```
 
@@ -111,7 +111,7 @@ both locally and on CI. We will explore the features of Nx in this tutorial by a
 
 To add Nx, run
 
-```shell {% frame="none" %}
+```shell
 nx init
 ```
 
@@ -152,7 +152,7 @@ The `@nx/gradle` plugin reflects the graph of projects in Gradle into the Nx Pro
 are created, deleted, and change their dependencies, Nx will automatically recalculate the graph. Exploring this graph
 visually is vital to understanding how your code is structured and how Nx and Gradle behaves.
 
-```shell {% frame="none" %}
+```shell
 nx graph
 ```
 
@@ -1132,7 +1132,7 @@ computation caching to reuse the results of tasks. We will explore how Nx adds t
 Before we start running tasks, let's explore the tasks available for the `application` project. The `@nx/gradle` plugin
 that we've installed reflects Gradle's tasks to Nx, which allows it to run any of the Gradle tasks defined for that project. You can view the available tasks either through [Nx Console](/docs/getting-started/editor-setup) or from the terminal:
 
-```shell {% frame="none" %}
+```shell
 nx show project application
 ```
 
@@ -2374,7 +2374,7 @@ nx show project application
 
 The Nx command to run the `build` task for the `application` project is:
 
-```shell {% frame="none" %}
+```shell
 nx run application:build
 ```
 
@@ -2457,7 +2457,7 @@ With Nx Cloud connected, your task results are now cached remotely. This means t
 
 Try running the build again after making a small change to see how Nx intelligently determines which tasks need to be re-run:
 
-```shell {% frame="none" %}
+```shell
 nx run-many -t build
 ```
 
@@ -2517,7 +2517,7 @@ You will also need to install the [Nx Console](/docs/getting-started/editor-setu
 
 Start by making a new branch to work on.
 
-```shell {% frame="none" %}
+```shell
 git checkout -b self-healing-ci
 ```
 
@@ -2534,7 +2534,7 @@ Now for demo purposes, we'll make a mistake in our `DemoApplication` class that 
 
 Commit the changes and open a new PR on GitHub.
 
-```shell {% frame="none" %}
+```shell
 git add .
 git commit -m 'demo self-healing ci'
 git push origin self-healing-ci

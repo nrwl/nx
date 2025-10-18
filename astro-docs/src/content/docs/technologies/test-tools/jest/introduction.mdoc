@@ -22,7 +22,7 @@ Make sure to install the `@nx/jest` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/jest` by running the following command:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/jest
 ```
 
@@ -148,7 +148,7 @@ The `@nx/jest/plugin` is configured in the `plugins` array in `nx.json`.
 
 By default, Nx will use Jest when creating applications and libraries.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/web:app apps/frontend
 ```
 
@@ -156,7 +156,7 @@ nx g @nx/web:app apps/frontend
 
 Run the `configuration` generator
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/jest:configuration --project=<project-name>
 ```
 
@@ -173,7 +173,7 @@ The recommended way to run/debug Jest tests via an editor
 
 To run Jest tests via nx use
 
-```shell {% frame="none" %}
+```shell
 nx test frontend
 ```
 
@@ -181,7 +181,7 @@ nx test frontend
 
 Using a single positional argument or the `--testFile` flag will run all test files matching the regex. For more info check out the [Jest documentation](https://jestjs.io/docs/cli#jest-regexfortestfiles).
 
-```shell {% frame="none" %}
+```shell
 nx test frontend HomePage.tsx
 # or
 nx test frontend --testFile HomePage.tsx
@@ -191,7 +191,7 @@ nx test frontend --testFile HomePage.tsx
 
 Using the `--watch` flag will run the tests whenever a file changes.
 
-```shell {% frame="none" %}
+```shell
 nx test frontend --watch
 ```
 
@@ -214,7 +214,7 @@ When using snapshots, you can update them with the `--updateSnapshot` flag, `-u`
 
 > By default, snapshots will be generated when there are not existing snapshots for the associated test.
 
-```shell {% frame="none" %}
+```shell
 nx test frontend -u
 ```
 

@@ -29,7 +29,7 @@ add an `nx.json` for configuring caching and task pipelines.
 
 Run the following command to automatically set up Nx:
 
-```shell {% frame="none" %}
+```shell
 npx nx@latest init
 ```
 
@@ -112,7 +112,7 @@ configuring the plugins on the [`@nx/next/plugin`](/docs/technologies/react/next
 To view all available tasks, open the Project Details view with Nx Console or use the terminal to launch the project
 details in a browser window.
 
-```shell {% frame="none" %}
+```shell
 nx show project my-workspace --web
 ```
 
@@ -301,14 +301,14 @@ initially using Nx just for a subset of your scripts and then gradually adding m
 
 For example, use Nx to run your builds:
 
-```shell {% frame="none" %}
+```shell
 npx nx run-many -t build
 ```
 
 But instead keep using NPM/Yarn/PNPM workspace commands for your tests and other scripts. Here's an example of using
 PNPM commands to run tests across packages
 
-```shell {% frame="none" %}
+```shell
 pnpm run -r test
 ```
 
@@ -335,7 +335,7 @@ Now that we're working on the CI pipeline, it is important for your changes to b
 
 Now connect your repository to Nx Cloud with the following command:
 
-```shell {% frame="none" %}
+```shell
 npx nx@latest connect
 ```
 
@@ -349,7 +349,7 @@ Once the PR is created, merge it into your main branch.
 
 And make sure you pull the latest changes locally:
 
-```shell {% frame="none" %}
+```shell
 git pull
 ```
 
@@ -359,7 +359,7 @@ You should now have an `nxCloudId` property specified in the `nx.json` file.
 
 Use the following command to generate a CI workflow file.
 
-```shell {% frame="none" %}
+```shell
 npx nx generate ci-workflow --ci=github
 ```
 
@@ -399,7 +399,7 @@ jobs:
 
 Commit the changes and open a new PR on GitHub.
 
-```shell {% frame="none" %}
+```shell
 git add .
 git commit -m 'add CI workflow file'
 git push origin add-workflow

@@ -16,7 +16,7 @@ You first need to set up Storybook for your Nx workspace, if you haven't already
 
 You can generate Storybook configuration for an individual React project by using the [`@nx/react:storybook-configuration` generator](/docs/technologies/react/generators#storybook-configuration), like this:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/react:storybook-configuration project-name
 ```
 
@@ -34,7 +34,7 @@ The [`@nx/react:storybook-configuration` generator](/docs/technologies/react/gen
 
 If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/react:stories` generator](/docs/technologies/react/generators#stories):
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/react:stories --project=<project-name>
 ```
 
@@ -44,7 +44,7 @@ Let's take for a example a library in your workspace, under `libs/feature/ui`, c
 
 The command to generate stories for that library would be:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/react:stories --project=feature-ui
 ```
 

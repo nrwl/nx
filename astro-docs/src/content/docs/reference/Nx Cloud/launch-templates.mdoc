@@ -37,7 +37,7 @@ launch-templates:
   template-two:
 ```
 
-```
+```shell
 nx-cloud start-ci-run --distribute-on="3 template-one"
 ```
 
@@ -278,6 +278,7 @@ This can be useful if we have a set of quick enough steps, such as restoring fro
 grouped together logically. The below cache steps will also be collapsed together in the Agents UI, making the config look cleaner:
 
 ```yaml
+// ./nx/workflows/agents.yaml
 - group-name: Restore Cache
   steps:
     - name: Restore Node Modules Cache
@@ -391,15 +392,15 @@ launch-templates:
 
 These templates can be used by passing the number of agents desired, and the template name via `--distribute-on` when starting your CI run.
 
-```
+```shell
 nx-cloud start-ci-run --distribute-on="4 my-linux-medium-js"
 ```
 
-```
+```shell
 nx-cloud start-ci-run --distribute-on="4 my-linux-large-js"
 ```
 
-```
+```shell
 nx-cloud start-ci-run --distribute-on="4 my-linux-large-rust"
 ```
 
@@ -415,7 +416,7 @@ within the launch template and all respective inputs within each step are approp
 
 To do this, run the `nx-cloud validate` command, with the path to the launch template:
 
-```shell {% frame="none" %}
+```shell
 nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
 ```
 
@@ -423,7 +424,7 @@ nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
 
 If you need to send environment variables to agents, you can use the [--with-env-vars](/docs/reference/nx-cloud-cli#withenvvars-nx-agents-only) flag on the `nx-cloud start-ci-run` command. You can pass a specific list of environment variables like this:
 
-```
+```shell
 nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="VAR1,VAR2"
 ```
 
@@ -472,7 +473,7 @@ launch-templates:
 
 Pass `SOME_AUTH_TOKEN` via `--with-env-vars`
 
-```
+```shell
 # this assumes SOME_AUTH_TOKEN is already defined on the main agent
 nx-cloud start-ci-run --distribute-on="5 my-linux-medium-js" --with-env-vars="SOME_AUTH_TOKEN"
 ```
@@ -667,7 +668,7 @@ distribute-on:
 
 Then you can pass the path to the file to the `--distribute-on` parameter.
 
-```
+```shell
 nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
 ```
 

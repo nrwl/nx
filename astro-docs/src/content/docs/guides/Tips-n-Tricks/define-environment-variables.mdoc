@@ -61,7 +61,7 @@ for workspace-specific settings (like the [Nx Cloud token](/docs/guides/nx-cloud
 
 Nx will only load environment variable files for a particular configuration if that configuration is defined for a task, even if you specify that configuration name from the command line. So if there is no `development` configuration defined for the `app`'s `build` task, the following command will use `.env.build` instead of `.env.build.development`:
 
-```shell {% frame="none" %}
+```shell
 nx build app --configuration development
 ```
 
@@ -99,18 +99,18 @@ In Unix systems, we need to set the environment variables before calling a comma
 
 Let's say that we want to define an API URL for the application to use:
 
-```shell {% frame="none" %}
+```shell
 NX_PUBLIC_API_URL=http://localhost:3333 nx build myapp
 ```
 
 **Windows (cmd.exe)**
 
-```shell {% frame="none" %}
+```shell
 set "NX_PUBLIC_API_URL=http://localhost:3333" && nx build myapp
 ```
 
 **Windows (Powershell)**
 
-```shell {% frame="none" %}
+```shell
 ($env:NX_PUBLIC_API_URL = "http://localhost:3333") -and (nx build myapp)
 ```

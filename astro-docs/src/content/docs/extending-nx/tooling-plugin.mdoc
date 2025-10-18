@@ -10,7 +10,7 @@ In this tutorial, we'll create a plugin that helps to integrate the _Astro_ fram
 
 To create a plugin in a brand new repository, use the `create-nx-plugin` command:
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-plugin nx-astro
 ```
 
@@ -193,7 +193,7 @@ If you create a generator named `init`, Nx will automatically run that generator
 
 To create the generator run the following command:
 
-```shell {% frame="none" %}
+```shell
 npx nx g generator src/generators/init
 ```
 
@@ -265,7 +265,7 @@ export interface InitGeneratorSchema {}
 
 Let's make one more generator to automatically create a simple Astro application. First we'll create the generator:
 
-```shell {% frame="none" %}
+```shell
 npx nx g generator src/generators/application
 ```
 

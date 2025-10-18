@@ -19,7 +19,7 @@ This command is the same as running `nx login`.
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud login [nxCloudUrl]
 ```
 
@@ -64,7 +64,7 @@ Revoke a personal access token from your local environment. This will remove the
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud logout
 ```
 
@@ -74,7 +74,7 @@ To provision more than one personal access token for multiple contexts (e.g. hom
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud configure
 ```
 
@@ -87,13 +87,13 @@ npx nx-cloud configure
 
 #### Examples
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN
 ```
 
 To configure multiple tokens for different instances of the Nx Cloud app:
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN --nx-cloud-url=https://nx-cloud.my-domain.app
 ```
 
@@ -105,7 +105,7 @@ If you are connecting to Nx Cloud with a workspace that is version 19.6 or lower
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud convert-to-nx-cloud-id
 ```
 
@@ -115,7 +115,7 @@ At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tell
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud start-ci-run
 ```
 
@@ -266,7 +266,7 @@ Enable [AI-powered self-healing](/docs/features/ci-features/self-healing-ci) for
 
 Examples:
 
-```shell {% frame="none" %}
+```shell
 # Enable for lint and format tasks only
 npx nx-cloud start-ci-run --fix-tasks="*lint*,*format*" --no-distribution
 
@@ -286,7 +286,7 @@ Automatically apply [AI-generated fixes](/docs/features/ci-features/self-healing
 
 Examples:
 
-```shell {% frame="none" %}
+```shell
 # Auto-apply fixes for linting tasks only
 npx nx-cloud start-ci-run --auto-apply-fixes="*lint*" --no-distribution
 
@@ -304,13 +304,13 @@ individual commands as follows:
 
 Explicitly enable distribution:
 
-```shell {% frame="none"%}
+```shell
 nx affected -t build --agents
 ```
 
 Explicitly disable distribution:
 
-```shell {% frame="none"%}
+```shell
 nx affected -t build --no-agents
 ```
 
@@ -319,13 +319,13 @@ nx affected -t build --no-agents
 
 Explicitly enable distribution:
 
-```shell {% frame="none"%}
+```shell
 nx affected -t build --dte
 ```
 
 Explicitly disable distribution:
 
-```shell {% frame="none"%}
+```shell
 nx affected -t build --no-dte
 ```
 
@@ -342,7 +342,7 @@ and terminate associated agents automatically.
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud stop-all-agents
 ```
 
@@ -352,7 +352,7 @@ Explicitly complete a CI run when using `--require-explicit-completion` with `st
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud complete-ci-run
 ```
 
@@ -362,7 +362,7 @@ Remove temporary marker files created by `start-ci-run` if accidentally run loca
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud cleanup
 ```
 
@@ -370,6 +370,6 @@ npx nx-cloud cleanup
 
 You can get help for any command by adding the `--help` flag:
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud <command> --help
 ```

@@ -19,7 +19,7 @@ Make sure to install the `@nx/js` version that matches the version of `nx` in yo
 
 In any Nx workspace, you can install `@nx/js` by running the following command:
 
-```shell {% frame="none"  %}
+```shell
 nx add @nx/js
 ```
 
@@ -32,14 +32,14 @@ When initializing a new Nx workspace, specifying `--preset=ts` will generate a w
 {% tabs %}
 {% tabitem label="npm" %}
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace my-org --preset=ts
 ```
 
 {% /tabitem %}
 {% tabitem label="yarn" %}
 
-```shell {% frame="none" %}
+```shell
 yarn create nx-workspace my-org --preset=ts
 ```
 
@@ -159,7 +159,7 @@ To disable `typecheck` task for a specific project, set the `nx.addTypecheckTarg
 
 You can add a new JS/TS library with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/js:lib libs/my-lib
 ```
 
@@ -167,13 +167,13 @@ nx g @nx/js:lib libs/my-lib
 
 You can `build` libraries that are generated with a bundler specified.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/js:lib libs/my-buildable-lib --bundler=rollup
 ```
 
 Generating a library with `--bundler` specified will add a `build` target to the library's `project.json` file allows the library to be built.
 
-```shell {% frame="none" %}
+```shell
 nx build my-buildable-lib
 ```
 
@@ -181,7 +181,7 @@ nx build my-buildable-lib
 
 You can test a library with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx test my-lib
 ```
 
@@ -189,7 +189,7 @@ nx test my-lib
 
 You can lint a library with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx lint my-lib
 ```
 
@@ -205,13 +205,13 @@ Currently, `@nx/js` supports the following compilers:
 
 - Create a buildable library with `swc`
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/js:lib libs/my-swc-lib --bundler=swc
 ```
 
 - Convert a `tsc` library to use `swc`
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/js:convert-to-swc my-buildable-lib
 ```
 

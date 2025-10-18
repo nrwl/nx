@@ -23,7 +23,7 @@ Get started developing your own plugin with a few terminal commands:
 {% tabs %}
 {% tabitem label="Create a plugin in a new workspace" %}
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-plugin my-plugin
 ```
 
@@ -31,7 +31,7 @@ npx create-nx-plugin my-plugin
 
 {% tabitem label="Add a plugin to an existing workspace" %}
 
-```shell {% frame="none" %}
+```shell
 npx nx add @nx/plugin
 npx nx g plugin tools/my-plugin
 ```
@@ -59,7 +59,7 @@ You can follow along with one of the step by step tutorials below that is focuse
 
 Wire up a new generator with this terminal command:
 
-```shell {% frame="none" %}
+```shell
 npx nx g generator my-plugin/src/generators/library-with-readme
 ```
 
@@ -110,7 +110,7 @@ The template files that are used in the `generateFiles` function can inject vari
 
 You can test your generator in dry-run mode with the following command:
 
-```shell {% frame="none" %}
+```shell
 npx nx g my-plugin:library-with-readme mylib --dry-run
 ```
 

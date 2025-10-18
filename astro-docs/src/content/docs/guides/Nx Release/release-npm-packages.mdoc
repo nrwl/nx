@@ -18,7 +18,7 @@ Ensure that Nx is installed in your monorepo. Check out the [Installation docs](
 
 The [`@nx/js` package](/docs/technologies/typescript/introduction) is required for Nx Release to manage and release JavaScript packages. Add it if it is not already installed:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/js
 ```
 
@@ -53,7 +53,7 @@ The `--dry-run` option is useful for testing your configuration without actually
 
 To preview your first release, run:
 
-```shell {% frame="none" %}
+```shell
 nx release --first-release --dry-run
 ```
 
@@ -156,7 +156,7 @@ Skipped publishing packages.
 
 If the preview looks good, run the command again without the `--dry-run` option to actually create the release.
 
-```shell {% frame="none" %}
+```shell
 nx release --first-release
 ```
 

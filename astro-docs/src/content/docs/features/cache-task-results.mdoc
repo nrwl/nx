@@ -70,7 +70,7 @@ By default, Nx caches task results locally. The biggest benefit of caching comes
 
 To enable remote caching, connect your workspace to [Nx Cloud](https://nx.dev/nx-cloud) by running the following command:
 
-```shell {% frame="none" %}
+```shell
 npx nx@latest connect
 ```
 
@@ -157,7 +157,7 @@ When using [Nx plugins](/docs/concepts/nx-plugins), many tasks have caching conf
 
 For example, if you add the `@nx/vite` plugin using the following command...
 
-```shell {% frame="none" %}
+```shell
 npx nx add @nx/vite
 ```
 
@@ -167,7 +167,7 @@ This means **you don't need to manually specify cacheable operations for Vite ta
 
 To view the task settings that have been automatically configured by a plugin, use the following command:
 
-```shell {% frame="none" %}
+```shell
 nx show project <project-name> --web
 ```
 

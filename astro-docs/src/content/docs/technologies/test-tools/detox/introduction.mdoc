@@ -22,14 +22,14 @@ Detox is gray box end-to-end testing and automation library for mobile apps. It 
 
 [applesimutils](https://github.com/wix/AppleSimulatorUtils) is a collection of utils for Apple simulators.
 
-```shell {% frame="none" %}
+```shell
 brew tap wix/brew
 brew install applesimutils
 ```
 
 #### Install Jest Globally
 
-```shell {% frame="none" %}
+```shell
 npm install -g jest
 ```
 
@@ -41,7 +41,7 @@ Make sure to install the `@nx/detox` version that matches the version of `nx` in
 
 In any Nx workspace, you can install `@nx/detox` by running the following command:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/detox
 ```
 
@@ -117,7 +117,7 @@ For Android, in terminal, run `emulator -list-avds` to view a list of emulators 
 
 In addition, to override the device name specified in a configuration, you could use `--device-name` option: `nx test-ios <app-name-e2e> --device-name "iPhone 11"`. The `device-name` property provides you the ability to test an application run on specific device.
 
-```shell {% frame="none" %}
+```shell
 nx test-ios frontend-e2e --device-name "iPhone 11"
 nx test-android frontend-e2e --device-name "Pixel_4a_API_30"
 ```

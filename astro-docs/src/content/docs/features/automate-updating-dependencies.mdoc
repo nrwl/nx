@@ -20,7 +20,7 @@ Keeping your tooling up to date is crucial for the health of your project. Tooli
 
 To update your workspace, run:
 
-```shell {% frame="none" %}
+```shell
 npx nx@latest migrate latest
 ```
 
@@ -66,7 +66,7 @@ You can intervene at each step and make adjustments as needed for your specific 
 
 First, run the `migrate` command:
 
-```shell {% frame="none" %}
+```shell
 nx migrate latest
 ```
 
@@ -89,7 +89,7 @@ Now, you can **inspect `package.json` to see if the changes make sense**. Someti
 
 You can now run the actual code migrations that were generated in the `migrations.json` in the previous step.
 
-```shell {% frame="none" %}
+```shell
 nx migrate --run-migrations
 ```
 
@@ -109,13 +109,13 @@ Note: You may want to keep the `migrations.json` until every branch that was cre
 
 If you have any [Nx community plugins](/docs/plugin-registry) installed you need to migrate them individually (assuming they provide migration scripts) by using the following command:
 
-```shell {% frame="none" %}
+```shell
 nx migrate my-plugin
 ```
 
 For a list of all the plugins you currently have installed, run:
 
-```shell {% frame="none" %}
+```shell
 nx report
 ```
 
