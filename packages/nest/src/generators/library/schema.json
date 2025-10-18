@@ -13,7 +13,7 @@
   ],
   "properties": {
     "directory": {
-      "description": "A directory where the library is placed.",
+      "description": "Full path to the library folder. When using positional name argument, this path should include the library name as the final segment.",
       "type": "string",
       "alias": "dir",
       "$default": {

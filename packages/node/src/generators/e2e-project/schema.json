@@ -14,7 +14,7 @@
       "x-prompt": "What project is this for?"
     },
     "directory": {
-      "description": "The directory of the e2e project.",
+      "description": "Full path to the e2e project folder. When using positional name argument, this path should include the project name as the final segment.",
       "type": "string",
       "x-priority": "important"
     },
