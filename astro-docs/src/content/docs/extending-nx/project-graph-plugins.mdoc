@@ -35,6 +35,10 @@ You can register a plugin by adding it to the plugins array in `nx.json`:
 
 You can add nodes to the project graph with [`createNodesV2`](/docs/reference/devkit/CreateNodesV2). This is the API that Nx uses under the hood to identify Nx projects coming from a `project.json` file or a `package.json` that's listed in a package manager's workspaces section.
 
+{% aside type="note" title="CreateNodes API Versions" %}
+Nx has evolved its plugin API over time. Different Nx versions call different `createNodes` exports (`createNodes` vs `createNodesV2`). If you need to support multiple Nx versions see the [CreateNodes Compatibility Guide](/docs/extending-nx/createnodes-compatibility).
+{% /aside %}
+
 ### Identifying Projects
 
 Looking at the tuple, you can see that the first element is a file pattern. This is a glob pattern that Nx will use to find files in your workspace. The second element is a function that will be called for each file that matches the pattern. The function will be called with the path to the file and a context object. Your plugin can then return a set of projects and external nodes.
