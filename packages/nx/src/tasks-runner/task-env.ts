@@ -3,6 +3,7 @@ import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
 import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'node:path';
+import { ProjectGraph } from '../config/project-graph';
 
 export function getEnvVariablesForBatchProcess(
   skipNxCache: boolean,
@@ -20,11 +21,11 @@ export function getEnvVariablesForBatchProcess(
   };
 }
 
-export function getTaskSpecificEnv(task: Task) {
+export function getTaskSpecificEnv(task: Task, graph: ProjectGraph) {
   // Unload any dot env files at the root of the workspace that were loaded on init of Nx.
   const taskEnv = unloadDotEnvFiles({ ...process.env });
   return process.env.NX_LOAD_DOT_ENV_FILES === 'true'
-    ? loadDotEnvFilesForTask(task, taskEnv)
+    ? loadDotEnvFilesForTask(task, graph, taskEnv)
     : // If not loading dot env files, ensure env vars created by system are still loaded
       taskEnv;
 }
@@ -165,28 +166,41 @@ export function unloadDotEnvFile(
   });
 }
 
-function getEnvFilesForTask(task: Task): string[] {
+function getOwnerTargetForTask(task: Task, graph: ProjectGraph): string {
+  const project = graph.nodes[task.target.project];
+  if (project.data.metadata?.targetGroups) {
+    for (const targets of Object.values(project.data.metadata.targetGroups)) {
+      if (targets.includes(task.target.target)) {
+        return targets[0];
+      }
+    }
+  }
+  return task.target.target;
+}
+
+function getEnvFilesForTask(task: Task, graph: ProjectGraph): string[] {
+  const target = getOwnerTargetForTask(task, graph);
   // Collect dot env files that may pertain to a task
   return [
     // Load DotEnv Files for a configuration in the project root
     ...(task.target.configuration
       ? [
-          `${task.projectRoot}/.env.${task.target.target}.${task.target.configuration}.local`,
-          `${task.projectRoot}/.env.${task.target.target}.${task.target.configuration}`,
+          `${task.projectRoot}/.env.${target}.${task.target.configuration}.local`,
+          `${task.projectRoot}/.env.${target}.${task.target.configuration}`,
           `${task.projectRoot}/.env.${task.target.configuration}.local`,
           `${task.projectRoot}/.env.${task.target.configuration}`,
-          `${task.projectRoot}/.${task.target.target}.${task.target.configuration}.local.env`,
-          `${task.projectRoot}/.${task.target.target}.${task.target.configuration}.env`,
+          `${task.projectRoot}/.${target}.${task.target.configuration}.local.env`,
+          `${task.projectRoot}/.${target}.${task.target.configuration}.env`,
           `${task.projectRoot}/.${task.target.configuration}.local.env`,
           `${task.projectRoot}/.${task.target.configuration}.env`,
         ]
       : []),
 
     // Load DotEnv Files for a target in the project root
-    `${task.projectRoot}/.env.${task.target.target}.local`,
-    `${task.projectRoot}/.env.${task.target.target}`,
-    `${task.projectRoot}/.${task.target.target}.local.env`,
-    `${task.projectRoot}/.${task.target.target}.env`,
+    `${task.projectRoot}/.env.${target}.local`,
+    `${task.projectRoot}/.env.${target}`,
+    `${task.projectRoot}/.${target}.local.env`,
+    `${task.projectRoot}/.${target}.env`,
     `${task.projectRoot}/.env.local`,
     `${task.projectRoot}/.local.env`,
     `${task.projectRoot}/.env`,
@@ -194,22 +208,22 @@ function getEnvFilesForTask(task: Task): string[] {
     // Load DotEnv Files for a configuration in the workspace root
     ...(task.target.configuration
       ? [
-          `.env.${task.target.target}.${task.target.configuration}.local`,
-          `.env.${task.target.target}.${task.target.configuration}`,
+          `.env.${target}.${task.target.configuration}.local`,
+          `.env.${target}.${task.target.configuration}`,
           `.env.${task.target.configuration}.local`,
           `.env.${task.target.configuration}`,
-          `.${task.target.target}.${task.target.configuration}.local.env`,
-          `.${task.target.target}.${task.target.configuration}.env`,
+          `.${target}.${task.target.configuration}.local.env`,
+          `.${target}.${task.target.configuration}.env`,
           `.${task.target.configuration}.local.env`,
           `.${task.target.configuration}.env`,
         ]
       : []),
 
     // Load DotEnv Files for a target in the workspace root
-    `.env.${task.target.target}.local`,
-    `.env.${task.target.target}`,
-    `.${task.target.target}.local.env`,
-    `.${task.target.target}.env`,
+    `.env.${target}.local`,
+    `.env.${target}`,
+    `.${target}.local.env`,
+    `.${target}.env`,
 
     // Load base DotEnv Files at workspace root
     `.local.env`,
@@ -220,9 +234,10 @@ function getEnvFilesForTask(task: Task): string[] {
 
 function loadDotEnvFilesForTask(
   task: Task,
+  graph: ProjectGraph,
   environmentVariables: NodeJS.ProcessEnv
 ) {
-  const dotEnvFiles = getEnvFilesForTask(task);
+  const dotEnvFiles = getEnvFilesForTask(task, graph);
   for (const file of dotEnvFiles) {
     loadAndExpandDotEnvFile(join(workspaceRoot, file), environmentVariables);
   }
