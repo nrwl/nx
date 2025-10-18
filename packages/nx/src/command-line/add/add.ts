@@ -20,7 +20,7 @@ import {
   runPluginInitGenerator,
   getFailedToInstallPluginErrorMessages,
 } from '../init/configure-plugins';
-import * as ora from 'ora';
+import { globalSpinner } from '../../utils/spinner';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
@@ -43,8 +43,7 @@ async function installPackage(
   version: string,
   nxJson: NxJsonConfiguration
 ): Promise<void> {
-  const spinner = ora(`Installing ${pkgName}@${version}...`);
-  spinner.start();
+  const spinner = globalSpinner.start(`Installing ${pkgName}@${version}...`);
 
   if (existsSync('package.json')) {
     const pm = detectPackageManager();
@@ -121,8 +120,7 @@ async function initializePlugin(
     updatePackageScripts = true;
   }
 
-  const spinner = ora(`Initializing ${pkgName}...`);
-  spinner.start();
+  const spinner = globalSpinner.start(`Initializing ${pkgName}...`);
 
   try {
     await runPluginInitGenerator(
