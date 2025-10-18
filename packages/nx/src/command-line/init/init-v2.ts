@@ -296,6 +296,14 @@ export async function detectPlugins(
     detectedPlugins.add('@nx/gradle');
   }
 
+  const dotnetProjectGlobs = ['**/*.csproj', '**/*.fsproj', '**/*.vbproj'];
+  const dotnetFiles = globWithWorkspaceContextSync(process.cwd(), [
+    ...dotnetProjectGlobs,
+  ]);
+  if (dotnetFiles.length > 0) {
+    detectedPlugins.add('@nx/dotnet');
+  }
+
   // Remove existing plugins
   for (const plugin of detectedPlugins) {
     if (currentPlugins.has(plugin)) {

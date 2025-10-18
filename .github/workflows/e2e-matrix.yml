@@ -2,7 +2,7 @@ name: E2E matrix
 
 on:
   schedule:
-    - cron: "0 5 * * *"
+    - cron: '0 5 * * *'
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -14,7 +14,7 @@ on:
 env:
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cypress
 
-permissions: { }
+permissions: {}
 jobs:
   preinstall:
     if: ${{ github.repository_owner == 'nrwl' }}
@@ -38,7 +38,7 @@ jobs:
           # - os: macos-latest
           #   node_version: 23
           # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
-            # node_version: 22
+          # node_version: 22
           # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
           #   node_version: 23
 
@@ -64,7 +64,7 @@ jobs:
 
       - name: Get pnpm store directory
         id: pnpm-cache
-        run: echo "path=$(pnpm store path)" >> $GITHUB_OUTPUT
+        run: echo 'path=$(pnpm store path)' >> $GITHUB_OUTPUT
 
       - name: Cache pnpm store
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
@@ -87,7 +87,7 @@ jobs:
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
         id: homebrew-cache-dir-path
-        run: echo "dir=$(brew --cache)" >> $GITHUB_OUTPUT
+        run: echo 'dir=$(brew --cache)' >> $GITHUB_OUTPUT
 
       - name: Cache Homebrew
         if: ${{ matrix.os == 'macos-latest' }}
@@ -127,8 +127,7 @@ jobs:
 
       - name: Process matrix data
         id: process-json
-        run:
-          echo "MATRIX=$(npx tsx .github/workflows/nightly/process-matrix.ts | jq -c .)" >> $GITHUB_OUTPUT
+        run: echo 'MATRIX=$(npx tsx .github/workflows/nightly/process-matrix.ts | jq -c .)' >> $GITHUB_OUTPUT
 
   e2e:
     if: ${{ github.repository_owner == 'nrwl' }}
@@ -138,7 +137,7 @@ jobs:
     permissions:
       contents: read
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 200     # <- cap each job to 200 minutes
+    timeout-minutes: 200 # <- cap each job to 200 minutes
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix)}} # Load matrix from previous job
       fail-fast: false
@@ -170,13 +169,18 @@ jobs:
         if: ${{ matrix.os != 'windows-latest' }}
         run: |
           curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
-          source "$HOME/.cargo/env"
+          source '$HOME/.cargo/env'
           rustup toolchain install 1.70.0
 
       - name: Load Cargo Env
         if: ${{ matrix.os != 'windows-latest' }}
-        run: echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
-  
+        run: echo 'PATH=$HOME/.cargo/bin:$PATH' >> $GITHUB_ENV
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
+        with:
+          dotnet-version: '9.0.x'
+
       - name: Install bun
         if: ${{ matrix.os != 'windows-latest' }}
         uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
@@ -195,15 +199,15 @@ jobs:
           # https://github.com/actions/virtual-environments/issues/2840
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo rm -rf '/usr/local/share/boost'
+          sudo rm -rf '$AGENT_TOOLSDIRECTORY'
           sudo apt-get install lsof
           echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
 
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
         id: homebrew-cache-dir-path
-        run: echo "dir=$(brew --cache)" >> $GITHUB_OUTPUT
+        run: echo 'dir=$(brew --cache)' >> $GITHUB_OUTPUT
 
       - name: Cache Homebrew
         if: ${{ matrix.os == 'macos-latest' }}
@@ -231,35 +235,35 @@ jobs:
           # Ensure Xcode command line tools are installed and configured
           xcode-select --print-path || sudo xcode-select --reset
           sudo xcode-select -s /Applications/Xcode.app
-          
+
           # Install or update applesimutils with error handling
           if ! brew list applesimutils &>/dev/null; then
-            echo "Installing applesimutils..."
+            echo 'Installing applesimutils...'
             HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
             HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null || {
-              echo "Failed to install applesimutils, retrying with update..."
+              echo 'Failed to install applesimutils, retrying with update...'
               brew update
               HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils
             }
           else
-            echo "Updating applesimutils..."
+            echo 'Updating applesimutils...'
             HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade applesimutils || true
           fi
-          
+
           # Verify applesimutils installation
-          applesimutils --version || (echo "applesimutils installation failed" && exit 1)
-          
+          applesimutils --version || (echo 'applesimutils installation failed' && exit 1)
+
           # Configure environment for M-series Mac
-          echo "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer" >> $GITHUB_ENV
-          echo "PLATFORM_NAME=iOS Simulator" >> $GITHUB_ENV
-          
+          echo 'DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer' >> $GITHUB_ENV
+          echo 'PLATFORM_NAME=iOS Simulator' >> $GITHUB_ENV
+
           # Set additional environment variables for better debugging
-          echo "DETOX_DISABLE_TELEMETRY=1" >> $GITHUB_ENV
-          echo "DETOX_LOG_LEVEL=trace" >> $GITHUB_ENV
-          
+          echo 'DETOX_DISABLE_TELEMETRY=1' >> $GITHUB_ENV
+          echo 'DETOX_LOG_LEVEL=trace' >> $GITHUB_ENV
+
           # Verify Xcode installation
           xcodebuild -version
-          
+
         timeout-minutes: 10
         continue-on-error: false
 
@@ -267,35 +271,35 @@ jobs:
         if: ${{ matrix.os == 'macos-latest' }}
         id: reset-simulators
         run: |
-          echo "Resetting iOS Simulators..."
-          
+          echo 'Resetting iOS Simulators...'
+
           # Kill simulator processes
           sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null || true
-          killall "Simulator" 2>/dev/null || true
-          killall "iOS Simulator" 2>/dev/null || true
-          
+          killall 'Simulator' 2>/dev/null || true
+          killall 'iOS Simulator' 2>/dev/null || true
+
           # Wait for processes to terminate
           sleep 3
-          
+
           # Shutdown and erase all simulators (ignore failures)
           xcrun simctl shutdown all 2>/dev/null || true
           sleep 5
           xcrun simctl erase all 2>/dev/null || true
-          
+
           # If erase failed, try the nuclear option
-          if xcrun simctl list devices | grep -q "Booted" 2>/dev/null; then
-            echo "Standard reset failed, using nuclear option..."
+          if xcrun simctl list devices | grep -q 'Booted' 2>/dev/null; then
+            echo 'Standard reset failed, using nuclear option...'
             rm -rf ~/Library/Developer/CoreSimulator/Devices/* 2>/dev/null || true
             launchctl remove com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null || true
             sleep 3
           fi
-          
+
           # Clean up additional directories
           rm -rf ~/Library/Developer/CoreSimulator/Caches/* 2>/dev/null || true
           rm -rf ~/Library/Logs/CoreSimulator/* 2>/dev/null || true
           rm -rf ~/Library/Developer/Xcode/DerivedData/* 2>/dev/null || true
-          
-          echo "Simulator reset completed"
+
+          echo 'Simulator reset completed'
         timeout-minutes: 5
         continue-on-error: true
 
@@ -303,34 +307,34 @@ jobs:
         if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' }}
         run: |
           # Verify CoreSimulator service restarted
-          pgrep -fl "CoreSimulator" || (echo "CoreSimulator service not running" && exit 1)
-          
+          pgrep -fl 'CoreSimulator' || (echo 'CoreSimulator service not running' && exit 1)
+
           # Verify simulator runtime paths exist and are writable
-          test -d ~/Library/Developer/CoreSimulator/Devices || (echo "Simulator devices directory missing" && exit 1)
-          touch ~/Library/Developer/CoreSimulator/Devices/test || (echo "Simulator devices directory not writable" && exit 1)
+          test -d ~/Library/Developer/CoreSimulator/Devices || (echo 'Simulator devices directory missing' && exit 1)
+          touch ~/Library/Developer/CoreSimulator/Devices/test || (echo 'Simulator devices directory not writable' && exit 1)
           rm ~/Library/Developer/CoreSimulator/Devices/test
         timeout-minutes: 5
 
       - name: Diagnose Simulator Reset Failure
         if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'failure' }}
         run: |
-          echo "Simulator reset failed. Collecting diagnostic information..."
+          echo 'Simulator reset failed. Collecting diagnostic information...'
           xcrun simctl list
-          echo "Checking simulator logs..."
-          ls -la ~/Library/Logs/CoreSimulator/ || echo "No simulator logs found"
+          echo 'Checking simulator logs...'
+          ls -la ~/Library/Logs/CoreSimulator/ || echo 'No simulator logs found'
 
       - name: Configure git metadata (needed for lerna smoke tests)
         if: ${{ (matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success') }}
         run: |
           git config --global user.email test@test.com
-          git config --global user.name "Test Test"
+          git config --global user.name 'Test Test'
 
       - name: Set starting timestamp
         if: ${{ (matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success') }}
         id: before-e2e
         shell: bash
         run: |
-          echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
+          echo 'timestamp=$(date +%s)' >> $GITHUB_OUTPUT
 
       - name: Run e2e tests with pnpm (Linux/Windows)
         id: e2e-run-pnpm
@@ -352,18 +356,18 @@ jobs:
           npm_config_registry: http://localhost:4872
           YARN_REGISTRY: http://localhost:4872
           CI: true
-  
+
       - name: Run e2e tests with npm (macOS)
         id: e2e-run-npm
         if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' }}
         run: |
           # Run the tests
-          if [[ "${{ matrix.project }}" == "e2e-detox" ]] || [[ "${{ matrix.project }}" == "e2e-react-native" ]] || [[ "${{ matrix.project }}" == "e2e-expo" ]]; then
+          if [[ '${{ matrix.project }}' == 'e2e-detox' ]] || [[ '${{ matrix.project }}' == 'e2e-react-native' ]] || [[ '${{ matrix.project }}' == 'e2e-expo' ]]; then
             NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-macos-local
           else
             NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-local
           fi
-        
+
         env:
           NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
           NX_PERF_LOGGING: 'false'
@@ -387,14 +391,14 @@ jobs:
           before=${{ steps.before-e2e.outputs.timestamp }}
           now=$(date +%s)
           delta=$(($now - $before))
-          
+
           # Determine the outcome based on which step ran
-          outcome="${{ matrix.os == 'macos-latest' && steps.e2e-run-npm.outcome || steps.e2e-run-pnpm.outcome }}"
-          
+          outcome='${{ matrix.os == 'macos-latest' && steps.e2e-run-npm.outcome || steps.e2e-run-pnpm.outcome }}'
+
           matrix=$((
             echo '${{ toJSON(matrix) }}'
-          ) | jq --argjson delta $delta -c '. + { "status": "'"$outcome"'", "duration": $delta }')
-          echo "$matrix" > 'outputs/matrix.json'
+          ) | jq --argjson delta $delta -c '. + { 'status': '''$outcome''', 'duration': $delta }')
+          echo '$matrix' > 'outputs/matrix.json'
 
       - name: Upload matrix config
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -442,7 +446,7 @@ jobs:
         id: combine-json
         run: |
           combined=$(jq -sc . outputs/*/matrix.json)
-          echo "combined=$combined" >> $GITHUB_OUTPUT
+          echo 'combined=$combined' >> $GITHUB_OUTPUT
 
       - name: Process results with TypeScript script
         id: process-json
