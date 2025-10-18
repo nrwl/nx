@@ -7,7 +7,7 @@
   "properties": {
     "directory": {
       "type": "string",
-      "description": "A directory where the app is placed.",
+      "description": "Full path to the application folder. When using positional name argument, this path should include the application name as the final segment.",
       "alias": "dir",
       "$default": {
         "$source": "argv",

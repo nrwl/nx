@@ -7,7 +7,7 @@
   "type": "object",
   "properties": {
     "directory": {
-      "description": "The directory of the new application.",
+      "description": "Full path to the host application folder. When using positional name argument, this path should include the application name as the final segment.",
       "type": "string",
       "alias": "dir",
       "$default": {
