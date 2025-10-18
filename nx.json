@@ -140,7 +140,8 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry",
+        "nx-maven-plugin:install"
       ]
     },
     "e2e-ci": {
@@ -161,7 +162,8 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry",
+        "nx-maven-plugin:install"
       ],
       "options": {
         "args": ["--forceExit"]
@@ -171,7 +173,8 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry",
+        "nx-maven-plugin:install"
       ]
     },
     "e2e-base": {
