@@ -24,6 +24,7 @@ describe('Maven', () => {
   afterAll(() => cleanupProject());
 
   it('should detect Maven projects', () => {
+    console.log(readJson('nx.json'));
     const projects = runCLI(`show projects`);
     expect(projects).toContain('app');
     expect(projects).toContain('lib');

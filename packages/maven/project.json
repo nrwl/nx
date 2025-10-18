@@ -17,6 +17,7 @@
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{options.outputPath}"],
       "options": {
         "tsConfig": "./tsconfig.lib.json",
         "outputPath": "packages/maven/dist",
