@@ -83,6 +83,14 @@ launch-templates:
           ./gradlew wrapper
           ./gradlew --version
 
+      - name: Setup .NET 9
+        script: |
+          wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+          sudo dpkg -i packages-microsoft-prod.deb
+          sudo apt-get update
+          sudo apt-get install -y dotnet-sdk-9.0
+          dotnet --version
+
   linux-extra-large:
     resource-class: 'docker_linux_amd64/extra_large'
     image: 'us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud/nx-agents-base-images:ubuntu22.04-node20.19-v1'
@@ -166,3 +174,11 @@ launch-templates:
         script: |
           ./gradlew wrapper
           ./gradlew --version
+
+      - name: Setup .NET 9
+        script: |
+          wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+          sudo dpkg -i packages-microsoft-prod.deb
+          sudo apt-get update
+          sudo apt-get install -y dotnet-sdk-9.0
+          dotnet --version

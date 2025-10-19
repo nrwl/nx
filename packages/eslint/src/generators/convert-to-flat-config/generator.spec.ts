@@ -67,6 +67,8 @@ describe('convert-to-flat-config generator', () => {
             "@eslint/eslintrc": "^2.1.1",
             "@nx/eslint": "0.0.1",
             "@nx/eslint-plugin": "0.0.1",
+            "@typescript-eslint/eslint-plugin": "^8.40.0",
+            "@typescript-eslint/parser": "^8.40.0",
             "eslint": "^9.8.0",
             "eslint-config-prettier": "^10.0.0",
             "typescript-eslint": "^8.40.0"
@@ -680,6 +682,8 @@ describe('convert-to-flat-config generator', () => {
             "@eslint/eslintrc": "^2.1.1",
             "@nx/eslint": "0.0.1",
             "@nx/eslint-plugin": "0.0.1",
+            "@typescript-eslint/eslint-plugin": "^8.40.0",
+            "@typescript-eslint/parser": "^8.40.0",
             "eslint": "^9.8.0",
             "eslint-config-prettier": "^10.0.0",
             "typescript-eslint": "^8.40.0"

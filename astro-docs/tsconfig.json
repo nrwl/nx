@@ -30,6 +30,9 @@
       "path": "../nx-dev/ui-common"
     },
     {
+      "path": "../nx-dev/ui-animations"
+    },
+    {
       "path": "../nx-dev/feature-analytics"
     },
     {

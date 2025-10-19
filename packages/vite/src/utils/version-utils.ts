@@ -1,14 +1,17 @@
-import type { Tree } from 'nx/src/generators/tree';
 import {
-  vitestVersion,
-  vitestV1Version,
-  vitestCoverageV8Version,
-  vitestV1CoverageV8Version,
-  vitestCoverageIstanbulVersion,
-  vitestV1CoverageIstanbulVersion,
-} from './versions';
+  createProjectGraphAsync,
+  getDependencyVersionFromPackageJson,
+} from '@nx/devkit';
+import type { Tree } from 'nx/src/generators/tree';
 import { clean, coerce, major } from 'semver';
-import { readJson, createProjectGraphAsync } from '@nx/devkit';
+import {
+  vitestCoverageIstanbulVersion,
+  vitestCoverageV8Version,
+  vitestV1CoverageIstanbulVersion,
+  vitestV1CoverageV8Version,
+  vitestV1Version,
+  vitestVersion,
+} from './versions';
 
 type VitestDependenciesVersions = {
   vitest: string;
@@ -43,9 +46,10 @@ export async function isVitestV1(tree: Tree) {
 }
 
 export function getInstalledVitestVersion(tree: Tree): string {
-  const pkgJson = readJson(tree, 'package.json');
-  const installedVitestVersion =
-    pkgJson.dependencies && pkgJson.dependencies['vitest'];
+  const installedVitestVersion = getDependencyVersionFromPackageJson(
+    tree,
+    'vitest'
+  );
 
   if (
     !installedVitestVersion ||

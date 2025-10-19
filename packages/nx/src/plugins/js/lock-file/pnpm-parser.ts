@@ -26,6 +26,7 @@ import {
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
 import { join } from 'path';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
@@ -403,13 +404,21 @@ function parseBaseVersion(rawVersion: string, isV5: boolean): string {
 export function stringifyPnpmLockfile(
   graph: ProjectGraph,
   rootLockFileContent: string,
-  packageJson: NormalizedPackageJson
+  packageJson: NormalizedPackageJson,
+  workspaceRoot: string
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
   const { lockfileVersion, packages, importers } = data;
 
   const { snapshot: rootSnapshot, importers: requiredImporters } =
-    mapRootSnapshot(packageJson, importers, packages, graph, +lockfileVersion);
+    mapRootSnapshot(
+      packageJson,
+      importers,
+      packages,
+      graph,
+      +lockfileVersion,
+      workspaceRoot
+    );
   const snapshots = mapSnapshots(
     data.packages,
     graph.externalNodes,
@@ -577,7 +586,8 @@ function mapRootSnapshot(
   rootImporters: Record<string, ProjectSnapshot>,
   packages: PackageSnapshots,
   graph: ProjectGraph,
-  lockfileVersion: number
+  lockfileVersion: number,
+  workspaceRoot: string
 ) {
   const workspaceModules = getWorkspacePackagesFromGraph(graph);
   const snapshot: ProjectSnapshot = { specifiers: {} };
@@ -590,7 +600,21 @@ function mapRootSnapshot(
   ].forEach((depType) => {
     if (packageJson[depType]) {
       Object.keys(packageJson[depType]).forEach((packageName) => {
-        const version = packageJson[depType][packageName];
+        let version = packageJson[depType][packageName];
+        const manager = getCatalogManager(workspaceRoot);
+        if (manager?.isCatalogReference(version)) {
+          version = manager.resolveCatalogReference(
+            packageName,
+            version,
+            workspaceRoot
+          );
+          if (!version) {
+            throw new Error(
+              `Could not resolve catalog reference for package ${packageName}@${version}.`
+            );
+          }
+        }
+
         if (workspaceModules.has(packageName)) {
           for (const [importerPath, importerSnapshot] of Object.entries(
             rootImporters

@@ -11,11 +11,11 @@ In the ever-evolving web development landscape, efficiency and modularity have b
 
 Qwik is a modern web framework that focuses on application performance by reducing the amount of JavaScript that needs to be shipped to the browser. You can learn more about how Qwik achieves this with [Resumability in their docs](https://qwik.dev/docs/concepts/resumable/).
 
-Nx is a powerful tool that helps you build extensible and maintainable codebases that scale as your application and team grows. Nx utilises computation cache and workspace analysis to ensure maximum efficiency and developer experience. You can [learn more about Nx here](/getting-started/intro).
+Nx is a powerful tool that helps you build extensible and maintainable codebases that scale as your application and team grows. Nx utilises computation cache and workspace analysis to ensure maximum efficiency and developer experience. You can [learn more about Nx here](/docs/getting-started/intro).
 
 In this blog post, we'll explore how to combine the strengths of Nx and Qwik to create a todo app. To do this, we'll take advantage of an Nx Plugin that was created by the Qwikifiers team to maximise the integration between Qwik and Nx, called [`qwik-nx`](https://github.com/qwikifiers/qwik-nx).
 
-> You do not necessarily need to use an Nx Plugin for Qwik. Instead, you could use the [Qwik CLI](https://qwik.dev/docs/getting-started/#create-an-app-using-the-cli) to create your application and [add Nx later](/recipes/adopting-nx/adding-to-existing-project#install-nx-on-a-nonmonorepo-project).
+> You do not necessarily need to use an Nx Plugin for Qwik. Instead, you could use the [Qwik CLI](https://qwik.dev/docs/getting-started/#create-an-app-using-the-cli) to create your application and [add Nx later](/docs/guides/adopting-nx/adding-to-existing-project).
 > In this blog post we use the `qwik-nx` plugin to leverage better DX provided by the generators offered by the Plugin.
 
 **Table of Contents**
@@ -50,7 +50,7 @@ npx create-nx-workspace@latest qwik-todo-app
 
 > You can also use the `preset` created by the `qwik-nx` plugin by running `npx create-qwik-nx` or `npx -y create-nx-workspace@latest --preset=qwik-nx`. This will skip a few of the next steps by installing the appropriate dependencies and generating your Qwik app.
 >
-> The `create-qwik-nx` package is an example of creating an Install Package with Nx. You can learn more here: [/extending-nx/recipes/create-install-package](/extending-nx/recipes/create-install-package)
+> The `create-qwik-nx` package is an example of creating an Install Package with Nx. You can learn more here: [/extending-nx/recipes/create-install-package](/docs/extending-nx/create-install-package)
 
 Next, navigate into the workspace and install the `qwik-nx` plugin.
 
@@ -147,11 +147,11 @@ Nx helps you organise your workspace in a modular fashion by creating workspace 
 
 Instead of organising your features into subfolders of your application, with Nx, you'll extract them into workspace libraries (libraries that are not intended to be published, but still used by other libraries and applications in your repository). This helps to create a much stronger boundary between modules and features in your application as libraries have a public API (the `index.ts` file), allowing you to control exactly what can be accessed by consumers.
 
-> [Learn more about defining and ensuring project boundaries in the Nx docs.](/features/enforce-module-boundaries)
+> [Learn more about defining and ensuring project boundaries in the Nx docs.](/docs/features/enforce-module-boundaries)
 >
 > By doing this, you start to build out a project graph for your workspace and your application. Defining your architecture in this manner also helps to reduce the areas in your application that each change affects.
 >
-> [Learn more about the Project Graph.](/concepts/mental-model#the-project-graph)
+> [Learn more about the Project Graph.](/docs/concepts/mental-model#the-project-graph)
 
 Using this feature of Nx, we can organise the state management of our todo application into its own library, separating the logic from the application itself.
 
@@ -597,14 +597,14 @@ This journey through Qwik and Nx demonstrates how thoughtful architecture and th
 
 - [Qwik](https://qwik.dev/)
 - [qwik-nx](https://github.com/qwikifiers/qwik-nx)
-- [Enforce Module Boundaries](/features/enforce-module-boundaries)
-- [Nx Core Concepts](/concepts)
+- [Enforce Module Boundaries](/docs/features/enforce-module-boundaries)
+- [Nx Core Concepts](/docs/concepts)
 
 ---
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)

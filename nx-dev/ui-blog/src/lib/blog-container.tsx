@@ -61,12 +61,11 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
     const firstFive = sortFirstFivePosts(filteredList);
     setFirstFiveBlogs(firstFive);
 
-    // Get the remaining blogs, sorted by date (unpinned posts after the first 5)
-    const firstFiveSlugs = new Set(firstFive.map((post) => post.slug));
-    const remaining = filteredList
-      .filter((post) => !firstFiveSlugs.has(post.slug))
-      .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
-    setRemainingBlogs(remaining);
+    // Get all blogs, sorted by date
+    const allBlogs = filteredList.sort(
+      (a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf()
+    );
+    setRemainingBlogs(allBlogs);
   }
 
   useEffect(() => updateBlogPosts(), [filteredList]);
@@ -102,7 +101,7 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
         {!!remainingBlogs.length && (
           <>
             <div className="mx-auto mb-8 mt-20 flex items-center justify-between border-b-2 border-slate-300 pb-3 text-sm dark:border-slate-700">
-              <h2 className="font-semibold">More blogs</h2>
+              <h2 className="font-semibold">All blogs</h2>
               <div className="flex gap-2">
                 <Link
                   href="/blog/rss.xml"
@@ -135,14 +134,13 @@ function initializeFilters(
   const filterBy = searchParams.get('filterBy');
 
   const firstFive = sortFirstFivePosts(blogPosts);
-  const firstFiveSlugs = new Set(firstFive.map((post) => post.slug));
-  const remaining = blogPosts
-    .filter((post) => !firstFiveSlugs.has(post.slug))
-    .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
+  const allBlogs = blogPosts.sort(
+    (a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf()
+  );
 
   const defaultState = {
     initialFirstFive: firstFive,
-    initialRest: remaining,
+    initialRest: allBlogs,
     initialSelectedFilterHeading: 'All Blogs',
     initialSelectedFilter: 'All',
   };
@@ -156,16 +154,13 @@ function initializeFilters(
   const initialFilter = ALL_TOPICS.find((filter) => filter.value === filterBy);
 
   const filteredFirstFive = sortFirstFivePosts(result);
-  const filteredFirstFiveSlugs = new Set(
-    filteredFirstFive.map((post) => post.slug)
+  const filteredAllBlogs = result.sort(
+    (a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf()
   );
-  const filteredRemaining = result
-    .filter((post) => !filteredFirstFiveSlugs.has(post.slug))
-    .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
 
   return {
     initialFirstFive: filteredFirstFive,
-    initialRest: filteredRemaining,
+    initialRest: filteredAllBlogs,
     initialSelectedFilterHeading: initialFilter?.heading || 'All Blogs',
     initialSelectedFilter: initialFilter?.value || 'All',
   };

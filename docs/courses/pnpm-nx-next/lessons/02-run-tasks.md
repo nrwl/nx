@@ -20,4 +20,4 @@ We'll cover the syntax for running both single tasks and multiple tasks, helping
 
 ## Relevant Links
 
-- [Run Tasks with Nx](/features/run-tasks)
+- [Run Tasks with Nx](/docs/features/run-tasks)

@@ -1,4 +1,4 @@
-import { workspaceRoot } from '@nx/devkit';
+import { workspaceRoot, type GeneratorsJson } from '@nx/devkit';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, extname, join } from 'node:path';
 import frontMatter from 'front-matter';
@@ -32,6 +32,8 @@ export const pluginToTechnology: Record<string, string> = {
   java: 'java',
   gradle: 'java',
   maven: 'java',
+
+  dotnet: 'dotnet',
 
   'module-federation': 'module-federation',
 
@@ -197,9 +199,8 @@ function hasValidConfig(
 
   // migrations can be generators or packageJsonUpdates
   const hasGenerators =
-    content.generators &&
-    typeof content.generators === 'object' &&
-    Object.keys(content.generators).length > 0;
+    isGeneratorsConfig(content) &&
+    Object.values(content.generators).filter((g) => !g.hidden).length > 0;
 
   const hasPackageJsonUpdates =
     content.packageJsonUpdates &&
@@ -371,4 +372,15 @@ export function pluginSpecialCasePluginRemapping(pluginName: string) {
     default:
       return pluginName;
   }
+}
+
+function isGeneratorsConfig(
+  content: unknown
+): content is GeneratorsJson & Pick<Required<GeneratorsJson>, 'generators'> {
+  return !!(
+    content &&
+    typeof content === 'object' &&
+    'generators' in content &&
+    typeof content.generators === 'object'
+  );
 }

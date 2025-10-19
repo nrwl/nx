@@ -1,6 +1,10 @@
-import { type Tree, readJson, createProjectGraphAsync } from '@nx/devkit';
+import {
+  type Tree,
+  createProjectGraphAsync,
+  getDependencyVersionFromPackageJson,
+} from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
-import { nextVersion, next14Version } from './versions';
+import { next14Version, nextVersion } from './versions';
 
 type NextDependenciesVersions = {
   next: string;
@@ -30,9 +34,10 @@ export async function isNext14(tree: Tree) {
 }
 
 export function getInstalledNextVersion(tree: Tree): string {
-  const pkgJson = readJson(tree, 'package.json');
-  const installedNextVersion =
-    pkgJson.dependencies && pkgJson.dependencies['next'];
+  const installedNextVersion = getDependencyVersionFromPackageJson(
+    tree,
+    'next'
+  );
 
   if (
     !installedNextVersion ||

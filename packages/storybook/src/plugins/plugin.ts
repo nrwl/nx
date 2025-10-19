@@ -4,6 +4,7 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   joinPathFragments,
   parseJson,
   readJsonFile,
@@ -20,12 +21,17 @@ import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import type { StorybookConfig } from 'storybook/internal/types';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { tsquery } from '@phenomnomnominal/tsquery';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
+
+const pmc = getPackageManagerCommand();
 
 export interface StorybookPluginOptions {
   buildStorybookTargetName?: string;
   serveStorybookTargetName?: string;
   staticStorybookTargetName?: string;
   testStorybookTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
 
 function readTargetsCache(
@@ -187,6 +193,14 @@ async function buildStorybookTargets(
   targets[options.staticStorybookTargetName] = serveStaticTarget(
     options,
     projectRoot
+  );
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
   );
 
   return targets;
@@ -400,6 +414,8 @@ function normalizeOptions(
       options.testStorybookTargetName ?? 'test-storybook',
     staticStorybookTargetName:
       options.staticStorybookTargetName ?? 'static-storybook',
+    buildDepsTargetName: options.buildDepsTargetName ?? 'build-deps',
+    watchDepsTargetName: options.watchDepsTargetName ?? 'watch-deps',
   };
 }
 

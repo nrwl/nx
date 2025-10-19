@@ -934,6 +934,8 @@ const docsToAstroRedirects = {
     '/docs/technologies/test-tools/playwright',
   '/technologies/test-tools/playwright/introduction':
     '/docs/technologies/test-tools/playwright/introduction',
+  '/technologies/test-tools/playwright/recipes/merge-atomized-outputs':
+    '/docs/technologies/test-tools/playwright/guides/merge-atomized-outputs',
   '/technologies/test-tools/storybook':
     '/docs/technologies/test-tools/storybook',
   '/technologies/test-tools/storybook/introduction':

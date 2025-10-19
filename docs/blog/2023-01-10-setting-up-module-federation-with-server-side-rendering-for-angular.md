@@ -13,7 +13,7 @@ This technology has enabled a much cleaner approach to Micro Frontend Architectu
 
 Nx offers great out-of-the-box support and developer experience for Module Federation for Angular and React. You can learn more about it from the resources below:
 
-📄 [Module Federation Recipes on Nx](/technologies/module-federation/recipes)
+📄 [Module Federation Recipes on Nx](/docs/technologies/module-federation/guides/create-a-host)
 📺 [Speed up your Angular serve and build times with Module Federation and Nx](https://www.youtube.com/watch?v=JkcaGzhRjkc)
 
 However, until now, it has only supported Client-Side Rendering (CSR). Essentially it worked only for Single Page Applications (SPAs). While this is still valuable, it is becoming ever more apparent that Server-Side Rendering (SSR) is becoming the de-facto standard for building web applications, due to the multitude of benefits it provides.
@@ -56,7 +56,7 @@ Answer with the following:
 
 When your workspace is created, run `cd myorg`.
 
-Next, we will need to install the [Official Nx Angular Plugin](/technologies/angular/introduction):
+Next, we will need to install the [Official Nx Angular Plugin](/docs/technologies/angular/introduction):
 
 ```
 npm install @nrwl/angular
@@ -120,7 +120,7 @@ npx nx serve-ssr dashboard --devRemotes=login
 
 ## Learn More
 
-🧠 [Nx Docs](/getting-started/intro)  
+🧠 [Nx Docs](/docs/getting-started/intro)  
 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)  
 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 📹 [Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)  
