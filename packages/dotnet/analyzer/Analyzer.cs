@@ -237,7 +237,7 @@ public static class Analyzer
         List<PackageReference> packageRefs)
     {
         return properties.GetValueOrDefault("IsTestProject") == "true" ||
-               packageRefs.Any(p => p.Include == "Microsoft.NET.Test.Sdk");
+               packageRefs.Any(p => p.Include == "Microsoft.NET.Test.Sdk" || p.Include.StartsWith("Microsoft.Testing"));
     }
 
     private static bool IsExecutableProject(Dictionary<string, string> properties)
