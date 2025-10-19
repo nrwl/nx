@@ -67,7 +67,11 @@ function writeAnalyzerCache(
   }
 }
 
-export interface DotNetPluginOptions {
+/**
+ * Options passed to the MSBuild analyzer.
+ * These are the target names that the analyzer will use to generate targets.
+ */
+export interface DotNetAnalyzerOptions {
   buildTargetName?: string;
   testTargetName?: string;
   cleanTargetName?: string;
@@ -127,7 +131,7 @@ async function calculateProjectFilesHash(
  */
 function runAnalyzer(
   projectFiles: string[],
-  options?: DotNetPluginOptions
+  options?: DotNetAnalyzerOptions
 ): AnalysisSuccessResult {
   if (projectFiles.length === 0) {
     return { nodesByFile: {}, referencesByRoot: {} };
@@ -225,7 +229,7 @@ function runAnalyzer(
  */
 export async function analyzeProjects(
   projectFiles: string[],
-  options?: DotNetPluginOptions
+  options?: DotNetAnalyzerOptions
 ): Promise<AnalysisResult> {
   const filesHash = await calculateProjectFilesHash(projectFiles);
 
