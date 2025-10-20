@@ -54,32 +54,42 @@ export interface DotNetPluginOptions {
    * Configuration for the build target.
    * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
    */
-  build?: TargetConfigurationWithName;
+  build?: TargetConfigurationWithName | false;
   /**
    * Configuration for the test target.
    * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
    */
-  test?: TargetConfigurationWithName;
+  test?: TargetConfigurationWithName | false;
   /**
    * Configuration for the clean target.
    * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
    */
-  clean?: TargetConfigurationWithName;
+  clean?: TargetConfigurationWithName | false;
   /**
    * Configuration for the restore target.
    * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
    */
-  restore?: TargetConfigurationWithName;
+  restore?: TargetConfigurationWithName | false;
   /**
    * Configuration for the publish target.
    * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
    */
-  publish?: TargetConfigurationWithName;
+  publish?: TargetConfigurationWithName | false;
   /**
    * Configuration for the pack target.
    * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
    */
-  pack?: TargetConfigurationWithName;
+  pack?: TargetConfigurationWithName | false;
+  /**
+   * Configuration for the watch target.
+   * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
+   */
+  watch?: TargetConfigurationWithName | false;
+  /**
+   * Configuration for the run target.
+   * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
+   */
+  run?: TargetConfigurationWithName | false;
 }
 
 const dotnetProjectGlob = '**/*.{csproj,fsproj,vbproj}';
@@ -96,7 +106,7 @@ function mergeUserTargetConfigurations(
   }
 
   const targetMappings: Array<{
-    targetOption: TargetConfigurationWithName | undefined;
+    targetOption: TargetConfigurationWithName | false | undefined;
     defaultTargetName: string;
   }> = [
     { targetOption: options.build, defaultTargetName: 'build' },
@@ -105,12 +115,15 @@ function mergeUserTargetConfigurations(
     { targetOption: options.restore, defaultTargetName: 'restore' },
     { targetOption: options.publish, defaultTargetName: 'publish' },
     { targetOption: options.pack, defaultTargetName: 'pack' },
+    { targetOption: options.watch, defaultTargetName: 'watch' },
+    { targetOption: options.run, defaultTargetName: 'run' },
   ];
 
   const mergedTargets = { ...node.targets };
 
   for (const { targetOption, defaultTargetName } of targetMappings) {
-    if (!targetOption) {
+    // Disabled target from user configuration
+    if (targetOption === false) {
       continue;
     }
 
@@ -158,12 +171,16 @@ export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
     try {
       // Extract target names from new format and create options for analyzer
       const analyzerOptions = {
-        buildTargetName: options?.build?.targetName ?? 'build',
-        testTargetName: options?.test?.targetName ?? 'test',
-        cleanTargetName: options?.clean?.targetName ?? 'clean',
-        restoreTargetName: options?.restore?.targetName ?? 'restore',
-        publishTargetName: options?.publish?.targetName ?? 'publish',
-        packTargetName: options?.pack?.targetName ?? 'pack',
+        buildTargetName: (options.build && options.build.targetName) || 'build',
+        testTargetName: (options.test && options.test.targetName) || 'test',
+        cleanTargetName: (options.clean && options.clean.targetName) || 'clean',
+        restoreTargetName:
+          (options.restore && options.restore.targetName) || 'restore',
+        publishTargetName:
+          (options.publish && options.publish.targetName) || 'publish',
+        packTargetName: (options.pack && options.pack.targetName) || 'pack',
+        watchTargetName: (options.watch && options.watch.targetName) || 'watch',
+        runTargetName: (options.run && options.run.targetName) || 'run',
       };
 
       const result = await analyzeProjects(

@@ -36,10 +36,12 @@ public static partial class TargetBuilder
 
         AddRestoreTarget(targets, fileName, options);
         AddCleanTarget(targets, fileName, isTest, options);
+        AddWatchTarget(targets, fileName, options);
 
         if (isExe)
         {
             AddPublishTarget(targets, projectName, fileName, isTest, properties, workspaceRoot, options, productionInput);
+            AddRunTarget(targets, fileName, options);
         }
 
         if (!isExe && !isTest)

@@ -26,7 +26,7 @@ function mergeUserTargetConfigurations(
   } = require('nx/src/project-graph/utils/project-configuration-utils');
 
   const targetMappings: Array<{
-    targetOption: TargetConfigurationWithName | undefined;
+    targetOption: TargetConfigurationWithName | false | undefined;
     defaultTargetName: string;
   }> = [
     { targetOption: options.build, defaultTargetName: 'build' },
@@ -532,8 +532,10 @@ describe('@nx/dotnet - createNodes', () => {
         test: {},
       };
 
-      const buildTargetName = options.build?.targetName ?? 'build';
-      const testTargetName = options.test?.targetName ?? 'test';
+      const buildTargetName =
+        (options.build && options.build.targetName) || 'build';
+      const testTargetName =
+        (options.test && options.test.targetName) || 'test';
 
       expect(buildTargetName).toBe('build');
       expect(testTargetName).toBe('test');
@@ -545,8 +547,10 @@ describe('@nx/dotnet - createNodes', () => {
         test: { targetName: 'unit-test' },
       };
 
-      const buildTargetName = options.build?.targetName ?? 'build';
-      const testTargetName = options.test?.targetName ?? 'test';
+      const buildTargetName =
+        (options.build && options.build.targetName) || 'build';
+      const testTargetName =
+        (options.test && options.test.targetName) || 'test';
 
       expect(buildTargetName).toBe('compile');
       expect(testTargetName).toBe('unit-test');
@@ -559,9 +563,12 @@ describe('@nx/dotnet - createNodes', () => {
         clean: { targetName: 'cleanup' },
       };
 
-      const buildTargetName = options.build?.targetName ?? 'build';
-      const testTargetName = options.test?.targetName ?? 'test';
-      const cleanTargetName = options.clean?.targetName ?? 'clean';
+      const buildTargetName =
+        (options.build && options.build.targetName) || 'build';
+      const testTargetName =
+        (options.test && options.test.targetName) || 'test';
+      const cleanTargetName =
+        (options.clean && options.clean.targetName) || 'clean';
 
       expect(buildTargetName).toBe('compile');
       expect(testTargetName).toBe('test');
