@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxDotNetMigrateFromNxDotnetSchema",
+  "title": "Migrate from @nx-dotnet/core",
+  "description": "Migrates a workspace from @nx-dotnet/core to @nx/dotnet.",
+  "type": "object",
+  "properties": {
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not update package.json dependencies.",
+      "x-priority": "internal"
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": false
+    },
+    "removeNxDotnetCore": {
+      "type": "boolean",
+      "description": "Remove @nx-dotnet/core packages from package.json (only recommended after completing manual migration steps)",
+      "default": false
+    },
+    "removeRcFile": {
+      "type": "boolean",
+      "description": "Remove .nx-dotnet.rc.json file after migration",
+      "default": true
+    },
+    "skipGitCheck": {
+      "type": "boolean",
+      "description": "Skip checking for clean git state before migration",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
+  "required": []
+}

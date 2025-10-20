@@ -5,6 +5,11 @@
       "implementation": "./dist/generators/init/init",
       "schema": "./dist/generators/init/schema.json",
       "description": "Initialize .NET support in an Nx workspace"
+    },
+    "migrate-from-nx-dotnet": {
+      "implementation": "./dist/generators/migrate-from-nx-dotnet/migrate-from-nx-dotnet",
+      "schema": "./dist/generators/migrate-from-nx-dotnet/schema.json",
+      "description": "Migrate from @nx-dotnet/core to @nx/dotnet"
     }
   }
 }
