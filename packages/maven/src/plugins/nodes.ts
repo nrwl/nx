@@ -13,7 +13,7 @@ import { hashObject } from 'nx/src/devkit-internals';
 /**
  * Maven plugin that analyzes Maven projects and returns configurations
  */
-export const createNodesV2: CreateNodesV2 = [
+export const createNodes: CreateNodesV2 = [
   '**/pom.xml',
   async (configFiles, options, context): Promise<CreateNodesResultV2> => {
     const opts: MavenPluginOptions = {

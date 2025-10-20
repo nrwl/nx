@@ -1,10 +1,4 @@
-import {
-  TargetConfiguration,
-  ProjectConfiguration,
-  CreateDependencies,
-  CreateNodesResultV2,
-} from '@nx/devkit';
-import { PluginCreateDependenciesResult } from 'nx/src/project-graph/plugins/isolation/messaging';
+import type { CreateNodesResultV2 } from '@nx/devkit';
 import type { RawProjectGraphDependency } from 'nx/src/project-graph/project-graph-builder';
 
 export interface MavenPluginOptions {
@@ -30,10 +24,4 @@ export interface MavenAnalysisData {
   generatedAt?: number;
   workspaceRoot?: string;
   totalProjects?: number;
-}
-
-// Nx-specific types for the createNodesResults format using official types
-
-export interface ProjectsWrapper {
-  projects: Record<string, ProjectConfiguration>;
 }
