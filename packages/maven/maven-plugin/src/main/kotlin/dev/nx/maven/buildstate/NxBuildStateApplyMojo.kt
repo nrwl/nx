@@ -22,6 +22,10 @@ import java.io.File
 )
 class NxBuildStateApplyMojo : AbstractMojo() {
 
+    companion object {
+        private const val BUILD_STATE_FILE = "nx-build-state.json"
+    }
+
     private val log: Logger = LoggerFactory.getLogger(NxBuildStateApplyMojo::class.java)
     private val objectMapper = ObjectMapper()
 
@@ -46,7 +50,6 @@ class NxBuildStateApplyMojo : AbstractMojo() {
         }
     }
 
-
     private fun addIfExists(path: String, action: () -> Unit) {
         if (File(path).isDirectory) action() else log.warn("Directory not found: $path")
     }
@@ -63,7 +66,7 @@ class NxBuildStateApplyMojo : AbstractMojo() {
     private fun applyAllBuildStates() {
         // Check all projects in the build - those with build state files will be applied
         val projectsToApply = session.allProjects.mapNotNull { depProject ->
-            val stateFile = File(depProject.build.directory, "nx-build-state.json")
+            val stateFile = File(depProject.build.directory, BUILD_STATE_FILE)
             if (stateFile.exists()) depProject to stateFile else null
         }
 
@@ -113,43 +116,47 @@ class NxBuildStateApplyMojo : AbstractMojo() {
 
             // Convert relative paths to absolute paths and apply classpaths
             val compileClasspath = PathUtils.toAbsolutePaths(buildState.compileClasspath, targetProject.basedir, log)
-            compileClasspath.forEach { targetProject.compileClasspathElements.add(it) }
+            targetProject.compileClasspathElements.addAll(compileClasspath)
 
             val testClasspath = PathUtils.toAbsolutePaths(buildState.testClasspath, targetProject.basedir, log)
-            testClasspath.forEach { targetProject.testClasspathElements.add(it) }
+            targetProject.testClasspathElements.addAll(testClasspath)
         }
 
         // Apply main artifact (only if file exists)
-        buildState.mainArtifact?.let { artifact ->
-            val absPath = PathUtils.toAbsolutePath(artifact.file, targetProject.basedir, log)
-            val file = File(absPath)
-            if (file.exists()) {
-                log.info("Applying main artifact: ${file.absolutePath} to ${targetProject.artifactId}")
-                targetProject.artifact.file = file
-            } else {
-                log.warn("Main artifact file does not exist, skipping: ${file.absolutePath}")
-            }
-        }
+        buildState.mainArtifact?.let { applyMainArtifact(targetProject, it) }
 
         // Apply attached artifacts (only if file exists)
-        buildState.attachedArtifacts.forEach { artifact ->
-            val absPath = PathUtils.toAbsolutePath(artifact.file, targetProject.basedir, log)
-            val file = File(absPath)
-            if (file.exists()) {
-                log.info("Applying attached artifact: ${file.absolutePath} to ${targetProject.artifactId}")
-                if (artifact.classifier.isNullOrEmpty()) {
-                    projectHelper.attachArtifact(targetProject, artifact.type, file)
-                } else {
-                    projectHelper.attachArtifact(targetProject, artifact.type, artifact.classifier, file)
-                }
-            } else {
-                log.warn("Attached artifact file does not exist, skipping: ${file.absolutePath}")
-            }
-        }
+        buildState.attachedArtifacts.forEach { applyAttachedArtifact(targetProject, it) }
 
         // Apply outputTimestamp
         buildState.outputTimestamp?.let {
             targetProject.properties.setProperty("project.build.outputTimestamp", it)
+        }
+    }
+
+    private fun applyMainArtifact(targetProject: MavenProject, artifact: ArtifactInfo) {
+        val absPath = PathUtils.toAbsolutePath(artifact.file, targetProject.basedir, log)
+        val file = File(absPath)
+        if (file.exists()) {
+            log.info("Applying main artifact: ${file.absolutePath} to ${targetProject.artifactId}")
+            targetProject.artifact.file = file
+        } else {
+            log.warn("Main artifact file does not exist, skipping: ${file.absolutePath}")
+        }
+    }
+
+    private fun applyAttachedArtifact(targetProject: MavenProject, artifact: ArtifactInfo) {
+        val absPath = PathUtils.toAbsolutePath(artifact.file, targetProject.basedir, log)
+        val file = File(absPath)
+        if (file.exists()) {
+            log.info("Applying attached artifact: ${file.absolutePath} to ${targetProject.artifactId}")
+            val classifier = artifact.classifier
+            when {
+                classifier.isNullOrEmpty() -> projectHelper.attachArtifact(targetProject, artifact.type, file)
+                else -> projectHelper.attachArtifact(targetProject, artifact.type, classifier, file)
+            }
+        } else {
+            log.warn("Attached artifact file does not exist, skipping: ${file.absolutePath}")
         }
     }
 }

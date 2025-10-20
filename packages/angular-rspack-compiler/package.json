@@ -1,7 +1,7 @@
 {
   "name": "@nx/angular-rspack-compiler",
   "private": false,
-  "version": "22.0.0",
+  "version": "0.0.1",
   "publishConfig": {
     "access": "public"
   },
