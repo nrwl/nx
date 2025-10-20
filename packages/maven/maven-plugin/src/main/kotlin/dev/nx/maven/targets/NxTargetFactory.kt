@@ -33,35 +33,6 @@ data class GoalDescriptor(
 )
 
 /**
- * Determines the execution priority for a goal within a phase.
- * Maven uses priority to determine the order of execution when multiple goals are bound to the same phase.
- * Lower numbers have higher priority (execute first).
- */
-private fun getExecutionPriority(execution: PluginExecution, mojoDescriptor: MojoDescriptor?): Int {
-  // Maven assigns priorities based on several factors:
-  // 1. Explicit priority in execution configuration
-  // 2. Plugin goal priority from mojo descriptor
-  // 3. Default priority (50)
-  // 4. Alphabetical order as tiebreaker
-
-  // For now, we'll use a simple heuristic based on common plugin patterns
-  val executionId = execution.id ?: "default"
-
-  // Well-known execution IDs that should run early
-  return when {
-    executionId.contains("generate") -> 10
-    executionId.contains("process") -> 20
-    executionId.contains("compile") -> 30
-    executionId.contains("test-compile") -> 35
-    executionId.contains("test") -> 40
-    executionId.contains("package") -> 60
-    executionId.contains("install") -> 70
-    executionId.contains("deploy") -> 80
-    else -> 50 // Default Maven priority
-  }
-}
-
-/**
  * Collects lifecycle and plugin information directly from Maven APIs
  */
 class NxTargetFactory(
@@ -76,40 +47,6 @@ class NxTargetFactory(
 ) {
   private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
 
-  // All goals now get build state management for maximum compatibility
-  private fun shouldApplyBuildState(): Boolean = true
-  private fun shouldRecordBuildState(): Boolean = true
-
-  /**
-   * Normalizes Maven 3 phase names to Maven 4 equivalents when running Maven 4.
-   * Returns the original phase name when running Maven 3.
-   */
-  private fun normalizePhase(phase: String?): String? {
-    if (phase == null) return null
-
-    val mavenVersion = session.systemProperties.getProperty("maven.version") ?: ""
-    if (!mavenVersion.startsWith("4")) {
-      return phase // Keep original phase names for Maven 3
-    }
-
-    return when (phase) {
-      "generate-sources" -> "sources"
-      "process-sources" -> "after:sources"
-      "generate-resources" -> "resources"
-      "process-resources" -> "after:resources"
-      "process-classes" -> "after:compile"
-      "generate-test-sources" -> "test-sources"
-      "process-test-sources" -> "after:test-sources"
-      "generate-test-resources" -> "test-resources"
-      "process-test-resources" -> "after:test-resources"
-      "process-test-classes" -> "after:test-compile"
-      "prepare-package" -> "before:package"
-      "pre-integration-test" -> "before:integration-test"
-      "post-integration-test" -> "after:integration-test"
-      else -> phase
-    }
-  }
-
 
   fun createNxTargets(
     mavenCommand: String, project: MavenProject
@@ -118,47 +55,10 @@ class NxTargetFactory(
     val targetGroups = mutableMapOf<String, List<String>>()
 
     val phaseDependsOn = mutableMapOf<String, MutableList<String>>()
-    val phaseGoals = mutableMapOf<String, MutableList<GoalDescriptor>>()
-
-    // First pass: collect all goals by phase from plugin executions
     val plugins = getExecutablePlugins(project)
-    plugins.forEach { plugin: Plugin ->
-      val pluginDescriptor = getPluginDescriptor(plugin, project)
-      val goalPrefix = pluginDescriptor.goalPrefix
 
-      plugin.executions.forEach { execution ->
-        execution.goals.forEach { goal ->
-          // Skip build-helper attach-artifact goal as it's not relevant for Nx
-          if (goalPrefix == "org.codehaus.mojo.build-helper" && goal == "attach-artifact") {
-            return@forEach
-          }
-
-          val mojoDescriptor = pluginDescriptor.getMojo(goal)
-          val phase = execution.phase ?: mojoDescriptor?.phase
-
-          val normalizedPhase = normalizePhase(phase)
-
-          if (normalizedPhase != null) {
-            val goalSpec = "$goalPrefix:$goal@${execution.id}"
-
-            // Determine execution priority - Maven uses priority to order goals within a phase
-            val executionPriority = getExecutionPriority(execution, mojoDescriptor)
-
-            val goalDescriptor = GoalDescriptor(
-              pluginDescriptor = pluginDescriptor,
-              mojoDescriptor = mojoDescriptor,
-              goal = goal,
-              goalSpecifier = goalSpec,
-              executionPriority = executionPriority,
-              executionId = execution.id
-            )
-
-            phaseGoals.computeIfAbsent(normalizedPhase) { mutableListOf() }.add(goalDescriptor)
-            log.info("Added goal $goalSpec to phase $normalizedPhase with priority $executionPriority")
-          }
-        }
-      }
-    }
+    // Collect all goals by phase from plugin executions
+    val phaseGoals = collectGoalsByPhase(plugins, project)
 
     val phaseTargets = mutableMapOf<String, NxTarget>()
     val ciPhaseTargets = mutableMapOf<String, NxTarget>()
@@ -205,15 +105,11 @@ class NxTargetFactory(
 
         phaseTargets[phase] = target
 
-//                    if (testIndex > -1 && index >= testIndex) {
         if (testIndex > -1) {
           val ciPhaseName = "$phase-ci"
           // Test and later phases get a CI counterpart - but only if they have goals
 
-          // Always create verify-ci (structural phase), or create if has goals
-          val shouldCreateCiPhase = hasGoals || phase == "verify"
-
-          if (shouldCreateCiPhase) {
+          if (shouldCreateCiPhase(hasGoals, phase)) {
             // Create CI targets for phases with goals, or noop for test/structural phases
             val ciTarget = if (hasGoals && phase != "test") {
               createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
@@ -224,14 +120,7 @@ class NxTargetFactory(
             val ciPhaseDependsOn = mutableListOf<String>()
 
             // Find the nearest previous phase that has a CI target
-            var previousCiPhase: String? = null
-            for (prevIdx in index - 1 downTo 0) {
-              val prevPhase = lifecycle.phases.getOrNull(prevIdx)
-              if (prevPhase != null && ciPhasesWithGoals.contains(prevPhase)) {
-                previousCiPhase = prevPhase
-                break
-              }
-            }
+            val previousCiPhase = findPreviousCiPhase(lifecycle.phases, index, ciPhasesWithGoals)
 
             if (previousCiPhase != null) {
               ciPhaseDependsOn.add("$previousCiPhase-ci")
@@ -265,9 +154,6 @@ class NxTargetFactory(
           }
         }
 
-//                target.dependsOn?.add("^$phase")
-//                phaseDependsOn[phase]?.add("^$phase")
-
         if (hasGoals) {
           log.info("Created phase target '$phase' with ${goalsForPhase?.size ?: 0} goals")
         } else {
@@ -276,39 +162,8 @@ class NxTargetFactory(
       }
     }
 
-    // Also create individual goal targets for granular execution
-    plugins.forEach { plugin: Plugin ->
-      val pluginDescriptor = runCatching { getPluginDescriptor(plugin, project) }
-        .getOrElse { throwable ->
-          log.warn(
-            "Failed to resolve plugin descriptor for ${plugin.groupId}:${plugin.artifactId}: ${throwable.message}"
-          )
-          return@forEach
-        }
-      val goalPrefix = pluginDescriptor.goalPrefix
-
-      plugin.executions.forEach { execution ->
-        execution.goals.forEach { goal ->
-          // Skip build-helper attach-artifact goal as it's not relevant for Nx
-          if (goalPrefix == "org.codehaus.mojo.build-helper" && goal == "attach-artifact") {
-            return@forEach
-          }
-
-          val goalTargetName = "$goalPrefix:$goal@${execution.id}"
-          val goalTarget = createSimpleGoalTarget(
-            mavenCommand,
-            project,
-            pluginDescriptor,
-            goalPrefix,
-            goal,
-            execution
-          ) ?: return@forEach
-          nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
-
-          log.info("Created individual goal target: $goalTargetName")
-        }
-      }
-    }
+    // Create individual goal targets for granular execution
+    createIndividualGoalTargets(plugins, project, mavenCommand, nxTargets)
 
     val mavenPhasesGroup = mutableListOf<String>()
     phaseTargets.forEach { (phase, target) ->
@@ -341,13 +196,7 @@ class NxTargetFactory(
       log.info("No test goals found for project ${project.artifactId}, skipping atomized test target generation")
     }
 
-    val targetGroupsJson = objectMapper.createObjectNode()
-    targetGroups.forEach { (groupName, targets) ->
-      val targetsArray = objectMapper.createArrayNode()
-      targets.forEach { target -> targetsArray.add(target) }
-      targetGroupsJson.set<ArrayNode>(groupName, targetsArray)
-    }
-
+    val targetGroupsJson = buildTargetGroupsJson(targetGroups)
     return Pair(nxTargets, targetGroupsJson)
   }
 
@@ -415,17 +264,15 @@ class NxTargetFactory(
     val commandParts = mutableListOf<String>()
     commandParts.add(mavenCommand)
 
-    // Add build state apply if needed (before goals)
-    if (shouldApplyBuildState()) {
-      commandParts.add(APPLY_GOAL)
-    }
+    // Add build state apply (all goals get build state management for maximum compatibility)
+    commandParts.add(APPLY_GOAL)
 
     // Add all goals for this phase (sorted by priority)
     commandParts.addAll(sortedGoals.map { it.goalSpecifier })
 
-    // Add build state record if needed (after goals)
+    // Add build state record (all goals except install)
     // TODO: install cannot record because it attaches a unique timestamp to artifacts, breaking caching
-    if (shouldRecordBuildState() && phase !== "install") {
+    if (phase !== "install") {
       commandParts.add(RECORD_GOAL)
     }
 
@@ -463,6 +310,115 @@ class NxTargetFactory(
     }
 
     return target
+  }
+
+  private fun collectGoalsByPhase(plugins: List<Plugin>, project: MavenProject): Map<String, MutableList<GoalDescriptor>> {
+    val phaseGoals = mutableMapOf<String, MutableList<GoalDescriptor>>()
+
+    plugins.forEach { plugin: Plugin ->
+      val pluginDescriptor = getPluginDescriptor(plugin, project)
+      val goalPrefix = pluginDescriptor.goalPrefix
+
+      plugin.executions.forEach { execution ->
+        execution.goals.forEach { goal ->
+          // Skip build-helper attach-artifact goal as it's not relevant for Nx
+          if (goalPrefix == "org.codehaus.mojo.build-helper" && goal == "attach-artifact") {
+            return@forEach
+          }
+
+          val mojoDescriptor = pluginDescriptor.getMojo(goal)
+          val phase = execution.phase ?: mojoDescriptor?.phase
+          val normalizedPhase = normalizePhase(phase)
+
+          if (normalizedPhase != null) {
+            val goalSpec = "$goalPrefix:$goal@${execution.id}"
+            val executionPriority = getExecutionPriority(execution)
+
+            val goalDescriptor = GoalDescriptor(
+              pluginDescriptor = pluginDescriptor,
+              mojoDescriptor = mojoDescriptor,
+              goal = goal,
+              goalSpecifier = goalSpec,
+              executionPriority = executionPriority,
+              executionId = execution.id
+            )
+
+            phaseGoals.computeIfAbsent(normalizedPhase) { mutableListOf() }.add(goalDescriptor)
+            log.info("Added goal $goalSpec to phase $normalizedPhase with priority $executionPriority")
+          }
+        }
+      }
+    }
+
+    return phaseGoals
+  }
+
+  private fun createIndividualGoalTargets(
+    plugins: List<Plugin>,
+    project: MavenProject,
+    mavenCommand: String,
+    nxTargets: ObjectNode
+  ) {
+    plugins.forEach { plugin: Plugin ->
+      val pluginDescriptor = runCatching { getPluginDescriptor(plugin, project) }
+        .getOrElse { throwable ->
+          log.warn(
+            "Failed to resolve plugin descriptor for ${plugin.groupId}:${plugin.artifactId}: ${throwable.message}"
+          )
+          return@forEach
+        }
+      val goalPrefix = pluginDescriptor.goalPrefix
+
+      plugin.executions.forEach { execution ->
+        execution.goals.forEach { goal ->
+          // Skip build-helper attach-artifact goal as it's not relevant for Nx
+          if (goalPrefix == "org.codehaus.mojo.build-helper" && goal == "attach-artifact") {
+            return@forEach
+          }
+
+          val goalTargetName = "$goalPrefix:$goal@${execution.id}"
+          val goalTarget = createSimpleGoalTarget(
+            mavenCommand,
+            project,
+            pluginDescriptor,
+            goalPrefix,
+            goal,
+            execution
+          ) ?: return@forEach
+          nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
+
+          log.info("Created individual goal target: $goalTargetName")
+        }
+      }
+    }
+  }
+
+  private fun findPreviousCiPhase(
+    lifecycle: List<String>,
+    index: Int,
+    ciPhasesWithGoals: Set<String>
+  ): String? {
+    for (prevIdx in index - 1 downTo 0) {
+      val prevPhase = lifecycle.getOrNull(prevIdx)
+      if (prevPhase != null && ciPhasesWithGoals.contains(prevPhase)) {
+        return prevPhase
+      }
+    }
+    return null
+  }
+
+  private fun shouldCreateCiPhase(hasGoals: Boolean, phase: String): Boolean {
+    return hasGoals || phase == "verify"
+  }
+
+  private fun buildTargetGroupsJson(targetGroups: Map<String, List<String>>): ObjectNode {
+    val targetGroupsJson = objectMapper.createObjectNode()
+    targetGroups.forEach { (groupName, targets) ->
+      val targetsArray = objectMapper.createArrayNode()
+      targets.forEach { target -> targetsArray.add(target) }
+      targetGroupsJson.set<ArrayNode>(groupName, targetsArray)
+    }
+    return targetGroupsJson
   }
 
   private fun createNoopPhaseTarget(
@@ -605,4 +561,64 @@ class NxTargetFactory(
   ): PluginDescriptor = pluginManager.getPluginDescriptor(
     plugin, project.remotePluginRepositories, session.repositorySession
   )
+
+  /**
+   * Normalizes Maven 3 phase names to Maven 4 equivalents when running Maven 4.
+   * Returns the original phase name when running Maven 3.
+   */
+  private fun normalizePhase(phase: String?): String? {
+    if (phase == null) return null
+
+    val mavenVersion = session.systemProperties.getProperty("maven.version") ?: ""
+    if (!mavenVersion.startsWith("4")) {
+      return phase // Keep original phase names for Maven 3
+    }
+
+    return when (phase) {
+      "generate-sources" -> "sources"
+      "process-sources" -> "after:sources"
+      "generate-resources" -> "resources"
+      "process-resources" -> "after:resources"
+      "process-classes" -> "after:compile"
+      "generate-test-sources" -> "test-sources"
+      "process-test-sources" -> "after:test-sources"
+      "generate-test-resources" -> "test-resources"
+      "process-test-resources" -> "after:test-resources"
+      "process-test-classes" -> "after:test-compile"
+      "prepare-package" -> "before:package"
+      "pre-integration-test" -> "before:integration-test"
+      "post-integration-test" -> "after:integration-test"
+      else -> phase
+    }
+  }
+}
+
+
+/**
+ * Determines the execution priority for a goal within a phase.
+ * Maven uses priority to determine the order of execution when multiple goals are bound to the same phase.
+ * Lower numbers have higher priority (execute first).
+ */
+private fun getExecutionPriority(execution: PluginExecution): Int {
+  // Maven assigns priorities based on several factors:
+  // 1. Explicit priority in execution configuration
+  // 2. Plugin goal priority from mojo descriptor
+  // 3. Default priority (50)
+  // 4. Alphabetical order as tiebreaker
+
+  // For now, we'll use a simple heuristic based on common plugin patterns
+  val executionId = execution.id ?: "default"
+
+  // Well-known execution IDs that should run early
+  return when {
+    executionId.contains("generate") -> 10
+    executionId.contains("process") -> 20
+    executionId.contains("compile") -> 30
+    executionId.contains("test-compile") -> 35
+    executionId.contains("test") -> 40
+    executionId.contains("package") -> 60
+    executionId.contains("install") -> 70
+    executionId.contains("deploy") -> 80
+    else -> 50 // Default Maven priority
+  }
 }
