@@ -52,7 +52,11 @@ export async function getBrowserConfig(
       cssFilename: `[name]${hashFormat.file}.css`,
       filename: `[name]${hashFormat.chunk}.js`,
       chunkFilename: `[name]${hashFormat.chunk}.js`,
-      ...(isDevServer ? {} : { scriptType: 'module', module: true }),
+      scriptType: 'module',
+      module: true,
+    },
+    experiments: {
+      outputModule: true,
     },
     resolve: {
       ...defaultConfig.resolve,
