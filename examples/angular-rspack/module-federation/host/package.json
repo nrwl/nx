@@ -1,0 +1,28 @@
+{
+  "name": "examples-angular-rspack-mf-host",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "@nx/angular-rspack": "workspace:*"
+  },
+  "devDependencies": {
+    "@nx/module-federation": "workspace:*",
+    "@rspack/core": "1.5.2",
+    "@rspack/cli": "1.5.2"
+  },
+  "nx": {
+    "targets": {
+      "serve": {
+        "dependsOn": [
+          "^build"
+        ]
+      },
+      "build": {
+        "dependsOn": [
+          "^build"
+        ]
+      }
+    }
+  }
+}

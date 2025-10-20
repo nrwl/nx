@@ -1205,6 +1205,176 @@ describe('convert-to-rspack', () => {
           parallelism: false,
         });
       });
+
+      it('should migrate port option from serve target to the new serve target', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+            serve: {
+              executor: '@angular-devkit/build-angular:dev-server',
+              options: {
+                port: 4300,
+              },
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.serve).toStrictEqual({
+          options: {
+            port: 4300,
+          },
+        });
+      });
+
+      it('should migrate configuration-level port from serve target to the new serve target', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+            serve: {
+              executor: '@angular-devkit/build-angular:dev-server',
+              options: {},
+              configurations: {
+                production: {
+                  port: 4500,
+                },
+              },
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.serve).toStrictEqual({
+          configurations: {
+            production: {
+              port: 4500,
+            },
+          },
+        });
+      });
+
+      it('should migrate configuration-level port from multiple configurations', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+            serve: {
+              executor: '@angular-devkit/build-angular:dev-server',
+              options: {},
+              configurations: {
+                production: {
+                  port: 4500,
+                },
+                development: {
+                  port: 4600,
+                },
+              },
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.serve).toStrictEqual({
+          configurations: {
+            production: {
+              port: 4500,
+            },
+            development: {
+              port: 4600,
+            },
+          },
+        });
+      });
+
+      it('should migrate both top-level and configuration-level port', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+            serve: {
+              executor: '@angular-devkit/build-angular:dev-server',
+              options: {
+                port: 4300,
+              },
+              configurations: {
+                production: {
+                  port: 4500,
+                },
+              },
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.serve).toStrictEqual({
+          options: {
+            port: 4300,
+          },
+          configurations: {
+            production: {
+              port: 4500,
+            },
+          },
+        });
+      });
     });
   });
 });
