@@ -2,7 +2,7 @@ import { CommandModule } from 'yargs';
 import { withVerbose } from '../../yargs-utils/shared-options';
 
 export const yargsStopAllAgentsCommand: CommandModule = {
-  command: 'start-agent [options]',
+  command: 'stop-all-agents [options]',
   aliases: ['complete-ci-run'],
   describe:
     'Terminates all dedicated agents associated with this CI pipeline execution. This command is an alias for [`nx-cloud stop-all-agents`](/docs/reference/nx-cloud-cli#nx-cloud-stop-all-agents).',
