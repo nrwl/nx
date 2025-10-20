@@ -12,6 +12,11 @@ export interface NxPlaywrightOptions {
   testDir?: string;
 
   /**
+   * Open the html report after the test run.
+   * @default 'on-failure'
+   */
+  openHtmlReport?: 'always' | 'never' | 'on-failure';
+  /**
    * Whether to generate blob reports. Useful when running atomized tasks in CI
    * and you want to merge the reports.
    * @default `!!process.env['CI']`
@@ -64,6 +69,7 @@ export function nxE2EPreset(
       outputFolder: isTsSolutionSetup
         ? 'test-output/playwright/report'
         : join(offset, 'dist', '.playwright', projectPath, 'playwright-report'),
+      open: options.openHtmlReport,
     },
   ]);
   const shouldGenerateBlobReports =
