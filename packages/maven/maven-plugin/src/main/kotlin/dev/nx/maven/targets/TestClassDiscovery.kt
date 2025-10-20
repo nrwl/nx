@@ -16,6 +16,7 @@ data class TestClassInfo(
 /**
  * Simple test class discovery utility for Maven projects
  * Uses lightweight string matching instead of complex AST parsing
+ * TODO: This should be pretty similar to the gradle one. We should look into merging them.
  */
 class TestClassDiscovery() {
     private val log: Logger = LoggerFactory.getLogger(TestClassDiscovery::class.java)
