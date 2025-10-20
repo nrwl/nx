@@ -364,11 +364,6 @@ export function pluginSpecialCasePluginRemapping(pluginName: string) {
     // we call the js plugin `typescript` in the URLs technologies
     case 'js':
       return 'typescript';
-    // we make the default java pages be the gradle impl atm.
-    // this will probs change with maven
-    case 'gradle':
-    case 'java':
-      return 'java';
     default:
       return pluginName;
   }
