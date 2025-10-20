@@ -65,102 +65,16 @@ class NxTargetFactory(
     val ciPhasesWithGoals = mutableSetOf<String>() // Track which CI phases have goals
 
     // Create phase targets from lifecycle, but only for phases that have goals
-    lifecycles.lifeCycles.forEach { lifecycle ->
-      log.info(
-        "Analyzing ${lifecycle.phases.size} phases for ${project.artifactId}: ${
-          lifecycle.phases.joinToString(
-            ", "
-          )
-        }"
-      )
-
-      val hasInstall = lifecycle.phases.contains("install")
-      val testIndex = lifecycle.phases.indexOf("test")
-
-      lifecycle.phases.forEachIndexed { index, phase ->
-        val goalsForPhase = phaseGoals[phase]
-        val hasGoals = goalsForPhase?.isNotEmpty() == true
-
-        // Create target for all phases - either with goals or as noop
-        val target = if (hasGoals) {
-          createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
-        } else {
-          createNoopPhaseTarget(phase)
-        }
-
-        phaseDependsOn[phase] = mutableListOf()
-        target.dependsOn = target.dependsOn ?: objectMapper.createArrayNode()
-
-        if (hasInstall) {
-          target.dependsOn?.add("^install")
-          phaseDependsOn[phase]?.add("^install")
-        }
-
-        // Add dependency on immediate previous phase (if exists)
-        val previousPhase = lifecycle.phases.getOrNull(index - 1)
-        if (previousPhase != null) {
-          target.dependsOn?.add(previousPhase)
-          phaseDependsOn[phase]?.add(previousPhase)
-        }
-
-        phaseTargets[phase] = target
-
-        if (testIndex > -1) {
-          val ciPhaseName = "$phase-ci"
-          // Test and later phases get a CI counterpart - but only if they have goals
-
-          if (shouldCreateCiPhase(hasGoals, phase)) {
-            // Create CI targets for phases with goals, or noop for test/structural phases
-            val ciTarget = if (hasGoals && phase != "test") {
-              createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
-            } else {
-              // Noop for test phase (will be orchestrated by atomized tests) or structural phases
-              createNoopPhaseTarget(phase)
-            }
-            val ciPhaseDependsOn = mutableListOf<String>()
-
-            // Find the nearest previous phase that has a CI target
-            val previousCiPhase = findPreviousCiPhase(lifecycle.phases, index, ciPhasesWithGoals)
-
-            if (previousCiPhase != null) {
-              ciPhaseDependsOn.add("$previousCiPhase-ci")
-              log.info("CI phase '$phase' depends on previous CI phase: '$previousCiPhase'")
-            }
-
-            if (hasInstall) {
-              ciPhaseDependsOn.add("^install-ci")
-            }
-
-            // Initialize dependsOn for all CI targets (for atomized tests or phase dependencies)
-            ciTarget.dependsOn = ciTarget.dependsOn ?: objectMapper.createArrayNode()
-
-            // Add phase dependencies to all CI targets
-            ciPhaseDependsOn.forEach {
-              ciTarget.dependsOn?.add(it)
-            }
-
-            phaseDependsOn[ciPhaseName] = ciPhaseDependsOn
-            ciPhaseTargets[ciPhaseName] = ciTarget
-            // Track all CI phases so the dependency chain is preserved
-            ciPhasesWithGoals.add(phase)
-
-            if (hasGoals) {
-              log.info("Created CI phase target '$phase-ci' with goals")
-            } else {
-              log.info("Created noop CI phase target '$phase-ci'")
-            }
-          } else {
-            log.info("Skipping noop CI phase target '$phase-ci' (no goals)")
-          }
-        }
-
-        if (hasGoals) {
-          log.info("Created phase target '$phase' with ${goalsForPhase?.size ?: 0} goals")
-        } else {
-          log.info("Created noop phase target '$phase' (no goals)")
-        }
-      }
-    }
+    processLifecyclePhases(
+      lifecycles.lifeCycles,
+      phaseGoals,
+      project,
+      mavenCommand,
+      phaseTargets,
+      ciPhaseTargets,
+      phaseDependsOn,
+      ciPhasesWithGoals
+    )
 
     // Create individual goal targets for granular execution
     createIndividualGoalTargets(plugins, project, mavenCommand, nxTargets)
@@ -310,6 +224,114 @@ class NxTargetFactory(
     }
 
     return target
+  }
+
+  private fun processLifecyclePhases(
+    lifecycles: List<org.apache.maven.lifecycle.Lifecycle>,
+    phaseGoals: Map<String, MutableList<GoalDescriptor>>,
+    project: MavenProject,
+    mavenCommand: String,
+    phaseTargets: MutableMap<String, NxTarget>,
+    ciPhaseTargets: MutableMap<String, NxTarget>,
+    phaseDependsOn: MutableMap<String, MutableList<String>>,
+    ciPhasesWithGoals: MutableSet<String>
+  ) {
+    lifecycles.forEach { lifecycle ->
+      log.info(
+        "Analyzing ${lifecycle.phases.size} phases for ${project.artifactId}: ${
+          lifecycle.phases.joinToString(
+            ", "
+          )
+        }"
+      )
+
+      val hasInstall = lifecycle.phases.contains("install")
+      val testIndex = lifecycle.phases.indexOf("test")
+
+      lifecycle.phases.forEachIndexed { index, phase ->
+        val goalsForPhase = phaseGoals[phase]
+        val hasGoals = goalsForPhase?.isNotEmpty() == true
+
+        // Create target for all phases - either with goals or as noop
+        val target = if (hasGoals) {
+          createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
+        } else {
+          createNoopPhaseTarget(phase)
+        }
+
+        phaseDependsOn[phase] = mutableListOf()
+        target.dependsOn = target.dependsOn ?: objectMapper.createArrayNode()
+
+        if (hasInstall) {
+          target.dependsOn?.add("^install")
+          phaseDependsOn[phase]?.add("^install")
+        }
+
+        // Add dependency on immediate previous phase (if exists)
+        val previousPhase = lifecycle.phases.getOrNull(index - 1)
+        if (previousPhase != null) {
+          target.dependsOn?.add(previousPhase)
+          phaseDependsOn[phase]?.add(previousPhase)
+        }
+
+        phaseTargets[phase] = target
+
+        if (testIndex > -1) {
+          val ciPhaseName = "$phase-ci"
+          // Test and later phases get a CI counterpart - but only if they have goals
+
+          if (shouldCreateCiPhase(hasGoals, phase)) {
+            // Create CI targets for phases with goals, or noop for test/structural phases
+            val ciTarget = if (hasGoals && phase != "test") {
+              createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
+            } else {
+              // Noop for test phase (will be orchestrated by atomized tests) or structural phases
+              createNoopPhaseTarget(phase)
+            }
+            val ciPhaseDependsOn = mutableListOf<String>()
+
+            // Find the nearest previous phase that has a CI target
+            val previousCiPhase = findPreviousCiPhase(lifecycle.phases, index, ciPhasesWithGoals)
+
+            if (previousCiPhase != null) {
+              ciPhaseDependsOn.add("$previousCiPhase-ci")
+              log.info("CI phase '$phase' depends on previous CI phase: '$previousCiPhase'")
+            }
+
+            if (hasInstall) {
+              ciPhaseDependsOn.add("^install-ci")
+            }
+
+            // Initialize dependsOn for all CI targets (for atomized tests or phase dependencies)
+            ciTarget.dependsOn = ciTarget.dependsOn ?: objectMapper.createArrayNode()
+
+            // Add phase dependencies to all CI targets
+            ciPhaseDependsOn.forEach {
+              ciTarget.dependsOn?.add(it)
+            }
+
+            phaseDependsOn[ciPhaseName] = ciPhaseDependsOn
+            ciPhaseTargets[ciPhaseName] = ciTarget
+            // Track all CI phases so the dependency chain is preserved
+            ciPhasesWithGoals.add(phase)
+
+            if (hasGoals) {
+              log.info("Created CI phase target '$phase-ci' with goals")
+            } else {
+              log.info("Created noop CI phase target '$phase-ci'")
+            }
+          } else {
+            log.info("Skipping noop CI phase target '$phase-ci' (no goals)")
+          }
+        }
+
+        if (hasGoals) {
+          log.info("Created phase target '$phase' with ${goalsForPhase?.size ?: 0} goals")
+        } else {
+          log.info("Created noop phase target '$phase' (no goals)")
+        }
+      }
+    }
   }
 
   private fun collectGoalsByPhase(plugins: List<Plugin>, project: MavenProject): Map<String, MutableList<GoalDescriptor>> {
