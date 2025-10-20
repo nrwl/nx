@@ -99,6 +99,48 @@ Similarly, if you only want to self-heal linting tasks you'd use `--fix-tasks="*
 
 Tasks are passed to the `--fix-tasks` as `<project>:<task-name>:<configuration>`. Commands like `nx format` which you configure with `nx-cloud record --` are passed as `nx-cloud record -- <params>`.
 
+### Customize Self-Healing Behavior
+
+You can customize how Self-Healing CI behaves in your workspace by creating a `CLAUDE.md` file in your repository root. This file allows you to define custom classification rules and predefined fixes tailored to your project's specific needs.
+
+#### Customize Failure Classification
+
+Before proposing a fix, the Self-Healing CI agent classifies each failure into one of three categories:
+
+- **`code_change`** - Failures directly caused by PR changes. Self-Healing will _propose and implement code fixes_.
+- **`environment_state`** - Failures caused by environmental issues (network errors, service outages, resource constraints). Self-Healing will _not propose fixes_.
+- **`flaky_task`** - Non-deterministic failures from timing issues or race conditions. Self-Healing _detects the flakiness and retriggers a pipeline run for the flaky task_.
+
+You can override the default classification behavior with custom rules in `CLAUDE.md` by describing the nature of the error as well as one of the before mentioned categories:
+
+```markdown
+// CLAUDE.md
+
+## Self-Healing CI
+
+### Classification Customization
+
+When analyzing failures, override the default classification in these cases:
+
+- If there are errors about missing environment variables (like API_KEY, DATABASE_URL, etc.) classify them as 'environment_state'.
+```
+
+#### Define Predefined Fixes
+
+For common, deterministic failures, you can define predefined fixes that Self-Healing CI should apply automatically. This is particularly useful for tasks that have standard, repeatable solutions. Here's an example to trigger `lint --fix` instead of having the AI attempt to implement the fix:
+
+```markdown
+// CLAUDE.md
+
+## Self-Healing CI
+
+Predefined fix:
+
+- If a failed task id contains ":lint", fix it by running linting on the project where it failed with the `--fix` flag. Example: `nx run myapp:lint --fix` where "myapp" is the app the task failed on.
+```
+
+These predefined fixes allow Self-Healing CI to apply deterministic solutions without needing to analyze the code, speeding up the fix generation process for common scenarios.
+
 ## How Self-Healing CI works
 
 Here's what happens when you push a PR with Self-Healing CI enabled:
