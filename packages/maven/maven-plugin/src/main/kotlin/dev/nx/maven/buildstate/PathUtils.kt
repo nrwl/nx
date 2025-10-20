@@ -2,7 +2,6 @@ package dev.nx.maven.buildstate
 
 import org.slf4j.Logger
 import java.io.File
-import java.nio.file.Files
 import java.nio.file.Paths
 
 /**
@@ -20,13 +19,10 @@ object PathUtils {
      */
     fun toRelativePath(absolutePath: String, projectRoot: File, logger: Logger? = null): String {
         return try {
-            val absFile = File(absolutePath)
-            val absPath = absFile.canonicalPath
+            val absPath = File(absolutePath).canonicalPath
             val rootPath = projectRoot.canonicalPath
-
-            val relPath = Paths.get(rootPath).relativize(Paths.get(absPath)).toString()
-            relPath
-        } catch (e: Exception) {
+            Paths.get(rootPath).relativize(Paths.get(absPath)).toString()
+        } catch (_: Exception) {
             logger?.warn("Failed to convert absolute path to relative: $absolutePath, using absolute path")
             absolutePath
         }
@@ -43,13 +39,12 @@ object PathUtils {
     fun toAbsolutePath(pathString: String, projectRoot: File, logger: Logger? = null): String {
         return try {
             val path = File(pathString)
-            val absPath = if (path.isAbsolute) {
+            if (path.isAbsolute) {
                 path.canonicalPath
             } else {
                 File(projectRoot, pathString).canonicalPath
             }
-            absPath
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             logger?.warn("Failed to convert relative path to absolute: $pathString, using as-is")
             pathString
         }
