@@ -126,6 +126,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     'packages/angular-rspack',
     'packages/angular-rspack-compiler',
     'packages/dotnet',
+    'packages/maven',
   ];
 
   const packageSnapshots: { [key: string]: string } = {};
