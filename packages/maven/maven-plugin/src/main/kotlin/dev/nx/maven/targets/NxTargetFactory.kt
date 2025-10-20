@@ -64,7 +64,8 @@ class NxTargetFactory(
     val ciPhaseTargets = mutableMapOf<String, NxTarget>()
     val ciPhasesWithGoals = mutableSetOf<String>() // Track which CI phases have goals
 
-    // Create phase targets from lifecycle, but only for phases that have goals
+    // Create phase targets from lifecycle (all phases get targets, either with goals or as noop)
+    // CI phase targets are only created if they have goals or are "verify" phase
     processLifecyclePhases(
       lifecycles.lifeCycles,
       phaseGoals,
