@@ -384,11 +384,6 @@ class NxTargetFactory(
 
       plugin.executions.forEach { execution ->
         execution.goals.forEach { goal ->
-          // Skip build-helper attach-artifact goal as it's not relevant for Nx
-          if (goalPrefix == "org.codehaus.mojo.build-helper" && goal == "attach-artifact") {
-            return@forEach
-          }
-
           val mojoDescriptor = pluginDescriptor.getMojo(goal)
           val phase = execution.phase ?: mojoDescriptor?.phase
           val normalizedPhase = normalizePhase(phase)

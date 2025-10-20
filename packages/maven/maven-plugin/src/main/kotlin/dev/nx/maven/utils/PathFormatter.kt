@@ -8,23 +8,23 @@ import java.io.File
 class PathFormatter {
 
   fun formatInputPath(path: File, projectRoot: File): String {
-        return toProjectPath(path, projectRoot)
-    }
+    return toProjectPath(path, projectRoot)
+  }
 
-    fun toDependentTaskOutputs(path: File, projectRoot: File): DependentTaskOutputs {
-        val relativePath = path.relativeTo(projectRoot)
-        return DependentTaskOutputs(relativePath.path)
-    }
+  fun toDependentTaskOutputs(path: File, projectRoot: File): DependentTaskOutputs {
+    val relativePath = path.relativeTo(projectRoot)
+    return DependentTaskOutputs(relativePath.path)
+  }
 
-    fun formatOutputPath(path: File, projectRoot: File): String {
-        return toProjectPath(path, projectRoot)
-    }
+  fun formatOutputPath(path: File, projectRoot: File): String {
+    return toProjectPath(path, projectRoot)
+  }
 
-    fun toProjectPath(path: File, projectRoot: File): String {
-        val relativePath = path.relativeToOrSelf(projectRoot)
+  fun toProjectPath(path: File, projectRoot: File): String {
+    val relativePath = path.relativeToOrSelf(projectRoot)
 
-        return "{projectRoot}/$relativePath"
-    }
+    return "{projectRoot}/$relativePath"
+  }
 }
 
 data class DependentTaskOutputs(val path: String, val transitive: Boolean = true)
