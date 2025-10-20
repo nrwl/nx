@@ -169,18 +169,34 @@ export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
   async (configFilePaths, options, context) => {
     // Analyze all projects - the C# analyzer builds the complete Nx structure
     try {
+      // Normalize options to handle undefined (when plugin is registered as string)
+      const normalizedOptions = options ?? {};
+
       // Extract target names from new format and create options for analyzer
       const analyzerOptions = {
-        buildTargetName: (options.build && options.build.targetName) || 'build',
-        testTargetName: (options.test && options.test.targetName) || 'test',
-        cleanTargetName: (options.clean && options.clean.targetName) || 'clean',
+        buildTargetName:
+          (normalizedOptions.build && normalizedOptions.build.targetName) ||
+          'build',
+        testTargetName:
+          (normalizedOptions.test && normalizedOptions.test.targetName) ||
+          'test',
+        cleanTargetName:
+          (normalizedOptions.clean && normalizedOptions.clean.targetName) ||
+          'clean',
         restoreTargetName:
-          (options.restore && options.restore.targetName) || 'restore',
+          (normalizedOptions.restore && normalizedOptions.restore.targetName) ||
+          'restore',
         publishTargetName:
-          (options.publish && options.publish.targetName) || 'publish',
-        packTargetName: (options.pack && options.pack.targetName) || 'pack',
-        watchTargetName: (options.watch && options.watch.targetName) || 'watch',
-        runTargetName: (options.run && options.run.targetName) || 'run',
+          (normalizedOptions.publish && normalizedOptions.publish.targetName) ||
+          'publish',
+        packTargetName:
+          (normalizedOptions.pack && normalizedOptions.pack.targetName) ||
+          'pack',
+        watchTargetName:
+          (normalizedOptions.watch && normalizedOptions.watch.targetName) ||
+          'watch',
+        runTargetName:
+          (normalizedOptions.run && normalizedOptions.run.targetName) || 'run',
       };
 
       const result = await analyzeProjects(
@@ -202,7 +218,10 @@ export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
         }
 
         // Merge user-specified target configurations with generated targets
-        const mergedNode = mergeUserTargetConfigurations(node, options);
+        const mergedNode = mergeUserTargetConfigurations(
+          node,
+          normalizedOptions
+        );
 
         return [
           configFile,
