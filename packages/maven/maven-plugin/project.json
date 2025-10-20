@@ -6,8 +6,9 @@
   "targets": {
     "install": {
       "command": "./mvnw install"
+    },
+    "_install": {
+      "command": "node scripts/build-maven-analyzer.js"
     }
-  },
-  "tags": [],
-  "implicitDependencies": ["nx-maven-plugin"]
+  }
 }
