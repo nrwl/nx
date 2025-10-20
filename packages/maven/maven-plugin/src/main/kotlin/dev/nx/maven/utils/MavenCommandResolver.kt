@@ -10,6 +10,11 @@ import java.io.File
 object MavenCommandResolver {
     private val log = LoggerFactory.getLogger(MavenCommandResolver::class.java)
 
+    private const val MVND_COMMAND = "mvnd"
+    private const val MVNW_COMMAND = "./mvnw"
+    private const val MVN_COMMAND = "mvn"
+    private const val MVNW_FILENAME = "mvnw"
+
     @Volatile
     private var cachedCommand: String? = null
 
@@ -17,10 +22,9 @@ object MavenCommandResolver {
      * Gets the best Maven executable with caching: mvnd > mvnw > mvn
      */
     fun getMavenCommand(workspaceRoot: File): String {
-        // Return cached result if workspace root hasn't changed
-        if (cachedCommand != null) {
-            log.debug("Using cached Maven command: $cachedCommand")
-            return cachedCommand!!
+        cachedCommand?.let {
+            log.debug("Using cached Maven command: $it")
+            return it
         }
 
         log.info("Detecting Maven command for workspace: $workspaceRoot")
@@ -31,41 +35,41 @@ object MavenCommandResolver {
         val detectionTime = System.currentTimeMillis() - startTime
         log.info("Maven command detection completed: '$cachedCommand' in ${detectionTime}ms")
 
-        return cachedCommand as String
+        return cachedCommand!!
     }
 
     private fun detectMavenCommand(workspaceRoot: File): String {
         // First priority: Check for Maven Daemon
-        try {
-            val mvndStart = System.currentTimeMillis()
-            val process = ProcessBuilder("mvnd", "--version")
+        if (isMvndAvailable()) {
+            log.info("Found mvnd (Maven Daemon)")
+            return MVND_COMMAND
+        }
+
+        // Second priority: Check for Maven wrapper
+        val mvnwFile = File(workspaceRoot, MVNW_FILENAME)
+        if (mvnwFile.exists() && mvnwFile.canExecute()) {
+            log.info("Found Maven wrapper: $MVNW_COMMAND")
+            return MVNW_COMMAND
+        }
+
+        log.info("Falling back to system Maven: $MVN_COMMAND")
+        return MVN_COMMAND
+    }
+
+    private fun isMvndAvailable(): Boolean {
+        return try {
+            val startTime = System.currentTimeMillis()
+            val process = ProcessBuilder(MVND_COMMAND, "--version")
                 .redirectOutput(ProcessBuilder.Redirect.PIPE)
                 .redirectError(ProcessBuilder.Redirect.PIPE)
                 .start()
             val exitCode = process.waitFor()
-            val mvndTime = System.currentTimeMillis() - mvndStart
-            log.debug("mvnd detection took ${mvndTime}ms")
-
-            if (exitCode == 0) {
-                log.info("Found mvnd (Maven Daemon)")
-                return "mvnd"
-            }
+            val detectionTime = System.currentTimeMillis() - startTime
+            log.debug("$MVND_COMMAND detection took ${detectionTime}ms")
+            exitCode == 0
         } catch (e: Exception) {
-            log.debug("mvnd not available: ${e.message}")
+            log.debug("$MVND_COMMAND not available: ${e.message}")
+            false
         }
-
-        // Second priority: Check for Maven wrapper
-        val mvnwStart = System.currentTimeMillis()
-        val mvnwFile = File(workspaceRoot, "mvnw")
-        val mvnwTime = System.currentTimeMillis() - mvnwStart
-        log.debug("mvnw file check took ${mvnwTime}ms")
-
-        if (mvnwFile.exists() && mvnwFile.canExecute()) {
-            log.info("Found Maven wrapper: ./mvnw")
-            return "./mvnw"
-        }
-
-        log.info("Falling back to system Maven: mvn")
-        return "mvn"
     }
 }
