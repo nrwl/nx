@@ -7,7 +7,7 @@ import {
   readNxJson,
   updateNxJson,
 } from '@nx/devkit';
-import { DOMParser, XMLSerializer } from 'xmldom';
+import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import { mavenPluginVersion, nxVersion } from '../../utils/versions';
 
 export interface MavenInitGeneratorSchema {

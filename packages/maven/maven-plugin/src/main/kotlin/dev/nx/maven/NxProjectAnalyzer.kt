@@ -22,7 +22,6 @@ class NxProjectAnalyzer(
     private val objectMapper = ObjectMapper()
     private val log: Logger = LoggerFactory.getLogger(NxProjectAnalyzer::class.java)
 
-
     /**
      * Analyzes the project and returns Nx project config
      */

@@ -46,7 +46,7 @@
   "license": "MIT",
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "xmldom": "^0.6.0"
+    "@xmldom/xmldom": "^0.8.10"
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
