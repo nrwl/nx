@@ -174,4 +174,4 @@ export type PostTasksExecution<TOptions = unknown> = (
 /**
  * A plugin which enhances the behavior of Nx
  */
-export type NxPlugin = NxPluginV2;
+export type NxPlugin<TOptions = unknown> = NxPluginV2<TOptions>;

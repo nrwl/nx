@@ -1254,6 +1254,22 @@
               ]
             },
             {
+              "name": ".NET",
+              "id": "dotnet",
+              "itemList": [
+                {
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/dotnet/dotnet-plugin"
+                },
+                {
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/dotnet/dotnet-plugin"
+                }
+              ]
+            },
+            {
               "name": "Module Federation",
               "id": "module-federation",
               "description": "Advanced guides to utilize Module Federation with Nx.",

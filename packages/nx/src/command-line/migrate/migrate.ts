@@ -64,7 +64,7 @@ import {
   onlyDefaultRunnerIsUsed,
 } from '../nx-cloud/connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
-import { existsSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { isCI } from '../../utils/is-ci';
 import {
@@ -84,7 +84,7 @@ import {
   ensurePackageHasProvenance,
   getNxPackageGroup,
 } from '../../utils/provenance';
-import { getCatalogManager } from '../../utils/catalog';
+import { type CatalogManager, getCatalogManager } from '../../utils/catalog';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1259,6 +1259,36 @@ async function updatePackageJson(
   if (catalogUpdates.length) {
     // manager is guaranteed to be defined when there are catalog updates
     manager!.updateCatalogVersions(root, catalogUpdates);
+    await formatCatalogDefinitionFiles(manager!, root);
+  }
+}
+
+async function formatCatalogDefinitionFiles(
+  manager: CatalogManager,
+  root: string
+) {
+  const catalogDefinitionFilePaths = manager.getCatalogDefinitionFilePaths();
+  const catalogDefinitionFiles = catalogDefinitionFilePaths.map((filePath) => {
+    const absolutePath = join(root, filePath);
+    return {
+      path: filePath,
+      absolutePath,
+      content: readFileSync(absolutePath, 'utf-8'),
+    };
+  });
+
+  const results = await formatFilesWithPrettierIfAvailable(
+    catalogDefinitionFiles.map(({ path, content }) => ({ path, content })),
+    root,
+    { silent: true }
+  );
+
+  for (const { path, absolutePath, content } of catalogDefinitionFiles) {
+    writeFileSync(
+      absolutePath,
+      results.has(path) ? results.get(path)! : content,
+      { encoding: 'utf-8' }
+    );
   }
 }
 

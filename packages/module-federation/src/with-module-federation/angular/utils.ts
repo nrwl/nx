@@ -5,6 +5,7 @@ import {
   mapRemotes,
   mapRemotesForSSR,
   ModuleFederationConfig,
+  normalizeProjectName,
   SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
@@ -28,6 +29,7 @@ export function applyDefaultEagerPackages(
       ? [
           '@angular/core',
           '@angular/core/primitives/signals',
+          '@angular/core/primitives/di',
           '@angular/core/event-dispatch',
           '@angular/core/rxjs-interop',
           '@angular/common',
@@ -98,7 +100,7 @@ export function getFunctionDeterminateRemoteUrl(
       serveTarget.options?.host ??
       `http${serveTarget.options.ssl ? 's' : ''}://localhost`;
     const port = serveTarget.options?.port ?? 4201;
-    return `${useRspack ? `${remote}@` : ''}${
+    return `${
       host.endsWith('/') ? host.slice(0, -1) : host
     }:${port}/${remoteEntry}`;
   };
@@ -219,12 +221,15 @@ export function getModuleFederationConfigSync(
   }
 
   const sharedLibraries = shareWorkspaceLibraries(
-    dependencies.workspaceLibraries
+    dependencies.workspaceLibraries,
+    undefined,
+    'rspack'
   );
 
   const npmPackages = sharePackages(
     Array.from(
       new Set([
+        ...DEFAULT_ANGULAR_PACKAGES_TO_SHARE,
         ...dependencies.npmPackages.filter(
           (pkg) => !DEFAULT_NPM_PACKAGES_TO_AVOID.includes(pkg)
         ),

@@ -15,7 +15,7 @@ describe('js:swc executor', () => {
   let scope: string;
 
   beforeAll(() => {
-    scope = newProject();
+    scope = newProject({ packages: ['@nx/js'] });
   });
 
   afterAll(() => {
