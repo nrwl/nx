@@ -21,13 +21,17 @@ import java.io.File
 )
 class NxBuildStateRecordMojo : AbstractMojo() {
 
+    companion object {
+        private const val BUILD_STATE_FILE = "nx-build-state.json"
+    }
+
     private val log: Logger = LoggerFactory.getLogger(NxBuildStateRecordMojo::class.java)
     private val objectMapper = ObjectMapper()
 
     @Parameter(defaultValue = "\${project}", readonly = true, required = true)
     private lateinit var project: MavenProject
 
-    @Parameter(property = "outputFile", defaultValue = "\${project.build.directory}/nx-build-state.json", readonly = true)
+    @Parameter(property = "outputFile", defaultValue = "\${project.build.directory}/$BUILD_STATE_FILE", readonly = true)
     private lateinit var outputFile: File
 
     @Throws(MojoExecutionException::class)
@@ -56,33 +60,6 @@ class NxBuildStateRecordMojo : AbstractMojo() {
             val testResources = PathUtils.toRelativePaths(testResourcesAbsolute, project.basedir, log)
             log.info("Captured ${testResources.size} test resource directories")
 
-
-//            // Capture generated source roots (from build helper plugin or annotation processors)
-//            val generatedSourceRoots = mutableSetOf<String>()
-//            val generatedTestSourceRoots = mutableSetOf<String>()
-
-//            // Look for common generated source patterns
-//            val targetGenerated = File(project.build.directory, "generated-sources")
-//            if (targetGenerated.exists()) {
-//                targetGenerated.listFiles()?.forEach { dir ->
-//                    if (dir.isDirectory) {
-//                        generatedSourceRoots.add(dir.absolutePath)
-//                    }
-//                }
-//            }
-//
-//            val targetGeneratedTest = File(project.build.directory, "generated-test-sources")
-//            if (targetGeneratedTest.exists()) {
-//                targetGeneratedTest.listFiles()?.forEach { dir ->
-//                    if (dir.isDirectory) {
-//                        generatedTestSourceRoots.add(dir.absolutePath)
-//                    }
-//                }
-//            }
-
-//            log.info("Captured ${generatedSourceRoots.size} generated source roots")
-//            log.info("Captured ${generatedTestSourceRoots.size} generated test source roots")
-
             // Capture output directories and convert to relative paths
             val outputDirectoryAbsolute = project.build.outputDirectory
             val outputDirectory = PathUtils.toRelativePath(outputDirectoryAbsolute, project.basedir, log)
@@ -92,68 +69,16 @@ class NxBuildStateRecordMojo : AbstractMojo() {
             log.info("Captured test output directory: $testOutputDirectory")
 
             // Capture compile classpath and convert to relative paths
-            val compileClasspathAbsolute = try {
-                project.compileClasspathElements.toSet()
-            } catch (e: Exception) {
-                log.warn("Failed to capture compile classpath: ${e.message}")
-                emptySet<String>()
-            }
-            val compileClasspath = PathUtils.toRelativePaths(compileClasspathAbsolute, project.basedir, log)
-            log.info("Captured ${compileClasspath.size} compile classpath elements")
+            val compileClasspath = captureClasspath("compile", project.compileClasspathElements)
 
             // Capture test classpath and convert to relative paths
-            val testClasspathAbsolute = try {
-                project.testClasspathElements.toSet()
-            } catch (e: Exception) {
-                log.warn("Failed to capture test classpath: ${e.message}")
-                emptySet<String>()
-            }
-            val testClasspath = PathUtils.toRelativePaths(testClasspathAbsolute, project.basedir, log)
-            log.info("Captured ${testClasspath.size} test classpath elements")
+            val testClasspath = captureClasspath("test", project.testClasspathElements)
 
             // Capture main artifact (only if file exists)
-            val mainArtifact = if (project.artifact?.file != null && project.artifact.file.exists()) {
-                ArtifactInfo(
-                    file = PathUtils.toRelativePath(project.artifact.file.absolutePath, project.basedir, log),
-                    type = project.artifact.type,
-                    classifier = project.artifact.classifier,
-                    groupId = project.artifact.groupId,
-                    artifactId = project.artifact.artifactId,
-                    version = project.artifact.version
-                )
-            } else {
-                if (project.artifact?.file != null) {
-                    log.warn("Main artifact file does not exist: ${project.artifact.file.absolutePath}")
-                }
-                null
-            }
-
-            if (mainArtifact != null) {
-                log.info("Captured main artifact: ${mainArtifact.file}")
-            }
+            val mainArtifact = captureMainArtifact()
 
             // Capture attached artifacts (only if file exists)
-            val attachedArtifacts = project.attachedArtifacts.mapNotNull { artifact: Artifact ->
-                if (artifact.file != null && artifact.file.exists()) {
-                    ArtifactInfo(
-                        file = PathUtils.toRelativePath(artifact.file.absolutePath, project.basedir, log),
-                        type = artifact.type,
-                        classifier = artifact.classifier,
-                        groupId = artifact.groupId,
-                        artifactId = artifact.artifactId,
-                        version = artifact.version
-                    )
-                } else {
-                    if (artifact.file == null) {
-                        log.warn("Attached artifact has no file: ${artifact.groupId}:${artifact.artifactId}:${artifact.version}")
-                    } else {
-                        log.warn("Attached artifact file does not exist: ${artifact.file.absolutePath}")
-                    }
-                    null
-                }
-            }
-
-            log.info("Captured ${attachedArtifacts.size} attached artifacts")
+            val attachedArtifacts = captureAttachedArtifacts()
 
             // Capture project.build.outputTimestamp for reproducible builds
             val outputTimestamp = project.properties.getProperty("project.build.outputTimestamp")
@@ -161,14 +86,12 @@ class NxBuildStateRecordMojo : AbstractMojo() {
                 log.info("Captured outputTimestamp: $outputTimestamp")
             }
 
-            // Create current build state
-            val currentState = BuildState(
+            // Create build state
+            val buildState = BuildState(
                 compileSourceRoots = compileSourceRoots,
                 testCompileSourceRoots = testCompileSourceRoots,
                 resources = resources,
                 testResources = testResources,
-//                generatedSourceRoots = generatedSourceRoots,
-//                generatedTestSourceRoots = generatedTestSourceRoots,
                 outputDirectory = outputDirectory,
                 testOutputDirectory = testOutputDirectory,
                 compileClasspath = compileClasspath,
@@ -178,15 +101,10 @@ class NxBuildStateRecordMojo : AbstractMojo() {
                 outputTimestamp = outputTimestamp
             )
 
-            // Don't merge - just use current state to avoid duplicates
-            val buildState = currentState
-
             log.info("Recorded build state - Compile source roots: ${buildState.compileSourceRoots.size}, " +
                     "Test source roots: ${buildState.testCompileSourceRoots.size}, " +
                     "Resources: ${buildState.resources.size}, " +
                     "Test resources: ${buildState.testResources.size}, " +
-//                    "Generated source roots: ${buildState.generatedSourceRoots.size}, " +
-//                    "Generated test source roots: ${buildState.generatedTestSourceRoots.size}, " +
                     "Output directory: ${buildState.outputDirectory}, " +
                     "Test output directory: ${buildState.testOutputDirectory}, " +
                     "Compile classpath: ${buildState.compileClasspath.size}, " +
@@ -205,5 +123,61 @@ class NxBuildStateRecordMojo : AbstractMojo() {
         } catch (e: Exception) {
             throw MojoExecutionException("Failed to record build state", e)
         }
+    }
+
+    private fun captureClasspath(classpathType: String, classpathElements: List<String>): Set<String> {
+        val absolutePaths = try {
+            classpathElements.toSet()
+        } catch (e: Exception) {
+            log.warn("Failed to capture $classpathType classpath: ${e.message}")
+            emptySet<String>()
+        }
+        val relativePaths = PathUtils.toRelativePaths(absolutePaths, project.basedir, log)
+        log.info("Captured ${relativePaths.size} $classpathType classpath elements")
+        return relativePaths
+    }
+
+    private fun captureMainArtifact(): ArtifactInfo? {
+        val artifactFile = project.artifact?.file
+        if (artifactFile != null && artifactFile.exists()) {
+            val info = ArtifactInfo(
+                file = PathUtils.toRelativePath(artifactFile.absolutePath, project.basedir, log),
+                type = project.artifact.type,
+                classifier = project.artifact.classifier,
+                groupId = project.artifact.groupId,
+                artifactId = project.artifact.artifactId,
+                version = project.artifact.version
+            )
+            log.info("Captured main artifact: ${info.file}")
+            return info
+        } else if (artifactFile != null) {
+            log.warn("Main artifact file does not exist: ${artifactFile.absolutePath}")
+        }
+        return null
+    }
+
+    private fun captureAttachedArtifacts(): List<ArtifactInfo> {
+        val artifacts = project.attachedArtifacts.mapNotNull { artifact: Artifact ->
+            when {
+                artifact.file != null && artifact.file.exists() -> ArtifactInfo(
+                    file = PathUtils.toRelativePath(artifact.file.absolutePath, project.basedir, log),
+                    type = artifact.type,
+                    classifier = artifact.classifier,
+                    groupId = artifact.groupId,
+                    artifactId = artifact.artifactId,
+                    version = artifact.version
+                )
+                artifact.file == null -> {
+                    log.warn("Attached artifact has no file: ${artifact.groupId}:${artifact.artifactId}:${artifact.version}")
+                    null
+                }
+                else -> {
+                    log.warn("Attached artifact file does not exist: ${artifact.file.absolutePath}")
+                    null
+                }
+            }
+        }
+        log.info("Captured ${artifacts.size} attached artifacts")
+        return artifacts
     }
 }
