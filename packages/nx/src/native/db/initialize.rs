@@ -151,7 +151,7 @@ pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<LockFile> {
 }
 
 pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Result<NxDbConnection> {
-    let mut cleaned_up_stale_files = false;
+    let mut database_recreated = false;
 
     loop {
         match open_database_connection(db_path) {
@@ -174,105 +174,33 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                         trace!("Database is compatible with Nx {}", nx_version);
 
                         // Check current journal mode to handle appropriately
-                        let current_mode = query_journal_mode(&c);
+                        let current_mode: Option<String> = c
+                            .query_row("PRAGMA journal_mode", [], |row| row.get(0))
+                            .ok()
+                            .flatten();
 
                         match current_mode.as_deref() {
-                            Some(mode) if mode.eq_ignore_ascii_case("DELETE") => {
-                                trace!("Database already configured with DELETE journal mode");
-                                trace!("Attempting to upgrade to WAL");
-
-                                // Opportunistically try to upgrade to WAL
-                                c.pragma_update(None, "journal_mode", "WAL").ok();
-
-                                // Check what mode we actually ended up in
-                                let final_mode = query_journal_mode(&c);
-
-                                match final_mode.as_deref() {
-                                    Some(m) if m.eq_ignore_ascii_case("WAL") => {
-                                        trace!("Successfully upgraded to WAL journal mode!");
-                                    }
-                                    _ => {
-                                        trace!("Still in DELETE mode");
-                                        // Clean up any orphaned WAL files if any since we're staying in DELETE mode
-                                        remove_wal_files(db_path);
-                                    }
-                                }
-
-                                // Set busy handler (connection-level, must be set every time)
+                            Some(mode)
+                                if mode.eq_ignore_ascii_case("DELETE")
+                                    || mode.eq_ignore_ascii_case("WAL") =>
+                            {
+                                trace!("Database configured with {} journal mode", mode);
                                 set_busy_handler(&c)?;
-
                                 return Ok(c);
-                            }
-                            Some(mode) if mode.eq_ignore_ascii_case("WAL") => {
-                                trace!("Database already configured with WAL journal mode");
-                                trace!("Verifying WAL mode still works");
-
-                                // Verify WAL mode works
-                                match c.pragma_update(None, "journal_mode", "WAL") {
-                                    Ok(_) => {
-                                        trace!("WAL mode verified working");
-
-                                        // Set busy handler (connection-level)
-                                        set_busy_handler(&c)?;
-
-                                        return Ok(c);
-                                    }
-                                    Err(wal_error) => {
-                                        trace!("WAL mode failed: {:?}", wal_error);
-
-                                        if !cleaned_up_stale_files {
-                                            // First failure - likely stale auxiliary files
-                                            trace!("Removing stale WAL files and retrying");
-
-                                            // Close connection before cleanup
-                                            close_connection_for_cleanup(c)?;
-
-                                            // Remove only auxiliary files (preserves cache in main .db)
-                                            remove_wal_files(db_path);
-
-                                            cleaned_up_stale_files = true;
-                                            continue; // Retry
-                                        }
-
-                                        // Still failing after cleanup - fallback to DELETE mode
-                                        debug!(
-                                            "WAL mode failed after cleanup, falling back to DELETE mode"
-                                        );
-
-                                        c.pragma_update(None, "journal_mode", "DELETE").map_err(
-                                            |e| {
-                                                create_db_error(
-                                                    "Cannot set DELETE journal mode",
-                                                    e.into(),
-                                                )
-                                            },
-                                        )?;
-
-                                        set_busy_handler(&c)?;
-
-                                        return Ok(c);
-                                    }
-                                }
                             }
                             _ => {
                                 // Unknown mode or query failed - use full configuration
                                 trace!(
                                     "Unknown journal mode or query failed, configuring database"
                                 );
-                                match configure_database(&c, db_path, cleaned_up_stale_files) {
+                                match configure_database(&c, db_path, database_recreated) {
                                     Ok(_) => return Ok(c),
-                                    Err(config_error) if !cleaned_up_stale_files => {
+                                    Err(config_error) if !database_recreated => {
                                         trace!("Failed to configure database: {:?}", config_error);
                                         trace!("Cleaning up database files and retrying");
-
-                                        // Close connection before cleanup
                                         close_connection_for_cleanup(c)?;
-
-                                        // Clean up ALL database files including auxiliary files
-                                        remove_all_database_files(db_path)?;
-
-                                        // Retry
-                                        cleaned_up_stale_files = true;
+                                        remove_all_database_files(db_path);
+                                        database_recreated = true;
                                         continue;
                                     }
                                     Err(config_error) => return Err(config_error),
@@ -282,16 +210,16 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                     }
                     // If there is no metadata, it means that this database is new
                     Err(s) if s.to_string().contains("metadata") => {
-                        match configure_database(&c, db_path, cleaned_up_stale_files) {
+                        match configure_database(&c, db_path, database_recreated) {
                             Ok(_) => {
                                 create_metadata_table(&mut c, &nx_version)?;
                                 return Ok(c);
                             }
-                            Err(config_error) if !cleaned_up_stale_files => {
+                            Err(config_error) if !database_recreated => {
                                 trace!("Failed to configure new database: {:?}", config_error);
                                 close_connection_for_cleanup(c)?;
-                                remove_all_database_files(db_path)?;
-                                cleaned_up_stale_files = true;
+                                remove_all_database_files(db_path);
+                                database_recreated = true;
                                 continue;
                             }
                             Err(config_error) => return Err(config_error),
@@ -302,12 +230,12 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                         trace!("Disconnecting from existing incompatible database");
                         close_connection_for_cleanup(c)?;
                         trace!("Removing existing incompatible database");
-                        remove_all_database_files(db_path)?;
+                        remove_all_database_files(db_path);
 
                         trace!("Initializing a new database");
                         // Incompatible database is expected behavior (version upgrade), not a failure
                         // We've cleaned up the old database, so mark flag for journal mode fallback
-                        cleaned_up_stale_files = true;
+                        database_recreated = true;
                         continue;
                     }
                 }
@@ -317,12 +245,12 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                     "Unable to connect to existing database because: {:?}",
                     reason
                 );
-                if !cleaned_up_stale_files {
+                if !database_recreated {
                     trace!("Removing existing incompatible database");
-                    remove_all_database_files(db_path)?;
+                    remove_all_database_files(db_path);
 
                     trace!("Initializing a new database");
-                    cleaned_up_stale_files = true;
+                    database_recreated = true;
                     continue;
                 } else {
                     return Err(reason);
@@ -330,31 +258,6 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
             }
         }
     }
-}
-
-/// Removes WAL auxiliary files (.db-wal and .db-shm) if they exist.
-/// This is safe to call and will not fail - errors are logged but ignored.
-fn remove_wal_files(db_path: &Path) {
-    let wal_path = PathBuf::from(format!("{}-wal", db_path.display()));
-    let shm_path = PathBuf::from(format!("{}-shm", db_path.display()));
-
-    for (path, description) in [(wal_path, "WAL file"), (shm_path, "shared memory file")] {
-        if path.exists() {
-            match remove_file(&path) {
-                Ok(_) => trace!("Removed {}: {:?}", description, path),
-                Err(e) => trace!("Warning: failed to remove {}: {}", description, e),
-            }
-        }
-    }
-}
-
-/// Queries the current journal mode of the database.
-/// Returns None if the query fails or returns no result.
-fn query_journal_mode(connection: &NxDbConnection) -> Option<String> {
-    connection
-        .query_row("PRAGMA journal_mode", [], |row| row.get(0))
-        .ok()
-        .flatten()
 }
 
 /// Sets the busy handler for the database connection.
@@ -365,23 +268,24 @@ fn set_busy_handler(connection: &NxDbConnection) -> anyhow::Result<()> {
         .map_err(|e| create_db_error("Cannot configure database busy handler", e.into()))
 }
 
-fn remove_all_database_files(db_path: &Path) -> anyhow::Result<()> {
-    // Remove main database file
-    match remove_file(db_path) {
-        Ok(_) => trace!("Removed database file: {:?}", db_path),
-        Err(e) if e.kind() == ErrorKind::NotFound => {
-            // File doesn't exist, which is fine
-        }
-        Err(e) => {
-            trace!("Warning: failed to remove database file: {}", e);
-            // Continue cleanup even if main file fails
+fn remove_all_database_files(db_path: &Path) {
+    let files = [
+        (db_path.to_path_buf(), "database"),
+        (PathBuf::from(format!("{}-wal", db_path.display())), "WAL"),
+        (
+            PathBuf::from(format!("{}-shm", db_path.display())),
+            "shared memory",
+        ),
+    ];
+
+    for (path, description) in files {
+        if path.exists() {
+            match remove_file(&path) {
+                Ok(_) => trace!("Removed {} file: {:?}", description, path),
+                Err(e) => trace!("Warning: failed to remove {} file: {}", description, e),
+            }
         }
     }
-
-    // Remove auxiliary files
-    remove_wal_files(db_path);
-
-    Ok(())
 }
 
 fn create_metadata_table(c: &mut NxDbConnection, nx_version: &str) -> anyhow::Result<()> {
@@ -439,9 +343,7 @@ fn configure_database(
         .pragma_update(None, "synchronous", "NORMAL")
         .map_err(|e| create_db_error("Cannot configure database synchronous mode", e.into()))?;
 
-    connection
-        .busy_handler(Some(|tries| tries <= 12))
-        .map_err(|e| create_db_error("Cannot configure database busy handler", e.into()))?;
+    set_busy_handler(connection)?;
 
     Ok(())
 }
@@ -471,11 +373,8 @@ fn set_journal_mode(
         Err(wal_error) => {
             trace!("WAL mode failed: {:?}", wal_error);
 
-            // If fallback is not allowed yet, WAL failure might be due to stale auxiliary files
-            // Return error to trigger cleanup and retry
             if !allow_wal_fallback {
                 trace!("WAL failed before cleanup");
-                trace!("Will clean up database files and retry");
                 return Err(anyhow::anyhow!(
                     "WAL mode failed - cleanup needed: {}",
                     wal_error
