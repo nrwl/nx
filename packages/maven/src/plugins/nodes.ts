@@ -3,9 +3,9 @@ import { dirname, relative } from 'path';
 import { DEFAULT_OPTIONS, MavenPluginOptions } from './types';
 import { runMavenAnalysis } from './maven-analyzer';
 import {
+  getCachePath,
   readMavenCache,
   writeMavenCache,
-  getCachePath,
 } from './maven-data-cache';
 import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { hashObject } from 'nx/src/devkit-internals';
@@ -13,12 +13,12 @@ import { hashObject } from 'nx/src/devkit-internals';
 /**
  * Maven plugin that analyzes Maven projects and returns configurations
  */
-export const createNodes: CreateNodesV2 = [
+export const createNodes: CreateNodesV2<MavenPluginOptions> = [
   '**/pom.xml',
   async (configFiles, options, context): Promise<CreateNodesResultV2> => {
     const opts: MavenPluginOptions = {
       ...DEFAULT_OPTIONS,
-      ...(options as MavenPluginOptions),
+      ...options,
     };
 
     // Check for verbose logging from multiple sources
