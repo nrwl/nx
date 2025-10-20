@@ -23,7 +23,12 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": ["eslint"]
+            "ignoredDependencies": [
+              "eslint",
+              // This is only used when migrating away from @nx-dotnet/core,
+              // and we access it via `ensurePackage` to avoid a direct dependency.
+              "xmldoc"
+            ]
           }
         ]
       }
