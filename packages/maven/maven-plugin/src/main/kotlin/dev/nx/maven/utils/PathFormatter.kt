@@ -1,18 +1,13 @@
 package dev.nx.maven.utils
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.io.File
 
 /**
  * Handles path resolution, Maven command detection, and input/output path formatting for Nx
  */
-class PathFormatter(
-) {
+class PathFormatter {
 
-    private val log: Logger = LoggerFactory.getLogger(PathFormatter::class.java)
-
-    fun formatInputPath(path: File, projectRoot: File): String {
+  fun formatInputPath(path: File, projectRoot: File): String {
         return toProjectPath(path, projectRoot)
     }
 

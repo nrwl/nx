@@ -14,10 +14,10 @@ import java.io.File
  * This is a simplified, per-project analyzer that doesn't require cross-project coordination
  */
 class NxProjectAnalyzer(
-    private val project: MavenProject,
-    private val workspaceRoot: File,
-    private val sharedLifecycleAnalyzer: NxTargetFactory,
-    private val mavenCommand: String
+  private val project: MavenProject,
+  private val workspaceRoot: File,
+  private val nxTargetFactory: NxTargetFactory,
+  private val mavenCommand: String
 ) {
     private val objectMapper = ObjectMapper()
     private val log: Logger = LoggerFactory.getLogger(NxProjectAnalyzer::class.java)
@@ -52,7 +52,7 @@ class NxProjectAnalyzer(
         log.info("Basic config creation took ${configCreationTime}ms for project: ${project.artifactId}")
 
         val targetAnalysisStart = System.currentTimeMillis()
-        val (nxTargets, targetGroups) = sharedLifecycleAnalyzer.createNxTargets(mavenCommand, project)
+        val (nxTargets, targetGroups) = nxTargetFactory.createNxTargets(mavenCommand, project)
         val targetAnalysisTime = System.currentTimeMillis() - targetAnalysisStart
         log.info("Target analysis took ${targetAnalysisTime}ms for project: ${project.artifactId}")
 
