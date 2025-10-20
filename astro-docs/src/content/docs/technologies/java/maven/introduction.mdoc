@@ -10,7 +10,7 @@ filter: 'type:References'
 The `@nx/maven` plugin is currently experimental. Features and APIs may change.
 {% /aside %}
 
-[Maven](https://maven.apache.org/) is a build automation tool used primarily for Java projects. Maven addresses two aspects of building software: how software is built and its dependencies.
+[Apache Maven](https://maven.apache.org/) is a build tool for Java projects. Using a project object model (POM), Maven manages a project's compilation, testing, and documentation.
 
 The Nx plugin for Maven registers Maven projects in your Nx workspace. It allows Maven tasks to be run through Nx. Nx effortlessly makes your [CI faster](/docs/guides/nx-cloud/setup-ci).
 
@@ -21,8 +21,13 @@ Nx adds the following features to your workspace:
 - [Run only tasks affected by a PR](/docs/features/ci-features/affected)
 - [Interactively explore your workspace](/docs/features/explore-graph)
 
-{% aside type="note" title="Java Compatibility" %}
-This plugin requires Java 17 or newer. Using older Java versions is unsupported and may lead to issues. If you need support for an older version, please create an issue on [Github](https://github.com/nrwl/nx)!
+{% aside type="note" title="Java and Maven Compatibility" %}
+This plugin requires:
+
+- **Java 17 or newer** - Using older Java versions is unsupported and may lead to issues.
+- **Maven 3.6.0 or newer** - Older Maven versions are not supported.
+
+If you need support for an older version, please create an issue on [Github](https://github.com/nrwl/nx)!
 {% /aside %}
 
 ## Setup @nx/maven
