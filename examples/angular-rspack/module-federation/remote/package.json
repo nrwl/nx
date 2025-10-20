@@ -1,0 +1,40 @@
+{
+  "name": "examples-angular-rspack-mf-remote",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "@nx/angular-rspack": "workspace:*"
+  },
+  "devDependencies": {
+    "@nx/module-federation": "workspace:*",
+    "@rspack/core": "1.5.2",
+    "@rspack/cli": "1.5.2"
+  },
+  "main": "./src/app/remote-entry/entry.routes.ts",
+  "types": "./src/app/remote-entry/entry.routes.ts",
+  "exports": {
+    "./Routes": "./src/app/remote-entry/entry.routes.ts"
+  },
+  "nx": {
+    "targets": {
+      "serve": {
+        "dependsOn": [
+          "^build",
+          "examples-angular-rspack-mf-host:serve"
+        ],
+        "options": {
+          "port": 4201
+        }
+      },
+      "build": {
+        "outputs": [
+          "{projectRoot}/dist/browser"
+        ],
+        "dependsOn": [
+          "^build"
+        ]
+      }
+    }
+  }
+}

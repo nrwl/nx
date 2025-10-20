@@ -7,4 +7,6 @@ packages:
   - 'typedoc-theme'
   - 'astro-docs'
   - 'examples/*/*'
+  - 'examples/angular-rspack/module-federation/host'
+  - 'examples/angular-rspack/module-federation/remote'
   - 'packages/nx/native-packages/*'

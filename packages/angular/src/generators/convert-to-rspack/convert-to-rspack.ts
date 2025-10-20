@@ -359,6 +359,8 @@ export async function convertToRspack(
   }
 
   let projectServePort = DEFAULT_PORT;
+  const projectServeConfigurationOptions: Record<string, { port?: number }> =
+    {};
 
   for (const [targetName, target] of Object.entries(project.targets)) {
     if (
@@ -428,6 +430,12 @@ export async function convertToRspack(
             configurationOptions[configurationName].devServer,
             project.root
           );
+
+          if (configuration.port && configuration.port !== DEFAULT_PORT) {
+            projectServeConfigurationOptions[configurationName] ??= {};
+            projectServeConfigurationOptions[configurationName].port =
+              configuration.port;
+          }
         }
       }
       serveTarget = { name: targetName, config: target };
@@ -685,6 +693,15 @@ export async function convertToRspack(
     if (projectServePort !== DEFAULT_PORT) {
       serveTarget.config.options = {};
       serveTarget.config.options.port = projectServePort;
+    }
+
+    if (Object.keys(projectServeConfigurationOptions).length > 0) {
+      serveTarget.config.configurations = {};
+      for (const [configurationName, options] of Object.entries(
+        projectServeConfigurationOptions
+      )) {
+        serveTarget.config.configurations[configurationName] = options;
+      }
     }
 
     if (Object.keys(serveTarget.config).length) {
