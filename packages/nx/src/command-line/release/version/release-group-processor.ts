@@ -22,7 +22,6 @@ import {
   SemverBumpType,
   VersionActions,
 } from './version-actions';
-import { resolveCurrentVersion } from './resolve-current-version';
 
 // Any semver version string such as "1.2.3" or "1.2.3-beta.1"
 type SemverVersion = string;
@@ -788,26 +787,10 @@ export class ReleaseGroupProcessor {
             finalPrefix = cachedFinalConfigForProject.versionPrefix;
           }
 
-          let newVersion: string;
-          if (targetVersionData.newVersion === null) {
-            const hasLocalProtocol =
-              currentDependencyVersion.startsWith('workspace:') ||
-              currentDependencyVersion.startsWith('file:');
-
-            if (
-              hasLocalProtocol &&
-              cachedFinalConfigForProject.preserveLocalDependencyProtocols
-            ) {
-              newVersion = currentDependencyVersion;
-            } else {
-              newVersion = this.releaseGraph.cachedCurrentVersions.get(
-                dep.target
-              );
-            }
-          } else {
-            newVersion =
-              targetVersionData.newVersion || currentDependencyVersion;
-          }
+          const newVersion =
+            targetVersionData.newVersion ??
+            this.releaseGraph.cachedCurrentVersions.get(dep.target) ??
+            currentDependencyVersion;
 
           // Remove any existing prefix from the new version before applying the finalPrefix
           const cleanNewVersion = newVersion.replace(/^[~^=]/, '');

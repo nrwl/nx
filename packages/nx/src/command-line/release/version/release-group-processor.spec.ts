@@ -414,7 +414,7 @@ describe('ReleaseGroupProcessor', () => {
           `
           __default__ ({ "projectsRelationship": "independent" }):
             - projectJ@1.0.0 [js]
-              -> depends on projectK
+              -> depends on projectK(file://../projectK)
             - projectK@2.0.0 [js]
         `,
           {
@@ -432,12 +432,6 @@ describe('ReleaseGroupProcessor', () => {
         nxReleaseConfig,
         filters
       );
-
-      updateJson(tree, 'projectJ/package.json', (json) => {
-        json.dependencies = json.dependencies || {};
-        json.dependencies['projectK'] = 'file://../projectK';
-        return json;
-      });
 
       mockDeriveSpecifierFromConventionalCommits.mockImplementation(
         (_, __, ___, ____, { name: projectName }) => {
@@ -478,7 +472,7 @@ describe('ReleaseGroupProcessor', () => {
           `
           __default__ ({ "projectsRelationship": "independent" }):
             - projectJ@1.0.0 [js]
-              -> depends on projectK
+              -> depends on projectK(file://../projectK)
             - projectK@2.0.0 [js]
         `,
           {
@@ -496,12 +490,6 @@ describe('ReleaseGroupProcessor', () => {
         nxReleaseConfig,
         filters
       );
-
-      updateJson(tree, 'projectJ/package.json', (json) => {
-        json.dependencies = json.dependencies || {};
-        json.dependencies['projectK'] = 'file://../projectK';
-        return json;
-      });
 
       mockDeriveSpecifierFromConventionalCommits.mockImplementation(
         (_, __, ___, ____, { name: projectName }) => {
@@ -531,6 +519,78 @@ describe('ReleaseGroupProcessor', () => {
         {
           "name": "projectK",
           "version": "2.0.0",
+        }
+      `);
+    });
+
+    it('should bump dependents when their dependencies have been bumped and they are linked via file:// ref and preserveLocalDependencyProtocols is false', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectJ@1.0.0 [js]
+              -> depends on projectK(file://../projectK)
+            - projectK@2.0.0 [js]
+              -> depends on projectL(file://../projectL)
+            - projectL@3.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // Only projectJ has a specifier, it is not depended on by anything else
+          if (projectName === 'projectJ') return 'patch';
+          if (projectName === 'projectL') return 'patch';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // Called for each project
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        3
+      );
+
+      // projectL is patch bumped
+      expect(readJson(tree, 'projectL/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectL",
+          "version": "3.0.1",
+        }
+      `);
+      // projectK is patch bumped, and its dependency on projectL is bumped
+      expect(readJson(tree, 'projectK/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectL": "3.0.1",
+          },
+          "name": "projectK",
+          "version": "2.0.1",
+        }
+      `);
+      // projectJ has its dep on projectK updated to projectK's new patch bumped version as a result of its dependency on projectL updating and projectJ's own version is patch bumped
+      expect(readJson(tree, 'projectJ/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectK": "2.0.1",
+          },
+          "name": "projectJ",
+          "version": "1.0.1",
         }
       `);
     });
