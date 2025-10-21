@@ -30,28 +30,28 @@ You can install Nx globally. Depending on your package manager, use one of the f
 {% tabs syncKey="package-manager" %}
 {% tabitem label="npm" %}
 
-```shell {% frame="none" %}
+```shell
 npm add --global nx@latest
 ```
 
 {% /tabitem %}
 {% tabitem label="Homebrew (macOS, Linux)" %}
 
-```shell {% frame="none" %}
+```shell
 brew install nx
 ```
 
 {% /tabitem %}
 {% tabitem label="Chocolatey (Windows)" %}
 
-```shell {% frame="none" %}
+```shell
 choco install nx
 ```
 
 {% /tabitem %}
 {% tabitem label="apt (Ubuntu)" %}
 
-```shell {% frame="none" %}
+```shell
 sudo add-apt-repository ppa:nrwl/nx
 sudo apt update
 sudo apt install nx
@@ -64,13 +64,13 @@ sudo apt install nx
 
 In any Gradle workspace, run the following command to add Nx and the `@nx/gradle` plugin:
 
-```shell {% frame="none" %}
+```shell
 nx init
 ```
 
 Then, you can run Gradle tasks using Nx. For example:
 
-```shell {% frame="none" %}
+```shell
 nx build <your gradle library>
 ```
 
@@ -116,14 +116,14 @@ The `dev.nx.gradle.project-graph` plugin introduces a task named `nxProjectGraph
 {% tabs syncKey="os" %}
 {% tabitem label="Mac OS/Linux" %}
 
-```shell {% frame="none" %}
+```shell
 ./gradlew nxProjectGraph
 ```
 
 {% /tabitem %}
 {% tabitem label="Windows" %}
 
-```shell {% frame="none" %}
+```shell
 .\gradlew.bat nxProjectGraph
 ```
 
@@ -138,7 +138,7 @@ To view inferred tasks for a project, open the [project details view](/docs/feat
 
 In any Nx workspace, you can install `@nx/gradle` by running the following command:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/gradle
 ```
 
@@ -176,7 +176,7 @@ To enable test distribution for your Gradle projects in CI, follow these steps:
 
 1.  **Generate CI Workflow**: Run the `ci-workflow` generator to set up the necessary CI configurations. This generator creates a GitHub Actions workflow file that integrates with Nx's distributed task execution capabilities.
 
-    ```shell {% frame="none" %}
+    ```shell
     nx g @nx/gradle:ci-workflow
     ```
 
@@ -203,7 +203,7 @@ To enable test distribution for your Gradle projects in CI, follow these steps:
 
 3.  **Update CI Workflow Command**: In your generated CI workflow file, modify the command used to run affected tasks. Instead of using a generic `build` target, leverage the `build-ci` target provided by the `@nx/gradle` plugin:
 
-    ```shell {% frame="none" %}
+    ```shell
     # Before:
     # ./nx affected --base=$NX_BASE --head=$NX_HEAD -t build
 

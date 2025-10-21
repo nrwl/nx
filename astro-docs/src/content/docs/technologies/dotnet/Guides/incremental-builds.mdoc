@@ -40,7 +40,7 @@ If `WebApi` depends on `ClassLib`, running commands **without** `--no-dependenci
 
 ### Without `--no-dependencies`
 
-```shell {% frame="none" %}
+```shell
 nx build WebApi
 ```
 
@@ -52,7 +52,7 @@ nx build WebApi
    - .NET CLI builds ClassLib **again** (duplicate build)
    - .NET CLI builds WebApi
 
-```shell {% frame="none" %}
+```shell
 nx affected -t build
 ```
 
@@ -69,7 +69,7 @@ This means ClassLib is compiled **twice** during affected builds, and the duplic
 
 The `@nx/dotnet` plugin automatically adds `--no-dependencies` to build commands, eliminating duplicate builds:
 
-```shell {% frame="none" %}
+```shell
 nx build WebApi
 ```
 
@@ -79,7 +79,7 @@ nx build WebApi
 3. Nx executes `dotnet build apps/WebApi/WebApi.csproj --no-dependencies`
    - .NET CLI builds **only** WebApi (skips ClassLib)
 
-```shell {% frame="none" %}
+```shell
 nx affected -t build
 ```
 
@@ -97,7 +97,7 @@ Consider a scenario where you modify only `WebApi`, leaving `ClassLib` unchanged
 
 ### Without `--no-dependencies`
 
-```shell {% frame="none" %}
+```shell
 nx affected -t build
 ```
 
@@ -112,7 +112,7 @@ The cached ClassLib output is effectively wasted because the .NET CLI rebuilds i
 
 ### With `--no-dependencies` (default)
 
-```shell {% frame="none" %}
+```shell
 nx affected -t build
 ```
 
@@ -165,7 +165,7 @@ The plugin automatically configures all .NET projects with appropriate target de
 
 ### Build a single project
 
-```shell {% frame="none" %}
+```shell
 nx build my-project
 ```
 
@@ -173,7 +173,7 @@ Builds the specified project and all its dependencies in the correct order.
 
 ### Build all affected projects
 
-```shell {% frame="none" %}
+```shell
 nx affected -t build
 ```
 
@@ -181,7 +181,7 @@ Builds only projects affected by recent changes, along with their dependencies.
 
 ### Build with parallelization
 
-```shell {% frame="none" %}
+```shell
 nx run-many -t build --parallel=3
 ```
 
@@ -205,7 +205,7 @@ Enable [Nx Cloud](https://nx.app) to share build cache across your team and CI/C
 
 Use the Nx graph visualization to understand your project dependencies:
 
-```shell {% frame="none" %}
+```shell
 nx graph
 ```
 
