@@ -6,6 +6,7 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "dependencies": {
+    "@nx/nx-dev-feature-analytics": "workspace:*",
     "@nx/nx-dev-ui-common": "workspace:*",
     "@nx/nx-dev-ui-fence": "workspace:*",
     "@nx/nx-dev-ui-icons": "workspace:*",

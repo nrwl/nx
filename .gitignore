@@ -62,6 +62,7 @@ out
 .profile
 .rustup/
 target
+.flattened-pom.xml
 *.wasm
 /wasi-sdk*
 
@@ -90,6 +91,7 @@ dev-debug.log
 node_modules/
 # Environment variables
 .env
+!e2e/dotnet/.env
 # Editor directories and files
 .idea
 .vscode
@@ -110,16 +112,24 @@ node_modules/
 
 astro-docs/.netlify
 
+coverage
+
 # Angular Rspack Specific Options
 packages/angular-rspack/coverage
 packages/angular-rspack-compiler/coverage
 
-# Angular Rspack Packages use a template to generate the correct README
+# Some Packages use a template to generate the correct README
 packages/angular-rspack/README.md
 packages/angular-rspack-compiler/README.md
+packages/dotnet/README.md
+packages/maven/README.md
 
 test-output
 test-results
 
 # TypeScript build info files
 *.tsbuildinfo
+
+# .NET build output
+/packages/dotnet/analyzer/bin
+/packages/dotnet/analyzer/obj

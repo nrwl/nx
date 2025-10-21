@@ -241,7 +241,7 @@ const Stack = createNativeStackNavigator<**RootStackParamList**>();
 
 ### Environment Variables
 
-Nx comes with a set of different options for [handling environment variables](/reference/environment-variables). In our workspace, we have a simple `.env` file at the workspace root:
+Nx comes with a set of different options for [handling environment variables](/docs/reference/environment-variables). In our workspace, we have a simple `.env` file at the workspace root:
 
 ```text
 NX_REQUEST_BASE_URL=://ghibliapi.herokuapp.com

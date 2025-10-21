@@ -2,7 +2,7 @@
 title: "What's New in Nx Self-Healing CI"
 slug: 'whats-new-in-nx-self-healing-ci'
 authors: ['Juri Strumpflohner']
-tags: [nx, nx-cloud, self-healing]
+tags: [nx, nx-cloud, self-healing, ai]
 cover_image: /blog/images/articles/self-healing-ci-update-blog-hero.avif
 description: 'Enhanced GitHub integration, interactive diffs, fine-grained task control, auto-apply fixes, and local fix application—discover the latest improvements to Nx Self-Healing CI.'
 pinned: true
@@ -119,9 +119,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       ...
-      - name: Start CI Run
-      - run: npx nx start-ci-run --no-distribution
-      ...
       - run: npx nx affected -t lint test build
 
       - run: npx nx fix-ci
@@ -136,7 +133,7 @@ Self-Healing CI is available for free on **Hobby, Team, and Enterprise** plans. 
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 🌩️ [Nx Cloud](/nx-cloud)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)

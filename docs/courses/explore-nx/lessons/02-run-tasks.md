@@ -11,4 +11,4 @@ Learn how Nx provides a powerful task runner that allows you to:
 - only run tasks for projects affected by a given change
 - speed up task execution with caching
 
-Read more [in our docs](/features/run-tasks)
+Read more [in our docs](/docs/features/run-tasks)

@@ -5,6 +5,11 @@ import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from '../../src/command-line/rele
 import type { RemoteReleaseClient } from '../../src/command-line/release/utils/remote-release-clients/remote-release-client';
 
 /**
+ * Re-export for ease of use in custom changelog renderers.
+ */
+export type { ChangelogChange };
+
+/**
  * The ChangelogRenderOptions are specific to each ChangelogRenderer implementation, and are taken
  * from the user's nx.json configuration and passed as is into the ChangelogRenderer function.
  */
@@ -375,7 +380,7 @@ export default class DefaultChangelogRenderer {
 
   protected formatChange(change: ChangelogChange): string {
     let description = change.description;
-    let extraLines = [];
+    let extraLines: string[] = [];
     let extraLinesStr = '';
     if (description.includes('\n')) {
       [description, ...extraLines] = description.split('\n');
@@ -395,7 +400,8 @@ export default class DefaultChangelogRenderer {
       description;
     if (
       this.remoteReleaseClient.getRemoteRepoData() &&
-      this.changelogRenderOptions.commitReferences
+      this.changelogRenderOptions.commitReferences &&
+      change.githubReferences
     ) {
       changeLine += this.remoteReleaseClient.formatReferences(
         change.githubReferences

@@ -34,7 +34,7 @@ Docusaurus has even [reported that switching to Rspack has resulted in a 2x-4x f
 
 However, Angular’s Webpack build pipeline proved to be an issue. It had not been possible to use Rspack as a drop-in replacement for Angular applications.
 
-Which is why [Angular Rspack](/technologies/angular/angular-rspack/introduction) was created.
+Which is why [Angular Rspack](/docs/technologies/angular/angular-rspack/introduction) was created.
 
 ## Angular Rspack
 
@@ -46,7 +46,7 @@ Angular Rspack provides Rspack Plugins and Loaders that makes it possible to bui
 
 You can learn more about Angular Rspack from the resources below:
 
-- [Angular Rspack - Introduction](/technologies/angular/angular-rspack/introduction)
+- [Angular Rspack - Introduction](/docs/technologies/angular/angular-rspack/introduction)
 - [Using Rspack with Angular](/blog/using-rspack-with-angular)
 
 {% /callout %}
@@ -64,7 +64,7 @@ From the benchmark results below, you can see the vast improvement using Angular
 
 You can see that the results from Rspack are comparable to the results provided by Angular’s Esbuild build pipeline.
 
-That said, it is worth noting that there are still currently some [known limitations and missing features](/technologies/angular/angular-rspack/introduction#known-limitations-and-missing-features).
+That said, it is worth noting that there are still currently some [known limitations and missing features](/docs/technologies/angular/angular-rspack/introduction#known-limitations-and-missing-features).
 
 ## Why Choose Rspack for New Projects?
 
@@ -121,7 +121,7 @@ npx nx g @nx/angular:app myapp --bundler=rspack
 
 ### Converting an Existing Angular Webpack Application
 
-If you have an existing Angular Webpack application you can easily migrate it to use Angular Rspack by using the `@nx/angular:convert-to-rspack` generator. The [Migrate Angular with Webpack to Rspack](/technologies/angular/angular-rspack/recipes/migrate-from-webpack) guide explains more on this.
+If you have an existing Angular Webpack application you can easily migrate it to use Angular Rspack by using the `@nx/angular:convert-to-rspack` generator. The [Migrate Angular with Webpack to Rspack](/docs/technologies/angular/angular-rspack/guides/migrate-from-webpack) guide explains more on this.
 
 ## Future Work
 
@@ -137,7 +137,7 @@ It’s been great to see the progress on Angular Rspack so far, but it’s not d
 
 Stay tuned to our socials to stay up to date on the latest Angular Rspack news!
 
-- 🧠 [**Nx Docs**](/getting-started/intro)
+- 🧠 [**Nx Docs**](/docs/getting-started/intro)
 - 👩‍💻 [**Nx GitHub**](https://github.com/nrwl/nx)
 - 💬 [**Nx Official Discord Server**](https://go.nx.dev/community)
 - 📹 [**Nx Youtube Channel**](https://www.youtube.com/@nxdevtools)

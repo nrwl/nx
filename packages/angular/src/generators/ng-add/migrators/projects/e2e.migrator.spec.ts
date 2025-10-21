@@ -43,7 +43,9 @@ describe('e2e migrator', () => {
     config: ProjectConfiguration
   ): MigrationProjectConfiguration {
     config.projectType = 'application';
-    writeJson(tree, `apps/${name}/project.json`, config);
+    config.name ??= name;
+
+    writeJson(tree, `${config.root}/project.json`, config);
     tree.write(`${config.root}/README.md`, '');
     tree.write(`${config.sourceRoot}/main.ts`, '');
 
@@ -62,9 +64,6 @@ describe('e2e migrator', () => {
     logger?: Logger
   ): void {
     migrator = new E2eMigrator(tree, {}, project, lintTargetName, logger);
-    // the app migrator does this before invoking e2e migrator, it's an implementation
-    // detail for now until the e2e migrator is split into builder migrators
-    project.config.root = 'apps/app1';
   }
 
   beforeEach(() => {

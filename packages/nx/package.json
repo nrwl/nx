@@ -114,6 +114,7 @@
       "@nx/expo",
       "@nx/express",
       "@nx/gradle",
+      "@nx/maven",
       "@nx/module-federation",
       "@nx/nest",
       "@nx/next",

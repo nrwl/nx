@@ -4,7 +4,7 @@ description: 'In this webinar, Nx CTO Victor Savkin and Senior Engineer Max Kles
 date: 2025-03-06
 slug: 'are-monorepos-the-answer-to-better-aiassisted-development'
 authors: ['Victor Savkin', 'Max Kless']
-tags: [webinar]
+tags: [webinar, ai]
 cover_image: /blog/images/2025-03-19/March-2025-Webinar-card.avif
 time: 1pm EDT/5pm UTC
 status: Past - Gated

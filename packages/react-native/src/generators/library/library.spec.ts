@@ -499,7 +499,7 @@ describe('lib', () => {
           "main": "./src/index.ts",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "19.0.0",
+            "react": "^19.0.0",
             "react-native": "~0.79.3",
           },
           "types": "./src/index.ts",
@@ -625,7 +625,7 @@ describe('lib', () => {
             }
           },
           "peerDependencies": {
-            "react": "19.0.0",
+            "react": "^19.0.0",
             "react-native": "~0.79.3"
           }
         }

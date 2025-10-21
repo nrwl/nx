@@ -182,7 +182,7 @@ describe('Rollup Plugin', () => {
 
   it('should work correctly with custom, non-Nx rollup config', () => {
     // ARRANGE
-    packageInstall('@rollup/plugin-babel', undefined, '5.3.0', 'prod');
+    packageInstall('@rollup/plugin-babel', undefined, '6.1.0', 'prod');
     packageInstall('@rollup/plugin-commonjs', undefined, '25.0.7', 'prod');
     packageInstall('rollup-plugin-typescript2', undefined, '0.36.0', 'prod');
     runCLI(`generate @nx/js:init --no-interactive`);

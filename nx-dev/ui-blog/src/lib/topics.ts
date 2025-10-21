@@ -2,7 +2,7 @@ import type { FC, SVGProps } from 'react';
 import {
   ComputerDesktopIcon,
   BookOpenIcon,
-  MicrophoneIcon,
+  SparklesIcon,
   CubeIcon,
   AcademicCapIcon,
   ChatBubbleOvalLeftEllipsisIcon,
@@ -36,11 +36,17 @@ export const ALL_TOPICS: Topic[] = [
     value: 'webinar',
     heading: 'Webinars',
   },
+  // {
+  //   label: 'Podcasts',
+  //   icon: MicrophoneIcon,
+  //   value: 'podcast',
+  //   heading: 'Podcasts',
+  // },
   {
-    label: 'Podcasts',
-    icon: MicrophoneIcon,
-    value: 'podcast',
-    heading: 'Podcasts',
+    label: 'AI',
+    icon: SparklesIcon,
+    value: 'ai',
+    heading: 'AI',
   },
   {
     label: 'Releases',

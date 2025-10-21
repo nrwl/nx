@@ -81,7 +81,7 @@ Next, we'll want to navigate into our new workspace:
 cd myorg
 ```
 
-And finally, we'll add the [`@nx/react`](/technologies/react/introduction) plugin to our workspace.
+And finally, we'll add the [`@nx/react`](/docs/technologies/react/introduction) plugin to our workspace.
 
 ```shell
 npx nx add @nx/react
@@ -94,7 +94,7 @@ generator now to scaffold out Module Federation projects.
 
 {% callout type="note" title="Generating host applications" %}
 If you'd like a more indepth recipe for scaffolding `host` and `remote` generators you can take a look through
-our [Module Federation Recipes](/technologies/module-federation/recipes).
+our [Module Federation Recipes](/docs/technologies/module-federation/guides/create-a-host).
 {% /callout %}
 
 ```{% command="npx nx g @nx/react:host apps/shell --remotes=remote1 --bundler=rspack" path="~/myorg" %}
@@ -123,7 +123,7 @@ projects.
 {% callout type="note" title="Running tasks" %}
 These projects contain all the usual tasks you would expect to see with a Nx project such as `build`, `serve`, `test`,
 `lint`.
-You can learn more about Running Tasks in Nx [here](/features/run-tasks).
+You can learn more about Running Tasks in Nx [here](/docs/features/run-tasks).
 {% /callout %}
 
 We specified `--bundler=rspack` indicating that the applications should be built with [Rspack](https://rspack.dev/).  
@@ -173,7 +173,7 @@ Nx itself has employed this strategy to solve a long-standing issue with shared 
 the possibility that a shared library would be served from a static remote. This in turn would prevent HMR updates to
 the library from being reflected in the locally served application.
 You can learn more about the
-`NxRuntimeLibraryControlPlugin` [here](/technologies/module-federation/concepts/nx-module-federation-technical-overview).
+`NxRuntimeLibraryControlPlugin` [here](/docs/technologies/module-federation/concepts/nx-module-federation-technical-overview).
 {% /callout %}
 
 ## Step 4: Building and Serving
@@ -203,7 +203,7 @@ Serving statically means that we can reuse the build artifacts for the `remotes`
 that is scalable. Combined with Nx caching, this works well to ensure a great developer experience.
 
 You can learn more about how this works in
-our [Nx Module Federation Technical Overview](/technologies/module-federation/concepts/nx-module-federation-technical-overview#what-happens-when-you-serve-your-host)
+our [Nx Module Federation Technical Overview](/docs/technologies/module-federation/concepts/nx-module-federation-technical-overview#what-happens-when-you-serve-your-host)
 document.
 
 {% /callout %}
@@ -480,9 +480,9 @@ For more information about Zephyr Cloud I highly recommend checking out their [d
 
 ## Learn More
 
-- [Nx on CI](/ci/recipes/set-up)
-- [Task Distribution with Nx Agents](/ci/features/distribute-task-execution)
-- [Automated e2e Test Splitting](/ci/features/split-e2e-tasks)
+- [Nx on CI](/docs/guides/nx-cloud/setup-ci)
+- [Task Distribution with Nx Agents](/docs/features/ci-features/distribute-task-execution)
+- [Automated e2e Test Splitting](/docs/features/ci-features/split-e2e-tasks)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

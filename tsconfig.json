@@ -405,6 +405,18 @@
     },
     {
       "path": "./graph/ui-render-config"
+    },
+    {
+      "path": "./packages/dotnet"
+    },
+    {
+      "path": "./e2e/dotnet"
+    },
+    {
+      "path": "./packages/maven"
+    },
+    {
+      "path": "./e2e/maven"
     }
   ],
   "extends": "./tsconfig.base.json"

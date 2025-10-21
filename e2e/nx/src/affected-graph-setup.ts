@@ -5,7 +5,7 @@ export interface AffectedGraphTestContext {
 }
 
 export function setupAffectedGraphTest(): AffectedGraphTestContext {
-  const proj = newProject();
+  const proj = newProject({ packages: ['@nx/js', '@nx/web'] });
   return { proj };
 }
 

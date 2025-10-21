@@ -2,7 +2,7 @@
 title: 'Nx Just Made Your LLM Way Smarter'
 slug: nx-just-made-your-llm-smarter
 authors: ['Juri Strumpflohner']
-tags: ['nx']
+tags: ['nx', 'ai']
 description: 'Learn how monorepos with Nx enhance AI capabilities by providing rich metadata and context, making LLMs smarter and more architecturally aware.'
 cover_image: /blog/images/articles/monorepos-are-ai-future-proof-bg.jpg
 youtubeUrl: https://youtu.be/RNilYmJJzdk
@@ -63,19 +63,19 @@ This is where Nx comes in.
 
 Monorepos don't come for free. While they improve visibility and collaboration, they introduce scaling challenges. This is where tools like Nx step in, helping you get the benefits of a monorepo while managing the complexity that comes with it.
 
-Over the years, we've built features like [Nx Replay](/ci/features/remote-cache) and [Nx Agents](/ci/features/distribute-task-execution) to keep CI fast, while [conformance rules](/nx-enterprise/powerpack/conformance), [ownership](/nx-enterprise/powerpack/owners), and [local repository automation](/extending-nx/intro/getting-started) help manage and scale a monorepo in the long run.
+Over the years, we've built features like [Nx Replay](/docs/features/ci-features/remote-cache) and [Nx Agents](/docs/features/ci-features/distribute-task-execution) to keep CI fast, while [conformance rules](/docs/enterprise/powerpack/conformance), [ownership](/docs/enterprise/powerpack/owners), and [local repository automation](/docs/extending-nx/intro) help manage and scale a monorepo in the long run.
 
-To power these features, **Nx collects metadata about your workspace**, understanding relationships between projects, ownership, technology types, available tasks, and more. The [Nx daemon](/concepts/nx-daemon) runs in the background, keeping this metadata up to date and making sure Nx operates efficiently.
+To power these features, **Nx collects metadata about your workspace**, understanding relationships between projects, ownership, technology types, available tasks, and more. The [Nx daemon](/docs/concepts/nx-daemon) runs in the background, keeping this metadata up to date and making sure Nx operates efficiently.
 
 **Nx understands project relationships down to the file level**, tracking dependencies. For example, in the image below, `src/app/app.tsx` imports a component from `@aishop/feat-create-order`, and Nx knows exactly how these projects connect.
 
 ![nx-ai-project-relationships.avif](/blog/images/articles/nx-ai-project-relationships.avif)
 
-**Nx also tracks available targets for each project**. If you're using [Code Owners](/nx-enterprise/powerpack/owners), it **knows who owns what within your monorepo**.
+**Nx also tracks available targets for each project**. If you're using [Code Owners](/docs/enterprise/powerpack/owners), it **knows who owns what within your monorepo**.
 
 ![nx-ai-project-detail-view.avif](/blog/images/articles/nx-ai-project-detail-view.avif)
 
-It **identifies relevant files for each target** based on the input and output properties defined in the [cache configuration](/features/cache-task-results#finetune-caching-with-inputs-and-outputs).
+It **identifies relevant files for each target** based on the input and output properties defined in the [cache configuration](/docs/features/cache-task-results#finetune-caching-with-inputs-and-outputs).
 
 ![nx-ai-cache-inputs.avif](/blog/images/articles/nx-ai-cache-inputs.avif)
 
@@ -83,7 +83,7 @@ Nx also knows about **project tags, helping classify domains, project types, or 
 
 ![nx-ai-project-tags.avif](/blog/images/articles/nx-ai-project-tags.avif)
 
-Nx plugins come with **[code generators](/features/generate-code)** that can scaffold entire projects. These generators have well-defined [schemas](https://github.com/nrwl/nx/blob/804df721a729da41d804c57a829828c96d265d79/packages/js/src/generators/library/schema.json) that describe the available properties, their descriptions, and which ones are required. This structured metadata makes them an ideal data source for LLMs, allowing them to provide more accurate and meaningful suggestions when interacting with your monorepo.
+Nx plugins come with **[code generators](/docs/features/generate-code)** that can scaffold entire projects. These generators have well-defined [schemas](https://github.com/nrwl/nx/blob/804df721a729da41d804c57a829828c96d265d79/packages/js/src/generators/library/schema.json) that describe the available properties, their descriptions, and which ones are required. This structured metadata makes them an ideal data source for LLMs, allowing them to provide more accurate and meaningful suggestions when interacting with your monorepo.
 
 ![nx-ai-generator-schema.avif](/blog/images/articles/nx-ai-generator-schema.avif)
 
@@ -95,7 +95,7 @@ Beyond that, the [Nx documentation already includes an AI-powered chat](/ai-chat
 
 ## Nx Makes Your LLM Way Smarter
 
-All of this data is a goldmine for enhancing your LLM. Luckily we're kinda obsessed with good DX which is why we had an editor for a long time: [Nx Console](/getting-started/editor-setup).
+All of this data is a goldmine for enhancing your LLM. Luckily we're kinda obsessed with good DX which is why we had an editor for a long time: [Nx Console](/docs/getting-started/editor-setup).
 
 While you could build your own chat-based LLM integration, the best approach is to make it work where developers already spend their time: inside the editor. Nx Console is the perfect fit for this. It already enhances your monorepo workflow by providing IntelliSense, running code generators, and [integrating with CI](/blog/nx-cloud-pipelines-come-to-nx-console). Now, we've taken it a step further.
 
@@ -111,7 +111,7 @@ We extended Nx Console with an integration for Copilot that preprocesses Nx meta
 
 The result: **your LLM just got significantly smarter**, moving beyond basic file-level reasoning to understanding your workspace at an architectural level.
 
-Let's go through some concrete examples. You can try these yourself by [installing Nx Console](/getting-started/editor-setup) or updating to the latest version.
+Let's go through some concrete examples. You can try these yourself by [installing Nx Console](/docs/getting-started/editor-setup) or updating to the latest version.
 
 Here, we ask Copilot about projects, their dependencies, and ownership details:
 
@@ -125,7 +125,7 @@ In a larger enterprise, this also means you can ask about who to talk to when im
 
 ![nx-ai-example-ownership.avif](/blog/images/articles/nx-ai-example-ownership.avif)
 
-And since we made the LLM aware of [Nx generators](/features/generate-code), we can ask it to help set up a new project. Notice how it not only suggests the correct command but also places the new project in the `packages/products` subfolder. We even added action buttons to either run the command immediately or open it in [Nx Console's generator UI](/recipes/nx-console/console-generate-command).
+And since we made the LLM aware of [Nx generators](/docs/features/generate-code), we can ask it to help set up a new project. Notice how it not only suggests the correct command but also places the new project in the `packages/products` subfolder. We even added action buttons to either run the command immediately or open it in [Nx Console's generator UI](/docs/guides/nx-console/console-generate-command).
 
 ![nx-ai-example-generate-code.avif](/blog/images/articles/nx-ai-example-generate-code.avif)
 
@@ -143,7 +143,7 @@ And this is just the beginning. While Nx already understands your local monorepo
 
 ## Try It Out Yourself
 
-If you want to test this out, [create a new Nx workspace](/getting-started/start-new-project) and make sure you have [Nx Console](/getting-started/editor-setup) installed or updated to the latest version.
+If you want to test this out, [create a new Nx workspace](/docs/getting-started/start-new-project) and make sure you have [Nx Console](/docs/getting-started/editor-setup) installed or updated to the latest version.
 
 > If you already have an existing NPM/Yarn/PNPM workspace, you can add Nx with `nx init`. Check out [our free course](/courses/pnpm-nx-next) to learn more.
 
@@ -153,7 +153,7 @@ While Nx Console is also available for WebStorm, the AI-powered extensions curre
 
 Learn more:
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

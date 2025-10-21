@@ -1,5 +1,4 @@
 import chalk = require('chalk');
-import * as ora from 'ora';
 import { prompt } from 'enquirer';
 import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
@@ -9,6 +8,7 @@ import { getLatestGitTagForPattern } from '../utils/git';
 import { ProjectLogger } from './project-logger';
 import type { FinalConfigForProject } from '../utils/release-graph';
 import { VersionActions } from './version-actions';
+import { globalSpinner } from '../../../utils/spinner';
 
 export async function resolveCurrentVersion(
   tree: Tree,
@@ -152,11 +152,9 @@ export async function resolveCurrentVersionFromRegistry(
 
   let registryTxt = '';
 
-  const spinner = ora(
+  const spinner = globalSpinner.start(
     `Resolving the current version for ${projectGraphNode.name} from the configured registry...`
   );
-  spinner.color = 'cyan';
-  spinner.start();
 
   try {
     const res = await versionActions.readCurrentVersionFromRegistry(
