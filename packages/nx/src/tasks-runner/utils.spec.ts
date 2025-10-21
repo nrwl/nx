@@ -782,7 +782,7 @@ describe('utils', () => {
         .toThrowErrorMatchingInlineSnapshot(`
         "The following outputs are invalid: 
          - dist
-           ** Reason: Outputs must start with either {workspaceRoot}/ or {projectRoot}/.
+           ** Reason: Outputs must start with either "{workspaceRoot}/" or "{projectRoot}/".
 
         Run \`nx repair\` to fix this."
       `);
