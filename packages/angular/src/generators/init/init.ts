@@ -10,8 +10,8 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { createNodesV2 } from '../../plugins/plugin';
+import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import {
   getInstalledAngularDevkitVersion,
   versions,
@@ -22,7 +22,7 @@ export async function angularInitGenerator(
   tree: Tree,
   options: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(tree, 'angular', 'init');
+  assertNotUsingTsSolutionSetup(tree, 'init');
 
   ignoreAngularCacheDirectory(tree);
   const installTask = installAngularDevkitCoreIfMissing(tree, options);
