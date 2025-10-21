@@ -203,9 +203,9 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
       if (isUsingTsSolutionSetup()) return;
       const outDir = options.dir || 'dist';
       const src = resolve(projectRoot, 'package.json');
-      if (existsSync(src)) {
-        const dest = join(outDir, 'package.json');
+      const dest = join(outDir, 'package.json');
 
+      if (existsSync(src) && !existsSync(dest)) {
         try {
           copyFileSync(src, dest);
         } catch (err) {
