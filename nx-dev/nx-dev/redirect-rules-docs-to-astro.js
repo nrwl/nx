@@ -1036,8 +1036,7 @@ const docsToAstroRedirects = {
     '/docs/technologies/node/guides/wait-for-tasks',
   '/technologies/node/express/api': '/docs/technologies/node/express',
   '/technologies/node/nest/api': '/docs/technologies/node/nest',
-  '/technologies/java/introduction':
-    '/docs/technologies/angular/angular-rspack/introduction',
+  '/technologies/java/introduction': '/docs/technologies/java/introduction',
   '/technologies/module-federation/recipes/create-a-host':
     '/docs/technologies/module-federation/guides/create-a-host',
   '/technologies/module-federation/recipes/create-a-remote':
