@@ -19,6 +19,7 @@ jest.doMock('./project-logger', () => ({
   // Don't slow down or add noise to unit tests output unnecessarily
   ProjectLogger: class ProjectLogger {
     buffer() {}
+
     flush() {}
   },
 }));
@@ -402,6 +403,134 @@ describe('ReleaseGroupProcessor', () => {
         {
           "name": "projectL",
           "version": "3.0.0",
+        }
+      `);
+    });
+
+    it('should only bump projects based on their own specifiers if no dependencies have resolved specifiers and file:// ref is used and preserveLocalDependencyProtocols is false', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectJ@1.0.0 [js]
+              -> depends on projectK
+            - projectK@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      updateJson(tree, 'projectJ/package.json', (json) => {
+        json.dependencies = json.dependencies || {};
+        json.dependencies['projectK'] = 'file://../projectK';
+        return json;
+      });
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // Only projectJ has a specifier, it is not depended on by anything else
+          if (projectName === 'projectJ') return 'minor';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // Called for each project
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        2
+      );
+
+      // Only projectJ is bumped
+      expect(readJson(tree, 'projectJ/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectK": "2.0.0",
+          },
+          "name": "projectJ",
+          "version": "1.1.0",
+        }
+      `);
+      expect(readJson(tree, 'projectK/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectK",
+          "version": "2.0.0",
+        }
+      `);
+    });
+
+    it('should only bump projects based on their own specifiers if no dependencies have resolved specifiers and file:// ref is used and preserveLocalDependencyProtocols is true', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectJ@1.0.0 [js]
+              -> depends on projectK
+            - projectK@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              preserveLocalDependencyProtocols: true,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      updateJson(tree, 'projectJ/package.json', (json) => {
+        json.dependencies = json.dependencies || {};
+        json.dependencies['projectK'] = 'file://../projectK';
+        return json;
+      });
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // Only projectJ has a specifier, it is not depended on by anything else
+          if (projectName === 'projectJ') return 'minor';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // Called for each project
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        2
+      );
+
+      // Only projectJ is bumped
+      expect(readJson(tree, 'projectJ/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectK": "file://../projectK",
+          },
+          "name": "projectJ",
+          "version": "1.1.0",
+        }
+      `);
+      expect(readJson(tree, 'projectK/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectK",
+          "version": "2.0.0",
         }
       `);
     });

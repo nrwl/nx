@@ -22,6 +22,7 @@ import {
   SemverBumpType,
   VersionActions,
 } from './version-actions';
+import { resolveCurrentVersion } from './resolve-current-version';
 
 // Any semver version string such as "1.2.3" or "1.2.3-beta.1"
 type SemverVersion = string;
@@ -765,10 +766,7 @@ export class ReleaseGroupProcessor {
     const dependencies = this.projectGraph.dependencies[projectName] || [];
 
     for (const dep of dependencies) {
-      if (
-        this.releaseGraph.allProjectsToProcess.has(dep.target) &&
-        this.bumpedProjects.has(dep.target)
-      ) {
+      if (this.releaseGraph.allProjectsToProcess.has(dep.target)) {
         const targetVersionData = this.versionData.get(dep.target);
         if (targetVersionData) {
           const { currentVersion: currentDependencyVersion } =
@@ -790,11 +788,29 @@ export class ReleaseGroupProcessor {
             finalPrefix = cachedFinalConfigForProject.versionPrefix;
           }
 
+          let newVersion: string;
+          if (targetVersionData.newVersion === null) {
+            const hasLocalProtocol =
+              currentDependencyVersion.startsWith('workspace:') ||
+              currentDependencyVersion.startsWith('file:');
+
+            if (
+              hasLocalProtocol &&
+              cachedFinalConfigForProject.preserveLocalDependencyProtocols
+            ) {
+              newVersion = currentDependencyVersion;
+            } else {
+              newVersion = this.releaseGraph.cachedCurrentVersions.get(
+                dep.target
+              );
+            }
+          } else {
+            newVersion =
+              targetVersionData.newVersion || currentDependencyVersion;
+          }
+
           // Remove any existing prefix from the new version before applying the finalPrefix
-          const cleanNewVersion = targetVersionData.newVersion.replace(
-            /^[~^=]/,
-            ''
-          );
+          const cleanNewVersion = newVersion.replace(/^[~^=]/, '');
           dependenciesToUpdate[dep.target] = `${finalPrefix}${cleanNewVersion}`;
         }
       }
