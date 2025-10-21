@@ -1340,7 +1340,8 @@ const nxApiRedirects = {
     '/technologies/test-tools/detox/introduction',
   '/nx-api/js/documents/overview': '/technologies/typescript/introduction',
   '/nx-api/gradle/documents': '/docs/technologies/java/gradle/introduction',
-  '/nx-api/gradle/documents/overview': '/docs/technologies/java/gradle/introduction',
+  '/nx-api/gradle/documents/overview':
+    '/docs/technologies/java/gradle/introduction',
   '/nx-api/eslint/documents/overview': '/technologies/eslint/introduction',
   '/nx-api/eslint-plugin/documents/overview':
     '/technologies/eslint/eslint-plugin/api',
