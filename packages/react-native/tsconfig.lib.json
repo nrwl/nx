@@ -22,10 +22,13 @@
       "path": "../devkit/tsconfig.lib.json"
     },
     {
-      "path": "../detox/tsconfig.lib.json"
+      "path": "../nx/tsconfig.lib.json"
     },
     {
       "path": "../rollup/tsconfig.lib.json"
+    },
+    {
+      "path": "../detox/tsconfig.lib.json"
     }
   ]
 }

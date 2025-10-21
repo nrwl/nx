@@ -16,10 +16,13 @@
       "path": "../devkit"
     },
     {
-      "path": "../detox"
+      "path": "../nx"
     },
     {
       "path": "../rollup"
+    },
+    {
+      "path": "../detox"
     },
     {
       "path": "./tsconfig.lib.json"

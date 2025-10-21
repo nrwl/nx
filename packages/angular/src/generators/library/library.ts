@@ -3,6 +3,7 @@ import {
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
+  logger,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';

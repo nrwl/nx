@@ -2898,6 +2898,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      nx:
+        specifier: workspace:*
+        version: link:../nx
 
   packages/expo:
     dependencies:
@@ -3234,6 +3238,12 @@ importers:
         specifier: ^5.8.0
         version: 5.10.0
     devDependencies:
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../cypress
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../playwright
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -3627,6 +3637,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      nx:
+        specifier: workspace:*
+        version: link:../nx
     optionalDependencies:
       '@nx/detox':
         specifier: workspace:*

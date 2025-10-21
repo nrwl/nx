@@ -46,6 +46,9 @@
     "semver": "^7.5.3",
     "tslib": "^2.3.0"
   },
+  "devDependencies": {
+    "nx": "workspace:*"
+  },
   "publishConfig": {
     "access": "public"
   },

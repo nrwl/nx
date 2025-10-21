@@ -46,6 +46,9 @@
     "@nx/detox": "workspace:*",
     "@nx/rollup": "workspace:*"
   },
+  "devDependencies": {
+    "nx": "workspace:*"
+  },
   "executors": "./executors.json",
   "ng-update": {
     "requirements": {},
