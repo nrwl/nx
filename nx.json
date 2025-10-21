@@ -330,7 +330,7 @@
     }
   ],
   "parallel": 1,
-  "bust": 15,
+  "bust": 11,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true
