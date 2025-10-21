@@ -127,7 +127,8 @@ function mergeUserTargetConfigurations(
       continue;
     }
 
-    const { targetName, ...userSpecifiedConfig } = targetOption;
+    // Use empty object as default when option is not provided
+    const { targetName, ...userSpecifiedConfig } = targetOption ?? {};
     const actualTargetName = targetName ?? defaultTargetName;
 
     // Find the generated target - it might be under the default name or the user-specified name

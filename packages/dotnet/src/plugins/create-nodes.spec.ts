@@ -35,16 +35,20 @@ function mergeUserTargetConfigurations(
     { targetOption: options.restore, defaultTargetName: 'restore' },
     { targetOption: options.publish, defaultTargetName: 'publish' },
     { targetOption: options.pack, defaultTargetName: 'pack' },
+    { targetOption: options.watch, defaultTargetName: 'watch' },
+    { targetOption: options.run, defaultTargetName: 'run' },
   ];
 
   const mergedTargets = { ...node.targets };
 
   for (const { targetOption, defaultTargetName } of targetMappings) {
-    if (!targetOption) {
+    // Disabled target from user configuration
+    if (targetOption === false) {
       continue;
     }
 
-    const { targetName, ...userSpecifiedConfig } = targetOption;
+    // Use empty object as default when option is not provided
+    const { targetName, ...userSpecifiedConfig } = targetOption ?? {};
     const actualTargetName = targetName ?? defaultTargetName;
 
     // Find the generated target - it might be under the default name or the user-specified name
