@@ -121,7 +121,6 @@
     "@rsbuild/core": "1.1.8",
     "@rspack/core": "1.5.2",
     "@rspack/dev-server": "1.1.4",
-    "@rspack/plugin-minify": "^0.7.5",
     "@rspack/plugin-react-refresh": "^1.0.0",
     "@schematics/angular": "~20.3.0",
     "@storybook/addon-docs": "^9.0.5",
