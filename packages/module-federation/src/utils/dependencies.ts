@@ -46,19 +46,12 @@ function collectDependencies(
     if (dependency.target.startsWith('npm:')) {
       dependencies.npmPackages.add(dependency.target.replace('npm:', ''));
     } else {
-      if (projectGraph.nodes[dependency.target]) {
-        dependencies.workspaceLibraries.set(dependency.target, {
-          name: dependency.target,
-          root: projectGraph.nodes[dependency.target].data.root,
-          importKey: getLibraryImportPath(dependency.target, projectGraph),
-        });
-        collectDependencies(
-          projectGraph,
-          dependency.target,
-          dependencies,
-          seen
-        );
-      }
+      dependencies.workspaceLibraries.set(dependency.target, {
+        name: dependency.target,
+        root: projectGraph.nodes[dependency.target].data.root,
+        importKey: getLibraryImportPath(dependency.target, projectGraph),
+      });
+      collectDependencies(projectGraph, dependency.target, dependencies, seen);
     }
   });
 
