@@ -31,6 +31,7 @@ assignment-rules:
       - e2e-docker
       - e2e-js
       - e2e-nx-init
+      - nx-maven-plugin
     targets:
       - e2e-ci**react-package**
       - e2e-ci**react.test**
@@ -53,6 +54,11 @@ assignment-rules:
       - e2e-ci**cypress**
       - e2e-ci**src/cypress-component-tests-buildable.test**
       - e2e-ci**src/cypress-component-tests-implicit-dep.test**
+      - e2e-ci**src/cypress-component-tests-app.test**
+      - e2e-ci**src/module-federation-ssr.test**
+      - e2e-ci**src/module-federation-lib.test**
+      - e2e-ci**nx-init-angular.test**
+      - install
       - e2e-ci**src/js-executor-swc.test**
       - e2e-ci**src/js-executor-tsc.test**
       - e2e-ci**src/js-packaging.test**
