@@ -332,6 +332,8 @@
       }
     }
   ],
+  "nxCloudId": "62d013ea0852fe0a2df74438",
+  "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
   "bust": 12,
   "defaultBase": "master",
@@ -444,7 +446,5 @@
         "rule": "./tools/workspace-plugin/src/conformance-rules/no-ignored-tracked-files"
       }
     ]
-  },
-  "nxCloudUrl": "https://snapshot.nx.app",
-  "nxCloudId": "68e938d6854766173d6d2294"
+  }
 }
