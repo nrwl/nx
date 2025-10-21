@@ -21,6 +21,7 @@ public static partial class TargetBuilder
             },
             DependsOn = [options.RestoreTargetName],
             Cache = false,
+            Continuous = true,
             Metadata = new TargetMetadata
             {
                 Description = "Watch for changes and rebuild/rerun the .NET project",

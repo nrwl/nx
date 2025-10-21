@@ -31,6 +31,11 @@ public record Target
     public bool? Cache { get; init; }
 
     /// <summary>
+    /// Whether this target runs continuously.
+    /// </summary>
+    public bool? Continuous { get; init; }
+
+    /// <summary>
     /// Input patterns for cache invalidation.
     /// </summary>
     public object[]? Inputs { get; init; }
