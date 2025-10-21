@@ -190,17 +190,17 @@ function hasValidConfig(
   const content = JSON.parse(readFileSync(configPath, 'utf-8'));
 
   if (type === 'executors') {
-    return (
+    const hasExecutors =
       content.executors &&
       typeof content.executors === 'object' &&
-      Object.keys(content.executors).length > 0
-    );
+      Object.keys(content.executors).length > 0;
+
+    return hasExecutors && hasVisibleImpls(content.executors);
   }
 
   // migrations can be generators or packageJsonUpdates
   const hasGenerators =
-    isGeneratorsConfig(content) &&
-    Object.values(content.generators).filter((g) => !g.hidden).length > 0;
+    isGeneratorsConfig(content) && hasVisibleImpls(content.generators);
 
   const hasPackageJsonUpdates =
     content.packageJsonUpdates &&
@@ -377,5 +377,17 @@ function isGeneratorsConfig(
     typeof content === 'object' &&
     'generators' in content &&
     typeof content.generators === 'object'
+  );
+}
+
+/**
+ * validate that a generator/migration/executor config has at least 1 visible implmentation
+ **/
+function hasVisibleImpls(content: Record<string, unknown>): boolean {
+  return (
+    content &&
+    Object.values(content).some(
+      (impl: any) => typeof impl === 'object' && !impl.hidden
+    )
   );
 }

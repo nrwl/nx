@@ -181,6 +181,11 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
             collapsed: true,
             items: getPluginItems('rsbuild', 'build-tools'),
           },
+          {
+            label: 'Docker',
+            collapsed: true,
+            items: getPluginItems('docker', 'build-tools'),
+          },
         ],
       },
       {
