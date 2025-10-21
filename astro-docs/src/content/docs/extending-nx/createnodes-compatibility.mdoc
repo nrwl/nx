@@ -83,25 +83,43 @@ This pattern ensures your plugin works with both Nx 21 and Nx 22+.
 
 ### Plugin Support for Nx 17 Through Nx 20
 
-If you need to support Nx versions 17-20, you'll need to provide separate implementations:
+If you need to support Nx versions 17-20, you'll need to provide separate implementations.
+In Nx 22 the type for v1 of the create nodes api are removed, you can inline the type to maintain type safety.
 
 ```typescript
 // my-plugin/index.ts
 import {
-  CreateNodes,
   CreateNodesV2,
-  CreateNodesContext,
   CreateNodesContextV2,
+  CreateNodesResult
 } from '@nx/devkit';
+
+
+// inlined types for backwards compat to v1 of createNodes
+// removed in Nx 22
+export interface OldCreateNodesContext extends CreateNodesContextV2 {
+    /**
+     * The subset of configuration files which match the createNodes pattern
+     */
+    readonly configFiles: readonly string[];
+}
+
+
+type OldCreateNodes<T = unknown> = readonly [
+  projectFilePattern: string,
+  createNodesFunction: CreateNodesFunction<T>
+];
+
+export type OldCreateNodesFunction<T = unknown> = (projectConfigurationFile: string, options: T | undefined, context: OldCreateNodesContext) => CreateNodesResult | Promise<CreateNodesResult>;
 
 export interface MyPluginOptions {
   // your options
 }
 
 // V1 API for Nx 17-20
-export const createNodes: CreateNodes<MyPluginOptions> = [
+export const createNodes: OldCreateNodes<MyPluginOptions> = [
   '**/some-config.json',
-  (configFile, options, context: CreateNodesContext) => {
+  (configFile, options, context: OldCreateNodesContext) => {
     // V1 implementation - processes one file at a time
     return createNodesInternal(configFile, options, context);
   },
@@ -124,7 +142,7 @@ export const createNodesV2: CreateNodesV2<MyPluginOptions> = [
 function createNodesInternal(
   configFilePath: string,
   options: MyPluginOptions,
-  context: CreateNodesContext | CreateNodesContextV2
+  context: OldCreateNodesContext | CreateNodesContextV2
 ) {
   // Shared logic that works with both APIs
   return {
@@ -141,7 +159,6 @@ Nx is standardizing on the v2 API. Here's the planned timeline:
 
 - **Nx 22**: Both `createNodes` and `createNodesV2` can be exported with v2 signature. `createNodes` re-exported as `createNodesV2`.
 - **Nx 23**: The `createNodesV2` export will be marked as deprecated in TypeScript types. Use `createNodes` with v2 signature instead.
-- **Nx 24**: The `createNodesV2` types will be removed. Only `createNodes` with v2 signature will be supported.
 
 ## Related Documentation
 
