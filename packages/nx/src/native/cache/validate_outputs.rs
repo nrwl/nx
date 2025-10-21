@@ -42,7 +42,7 @@ pub fn validate_outputs(outputs: Vec<String>) -> anyhow::Result<()> {
     if !missing_prefix.is_empty() {
         error_message.push_str(&format!(
             "The following outputs are invalid: \n{}\n\nRun `nx repair` to fix this.",
-            missing_prefix.iter().map(|s| format!(" - {}\n\n   ** Reason: Outputs must start with either \"{{workspaceRoot}}/\" or \"{{projectRoot}}/\".", s)).join("\n")
+            missing_prefix.iter().map(|s| format!(" - {}\n   ** Reason: Outputs must start with either \"{{workspaceRoot}}/\" or \"{{projectRoot}}/\".", s)).join("\n")
         ));
     }
     if !workspace_globs.is_empty() {
