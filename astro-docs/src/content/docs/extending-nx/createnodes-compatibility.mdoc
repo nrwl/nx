@@ -14,7 +14,7 @@ The following table shows which export Nx will call based on the Nx version:
 | ------------- | ------------------- | --------------------- | ---------------------------- |
 | 17.x - 19.1.x | Yes                 | No                    | Only v1 supported            |
 | 19.2.x - 20.x | Yes (fallback)      | Yes (preferred)       | Prefers v2, falls back to v1 |
-| 21.x - 21.x   | No                  | Yes                   | Only v2 supported            |
+| 21.x          | No                  | Yes                   | Only v2 supported            |
 | 22.x+         | Yes (v2 signature)  | Yes                   | Both use v2 signature        |
 
 ## Which Nx Versions Does My Plugin Support?
@@ -88,37 +88,42 @@ In Nx 22 the type for v1 of the create nodes api are removed, you can inline the
 
 ```typescript
 // my-plugin/index.ts
+
 import {
   CreateNodesV2,
   CreateNodesContextV2,
-  CreateNodesResult
+  CreateNodesResult,
+  createNodesFromFiles,
 } from '@nx/devkit';
-
 
 // inlined types for backwards compat to v1 of createNodes
 // removed in Nx 22
 export interface OldCreateNodesContext extends CreateNodesContextV2 {
-    /**
-     * The subset of configuration files which match the createNodes pattern
-     */
-    readonly configFiles: readonly string[];
+  /**
+   * The subset of configuration files which match the createNodes pattern
+   */
+  readonly configFiles: readonly string[];
 }
-
 
 type OldCreateNodes<T = unknown> = readonly [
   projectFilePattern: string,
-  createNodesFunction: CreateNodesFunction<T>
+  createNodesFunction: OldCreateNodesFunction<T>
 ];
 
-export type OldCreateNodesFunction<T = unknown> = (projectConfigurationFile: string, options: T | undefined, context: OldCreateNodesContext) => CreateNodesResult | Promise<CreateNodesResult>;
+export type OldCreateNodesFunction<T = unknown> = (
+  projectConfigurationFile: string,
+  options: T | undefined,
+  context: OldCreateNodesContext
+) => CreateNodesResult | Promise<CreateNodesResult>;
 
 export interface MyPluginOptions {
   // your options
 }
 
 // V1 API for Nx 17-20
+
 export const createNodes: OldCreateNodes<MyPluginOptions> = [
-  '**/some-config.json',
+  '**/my-config.json',
   (configFile, options, context: OldCreateNodesContext) => {
     // V1 implementation - processes one file at a time
     return createNodesInternal(configFile, options, context);
@@ -128,6 +133,7 @@ export const createNodes: OldCreateNodes<MyPluginOptions> = [
 // V2 API for Nx 19.2+
 export const createNodesV2: CreateNodesV2<MyPluginOptions> = [
   '**/my-config.json',
+
   async (configFiles, options, context: CreateNodesContextV2) => {
     return await createNodesFromFiles(
       (configFile, options, context) =>
