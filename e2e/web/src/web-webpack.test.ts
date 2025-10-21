@@ -8,7 +8,7 @@ import {
 } from '@nx/e2e-utils';
 
 describe('Web Components Applications with bundler set as webpack', () => {
-  beforeEach(() => newProject({ packages: ['@nx/web'] }));
+  beforeEach(() => newProject());
   afterEach(() => cleanupProject());
 
   it('should support https for dev-server (legacy)', async () => {

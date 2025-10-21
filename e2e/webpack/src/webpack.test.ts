@@ -17,9 +17,7 @@ import {
 import { join } from 'path';
 
 describe('Webpack Plugin', () => {
-  beforeAll(() =>
-    newProject({ packages: ['@nx/webpack', '@nx/js', '@nx/react', '@nx/web'] })
-  );
+  beforeAll(() => newProject());
   afterAll(() => cleanupProject());
 
   it('should be able to setup project to build node programs with webpack and different compilers', async () => {

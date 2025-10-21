@@ -13,7 +13,7 @@ import {
 } from '@nx/e2e-utils';
 
 describe('Web Components Applications with bundler set as vite', () => {
-  beforeEach(() => newProject({ packages: ['@nx/web', '@nx/react'] }));
+  beforeEach(() => newProject());
   afterEach(() => cleanupProject());
 
   it('should be able to generate a web app', async () => {

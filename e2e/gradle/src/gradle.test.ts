@@ -17,7 +17,7 @@ describe('Gradle', () => {
     ({ type }: { type: 'kotlin' | 'groovy' }) => {
       let gradleProjectName = uniq('my-gradle-project');
       beforeAll(() => {
-        newProject({ packages: [] });
+        newProject();
         createGradleProject(gradleProjectName, type);
         runCLI(`add @nx/gradle`);
       });

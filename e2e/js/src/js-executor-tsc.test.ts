@@ -23,7 +23,7 @@ import {
 
 describe('js:tsc executor', () => {
   let scope;
-  beforeAll(() => (scope = newProject({ packages: ['@nx/js'] })));
+  beforeAll(() => (scope = newProject()));
   afterAll(() => cleanupProject());
 
   it('should create libs with js executors (--compiler=tsc)', async () => {

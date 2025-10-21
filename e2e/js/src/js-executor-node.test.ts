@@ -12,7 +12,7 @@ describe('js:node executor', () => {
   let scope: string;
 
   beforeAll(() => {
-    scope = newProject({ packages: ['@nx/js', '@nx/node'] });
+    scope = newProject();
   });
 
   afterAll(() => cleanupProject());
