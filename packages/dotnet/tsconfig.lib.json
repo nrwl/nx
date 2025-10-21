@@ -15,10 +15,10 @@
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "dist/**/*"],
   "references": [
     {
-      "path": "../nx/tsconfig.lib.json"
+      "path": "../devkit/tsconfig.lib.json"
     },
     {
-      "path": "../devkit/tsconfig.lib.json"
+      "path": "../nx/tsconfig.lib.json"
     }
   ]
 }

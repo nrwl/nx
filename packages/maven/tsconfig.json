@@ -8,6 +8,9 @@
       "path": "../devkit"
     },
     {
+      "path": "../nx"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]
