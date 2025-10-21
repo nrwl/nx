@@ -124,6 +124,7 @@ function mergeUserTargetConfigurations(
   for (const { targetOption, defaultTargetName } of targetMappings) {
     // Disabled target from user configuration
     if (targetOption === false) {
+      delete mergedTargets[defaultTargetName];
       continue;
     }
 

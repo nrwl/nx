@@ -44,6 +44,7 @@ function mergeUserTargetConfigurations(
   for (const { targetOption, defaultTargetName } of targetMappings) {
     // Disabled target from user configuration
     if (targetOption === false) {
+      delete mergedTargets[defaultTargetName];
       continue;
     }
 
@@ -526,6 +527,44 @@ describe('@nx/dotnet - createNodes', () => {
         outputs: ['{projectRoot}/bin/{configuration}'],
         dependsOn: ['^build'],
       });
+    });
+
+    it('should remove disabled targets from configuration', () => {
+      const node: ProjectConfiguration = {
+        root: 'apps/my-app',
+        name: 'my-app',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'dotnet build',
+            },
+          },
+          test: {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'dotnet test',
+            },
+          },
+          clean: {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'dotnet clean',
+            },
+          },
+        },
+      };
+
+      const options: DotNetPluginOptions = {
+        test: false,
+        clean: false,
+      };
+
+      const result = mergeUserTargetConfigurations(node, options);
+
+      expect(result.targets?.build).toBeDefined();
+      expect(result.targets?.test).toBeUndefined();
+      expect(result.targets?.clean).toBeUndefined();
     });
   });
 
