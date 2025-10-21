@@ -33,7 +33,7 @@ describe('index.html interpolation', () => {
     const envFileContents = `
       NX_PUBLIC_VARIABLE=foo
       SOME_OTHER_VARIABLE=bar
-    }`;
+    `;
 
     createFile(envFilePath);
 
