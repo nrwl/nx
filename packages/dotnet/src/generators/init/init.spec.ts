@@ -18,19 +18,9 @@ describe('@nx/dotnet:init', () => {
         skipPackageJson: false,
       });
       const nxJson = readNxJson(tree);
-      expect(nxJson.plugins).toMatchInlineSnapshot(`
+      expect(nxJson?.plugins).toMatchInlineSnapshot(`
         [
-          {
-            "options": {
-              "buildTargetName": "build",
-              "cleanTargetName": "clean",
-              "packTargetName": "pack",
-              "publishTargetName": "publish",
-              "restoreTargetName": "restore",
-              "testTargetName": "test",
-            },
-            "plugin": "@nx/dotnet",
-          },
+          "@nx/dotnet",
         ]
       `);
     });
@@ -44,20 +34,10 @@ describe('@nx/dotnet:init', () => {
         skipPackageJson: false,
       });
       const nxJson = readNxJson(tree);
-      expect(nxJson.plugins).toMatchInlineSnapshot(`
+      expect(nxJson?.plugins).toMatchInlineSnapshot(`
         [
           "foo",
-          {
-            "options": {
-              "buildTargetName": "build",
-              "cleanTargetName": "clean",
-              "packTargetName": "pack",
-              "publishTargetName": "publish",
-              "restoreTargetName": "restore",
-              "testTargetName": "test",
-            },
-            "plugin": "@nx/dotnet",
-          },
+          "@nx/dotnet",
         ]
       `);
     });
@@ -71,7 +51,7 @@ describe('@nx/dotnet:init', () => {
         skipPackageJson: false,
       });
       const nxJson = readNxJson(tree);
-      expect(nxJson.plugins).toMatchInlineSnapshot(`
+      expect(nxJson?.plugins).toMatchInlineSnapshot(`
         [
           "@nx/dotnet",
         ]
@@ -86,7 +66,7 @@ describe('@nx/dotnet:init', () => {
         skipPackageJson: false,
       });
       const nxJson = readNxJson(tree);
-      expect(nxJson.namedInputs).toMatchInlineSnapshot(`
+      expect(nxJson?.namedInputs).toMatchInlineSnapshot(`
         {
           "default": [
             "{projectRoot}/**/*",
@@ -113,7 +93,7 @@ describe('@nx/dotnet:init', () => {
         skipPackageJson: false,
       });
       const nxJson = readNxJson(tree);
-      expect(nxJson.namedInputs).toMatchInlineSnapshot(`
+      expect(nxJson?.namedInputs).toMatchInlineSnapshot(`
         {
           "default": [
             "foo",

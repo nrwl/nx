@@ -34,4 +34,14 @@ public class PluginOptions
     /// The name of the pack target. Defaults to "pack".
     /// </summary>
     public string PackTargetName { get; set; } = "pack";
+
+    /// <summary>
+    /// The name of the watch target. Defaults to "watch".
+    /// </summary>
+    public string WatchTargetName { get; set; } = "watch";
+
+    /// <summary>
+    /// The name of the run target. Defaults to "run".
+    /// </summary>
+    public string RunTargetName { get; set; } = "run";
 }
