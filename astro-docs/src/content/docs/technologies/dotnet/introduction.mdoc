@@ -1,0 +1,196 @@
+---
+title: Overview of the Nx Plugin for .NET
+description: This plugin allows .NET projects to be run through Nx.
+sidebar:
+  label: 'Introduction'
+filter: 'type:References'
+---
+
+[.NET](https://dotnet.microsoft.com/) is a free, cross-platform, open-source developer platform for building many different types of applications. With .NET, you can use multiple languages, editors, and libraries to build for web, mobile, desktop, games, IoT, and more.
+
+The Nx plugin for .NET registers .NET projects in your Nx workspace. It allows MSBuild tasks to be run through Nx. Nx effortlessly makes your [CI faster](/docs/guides/nx-cloud/setup-ci).
+
+Nx adds the following features to your workspace:
+
+- [Cache task results](/docs/features/cache-task-results)
+- [Distribute task execution](/docs/features/ci-features/distribute-task-execution)
+- [Run only tasks affected by a PR](/docs/features/ci-features/affected)
+- [Interactively explore your workspace](/docs/features/explore-graph)
+
+{% aside type="note" title=".NET SDK Compatibility" %}
+This plugin requires .NET SDK 8.0 or newer. Older versions of .NET core may work, but are unsupported and may lead to issues. If you need support for an older version, please create an issue on [Github](https://github.com/nrwl/nx)!
+{% /aside %}
+
+## Setup @nx/dotnet
+
+### Install Nx
+
+You can install Nx globally. Depending on your package manager, use one of the following commands:
+
+{% tabs syncKey="package-manager" %}
+{% tabitem label="npm" %}
+
+```shell {% frame="none" %}
+npm add --global nx@latest
+```
+
+{% /tabitem %}
+{% tabitem label="Homebrew (macOS, Linux)" %}
+
+```shell {% frame="none" %}
+brew install nx
+```
+
+{% /tabitem %}
+{% tabitem label="Chocolatey (Windows)" %}
+
+```shell {% frame="none" %}
+choco install nx
+```
+
+{% /tabitem %}
+{% tabitem label="apt (Ubuntu)" %}
+
+```shell {% frame="none" %}
+sudo add-apt-repository ppa:nrwl/nx
+sudo apt update
+sudo apt install nx
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+### Add Nx to a .NET Workspace
+
+In any .NET workspace, run the following command to add Nx and the `@nx/dotnet` plugin:
+
+```shell {% frame="none" %}
+nx init
+```
+
+Then, you can run .NET tasks using Nx. For example:
+
+```shell {% frame="none" %}
+nx build <your dotnet project>
+```
+
+### Add .NET to an Existing Nx Workspace
+
+If you already have an Nx workspace set up, you can add the `@nx/dotnet` plugin by running the following command:
+
+```shell {% frame="none" %}
+nx add @nx/dotnet
+```
+
+{% aside title="Minimum Nx Version" type="caution" %}
+The `@nx/dotnet` plugin only became available in Nx 22.0.0. Your Nx Workspace will need to be on this version or higher to use it.
+{% /aside %}
+
+## How @nx/dotnet Infers Tasks
+
+The `@nx/dotnet` plugin uses MSBuild to analyze your .NET solution and project structure. When using `nx add`, the plugin is automatically configured in your `nx.json` file.
+
+The plugin automatically detects .NET projects by scanning for the following project file patterns:
+
+- `**/*.csproj` (C# projects)
+- `**/*.fsproj` (F# projects)
+- `**/*.vbproj` (Visual Basic projects)
+
+The plugin analyzes your MSBuild project files to determine:
+
+- Project dependencies (via `<ProjectReference>` elements)
+- Available build targets (build, test, clean, etc.)
+- Project outputs and configuration
+
+## View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/docs/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project` in the command line.
+
+## @nx/dotnet Configuration
+
+The `@nx/dotnet` is configured in the `plugins` array in `nx.json`.
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/dotnet",
+      "options": {
+        "buildTargetName": "build",
+        "testTargetName": "test",
+        "cleanTargetName": "clean",
+        "restoreTargetName": "restore",
+        "publishTargetName": "publish",
+        "packTargetName": "pack"
+      }
+    }
+  ]
+}
+```
+
+Once a .NET project file has been identified, the targets are created with the names you specify in the `nx.json` `plugins` array. The default names for the inferred targets are:
+
+- `build` - Compiles the project
+- `test` - Runs unit tests (for test projects)
+- `clean` - Removes build outputs
+- `restore` - Restores NuGet package dependencies
+- `publish` - Publishes the application (for executable projects)
+- `pack` - Creates a NuGet package (for library projects)
+
+### Target Availability
+
+Not all targets are available for every project type. The plugin intelligently determines which targets to create based on the project type:
+
+- **Console Applications & Web Projects**: build, clean, restore, publish
+- **Class Libraries**: build, clean, restore, pack
+- **Test Projects**: build, clean, restore, test
+
+### Continuous Tasks
+
+.NET doesn't have a standard way to identify tasks which are [continuous](/docs/reference/project-configuration#continuous), like `run` or `watch` for serving an application during development. To ensure Nx handles these continuous tasks correctly, you can explicitly mark them as continuous.
+
+{% tabs %}
+{% tabitem label="nx.json" %}
+
+In the `nx.json`, you can specify the target default configuration like so:
+
+```json {% meta="{5}" %}
+// nx.json
+{
+  "targetDefaults": {
+    "watch": {
+      "continuous": true
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="project.json" %}
+
+In a `project.json`, you can specify the target configuration like so:
+
+```json {% meta="{4}" %}
+// project.json
+{
+  "watch": {
+    "continuous": true
+  }
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+## Working with Configurations
+
+The `@nx/dotnet` plugin supports MSBuild configurations (Debug, Release, etc.) through Nx's configuration system. You can run tasks with specific configurations:
+
+```shell {% frame="none" %}
+# Build with Release configuration
+nx build my-app --configuration release
+
+# Build with Debug configuration (usually the default)
+nx build my-app --configuration debug
+```

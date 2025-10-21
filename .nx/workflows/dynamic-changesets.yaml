@@ -15,11 +15,11 @@ assignment-rules:
     targets:
       - e2e-ci**
     run-on:
-        - agent: linux-large
-          parallelism: 1
-        - agent: linux-extra-large
-          parallelism: 1
-  
+      - agent: linux-large
+        parallelism: 1
+      - agent: linux-extra-large
+        parallelism: 1
+
   - projects:
       - e2e-angular
       - e2e-react
@@ -57,10 +57,10 @@ assignment-rules:
       - e2e-ci**src/js-executor-tsc.test**
       - e2e-ci**src/js-packaging.test**
     run-on:
-        - agent: linux-large
-          parallelism: 1
-        - agent: linux-extra-large
-          parallelism: 1
+      - agent: linux-large
+        parallelism: 1
+      - agent: linux-extra-large
+        parallelism: 1
 
   # All other e2e tests can run in parallel
   - targets:
@@ -98,7 +98,7 @@ assignment-rules:
         parallelism: 6
 
   - targets:
-      - '*'
+      - "*"
     run-on:
       - agent: linux-large
         parallelism: 3

@@ -13,6 +13,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { minimatch } from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
+import { existsSync } from 'node:fs';
 
 import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
@@ -37,6 +38,7 @@ import {
   getExecutorInformation,
   parseExecutor,
 } from '../../command-line/run/executor-utils';
+import { toProjectName } from '../../config/to-project-name';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -667,6 +669,16 @@ function validateAndNormalizeProjectRootMap(
     // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
     // Strip it before returning configuration for usage.
     if (project['// targets']) delete project['// targets'];
+
+    // We initially did this in the project.json plugin, but
+    // that resulted in project.json files without names causing
+    // the resulting project to change names from earlier plugins...
+    if (
+      !project.name &&
+      existsSync(join(workspaceRoot, project.root, 'project.json'))
+    ) {
+      project.name = toProjectName(join(root, 'project.json'));
+    }
 
     try {
       validateProject(project, projects);
