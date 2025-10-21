@@ -1116,7 +1116,7 @@ async function generateChangelogForWorkspace({
     changes,
     changelogEntryVersion: releaseVersion.rawVersion,
     project: null,
-    isVersionPlans: false,
+    isVersionPlans: !!nxReleaseConfig.versionPlans,
     entryWhenNoChanges: config.entryWhenNoChanges,
     changelogRenderOptions: config.renderOptions,
     conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,

@@ -184,13 +184,6 @@ export default class DefaultChangelogRenderer {
     }
 
     if (this.isVersionPlans) {
-      this.conventionalCommitsConfig = {
-        types: {
-          feat: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.feat,
-          fix: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.fix,
-        },
-      };
-
       for (let i = this.relevantChanges.length - 1; i >= 0; i--) {
         if (this.relevantChanges[i].isBreaking) {
           const change = this.relevantChanges[i];
@@ -385,8 +378,12 @@ export default class DefaultChangelogRenderer {
     if (description.includes('\n')) {
       [description, ...extraLines] = description.split('\n');
       const indentation = '  ';
-      extraLinesStr = extraLines
-        .filter((l) => l.trim().length > 0)
+      extraLinesStr = (
+        this.isVersionPlans
+          ? // Preserve newlines for version plan sources to allow author to maintain maximum control over final contents
+            extraLines
+          : extraLines.filter((l) => l.trim().length > 0)
+      )
         .map((l) => `${indentation}${l}`)
         .join('\n');
     }
@@ -408,7 +405,7 @@ export default class DefaultChangelogRenderer {
       );
     }
     if (extraLinesStr) {
-      changeLine += '\n\n' + extraLinesStr;
+      changeLine += (this.isVersionPlans ? '\n' : '\n\n') + extraLinesStr;
     }
     return changeLine;
   }
