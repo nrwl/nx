@@ -787,6 +787,19 @@ describe('utils', () => {
         Run \`nx repair\` to fix this."
       `);
     });
+
+    test('multiple errors formatted correctly', () => {
+      expect(() => validateOutputs(['foo', 'bar']))
+        .toThrowErrorMatchingInlineSnapshot(`
+        "The following outputs are invalid: 
+         - foo
+           ** Reason: Outputs must start with either "{workspaceRoot}/" or "{projectRoot}/".
+         - bar
+           ** Reason: Outputs must start with either "{workspaceRoot}/" or "{projectRoot}/".
+
+        Run \`nx repair\` to fix this."
+      `);
+    });
   });
 });
 
