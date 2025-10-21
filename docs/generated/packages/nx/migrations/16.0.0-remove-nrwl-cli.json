@@ -1,0 +1,13 @@
+{
+  "name": "16.0.0-remove-nrwl-cli",
+  "cli": "nx",
+  "version": "16.0.0-beta.0",
+  "description": "Remove @nrwl/cli.",
+  "implementation": "/packages/nx/src/migrations/update-16-0-0/remove-nrwl-cli.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

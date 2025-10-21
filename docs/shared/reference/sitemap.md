@@ -687,6 +687,8 @@
           - [fix-ci](/reference/core-api/nx/documents/fix-ci)
           - [record](/reference/core-api/nx/documents/record)
           - [start-ci-run](/reference/core-api/nx/documents/start-ci-run)
+          - [start-agent](/reference/core-api/nx/documents/start-agent)
+          - [stop-all-agents](/reference/core-api/nx/documents/stop-all-agents)
         - [executors](/reference/core-api/nx/executors)
           - [noop](/reference/core-api/nx/executors/noop)
           - [run-commands](/reference/core-api/nx/executors/run-commands)

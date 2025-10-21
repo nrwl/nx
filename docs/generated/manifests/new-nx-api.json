@@ -3676,6 +3676,28 @@
         "path": "/reference/core-api/nx/documents/start-ci-run",
         "tags": ["nx-cloud", "ci"],
         "originalFilePath": "generated/cli/start-ci-run"
+      },
+      "/reference/core-api/nx/documents/start-agent": {
+        "id": "start-agent",
+        "name": "start-agent",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/start-agent",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/nx/documents/start-agent",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/start-agent"
+      },
+      "/reference/core-api/nx/documents/stop-all-agents": {
+        "id": "stop-all-agents",
+        "name": "stop-all-agents",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/stop-all-agents",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/nx/documents/stop-all-agents",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/stop-all-agents"
       }
     },
     "root": "/packages/nx",
@@ -3888,6 +3910,66 @@
         "version": "17.0.0-beta.1",
         "originalFilePath": "/packages/nx",
         "path": "/reference/core-api/nx/migrations/17.0.0-move-cache-directory",
+        "type": "migration"
+      },
+      "/reference/core-api/nx/migrations/16.8.0-escape-dollar-sign-env": {
+        "description": "Escape $ in env variables",
+        "file": "generated/packages/nx/migrations/16.8.0-escape-dollar-sign-env.json",
+        "hidden": false,
+        "name": "16.8.0-escape-dollar-sign-env",
+        "version": "16.8.0-beta.3",
+        "originalFilePath": "/packages/nx",
+        "path": "/reference/core-api/nx/migrations/16.8.0-escape-dollar-sign-env",
+        "type": "migration"
+      },
+      "/reference/core-api/nx/migrations/16.6.0-prefix-outputs": {
+        "description": "Prefix outputs with {workspaceRoot}/{projectRoot} if needed",
+        "file": "generated/packages/nx/migrations/16.6.0-prefix-outputs.json",
+        "hidden": false,
+        "name": "16.6.0-prefix-outputs",
+        "version": "16.6.0-beta.6",
+        "originalFilePath": "/packages/nx",
+        "path": "/reference/core-api/nx/migrations/16.6.0-prefix-outputs",
+        "type": "migration"
+      },
+      "/reference/core-api/nx/migrations/16.2.0-remove-output-path-from-run-commands": {
+        "description": "Remove outputPath from run commands",
+        "file": "generated/packages/nx/migrations/16.2.0-remove-output-path-from-run-commands.json",
+        "hidden": false,
+        "name": "16.2.0-remove-output-path-from-run-commands",
+        "version": "16.2.0-beta.0",
+        "originalFilePath": "/packages/nx",
+        "path": "/reference/core-api/nx/migrations/16.2.0-remove-output-path-from-run-commands",
+        "type": "migration"
+      },
+      "/reference/core-api/nx/migrations/16.0.0-tokens-for-depends-on": {
+        "description": "Replace `dependsOn.projects` and `inputs` definitions with new configuration format.",
+        "file": "generated/packages/nx/migrations/16.0.0-tokens-for-depends-on.json",
+        "hidden": false,
+        "name": "16.0.0-tokens-for-depends-on",
+        "version": "16.0.0-beta.9",
+        "originalFilePath": "/packages/nx",
+        "path": "/reference/core-api/nx/migrations/16.0.0-tokens-for-depends-on",
+        "type": "migration"
+      },
+      "/reference/core-api/nx/migrations/16.0.0-remove-nrwl-cli": {
+        "description": "Remove @nrwl/cli.",
+        "file": "generated/packages/nx/migrations/16.0.0-remove-nrwl-cli.json",
+        "hidden": false,
+        "name": "16.0.0-remove-nrwl-cli",
+        "version": "16.0.0-beta.0",
+        "originalFilePath": "/packages/nx",
+        "path": "/reference/core-api/nx/migrations/16.0.0-remove-nrwl-cli",
+        "type": "migration"
+      },
+      "/reference/core-api/nx/migrations/16.0.0-update-nx-cloud-runner": {
+        "description": "Replace @nrwl/nx-cloud with nx-cloud",
+        "file": "generated/packages/nx/migrations/16.0.0-update-nx-cloud-runner.json",
+        "hidden": false,
+        "name": "16.0.0-update-nx-cloud-runner",
+        "version": "16.0.0-beta.0",
+        "originalFilePath": "/packages/nx",
+        "path": "/reference/core-api/nx/migrations/16.0.0-update-nx-cloud-runner",
         "type": "migration"
       }
     },

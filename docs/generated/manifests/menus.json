@@ -5686,6 +5686,22 @@
                         "children": [],
                         "isExternal": false,
                         "disableCollapsible": false
+                      },
+                      {
+                        "id": "start-agent",
+                        "path": "/reference/core-api/nx/documents/start-agent",
+                        "name": "start-agent",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "stop-all-agents",
+                        "path": "/reference/core-api/nx/documents/stop-all-agents",
+                        "name": "stop-all-agents",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
                       }
                     ],
                     "isExternal": false,

@@ -1,11 +1,11 @@
 ---
 title: 'start-ci-run - CLI command'
-description: 'Starts a new CI run for distributed task execution. This command is an alias for [`nx-cloud start-ci-run`](/ci/reference/nx-cloud-cli#npx-nxcloud-start-ci-run).'
+description: 'Starts a new CI run for distributed task execution. This command is an alias for [`nx-cloud start-ci-run`](/docs/reference/nx-cloud-cli#npx-nxcloud-start-ci-run).'
 ---
 
 # start-ci-run
 
-Starts a new CI run for distributed task execution. This command is an alias for [`nx-cloud start-ci-run`](/ci/reference/nx-cloud-cli#npx-nxcloud-start-ci-run).
+Starts a new CI run for distributed task execution. This command is an alias for [`nx-cloud start-ci-run`](/docs/reference/nx-cloud-cli#npx-nxcloud-start-ci-run).
 
 ## Usage
 

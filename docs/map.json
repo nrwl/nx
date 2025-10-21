@@ -3158,6 +3158,18 @@
               "id": "start-ci-run",
               "tags": ["nx-cloud", "ci"],
               "file": "generated/cli/start-ci-run"
+            },
+            {
+              "name": "start-agent",
+              "id": "start-agent",
+              "tags": ["nx-cloud", "ci"],
+              "file": "generated/cli/start-agent"
+            },
+            {
+              "name": "stop-all-agents",
+              "id": "stop-all-agents",
+              "tags": ["nx-cloud", "ci"],
+              "file": "generated/cli/stop-all-agents"
             }
           ]
         },

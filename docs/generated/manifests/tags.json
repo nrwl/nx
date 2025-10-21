@@ -1717,6 +1717,20 @@
       "id": "start-ci-run",
       "name": "start-ci-run",
       "path": "/reference/core-api/nx/documents/start-ci-run"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/start-agent",
+      "id": "start-agent",
+      "name": "start-agent",
+      "path": "/reference/core-api/nx/documents/start-agent"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/stop-all-agents",
+      "id": "stop-all-agents",
+      "name": "stop-all-agents",
+      "path": "/reference/core-api/nx/documents/stop-all-agents"
     }
   ],
   "ci": [
@@ -1740,6 +1754,20 @@
       "id": "start-ci-run",
       "name": "start-ci-run",
       "path": "/reference/core-api/nx/documents/start-ci-run"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/start-agent",
+      "id": "start-agent",
+      "name": "start-agent",
+      "path": "/reference/core-api/nx/documents/start-agent"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/stop-all-agents",
+      "id": "stop-all-agents",
+      "name": "stop-all-agents",
+      "path": "/reference/core-api/nx/documents/stop-all-agents"
     }
   ]
 }

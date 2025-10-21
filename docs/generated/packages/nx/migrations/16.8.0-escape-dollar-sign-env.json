@@ -1,0 +1,14 @@
+{
+  "name": "16.8.0-escape-dollar-sign-env",
+  "cli": "nx",
+  "version": "16.8.0-beta.3",
+  "description": "Escape $ in env variables",
+  "implementation": "/packages/nx/src/migrations/update-16-8-0/escape-dollar-sign-env-variables.ts",
+  "x-repair-skip": true,
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

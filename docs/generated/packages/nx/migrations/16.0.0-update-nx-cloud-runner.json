@@ -1,0 +1,13 @@
+{
+  "name": "16.0.0-update-nx-cloud-runner",
+  "cli": "nx",
+  "version": "16.0.0-beta.0",
+  "description": "Replace @nrwl/nx-cloud with nx-cloud",
+  "implementation": "/packages/nx/src/migrations/update-16-0-0/update-nx-cloud-runner.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

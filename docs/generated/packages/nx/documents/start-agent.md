@@ -1,16 +1,16 @@
 ---
-title: 'start-ci-run - CLI command'
-description: 'Starts a new CI run for distributed task execution. This command is an alias for [`nx-cloud start-ci-run`](/docs/reference/nx-cloud-cli#npx-nxcloud-start-ci-run).'
+title: 'start-agent - CLI command'
+description: 'Starts a new agent for distributed task execution. This command is an alias for [`nx-cloud start-agent`](/docs/reference/nx-cloud-cli).'
 ---
 
-# start-ci-run
+# start-agent
 
-Starts a new CI run for distributed task execution. This command is an alias for [`nx-cloud start-ci-run`](/docs/reference/nx-cloud-cli#npx-nxcloud-start-ci-run).
+Starts a new agent for distributed task execution. This command is an alias for [`nx-cloud start-agent`](/docs/reference/nx-cloud-cli).
 
 ## Usage
 
 ```shell
-nx start-ci-run [options]
+nx start-agent [options]
 ```
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.
