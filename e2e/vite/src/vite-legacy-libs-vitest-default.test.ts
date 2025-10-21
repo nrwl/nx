@@ -47,7 +47,7 @@ describe('Vite Plugin', () => {
           });
         } catch (error) {
           console.error(error);
-          throw error; 
+          throw error;
         } finally {
           if (cp && cp.pid) {
             await killProcessAndPorts(cp.pid);
