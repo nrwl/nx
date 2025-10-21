@@ -58,65 +58,21 @@ export function CallToAction(): ReactElement {
 
       {/* Content */}
       <div className="mx-auto max-w-2xl text-center">
-        <div className="mb-8 flex justify-center">
-          <GradleIcon className="h-16 w-16 text-slate-900 dark:text-white" />
-        </div>
-
         <h2 className="text-3xl font-medium tracking-tight text-slate-950 sm:text-5xl dark:text-white">
-          Get Started With Gradle
+          Learn More
         </h2>
         <p className="mt-8">
-          Check out the documentation for the <code>@nx/gradle</code> plugin to
-          learn more
+          Check out the documentation for <code>@nx/gradle</code> or{' '}
+          <code>@nx/maven</code> to learn more
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <Link
-            href="/nx-api/gradle/documents/overview"
-            title="Get started with the tutorial"
+            href="/docs/technologies/java/gradle/introduction"
+            title="Get started with Gradle"
             prefetch={false}
             className="rounded-md bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
           >
-            Read the Docs{' '}
-            <span
-              aria-hidden="true"
-              className="inline-block transition group-hover:translate-x-1"
-            >
-              →
-            </span>
-          </Link>
-
-          {/* <Link
-            href="/packages/gradle/gradle-plugin"
-            title="Read the documentation"
-            prefetch={false}
-            className="group text-sm font-semibold leading-6 text-slate-950 dark:text-white"
-          >
-            Read documentation{' '}
-            <span
-              aria-hidden="true"
-              className="inline-block transition group-hover:translate-x-1"
-            >
-              →
-            </span>
-          </Link> */}
-        </div>
-
-        <h3 className="mt-16 text-3xl font-medium tracking-tight text-slate-950 dark:text-white">
-          Looking for Maven?
-        </h3>
-        <p className="mt-8">
-          {' '}
-          Maven support is coming soon. Follow our blog and social media to be
-          notified when it is released.{' '}
-        </p>
-        <div className="mt-10 flex items-center justify-center gap-x-6">
-          <Link
-            href="/blog"
-            title="Read the blog"
-            prefetch={false}
-            className="rounded-md bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
-          >
-            Read the blog{' '}
+            @nx/gradle Docs{' '}
             <span
               aria-hidden="true"
               className="inline-block transition group-hover:translate-x-1"
@@ -126,12 +82,12 @@ export function CallToAction(): ReactElement {
           </Link>
 
           <Link
-            href="/community"
-            title="Follow us on social media"
+            href="/docs/technologies/java/maven/introduction"
+            title="Get started with Maven"
             prefetch={false}
             className="rounded-md bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
           >
-            Follow us on social media{' '}
+            @nx/maven Docs{' '}
             <span
               aria-hidden="true"
               className="inline-block transition group-hover:translate-x-1"
