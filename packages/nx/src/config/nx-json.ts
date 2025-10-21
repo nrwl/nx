@@ -78,6 +78,8 @@ export interface NxReleaseDockerConfiguration {
    *     "skipVersionActions": ["api"]
    *   }
    * ```
+   * Note: if you are using {versionActionsVersion} in your docker version scheme you should not skip version actions for that project
+   * as the docker versioning will not be able to resolve the {versionActionsVersion} placeholder.
    */
   skipVersionActions?: string[] | boolean;
   /**

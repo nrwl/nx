@@ -277,7 +277,8 @@ export class ReleaseGroupProcessor {
       projectGraphNode: ProjectGraphProjectNode,
       finalConfigForProject: FinalConfigForProject,
       dockerVersionScheme?: string,
-      dockerVersion?: string
+      dockerVersion?: string,
+      versionActionsVersion?: string
     ) => Promise<{ newVersion: string; logs: string[] }>;
     try {
       const {
@@ -294,19 +295,21 @@ export class ReleaseGroupProcessor {
     }
     for (const [project, finalConfigForProject] of dockerProjects.entries()) {
       const projectNode = this.projectGraph.nodes[project];
+      const projectVersionData = this.versionData.get(project);
       const { newVersion, logs } = await handleDockerVersion(
         workspaceRoot,
         projectNode,
         finalConfigForProject,
         dockerVersionScheme,
-        dockerVersion
+        dockerVersion,
+        projectVersionData.newVersion
       );
 
       logs.forEach((log) =>
         this.getProjectLoggerForProject(project).buffer(log)
       );
       const newVersionData = {
-        ...this.versionData.get(project),
+        ...projectVersionData,
         dockerVersion: newVersion,
       };
       this.versionData.set(project, newVersionData);
