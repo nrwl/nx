@@ -1,8 +1,8 @@
 export interface GradlePluginOptions {
   testTargetName?: string;
   ciTestTargetName?: string;
+  customGradleInstallation?: string;
   [taskTargetName: string]: string | undefined | boolean;
-  gradleProjectRoot?: string;
 }
 
 export function normalizeOptions(

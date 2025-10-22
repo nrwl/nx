@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nx/devkit';
+import {ExecutorContext, workspaceRoot} from '@nx/devkit';
 import { GradleExecutorSchema } from './schema';
 import { findGradlewFile } from '../../utils/exec-gradle';
 import { dirname, join } from 'node:path';
@@ -11,7 +11,7 @@ export default async function gradleExecutor(
 ): Promise<{ success: boolean }> {
   let projectRoot =
     context.projectGraph.nodes[context.projectName]?.data?.root ?? context.root;
-  let gradlewPath = findGradlewFile(join(projectRoot, 'project.json')); // find gradlew near project root
+  let gradlewPath = findGradlewFile(join(projectRoot, 'project.json'), workspaceRoot); // find gradlew near project root
   gradlewPath = join(context.root, gradlewPath);
 
   let args =

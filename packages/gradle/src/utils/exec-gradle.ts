@@ -66,18 +66,17 @@ export function execGradleAsync(
  * This function recursively finds the nearest gradlew file in the workspace
  * @param filePathToSearch the original file to search for, relative to workspace root, file path not directory path
  * @param workspaceRoot workspace root
- * @param currentSearchPath the path to start searching for gradlew file
- * @param customGradleInstallation a custom gradle installation path to search at
+ * @param customGradleInstallationPath a custom gradle installation path to search at
  * @returns the relative path of the gradlew file to workspace root, throws an error if gradlew file is not found
  * It will return relative path to workspace root of gradlew.bat file on windows and gradlew file on other platforms
  */
 export function findGradlewFile(
   filePathToSearch: string,
   workspaceRoot: string,
-  customGradleInstallation?: string,
+  customGradleInstallationPath?: string,
 ): string {
-  if (customGradleInstallation) {
-    return findGradlewUsingCustomInstallationPath(customGradleInstallation, workspaceRoot);
+  if (customGradleInstallationPath) {
+    return findGradlewUsingCustomInstallationPath(customGradleInstallationPath, workspaceRoot);
   }
 
   return findGradlewUsingFilePathTraversal(filePathToSearch, workspaceRoot);
@@ -119,11 +118,11 @@ export function findGradlewUsingFilePathTraversal(
   return findGradlewUsingFilePathTraversal(filePathToSearch, workspaceRoot, parent);
 }
 
-export function findGradlewUsingCustomInstallationPath(customGradleInstallation: string, workspaceRoot: string) {
+export function findGradlewUsingCustomInstallationPath(customGradleInstallationPath: string, workspaceRoot: string) {
   // Resolve the custom installation path - if relative, resolve against workspace root
-  const resolvedInstallationPath = isAbsolute(customGradleInstallation)
-    ? customGradleInstallation
-    : join(workspaceRoot, customGradleInstallation);
+  const resolvedInstallationPath = isAbsolute(customGradleInstallationPath)
+    ? customGradleInstallationPath
+    : join(workspaceRoot, customGradleInstallationPath);
 
   const customGradlewPath = join(resolvedInstallationPath, 'gradlew');
   const customGradlewBatPath = join(resolvedInstallationPath, 'gradlew.bat');
@@ -131,24 +130,24 @@ export function findGradlewUsingCustomInstallationPath(customGradleInstallation:
   if (process.platform.startsWith('win')) {
     if (existsSync(customGradlewBatPath)) {
       // Return path relative to workspace root if it was relative, otherwise return absolute
-      return isAbsolute(customGradleInstallation)
+      return isAbsolute(customGradleInstallationPath)
         ? customGradlewBatPath
-        : join(customGradleInstallation, 'gradlew.bat');
+        : join(customGradleInstallationPath, 'gradlew.bat');
     }
   } else {
     if (existsSync(customGradlewPath)) {
       // Return path relative to workspace root if it was relative, otherwise return absolute
-      return isAbsolute(customGradleInstallation)
+      return isAbsolute(customGradleInstallationPath)
         ? customGradlewPath
-        : join(customGradleInstallation, 'gradlew');
+        : join(customGradleInstallationPath, 'gradlew');
     }
   }
 
   throw new AggregateCreateNodesError(
     [
       [
-        customGradleInstallation,
-        new Error(`No Gradlew file found at ${customGradleInstallation}. Run "gradle init"`),
+        customGradleInstallationPath,
+        new Error(`No Gradlew file found at ${customGradleInstallationPath}. Run "gradle init"`),
       ],
     ],
     []

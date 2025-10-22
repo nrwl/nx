@@ -56,13 +56,17 @@ const regex =
  */
 export async function extractNxPluginVersion(
   gradleFilePath: string,
-  gradleContent: string
+  gradleContent: string,
 ): Promise<string | null> {
   const match = gradleContent.match(regex);
   let version = match ? match[2] : null;
   if (!version) {
     try {
-      const gradlewFile = findGradlewFile(gradleFilePath, workspaceRoot);
+      const gradlewFile = findGradlewFile(
+        gradleFilePath,
+        workspaceRoot,
+        undefined
+      );
       const buildEnvironment = (
         await execGradleAsync(join(workspaceRoot, gradlewFile), [
           'buildEnvironment',
