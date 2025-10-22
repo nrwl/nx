@@ -45,20 +45,20 @@
     "generators.json",
     "executors.json",
     "migrations.json",
-    "!README.md__tpl__"
+    "!dist/tsconfig.lib.tsbuildinfo"
   ],
   "scripts": {},
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "nx": "workspace:*",
     "tslib": "^2.3.0",
     "ignore": "^7.0.5"
   },
   "devDependencies": {
-    "@types/jest": "^29.4.0",
+    "@types/jest": "30.0.0",
     "@types/node": "20.16.10",
-    "jest": "^29.4.0",
+    "jest": "30.0.2",
     "memfs": "^4.9.2",
+    "nx": "workspace:*",
     "ts-jest": "^29.1.0",
     "typescript": "^5.0.0"
   },

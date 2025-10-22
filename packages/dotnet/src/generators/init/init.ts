@@ -102,17 +102,7 @@ function addPlugin(tree: Tree) {
 
   if (!hasDotNetPlugin(tree)) {
     nxJson.plugins ??= [];
-    nxJson.plugins.push({
-      plugin: '@nx/dotnet',
-      options: {
-        buildTargetName: 'build',
-        testTargetName: 'test',
-        cleanTargetName: 'clean',
-        restoreTargetName: 'restore',
-        publishTargetName: 'publish',
-        packTargetName: 'pack',
-      },
-    });
+    nxJson.plugins.push('@nx/dotnet');
     updateNxJson(tree, nxJson);
   }
 }

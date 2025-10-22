@@ -149,16 +149,10 @@ jobs:
         run: git fetch origin master:master
         if: ${{ github.event_name == 'pull_request' }}
 
-      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
-        name: Install pnpm
-        with:
-          version: 10.11.1
-          run_install: false
-
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 20
-          cache: 'pnpm'
+          package-manager-cache: false
 
       - name: Set SHAs
         uses: nrwl/nx-set-shas@1859e66a83ac9be0dceecbd9a023702e27ac47f4 # v4.3.3
@@ -293,6 +287,27 @@ jobs:
             /opt/homebrew
             ~/Library/Caches/Homebrew
           key: nrwl-nx-homebrew-packages
+
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
+        if: steps.check-changes.outputs.has_changes == 'true'
+        name: Install pnpm
+        with:
+          version: 10.11.1
+          run_install: false
+
+      - name: Get pnpm store directory
+        if: steps.check-changes.outputs.has_changes == 'true'
+        id: pnpm-cache
+        run: echo "path=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        if: steps.check-changes.outputs.has_changes == 'true'
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install Rust
         if: steps.check-changes.outputs.has_changes == 'true'

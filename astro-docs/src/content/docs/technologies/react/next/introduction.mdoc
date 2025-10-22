@@ -173,7 +173,7 @@ nx serve my-new-app --prod
 
 You can import a library called `my-new-lib` in your application as follows.
 
-```typescript {1,5-7}
+```typescript {% meta="{1,5-7}" %}
 // apps/my-next-app/pages/index.tsx
 import { MyNewLib } from '@<your nx workspace name>/my-new-lib';
 
@@ -250,7 +250,7 @@ After running a build, the output will be in the `.next` folder inside your app'
 
 You can customize the output folder path by updating the Next.js config. For example, you can set a custom `distDir` in `next.config.js`:
 
-```javascript {2}"
+```javascript {% meta="{2}" %}
 // apps/my-next-app/next.config.js
 const nextConfig = {
   distDir: 'dist',
@@ -271,7 +271,7 @@ This approach is for projects not using the `@nx/next/plugin` in `nx.json`. If y
 
 You can customize the output folder by setting `outputPath` in the project's `project.json` file
 
-```json {9}"
+```json {% meta="{9}" %}
 // apps/my-next-app/project.json
 {
   "root": "apps/my-next-app",
@@ -299,7 +299,7 @@ The library in `dist` is publishable to npm or a private registry.
 
 Next.js applications can be statically exported by changing the output inside your Next.js configuration file.
 
-```js {5}
+```js {% meta="{5}" %}
 // apps/my-next-app/next.config.js
 const nextConfig = {
   nx: {

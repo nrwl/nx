@@ -23,7 +23,7 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": ["eslint"]
+            "ignoredDependencies": ["nx"]
           }
         ]
       }
