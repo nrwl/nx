@@ -1,7 +1,6 @@
 import { major } from 'semver';
 import type { ChangelogChange } from '../../src/command-line/release/changelog';
 import type { NxReleaseConfig } from '../../src/command-line/release/config/config';
-import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from '../../src/command-line/release/config/conventional-commits';
 import type { RemoteReleaseClient } from '../../src/command-line/release/utils/remote-release-clients/remote-release-client';
 
 /**
@@ -61,9 +60,7 @@ export default class DefaultChangelogRenderer {
   protected changelogRenderOptions: DefaultChangelogRenderOptions;
   protected isVersionPlans: boolean;
   protected dependencyBumps?: DependencyBump[];
-  protected conventionalCommitsConfig:
-    | NxReleaseConfig['conventionalCommits']
-    | null;
+  protected conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'];
   protected relevantChanges: ChangelogChange[];
   protected breakingChanges: string[];
   protected additionalChangesForAuthorsSection: ChangelogChange[];
@@ -81,7 +78,7 @@ export default class DefaultChangelogRenderer {
    * @param {boolean} config.isVersionPlans Whether or not Nx release version plans are the source of truth for the changelog entry
    * @param {ChangelogRenderOptions} config.changelogRenderOptions The options specific to the ChangelogRenderer implementation
    * @param {DependencyBump[]} config.dependencyBumps Optional list of additional dependency bumps that occurred as part of the release, outside of the change data
-   * @param {NxReleaseConfig['conventionalCommits'] | null} config.conventionalCommitsConfig The configuration for conventional commits, or null if version plans are being used
+   * @param {NxReleaseConfig['conventionalCommits']} config.conventionalCommitsConfig The configuration for conventional commits
    * @param {RemoteReleaseClient} config.remoteReleaseClient The remote release client to use for formatting references
    */
   constructor(config: {
@@ -92,7 +89,7 @@ export default class DefaultChangelogRenderer {
     isVersionPlans: boolean;
     changelogRenderOptions: DefaultChangelogRenderOptions;
     dependencyBumps?: DependencyBump[];
-    conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] | null;
+    conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'];
     remoteReleaseClient: RemoteReleaseClient<unknown>;
   }) {
     this.changes = this.filterChanges(config.changes, config.project);

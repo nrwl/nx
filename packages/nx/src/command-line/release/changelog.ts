@@ -1285,9 +1285,7 @@ async function generateChangelogForProjects({
           : false,
       changelogRenderOptions: config.renderOptions,
       isVersionPlans: !!releaseGroup.versionPlans,
-      conventionalCommitsConfig: releaseGroup.versionPlans
-        ? null
-        : nxReleaseConfig.conventionalCommits,
+      conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
       dependencyBumps: projectToAdditionalDependencyBumps.get(project.name),
       remoteReleaseClient,
     });
