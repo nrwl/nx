@@ -56,7 +56,7 @@ const regex =
  */
 export async function extractNxPluginVersion(
   gradleFilePath: string,
-  gradleContent: string,
+  gradleContent: string
 ): Promise<string | null> {
   const match = gradleContent.match(regex);
   let version = match ? match[2] : null;

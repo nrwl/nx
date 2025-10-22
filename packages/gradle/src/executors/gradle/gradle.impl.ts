@@ -1,6 +1,9 @@
 import { ExecutorContext, workspaceRoot } from '@nx/devkit';
 import { GradleExecutorSchema } from './schema';
-import {findGradlewFile, getCustomGradleInstallationPathFromPlugin} from '../../utils/exec-gradle';
+import {
+  findGradlewFile,
+  getCustomGradleInstallationPathFromPlugin,
+} from '../../utils/exec-gradle';
 import { dirname, join } from 'node:path';
 import runCommandsImpl from 'nx/src/executors/run-commands/run-commands.impl';
 import { getExcludeTasks } from './get-exclude-task';
@@ -12,7 +15,9 @@ export default async function gradleExecutor(
 ): Promise<{ success: boolean }> {
   let projectRoot =
     context.projectGraph.nodes[context.projectName]?.data?.root ?? context.root;
-  const customGradleInstallation = getCustomGradleInstallationPathFromPlugin(context.nxJsonConfiguration);
+  const customGradleInstallation = getCustomGradleInstallationPathFromPlugin(
+    context.nxJsonConfiguration
+  );
 
   let gradlewPath = findGradlewFile(
     join(projectRoot, 'project.json'),

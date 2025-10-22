@@ -63,7 +63,9 @@ export function execGradleAsync(
   });
 }
 
-export function getCustomGradleInstallationPathFromPlugin(nxJson: NxJsonConfiguration): string | undefined {
+export function getCustomGradleInstallationPathFromPlugin(
+  nxJson: NxJsonConfiguration
+): string | undefined {
   const gradlePlugin = nxJson.plugins?.find((plugin) => {
     if (typeof plugin === 'string') {
       return plugin === '@nx/gradle';
@@ -72,8 +74,8 @@ export function getCustomGradleInstallationPathFromPlugin(nxJson: NxJsonConfigur
   });
 
   return gradlePlugin && typeof gradlePlugin !== 'string'
-      ? (gradlePlugin.options as GradlePluginOptions)?.customGradleInstallation
-      : undefined;
+    ? (gradlePlugin.options as GradlePluginOptions)?.customGradleInstallation
+    : undefined;
 }
 
 /**
@@ -87,15 +89,17 @@ export function getCustomGradleInstallationPathFromPlugin(nxJson: NxJsonConfigur
 export function findGradlewFile(
   filePathToSearch: string,
   workspaceRoot: string,
-  customGradleInstallationPath?: string,
+  customGradleInstallationPath?: string
 ): string {
   if (customGradleInstallationPath) {
-    return findGradlewUsingCustomInstallationPath(customGradleInstallationPath, workspaceRoot);
+    return findGradlewUsingCustomInstallationPath(
+      customGradleInstallationPath,
+      workspaceRoot
+    );
   }
 
   return findGradlewUsingFilePathTraversal(filePathToSearch, workspaceRoot);
 }
-
 
 export function findGradlewUsingFilePathTraversal(
   filePathToSearch: string,
@@ -109,7 +113,9 @@ export function findGradlewUsingFilePathTraversal(
       [
         [
           filePathToSearch,
-          new Error(`No Gradlew file found at ${filePathToSearch} or any of its parent directories. Run "gradle init"`),
+          new Error(
+            `No Gradlew file found at ${filePathToSearch} or any of its parent directories. Run "gradle init"`
+          ),
         ],
       ],
       []
@@ -129,10 +135,17 @@ export function findGradlewUsingFilePathTraversal(
     }
   }
 
-  return findGradlewUsingFilePathTraversal(filePathToSearch, workspaceRoot, parent);
+  return findGradlewUsingFilePathTraversal(
+    filePathToSearch,
+    workspaceRoot,
+    parent
+  );
 }
 
-export function findGradlewUsingCustomInstallationPath(customGradleInstallationPath: string, workspaceRoot: string) {
+export function findGradlewUsingCustomInstallationPath(
+  customGradleInstallationPath: string,
+  workspaceRoot: string
+) {
   // Resolve the custom installation path - if relative, resolve against workspace root
   const resolvedInstallationPath = isAbsolute(customGradleInstallationPath)
     ? customGradleInstallationPath
@@ -161,7 +174,9 @@ export function findGradlewUsingCustomInstallationPath(customGradleInstallationP
     [
       [
         customGradleInstallationPath,
-        new Error(`No Gradlew file found at ${customGradleInstallationPath}. Run "gradle init"`),
+        new Error(
+          `No Gradlew file found at ${customGradleInstallationPath}. Run "gradle init"`
+        ),
       ],
     ],
     []
