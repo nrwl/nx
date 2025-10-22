@@ -15,8 +15,6 @@ assignment-rules:
     targets:
       - e2e-ci**
     run-on:
-      - agent: linux-large
-        parallelism: 1
       - agent: linux-extra-large
         parallelism: 1
 
