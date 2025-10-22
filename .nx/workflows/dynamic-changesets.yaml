@@ -1,5 +1,5 @@
 distribute-on:
-  default: 8 linux-large, 1 linux-extra-large
+  default: auto linux-large, 1 linux-extra-large
 assignment-rules:
   # e2e-release tests must run sequentially due to shared git state and publishing operations
   - projects:
@@ -87,10 +87,7 @@ assignment-rules:
         parallelism: 1
   - projects:
       - angular
-      - nx
       - react
-      - remix
-      - workspace
     targets:
       - test
     run-on:
