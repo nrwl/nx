@@ -137,44 +137,51 @@ Once a .NET project file has been identified, the targets are created with the n
 - `restore` - Restores NuGet package dependencies
 - `publish` - Publishes the application (for executable projects)
 - `pack` - Creates a NuGet package (for library projects)
+- `watch` - Watches the project for changes and rebuilds (automatically marked as continuous)
+- `run` - Runs the application (for executable projects)
 
 ### Target Availability
 
 Not all targets are available for every project type. The plugin intelligently determines which targets to create based on the project type:
 
-- **Console Applications & Web Projects**: build, clean, restore, publish
-- **Class Libraries**: build, clean, restore, pack
-- **Test Projects**: build, clean, restore, test
+- **Console Applications & Web Projects**: build, clean, restore, publish, watch, run
+- **Class Libraries**: build, clean, restore, pack, watch
+- **Test Projects**: build, clean, restore, test, watch
 
 ### Continuous Tasks
 
-.NET doesn't have a standard way to identify tasks which are [continuous](/docs/reference/project-configuration#continuous), like `run` or `watch` for serving an application during development. To ensure Nx handles these continuous tasks correctly, you can explicitly mark them as continuous.
+The `@nx/dotnet` plugin automatically marks the `watch` target as [continuous](/docs/reference/project-configuration#continuous), ensuring Nx handles it correctly during development. Unlike watch, `run` is not automatically marked as continuous as it may exit depending on the type of application. To mark `run` as continuous, you can configure it manually in `project.json` or `nx.json`.
 
 {% tabs %}
 {% tabitem label="nx.json" %}
 
-In the `nx.json`, you can specify the target default configuration like so:
+In the `nx.json`, you can specify that run should be continous like so:
 
 ```json {% meta="{5}" %}
 // nx.json
 {
-  "targetDefaults": {
-    "watch": {
-      "continuous": true
+  "plugins": [
+    {
+      "plugin": "@nx/dotnet",
+      "options": {
+        "run": {
+          "continuous": true
+        }
+      }
     }
-  }
+  ]
 }
 ```
 
 {% /tabitem %}
 {% tabitem label="project.json" %}
 
-In a `project.json`, you can specify the target configuration like so:
+Alternatively, you can create a new `project.json` file in the root of your project (next to the `.csproj` file) and configure the `run` target as continuous like so:
 
 ```json {% meta="{4}" %}
 // project.json
 {
-  "watch": {
+  "run": {
     "continuous": true
   }
 }
