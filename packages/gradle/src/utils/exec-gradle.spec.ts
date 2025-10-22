@@ -1,5 +1,9 @@
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { findGradlewFile } from './exec-gradle';
+import {
+  findGradlewFile,
+  getCustomGradleInstallationPathFromPlugin,
+} from './exec-gradle';
+import { NxJsonConfiguration } from '@nx/devkit';
 
 describe('exec gradle', () => {
   describe('findGradlewFile', () => {
@@ -82,6 +86,62 @@ describe('exec gradle', () => {
       expect(() =>
         findGradlewFile('proj/build.gradle', tempFs.tempDir)
       ).toThrow();
+    });
+  });
+
+  describe('getCustomGradleInstallationPathFromPlugin', () => {
+    it('should return undefined when nxJson plugins is empty array', () => {
+      const nxJson: NxJsonConfiguration = {
+        plugins: [],
+      };
+      const result = getCustomGradleInstallationPathFromPlugin(nxJson);
+      expect(result).toBeUndefined();
+    });
+
+    it('should return undefined when gradle plugin is not in plugins list', () => {
+      const nxJson: NxJsonConfiguration = {
+        plugins: ['@nx/js', '@nx/react'],
+      };
+      const result = getCustomGradleInstallationPathFromPlugin(nxJson);
+      expect(result).toBeUndefined();
+    });
+
+    it('should return undefined when gradle plugin is specified as string', () => {
+      const nxJson: NxJsonConfiguration = {
+        plugins: ['@nx/gradle'],
+      };
+      const result = getCustomGradleInstallationPathFromPlugin(nxJson);
+      expect(result).toBeUndefined();
+    });
+
+    it('should return undefined when gradle plugin has no customGradleInstallation option', () => {
+      const nxJson: NxJsonConfiguration = {
+        plugins: [
+          {
+            plugin: '@nx/gradle',
+            options: {},
+          },
+        ],
+      };
+      const result = getCustomGradleInstallationPathFromPlugin(nxJson);
+      expect(result).toBeUndefined();
+    });
+
+    it('should return customGradleInstallation from gradle plugin when multiple plugins exist', () => {
+      const nxJson: NxJsonConfiguration = {
+        plugins: [
+          '@nx/js',
+          {
+            plugin: '@nx/gradle',
+            options: {
+              customGradleInstallation: '/path/to/gradle',
+            },
+          },
+          '@nx/react',
+        ],
+      };
+      const result = getCustomGradleInstallationPathFromPlugin(nxJson);
+      expect(result).toBe('/path/to/gradle');
     });
   });
 });

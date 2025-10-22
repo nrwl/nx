@@ -66,9 +66,9 @@ export function execGradleAsync(
 export function getCustomGradleInstallationPathFromPlugin(nxJson: NxJsonConfiguration): string | undefined {
   const gradlePlugin = nxJson.plugins?.find((plugin) => {
     if (typeof plugin === 'string') {
-      return plugin === '@nx/gradle' || plugin === '@nx/gradle/plugin';
+      return plugin === '@nx/gradle';
     }
-    return plugin.plugin === '@nx/gradle' || plugin.plugin === '@nx/gradle/plugin';
+    return plugin.plugin === '@nx/gradle';
   });
 
   return gradlePlugin && typeof gradlePlugin !== 'string'
