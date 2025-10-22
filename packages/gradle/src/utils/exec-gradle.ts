@@ -1,9 +1,9 @@
 import { AggregateCreateNodesError, workspaceRoot } from '@nx/devkit';
-import { signalToCode } from '@nx/devkit/internal';
 import { ExecFileOptions, execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, isAbsolute } from 'node:path';
 import { LARGE_BUFFER } from 'nx/src/executors/run-commands/run-commands.impl';
+import {signalToCode} from "nx/src/utils/exit-codes";
 
 export const fileSeparator = process.platform.startsWith('win')
   ? 'file:///'
@@ -64,25 +64,39 @@ export function execGradleAsync(
 
 /**
  * This function recursively finds the nearest gradlew file in the workspace
- * @param originalFileToSearch the original file to search for, relative to workspace root, file path not directory path
- * @param wr workspace root
+ * @param filePathToSearch the original file to search for, relative to workspace root, file path not directory path
+ * @param workspaceRoot workspace root
  * @param currentSearchPath the path to start searching for gradlew file
+ * @param customGradleInstallation a custom gradle installation path to search at
  * @returns the relative path of the gradlew file to workspace root, throws an error if gradlew file is not found
  * It will return relative path to workspace root of gradlew.bat file on windows and gradlew file on other platforms
  */
 export function findGradlewFile(
-  originalFileToSearch: string,
-  wr: string = workspaceRoot,
-  currentSearchPath?: string
+  filePathToSearch: string,
+  workspaceRoot: string,
+  customGradleInstallation?: string,
 ): string {
-  currentSearchPath ??= originalFileToSearch;
+  if (customGradleInstallation) {
+    return findGradlewUsingCustomInstallationPath(customGradleInstallation, workspaceRoot);
+  }
+
+  return findGradlewUsingFilePathTraversal(filePathToSearch, workspaceRoot);
+}
+
+
+export function findGradlewUsingFilePathTraversal(
+  filePathToSearch: string,
+  workspaceRoot: string,
+  currentSearchPath?: string
+) {
+  currentSearchPath ??= filePathToSearch;
   const parent = dirname(currentSearchPath);
   if (currentSearchPath === parent) {
     throw new AggregateCreateNodesError(
       [
         [
-          originalFileToSearch,
-          new Error('No Gradlew file found. Run "gradle init"'),
+          filePathToSearch,
+          new Error(`No Gradlew file found at ${filePathToSearch} or any of its parent directories. Run "gradle init"`),
         ],
       ],
       []
@@ -93,14 +107,50 @@ export function findGradlewFile(
   const gradlewBatPath = join(parent, 'gradlew.bat');
 
   if (process.platform.startsWith('win')) {
-    if (existsSync(join(wr, gradlewBatPath))) {
+    if (existsSync(join(workspaceRoot, gradlewBatPath))) {
       return gradlewBatPath;
     }
   } else {
-    if (existsSync(join(wr, gradlewPath))) {
+    if (existsSync(join(workspaceRoot, gradlewPath))) {
       return gradlewPath;
     }
   }
 
-  return findGradlewFile(originalFileToSearch, wr, parent);
+  return findGradlewUsingFilePathTraversal(filePathToSearch, workspaceRoot, parent);
+}
+
+export function findGradlewUsingCustomInstallationPath(customGradleInstallation: string, workspaceRoot: string) {
+  // Resolve the custom installation path - if relative, resolve against workspace root
+  const resolvedInstallationPath = isAbsolute(customGradleInstallation)
+    ? customGradleInstallation
+    : join(workspaceRoot, customGradleInstallation);
+
+  const customGradlewPath = join(resolvedInstallationPath, 'gradlew');
+  const customGradlewBatPath = join(resolvedInstallationPath, 'gradlew.bat');
+
+  if (process.platform.startsWith('win')) {
+    if (existsSync(customGradlewBatPath)) {
+      // Return path relative to workspace root if it was relative, otherwise return absolute
+      return isAbsolute(customGradleInstallation)
+        ? customGradlewBatPath
+        : join(customGradleInstallation, 'gradlew.bat');
+    }
+  } else {
+    if (existsSync(customGradlewPath)) {
+      // Return path relative to workspace root if it was relative, otherwise return absolute
+      return isAbsolute(customGradleInstallation)
+        ? customGradlewPath
+        : join(customGradleInstallation, 'gradlew');
+    }
+  }
+
+  throw new AggregateCreateNodesError(
+    [
+      [
+        customGradleInstallation,
+        new Error(`No Gradlew file found at ${customGradleInstallation}. Run "gradle init"`),
+      ],
+    ],
+    []
+  );
 }
