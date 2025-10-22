@@ -3,6 +3,14 @@ distribute-on:
 assignment-rules:
   - projects:
       - e2e-gradle
+    targets:
+      - e2e-ci**
+    run-on:
+      - agent: linux-extra-large
+        parallelism: 1
+
+  - projects:
+      - e2e-gradle
       - e2e-release
       - e2e-angular
       - e2e-react
