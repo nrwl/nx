@@ -28,8 +28,8 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
+    "@zkochan/js-yaml": "0.0.7",
     "ejs": "^3.1.7",
-    "ignore": "^5.0.4",
     "tslib": "^2.3.0",
     "semver": "^7.5.3",
     "yargs-parser": "21.1.1",
@@ -41,7 +41,7 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "nx": ">= 20 <= 22"
+    "nx": ">= 21 <= 23 || ^22.0.0-0"
   },
   "publishConfig": {
     "access": "public"

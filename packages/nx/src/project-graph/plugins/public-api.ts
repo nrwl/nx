@@ -13,30 +13,10 @@ import type { NxJsonConfiguration } from '../../config/nx-json';
 import type { RawProjectGraphDependency } from '../project-graph-builder';
 import type { TaskResults } from '../../tasks-runner/life-cycle';
 
-/**
- * Context for {@link CreateNodesFunction}
- */
-export interface CreateNodesContext extends CreateNodesContextV2 {
-  /**
-   * The subset of configuration files which match the createNodes pattern
-   */
-  readonly configFiles: readonly string[];
-}
-
 export interface CreateNodesContextV2 {
   readonly nxJsonConfiguration: NxJsonConfiguration;
   readonly workspaceRoot: string;
 }
-
-/**
- * A function which parses a configuration file into a set of nodes.
- * Used for creating nodes for the {@link ProjectGraph}
- */
-export type CreateNodesFunction<T = unknown> = (
-  projectConfigurationFile: string,
-  options: T | undefined,
-  context: CreateNodesContext
-) => CreateNodesResult | Promise<CreateNodesResult>;
 
 export type CreateNodesResultV2 = Array<
   readonly [configFileSource: string, result: CreateNodesResult]
@@ -61,24 +41,6 @@ export interface CreateNodesResult {
    */
   externalNodes?: Record<string, ProjectGraphExternalNode>;
 }
-
-/**
- * A pair of file patterns and {@link CreateNodesFunction}
- *
- * Nx 19.2+: Both original `CreateNodes` and `CreateNodesV2` are supported. Nx will only invoke `CreateNodesV2` if it is present.
- * Nx 21.X : The `CreateNodesV2` will be the only supported API. This typing will still exist, but be identical to `CreateNodesV2`.
-             Nx **will not** invoke the original `plugin.createNodes` callback. This should give plugin authors a window to transition.
-             Plugin authors should update their plugin's `createNodes` function to align with `CreateNodesV2` / the updated `CreateNodes`.
-             The plugin should contain something like: `export createNodes = createNodesV2;` during this period. This will allow the plugin
-             to maintain compatibility with Nx 19.2 and up.
- * Nx 22.X : The `CreateNodesV2` typing will be removed, as it has replaced `CreateNodes`.
- *
- * @deprecated Use {@link CreateNodesV2} instead. CreateNodesV2 will replace this API. Read more about the transition above.
- */
-export type CreateNodes<T = unknown> = readonly [
-  projectFilePattern: string,
-  createNodesFunction: CreateNodesFunction<T>
-];
 
 /**
  * A pair of file patterns and {@link CreateNodesFunctionV2}
@@ -155,16 +117,12 @@ export type NxPluginV2<TOptions = unknown> = {
   /**
    * Provides a file pattern and function that retrieves configuration info from
    * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFile }
-   *
-   * @deprecated Use {@link createNodesV2} instead. In Nx 21 support for calling createNodes with a single file for the first argument will be removed.
    */
-  createNodes?: CreateNodes<TOptions>;
+  createNodes?: CreateNodesV2<TOptions>;
 
   /**
    * Provides a file pattern and function that retrieves configuration info from
    * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFiles }
-   *
-   * In Nx 21 {@link createNodes} will be replaced with this property. In Nx 22, this property will be removed.
    */
   createNodesV2?: CreateNodesV2<TOptions>;
 
@@ -216,4 +174,4 @@ export type PostTasksExecution<TOptions = unknown> = (
 /**
  * A plugin which enhances the behavior of Nx
  */
-export type NxPlugin = NxPluginV2;
+export type NxPlugin<TOptions = unknown> = NxPluginV2<TOptions>;

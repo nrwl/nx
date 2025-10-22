@@ -3,14 +3,12 @@ import {
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
-  logger,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { releaseTasks } from '@nx/js/src/generators/library/utils/add-release-config';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import init from '../../generators/init/init';
 import { UnitTestRunner } from '../../utils/test-runners';
 import addLintingGenerator from '../add-linting/add-linting';
@@ -19,6 +17,7 @@ import { addJest } from '../utils/add-jest';
 import { addVitest } from '../utils/add-vitest';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
+import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import { versions } from '../utils/version-utils';
 import { addModule } from './lib/add-module';
 import { addProject } from './lib/add-project';
@@ -35,7 +34,7 @@ export async function libraryGenerator(
   tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(tree, 'angular', 'library');
+  assertNotUsingTsSolutionSetup(tree, 'library');
 
   // Do some validation checks
   if (!schema.routing && schema.lazy) {

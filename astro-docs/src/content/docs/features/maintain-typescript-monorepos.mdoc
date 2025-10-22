@@ -19,9 +19,7 @@ Whenever possible, Nx will detect the existing configuration settings of other t
 
 ### Project Detection with Workspaces
 
-If your repository is using package manager workspaces, Nx will use those settings to find all the [projects](/docs/reference/project-configuration) in your repository. So you don't need to define a project for your package manager and separately identify the project for Nx. The `workspaces` configuration on the left allows Nx to detect the project graph on the right.
-
-{% side_by_side align="top" %}
+If your repository is using package manager workspaces, Nx will use those settings to find all the [projects](/docs/reference/project-configuration) in your repository. So you don't need to define a project for your package manager and separately identify the project for Nx. The `workspaces` configuration allows Nx to detect the project graph.
 
 ```json
 // package.json
@@ -83,17 +81,13 @@ If your repository is using package manager workspaces, Nx will use those settin
 
 {% /graph %}
 
-{% /side_by_side %}
-
 ### Inferred Tasks with Tooling Plugins
 
 Nx provides [plugins](/docs/concepts/nx-plugins) for tools that run tasks, like Vite, TypeScript, Playwright or Jest. These plugins can automatically [infer the Nx-specific task configuration](/docs/concepts/inferred-tasks) based on the tooling configuration files that already exist.
 
-In the example below, because the `/apps/cart/vite.config.ts` file exists, Nx knows that the `cart` project can run a `build` task using Vite. If you expand the `build` task on the right, you can also see that Nx configured the output directory for the [cache](/docs/features/cache-task-results) to match the `build.outDir` provided in the Vite configuration file.
+In the example below, because the `/apps/cart/vite.config.ts` file exists, Nx knows that the `cart` project can run a `build` task using Vite. If you expand the `build` task, you can also see that Nx configured the output directory for the [cache](/docs/features/cache-task-results) to match the `build.outDir` provided in the Vite configuration file.
 
 With inferred tasks, you can keep your tooling configuration file as the one source of truth for that tool's configuration, instead of adding an extra layer of configuration on top.
-
-{% side_by_side align="top" %}
 
 ```ts
 // /apps/cart/vite.config.ts
@@ -184,8 +178,6 @@ export default defineConfig({
 
 {% /project_details %}
 
-{% /side_by_side %}
-
 ## Enhance Tools for Monorepos
 
 Nx does not just reduce its own configuration burden, it also improves the functionality of your existing tools so that they work better in a monorepo context.
@@ -195,8 +187,6 @@ Nx does not just reduce its own configuration burden, it also improves the funct
 TypeScript provides a feature called [Project References](https://www.typescriptlang.org/docs/handbook/project-references.html) that allows the TypeScript compiler to build and typecheck each project independently. When each project is typechecked, the TypeScript compiler will output an intermediate `*.tsbuildinfo` file that can be used by other projects instead of re-typechecking all dependencies. This feature can provide [significant performance improvements](/docs/concepts/typescript-project-linking#typescript-project-references-performance-benefits), particularly in a large monorepo.
 
 The main downside of this feature is that you have to manually define each project's references (dependencies) in the appropriate `tsconfig.*.json` file. This process is tedious to set up and very difficult to maintain as the repository changes over time. Nx can help by using a [sync generator](/docs/concepts/sync-generators) to automatically update the references defined in the `tsconfig.json` files based on the project graph it already knows about.
-
-{% side_by_side align="top" %}
 
 {% graph height="200px" title="Project View" %}
 
@@ -275,8 +265,6 @@ The main downside of this feature is that you have to manually define each proje
   ]
 }
 ```
-
-{% /side_by_side %}
 
 Later, if someone adds another dependency to the `cart` app and then runs the `build` task, Nx will detect that the project references are out of sync and ask if the references should be updated.
 

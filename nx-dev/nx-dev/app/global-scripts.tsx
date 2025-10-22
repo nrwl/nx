@@ -71,6 +71,22 @@ export default function GlobalScripts({ gaMeasurementId, gtmMeasurementId }) {
       hsFormsScript.async = true;
       hsFormsScript.defer = true;
       document.head.appendChild(hsFormsScript);
+
+      // Load Calendly Forms
+      const calendlyFormsScript = document.createElement('script');
+      calendlyFormsScript.src =
+        '//assets.calendly.com/assets/external/forms.js';
+      calendlyFormsScript.async = true;
+      calendlyFormsScript.defer = true;
+      document.head.appendChild(calendlyFormsScript);
+
+      // Load Calendly CSS
+      const calendlyStylesLink = document.createElement('link');
+      calendlyStylesLink.href =
+        'https://assets.calendly.com/assets/external/widget.css';
+      calendlyStylesLink.rel = 'stylesheet';
+      calendlyStylesLink.type = 'text/css';
+      document.head.appendChild(calendlyStylesLink);
     };
 
     const loadApollo = () => {

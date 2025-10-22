@@ -1,4 +1,4 @@
-import { readJson, type Tree } from '@nx/devkit';
+import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { clean, coerce, major } from 'semver';
 
@@ -92,9 +92,7 @@ export function assertMinimumCypressVersion(
 }
 
 function getCypressVersionFromTree(tree: Tree): string | null {
-  const packageJson = readJson(tree, 'package.json');
-  const installedVersion =
-    packageJson.devDependencies?.cypress ?? packageJson.dependencies?.cypress;
+  const installedVersion = getDependencyVersionFromPackageJson(tree, 'cypress');
 
   if (!installedVersion) {
     return null;

@@ -3,7 +3,7 @@ title: Nx Docs AI Assistant
 slug: 'nx-docs-ai-assistant'
 authors: [Katerina Skroumpelou]
 cover_image: '/blog/images/2023-11-21/featured_img.avif'
-tags: [nx, docs, AI]
+tags: [nx, docs, ai]
 description: Explore the Nx Docs AI Assistant's architecture, user benefits, and how it enhances documentation accessibility through intelligent search and contextual responses.
 ---
 
@@ -308,7 +308,7 @@ This role, in the context of OpenAI’s chat models, is the response of the AI. 
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](/community)

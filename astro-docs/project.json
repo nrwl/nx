@@ -7,7 +7,7 @@
       "continuous": true,
       "dependsOn": [
         {
-          "projects": ["devkit", "create-nx-workspace"],
+          "projects": ["devkit", "create-nx-workspace", "dotnet", "maven"],
           "target": "build"
         }
       ],
@@ -19,7 +19,7 @@
     "build": {
       "dependsOn": [
         {
-          "projects": ["devkit", "create-nx-workspace"],
+          "projects": ["devkit", "create-nx-workspace", "dotnet", "maven"],
           "target": "build"
         }
       ],
@@ -57,7 +57,10 @@
     },
     "e2e-ci--**/*": {
       "dependsOn": ["preview"],
-      "parallelism": true
+      "parallelism": true,
+      "options": {
+        "args": []
+      }
     },
     "show-report": {
       "command": "playwright show-report dist/astro-docs/playwright-report"

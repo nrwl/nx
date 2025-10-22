@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { prerelease, ReleaseType } from 'semver';
+import { ReleaseType, prerelease } from 'semver';
 import { dirSync } from 'tmp';
 import type { DependencyBump } from '../../../release/changelog-renderer';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
@@ -30,11 +30,7 @@ import {
   handleNxReleaseConfigError,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
-import {
-  ReleaseGroupWithName,
-  filterReleaseGroups,
-} from './config/filter-release-groups';
-import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
+import { ReleaseGroupWithName } from './config/filter-release-groups';
 import {
   GroupVersionPlan,
   ProjectsVersionPlan,
@@ -52,30 +48,31 @@ import {
   gitPush,
   gitTag,
   parseCommits,
-  parseGitCommit,
+  parseVersionPlanCommit,
 } from './utils/git';
 import { launchEditor } from './utils/launch-editor';
 import { parseChangelogMarkdown } from './utils/markdown';
 import { printAndFlushChanges } from './utils/print-changes';
 import { printConfigAndExit } from './utils/print-config';
+import { ReleaseGraph, createReleaseGraph } from './utils/release-graph';
 import { createRemoteReleaseClient } from './utils/remote-release-clients/remote-release-client';
 import { resolveChangelogRenderer } from './utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
-import {
-  areAllVersionPlanProjectsFiltered,
-  validateResolvedVersionPlansAgainstFilter,
-} from './utils/version-plan-utils';
 import {
   ReleaseVersion,
   VersionData,
   commitChanges,
   createCommitMessageValues,
   createGitTagValues,
-  shouldPreferDockerVersionForReleaseGroup,
   handleDuplicateGitTags,
   isPrerelease,
   noDiffInChangelogMessage,
+  shouldPreferDockerVersionForReleaseGroup,
 } from './utils/shared';
+import {
+  areAllVersionPlanProjectsFiltered,
+  validateResolvedVersionPlansAgainstFilter,
+} from './utils/version-plan-utils';
 
 export interface NxReleaseChangelogResult {
   workspaceChangelog?: {
@@ -108,9 +105,12 @@ export interface ChangelogChange {
 export type PostGitTask = (latestCommit: string) => Promise<void>;
 
 export const releaseChangelogCLIHandler = (args: ChangelogOptions) =>
-  handleErrors(args.verbose, () => createAPI({})(args));
+  handleErrors(args.verbose, () => createAPI({}, false)(args));
 
-export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
+export function createAPI(
+  overrideReleaseConfig: NxReleaseConfiguration,
+  ignoreNxJsonConfig: boolean
+) {
   /**
    * NOTE: This function is also exported for programmatic usage and forms part of the public API
    * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
@@ -120,11 +120,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     args: ChangelogOptions
   ): Promise<NxReleaseChangelogResult> {
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-    const nxJson = readNxJson();
-    const userProvidedReleaseConfig = deepMergeJson(
-      nxJson.release ?? {},
-      overrideReleaseConfig ?? {}
-    );
+    const overriddenConfig = overrideReleaseConfig ?? {};
+    const userProvidedReleaseConfig = ignoreNxJsonConfig
+      ? overriddenConfig
+      : deepMergeJson(readNxJson().release ?? {}, overriddenConfig);
 
     // Apply default configuration to any optional user configuration
     const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
@@ -133,13 +132,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       userProvidedReleaseConfig
     );
     if (configError) {
-      const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(
-        userProvidedReleaseConfig
-      );
-      return await handleNxReleaseConfigError(
-        configError,
-        USE_LEGACY_VERSIONING
-      );
+      return await handleNxReleaseConfigError(configError);
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
@@ -171,32 +164,36 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       process.exit(1);
     }
 
-    const {
-      error: filterError,
-      filterLog,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-    } = filterReleaseGroups(
-      projectGraph,
-      nxReleaseConfig,
-      args.projects,
-      args.groups
-    );
-    if (filterError) {
-      output.error(filterError);
-      process.exit(1);
-    }
+    const tree = new FsTree(workspaceRoot, args.verbose);
+
+    // Use pre-built release graph if provided, otherwise create a new one
+    const releaseGraph: ReleaseGraph =
+      args.releaseGraph ||
+      (await createReleaseGraph({
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters: {
+          projects: args.projects,
+          groups: args.groups,
+        },
+        firstRelease: args.firstRelease,
+        verbose: args.verbose,
+      }));
+
+    // Display filter log if filters were applied (only when graph was created, not reused)
     if (
-      filterLog &&
+      !args.releaseGraph &&
+      releaseGraph.filterLog &&
       process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG !== 'true'
     ) {
-      output.note(filterLog);
+      output.note(releaseGraph.filterLog);
     }
 
     const rawVersionPlans = await readRawVersionPlans();
     await setResolvedVersionPlansOnGroups(
       rawVersionPlans,
-      releaseGroups,
+      releaseGraph.releaseGroups,
       Object.keys(projectGraph.nodes),
       args.verbose
     );
@@ -204,8 +201,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     // Validate version plans against the filter after resolution
     const versionPlanValidationError =
       validateResolvedVersionPlansAgainstFilter(
-        releaseGroups,
-        releaseGroupToFilteredProjects
+        releaseGraph.releaseGroups,
+        releaseGraph.releaseGroupToFilteredProjects
       );
     if (versionPlanValidationError) {
       output.error(versionPlanValidationError);
@@ -230,8 +227,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       return {};
     }
 
-    const tree = new FsTree(workspaceRoot, args.verbose);
-
     const useAutomaticFromRef =
       nxReleaseConfig.changelog?.automaticFromRef || args.firstRelease;
 
@@ -250,11 +245,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
      *    to generate project changelogs
      */
     const { workspaceChangelogVersion, projectsVersionData } =
-      resolveChangelogVersions(
-        args,
-        releaseGroups,
-        releaseGroupToFilteredProjects
-      );
+      resolveChangelogVersions(args, releaseGraph);
 
     const to = args.to || 'HEAD';
     const toSHA = await getCommitHash(to);
@@ -291,8 +282,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       args.gitCommitMessage || nxReleaseConfig.changelog.git.commitMessage;
 
     const commitMessageValues: string[] = createCommitMessageValues(
-      releaseGroups,
-      releaseGroupToFilteredProjects,
+      releaseGraph.releaseGroups,
+      releaseGraph.releaseGroupToFilteredProjects,
       projectsVersionData,
       commitMessage
     );
@@ -301,8 +292,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     const gitTagValues: string[] =
       args.gitTag ?? nxReleaseConfig.changelog.git.tag
         ? createGitTagValues(
-            releaseGroups,
-            releaseGroupToFilteredProjects,
+            releaseGraph.releaseGroups,
+            releaseGraph.releaseGroupToFilteredProjects,
             projectsVersionData
           )
         : [];
@@ -311,15 +302,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     const postGitTasks: PostGitTask[] = [];
 
     let workspaceChangelogChanges: ChangelogChange[] = [];
-    // TODO(v22): remove this after the changelog renderer is refactored to remove coupling with git commits
-    let workspaceChangelogCommits: GitCommit[] = [];
 
     // If there are multiple release groups, we'll just skip the workspace changelog anyway.
     const versionPlansEnabledForWorkspaceChangelog =
-      releaseGroups[0].resolvedVersionPlans;
+      releaseGraph.releaseGroups[0].resolvedVersionPlans;
     if (versionPlansEnabledForWorkspaceChangelog) {
-      if (releaseGroups.length === 1) {
-        const releaseGroup = releaseGroups[0];
+      if (releaseGraph.releaseGroups.length === 1) {
+        const releaseGroup = releaseGraph.releaseGroups[0];
         if (releaseGroup.projectsRelationship === 'fixed') {
           const versionPlans =
             releaseGroup.resolvedVersionPlans as GroupVersionPlan[];
@@ -329,13 +318,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 vp.groupVersionBump
               );
               let githubReferences = [];
-              let author = undefined;
+              let authors = undefined;
               const parsedCommit = vp.commit
-                ? parseGitCommit(vp.commit, true)
+                ? parseVersionPlanCommit(vp.commit)
                 : null;
               if (parsedCommit) {
                 githubReferences = parsedCommit.references;
-                author = parsedCommit.author;
+                authors = parsedCommit.authors;
               }
               const changes: ChangelogChange | ChangelogChange[] =
                 !vp.triggeredByProjects
@@ -346,8 +335,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                       body: '',
                       isBreaking: releaseType.isBreaking,
                       githubReferences,
-                      // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
-                      authors: [author],
+                      authors,
                       affectedProjects: '*',
                     }
                   : vp.triggeredByProjects.map((project) => {
@@ -358,8 +346,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                         body: '',
                         isBreaking: releaseType.isBreaking,
                         githubReferences,
-                        // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
-                        authors: [author],
+                        authors,
                         affectedProjects: [project],
                       };
                     });
@@ -373,18 +360,16 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         args.from ||
         (
           await getLatestGitTagForPattern(
-            nxReleaseConfig.releaseTagPattern,
+            nxReleaseConfig.releaseTag.pattern,
             {},
             {
               checkAllBranchesWhen:
-                nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
+                nxReleaseConfig.releaseTag.checkAllBranchesWhen,
               preid:
                 workspacePreid ??
                 projectsPreid?.[Object.keys(projectsPreid)[0]],
-              releaseTagPatternRequireSemver:
-                nxReleaseConfig.releaseTagPatternRequireSemver,
-              releaseTagPatternStrictPreid:
-                nxReleaseConfig.releaseTagPatternStrictPreid,
+              requireSemver: nxReleaseConfig.releaseTag.requireSemver,
+              strictPreid: nxReleaseConfig.releaseTag.strictPreid,
             }
           )
         )?.tag;
@@ -398,7 +383,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           }
         } else {
           throw new Error(
-            `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+            `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
           );
         }
       }
@@ -408,13 +393,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         workspaceChangelogFromRef
       );
 
-      workspaceChangelogCommits = await getCommits(
-        workspaceChangelogFromSHA,
-        toSHA
-      );
-
       workspaceChangelogChanges = filterHiddenChanges(
-        workspaceChangelogCommits.map((c) => {
+        (await getCommits(workspaceChangelogFromSHA, toSHA)).map((c) => {
           return {
             type: c.type,
             scope: c.scope,
@@ -422,7 +402,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             body: c.body,
             isBreaking: c.isBreaking,
             githubReferences: c.references,
-            authors: [c.author],
+            authors: c.authors,
             shortHash: c.shortHash,
             revertedHashes: c.revertedHashes,
             affectedProjects: '*',
@@ -453,7 +433,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       string,
       DependencyBump[]
     >();
-    for (const releaseGroup of releaseGroups) {
+    for (const releaseGroup of releaseGraph.releaseGroups) {
       if (releaseGroup.projectsRelationship !== 'independent') {
         continue;
       }
@@ -497,7 +477,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     const allProjectChangelogs: NxReleaseChangelogResult['projectChangelogs'] =
       {};
 
-    for (const releaseGroup of releaseGroups) {
+    for (const releaseGroup of releaseGraph.releaseGroups) {
       const config = releaseGroup.changelog;
       // The entire feature is disabled at the release group level, exit early
       if (config === false) {
@@ -506,16 +486,16 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
       const projects = args.projects?.length
         ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group, plus any dependents
-          Array.from(releaseGroupToFilteredProjects.get(releaseGroup)).flatMap(
-            (project) => {
-              return [
-                project,
-                ...(projectsVersionData[project]?.dependentProjects.map(
-                  (dep) => dep.source
-                ) || []),
-              ];
-            }
-          )
+          Array.from(
+            releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
+          ).flatMap((project) => {
+            return [
+              project,
+              ...(projectsVersionData[project]?.dependentProjects.map(
+                (dep) => dep.source
+              ) || []),
+            ];
+          })
         : // Otherwise, we use the full list of projects within the release group
           releaseGroup.projects;
       const projectNodes = projects.map((name) => projectGraph.nodes[name]);
@@ -523,8 +503,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       if (releaseGroup.projectsRelationship === 'independent') {
         for (const project of projectNodes) {
           let changes: ChangelogChange[] | null = null;
-          // TODO(v22): remove this after the changelog renderer is refactored to remove coupling with git commits
-          let commits: GitCommit[];
 
           if (releaseGroup.resolvedVersionPlans) {
             changes = (
@@ -540,12 +518,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 let githubReferences = [];
                 let authors = [];
                 const parsedCommit = vp.commit
-                  ? parseGitCommit(vp.commit, true)
+                  ? parseVersionPlanCommit(vp.commit)
                   : null;
                 if (parsedCommit) {
                   githubReferences = parsedCommit.references;
-                  // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
-                  authors = [parsedCommit.author];
+                  authors = parsedCommit.authors;
                 }
                 return {
                   type: releaseType.type,
@@ -564,23 +541,22 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               args.from ||
               (
                 await getLatestGitTagForPattern(
-                  releaseGroup.releaseTagPattern,
+                  releaseGroup.releaseTag.pattern,
                   {
                     projectName: project.name,
                     releaseGroupName: releaseGroup.name,
                   },
                   {
                     checkAllBranchesWhen:
-                      releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                      releaseGroup.releaseTag.checkAllBranchesWhen,
                     preid: projectsPreid[project.name],
-                    releaseTagPatternRequireSemver:
-                      releaseGroup.releaseTagPatternRequireSemver,
-                    releaseTagPatternStrictPreid:
-                      releaseGroup.releaseTagPatternStrictPreid,
+                    requireSemver: releaseGroup.releaseTag.requireSemver,
+                    strictPreid: releaseGroup.releaseTag.strictPreid,
                   }
                 )
               )?.tag;
 
+            let commits: GitCommit[];
             if (!fromRef && useAutomaticFromRef) {
               const firstCommit = await getFirstGitCommit();
               commits = await filterProjectCommits({
@@ -599,7 +575,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
             if (!fromRef && !commits) {
               throw new Error(
-                `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+                `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
               );
             }
 
@@ -626,8 +602,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 body: c.body,
                 isBreaking: c.isBreaking,
                 githubReferences: c.references,
-                // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
-                authors: [c.author],
+                authors: c.authors,
                 shortHash: c.shortHash,
                 revertedHashes: c.revertedHashes,
                 affectedProjects: commitChangesNonProjectFiles(
@@ -666,8 +641,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         }
       } else {
         let changes: ChangelogChange[] = [];
-        // TODO(v22): remove this after the changelog renderer is refactored to remove coupling with git commits
-        let commits: GitCommit[] = [];
         if (releaseGroup.resolvedVersionPlans) {
           changes = (releaseGroup.resolvedVersionPlans as GroupVersionPlan[])
             .flatMap((vp) => {
@@ -675,13 +648,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 vp.groupVersionBump
               );
               let githubReferences = [];
-              let author = undefined;
+              let authors = undefined;
               const parsedCommit = vp.commit
-                ? parseGitCommit(vp.commit, true)
+                ? parseVersionPlanCommit(vp.commit)
                 : null;
               if (parsedCommit) {
                 githubReferences = parsedCommit.references;
-                author = parsedCommit.author;
+                authors = parsedCommit.authors;
               }
               const changes: ChangelogChange | ChangelogChange[] =
                 !vp.triggeredByProjects
@@ -692,8 +665,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                       body: '',
                       isBreaking: releaseType.isBreaking,
                       githubReferences,
-                      // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
-                      authors: [author],
+                      authors,
                       affectedProjects: '*',
                     }
                   : vp.triggeredByProjects.map((project) => {
@@ -704,8 +676,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                         body: '',
                         isBreaking: releaseType.isBreaking,
                         githubReferences,
-                        // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
-                        authors: [author],
+                        authors,
                         affectedProjects: [project],
                       };
                     });
@@ -717,18 +688,16 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             args.from ||
             (
               await getLatestGitTagForPattern(
-                releaseGroup.releaseTagPattern,
+                releaseGroup.releaseTag.pattern,
                 {},
                 {
                   checkAllBranchesWhen:
-                    releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                    releaseGroup.releaseTag.checkAllBranchesWhen,
                   preid:
                     workspacePreid ??
                     projectsPreid?.[Object.keys(projectsPreid)[0]],
-                  releaseTagPatternRequireSemver:
-                    releaseGroup.releaseTagPatternRequireSemver,
-                  releaseTagPatternStrictPreid:
-                    releaseGroup.releaseTagPatternStrictPreid,
+                  requireSemver: releaseGroup.releaseTag.requireSemver,
+                  strictPreid: releaseGroup.releaseTag.strictPreid,
                 }
               )
             )?.tag;
@@ -742,7 +711,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               }
             } else {
               throw new Error(
-                `Unable to determine the previous git tag. If this is the first release of your release group, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+                `Unable to determine the previous git tag. If this is the first release of your release group, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
               );
             }
           }
@@ -757,17 +726,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             fileMap.projectFileMap
           );
 
-          commits = await getCommits(fromSHA, toSHA);
           changes = filterHiddenChanges(
-            commits.map((c) => ({
+            (await getCommits(fromSHA, toSHA)).map((c) => ({
               type: c.type,
               scope: c.scope,
               description: c.description,
               body: c.body,
               isBreaking: c.isBreaking,
               githubReferences: c.references,
-              // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
-              authors: [c.author],
+              authors: c.authors,
               shortHash: c.shortHash,
               revertedHashes: c.revertedHashes,
               affectedProjects: commitChangesNonProjectFiles(
@@ -814,8 +781,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       postGitTasks,
       commitMessageValues,
       gitTagValues,
-      releaseGroups,
-      releaseGroupToFilteredProjects
+      releaseGraph
     );
 
     return {
@@ -827,8 +793,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
 function resolveChangelogVersions(
   args: ChangelogOptions,
-  releaseGroups: ReleaseGroupWithName[],
-  releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>
+  releaseGraph: ReleaseGraph
 ): {
   workspaceChangelogVersion: string | undefined;
   projectsVersionData: VersionData;
@@ -839,10 +804,10 @@ function resolveChangelogVersions(
     );
   }
 
-  const versionData: VersionData = releaseGroups.reduce(
+  const versionData: VersionData = releaseGraph.releaseGroups.reduce(
     (versionData, releaseGroup) => {
       const releaseGroupProjectNames = Array.from(
-        releaseGroupToFilteredProjects.get(releaseGroup)
+        releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
       );
       for (const projectName of releaseGroupProjectNames) {
         if (!args.versionData) {
@@ -860,7 +825,7 @@ function resolveChangelogVersions(
          */
         if (!args.versionData[projectName]) {
           throw new Error(
-            `The provided versionData object does not contain a version for project "${projectName}". This suggests a filtering mismatch between the version and changelog command invocations.`
+            `The provided versionData object does not contain a version for project "${projectName}". This suggests a filtering mismatch between the version and changelog command invocations. Please ensure that you have used the same "group" or "project" filter between commands.`
           );
         }
       }
@@ -897,8 +862,7 @@ async function applyChangesAndExit(
   postGitTasks: PostGitTask[],
   commitMessageValues: string[],
   gitTagValues: string[],
-  releaseGroups: ReleaseGroupWithName[],
-  releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>
+  releaseGraph: ReleaseGraph
 ) {
   let latestCommit = toSHA;
 
@@ -953,8 +917,9 @@ async function applyChangesAndExit(
   let deletedFiles: string[] = [];
   if (args.deleteVersionPlans) {
     const planFiles = new Set<string>();
-    releaseGroups.forEach((group) => {
-      const filteredProjects = releaseGroupToFilteredProjects.get(group);
+    releaseGraph.releaseGroups.forEach((group) => {
+      const filteredProjects =
+        releaseGraph.releaseGroupToFilteredProjects.get(group);
 
       if (group.resolvedVersionPlans) {
         // Check each version plan individually to see if it should be deleted
@@ -1127,7 +1092,7 @@ async function generateChangelogForWorkspace({
 
   const releaseVersion = new ReleaseVersion({
     version: workspaceChangelogVersion,
-    releaseTagPattern: nxReleaseConfig.releaseTagPattern,
+    releaseTagPattern: nxReleaseConfig.releaseTag.pattern,
   });
 
   if (interpolatedTreePath) {
@@ -1179,7 +1144,7 @@ async function generateChangelogForWorkspace({
     let rootChangelogContents = tree.exists(interpolatedTreePath)
       ? tree.read(interpolatedTreePath).toString()
       : '';
-    if (rootChangelogContents) {
+    if (rootChangelogContents && !args.replaceExistingContents) {
       // NOTE: right now existing releases are always expected to be in markdown format, but in the future we could potentially support others via a custom parser option
       const changelogReleases = parseChangelogMarkdown(
         rootChangelogContents
@@ -1198,7 +1163,7 @@ async function generateChangelogForWorkspace({
         rootChangelogContents = `${contents}\n\n${rootChangelogContents}`;
       }
     } else {
-      // No existing changelog contents, simply create a new one using the generated contents
+      // No existing changelog contents, or replaceExistingContents is true, simply use the generated contents directly
       rootChangelogContents = contents;
     }
 
@@ -1289,10 +1254,11 @@ async function generateChangelogForProjects({
       shouldPreferDockerVersionForReleaseGroup(releaseGroup);
     const releaseVersion = new ReleaseVersion({
       version:
-        preferDockerVersion && projectsVersionData[project.name].dockerVersion
+        (preferDockerVersion === true || preferDockerVersion === 'both') &&
+        projectsVersionData[project.name].dockerVersion
           ? projectsVersionData[project.name].dockerVersion
           : projectsVersionData[project.name].newVersion,
-      releaseTagPattern: releaseGroup.releaseTagPattern,
+      releaseTagPattern: releaseGroup.releaseTag.pattern,
       projectName: project.name,
     });
 

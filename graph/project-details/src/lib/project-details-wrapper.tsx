@@ -182,7 +182,7 @@ export function ProjectDetailsWrapper({
   return (
     <>
       <ProjectDetails
-        project={project}
+        project={project as any}
         projectId={projectId}
         sourceMap={sourceMap}
         onViewInProjectGraph={handleViewInProjectGraph}

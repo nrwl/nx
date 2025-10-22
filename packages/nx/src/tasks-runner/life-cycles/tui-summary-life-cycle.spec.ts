@@ -1,34 +1,31 @@
-import { stripVTControlCharacters } from 'util';
 import { EOL } from 'os';
-
-import { getTuiTerminalSummaryLifeCycle } from './tui-summary-life-cycle';
+import { stripVTControlCharacters } from 'util';
 import { Task } from '../../config/task-graph';
 import { TaskStatus as NativeTaskStatus } from '../../native';
+import * as taskHistoryUtils from '../../utils/task-history';
+import { getTuiTerminalSummaryLifeCycle } from './tui-summary-life-cycle';
+import { TaskMetadata } from '../life-cycle';
 
-let originalHrTime;
-let originalColumns;
-let originalDbEnabled;
+let originalHrTime: typeof process.hrtime;
+let originalColumns: typeof process.stdout.columns;
 
 describe('getTuiTerminalSummaryLifeCycle', () => {
   beforeAll(() => {
     originalHrTime = process.hrtime;
     originalColumns = process.stdout.columns;
-    originalDbEnabled = process.env.NX_DISABLE_DB;
     process.stdout.columns = 80;
-    process.hrtime = ((x) => {
+    process.hrtime = ((x: Parameters<typeof process.hrtime>[0]) => {
       if (x !== undefined) {
         return [x[0] + 1, x[1]];
       }
       return [22229415, 668399708];
     }) as any;
-    // Disable DB to avoid issues when running tests
-    process.env.NX_DISABLE_DB = 'true';
+    jest.spyOn(taskHistoryUtils, 'getTaskHistory').mockReturnValue(null);
   });
 
   afterAll(() => {
     process.hrtime = originalHrTime;
     process.stdout.columns = originalColumns;
-    process.env.NX_DISABLE_DB = originalDbEnabled;
   });
 
   beforeEach(() => {});
@@ -64,9 +61,9 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([dep], null);
-      lifeCycle.appendTaskOutput(dep.id, 'boom', true);
-      lifeCycle.endTasks(
+      lifeCycle.startTasks?.([dep], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(dep.id, 'boom', true);
+      lifeCycle.endTasks?.(
         [
           {
             code: 1,
@@ -75,10 +72,10 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
             terminalOutput: 'boom',
           },
         ],
-        null
+        null as unknown as TaskMetadata
       );
-      lifeCycle.printTaskTerminalOutput(dep, 'failure', 'boom');
-      lifeCycle.endCommand();
+      lifeCycle.printTaskTerminalOutput?.(dep, 'failure', 'boom');
+      lifeCycle.endCommand?.();
 
       const lines = getOutputLines(printSummary);
 
@@ -123,9 +120,9 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([dep], null);
-      lifeCycle.appendTaskOutput(dep.id, ':)', true);
-      lifeCycle.endTasks(
+      lifeCycle.startTasks?.([dep], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(dep.id, ':)', true);
+      lifeCycle.endTasks?.(
         [
           {
             code: 1,
@@ -134,12 +131,12 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
             terminalOutput: ':)',
           },
         ],
-        null
+        null as unknown as TaskMetadata
       );
-      lifeCycle.printTaskTerminalOutput(dep, 'success', ':)');
-      lifeCycle.startTasks([target], null);
-      lifeCycle.appendTaskOutput(target.id, "Wait, I'm not done yet", true);
-      lifeCycle.endCommand();
+      lifeCycle.printTaskTerminalOutput?.(dep, 'success', ':)');
+      lifeCycle.startTasks?.([target], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(target.id, "Wait, I'm not done yet", true);
+      lifeCycle.endCommand?.();
 
       const lines = getOutputLines(printSummary);
 
@@ -184,9 +181,9 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([dep], null);
-      lifeCycle.appendTaskOutput(dep.id, ':)', true);
-      lifeCycle.endTasks(
+      lifeCycle.startTasks?.([dep], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(dep.id, ':)', true);
+      lifeCycle.endTasks?.(
         [
           {
             code: 0,
@@ -195,10 +192,10 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
             terminalOutput: ':)',
           },
         ],
-        null
+        null as unknown as TaskMetadata
       );
-      lifeCycle.printTaskTerminalOutput(dep, 'success', ':)');
-      lifeCycle.endCommand();
+      lifeCycle.printTaskTerminalOutput?.(dep, 'success', ':)');
+      lifeCycle.endCommand?.();
 
       const lines = getOutputLines(printSummary);
 
@@ -247,15 +244,15 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([target], null);
-      lifeCycle.appendTaskOutput(target.id, 'I was a happy dev server', true);
-      lifeCycle.setTaskStatus(target.id, NativeTaskStatus.Stopped);
-      lifeCycle.printTaskTerminalOutput(
+      lifeCycle.startTasks?.([target], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(target.id, 'I was a happy dev server', true);
+      lifeCycle.setTaskStatus?.(target.id, NativeTaskStatus.Stopped);
+      lifeCycle.printTaskTerminalOutput?.(
         target,
         'success',
         'I was a happy dev server'
       );
-      lifeCycle.endCommand();
+      lifeCycle.endCommand?.();
       // Continuous tasks are marked as stopped when the command is stopped
 
       const lines = getOutputLines(printSummary);
@@ -294,7 +291,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         args: {
           targets: ['test'],
         },
-        initiatingProject: null,
+        initiatingProject: '',
         initiatingTasks: [],
         taskGraph: {
           tasks: { foo, bar },
@@ -308,10 +305,10 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([foo, bar], null);
-      lifeCycle.appendTaskOutput(foo.id, ':)', true);
-      lifeCycle.appendTaskOutput(bar.id, 'boom', true);
-      lifeCycle.endTasks(
+      lifeCycle.startTasks?.([foo, bar], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(foo.id, ':)', true);
+      lifeCycle.appendTaskOutput?.(bar.id, 'boom', true);
+      lifeCycle.endTasks?.(
         [
           {
             code: 1,
@@ -326,11 +323,11 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
             terminalOutput: 'foo',
           },
         ],
-        null
+        null as unknown as TaskMetadata
       );
-      lifeCycle.printTaskTerminalOutput(foo, 'success', ':)');
-      lifeCycle.printTaskTerminalOutput(bar, 'failure', 'boom');
-      lifeCycle.endCommand();
+      lifeCycle.printTaskTerminalOutput?.(foo, 'success', ':)');
+      lifeCycle.printTaskTerminalOutput?.(bar, 'failure', 'boom');
+      lifeCycle.endCommand?.();
 
       const lines = getOutputLines(printSummary);
 
@@ -378,7 +375,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         args: {
           targets: ['test'],
         },
-        initiatingProject: null,
+        initiatingProject: '',
         initiatingTasks: [],
         taskGraph: {
           tasks: { foo, bar },
@@ -392,10 +389,10 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([bar, foo], null);
-      lifeCycle.appendTaskOutput(foo.id, 'Stop, in the name of', true);
-      lifeCycle.appendTaskOutput(bar.id, 'Love', true);
-      lifeCycle.endTasks(
+      lifeCycle.startTasks?.([bar, foo], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(foo.id, 'Stop, in the name of', true);
+      lifeCycle.appendTaskOutput?.(bar.id, 'Love', true);
+      lifeCycle.endTasks?.(
         [
           {
             code: 0,
@@ -404,10 +401,10 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
             terminalOutput: 'foo',
           },
         ],
-        null
+        null as unknown as TaskMetadata
       );
-      lifeCycle.printTaskTerminalOutput(foo, 'success', ':)');
-      lifeCycle.endCommand();
+      lifeCycle.printTaskTerminalOutput?.(foo, 'success', ':)');
+      lifeCycle.endCommand?.();
 
       const lines = getOutputLines(printSummary);
       expect(lines.join('\n')).toMatchInlineSnapshot(`
@@ -454,7 +451,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         args: {
           targets: ['test'],
         },
-        initiatingProject: null,
+        initiatingProject: '',
         initiatingTasks: [],
         overrides: {},
         taskGraph: {
@@ -468,10 +465,10 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([foo, bar], null);
-      lifeCycle.appendTaskOutput(foo.id, ':)', true);
-      lifeCycle.appendTaskOutput(bar.id, ':)', true);
-      lifeCycle.endTasks(
+      lifeCycle.startTasks?.([foo, bar], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(foo.id, ':)', true);
+      lifeCycle.appendTaskOutput?.(bar.id, ':)', true);
+      lifeCycle.endTasks?.(
         [
           {
             code: 0,
@@ -486,11 +483,11 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
             terminalOutput: ':)',
           },
         ],
-        null
+        null as unknown as TaskMetadata
       );
-      lifeCycle.printTaskTerminalOutput(foo, 'success', ':)');
-      lifeCycle.printTaskTerminalOutput(bar, 'success', ':)');
-      lifeCycle.endCommand();
+      lifeCycle.printTaskTerminalOutput?.(foo, 'success', ':)');
+      lifeCycle.printTaskTerminalOutput?.(bar, 'success', ':)');
+      lifeCycle.endCommand?.();
 
       const lines = getOutputLines(printSummary);
 
@@ -509,8 +506,8 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
   });
 });
 
-function getOutputLines(cb: () => void) {
-  const lines = [];
+function getOutputLines(cb: () => void): string[] {
+  const lines: string[] = [];
   const originalLog = console.log;
   const originalStdout = process.stdout.write;
   let buf = '';
@@ -518,7 +515,11 @@ function getOutputLines(cb: () => void) {
     lines.push(buf + stripVTControlCharacters(args.join(' ')));
     buf = '';
   };
-  process.stdout.write = (chunk, callback) => {
+  process.stdout.write = (
+    chunk: string | Uint8Array,
+    encodingOrCallback?: BufferEncoding | ((err?: Error) => void),
+    callback?: (err?: Error) => void
+  ): boolean => {
     buf += chunk;
     if (buf.includes('boom')) {
     }
@@ -532,8 +533,11 @@ function getOutputLines(cb: () => void) {
       }
       buf = '';
     }
-    if (callback) {
-      callback();
+    // Handle both overload signatures
+    const cb =
+      typeof encodingOrCallback === 'function' ? encodingOrCallback : callback;
+    if (cb) {
+      cb();
     }
     return true;
   };

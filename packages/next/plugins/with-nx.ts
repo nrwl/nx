@@ -13,19 +13,8 @@ import {
 } from '@nx/devkit';
 import type { AssetGlobPattern } from '@nx/webpack';
 
-export interface SvgrOptions {
-  svgo?: boolean;
-  titleProp?: boolean;
-  ref?: boolean;
-}
-
 export interface WithNxOptions extends NextConfig {
   nx?: {
-    /**
-     * @deprecated Add SVGR support in your Webpack configuration without relying on Nx. See https://react-svgr.com/docs/webpack/
-     * TODO(v22): Remove this option and migrate userland webpack config to explicitly configure @svgr/webpack
-     * */
-    svgr?: boolean | SvgrOptions;
     babelUpwardRootMode?: boolean;
     fileReplacements?: { replace: string; with: string }[];
     assets?: AssetGlobPattern[];
@@ -362,54 +351,6 @@ export function getNextConfig(
           ? nextGlobalCssLoader.issuer.and.concat(includes)
           : includes;
         delete nextGlobalCssLoader.issuer.and;
-      }
-
-      /**
-       * 5. Add SVGR support if option is on.
-       */
-
-      // Default SVGR support to be on for projects.
-      if (nx?.svgr !== false || typeof nx?.svgr === 'object') {
-        forNextVersion('>=15.0.0', () => {
-          // Since Next.js 15, turbopack could be enabled by default.
-          console.warn(
-            `NX: Next.js SVGR support is deprecated. If used with turbopack, it may not work as expected and is not recommended. Please configure SVGR manually.`
-          );
-        });
-        const defaultSvgrOptions = {
-          svgo: false,
-          titleProp: true,
-          ref: true,
-        };
-
-        const svgrOptions =
-          typeof nx?.svgr === 'object' ? nx.svgr : defaultSvgrOptions;
-        // TODO(v22): Remove SVGR support
-        config.module.rules.push({
-          test: /\.svg$/,
-          issuer: { not: /\.(css|scss|sass)$/ },
-          resourceQuery: {
-            not: [
-              /__next_metadata__/,
-              /__next_metadata_route__/,
-              /__next_metadata_image_meta__/,
-            ],
-          },
-          use: [
-            {
-              loader: require.resolve('@svgr/webpack'),
-              options: svgrOptions,
-            },
-            {
-              loader: require.resolve('file-loader'),
-              options: {
-                // Next.js hard-codes assets to load from "static/media".
-                // See: https://github.com/vercel/next.js/blob/53d017d/packages/next/src/build/webpack-config.ts#L1993
-                name: 'static/media/[name].[hash].[ext]',
-              },
-            },
-          ],
-        });
       }
 
       return userWebpack(config, options);

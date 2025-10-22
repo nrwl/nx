@@ -1,0 +1,121 @@
+---
+title: Overview of the Nx Plugin for Maven
+description: This plugin allows Maven tasks to be run through Nx.
+sidebar:
+  label: 'Introduction'
+filter: 'type:References'
+---
+
+{% aside type="caution" title="Experimental Plugin" %}
+The `@nx/maven` plugin is currently experimental. Features and APIs may change.
+{% /aside %}
+
+[Apache Maven](https://maven.apache.org/) is a build tool for Java projects. Using a project object model (POM), Maven manages a project's compilation, testing, and documentation.
+
+The Nx plugin for Maven registers Maven projects in your Nx workspace. It allows Maven tasks to be run through Nx. Nx effortlessly makes your [CI faster](/docs/guides/nx-cloud/setup-ci).
+
+Nx adds the following features to your workspace:
+
+- [Cache task results](/docs/features/cache-task-results)
+- [Distribute task execution](/docs/features/ci-features/distribute-task-execution)
+- [Run only tasks affected by a PR](/docs/features/ci-features/affected)
+- [Interactively explore your workspace](/docs/features/explore-graph)
+
+{% aside type="note" title="Java and Maven Compatibility" %}
+This plugin requires:
+
+- **Java 17 or newer** - Using older Java versions is unsupported and may lead to issues.
+- **Maven 3.6.0 or newer** - Older Maven versions are not supported.
+
+If you need support for an older version, please create an issue on [Github](https://github.com/nrwl/nx)!
+{% /aside %}
+
+## Setup @nx/maven
+
+### Install Nx
+
+You can install Nx globally. Depending on your package manager, use one of the following commands:
+
+{% tabs syncKey="package-manager" %}
+{% tabitem label="npm" %}
+
+```shell {% frame="none" %}
+npm add --global nx@latest
+```
+
+{% /tabitem %}
+{% tabitem label="Homebrew (macOS, Linux)" %}
+
+```shell {% frame="none" %}
+brew install nx
+```
+
+{% /tabitem %}
+{% tabitem label="Chocolatey (Windows)" %}
+
+```shell {% frame="none" %}
+choco install nx
+```
+
+{% /tabitem %}
+{% tabitem label="apt (Ubuntu)" %}
+
+```shell {% frame="none" %}
+sudo add-apt-repository ppa:nrwl/nx
+sudo apt update
+sudo apt install nx
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+### Add Nx to a Maven Workspace
+
+In any Maven workspace, run the following command to add Nx and the `@nx/maven` plugin:
+
+```shell {% frame="none" %}
+nx init
+```
+
+Then, you can run Maven tasks using Nx. For example:
+
+```shell {% frame="none" %}
+nx build <your maven module>
+```
+
+## How @nx/maven Infers Tasks
+
+The `@nx/maven` plugin automatically detects Maven projects in your workspace by scanning for `pom.xml` files. It analyzes your Maven build structure to create Nx targets for common Maven lifecycle phases and plugin goals.
+
+## View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/docs/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project` in the command line.
+
+## Setting Up @nx/maven in a Nx Workspace
+
+In any Nx workspace, you can install `@nx/maven` by running the following command:
+
+```shell {% frame="none" %}
+nx add @nx/maven
+```
+
+## @nx/maven Configuration
+
+The `@nx/maven` is configured in the `plugins` array in `nx.json`.
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/maven",
+      "options": {
+        "testTargetName": "test",
+        "buildTargetName": "build"
+      }
+    }
+  ]
+}
+```
+
+Once a Maven configuration file has been identified, the targets are created with the name you specify under `testTargetName` or `buildTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `test` and `build`.

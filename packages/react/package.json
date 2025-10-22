@@ -42,7 +42,6 @@
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/web": "workspace:*",
-    "@nx/vite": "workspace:*",
     "@nx/module-federation": "workspace:*",
     "@nx/rollup": "workspace:*",
     "express": "^4.21.2",
@@ -50,7 +49,15 @@
     "semver": "^7.6.3"
   },
   "devDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/playwright": "workspace:*",
+    "@nx/rsbuild": "workspace:*",
+    "@nx/vite": "workspace:*",
+    "@nx/webpack": "workspace:*",
     "nx": "workspace:*"
+  },
+  "optionalDependencies": {
+    "@nx/vite": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

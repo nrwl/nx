@@ -10,7 +10,7 @@ import {
   NxGraphProjectGraphProvider,
   useProjectGraphContext,
 } from '@nx/graph/projects';
-import { resolveTheme } from './resolve-theme';
+import { affectedNodeStyles, useThemeSync } from './resolve-theme';
 import {
   NxGraphCompositeProjectNodePanelContent,
   NxGraphCompositeProjectNodePanelHeader,
@@ -27,11 +27,15 @@ interface NxDevProjectGraphProps {
   affectedProjects?: string[];
   enableContextMenu?: boolean;
   composite?: boolean;
+  showAffectedWithNodes?: boolean;
 }
 
 export function NxDevProjectGraph(props: NxDevProjectGraphProps) {
   return (
-    <NxGraphProjectGraphProvider renderPlatform="nx-dev">
+    <NxGraphProjectGraphProvider
+      renderPlatform="nx-dev"
+      styles={[affectedNodeStyles]}
+    >
       <NxDevProjectGraphInner {...props} />
     </NxGraphProjectGraphProvider>
   );
@@ -44,6 +48,7 @@ function NxDevProjectGraphInner({
   theme = 'system',
   composite = false,
   enableContextMenu = false,
+  showAffectedWithNodes = false,
 }: NxDevProjectGraphProps) {
   const graphContext = useProjectGraphContext();
 
@@ -59,12 +64,12 @@ function NxDevProjectGraphInner({
     ElementData.ProjectNode | ElementData.CompositeProjectNode
   >(eventBus);
 
-  useEffect(() => {
+  useThemeSync(theme, (resolvedTheme) => {
     sendRendererConfigEvent({
       type: 'themeChange',
-      theme: resolveTheme(theme),
+      theme: resolvedTheme,
     });
-  }, [theme]);
+  });
 
   useEffect(() => {
     if (!orchestrator) return;
@@ -76,11 +81,18 @@ function NxDevProjectGraphInner({
       updater: (config) => ({
         mode: composite ? 'composite' : 'individual',
         autoExpand: composite ? config.autoExpand : 0,
-        showMode: affectedProjects.length ? 'affected' : 'all',
+        showMode: showAffectedWithNodes
+          ? 'all'
+          : affectedProjects.length
+          ? 'affected'
+          : 'all',
       }),
     });
 
     send({ type: 'showAll' });
+    // make sure the graph sized to fix into the box
+    const el = orchestrator['renderer'].cy.elements();
+    orchestrator['renderer'].cy.fit(el, 1).center().resize();
   }, [orchestrator]);
 
   return (

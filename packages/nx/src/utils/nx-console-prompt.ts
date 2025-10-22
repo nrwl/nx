@@ -33,7 +33,10 @@ export async function ensureNxConsoleInstalled() {
   }
 
   if (setting) {
-    installNxConsole();
+    const installed = installNxConsole();
+    if (installed) {
+      output.log({ title: 'Successfully installed Nx Console!' });
+    }
   }
 }
 

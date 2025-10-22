@@ -161,7 +161,7 @@ That's a wrap. Hopefully, with Git worktrees and [Nx Cloud's self-healing CI](/b
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 🌩️ [Nx Cloud Self-Healing CI](/blog/nx-self-healing-ci)
 - 👩‍💻 [John Lindquist's Worktree CLI](https://www.npmjs.com/package/@johnlindquist/worktree)
 - 📹 [Git Worktrees Video Walkthrough](https://youtu.be/-DTpsDjYKCY)

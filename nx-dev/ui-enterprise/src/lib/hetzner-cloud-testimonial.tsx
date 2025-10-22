@@ -1,84 +1,21 @@
 'use client';
-import { ComponentProps, ReactElement, useState } from 'react';
-import { Button, SectionHeading } from '@nx/nx-dev-ui-common';
+import { ReactElement } from 'react';
+import {
+  Button,
+  SectionHeading,
+  VideoPlayer,
+  VideoPlayerProvider,
+  VideoPlayerThumbnail,
+  VideoPlayerOverlay,
+  VideoPlayerButton,
+  VideoPlayerModal,
+} from '@nx/nx-dev-ui-common';
 import { HetznerCloudIcon } from '@nx/nx-dev-ui-icons';
 import Link from 'next/link';
-import { cx } from '@nx/nx-dev-ui-primitives';
-import { MovingBorder } from '@nx/nx-dev-ui-animations';
-import { motion } from 'framer-motion';
 import { PlayIcon } from '@heroicons/react/24/outline';
-import Image from 'next/image';
 import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
-import { VideoModal } from '@nx/nx-dev-ui-common';
-
-function PlayButton({
-  className,
-  ...props
-}: ComponentProps<'div'>): ReactElement {
-  const parent = {
-    initial: {
-      width: 82,
-      transition: {
-        when: 'afterChildren',
-      },
-    },
-    hover: {
-      width: 296,
-      transition: {
-        duration: 0.125,
-        type: 'tween',
-        ease: 'easeOut',
-      },
-    },
-  };
-  const child = {
-    initial: {
-      opacity: 0,
-      x: -6,
-    },
-    hover: {
-      x: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.015,
-        type: 'tween',
-        ease: 'easeOut',
-      },
-    },
-  };
-
-  return (
-    <div
-      className={cx(
-        'group relative overflow-hidden rounded-full bg-transparent p-[1px] shadow-md',
-        className
-      )}
-      {...props}
-    >
-      <div className="absolute inset-0">
-        <MovingBorder duration={5000} rx="5%" ry="5%">
-          <div className="size-20 bg-[radial-gradient(var(--blue-500)_40%,transparent_60%)] opacity-[0.8] dark:bg-[radial-gradient(var(--pink-500)_40%,transparent_60%)]" />
-        </MovingBorder>
-      </div>
-      <motion.div
-        initial="initial"
-        whileHover="hover"
-        variants={parent}
-        className="relative isolate flex size-20 cursor-pointer items-center justify-center gap-6 rounded-full border-2 border-slate-100 bg-white/10 p-6 text-white antialiased backdrop-blur-xl"
-      >
-        <PlayIcon aria-hidden="true" className="absolute left-6 top-6 size-8" />
-        <motion.div variants={child} className="absolute left-20 top-4 w-48">
-          <p className="text-base font-medium">Watch the interview</p>
-          <p className="text-xs">Under 3 minutes.</p>
-        </motion.div>
-      </motion.div>
-    </div>
-  );
-}
 
 export function HetznerCloudTestimonial(): ReactElement {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
     <div className="border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900">
       <section
@@ -161,28 +98,34 @@ export function HetznerCloudTestimonial(): ReactElement {
                 </svg>
               </div>
 
-              <Image
-                src="/images/enterprise/video-story-pavlo-grosse.avif"
-                alt="video still"
-                width={960}
-                height={540}
-                loading="lazy"
-                unoptimized
-                className="relative rounded-xl"
-              />
-
-              <div className="absolute inset-0 grid h-full w-full items-center justify-center">
-                <PlayButton
-                  onClick={() => {
-                    setIsOpen(true);
-                    sendCustomEvent(
-                      'hetzner-cloud-testimonial-video-click',
-                      'hetzner-cloud-testimonial',
-                      'enterprise'
-                    );
-                  }}
-                />
-              </div>
+              <VideoPlayerProvider
+                videoUrl="https://youtu.be/2BLqiNnBPuU"
+                analytics={{
+                  event: 'hetzner-cloud-testimonial-video-click',
+                  category: 'hetzner-cloud-testimonial',
+                  label: 'enterprise',
+                }}
+              >
+                <VideoPlayer>
+                  <VideoPlayerThumbnail
+                    src="/images/enterprise/video-story-pavlo-grosse.avif"
+                    alt="video still"
+                    width={960}
+                    height={540}
+                    className="relative rounded-xl"
+                  />
+                  <VideoPlayerOverlay>
+                    <VideoPlayerButton
+                      variant="blue-pink"
+                      text={{
+                        primary: 'Watch the interview',
+                        secondary: 'Under 3 minutes.',
+                      }}
+                    />
+                  </VideoPlayerOverlay>
+                </VideoPlayer>
+                <VideoPlayerModal />
+              </VideoPlayerProvider>
             </div>
           </div>
 
@@ -239,12 +182,12 @@ export function HetznerCloudTestimonial(): ReactElement {
                   variant="secondary"
                   size="small"
                   onClick={() => {
-                    setIsOpen(true);
                     sendCustomEvent(
                       'hetzner-cloud-testimonial-video-click',
                       'hetzner-cloud-testimonial',
                       'enterprise'
                     );
+                    // Video will open automatically via VideoPlayerModal
                   }}
                 >
                   <PlayIcon aria-hidden="true" className="size-5 shrink-0" />
@@ -269,12 +212,6 @@ export function HetznerCloudTestimonial(): ReactElement {
           </figure>
         </div>
       </section>
-
-      <VideoModal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        videoUrl="https://youtu.be/2BLqiNnBPuU"
-      />
     </div>
   );
 }

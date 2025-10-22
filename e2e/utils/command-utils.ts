@@ -2,8 +2,6 @@ import { output, PackageManager, ProjectConfiguration } from '@nx/devkit';
 import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   detectPackageManager,
-  ensureCypressInstallation,
-  ensurePlaywrightBrowsersInstallation,
   getNpmMajorVersion,
   getPnpmVersion,
   getPublishedVersion,
@@ -11,6 +9,10 @@ import {
   getYarnMajorVersion,
   isVerboseE2ERun,
 } from './get-env-info';
+import {
+  ensureCypressInstallation,
+  ensurePlaywrightBrowsersInstallation,
+} from './ensure-browser-installation';
 import { TargetConfiguration } from '@nx/devkit';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import { join } from 'path';
@@ -137,8 +139,8 @@ export function getPackageManagerCommand({
       runUninstalledPackage: `npx --yes`,
       install: 'npm install',
       ciInstall: 'npm ci',
-      addProd: `npm install --legacy-peer-deps`,
-      addDev: `npm install --legacy-peer-deps -D`,
+      addProd: `npm install`,
+      addDev: `npm install -D`,
       list: 'npm ls --depth 10',
       runLerna: `npx lerna`,
       exec: 'npx',

@@ -1,0 +1,14 @@
+{
+  "name": "nx-maven-plugin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/maven/maven-plugin",
+  "projectType": "library",
+  "targets": {
+    "install": {
+      "command": "./mvnw install"
+    },
+    "_install": {
+      "command": "node scripts/build-maven-analyzer.js"
+    }
+  }
+}

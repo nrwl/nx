@@ -16,6 +16,7 @@ export {
   readProjectConfigurationsFromRootMap,
   findMatchingConfigFiles,
 } from './project-graph/utils/project-configuration-utils';
+export { getIgnoreObjectForTree } from './utils/ignore';
 export { splitTarget } from './utils/split-target';
 export { combineOptionsForExecutor } from './utils/params';
 export { sortObjectByKeys } from './utils/object-sort';
@@ -41,3 +42,5 @@ export { registerTsProject } from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';
 export { isCI } from './utils/is-ci';
 export { isUsingPrettierInTree } from './utils/is-using-prettier';
+export { readYamlFile } from './utils/fileutils';
+export { globalSpinner } from './utils/spinner';

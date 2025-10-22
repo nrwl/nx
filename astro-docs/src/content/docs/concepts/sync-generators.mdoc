@@ -105,9 +105,9 @@ Global sync generators are not associated with a particular task and are execute
 
 Nx processes the file system in order to [create the project graph](/docs/features/explore-graph) which is used to run tasks in the correct order and determine project dependencies. Sync generators allow you to also go the other direction and use the project graph to update the file system.
 
-{% side_by_side %}
+**File System:**
 
-```text title="File System"
+```text
 └─ myorg
    ├─ apps
    │  ├─ app1
@@ -117,6 +117,8 @@ Nx processes the file system in order to [create the project graph](/docs/featur
    ├─ nx.json
    └─ package.json
 ```
+
+**Project Graph:**
 
 {% graph title="Project Graph" height="200px" type="project" %}
 
@@ -183,7 +185,6 @@ Nx processes the file system in order to [create the project graph](/docs/featur
 ```
 
 {% /graph %}
-{% /side_by_side %}
 
 The ability to update the file system from the project graph makes it possible to use the Nx project graph to change the behavior of other tools that are not part of the Nx ecosystem.
 

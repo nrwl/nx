@@ -1,5 +1,6 @@
 ---
 title: Assignment Rules
+description: Control which tasks run on which agents using assignment rules with Nx Agents or manual DTE
 filter: 'type:References'
 ---
 
@@ -353,7 +354,7 @@ jobs:
       - ... # other setup steps you may need
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Start Agent ${{ matrix.agent }}
         run: npx nx-cloud start-agent
@@ -381,7 +382,7 @@ jobs:
       - ... # other setup steps you may need
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Start Agent ${{ matrix.agent }}
         run: npx nx-cloud start-agent

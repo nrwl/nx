@@ -68,9 +68,7 @@ export function GettingStarted(): ReactElement {
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
             Add Nx To An Existing Project
           </h2>
-          <p className="mt-8">
-            Currently Nx only supports Gradle. Support for Maven will come soon
-          </p>
+          <p className="mt-8">Nx supports both Gradle and Maven</p>
         </div>
 
         <div className="mt-12 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 ">
@@ -82,7 +80,7 @@ export function GettingStarted(): ReactElement {
           <GetStartedCard
             title="Add Nx To Your Project"
             command="nx init"
-            description="Select <code>@nx/gradle</code> when prompted."
+            description="Select <code>@nx/gradle</code> or <code>@nx/maven</code> when prompted."
           />
 
           <GetStartedCard

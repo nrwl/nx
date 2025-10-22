@@ -423,14 +423,5 @@ export default defineMarkdocConfig({
         },
       },
     },
-    side_by_side: {
-      render: component('./src/components/markdoc/SideBySide.astro'),
-      attributes: {
-        align: {
-          type: 'String',
-          default: 'center',
-        },
-      },
-    },
   },
 });

@@ -30,14 +30,14 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
+    "axios": "^1.12.0",
     "chalk": "^4.1.0",
     "enquirer": "~2.3.6",
     "flat": "^5.0.2",
     "ora": "5.3.0",
     "tmp": "~0.2.1",
     "tslib": "^2.3.0",
-    "yargs": "^17.6.2",
-    "axios": "^1.8.3"
+    "yargs": "^17.6.2"
   },
   "publishConfig": {
     "access": "public"

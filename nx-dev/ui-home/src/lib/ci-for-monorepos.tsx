@@ -1,16 +1,15 @@
-import {
-  Dialog,
-  DialogPanel,
-  Transition,
-  TransitionChild,
-} from '@headlessui/react';
-import { PlayIcon } from '@heroicons/react/24/outline';
 import { AnimateValue, Marquee } from '@nx/nx-dev-ui-animations';
 import {
   ButtonLink,
   SectionHeading,
   Strong,
   TextLink,
+  VideoPlayer,
+  VideoPlayerProvider,
+  VideoPlayerThumbnail,
+  VideoPlayerOverlay,
+  VideoPlayerButton,
+  VideoPlayerModal,
 } from '@nx/nx-dev-ui-common';
 import {
   AzureDevOpsIcon,
@@ -21,10 +20,8 @@ import {
   TravisCiIcon,
 } from '@nx/nx-dev-ui-icons';
 import { cx } from '@nx/nx-dev-ui-primitives';
-import { motion } from 'framer-motion';
-import Image from 'next/image';
 import Link from 'next/link';
-import { ComponentProps, Fragment, ReactNode, useState } from 'react';
+import { ReactNode } from 'react';
 
 export function CiForMonorepos(): JSX.Element {
   return (
@@ -148,7 +145,6 @@ export function CornerBlur({
 }
 
 export function ApplicationCard(): JSX.Element {
-  const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="col-span-1 h-[600px] lg:col-span-4 lg:h-[600px]">
       <Card>
@@ -178,136 +174,29 @@ export function ApplicationCard(): JSX.Element {
             </span>
           </a>
         </div>
-        <picture className="absolute bottom-0 left-4 h-[345px] w-full overflow-hidden rounded-xl border border-slate-200 dark:bg-slate-800">
-          <Image
-            src="/images/home/nx-app-dashboard.avif"
-            alt="App screenshot: overview"
-            width={534}
-            height={370}
-            loading={'eager'}
-            priority={true}
-            unoptimized
-            className="h-full w-full object-cover object-left-top"
-          />
-          <div className="absolute inset-0 z-10 grid h-full w-full items-center justify-center">
-            <PlayButton onClick={() => setIsOpen(true)} />
-          </div>
-        </picture>
+        <div className="absolute bottom-0 left-4 h-[345px] w-full overflow-hidden rounded-xl border border-slate-200 dark:bg-slate-800">
+          <VideoPlayerProvider videoUrl="https://www.youtube.com/embed/4VI-q943J3o?si=3tR-EkCKLfLvHYzL">
+            <VideoPlayer>
+              <VideoPlayerThumbnail
+                src="/images/home/nx-app-dashboard.avif"
+                alt="App screenshot: overview"
+                width={534}
+                height={370}
+              />
+              <VideoPlayerOverlay>
+                <VideoPlayerButton
+                  variant="blue-white-spin"
+                  text={{
+                    primary: 'See how Nx Cloud works',
+                    secondary: 'In under 9 minutes',
+                  }}
+                />
+              </VideoPlayerOverlay>
+            </VideoPlayer>
+            <VideoPlayerModal />
+          </VideoPlayerProvider>
+        </div>
       </Card>
-      {/*MODAL*/}
-      <Transition appear show={isOpen} as={Fragment}>
-        <Dialog
-          as="div"
-          open={isOpen}
-          onClose={() => setIsOpen(false)}
-          className="relative z-10"
-        >
-          <TransitionChild
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black/25 backdrop-blur-sm" />
-          </TransitionChild>
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <TransitionChild
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
-                <DialogPanel className="relative w-auto transform overflow-hidden rounded-2xl border border-slate-600 text-left align-middle shadow-xl transition-all focus:outline-none dark:border-slate-800">
-                  <iframe
-                    width="812"
-                    height="468"
-                    src="https://www.youtube.com/embed/4VI-q943J3o?si=3tR-EkCKLfLvHYzL"
-                    title="YouTube video player"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    className="max-w-full"
-                  />
-                </DialogPanel>
-              </TransitionChild>
-            </div>
-          </div>
-        </Dialog>
-      </Transition>
-    </div>
-  );
-}
-
-//
-function PlayButton({
-  className,
-  ...props
-}: ComponentProps<'div'>): JSX.Element {
-  const parent = {
-    initial: {
-      width: 82,
-      transition: {
-        when: 'afterChildren',
-      },
-    },
-    hover: {
-      width: 296,
-      transition: {
-        duration: 0.125,
-        type: 'tween',
-        ease: 'easeOut',
-      },
-    },
-  };
-  const child = {
-    initial: {
-      opacity: 0,
-      x: -6,
-    },
-    hover: {
-      x: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.015,
-        type: 'tween',
-        ease: 'easeOut',
-      },
-    },
-  };
-
-  return (
-    <div
-      className={cx(
-        'group relative overflow-hidden rounded-full bg-transparent p-[1px] shadow-md',
-        className
-      )}
-      {...props}
-    >
-      <div className="absolute inset-0">
-        <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#FFFFFF_0%,#3B82F6_50%,#FFFFFF_100%)] dark:bg-[conic-gradient(from_90deg_at_50%_50%,#FFFFFF_0%,#0EA5E9_50%,#FFFFFF_100%)]" />
-      </div>
-      <motion.div
-        initial="initial"
-        whileHover="hover"
-        variants={parent}
-        className="relative isolate flex h-20 w-20 cursor-pointer items-center justify-center gap-6 rounded-full border border-slate-100 bg-white/70 p-6 text-sm text-slate-950 antialiased backdrop-blur-xl"
-      >
-        <PlayIcon
-          aria-hidden="true"
-          className="absolute left-6 top-6 h-8 w-8"
-        />
-        <motion.div variants={child} className="absolute left-20 top-4 w-48">
-          <p className="text-base font-medium">See how Nx Cloud works</p>
-          <p className="text-slate-700">In under 9 minutes</p>
-        </motion.div>
-      </motion.div>
     </div>
   );
 }

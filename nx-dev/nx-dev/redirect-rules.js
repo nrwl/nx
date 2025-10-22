@@ -895,12 +895,7 @@ const missingAndCatchAllRedirects = {
   '/packages/:path*': '/nx-api/:path*',
 };
 
-if (process.env['NEXT_PUBLIC_ASTRO_URL']) {
-  missingAndCatchAllRedirects['/docs'] = '/docs/getting-started/intro';
-} else {
-  // For new docs, we rewrite all docs URLs to astro site, so we can skip this redirect
-  missingAndCatchAllRedirects['/docs'] = '/getting-started/intro';
-}
+missingAndCatchAllRedirects['/docs'] = '/docs/getting-started/intro';
 
 const marketing = {
   '/conf': 'https://monorepo.world',
@@ -1175,7 +1170,10 @@ const blogPosts = {
 
 const featurePagesUpdate = {
   '/ci/troubleshooting/explain-with-ai': '/ci/features/explain-with-ai',
-  '/ci/features/ai-features': '/ci/concepts/ai-features',
+  '/ci/concepts/ai-features': '/docs/features/ci-features/self-healing-ci',
+  '/ci/concepts/nx-cloud-ai': '/docs/features/ci-features/self-healing-ci',
+  '/concepts/ci-concepts/ai-features':
+    '/docs/features/ci-features/self-healing-ci',
 };
 
 const enterpriseNxSection = {
@@ -1341,8 +1339,9 @@ const nxApiRedirects = {
   '/nx-api/detox/documents/overview':
     '/technologies/test-tools/detox/introduction',
   '/nx-api/js/documents/overview': '/technologies/typescript/introduction',
-  '/nx-api/gradle/documents': '/technologies/java/introduction',
-  '/nx-api/gradle/documents/overview': '/technologies/java/introduction',
+  '/nx-api/gradle/documents': '/docs/technologies/java/gradle/introduction',
+  '/nx-api/gradle/documents/overview':
+    '/docs/technologies/java/gradle/introduction',
   '/nx-api/eslint/documents/overview': '/technologies/eslint/introduction',
   '/nx-api/eslint-plugin/documents/overview':
     '/technologies/eslint/eslint-plugin/api',
@@ -1549,8 +1548,5 @@ module.exports = {
   ciTutorialRedirects,
   dockerReleaseRedirect,
   contentDedupeRedirects,
-  // Only enable these redirects if the new docs are enabled
-  docsToAstroRedirects: process.env['NEXT_PUBLIC_ASTRO_URL']
-    ? docsToAstroRedirects
-    : {},
+  docsToAstroRedirects: docsToAstroRedirects,
 };

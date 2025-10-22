@@ -76,6 +76,7 @@
       },
       "currentVersionResolver": "registry",
       "preserveLocalDependencyProtocols": false,
+      "preserveMatchingDependencyRanges": false,
       "manifestRootsToUpdate": ["dist/packages/{projectName}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true
@@ -139,7 +140,8 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry",
+        "nx-maven-plugin:install"
       ]
     },
     "e2e-ci": {
@@ -160,14 +162,19 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
-      ]
+        "@nx/nx-source:local-registry",
+        "nx-maven-plugin:install"
+      ],
+      "options": {
+        "args": ["--forceExit"]
+      }
     },
     "e2e-macos-ci--**/*": {
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry",
+        "nx-maven-plugin:install"
       ]
     },
     "e2e-base": {
@@ -220,12 +227,20 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "exclude": ["examples/angular-rspack/**/*"],
+      "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
       "options": {
         "typecheck": true,
         "build": {
           "targetName": "build-base"
         }
+      }
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "include": ["e2e/**/*"],
+      "options": {
+        "typecheck": true,
+        "build": false
       }
     },
     {
@@ -320,7 +335,7 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 1,
+  "bust": 3,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true

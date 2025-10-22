@@ -161,7 +161,7 @@ async function getPatternsFromApps(
   });
   const affectedGraph = await filterAffected(
     graph,
-    calculateFileChanges(affectedFiles, allWorkspaceFiles)
+    calculateFileChanges(affectedFiles)
   );
   return getPatternsFromProjects(
     Object.keys(affectedGraph.nodes),

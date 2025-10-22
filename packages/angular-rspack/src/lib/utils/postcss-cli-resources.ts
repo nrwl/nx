@@ -24,6 +24,16 @@ function wrapUrl(url: string): string {
   return `url(${wrappedUrl})`;
 }
 
+function resolveUrl(from: string, to: string) {
+  const resolvedUrl = new URL(to, new URL(from, 'resolve://'));
+  if (resolvedUrl.protocol === 'resolve:') {
+    // `from` is a relative URL.
+    const { pathname, search, hash } = resolvedUrl;
+    return pathname + search + hash;
+  }
+  return resolvedUrl.toString();
+}
+
 export interface PostcssCliResourcesOptions {
   baseHref?: string;
   deployUrl?: string;
@@ -149,7 +159,7 @@ export default function (options?: PostcssCliResourcesOptions): Plugin {
         }
 
         if (deployUrl && !extracted) {
-          outputUrl = new URL(outputUrl, deployUrl).href;
+          outputUrl = resolveUrl(deployUrl, outputUrl);
         }
 
         resourceCache.set(cacheKey, outputUrl);

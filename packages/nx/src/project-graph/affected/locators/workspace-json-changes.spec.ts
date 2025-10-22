@@ -8,7 +8,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
       [
         {
           file: 'source.ts',
-          hash: 'some-hash',
           getChanges: () => [new WholeFileChange()],
         },
       ],
@@ -23,7 +22,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
       [
         {
           file: 'angular.json',
-          hash: 'some-hash',
           getChanges: () => [new WholeFileChange()],
         },
       ],
@@ -54,7 +52,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
       [
         {
           file: 'angular.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: JsonDiffType.Modified,
@@ -94,7 +91,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
       [
         {
           file: 'angular.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: JsonDiffType.Added,
@@ -137,7 +133,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
       [
         {
           file: 'angular.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: JsonDiffType.Deleted,
@@ -179,7 +174,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
       [
         {
           file: 'angular.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: JsonDiffType.Modified,

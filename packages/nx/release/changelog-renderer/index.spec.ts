@@ -724,7 +724,7 @@ describe('ChangelogRenderer', () => {
               `);
       });
 
-      it('should extract the explanation of a breaking change and render it preferentially', async () => {
+      it('should extract the explanation of a breaking change and render it preferentially with references', async () => {
         const breakingChangeWithExplanation: ChangelogChange = {
           shortHash: '54f2f6ed1',
           authors: [
@@ -757,25 +757,128 @@ describe('ChangelogRenderer', () => {
           entryWhenNoChanges: false,
           changelogRenderOptions: {
             authors: true,
+            commitReferences: true,
           },
           conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
         }).render();
 
         expect(markdown).toMatchInlineSnapshot(`
-                  "## v1.1.0
+          "## v1.1.0
 
-                  ### 🚀 Features
+          ### 🚀 Features
 
-                  - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
+          - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`. ([54f2f6ed1](https://example.com/example/example/commit/54f2f6ed1))
 
-                  ### ⚠️  Breaking Changes
+          ### ⚠️  Breaking Changes
 
-                  - **WebSocketSubject:** \`WebSocketSubject\` is no longer \`instanceof Subject\`. Check for \`instanceof WebSocketSubject\` instead.
+          - **WebSocketSubject:** \`WebSocketSubject\` is no longer \`instanceof Subject\`. Check for \`instanceof WebSocketSubject\` instead. ([54f2f6ed1](https://example.com/example/example/commit/54f2f6ed1))
 
-                  ### ❤️ Thank You
+          ### ❤️ Thank You
 
-                  - James Henry"
-              `);
+          - James Henry"
+        `);
+      });
+
+      it('should include PR references in breaking changes with multi-line explanations', async () => {
+        const breakingChangeWithExplanationAndPR: ChangelogChange = {
+          shortHash: '6a104c5',
+          authors: [{ name: 'Test User', email: 'test@example.com' }],
+          body:
+            'BREAKING CHANGE: The `--legacy-peer-deps` behavior is no longer forced.\n' +
+            'If you need it, configure your package manager to enforce it.\n' +
+            '"\n\nM\tpackages/nx/file.ts\n"',
+          description: "don't set legacy-peer-deps by default",
+          type: 'fix',
+          scope: 'misc',
+          githubReferences: [
+            { type: 'pull-request', value: '#33014' },
+            { value: '6a104c5', type: 'hash' },
+          ],
+          isBreaking: true,
+          revertedHashes: [],
+          affectedProjects: ['nx'],
+        };
+
+        const markdown = await new DefaultChangelogRenderer({
+          changes: [breakingChangeWithExplanationAndPR],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: { authors: true, commitReferences: true },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        }).render();
+
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🩹 Fixes
+
+          - ⚠️  **misc:** don't set legacy-peer-deps by default ([#33014](https://example.com/example/example/pull/33014))
+
+          ### ⚠️  Breaking Changes
+
+          - **misc:** The \`--legacy-peer-deps\` behavior is no longer forced. ([#33014](https://example.com/example/example/pull/33014))
+
+            If you need it, configure your package manager to enforce it.
+
+          ### ❤️ Thank You
+
+          - Test User"
+        `);
+      });
+
+      it('should handle multi-paragraph breaking changes with proper indentation', async () => {
+        const multiParagraphBreakingChange: ChangelogChange = {
+          shortHash: 'abc123',
+          authors: [{ name: 'Test User', email: 'test@example.com' }],
+          body:
+            'BREAKING CHANGE: First paragraph of explanation.\n\n' +
+            'Second paragraph with more details.\n' +
+            'Continued explanation.\n' +
+            '"\n\nM\tfile.ts\n"',
+          description: 'major refactor',
+          type: 'feat',
+          scope: 'core',
+          githubReferences: [
+            { type: 'pull-request', value: '#12345' },
+            { value: 'abc123', type: 'hash' },
+          ],
+          isBreaking: true,
+          revertedHashes: [],
+          affectedProjects: ['*'],
+        };
+
+        const markdown = await new DefaultChangelogRenderer({
+          changes: [multiParagraphBreakingChange],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v2.0.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: { authors: true, commitReferences: true },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        }).render();
+
+        expect(markdown).toMatchInlineSnapshot(`
+          "# v2.0.0
+
+          ### 🚀 Features
+
+          - ⚠️  **core:** major refactor ([#12345](https://example.com/example/example/pull/12345))
+
+          ### ⚠️  Breaking Changes
+
+          - **core:** First paragraph of explanation. ([#12345](https://example.com/example/example/pull/12345))
+
+            Second paragraph with more details.
+            Continued explanation.
+
+          ### ❤️ Thank You
+
+          - Test User"
+        `);
       });
     });
 

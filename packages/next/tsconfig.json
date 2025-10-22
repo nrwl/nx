@@ -22,13 +22,22 @@
       "path": "../js"
     },
     {
-      "path": "../nx"
+      "path": "../devkit"
     },
     {
-      "path": "../devkit"
+      "path": "../playwright"
+    },
+    {
+      "path": "../cypress"
+    },
+    {
+      "path": "../nx"
     },
     {
       "path": "./tsconfig.lib.json"
     }
-  ]
+  ],
+  "nx": {
+    "addTypecheckTarget": false
+  }
 }

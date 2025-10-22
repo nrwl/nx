@@ -86,15 +86,9 @@ A task is an invocation of a target. If you invoke the same target twice, you cr
 Nx uses the [project graph](#the-project-graph), but the task graph and project graph aren't isomorphic, meaning they
 aren't directly connected. In the case above, `app1` and `app2` depend on `lib`, but
 running `nx run-many -t test -p app1 app2 lib`, the created task graph will look like this:
-{% side_by_side %}
 
-**Project Graph**
+**Project Graph:**
 
-**Task Graph**
-
-{% /side_by_side %}
-
-{% side_by_side %}
 {% graph height="200px" type="project" %}
 
 ```json
@@ -131,6 +125,8 @@ running `nx run-many -t test -p app1 app2 lib`, the created task graph will look
 ```
 
 {% /graph %}
+
+**Task Graph:**
 
 {% graph height="200px" type="task"%}
 
@@ -168,7 +164,6 @@ running `nx run-many -t test -p app1 app2 lib`, the created task graph will look
 ```
 
 {% /graph %}
-{% /side_by_side %}
 
 Even though the apps depend on `lib`, testing `app1` doesn't depend on the testing `lib`. This means that the two tasks
 can
@@ -192,15 +187,8 @@ Let's look at the test target relying on its dependencies.
 
 With this, running the same test command creates the following task graph:
 
-{% side_by_side %}
+**Project Graph:**
 
-**Project Graph**
-
-**Task Graph**
-
-{% /side_by_side %}
-
-{% side_by_side %}
 {% graph height="200px" type="project" %}
 
 ```json
@@ -238,6 +226,8 @@ With this, running the same test command creates the following task graph:
 
 {% /graph %}
 
+**Task Graph:**
+
 {% graph height="200px" type="task" %}
 
 ```json
@@ -274,7 +264,6 @@ With this, running the same test command creates the following task graph:
 ```
 
 {% /graph %}
-{% /side_by_side %}
 
 This often makes more sense for builds, where to build `app1`, you want to build `lib` first. You can also define
 similar
@@ -355,7 +344,7 @@ instance, Nx:
 
 As your workspace grows, the task graph looks more like this:
 
-{% graph height="400px" type="task"%}
+{% graph height="200px" type="task"%}
 
 ```json
 {

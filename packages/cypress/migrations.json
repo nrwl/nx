@@ -1,11 +1,5 @@
 {
   "generators": {
-    "update-19-6-0-update-ci-webserver-for-vite": {
-      "cli": "nx",
-      "version": "19.6.0-beta.4",
-      "description": "Update ciWebServerCommand to use static serve for the application.",
-      "implementation": "./src/migrations/update-19-6-0/update-ci-webserver-for-static-serve"
-    },
     "set-inject-document-domain": {
       "cli": "nx",
       "version": "20.8.0-beta.0",
@@ -49,34 +43,6 @@
     }
   },
   "packageJsonUpdates": {
-    "19.1.0": {
-      "version": "19.1.0-beta.0",
-      "requires": {
-        "cypress": "^13.0.0"
-      },
-      "packages": {
-        "cypress": {
-          "version": "^13.8.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@cypress/webpack-dev-server": {
-          "version": "^3.8.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "19.4.1": {
-      "version": "19.4.1-beta.0",
-      "requires": {
-        "cypress": "^13.0.0"
-      },
-      "packages": {
-        "cypress": {
-          "version": "^13.13.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "20.8.0": {
       "version": "20.8.0-beta.0",
       "x-prompt": "Do you want to update the Cypress version to v14?",

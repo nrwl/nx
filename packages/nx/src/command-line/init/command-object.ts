@@ -55,6 +55,12 @@ async function withInitOptions(yargs: Argv) {
           'Force the migration to continue and ignore custom webpack setup or uncommitted changes. Only for CRA projects.',
         type: 'boolean',
         default: false,
+      })
+      .option('aiAgents', {
+        type: 'array',
+        string: true,
+        description: 'List of AI agents to set up.',
+        choices: ['claude', 'codex', 'copilot', 'cursor', 'gemini'],
       });
   } else {
     return yargs

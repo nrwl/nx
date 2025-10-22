@@ -15,20 +15,27 @@ const searchSchema = z.object({
   filter: z.string().optional(),
 });
 
-const baseSchema = z
+const customDocsSchema = z
   .object({
     title: z.string(),
+    description: z.string(),
+  })
+  .and(searchSchema);
+
+const baseSchema = z
+  .object({
     /**
      * Slug should be from the root route without any prefix requirements i.e. `/docs`
      **/
     slug: z.string(),
   })
-  .and(searchSchema);
+  .and(customDocsSchema);
+
 // Default docs collection handled by Starlight
 const docs = defineCollection({
   loader: docsLoader(),
   schema: docsSchema({
-    extend: searchSchema,
+    extend: customDocsSchema,
   }),
 });
 

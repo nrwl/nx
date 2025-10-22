@@ -45,8 +45,8 @@ export interface GitCommit extends RawGitCommit {
 export interface GetLatestGitTagForPatternOptions {
   checkAllBranchesWhen?: boolean | string[];
   preid?: string;
-  releaseTagPatternRequireSemver: boolean;
-  releaseTagPatternStrictPreid: boolean;
+  requireSemver: boolean;
+  strictPreid: boolean;
 }
 
 function escapeRegExp(string) {
@@ -70,10 +70,10 @@ export function extractTagAndVersion(
   tagRegexp: string,
   options: GetLatestGitTagForPatternOptions
 ): GitTagAndVersion {
-  const { releaseTagPatternRequireSemver } = options;
+  const { requireSemver } = options;
 
   const [latestMatchingTag, ...rest] = tag.match(tagRegexp);
-  let version = releaseTagPatternRequireSemver
+  let version = requireSemver
     ? rest.filter((r) => {
         return r.match(SEMVER_REGEX);
       })[0]
@@ -105,12 +105,7 @@ export async function getLatestGitTagForPattern(
   additionalInterpolationData = {},
   options: GetLatestGitTagForPatternOptions
 ): Promise<GitTagAndVersion | null> {
-  const {
-    checkAllBranchesWhen,
-    releaseTagPatternRequireSemver,
-    releaseTagPatternStrictPreid,
-    preid,
-  } = options;
+  const { checkAllBranchesWhen, requireSemver, strictPreid, preid } = options;
 
   /**
    * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
@@ -194,15 +189,17 @@ export async function getLatestGitTagForPattern(
     const interpolatedTagPattern = interpolate(releaseTagPattern, {
       version: '%v%',
       projectName: '%p%',
+      releaseGroupName: '%rg%',
       ...additionalInterpolationData,
     });
 
     const tagRegexp = `^${escapeRegExp(interpolatedTagPattern)
       .replace('%v%', '(.+)')
-      .replace('%p%', '(.+)')}`;
+      .replace('%p%', '(.+)')
+      .replace('%rg%', '(.+)')}`;
 
     const matchingTags = tags.filter((tag) => {
-      if (releaseTagPatternRequireSemver) {
+      if (requireSemver) {
         // Match against Semver Regex when using semverVersioning to ensure only valid semver tags are matched
         return (
           !!tag.match(tagRegexp) &&
@@ -217,7 +214,7 @@ export async function getLatestGitTagForPattern(
       return null;
     }
 
-    if (!releaseTagPatternStrictPreid) {
+    if (!strictPreid) {
       // If not using strict preid, we can just return the first matching tag
       return extractTagAndVersion(matchingTags[0], tagRegexp, options);
     }
@@ -644,29 +641,17 @@ const IssueRE = /(#\d+)/gm;
 const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
 
-export function parseGitCommit(
-  commit: RawGitCommit,
-  isVersionPlanCommit = false
-): GitCommit | null {
-  // For version plans, we do not require conventional commits and therefore cannot extract data based on that format
-  if (isVersionPlanCommit) {
-    return {
-      ...commit,
-      description: commit.message,
-      type: '',
-      scope: '',
-      references: extractReferencesFromCommit(commit),
-      // The commit message is not the source of truth for a breaking (major) change in version plans, so the value is not relevant
-      // TODO(v22): Make the current GitCommit interface more clearly tied to conventional commits
-      isBreaking: false,
-      authors: getAllAuthorsForCommit(commit),
-      // Not applicable to version plans
-      affectedFiles: [],
-      // Not applicable, a version plan cannot have been added in a commit that also reverts another commit
-      revertedHashes: [],
-    };
-  }
+export function parseVersionPlanCommit(commit: RawGitCommit): {
+  references: Reference[];
+  authors: GitCommitAuthor[];
+} {
+  return {
+    references: extractReferencesFromCommit(commit),
+    authors: getAllAuthorsForCommit(commit),
+  };
+}
 
+export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   const parsedMessage = parseConventionalCommitsMessage(commit.message);
   if (!parsedMessage) {
     return null;
@@ -753,6 +738,7 @@ async function getGitRoot() {
 }
 
 let gitRootRelativePath: string;
+
 async function getGitRootRelativePath() {
   if (!gitRootRelativePath) {
     const gitRoot = await getGitRoot();

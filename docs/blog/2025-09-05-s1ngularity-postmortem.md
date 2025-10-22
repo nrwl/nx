@@ -30,7 +30,7 @@ This is how we responded to the security incident.
 
 **Immediate Containment:** We reached out to NPM, removed the affected token, and started to manually unpublish the malicious packages. NPM stepped in to remove all packages and revoke all our NPM tokens. The malicious packages were active for 4 hours before being completely removed from the registry.
 
-**Communication and Damage Mitigation:** We published a [security advisory](https://github.com/nrwl/nx/security/advisories/GHSA-cxm3-wv7p-598c) that we constantly updated and added a security policy for Nx OSS to call out the existing [security@nrwl.io](mailto:security@nrwl.io) email for reporting vulnerabilities. We started identifying and reaching out to our point of contacts: our Nx Enterprise customers, social media and Discord communities, and actively monitored GitHub for leaked repositories, opening issues to alert their respective owners. We collaborated closely with GitHub, who stepped in to take leaked repositories offline.
+**Communication and Damage Mitigation:** We published a [security advisory](https://github.com/nrwl/nx/security/advisories/GHSA-cxm3-wv7p-598c) that we constantly updated and added a security policy for Nx OSS to call out the existing [security@nrwl.io](/company) email for reporting vulnerabilities. We started identifying and reaching out to our point of contacts: our Nx Enterprise customers, social media and Discord communities, and actively monitored GitHub for leaked repositories, opening issues to alert their respective owners. We collaborated closely with GitHub, who stepped in to take leaked repositories offline.
 
 **Investigation and Access Hardening:** Since the packages lacked NPM provenance signing, we knew they didn't originate from our CI pipeline. We disabled all publishing workflows and external contributor access until we understood the attack vector, then worked backwards from the leaked NPM token to uncover the technical details.
 
@@ -112,4 +112,4 @@ This incident also highlights the importance of being mindful about what sensiti
 
 We remain committed to maintaining a secure setup for all Nx users.
 
-For complete details, see our [GitHub Security Advisory](https://github.com/nrwl/nx/security/advisories/GHSA-cxm3-wv7p-598c). For questions or assistance, reach out to [security@nrwl.io](mailto:security@nrwl.io).
+For complete details, see our [GitHub Security Advisory](https://github.com/nrwl/nx/security/advisories/GHSA-cxm3-wv7p-598c). For questions or assistance, reach out to [security@nrwl.io](/company).

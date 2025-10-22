@@ -4,7 +4,7 @@ import {
   readJsonFile,
   writeJsonFile,
   CreateNodesV2,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   joinPathFragments,
   getPackageManagerCommand,
@@ -82,7 +82,7 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
 async function createNodesInternal(
   configFilePath: string,
   options: RsbuildPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, RsbuildTargets>,
   isUsingTsSolutionSetup: boolean
 ) {
@@ -135,7 +135,7 @@ async function createRsbuildTargets(
   options: RsbuildPluginOptions,
   tsConfigFiles: string[],
   isUsingTsSolutionSetup: boolean,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<RsbuildTargets> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,

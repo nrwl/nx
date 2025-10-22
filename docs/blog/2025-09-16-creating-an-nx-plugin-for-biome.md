@@ -154,7 +154,7 @@ Now when we run the task once, it gets cached. Running it a second time will rea
 
 ## Creating an Nx Plugin for Scale
 
-Copying targets to every package would be easy in a small workspace, but **this process needs to scale to workspaces with hundreds of packages**. Instead, let's create an Nx plugin that uses [inferred tasks](/concepts/inferred-tasks#inferred-tasks-project-crystal) to create these targets automatically.
+Copying targets to every package would be easy in a small workspace, but **this process needs to scale to workspaces with hundreds of packages**. Instead, let's create an Nx plugin that uses [inferred tasks](/docs/concepts/inferred-tasks#inferred-tasks-project-crystal) to create these targets automatically.
 
 An **inferred task** is created by an Nx plugin by scanning your workspace for particular configuration files and adding targets to projects where it finds those files.
 
@@ -176,7 +176,7 @@ This creates a plugin project at the root of our workspace. The important file i
 
 ### Understanding Plugin Structure
 
-Looking at the [Nx docs on extending the project graph](/extending-nx/recipes/project-graph-plugins), we can find a code example to paste into our `index.ts`:
+Looking at the [Nx docs on extending the project graph](/docs/extending-nx/project-graph-plugins), we can find a code example to paste into our `index.ts`:
 
 ```typescript {% fileName="plugin/src/index.ts" %}
 import {
@@ -282,7 +282,7 @@ You can now delete all of the configuration you added to your `package.json` and
 
 {% callout title="What about that weird `{projectRoot}` in the command?" type="info" %}
 
-Nx executes tasks in the context of the root of the workspace. If you were to just have a command of `npx nx @biomejs/biome`, it would execute that command in the root of the workspace and lint the entire workspace. `{projectRoot}` is a [special token](/reference/inputs#source-files) that will be replaced with the directory of the project you're running against. So now the command will lint the project directory, not the entire workspace.
+Nx executes tasks in the context of the root of the workspace. If you were to just have a command of `npx nx @biomejs/biome`, it would execute that command in the root of the workspace and lint the entire workspace. `{projectRoot}` is a [special token](/docs/reference/inputs#source-files) that will be replaced with the directory of the project you're running against. So now the command will lint the project directory, not the entire workspace.
 
 {% /callout %}
 
@@ -438,7 +438,7 @@ Since you already have your own plugin, you can easily extend it without waiting
 
 Ready to build your own plugin? Here are some tools to support any tool in your workspace that the Nx team doesn't officially support:
 
-- Check out the [Nx plugin documentation](/extending-nx)
+- Check out the [Nx plugin documentation](/docs/extending-nx)
 - Join our [Discord community](https://go.nx.dev/community) for help and to share what you're building
 - Share your plugin with the community—others might benefit from your work
 
@@ -446,7 +446,7 @@ Writing Nx plugins isn't as intimidating as it seems. With the same tools we use
 
 Learn more:
 
-- 🧠 [Nx Plugin Documentation](/extending-nx)
+- 🧠 [Nx Plugin Documentation](/docs/extending-nx)
 - 🌐 [Biome Official Website](https://biomejs.dev/)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)

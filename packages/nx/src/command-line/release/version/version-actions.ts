@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { ReleaseType } from 'semver';
 import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type {
@@ -12,15 +12,13 @@ import { getRootTsConfigPath } from '../../../plugins/js/utils/typescript';
 import { interpolate } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { DEFAULT_VERSION_ACTIONS_PATH } from '../config/config';
-import { ReleaseGroupWithName } from '../config/filter-release-groups';
+import type { ReleaseGroupWithName } from '../config/filter-release-groups';
+import type { FinalConfigForProject } from '../utils/release-graph';
 import {
   deriveNewSemverVersion,
   isRelativeVersionKeyword,
 } from '../utils/semver';
-import {
-  BUMP_TYPE_REASON_TEXT,
-  FinalConfigForProject,
-} from './release-group-processor';
+import { BUMP_TYPE_REASON_TEXT } from './release-group-processor';
 
 export type SemverBumpType = ReleaseType | 'none';
 
@@ -97,8 +95,7 @@ export async function resolveVersionActionsForProject(
   tree: Tree,
   releaseGroup: ReleaseGroupWithName,
   projectGraphNode: ProjectGraphProjectNode,
-  finalConfigForProject: FinalConfigForProject,
-  isInProjectsToProcess: boolean
+  finalConfigForProject: FinalConfigForProject
 ): Promise<{
   versionActionsPath: string;
   versionActions: VersionActions;
@@ -173,7 +170,7 @@ export async function resolveVersionActionsForProject(
     finalConfigForProject
   );
   // Initialize the version actions with all the required manifest paths etc
-  await versionActions.init(tree, isInProjectsToProcess);
+  await versionActions.init(tree);
   return {
     versionActionsPath,
     versionActions,
@@ -211,9 +208,10 @@ export abstract class VersionActions {
   ) {}
 
   /**
-   * Asynchronous initialization of the version actions and validation of certain configuration options.
+   * Asynchronous initialization of the version actions and resolution of manifest paths.
+   * Note: This does NOT validate that manifest files exist - that happens later in validate().
    */
-  async init(tree: Tree, isInProjectsToProcess: boolean): Promise<void> {
+  async init(tree: Tree): Promise<void> {
     // Default to the first available source manifest root, if applicable, if no custom manifest roots are provided
     if (
       this.validManifestFilenames?.length &&
@@ -245,32 +243,46 @@ export abstract class VersionActions {
         };
       });
 
+    // Build manifestsToUpdate but don't validate existence yet as that could break release graph construction before preVersionCommands have run
     for (const interpolatedManifestRoot of interpolatedManifestRoots) {
-      let hasValidManifest = false;
       for (const manifestFilename of this.validManifestFilenames) {
         const manifestPath = join(
           interpolatedManifestRoot.path,
           manifestFilename
         );
-        if (tree.exists(manifestPath)) {
-          this.manifestsToUpdate.push({
-            ...interpolatedManifestRoot,
-            manifestPath,
-          });
-          hasValidManifest = true;
-          break;
-        }
+        // Just add the first matching filename pattern, actual existence check happens in validate()
+        this.manifestsToUpdate.push({
+          ...interpolatedManifestRoot,
+          manifestPath,
+        });
+        break;
       }
-      /**
-       * If projects or groups filters are applied, it is possible that the project is not being actively processed
-       * and we should not throw an error in this case.
-       */
-      if (!hasValidManifest && isInProjectsToProcess) {
+    }
+  }
+
+  /**
+   * Validates that manifest files actually exist.
+   * This will be called after all preVersionCommands have run.
+   */
+  async validate(tree: Tree): Promise<void> {
+    // Skip if no manifest files are expected
+    if (!this.validManifestFilenames?.length) {
+      return;
+    }
+
+    // Simply check each manifest exists
+    for (const manifest of this.manifestsToUpdate) {
+      if (!tree.exists(manifest.manifestPath)) {
         const validManifestFilenames =
           this.validManifestFilenames?.join(' or ');
+        // Get directory path for error message using Node's path module for cross-platform compatibility
+        let rootPath = manifest.manifestPath;
+        for (const filename of this.validManifestFilenames) {
+          rootPath = rootPath.replace(filename, '');
+        }
 
         throw new Error(
-          `The project "${this.projectGraphNode.name}" does not have a ${validManifestFilenames} file available in ./${interpolatedManifestRoot.path}.
+          `The project "${this.projectGraphNode.name}" does not have a ${validManifestFilenames} file available in ${rootPath}
 
 To fix this you will either need to add a ${validManifestFilenames} file at that location, or configure "release" within your nx.json to exclude "${this.projectGraphNode.name}" from the current release group, or amend the "release.version.manifestRootsToUpdate" configuration to point to where the relevant manifest should be.
 
@@ -457,6 +469,11 @@ It is also possible that the project is being processed because of a dependency 
 
 export class NOOP_VERSION_ACTIONS extends VersionActions {
   validManifestFilenames = null;
+
+  async validate(tree: Tree): Promise<void> {
+    // Nothing to validate, patch base method
+    return;
+  }
 
   readCurrentVersionFromRegistry(
     tree: Tree,

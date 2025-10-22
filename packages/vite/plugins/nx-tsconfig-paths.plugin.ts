@@ -1,26 +1,25 @@
 import {
   createProjectGraphAsync,
   joinPathFragments,
-  stripIndents,
   workspaceRoot,
 } from '@nx/devkit';
-import { copyFileSync, existsSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
-import {
-  loadConfig,
-  createMatchPath,
-  MatchPath,
-  ConfigLoaderSuccessResult,
-} from 'tsconfig-paths';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
 } from '@nx/js/src/utils/buildable-libs-utils';
-import { Plugin } from 'vite';
-import { nxViteBuildCoordinationPlugin } from './nx-vite-build-coordination.plugin';
-import { findFile } from '../src/utils/nx-tsconfig-paths-find-file';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { copyFileSync, existsSync } from 'node:fs';
+import { join, relative, resolve } from 'node:path';
+import {
+  ConfigLoaderSuccessResult,
+  createMatchPath,
+  loadConfig,
+  MatchPath,
+} from 'tsconfig-paths';
+import { Plugin } from 'vite';
+import { findFile } from '../src/utils/nx-tsconfig-paths-find-file';
 import { getProjectTsConfigPath } from '../src/utils/options-utils';
+import { nxViteBuildCoordinationPlugin } from './nx-vite-build-coordination.plugin';
 
 export interface nxViteTsPathsOptions {
   /**
@@ -95,11 +94,7 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
 
       if (!foundTsConfigPath) return;
 
-      if (
-        !options.buildLibsFromSource &&
-        !global.NX_GRAPH_CREATION &&
-        config.mode !== 'test'
-      ) {
+      if (!options.buildLibsFromSource && !global.NX_GRAPH_CREATION) {
         const projectGraph = await createProjectGraphAsync({
           exitOnError: false,
           resetDaemonClient: true,
@@ -107,7 +102,8 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
         // When using incremental building and the serve target is called
         // we need to get the deps for the 'build' target instead.
         const depsBuildTarget =
-          process.env.NX_TASK_TARGET_TARGET === 'serve'
+          process.env.NX_TASK_TARGET_TARGET === 'serve' ||
+          process.env.NX_TASK_TARGET_TARGET === 'test'
             ? 'build'
             : process.env.NX_TASK_TARGET_TARGET;
         const { dependencies } = calculateProjectBuildableDependencies(
@@ -118,16 +114,23 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
           depsBuildTarget,
           process.env.NX_TASK_TARGET_CONFIGURATION
         );
-        // This tsconfig is used via the Vite ts paths plugin.
-        // It can be also used by other user-defined Vite plugins (e.g. for creating type declaration files).
-        foundTsConfigPath = createTmpTsConfig(
-          foundTsConfigPath,
-          workspaceRoot,
-          relative(workspaceRoot, projectRoot),
-          dependencies,
-          true
-        );
 
+        if (process.env.NX_GENERATED_TSCONFIG_PATH) {
+          // This is needed for vitest browser mode because it runs two vite dev servers
+          // so we want to reuse the same tsconfig file for both servers
+          foundTsConfigPath = process.env.NX_GENERATED_TSCONFIG_PATH;
+        } else {
+          // This tsconfig is used via the Vite ts paths plugin.
+          // It can be also used by other user-defined Vite plugins (e.g. for creating type declaration files).
+          foundTsConfigPath = createTmpTsConfig(
+            foundTsConfigPath,
+            workspaceRoot,
+            relative(workspaceRoot, projectRoot),
+            dependencies,
+            true
+          );
+          process.env.NX_GENERATED_TSCONFIG_PATH = foundTsConfigPath;
+        }
         if (config.command === 'serve') {
           const buildableLibraryDependencies = dependencies
             .filter((dep) => dep.node.type === 'lib')
@@ -200,9 +203,9 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
       if (isUsingTsSolutionSetup()) return;
       const outDir = options.dir || 'dist';
       const src = resolve(projectRoot, 'package.json');
-      if (existsSync(src)) {
-        const dest = join(outDir, 'package.json');
+      const dest = join(outDir, 'package.json');
 
+      if (existsSync(src) && !existsSync(dest)) {
         try {
           copyFileSync(src, dest);
         } catch (err) {

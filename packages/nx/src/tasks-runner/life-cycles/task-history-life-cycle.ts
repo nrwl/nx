@@ -1,5 +1,7 @@
+import { readNxJson } from '../../config/nx-json';
 import { Task } from '../../config/task-graph';
 import { IS_WASM, type TaskRun as NativeTaskRun } from '../../native';
+import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { output } from '../../utils/output';
 import { serializeTarget } from '../../utils/serialize-target';
 import { getTaskHistory, TaskHistory } from '../../utils/task-history';
@@ -17,10 +19,9 @@ export function getTasksHistoryLifeCycle():
   | TaskHistoryLifeCycle
   | LegacyTaskHistoryLifeCycle {
   if (!tasksHistoryLifeCycle) {
-    tasksHistoryLifeCycle =
-      process.env.NX_DISABLE_DB !== 'true' && !IS_WASM
-        ? new TaskHistoryLifeCycle()
-        : new LegacyTaskHistoryLifeCycle();
+    tasksHistoryLifeCycle = !IS_WASM
+      ? new TaskHistoryLifeCycle()
+      : new LegacyTaskHistoryLifeCycle();
   }
 
   return tasksHistoryLifeCycle;
@@ -95,8 +96,12 @@ export class TaskHistoryLifeCycle implements LifeCycle {
               taskRun.target.configuration
             )}`;
           }),
-          '',
-          `Flaky tasks can disrupt your CI pipeline. Automatically retry them with Nx Cloud. Learn more at https://nx.dev/ci/features/flaky-tasks`,
+          ...(isNxCloudUsed(readNxJson())
+            ? []
+            : [
+                '',
+                `Flaky tasks can disrupt your CI pipeline. Automatically retry them with Nx Cloud. Learn more at https://nx.dev/ci/features/flaky-tasks`,
+              ]),
         ],
       });
     }
