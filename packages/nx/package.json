@@ -109,6 +109,7 @@
       "@nx/cypress",
       "@nx/detox",
       "@nx/devkit",
+      "@nx/dotnet",
       "@nx/esbuild",
       "@nx/eslint-plugin",
       "@nx/expo",

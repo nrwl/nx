@@ -12,7 +12,12 @@
       }
     },
     "build": {
-      "command": "node ./scripts/copy-readme.js maven packages/maven/README.md__tpl__ packages/maven/README.md",
+      "command": "node ./scripts/copy-readme.js maven packages/maven/readme-template.md packages/maven/README.md",
+      "inputs": [
+        "{projectRoot}/readme-template.md",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{workspaceRoot}/scripts/readme-fragments"
+      ],
       "outputs": ["{projectRoot}/README.md"]
     },
     "legacy-post-build": {

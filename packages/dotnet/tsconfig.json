@@ -7,10 +7,10 @@
   "include": [],
   "references": [
     {
-      "path": "../nx"
+      "path": "../devkit"
     },
     {
-      "path": "../devkit"
+      "path": "../nx"
     },
     {
       "path": "./tsconfig.lib.json"

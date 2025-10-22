@@ -11,4 +11,4 @@ mocks
 **/*.tgz
 vitest.config.mts
 test-utils
-README.md__tpl__
+readme-template.md

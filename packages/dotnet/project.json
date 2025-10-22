@@ -12,9 +12,13 @@
   },
   "targets": {
     "build": {
-      "command": "node ./scripts/copy-readme.js dotnet packages/dotnet/README.md__tmpl__ packages/dotnet/README.md",
+      "command": "node ./scripts/copy-readme.js dotnet packages/dotnet/readme-template.md packages/dotnet/README.md",
       "outputs": ["{projectRoot}/README.md"],
-      "inputs": ["{projectRoot}/README.md__tmpl__"],
+      "inputs": [
+        "{projectRoot}/readme-template.md",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{workspaceRoot}/scripts/readme-fragments"
+      ],
       "cache": true
     },
     "build-analyzer": {
