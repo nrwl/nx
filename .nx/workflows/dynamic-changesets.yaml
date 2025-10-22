@@ -9,6 +9,20 @@ assignment-rules:
       - agent: linux-extra-large
         parallelism: 1
 
+ - projects:
+      - nx
+      - workspace
+      - remix
+      - nx-maven-plugin
+    targets:
+      - install
+      - test
+    run-on:
+      - agent: linux-large
+        parallelism: 1
+      - agent: linux-extra-large
+        parallelism: 1
+
   - projects:
       - e2e-gradle
       - e2e-release
@@ -22,10 +36,8 @@ assignment-rules:
       - e2e-docker
       - e2e-js
       - e2e-nx-init
-      - nx-maven-plugin
     targets:
       - e2e-ci**
-      - install
     run-on:
       - agent: linux-large
         parallelism: 1
