@@ -493,13 +493,18 @@ export default class DefaultChangelogRenderer {
 
     const startOfBreakingChange = startIndex + breakingChangeIdentifier.length;
 
-    // Extract all text after BREAKING CHANGE: until we hit git metadata
+    // Extract all text after BREAKING CHANGE: until we hit a Co-authored-by section or git metadata
     let endOfBreakingChange = message.length;
 
-    // Look for the git metadata delimiter (a line with just ")
-    const gitMetadataMarker = message.indexOf('\n"', startOfBreakingChange);
-    if (gitMetadataMarker !== -1) {
-      endOfBreakingChange = gitMetadataMarker;
+    const coAuthoredBySection = message.indexOf('---------\n\nCo-authored-by:');
+    if (coAuthoredBySection !== -1) {
+      endOfBreakingChange = coAuthoredBySection;
+    } else {
+      // Look for the git metadata delimiter (a line with just ")
+      const gitMetadataMarker = message.indexOf('"\n', startOfBreakingChange);
+      if (gitMetadataMarker !== -1) {
+        endOfBreakingChange = gitMetadataMarker;
+      }
     }
 
     return message.substring(startOfBreakingChange, endOfBreakingChange).trim();
