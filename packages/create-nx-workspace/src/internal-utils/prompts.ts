@@ -90,20 +90,21 @@ export async function determineAiAgents(
 }
 
 async function aiAgentsPrompt(): Promise<Agent[]> {
-  return (
-    await enquirer.prompt<{ agents: Agent[] }>([
-      {
-        name: 'agents',
-        message:
-          'Which AI agents would you like to set up? (space to select, enter to confirm)',
-        type: 'multiselect',
-        choices: supportedAgents.map((a) => ({
-          name: a,
-          message: agentDisplayMap[a],
-        })),
-      },
-    ])
-  ).agents;
+  const promptConfig = {
+    name: 'agents',
+    message:
+      'Which AI agents would you like to set up? (space to select, enter to confirm)',
+    type: 'multiselect',
+    choices: supportedAgents.map((a) => ({
+      name: a,
+      message: agentDisplayMap[a],
+    })),
+    footer: () =>
+      chalk.dim(
+        "Multiple selections possible. If you don't want any agents, just hit enter."
+      ),
+  };
+  return (await enquirer.prompt<{ agents: Agent[] }>([promptConfig])).agents;
 }
 
 export async function determineDefaultBase(

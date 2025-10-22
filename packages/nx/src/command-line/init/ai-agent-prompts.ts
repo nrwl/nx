@@ -1,6 +1,7 @@
 import { prompt } from 'enquirer';
 import { isCI } from '../../utils/is-ci';
 import { Agent, agentDisplayMap, supportedAgents } from '../../ai/utils';
+import chalk = require('chalk');
 
 export async function determineAiAgents(
   aiAgents?: Agent[],
@@ -17,18 +18,19 @@ export async function determineAiAgents(
 }
 
 async function aiAgentsPrompt(): Promise<Agent[]> {
-  return (
-    await prompt<{ agents: Agent[] }>([
-      {
-        name: 'agents',
-        message:
-          'Which AI agents would you like to set up? (space to select, enter to confirm)',
-        type: 'multiselect',
-        choices: supportedAgents.map((a) => ({
-          name: a,
-          message: agentDisplayMap[a],
-        })),
-      },
-    ])
-  ).agents;
+  const promptConfig = {
+    name: 'agents',
+    message:
+      'Which AI agents would you like to set up? (space to select, enter to confirm)',
+    type: 'multiselect',
+    choices: supportedAgents.map((a) => ({
+      name: a,
+      message: agentDisplayMap[a],
+    })),
+    footer: () =>
+      chalk.dim(
+        "Multiple selections possible. If you don't want any agents, just hit enter."
+      ),
+  };
+  return (await prompt<{ agents: Agent[] }>([promptConfig])).agents;
 }
