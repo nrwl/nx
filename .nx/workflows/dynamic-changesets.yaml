@@ -32,8 +32,13 @@ assignment-rules:
       - e2e-js
       - e2e-nx-init
       - nx-maven-plugin
+      - nx
+      - next
+      - workspace
     targets:
       - e2e-ci**
+      - test
+      - install
     run-on:
       - agent: linux-large
         parallelism: 1
