@@ -384,7 +384,8 @@ export default class DefaultChangelogRenderer {
             extraLines
           : extraLines.filter((l) => l.trim().length > 0)
       )
-        .map((l) => `${indentation}${l}`)
+        // Only add indentation to lines with content
+        .map((l) => (l.trim().length > 0 ? `${indentation}${l}` : ''))
         .join('\n');
     }
 
