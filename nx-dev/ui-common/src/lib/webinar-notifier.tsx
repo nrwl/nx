@@ -61,12 +61,12 @@ export function WebinarNotifier(): ReactElement | null {
               aria-hidden="true"
               className="size-8 flex-shrink-0"
             />
-            <span>Unlock the Full 70% of Your CI Gains</span>
+            <span>Get 70% More Performance From Your CI</span>
           </motion.h3>
           <motion.div key="live-event" className="mt-4 space-y-4">
             <p className="mb-2 text-sm">
-              Join our Oct. 27th webinar to learn how modern CI should work—and
-              how Nx Cloud makes it happen.
+              Join Nx co-founders, Jeff Cross and Victor Savkin, in our Oct.
+              27th webinar. Learn how to optimize your CI beyond just caching.
             </p>
             <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-4">
               <a
