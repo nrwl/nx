@@ -22,7 +22,8 @@ export function spawnAndWait(command: string, args: string[], cwd: string) {
       windowsHide: false,
     });
 
-    childProcess.on('exit', (code) => {
+    childProcess.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code !== 0) {
         rej({ code: code });
       } else {
@@ -57,4 +58,17 @@ export function execAndWait(
       }
     );
   });
+}
+
+function signalToCode(signal: NodeJS.Signals | null): number {
+  switch (signal) {
+    case 'SIGHUP':
+      return 128 + 1;
+    case 'SIGINT':
+      return 128 + 2;
+    case 'SIGTERM':
+      return 128 + 15;
+    default:
+      return 128;
+  }
 }

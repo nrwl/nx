@@ -1,3 +1,4 @@
+import { signalToCode } from '@nx/devkit/internal';
 import { execSync, fork } from 'child_process';
 
 /**
@@ -92,7 +93,8 @@ export function startLocalRegistry({
       console.log('local registry error', err);
       reject(err);
     });
-    childProcess.on('exit', (code) => {
+    childProcess.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       console.log('local registry exit', code);
       if (code !== 0) {
         reject(code);
