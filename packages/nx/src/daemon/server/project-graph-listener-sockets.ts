@@ -2,6 +2,7 @@ import { Socket } from 'net';
 import { ProjectGraph } from '../../config/project-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
 import { handleResult } from './server';
+import { isV8SerializerEnabled } from '../is-v8-serializer-enabled';
 
 export let registeredProjectGraphListenerSockets: Socket[] = [];
 
@@ -24,11 +25,15 @@ export async function notifyProjectGraphListenerSockets(
 
   await Promise.all(
     registeredProjectGraphListenerSockets.map((socket) =>
-      handleResult(socket, 'PROJECT_GRAPH_UPDATED', () =>
-        Promise.resolve({
-          description: 'Project graph updated',
-          response: JSON.stringify({ projectGraph, sourceMaps }),
-        })
+      handleResult(
+        socket,
+        'PROJECT_GRAPH_UPDATED',
+        () =>
+          Promise.resolve({
+            description: 'Project graph updated',
+            response: { projectGraph, sourceMaps },
+          }),
+        isV8SerializerEnabled() ? 'v8' : 'json'
       )
     )
   );

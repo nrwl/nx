@@ -1,7 +1,11 @@
-import { randomUUID } from 'crypto';
+import { serialize } from 'v8';
 import { Socket } from 'net';
 import { performance } from 'perf_hooks';
-import { consumeMessagesFromSocket } from '../../utils/consume-messages-from-socket';
+import {
+  consumeMessagesFromSocket,
+  MESSAGE_END_SEQ,
+} from '../../utils/consume-messages-from-socket';
+import { isV8SerializerEnabled } from '../is-v8-serializer-enabled';
 
 export interface Message extends Record<string, any> {
   type: string;
@@ -12,9 +16,14 @@ export class DaemonSocketMessenger {
   constructor(private socket: Socket) {}
 
   async sendMessage(messageToDaemon: Message) {
-    this.socket.write(JSON.stringify(messageToDaemon));
+    if (isV8SerializerEnabled()) {
+      const serialized = serialize(messageToDaemon);
+      this.socket.write(serialized.toString('binary'));
+    } else {
+      this.socket.write(JSON.stringify(messageToDaemon));
+    }
     // send EOT to indicate that the message has been fully written
-    this.socket.write(String.fromCodePoint(4));
+    this.socket.write(MESSAGE_END_SEQ);
   }
 
   listen(
