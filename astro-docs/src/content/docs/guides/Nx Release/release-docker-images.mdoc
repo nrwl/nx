@@ -70,6 +70,9 @@ Configure Docker applications in a separate release group called `apps` so it do
 
 To learn more about release groups, see the [Release Groups](/docs/guides/nx-release/release-groups) guide.
 
+{% tabs syncKey="nx-release-configuration" %}
+{% tabitem label="Nx 22+" %}
+
 ```jsonc
 // nx.json
 {
@@ -98,6 +101,39 @@ To learn more about release groups, see the [Release Groups](/docs/guides/nx-rel
   }
 }
 ```
+
+{% /tabitem %}
+{% tabitem label="Nx < 22" %}
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "releaseTagPattern": "release/{projectName}/{version}",
+    "groups": {
+      "apps": {
+        "projects": ["api"],
+        "projectsRelationship": "independent",
+        "docker": {
+          // This should be true to skip versioning with other tools like NPM or Rust crates.
+          "skipVersionActions": true,
+          // You can also use a custom registry like `ghcr.io` for GitHub Container Registry.
+          // `docker.io` is the default so you could leave this out for Docker Hub.
+          "registryUrl": "docker.io",
+          // The pre-version command is run before versioning, useful for verifying the Docker image.
+          "groupPreVersionCommand": "echo BEFORE VERSIONING"
+        },
+        "changelog": {
+          "projectChangelogs": true
+        }
+      }
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
 
 The `release.groups.apps.docker.skipVersionActions` option should be set to `true` to skip versioning for other tooling such as NPM or Rust crates.
 
