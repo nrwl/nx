@@ -27,10 +27,7 @@ async function aiAgentsPrompt(): Promise<Agent[]> {
       name: a,
       message: agentDisplayMap[a],
     })),
-    footer: () =>
-      chalk.dim(
-        "Multiple selections possible. If you don't want any agents, just hit enter."
-      ),
+    footer: () => chalk.dim('You can select multiple or press Enter to skip.'),
   };
   return (await prompt<{ agents: Agent[] }>([promptConfig])).agents;
 }
