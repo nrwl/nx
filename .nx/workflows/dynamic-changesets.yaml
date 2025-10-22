@@ -9,7 +9,7 @@ assignment-rules:
       - agent: linux-extra-large
         parallelism: 1
 
- - projects:
+  - projects:
       - nx
       - workspace
       - remix
