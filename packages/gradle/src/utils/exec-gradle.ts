@@ -1,8 +1,9 @@
-import { AggregateCreateNodesError, workspaceRoot } from '@nx/devkit';
+import {AggregateCreateNodesError, NxJsonConfiguration, workspaceRoot} from '@nx/devkit';
 import { ExecFileOptions, execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join, isAbsolute } from 'node:path';
 import { LARGE_BUFFER } from 'nx/src/executors/run-commands/run-commands.impl';
+import {GradlePluginOptions} from "../plugin/utils/gradle-plugin-options";
 import {signalToCode} from "nx/src/utils/exit-codes";
 
 export const fileSeparator = process.platform.startsWith('win')
@@ -60,6 +61,19 @@ export function execGradleAsync(
       }
     });
   });
+}
+
+export function getCustomGradleInstallationPathFromPlugin(nxJson: NxJsonConfiguration): string | undefined {
+  const gradlePlugin = nxJson.plugins?.find((plugin) => {
+    if (typeof plugin === 'string') {
+      return plugin === '@nx/gradle' || plugin === '@nx/gradle/plugin';
+    }
+    return plugin.plugin === '@nx/gradle' || plugin.plugin === '@nx/gradle/plugin';
+  });
+
+  return gradlePlugin && typeof gradlePlugin !== 'string'
+      ? (gradlePlugin.options as GradlePluginOptions)?.customGradleInstallation
+      : undefined;
 }
 
 /**

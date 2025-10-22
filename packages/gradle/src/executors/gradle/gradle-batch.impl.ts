@@ -11,7 +11,7 @@ import {
 } from 'nx/src/executors/run-commands/run-commands.impl';
 import { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
 import { GradleExecutorSchema } from './schema';
-import { findGradlewFile } from '../../utils/exec-gradle';
+import {findGradlewFile, getCustomGradleInstallationPathFromPlugin} from '../../utils/exec-gradle';
 import { dirname, join } from 'path';
 import { execSync } from 'child_process';
 import {
@@ -23,6 +23,7 @@ import {
   getExcludeTasks,
   getGradleTaskNameWithNxTaskId,
 } from './get-exclude-task';
+import {GradlePluginOptions} from "../../plugin/utils/gradle-plugin-options";
 
 export const batchRunnerPath = join(
   __dirname,
@@ -38,7 +39,9 @@ export default async function gradleBatch(
   try {
     const projectName = taskGraph.tasks[taskGraph.roots[0]]?.target?.project;
     let projectRoot = context.projectGraph.nodes[projectName]?.data?.root ?? '';
-    let gradlewPath = findGradlewFile(join(projectRoot, 'project.json'), workspaceRoot); // find gradlew near project root
+    const customGradleInstallation = getCustomGradleInstallationPathFromPlugin(context.nxJsonConfiguration);
+
+    let gradlewPath = findGradlewFile(join(projectRoot, 'project.json'), workspaceRoot, customGradleInstallation); // find gradlew near project root
     gradlewPath = join(context.root, gradlewPath);
     const root = dirname(gradlewPath);
 
