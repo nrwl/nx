@@ -67,7 +67,12 @@
     },
     "targets": {
       "build": {
-        "command": "node ./scripts/copy-readme.js angular-rspack-compiler packages/angular-rspack-compiler/README.md__tpl__ packages/angular-rspack-compiler/README.md",
+        "command": "node ./scripts/copy-readme.js angular-rspack-compiler packages/angular-rspack-compiler/readme-template.md packages/angular-rspack-compiler/README.md",
+        "inputs": [
+          "{projectRoot}/readme-template.md",
+          "{workspaceRoot}/scripts/copy-readme.js",
+          "{workspaceRoot}/scripts/readme-fragments"
+        ],
         "outputs": [
           "{projectRoot}/README.md"
         ]

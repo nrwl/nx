@@ -30,7 +30,7 @@ import {
 import { getLocaleBaseHref } from '../utils/get-locale-base-href';
 import { addError, addWarning } from '../utils/rspack-diagnostics';
 import { assertNever } from '../utils/misc-helpers';
-import { rspackStatsLogger } from '../utils/stats';
+import { rspackStatsLogger, statsErrorsToString } from '../utils/stats';
 import { getStatsOptions } from '../config/config-utils/get-stats-options';
 
 const PLUGIN_NAME = 'AngularRspackPlugin';
@@ -143,6 +143,20 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     );
 
     compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
+      // Handle errors thrown by loaders that prevent sealing
+      compilation.hooks.afterSeal.tapAsync(PLUGIN_NAME, (callback) => {
+        if (compilation.errors.length > 0) {
+          const stats = compilation.getStats();
+          const compilationError = statsErrorsToString(
+            stats.toJson(),
+            getStatsOptions(this.#_options.verbose)
+          );
+          callback(new Error(compilationError));
+        } else {
+          callback();
+        }
+      });
+
       compilation.hooks.processAssets.tap(
         {
           name: PLUGIN_NAME,
@@ -287,6 +301,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           }
         }
       });
+
       compiler.hooks.afterDone.tap(PLUGIN_NAME, (stats) => {
         rspackStatsLogger(stats, getStatsOptions(this.#_options.verbose));
         if (stats.hasErrors()) {

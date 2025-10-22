@@ -1116,7 +1116,7 @@ async function generateChangelogForWorkspace({
     changes,
     changelogEntryVersion: releaseVersion.rawVersion,
     project: null,
-    isVersionPlans: false,
+    isVersionPlans: !!nxReleaseConfig.versionPlans,
     entryWhenNoChanges: config.entryWhenNoChanges,
     changelogRenderOptions: config.renderOptions,
     conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
@@ -1285,9 +1285,7 @@ async function generateChangelogForProjects({
           : false,
       changelogRenderOptions: config.renderOptions,
       isVersionPlans: !!releaseGroup.versionPlans,
-      conventionalCommitsConfig: releaseGroup.versionPlans
-        ? null
-        : nxReleaseConfig.conventionalCommits,
+      conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
       dependencyBumps: projectToAdditionalDependencyBumps.get(project.name),
       remoteReleaseClient,
     });

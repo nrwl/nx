@@ -75,6 +75,10 @@ If the `astro.config.mjs` for a project looks like our example in the previous s
 
 To create an inferred task, we need to export a `createNodesV2` function from the plugin's `index.ts` file. The entire file is shown below with inline comments to explain what is happening in each section.
 
+{% aside type="note" title="Supporting Multiple Nx Versions" %}
+Different Nx versions call different `createNodes` exports. If you need to support Nx versions before 21 see the [CreateNodes Compatibility Guide](/docs/extending-nx/createnodes-compatibility).
+{% /aside %}
+
 ```ts
 // src/index.ts
 import {

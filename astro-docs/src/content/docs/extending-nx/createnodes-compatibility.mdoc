@@ -1,0 +1,173 @@
+---
+title: CreateNodes API Compatibility
+description: Understand which createNodes API version is used by different Nx versions and how to write plugins that support multiple Nx versions.
+filter: 'type:Reference'
+---
+
+This is a reference for knowing how Nx versions and the `createNodes`/`createNodesV2` APIs interact. If you plan on supporting multiple Nx versions with a custom plugin, then it's important to know which APIs to use.
+
+## Which CreateNodes Version Does Nx Call?
+
+The following table shows which export Nx will call based on the Nx version:
+
+| Nx Version    | Calls `createNodes` | Calls `createNodesV2` | Nx Call Preference           |
+| ------------- | ------------------- | --------------------- | ---------------------------- |
+| 17.x - 19.1.x | Yes                 | No                    | Only v1 supported            |
+| 19.2.x - 20.x | Yes (fallback)      | Yes (preferred)       | Prefers v2, falls back to v1 |
+| 21.x          | No                  | Yes                   | Only v2 supported            |
+| 22.x+         | Yes (v2 signature)  | Yes                   | Both use v2 signature        |
+
+## Which Nx Versions Does My Plugin Support?
+
+> Note this is the same information as above, but presented as a lookup table for plugin authors.
+
+If you're a plugin author, this table shows which Nx versions your plugin will support based on which exports you provide:
+
+| Plugin Exports                            | Nx 17-19.1       | Nx 19.2-20       | Nx 21-21.x       | Nx 22+           |
+| ----------------------------------------- | ---------------- | ---------------- | ---------------- | ---------------- |
+| Only `createNodes` (v1)                   | ✅ Supported     | ✅ Supported     | ❌ Not Supported | ❌ Not Supported |
+| Only `createNodesV2`                      | ❌ Not Supported | ✅ Supported     | ✅ Supported     | ✅ Supported     |
+| Both `createNodes` (v1) & `createNodesV2` | ✅ Supported     | ✅ Supported     | ✅ Supported     | ✅ Supported     |
+| Both with v2 signature (Nx 22+)           | ❌ Not Supported | ❌ Not Supported | ✅ Supported     | ✅ Supported     |
+
+## Recommended Implementation Pattern
+
+### Plugin Support for Nx 21 and later
+
+For plugins targeting **Nx 21 and later**, the recommended pattern is to export both `createNodes` and `createNodesV2` using the same v2 implementation:
+
+```typescript
+// my-plugin/index.ts
+import {
+  CreateNodesV2,
+  CreateNodesContextV2,
+  createNodesFromFiles,
+} from '@nx/devkit';
+
+export interface MyPluginOptions {
+  // your options
+}
+
+// Export createNodes with v2 signature
+export const createNodes: CreateNodesV2<MyPluginOptions> = [
+  '**/some-config.json',
+  async (configFiles, options, context) => {
+    return await createNodesFromFiles(
+      (configFile, options, context) =>
+        createNodesInternal(configFile, options, context),
+      configFiles,
+      options,
+      context
+    );
+  },
+];
+
+// Re-export as createNodesV2
+export const createNodesV2 = createNodes;
+
+async function createNodesInternal(
+  configFilePath: string,
+  options: MyPluginOptions,
+  context: CreateNodesContextV2
+) {
+  // Your plugin logic here
+  return {
+    projects: {
+      // ...
+    },
+  };
+}
+```
+
+This pattern ensures your plugin works with both Nx 21 and Nx 22+.
+
+### Plugin Support for Nx 17 Through Nx 20
+
+If you need to support Nx versions 17-20, you'll need to provide separate implementations.
+In Nx 22 the type for v1 of the create nodes api are removed, you can inline the type to maintain type safety.
+
+```typescript
+// my-plugin/index.ts
+
+import {
+  CreateNodesV2,
+  CreateNodesContextV2,
+  CreateNodesResult,
+  createNodesFromFiles,
+} from '@nx/devkit';
+
+// inlined types for backwards compat to v1 of createNodes
+// removed in Nx 22
+export interface OldCreateNodesContext extends CreateNodesContextV2 {
+  /**
+   * The subset of configuration files which match the createNodes pattern
+   */
+  readonly configFiles: readonly string[];
+}
+
+type OldCreateNodes<T = unknown> = readonly [
+  projectFilePattern: string,
+  createNodesFunction: OldCreateNodesFunction<T>
+];
+
+export type OldCreateNodesFunction<T = unknown> = (
+  projectConfigurationFile: string,
+  options: T | undefined,
+  context: OldCreateNodesContext
+) => CreateNodesResult | Promise<CreateNodesResult>;
+
+export interface MyPluginOptions {
+  // your options
+}
+
+// V1 API for Nx 17-20
+
+export const createNodes: OldCreateNodes<MyPluginOptions> = [
+  '**/my-config.json',
+  (configFile, options, context: OldCreateNodesContext) => {
+    // V1 implementation - processes one file at a time
+    return createNodesInternal(configFile, options, context);
+  },
+];
+
+// V2 API for Nx 19.2+
+export const createNodesV2: CreateNodesV2<MyPluginOptions> = [
+  '**/my-config.json',
+
+  async (configFiles, options, context: CreateNodesContextV2) => {
+    return await createNodesFromFiles(
+      (configFile, options, context) =>
+        createNodesInternal(configFile, options, context),
+      configFiles,
+      options,
+      context
+    );
+  },
+];
+
+function createNodesInternal(
+  configFilePath: string,
+  options: MyPluginOptions,
+  context: OldCreateNodesContext | CreateNodesContextV2
+) {
+  // Shared logic that works with both APIs
+  return {
+    projects: {
+      // ...
+    },
+  };
+}
+```
+
+## Future Deprecation Timeline
+
+Nx is standardizing on the v2 API. Here's the planned timeline:
+
+- **Nx 22**: Both `createNodes` and `createNodesV2` can be exported with v2 signature. `createNodes` re-exported as `createNodesV2`.
+- **Nx 23**: The `createNodesV2` export will be marked as deprecated in TypeScript types. Use `createNodes` with v2 signature instead.
+
+## Related Documentation
+
+- [Extending the Project Graph](/docs/extending-nx/project-graph-plugins) - Learn how to create project graph plugins
+- [Integrate a New Tool with a Tooling Plugin](/docs/extending-nx/tooling-plugin) - Tutorial for creating a complete plugin
+- [CreateNodesV2 API Reference](/docs/reference/devkit/CreateNodesV2) - Detailed API documentation

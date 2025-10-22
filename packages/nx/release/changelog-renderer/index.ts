@@ -1,7 +1,6 @@
 import { major } from 'semver';
 import type { ChangelogChange } from '../../src/command-line/release/changelog';
 import type { NxReleaseConfig } from '../../src/command-line/release/config/config';
-import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from '../../src/command-line/release/config/conventional-commits';
 import type { RemoteReleaseClient } from '../../src/command-line/release/utils/remote-release-clients/remote-release-client';
 
 /**
@@ -61,9 +60,7 @@ export default class DefaultChangelogRenderer {
   protected changelogRenderOptions: DefaultChangelogRenderOptions;
   protected isVersionPlans: boolean;
   protected dependencyBumps?: DependencyBump[];
-  protected conventionalCommitsConfig:
-    | NxReleaseConfig['conventionalCommits']
-    | null;
+  protected conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'];
   protected relevantChanges: ChangelogChange[];
   protected breakingChanges: string[];
   protected additionalChangesForAuthorsSection: ChangelogChange[];
@@ -81,7 +78,7 @@ export default class DefaultChangelogRenderer {
    * @param {boolean} config.isVersionPlans Whether or not Nx release version plans are the source of truth for the changelog entry
    * @param {ChangelogRenderOptions} config.changelogRenderOptions The options specific to the ChangelogRenderer implementation
    * @param {DependencyBump[]} config.dependencyBumps Optional list of additional dependency bumps that occurred as part of the release, outside of the change data
-   * @param {NxReleaseConfig['conventionalCommits'] | null} config.conventionalCommitsConfig The configuration for conventional commits, or null if version plans are being used
+   * @param {NxReleaseConfig['conventionalCommits']} config.conventionalCommitsConfig The configuration for conventional commits
    * @param {RemoteReleaseClient} config.remoteReleaseClient The remote release client to use for formatting references
    */
   constructor(config: {
@@ -92,7 +89,7 @@ export default class DefaultChangelogRenderer {
     isVersionPlans: boolean;
     changelogRenderOptions: DefaultChangelogRenderOptions;
     dependencyBumps?: DependencyBump[];
-    conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] | null;
+    conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'];
     remoteReleaseClient: RemoteReleaseClient<unknown>;
   }) {
     this.changes = this.filterChanges(config.changes, config.project);
@@ -184,13 +181,6 @@ export default class DefaultChangelogRenderer {
     }
 
     if (this.isVersionPlans) {
-      this.conventionalCommitsConfig = {
-        types: {
-          feat: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.feat,
-          fix: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.fix,
-        },
-      };
-
       for (let i = this.relevantChanges.length - 1; i >= 0; i--) {
         if (this.relevantChanges[i].isBreaking) {
           const change = this.relevantChanges[i];
@@ -385,9 +375,14 @@ export default class DefaultChangelogRenderer {
     if (description.includes('\n')) {
       [description, ...extraLines] = description.split('\n');
       const indentation = '  ';
-      extraLinesStr = extraLines
-        .filter((l) => l.trim().length > 0)
-        .map((l) => `${indentation}${l}`)
+      extraLinesStr = (
+        this.isVersionPlans
+          ? // Preserve newlines for version plan sources to allow author to maintain maximum control over final contents
+            extraLines
+          : extraLines.filter((l) => l.trim().length > 0)
+      )
+        // Only add indentation to lines with content
+        .map((l) => (l.trim().length > 0 ? `${indentation}${l}` : ''))
         .join('\n');
     }
 
@@ -408,7 +403,7 @@ export default class DefaultChangelogRenderer {
       );
     }
     if (extraLinesStr) {
-      changeLine += '\n\n' + extraLinesStr;
+      changeLine += (this.isVersionPlans ? '\n' : '\n\n') + extraLinesStr;
     }
     return changeLine;
   }
@@ -498,13 +493,18 @@ export default class DefaultChangelogRenderer {
 
     const startOfBreakingChange = startIndex + breakingChangeIdentifier.length;
 
-    // Extract all text after BREAKING CHANGE: until we hit git metadata
+    // Extract all text after BREAKING CHANGE: until we hit a Co-authored-by section or git metadata
     let endOfBreakingChange = message.length;
 
-    // Look for the git metadata delimiter (a line with just ")
-    const gitMetadataMarker = message.indexOf('\n"', startOfBreakingChange);
-    if (gitMetadataMarker !== -1) {
-      endOfBreakingChange = gitMetadataMarker;
+    const coAuthoredBySection = message.indexOf('---------\n\nCo-authored-by:');
+    if (coAuthoredBySection !== -1) {
+      endOfBreakingChange = coAuthoredBySection;
+    } else {
+      // Look for the git metadata delimiter (a line with just ")
+      const gitMetadataMarker = message.indexOf('"\n', startOfBreakingChange);
+      if (gitMetadataMarker !== -1) {
+        endOfBreakingChange = gitMetadataMarker;
+      }
     }
 
     return message.substring(startOfBreakingChange, endOfBreakingChange).trim();
