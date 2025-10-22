@@ -880,6 +880,135 @@ describe('ChangelogRenderer', () => {
           - Test User"
         `);
       });
+
+      it('should handle complex real-world commit messages from the Nx repository', async () => {
+        const realWorldCommitMessage: ChangelogChange = {
+          shortHash: '54f2f6ed1',
+          authors: [{ name: 'James Henry', email: 'james@henry.sc' }],
+          githubReferences: [
+            { type: 'pull-request', value: '#12345' },
+            { value: 'abc123', type: 'hash' },
+          ],
+          isBreaking: true,
+          revertedHashes: [],
+          affectedProjects: ['*'],
+          type: 'fix',
+          scope: 'release',
+          description: 'improve release configuration',
+          body: `## Current Behavior
+
+The Nx release configuration currently uses 5 separate flat properties
+for release tag
+  configuration:
+  - \`releaseTagPattern\`
+  - \`releaseTagPatternCheckAllBranchesWhen\`
+  - \`releaseTagPatternRequireSemver\`
+  - \`releaseTagPatternPreferDockerVersion\`
+  - \`releaseTagPatternStrictPreid\`
+
+This flat structure makes the configuration verbose and harder to
+organize, especially
+  as more release tag options are added.
+
+  Example of current configuration:
+  \`\`\`json
+  {
+    "release": {
+      "releaseTagPattern": "{projectName}@{version}",
+      "releaseTagPatternRequireSemver": true,
+      "releaseTagPatternStrictPreid": false
+    }
+  }
+\`\`\`
+
+### Expected Behavior
+
+  After this PR, all release tag-related configuration is consolidated into a single
+  nested releaseTag object with the following structure:
+  - releaseTag.pattern (was releaseTagPattern)
+  - releaseTag.checkAllBranchesWhen (was releaseTagPatternCheckAllBranchesWhen)
+  - releaseTag.requireSemver (was releaseTagPatternRequireSemver)
+  - releaseTag.preferDockerVersion (was releaseTagPatternPreferDockerVersion)
+  - releaseTag.strictPreid (was releaseTagPatternStrictPreid)
+
+  Example of new configuration:
+\`\`\`
+  {
+    "release": {
+      "releaseTag": {
+        "pattern": "{projectName}@{version}",
+        "requireSemver": true,
+        "strictPreid": false
+      }
+    }
+  }
+\`\`\`
+
+  Migration & Backward Compatibility:
+  - An automatic migration transforms old configurations to the new structure
+  - Old flat properties are deprecated but still supported during the migration period
+  - The deprecated properties will be removed in Nx 23
+  - All internal code has been updated to use the new nested structure
+
+BREAKING CHANGE: This is a breaking change in the preferred configuration structure. Existing configurations will continue to work through the migration period, but users should update to the new nested format.
+
+---------
+
+Co-authored-by: nx-cloud[bot] <71083854+nx-cloud[bot]@users.noreply.github.com>"
+
+M	docs/generated/manifests/new-nx-api.json
+M	docs/generated/packages-metadata.json
+A	docs/generated/packages/nx/migrations/22-0-0-consolidate-release-tag-config.json
+M	e2e/release/src/first-release.test.ts
+M	e2e/release/src/independent-projects.workspaces.test.ts
+M	packages/nx/migrations.json
+M	packages/nx/schemas/nx-schema.json
+M	packages/nx/src/command-line/release/changelog.ts
+M	packages/nx/src/command-line/release/config/config.spec.ts
+M	packages/nx/src/command-line/release/config/config.ts
+M	packages/nx/src/command-line/release/config/filter-release-groups.spec.ts
+M	packages/nx/src/command-line/release/utils/git.spec.ts
+M	packages/nx/src/command-line/release/utils/git.ts
+M	packages/nx/src/command-line/release/utils/release-graph.ts
+M	packages/nx/src/command-line/release/utils/shared.spec.ts
+M	packages/nx/src/command-line/release/utils/shared.ts
+M	packages/nx/src/command-line/release/utils/version-plan-utils.spec.ts
+M	packages/nx/src/config/nx-json.ts
+A	packages/nx/src/migrations/update-22-0-0/consolidate-release-tag-config.spec.ts
+A	packages/nx/src/migrations/update-22-0-0/consolidate-release-tag-config.ts
+"`,
+        };
+
+        const markdown = await new DefaultChangelogRenderer({
+          changes: [realWorldCommitMessage],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: {
+            authors: true,
+            commitReferences: true,
+          },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        }).render();
+
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🩹 Fixes
+
+          - ⚠️  **release:** improve release configuration ([#12345](https://example.com/example/example/pull/12345))
+
+          ### ⚠️  Breaking Changes
+
+          - **release:** This is a breaking change in the preferred configuration structure. Existing configurations will continue to work through the migration period, but users should update to the new nested format. ([#12345](https://example.com/example/example/pull/12345))
+
+          ### ❤️ Thank You
+
+          - James Henry"
+        `);
+      });
     });
 
     describe('dependency bumps', () => {
