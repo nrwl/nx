@@ -13,6 +13,7 @@ data class MojoAnalysis(
   val dependentTaskOutputInputs: Set<DependentTaskOutputs>,
   val outputs: Set<String>,
   val isCacheable: Boolean,
+  val isContinuous: Boolean,
   val isThreadSafe: Boolean,
 )
 
@@ -47,9 +48,11 @@ class MojoAnalyzer(
 
     val isCacheable = isPluginCacheable(pluginDescriptor, mojoDescriptor)
 
+    val isContinuous = isPluginContinuous(pluginDescriptor, mojoDescriptor)
+
     if (!isCacheable) {
       log.info("${pluginDescriptor.artifactId}:$goal is not cacheable")
-      return MojoAnalysis(emptySet(), emptySet(), emptySet(), false, isThreadSafe)
+      return MojoAnalysis(emptySet(), emptySet(), emptySet(), false, isContinuous, isThreadSafe)
     }
 
     val (inputs, dependentTaskOutputInputs) = getInputs(pluginDescriptor, mojoDescriptor, project)
@@ -60,6 +63,7 @@ class MojoAnalyzer(
       dependentTaskOutputInputs,
       outputs,
       true,
+      isContinuous,
       isThreadSafe
     )
   }
@@ -172,6 +176,10 @@ class MojoAnalyzer(
     }
 
     return outputs
+  }
+
+  private fun isPluginContinuous(pluginDescriptor: PluginDescriptor, mojoDescriptor: MojoDescriptor): Boolean {
+    return cacheConfig.continuous.contains("${pluginDescriptor.artifactId}:${mojoDescriptor.goal}")
   }
 
   private fun isPluginCacheable(pluginDescriptor: PluginDescriptor, mojoDescriptor: MojoDescriptor): Boolean {
