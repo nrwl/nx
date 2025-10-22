@@ -175,7 +175,7 @@ export function findGradlewUsingCustomInstallationPath(
       [
         customGradleInstallationPath,
         new Error(
-          `No Gradlew file found at ${customGradleInstallationPath}. Run "gradle init"`
+          `No Gradlew file found at custom gradle installation path: ${customGradleInstallationPath}. Run "gradle init"`
         ),
       ],
     ],

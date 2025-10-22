@@ -34,10 +34,6 @@
       "default": true,
       "x-priority": "internal"
     },
-    "customGradleInstallation": {
-      "type": "string",
-      "description": "Path to a custom Gradle installation directory containing the gradlew file. Can be absolute or relative to workspace root."
-    },
     "__unparsed__": {
       "type": "array",
       "items": {
