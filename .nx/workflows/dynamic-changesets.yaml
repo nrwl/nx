@@ -1,19 +1,22 @@
 distribute-on:
-  default: auto linux-large, 1 linux-extra-large
+  default: auto linux-large, 3 linux-extra-large
 assignment-rules:
-  # e2e-release tests must run sequentially due to shared git state and publishing operations
-  - projects:
-      - e2e-release
-    targets:
-      - e2e-ci**
-    run-on:
-      - agent: linux-large
-        parallelism: 1
-
   - projects:
       - e2e-gradle
     targets:
       - e2e-ci**
+    run-on:
+      - agent: linux-extra-large
+        parallelism: 1
+
+  - projects:
+      - nx
+      - workspace
+      - remix
+      - nx-maven-plugin
+    targets:
+      - install
+      - test
     run-on:
       - agent: linux-large
         parallelism: 1
@@ -21,18 +24,20 @@ assignment-rules:
         parallelism: 1
 
   - projects:
+      - e2e-gradle
+      - e2e-release
+      - e2e-angular
       - e2e-react
       - e2e-next
       - e2e-web
+      - e2e-eslint
+      - e2e-remix
+      - e2e-cypress
+      - e2e-docker
+      - e2e-js
+      - e2e-nx-init
     targets:
-      - e2e-ci**react-package**
-      - e2e-ci**react.test**
-      - e2e-ci**react-router-ts-solution**
-      - e2e-ci**next-e2e-and-snapshots**
-      - e2e-ci**next-generation**
-      - e2e-ci**next-ts-solutions**
-      - e2e-ci**next-webpack**
-      - e2e-ci**web**
+      - e2e-ci**
     run-on:
       - agent: linux-large
         parallelism: 1
@@ -69,6 +74,8 @@ assignment-rules:
       - lint
     run-on:
       - agent: linux-large
+        parallelism: 6
+      - agent: linux-extra-large
         parallelism: 6
 
   - targets:
