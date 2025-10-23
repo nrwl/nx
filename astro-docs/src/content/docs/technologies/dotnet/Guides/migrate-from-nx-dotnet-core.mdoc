@@ -8,45 +8,21 @@ filter: 'type:Guides'
 
 This guide provides a streamlined migration path from the community `@nx-dotnet/core` plugin to Nx's official `@nx/dotnet` plugin.
 
-{% callout type="note" title="Plugin Status" %}
+{% aside type="note" title="Plugin Status" %}
 The `@nx-dotnet/core` plugin is deprecated in favor of the official `@nx/dotnet` plugin (available in Nx 22+), which is maintained by the Nx team and integrated directly into the Nx repository.
-{% /callout %}
+{% /aside %}
+
 
 ## Why Migrate?
 
 The official `@nx/dotnet` plugin represents a natural evolution, building on lessons learned from the community plugin while embracing native .NET workflows:
 
-### Better Performance
-
-Significant performance improvements through efficient MSBuild analysis:
-
-- **Efficient dependency detection** using MSBuild APIs instead of repeated CLI calls
-- **Smaller footprint** with minimal dependencies (2 packages vs 12+)
-
-### Simpler Architecture
-
-- **Embraces native .NET tooling**: Use `dotnet new`, `dotnet add`, etc. directly
-- **Command-based targets**: Transparent `dotnet` commands instead of custom executors
-- **Zero configuration**: Automatic project detection without custom config files
-- **Minimal learning curve**: If you know the .NET CLI, you're already an expert
-
-### Production-Ready Support
-
-- **Official Nx support**: Maintained by the Nx core team
-- **Always compatible**: Integrated into Nx releases, no version lag
-- **MSBuild accuracy**: Uses Microsoft's official APIs for more accurate project analysis
-- **Battle-tested**: Used in production Nx workspaces
-
-### Key Design Decisions
-
-The official plugin takes a streamlined approach:
-
-- **Project inference**: Automatic detection of .NET projects without configuration
+- **Project inference**: Automatic detection of .NET projects without configuration with [Nx inferred targets](/docs/guides/tasks--caching/convert-to-inferred)
 - **MSBuild integration**: Direct use of Microsoft's APIs for accurate dependency analysis
 - **Native CLI first**: Uses `dotnet` commands directly instead of custom wrappers
 - **Minimal abstraction**: Simpler implementation with fewer dependencies
 
-This results in a faster, more reliable, and easier to maintain solution.
+This results in a faster, and more reliable .NET plugin.
 
 ## Prerequisites
 
@@ -88,9 +64,9 @@ The @nx-dotnet/core plugin configuration can be in one of two places:
 }
 ```
 
-{% callout type="note" title="No Configuration?" %}
+{% aside type="note" title="No Configuration?" %}
 If you don't have custom configuration in either location, that's fine! The plugin works with defaults, and migration will be even simpler.
-{% /callout %}
+{% /aside %}
 
 ## Migration Steps
 
@@ -102,9 +78,9 @@ nx add @nx/dotnet
 
 This automatically:
 
-- Adds `@nx/dotnet` to `package.json`
+- Adds `@nx/dotnet` as a dependency
 - Registers the plugin in `nx.json`
-- Configures `production` named inputs
+- Configures target inputs
 - Updates `.gitignore`
 
 ### 2. Remove @nx-dotnet/core
@@ -113,7 +89,7 @@ This automatically:
 npm uninstall @nx-dotnet/core @nx-dotnet/utils @nx-dotnet/dotnet
 ```
 
-Then clean up your configuration:
+Clean up the relevant workspace configurations:
 
 - Remove `@nx-dotnet/core` from the `plugins` array in `nx.json` (if present)
 - Delete `.nx-dotnet.rc.json` (if it exists)
@@ -139,6 +115,7 @@ Move any customized target configurations from your @nx-dotnet/core config to th
 **After** (in `nx.json`):
 
 ```json
+// nx.json
 {
   "plugins": [
     {
@@ -167,7 +144,7 @@ The `nx graph` command should show all your .NET projects with their dependencie
 
 ## Key Workflow Changes
 
-Here's what changes in your day-to-day development workflow:
+Here's what changes in your day-to-day usage with the new `@nx/dotnet` plugin:
 
 | Task                      | Old (@nx-dotnet/core)                                          | New (@nx/dotnet)                                |
 | ------------------------- | -------------------------------------------------------------- | ----------------------------------------------- |
@@ -179,7 +156,7 @@ Here's what changes in your day-to-day development workflow:
 | **Run tests**             | `nx test my-api`                                               | `nx test my-api` ✅ (same)                      |
 | **Serve/watch**           | `nx serve my-api`                                              | `dotnet watch run` (or configure custom target) |
 
-### Targets Generated
+### Default Targets Generated
 
 The plugin automatically creates these targets for .NET projects:
 
@@ -192,10 +169,12 @@ The plugin automatically creates these targets for .NET projects:
 | `publish` | Executable projects | `dotnet publish`                              |
 | `pack`    | Library projects    | `dotnet pack`                                 |
 
-{% callout type="note" title="Missing Targets" %}
-The `serve` and `format` targets are not automatically created. `serve` defaults to a target named `watch` now. To run it, you'd need to run something like `nx watch my-api run` or `nx run my-api:watch run`. To configure the watch target to act like `serve`, you could set the following in `nx.json`:
+### Adding Back Missing Targets
+
+The `serve` and `format` targets are not automatically created. `serve` defaults to a target named `watch` now. To run it, you'd need to run `nx run my-api:watch run`. To configure the watch target to act like `serve`, you could set the following in `nx.json`:
 
 ```json
+// nx.json
 {
   "plugins": [
     {
@@ -209,11 +188,10 @@ The `serve` and `format` targets are not automatically created. `serve` defaults
     }
   ]
 }
+
 ```
 
 The `format` target is not present by default. You should add it as a custom target if desired.
-
-{% /callout %}
 
 ## Advanced Migration Scenarios
 
@@ -224,6 +202,7 @@ If you have `project.json` files that explicitly configure @nx-dotnet/core execu
 **Before** (`project.json`):
 
 ```json
+// project.json
 {
   "name": "my-api",
   "targets": {
@@ -253,6 +232,7 @@ If you have `project.json` files that explicitly configure @nx-dotnet/core execu
 **After** (`project.json`):
 
 ```json
+// project.json
 {
   "name": "my-api",
   "targets": {
@@ -279,9 +259,9 @@ If you have `project.json` files that explicitly configure @nx-dotnet/core execu
 }
 ```
 
-{% callout type="note" title="Automatic Target Inference" %}
-In most cases, you can delete these `project.json` files entirely. The @nx/dotnet plugin will automatically infer the correct targets based on your `.csproj` files. Only keep custom `project.json` configurations if you need non-standard options.
-{% /callout %}
+{% aside type="tip" title="Automatic Target Inference" %}
+In most cases, you can delete these `project.json` files entirely. The @nx/dotnet plugin will [automatically infer](/docs/guides/tasks--caching/convert-to-inferred) the correct targets based on your `.csproj` files. Only keep custom `project.json` configurations if you need non-standard options.
+{% /aside %}
 
 ### Migrating from `inferProjects: false`
 
@@ -290,7 +270,7 @@ If you previously set `inferProjects: false` in your @nx-dotnet/core config, thi
 **Why this changed:**
 
 - Project inference is a core feature of how Nx plugins work
-- Manual project management doesn't align with Nx's automatic detection model
+- Manual project management doesn't align with Nx's preferred automatic detection model
 - Maintaining explicit project configurations is error-prone
 
 **Migration path:**
@@ -299,6 +279,7 @@ If you previously set `inferProjects: false` in your @nx-dotnet/core config, thi
 
    - Use the `exclude` property in the plugin configuration:
      ```json
+     // nx.json
      {
        "plugins": [
          {
@@ -323,7 +304,7 @@ If you previously set `inferProjects: false` in your @nx-dotnet/core config, thi
 
 ### Module Boundaries → Nx Conformance
 
-If you used `moduleBoundaries` in your @nx-dotnet/core config, you may want to migrate to [Nx Conformance rules](https://nx.dev/docs/enterprise/powerpack/conformance)
+If you used `moduleBoundaries` in your @nx-dotnet/core config, you may want to migrate to [Nx Conformance rules](/docs/enterprise/powerpack/conformance)
 
 The script used to evaluate module boundaries is missing several features from the eslint and conformance implementations, and is not present in the new plugin. If you wish to continue using it, you'll need to inline the implementation in your repository and update the path in `Directory.build.targets`. Otherwise, you should remove the target from `Directory.build.targets`.
 
@@ -334,6 +315,7 @@ Replace the `sync` generator with MSBuild's [Central Package Management](https:/
 Create `Directory.Packages.props` at workspace root:
 
 ```xml
+// Directory.Packages.props
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
@@ -347,12 +329,9 @@ Create `Directory.Packages.props` at workspace root:
 
 Update project files to remove version attributes:
 
-```xml
-<!-- Before -->
-<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-
-<!-- After -->
-<PackageReference Include="Newtonsoft.Json" />
+```diff {% lang="xml" %}
+- <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
++ <PackageReference Include="Newtonsoft.Json" />
 ```
 
 ## Testing the Migration
@@ -415,7 +394,7 @@ nx run-many -t test
 **Symptom**: Project names don't match expectations
 
 **Solution**:
-Add `<Nx><Name></Name></Nx>ProjectName` property to your `.csproj` file:
+Add a `Name` property to your `.csproj` file under the `Nx` property group:
 
 ```xml
 <PropertyGroup>
@@ -429,15 +408,15 @@ Add `<Nx><Name></Name></Nx>ProjectName` property to your `.csproj` file:
 
 After completing the migration:
 
-- Review the [incremental builds guide](./incremental-builds) to understand how `--no-dependencies` optimizes builds
-- Configure [Nx Cloud](https://nx.app) for distributed caching across your team and CI
+- Review the [incremental builds guide](/technologies/dotnet/Guides/incremental-builds) to understand how `--no-dependencies` optimizes builds
+- Configure [Nx Cloud](https://nx.dev/nx-cloud?utm_source=nx.dev&utm_medium=dotnet-migration) for improved repo experience for your team and CI
 - Set up custom targets for `serve`, `lint`, or other specialized tasks as needed
 - Update CI/CD pipelines to ensure .NET SDK 8.0+ is installed
 
 ## Additional Resources
 
-- [Nx .NET Plugin Documentation](https://nx.dev/nx-api/dotnet)
-- [Nx Conformance](https://nx.dev/concepts/conformance)
+- [Nx .NET Plugin Documentation](/docs/technologies/dotnet/introduction)
+- [Nx Conformance](/docs/enterprise/powerpack/conformance)
 - [Central Package Management](https://learn.microsoft.com/nuget/consume-packages/central-package-management)
 - [@nx-dotnet/core Documentation](https://www.nx-dotnet.com/)
 
