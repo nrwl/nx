@@ -458,10 +458,10 @@ class ProcessTaskUtilsTest {
     val gitignore = java.io.File(project.rootDir, ".gitignore")
     gitignore.writeText(
         """
-            build
-            .gradle
-            *.log
-            dist
+        build
+        .gradle
+        *.log
+        dist
         """
             .trimIndent())
 
@@ -469,10 +469,10 @@ class ProcessTaskUtilsTest {
 
     // Add inputs with mixed types
     val sourceFile = java.io.File("$workspaceRoot/src/main.kt") // Not ignored - should be input
-    val buildFile =
-        java.io.File("$workspaceRoot/build/classes/Main.class") // Ignored - should be
+    val buildFile = java.io.File("$workspaceRoot/build/classes/Main.class") // Ignored - should be
     // dependentTasksOutputFiles
-    val logFile = java.io.File("$workspaceRoot/app.log") // Ignored - should be dependentTasksOutputFiles
+    val logFile =
+        java.io.File("$workspaceRoot/app.log") // Ignored - should be dependentTasksOutputFiles
     val configFile =
         java.io.File("$workspaceRoot/config/app.properties") // Not ignored - should be input
 
@@ -496,7 +496,9 @@ class ProcessTaskUtilsTest {
 
     // Log file should be dependentTasksOutputFiles (matches gitignore)
     assertTrue(
-        result.any { it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("log") })
+        result.any {
+          it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("log")
+        })
   }
 
   @Test
@@ -509,8 +511,8 @@ class ProcessTaskUtilsTest {
     val gitignore = java.io.File(project.rootDir, ".gitignore")
     gitignore.writeText(
         """
-            target
-            dist
+        target
+        dist
         """
             .trimIndent())
 

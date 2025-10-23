@@ -88,7 +88,9 @@ fun getGradlewCommand(): String {
 
 /**
  * Cache the gitignore classifier per workspace root to avoid recreating it for every task
- * TODO(lourw): refactor this out. The structure of this plugin should be refactored to use dependency injection rather than maintaining a cached instance
+ *
+ * TODO(lourw): refactor this out. The structure of this plugin should be refactored to use
+ *   dependency injection rather than maintaining a cached instance
  */
 private val gitignoreClassifierCache = mutableMapOf<String, GitIgnoreClassifier>()
 
@@ -113,9 +115,10 @@ fun getInputsForTask(
     val externalDependencies = mutableListOf<String>()
 
     // Get or create cached classifier for this workspace
-    val classifier = gitignoreClassifierCache.getOrPut(workspaceRoot) {
-      GitIgnoreClassifier(File(workspaceRoot))
-    }
+    val classifier =
+        gitignoreClassifierCache.getOrPut(workspaceRoot) {
+          GitIgnoreClassifier(File(workspaceRoot))
+        }
 
     // Step 1: Collect outputs from dependent tasks (always treated as dependentTasksOutputFiles)
     val tasksToProcess = dependsOnTasks ?: getDependsOnTask(task)
@@ -136,7 +139,8 @@ fun getInputsForTask(
         // File is outside workspace - treat as external dependency
         relativePath == null -> {
           try {
-            val externalDep = getExternalDepFromInputFile(inputFile.path, externalNodes, task.logger)
+            val externalDep =
+                getExternalDepFromInputFile(inputFile.path, externalNodes, task.logger)
             externalDep?.let { externalDependencies.add(it) }
           } catch (e: Exception) {
             task.logger.info("Error resolving external dependency for ${inputFile.path}: $e")
@@ -169,16 +173,12 @@ fun getInputsForTask(
   }
 }
 
-/**
- * Checks if a file is within the workspace.
- */
+/** Checks if a file is within the workspace. */
 private fun isFileInWorkspace(file: File, workspaceRoot: String): Boolean {
   return file.path.startsWith(workspaceRoot + File.separator)
 }
 
-/**
- * Converts a file to a relative path. If it's a directory, returns a glob pattern.
- */
+/** Converts a file to a relative path. If it's a directory, returns a glob pattern. */
 private fun toRelativePathOrGlob(file: File, workspaceRoot: String): String {
   val relativePath = file.path.substring(workspaceRoot.length + 1)
   val isFile = file.name.contains('.') || (file.exists() && file.isFile)
