@@ -20,7 +20,6 @@ The official `@nx/dotnet` plugin represents a natural evolution, building on les
 
 Significant performance improvements through efficient MSBuild analysis:
 
-- **5-7x faster** graph inference (400ms vs 2.1s for 50 projects)
 - **Efficient dependency detection** using MSBuild APIs instead of repeated CLI calls
 - **Smaller footprint** with minimal dependencies (2 packages vs 12+)
 
@@ -35,7 +34,7 @@ Significant performance improvements through efficient MSBuild analysis:
 
 - **Official Nx support**: Maintained by the Nx core team
 - **Always compatible**: Integrated into Nx releases, no version lag
-- **MSBuild accuracy**: Uses Microsoft's official APIs for 100% accurate project analysis
+- **MSBuild accuracy**: Uses Microsoft's official APIs for more accurate project analysis
 - **Battle-tested**: Used in production Nx workspaces
 
 ### Key Design Decisions
@@ -416,11 +415,13 @@ nx run-many -t test
 **Symptom**: Project names don't match expectations
 
 **Solution**:
-Add `NxProjectName` property to your `.csproj` file:
+Add `<Nx><Name></Name></Nx>ProjectName` property to your `.csproj` file:
 
 ```xml
 <PropertyGroup>
-  <NxProjectName>my-custom-name</NxProjectName>
+  <Nx>
+    <Name>my-custom-name</Name>
+  </Nx>
 </PropertyGroup>
 ```
 
@@ -435,7 +436,6 @@ After completing the migration:
 
 ## Additional Resources
 
-- [Full Feature Comparison](/NX_DOTNET_COMPARISON.md) - Detailed comparison of all features
 - [Nx .NET Plugin Documentation](https://nx.dev/nx-api/dotnet)
 - [Nx Conformance](https://nx.dev/concepts/conformance)
 - [Central Package Management](https://learn.microsoft.com/nuget/consume-packages/central-package-management)
