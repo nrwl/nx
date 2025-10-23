@@ -72,7 +72,9 @@ Configure Docker applications in a separate release group called `apps` so it do
 // nx.json
 {
   "release": {
-    "releaseTagPattern": "release/{projectName}/{version}",
+    "releaseTag": {
+      "pattern": "release/{projectName}/{version}"
+    },
     "groups": {
       "apps": {
         "projects": ["api"],

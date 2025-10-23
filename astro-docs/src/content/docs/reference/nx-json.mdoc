@@ -408,9 +408,9 @@ Optionally override the git/release tag pattern to use. This field is the source
 
 It supports interpolating the version as `{version}` and (if releasing independently or forcing project level version control system releases) the project name as `{projectName}` within the string. When using release groups in which the member projects are versioned together, you can also leverage `{releaseGroupName}` and it will be interpolated appropriately in the commit/tag that gets created for that release group.
 
-The default `"releaseTagPattern"` for fixed/unified releases is: `v{version}`
+The default `"releaseTag.pattern"` for fixed/unified releases is: `v{version}`
 
-The default `"releaseTagPattern"` for independent releases at the project level is: `{projectName}@{version}`
+The default `"releaseTag.pattern"` for independent releases at the project level is: `{projectName}@{version}`
 
 ```jsonc
 // nx.json
@@ -418,14 +418,16 @@ The default `"releaseTagPattern"` for independent releases at the project level 
   "release": {
     // Here we are configuring nx release to use a custom release
     // tag pattern (we have dropped the v prefix from the default)
-    "releaseTagPattern": "{version}"
+    "releaseTag": {
+      "pattern": "{version}"
+    }
   }
 }
 ```
 
 #### Tag Pattern Syntax
 
-The `releaseTagPattern` supports interpolated values:
+The `releaseTag.pattern` supports interpolated values:
 
 - `{version}` - The version currently being released
 - `{projectName}` - The name of the project being released
@@ -439,10 +441,11 @@ The `releaseTagPattern` supports interpolated values:
 
 The `version` property configures the versioning phase of the release process. It is used to determine the next version of your projects, and update any projects that depend on them to use the new version.
 
-{% aside type="note" title="Breaking Changes in Nx v21" %}
-In Nx v21, the implementation details of versioning were rewritten to enhance flexibility and allow for better cross-ecosystem support. An automated migration was provided in Nx v21 to update your configuration to the new format when running `nx migrate`.
+{% aside type="note" title="Breaking Changes in Nx v22" %}
+In Nx v22, the legacy versioning implementation was removed entirely. This had been deprecated since Nx 21.
+An automated migration was provided in Nx v21 to update your configuration to the new format when running `nx migrate`.
 
-During the lifecycle of Nx v21, you can still opt into the old versioning by setting `release.version.useLegacyVersioning` to `true`, which will keep the original configuration structure and behavior. In Nx v22, the legacy versioning implementation will be removed entirely, so this should only be done temporarily to ease the transition.
+For Nx 22, this automated migration was re-added to allow updating your configuration by running `nx migrate`.
 {% /aside %}
 
 Behind the scenes, ecosystem-specific `version` logic is powered by a `VersionActions` implementation. Out of the box Nx wires up the most widely applicable `VersionActions` implementation for you, which is `@nx/js/src/release/version-actions` provided by the `@nx/js` plugin.
@@ -466,13 +469,13 @@ Core version options are therefore directly at the top level of the `version` pr
 }
 ```
 
-Some important changes in Nx 21:
+Some important changes in Nx 22:
 
-- The `release.version.generatorOptions` object has been removed, with its properties moved to the top level of `release.version`
-- `packageRoot` has been replaced by the more flexible `manifestRootsToUpdate` array
-- Ecosystem-specific options like `skipLockFileUpdate` are now under `versionActionsOptions`
-- `preserveLocalDependencyProtocols` (also now at the top level) now defaults to `true` (previously `false` when it was a generatorOption)
-- `tui` object has been added to control the new [Terminal UI](/docs/guides/tasks--caching/terminal-ui)
+- `preserveMatchingDependencyRanges` now defaults to `true`
+- `updateDependents` now defaults to "always"
+- `releaseTag*` properties such as `releaseTagPattern` and `releaseTagPatternStrictPreid` have been coalesced into a single `releaseTag` object. (`releaseTagPattern` -> `releaseTag.pattern`, `releaseTagPatternStrictPreid` -> `releaseTag.strictPreid`)
+- `releaseTag.strictPreid` now defaults to `true`
+- Fixed Release Group Release Tag Pattern now defaults to `{releaseGroupName}-v{version}`
 
 ### Changelog
 
