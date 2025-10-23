@@ -4,7 +4,6 @@ packages:
   - 'graph/*'
   - 'nx-dev/*'
   - 'tools/*'
-  - 'typedoc-theme'
   - 'astro-docs'
   - 'examples/*/*'
   - 'examples/angular-rspack/module-federation/host'
