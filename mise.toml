@@ -2,4 +2,4 @@
 dotnet = "9"
 java = "24"
 node = "24"
-rust = "1.86.0"
+rust = "1.90.0"
