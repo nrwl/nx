@@ -12,7 +12,6 @@ This guide provides a streamlined migration path from the community `@nx-dotnet/
 The `@nx-dotnet/core` plugin is deprecated in favor of the official `@nx/dotnet` plugin (available in Nx 22+), which is maintained by the Nx team and integrated directly into the Nx repository.
 {% /aside %}
 
-
 ## Why Migrate?
 
 The official `@nx/dotnet` plugin represents a natural evolution, building on lessons learned from the community plugin while embracing native .NET workflows:
@@ -37,7 +36,8 @@ Before starting the migration:
 
 The @nx-dotnet/core plugin configuration can be in one of two places:
 
-**Option 1: In `nx.json` (newer default)**
+{% tabs %}
+{% tabitem label="nx.json" %}
 
 ```json
 {
@@ -54,7 +54,8 @@ The @nx-dotnet/core plugin configuration can be in one of two places:
 }
 ```
 
-**Option 2: In `.nx-dotnet.rc.json` (legacy)**
+{% /tabitem %}
+{% tabitem label=".nx-dotnet.rc.json" %}
 
 ```json
 {
@@ -63,6 +64,9 @@ The @nx-dotnet/core plugin configuration can be in one of two places:
   // ... other options
 }
 ```
+
+{% /tabitem %}
+{% /tabs %}
 
 {% aside type="note" title="No Configuration?" %}
 If you don't have custom configuration in either location, that's fine! The plugin works with defaults, and migration will be even simpler.
@@ -140,7 +144,7 @@ nx reset
 nx graph
 ```
 
-The `nx graph` command should show all your .NET projects with their dependencies correctly detected.
+The `nx graph` command should show all your .NET projects with their dependencies correctly detected. If you encounter any issues, see the [Troubleshooting](#troubleshooting) section below.
 
 ## Key Workflow Changes
 
@@ -188,7 +192,6 @@ The `serve` and `format` targets are not automatically created. `serve` defaults
     }
   ]
 }
-
 ```
 
 The `format` target is not present by default. You should add it as a custom target if desired.
@@ -296,10 +299,6 @@ If you previously set `inferProjects: false` in your @nx-dotnet/core config, thi
    - You can keep `project.json` files to customize targets, but they're optional
    - Consider removing them to use the automatically inferred targets
 
-3. **If you need to completely hide projects from Nx:**
-   - Use the `exclude` property in the plugin configuration
-   - Or move projects outside the workspace
-
 ## Configuration Changes
 
 ### Module Boundaries → Nx Conformance
@@ -357,7 +356,7 @@ nx run-many -t test
 
 ## Troubleshooting
 
-### Projects Not Detected
+### Projects Not Detected After Migration
 
 **Symptom**: Some .NET projects don't appear in `nx show projects`
 
@@ -367,7 +366,7 @@ nx run-many -t test
 - Check that the plugin is registered in `nx.json`
 - Run `nx reset` to clear the cache
 
-### Build Errors: Missing Dependencies
+### "Could not find project reference" Build Error
 
 **Symptom**: Build fails with "Could not find project reference"
 
@@ -378,7 +377,7 @@ nx run-many -t test
 - Check that project references in `.csproj` files use correct relative paths
 - Run `nx reset` to clear stale cache
 
-### Targets Not Appearing
+### Missing Targets (test, pack, publish)
 
 **Symptom**: Expected targets like `test` or `pack` don't show up
 
@@ -389,7 +388,7 @@ nx run-many -t test
 - `publish`: Only created for executable projects (`OutputType="Exe"`)
 - Use `nx show project my-project` to see all available targets
 
-### Custom Naming Conflicts
+### Project Name Mismatch After Migration
 
 **Symptom**: Project names don't match expectations
 
@@ -418,10 +417,3 @@ After completing the migration:
 - [Nx .NET Plugin Documentation](/docs/technologies/dotnet/introduction)
 - [Nx Conformance](/docs/enterprise/powerpack/conformance)
 - [Central Package Management](https://learn.microsoft.com/nuget/consume-packages/central-package-management)
-- [@nx-dotnet/core Documentation](https://www.nx-dotnet.com/)
-
-## Getting Help
-
-- **Nx Community Discord**: [Join here](https://go.nx.dev/community)
-- **GitHub Discussions**: [Nx Discussions](https://github.com/nrwl/nx/discussions)
-- **GitHub Issues**: [Report bugs](https://github.com/nrwl/nx/issues)
