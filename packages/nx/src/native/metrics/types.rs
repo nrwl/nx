@@ -65,54 +65,6 @@ impl BatchRegistration {
     }
 }
 
-/// Process snapshot with full metadata and metrics
-#[napi(object)]
-#[derive(Debug, Clone)]
-pub struct ProcessSnapshot {
-    pub pid: i32,
-    pub ppid: i32,
-    pub name: String,
-    pub command: String,
-    pub exe_path: String,
-    pub cwd: String,
-    pub cpu: f64,
-    pub memory: i64,
-}
-
-impl ProcessSnapshot {
-    pub fn new(
-        pid: i32,
-        ppid: i32,
-        name: String,
-        command: String,
-        exe_path: String,
-        cwd: String,
-        cpu: f64,
-        memory: i64,
-    ) -> Self {
-        Self {
-            pid,
-            ppid,
-            name,
-            command,
-            exe_path,
-            cwd,
-            cpu,
-            memory,
-        }
-    }
-}
-
-/// Metrics data for collection cycle
-#[napi(object)]
-#[derive(Debug, Clone)]
-pub struct MetricsData {
-    pub timestamp: i64,
-    pub main_cli_process: Option<ProcessSnapshot>,
-    pub daemon_processes: Vec<ProcessSnapshot>,
-    pub tasks: HashMap<String, Vec<ProcessSnapshot>>,
-}
-
 /// Process metadata (static, doesn't change during process lifetime)
 #[napi(object)]
 #[derive(Debug, Clone)]
