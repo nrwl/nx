@@ -24,7 +24,7 @@ Make sure to install the `@nx/playwright` version that matches the version of `n
 
 In any Nx workspace, you can install `@nx/playwright` by running the following command:
 
-```shell frame="none"
+```shell
 nx add @nx/playwright
 ```
 
@@ -76,7 +76,7 @@ If you would like to disable Atomizer for Playwright tasks, set `ciTargetName` t
 
 By default, when creating a new frontend application, Nx will prompt for which e2e test runner to use. Select `playwright` or pass in the arg `--e2eTestRunner=playwright`
 
-```shell frame="none"
+```shell
 nx g @nx/web:app apps/frontend --e2eTestRunner=playwright
 ```
 
@@ -84,13 +84,13 @@ nx g @nx/web:app apps/frontend --e2eTestRunner=playwright
 
 To generate an E2E project for an existing project, run the following generator
 
-```shell frame="none"
+```shell
 nx g @nx/playwright:configuration --project=your-app-name
 ```
 
 Optionally, you can use the `--webServerCommand` and `--webServerAddress` option, to auto setup the [web server option](https://playwright.dev/docs/test-webserver) in the playwright config
 
-```shell frame="none"
+```shell
 nx g @nx/playwright:configuration --project=your-app-name --webServerCommand="npx serve your-project-name" --webServerAddress="http://localhost:4200"
 ```
 
@@ -126,7 +126,7 @@ With, `nx e2e frontend-e2e --ui` Playwright will start in headed mode where you 
 
 From, there you can toggle on the watch icon which will rerun the tests when the spec file updates.
 
-```shell frame="none"
+```shell
 nx e2e <your-app-name> --ui
 ```
 
@@ -164,7 +164,7 @@ By default, Playwright will run tests against all browsers in the `projects` lis
 
 You can specify a specific browser to run the tests against by passing the `--project` flag to the `nx e2e` command.
 
-```shell frame="none"
+```shell
 nx e2e frontend-e2e -- --project=firefox
 ```
 

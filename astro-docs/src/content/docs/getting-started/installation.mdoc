@@ -10,7 +10,7 @@ To install Nx on your machine, choose one of the following methods based on your
 {% tabs syncKey="install-method" %}
 {% tabitem label="npm" %}
 
-```shell {% frame="none" %}
+```shell
 npm add --global nx
 ```
 
@@ -19,7 +19,7 @@ npm add --global nx
 
 {% tabitem label="Homebrew (macOS, Linux)" %}
 
-```shell {% frame="none" %}
+```shell
 brew install nx
 ```
 
@@ -27,7 +27,7 @@ brew install nx
 
 {% tabitem label="Chocolatey (Windows)" %}
 
-```shell {% frame="none" %}
+```shell
 choco install nx
 ```
 
@@ -35,7 +35,7 @@ choco install nx
 
 {% tabitem label="apt (Ubuntu)" %}
 
-```shell {% frame="none" %}
+```shell
 sudo add-apt-repository ppa:nrwl/nx
 sudo apt update
 sudo apt install nx
@@ -48,7 +48,7 @@ sudo apt install nx
 
 To add Nx to an existing repository, run:
 
-```shell {% frame="none" %}
+```shell
 nx init
 ```
 
@@ -59,7 +59,7 @@ Learn more about [adopting Nx in an existing project](/docs/guides/adopting-nx)
 
 To create a starter repository, you can use the `create-nx-workspace` command. This will create a new Nx workspace with a default configuration and example applications.
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace@latest
 ```
 
@@ -67,13 +67,13 @@ npx create-nx-workspace@latest
 
 When you update Nx, Nx will also [automatically update your dependencies](/docs/features/automate-updating-dependencies) if you have an [Nx plugin](/docs/concepts/nx-plugins) installed for that dependency. To update Nx, run:
 
-```shell {% frame="none" %}
+```shell
 nx migrate latest
 ```
 
 This will create a `migrations.json` file with any update scripts that need to be run. Run them with:
 
-```shell {% frame="none" %}
+```shell
 nx migrate --run-migrations
 ```
 

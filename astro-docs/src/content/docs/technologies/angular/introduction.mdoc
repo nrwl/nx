@@ -43,7 +43,7 @@ Make sure to install the `@nx/angular` version that matches the version of `nx` 
 
 In any Nx workspace, you can install `@nx/angular` by running the following command:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/angular
 ```
 
@@ -59,7 +59,7 @@ For a full tutorial experience, follow the [Angular Monorepo Tutorial](/docs/get
 
 It's straightforward to generate an Angular application:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:app apps/appName
 ```
 
@@ -71,7 +71,7 @@ By default, the application will be generated with:
 
 We can then serve, build, test, lint, and run e2e tests on the application with the following commands:
 
-```shell {% frame="none" %}
+```shell
 nx serve appName
 nx build appName
 nx test appName
@@ -83,7 +83,7 @@ nx e2e appName
 
 Generating an Angular library is very similar to generating an application:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:lib libs/libName
 ```
 
@@ -94,7 +94,7 @@ By default, the library will be generated with:
 
 We can then test and lint the library with the following commands:
 
-```shell {% frame="none" %}
+```shell
 nx test libName
 nx lint libName
 ```
@@ -111,7 +111,7 @@ If you try to invoke a generator that is not present in `@nx/angular`, the reque
 to `@schematics/angular`. So, even though there is no `@nx/angular:service` generator, the following command will
 successfully create a service:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:service apps/appName/src/lib/my-service/my-service
 ```
 

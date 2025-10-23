@@ -14,7 +14,7 @@ It can be difficult to set up a typescript library to compile to ESM and CommonJ
 
 If you do not use Rollup already, install the corresponding Nx plugin as follows:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/rollup
 ```
 
@@ -89,23 +89,24 @@ You'll need to specify `format`, `additionalEntryPoints` and `generateExportsFie
 
 After compiling our package using `nx build my-awesome-lib` we'll get the following output in our `dist` folder.
 
-```
-my-awesome-lib
-└─ .
-   ├─ README.md
-   ├─ foo.cjs.d.ts
-   ├─ foo.cjs.js
-   ├─ foo.esm.js
-   ├─ index.cjs.d.ts
-   ├─ index.cjs.js
-   ├─ index.esm.js
-   ├─ package.json
-   └─ src
-      ├─ foo.d.ts
-      ├─ index.d.ts
-      └─ lib
-         └─ my-awesome-lib.d.ts
-```
+{% filetree %}
+
+- my-awesome-lib/
+  - README.md
+  - foo.cjs.d.ts
+  - foo.cjs.js
+  - foo.esm.js
+  - index.cjs.d.ts
+  - index.cjs.js
+  - index.esm.js
+  - package.json
+  - src/
+    - foo.d.ts
+    - index.d.ts
+    - lib/
+      - my-awesome-lib.d.ts
+
+{% /filetree %}
 
 And our `package.json` will look like this:
 

@@ -83,7 +83,7 @@
     "@nuxt/kit": "^3.10.0",
     "@nuxt/schema": "^3.10.0",
     "@nx/angular": "22.0.0-rc.0",
-    "@nx/conformance": "3.0.0",
+    "@nx/conformance": "4.0.0",
     "@nx/cypress": "22.0.0-rc.0",
     "@nx/devkit": "22.0.0-rc.0",
     "@nx/enterprise-cloud": "3.0.0",

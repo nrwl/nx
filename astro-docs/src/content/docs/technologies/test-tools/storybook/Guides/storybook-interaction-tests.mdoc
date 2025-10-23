@@ -18,7 +18,7 @@ You need to have Storybook already set up in your Nx workspace. If you don't hav
 
 When generating your Storybook configuration, make sure to answer `Yes` to the `Do you want to set up Storybook interaction tests?` prompt, or pass the `--interactionTests=true` flag when generating your Storybook configuration.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/storybook:configuration my-project --interactionTests=true
 ```
 
@@ -74,7 +74,7 @@ export const Primary: Story = {
 
 You can run your interaction tests using:
 
-```shell {% frame="none" %}
+```shell
 nx test-storybook my-project
 ```
 
@@ -82,7 +82,7 @@ This will run all the interaction tests in your Storybook stories.
 
 You can also run the tests in headless mode for CI:
 
-```shell {% frame="none" %}
+```shell
 nx test-storybook my-project --ci
 ```
 

@@ -15,7 +15,7 @@ To enable incremental builds you need to use buildable libraries.
 
 You can generate a new buildable library with:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:lib libs/my-lib --buildable
 ```
 
@@ -252,13 +252,13 @@ required executors you can add it to the `targetDefaults` section of the `nx.jso
 
 To build an application incrementally use the following command:
 
-```shell {% frame="none" %}
+```shell
 nx build my-app --parallel
 ```
 
 To serve an application incrementally use this command:
 
-```shell {% frame="none" %}
+```shell
 nx serve my-app
 ```
 

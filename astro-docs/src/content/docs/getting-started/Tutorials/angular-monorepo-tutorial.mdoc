@@ -38,14 +38,14 @@ Please verify closely that you have the following setup:
 
 Clone your repository to your local machine:
 
-```shell {% frame="none" %}
+```shell
 git clone <your-repository-url>
 cd <your-repository-name>
 ```
 
 Install dependencies:
 
-```shell {% frame="none" %}
+```shell
 npm install
 ```
 
@@ -84,7 +84,7 @@ Now, let's build some features and see how Nx helps get us to production faster.
 
 To serve your new Angular app, run:
 
-```shell {% frame="none" %}
+```shell
 npx nx serve angular-demo
 ```
 
@@ -151,7 +151,7 @@ The most critical parts are:
 
 To view all tasks for a project, look in the [Nx Console](/docs/getting-started/editor-setup) project detail view or run:
 
-```shell {% frame="none" %}
+```shell
 npx nx show project angular-demo
 ```
 
@@ -256,7 +256,7 @@ Nx allows you to separate this logic into "local libraries." The main benefits i
 
 Let's create a reusable design system library called `ui` that we can use across our workspace. This library will contain reusable components such as buttons, inputs, and other UI elements.
 
-```shell {% frame="none" %}
+```shell
 npx nx g @nx/angular:library packages/ui --unitTestRunner=vitest
 ```
 
@@ -281,13 +281,13 @@ Running the above command should lead to the following directory structure:
 
 Just as with the `angular-demo` app, Nx automatically infers the tasks for the `ui` library from its configuration files. You can view them by running:
 
-```shell {% frame="none" %}
+```shell
 npx nx show project ui
 ```
 
 In this case, we have the `lint` and `test` tasks available, among other inferred tasks.
 
-```shell {% frame="none" %}
+```shell
 npx nx lint ui
 npx nx test ui
 ```
@@ -433,7 +433,7 @@ Nx automatically detects the dependencies between the various parts of your work
 
 Just run:
 
-```shell {% frame="none" %}
+```shell
 npx nx graph
 ```
 
@@ -475,7 +475,7 @@ You should be able to see something similar to the following in your browser.
 
 Let's create a git branch with the new hero component so we can open a pull request later:
 
-```shell {% frame="none" %}
+```shell
 git checkout -b add-hero-component
 git add .
 git commit -m 'add hero component'
@@ -485,14 +485,14 @@ git commit -m 'add hero component'
 
 Our current setup not only has targets for serving and building the Angular application, but also has targets for unit testing, e2e testing and linting. The `test` and `lint` targets are defined in the application `project.json` file. We can use the same syntax as before to run these tasks:
 
-```shell {% frame="none" %}
+```shell
 npx nx test angular-demo # runs the tests for angular-demo
 npx nx lint ui           # runs the linter on ui
 ```
 
 More conveniently, we can also run tasks in parallel using the following syntax:
 
-```shell {% frame="none" %}
+```shell
 npx nx run-many -t test lint
 ```
 
@@ -575,7 +575,7 @@ You will also need to install the [Nx Console](/docs/getting-started/editor-setu
 
 Now, let's push the `add-hero-component` branch to GitHub and open a new pull request.
 
-```shell {% frame="none" %}
+```shell
 git push origin add-hero-component
 # Don't forget to open a pull request on GitHub
 ```
