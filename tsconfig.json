@@ -125,9 +125,6 @@
       "path": "./graph/ui-project-details"
     },
     {
-      "path": "./typedoc-theme"
-    },
-    {
       "path": "./tools/documentation/create-embeddings"
     },
     {
