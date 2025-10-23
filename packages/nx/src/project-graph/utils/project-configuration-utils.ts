@@ -1210,7 +1210,7 @@ export function normalizeTarget(
   project: ProjectConfiguration,
   workspaceRoot: string,
   projectsMap: Record<string, ProjectConfiguration>,
-  errorMsgKey: string = project.root
+  errorMsgKey: string
 ) {
   target = {
     ...target,

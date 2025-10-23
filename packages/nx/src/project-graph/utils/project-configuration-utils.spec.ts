@@ -1657,7 +1657,7 @@ describe('project-configuration-utils', () => {
           foo: { command: 'echo {projectRoot}' },
         },
       };
-      expect(normalizeTarget(config.targets.foo, config, workspaceRoot, {}))
+      expect(normalizeTarget(config.targets.foo, config, workspaceRoot, {}, ''))
         .toMatchInlineSnapshot(`
         {
           "configurations": {},
@@ -1700,8 +1700,8 @@ describe('project-configuration-utils', () => {
       };
       const originalConfig = JSON.stringify(config, null, 2);
 
-      normalizeTarget(config.targets.foo, config, workspaceRoot, {});
-      normalizeTarget(config.targets.bar, config, workspaceRoot, {});
+      normalizeTarget(config.targets.foo, config, workspaceRoot, {}, '');
+      normalizeTarget(config.targets.bar, config, workspaceRoot, {}, '');
       expect(JSON.stringify(config, null, 2)).toEqual(originalConfig);
     });
   });
