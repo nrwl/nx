@@ -4,7 +4,7 @@ description: Learn how to use Nx Release to version and publish Docker images fr
 filter: 'type:Guides'
 ---
 
-This guide walks you through setting up Nx Release to version and publish Docker images from your monorepo using calendar-based versioning.
+This guide walks you through setting up Nx Release to version and publish Docker images from your monorepo.
 
 {% youtube title="What is Nx?" src="https://www.youtube.com/embed/TOPxKJXUaqw" /%}
 
@@ -116,6 +116,7 @@ To learn more about release groups, see the [Release Groups](/docs/guides/nx-rel
         "projectsRelationship": "independent",
         "docker": {
           // This should be true to skip versioning with other tools like NPM or Rust crates.
+          // Only set this if you are not using {versionActionsVersion} in your docker version scheme
           "skipVersionActions": true,
           // You can also use a custom registry like `ghcr.io` for GitHub Container Registry.
           // `docker.io` is the default so you could leave this out for Docker Hub.
@@ -286,5 +287,13 @@ You can customize Docker version schemes in your `nx.json` to match your deploym
 The above configuration swaps `hotfix` scheme for `staging` and adds a `ci` scheme that uses an environment variable. You can customize this list to fit your needs, and you can also change the patterns for each scheme.
 
 Version patterns can include environment variables using the `{env.VAR_NAME}` syntax, allowing you to inject CI/CD pipeline information like build numbers or deployment environments directly into your Docker tags.
+
+You can also include the semantic version generated during version actions using `{versionActionsVersion}`. For example:
+
+```json
+"production": "{projectName}-{versionActionsVersion}"
+```
+
+If you use `{versionActionsVersion}`, do not enable `docker.skipVersionActions` (or include the project in `skipVersionActions`) because the placeholder cannot be resolved when version actions are skipped.
 
 See the [`docker.versionScheme` documentation](/docs/reference/nx-json#version-scheme-syntax) for more details on how to customize the tag pattern.

@@ -16196,4 +16196,66 @@ describe('createNxReleaseConfig()', () => {
       expect(res.nxReleaseConfig.version.updateDependents).toBe('always');
     });
   });
+  describe('docker version schemes validation', () => {
+    it('should error when skipVersionActions is configured and version scheme uses {versionActionsVersion}', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          'group-1': {
+            projects: 'lib-a',
+            docker: {
+              skipVersionActions: true,
+              versionSchemes: {
+                production: '{versionActionsVersion}',
+              },
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": {
+            "code": "DOCKER_VERSION_SCHEME_USES_VERSION_ACTIONS_VERSION_WHEN_SKIP_VERSION_ACTIONS",
+            "data": {
+              "releaseGroupName": "group-1",
+              "schemeName": "production",
+            },
+          },
+          "nxReleaseConfig": null,
+        }
+      `);
+    });
+
+    it('should allow docker version schemes without the {versionActionsVersion} placeholder when skipVersionActions is configured', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          'group-1': {
+            projects: 'lib-a',
+            docker: {
+              skipVersionActions: true,
+              versionSchemes: {
+                production: '{currentDate|YYMM.DD}.{shortCommitSha}',
+              },
+            },
+          },
+        },
+      });
+      expect(res.error).toBeNull();
+    });
+
+    it('should allow docker version schemes with the {versionActionsVersion} placeholder when skipVersionActions is not configured', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          'group-1': {
+            projects: 'lib-a',
+            docker: {
+              versionSchemes: {
+                production: '{versionActionsVersion}-rc.{shortCommitSha}',
+              },
+            },
+          },
+        },
+      });
+      expect(res.error).toBeNull();
+    });
+  });
 });

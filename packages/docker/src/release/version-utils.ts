@@ -23,7 +23,8 @@ export async function handleDockerVersion(
   projectGraphNode: ProjectGraphProjectNode,
   finalConfigForProject: FinalConfigForProject,
   dockerVersionScheme?: string,
-  dockerVersion?: string
+  dockerVersion?: string,
+  versionActionsVersion?: string
 ) {
   // If the full docker image reference is provided, use it directly
   const nxDockerImageRefEnvOverride =
@@ -48,7 +49,8 @@ export async function handleDockerVersion(
       newVersion = calculateNewVersion(
         projectGraphNode.name,
         versionScheme,
-        availableVersionSchemes
+        availableVersionSchemes,
+        versionActionsVersion
       );
     }
   }
@@ -91,7 +93,8 @@ async function promptForNewVersion(
 function calculateNewVersion(
   projectName: string,
   versionScheme: string,
-  versionSchemes: Record<string, string>
+  versionSchemes: Record<string, string>,
+  versionActionsVersion?: string
 ): string {
   if (!(versionScheme in versionSchemes)) {
     throw new Error(
@@ -102,6 +105,7 @@ function calculateNewVersion(
   }
   return interpolateVersionPattern(versionSchemes[versionScheme], {
     projectName,
+    versionActionsVersion,
   });
 }
 

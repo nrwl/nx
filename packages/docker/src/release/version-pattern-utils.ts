@@ -8,12 +8,14 @@ import { getLatestCommitSha } from 'nx/src/utils/git-utils';
  * {commitSha} - The full commit sha for the current commit
  * {shortCommitSha} - The seven character commit sha for the current commit
  * {env.VAR_NAME} - The value of the environment variable VAR_NAME
+ * {versionActionsVersion} - The version generated during the version actions such as "1.2.3"
  */
 export interface PatternTokens {
   projectName: string;
   currentDate: Date;
   commitSha: string;
   shortCommitSha: string;
+  versionActionsVersion: string;
 }
 
 const tokenRegex = /\{(env\.([^}]+)|([^|{}]+)(?:\|([^{}]+))?)\}/g;
@@ -46,6 +48,7 @@ export function interpolateVersionPattern(
     currentDate: data.currentDate ?? new Date(),
     commitSha: data.commitSha ?? commitSha,
     shortCommitSha: data.shortCommitSha ?? commitSha.slice(0, 7),
+    versionActionsVersion: data.versionActionsVersion ?? '',
   };
 
   return versionPattern.replace(
