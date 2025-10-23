@@ -33,13 +33,13 @@ class CompileTestCiTargetsTest {
           parentFile.mkdirs()
           writeText(
               """
-                package com.example
-                import org.junit.jupiter.api.Test
-                
-                class UserServiceTest {
-                  @Test
-                  fun testService() {}
-                }
+              package com.example
+              import org.junit.jupiter.api.Test
+
+              class UserServiceTest {
+                @Test
+                fun testService() {}
+              }
               """
                   .trimIndent())
         }
@@ -49,13 +49,13 @@ class CompileTestCiTargetsTest {
           parentFile.mkdirs()
           writeText(
               """
-                package com.example
-                import org.junit.jupiter.api.Test
-                
-                class UserRepositoryTest {
-                  @Test
-                  fun testRepository() {}
-                }
+              package com.example
+              import org.junit.jupiter.api.Test
+
+              class UserRepositoryTest {
+                @Test
+                fun testRepository() {}
+              }
               """
                   .trimIndent())
         }
