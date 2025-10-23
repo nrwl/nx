@@ -4,7 +4,7 @@
   "homepage": "https://nx.dev",
   "private": true,
   "scripts": {
-    "build": "nx run-many --target build --parallel 8 --exclude nx-dev,typedoc-theme,tools-documentation-create-embeddings,nx-dev-util-ai",
+    "build": "nx run-many --target build --parallel 8 --exclude nx-dev,tools-documentation-create-embeddings,nx-dev-util-ai",
     "commit": "czg",
     "check-commit": "node ./scripts/commit-lint.js",
     "check-format": "nx format:check --all",
