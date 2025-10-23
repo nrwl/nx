@@ -74,6 +74,7 @@
     },
     "serve": {
       "executor": "@nx/next:server",
+      "dependsOn": ["copy-docs"],
       "options": {
         "buildTarget": "nx-dev:build-base",
         "dev": true
