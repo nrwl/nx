@@ -52,7 +52,7 @@ const docsToAstroRedirects = {
   '/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center':
     '/docs/enterprise/single-tenant/auth-bitbucket-data-center',
   '/ci/recipes/enterprise/single-tenant/auth-saml':
-    '/docs/enterprise/single-tenant/auth-saml',
+    '/docs/enterprise/single-tenant',
   '/ci/recipes/enterprise/single-tenant/custom-github-app':
     '/docs/enterprise/single-tenant/custom-github-app',
   '/ci/recipes/enterprise/conformance':
