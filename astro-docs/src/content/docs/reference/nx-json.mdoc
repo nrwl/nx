@@ -422,13 +422,13 @@ Release tag configuration now uses a nested `releaseTag` object. Old flat proper
 
 #### Configuration Options
 
-| Property | Type | Default | Description |
-| -------- | ---- | ------- | ----------- |
-| **pattern** | string | `v{version}` for fixed, `{projectName}@{version}` for independent | The git tag pattern to use. Supports interpolation of `{version}`, `{projectName}`, and `{releaseGroupName}` |
-| **requireSemver** | boolean | `false` | Whether to require that all tags match semantic versioning |
-| **strictPreid** | boolean | `false` for independent, `true` for fixed release groups | Whether to ensure prerelease IDs are consistent across packages |
-| **preferDockerVersion** | boolean | `false` | Whether to prefer Docker-compatible version format in git tags |
-| **checkAllBranchesWhen** | string | undefined | Branch to check when resolving current versions from git tags |
+| Property                 | Type    | Default                                                           | Description                                                                                                  |
+| ------------------------ | ------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **pattern**              | string  | `v{version}` for fixed, `{projectName}@{version}` for independent | The git tag pattern to use. Supports interpolation of `{version}`, `{projectName}`, and `{releaseGroupName}` |
+| **requireSemver**        | boolean | `false`                                                           | Whether to require that all tags match semantic versioning                                                   |
+| **strictPreid**          | boolean | `false` for independent, `true` for fixed release groups          | Whether to ensure prerelease IDs are consistent across packages                                              |
+| **preferDockerVersion**  | boolean | `false`                                                           | Whether to prefer Docker-compatible version format in git tags                                               |
+| **checkAllBranchesWhen** | string  | undefined                                                         | Branch to check when resolving current versions from git tags                                                |
 
 #### Tag Pattern Syntax
 
@@ -497,6 +497,10 @@ For Nx 22, this automated migration was re-added to allow updating your configur
 
 Behind the scenes, ecosystem-specific `version` logic is powered by a `VersionActions` implementation. Out of the box Nx wires up the most widely applicable `VersionActions` implementation for you, which is `@nx/js/src/release/version-actions` provided by the `@nx/js` plugin.
 
+{% aside type="note" title="Programmatic API (Nx 22+)" %}
+For advanced use cases, the `ReleaseClient` programmatic API allows you to trigger releases from custom scripts. In Nx 22+, you can optionally ignore the `nx.json` release configuration entirely when using the API, which is useful for ad-hoc scripts that only work with a subset of the repository.
+{% /aside %}
+
 Core version options are therefore directly at the top level of the `version` property (as of Nx v21), while ecosystem-specific options are available through `versionActionsOptions`:
 
 ```jsonc
@@ -518,8 +522,14 @@ Core version options are therefore directly at the top level of the `version` pr
 
 Some important changes in Nx 22:
 
-- `preserveMatchingDependencyRanges` now defaults to `true`
-- `updateDependents` now defaults to "always"
+- `preserveMatchingDependencyRanges` now defaults to `true` (previously `false`)
+  - When `true`, dependency version ranges are preserved if they already satisfy the new version being released
+  - Example: If releasing version `1.2.0` and a dependent has range `^1.0.0`, it remains `^1.0.0` instead of being updated to `1.2.0`
+  - Set to `false` explicitly if you need exact versions in all dependents
+- `updateDependents` now defaults to `"always"` (previously `"auto"`)
+  - `"always"`: Update dependents wherever they exist in the graph, regardless of filter selection
+  - `"auto"`: Update dependents only if they're within the selected projects or release groups
+  - `"never"`: Never update dependents
 - `releaseTag*` properties such as `releaseTagPattern` and `releaseTagPatternStrictPreid` have been coalesced into a single `releaseTag` object. (`releaseTagPattern` -> `releaseTag.pattern`, `releaseTagPatternStrictPreid` -> `releaseTag.strictPreid`)
 - `releaseTag.strictPreid` now defaults to `true`
 - Fixed Release Group Release Tag Pattern now defaults to `{releaseGroupName}-v{version}`
@@ -602,6 +612,26 @@ The `changelog.projectChangelogs` property configures the project changelogs. It
   }
 }
 ```
+
+#### Replace Existing Contents {% badge  text="Nx 22+" /%}
+
+By default, changelog entries are prepended to existing changelog files. To completely replace the entire changelog file contents instead, use the `replaceExistingContents` option:
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "changelog": {
+      "workspaceChangelog": {
+        // Replaces the entire CHANGELOG.md file with the new content
+        "replaceExistingContents": true
+      }
+    }
+  }
+}
+```
+
+This option is available for both `workspaceChangelog` and `projectChangelogs`. It's useful when you want to regenerate the entire changelog from scratch rather than maintaining a cumulative history.
 
 ### Git
 

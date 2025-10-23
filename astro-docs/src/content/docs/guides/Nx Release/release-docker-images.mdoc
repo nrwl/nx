@@ -147,7 +147,7 @@ Docker images have to be pushed to a repository, and this must be set on each ap
 
 For example, from the previous `apps/api` Node.js application, you can set the `nx.release.docker.repositoryName` in `package.json`.
 
-```json {% meta="{6-8}" %}
+```json {% meta="{6-10}" %}
 // apps/api/package.json
 {
   "name": "@acme/api",
@@ -165,7 +165,7 @@ For example, from the previous `apps/api` Node.js application, you can set the `
 
 Or if you don't have a `package.json` (e.g. for non-JS projects), set it in `project.json`:
 
-```json {% meta="{6-8}" %}
+```json {% meta="{6-10}" %}
 // apps/api/project.json
 {
   "name": "api",
