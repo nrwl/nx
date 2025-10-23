@@ -1,0 +1,255 @@
+---
+title: Programmatic API
+description: Learn how to use the Nx Release programmatic API to go beyond the CLI and create custom release workflows.
+filter: 'type:Guides'
+---
+
+{% aside type="note" title="Learn about Nx Release" %}
+Be sure to read our introduction to [Nx Release](/docs/features/manage-releases) to understand the basics of how Nx Release works and the different phases of a release before moving onto the programmatic API.
+{% /aside %}
+
+A powerful feature of Nx Release is the fact that it is designed to be used via a Node.js programmatic API in addition to the `nx release` CLI.
+
+Releases are a hugely complex and nuanced process, filled with many special cases and idiosyncratic preferences, and it is impossible for a CLI to be able to support all of them out of the box. By having a first-class programmatic API, you can go beyond the CLI and create custom release workflows that are highly dynamic and tailored to your specific needs.
+
+Just as with the CLI, the programmatic API is broken up into the distinct phases of a release: versioning, changelog generation, and publishing. These are available via the `releaseChangelog`, `releasePublish`, and `releaseVersion` functions, which are importable from the `nx/release` entrypoint.
+
+These functions are the exact functions used behind the scenes by the CLI, and so they will read from the "release" config in `nx.json` in just the same way. If you need even more fine grained control over configuration via the programmatic API, see the section on using the [`ReleaseClient` class](#using-the-releaseclient-class) below.
+
+## Using the Programmatic API
+
+```ts
+import { releaseChangelog, releasePublish, releaseVersion } from 'nx/release';
+```
+
+The functions are all asynchronous and return data relevant to their specific phase of the release process. They all support `dryRun` and `verbose` boolean options to control the level of detail of the output and allow you to preview changes before they are applied. You can inspect their types to see what each one supports in terms of additional config options.
+
+{% aside type="caution" title="Project or Group Filtering" %}
+If you apply project or group filtering to the programmatic API via the `projects` or `groups` options that each function supports, be sure to pass the same filters to all three functions.
+{% /aside %}
+
+### releaseVersion
+
+`releaseVersion` will return a `NxReleaseVersionResult` object containing the following properties:
+
+- `workspaceVersion`: The new overall version of the workspace. This is only applicable in cases where all projects are versioned together in a single release group. In all other cases, this will be `null`.
+
+- `projectsVersionData`: A map of project names to their version data. The version data is a `VersionData` object, which contains the following properties:
+
+  - `currentVersion`: The current version of the project. This is the version that the project was at before the versioning process began.
+  - `newVersion`: The new version of the project.
+  - `dockerVersion`: The new version of the project if it is a docker project.
+  - `dependentProjects`: A list of projects that depend on the current project.
+
+- `releaseGraph`: The release graph that was generated for the nx release config and workspace data. This can be passed to subsequent operations (changelog, publish) to avoid recomputing and improve performance.
+
+```ts
+const { workspaceVersion, projectsVersionData, releaseGraph } =
+  await releaseVersion({
+    // E.g. if releasing a specific known version
+    // otherwise if using e.g. conventional-commits this is not needed
+    specifier: '1.0.0',
+    dryRun: true,
+    verbose: true,
+    // ... other options
+  });
+
+console.log(workspaceVersion);
+console.log(projectsVersionData);
+console.log(releaseGraph);
+```
+
+### releaseChangelog
+
+`releaseChangelog` will return a `NxReleaseChangelogResult` object containing the following properties:
+
+- `workspaceChangelog`: The changelog data for the workspace, if applicable based on the nx release config.
+
+  - `releaseVersion`: Relevant version data for the new changelog entry.
+  - `contents`: The changelog entry contents.
+
+- `projectChangelogs`: A map of project names to their changelog data, if applicable based on the nx release config.
+  - `releaseVersion`: Relevant version data for the new changelog entry.
+  - `contents`: The changelog entry contents.
+
+```ts
+const { workspaceChangelog, projectChangelogs } = await releaseChangelog({
+  // Re-use the existing release graph from the releaseVersion
+  // call (if applicable) to avoid recomputing in each subcommand
+  releaseGraph,
+
+  // NOTE: One of either version or versionData must be provided
+  versionData: projectsVersionData, // Pass the detailed project version data from the releaseVersion call
+  version: workspaceVersion, // Pass the new workspace version from the releaseVersion call
+
+  dryRun: true,
+  verbose: true,
+
+  // ... other options
+});
+```
+
+### releasePublish
+
+`releasePublish` will return a `PublishProjectsResult` object, which is a map of project names to their publish result which is a simple object with a `code` property representing the exit code of the publish operation for the project.
+
+```ts
+const publishResults = await releasePublish({
+  // Re-use the existing release graph from the releaseVersion
+  // call (if applicable) to avoid recomputing in each subcommand
+  releaseGraph,
+
+  dryRun: true,
+  verbose: true,
+
+  // ... other options
+});
+```
+
+You can optionally pass through the version data (e.g. if you are using a custom publish executor that needs to be aware of versions). It will then be provided to the publish executor options as `nxReleaseVersionData` and can be accessed in the publish executor options like any other option.
+
+```ts
+const publishResults = await releasePublish({
+  releaseGraph,
+  versionData: projectsVersionData,
+  dryRun: true,
+  verbose: true,
+});
+```
+
+NOTE: Passing `versionData` to `releasePublish` is not required for the default @nx/js publish executor.
+
+It is recommended to use the publishResults to determine the overall success or failure of the release process, for example:
+
+```ts
+process.exit(
+  Object.values(publishResults).every((result) => result.code === 0) ? 0 : 1
+);
+```
+
+## Example Release Script
+
+How you compose these functions in your release script is of course entirely up to you, and you may even want to break them up into multiple files depending on your use-case.
+
+The below is purely an example of you might compose them together into one holistic release script which uses `yargs` to parse script options from the command line (nx release does not require `yargs`, it is simply a common choice for this use-case, you can parse arguments however you wish).
+
+```ts
+// scripts/release.ts
+
+import { releaseChangelog, releasePublish, releaseVersion } from 'nx/release';
+import * as yargs from 'yargs';
+
+(async () => {
+  const options = await yargs
+    .version(false) // don't use the default meaning of version in yargs
+    .option('version', {
+      description:
+        'Explicit version specifier to use, if overriding conventional commits',
+      type: 'string',
+    })
+    .option('dryRun', {
+      alias: 'd',
+      description:
+        'Whether or not to perform a dry-run of the release process, defaults to true',
+      type: 'boolean',
+      default: true,
+    })
+    .option('verbose', {
+      description:
+        'Whether or not to enable verbose logging, defaults to false',
+      type: 'boolean',
+      default: false,
+    })
+    .parseAsync();
+
+  const { workspaceVersion, projectsVersionData, releaseGraph } =
+    await releaseVersion({
+      specifier: options.version,
+      dryRun: options.dryRun,
+      verbose: options.verbose,
+    });
+
+  await releaseChangelog({
+    releaseGraph, // Re-use the existing release graph to avoid recomputing in each subcommand
+    versionData: projectsVersionData,
+    version: workspaceVersion,
+    dryRun: options.dryRun,
+    verbose: options.verbose,
+  });
+
+  // publishResults contains a map of project names and their exit codes
+  const publishResults = await releasePublish({
+    releaseGraph, // Re-use the existing release graph to avoid recomputing in each subcommand
+    dryRun: options.dryRun,
+    verbose: options.verbose,
+  });
+
+  process.exit(
+    Object.values(publishResults).every((result) => result.code === 0) ? 0 : 1
+  );
+})();
+```
+
+To perform a dry-run of version `1.0.0`, you would therefore run the script like so:
+
+```sh
+npx tsx scripts/release.ts --version 1.0.0
+```
+
+(Or by using `ts-node` or any other tool you prefer to run TS scripts.)
+
+## Using the `ReleaseClient` class
+
+The standalone functions that we covered in the previous sections are actually just bound methods of the `ReleaseClient` class that has been pre-instantiated for you.
+
+For an extra layer of control, you can import the `ReleaseClient` directly instead of the standalone functions and use your instance's methods for versioning, changelog generation, and publishing.
+
+The reason you might want to do this is configuration. The `ReleaseClient` constructor allows you to either override release configuration found in `nx.json`, or completely replace it.
+
+```ts
+import { ReleaseClient } from 'nx/release';
+
+const releaseClientWithMergedConfig = new ReleaseClient(
+  {
+    projects: ['project-1', 'project-2'],
+    // ... more nx release config options
+  },
+  false // Do NOT ignore nx.json config, merge whatever was given in the first parameter with it
+);
+
+const releaseClientWithIsolatedConfig = new ReleaseClient(
+  {
+    projects: ['project-1', 'project-2'],
+    // ... more nx release config options
+  },
+  true // Ignore nx.json config, only the configuration given in the first parameter will be used
+);
+```
+
+Ignoring the Nx Release configurations in `nx.json` can be useful for cases where you have a large, complex workspace and your script only needs to focus on a specific subset in a granular way. One such example would be a script that only focuses on changelog generation for a specific project or projects and does not want to invoke any versioning or publishing logic.
+
+### Using the `ReleaseClient`
+
+Once you have the instantiated `ReleaseClient` class, the usage pattern is the same as with the standalone functions.
+
+```ts
+import { ReleaseClient } from 'nx/release';
+
+const releaseClient = new ReleaseClient({});
+
+const { workspaceVersion, projectsVersionData, releaseGraph } =
+  await releaseClient.releaseVersion({
+    // ... options
+  });
+
+const { workspaceChangelog, projectChangelogs } =
+  await releaseClient.releaseChangelog({
+    releaseGraph,
+    // ... other options
+  });
+
+const publishResults = await releaseClient.releasePublish({
+  releaseGraph,
+  // ... other options
+});
+```
