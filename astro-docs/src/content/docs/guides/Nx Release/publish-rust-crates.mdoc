@@ -11,7 +11,7 @@ This recipe guides you through versioning Rust libraries, generating changelogs,
 {% aside type="caution" title="Currently requires legacy versioning" %}
 In Nx v21, the implementation details of versioning were rewritten to enhance flexibility and allow for better cross-ecosystem support. An automated migration was provided in Nx v21 to update your configuration to the new format when running `nx migrate`.
 
-During the lifecycle of Nx v21, you can still opt into the old versioning by setting `release.version.useLegacyVersioning` to `true`, which will keep the original configuration structure and behavior. In Nx v22, the legacy versioning implementation will be removed entirely, so this should only be done temporarily to ease the transition.
+During the lifecycle of Nx v21, you can still opt into the old versioning by setting `release.version.useLegacyVersioning` to `true`, which will keep the original configuration structure and behavior. In Nx v22, the legacy versioning implementation has been removed entirely, so this should only be done temporarily to ease the transition.
 
 Importantly, this recipe currently requires the use of legacy versioning, because the `@monodon/rust` plugin does not yet provide the necessary `VersionActions` implementation to support the new versioning behavior. This will be added in a minor release of Nx v21 and this recipe will be updated accordingly.
 {% /aside %}
@@ -211,9 +211,29 @@ By default, Nx Release will stage all changes it makes with git. This includes u
 
 The commit message created by Nx Release defaults to 'chore(release): publish {version}', where `{version}` will be dynamically interpolated with the relevant value based on your actual release, but can be customized with the `release.git.commitMessage` property in nx.json.
 
-The structure of the git tag defaults to `v{version}`. For example, if the version is `1.2.3`, the tag will be `v1.2.3`. This can be customized by setting the `release.releaseTagPattern` property in nx.json.
+The structure of the git tag defaults to `v{version}`. For example, if the version is `1.2.3`, the tag will be `v1.2.3`. This can be customized by setting the `release.releaseTag.pattern` property (Nx 22+) or `release.releaseTagPattern` property (Nx < 22) in nx.json.
 
 For this same example, if you want the commit message to be 'chore(release): 1.2.3' and the tag to be `release/1.2.3`, you would configure nx.json like this:
+
+{% tabs syncKey="nx-release-configuration" %}
+{% tabitem label="Nx 22+" %}
+
+```json
+// nx.json
+{
+  "release": {
+    "releaseTag": {
+      "pattern": "release/{version}"
+    },
+    "git": {
+      "commitMessage": "chore(release): {version}"
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 22" %}
 
 ```json
 // nx.json
@@ -226,6 +246,9 @@ For this same example, if you want the commit message to be 'chore(release): 1.2
   }
 }
 ```
+
+{% /tabitem %}
+{% /tabs %}
 
 When using release groups in which the member projects are versioned together, you can also leverage `{releaseGroupName}` and it will be interpolated appropriately in the commit/tag that gets created for that release group.
 

@@ -68,6 +68,43 @@ nx docker:build api
 
 Configure Docker applications in a separate release group called `apps` so it does not conflict with any existing release projects.
 
+To learn more about release groups, see the [Release Groups](/docs/guides/nx-release/release-groups) guide.
+
+{% tabs syncKey="nx-release-configuration" %}
+{% tabitem label="Nx 22+" %}
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "releaseTag": {
+      "pattern": "release/{projectName}/{version}"
+    },
+    "groups": {
+      "apps": {
+        "projects": ["api"],
+        "projectsRelationship": "independent",
+        "docker": {
+          // This should be true to skip versioning with other tools like NPM or Rust crates.
+          "skipVersionActions": true,
+          // You can also use a custom registry like `ghcr.io` for GitHub Container Registry.
+          // `docker.io` is the default so you could leave this out for Docker Hub.
+          "registryUrl": "docker.io",
+          // The pre-version command is run before versioning, useful for verifying the Docker image.
+          "groupPreVersionCommand": "echo BEFORE VERSIONING"
+        },
+        "changelog": {
+          "projectChangelogs": true
+        }
+      }
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 22" %}
+
 ```jsonc
 // nx.json
 {
@@ -95,6 +132,9 @@ Configure Docker applications in a separate release group called `apps` so it do
 }
 ```
 
+{% /tabitem %}
+{% /tabs %}
+
 The `release.groups.apps.docker.skipVersionActions` option should be set to `true` to skip versioning for other tooling such as NPM or Rust crates.
 
 The `release.groups.apps.projectsRelationship` is set to `independent` and `release.groups.apps.changelog` is set to `projectChangelogs` so that each application within the group maintains its own release cadence and changelog.
@@ -107,7 +147,7 @@ Docker images have to be pushed to a repository, and this must be set on each ap
 
 For example, from the previous `apps/api` Node.js application, you can set the `nx.release.docker.repositoryName` in `package.json`.
 
-```json {% meta="{6-8}" %}
+```json {% meta="{6-10}" %}
 // apps/api/package.json
 {
   "name": "@acme/api",
@@ -125,7 +165,7 @@ For example, from the previous `apps/api` Node.js application, you can set the `
 
 Or if you don't have a `package.json` (e.g. for non-JS projects), set it in `project.json`:
 
-```json {% meta="{6-8}" %}
+```json {% meta="{6-10}" %}
 // apps/api/project.json
 {
   "name": "api",

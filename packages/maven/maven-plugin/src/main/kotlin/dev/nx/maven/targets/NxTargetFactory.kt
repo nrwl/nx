@@ -125,6 +125,7 @@ class NxTargetFactory(
     val plugins = project.build.plugins
     var isThreadSafe = true
     var isCacheable = true
+    var isContinuous = false
     val inputs = objectMapper.createArrayNode()
     val outputs = mutableSetOf<String>()
 
@@ -159,6 +160,9 @@ class NxTargetFactory(
       }
       if (!analysis.isCacheable) {
         isCacheable = false
+      }
+      if (analysis.isContinuous) {
+        isContinuous = true
       }
 
       analysis.inputs.forEach { input -> inputs.add(input) }
@@ -208,7 +212,7 @@ class NxTargetFactory(
 
     log.info("Created phase target '$phase' with command: $command")
 
-    val target = NxTarget("nx:run-commands", options, isCacheable, isThreadSafe)
+    val target = NxTarget("nx:run-commands", options, isCacheable, isContinuous, isThreadSafe)
 
     // Copy caching info from analysis
     if (isCacheable) {
@@ -375,7 +379,10 @@ class NxTargetFactory(
     }
   }
 
-  private fun collectGoalsByPhase(plugins: List<Plugin>, project: MavenProject): Map<String, MutableList<GoalDescriptor>> {
+  private fun collectGoalsByPhase(
+    plugins: List<Plugin>,
+    project: MavenProject
+  ): Map<String, MutableList<GoalDescriptor>> {
     val phaseGoals = mutableMapOf<String, MutableList<GoalDescriptor>>()
 
     plugins.forEach { plugin: Plugin ->
@@ -427,12 +434,12 @@ class NxTargetFactory(
         }
       val goalPrefix = pluginDescriptor.goalPrefix
 
+      // Track which goals are bound to executions
+      val boundGoals = mutableSetOf<String>()
+
       plugin.executions.forEach { execution ->
         execution.goals.forEach { goal ->
-          // Skip build-helper attach-artifact goal as it's not relevant for Nx
-          if (goalPrefix == "org.codehaus.mojo.build-helper" && goal == "attach-artifact") {
-            return@forEach
-          }
+          boundGoals.add(goal)
 
           val goalTargetName = "$goalPrefix:$goal@${execution.id}"
           val goalTarget = createSimpleGoalTarget(
@@ -446,6 +453,25 @@ class NxTargetFactory(
           nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
 
           log.info("Created individual goal target: $goalTargetName")
+        }
+      }
+
+      // Handle unbound goals (goals defined in plugin but not bound to any execution)
+      pluginDescriptor.mojos?.forEach { mojoDescriptor ->
+        val goal = mojoDescriptor.goal
+        if (!boundGoals.contains(goal)) {
+          val goalTargetName = "$goalPrefix:$goal"
+          val goalTarget = createSimpleGoalTarget(
+            mavenCommand,
+            project,
+            pluginDescriptor,
+            goalPrefix,
+            goal,
+            null
+          ) ?: return@forEach
+          nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
+
+          log.info("Created unbound goal target: $goalTargetName")
         }
       }
     }
@@ -483,7 +509,7 @@ class NxTargetFactory(
     phase: String
   ): NxTarget {
     log.info("Creating noop target for phase '$phase' (no goals)")
-    return NxTarget("nx:noop", null, cache = true, parallelism = true)
+    return NxTarget("nx:noop", null, cache = true, false, parallelism = true)
   }
 
   private fun createSimpleGoalTarget(
@@ -492,20 +518,24 @@ class NxTargetFactory(
     pluginDescriptor: PluginDescriptor,
     goalPrefix: String,
     goalName: String,
-    execution: PluginExecution
+    execution: PluginExecution?
   ): NxTarget? {
     val options = objectMapper.createObjectNode()
 
     // Simple command without nx:apply/nx:record
     val mavenVersion = session.systemProperties.getProperty("maven.version") ?: ""
     val nonRecursiveFlag = if (mavenVersion.startsWith("4")) "-N" else ""
+    val goalSpec = if (execution != null) "$goalPrefix:$goalName@${execution.id}" else "$goalPrefix:$goalName"
     val command =
-      "$mavenCommand $goalPrefix:$goalName@${execution.id} -pl ${project.groupId}:${project.artifactId} $nonRecursiveFlag --batch-mode".replace("  ", " ")
+      "$mavenCommand $goalSpec -pl ${project.groupId}:${project.artifactId} $nonRecursiveFlag --batch-mode".replace(
+        "  ",
+        " "
+      )
     options.put("command", command)
     val analysis = mojoAnalyzer.analyzeMojo(pluginDescriptor, goalName, project)
       ?: return null
 
-    val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isThreadSafe)
+    val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isContinuous, analysis.isThreadSafe)
 
     // Add inputs and outputs if cacheable
     if (analysis.isCacheable) {
@@ -568,6 +598,7 @@ class NxTargetFactory(
         "nx:run-commands",
         options,
         analysis.isCacheable,
+        analysis.isContinuous,
         analysis.isThreadSafe,
         dependsOn,
         objectMapper.createArrayNode(),

@@ -1,7 +1,7 @@
 <p style="text-align: center;">
  <picture>
- <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-dark.svg">
- <img alt="Nx - Smart Repos · Fast Builds" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
+ <source media="(prefers-color-scheme: dark)" srcset="./images/nx-dark.svg">
+ <img alt="Nx - Smart Repos · Fast Builds" src="./images/nx-light.svg" width="100%">
  </picture>
 </p>
 
@@ -67,7 +67,7 @@ our [guidelines for contributing](https://github.com/nrwl/nx/blob/master/CONTRIB
 help you get started.
 
 <a href="https://www.youtube.com/watch?v=8LCA_4qxc08" target="_blank" rel="noreferrer">
-<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/how-to-contribute.png" width="600" alt="Nx - How to contribute video"></p>
+<p style="text-align: center;"><img src="./images/how-to-contribute.png" width="600" alt="Nx - How to contribute video"></p>
 </a>
 
 ## Core Team

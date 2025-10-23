@@ -14,7 +14,6 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /graph/** @philipjfulcher @FrozenPandaz @bcabanes @MaxKless @Coly010 @jaysoo @nartc
 /images @nrwl/nx-docs-reviewers
 /nx-dev/** @nrwl/nx-docs-reviewers
-/typedoc-theme @nrwl/nx-docs-reviewers
 
 # Plugin Verticals
 

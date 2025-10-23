@@ -6,11 +6,14 @@ filter: 'type:Guides'
 
 Nx Release supports releasing projects independently. This is useful when you have a monorepo with projects that are not released on the same schedule.
 
+You can also group projects into multiple release groups for increased flexibility and control. Learn more about [release groups](/docs/guides/nx-release/release-groups).
+
 ## Configure Independent Releases
 
 To configure independent releases, add the following property to your `nx.json` file:
 
-```nx.json
+```json
+// nx.json
 {
   "release": {
     "projectsRelationship": "independent"
@@ -30,11 +33,29 @@ When configured for independent releases, Nx Release will prompt for a version b
 
 Since each project can have a different version, Nx Release will create a git tag for each project that is being released. By default, the tag for each project will follow the pattern `{projectName}@{version}`. For example, if the `pkg-1` project is being released with version `1.1.0`, its git tag will be `pkg-1@1.1.0`.
 
-This can still be changed with the `release.releaseTagPattern` property in `nx.json`, but be sure to include `{projectName}` in the pattern so that each generated tag is unique.
+This can still be changed with the `release.releaseTag.pattern` property (Nx 22+) or `release.releaseTagPattern` (Nx < 22) in `nx.json`, but be sure to include `{projectName}` in the pattern so that each generated tag is unique.
 
 For example, to generate the tags `release/pkg-1/1.1.0` and `release/pkg-2/1.2.1` for the `pkg-1` and `pkg-2` projects respectively, you would use the following configuration in nx.json:
 
-```json nx.json
+{% tabs syncKey="nx-release-configuration" %}
+{% tabitem label="Nx 22+" %}
+
+```json
+// nx.json
+{
+  "release": {
+    "releaseTag": {
+      "pattern": "release/{projectName}/{version}"
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 22" %}
+
+```json
+// nx.json
 {
   "release": {
     "releaseTagPattern": "release/{projectName}/{version}"
@@ -42,7 +63,10 @@ For example, to generate the tags `release/pkg-1/1.1.0` and `release/pkg-2/1.2.1
 }
 ```
 
-See the [`releaseTagPattern` documentation](/docs/reference/nx-json#release-tag-pattern) for more details on how to customize the tag pattern.
+{% /tabitem %}
+{% /tabs %}
+
+See the [`releaseTag.pattern` documentation](/docs/reference/nx-json#release-tag) for more details on how to customize the tag pattern.
 
 ### Different Commit Message Structure
 
@@ -62,7 +86,8 @@ chore(release): publish
 
 Nx Release will no longer generate and update a workspace level `CHANGELOG.md` file when configured for independent releases. If you still want changelog generation, you will need to enable project level changelogs. These are similar to the workspace level changelog, but they are generated for each project individually and only contain changes for that specific project. They can be configured with the `release.changelog.projectChangelogs` property in `nx.json`.
 
-```json nx.json
+```json
+// nx.json
 {
   "release": {
     "changelog": {
@@ -87,13 +112,33 @@ nx release --projects=pkg-1,pkg-2
 Release all projects in the `server` directory:
 
 ```shell {% frame="none" %}
-nx release --projects=server/*
+nx release --projects="server/*"
 ```
 
 Release all projects except those in the `ui` directory:
 
 ```shell {% frame="none" %}
-nx release --projects='!ui/*'
+nx release --projects="!ui/*"
 ```
 
 All other projects in the workspace will be ignored and only those that match the filter will be versioned, have their changelogs updated, and published.
+
+## Update Dependents
+
+For independently versioned projects, we will have to consider what happens when those projects depend on one another.
+
+```json
+// nx.json
+{
+  "release": {
+    "projectsRelationship": "independent",
+    // The projects are independently versioned, but project-a depends on
+    // project-b, so we need to consider the side-effects of updating project-b
+    "projects": ["project-a", "project-b"]
+  }
+}
+```
+
+Nx can handle this cascade of updates automatically, across any number of release group boundaries, and this behavior is configurable via the `version.updateDependents` option.
+
+See the [Update Dependents](/docs/guides/nx-release/update-dependents) guide for more details.
