@@ -159,7 +159,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     }
 
     private fun writeProjectAnalysesToFile(inMemoryAnalyses: List<ProjectAnalysis>) {
-        val outputPath = if (outputFile.startsWith("/")) {
+        val outputPath = if (File(outputFile).isAbsolute) {
             File(outputFile)
         } else {
             File(workspaceRoot, outputFile)
