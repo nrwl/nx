@@ -91,11 +91,12 @@ export function findGradlewFile(
   workspaceRoot: string,
   customGradleInstallationPath?: string
 ): string {
-  if (customGradleInstallationPath) {
-    return findGradlewUsingCustomInstallationPath(
-      customGradleInstallationPath,
-      workspaceRoot
-    );
+  const customGradlew = customGradleInstallationPath
+    ? findGradlewUsingCustomInstallationPath(customGradleInstallationPath, workspaceRoot)
+    : undefined;
+
+  if (customGradlew) {
+    return customGradlew;
   }
 
   return findGradlewUsingFilePathTraversal(filePathToSearch, workspaceRoot);
@@ -170,15 +171,5 @@ export function findGradlewUsingCustomInstallationPath(
     }
   }
 
-  throw new AggregateCreateNodesError(
-    [
-      [
-        customGradleInstallationPath,
-        new Error(
-          `No Gradlew file found at custom gradle installation path: ${customGradleInstallationPath}. Run "gradle init"`
-        ),
-      ],
-    ],
-    []
-  );
+  return undefined
 }
