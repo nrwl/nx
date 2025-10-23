@@ -447,4 +447,97 @@ class ProcessTaskUtilsTest {
           it is Map<*, *> && (it["dependentTasksOutputFiles"] as String) == "build/classes/**/*"
         })
   }
+
+  @Test
+  fun `test getInputsForTask with gitignore classification`() {
+    val project = ProjectBuilder.builder().build()
+    val workspaceRoot = project.rootDir.path
+    val projectRoot = project.projectDir.path
+
+    // Create .gitignore file
+    val gitignore = java.io.File(project.rootDir, ".gitignore")
+    gitignore.writeText(
+        """
+            build
+            .gradle
+            *.log
+            dist
+        """
+            .trimIndent())
+
+    val mainTask = project.tasks.register("mainTask").get()
+
+    // Add inputs with mixed types
+    val sourceFile = java.io.File("$workspaceRoot/src/main.kt") // Not ignored - should be input
+    val buildFile =
+        java.io.File("$workspaceRoot/build/classes/Main.class") // Ignored - should be
+    // dependentTasksOutputFiles
+    val logFile = java.io.File("$workspaceRoot/app.log") // Ignored - should be dependentTasksOutputFiles
+    val configFile =
+        java.io.File("$workspaceRoot/config/app.properties") // Not ignored - should be input
+
+    mainTask.inputs.files(sourceFile, buildFile, logFile, configFile)
+
+    val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
+
+    assertNotNull(result)
+
+    // Source file should be regular input
+    assertTrue(result!!.any { it == "{projectRoot}/src/main.kt" })
+
+    // Config file should be regular input
+    assertTrue(result.any { it == "{projectRoot}/config/app.properties" })
+
+    // Build file should be dependentTasksOutputFiles (matches gitignore)
+    assertTrue(
+        result.any {
+          it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("build")
+        })
+
+    // Log file should be dependentTasksOutputFiles (matches gitignore)
+    assertTrue(
+        result.any { it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("log") })
+  }
+
+  @Test
+  fun `test getInputsForTask gitignore patterns with nested paths`() {
+    val project = ProjectBuilder.builder().build()
+    val workspaceRoot = project.rootDir.path
+    val projectRoot = project.projectDir.path
+
+    // Create .gitignore with common patterns
+    val gitignore = java.io.File(project.rootDir, ".gitignore")
+    gitignore.writeText(
+        """
+            target
+            dist
+        """
+            .trimIndent())
+
+    val mainTask = project.tasks.register("mainTask").get()
+
+    // Add inputs
+    val javaSource = java.io.File("$workspaceRoot/src/Main.java") // Not ignored
+    val compiledClass =
+        java.io.File("$workspaceRoot/dist/production/Main.class") // Ignored (*.class pattern)
+    val jarTarget = java.io.File("$workspaceRoot/dist/app.jar") // Ignored (target)
+
+    mainTask.inputs.files(javaSource, compiledClass, jarTarget)
+
+    val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
+
+    assertNotNull(result)
+
+    assertTrue(result!!.any { it == "{projectRoot}/src/Main.java" })
+
+    assertTrue(
+        result.any {
+          it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("Main.class")
+        })
+
+    assertTrue(
+        result.any {
+          it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("dist")
+        })
+  }
 }
