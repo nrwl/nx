@@ -367,6 +367,133 @@ describe('cache', () => {
     expect(fourthRun).toContain('read the output from the cache');
   }, 120000);
 
+  it('should support .env files and invalidate cache when env vars change', () => {
+    const lib = uniq('lib-dotenv');
+    runCLI(`generate @nx/js:lib libs/${lib}`);
+
+    // Configure nx.json to include .env file and VERSION env var as inputs
+    updateJson(`nx.json`, (c) => {
+      c.targetDefaults = {
+        build: {
+          cache: true,
+          inputs: [
+            'default',
+            '{projectRoot}/.env',
+            {
+              env: 'VERSION',
+            },
+          ],
+        },
+      };
+      return c;
+    });
+
+    // Add a build target that uses the VERSION env var
+    updateJson(`libs/${lib}/project.json`, (c) => {
+      c.targets = {
+        build: {
+          command: 'echo Building version $VERSION',
+          outputs: ['{workspaceRoot}/dist/{projectName}'],
+        },
+      };
+      return c;
+    });
+
+    // Create .env file with VERSION variable
+    updateFile(`libs/${lib}/.env`, 'VERSION=1.0.0');
+
+    // First run should not be cached
+    const firstRun = runCLI(`build ${lib}`, {
+      env: { NX_LOAD_DOT_ENV_FILES: 'true' },
+    });
+    expect(firstRun).not.toContain('read the output from the cache');
+    expect(firstRun).toContain('Building version 1.0.0');
+
+    // Second run should be cached
+    const secondRun = runCLI(`build ${lib}`, {
+      env: { NX_LOAD_DOT_ENV_FILES: 'true' },
+    });
+    expect(secondRun).toContain('read the output from the cache');
+
+    // Update .env file
+    updateFile(`libs/${lib}/.env`, 'VERSION=2.0.0');
+
+    // Third run should NOT be cached because .env file changed
+    const thirdRun = runCLI(`build ${lib}`, {
+      env: { NX_LOAD_DOT_ENV_FILES: 'true' },
+    });
+    expect(thirdRun).not.toContain('read the output from the cache');
+    expect(thirdRun).toContain('Building version 2.0.0');
+
+    // Fourth run should be cached again
+    const fourthRun = runCLI(`build ${lib}`, {
+      env: { NX_LOAD_DOT_ENV_FILES: 'true' },
+    });
+    expect(fourthRun).toContain('read the output from the cache');
+  }, 120000);
+
+  it('should support .env files in workspace root', () => {
+    const lib = uniq('lib-workspace-env');
+    runCLI(`generate @nx/js:lib libs/${lib}`);
+
+    // Configure nx.json to include workspace .env file and API_KEY env var as inputs
+    updateJson(`nx.json`, (c) => {
+      c.targetDefaults = {
+        build: {
+          cache: true,
+          inputs: [
+            'default',
+            '{workspaceRoot}/.env',
+            {
+              env: 'API_KEY',
+            },
+          ],
+        },
+      };
+      return c;
+    });
+
+    // Add a build target that uses the API_KEY env var
+    updateJson(`libs/${lib}/project.json`, (c) => {
+      c.targets = {
+        build: {
+          command: 'echo Using API key $API_KEY',
+          outputs: ['{workspaceRoot}/dist/{projectName}'],
+        },
+      };
+      return c;
+    });
+
+    // Create workspace-level .env file
+    updateFile(`.env`, 'API_KEY=secret123');
+
+    // First run should not be cached
+    const firstRun = runCLI(`build ${lib}`, {
+      env: { NX_LOAD_DOT_ENV_FILES: 'true' },
+    });
+    expect(firstRun).not.toContain('read the output from the cache');
+    expect(firstRun).toContain('Using API key secret123');
+
+    // Second run should be cached
+    const secondRun = runCLI(`build ${lib}`, {
+      env: { NX_LOAD_DOT_ENV_FILES: 'true' },
+    });
+    expect(secondRun).toContain('read the output from the cache');
+
+    // Update workspace .env file
+    updateFile(`.env`, 'API_KEY=newsecret456');
+
+    // Third run should NOT be cached because .env file changed
+    const thirdRun = runCLI(`build ${lib}`, {
+      env: { NX_LOAD_DOT_ENV_FILES: 'true' },
+    });
+    expect(thirdRun).not.toContain('read the output from the cache');
+    expect(thirdRun).toContain('Using API key newsecret456');
+
+    // Cleanup workspace .env file
+    removeFile(`.env`);
+  }, 120000);
+
   it('should evict cache if larger than max cache size', async () => {
     runCLI('reset');
     updateJson(`nx.json`, (c) => {
