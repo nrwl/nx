@@ -1981,6 +1981,110 @@ describe('project-configuration-utils', () => {
         }
       `);
     });
+
+    it('should include project and target context in error message when plugin returns invalid {workspaceRoot} token', async () => {
+      const invalidTokenPlugin: NxPluginV2 = {
+        name: 'invalid-token-plugin',
+        createNodesV2: [
+          'libs/*/project.json',
+          (projectJsonPaths) =>
+            createNodesFromFiles(
+              (projectJsonPath) => {
+                const root = dirname(projectJsonPath);
+                const name = root.split('/')[1];
+                return {
+                  projects: {
+                    [root]: {
+                      name,
+                      root,
+                      targets: {
+                        build: {
+                          executor: 'nx:run-commands',
+                          options: {
+                            command: 'echo foo/{workspaceRoot}/bar',
+                          },
+                        },
+                      },
+                    },
+                  },
+                };
+              },
+              projectJsonPaths,
+              null,
+              null
+            ),
+        ],
+      };
+
+      const error = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {},
+        [['libs/my-app/project.json']],
+        [new LoadedNxPlugin(invalidTokenPlugin, 'invalid-token-plugin')]
+      ).catch((e) => e);
+
+      expect(error.message).toContain(
+        'The {workspaceRoot} token is only valid at the beginning of an option'
+      );
+      expect(error.message).toContain('libs/my-app:build');
+    });
+
+    it('should include nx.json context in error message when target defaults have invalid {workspaceRoot} token', async () => {
+      const simplePlugin: NxPluginV2 = {
+        name: 'simple-plugin',
+        createNodesV2: [
+          'libs/*/project.json',
+          (projectJsonPaths) =>
+            createNodesFromFiles(
+              (projectJsonPath) => {
+                const root = dirname(projectJsonPath);
+                const name = root.split('/')[1];
+                return {
+                  projects: {
+                    [root]: {
+                      name,
+                      root,
+                      targets: {
+                        test: {
+                          executor: 'nx:run-commands',
+                          options: {
+                            command: 'echo test',
+                          },
+                        },
+                      },
+                    },
+                  },
+                };
+              },
+              projectJsonPaths,
+              null,
+              null
+            ),
+        ],
+      };
+
+      const nxJsonWithInvalidDefaults = {
+        targetDefaults: {
+          test: {
+            options: {
+              config: 'path/{workspaceRoot}/config.json',
+            },
+          },
+        },
+      };
+
+      const error = await createProjectConfigurationsWithPlugins(
+        undefined,
+        nxJsonWithInvalidDefaults,
+        [['libs/my-lib/project.json']],
+        [new LoadedNxPlugin(simplePlugin, 'simple-plugin')]
+      ).catch((e) => e);
+
+      expect(error.message).toContain(
+        'The {workspaceRoot} token is only valid at the beginning of an option'
+      );
+      expect(error.message).toContain('nx.json[targetDefaults]:test');
+    });
   });
 
   describe('merge target default with target definition', () => {
