@@ -1,5 +1,5 @@
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
-import {CreateNodesContext} from '@nx/devkit';
+import { CreateNodesContext } from '@nx/devkit';
 
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { minimatch } from 'minimatch';
@@ -8,9 +8,9 @@ import {
   CreateNodesResultV2,
   CreateNodesV2,
   CreateNodesResult,
-  CreateNodesContextV2
-} from "@nx/devkit";
-import { dirname } from "path";
+  CreateNodesContextV2,
+} from '@nx/devkit';
+import { dirname } from 'path';
 
 interface PlaywrightPluginOptions {
   targetName: string;
@@ -18,8 +18,8 @@ interface PlaywrightPluginOptions {
 }
 
 const defaultOptions: PlaywrightPluginOptions = {
-  targetName: "e2e",
-  ciTargetName: "e2e-ci",
+  targetName: 'e2e',
+  ciTargetName: 'e2e-ci',
 };
 
 function createNodeForConfigFile(
@@ -34,10 +34,10 @@ function createNodeForConfigFile(
         [dirname(configFile)]: {
           targets: {
             [options.ciTargetName]: {
-              executor: "nx:noop",
+              executor: 'nx:noop',
             },
             [options.targetName]: {
-              executor: "nx:noop",
+              executor: 'nx:noop',
             },
           },
         },
@@ -47,7 +47,7 @@ function createNodeForConfigFile(
 }
 
 export const createNodesV2: CreateNodesV2<PlaywrightPluginOptions> = [
-  "**/*/project.json",
+  '**/*/project.json',
   async (files, options, context): Promise<CreateNodesResultV2> => {
     const mergedOptions = { ...defaultOptions, ...options };
     const result: CreateNodesResultV2 = [];
