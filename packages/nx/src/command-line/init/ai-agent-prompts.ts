@@ -18,7 +18,9 @@ export async function determineAiAgents(
 }
 
 async function aiAgentsPrompt(): Promise<Agent[]> {
-  const promptConfig = {
+  const promptConfig: Parameters<typeof prompt>[0] & {
+    footer: () => void;
+  } = {
     name: 'agents',
     message: 'Which AI agents, if any, would you like to set up?',
     type: 'multiselect',
