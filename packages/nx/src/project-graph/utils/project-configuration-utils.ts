@@ -730,7 +730,8 @@ function normalizeTargets(
       project.targets[targetName],
       project,
       workspaceRoot,
-      projects
+      projects,
+      [project.root, targetName].join(':')
     );
 
     const projectSourceMaps = sourceMaps[project.root];
@@ -749,7 +750,13 @@ function normalizeTargets(
       project.targets[targetName] = mergeTargetDefaultWithTargetDefinition(
         targetName,
         project,
-        normalizeTarget(targetDefaults, project, workspaceRoot, projects),
+        normalizeTarget(
+          targetDefaults,
+          project,
+          workspaceRoot,
+          projects,
+          ['nx.json[targetDefaults]', targetName].join(':')
+        ),
         projectSourceMaps
       );
     }
@@ -1202,7 +1209,8 @@ export function normalizeTarget(
   target: TargetConfiguration,
   project: ProjectConfiguration,
   workspaceRoot: string,
-  projectsMap: Record<string, ProjectConfiguration>
+  projectsMap: Record<string, ProjectConfiguration>,
+  errorMsgKey: string
 ) {
   target = {
     ...target,
@@ -1216,7 +1224,7 @@ export function normalizeTarget(
   target.options = resolveNxTokensInOptions(
     target.options,
     project,
-    `${project.root}:${target}`
+    errorMsgKey
   );
 
   for (const configuration in target.configurations) {
