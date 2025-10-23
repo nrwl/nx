@@ -7,7 +7,7 @@ Change dev.nx.gradle.project-graph to version 0.1.8 in build file
 {% tabs %}
 {% tab label="Before" %}
 
-```{% fileName="build.gradle" %}
+```text {% fileName="build.gradle" %}
 plugins {
 	id "dev.nx.gradle.project-graph" version "0.1.0"
 }
@@ -16,7 +16,7 @@ plugins {
 {% /tab %}
 {% tab label="After" %}
 
-```{% fileName="build.gradle" %}
+```text {% fileName="build.gradle" %}
 plugins {
     id "dev.nx.gradle.project-graph" version "0.1.8"
 }

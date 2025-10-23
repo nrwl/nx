@@ -18,7 +18,7 @@ The Next.js plugin contains executors and generators for managing Next.js applic
 
 To create a new Nx workspace with Next.js, run:
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace@latest --preset=next
 ```
 
@@ -33,7 +33,7 @@ In any workspace, you can install `@nx/next` by running the following command:
 {% tabs %}
 {% tabitem label="Nx 18+" %}
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/next
 ```
 
@@ -45,7 +45,7 @@ This will install the correct version of `@nx/next`.
 
 Install the `@nx/next` package with your package manager.
 
-```shell {% frame="none" %}
+```shell
 npm add -D @nx/next
 ```
 
@@ -101,7 +101,7 @@ The `@nx/next/plugin` is configured in the `plugins` array in `nx.json`.
 
 You can add a new application with the following:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/next:app apps/my-new-app
 ```
 
@@ -115,7 +115,7 @@ Nx allows you to create libraries with just one command. Some reasons you might 
 
 To generate a new library run:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/next:lib libs/my-new-lib
 ```
 
@@ -123,7 +123,7 @@ nx g @nx/next:lib libs/my-new-lib
 
 Nx also provides commands to quickly generate new pages and components for your application.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/next:page apps/my-new-app/pages/my-new-page
 
 nx g @nx/next:component apps/my-new-app/components/my-new-component
@@ -143,13 +143,13 @@ Nx generates components with tests by default. For pages, you can pass the `--wi
 
 You can serve a Next.js application `my-new-app` for development:
 
-```shell {% frame="none" %}
+```shell
 nx dev my-new-app
 ```
 
 To serve a Next.js application for production:
 
-```shell {% frame="none" %}
+```shell
 nx start my-new-app
 ```
 
@@ -162,7 +162,7 @@ You can run `nx serve my-new-app` to serve a Next.js application called `my-new-
 
 To serve a Next.js application for production, add the `--prod` flag to the serve command:
 
-```shell {% frame="none" %}
+```shell
 nx serve my-new-app --prod
 ```
 
@@ -194,7 +194,7 @@ There is no need to build the library prior to using it. When you update your li
 
 For libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/next:lib libs/my-new-lib --publishable --importPath=@happynrwl/ui-components
 ```
 
@@ -202,7 +202,7 @@ nx g @nx/next:lib libs/my-new-lib --publishable --importPath=@happynrwl/ui-compo
 
 You can run unit tests with:
 
-```shell {% frame="none" %}
+```shell
 nx test my-new-app
 nx test my-new-lib
 ```
@@ -211,7 +211,7 @@ Replace `my-new-app` and `my-new-lib` with the name or the project you want to t
 
 You can also run E2E tests for applications:
 
-```shell {% frame="none" %}
+```shell
 nx e2e my-new-app-e2e
 ```
 
@@ -221,7 +221,7 @@ Replace `my-new-app-e2e` with the name or your project with -e2e appended.
 
 You can lint projects with:
 
-```shell {% frame="none" %}
+```shell
 nx lint my-new-app
 nx lint my-new-lib
 ```
@@ -232,13 +232,13 @@ Replace `my-new-app` and `my-new-lib` with the name or the project you want to t
 
 Next.js applications can be build with:
 
-```shell {% frame="none" %}
+```shell
 nx build my-new-app
 ```
 
 And if you generated a library with `--bundler`, then you can build a library as well:
 
-```shell {% frame="none" %}
+```shell
 nx build my-new-lib
 ```
 
@@ -311,7 +311,7 @@ const nextConfig = {
 
 After setting the output to `export`, you can run the `build` command to generate the static HTML files.
 
-```shell {% frame="none" %}
+```shell
 nx build my-next-app
 ```
 
@@ -341,7 +341,7 @@ This feature is particularly useful for testing in continuous integration (CI) p
 
 To utilize the `serve-static` target for testing, run the following command:
 
-```shell {% frame="none" %}
+```shell
 nx serve-static my-next-app-e2e
 ```
 

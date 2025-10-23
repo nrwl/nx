@@ -18,7 +18,7 @@ Get up and running with Nx in just a few minutes by following these simple steps
    {% tabs syncKey="install-method" %}
    {% tabitem label="npm" %}
 
-   ```shell {% frame="none" %}
+   ```shell
    npm add --global nx
    ```
 
@@ -27,21 +27,21 @@ Get up and running with Nx in just a few minutes by following these simple steps
    {% /tabitem %}
    {% tabitem label="Homebrew (macOS, Linux)" %}
 
-   ```shell {% frame="none" %}
+   ```shell
    brew install nx
    ```
 
    {% /tabitem %}
    {% tabitem label="Chocolatey (Windows)" %}
 
-   ```shell {% frame="none" %}
+   ```shell
    choco install nx
    ```
 
    {% /tabitem %}
    {% tabitem label="apt (Ubuntu)" %}
 
-   ```shell {% frame="none" %}
+   ```shell
    sudo add-apt-repository ppa:nrwl/nx
    sudo apt update
    sudo apt install nx
@@ -54,13 +54,13 @@ Get up and running with Nx in just a few minutes by following these simple steps
 
    For JavaScript-based projects you can **start with a new workspace** using the following command:
 
-   ```shell {% frame="none" %}
+   ```shell
    npx create-nx-workspace@latest
    ```
 
    **Add to an existing project: (recommended also for non-JS projects)**
 
-   ```shell {% frame="none" %}
+   ```shell
    npx nx@latest init
    ```
 
@@ -75,14 +75,14 @@ Get up and running with Nx in just a few minutes by following these simple steps
 
    **Run a task for a single project:**
 
-   ```shell {% frame="none" %}
+   ```shell
    nx build my-app
    nx test my-lib
    ```
 
    **Run tasks for multiple projects:**
 
-   ```shell {% frame="none" %}
+   ```shell
    nx run-many -t build test lint
    ```
 

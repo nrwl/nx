@@ -24,7 +24,7 @@ Depending on your current situation, you can either
 
 To create a new project, run
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace@latest my-functions --preset=@nx/aws-lambda
 ```
 
@@ -32,13 +32,13 @@ npx create-nx-workspace@latest my-functions --preset=@nx/aws-lambda
 
 First, make sure you have `@nx/aws-lambda` installed.
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/aws-lambda
 ```
 
 Next, use the corresponding Nx generator to add the AWS Lambda configuration to an existing project:
 
-```shell {% frame="none" %}
+```shell
 nx generate @nx/aws-lambda:setup-functions
 ```
 
@@ -103,7 +103,7 @@ The Nx `project.json` already contains a `deploy-functions` target we can invoke
 
 Just run:
 
-```shell {% frame="none" %}
+```shell
 nx deploy-functions
 ```
 

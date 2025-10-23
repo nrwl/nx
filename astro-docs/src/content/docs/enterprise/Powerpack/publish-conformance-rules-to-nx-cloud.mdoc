@@ -8,13 +8,13 @@ filter: 'type:Guides'
 
 Let's create a custom rule which we can then publish to Nx Cloud. We will first create a new library project to contain our rule (and any others we might create in the future):
 
-```shell {% frame="none" %}
+```shell
 nx generate @nx/js:library cloud-conformance-rules
 ```
 
 The Nx Cloud distribution mechanism expects each rule to be created in a named subdirectory in the `src/` directory of our new project, and each rule directory to contain an `index.ts` and a `schema.json` file. You can read more about [creating a conformance rule](/docs/reference/powerpack/conformance/create-conformance-rule) in the dedicated guide. For this recipe, we'll generate a default rule to use in the publishing process.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/conformance:create-rule --name=test-cloud-rule --directory=cloud-conformance-rules/src --category=reliability --description="A test cloud rule" --reporter=non-project-files-reporter
 ```
 
@@ -50,7 +50,7 @@ We can now run `nx build cloud-conformance-rules` to build our rule and create t
 
 Our final step is to publish the rule artifacts to Nx Cloud. We achieve this by running the `publish-conformance-rules` command on the `nx-cloud` CLI, passing the output path location as the first positional argument:
 
-```shell {% frame="none" %}
+```shell
 nx-cloud publish-conformance-rules cloud-conformance-rules/dist
 ```
 

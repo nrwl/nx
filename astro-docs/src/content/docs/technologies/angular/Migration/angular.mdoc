@@ -12,7 +12,7 @@ Within an Nx workspace, you gain many capabilities that help you build applicati
 
 You can migrate to a standalone Angular app with the command:
 
-```shell {% frame="none" %}
+```shell
 npx nx@latest init
 ```
 
@@ -30,7 +30,7 @@ This will enable you to use the Nx CLI in your existing Angular CLI workspace wh
 
 If you want to migrate your Angular CLI project to an Nx Monorepo, run the following command:
 
-```shell {% frame="none" %}
+```shell
 npx nx@latest init --integrated
 ```
 
@@ -137,7 +137,7 @@ Now that we're working on the CI pipeline, it is important for your changes to b
 
 Now connect your repository to Nx Cloud with the following command:
 
-```shell {% frame="none" %}
+```shell
 npx nx@latest connect
 ```
 
@@ -151,7 +151,7 @@ Once the PR is created, merge it into your main branch.
 
 And make sure you pull the latest changes locally:
 
-```shell {% frame="none" %}
+```shell
 git pull
 ```
 
@@ -161,7 +161,7 @@ You should now have an `nxCloudId` property specified in the `nx.json` file.
 
 Use the following command to generate a CI workflow file.
 
-```shell {% frame="none" %}
+```shell
 npx nx generate ci-workflow --ci=github
 ```
 
@@ -201,7 +201,7 @@ jobs:
 
 Commit the changes and open a new PR on GitHub.
 
-```shell {% frame="none" %}
+```shell
 git add .
 git commit -m 'add CI workflow file'
 git push origin add-workflow

@@ -282,7 +282,7 @@ It always stays up to date without having to actively maintain a document as it 
 
 To launch the project graph visualization for your workspace, use [Nx Console](/docs/getting-started/editor-setup) or run:
 
-```shell {% frame="none" %}
+```shell
 npx nx graph
 ```
 
@@ -545,7 +545,7 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
 
 If you prefer to analyze the underlying data of the project graph with a script or some other tool, you can run:
 
-```shell {% frame="none" %}
+```shell
 nx graph --file=output.json
 ```
 
@@ -566,7 +566,7 @@ Some moments which you may want to share these images are:
 
 Nx uses the project graph of your workspace to determine the order in which to [run tasks](/docs/features/run-tasks). Pass the `--graph` flag to view the **task graph** which is executed by Nx when running a command.
 
-```shell {% frame="none" %}
+```shell
 nx build myreactapp --graph # View the graph for building myreactapp
 nx run-many --targets build --graph # View the graph for building all projects
 nx affected --targets build --graph # View the graph for building the affected projects

@@ -26,7 +26,7 @@ If your standalone project was not an Nx workspace, it's likely that your migrat
 
 In order to avoid merge conflicts later, it's best to first do the folder reorganization in the _standalone project repo_. For example, assuming you want the standalone app to end up at `apps/my-standalone-app` in the monorepo and your main branch is called `master`:
 
-```shell {% frame="none" %}
+```shell
 cd my-standalone-app
 git checkout main
 git fetch
@@ -38,21 +38,21 @@ git ls-files | sed 's!/.*!!'| uniq | xargs -i git mv {} apps/my-standalone-app
 Check if you need to move back the `.gitignore` file to the root and/or update any paths so you don't commit previously ignored files/folders.
 If all is well proceed with the commit and push.
 
-```shell {% frame="none" %}
+```shell
 git commit -m "Move files in preparation for monorepo migration"
 git push --set-upstream origin monorepo-migration
 ```
 
 Next, in your monorepo, we'll add a remote repository url for where the standalone app is located:
 
-```shell {% frame="none" %}
+```shell
 git remote add my-standalone-app <repository url>
 git fetch my-standalone-app
 ```
 
 Then we'll run
 
-```shell {% frame="none" %}
+```shell
 git merge my-standalone-app/monorepo-migration --allow-unrelated-histories
 ```
 
