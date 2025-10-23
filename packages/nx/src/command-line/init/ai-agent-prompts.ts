@@ -20,14 +20,16 @@ export async function determineAiAgents(
 async function aiAgentsPrompt(): Promise<Agent[]> {
   const promptConfig = {
     name: 'agents',
-    message:
-      'Which AI agents would you like to set up? (space to select, enter to confirm)',
+    message: 'Which AI agents, if any, would you like to set up?',
     type: 'multiselect',
     choices: supportedAgents.map((a) => ({
       name: a,
       message: agentDisplayMap[a],
     })),
-    footer: () => chalk.dim('You can select multiple or press Enter to skip.'),
+    footer: () =>
+      chalk.dim(
+        'Multiple selections possible. <Space> to select. <Enter> to confirm.'
+      ),
   };
   return (await prompt<{ agents: Agent[] }>([promptConfig])).agents;
 }
