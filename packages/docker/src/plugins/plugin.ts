@@ -22,6 +22,10 @@ export interface DockerTargetOptions {
   env?: Record<string, string>;
   envFile?: string;
   cwd?: string;
+  configurations?: Record<
+    string,
+    Omit<DockerTargetOptions, 'configurations' | 'name'>
+  >;
 }
 
 export interface DockerPluginOptions {
@@ -118,7 +122,7 @@ function interpolateDockerTargetOptions(
   options: DockerTargetOptions,
   projectRoot: string,
   imageRef: string,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): DockerTargetOptions {
   const commitSha = getLatestCommitSha();
   const projectName = getProjectName(projectRoot, context.workspaceRoot);
@@ -155,6 +159,64 @@ function getProjectName(projectRoot: string, workspaceRoot: string): string {
   return projectRoot.replace(/^[\\/]/, '').replace(/[\\/\s]+/g, '-');
 }
 
+function buildTargetOptions(
+  interpolatedTarget: DockerTargetOptions,
+  projectRoot: string,
+  imageRef: string,
+  isRunTarget = false
+): Record<string, any> {
+  const options: Record<string, any> = {
+    cwd: interpolatedTarget.cwd ?? projectRoot,
+  };
+
+  if (isRunTarget) {
+    // Run target doesn't have default args
+    if (interpolatedTarget.args) {
+      options.args = interpolatedTarget.args;
+    }
+  } else {
+    // Build target always includes --tag default
+    options.args = [`--tag ${imageRef}`, ...(interpolatedTarget.args ?? [])];
+  }
+
+  if (interpolatedTarget.env) {
+    options.env = interpolatedTarget.env;
+  }
+
+  if (interpolatedTarget.envFile) {
+    options.envFile = interpolatedTarget.envFile;
+  }
+
+  return options;
+}
+
+function buildTargetConfigurations(
+  interpolatedTarget: DockerTargetOptions,
+  projectRoot: string,
+  imageRef: string,
+  isRunTarget = false
+): Record<string, any> | undefined {
+  if (!interpolatedTarget.configurations) {
+    return undefined;
+  }
+
+  const configurations: Record<string, any> = {};
+
+  for (const [configName, configOptions] of Object.entries(
+    interpolatedTarget.configurations
+  )) {
+    // Each configuration gets the full treatment with defaults
+    configurations[configName] = buildTargetOptions(
+      { ...configOptions, name: interpolatedTarget.name },
+      projectRoot,
+      imageRef,
+      isRunTarget
+    );
+  }
+
+  return configurations;
+}
+
 async function createDockerTargets(
   projectRoot: string,
   options: NormalizedDockerPluginOptions,
@@ -187,19 +249,24 @@ async function createDockerTargets(
     },
   };
 
-  const buildOptions = {
-    cwd: interpolatedBuildTarget.cwd ?? projectRoot,
-    args: [`--tag ${imageRef}`, ...(interpolatedBuildTarget.args ?? [])],
-    ...(interpolatedBuildTarget.env && { env: interpolatedBuildTarget.env }),
-    ...(interpolatedBuildTarget.envFile && {
-      envFile: interpolatedBuildTarget.envFile,
-    }),
-  };
+  const buildOptions = buildTargetOptions(
+    interpolatedBuildTarget,
+    projectRoot,
+    imageRef,
+    false
+  );
+  const buildConfigurations = buildTargetConfigurations(
+    interpolatedBuildTarget,
+    projectRoot,
+    imageRef,
+    false
+  );
 
   targets[interpolatedBuildTarget.name] = {
     dependsOn: ['build', '^build'],
     command: `docker build .`,
     options: buildOptions,
+    ...(buildConfigurations && { configurations: buildConfigurations }),
     inputs: [
       ...('production' in namedInputs
         ? ['production', '^production']
@@ -220,19 +287,24 @@ async function createDockerTargets(
     },
   };
 
-  const runOptions = {
-    cwd: interpolatedRunTarget.cwd ?? projectRoot,
-    ...(interpolatedRunTarget.args && { args: interpolatedRunTarget.args }),
-    ...(interpolatedRunTarget.env && { env: interpolatedRunTarget.env }),
-    ...(interpolatedRunTarget.envFile && {
-      envFile: interpolatedRunTarget.envFile,
-    }),
-  };
+  const runOptions = buildTargetOptions(
+    interpolatedRunTarget,
+    projectRoot,
+    imageRef,
+    true
+  );
+  const runConfigurations = buildTargetConfigurations(
+    interpolatedRunTarget,
+    projectRoot,
+    imageRef,
+    true
+  );
 
   targets[interpolatedRunTarget.name] = {
     dependsOn: [interpolatedBuildTarget.name],
     command: `docker run {args} ${imageRef}`,
     options: runOptions,
+    ...(runConfigurations && { configurations: runConfigurations }),
     inputs: [
       ...('production' in namedInputs
         ? ['production', '^production']

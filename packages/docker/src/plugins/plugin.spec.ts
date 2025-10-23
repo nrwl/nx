@@ -1018,4 +1018,327 @@ describe('@nx/docker', () => {
       expect(targets['build'].options.envFile).toBe('.env.docker');
     });
   });
+
+  describe('target configurations', () => {
+    it('should create configurations with interpolated args', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': JSON.stringify({ name: 'my-project' }),
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            configurations: {
+              ci: {
+                args: ['--cache-to={projectName}'],
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].configurations).toMatchInlineSnapshot(`
+        {
+          "ci": {
+            "args": [
+              "--tag proj",
+              "--cache-to=my-project",
+            ],
+            "cwd": "proj",
+          },
+        }
+      `);
+    });
+
+    it('should create multiple configurations', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            configurations: {
+              ci: {
+                args: ['--cache-to=s3://bucket/{projectName}'],
+              },
+              production: {
+                args: ['--no-cache', '--platform=linux/amd64'],
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].configurations).toMatchInlineSnapshot(`
+        {
+          "ci": {
+            "args": [
+              "--tag proj",
+              "--cache-to=s3://bucket/proj",
+            ],
+            "cwd": "proj",
+          },
+          "production": {
+            "args": [
+              "--tag proj",
+              "--no-cache",
+              "--platform=linux/amd64",
+            ],
+            "cwd": "proj",
+          },
+        }
+      `);
+    });
+
+    it('should include default args in configurations', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--build-arg', 'NODE_ENV=production'],
+            configurations: {
+              ci: {
+                args: ['--cache-from=type=registry'],
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      // Base options should include custom args
+      expect(targets['build'].options.args).toEqual([
+        '--tag proj',
+        '--build-arg',
+        'NODE_ENV=production',
+      ]);
+      // Configuration should include default tag + config args
+      expect(targets['build'].configurations.ci.args).toEqual([
+        '--tag proj',
+        '--cache-from=type=registry',
+      ]);
+    });
+
+    it('should support configurations with env and envFile', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            configurations: {
+              ci: {
+                env: {
+                  DOCKER_BUILDKIT: '1',
+                  CI: 'true',
+                },
+                envFile: '.env.ci',
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].configurations.ci.env).toEqual({
+        DOCKER_BUILDKIT: '1',
+        CI: 'true',
+      });
+      expect(targets['build'].configurations.ci.envFile).toBe('.env.ci');
+    });
+
+    it('should support configurations for run target', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          runTarget: {
+            name: 'run',
+            configurations: {
+              debug: {
+                args: ['-p', '9229:9229'],
+                env: {
+                  NODE_ENV: 'development',
+                },
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['run'].configurations.debug.args).toEqual([
+        '-p',
+        '9229:9229',
+      ]);
+      expect(targets['run'].configurations.debug.env).toEqual({
+        NODE_ENV: 'development',
+      });
+    });
+
+    it('should not include configurations if not defined', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: 'build',
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].configurations).toBeUndefined();
+      expect(targets['build']).toMatchInlineSnapshot(`
+        {
+          "command": "docker build .",
+          "dependsOn": [
+            "build",
+            "^build",
+          ],
+          "inputs": [
+            "production",
+            "^production",
+          ],
+          "metadata": {
+            "description": "Run Docker build",
+            "help": {
+              "command": "docker build --help",
+              "example": {
+                "options": {
+                  "cache-from": "type=s3,region=eu-west-1,bucket=mybucket .",
+                  "cache-to": "type=s3,region=eu-west-1,bucket=mybucket .",
+                },
+              },
+            },
+            "technologies": [
+              "docker",
+            ],
+          },
+          "options": {
+            "args": [
+              "--tag proj",
+            ],
+            "cwd": "proj",
+          },
+        }
+      `);
+    });
+
+    it('should interpolate tokens in configuration args', async () => {
+      await tempFs.createFiles({
+        'apps/api/Dockerfile': 'FROM node:18',
+        'apps/api/project.json': JSON.stringify({ name: 'my-api' }),
+      });
+
+      const results = await createNodesFunction(
+        ['apps/api/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            configurations: {
+              ci: {
+                args: [
+                  '--label',
+                  'project={projectName}',
+                  '--label',
+                  'root={projectRoot}',
+                  '--tag',
+                  '{imageRef}:{shortCommitSha}',
+                ],
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['apps/api'].targets;
+      expect(targets['build'].configurations.ci.args).toContain('--label');
+      expect(targets['build'].configurations.ci.args).toContain(
+        'project=my-api'
+      );
+      expect(targets['build'].configurations.ci.args).toContain(
+        'root=apps/api'
+      );
+      expect(targets['build'].configurations.ci.args).toContain('--tag');
+      expect(targets['build'].configurations.ci.args).toContain(
+        'apps-api:abc1234'
+      );
+    });
+
+    it('should support both buildTarget and runTarget configurations', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'docker:build',
+            configurations: {
+              ci: {
+                args: ['--cache-to=type=registry'],
+              },
+            },
+          },
+          runTarget: {
+            name: 'docker:run',
+            configurations: {
+              dev: {
+                args: ['-p', '3000:3000'],
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['docker:build'].configurations).toMatchInlineSnapshot(`
+        {
+          "ci": {
+            "args": [
+              "--tag proj",
+              "--cache-to=type=registry",
+            ],
+            "cwd": "proj",
+          },
+        }
+      `);
+    });
+  });
 });
