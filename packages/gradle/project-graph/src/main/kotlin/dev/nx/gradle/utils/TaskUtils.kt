@@ -87,6 +87,12 @@ fun getGradlewCommand(): String {
 }
 
 /**
+ * Cache the gitignore classifier per workspace root to avoid recreating it for every task
+ * TODO(lourw): refactor this out. The structure of this plugin should be refactored to use dependency injection rather than maintaining a cached instance
+ */
+private val gitignoreClassifierCache = mutableMapOf<String, GitIgnoreClassifier>()
+
+/**
  * Parse task and get inputs for this task
  *
  * @param task task to process
@@ -102,80 +108,85 @@ fun getInputsForTask(
     workspaceRoot: String,
     externalNodes: MutableMap<String, ExternalNode>? = null
 ): List<Any>? {
-  fun getDependentTasksOutputFile(file: File): String {
-    val relativePathToWorkspaceRoot =
-        file.path.substring(workspaceRoot.length + 1) // also remove the file separator
-    val dependentTasksOutputFiles =
-        if (file.name.contains('.') ||
-            (file.exists() &&
-                file.isFile)) { // if file does not exists, file.isFile would always be false
-          relativePathToWorkspaceRoot
-        } else {
-          "$relativePathToWorkspaceRoot${File.separator}**${File.separator}*"
-        }
-    return dependentTasksOutputFiles
-  }
-
   return try {
-    val mappedInputsIncludeExternal: MutableList<Any> = mutableListOf()
+    val inputs = mutableListOf<Any>()
+    val externalDependencies = mutableListOf<String>()
 
-    val dependsOnOutputs: MutableSet<File> = mutableSetOf()
-    val combinedDependsOn: Set<Task> = dependsOnTasks ?: getDependsOnTask(task)
-    combinedDependsOn.forEach { dependsOnTask ->
-      dependsOnTask.outputs.files.files.forEach { file ->
-        if (file.path.startsWith(workspaceRoot + File.separator)) {
-          dependsOnOutputs.add(file)
-          val dependentTasksOutputFiles = getDependentTasksOutputFile(file)
-          mappedInputsIncludeExternal.add(
-              mapOf("dependentTasksOutputFiles" to dependentTasksOutputFiles))
+    // Get or create cached classifier for this workspace
+    val classifier = gitignoreClassifierCache.getOrPut(workspaceRoot) {
+      GitIgnoreClassifier(File(workspaceRoot))
+    }
+
+    // Step 1: Collect outputs from dependent tasks (always treated as dependentTasksOutputFiles)
+    val tasksToProcess = dependsOnTasks ?: getDependsOnTask(task)
+    tasksToProcess.forEach { dependentTask ->
+      dependentTask.outputs.files.files.forEach { outputFile ->
+        if (isFileInWorkspace(outputFile, workspaceRoot)) {
+          val relativePath = toRelativePathOrGlob(outputFile, workspaceRoot)
+          inputs.add(mapOf("dependentTasksOutputFiles" to relativePath))
         }
       }
     }
 
-    val externalDependencies = mutableListOf<String>()
-    val buildDir = task.project.layout.buildDirectory.get().asFile
+    // Step 2: Process task's input files
+    task.inputs.files.forEach { inputFile ->
+      val relativePath = replaceRootInPath(inputFile.path, projectRoot, workspaceRoot)
 
-    task.inputs.files.forEach { file ->
-      val path: String = file.path
-      val pathWithReplacedRoot = replaceRootInPath(path, projectRoot, workspaceRoot)
-
-      if (pathWithReplacedRoot != null) {
-        val isInTaskOutputBuildDir = file.path.startsWith(buildDir.path + File.separator)
-        if (!isInTaskOutputBuildDir) {
-          mappedInputsIncludeExternal.add(pathWithReplacedRoot)
-        } else {
-          val isInDependsOnOutputs =
-              dependsOnOutputs.any { outputFile ->
-                file == outputFile || file.path.startsWith(outputFile.path + File.separator)
-              }
-          if (!isInDependsOnOutputs) {
-            val dependentTasksOutputFile = getDependentTasksOutputFile(file)
-            mappedInputsIncludeExternal.add(
-                mapOf("dependentTasksOutputFiles" to dependentTasksOutputFile))
+      when {
+        // File is outside workspace - treat as external dependency
+        relativePath == null -> {
+          try {
+            val externalDep = getExternalDepFromInputFile(inputFile.path, externalNodes, task.logger)
+            externalDep?.let { externalDependencies.add(it) }
+          } catch (e: Exception) {
+            task.logger.info("Error resolving external dependency for ${inputFile.path}: $e")
           }
         }
-      } else {
-        try {
-          val externalDep = getExternalDepFromInputFile(path, externalNodes, task.logger)
-          externalDep?.let { externalDependencies.add(it) }
-        } catch (e: Exception) {
-          task.logger.info("${task}: get external dependency error $e")
+
+        // File matches gitignore pattern - treat as dependentTasksOutputFiles (build artifact)
+        classifier.isIgnored(inputFile) -> {
+          val relativePathOrGlob = toRelativePathOrGlob(inputFile, workspaceRoot)
+          inputs.add(mapOf("dependentTasksOutputFiles" to relativePathOrGlob))
+        }
+
+        // Regular source file - add as direct input
+        else -> {
+          inputs.add(relativePath)
         }
       }
     }
 
+    // Step 3: Add external dependencies if any
     if (externalDependencies.isNotEmpty()) {
-      mappedInputsIncludeExternal.add(mapOf("externalDependencies" to externalDependencies))
+      inputs.add(mapOf("externalDependencies" to externalDependencies))
     }
 
-    if (mappedInputsIncludeExternal.isNotEmpty()) {
-      return mappedInputsIncludeExternal
-    }
-    return null
+    inputs.ifEmpty { null }
   } catch (e: Exception) {
     task.logger.info("Error getting inputs for ${task.path}: ${e.message}")
     task.logger.debug("Stack trace:", e)
     null
+  }
+}
+
+/**
+ * Checks if a file is within the workspace.
+ */
+private fun isFileInWorkspace(file: File, workspaceRoot: String): Boolean {
+  return file.path.startsWith(workspaceRoot + File.separator)
+}
+
+/**
+ * Converts a file to a relative path. If it's a directory, returns a glob pattern.
+ */
+private fun toRelativePathOrGlob(file: File, workspaceRoot: String): String {
+  val relativePath = file.path.substring(workspaceRoot.length + 1)
+  val isFile = file.name.contains('.') || (file.exists() && file.isFile)
+
+  return if (isFile) {
+    relativePath
+  } else {
+    "$relativePath${File.separator}**${File.separator}*"
   }
 }
 
