@@ -7,10 +7,12 @@ export function consumeMessagesFromSocket(callback: (message: string) => void) {
     if (chunk.endsWith(MESSAGE_END_SEQ)) {
       message += chunk.substring(0, chunk.length - MESSAGE_END_SEQ.length);
 
-      // Server may send multiple messages in one chunk, so splitting by 0x4
+      // Server may send multiple messages in one chunk, so splitting by MESSAGE_END_SEQ
       const messages = message.split(MESSAGE_END_SEQ);
       for (const splitMessage of messages) {
-        callback(splitMessage);
+        if (splitMessage) {
+          callback(splitMessage);
+        }
       }
 
       message = '';
