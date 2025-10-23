@@ -211,7 +211,7 @@ By default, Nx Release will stage all changes it makes with git. This includes u
 
 The commit message created by Nx Release defaults to 'chore(release): publish {version}', where `{version}` will be dynamically interpolated with the relevant value based on your actual release, but can be customized with the `release.git.commitMessage` property in nx.json.
 
-The structure of the git tag defaults to `v{version}`. For example, if the version is `1.2.3`, the tag will be `v1.2.3`. This can be customized by setting the `release.releaseTagPattern` property in nx.json.
+The structure of the git tag defaults to `v{version}`. For example, if the version is `1.2.3`, the tag will be `v1.2.3`. This can be customized by setting the `release.releaseTag.pattern` property in nx.json.
 
 For this same example, if you want the commit message to be 'chore(release): 1.2.3' and the tag to be `release/1.2.3`, you would configure nx.json like this:
 
@@ -219,7 +219,9 @@ For this same example, if you want the commit message to be 'chore(release): 1.2
 // nx.json
 {
   "release": {
-    "releaseTagPattern": "release/{version}",
+    "releaseTag": {
+      "pattern": "release/{version}"
+    },
     "git": {
       "commitMessage": "chore(release): {version}"
     }
