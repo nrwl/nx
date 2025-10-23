@@ -472,7 +472,7 @@ Core version options are therefore directly at the top level of the `version` pr
 Some important changes in Nx 22:
 
 - `preserveMatchingDependencyRanges` now defaults to `true`
-- `updateDependents` now defaults to `true`
+- `updateDependents` now defaults to "always"
 - `releaseTag*` properties such as `releaseTagPattern` and `releaseTagPatternStrictPreid` have been coalesced into a single `releaseTag` object. (`releaseTagPattern` -> `releaseTag.pattern`, `releaseTagPatternStrictPreid` -> `releaseTag.strictPreid`)
 - `releaseTag.strictPreid` now defaults to `true`
 - Fixed Release Group Release Tag Pattern now defaults to `{releaseGroupName}-v{version}`
