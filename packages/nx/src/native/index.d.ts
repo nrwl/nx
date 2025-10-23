@@ -315,14 +315,6 @@ export declare export declare function isEditorInstalled(editor: SupportedEditor
 
 export declare export declare function logDebug(message: string): void
 
-/** Metrics data for collection cycle */
-export interface MetricsData {
-  timestamp: number
-  mainCliProcess?: ProcessSnapshot
-  daemonProcesses: Array<ProcessSnapshot>
-  tasks: Record<string, Array<ProcessSnapshot>>
-}
-
 /** Metrics update sent every collection cycle */
 export interface MetricsUpdate {
   metrics: ProcessMetricsSnapshot
@@ -371,18 +363,6 @@ export interface ProcessMetricsSnapshot {
   daemon?: DaemonMetrics
   tasks: Record<string, Array<ProcessMetrics>>
   batches: Record<string, BatchMetricsSnapshot>
-}
-
-/** Process snapshot with full metadata and metrics */
-export interface ProcessSnapshot {
-  pid: number
-  ppid: number
-  name: string
-  command: string
-  exePath: string
-  cwd: string
-  cpu: number
-  memory: number
 }
 
 export interface Project {

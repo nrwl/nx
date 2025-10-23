@@ -357,7 +357,7 @@ impl MetricsCollector {
                             .collect::<Vec<_>>()
                     }; // Lock released here!
 
-                    // Notify subscribers WITHOUT holding lock (fixes RUST-8)
+                    // Notify subscribers
                     for (callback, update) in notifications {
                         let status =
                             callback.call(Ok(update), ThreadsafeFunctionCallMode::NonBlocking);
