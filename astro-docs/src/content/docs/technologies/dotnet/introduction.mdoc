@@ -114,6 +114,14 @@ To view inferred tasks for a project, open the [project details view](/docs/feat
 
 The `@nx/dotnet` is configured in the `plugins` array in `nx.json`.
 
+Each target type can be configured with:
+
+- `targetName` - Rename the target if needed (e.g., change "build" to "compile")
+- Additional target configuration properties (options, configurations, dependsOn, cache, inputs, outputs)
+- Set to `false` to disable a target
+
+For example:
+
 ```json
 // nx.json
 {
@@ -121,19 +129,26 @@ The `@nx/dotnet` is configured in the `plugins` array in `nx.json`.
     {
       "plugin": "@nx/dotnet",
       "options": {
-        "buildTargetName": "build",
-        "testTargetName": "test",
-        "cleanTargetName": "clean",
-        "restoreTargetName": "restore",
-        "publishTargetName": "publish",
-        "packTargetName": "pack"
+        "build": {
+          "targetName": "compile",
+          "configurations": {
+            "production": {
+              "optimization": true
+            }
+          }
+        },
+        "test": {
+          "targetName": "unit-test",
+          "dependsOn": ["build"]
+        },
+        "pack": false
       }
     }
   ]
 }
 ```
 
-Once a .NET project file has been identified, the targets are created with the names you specify in the `nx.json` `plugins` array. The default names for the inferred targets are:
+Once a .NET project file has been identified, the targets are created with the configuration you specify in the `nx.json` `plugins` array. The default names for the inferred targets are:
 
 - `build` - Compiles the project
 - `test` - Runs unit tests (for test projects)
