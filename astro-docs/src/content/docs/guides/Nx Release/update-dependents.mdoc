@@ -12,9 +12,7 @@ For example, `project-a` might be version `1.0.0` and `project-b` might be versi
 
 **In other words, `project-a` is a dependent of `project-b`, and `project-b` is a dependency of `project-a`.**
 
-
 This means that whenever we update `project-b` we need to consider the side-effects of that on `project-a`. There will now be a dependency reference, e.g. in a manifest file such as `package.json` for the TypeScript/JavaScript ecosystem, that needs to be updated to reflect the new version of `project-b`.
-
 
 Nx can handle this cascade of updates automatically, across any number of [Release Group](/docs/guides/nx-release/release-groups) boundaries, and this behavior is configurable via the `version.updateDependents` option.
 
