@@ -13,9 +13,7 @@ An important characteristic of Nx release is that it does not directly manipulat
 {% aside type="note" title="Breaking Changes in Nx v21" %}
 In Nx v21, the implementation details of versioning were rewritten to enhance flexibility and allow for better cross-ecosystem support. An automated migration was provided in Nx v21 to update your configuration to the new format when running `nx migrate`.
 
-During the lifecycle of Nx v21, you can still opt into the old versioning by setting `release.version.useLegacyVersioning` to `true`, which will keep the original configuration structure and behavior. In Nx v22, the legacy versioning implementation will be removed entirely, so this should only be done temporarily to ease the transition.
-
-The following examples shows the Nx v21 configuration format, you can view the v20 version of the website to see the legacy format.
+The following examples shows the Nx v21 and later configuration format, you can view the v20 version of the website to see the legacy format.
 {% /aside %}
 
 ## Scenario 1: I want to update semantic version numbers directly in my source package.json files
