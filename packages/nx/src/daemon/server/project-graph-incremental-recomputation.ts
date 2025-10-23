@@ -117,6 +117,29 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
       );
     }
 
+    const errors = result.error
+      ? result.error instanceof DaemonProjectGraphError
+        ? result.error.errors
+        : [result.error]
+      : [];
+
+    // Always write the daemon's current graph to disk to ensure disk cache
+    // stays in sync with the daemon's in-memory cache. This prevents issues
+    // where a non-daemon process writes a stale/errored cache that never
+    // gets overwritten by the daemon's valid graph.
+    if (
+      result.projectGraph &&
+      result.projectFileMapCache &&
+      result.sourceMaps
+    ) {
+      writeCache(
+        result.projectFileMapCache,
+        result.projectGraph,
+        result.sourceMaps,
+        errors
+      );
+    }
+
     return result;
   } catch (e) {
     return {
@@ -323,12 +346,6 @@ async function processFilesAndCreateAndSerializeProjectGraph(
         };
       }
     }
-    writeCache(
-      g.projectFileMapCache,
-      g.projectGraph,
-      projectConfigurationsResult.sourceMaps,
-      errors
-    );
     if (errors.length > 0) {
       return {
         error: new DaemonProjectGraphError(
