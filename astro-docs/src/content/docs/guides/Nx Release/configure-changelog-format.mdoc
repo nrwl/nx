@@ -25,6 +25,7 @@ The default changelog renderer for `nx release` generates a changelog entry for 
 There are a few options available to modify the default changelog renderer output. They can be applied to both `workspaceChangelog` and `projectChangelogs` in exactly the same way. All four options are true by default:
 
 ```json
+// nx.json
 {
   "release": {
     "changelog": {
@@ -66,6 +67,7 @@ Whether to include the date in the version title. It can be set to `false` to di
 If you prefer a more minimalist changelog, you can set all the options to false, like this:
 
 ```json
+// nx.json
 {
   "release": {
     "changelog": {
