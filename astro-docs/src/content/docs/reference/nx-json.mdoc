@@ -9,6 +9,12 @@ filter: 'type:References'
 
 The `nx.json` file configures the Nx CLI and project defaults. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/nx-schema.json) is available on GitHub.
 
+{% aside type="note" title="Nx 22 Changes" %}
+Release tag configuration now uses a nested `releaseTag` object (e.g., `releaseTag.pattern` instead of `releaseTagPattern`). Old properties work until Nx 23.
+
+See [Release Tag](#release-tag) for details.
+{% /aside %}
+
 The following is an expanded example showing all options. Your `nx.json` will likely be much shorter.
 
 ```json
@@ -402,40 +408,81 @@ The `projectsRelationship` property tells Nx whether to release projects indepen
 }
 ```
 
-### Release Tag Pattern
+### Release Tag
 
-Optionally override the git/release tag pattern to use. This field is the source of truth for changelog generation and release tagging, as well as for conventional commits parsing.
+The `releaseTag` property controls how git tags are parsed and generated. By default tags conform to semantic version and are validated as such.
 
-It supports interpolating the version as `{version}` and (if releasing independently or forcing project level version control system releases) the project name as `{projectName}` within the string. When using release groups in which the member projects are versioned together, you can also leverage `{releaseGroupName}` and it will be interpolated appropriately in the commit/tag that gets created for that release group.
+{% aside type="note" title="Nx 22 Changes" %}
+Release tag configuration now uses a nested `releaseTag` object. Old flat properties (`releaseTagPattern`, etc.) are deprecated but work until Nx 23.
 
-The default `"releaseTag.pattern"` for fixed/unified releases is: `v{version}`
+**Nx 22+:** `releaseTag.pattern`, `releaseTag.requireSemver`, `releaseTag.strictPreid`
 
-The default `"releaseTag.pattern"` for independent releases at the project level is: `{projectName}@{version}`
+**Nx < 22:** `releaseTagPattern`, `releaseTagPatternRequireSemver`, `releaseTagPatternStrictPreid`
+{% /aside %}
+
+#### Configuration Options
+
+| Property                 | Type    | Default                                                           | Description                                                                                                  |
+| ------------------------ | ------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **pattern**              | string  | `v{version}` for fixed, `{projectName}@{version}` for independent | The git tag pattern to use. Supports interpolation of `{version}`, `{projectName}`, and `{releaseGroupName}` |
+| **requireSemver**        | boolean | `false`                                                           | Whether to require that all tags match semantic versioning                                                   |
+| **strictPreid**          | boolean | `false` for independent, `true` for fixed release groups          | Whether to ensure prerelease IDs are consistent across packages                                              |
+| **preferDockerVersion**  | boolean | `false`                                                           | Whether to prefer Docker-compatible version format in git tags                                               |
+| **checkAllBranchesWhen** | string  | undefined                                                         | Branch to check when resolving current versions from git tags                                                |
+
+#### Tag Pattern Syntax
+
+The tag pattern supports interpolating the following values:
+
+- `{version}` - The version currently being released
+- `{projectName}` - The name of the project being released (for independent releases)
+- `{releaseGroupName}` - The name of the release group being released (when using release groups)
+
+Example patterns and their results:
+
+- `v{version}` → `v1.0.0` (default for fixed releases)
+- `{projectName}@{version}` → `my-lib@1.0.0` (default for independent releases)
+- `{releaseGroupName}/{projectName}/{version}` → `backend/api/1.0.0`
+- `release/{version}` → `release/1.0.0`
+
+#### Example Configuration
+
+{% tabs syncKey="nx-release-configuration" %}
+{% tabitem label="Nx 22+" %}
 
 ```jsonc
 // nx.json
 {
   "release": {
-    // Here we are configuring nx release to use a custom release
-    // tag pattern (we have dropped the v prefix from the default)
     "releaseTag": {
-      "pattern": "{version}"
+      "pattern": "{releaseGroupName}-v{version}",
+      "requireSemver": true,
+      "strictPreid": true,
+      "preferDockerVersion": false,
+      "checkAllBranchesWhen": "main"
     }
   }
 }
 ```
 
-#### Tag Pattern Syntax
+{% /tabitem %}
+{% tabitem label="Nx < 22" %}
 
-The `releaseTag.pattern` supports interpolated values:
+```jsonc
+// nx.json
+{
+  "release": {
+    "releaseTagPattern": "{releaseGroupName}-v{version}",
+    "releaseTagPatternRequireSemver": true,
+    "releaseTagPatternStrictPreid": true,
+    "releaseTagPatternPreferDockerVersion": false,
+    "releaseTagPatternCheckAllBranchesWhen": "main"
+  }
+}
+```
 
-- `{version}` - The version currently being released
-- `{projectName}` - The name of the project being released
-- `{releaseGroupname}` - The name of the release group being released (if applicable)
-- Example patterns:
-
-- `{projectName}@{version}` - Results in: my-lib@1.0.0
-- `{releaseGroupName}/{projectName}/{version}` - Results in: my-group/my-lib/1.0.0
+{% /tabitem %}
+{% /tabs %}
 
 ### Version
 
@@ -449,6 +496,10 @@ For Nx 22, this automated migration was re-added to allow updating your configur
 {% /aside %}
 
 Behind the scenes, ecosystem-specific `version` logic is powered by a `VersionActions` implementation. Out of the box Nx wires up the most widely applicable `VersionActions` implementation for you, which is `@nx/js/src/release/version-actions` provided by the `@nx/js` plugin.
+
+{% aside type="note" title="Programmatic API (Nx 22+)" %}
+For advanced use cases, the `ReleaseClient` programmatic API allows you to trigger releases from custom scripts. In Nx 22+, you can optionally ignore the `nx.json` release configuration entirely when using the API, which is useful for ad-hoc scripts that only work with a subset of the repository.
+{% /aside %}
 
 Core version options are therefore directly at the top level of the `version` property (as of Nx v21), while ecosystem-specific options are available through `versionActionsOptions`:
 
@@ -471,8 +522,14 @@ Core version options are therefore directly at the top level of the `version` pr
 
 Some important changes in Nx 22:
 
-- `preserveMatchingDependencyRanges` now defaults to `true`
-- `updateDependents` now defaults to "always"
+- `preserveMatchingDependencyRanges` now defaults to `true` (previously `false`)
+  - When `true`, dependency version ranges are preserved if they already satisfy the new version being released
+  - Example: If releasing version `1.2.0` and a dependent has range `^1.0.0`, it remains `^1.0.0` instead of being updated to `1.2.0`
+  - Set to `false` explicitly if you need exact versions in all dependents
+- `updateDependents` now defaults to `"always"` (previously `"auto"`)
+  - `"always"`: Update dependents wherever they exist in the graph, regardless of filter selection
+  - `"auto"`: Update dependents only if they're within the selected projects or release groups
+  - `"never"`: Never update dependents
 - `releaseTag*` properties such as `releaseTagPattern` and `releaseTagPatternStrictPreid` have been coalesced into a single `releaseTag` object. (`releaseTagPattern` -> `releaseTag.pattern`, `releaseTagPatternStrictPreid` -> `releaseTag.strictPreid`)
 - `releaseTag.strictPreid` now defaults to `true`
 - Fixed Release Group Release Tag Pattern now defaults to `{releaseGroupName}-v{version}`
@@ -555,6 +612,26 @@ The `changelog.projectChangelogs` property configures the project changelogs. It
   }
 }
 ```
+
+#### Replace Existing Contents {% badge  text="Nx 22+" /%}
+
+By default, changelog entries are prepended to existing changelog files. To completely replace the entire changelog file contents instead, use the `replaceExistingContents` option:
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "changelog": {
+      "workspaceChangelog": {
+        // Replaces the entire CHANGELOG.md file with the new content
+        "replaceExistingContents": true
+      }
+    }
+  }
+}
+```
+
+This option is available for both `workspaceChangelog` and `projectChangelogs`. It's useful when you want to regenerate the entire changelog from scratch rather than maintaining a cumulative history.
 
 ### Git
 
