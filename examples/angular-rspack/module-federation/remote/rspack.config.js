@@ -5,7 +5,7 @@ module.exports = () => {
     const {
       patchDevkitRequestPath,
       patchModuleFederationRequestPath,
-    } = require('../../patch-devkit-request-path');
+    } = require('../../patch-devkit-request-path.ts');
     const cleanupDevkitPatch = patchDevkitRequestPath();
     const cleanupModuleFederationPatch = patchModuleFederationRequestPath();
     const {

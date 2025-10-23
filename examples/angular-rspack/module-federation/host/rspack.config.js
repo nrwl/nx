@@ -1,7 +1,7 @@
 const {
   patchDevkitRequestPath,
   patchModuleFederationRequestPath,
-} = require('../../patch-devkit-request-path');
+} = require('../../patch-devkit-request-path.ts');
 module.exports = () => {
   if (global.NX_GRAPH_CREATION === undefined) {
     // This is needed to ensure that the `@nx/angular-rspack` package can find the build artefact for `@nx/devkit`
@@ -9,7 +9,7 @@ module.exports = () => {
     const {
       patchDevkitRequestPath,
       patchModuleFederationRequestPath,
-    } = require('../../patch-devkit-request-path');
+    } = require('../../patch-devkit-request-path.ts');
     const cleanupDevkitPatch = patchDevkitRequestPath();
     const cleanupModuleFederationPatch = patchModuleFederationRequestPath();
     const {
