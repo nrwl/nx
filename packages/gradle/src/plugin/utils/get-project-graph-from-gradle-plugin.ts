@@ -95,6 +95,7 @@ export function getCurrentBuildFiles(): string[] {
  * It will accumulate the output of all gradlew files.
  * @param workspaceRoot
  * @param gradlewFiles absolute paths to all gradlew files in the workspace
+ * @param options user specified gradle plugin options
  * @returns Promise<void>
  */
 export async function populateProjectGraph(
