@@ -26,7 +26,7 @@ Manually splitting these slow tasks can be complex and require ongoing maintenan
 
 To use **automated task splitting**, you need to connect your workspace to Nx Cloud (if you haven't already).
 
-```shell {% frame="none" %}
+```shell
 npx nx@latest connect
 ```
 
@@ -39,28 +39,28 @@ Run this command to set up inferred tasks and enable task splitting for each plu
 {% tabs syncKey="test-runner" %}
 {% tabitem label="Cypress" %}
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/cypress
 ```
 
 {% /tabitem %}
 {% tabitem label="Playwright" %}
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/playwright
 ```
 
 {% /tabitem %}
 {% tabitem label="Jest" %}
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/jest
 ```
 
 {% /tabitem %}
 {% tabitem label="Gradle" %}
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/gradle
 ```
 
@@ -96,7 +96,7 @@ Run the following command to open the project detail view for your test project:
 {% tabs %}
 {% tabitem label="CLI" %}
 
-```shell {% frame="none" %}
+```shell
 nx show project my-project-e2e
 ```
 
@@ -422,7 +422,7 @@ If you configured Nx Atomizer properly, you'll see that there are tasks named `e
 
 During local development, you'll want to continue using the base task (e.g., `e2e`, `test`) as it is more efficient on a single machine.
 
-```shell {% frame="none" %}
+```shell
 nx e2e my-project-e2e
 ```
 

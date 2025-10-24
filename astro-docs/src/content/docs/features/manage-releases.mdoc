@@ -14,7 +14,7 @@ Nx provides a set of tools to help you manage your releases called `nx release`.
 
 > We recommend always starting with --dry-run, because publishing is difficult to undo
 
-```shell {% frame="none" %}
+```shell
 nx release --dry-run
 ```
 
@@ -34,7 +34,7 @@ By default, when you run `nx release` it will prompt you for a version keyword (
 
 When trying it out for the first time, you need to pass the `--first-release` flag since there is no previous release to compare against for changelog purposes. It is strongly recommended to use the `--dry-run` flag to see what will be published in the first release without actually pushing anything to the registry.
 
-```shell {% frame="none" %}
+```shell
 nx release --first-release --dry-run
 ```
 

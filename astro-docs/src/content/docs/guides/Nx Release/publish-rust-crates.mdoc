@@ -26,7 +26,7 @@ Ensure that Nx is installed in your monorepo. Check out the [Installation docs](
 
 The [`@monodon/rust` package](https://github.com/Cammisuli/monodon) is required for Nx Release to manage and release Rust crates. Add it if it is not already installed:
 
-```shell {% frame="none" %}
+```shell
 nx add @monodon/rust
 ```
 
@@ -65,7 +65,7 @@ The `--dry-run` option is useful for testing your configuration without actually
 
 To preview your first release, run:
 
-```shell {% frame="none" %}
+```shell
 nx release --first-release --dry-run
 ```
 
@@ -176,7 +176,7 @@ NOTE: The "dryRun" flag means no changes were made.
 
 If the preview looks good, run the command again without the `--dry-run` option to actually create the release.
 
-```shell {% frame="none" %}
+```shell
 nx release --first-release
 ```
 

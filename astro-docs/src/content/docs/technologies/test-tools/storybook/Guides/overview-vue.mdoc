@@ -19,14 +19,14 @@ You can generate Storybook configuration for an individual Vue or Nuxt project b
 {% tabs %}
 {% tabitem label="Vue" %}
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/vue:storybook-configuration project-name
 ```
 
 {% /tabitem %}
 {% tabitem label="Nuxt" %}
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/nuxt:storybook-configuration my-nuxt-app
 ```
 
@@ -49,14 +49,14 @@ If you add more components to your project, and want to generate stories for all
 {% tabs %}
 {% tabitem label="Vue" %}
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/vue:stories --project=<project-name>
 ```
 
 {% /tabitem %}
 {% tabitem label="Nuxt" %}
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/nuxt:stories --project=<project-name>
 ```
 
@@ -70,7 +70,7 @@ Let's take for a example a library in your workspace, under `libs/feature/ui`, c
 
 The command to generate stories for that library would be:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/vue:stories --project=feature-ui
 ```
 

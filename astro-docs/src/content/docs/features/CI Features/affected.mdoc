@@ -211,7 +211,7 @@ This drastically improves the speed of your CI and reduces the amount of compute
 
 To leverage this feature, use the following command when running your tasks, particularly on CI:
 
-```shell {% frame="none" %}
+```shell
 nx affected -t <task>
 ```
 
@@ -225,7 +225,7 @@ Once the projects are identified, Nx runs the tasks you specified on that subset
 
 You can also visualize the affected projects using the [Nx graph](/docs/features/explore-graph). Simply run:
 
-```shell {% frame="none" %}
+```shell
 nx graph --affected
 ```
 
@@ -244,14 +244,14 @@ To understand which projects are affected, Nx uses the Git history and the [proj
 
 The affected command takes a `base` and `head` commit. The default `base` is your `main` branch, and the default `head` is your current file system. This is generally what you want when developing locally, but in CI, you need to customize these values.
 
-```shell {% frame="none" %}
+```shell
 nx affected -t build --base=origin/main --head=$PR_BRANCH_NAME # where PR_BRANCH_NAME is defined by your CI system
 nx affected -t build --base=origin/main~1 --head=origin/main # rerun what is affected by the last commit in main
 ```
 
 You can also set the base and head SHAs as environment variables:
 
-```shell {% frame="none" %}
+```shell
 NX_BASE=origin/main~1
 NX_HEAD=origin/main
 ```

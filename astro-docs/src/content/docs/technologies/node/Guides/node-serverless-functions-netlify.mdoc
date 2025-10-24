@@ -21,7 +21,7 @@ Let's walk through both scenarios.
 
 For new workspaces you can create a Nx workspace with serverless function with one command:
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace@latest my-functions --preset=@nx/netlify --site=my-site
 ```
 
@@ -29,13 +29,13 @@ npx create-nx-workspace@latest my-functions --preset=@nx/netlify --site=my-site
 
 You will need to install `@nx/netlify` if you haven't already.
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/netlify
 ```
 
 Next add the Netlify serverless configuration by running the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/netlify:setup-functions
 ```
 
@@ -49,7 +49,7 @@ This will do a few things:
 
 To serve your functions locally, run:
 
-```shell {% frame="none" %}
+```shell
 nx serve-functions
 ```
 
@@ -84,13 +84,13 @@ If you run `npx netlify deploy` in the workspace, the site ID will be automatica
 
 To deploy them to Netlify, run:
 
-```shell {% frame="none" %}
+```shell
 nx deploy-functions
 ```
 
 This creates a "draft deployment" to a temporary URL. If you want to do a production deployment, pass the `--prod` flag:
 
-```shell {% frame="none" %}
+```shell
 nx deploy-functions --prod
 ```
 

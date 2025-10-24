@@ -98,6 +98,8 @@ export async function runMavenAnalysis(
   await new Promise<void>((resolve, reject) => {
     const child = spawn(mavenExecutable, mavenArgs, {
       cwd: workspaceRoot,
+      windowsHide: true,
+      shell: true,
       stdio: 'pipe', // Always use pipe so we can control output
     });
 

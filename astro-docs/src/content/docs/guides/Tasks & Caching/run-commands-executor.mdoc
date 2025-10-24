@@ -10,7 +10,7 @@ You can easily run any command with the Nx toolchain. The main benefit is to mak
 
 The command we want to run for each project is:
 
-```shell {% frame="none" %}
+```shell
 make hello
 ```
 
@@ -42,24 +42,24 @@ For more information (e.g. how to forward arguments), see the [run-commands api 
 
 To run the command, use the usual Nx syntax:
 
-```shell {% frame="none" %}
+```shell
 nx run my-app:make
 ```
 
 or
 
-```shell {% frame="none" %}
+```shell
 nx make my-app
 ```
 
 You can also run the `make` command for all projects it has been defined on:
 
-```shell {% frame="none" %}
+```shell
 nx run-many -t make
 ```
 
 Or just on a subset of projects that are [affected by a given change](/docs/features/ci-features/affected):
 
-```shell {% frame="none" %}
+```shell
 nx affected -t make
 ```

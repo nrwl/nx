@@ -19,7 +19,7 @@ title="Project Crystal"
 
 For the best experience, we recommend that you [migrate](/docs/features/automate-updating-dependencies) to the latest Nx version before continuing. At minimum, you should be on Nx version 19.6.
 
-```shell {% frame="none" %}
+```shell
 npx nx migrate latest
 ```
 
@@ -27,7 +27,7 @@ npx nx migrate latest
 
 You can use the `infer-targets` generator to quickly migrate all available plugins to use inferred tasks. See the sections below for more details on the individual plugins' migration processes.
 
-```shell {% frame="none" %}
+```shell
 npx nx g infer-targets
 ```
 
@@ -64,7 +64,7 @@ The `convert-to-inferred` generator removes uses of executors from the correspon
 
 Target and configuration names are maintained for each project in their `project.json` files. A target may be removed from `project.json` if everything is inferred--that is, options and configurations are not customized. To get the full project details (including all inferred tasks), run:
 
-```shell {% frame="none" %}
+```shell
 npx nx show project <project-name>
 ```
 
