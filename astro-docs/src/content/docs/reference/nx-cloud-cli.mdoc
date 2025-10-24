@@ -332,6 +332,32 @@ nx affected -t build --no-dte
 {% /tabitem %}
 {% /tabs %}
 
+### `nx-cloud start-agent`
+
+Starts an agent process for [manual distributed task execution](/docs/guides/nx-cloud/manual-dte). The agent waits for Nx Cloud to assign tasks that have been distributed by the main CI job via `start-ci-run`. For automatic agent management, use [Nx Agents](/docs/features/ci-features/distribute-task-execution) instead.
+
+**Usage:**
+
+```shell
+npx nx-cloud start-agent
+```
+
+#### Options
+
+| Option      | Type    | Description                          | Default |
+| ----------- | ------- | ------------------------------------ | ------- |
+| `--verbose` | boolean | Enable verbose logging for debugging | `false` |
+
+#### Environment Variables
+
+Use the `NX_AGENT_NAME` environment variable to assign a name to the agent for identification in logs and the Nx Cloud UI:
+
+```shell
+NX_AGENT_NAME=agent-1 npx nx-cloud start-agent
+```
+
+For complete examples across different CI providers, see the [Manual Distributed Task Execution guide](/docs/guides/nx-cloud/manual-dte).
+
 ### `nx-cloud stop-all-agents`
 
 Same as `npx nx-cloud complete-ci-run`.
