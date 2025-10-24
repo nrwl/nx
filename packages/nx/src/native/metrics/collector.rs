@@ -393,6 +393,10 @@ impl MetricsCollector {
         sys.processes()
             .iter()
             .filter_map(|(pid, process)| {
+                // sysinfo marks Linux threads via `thread_kind`; skip them so we only track real child processes
+                if process.thread_kind().is_some() {
+                    return None;
+                }
                 process
                     .parent()
                     .map(|p| (p.as_u32() as i32, pid.as_u32() as i32))
