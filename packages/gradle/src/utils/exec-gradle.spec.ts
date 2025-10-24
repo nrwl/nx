@@ -1,7 +1,7 @@
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import {
   findGradlewFile,
-  getCustomGradleInstallationPathFromPlugin,
+  getCustomGradleExecutableDirectoryFromPlugin,
 } from './exec-gradle';
 import { NxJsonConfiguration } from '@nx/devkit';
 
@@ -94,7 +94,7 @@ describe('exec gradle', () => {
       const nxJson: NxJsonConfiguration = {
         plugins: [],
       };
-      const result = getCustomGradleInstallationPathFromPlugin(nxJson);
+      const result = getCustomGradleExecutableDirectoryFromPlugin(nxJson);
       expect(result).toBeUndefined();
     });
 
@@ -102,7 +102,7 @@ describe('exec gradle', () => {
       const nxJson: NxJsonConfiguration = {
         plugins: ['@nx/js', '@nx/react'],
       };
-      const result = getCustomGradleInstallationPathFromPlugin(nxJson);
+      const result = getCustomGradleExecutableDirectoryFromPlugin(nxJson);
       expect(result).toBeUndefined();
     });
 
@@ -110,7 +110,7 @@ describe('exec gradle', () => {
       const nxJson: NxJsonConfiguration = {
         plugins: ['@nx/gradle'],
       };
-      const result = getCustomGradleInstallationPathFromPlugin(nxJson);
+      const result = getCustomGradleExecutableDirectoryFromPlugin(nxJson);
       expect(result).toBeUndefined();
     });
 
@@ -123,7 +123,7 @@ describe('exec gradle', () => {
           },
         ],
       };
-      const result = getCustomGradleInstallationPathFromPlugin(nxJson);
+      const result = getCustomGradleExecutableDirectoryFromPlugin(nxJson);
       expect(result).toBeUndefined();
     });
 
@@ -140,7 +140,7 @@ describe('exec gradle', () => {
           '@nx/react',
         ],
       };
-      const result = getCustomGradleInstallationPathFromPlugin(nxJson);
+      const result = getCustomGradleExecutableDirectoryFromPlugin(nxJson);
       expect(result).toBe('/path/to/gradle');
     });
   });

@@ -13,7 +13,7 @@ import { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
 import { GradleExecutorSchema } from './schema';
 import {
   findGradlewFile,
-  getCustomGradleInstallationPathFromPlugin,
+  getCustomGradleExecutableDirectoryFromPlugin,
 } from '../../utils/exec-gradle';
 import { dirname, join } from 'path';
 import { execSync } from 'child_process';
@@ -42,9 +42,8 @@ export default async function gradleBatch(
   try {
     const projectName = taskGraph.tasks[taskGraph.roots[0]]?.target?.project;
     let projectRoot = context.projectGraph.nodes[projectName]?.data?.root ?? '';
-    const customGradleInstallation = getCustomGradleInstallationPathFromPlugin(
-      context.nxJsonConfiguration
-    );
+    const customGradleInstallation =
+      getCustomGradleExecutableDirectoryFromPlugin(context.nxJsonConfiguration);
 
     let gradlewPath = findGradlewFile(
       join(projectRoot, 'project.json'),

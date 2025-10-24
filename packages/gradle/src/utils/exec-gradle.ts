@@ -67,7 +67,7 @@ export function execGradleAsync(
   });
 }
 
-export function getCustomGradleInstallationPathFromPlugin(
+export function getCustomGradleExecutableDirectoryFromPlugin(
   nxJson: NxJsonConfiguration
 ): string | undefined {
   const gradlePlugin = nxJson.plugins?.find((plugin) => {
@@ -78,7 +78,7 @@ export function getCustomGradleInstallationPathFromPlugin(
   });
 
   return gradlePlugin && typeof gradlePlugin !== 'string'
-    ? (gradlePlugin.options as GradlePluginOptions)?.customGradleInstallation
+    ? (gradlePlugin.options as GradlePluginOptions)?.gradleExecutableDirectory
     : undefined;
 }
 
@@ -86,24 +86,20 @@ export function getCustomGradleInstallationPathFromPlugin(
  * This function recursively finds the nearest gradlew file in the workspace
  * @param filePathToSearch the original file to search for, relative to workspace root, file path not directory path
  * @param workspaceRoot workspace root
- * @param customGradleInstallationPath a custom gradle installation path to search at
+ * @param customExecutableDirectory a custom directory to search for the gradle wrapper file
  * @returns the relative path of the gradlew file to workspace root, throws an error if gradlew file is not found
  * It will return relative path to workspace root of gradlew.bat file on windows and gradlew file on other platforms
  */
 export function findGradlewFile(
   filePathToSearch: string,
   workspaceRoot: string,
-  customGradleInstallationPath?: string
+  customExecutableDirectory?: string
 ): string {
-  const customGradlew = customGradleInstallationPath
-    ? findGradlewUsingCustomInstallationPath(
-        customGradleInstallationPath,
-        workspaceRoot
-      )
-    : undefined;
-
-  if (customGradlew) {
-    return customGradlew;
+  if (customExecutableDirectory) {
+    return findGradlewUsingCustomExecutableDirectory(
+      customExecutableDirectory,
+      workspaceRoot
+    );
   }
 
   return findGradlewUsingFilePathTraversal(filePathToSearch, workspaceRoot);
@@ -150,14 +146,14 @@ export function findGradlewUsingFilePathTraversal(
   );
 }
 
-export function findGradlewUsingCustomInstallationPath(
-  customGradleInstallationPath: string,
+export function findGradlewUsingCustomExecutableDirectory(
+  customGradleExecutableDirectory: string,
   workspaceRoot: string
 ) {
   // Resolve the custom installation path - if relative, resolve against workspace root
-  const resolvedInstallationPath = isAbsolute(customGradleInstallationPath)
-    ? customGradleInstallationPath
-    : join(workspaceRoot, customGradleInstallationPath);
+  const resolvedInstallationPath = isAbsolute(customGradleExecutableDirectory)
+    ? customGradleExecutableDirectory
+    : join(workspaceRoot, customGradleExecutableDirectory);
 
   const customGradlewPath = join(resolvedInstallationPath, 'gradlew');
   const customGradlewBatPath = join(resolvedInstallationPath, 'gradlew.bat');
@@ -165,18 +161,28 @@ export function findGradlewUsingCustomInstallationPath(
   if (process.platform.startsWith('win')) {
     if (existsSync(customGradlewBatPath)) {
       // Return path relative to workspace root if it was relative, otherwise return absolute
-      return isAbsolute(customGradleInstallationPath)
+      return isAbsolute(customGradleExecutableDirectory)
         ? customGradlewBatPath
-        : join(customGradleInstallationPath, 'gradlew.bat');
+        : join(customGradleExecutableDirectory, 'gradlew.bat');
     }
   } else {
     if (existsSync(customGradlewPath)) {
       // Return path relative to workspace root if it was relative, otherwise return absolute
-      return isAbsolute(customGradleInstallationPath)
+      return isAbsolute(customGradleExecutableDirectory)
         ? customGradlewPath
-        : join(customGradleInstallationPath, 'gradlew');
+        : join(customGradleExecutableDirectory, 'gradlew');
     }
   }
 
-  return undefined;
+  throw new AggregateCreateNodesError(
+    [
+      [
+        customGradleExecutableDirectory,
+        new Error(
+          `No Gradlew file found at custom gradle executable directory. Please ensure that there is a gradle wrapper file located at ${customGradleExecutableDirectory}`
+        ),
+      ],
+    ],
+    []
+  );
 }
