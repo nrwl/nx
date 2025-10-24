@@ -169,7 +169,8 @@ Once a Gradle configuration file has been identified, the targets are created wi
 
 ### Custom Gradle Executable Directory
 
-By default the `@nx/gradle` plugin will execute the gradle wrapper file that is located in your gradle project root. If none is found, it will traverse the parents up to the workspace root until it locates a valid gradle wrapper file. If you have a custom gradle executable directory containing a gradle wrapper file that you would like to use instead, you can specify it in the `nx.json` `plugins` array under `gradleExecutableDirectory`.
+By default, the @nx/gradle plugin executes the Gradle wrapper found in your project root. If no wrapper exists there, it searches up through parent directories to the workspace root.
+To use a Gradle wrapper from a custom location, specify the directory path in your nx.json under the plugins array using the gradleExecutableDirectory option.
 
 ### Test Distribution
 

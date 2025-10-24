@@ -42,13 +42,13 @@ export default async function gradleBatch(
   try {
     const projectName = taskGraph.tasks[taskGraph.roots[0]]?.target?.project;
     let projectRoot = context.projectGraph.nodes[projectName]?.data?.root ?? '';
-    const customGradleInstallation =
+    const customGradleExecutableDirectory =
       getCustomGradleExecutableDirectoryFromPlugin(context.nxJsonConfiguration);
 
     let gradlewPath = findGradlewFile(
       join(projectRoot, 'project.json'),
       workspaceRoot,
-      customGradleInstallation
+      customGradleExecutableDirectory
     ); // find gradlew near project root
     gradlewPath = join(context.root, gradlewPath);
     const root = dirname(gradlewPath);

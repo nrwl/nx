@@ -89,7 +89,7 @@ describe('exec gradle', () => {
     });
   });
 
-  describe('getCustomGradleInstallationPathFromPlugin', () => {
+  describe('getCustomGradleExecutableDirectoryPathFromPlugin', () => {
     it('should return undefined when nxJson plugins is empty array', () => {
       const nxJson: NxJsonConfiguration = {
         plugins: [],
@@ -114,7 +114,7 @@ describe('exec gradle', () => {
       expect(result).toBeUndefined();
     });
 
-    it('should return undefined when gradle plugin has no customGradleInstallation option', () => {
+    it('should return undefined when gradle plugin has no gradleExecutablePath option', () => {
       const nxJson: NxJsonConfiguration = {
         plugins: [
           {
@@ -127,14 +127,14 @@ describe('exec gradle', () => {
       expect(result).toBeUndefined();
     });
 
-    it('should return customGradleInstallation from gradle plugin when multiple plugins exist', () => {
+    it('should return gradleExecutablePath from gradle plugin when multiple plugins exist', () => {
       const nxJson: NxJsonConfiguration = {
         plugins: [
           '@nx/js',
           {
             plugin: '@nx/gradle',
             options: {
-              customGradleInstallation: '/path/to/gradle',
+              gradleExecutablePath: '/path/to/gradle',
             },
           },
           '@nx/react',

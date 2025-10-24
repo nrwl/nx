@@ -15,14 +15,13 @@ export default async function gradleExecutor(
 ): Promise<{ success: boolean }> {
   let projectRoot =
     context.projectGraph.nodes[context.projectName]?.data?.root ?? context.root;
-  const customGradleInstallation = getCustomGradleExecutableDirectoryFromPlugin(
-    context.nxJsonConfiguration
-  );
+  const customGradleExecutableDirectory =
+    getCustomGradleExecutableDirectoryFromPlugin(context.nxJsonConfiguration);
 
   let gradlewPath = findGradlewFile(
     join(projectRoot, 'project.json'),
     workspaceRoot,
-    customGradleInstallation
+    customGradleExecutableDirectory
   ); // find gradlew near project root
   gradlewPath = join(context.root, gradlewPath);
 
