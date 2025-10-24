@@ -10,7 +10,7 @@ youtubeUrl: https://youtu.be/URc1aQU0Scs
 
 This came up in [our Discord](https://go.nx.dev/community): A Storybook setup in a library that depends on another **buildable package** in the monorepo. The problem? Whenever you run Storybook and change something in the buildable package, you won't see the effect right away. You need to manually rebuild it, and only then will Storybook pick up the changes.
 
-Let me show you how we can fix this with Nx's [workspace watching feature](https://nx.dev/docs/guides/tasks--caching/workspace-watching). _(Demo repo included in the links at the very end.)_
+Let me show you how we can fix this with Nx's [workspace watching feature](/docs/guides/tasks--caching/workspace-watching). _(Demo repo included in the links at the very end.)_
 
 {% toc /%}
 
@@ -48,7 +48,7 @@ Notice how the main entry points point to `*.js` files. This means we need to ke
 
 ## The Solution: Nx Workspace Watching
 
-Nx actually has a feature that allows you to watch files and automatically run commands when they change. You can find all the details in the [Workspace Watching guide](https://nx.dev/docs/guides/tasks--caching/workspace-watching) in the Nx docs.
+Nx actually has a feature that allows you to watch files and automatically run commands when they change. You can find all the details in the [Workspace Watching guide](/docs/guides/tasks--caching/workspace-watching) in the Nx docs.
 
 The key is the `nx watch` command which lets you watch specific projects and run a command whenever a change is detected. Here's the basic syntax:
 
@@ -192,8 +192,8 @@ The combination of Nx's workspace watching, intelligent caching, and task orches
 
 ## Learn More
 
-- 📚 [Nx Workspace Watching Docs](https://nx.dev/docs/guides/tasks--caching/workspace-watching)
-- 🔧 [Storybook with Nx](https://nx.dev/nx-api/storybook)
+- 📚 [Nx Workspace Watching Docs](/docs/guides/tasks--caching/workspace-watching)
+- 🔧 [Storybook with Nx](/nx-api/storybook)
 - 🎬 [Watch the Video Tutorial](https://youtu.be/URc1aQU0Scs)
 - 💻 [Demo Repository](https://github.com/juristr/nx-storybook-watchdeps)
 
