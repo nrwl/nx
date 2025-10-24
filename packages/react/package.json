@@ -32,12 +32,12 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@phenomnomnominal/tsquery": "~5.0.1",
+    "@phenomnomnominal/tsquery": "catalog:typescript",
     "@svgr/webpack": "^8.0.1",
     "file-loader": "^6.2.0",
-    "minimatch": "9.0.3",
-    "picocolors": "^1.1.0",
-    "tslib": "^2.3.0",
+    "minimatch": "catalog:",
+    "picocolors": "catalog:",
+    "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
@@ -46,7 +46,7 @@
     "@nx/rollup": "workspace:*",
     "express": "^4.21.2",
     "http-proxy-middleware": "^3.0.5",
-    "semver": "^7.6.3"
+    "semver": "catalog:"
   },
   "devDependencies": {
     "@nx/cypress": "workspace:*",

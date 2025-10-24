@@ -47,17 +47,17 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@xmldom/xmldom": "^0.8.10",
-    "tslib": "^2.3.0"
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
-    "@types/jest": "30.0.0",
-    "@types/node": "^20.19.10",
+    "@types/jest": "catalog:jest",
+    "@types/node": "catalog:typescript",
     "@types/xmldom": "^0.1.34",
-    "jest": "30.0.2",
+    "jest": "catalog:jest",
     "memfs": "^4.9.2",
     "nx": "workspace:*",
-    "ts-jest": "^29.1.0",
-    "typescript": "^5.0.0"
+    "ts-jest": "catalog:jest",
+    "typescript": "catalog:typescript"
   },
   "publishConfig": {
     "access": "public"
