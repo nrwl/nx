@@ -6,6 +6,7 @@ import {
   readJsonFile,
   writeJsonFile,
   CreateNodesContextV2,
+  workspaceRoot,
 } from '@nx/devkit';
 import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { hashObject } from 'nx/src/hasher/file-hasher';
@@ -139,6 +140,18 @@ function interpolateDockerTargetOptions(
   return interpolateObject(options, tokens);
 }
 
+export function getProjectNameFromPath(
+  projectRoot: string,
+  workspaceRoot: string
+): string {
+  const root = projectRoot === '.' ? workspaceRoot : projectRoot;
+  const normalized = root
+    .replace(/^[\\/]/, '')
+    .replace(/[\\/\s]+/g, '-')
+    .toLowerCase();
+  return normalized.length > 128 ? normalized.slice(-128) : normalized;
+}
+
 function getProjectName(projectRoot: string, workspaceRoot: string): string {
   const projectJsonPath = join(workspaceRoot, projectRoot, 'project.json');
   if (existsSync(projectJsonPath)) {
@@ -156,7 +169,7 @@ function getProjectName(projectRoot: string, workspaceRoot: string): string {
     }
   }
 
-  return projectRoot.replace(/^[\\/]/, '').replace(/[\\/\s]+/g, '-');
+  return getProjectNameFromPath(projectRoot, workspaceRoot);
 }
 
 function buildTargetOptions(
@@ -222,7 +235,7 @@ async function createDockerTargets(
   options: NormalizedDockerPluginOptions,
   context: CreateNodesContextV2
 ) {
-  const imageRef = projectRoot.replace(/^[\\/]/, '').replace(/[\\/\s]+/g, '-');
+  const imageRef = getProjectNameFromPath(projectRoot, workspaceRoot);
 
   const interpolatedBuildTarget = interpolateDockerTargetOptions(
     options.buildTarget,
@@ -348,7 +361,7 @@ function normalizePluginOptions(
   };
 
   return {
-    buildTarget: normalizeTarget(options.buildTarget, 'docker:build'),
-    runTarget: normalizeTarget(options.runTarget, 'docker:run'),
+    buildTarget: normalizeTarget(options?.buildTarget, 'docker:build'),
+    runTarget: normalizeTarget(options?.runTarget, 'docker:run'),
   };
 }

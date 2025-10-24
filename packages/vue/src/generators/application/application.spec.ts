@@ -203,7 +203,7 @@ describe('application generator', () => {
           plugins: [vue()],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //  plugins: [],
           // },
           build: {
             outDir: './dist',

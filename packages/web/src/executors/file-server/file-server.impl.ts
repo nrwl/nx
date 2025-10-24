@@ -1,3 +1,4 @@
+import { signalToCode } from '@nx/devkit/internal';
 import { execFileSync, fork } from 'child_process';
 import * as pc from 'picocolors';
 import {
@@ -267,7 +268,8 @@ export default async function* fileServerExecutor(
   };
 
   return new Promise<{ success: boolean }>((res) => {
-    serve.on('exit', (code) => {
+    serve.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code == 0) {
         res({ success: true });
       } else {

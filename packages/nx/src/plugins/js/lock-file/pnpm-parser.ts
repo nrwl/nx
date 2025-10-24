@@ -604,9 +604,9 @@ function mapRootSnapshot(
         const manager = getCatalogManager(workspaceRoot);
         if (manager?.isCatalogReference(version)) {
           version = manager.resolveCatalogReference(
+            workspaceRoot,
             packageName,
-            version,
-            workspaceRoot
+            version
           );
           if (!version) {
             throw new Error(
