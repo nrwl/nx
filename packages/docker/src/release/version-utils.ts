@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { prompt } from 'enquirer';
-import type { ProjectGraphProjectNode } from '@nx/devkit';
+import { ProjectGraphProjectNode, workspaceRoot } from '@nx/devkit';
 import type { FinalConfigForProject } from 'nx/src/command-line/release/utils/release-graph';
 import { interpolateVersionPattern } from './version-pattern-utils';
 
@@ -152,5 +152,10 @@ function getImageReference(
 }
 
 function getDefaultImageReference(projectRoot: string) {
-  return projectRoot.replace(/^[\\/]/, '').replace(/[\\/\s]+/g, '-');
+  const root = projectRoot === '.' ? workspaceRoot : projectRoot;
+  const normalized = root
+    .replace(/^[\\/]/, '')
+    .replace(/[\\/\s]+/g, '-')
+    .toLowerCase();
+  return normalized.length > 128 ? normalized.slice(-128) : normalized;
 }

@@ -5,5 +5,20 @@
   "projectType": "application",
   "implicitDependencies": ["maven", "nx-maven-plugin"],
   "// targets": "to see all targets run: nx show project e2e-maven --web",
-  "targets": {}
+  "targets": {
+    "e2e-local": {
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry",
+        "nx-maven-plugin:install"
+      ]
+    },
+    "e2e-ci--**/**": {
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry",
+        "nx-maven-plugin:install"
+      ]
+    }
+  }
 }
