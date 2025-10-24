@@ -48,3 +48,65 @@ If you suspect that a task is flaky, but Nx has not confirmed it yet, you can ma
 Once you've resolved the issue that caused a task to be flaky, you can immediately mark the task as not flaky by clicking on **"Mark task as no longer flaky"** on the same run details screen.
 
 ![Mark task as no longer flaky button](../../../../assets/features/ci-features/mark-task-as-no-longer-flaky.png)
+
+## Flaky Task Analytics
+
+{% aside type="note" title="Enterprise Feature" %}
+Workspace flaky task analytics is currently available for organizations on the Enterprise plan. Reach out if your organization is [interested in Nx Enterprise](https://nx.dev/enterprise?utmsource=nx.dev&utm_medium=callout&utm_campaign=flaky-task-analytics).
+{% /aside %}
+
+Nx Cloud provides comprehensive analytics to help you understand and manage flaky tasks across your workspace. The analytics dashboard gives you insights into which tasks are flaky, how often they fail, and how much time is being wasted on reruns.
+
+### Available Flaky Task Metrics
+
+![Flaky Tasks dashboard](../../../../assets/features/ci-features/nx-cloud-flaky-tasks-scatter-chart-with-metrics.avif)
+
+The dashboard displays key metric over the time range selected (7 days vs 30 days) to give you a quick overview of your workspace health.
+
+- **Active flaky tasks** - The total number of tasks in your workspace that have a flake rate greater than 0 within the selected time window.
+- **Average flake rate** - A weighted average flake rate across all tasks in your workspace. This metric uses the sample size to weight each task's flake rate proportionally, so a task that ran 1000 times with 5% flake rate has more impact than one that ran 10 times with 50% flake rate.
+- **High risk tasks** - The number of tasks with a flake rate higher than 50%, indicating severe reliability issues that need immediate attention.
+
+The chart shown provides a visual representation of your flaky tasks, helping you quickly identify which tasks need the most attention:
+
+Tasks are plotted based on their **impact score**, which is calculated as `flake_rate × sample_size`. This means frequently-run flaky tasks are weighted higher than rarely-run flaky tasks.
+
+Priority levels are determined using percentile-based thresholds that scale across organizations of any size:
+
+- **High priority** (red) - Top 10% of tasks by impact score (90th percentile and above). These tasks have severe flakiness and should be addressed immediately.
+- **Medium priority** (yellow) - Next 23% of tasks by impact score (67th-90th percentile). These tasks have moderate flakiness with sufficient data.
+- **Low priority** (gray) - Bottom 67% of tasks by impact score. These tasks have minor flakiness or not enough data to be concerning.
+
+Tasks on the right side of the chart typically represent the highest priority items that need attention. The scatter plot shows up to 50 results, sorted by most recent flaked tasks.
+
+### Analytics Table
+
+The table provides detailed information about each flaky task in your workspace:
+
+![Flaky Tasks Analytics Table](../../../../assets/features/ci-features/nx-cloud-flaky-tasks-table.avif)
+
+By default, the table loads your most recent flaky tasks. Each row includes:
+
+- **Task** - The project and target combination (e.g., `my-app:test`)
+- **Flake rate** - Measures how often a task succeeds due to flakiness. Specifically, it represents the percentage of total successes that came from unreliable (flaky) task hashes: `flaky_successes / (flaky_successes + non_flaky_successes)`. This tells you: "Of all the times this task succeeded, how many successes came from unreliable code?"
+- **Total reruns** - The number of times a task was executed more than once due to flakiness. This counts the "extra" executions that happened because the task failed and needed to be retried. Calculated as: `total_executions - unique_hash_count`
+- **Time wasted** - An estimate of the total time spent on reruns, calculated by multiplying the total reruns by the average task duration
+- **Last failure** - The timestamp of the most recent failure across all contributing task hashes
+
+
+#### Flaky Task Detail View
+
+Click on any row in the table to view detailed information about a specific flaky task.
+
+The **Overview** tab shows summary statistics and trends for the selected task such as flake rate, successful execution count, and automatic deflake count. 
+
+![Flaky Task Detail Overview](../../../../assets/features/ci-features/nx-cloud-flaky-task-detail-overview.avif)
+
+The **Activity** tab displays a timeline of all executions, showing when the task failed and succeeded to jump directly into the runs.
+
+![Flaky Task Detail Activity](../../../../assets/features/ci-features/nx-cloud-flaky-task-detail-activity.avif)
+
+The **Environments** tab provides insights into the different environments where the task was executed, helping identify if certain environments contribute to flakiness.
+
+![Flaky Task Detail Environments](../../../../assets/features/ci-features/nx-cloud-flaky-task-detail-environment.avif)
+
