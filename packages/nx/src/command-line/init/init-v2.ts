@@ -316,6 +316,13 @@ export async function detectPlugins(
     detectedPlugins.add('@nx/maven');
   }
 
+  let dockerFiles = ['Dockerfile'].concat(
+    globWithWorkspaceContextSync(process.cwd(), ['**/Dockerfile'])
+  );
+  if (dockerFiles.some((f) => existsSync(f))) {
+    detectedPlugins.add('@nx/docker');
+  }
+
   // Remove existing plugins
   for (const plugin of detectedPlugins) {
     if (currentPlugins.has(plugin)) {

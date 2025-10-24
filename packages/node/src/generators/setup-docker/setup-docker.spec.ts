@@ -110,7 +110,7 @@ describe('setupDockerGenerator', () => {
       );
     });
 
-    it('should not create docker:build target when skipDockerPlugin is false', async () => {
+    it('should create docker:build target when skipDockerPlugin is false', async () => {
       const projectName = 'api-with-plugin-docker';
 
       await applicationGenerator(tree, {
@@ -138,8 +138,10 @@ describe('setupDockerGenerator', () => {
             {
               plugin: '@nx/docker',
               options: {
-                buildTarget: 'docker:build',
-                runTarget: 'docker:run',
+                buildTarget: {
+                  name: 'docker:build',
+                },
+                runTarget: { name: 'docker:run' },
               },
             },
           ]),
