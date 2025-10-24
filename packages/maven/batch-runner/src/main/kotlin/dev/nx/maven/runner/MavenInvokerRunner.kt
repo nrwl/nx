@@ -3,6 +3,7 @@ package dev.nx.maven.runner
 import dev.nx.maven.data.MavenBatchOptions
 import dev.nx.maven.data.MavenBatchTask
 import dev.nx.maven.data.TaskResult
+import dev.nx.maven.data.Task
 import dev.nx.maven.utils.MavenCommandResolver
 import org.apache.maven.shared.invoker.DefaultInvoker
 import org.apache.maven.shared.invoker.DefaultInvocationRequest
@@ -157,11 +158,31 @@ class MavenInvokerRunner(private val options: MavenBatchOptions) {
         val request = DefaultInvocationRequest()
         request.baseDirectory = File(options.workspaceRoot)
 
-        // Don't filter by project selector (-pl flag)
-        // Maven will discover and build all modules in the reactor
-        // The Nx goals will handle recording execution for the specific project
+        // Set the pom file explicitly
+        val pomFile = File(options.workspaceRoot, "pom.xml")
+        if (pomFile.exists()) {
+            request.pomFile = pomFile
+            log.info("Using pom file: ${pomFile.absolutePath}")
+        }
 
-      request.projects = mutableListOf(project)
+        // Get the actual project from task graph and use projectRoot as module selector
+        val task = options.taskGraph?.tasks?.values?.find { it.target.project == project }
+        if (task != null) {
+            log.info("DEBUG: Found task for project '$project'")
+            log.info("DEBUG: task.target.project = '${task.target.project}'")
+            log.info("DEBUG: task.projectRoot = '${task.projectRoot}'")
+
+            // Use projectRoot if available, otherwise fall back to target.project
+            if (task.projectRoot != null) {
+                request.projects = mutableListOf(task.projectRoot)
+                log.info("Using projectRoot as selector: ${task.projectRoot}")
+            } else {
+                request.projects = mutableListOf(task.target.project)
+                log.info("Using target.project as selector: ${task.target.project}")
+            }
+        } else {
+            log.warn("Could not find task for project '$project' in task graph")
+        }
 
         request.goals = mutableListOf()
         // Collect all goals from tasks (with Nx wrapper goals)
@@ -220,6 +241,15 @@ class MavenInvokerRunner(private val options: MavenBatchOptions) {
             log.info("Using Maven home: ${mavenHome.absolutePath}")
         } else {
             log.warn("Maven home not found, using system Maven")
+        }
+
+        // Set local repository directory
+        val localRepoPath = System.getenv("M2_HOME")?.let { File(it, "repository") }
+            ?: File(System.getProperty("user.home"), ".m2/repository")
+
+        if (localRepoPath.exists() || localRepoPath.parentFile?.exists() == true) {
+            invoker.localRepositoryDirectory = localRepoPath
+            log.info("Using local repository: ${localRepoPath.absolutePath}")
         }
 
         return invoker
