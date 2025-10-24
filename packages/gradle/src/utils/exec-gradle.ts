@@ -92,7 +92,10 @@ export function findGradlewFile(
   customGradleInstallationPath?: string
 ): string {
   const customGradlew = customGradleInstallationPath
-    ? findGradlewUsingCustomInstallationPath(customGradleInstallationPath, workspaceRoot)
+    ? findGradlewUsingCustomInstallationPath(
+        customGradleInstallationPath,
+        workspaceRoot
+      )
     : undefined;
 
   if (customGradlew) {
@@ -171,5 +174,5 @@ export function findGradlewUsingCustomInstallationPath(
     }
   }
 
-  return undefined
+  return undefined;
 }
