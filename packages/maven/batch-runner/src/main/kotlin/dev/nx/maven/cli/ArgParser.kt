@@ -69,7 +69,7 @@ object ArgParser {
                         phase = (taskData["phase"] as? String),
                         goals = (taskData["goals"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
                         args = (taskData["args"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
-                        project = (taskData["project"] as? String)
+                        project = (taskData["project"] as String)
                     )
                 }
             } catch (e: Exception) {

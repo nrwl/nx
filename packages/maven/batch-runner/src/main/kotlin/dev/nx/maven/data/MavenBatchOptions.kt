@@ -16,7 +16,7 @@ data class MavenBatchTask(
     val phase: String? = null,
     val goals: List<String> = emptyList(),
     val args: List<String> = emptyList(),
-    val project: String? = null
+    val project: String
 )
 
 data class TaskResult(

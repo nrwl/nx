@@ -27,7 +27,7 @@ class MavenInvokerRunner(private val options: MavenBatchOptions) {
         log.info("Task execution order from graph: ${taskIds.joinToString(", ")}")
 
         // Group tasks by project
-        val tasksByProject = groupTasksByProject(taskIds)
+        val tasksByProject = groupTasksByProject()
         log.info("Grouped tasks into ${tasksByProject.size} projects")
         for ((project, tasks) in tasksByProject) {
             log.info("  Project '$project': ${tasks.joinToString(", ")}")
@@ -56,7 +56,7 @@ class MavenInvokerRunner(private val options: MavenBatchOptions) {
     }
 
     private fun executeProjectTasks(
-        project: String?,
+        project: String,
         projectTasks: List<String>,
         results: ConcurrentHashMap<String, TaskResult>
     ) {
@@ -69,7 +69,7 @@ class MavenInvokerRunner(private val options: MavenBatchOptions) {
         val projectOutput = StringBuilder()
 
         try {
-            val request = createInvocationRequest(projectTasks)
+            val request = createInvocationRequest(project, projectTasks)
 
             // Set output handler to capture Maven output
             invoker.setOutputHandler { line ->
@@ -146,17 +146,15 @@ class MavenInvokerRunner(private val options: MavenBatchOptions) {
         }
     }
 
-    private fun groupTasksByProject(taskIds: List<String>): LinkedHashMap<String?, List<String>> {
-        val grouped = LinkedHashMap<String?, MutableList<String>>()
+    private fun groupTasksByProject(): LinkedHashMap<String, MutableList<String>> {
+        val grouped = LinkedHashMap<String, MutableList<String>>()
 
-        for (taskId in taskIds) {
-            val task = options.tasks[taskId]
-            val project = task?.project
-            grouped.computeIfAbsent(project) { mutableListOf() }.add(taskId)
+        for ((taskId, task) in options.tasks) {
+          val project = task.project
+          grouped.computeIfAbsent(project) { mutableListOf() }.add(taskId)
         }
 
-        @Suppress("UNCHECKED_CAST")
-        return grouped as LinkedHashMap<String?, List<String>>
+        return grouped
     }
 
     private fun buildTargets(task: MavenBatchTask): List<String> {
@@ -168,9 +166,15 @@ class MavenInvokerRunner(private val options: MavenBatchOptions) {
         return targets
     }
 
-    private fun createInvocationRequest(taskIds: List<String>): InvocationRequest {
+    private fun createInvocationRequest(project: String, taskIds: List<String>): InvocationRequest {
         val request = DefaultInvocationRequest()
         request.baseDirectory = File(options.workspaceRoot)
+
+        // Don't filter by project selector (-pl flag)
+        // Maven will discover and build all modules in the reactor
+        // The Nx goals will handle recording execution for the specific project
+
+      request.projects = mutableListOf(project)
 
         request.goals = mutableListOf()
         // Collect all goals from tasks (with Nx wrapper goals)
@@ -179,7 +183,6 @@ class MavenInvokerRunner(private val options: MavenBatchOptions) {
       request.goals.add("dev.nx.maven:nx-maven-plugin:apply")
         for (taskId in taskIds) {
             val task = options.tasks[taskId] ?: continue
-            request.projects = listOf(task.project)
             val targets = buildTargets(task)
             request.goals.addAll(targets)
             log.debug("Added targets from task $taskId: ${targets.joinToString(", ")}")
@@ -188,9 +191,9 @@ class MavenInvokerRunner(private val options: MavenBatchOptions) {
       // Add Nx Maven record goal after user goals
       request.goals.add("dev.nx.maven:nx-maven-plugin:record")
 
-      request.isRecursive = false
+      request.isRecursive = true
 
-        log.info("Executing ${request.goals.joinToString(", ")} goals for ${request.projects.joinToString(", ")}")
+        log.info("Executing ${request.goals.joinToString(", ")} goals for project: $project")
 
         // Add additional arguments
         val allArgs = mutableListOf<String>()

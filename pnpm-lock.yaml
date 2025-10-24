@@ -3138,8 +3138,8 @@ importers:
   packages/maven:
     dependencies:
       '@nx/devkit':
-        specifier: workspace:*
-        version: link:../devkit
+        specifier: 22.0.1
+        version: 22.0.1(nx@packages+nx)
       '@xmldom/xmldom':
         specifier: ^0.8.10
         version: 0.8.11
@@ -9010,6 +9010,11 @@ packages:
     resolution: {integrity: sha512-eVFFLMUcxO/holHdWo0YabyUs6H3wNvnovt/0LddIRGoiMHWpbFZLB/KThiyUWvuFVuqqyDzRmS0XRo/M2kOqQ==}
     peerDependencies:
       nx: '>= 20 <= 22'
+
+  '@nx/devkit@22.0.1':
+    resolution: {integrity: sha512-pam3RuHI+1vwg4pKyq4zq4oFuXvqllJvuArsCWYCv6m10NYPu0cXRXaAbZfffcmW6Kvh1cRSb80OCs8ZzN4cXA==}
+    peerDependencies:
+      nx: '>= 21 <= 23 || ^22.0.0-0'
 
   '@nx/devkit@22.1.0-beta.0':
     resolution: {integrity: sha512-yNMg6Fl5sPVH/m3RuiyOK/TQzNQHFgGhOWERGYgb1dnvzh+kMgCG01wcLsB/uZVtY4y593zae1O8KxoTVJHLCg==}
@@ -32435,6 +32440,17 @@ snapshots:
       nx: 22.1.0-beta.0(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.9.2))(@swc/core@1.5.7(@swc/helpers@0.5.11))
       semver: 7.7.2
       tmp: 0.2.4
+      tslib: 2.8.1
+      yargs-parser: 21.1.1
+
+  '@nx/devkit@22.0.1(nx@packages+nx)':
+    dependencies:
+      '@zkochan/js-yaml': 0.0.7
+      ejs: 3.1.10
+      enquirer: 2.3.6
+      minimatch: 9.0.3
+      nx: link:packages/nx
+      semver: 7.7.2
       tslib: 2.8.1
       yargs-parser: 21.1.1
 

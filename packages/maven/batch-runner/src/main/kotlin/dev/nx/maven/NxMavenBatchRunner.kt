@@ -2,7 +2,6 @@ package dev.nx.maven
 
 import com.google.gson.Gson
 import dev.nx.maven.cli.ArgParser
-import dev.nx.maven.data.TaskResult
 import dev.nx.maven.runner.MavenInvokerRunner
 import org.slf4j.LoggerFactory
 import kotlin.system.exitProcess

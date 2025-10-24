@@ -37,7 +37,7 @@
 
 
   <modules>
-    <module>packages/maven/maven-plugin</module>
+    <module>packages/maven</module>
   </modules>
 
   <properties>
