@@ -23,6 +23,8 @@ import {
   ArrowTrendingUpIcon,
   CommandLineIcon,
   UsersIcon,
+  DocumentChartBarIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
@@ -206,6 +208,30 @@ export const learnItems: MenuItem[] = [
     description: null,
     href: 'https://go.nx.dev/community',
     icon: DiscordIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Books',
+    description: null,
+    href: '/resources-library?filterBy=book',
+    icon: BookOpenIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Case Studies',
+    description: null,
+    href: '/resources-library?filterBy=case-study',
+    icon: DocumentChartBarIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Whitepapers',
+    description: null,
+    href: '/resources-library?filterBy=whitepaper',
+    icon: DocumentTextIcon,
     isNew: false,
     isHighlight: false,
   },

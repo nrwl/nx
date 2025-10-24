@@ -414,6 +414,9 @@
     },
     {
       "path": "./e2e/maven"
+    },
+    {
+      "path": "./nx-dev/ui-resources"
     }
   ],
   "extends": "./tsconfig.base.json"
