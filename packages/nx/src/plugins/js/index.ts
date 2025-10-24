@@ -30,12 +30,9 @@ import { jsPluginConfig } from './utils/config';
 
 export const name = 'nx/js/dependencies-and-lockfile';
 
-interface ParsedLockFile {
-  externalNodes?: ProjectGraph['externalNodes'];
-  dependencies?: RawProjectGraphDependency[];
-}
-
-let parsedLockFile: ParsedLockFile = {};
+// Separate in-memory caches
+let cachedExternalNodes: ProjectGraph['externalNodes'] | undefined;
+let cachedDependencies: RawProjectGraphDependency[] | undefined;
 
 export const createNodesV2: CreateNodesV2 = [
   combineGlobPatterns(LOCKFILES),
@@ -69,8 +66,9 @@ function internalCreateNodes(
   const lockFileHash = getLockFileHash(lockFileContents);
 
   if (!lockFileNeedsReprocessing(lockFileHash)) {
-    const nodes = readCachedParsedLockFile().externalNodes;
-    parsedLockFile.externalNodes = nodes;
+    const nodes = readCachedExternalNodes();
+    cachedExternalNodes = nodes;
+
     return {
       externalNodes: nodes,
     };
@@ -82,7 +80,10 @@ function internalCreateNodes(
     lockFileHash,
     context
   );
-  parsedLockFile.externalNodes = externalNodes;
+  cachedExternalNodes = externalNodes;
+
+  writeExternalNodesCache(lockFileHash, externalNodes);
+
   return {
     externalNodes,
   };
@@ -101,7 +102,7 @@ export const createDependencies: CreateDependencies = (
   if (
     pluginConfig.analyzeLockfile &&
     lockFileExists(packageManager) &&
-    parsedLockFile.externalNodes
+    cachedExternalNodes
   ) {
     const lockFilePath = join(workspaceRoot, getLockFileName(packageManager));
     const lockFileContents =
@@ -111,7 +112,7 @@ export const createDependencies: CreateDependencies = (
     const lockFileHash = getLockFileHash(lockFileContents);
 
     if (!lockFileNeedsReprocessing(lockFileHash)) {
-      lockfileDependencies = readCachedParsedLockFile().dependencies ?? [];
+      lockfileDependencies = readCachedDependencies();
     } else {
       lockfileDependencies = getLockFileDependencies(
         packageManager,
@@ -120,9 +121,9 @@ export const createDependencies: CreateDependencies = (
         ctx
       );
 
-      parsedLockFile.dependencies = lockfileDependencies;
+      cachedDependencies = lockfileDependencies;
 
-      writeLastProcessedLockfileHash(lockFileHash, parsedLockFile);
+      writeDependenciesCache(lockFileHash, lockfileDependencies);
     }
   }
 
@@ -152,21 +153,41 @@ function lockFileNeedsReprocessing(lockHash: string) {
   }
 }
 
-function writeLastProcessedLockfileHash(
+// External nodes cache functions
+function writeExternalNodesCache(
   hash: string,
-  lockFile: ParsedLockFile
+  nodes: ProjectGraph['externalNodes']
 ) {
   mkdirSync(dirname(lockFileHashFile), { recursive: true });
-  writeFileSync(cachedParsedLockFile, JSON.stringify(lockFile, null, 2));
+  writeFileSync(externalNodesCache, JSON.stringify(nodes, null, 2));
   writeFileSync(lockFileHashFile, hash);
 }
 
-function readCachedParsedLockFile(): ParsedLockFile {
-  return JSON.parse(readFileSync(cachedParsedLockFile).toString());
+function readCachedExternalNodes(): ProjectGraph['externalNodes'] {
+  return JSON.parse(readFileSync(externalNodesCache).toString());
 }
 
+// Dependencies cache functions
+function writeDependenciesCache(
+  hash: string,
+  dependencies: RawProjectGraphDependency[]
+) {
+  mkdirSync(dirname(lockFileHashFile), { recursive: true });
+  writeFileSync(dependenciesCache, JSON.stringify(dependencies, null, 2));
+  writeFileSync(lockFileHashFile, hash);
+}
+
+function readCachedDependencies(): RawProjectGraphDependency[] {
+  return JSON.parse(readFileSync(dependenciesCache).toString());
+}
+
+// Cache file paths
 const lockFileHashFile = join(workspaceDataDirectory, 'lockfile.hash');
-const cachedParsedLockFile = join(
+const externalNodesCache = join(
   workspaceDataDirectory,
-  'parsed-lock-file.json'
+  'parsed-lock-file.nodes.json'
+);
+const dependenciesCache = join(
+  workspaceDataDirectory,
+  'parsed-lock-file.dependencies.json'
 );
