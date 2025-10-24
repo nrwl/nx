@@ -141,7 +141,7 @@ export {
 } from './ensure-browser-installation';
 
 export function getStrippedEnvironmentVariables() {
-  return Object.fromEntries(
+  const env = Object.fromEntries(
     Object.entries(process.env).filter(([key]) => {
       if (key.startsWith('NX_E2E_')) {
         return true;
@@ -150,7 +150,6 @@ export function getStrippedEnvironmentVariables() {
       const allowedKeys = [
         'NX_ADD_PLUGINS',
         'NX_ISOLATE_PLUGINS',
-        'NX_VERBOSE_LOGGING',
         'NX_NATIVE_LOGGING',
       ];
 
@@ -172,4 +171,14 @@ export function getStrippedEnvironmentVariables() {
       return true;
     })
   );
+
+  // Force NX_VERBOSE_LOGGING to false in e2e tests to prevent verbose output from polluting
+  // command outputs. Verbose logging from plugins (e.g., Vite TsPaths) can interfere with:
+  // - JSON parsing (e.g., `nx show project --json`)
+  // - Line count expectations (e.g., `nx show projects`)
+  // - Other tests that expect clean output
+  // If you need to debug e2e tests, you can temporarily toggle this to "true" here
+  env.NX_VERBOSE_LOGGING = 'false';
+
+  return env;
 }
