@@ -13,7 +13,7 @@ pub struct CollectorConfig {
 impl Default for CollectorConfig {
     fn default() -> Self {
         Self {
-            collection_interval_ms: 500, // 500ms for push-based collection
+            collection_interval_ms: 1_000, // 1 second for push-based collection
         }
     }
 }
