@@ -1,6 +1,7 @@
 export interface GradlePluginOptions {
   testTargetName?: string;
   ciTestTargetName?: string;
+  gradleExecutableDirectory?: string;
   [taskTargetName: string]: string | undefined | boolean;
 }
 
