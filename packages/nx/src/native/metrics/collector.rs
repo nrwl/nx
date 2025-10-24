@@ -13,6 +13,7 @@ use crate::native::metrics::types::{
     IndividualTaskRegistration, MetricsError, MetricsUpdate, ProcessMetadata, ProcessMetrics,
     ProcessMetricsSnapshot, SystemInfo,
 };
+use crate::native::utils::time::current_timestamp_millis;
 use napi::threadsafe_function::{
     ErrorStrategy::CalleeHandled, ThreadsafeFunction, ThreadsafeFunctionCallMode,
 };
@@ -481,13 +482,10 @@ impl MetricsCollector {
         metadata_store: &MetadataStore,
     ) -> Result<MetricsCollectionResult, Box<dyn std::error::Error>> {
         // Capture timestamp FIRST for accuracy
-        let timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_else(|e| {
-                tracing::warn!("System time before UNIX epoch: {}", e);
-                std::time::Duration::ZERO
-            })
-            .as_millis() as i64;
+        let timestamp = current_timestamp_millis().unwrap_or_else(|e| {
+            tracing::warn!("System time before UNIX epoch: {}", e);
+            0
+        });
 
         // Single system refresh for ALL processes (one scan, all data)
         // Remove dead processes to prevent stale metrics from terminated processes
