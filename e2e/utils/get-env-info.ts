@@ -40,14 +40,6 @@ export function isOSX() {
   return process.platform === 'darwin';
 }
 
-export function isAndroid() {
-  return (
-    process.platform === 'linux' &&
-    process.env.ANDROID_HOME &&
-    process.env.ANDROID_SDK_ROOT
-  );
-}
-
 export const e2eRoot = isCI
   ? dirSync({ prefix: 'nx-e2e-' }).name
   : '/tmp/nx-e2e';

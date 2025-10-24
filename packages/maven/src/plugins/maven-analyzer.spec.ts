@@ -16,6 +16,8 @@ describe('Maven Analyzer', () => {
   const workspaceRoot = '/test/workspace';
   const mockOutputFile = `${workspaceDataDirectory}/nx-maven-projects.json`;
 
+  const originalNxVerboseLogging = process.env.NX_VERBOSE_LOGGING;
+
   beforeEach(() => {
     jest.clearAllMocks();
     (existsSync as jest.Mock).mockReturnValue(true);
@@ -23,6 +25,14 @@ describe('Maven Analyzer', () => {
     (execSync as jest.Mock).mockImplementation(() => {
       throw new Error('mvnd not found');
     });
+
+    process.env.NX_VERBOSE_LOGGING =
+      process.env.NX_E2E_VERBOSE_LOGGING === 'true' ? 'true' : 'false';
+  });
+
+  afterEach(() => {
+    // Restore original value to avoid affecting other tests
+    process.env.NX_VERBOSE_LOGGING = originalNxVerboseLogging;
   });
 
   describe('runMavenAnalysis', () => {
