@@ -8,8 +8,8 @@
   },
   "devDependencies": {
     "@nx/module-federation": "workspace:*",
-    "@rspack/core": "1.5.2",
-    "@rspack/cli": "1.5.2"
+    "@rspack/core": "catalog:rspack",
+    "@rspack/cli": "catalog:rspack"
   },
   "nx": {
     "targets": {

@@ -33,8 +33,8 @@
     "@nx/js": "workspace:*",
     "@nx/react": "workspace:*",
     "@nx/workspace": "workspace:*",
-    "tslib": "^2.3.1",
-    "@phenomnomnominal/tsquery": "~5.0.1"
+    "tslib": "catalog:typescript",
+    "@phenomnomnominal/tsquery": "catalog:typescript"
   },
   "devDependencies": {
     "nx": "workspace:*"

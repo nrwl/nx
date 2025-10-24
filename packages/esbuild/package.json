@@ -33,10 +33,10 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
-    "tinyglobby": "^0.2.12",
-    "picocolors": "^1.1.0",
-    "tsconfig-paths": "^4.1.2",
-    "tslib": "^2.3.0"
+    "tinyglobby": "catalog:",
+    "picocolors": "catalog:",
+    "tsconfig-paths": "catalog:typescript",
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
     "nx": "workspace:*"

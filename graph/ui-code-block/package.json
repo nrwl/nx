@@ -9,6 +9,6 @@
     "@nx/graph-ui-common": "workspace:"
   },
   "devDependencies": {
-    "jest": "^29.4.1"
+    "jest": "catalog:jest"
   }
 }
