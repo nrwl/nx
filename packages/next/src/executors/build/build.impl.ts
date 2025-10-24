@@ -19,7 +19,7 @@ import { checkPublicDirectory } from './lib/check-project';
 import { NextBuildBuilderOptions } from '../../utils/types';
 import { ChildProcess, fork } from 'child_process';
 import { createCliOptions } from '../../utils/create-cli-options';
-import { signalToCode } from 'nx/src/utils/exit-codes';
+import { signalToCode } from '@nx/devkit/internal';
 
 let childProcess: ChildProcess;
 
@@ -176,6 +176,7 @@ function runCliBuild(
     });
 
     childProcess.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code === 0) {
         resolve({ code, signal });
       } else {
