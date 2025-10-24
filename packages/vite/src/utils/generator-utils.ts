@@ -519,7 +519,12 @@ ${
     host: 'localhost',
   },`;
 
-  const workerOption = `  // Uncomment this if you are using workers.
+  const workerOption = isTsSolutionSetup
+    ? `  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [],
+  // },`
+    : `  // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },`;

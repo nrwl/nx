@@ -549,7 +549,7 @@ module.exports = [
           plugins: [vue()],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //  plugins: [],
           // },
           test: {
             name: '@proj/my-lib',
