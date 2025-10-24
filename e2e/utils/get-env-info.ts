@@ -7,8 +7,6 @@ import { dirSync } from 'tmp';
 
 import * as isCI from 'is-ci';
 import { PackageManager } from 'nx/src/utils/package-manager';
-import { tmpProjPath } from './create-project-utils';
-import { e2eConsoleLogger } from './log-utils';
 
 export const isWindows = require('is-windows');
 
@@ -55,10 +53,16 @@ export const e2eRoot = isCI
   : '/tmp/nx-e2e';
 
 export function isVerbose() {
-  return (
-    process.env.NX_VERBOSE_LOGGING === 'true' ||
-    process.argv.includes('--verbose')
-  );
+  // Note: We deliberately ignore NX_VERBOSE_LOGGING here because it can be set to 'true'
+  // in CI for debugging, but we don't want it to affect e2e test commands.
+  /*
+  Verbose logging from plugins (e.g., Vite TsPaths) can interfere with:
+   - JSON parsing (e.g., `nx show project --json`)
+   - Line count expectations (e.g., `nx show projects`)
+   - Other tests that expect clean output
+   */
+  // Use NX_E2E_VERBOSE_LOGGING if you want to enable verbose logging for e2e tests specifically.
+  return process.argv.includes('--verbose');
 }
 
 export function isVerboseE2ERun() {
@@ -171,14 +175,6 @@ export function getStrippedEnvironmentVariables() {
       return true;
     })
   );
-
-  // Force NX_VERBOSE_LOGGING to false in e2e tests to prevent verbose output from polluting
-  // command outputs. Verbose logging from plugins (e.g., Vite TsPaths) can interfere with:
-  // - JSON parsing (e.g., `nx show project --json`)
-  // - Line count expectations (e.g., `nx show projects`)
-  // - Other tests that expect clean output
-  // If you need to debug e2e tests, you can temporarily toggle this to "true" here
-  env.NX_VERBOSE_LOGGING = 'false';
 
   return env;
 }
