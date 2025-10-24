@@ -153,7 +153,8 @@ The `@nx/gradle` is configured in the `plugins` array in `nx.json`.
         "classesTargetName": "classes",
         "buildTargetName": "build",
         "ciTestTargetName": "test-ci",
-        "ciIntTestTargetName": "intTest-ci"
+        "ciIntTestTargetName": "intTest-ci",
+        "gradleExecutableDirectory": "./gradle-projects"
       }
     }
   ]
@@ -161,6 +162,11 @@ The `@nx/gradle` is configured in the `plugins` array in `nx.json`.
 ```
 
 Once a Gradle configuration file has been identified, the targets are created with the name you specify under `testTargetName`, `classesTargetName` or `buildTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `test`, `classes` and `build`.
+
+### Custom Gradle Executable Directory
+
+By default, the @nx/gradle plugin executes the Gradle wrapper found in your project root. If no wrapper exists there, it searches up through parent directories to the workspace root.
+To use a Gradle wrapper from a custom location, specify the directory path in your nx.json under the plugins array using the gradleExecutableDirectory option.
 
 ### Test Distribution
 

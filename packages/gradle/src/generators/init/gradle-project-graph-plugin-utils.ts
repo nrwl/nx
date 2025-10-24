@@ -62,7 +62,11 @@ export async function extractNxPluginVersion(
   let version = match ? match[2] : null;
   if (!version) {
     try {
-      const gradlewFile = findGradlewFile(gradleFilePath, workspaceRoot);
+      const gradlewFile = findGradlewFile(
+        gradleFilePath,
+        workspaceRoot,
+        undefined
+      );
       const buildEnvironment = (
         await execGradleAsync(join(workspaceRoot, gradlewFile), [
           'buildEnvironment',
