@@ -80,7 +80,7 @@ describe('shouldUseTui', () => {
       }
     ));
 
-  it.each(['dynamic-legacy', 'static', 'stream'])(
+  it.each(['dynamic-legacy', 'static', 'stream', 'stream-without-prefixes'])(
     'should be disabled if output-style=%s',
     (outputStyle) =>
       withEnvironmentVariables(

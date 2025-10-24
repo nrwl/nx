@@ -916,6 +916,7 @@ export function setEnvVarsBasedOnArgs(
   }
   if (nxArgs.outputStyle == 'stream-without-prefixes') {
     process.env.NX_STREAM_OUTPUT = 'true';
+    process.env.NX_PREFIX_OUTPUT = 'false';
   }
   if (loadDotEnvFiles) {
     process.env.NX_LOAD_DOT_ENV_FILES = 'true';
@@ -1104,7 +1105,12 @@ function shouldUseDynamicLifeCycle(
   }
   if (!process.stdout.isTTY) return false;
   if (isCI()) return false;
-  if (outputStyle === 'static' || outputStyle === 'stream') return false;
+  if (
+    outputStyle === 'static' ||
+    outputStyle === 'stream' ||
+    outputStyle === 'stream-without-prefixes'
+  )
+    return false;
 
   return !tasks.find((t) => shouldStreamOutput(t, null));
 }
