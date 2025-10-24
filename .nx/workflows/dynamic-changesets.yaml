@@ -36,6 +36,7 @@ assignment-rules:
       - e2e-docker
       - e2e-js
       - e2e-nx-init
+      - e2e-dotnet
     targets:
       - e2e-ci**
     run-on:
