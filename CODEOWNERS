@@ -99,7 +99,7 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /e2e/storybook/** @nrwl/nx-storybook-reviewers
 
 # Docker
-/packages/docker/** @nrwl/nx-core-reviewers @Coly010
+/packages/docker/** @nrwl/nx-core-reviewers @Coly010 @jaysoo
 
 ## Devkit
 /packages/devkit/** @nrwl/nx-devkit-reviewers
