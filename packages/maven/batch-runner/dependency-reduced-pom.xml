@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>dev.nx.maven</groupId>
+  <artifactId>batch-runner</artifactId>
+  <name>Nx Maven Batch Runner</name>
+  <version>0.0.8-SNAPSHOT</version>
+  <description>Batch runner for Nx Maven plugin using Maven Invoker API</description>
+  <url>https://github.com/nrwl/nx/packages/nx-maven-parent/batch-runner</url>
+  <developers>
+    <developer>
+      <name>Nx Team</name>
+      <email>hello@nrwl.io</email>
+      <organization>Nrwl</organization>
+      <organizationUrl>https://nrwl.io</organizationUrl>
+    </developer>
+  </developers>
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <connection>scm:git:git://github.com/nrwl/nx.git/packages/nx-maven-parent/batch-runner</connection>
+    <developerConnection>scm:git:ssh://github.com:nrwl/nx.git/packages/nx-maven-parent/batch-runner</developerConnection>
+    <url>https://github.com/nrwl/nx/tree/master/packages/nx-maven-parent/batch-runner</url>
+  </scm>
+</project>

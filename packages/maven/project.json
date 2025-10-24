@@ -18,19 +18,12 @@
         "{workspaceRoot}/scripts/copy-readme.js",
         "{workspaceRoot}/scripts/readme-fragments"
       ],
-      "outputs": ["{projectRoot}/README.md"],
-      "dependsOn": [
-        "^build",
-        "typecheck",
-        "legacy-post-build",
-        "build-base",
-        "build-native",
-        "maven-batch-runner:package"
-      ]
+      "outputs": ["{projectRoot}/README.md"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "outputs": ["{options.outputPath}"],
+      "dependsOn": ["maven-batch-runner:package"],
       "options": {
         "tsConfig": "./tsconfig.lib.json",
         "outputPath": "packages/maven/dist",
