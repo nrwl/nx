@@ -1,4 +1,5 @@
 import { AggregateCreateNodesError, workspaceRoot } from '@nx/devkit';
+import { signalToCode } from '@nx/devkit/internal';
 import { ExecFileOptions, execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -50,7 +51,8 @@ export function execGradleAsync(
       stdout += data;
     });
 
-    cp.on('exit', (code) => {
+    cp.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code === 0) {
         res(stdout);
       } else {
