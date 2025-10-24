@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dev.nx.maven.data.MavenBatchOptions
 import dev.nx.maven.data.MavenBatchTask
-import java.io.File
+import dev.nx.maven.data.TaskGraph
 
 object ArgParser {
     private val gson = Gson()
@@ -57,6 +57,17 @@ object ArgParser {
         // Read task graph from stdin
         val taskGraphJson = System.`in`.bufferedReader().readText()
 
+        // Parse task graph JSON
+        val taskGraph = if (taskGraphJson.isNotEmpty() && taskGraphJson != "{}") {
+            try {
+                gson.fromJson(taskGraphJson, TaskGraph::class.java)
+            } catch (e: Exception) {
+                throw IllegalArgumentException("Failed to parse task graph JSON", e)
+            }
+        } else {
+            null
+        }
+
         // Parse tasks JSON
         val tasksMap = if (tasksJson.isNotEmpty()) {
             try {
@@ -106,7 +117,7 @@ object ArgParser {
             resultsFile = cleanResultsFile,
             quiet = quiet,
             verbose = verbose,
-            taskGraph = taskGraphJson
+            taskGraph = taskGraph
         )
     }
 }
