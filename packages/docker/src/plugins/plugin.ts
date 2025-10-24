@@ -348,7 +348,7 @@ function normalizePluginOptions(
   };
 
   return {
-    buildTarget: normalizeTarget(options.buildTarget, 'docker:build'),
-    runTarget: normalizeTarget(options.runTarget, 'docker:run'),
+    buildTarget: normalizeTarget(options?.buildTarget, 'docker:build'),
+    runTarget: normalizeTarget(options?.runTarget, 'docker:run'),
   };
 }
