@@ -591,7 +591,7 @@ function getDependencyVersionFromPackageJsonFromFileSystem(
   // Resolve catalog reference if needed
   const manager = getCatalogManager(root);
   if (version && manager?.isCatalogReference(version)) {
-    version = manager.resolveCatalogReference(packageName, version, root);
+    version = manager.resolveCatalogReference(root, packageName, version);
   }
 
   return version;

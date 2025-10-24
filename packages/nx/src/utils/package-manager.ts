@@ -462,9 +462,9 @@ export async function resolvePackageVersionUsingRegistry(
     const manager = getCatalogManager(workspaceRoot);
     if (manager?.isCatalogReference(version)) {
       resolvedVersion = manager.resolveCatalogReference(
+        workspaceRoot,
         packageName,
-        version,
-        workspaceRoot
+        version
       );
       if (!resolvedVersion) {
         throw new Error(
@@ -525,9 +525,9 @@ export async function resolvePackageVersionUsingInstallation(
     const manager = getCatalogManager(workspaceRoot);
     if (manager.isCatalogReference(version)) {
       resolvedVersion = manager.resolveCatalogReference(
+        workspaceRoot,
         packageName,
-        version,
-        workspaceRoot
+        version
       );
       if (!resolvedVersion) {
         throw new Error(
