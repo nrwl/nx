@@ -1,6 +1,8 @@
-use ignore::WalkBuilder;
+use ignore::{WalkBuilder, Match};
+use ignore::gitignore::GitignoreBuilder;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use crate::native::glob::build_glob_set;
 
@@ -177,26 +179,59 @@ where
     walker.require_git(false);
     walker.hidden(false);
 
-    if use_ignores {
-        // Handle parent .gitignore files based on git repository boundaries
+    // Build custom gitignore matchers for parent directories
+    let parent_gitignore_matchers: Option<Arc<Vec<_>>> = if use_ignores {
         if let Some(gitignore_paths) = parent_gitignore_files(&directory) {
-            // Workspace is git root or nested in git repo - use manual parent traversal
+            // Workspace is git root or nested in git repo - build custom matchers
             walker.parents(false);
+
+            // Create a GitignoreBuilder for each parent gitignore
+            let mut matchers = Vec::new();
             for gitignore_path in gitignore_paths {
-                walker.add_ignore(gitignore_path);
+                if let Some(parent_dir) = gitignore_path.parent() {
+                    let mut builder = GitignoreBuilder::new(parent_dir);
+                    if builder.add(&gitignore_path).is_none() {
+                        if let Ok(gitignore) = builder.build() {
+                            matchers.push(gitignore);
+                        }
+                    }
+                }
             }
+            Some(Arc::new(matchers))
         } else {
             // No git repo found - use automatic parent traversal for backwards compatibility
             walker.parents(true);
+            None
         }
+    } else {
+        None
+    };
 
+    if use_ignores {
         walker.add_custom_ignore_filename(".nxignore");
     }
 
-    // We should make sure to always ignore node_modules and the .git folder
+    // Apply both static ignores and parent gitignore patterns
     walker.filter_entry(move |entry| {
-        let path = entry.path().to_string_lossy();
-        !ignore_glob_set.is_match(path.as_ref())
+        let path = entry.path();
+
+        // Apply static ignores
+        if ignore_glob_set.is_match(path.to_string_lossy().as_ref()) {
+            return false;
+        }
+
+        // Apply parent gitignore patterns with proper directory context
+        if let Some(ref matchers) = parent_gitignore_matchers {
+            let is_dir = entry.file_type().map_or(false, |ft| ft.is_dir());
+            for gitignore in matchers.iter() {
+                match gitignore.matched_path_or_any_parents(path, is_dir) {
+                    Match::Ignore(_) => return false,
+                    _ => continue,
+                }
+            }
+        }
+
+        true
     });
     walker
 }
@@ -430,5 +465,124 @@ nested/child-two/
 
         // All files should be ignored by parent .gitignore since no git repo was found
         assert!(files.is_empty());
+    }
+
+    #[test]
+    fn parent_gitignore_patterns_respect_directory_context() {
+        let temp_dir = assert_fs::TempDir::new().unwrap();
+
+        // Parent gitignore with "dist/" pattern (should only apply to parent/dist/)
+        temp_dir
+            .child(".gitignore")
+            .write_str("dist/\nbuild/\n")
+            .unwrap();
+
+        // Create parent/dist/ (should be ignored by parent .gitignore)
+        temp_dir
+            .child("dist/parent-file.txt")
+            .write_str("test")
+            .unwrap();
+
+        // Git repo in nested directory
+        temp_dir.child("workspace/.git").touch().unwrap();
+
+        // Workspace gitignore (empty - doesn't ignore dist/)
+        temp_dir
+            .child("workspace/.gitignore")
+            .write_str("")
+            .unwrap();
+
+        // Create workspace/dist/ (should NOT be ignored - parent pattern shouldn't apply here)
+        temp_dir
+            .child("workspace/dist/bundle.js")
+            .write_str("code")
+            .unwrap();
+
+        temp_dir
+            .child("workspace/dist/app.css")
+            .write_str("code")
+            .unwrap();
+
+        // Create workspace/build/ (should NOT be ignored)
+        temp_dir
+            .child("workspace/build/output.js")
+            .write_str("code")
+            .unwrap();
+
+        temp_dir
+            .child("workspace/src/index.js")
+            .write_str("code")
+            .unwrap();
+
+        let workspace_path = temp_dir.path().join("workspace");
+        let mut files: Vec<_> = nx_walker(&workspace_path, true)
+            .map(|f| f.normalized_path)
+            .collect();
+        files.sort();
+
+        // Should include dist/ and build/ files because parent gitignore patterns
+        // are now correctly scoped to the parent directory
+        assert_eq!(
+            files,
+            vec![
+                "build/output.js".to_string(),
+                "dist/app.css".to_string(),
+                "dist/bundle.js".to_string(),
+                "src/index.js".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn nested_parent_gitignores_apply_correctly() {
+        let temp_dir = assert_fs::TempDir::new().unwrap();
+
+        // Root .gitignore ignoring "temp/"
+        temp_dir
+            .child(".gitignore")
+            .write_str("temp/\n")
+            .unwrap();
+
+        // Middle level .gitignore ignoring "logs/"
+        temp_dir
+            .child("project/.gitignore")
+            .write_str("logs/\n")
+            .unwrap();
+
+        // Git repo in deeply nested directory
+        temp_dir.child("project/workspace/.git").touch().unwrap();
+
+        // Create files in workspace
+        temp_dir
+            .child("project/workspace/temp/data.txt")
+            .write_str("data")
+            .unwrap();
+
+        temp_dir
+            .child("project/workspace/logs/app.log")
+            .write_str("log")
+            .unwrap();
+
+        temp_dir
+            .child("project/workspace/src/main.js")
+            .write_str("code")
+            .unwrap();
+
+        let workspace_path = temp_dir.path().join("project/workspace");
+        let mut files: Vec<_> = nx_walker(&workspace_path, true)
+            .map(|f| f.normalized_path)
+            .collect();
+        files.sort();
+
+        // Both temp/ and logs/ should be included because parent gitignores
+        // are scoped to their respective directories
+        assert_eq!(
+            files,
+            vec![
+                "logs/app.log".to_string(),
+                "src/main.js".to_string(),
+                "temp/data.txt".to_string()
+            ]
+        );
     }
 }
