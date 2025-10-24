@@ -64,7 +64,6 @@ class MavenInvokerRunner(private val options: MavenBatchOptions) {
 
         // Create a fresh invoker for this thread
         val invoker = createInvoker()
-
         // Collect output for this project
         val projectOutput = StringBuilder()
 
@@ -112,36 +111,24 @@ class MavenInvokerRunner(private val options: MavenBatchOptions) {
         }
     }
 
-    private fun parseTaskGraph(): Map<*, *>? {
-        return try {
-            val gson = Gson()
-            @Suppress("UNCHECKED_CAST")
-            (gson.fromJson(options.taskGraph, Map::class.java) as Map<*, *>)
-        } catch (e: Exception) {
-            log.warn("Failed to parse task graph: ${e.message}")
-            null
-        }
-    }
-
     private fun getTaskExecutionOrder(): List<String> {
         return try {
-            val taskGraph = parseTaskGraph()
+            val taskGraph = options.taskGraph
 
             if (taskGraph == null) {
                 log.warn("Task graph is null, using all available tasks")
                 options.tasks.keys.toList()
             } else {
                 // Extract task IDs from the "tasks" field in the task graph
-                val tasks = taskGraph["tasks"] as? Map<*, *>
-                if (tasks != null) {
-                    tasks.keys.map { it.toString() }.toList()
+                if (taskGraph.tasks.isNotEmpty()) {
+                    taskGraph.tasks.keys.toList()
                 } else {
-                    log.warn("No tasks field in task graph, using all available tasks")
+                    log.warn("No tasks in task graph, using all available tasks")
                     options.tasks.keys.toList()
                 }
             }
         } catch (e: Exception) {
-            log.warn("Failed to parse task graph: ${e.message}, using all available tasks")
+            log.warn("Failed to access task graph: ${e.message}, using all available tasks")
             options.tasks.keys.toList()
         }
     }
@@ -191,7 +178,7 @@ class MavenInvokerRunner(private val options: MavenBatchOptions) {
       // Add Nx Maven record goal after user goals
       request.goals.add("dev.nx.maven:nx-maven-plugin:record")
 
-      request.isRecursive = true
+      request.isRecursive = false
 
         log.info("Executing ${request.goals.joinToString(", ")} goals for project: $project")
 
