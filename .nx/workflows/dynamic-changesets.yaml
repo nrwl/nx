@@ -24,7 +24,6 @@ assignment-rules:
         parallelism: 1
 
   - projects:
-      - e2e-gradle
       - e2e-release
       - e2e-angular
       - e2e-react
@@ -37,6 +36,8 @@ assignment-rules:
       - e2e-js
       - e2e-nx-init
       - e2e-dotnet
+      - e2e-workspace-create
+      - e2e-rollup
     targets:
       - e2e-ci**
     run-on:
