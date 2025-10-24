@@ -66,33 +66,6 @@ For manual DTE configurations, the `nx fix-ci` command must be included in the a
 
 For non-DTE setups, refer to the [Self-Healing CI documentation](/docs/features/ci-features/self-healing-ci) for detailed configuration instructions.
 
-## Explain with AI for Enterprise On-Prem Installations
-
-To enable the Explain with AI feature for enterprise on-prem installations, add the following configuration to your `helm-values.yaml` file:
-
-```yaml
-nxApi
-  deployment:
-    env:
-      - name: NX_CLOUD_AI_ENABLED
-        value: 'true'
-
-frontend
-  deployment:
-    env:
-      - name: OPENAI_SECRET_KEY
-        valueFrom:
-          secretKeyRef:
-            name: open-ai-secrets
-            key: OPENAI_SECRET_KEY
-      - name: NX_CLOUD_AI_ENABLED
-        value: 'true'
-```
-
-_(We use gpt-4o for the Explain with AI feature)_
-
-Then, enable AI features in the [organization settings](https://cloud.nx.app/go/organization/edit).
-
 ## Regional Availability
 
-AI features are not available for the EU cluster in public cloud installations due to regional restrictions. However, on-prem customers in the EU can still use these features by providing their own OpenAI secret key (for Explain with AI) or Anthropic API key (for Self-Healing CI) and enabling the required environment variables.
+AI features are not available for the EU cluster in public cloud installations due to regional restrictions. However, on-prem customers in the EU can still use these features by providing their own Anthropic API key (for Self-Healing CI) and enabling the required environment variables.

@@ -2597,12 +2597,6 @@
               "file": "nx-cloud/features/flaky-tasks"
             },
             {
-              "name": "Explain With AI",
-              "id": "explain-with-ai",
-              "description": "Learn how to use AI to explain cryptic failure logs into actionable errors.",
-              "file": "nx-cloud/features/explain-with-ai"
-            },
-            {
               "name": "GitHub Integration",
               "id": "github-integration",
               "description": "Learn how to setup the GitHub integration for Nx Cloud.",
