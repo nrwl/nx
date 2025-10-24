@@ -1,4 +1,5 @@
 import { names, ExecutorContext } from '@nx/devkit';
+import { signalToCode } from '@nx/devkit/internal';
 import { dirname, join, resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
@@ -56,7 +57,8 @@ function runCliBuild(
     childProcess.on('error', (err) => {
       reject(err);
     });
-    childProcess.on('exit', (code) => {
+    childProcess.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code === 0) {
         resolve(childProcess);
       } else {
