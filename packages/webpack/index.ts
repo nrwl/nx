@@ -6,7 +6,7 @@ import { useLegacyNxPlugin } from './src/plugins/use-legacy-nx-plugin/use-legacy
 // Lazy-loaded to avoid requiring typescript before it's installed.
 // Other generators may import this index before typescript is available.
 // This generator imports @phenomnomnominal/tsquery which requires typescript.
-// Note: This seems to only affet yarn v1.
+// Note: This seems to only affect yarn v1.
 export function convertConfigToWebpackPluginGenerator(
   ...args: Parameters<
     typeof import('./src/generators/convert-config-to-webpack-plugin/convert-config-to-webpack-plugin').convertConfigToWebpackPluginGenerator
