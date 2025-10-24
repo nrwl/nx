@@ -247,6 +247,42 @@ describe('@nx/vite/plugin', () => {
 
       expect(() => runCLI(`test ${lib1}`)).not.toThrow();
     });
+
+    it('should support local path aliases in project tsconfig.app.json', () => {
+      const myLocalApp = uniq('myapp');
+      runCLI(
+        `generate @nx/react:app ${myLocalApp} --directory=apps/${myLocalApp} --bundler=vite --unitTestRunner=vitest`
+      );
+
+      // Add a local path alias in the project's tsconfig.app.json
+      updateJson(`apps/${myLocalApp}/tsconfig.app.json`, (json) => {
+        json.compilerOptions = json.compilerOptions || {};
+        json.compilerOptions.baseUrl = '.';
+        json.compilerOptions.paths = {
+          '~/*': ['src/*'],
+        };
+        return json;
+      });
+
+      // Update the app to use the local path alias
+      updateFile(
+        `apps/${myLocalApp}/src/app/app.tsx`,
+        `import NxWelcome from '~/app/nx-welcome';
+
+        export function App() {
+          return (
+            <div>
+              <NxWelcome title="${myLocalApp}" />
+            </div>
+          );
+        }
+
+        export default App;`
+      );
+
+      // Ensure build works with local path aliases
+      expect(() => runCLI(`build ${myLocalApp}`)).not.toThrow();
+    });
   });
 
   describe('react with vitest only', () => {

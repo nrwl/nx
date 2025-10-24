@@ -296,7 +296,7 @@ describe('generator utils', () => {
           plugins: [dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //  plugins: [],
           // },
           // Configuration for building your library.
           // See: https://vitejs.dev/guide/build.html#library-mode
