@@ -8,6 +8,10 @@ youtubeUrl: https://youtu.be/g2m9cHp-O-Q?si=ax-SKCO0Xvy9vFIz
 description: Explain with AI in Nx Cloud Pro helps debug CI failures with AI explanations and suggested fixes.
 ---
 
+{% callout type="warning" title="Feature Sunset" %}
+The "Explain with AI" feature has been sunset and replaced by [Self-Healing CI](/ci/features/self-healing-ci), which provides automated CI failure detection, analysis, and fixes without manual intervention. This article is kept for historical reference.
+{% /callout %}
+
 It's Friday, and you absolutely, positively have to deploy to production. But you can't get CI to pass your PR. What do you do? It's an inevitable part of your life as a developer, and you've built a collection of tools to deal with it: Google, MDN, Discord, ChatGPT. We've got one more tool for your toolbox: **"Explain with AI" for [Nx Cloud](/nx-cloud)**.
 
 ## Your ticket to fast error debugging
