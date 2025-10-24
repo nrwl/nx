@@ -74,7 +74,7 @@ describe('exec gradle', () => {
       expect(gradlewFile).toEqual('nested/nested/proj/gradlew');
     });
 
-    it('should throw an error if no gradlw in workspace', async () => {
+    it('should throw an error if no gradlew in workspace', async () => {
       await tempFs.createFiles({
         'proj/build.gradle': ``,
         'nested/nested/proj/build.gradle': ``,
@@ -114,7 +114,7 @@ describe('exec gradle', () => {
       expect(result).toBeUndefined();
     });
 
-    it('should return undefined when gradle plugin has no gradleExecutablePath option', () => {
+    it('should return undefined when gradle plugin has no gradleExecutableDirectory option', () => {
       const nxJson: NxJsonConfiguration = {
         plugins: [
           {
@@ -127,14 +127,14 @@ describe('exec gradle', () => {
       expect(result).toBeUndefined();
     });
 
-    it('should return gradleExecutablePath from gradle plugin when multiple plugins exist', () => {
+    it('should return gradleExecutableDirectory from gradle plugin when multiple plugins exist', () => {
       const nxJson: NxJsonConfiguration = {
         plugins: [
           '@nx/js',
           {
             plugin: '@nx/gradle',
             options: {
-              gradleExecutablePath: '/path/to/gradle',
+              gradleExecutableDirectory: '/path/to/gradle',
             },
           },
           '@nx/react',

@@ -7,7 +7,6 @@ import {
 import { dirname, join } from 'node:path';
 import runCommandsImpl from 'nx/src/executors/run-commands/run-commands.impl';
 import { getExcludeTasks } from './get-exclude-task';
-import { GradlePluginOptions } from '../../plugin/utils/gradle-plugin-options';
 
 export default async function gradleExecutor(
   options: GradleExecutorSchema,
