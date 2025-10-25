@@ -1,6 +1,7 @@
+import type { NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/nx-json';
 import type { ProjectGraph } from '../../config/project-graph';
-import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import type { ProjectsConfigurations } from '../../config/workspace-json-project-json';
 import { FsTree, type Tree } from '../../generators/tree';
 import { hashArray } from '../../hasher/file-hasher';
 import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph';
@@ -8,8 +9,8 @@ import {
   collectEnabledTaskSyncGeneratorsFromProjectGraph,
   collectRegisteredGlobalSyncGenerators,
   flushSyncGeneratorChanges,
-  runSyncGenerator,
   type FlushSyncGeneratorChangesResult,
+  runSyncGenerator,
   type SyncGeneratorRunResult,
   type SyncGeneratorRunSuccessResult,
 } from '../../utils/sync-generators';
@@ -136,13 +137,14 @@ export function collectAndScheduleSyncGenerators(
       return;
     }
 
-    const { projects } =
+    const projectsConfigurations =
       readProjectsConfigurationFromProjectGraph(projectGraph);
+    const nxJsonConfiguration = readNxJson();
 
     for (const generator of scheduledGenerators) {
       syncGeneratorsCacheResultPromises.set(
         generator,
-        runGenerator(generator, projects)
+        runGenerator(generator, projectsConfigurations, nxJsonConfiguration)
       );
     }
 
@@ -172,21 +174,26 @@ export async function getCachedRegisteredSyncGenerators(): Promise<{
 async function getFromCacheOrRunGenerators(
   generators: string[]
 ): Promise<SyncGeneratorRunResult[]> {
-  let projects: Record<string, ProjectConfiguration> | null;
+  let projectsConfigurations: ProjectsConfigurations | null;
+  let nxJsonConfiguration: NxJsonConfiguration | null;
   let errored = false;
-  const getProjectsConfigurations = async () => {
-    if (projects || errored) {
-      return projects;
+
+  const getConfigurations = async () => {
+    if (projectsConfigurations || errored) {
+      return { projectsConfigurations, nxJsonConfiguration };
     }
 
     const { projectGraph, error } =
       await getCachedSerializedProjectGraphPromise();
-    projects = projectGraph
-      ? readProjectsConfigurationFromProjectGraph(projectGraph).projects
+    projectsConfigurations = projectGraph
+      ? readProjectsConfigurationFromProjectGraph(projectGraph)
       : null;
+
+    nxJsonConfiguration = readNxJson();
+
     errored = error !== undefined;
 
-    return projects;
+    return { projectsConfigurations, nxJsonConfiguration };
   };
 
   return (
@@ -198,12 +205,17 @@ async function getFromCacheOrRunGenerators(
         ) {
           // it's scheduled to run (there are pending changes to process) or
           // it's not scheduled and there's no cached result, so run it
-          const projects = await getProjectsConfigurations();
-          if (projects) {
+          const { projectsConfigurations, nxJsonConfiguration } =
+            await getConfigurations();
+          if (projectsConfigurations) {
             log(generator, 'already scheduled or not cached, running it now');
             syncGeneratorsCacheResultPromises.set(
               generator,
-              runGenerator(generator, projects)
+              runGenerator(
+                generator,
+                projectsConfigurations,
+                nxJsonConfiguration
+              )
             );
           } else {
             log(
@@ -242,11 +254,12 @@ async function runConflictingGenerators(
   generators: string[]
 ): Promise<SyncGeneratorRunResult[]> {
   const { projectGraph } = await getCachedSerializedProjectGraphPromise();
-  const projects = projectGraph
-    ? readProjectsConfigurationFromProjectGraph(projectGraph).projects
+  const projectsConfigurations = projectGraph
+    ? readProjectsConfigurationFromProjectGraph(projectGraph)
     : null;
+  const nxJsonConfiguration = readNxJson();
 
-  if (!projects) {
+  if (!projectsConfigurations) {
     /**
      * This should never happen. This is invoked imperatively, and by
      * the time it is invoked, the project graph would have already
@@ -266,7 +279,14 @@ async function runConflictingGenerators(
   const results: SyncGeneratorRunResult[] = [];
   for (const generator of generators) {
     log(generator, 'running it now');
-    results.push(await runGenerator(generator, projects, tree));
+    results.push(
+      await runGenerator(
+        generator,
+        projectsConfigurations,
+        nxJsonConfiguration,
+        tree
+      )
+    );
   }
 
   return results;
@@ -449,7 +469,8 @@ function collectAllRegisteredSyncGenerators(projectGraph: ProjectGraph): void {
 
 function runGenerator(
   generator: string,
-  projects: Record<string, ProjectConfiguration>,
+  projectsConfigurations: ProjectsConfigurations,
+  nxJsonConfiguration: NxJsonConfiguration,
   tree?: Tree
 ): Promise<SyncGeneratorRunResult> {
   log('running scheduled generator', generator);
@@ -461,7 +482,12 @@ function runGenerator(
     `running sync generator ${generator}`
   );
 
-  return runSyncGenerator(tree, generator, projects).then((result) => {
+  return runSyncGenerator(
+    tree,
+    generator,
+    projectsConfigurations,
+    nxJsonConfiguration
+  ).then((result) => {
     if ('error' in result) {
       log(generator, 'error:', result.error.message);
     } else {
