@@ -10,6 +10,7 @@ import {
 } from '../../project-graph/error-types';
 import { removeDbConnections } from '../../utils/db-connection';
 import { cleanupPlugins } from '../../project-graph/plugins/get-plugins';
+import { MESSAGE_END_SEQ } from '../../utils/consume-messages-from-socket';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 
@@ -98,7 +99,7 @@ export function respondToClient(
     if (description) {
       serverLogger.requestLog(`Responding to the client.`, description);
     }
-    socket.write(`${response}${String.fromCodePoint(4)}`, (err) => {
+    socket.write(response + MESSAGE_END_SEQ, (err) => {
       if (err) {
         console.error(err);
       }
