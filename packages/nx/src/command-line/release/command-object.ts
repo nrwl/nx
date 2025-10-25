@@ -224,6 +224,12 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
             description:
               'Skip publishing by automatically answering no to the confirmation prompt for publishing.',
           })
+          .option('tag', {
+            type: 'string',
+            description:
+              'The distribution tag to apply to the published package.',
+            default: 'latest',
+          })
           .check((argv) => {
             if (argv.yes !== undefined && argv.skipPublish !== undefined) {
               throw new Error(
