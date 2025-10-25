@@ -307,7 +307,6 @@
         "testTargetName": "test-kt"
       }
     },
-    "@nx/enterprise-cloud",
     {
       "plugin": "@nx/storybook/plugin",
       "options": {
