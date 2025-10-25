@@ -1070,7 +1070,7 @@ function isExternalProjectReference(
   workspaceRoot: string,
   projectRoot: string
 ): boolean {
-  const relativePath = posixRelative(workspaceRoot, refTsConfigPath);
+  const relativePath = posixRelative(projectRoot, refTsConfigPath);
   if (cache.isExternalProjectReference[relativePath] !== undefined) {
     return cache.isExternalProjectReference[relativePath];
   }
