@@ -1,0 +1,16 @@
+{
+  "name": "maven-batch-runner",
+  "projectType": "application",
+  "sourceRoot": "packages/maven/batch-runner/src",
+  "targets": {
+    "package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd packages/maven/batch-runner && mvn clean package -q",
+        "cwd": "."
+      },
+      "outputs": ["{projectRoot}/target/*.jar"]
+    }
+  },
+  "tags": []
+}

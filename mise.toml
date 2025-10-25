@@ -1,5 +1,6 @@
 [tools]
 dotnet = "9"
 java = "24"
+maven = "latest"
 node = "24"
 rust = "1.90.0"
