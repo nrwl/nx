@@ -1,5 +1,5 @@
-use ignore::{WalkBuilder, Match};
 use ignore::gitignore::GitignoreBuilder;
+use ignore::{Match, WalkBuilder};
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -486,11 +486,8 @@ nested/child-two/
         // Git repo in nested directory
         temp_dir.child("workspace/.git").touch().unwrap();
 
-        // Workspace gitignore (empty - doesn't ignore dist/)
-        temp_dir
-            .child("workspace/.gitignore")
-            .write_str("")
-            .unwrap();
+        // Create workspace with its own git repo and gitignore
+        temp_dir.child("workspace/.gitignore").write_str("").unwrap();
 
         // Create workspace/dist/ (should NOT be ignored - parent pattern shouldn't apply here)
         temp_dir
@@ -522,9 +519,11 @@ nested/child-two/
 
         // Should include dist/ and build/ files because parent gitignore patterns
         // are now correctly scoped to the parent directory
+        // Note: .gitignore file itself is also included
         assert_eq!(
             files,
             vec![
+                ".gitignore".to_string(),
                 "build/output.js".to_string(),
                 "dist/app.css".to_string(),
                 "dist/bundle.js".to_string(),
@@ -538,10 +537,7 @@ nested/child-two/
         let temp_dir = assert_fs::TempDir::new().unwrap();
 
         // Root .gitignore ignoring "temp/"
-        temp_dir
-            .child(".gitignore")
-            .write_str("temp/\n")
-            .unwrap();
+        temp_dir.child(".gitignore").write_str("temp/\n").unwrap();
 
         // Middle level .gitignore ignoring "logs/"
         temp_dir
