@@ -7,8 +7,6 @@ import { dirSync } from 'tmp';
 
 import * as isCI from 'is-ci';
 import { PackageManager } from 'nx/src/utils/package-manager';
-import { tmpProjPath } from './create-project-utils';
-import { e2eConsoleLogger } from './log-utils';
 
 export const isWindows = require('is-windows');
 
@@ -42,23 +40,21 @@ export function isOSX() {
   return process.platform === 'darwin';
 }
 
-export function isAndroid() {
-  return (
-    process.platform === 'linux' &&
-    process.env.ANDROID_HOME &&
-    process.env.ANDROID_SDK_ROOT
-  );
-}
-
 export const e2eRoot = isCI
   ? dirSync({ prefix: 'nx-e2e-' }).name
   : '/tmp/nx-e2e';
 
 export function isVerbose() {
-  return (
-    process.env.NX_VERBOSE_LOGGING === 'true' ||
-    process.argv.includes('--verbose')
-  );
+  // Note: We deliberately ignore NX_VERBOSE_LOGGING here because it can be set to 'true'
+  // in CI for debugging, but we don't want it to affect e2e test commands.
+  /*
+  Verbose logging from plugins (e.g., Vite TsPaths) can interfere with:
+   - JSON parsing (e.g., `nx show project --json`)
+   - Line count expectations (e.g., `nx show projects`)
+   - Other tests that expect clean output
+   */
+  // Use NX_E2E_VERBOSE_LOGGING if you want to enable verbose logging for e2e tests specifically.
+  return process.argv.includes('--verbose');
 }
 
 export function isVerboseE2ERun() {
@@ -141,7 +137,7 @@ export {
 } from './ensure-browser-installation';
 
 export function getStrippedEnvironmentVariables() {
-  return Object.fromEntries(
+  const env = Object.fromEntries(
     Object.entries(process.env).filter(([key]) => {
       if (key.startsWith('NX_E2E_')) {
         return true;
@@ -150,7 +146,6 @@ export function getStrippedEnvironmentVariables() {
       const allowedKeys = [
         'NX_ADD_PLUGINS',
         'NX_ISOLATE_PLUGINS',
-        'NX_VERBOSE_LOGGING',
         'NX_NATIVE_LOGGING',
       ];
 
@@ -172,4 +167,6 @@ export function getStrippedEnvironmentVariables() {
       return true;
     })
   );
+
+  return env;
 }
