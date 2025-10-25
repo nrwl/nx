@@ -696,7 +696,10 @@ function validateAndNormalizeProjectRootMap(
         throw e;
       }
     }
+  }
 
+  for (const root in projectRootMap) {
+    const project = projectRootMap[root];
     normalizeTargets(
       project,
       sourceMaps,
