@@ -50,17 +50,17 @@
   "scripts": {},
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "tslib": "^2.3.0",
+    "tslib": "catalog:typescript",
     "ignore": "^7.0.5"
   },
   "devDependencies": {
-    "@types/jest": "30.0.0",
-    "@types/node": "20.16.10",
-    "jest": "30.0.2",
+    "@types/jest": "catalog:jest",
+    "@types/node": "catalog:typescript",
+    "jest": "catalog:jest",
     "memfs": "^4.9.2",
     "nx": "workspace:*",
-    "ts-jest": "^29.1.0",
-    "typescript": "^5.0.0"
+    "ts-jest": "catalog:jest",
+    "typescript": "catalog:typescript"
   },
   "publishConfig": {
     "access": "public"

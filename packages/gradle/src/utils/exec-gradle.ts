@@ -39,14 +39,19 @@ export function execGradleAsync(
   execOptions: ExecFileOptions = {}
 ): Promise<Buffer> {
   return new Promise<Buffer>((res, rej: (stdout: Buffer) => void) => {
-    const cp = execFile(gradleBinaryPath, args, {
-      cwd: dirname(gradleBinaryPath),
-      shell: true,
-      windowsHide: true,
-      env: process.env,
-      maxBuffer: LARGE_BUFFER,
-      ...execOptions,
-    });
+    const cp = execFile(
+      gradleBinaryPath,
+      args,
+      {
+        cwd: dirname(gradleBinaryPath),
+        shell: true,
+        windowsHide: true,
+        env: process.env,
+        maxBuffer: LARGE_BUFFER,
+        ...execOptions,
+      },
+      undefined
+    );
 
     let stdout = Buffer.from('');
     cp.stdout?.on('data', (data) => {

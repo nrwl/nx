@@ -21,6 +21,6 @@
   },
   "devDependencies": {
     "@types/yargs": "*",
-    "typescript": "*"
+    "typescript": "catalog:typescript"
   }
 }

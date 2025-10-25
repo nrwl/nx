@@ -6,7 +6,7 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "devDependencies": {
-    "jest": "^29.4.1"
+    "jest": "catalog:jest"
   },
   "dependencies": {
     "@nx/nx-dev-ui-common": "workspace:*"

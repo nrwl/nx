@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "devDependencies": {
-    "jest": "^29.4.1"
+    "jest": "catalog:jest"
   },
   "dependencies": {
     "@nx/graph-internal-ui-render-config": "workspace:",
