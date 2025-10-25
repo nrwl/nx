@@ -14,7 +14,7 @@
   "properties": {
     "directory": {
       "type": "string",
-      "description": "A directory where the plugin is placed.",
+      "description": "Full path to the plugin folder. When using positional name argument, this path should include the plugin name as the final segment.",
       "$default": {
         "$source": "argv",
         "index": 0
