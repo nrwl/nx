@@ -47,7 +47,7 @@ export function WebinarNotifier(): ReactElement | null {
       <div className="relative p-4">
         <button
           onClick={closeNotifier}
-          className="absolute right-2 top-2 rounded-full p-1 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-white"
+          className="absolute right-2 top-2 flex h-9 w-9 cursor-pointer items-center justify-center !rounded-full bg-transparent p-1 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-white"
         >
           <XMarkIcon className="size-5" aria-hidden="true" />
           <span className="sr-only">Close</span>
@@ -74,7 +74,7 @@ export function WebinarNotifier(): ReactElement | null {
                 href="https://bit.ly/48iV9DZ"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-pink-600 px-2 py-2 text-sm font-semibold text-white transition hover:bg-pink-700 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:text-black/70 md:px-4"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-pink-600 px-2 py-2 text-sm font-semibold text-white no-underline transition hover:bg-pink-700 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:text-black/70 md:px-4"
               >
                 <VideoCameraIcon aria-hidden="true" className="size-4" />
                 <span>Sign Up Now</span>
