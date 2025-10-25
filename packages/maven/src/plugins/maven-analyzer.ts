@@ -100,7 +100,8 @@ export async function runMavenAnalysis(
       cwd: workspaceRoot,
       windowsHide: true,
       shell: true,
-      stdio: 'pipe', // Always use pipe so we can control output
+      stdio: 'pipe', // Always use pipe so we can control output,
+      env: process.env,
     });
 
     logger.verbose(`[Maven Analyzer] Process spawned with PID: ${child.pid}`);
