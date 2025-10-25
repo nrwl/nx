@@ -99,6 +99,30 @@ Similarly, if you only want to self-heal linting tasks you'd use `--fix-tasks="*
 
 Tasks are passed to the `--fix-tasks` as `<project>:<task-name>:<configuration>`. Commands like `nx format` which you configure with `nx-cloud record --` are passed as `nx-cloud record -- <params>`.
 
+### Customize Failure Classification
+
+Before proposing a fix, the Self-Healing CI agent classifies each failure into one of three categories:
+
+- **`code_change`** - Failures directly caused by PR changes. Self-Healing will propose and implement code fixes.
+- **`environment_state`** - Failures caused by environmental issues (network errors, service outages, resource constraints). Self-Healing will not propose fixes.
+- **`flaky_task`** - Non-deterministic failures from timing issues or race conditions. Self-Healing detects the flakiness and retriggers the flaky task.
+
+You can customize and add your own workspace scenarios to this AI classifies by creating a `CLAUDE.md` file in your repository root with custom instructions:
+
+```markdown
+// CLAUDE.md
+
+## Self-Healing CI
+
+Vitest snapshot test failures should be classified as 'code_change'.
+
+E2e test timeouts under 30 seconds in 'apps/web-e2e:\*' should
+be classified as 'flaky_task'.
+
+Database connection errors (ECONNREFUSED) should
+be classified as 'environment_state'.
+```
+
 ## How Self-Healing CI works
 
 Here's what happens when you push a PR with Self-Healing CI enabled:
