@@ -102,6 +102,7 @@ import {
 import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
 import { deserialize } from 'node:v8';
 import { isJsonMessage } from '../../utils/consume-messages-from-socket';
+import { isV8SerializerEnabled } from '../is-v8-serializer-enabled';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -365,11 +366,16 @@ export class DaemonClient {
   }
 
   processInBackground(requirePath: string, data: any): Promise<any> {
-    return this.sendToDaemonViaQueue({
-      type: 'PROCESS_IN_BACKGROUND',
-      requirePath,
-      data,
-    });
+    return this.sendToDaemonViaQueue(
+      {
+        type: 'PROCESS_IN_BACKGROUND',
+        requirePath,
+        data,
+        // This method is sometimes passed data that cannot be serialized with v8
+        // so we force JSON serialization here
+      },
+      'json'
+    );
   }
 
   recordOutputsHash(outputs: string[], hash: string): Promise<any> {
@@ -560,9 +566,12 @@ export class DaemonClient {
     });
   }
 
-  private async sendToDaemonViaQueue(messageToDaemon: Message): Promise<any> {
+  private async sendToDaemonViaQueue(
+    messageToDaemon: Message,
+    force?: 'v8' | 'json'
+  ): Promise<any> {
     return this.queue.sendToQueue(() =>
-      this.sendMessageToDaemon(messageToDaemon)
+      this.sendMessageToDaemon(messageToDaemon, force)
     );
   }
 
@@ -598,16 +607,6 @@ export class DaemonClient {
           return this.currentReject(daemonProcessException(err.toString()));
         }
 
-        if (err.message.startsWith('LOCK-FILES-CHANGED')) {
-          // retry the current message
-          // we cannot send it via the queue because we are in the middle of processing
-          // a message from the queue
-          return this.sendMessageToDaemon(this.currentMessage).then(
-            this.currentResolve,
-            this.currentReject
-          );
-        }
-
         let error: any;
         if (err.message.startsWith('connect ENOENT')) {
           error = daemonProcessException('The Daemon Server is not running');
@@ -628,7 +627,10 @@ export class DaemonClient {
     );
   }
 
-  private async sendMessageToDaemon(message: Message): Promise<any> {
+  private async sendMessageToDaemon(
+    message: Message,
+    force?: 'v8' | 'json'
+  ): Promise<any> {
     if (this._daemonStatus == DaemonStatus.DISCONNECTED) {
       this._daemonStatus = DaemonStatus.CONNECTING;
 
@@ -652,7 +654,7 @@ export class DaemonClient {
       this.currentResolve = resolve;
       this.currentReject = reject;
 
-      this.socketMessenger.sendMessage(message);
+      this.socketMessenger.sendMessage(message, force);
     }).finally(() => {
       clearTimeout(keepAlive);
     });
