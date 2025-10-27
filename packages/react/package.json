@@ -61,5 +61,159 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./index.js",
+      "types": "./index.d.ts"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./mf": {
+      "import": "./mf/index.js",
+      "require": "./mf/index.js",
+      "types": "./mf/index.d.ts"
+    },
+    "./babel": {
+      "import": "./babel.js",
+      "require": "./babel.js",
+      "types": "./babel.d.ts"
+    },
+    "./tailwind": {
+      "import": "./tailwind.js",
+      "require": "./tailwind.js",
+      "types": "./tailwind.d.ts"
+    },
+    "./module-federation": {
+      "import": "./module-federation.js",
+      "require": "./module-federation.js",
+      "types": "./module-federation.d.ts"
+    },
+    "./webpack-plugin": {
+      "import": "./webpack-plugin.js",
+      "require": "./webpack-plugin.js",
+      "types": "./webpack-plugin.d.ts"
+    },
+    "./router-plugin": {
+      "import": "./router-plugin.js",
+      "require": "./router-plugin.js",
+      "types": "./router-plugin.d.ts"
+    },
+    "./ast-utils": {
+      "import": "./ast-utils.js",
+      "require": "./ast-utils.js",
+      "types": "./ast-utils.d.ts"
+    },
+    "./plugins/storybook": {
+      "import": "./plugins/storybook/index.js",
+      "require": "./plugins/storybook/index.js",
+      "types": "./plugins/storybook/index.d.ts"
+    },
+    "./plugins/component-testing": {
+      "import": "./plugins/component-testing/index.js",
+      "require": "./plugins/component-testing/index.js",
+      "types": "./plugins/component-testing/index.d.ts"
+    },
+    "./plugins/webpack": {
+      "import": "./plugins/webpack.js",
+      "require": "./plugins/webpack.js",
+      "types": "./plugins/webpack.d.ts"
+    },
+    "./plugins/bundle-rollup": {
+      "import": "./plugins/bundle-rollup.js",
+      "require": "./plugins/bundle-rollup.js",
+      "types": "./plugins/bundle-rollup.d.ts"
+    },
+    "./plugins/jest": {
+      "import": "./plugins/jest.js",
+      "require": "./plugins/jest.js",
+      "types": "./plugins/jest.d.ts"
+    },
+    "./plugins/with-react": {
+      "import": "./plugins/with-react.js",
+      "require": "./plugins/with-react.js",
+      "types": "./plugins/with-react.d.ts"
+    },
+    "./src/utils": {
+      "import": "./src/utils/index.js",
+      "require": "./src/utils/index.js",
+      "types": "./src/utils/index.d.ts"
+    },
+    "./src/utils/*": {
+      "import": "./src/utils/*.js",
+      "require": "./src/utils/*.js",
+      "types": "./src/utils/*.d.ts"
+    },
+    "./src/generators/utils": {
+      "import": "./src/generators/utils/index.js",
+      "require": "./src/generators/utils/index.js",
+      "types": "./src/generators/utils/index.d.ts"
+    },
+    "./src/generators/*": {
+      "import": "./src/generators/*.js",
+      "require": "./src/generators/*.js",
+      "types": "./src/generators/*.d.ts"
+    },
+    "./src/generators/*/lib/*": {
+      "import": "./src/generators/*/lib/*.js",
+      "require": "./src/generators/*/lib/*.js",
+      "types": "./src/generators/*/lib/*.d.ts"
+    },
+    "./src/generators/*/*": {
+      "import": "./src/generators/*/*.js",
+      "require": "./src/generators/*/*.js",
+      "types": "./src/generators/*/*.d.ts"
+    },
+    "./src/generators/*/schema.json": "./src/generators/*/schema.json",
+    "./src/executors/*/schema.json": "./src/executors/*/schema.json",
+    "./src/executors/*.impl": {
+      "import": "./src/executors/*.impl.js",
+      "require": "./src/executors/*.impl.js",
+      "types": "./src/executors/*.impl.d.ts"
+    },
+    "./src/executors/*": {
+      "import": "./src/executors/*.js",
+      "require": "./src/executors/*.js",
+      "types": "./src/executors/*.d.ts"
+    },
+    "./src/executors/*/lib/*": {
+      "import": "./src/executors/*/lib/*.js",
+      "require": "./src/executors/*/lib/*.js",
+      "types": "./src/executors/*/lib/*.d.ts"
+    },
+    "./src/module-federation/*": {
+      "import": "./src/module-federation/*.js",
+      "require": "./src/module-federation/*.js",
+      "types": "./src/module-federation/*.d.ts"
+    },
+    "./src/plugins/*": {
+      "import": "./src/plugins/*.js",
+      "require": "./src/plugins/*.js",
+      "types": "./src/plugins/*.d.ts"
+    },
+    "./src/rules/*": {
+      "import": "./src/rules/*.js",
+      "require": "./src/rules/*.js",
+      "types": "./src/rules/*.d.ts"
+    },
+    "./src/*": {
+      "import": "./src/*.js",
+      "require": "./src/*.js",
+      "types": "./src/*.d.ts"
+    },
+    "./plugins/*": {
+      "import": "./plugins/*.js",
+      "require": "./plugins/*.js",
+      "types": "./plugins/*.d.ts"
+    },
+    "./mf/*": {
+      "import": "./mf/*.js",
+      "require": "./mf/*.js",
+      "types": "./mf/*.d.ts"
+    },
+    "./typings/*.d.ts": "./typings/*.d.ts"
   }
 }

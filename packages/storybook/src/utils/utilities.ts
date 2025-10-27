@@ -1,10 +1,11 @@
-import { TargetConfiguration, Tree } from '@nx/devkit';
+import { readJson, TargetConfiguration, Tree } from '@nx/devkit';
 import { CompilerOptions } from 'typescript';
 import { statSync } from 'fs';
 import { findNodes } from '@nx/js';
 import ts = require('typescript');
-import { major } from 'semver';
+import { gte, major } from 'semver';
 import { join } from 'path';
+import { storybookVersion } from './versions';
 
 export const Constants = {
   addonDependencies: ['@storybook/addons'],
@@ -35,7 +36,35 @@ export const Constants = {
 };
 type Constants = typeof Constants;
 
-export function storybookMajorVersion(): number | undefined {
+export function getStorybookVersionToInstall(tree: Tree) {
+  let storybookVersionToInstall = storybookVersion;
+  const installedStorybookMajorVersion = storybookMajorVersion(tree);
+  const installedStorybookVersion = getInstalledStorybookVersion(tree);
+  if (
+    installedStorybookMajorVersion >= 7 &&
+    installedStorybookVersion &&
+    gte(installedStorybookVersion, '7.0.0')
+  ) {
+    storybookVersionToInstall = installedStorybookVersion;
+  }
+  return storybookVersionToInstall;
+}
+
+export function storybookMajorVersion(tree?: Tree): number | undefined {
+  let foundStorybookPackageVersion: string;
+  if (tree) {
+    const rootPkgJson = readJson(tree, 'package.json');
+    foundStorybookPackageVersion =
+      rootPkgJson?.dependencies?.['storybook'] ||
+      rootPkgJson?.devDependencies?.['storybook'];
+  }
+  if (foundStorybookPackageVersion) {
+    try {
+      return major(foundStorybookPackageVersion);
+    } catch {
+      // unable to parse, fallback to requiring version from disk
+    }
+  }
   try {
     const storybookPackageVersion = require(join(
       'storybook',
@@ -47,7 +76,19 @@ export function storybookMajorVersion(): number | undefined {
   }
 }
 
-export function getInstalledStorybookVersion(): string | undefined {
+export function getInstalledStorybookVersion(tree?: Tree): string | undefined {
+  let foundStorybookPackageVersion: string;
+  if (tree) {
+    const rootPkgJson = readJson(tree, 'package.json');
+    foundStorybookPackageVersion =
+      rootPkgJson?.dependencies?.['storybook'] ||
+      rootPkgJson?.devDependencies?.['storybook'];
+  }
+  if (foundStorybookPackageVersion) {
+    return foundStorybookPackageVersion;
+  }
+
+  // unable to find in root packageJson, fallback to requiring version from disk
   try {
     const storybookPackageVersion = require(join(
       'storybook',

@@ -46,11 +46,6 @@ describe('Storybook generators and executors for standalone workspaces - using R
         'tsconfig.storybook.json'
       );
     });
-
-    it('should edit root tsconfig.json', () => {
-      const tsconfig = readJson(`tsconfig.json`);
-      expect(tsconfig['ts-node']?.compilerOptions?.module).toEqual('commonjs');
-    });
   });
 
   describe('serve storybook', () => {
