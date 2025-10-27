@@ -1648,4 +1648,84 @@ describe('pnpm LockFile utility', () => {
       expect(result).toEqual(expectedPrunedLockFile);
     });
   });
+
+  describe('missing workspace importer', () => {
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/.modules.yaml': `hoistedDependencies: {}`,
+        'node_modules/lodash/package.json': '{"version": "4.17.21"}',
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should throw clear error when workspace package importer is missing', () => {
+      // v9.0 lockfile
+      // Only has root importer (.)
+      // Root importer references a workspace package with link:
+      // But the workspace package's importer is MISSING
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+      my-workspace-lib:
+        specifier: workspace:*
+        version: link:packages/my-workspace-lib
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: {
+          lodash: '^4.17.21',
+          'my-workspace-lib': 'workspace:*',
+        },
+      };
+
+      const graph: ProjectGraph = {
+        nodes: {
+          'my-workspace-lib': {
+            name: 'my-workspace-lib',
+            type: 'lib',
+            data: {
+              root: 'packages/my-workspace-lib',
+              metadata: {
+                js: {
+                  packageName: 'my-workspace-lib',
+                },
+              },
+            },
+          },
+        },
+        dependencies: {},
+        externalNodes: {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+      };
+
+      expect(() =>
+        stringifyPnpmLockfile(graph, lockFile, packageJson, '/virtual')
+      ).not.toThrow();
+    });
+  });
 });

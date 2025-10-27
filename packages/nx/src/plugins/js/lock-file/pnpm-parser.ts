@@ -419,8 +419,10 @@ export function stringifyPnpmLockfile(
   const workspaceDependencyImporters: Record<string, ProjectSnapshot> = {};
   for (const [packageName, importerPath] of Object.entries(requiredImporters)) {
     const baseImporter = importers[importerPath];
-    workspaceDependencyImporters[`workspace_modules/${packageName}`] =
-      baseImporter;
+    if (baseImporter) {
+      workspaceDependencyImporters[`workspace_modules/${packageName}`] =
+        baseImporter;
+    }
   }
 
   const output: Lockfile = {
