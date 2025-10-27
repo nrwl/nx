@@ -4,7 +4,10 @@ const redirectRules = require('./redirect-rules');
 
 if (!process.env.NEXT_PUBLIC_ASTRO_URL && !global.NX_GRAPH_CREATION) {
   // If we're building for production throw error as each env must set this value.
-  if (process.env.NODE_ENV === 'production') {
+  if (
+    process.env.NODE_ENV === 'production' &&
+    (process.env.VERCEL || process.env.NETLIFY)
+  ) {
     throw new Error(
       `The NEXT_PUBLIC_ASTRO_URL environment variable is not set. Please set it to the URL of the Astro site.`
     );
