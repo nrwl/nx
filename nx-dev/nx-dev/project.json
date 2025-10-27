@@ -6,26 +6,39 @@
   "targets": {
     "build": {
       "dependsOn": [
-        "astro-docs:build",
         {
           "target": "build-base"
         }
       ],
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "nx run nx-dev:sitemap",
-          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
-        ],
+        "commands": ["nx run nx-dev:sitemap"],
         "parallel": false
       },
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/scripts/tsconfig.scripts.json",
-        "{workspaceRoot}/scripts/documentation/internal-link-checker.ts"
+        { "env": "NEXT_PUBLIC_ASTRO_URL" }
       ],
       "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev"]
+    },
+    "check-links": {
+      "cache": true,
+      "dependsOn": ["nx-dev:build", "astro-docs:build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
+      },
+      "inputs": [
+        "{workspaceRoot}/docs/**/*",
+        "{workspaceRoot}/dist/nx-dev/nx-dev/public/sitemap.xml",
+        "{workspaceRoot}/astro-docs/dist/sitemap-index.xml",
+        "{workspaceRoot}/scripts/tsconfig.scripts.json",
+        "{workspaceRoot}/scripts/documentation/internal-link-checker.ts"
+      ]
+    },
+    "test": {
+      "dependsOn": ["check-links"]
     },
     "sitemap": {
       "executor": "nx:run-commands",
