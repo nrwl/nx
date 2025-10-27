@@ -6,25 +6,26 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
+  normalizePath,
   ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, isAbsolute, join, relative } from 'path';
+import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
-import {
-  calculateHashesForCreateNodes,
-  calculateHashForCreateNodes,
-} from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
-import { loadViteDynamicImport } from '../utils/executor-utils';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import picomatch = require('picomatch');
-import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
+import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { existsSync, readdirSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative } from 'node:path';
+import { hashObject } from 'nx/src/hasher/file-hasher';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { ResolvedConfig } from 'vite';
+import { loadViteDynamicImport } from '../utils/executor-utils';
+import picomatch = require('picomatch');
 
 const pmc = getPackageManagerCommand();
 
@@ -41,6 +42,15 @@ export interface VitePluginOptions {
   typecheckTargetName?: string;
   watchDepsTargetName?: string;
   buildDepsTargetName?: string;
+
+  /**
+   * Atomizer for vitest
+   */
+  ciTargetName?: string;
+  /**
+   * The name that should be used to group atomized tasks on CI
+   */
+  ciGroupName?: string;
 }
 
 type ViteTargets = Pick<
@@ -204,6 +214,8 @@ async function buildViteTargets(
     'build'
   );
 
+  let metadata: ProjectConfiguration['metadata'];
+
   const { buildOutputs, testOutputs, hasTest, isBuildable, hasServeConfig } =
     getOutputs(viteBuildConfig, projectRoot, context.workspaceRoot);
 
@@ -211,13 +223,103 @@ async function buildViteTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
-  // if file is vitest.config or vite.config has definition for test, create target for test
+  // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
   if (configFilePath.includes('vitest.config') || hasTest) {
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
       projectRoot
     );
+
+    if (options.ciTargetName) {
+      const groupName =
+        options.ciGroupName ?? deriveGroupNameFromTarget(options.ciTargetName);
+      const targetGroup = [];
+      const dependsOn: string[] = [];
+      metadata = {
+        targetGroups: {
+          [groupName]: targetGroup,
+        },
+      };
+
+      const testPaths = await getTestPaths(
+        viteBuildConfig,
+        projectRoot,
+        context
+      );
+
+      for (const testPath of testPaths) {
+        const relativePath = normalizePath(
+          relative(join(context.workspaceRoot, projectRoot), testPath)
+        );
+        if (relativePath.includes('../')) {
+          throw new Error(
+            '@nx/vite/plugin attempted to run tests outside of the project root. This is not supported and should not happen. Please open an issue at https://github.com/nrwl/nx/issues/new/choose with the following information:\n\n' +
+              `\n\n${JSON.stringify(
+                {
+                  projectRoot,
+                  relativePath,
+                  testPaths,
+                  context,
+                },
+                null,
+                2
+              )}`
+          );
+        }
+
+        const targetName = `${options.ciTargetName}--${testPath}`;
+        dependsOn.push(targetName);
+        targets[targetName] = {
+          // It does not make sense to run atomized tests in watch mode as they are intended to be run in CI
+          command: `vitest run ${relativePath}`,
+          cache: targets[options.testTargetName].cache,
+          inputs: targets[options.testTargetName].inputs,
+          outputs: targets[options.testTargetName].outputs,
+          options: {
+            cwd: projectRoot,
+            env: targets[options.testTargetName].options.env,
+          },
+          metadata: {
+            technologies: ['vitest'],
+            description: `Run Vitest Tests in ${relativePath}`,
+            help: {
+              command: `${pmc.exec} vitest --help`,
+              example: {
+                options: {
+                  coverage: true,
+                },
+              },
+            },
+          },
+        };
+        targetGroup.push(targetName);
+      }
+
+      if (targetGroup.length > 0) {
+        targets[options.ciTargetName] = {
+          executor: 'nx:noop',
+          cache: true,
+          inputs: targets[options.testTargetName].inputs,
+          outputs: targets[options.testTargetName].outputs,
+          dependsOn,
+          metadata: {
+            technologies: ['vitest'],
+            description: 'Run Vitest Tests in CI',
+            nonAtomizedTarget: options.testTargetName,
+            help: {
+              command: `${pmc.exec} vitest --help`,
+              example: {
+                options: {
+                  coverage: true,
+                },
+              },
+            },
+          },
+        };
+        targetGroup.unshift(options.ciTargetName);
+      }
+    }
   }
 
   if (hasReactRouterConfig) {
@@ -325,7 +427,6 @@ async function buildViteTargets(
     pmc
   );
 
-  const metadata = {};
   return {
     targets,
     metadata,
@@ -565,6 +666,7 @@ function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
   options.testTargetName ??= 'test';
   options.serveStaticTargetName ??= 'serve-static';
   options.typecheckTargetName ??= 'typecheck';
+  options.ciTargetName ??= 'e2e-ci';
   return options;
 }
 
@@ -582,4 +684,40 @@ function checkIfConfigFileShouldBeProject(
   }
 
   return true;
+}
+
+async function getTestPaths(
+  resolvedViteConfig: ResolvedConfig,
+  projectRoot: string,
+  context: CreateNodesContextV2
+): Promise<string[]> {
+  const include = await getVitestOption<string[]>(
+    resolvedViteConfig,
+    'include'
+  );
+  const exclude = await getVitestOption<string[]>(
+    resolvedViteConfig,
+    'include'
+  );
+  return await globWithWorkspaceContext(
+    context.workspaceRoot,
+    // Default patterns from https://vitest.dev/config/#include
+    (include || ['**/*.{test,spec}.?(c|m)[jt]s?(x)']).map((pattern) =>
+      join(projectRoot, pattern)
+    ),
+    // Default patterns from https://vitest.dev/config/#exclude
+    (exclude || ['**/node_modules/**', '**/.{git,svn,hg,idea}/**']).map(
+      (pattern) => join(projectRoot, pattern)
+    )
+  );
+}
+
+async function getVitestOption<T = any>(
+  resolvedViteConfig: ResolvedConfig,
+  optionName: string
+): Promise<T> {
+  if (resolvedViteConfig.test?.[optionName]) {
+    return resolvedViteConfig.test[optionName];
+  }
+  return undefined;
 }
