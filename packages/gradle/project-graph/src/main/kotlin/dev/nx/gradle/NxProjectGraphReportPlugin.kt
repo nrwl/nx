@@ -10,6 +10,13 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
   override fun apply(project: Project) {
     project.logger.info("${Date()} Applying NxProjectGraphReportPlugin to ${project.name}")
 
+    // Register the nx extension on all tasks to allow users to specify Nx dependencies
+    project.tasks.configureEach { task ->
+      if (task.extensions.findByName("nx") == null) {
+        task.extensions.create("nx", NxTaskExtension::class.java, project.objects)
+      }
+    }
+
     val nxProjectReportTask: TaskProvider<NxProjectReportTask> =
         project.tasks.register("nxProjectReport", NxProjectReportTask::class.java) { task ->
           val hashProperty =
@@ -67,6 +74,13 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
 
     // Ensure all subprojects are processed only once using lazy evaluation
     project.subprojects.distinct().forEach { subProject ->
+      // Register the nx extension on all tasks in subprojects
+      subProject.tasks.configureEach {
+        if (it.extensions.findByName("nx") == null) {
+          it.extensions.create("nx", NxTaskExtension::class.java, subProject.objects)
+        }
+      }
+
       // Add a dependency on each subproject's nxProjectReport task
       nxProjectReportTask.configure {
         it.dependsOn(subProject.tasks.matching { it.name == "nxProjectReport" })
