@@ -1,0 +1,160 @@
+diff --git a/src/utils/consume-messages-from-socket.js b/src/utils/consume-messages-from-socket.js
+index a662d6b2b17015f06e4ec31c64099be768f3449d..9914331c25b2ba165a5e439481e61b937a55c9cd 100644
+--- a/src/utils/consume-messages-from-socket.js
++++ b/src/utils/consume-messages-from-socket.js
+@@ -4,11 +4,140 @@ exports.MESSAGE_END_SEQ = void 0;
+ exports.consumeMessagesFromSocket = consumeMessagesFromSocket;
+ exports.isJsonMessage = isJsonMessage;
+ exports.MESSAGE_END_SEQ = 'NX_MSG_END' + String.fromCharCode(4);
++// Timeout for detecting stuck messages (in milliseconds)
++const STUCK_MESSAGE_TIMEOUT = process.env.NX_STUCK_MESSAGE_TIMEOUT
++    ? parseInt(process.env.NX_STUCK_MESSAGE_TIMEOUT, 10)
++    : 30000; // 30 seconds default
++
++// Daemon log monitoring
++const fs = require('fs');
++const path = require('path');
++let daemonLogMonitorInterval = null;
++let lastDaemonLogSize = 0;
++
++function startDaemonLogMonitoring() {
++    if (daemonLogMonitorInterval) return; // Already started
++
++    const workspaceRoot = process.cwd();
++    const daemonLogPath = path.join(workspaceRoot, '.nx', 'workspace-data', 'd', 'daemon.log');
++
++    console.error('[NX DEBUG] Starting daemon log monitoring:', daemonLogPath);
++
++    // Initialize last size
++    try {
++        const stats = fs.statSync(daemonLogPath);
++        lastDaemonLogSize = stats.size;
++    } catch (e) {
++        console.error('[NX DEBUG] Daemon log not found yet, will monitor for creation');
++    }
++
++    daemonLogMonitorInterval = setInterval(() => {
++        try {
++            if (!fs.existsSync(daemonLogPath)) return;
++
++            const stats = fs.statSync(daemonLogPath);
++
++            // Handle log rotation or truncation - reset our tracking
++            if (stats.size < lastDaemonLogSize) {
++                console.error('[NX DEBUG] Daemon log was truncated/rotated, resetting position');
++                lastDaemonLogSize = 0;
++            }
++
++            if (stats.size > lastDaemonLogSize) {
++                const bytesToRead = stats.size - lastDaemonLogSize;
++                const fd = fs.openSync(daemonLogPath, 'r');
++                const buffer = Buffer.alloc(bytesToRead);
++                fs.readSync(fd, buffer, 0, bytesToRead, lastDaemonLogSize);
++                fs.closeSync(fd);
++
++                const newContent = buffer.toString('utf8');
++                console.error('[NX DEBUG] New daemon log content:');
++                console.error(newContent);
++
++                lastDaemonLogSize = stats.size;
++            }
++        } catch (e) {
++            console.error('[NX DEBUG] Error reading daemon log:', e.message);
++        }
++    }, 2000).unref(); // Check every 2 seconds, don't keep process alive
++}
++
+ function consumeMessagesFromSocket(callback) {
+     let message = '';
++    let timeoutHandle = null;
++    let dataReceivedCount = 0;
++    let lastDataTime = Date.now();
++
++    // Log that the patched version is being used
++    console.error('\n========================================');
++    console.error('[NX DEBUG] PATCHED consumeMessagesFromSocket initialized');
++    console.error('[NX DEBUG] Timeout:', STUCK_MESSAGE_TIMEOUT + 'ms');
++    console.error('[NX DEBUG] Process:', process.pid);
++    console.error('[NX DEBUG] Stack trace:');
++    console.error(new Error().stack);
++    console.error('========================================\n');
++
++    // Start daemon log monitoring
++    startDaemonLogMonitoring();
++
++    const logStuckMessage = () => {
++        if (message.length > 0) {
++            const now = Date.now();
++            const timeSinceLastData = now - lastDataTime;
++            const truncatedMessage = message.length > 1000
++                ? message.substring(0, 1000) + `... (truncated, total length: ${message.length})`
++                : message;
++
++            console.error('\n========================================');
++            console.error('[NX] STUCK MESSAGE DETECTED');
++            console.error('========================================');
++            console.error('Time since last data received:', timeSinceLastData + 'ms');
++            console.error('Total data chunks received:', dataReceivedCount);
++            console.error('Accumulated message length:', message.length);
++            console.error('Expected terminator:', JSON.stringify(exports.MESSAGE_END_SEQ));
++            console.error('Terminator char codes:', exports.MESSAGE_END_SEQ.split('').map(c => c.charCodeAt(0)));
++            console.error('\nLast 100 characters of message:');
++            console.error(JSON.stringify(message.substring(message.length - 100)));
++            console.error('\nFull message content (first 1000 chars):');
++            console.error(truncatedMessage);
++            console.error('========================================\n');
++
++            const error = new Error(
++                `Socket message stuck without terminator after ${timeSinceLastData}ms. ` +
++                `Message length: ${message.length}, chunks received: ${dataReceivedCount}`
++            );
++            throw error;
++        }
++    };
++
++    const resetTimeout = () => {
++        if (timeoutHandle) {
++            clearTimeout(timeoutHandle);
++        }
++        if (message.length > 0) {
++            timeoutHandle = setTimeout(logStuckMessage, STUCK_MESSAGE_TIMEOUT);
++        }
++    };
++
+     return (data) => {
++        dataReceivedCount++;
++        lastDataTime = Date.now();
+         const chunk = data.toString();
++
++        // Log incoming socket data
++        const chunkPreview = chunk.length > 50
++            ? chunk.substring(0, 20) + '...' + chunk.substring(chunk.length - 20)
++            : chunk;
++        const chunkBytes = Array.from(chunk.substring(Math.max(0, chunk.length - 20)))
++            .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
++            .join(' ');
++        console.error(`[NX DEBUG] Socket data received [chunk #${dataReceivedCount}]:`,
++            `length=${chunk.length},`,
++            `preview="${chunkPreview}",`,
++            `last20bytes=[${chunkBytes}]`);
++
+         message += chunk;
++
+         // Check if accumulated message ends with MESSAGE_END_SEQ (not just the chunk)
+         // This handles TCP packet fragmentation where MESSAGE_END_SEQ may be split across packets
+         if (message.endsWith(exports.MESSAGE_END_SEQ)) {
+@@ -22,6 +151,14 @@ function consumeMessagesFromSocket(callback) {
+                 }
+             }
+             message = '';
++            dataReceivedCount = 0;
++            if (timeoutHandle) {
++                clearTimeout(timeoutHandle);
++                timeoutHandle = null;
++            }
++        } else {
++            // Message incomplete, reset the timeout to detect if it gets stuck
++            resetTimeout();
+         }
+         // If message doesn't end with MESSAGE_END_SEQ, keep accumulating chunks
+     };
