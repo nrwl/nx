@@ -17,13 +17,12 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName } from '@nx/js';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { spawn, type SpawnOptions } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
-import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
-import { ResolvedConfig } from 'vite';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import picomatch = require('picomatch');
 
@@ -214,7 +213,7 @@ async function buildViteTargets(
     'build'
   );
 
-  let metadata: ProjectConfiguration['metadata'];
+  let metadata: ProjectConfiguration['metadata'] = {};
 
   const { buildOutputs, testOutputs, hasTest, isBuildable, hasServeConfig } =
     getOutputs(viteBuildConfig, projectRoot, context.workspaceRoot);
@@ -242,11 +241,7 @@ async function buildViteTargets(
         },
       };
 
-      const testPaths = await getTestPaths(
-        viteBuildConfig,
-        projectRoot,
-        context
-      );
+      const testPaths = await getTestPaths(projectRoot);
 
       for (const testPath of testPaths) {
         const relativePath = normalizePath(
@@ -666,7 +661,6 @@ function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
   options.testTargetName ??= 'test';
   options.serveStaticTargetName ??= 'serve-static';
   options.typecheckTargetName ??= 'typecheck';
-  options.ciTargetName ??= 'e2e-ci';
   return options;
 }
 
@@ -686,38 +680,57 @@ function checkIfConfigFileShouldBeProject(
   return true;
 }
 
-async function getTestPaths(
-  resolvedViteConfig: ResolvedConfig,
-  projectRoot: string,
-  context: CreateNodesContextV2
-): Promise<string[]> {
-  const include = await getVitestOption<string[]>(
-    resolvedViteConfig,
-    'include'
-  );
-  const exclude = await getVitestOption<string[]>(
-    resolvedViteConfig,
-    'include'
-  );
-  return await globWithWorkspaceContext(
-    context.workspaceRoot,
-    // Default patterns from https://vitest.dev/config/#include
-    (include || ['**/*.{test,spec}.?(c|m)[jt]s?(x)']).map((pattern) =>
-      join(projectRoot, pattern)
-    ),
-    // Default patterns from https://vitest.dev/config/#exclude
-    (exclude || ['**/node_modules/**', '**/.{git,svn,hg,idea}/**']).map(
-      (pattern) => join(projectRoot, pattern)
-    )
-  );
+async function getTestPaths(projectRoot: string): Promise<string[]> {
+  const stdout = await exec('npx', ['vitest', 'list', '--filesOnly'], {
+    cwd: projectRoot,
+  });
+  if (typeof stdout !== 'string' || !stdout) {
+    return [];
+  }
+  const vitestListFiles: string[] = stdout.trim().split('\n');
+  return vitestListFiles.map((f) => join(projectRoot, f));
 }
 
-async function getVitestOption<T = any>(
-  resolvedViteConfig: ResolvedConfig,
-  optionName: string
-): Promise<T> {
-  if (resolvedViteConfig.test?.[optionName]) {
-    return resolvedViteConfig.test[optionName];
-  }
-  return undefined;
+/**
+ * Execute a command and return stdout as a string
+ * @param {string} command - The command to run
+ * @param {string[]} args - Array of arguments
+ * @param {object} options - spawn options (cwd, env, etc.)
+ * @returns {Promise<string>} stdout as string
+ */
+async function exec(
+  command: string,
+  args: string[] = [],
+  options: SpawnOptions = {}
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      ...options,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    child.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    child.on('error', (error) => {
+      reject(new Error(`Failed to spawn ${command}: ${error.message}`));
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve(stdout);
+      } else {
+        const error = new Error(`Command failed with exit code ${code}`);
+        reject(error);
+      }
+    });
+  });
 }
