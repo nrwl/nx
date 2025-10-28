@@ -125,8 +125,7 @@ async function getAgentConfiguration(
 
       const geminiSettings = parseGeminiSettings(workspaceRoot);
       const customContextFilePath: string | undefined =
-        geminiSettings?.contextFileName &&
-        typeof geminiSettings.contextFileName === 'string'
+        typeof geminiSettings?.contextFileName === 'string'
           ? geminiSettings.contextFileName
           : undefined;
 
