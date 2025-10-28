@@ -22,7 +22,6 @@ import { dirname, isAbsolute, join, relative } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
-import { createVitest } from 'vitest/node';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import picomatch = require('picomatch');
 
@@ -682,6 +681,7 @@ async function getTestPathsRelativeToProjectRoot(
   projectRoot: string
 ): Promise<string[]> {
   const fullProjectRoot = join(workspaceRoot, projectRoot);
+  const { createVitest } = await import('vitest/node');
   const vitest = await createVitest('test', {
     dir: fullProjectRoot,
     filesOnly: true,
