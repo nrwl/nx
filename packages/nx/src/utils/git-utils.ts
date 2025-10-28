@@ -8,7 +8,7 @@ function execAsync(command: string, execOptions: ExecOptions) {
       if (err) {
         return rej(err);
       }
-      res(stdout);
+      res(stdout.toString());
     });
   });
 }

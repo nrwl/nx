@@ -55,14 +55,14 @@
     "@nx/web": "workspace:*",
     "@nx/webpack": "workspace:*",
     "@nx/workspace": "workspace:*",
-    "@phenomnomnominal/tsquery": "~5.0.1",
+    "@phenomnomnominal/tsquery": "catalog:typescript",
     "@typescript-eslint/type-utils": "^8.0.0",
-    "enquirer": "~2.3.6",
+    "enquirer": "catalog:",
     "magic-string": "~0.30.2",
-    "picocolors": "^1.1.0",
-    "picomatch": "4.0.2",
-    "semver": "^7.5.3",
-    "tslib": "^2.3.0",
+    "picocolors": "catalog:",
+    "picomatch": "catalog:",
+    "semver": "catalog:",
+    "tslib": "catalog:typescript",
     "webpack-merge": "^5.8.0"
   },
   "devDependencies": {
@@ -70,13 +70,13 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "@angular/build": ">= 18.0.0 < 21.0.0",
-    "@angular-devkit/build-angular": ">= 18.0.0 < 21.0.0",
-    "@angular-devkit/core": ">= 18.0.0 < 21.0.0",
-    "@angular-devkit/schematics": ">= 18.0.0 < 21.0.0",
-    "@schematics/angular": ">= 18.0.0 < 21.0.0",
-    "ng-packagr": ">= 18.0.0 < 21.0.0",
-    "rxjs": "^6.5.3 || ^7.5.0"
+    "@angular/build": "catalog:angular-supported-versions",
+    "@angular-devkit/build-angular": "catalog:angular-supported-versions",
+    "@angular-devkit/core": "catalog:angular-supported-versions",
+    "@angular-devkit/schematics": "catalog:angular-supported-versions",
+    "@schematics/angular": "catalog:angular-supported-versions",
+    "ng-packagr": "catalog:angular-supported-versions",
+    "rxjs": "catalog:angular-supported-versions"
   },
   "peerDependenciesMeta": {
     "@angular/build": {

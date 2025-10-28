@@ -35,21 +35,21 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@jest/reporters": "^30.0.2",
-    "@jest/test-result": "^30.0.2",
+    "@jest/reporters": "catalog:jest",
+    "@jest/test-result": "catalog:jest",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
-    "@phenomnomnominal/tsquery": "~5.0.1",
-    "identity-obj-proxy": "3.0.0",
-    "jest-config": "^30.0.2",
-    "jest-resolve": "^30.0.2",
-    "jest-util": "^30.0.2",
-    "minimatch": "9.0.3",
-    "picocolors": "^1.1.0",
+    "@phenomnomnominal/tsquery": "catalog:typescript",
+    "identity-obj-proxy": "catalog:jest",
+    "jest-config": "catalog:jest",
+    "jest-resolve": "catalog:jest",
+    "jest-util": "catalog:jest",
+    "minimatch": "catalog:",
+    "picocolors": "catalog:",
     "resolve.exports": "2.0.3",
-    "semver": "^7.5.3",
-    "tslib": "^2.3.0",
-    "yargs-parser": "21.1.1"
+    "semver": "catalog:",
+    "tslib": "catalog:typescript",
+    "yargs-parser": "catalog:"
   },
   "devDependencies": {
     "nx": "workspace:*"
