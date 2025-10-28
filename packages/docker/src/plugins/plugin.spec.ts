@@ -776,6 +776,20 @@ describe('@nx/docker', () => {
   });
 
   describe('pattern interpolation', () => {
+    it('should not throw when commitSha is null', async () => {
+      mockGetLatestCommitSha.mockReturnValue(null);
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+      expect(
+        await createNodesFunction(['proj/Dockerfile'], {}, context)
+      ).toBeDefined();
+      const targets = (
+        await createNodesFunction(['proj/Dockerfile'], {}, context)
+      )[0][1].projects['proj'].targets;
+      expect(targets['docker:build']).toBeDefined();
+    });
     it('should interpolate imageRef in args', async () => {
       await tempFs.createFiles({
         'proj/Dockerfile': 'FROM node:18',
