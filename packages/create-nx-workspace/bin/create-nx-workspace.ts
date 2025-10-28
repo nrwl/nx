@@ -1291,7 +1291,7 @@ async function determineReactBundler(
       choices: [
         {
           name: 'vite',
-          message: 'Vite    [ https://vitejs.dev/     ]',
+          message: 'Vite    [ https://vite.dev/     ]',
         },
         {
           name: 'webpack',

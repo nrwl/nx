@@ -96,3 +96,437 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
   ],
 ]
 `;
+
+exports[`@nx/vite/plugin root project should create nodes with ci target name 1`] = `
+[
+  [
+    "vitest.config.ts",
+    {
+      "projects": {
+        ".": {
+          "metadata": {
+            "targetGroups": {
+              "E2E (CI)": [
+                "e2e-ci",
+                "e2e-ci--src/test-1.ts",
+                "e2e-ci--src/test-2.ts",
+              ],
+            },
+          },
+          "root": ".",
+          "targets": {
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "e2e-ci": {
+              "cache": true,
+              "dependsOn": [
+                "e2e-ci--src/test-1.ts",
+                "e2e-ci--src/test-2.ts",
+              ],
+              "executor": "nx:noop",
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vitest",
+                  ],
+                },
+                {
+                  "env": "CI",
+                },
+              ],
+              "metadata": {
+                "description": "Run Vitest Tests in CI",
+                "help": {
+                  "command": "npx vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true,
+                    },
+                  },
+                },
+                "nonAtomizedTarget": "test",
+                "technologies": [
+                  "vitest",
+                ],
+              },
+              "outputs": [
+                "{projectRoot}/coverage",
+              ],
+            },
+            "e2e-ci--src/test-1.ts": {
+              "cache": true,
+              "command": "vitest run src/test-1.ts",
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vitest",
+                  ],
+                },
+                {
+                  "env": "CI",
+                },
+              ],
+              "metadata": {
+                "description": "Run Vitest Tests in src/test-1.ts",
+                "help": {
+                  "command": "npx vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "vitest",
+                ],
+              },
+              "options": {
+                "cwd": ".",
+                "env": undefined,
+              },
+              "outputs": [
+                "{projectRoot}/coverage",
+              ],
+            },
+            "e2e-ci--src/test-2.ts": {
+              "cache": true,
+              "command": "vitest run src/test-2.ts",
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vitest",
+                  ],
+                },
+                {
+                  "env": "CI",
+                },
+              ],
+              "metadata": {
+                "description": "Run Vitest Tests in src/test-2.ts",
+                "help": {
+                  "command": "npx vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "vitest",
+                ],
+              },
+              "options": {
+                "cwd": ".",
+                "env": undefined,
+              },
+              "outputs": [
+                "{projectRoot}/coverage",
+              ],
+            },
+            "test": {
+              "cache": true,
+              "command": "vitest",
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vitest",
+                  ],
+                },
+                {
+                  "env": "CI",
+                },
+              ],
+              "metadata": {
+                "description": "Run Vite tests",
+                "help": {
+                  "command": "npx vitest --help",
+                  "example": {
+                    "options": {
+                      "bail": 1,
+                      "coverage": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "vite",
+                ],
+              },
+              "options": {
+                "cwd": ".",
+              },
+              "outputs": [
+                "{projectRoot}/coverage",
+              ],
+            },
+            "typecheck": {
+              "cache": true,
+              "command": "tsc --noEmit -p tsconfig.lib.json",
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "typescript",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "npx tsc -p tsconfig.lib.json --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects vite --includeDependentProjects -- npx nx build-deps vite",
+              "continuous": true,
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;
+
+exports[`@nx/vite/plugin root project should create nodes with ci target name and ci group name 1`] = `
+[
+  [
+    "vitest.config.ts",
+    {
+      "projects": {
+        ".": {
+          "metadata": {
+            "targetGroups": {
+              "Custom E2E (CI)": [
+                "e2e-ci",
+                "e2e-ci--src/test-1.ts",
+                "e2e-ci--src/test-2.ts",
+              ],
+            },
+          },
+          "root": ".",
+          "targets": {
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "e2e-ci": {
+              "cache": true,
+              "dependsOn": [
+                "e2e-ci--src/test-1.ts",
+                "e2e-ci--src/test-2.ts",
+              ],
+              "executor": "nx:noop",
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vitest",
+                  ],
+                },
+                {
+                  "env": "CI",
+                },
+              ],
+              "metadata": {
+                "description": "Run Vitest Tests in CI",
+                "help": {
+                  "command": "npx vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true,
+                    },
+                  },
+                },
+                "nonAtomizedTarget": "test",
+                "technologies": [
+                  "vitest",
+                ],
+              },
+              "outputs": [
+                "{projectRoot}/coverage",
+              ],
+            },
+            "e2e-ci--src/test-1.ts": {
+              "cache": true,
+              "command": "vitest run src/test-1.ts",
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vitest",
+                  ],
+                },
+                {
+                  "env": "CI",
+                },
+              ],
+              "metadata": {
+                "description": "Run Vitest Tests in src/test-1.ts",
+                "help": {
+                  "command": "npx vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "vitest",
+                ],
+              },
+              "options": {
+                "cwd": ".",
+                "env": undefined,
+              },
+              "outputs": [
+                "{projectRoot}/coverage",
+              ],
+            },
+            "e2e-ci--src/test-2.ts": {
+              "cache": true,
+              "command": "vitest run src/test-2.ts",
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vitest",
+                  ],
+                },
+                {
+                  "env": "CI",
+                },
+              ],
+              "metadata": {
+                "description": "Run Vitest Tests in src/test-2.ts",
+                "help": {
+                  "command": "npx vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "vitest",
+                ],
+              },
+              "options": {
+                "cwd": ".",
+                "env": undefined,
+              },
+              "outputs": [
+                "{projectRoot}/coverage",
+              ],
+            },
+            "test": {
+              "cache": true,
+              "command": "vitest",
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vitest",
+                  ],
+                },
+                {
+                  "env": "CI",
+                },
+              ],
+              "metadata": {
+                "description": "Run Vite tests",
+                "help": {
+                  "command": "npx vitest --help",
+                  "example": {
+                    "options": {
+                      "bail": 1,
+                      "coverage": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "vite",
+                ],
+              },
+              "options": {
+                "cwd": ".",
+              },
+              "outputs": [
+                "{projectRoot}/coverage",
+              ],
+            },
+            "typecheck": {
+              "cache": true,
+              "command": "tsc --noEmit -p tsconfig.lib.json",
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "typescript",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "npx tsc -p tsconfig.lib.json --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects vite --includeDependentProjects -- npx nx build-deps vite",
+              "continuous": true,
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;

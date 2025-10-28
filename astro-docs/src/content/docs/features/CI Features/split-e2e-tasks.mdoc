@@ -58,6 +58,13 @@ nx add @nx/jest
 ```
 
 {% /tabitem %}
+{% tabitem label="Vitest" %}
+
+```shell
+nx add @nx/vite
+```
+
+{% /tabitem %}
 {% tabitem label="Gradle" %}
 
 ```shell
@@ -82,11 +89,12 @@ If you upgraded Nx from an older version, ensure that [inferred tasks](/docs/con
 
 ## Update an Existing Project to use Automated Task Splitting
 
-If you are already using the `@nx/cypress`, `@nx/playwright`, `@nx/jest`, or `@nx/gradle` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
+If you are already using the `@nx/cypress`, `@nx/playwright`, `@nx/jest`, `@nx/vite` or `@nx/gradle` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
 
 - [Configure Cypress Task Splitting](/docs/technologies/test-tools/cypress/introduction#nxcypress-configuration)
 - [Configure Playwright Task Splitting](/docs/technologies/test-tools/playwright/introduction#nxplaywright-configuration)
 - [Configure Jest Task Splitting](/docs/technologies/test-tools/jest/introduction#splitting-e2e-tests)
+- [Configure Vitest Task Splitting](/docs/technologies/build-tools/vite/introduction#splitting-e2e-tests)
 - [Configure Gradle Testing Task Splitting](/docs/technologies/java/gradle/introduction#test-distribution)
 
 ## Verify Automated Task Splitting Works

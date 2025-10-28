@@ -155,7 +155,7 @@ describe('generator utils', () => {
           //  plugins: [ nxViteTsPaths() ],
           // },
           // Configuration for building your library.
-          // See: https://vitejs.dev/guide/build.html#library-mode
+          // See: https://vite.dev/guide/build.html#library-mode
           build: {
             outDir: '../dist/myproj',
             emptyOutDir: true,
@@ -299,7 +299,7 @@ describe('generator utils', () => {
           //  plugins: [],
           // },
           // Configuration for building your library.
-          // See: https://vitejs.dev/guide/build.html#library-mode
+          // See: https://vite.dev/guide/build.html#library-mode
           build: {
             outDir: './dist',
             emptyOutDir: true,

@@ -636,8 +636,8 @@ async function handleUnsupportedUserProvidedTargetsErrors(
     `The custom ${target} target you provided (${userProvidedTargetName}) cannot be converted to use the @nx/rspack:${executor} executor.
      However, we found the following ${target} target in your project that can be converted: ${validFoundTargetName}
 
-     Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
-     your changes before converting a project to use Vite.js, and test the converted project thoroughly before deploying it.
+     Please note that converting a potentially non-compatible project to use Vite may result in unexpected behavior. Always commit
+     your changes before converting a project to use Vite, and test the converted project thoroughly before deploying it.
     `
   );
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -654,8 +654,8 @@ async function handleUnsupportedUserProvidedTargetsErrors(
       Please try again, either by providing a different ${target} target or by not providing a target at all (Nx will
         convert the first one it finds, most probably this one: ${validFoundTargetName})
 
-      Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
-      your changes before converting a project to use Vite.js, and test the converted project thoroughly before deploying it.
+      Please note that converting a potentially non-compatible project to use Vite may result in unexpected behavior. Always commit
+      your changes before converting a project to use Vite, and test the converted project thoroughly before deploying it.
       `
     );
   }

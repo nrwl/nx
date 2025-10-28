@@ -17,16 +17,23 @@ import {
   loadConfigFile,
 } from '@nx/devkit/src/utils/config-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync, readFileSync } from 'fs';
 import { minimatch } from 'minimatch';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import {
+  dirname,
+  isAbsolute,
+  join,
+  normalize,
+  relative,
+  resolve,
+} from 'node:path';
 import { hashObject } from 'nx/src/devkit-internals';
 import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
-import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
-import { normalize } from 'node:path';
 import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
+import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { major } from 'semver';
 import { getInstalledJestMajorVersion } from '../utils/versions';
 
@@ -288,7 +295,7 @@ async function buildJestTargets(
   let metadata: ProjectConfiguration['metadata'];
 
   const groupName =
-    options?.ciGroupName ?? deductGroupNameFromTarget(options?.ciTargetName);
+    options?.ciGroupName ?? deriveGroupNameFromTarget(options?.ciTargetName);
 
   if (disableJestRuntime) {
     const outputs = (target.outputs = getOutputs(
@@ -785,29 +792,4 @@ async function getJestOption<T = any>(
   }
 
   return undefined;
-}
-
-/**
- * Helper that tries to deduct the name of the CI group, based on the related target name.
- *
- * This will work well, when the CI target name follows the documented naming convention or similar (for e.g `test-ci`, `e2e-ci`, `ny-e2e-ci`, etc).
- *
- * For example, `test-ci` => `TEST (CI)`,  `e2e-ci` => `E2E (CI)`,  `my-e2e-ci` => `MY E2E (CI)`
- *
- *
- * @param ciTargetName name of the CI target
- * @returns the deducted group name or `${ciTargetName.toUpperCase()} (CI)` if cannot be deducted automatically
- */
-function deductGroupNameFromTarget(ciTargetName: string | undefined) {
-  if (!ciTargetName) {
-    return null;
-  }
-
-  const parts = ciTargetName.split('-').map((v) => v.toUpperCase());
-
-  if (parts.length > 1) {
-    return `${parts.slice(0, -1).join(' ')} (${parts[parts.length - 1]})`;
-  }
-
-  return `${parts[0]} (CI)`; // default group name when there is a single segment
 }

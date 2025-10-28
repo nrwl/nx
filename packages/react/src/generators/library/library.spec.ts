@@ -1001,7 +1001,7 @@ module.exports = withNx(
           //  plugins: [],
           // },
           // Configuration for building your library.
-          // See: https://vitejs.dev/guide/build.html#library-mode
+          // See: https://vite.dev/guide/build.html#library-mode
           build: {
             outDir: './dist',
             emptyOutDir: true,

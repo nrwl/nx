@@ -9,22 +9,21 @@ import {
   ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
+  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, isAbsolute, join, relative } from 'path';
+import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
-import {
-  calculateHashesForCreateNodes,
-  calculateHashForCreateNodes,
-} from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
-import { loadViteDynamicImport } from '../utils/executor-utils';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import picomatch = require('picomatch');
-import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
+import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { existsSync, readdirSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative } from 'node:path';
+import { hashObject } from 'nx/src/hasher/file-hasher';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
+import { loadViteDynamicImport } from '../utils/executor-utils';
+import picomatch = require('picomatch');
 
 const pmc = getPackageManagerCommand();
 
@@ -41,6 +40,15 @@ export interface VitePluginOptions {
   typecheckTargetName?: string;
   watchDepsTargetName?: string;
   buildDepsTargetName?: string;
+
+  /**
+   * Atomizer for vitest
+   */
+  ciTargetName?: string;
+  /**
+   * The name that should be used to group atomized tasks on CI
+   */
+  ciGroupName?: string;
 }
 
 type ViteTargets = Pick<
@@ -204,6 +212,8 @@ async function buildViteTargets(
     'build'
   );
 
+  let metadata: ProjectConfiguration['metadata'] = {};
+
   const { buildOutputs, testOutputs, hasTest, isBuildable, hasServeConfig } =
     getOutputs(viteBuildConfig, projectRoot, context.workspaceRoot);
 
@@ -211,13 +221,97 @@ async function buildViteTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
-  // if file is vitest.config or vite.config has definition for test, create target for test
+  // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
   if (configFilePath.includes('vitest.config') || hasTest) {
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
       projectRoot
     );
+
+    if (options.ciTargetName) {
+      const groupName =
+        options.ciGroupName ?? deriveGroupNameFromTarget(options.ciTargetName);
+      const targetGroup = [];
+      const dependsOn: string[] = [];
+      metadata = {
+        targetGroups: {
+          [groupName]: targetGroup,
+        },
+      };
+
+      const projectRootRelativeTestPaths =
+        await getTestPathsRelativeToProjectRoot(projectRoot);
+
+      for (const relativePath of projectRootRelativeTestPaths) {
+        if (relativePath.includes('../')) {
+          throw new Error(
+            '@nx/vite/plugin attempted to run tests outside of the project root. This is not supported and should not happen. Please open an issue at https://github.com/nrwl/nx/issues/new/choose with the following information:\n\n' +
+              `\n\n${JSON.stringify(
+                {
+                  projectRoot,
+                  relativePath,
+                  projectRootRelativeTestPaths,
+                  context,
+                },
+                null,
+                2
+              )}`
+          );
+        }
+
+        const targetName = `${options.ciTargetName}--${relativePath}`;
+        dependsOn.push(targetName);
+        targets[targetName] = {
+          // It does not make sense to run atomized tests in watch mode as they are intended to be run in CI
+          command: `vitest run ${relativePath}`,
+          cache: targets[options.testTargetName].cache,
+          inputs: targets[options.testTargetName].inputs,
+          outputs: targets[options.testTargetName].outputs,
+          options: {
+            cwd: projectRoot,
+            env: targets[options.testTargetName].options.env,
+          },
+          metadata: {
+            technologies: ['vitest'],
+            description: `Run Vitest Tests in ${relativePath}`,
+            help: {
+              command: `${pmc.exec} vitest --help`,
+              example: {
+                options: {
+                  coverage: true,
+                },
+              },
+            },
+          },
+        };
+        targetGroup.push(targetName);
+      }
+
+      if (targetGroup.length > 0) {
+        targets[options.ciTargetName] = {
+          executor: 'nx:noop',
+          cache: true,
+          inputs: targets[options.testTargetName].inputs,
+          outputs: targets[options.testTargetName].outputs,
+          dependsOn,
+          metadata: {
+            technologies: ['vitest'],
+            description: 'Run Vitest Tests in CI',
+            nonAtomizedTarget: options.testTargetName,
+            help: {
+              command: `${pmc.exec} vitest --help`,
+              example: {
+                options: {
+                  coverage: true,
+                },
+              },
+            },
+          },
+        };
+        targetGroup.unshift(options.ciTargetName);
+      }
+    }
   }
 
   if (hasReactRouterConfig) {
@@ -325,7 +419,6 @@ async function buildViteTargets(
     pmc
   );
 
-  const metadata = {};
   return {
     targets,
     metadata,
@@ -582,4 +675,21 @@ function checkIfConfigFileShouldBeProject(
   }
 
   return true;
+}
+
+async function getTestPathsRelativeToProjectRoot(
+  projectRoot: string
+): Promise<string[]> {
+  const fullProjectRoot = join(workspaceRoot, projectRoot);
+  const { createVitest } = await import('vitest/node');
+  const vitest = await createVitest('test', {
+    dir: fullProjectRoot,
+    filesOnly: true,
+    watch: false,
+  });
+  const relevantTestSpecifications =
+    await vitest.getRelevantTestSpecifications();
+  return relevantTestSpecifications.map((ts) =>
+    relative(projectRoot, ts.moduleId)
+  );
 }
