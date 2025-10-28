@@ -7,7 +7,7 @@ cover_image: /blog/images/articles/hero-enterprise-react-brainly.avif
 description: 'Learn how to bring order, automation, and long-term velocity to large React codebases with the new React Enterprise book by Przemysław Nowak from Brainly, written in collaboration with Nx.'
 ---
 
-When React first appeared, it came with the premise of being only a lightweight UI library. Not another opinionated frontend frameworks as have been around back then. This appealed a lot of people, removing complexity, flexibility, freedom of choice. And a lot has changed since then. But it left the big questions open. How do you structure a large React codebase? Where should business logic live? How do you keep consistency across dozens of teams without slowing them down?
+When React first appeared, it was presented as a lightweight UI library, not just another opinionated frontend framework. This flexibility and freedom of choice appealed to many. Since then, a lot has changed, but several important questions remain. How should you structure a large React codebase? Where should business logic reside? How can you maintain consistency across numerous teams without slowing them down?
 
 [Brainly](https://brainly.com/) is one of the world's largest educational platforms and has faced these exact challenges when scaling their React codebase. This new book - _React for Enterprise: Timeless Architecture for Enterprise Apps_ by Przemysław Nowak (Principal Engineer at Brainly), created in collaboration with Juri Strumpflohner (Nx) - distills their real-world lessons into battle-tested architectural patterns built on top of Nx.
 
