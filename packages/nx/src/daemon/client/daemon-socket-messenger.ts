@@ -1,11 +1,10 @@
-import { serialize } from 'v8';
 import { Socket } from 'net';
 import { performance } from 'perf_hooks';
 import {
   consumeMessagesFromSocket,
   MESSAGE_END_SEQ,
 } from '../../utils/consume-messages-from-socket';
-import { isV8SerializerEnabled } from '../is-v8-serializer-enabled';
+import { serialize } from '../socket-utils';
 
 export interface Message extends Record<string, any> {
   type: string;
@@ -15,13 +14,9 @@ export interface Message extends Record<string, any> {
 export class DaemonSocketMessenger {
   constructor(private socket: Socket) {}
 
-  async sendMessage(messageToDaemon: Message) {
-    if (isV8SerializerEnabled()) {
-      const serialized = serialize(messageToDaemon);
-      this.socket.write(serialized.toString('binary'));
-    } else {
-      this.socket.write(JSON.stringify(messageToDaemon));
-    }
+  async sendMessage(messageToDaemon: Message, force?: 'v8' | 'json') {
+    const serialized = serialize(messageToDaemon, force);
+    this.socket.write(serialized);
     // send EOT to indicate that the message has been fully written
     this.socket.write(MESSAGE_END_SEQ);
   }
