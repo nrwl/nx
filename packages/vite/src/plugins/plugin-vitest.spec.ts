@@ -17,26 +17,17 @@ jest.mock('node:fs', () => ({
   }),
 }));
 
-jest.mock('node:child_process', () => ({
-  ...jest.requireActual('node:child_process'),
-  spawn: jest.fn(() => {
+jest.mock('vitest/node', () => ({
+  createVitest: jest.fn().mockImplementation(() => {
     return {
-      on: jest.fn().mockImplementation((event, callback) => {
-        if (event === 'close') {
-          callback(0);
-        }
-      }),
-      stdout: {
-        on: jest.fn().mockImplementation((event, callback) => {
-          if (event === 'data') {
-            // Result of `npx vitest list --filesOnly`
-            callback('src/test-1.ts\nsrc/test-2.ts');
-          }
-        }),
-      },
-      stderr: {
-        on: jest.fn().mockReturnValue(undefined),
-      },
+      getRelevantTestSpecifications: jest.fn().mockResolvedValue([
+        {
+          moduleId: 'src/test-1.ts',
+        },
+        {
+          moduleId: 'src/test-2.ts',
+        },
+      ]),
     };
   }),
 }));

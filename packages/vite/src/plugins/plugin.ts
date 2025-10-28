@@ -6,10 +6,10 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
-  normalizePath,
   ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
+  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
@@ -17,12 +17,12 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName } from '@nx/js';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { spawn, type SpawnOptions } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
+import { createVitest } from 'vitest/node';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import picomatch = require('picomatch');
 
@@ -241,12 +241,10 @@ async function buildViteTargets(
         },
       };
 
-      const testPaths = await getTestPaths(projectRoot);
+      const projectRootRelativeTestPaths =
+        await getTestPathsRelativeToProjectRoot(projectRoot);
 
-      for (const testPath of testPaths) {
-        const relativePath = normalizePath(
-          relative(join(context.workspaceRoot, projectRoot), testPath)
-        );
+      for (const relativePath of projectRootRelativeTestPaths) {
         if (relativePath.includes('../')) {
           throw new Error(
             '@nx/vite/plugin attempted to run tests outside of the project root. This is not supported and should not happen. Please open an issue at https://github.com/nrwl/nx/issues/new/choose with the following information:\n\n' +
@@ -254,7 +252,7 @@ async function buildViteTargets(
                 {
                   projectRoot,
                   relativePath,
-                  testPaths,
+                  projectRootRelativeTestPaths,
                   context,
                 },
                 null,
@@ -263,7 +261,7 @@ async function buildViteTargets(
           );
         }
 
-        const targetName = `${options.ciTargetName}--${testPath}`;
+        const targetName = `${options.ciTargetName}--${relativePath}`;
         dependsOn.push(targetName);
         targets[targetName] = {
           // It does not make sense to run atomized tests in watch mode as they are intended to be run in CI
@@ -680,57 +678,18 @@ function checkIfConfigFileShouldBeProject(
   return true;
 }
 
-async function getTestPaths(projectRoot: string): Promise<string[]> {
-  const stdout = await exec('npx', ['vitest', 'list', '--filesOnly'], {
-    cwd: projectRoot,
+async function getTestPathsRelativeToProjectRoot(
+  projectRoot: string
+): Promise<string[]> {
+  const fullProjectRoot = join(workspaceRoot, projectRoot);
+  const vitest = await createVitest('test', {
+    dir: fullProjectRoot,
+    filesOnly: true,
+    watch: false,
   });
-  if (typeof stdout !== 'string' || !stdout) {
-    return [];
-  }
-  const vitestListFiles: string[] = stdout.trim().split('\n');
-  return vitestListFiles.map((f) => join(projectRoot, f));
-}
-
-/**
- * Execute a command and return stdout as a string
- * @param {string} command - The command to run
- * @param {string[]} args - Array of arguments
- * @param {object} options - spawn options (cwd, env, etc.)
- * @returns {Promise<string>} stdout as string
- */
-async function exec(
-  command: string,
-  args: string[] = [],
-  options: SpawnOptions = {}
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
-      ...options,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-
-    let stdout = '';
-    let stderr = '';
-
-    child.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    child.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    child.on('error', (error) => {
-      reject(new Error(`Failed to spawn ${command}: ${error.message}`));
-    });
-
-    child.on('close', (code) => {
-      if (code === 0) {
-        resolve(stdout);
-      } else {
-        const error = new Error(`Command failed with exit code ${code}`);
-        reject(error);
-      }
-    });
-  });
+  const relevantTestSpecifications =
+    await vitest.getRelevantTestSpecifications();
+  return relevantTestSpecifications.map((ts) =>
+    relative(projectRoot, ts.moduleId)
+  );
 }
