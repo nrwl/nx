@@ -1,5 +1,5 @@
 import type { moduleFederationPlugin } from '@module-federation/sdk';
-import type { NormalModuleReplacementPlugin as RspackNormalModuleReplacementPlugin } from '@rspack/core';
+import { NormalModuleReplacementPlugin as RspackNormalModuleReplacementPlugin } from '@rspack/core';
 
 export type ModuleFederationLibrary = { type: string; name: string };
 
@@ -16,7 +16,7 @@ export type SharedWorkspaceLibraryConfig = {
     eager?: boolean
   ) => Record<string, SharedLibraryConfig>;
   getReplacementPlugin: () =>
-    | RspackNormalModuleReplacementPlugin
+    | InstanceType<typeof RspackNormalModuleReplacementPlugin>
     | import('webpack').NormalModuleReplacementPlugin;
 };
 

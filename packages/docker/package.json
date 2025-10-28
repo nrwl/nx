@@ -48,8 +48,8 @@
   "generators": "./generators.json",
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "enquirer": "~2.3.6",
-    "tslib": "^2.3.0"
+    "enquirer": "catalog:",
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
     "nx": "workspace:*"

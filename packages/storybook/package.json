@@ -34,9 +34,9 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "@phenomnomnominal/tsquery": "~5.0.1",
-    "semver": "^7.5.3",
-    "tslib": "^2.3.0",
+    "@phenomnomnominal/tsquery": "catalog:typescript",
+    "semver": "catalog:",
+    "tslib": "catalog:typescript",
     "@nx/cypress": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*"
