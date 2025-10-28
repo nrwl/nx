@@ -1965,6 +1965,9 @@ importers:
       '@nx/nx-dev-ui-remote-cache':
         specifier: workspace:*
         version: link:../ui-remote-cache
+      '@nx/nx-dev-ui-resources':
+        specifier: workspace:*
+        version: link:../ui-resources
       '@nx/nx-dev-ui-scrollable-content':
         specifier: workspace:*
         version: link:../ui-scrollable-content
@@ -2354,6 +2357,15 @@ importers:
       '@nx/nx-dev-feature-analytics':
         specifier: workspace:*
         version: link:../feature-analytics
+      '@nx/nx-dev-ui-common':
+        specifier: workspace:*
+        version: link:../ui-common
+      '@nx/nx-dev-ui-primitives':
+        specifier: workspace:*
+        version: link:../ui-primitives
+
+  nx-dev/ui-resources:
+    dependencies:
       '@nx/nx-dev-ui-common':
         specifier: workspace:*
         version: link:../ui-common
