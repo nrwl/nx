@@ -134,7 +134,7 @@ function interpolateDockerTargetOptions(
     imageRef,
     currentDate: new Date(),
     commitSha,
-    shortCommitSha: commitSha.slice(0, 7),
+    shortCommitSha: commitSha ? commitSha.slice(0, 7) : null,
   };
 
   return interpolateObject(options, tokens);
