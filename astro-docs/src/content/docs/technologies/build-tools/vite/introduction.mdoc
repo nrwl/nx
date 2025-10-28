@@ -6,9 +6,9 @@ sidebar:
 filter: 'type:References'
 ---
 
-The Nx plugin for [Vite](https://vitejs.dev/) and [Vitest](https://vitest.dev/).
+The Nx plugin for [Vite](https://vite.dev/) and [Vitest](https://vitest.dev/).
 
-[Vite.js](https://vitejs.dev/) is a build tool that aims to provide a faster and leaner development experience for modern web projects.
+[Vite](https://vite.dev/) is a build tool that aims to provide a faster and leaner development experience for modern web projects.
 
 Why should you use this plugin?
 
@@ -17,7 +17,7 @@ Why should you use this plugin?
 - _Fast_ builds using Vite.
 - Vite-powered tests with smart and instant watch mode
 
-Read more about Vite and Vitest in the [Vite documentation](https://vitejs.dev/).
+Read more about Vite and Vitest in the [Vite documentation](https://vite.dev/).
 
 ## Setting up a new Nx workspace with @nx/vite
 
@@ -90,28 +90,78 @@ The `buildTargetName`, `previewTargetName`, `testTargetName`, `serveTargetName` 
 
 ### Generate a new project using Vite
 
-You can generate a [React](/docs/technologies/react/introduction) application or library or a [Web](/docs/reference/web) application that uses Vite.js. The [`@nx/react:app`](/docs/technologies/react/generators#application), [`@nx/react:lib`](/docs/technologies/react/generators#library) and [`@nx/web:app`](/docs/reference/web/generators#application) generators accept the `bundler` option, where you can pass `vite`. This will generate a new application configured to use Vite.js, and it will also install all the necessary dependencies, including the `@nx/vite` plugin.
+You can generate a [React](/docs/technologies/react/introduction) application or library or a [Web](/docs/reference/web) application that uses Vite. The [`@nx/react:app`](/docs/technologies/react/generators#application), [`@nx/react:lib`](/docs/technologies/react/generators#library) and [`@nx/web:app`](/docs/reference/web/generators#application) generators accept the `bundler` option, where you can pass `vite`. This will generate a new application configured to use Vite, and it will also install all the necessary dependencies, including the `@nx/vite` plugin.
 
-To generate a React application using Vite.js, run the following:
+To generate a React application using Vite, run the following:
 
 ```bash frame="none"
 nx g @nx/react:app apps/my-app --bundler=vite
 ```
 
-To generate a React library using Vite.js, run the following:
+To generate a React library using Vite, run the following:
 
 ```bash frame="none"
 nx g @nx/react:lib libs/my-lib --bundler=vite
 ```
 
-To generate a Web application using Vite.js, run the following:
+To generate a Web application using Vite, run the following:
 
 ```bash frame="none"
 nx g @nx/web:app apps/my-app --bundler=vite
 ```
 
-### Modify an existing React or Web project to use Vite.js
+### Modify an existing React or Web project to use Vite
 
-You can use the `@nx/vite:configuration` generator to change your React or Web project to use Vite.js. This generator will modify your project's configuration to use Vite.js, and it will also install all the necessary dependencies, including the `@nx/vite` plugin..
+You can use the `@nx/vite:configuration` generator to change your React or Web project to use Vite. This generator will modify your project's configuration to use Vite, and it will also install all the necessary dependencies.
 
 You can read more about this generator on the [`@nx/vite:configuration`](/docs/technologies/build-tools/vite/generators#configuration) generator page.
+
+### Modify an existing project to use Vitest
+
+You can use the `@nx/vite:vitest` generator to generate Vitest configuration for your project. This generator will generate a `vitest.config.ts` file in the root of your project, and it will also install all the necessary dependencies.
+
+You can read more about this generator on the [`@nx/vite:vitest`](/docs/technologies/build-tools/vite/generators#vitest) generator page.
+
+### Splitting E2E Tests
+
+If Vitest is used to run E2E tests, you can enable [splitting the tasks](/docs/features/ci-features/split-e2e-tasks) by file to get
+improved caching, distribution, and retrying flaky tests. Enable this Atomizer feature by providing a `ciTargetName`. This will create a
+target with that name which can be used in CI to run the tests for each file in a distributed fashion.
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "include": ["e2e/**/*"],
+      "options": {
+        "testTargetName": "e2e-local",
+        "ciTargetName": "e2e-ci"
+      }
+    }
+  ]
+}
+```
+
+### Customizing atomized unit/e2e tasks group name
+
+By default, the atomized tasks group name is derived from the `ciTargetName`. For example, atomized tasks for the `e2e-ci` target will be grouped under the name "E2E (CI)" when displayed in Nx Cloud or `nx show project <project>` UI.
+You can customize that name by explicitly providing the optional `ciGroupName` plugin option as such:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "include": ["e2e/**/*"],
+      "options": {
+        "testTargetName": "e2e-local",
+        "ciTargetName": "e2e-ci",
+        "ciGroupName": "My E2E tests (CI)"
+      }
+    }
+  ]
+}
+```

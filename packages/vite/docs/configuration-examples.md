@@ -3,7 +3,7 @@ title: Examples for the Vite configuration generator
 description: This page contains examples for the Vite @nx/vite:configuration generator, which helps you set up Vite on your Nx workspace, or convert an existing project to use Vite.
 ---
 
-This generator is used for converting an existing React or Web project to use [Vite.js](https://vitejs.dev/).
+This generator is used for converting an existing React or Web project to use [Vite](https://vite.dev/).
 
 It will create a `vite.config.ts` file at the root of your project with the correct settings, or if there's already a `vite.config.ts` file, it will modify it to include the correct settings.
 
