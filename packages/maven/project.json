@@ -1,5 +1,4 @@
 {
-  "name": "maven",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/maven/src",
   "projectType": "library",
@@ -65,6 +64,5 @@
       "manifestRootsToUpdate": ["packages/{projectName}"]
     }
   },
-  "tags": [],
-  "implicitDependencies": ["nx-maven-plugin", "maven-batch-runner"]
+  "tags": []
 }

@@ -15,7 +15,7 @@ import com.google.gson.Gson
 import java.util.concurrent.Executors
 import java.util.concurrent.ConcurrentHashMap
 
-class MavenInvokerRunner(private val options: MavenBatchOptions) {
+class MavenInvokerRunner(private val workspaceRoot: File, private val options: MavenBatchOptions) {
     private val log = LoggerFactory.getLogger(MavenInvokerRunner::class.java)
 
     fun runBatch(): Map<String, TaskResult> {
@@ -234,23 +234,27 @@ class MavenInvokerRunner(private val options: MavenBatchOptions) {
     private fun createInvoker(): Invoker {
         val invoker = DefaultInvoker()
 
-        // Try to locate Maven
-        val mavenHome = findMavenHome()
-        if (mavenHome != null) {
-            invoker.mavenHome = mavenHome
-            log.info("Using Maven home: ${mavenHome.absolutePath}")
-        } else {
-            log.warn("Maven home not found, using system Maven")
-        }
+//        // Try to locate Maven
+//        val mavenHome = findMavenHome()
+//        if (mavenHome != null) {
+//            invoker.mavenHome = mavenHome
+//            log.info("Using Maven home: ${mavenHome.absolutePath}")
+//        } else {
+//            log.warn("Maven home not found, using system Maven")
+//        }
+//
+//        // Set local repository directory
+//        val localRepoPath = System.getenv("M2_HOME")?.let { File(it, "repository") }
+//            ?: File(System.getProperty("user.home"), ".m2/repository")
+//
+//        if (localRepoPath.exists() || localRepoPath.parentFile?.exists() == true) {
+//            invoker.localRepositoryDirectory = localRepoPath
+//            log.info("Using local repository: ${localRepoPath.absolutePath}")
+//        }
 
-        // Set local repository directory
-        val localRepoPath = System.getenv("M2_HOME")?.let { File(it, "repository") }
-            ?: File(System.getProperty("user.home"), ".m2/repository")
-
-        if (localRepoPath.exists() || localRepoPath.parentFile?.exists() == true) {
-            invoker.localRepositoryDirectory = localRepoPath
-            log.info("Using local repository: ${localRepoPath.absolutePath}")
-        }
+      invoker.mavenHome = workspaceRoot
+      invoker.mavenExecutable = File(workspaceRoot, "mvnw")
+      invoker.workingDirectory = workspaceRoot
 
         return invoker
     }

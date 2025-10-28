@@ -4,14 +4,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>dev.nx</groupId>
+    <groupId>dev.nx.maven</groupId>
     <artifactId>nx-parent</artifactId>
     <version>0.0.8-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
-  <groupId>dev.nx.maven</groupId>
-  <artifactId>nx-maven-parent</artifactId>
+    <artifactId>nx-maven-parent</artifactId>
   <packaging>pom</packaging>
 
   <name>Nx Maven Parent</name>

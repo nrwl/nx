@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import dev.nx.maven.cli.ArgParser
 import dev.nx.maven.runner.MavenInvokerRunner
 import org.slf4j.LoggerFactory
+import java.io.File
 import kotlin.system.exitProcess
 
 private val log = LoggerFactory.getLogger("NxMavenBatchRunner")
@@ -25,13 +26,15 @@ fun main(args: Array<String>) {
             exitProcess(1)
         }
 
+      val workspaceRoot = File(options.workspaceRoot)
+
         log.info("🚀 Starting Maven batch execution")
         log.info("   Workspace: ${options.workspaceRoot}")
         log.info("   Tasks: ${options.tasks.size}")
         log.info("   Quiet: ${options.quiet}, Verbose: ${options.verbose}")
 
         // Run batch execution
-        val runner = MavenInvokerRunner(options)
+        val runner = MavenInvokerRunner(workspaceRoot, options)
         val results = runner.runBatch()
 
         // Output results as JSON to specified file

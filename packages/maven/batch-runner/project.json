@@ -1,7 +1,5 @@
 {
-  "name": "maven-batch-runner",
   "projectType": "application",
-  "sourceRoot": "packages/maven/batch-runner/src",
   "targets": {
     "package": {
       "executor": "nx:run-commands",
