@@ -77,10 +77,16 @@ In any Maven workspace, run the following command to add Nx and the `@nx/maven` 
 nx init
 ```
 
+After initialization, you can view all Maven projects in your workspace:
+
+```shell
+nx show projects
+```
+
 Then, you can run Maven tasks using Nx. For example:
 
 ```shell
-nx build <your maven module>
+nx verify <your maven module>
 ```
 
 ## How @nx/maven Infers Tasks
