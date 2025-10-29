@@ -2,9 +2,12 @@ package dev.nx.gradle.utils
 
 import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.ExternalNode
+import org.gradle.api.Project
+import org.gradle.internal.serialize.codecs.core.NodeOwner
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 class ProcessTaskUtilsTest {
@@ -106,293 +109,331 @@ class ProcessTaskUtilsTest {
     assertNotNull(result["options"])
   }
 
-  @Test
-  fun `test getInputsForTask with dependsOn outputs exclusion`() {
-    val project = ProjectBuilder.builder().build()
-    val workspaceRoot = project.rootDir.path
-    val projectRoot = project.projectDir.path
+  @Nested
+  inner class GetInputsForTaskTests {
+    lateinit var project: Project
+    lateinit var workspaceRoot: String
+    lateinit var projectRoot: String
 
-    // Create dependent task with outputs
-    val dependentTask = project.tasks.register("dependentTask").get()
-    val outputFile = java.io.File("$workspaceRoot/dist/output.jar")
-    dependentTask.outputs.file(outputFile)
+    @BeforeEach
+    fun projectSetup() {
+      project = ProjectBuilder.builder().build()
+      workspaceRoot = project.rootDir.path
+      projectRoot = project.projectDir.path
 
-    // Create main task with inputs and dependsOn
-    val mainTask = project.tasks.register("mainTask").get()
-    mainTask.dependsOn(dependentTask)
+      val gitIgnore = java.io.File(workspaceRoot, ".gitignore")
+      // Any inputs of tasks that are found in ignored files are considered dependent task output files
+      gitIgnore.writeText("dist")
+    }
 
-    // Add inputs - one that matches dependent output, one that doesn't
-    val inputFile1 = java.io.File("$workspaceRoot/dist/output.jar") // Should be excluded
-    val inputFile2 = java.io.File("$workspaceRoot/src/main.kt") // Should be included
-    mainTask.inputs.files(inputFile1, inputFile2)
+    @Test
+    fun `test getInputsForTask with dependsOn outputs exclusion`() {
+      // Create dependent task with outputs
+      val dependentTask = project.tasks.register("dependentTask").get()
+      val outputFile = java.io.File("$workspaceRoot/dist/output.jar")
+      dependentTask.outputs.file(outputFile)
 
-    val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
+      // Create main task with inputs and dependsOn
+      val mainTask = project.tasks.register("mainTask").get()
+      mainTask.dependsOn(dependentTask)
 
-    assertNotNull(result)
+      // Add inputs - one that matches dependent output, one that doesn't
+      val inputFile1 = java.io.File("$workspaceRoot/dist/output.jar") // Should be excluded
+      val inputFile2 = java.io.File("$workspaceRoot/src/main.kt") // Should be included
+      mainTask.inputs.files(inputFile1, inputFile2)
 
-    // Should contain dependentTasksOutputFiles for the output
-    assertTrue(
+      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
+
+      assertNotNull(result)
+
+      // Should contain dependentTasksOutputFiles for the output
+      assertTrue(
         result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/output.jar" })
 
-    // Should contain the non-conflicting input file
-    assertTrue(result.any { it == "{projectRoot}/src/main.kt" })
+      // Should contain the non-conflicting input file
+      assertTrue(result.any { it == "{projectRoot}/src/main.kt" })
+    }
 
-    // Should NOT contain the input file that matches dependent output
-    assertFalse(result.any { it == "{workspaceRoot}/dist/output.jar" })
-  }
+    @Test
+    fun `test getInputsForTask directory vs file patterns`() {
+      val dependentTask = project.tasks.register("dependentTask").get()
 
-  @Test
-  fun `test getInputsForTask directory vs file patterns`() {
-    val project = ProjectBuilder.builder().build()
-    val workspaceRoot = project.rootDir.path
-    val projectRoot = project.projectDir.path
+      // Add file output (should get exact path)
+      val outputFile = java.io.File("$workspaceRoot/dist/app.jar")
+      dependentTask.outputs.file(outputFile)
 
-    val dependentTask = project.tasks.register("dependentTask").get()
+      // Add directory output (should get /**/* pattern)
+      val outputDir = java.io.File("$workspaceRoot/dist/classes")
+      dependentTask.outputs.dir(outputDir)
 
-    // Add file output (should get exact path)
-    val outputFile = java.io.File("$workspaceRoot/dist/app.jar")
-    dependentTask.outputs.file(outputFile)
+      val mainTask = project.tasks.register("mainTask").get()
+      mainTask.dependsOn(dependentTask)
 
-    // Add directory output (should get /**/* pattern)
-    val outputDir = java.io.File("$workspaceRoot/build/classes")
-    dependentTask.outputs.dir(outputDir)
+      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
 
-    val mainTask = project.tasks.register("mainTask").get()
-    mainTask.dependsOn(dependentTask)
+      assertNotNull(result)
 
-    val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
-
-    assertNotNull(result)
-
-    // File should get exact path
-    assertTrue(
+      // File should get exact path
+      assertTrue(
         result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/app.jar" })
 
-    // Directory should get glob pattern
-    assertTrue(
+      // Directory should get glob pattern
+      assertTrue(
         result.any {
           it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).endsWith("/**/*")
         })
-  }
+    }
 
-  @Test
-  fun `test getInputsForTask excludes build directory files`() {
-    val project = ProjectBuilder.builder().build()
-    val workspaceRoot = project.rootDir.path
-    val projectRoot = project.projectDir.path
-    val buildDir = project.layout.buildDirectory.get().asFile
+    @Test
+    fun `test getInputsForTask with pre-computed dependsOnTasks`() {
+      // Create dependent task with output
+      val dependentTask = project.tasks.register("dependentTask").get()
+      val outputFile = java.io.File("$workspaceRoot/dist/output.jar")
+      dependentTask.outputs.file(outputFile)
 
-    val mainTask = project.tasks.register("mainTask").get()
+      // Create main task with dependsOn
+      val mainTask = project.tasks.register("mainTask").get()
+      mainTask.dependsOn(dependentTask)
 
-    // Add inputs - one in build dir, one outside
-    val buildDirFile = java.io.File("${buildDir.path}/classes/Main.class")
-    val sourceFile = java.io.File("$workspaceRoot/src/main.kt")
-    mainTask.inputs.files(buildDirFile, sourceFile)
+      // Add input file
+      val inputFile = java.io.File("$workspaceRoot/src/main.kt")
+      mainTask.inputs.files(inputFile)
 
-    val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
+      // Pre-compute dependsOnTasks using getDependsOnTask
+      val preComputedDependsOn = getDependsOnTask(mainTask)
 
-    assertNotNull(result)
-
-    // Should contain the source file
-    assertTrue(result!!.any { it == "{projectRoot}/src/main.kt" })
-
-    // Should NOT contain the build directory file
-    assertFalse(result.any { it.toString().contains("build") && it !is Map<*, *> })
-  }
-
-  @Test
-  fun `test getInputsForTask with build dir input as dependentTasksOutputFiles`() {
-    val project = ProjectBuilder.builder().build()
-    val workspaceRoot = project.rootDir.path
-    val projectRoot = project.projectDir.path
-    val buildDir = project.layout.buildDirectory.get().asFile
-
-    // Create dependent task with build dir output
-    val dependentTask = project.tasks.register("dependentTask").get()
-    val buildDirOutput = java.io.File("${buildDir.path}/libs/app.jar")
-    dependentTask.outputs.file(buildDirOutput)
-
-    val mainTask = project.tasks.register("mainTask").get()
-    mainTask.dependsOn(dependentTask)
-
-    // Add build dir file as input that matches dependent output
-    mainTask.inputs.files(buildDirOutput)
-
-    val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
-
-    assertNotNull(result)
-
-    // Should contain dependentTasksOutputFiles for the build dir output
-    assertTrue(
-        result!!.any {
-          it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("libs/app.jar")
-        })
-
-    // Should NOT contain it as a regular input
-    assertFalse(result.any { it.toString().contains("build") && it !is Map<*, *> })
-  }
-
-  @Test
-  fun `test getInputsForTask with pre-computed dependsOnTasks`() {
-    val project = ProjectBuilder.builder().build()
-    val workspaceRoot = project.rootDir.path
-    val projectRoot = project.projectDir.path
-
-    // Create dependent task with output
-    val dependentTask = project.tasks.register("dependentTask").get()
-    val outputFile = java.io.File("$workspaceRoot/dist/output.jar")
-    dependentTask.outputs.file(outputFile)
-
-    // Create main task with dependsOn
-    val mainTask = project.tasks.register("mainTask").get()
-    mainTask.dependsOn(dependentTask)
-
-    // Add input file
-    val inputFile = java.io.File("$workspaceRoot/src/main.kt")
-    mainTask.inputs.files(inputFile)
-
-    // Pre-compute dependsOnTasks using getDependsOnTask
-    val preComputedDependsOn = getDependsOnTask(mainTask)
-
-    // Test with pre-computed dependsOnTasks
-    val resultWithPreComputed =
+      // Test with pre-computed dependsOnTasks
+      val resultWithPreComputed =
         getInputsForTask(preComputedDependsOn, mainTask, projectRoot, workspaceRoot, mutableMapOf())
 
-    // Test without pre-computed (should compute internally)
-    val resultWithoutPreComputed =
+      // Test without pre-computed (should compute internally)
+      val resultWithoutPreComputed =
         getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
 
-    // Both results should be identical
-    assertNotNull(resultWithPreComputed)
-    assertNotNull(resultWithoutPreComputed)
-    assertEquals(resultWithPreComputed!!.size, resultWithoutPreComputed!!.size)
+      // Both results should be identical
+      assertNotNull(resultWithPreComputed)
+      assertNotNull(resultWithoutPreComputed)
+      assertEquals(resultWithPreComputed!!.size, resultWithoutPreComputed!!.size)
 
-    // Should contain dependentTasksOutputFiles for the dependent task output
-    assertTrue(
+      // Should contain dependentTasksOutputFiles for the dependent task output
+      assertTrue(
         resultWithPreComputed.any {
           it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/output.jar"
         })
-    assertTrue(
+      assertTrue(
         resultWithoutPreComputed.any {
           it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/output.jar"
         })
 
-    // Should contain the input file
-    assertTrue(resultWithPreComputed.any { it == "{projectRoot}/src/main.kt" })
-    assertTrue(resultWithoutPreComputed.any { it == "{projectRoot}/src/main.kt" })
-  }
+      // Should contain the input file
+      assertTrue(resultWithPreComputed.any { it == "{projectRoot}/src/main.kt" })
+      assertTrue(resultWithoutPreComputed.any { it == "{projectRoot}/src/main.kt" })
+    }
 
-  @Test
-  fun `test getDependsOnForTask with pre-computed dependsOnTasks`() {
-    val project = ProjectBuilder.builder().withName("testProject").build()
-    // Create a build file so the task dependencies are properly detected
-    val buildFile = java.io.File(project.projectDir, "build.gradle")
-    buildFile.writeText("// test build file")
+    @Test
+    fun `test getDependsOnForTask with pre-computed dependsOnTasks`() {
+      // Create a build file so the task dependencies are properly detected
+      val buildFile = java.io.File(project.projectDir, "build.gradle")
+      buildFile.writeText("// test build file")
 
-    val taskA = project.tasks.register("taskA").get()
-    val taskB = project.tasks.register("taskB").get()
-    val taskC = project.tasks.register("taskC").get()
+      val taskA = project.tasks.register("taskA").get()
+      val taskB = project.tasks.register("taskB").get()
+      val taskC = project.tasks.register("taskC").get()
 
-    taskA.dependsOn(taskB, taskC)
+      taskA.dependsOn(taskB, taskC)
 
-    val dependencies = mutableSetOf<Dependency>()
+      val dependencies = mutableSetOf<Dependency>()
 
-    // Pre-compute dependsOnTasks using getDependsOnTask
-    val preComputedDependsOn = getDependsOnTask(taskA)
+      // Pre-compute dependsOnTasks using getDependsOnTask
+      val preComputedDependsOn = getDependsOnTask(taskA)
 
-    // Test with pre-computed dependsOnTasks
-    val resultWithPreComputed = getDependsOnForTask(preComputedDependsOn, taskA, dependencies)
+      // Test with pre-computed dependsOnTasks
+      val resultWithPreComputed = getDependsOnForTask(preComputedDependsOn, taskA, dependencies)
 
-    // Test without pre-computed (should compute internally)
-    val dependencies2 = mutableSetOf<Dependency>()
-    val resultWithoutPreComputed = getDependsOnForTask(null, taskA, dependencies2)
+      // Test without pre-computed (should compute internally)
+      val dependencies2 = mutableSetOf<Dependency>()
+      val resultWithoutPreComputed = getDependsOnForTask(null, taskA, dependencies2)
 
-    // Both results should be identical
-    assertNotNull(resultWithPreComputed)
-    assertNotNull(resultWithoutPreComputed)
-    assertEquals(resultWithPreComputed!!.size, resultWithoutPreComputed!!.size)
-    assertEquals(2, resultWithPreComputed.size)
+      // Both results should be identical
+      assertNotNull(resultWithPreComputed)
+      assertNotNull(resultWithoutPreComputed)
+      assertEquals(resultWithPreComputed!!.size, resultWithoutPreComputed!!.size)
+      assertEquals(2, resultWithPreComputed.size)
 
-    // Should contain both dependencies
-    assertTrue(resultWithPreComputed.contains("testProject:taskB"))
-    assertTrue(resultWithPreComputed.contains("testProject:taskC"))
-    assertTrue(resultWithoutPreComputed!!.contains("testProject:taskB"))
-    assertTrue(resultWithoutPreComputed.contains("testProject:taskC"))
-  }
+      // Should contain both dependencies
+      assertTrue(resultWithPreComputed.contains("test:taskB"))
+      assertTrue(resultWithPreComputed.contains("test:taskC"))
+      assertTrue(resultWithoutPreComputed.contains("test:taskB"))
+      assertTrue(resultWithoutPreComputed.contains("test:taskC"))
+    }
 
-  @Test
-  fun `test dependentTasksOutputFiles generation with reused dependsOnTasks`() {
-    val project = ProjectBuilder.builder().build()
-    val workspaceRoot = project.rootDir.path
-    val projectRoot = project.projectDir.path
+    @Test
+    fun `test dependentTasksOutputFiles generation with reused dependsOnTasks`() {
+      val project = ProjectBuilder.builder().build()
+      val workspaceRoot = project.rootDir.path
+      val projectRoot = project.projectDir.path
 
-    // Create multiple dependent tasks with different output types
-    val dependentTask1 = project.tasks.register("dependentTask1").get()
-    val fileOutput = java.io.File("$workspaceRoot/dist/app.jar")
-    dependentTask1.outputs.file(fileOutput)
+      // Create multiple dependent tasks with different output types
+      val dependentTask1 = project.tasks.register("dependentTask1").get()
+      val fileOutput = java.io.File("$workspaceRoot/dist/app.jar")
+      dependentTask1.outputs.file(fileOutput)
 
-    val dependentTask2 = project.tasks.register("dependentTask2").get()
-    val dirOutput = java.io.File("$workspaceRoot/build/classes")
-    dependentTask2.outputs.dir(dirOutput)
+      val dependentTask2 = project.tasks.register("dependentTask2").get()
+      val dirOutput = java.io.File("$workspaceRoot/build/classes")
+      dependentTask2.outputs.dir(dirOutput)
 
-    val dependentTask3 = project.tasks.register("dependentTask3").get()
-    val multipleOutputs =
+      val dependentTask3 = project.tasks.register("dependentTask3").get()
+      val multipleOutputs =
         listOf(
-            java.io.File("$workspaceRoot/reports/test.xml"),
-            java.io.File("$workspaceRoot/reports/coverage"))
-    dependentTask3.outputs.files(multipleOutputs)
+          java.io.File("$workspaceRoot/reports/test.xml"),
+          java.io.File("$workspaceRoot/reports/coverage"))
+      dependentTask3.outputs.files(multipleOutputs)
 
-    // Create main task that depends on all three
-    val mainTask = project.tasks.register("mainTask").get()
-    mainTask.dependsOn(dependentTask1, dependentTask2, dependentTask3)
+      // Create main task that depends on all three
+      val mainTask = project.tasks.register("mainTask").get()
+      mainTask.dependsOn(dependentTask1, dependentTask2, dependentTask3)
 
-    // Add some input files
-    val inputFiles =
+      // Add some input files
+      val inputFiles =
         listOf(
-            java.io.File("$workspaceRoot/src/main.kt"),
-            java.io.File("$workspaceRoot/config/app.properties"))
-    mainTask.inputs.files(inputFiles)
+          java.io.File("$workspaceRoot/src/main.kt"),
+          java.io.File("$workspaceRoot/config/app.properties"))
+      mainTask.inputs.files(inputFiles)
 
-    // Get dependsOnTasks once and reuse
-    val dependsOnTasks = getDependsOnTask(mainTask)
-    val result =
+      // Get dependsOnTasks once and reuse
+      val dependsOnTasks = getDependsOnTask(mainTask)
+      val result =
         getInputsForTask(dependsOnTasks, mainTask, projectRoot, workspaceRoot, mutableMapOf())
 
-    assertNotNull(result)
+      assertNotNull(result)
 
-    // Should contain dependentTasksOutputFiles for file output (exact path)
-    assertTrue(
+      // Should contain dependentTasksOutputFiles for file output (exact path)
+      assertTrue(
         result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "dist/app.jar" })
 
-    // Should contain dependentTasksOutputFiles for directory output (with /**/* pattern)
-    assertTrue(
+      // Should contain dependentTasksOutputFiles for directory output (with /**/* pattern)
+      assertTrue(
         result.any {
           it is Map<*, *> && (it["dependentTasksOutputFiles"] as String) == "build/classes/**/*"
         })
 
-    // Should contain dependentTasksOutputFiles for test report file
-    assertTrue(
+      // Should contain dependentTasksOutputFiles for test report file
+      assertTrue(
         result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "reports/test.xml" })
 
-    // Should contain dependentTasksOutputFiles for coverage directory (with /**/* pattern)
-    assertTrue(
+      // Should contain dependentTasksOutputFiles for coverage directory (with /**/* pattern)
+      assertTrue(
         result.any {
           it is Map<*, *> && (it["dependentTasksOutputFiles"] as String) == "reports/coverage/**/*"
         })
 
-    // Should contain regular input files
-    assertTrue(result.any { it == "{projectRoot}/src/main.kt" })
-    assertTrue(result.any { it == "{projectRoot}/config/app.properties" })
+      // Should contain regular input files
+      assertTrue(result.any { it == "{projectRoot}/src/main.kt" })
+      assertTrue(result.any { it == "{projectRoot}/config/app.properties" })
 
-    // Verify we have the expected number of dependentTasksOutputFiles entries (4 outputs from 3
-    // tasks)
-    val dependentTasksOutputFilesCount =
+      // Verify we have the expected number of dependentTasksOutputFiles entries (4 outputs from 3
+      // tasks)
+      val dependentTasksOutputFilesCount =
         result.count { it is Map<*, *> && it.containsKey("dependentTasksOutputFiles") }
-    assertEquals(4, dependentTasksOutputFilesCount)
+      assertEquals(4, dependentTasksOutputFilesCount)
 
-    // Verify we have the expected number of regular input files (2)
-    val regularInputsCount = result.count { it is String && it.startsWith("{projectRoot}") }
-    assertEquals(2, regularInputsCount)
+      // Verify we have the expected number of regular input files (2)
+      val regularInputsCount = result.count { it is String && it.startsWith("{projectRoot}") }
+      assertEquals(2, regularInputsCount)
+    }
+
+    @Test
+    fun `test getInputsForTask with gitignore classification`() {
+      val project = ProjectBuilder.builder().build()
+      val workspaceRoot = project.rootDir.path
+      val projectRoot = project.projectDir.path
+
+      // Create .gitignore file
+      val gitignore = java.io.File(project.rootDir, ".gitignore")
+      gitignore.writeText(
+        """
+            build
+            .gradle
+            *.log
+            dist
+        """
+          .trimIndent())
+
+      val mainTask = project.tasks.register("mainTask").get()
+
+      // Add inputs with mixed types
+      val sourceFile = java.io.File("$workspaceRoot/src/main.kt") // Not ignored - should be input
+      val buildFile =
+        java.io.File("$workspaceRoot/build/classes/Main.class") // Ignored - should be
+      // dependentTasksOutputFiles
+      val logFile = java.io.File("$workspaceRoot/app.log") // Ignored - should be dependentTasksOutputFiles
+      val configFile =
+        java.io.File("$workspaceRoot/config/app.properties") // Not ignored - should be input
+
+      mainTask.inputs.files(sourceFile, buildFile, logFile, configFile)
+
+      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
+
+      assertNotNull(result)
+
+      // Source file should be regular input
+      assertTrue(result!!.any { it == "{projectRoot}/src/main.kt" })
+
+      // Config file should be regular input
+      assertTrue(result.any { it == "{projectRoot}/config/app.properties" })
+
+      // Build file should be dependentTasksOutputFiles (matches gitignore)
+      assertTrue(
+        result.any {
+          it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("build")
+        })
+
+      // Log file should be dependentTasksOutputFiles (matches gitignore)
+      assertTrue(
+        result.any { it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("log") })
+    }
+
+    @Test
+    fun `test getInputsForTask gitignore patterns with nested paths`() {
+      val project = ProjectBuilder.builder().build()
+      val workspaceRoot = project.rootDir.path
+      val projectRoot = project.projectDir.path
+
+      // Create .gitignore with common patterns
+      val gitignore = java.io.File(project.rootDir, ".gitignore")
+      gitignore.writeText(
+        """
+            target
+            dist
+        """
+          .trimIndent())
+
+      val mainTask = project.tasks.register("mainTask").get()
+
+      // Add inputs
+      val javaSource = java.io.File("$workspaceRoot/src/Main.java") // Not ignored
+      val compiledClass =
+        java.io.File("$workspaceRoot/dist/production/Main.class") // Ignored (*.class pattern)
+      val jarTarget = java.io.File("$workspaceRoot/dist/app.jar") // Ignored (target)
+
+      mainTask.inputs.files(javaSource, compiledClass, jarTarget)
+
+      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
+
+      assertNotNull(result)
+
+      assertTrue(result!!.any { it == "{projectRoot}/src/Main.java" })
+
+      assertTrue(
+        result.any {
+          it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("Main.class")
+        })
+
+      assertTrue(
+        result.any {
+          it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("dist")
+        })
+    }
   }
 
   @Test
@@ -448,96 +489,5 @@ class ProcessTaskUtilsTest {
         })
   }
 
-  @Test
-  fun `test getInputsForTask with gitignore classification`() {
-    val project = ProjectBuilder.builder().build()
-    val workspaceRoot = project.rootDir.path
-    val projectRoot = project.projectDir.path
 
-    // Create .gitignore file
-    val gitignore = java.io.File(project.rootDir, ".gitignore")
-    gitignore.writeText(
-        """
-            build
-            .gradle
-            *.log
-            dist
-        """
-            .trimIndent())
-
-    val mainTask = project.tasks.register("mainTask").get()
-
-    // Add inputs with mixed types
-    val sourceFile = java.io.File("$workspaceRoot/src/main.kt") // Not ignored - should be input
-    val buildFile =
-        java.io.File("$workspaceRoot/build/classes/Main.class") // Ignored - should be
-    // dependentTasksOutputFiles
-    val logFile = java.io.File("$workspaceRoot/app.log") // Ignored - should be dependentTasksOutputFiles
-    val configFile =
-        java.io.File("$workspaceRoot/config/app.properties") // Not ignored - should be input
-
-    mainTask.inputs.files(sourceFile, buildFile, logFile, configFile)
-
-    val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
-
-    assertNotNull(result)
-
-    // Source file should be regular input
-    assertTrue(result!!.any { it == "{projectRoot}/src/main.kt" })
-
-    // Config file should be regular input
-    assertTrue(result.any { it == "{projectRoot}/config/app.properties" })
-
-    // Build file should be dependentTasksOutputFiles (matches gitignore)
-    assertTrue(
-        result.any {
-          it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("build")
-        })
-
-    // Log file should be dependentTasksOutputFiles (matches gitignore)
-    assertTrue(
-        result.any { it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("log") })
-  }
-
-  @Test
-  fun `test getInputsForTask gitignore patterns with nested paths`() {
-    val project = ProjectBuilder.builder().build()
-    val workspaceRoot = project.rootDir.path
-    val projectRoot = project.projectDir.path
-
-    // Create .gitignore with common patterns
-    val gitignore = java.io.File(project.rootDir, ".gitignore")
-    gitignore.writeText(
-        """
-            target
-            dist
-        """
-            .trimIndent())
-
-    val mainTask = project.tasks.register("mainTask").get()
-
-    // Add inputs
-    val javaSource = java.io.File("$workspaceRoot/src/Main.java") // Not ignored
-    val compiledClass =
-        java.io.File("$workspaceRoot/dist/production/Main.class") // Ignored (*.class pattern)
-    val jarTarget = java.io.File("$workspaceRoot/dist/app.jar") // Ignored (target)
-
-    mainTask.inputs.files(javaSource, compiledClass, jarTarget)
-
-    val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
-
-    assertNotNull(result)
-
-    assertTrue(result!!.any { it == "{projectRoot}/src/Main.java" })
-
-    assertTrue(
-        result.any {
-          it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("Main.class")
-        })
-
-    assertTrue(
-        result.any {
-          it is Map<*, *> && (it["dependentTasksOutputFiles"] as String).contains("dist")
-        })
-  }
 }
