@@ -7,7 +7,7 @@ filter: 'type:Guides'
 ---
 
 {% aside type="note" title="Use our generator!" %}
-It is recommended that you use the [`@nx/vite:configuration`](/docs/technologies/build-tools/vite/generators#configuration) generator to set up [Vite](https://vitejs.dev/) for your new or existing projects.
+It is recommended that you use the [`@nx/vite:configuration`](/docs/technologies/build-tools/vite/generators#configuration) generator to set up [Vite](https://vite.dev/) for your new or existing projects.
 {% /aside %}
 
 The `@nx/vite` plugin generators take care of configuring Vite for you. However, you may need to set up Vite manually in some cases. This guide explains how you can configure Vite in your Nx workspace.
@@ -84,7 +84,7 @@ You can read more about the configuration options in the [`vite-plugin-dts` plug
 
 ## Copying assets
 
-If you have assets outside of [`publicDir`](https://vitejs.dev/config/shared-options.html#publicdir) that need to be copied the output folder, then you can use `nxCopyAssetsPlugin` from `@nx/vite`.
+If you have assets outside of [`publicDir`](https://vite.dev/config/shared-options.html#publicdir) that need to be copied the output folder, then you can use `nxCopyAssetsPlugin` from `@nx/vite`.
 
 ```ts
 // vite.config.ts
@@ -133,7 +133,7 @@ If you're using `vitest`, make sure your `test` object in your `vite.config.ts` 
 
 Note how we're specifying `reporters` and `environment`.
 
-## How your `vite.config.ts` looks like
+## What your `vite.config.ts` looks like
 
 ### For applications
 
@@ -210,7 +210,7 @@ export default defineConfig({
     }),
   ],
   // Configuration for building your library.
-  // See: https://vitejs.dev/guide/build.html#library-mode
+  // See: https://vite.dev/guide/build.html#library-mode
   build: {
     outDir: '../dist/libs/my-lib',
     reportCompressedSize: true,
@@ -247,7 +247,7 @@ export default defineConfig({
 });
 ```
 
-In that config file, you can configure Vite as you would normally do. For more information, see the [Vite.js documentation](https://vitejs.dev/config/).
+In that config file, you can configure Vite as you would normally do. For more information, see the [Vite documentation](https://vite.dev/config/).
 
 ## Set up file replacements
 

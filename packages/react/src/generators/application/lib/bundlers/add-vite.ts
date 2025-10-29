@@ -11,7 +11,7 @@ export async function setupViteConfiguration(
     typeof import('@nx/vite')
   >('@nx/vite', nxVersion);
   // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
-  // See: https://vitejs.dev/guide/env-and-mode.html
+  // See: https://vite.dev/guide/env-and-mode.html
   if (
     tree.exists(joinPathFragments(options.appProjectRoot, 'src/environments'))
   ) {

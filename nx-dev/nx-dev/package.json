@@ -36,6 +36,7 @@
     "@nx/nx-dev-ui-sponsor-card": "workspace:*",
     "@nx/nx-dev-ui-fence": "workspace:*",
     "@nx/nx-dev-ui-blog": "workspace:*",
+    "@nx/nx-dev-ui-resources": "workspace:*",
     "@nx/nx-dev-ui-ai-landing-page": "workspace:*",
     "@nx/nx-dev-ui-brands": "workspace:*",
     "@nx/nx-dev-ui-cloud": "workspace:*",

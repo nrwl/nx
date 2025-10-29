@@ -3,5 +3,5 @@
  * V8 serializer is enabled by default unless explicitly disabled.
  */
 export function isV8SerializerEnabled(): boolean {
-  return process.env.NX_USE_V8_SERIALIZER !== 'false';
+  return process.env.NX_USE_V8_SERIALIZER === 'true';
 }

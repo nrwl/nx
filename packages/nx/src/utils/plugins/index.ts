@@ -6,3 +6,4 @@ export {
   listPluginCapabilities,
 } from './output';
 export { getPluginCapabilities } from './plugin-capabilities';
+export { deriveGroupNameFromTarget } from './atomizer-utils';

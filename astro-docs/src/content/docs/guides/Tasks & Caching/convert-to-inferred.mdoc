@@ -108,7 +108,7 @@ For example, if we migrated the `@nx/vite` plugin for a single app (i.e. `nx g @
 
 {% /project_details %}
 
-You'll notice that the `serve` and `build` tasks are running the [Vite CLI](https://vitejs.dev/guide/cli.html) and there are no references to Nx executors. Since the targets directly invoke the Vite CLI, any options that may be passed to it can be passed via Nx commands. e.g. `nx serve demo --cors --port 8888` enables CORs and uses port `8888` using [Vite CLI options](https://vitejs.dev/guide/cli.html#options)
+You'll notice that the `serve` and `build` tasks are running the [Vite CLI](https://vite.dev/guide/cli.html) and there are no references to Nx executors. Since the targets directly invoke the Vite CLI, any options that may be passed to it can be passed via Nx commands. e.g. `nx serve demo --cors --port 8888` enables CORs and uses port `8888` using [Vite CLI options](https://vite.dev/guide/cli.html#options)
 The same CLI setup applies to other plugins as well.
 
 - `@nx/cypress` calls the [Cypress CLI](https://docs.cypress.io/guides/guides/command-line)

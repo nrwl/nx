@@ -25,7 +25,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   // Configuration for building your library.
-  // See: https://vitejs.dev/guide/build.html#library-mode
+  // See: https://vite.dev/guide/build.html#library-mode
   build: {
     outDir: '../dist/my-lib',
     emptyOutDir: true,
@@ -198,7 +198,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   // Configuration for building your library.
-  // See: https://vitejs.dev/guide/build.html#library-mode
+  // See: https://vite.dev/guide/build.html#library-mode
   build: {
     outDir: '../../dist/libs/react-lib-nonb-jest',
     emptyOutDir: true,
@@ -251,7 +251,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   // Configuration for building your library.
-  // See: https://vitejs.dev/guide/build.html#library-mode
+  // See: https://vite.dev/guide/build.html#library-mode
   build: {
     outDir: '../../dist/libs/react-lib-nonb-jest',
     emptyOutDir: true,
@@ -299,7 +299,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
   // Configuration for building your library.
-  // See: https://vitejs.dev/guide/build.html#library-mode
+  // See: https://vite.dev/guide/build.html#library-mode
   build: {
     outDir: '../../dist/libs/react-lib-nonb-vitest',
     emptyOutDir: true,
