@@ -650,9 +650,7 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
 };
 
 export async function startServer(): Promise<Server> {
-  const additionalProjectDirectories =
-    readNxJson(workspaceRoot).additionalProjectDirectories ?? [];
-  setupWorkspaceContext(workspaceRoot, additionalProjectDirectories);
+  setupWorkspaceContext(workspaceRoot);
 
   // Persist metadata about the background process so that it can be cleaned up later if needed
   await writeDaemonJsonProcessCache({

@@ -338,13 +338,15 @@ export type ConfigurationResult = {
  *
  * @param root The workspace root
  * @param nxJson The NxJson configuration
- * @param workspaceFiles A list of non-ignored workspace files
+ * @param projectFiles
+ * @param additionalProjectConfigurationFiles
  * @param plugins The plugins that should be used to infer project configuration
  */
 export async function createProjectConfigurationsWithPlugins(
   root: string = workspaceRoot,
   nxJson: NxJsonConfiguration,
   projectFiles: string[][], // making this parameter allows devkit to pick up newly created projects
+  additionalProjectConfigurationFiles: string[][],
   plugins: LoadedNxPlugin[]
 ): Promise<ConfigurationResult> {
   performance.mark('build-project-configs:start');
@@ -419,10 +421,13 @@ export async function createProjectConfigurationsWithPlugins(
       exclude
     );
 
+    const additionalFiles = additionalProjectConfigurationFiles[index];
+
     inProgressPlugins.add(pluginName);
     let r = createNodes(matchingConfigFiles, {
       nxJsonConfiguration: nxJson,
       workspaceRoot: root,
+      additionalProjectConfigurationFiles: additionalFiles,
     })
       .catch((e: Error) => {
         const error: AggregateCreateNodesError = isAggregateCreateNodesError(e)

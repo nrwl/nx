@@ -30,15 +30,15 @@ pub struct WorkspaceContext {
 
 type Files = Vec<(PathBuf, String)>;
 
-fn gather_and_hash_files(directory: &Path, cache_dir: &String) -> Vec<(PathBuf, String)> {
-    let archived_files = read_files_archive(cache_dir);
+fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Vec<(PathBuf, String)> {
+    let archived_files = read_files_archive(&cache_dir);
 
-    trace!("Gathering files in {}", directory.display());
+    trace!("Gathering files in {}", workspace_root.display());
     let now = std::time::Instant::now();
     let file_hashes = if let Some(archived_files) = archived_files {
-        selective_files_hash(directory, archived_files)
+        selective_files_hash(workspace_root, archived_files)
     } else {
-        full_files_hash(directory)
+        full_files_hash(workspace_root)
     };
 
     let mut files = file_hashes
@@ -57,11 +57,7 @@ fn gather_and_hash_files(directory: &Path, cache_dir: &String) -> Vec<(PathBuf, 
 struct FilesWorker(Option<Arc<(NxMutex<Files>, NxCondvar)>>);
 impl FilesWorker {
     #[cfg(not(target_arch = "wasm32"))]
-    fn gather_files(
-        workspace_root: &Path,
-        additional_project_directories: Vec<PathBuf>,
-        cache_dir: String,
-    ) -> Self {
+    fn gather_files(workspace_root: &Path, cache_dir: String) -> Self {
         if !workspace_root.exists() {
             warn!(
                 "workspace root does not exist: {}",
@@ -79,14 +75,7 @@ impl FilesWorker {
             trace!("Initially locking files");
             let mut workspace_files = lock.lock().expect("Should be the first time locking files");
 
-            let mut files = gather_and_hash_files(&workspace_root, &cache_dir);
-
-            for additional_project_directory in additional_project_directories {
-                let additional_files =
-                    gather_and_hash_files(&additional_project_directory, &cache_dir);
-
-                files.extend(additional_files);
-            }
+            let files = gather_and_hash_files(&workspace_root, cache_dir);
 
             *workspace_files = files;
             let files_len = workspace_files.len();
@@ -211,27 +200,15 @@ impl FilesWorker {
 #[napi]
 impl WorkspaceContext {
     #[napi(constructor)]
-    pub fn new(
-        workspace_root: String,
-        additional_project_directories: Vec<String>,
-        cache_dir: String,
-    ) -> Self {
+    pub fn new(workspace_root: String, cache_dir: String) -> Self {
         enable_logger();
 
         trace!(?workspace_root);
 
         let workspace_root_path = PathBuf::from(&workspace_root);
-        let additional_project_directories = additional_project_directories
-            .iter()
-            .map(|s| PathBuf::from(s))
-            .collect::<Vec<PathBuf>>();
 
         WorkspaceContext {
-            files_worker: FilesWorker::gather_files(
-                &workspace_root_path,
-                additional_project_directories,
-                cache_dir.clone(),
-            ),
+            files_worker: FilesWorker::gather_files(&workspace_root_path, cache_dir.clone()),
             workspace_root,
             workspace_root_path,
         }

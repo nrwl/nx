@@ -135,7 +135,7 @@ export declare class Watcher {
 
 export declare class WorkspaceContext {
   workspaceRoot: string
-  constructor(workspaceRoot: string, additionalProjectDirectories: Array<string>, cacheDir: string)
+  constructor(workspaceRoot: string, cacheDir: string)
   getWorkspaceFiles(projectRootMap: Record<string, string>): NxWorkspaceFiles
   glob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<string>
   /**
@@ -263,6 +263,10 @@ export declare export declare function isAiAgent(): boolean
 export declare export declare function isEditorInstalled(editor: SupportedEditor): boolean
 
 export declare export declare function logDebug(message: string): void
+
+export declare export declare function multiGlobInAdditionalProjectDirectories(workspaceRoot: string, additionalProjectDirectories: Array<string>, globs: Array<string>, exclude?: Array<string> | undefined | null): Array<Array<string>>
+
+export declare export declare function multiHashGlobInAdditionalProjectDirectories(workspaceRoot: string, additionalProjectDirectories: Array<string>, globGroups: Array<Array<string>>): Array<string>
 
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {

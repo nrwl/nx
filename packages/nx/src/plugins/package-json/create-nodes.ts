@@ -1,6 +1,6 @@
 import { minimatch } from 'minimatch';
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, basename, resolve, relative } from 'node:path';
 
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
@@ -21,7 +21,6 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
 } from '../../project-graph/plugins';
-import { basename } from 'path';
 import { hashObject } from '../../hasher/file-hasher';
 import {
   PackageJsonConfigurationCache,
@@ -36,7 +35,9 @@ export const createNodesV2: CreateNodesV2 = [
     '**/project.json'
   ),
   (configFiles, _, context) => {
-    const { packageJsons, projectJsonRoots } = splitConfigFiles(configFiles);
+    const { packageJsons, projectJsonRoots } = splitConfigFiles(
+      configFiles.concat(context.additionalProjectConfigurationFiles)
+    );
 
     const readJson = (f) => readJsonFile(join(context.workspaceRoot, f));
     const isInPackageJsonWorkspaces =
@@ -52,8 +53,9 @@ export const createNodesV2: CreateNodesV2 = [
 
     return createNodesFromFiles(
       (packageJsonPath, options, context) => {
-        const isInPackageManagerWorkspaces =
-          isInPackageJsonWorkspaces(packageJsonPath);
+        const isInPackageManagerWorkspaces = isInPackageJsonWorkspaces(
+          relative(context.workspaceRoot, packageJsonPath)
+        );
         if (
           !isInPackageManagerWorkspaces &&
           !isNextToProjectJson(packageJsonPath)
@@ -137,7 +139,7 @@ export function createNodeFromPackageJson(
   cache: PackageJsonConfigurationCache,
   isInPackageManagerWorkspaces: boolean
 ) {
-  const json: PackageJson = readJsonFile(join(workspaceRoot, pkgJsonPath));
+  const json: PackageJson = readJsonFile(resolve(workspaceRoot, pkgJsonPath));
 
   const projectRoot = dirname(pkgJsonPath);
 
@@ -180,8 +182,9 @@ export function buildProjectConfigurationFromPackageJson(
   nxJson: NxJsonConfiguration,
   isInPackageManagerWorkspaces: boolean
 ): ProjectConfiguration & { name: string } {
-  const normalizedPath = packageJsonPath.split('\\').join('/');
-  const projectRoot = dirname(normalizedPath);
+  const projectRoot = dirname(relative(workspaceRoot, packageJsonPath))
+    .split('\\')
+    .join('/');
 
   const siblingProjectJson = tryReadJson<ProjectConfiguration>(
     join(workspaceRoot, projectRoot, 'project.json')
@@ -208,7 +211,7 @@ export function buildProjectConfigurationFromPackageJson(
     );
   }
 
-  let name = packageJson.name ?? toProjectName(normalizedPath);
+  let name = packageJson.name ?? toProjectName(projectRoot);
 
   const projectConfiguration: ProjectConfiguration & { name: string } = {
     root: projectRoot,

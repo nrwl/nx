@@ -59,10 +59,8 @@ async function main() {
     process.env.NX_DAEMON = 'false';
     require('nx/src/command-line/nx-commands').commandsObject.argv;
   } else {
-    const additionalProjectDirectories =
-      readNxJson(workspace.dir).additionalProjectDirectories ?? [];
     if (!daemonClient.enabled() && workspace !== null) {
-      setupWorkspaceContext(workspace.dir, additionalProjectDirectories);
+      setupWorkspaceContext(workspace.dir);
     }
 
     // polyfill rxjs observable to avoid issues with multiple version of Observable installed in node_modules

@@ -10,6 +10,7 @@ import {
   updateProjectConfiguration,
 } from 'nx/src/devkit-exports';
 import { findProjectForPath, hashObject } from 'nx/src/devkit-internals';
+import { multiGlobInAdditionalProjectDirectories } from 'nx/src/native';
 
 export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   tree: Tree,
@@ -37,9 +38,16 @@ export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   const [pluginGlob, createNodesFunction] = createNodes;
   const configFiles = glob(tree, [pluginGlob]);
 
+  const additionalProjectConfigurationFiles =
+    multiGlobInAdditionalProjectDirectories(
+      tree.root,
+      nxJson.additionalProjectDirectories ?? [],
+      [pluginGlob]
+    )[0];
   const results = await createNodesFunction(configFiles, pluginOptions, {
     workspaceRoot: tree.root,
     nxJsonConfiguration: readNxJson(tree),
+    additionalProjectConfigurationFiles,
   });
 
   for (const [configFile, nodes] of results) {

@@ -9,6 +9,7 @@ mod files_archive;
 mod files_hashing;
 pub mod types;
 pub mod workspace_files;
+pub mod additional_project_directories;
 
 #[napi]
 // should only be used in tests to transfer the file map from the JS world to the Rust world

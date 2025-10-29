@@ -12,12 +12,12 @@ import {
 import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
   getNxWorkspaceFilesFromContext,
-  globWithWorkspaceContext,
   multiGlobWithWorkspaceContext,
 } from '../../utils/workspace-context';
 import { buildAllWorkspaceFiles } from './build-all-workspace-files';
 import { join } from 'path';
 import { getOnlyDefaultPlugins, getPlugins } from '../plugins/get-plugins';
+import { multiGlobInAdditionalProjectDirectories } from '../../native';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
@@ -74,10 +74,18 @@ export async function retrieveProjectConfigurations(
     globPatterns
   );
 
+  const pluginFilesInAdditionalProjectDirectories =
+    multiGlobInAdditionalProjectDirectories(
+      workspaceRoot,
+      nxJson.additionalProjectDirectories ?? [],
+      globPatterns
+    );
+
   return createProjectConfigurationsWithPlugins(
     workspaceRoot,
     nxJson,
     pluginConfigFiles,
+    pluginFilesInAdditionalProjectDirectories,
     pluginsWithCreateNodes
   );
 }
@@ -134,8 +142,6 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
 ): Promise<Record<string, ProjectConfiguration>> {
   const nxJson = readNxJson(root);
   const plugins = await getOnlyDefaultPlugins(); // only load default plugins
-  const additionalProjectDirectories =
-    nxJson.additionalProjectDirectories ?? [];
   const projectGlobPatterns = getGlobPatternsOfPlugins(plugins);
   const cacheKey = root + ',' + projectGlobPatterns.join(',');
 
@@ -144,12 +150,19 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
   }
 
   const projectFiles =
-    (await multiGlobWithWorkspaceContext(root,       additionalProjectDirectories,
-      projectGlobPatterns)) ?? [];
+    (await multiGlobWithWorkspaceContext(root, projectGlobPatterns)) ?? [];
+
+  const pluginFilesInAdditionalProjectDirectories =
+    multiGlobInAdditionalProjectDirectories(
+      root,
+      nxJson.additionalProjectDirectories ?? [],
+      projectGlobPatterns
+    );
   const { projects } = await createProjectConfigurationsWithPlugins(
     root,
     nxJson,
     projectFiles,
+    pluginFilesInAdditionalProjectDirectories,
     plugins
   );
 
