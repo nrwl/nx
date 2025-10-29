@@ -2,14 +2,21 @@
 import MobileMenuFooter from '@astrojs/starlight/components/MobileMenuFooter.astro'
 import SidebarPersister from '@astrojs/starlight/components/SidebarPersister.astro'
 import SidebarSublist from './SidebarSublist.astro'
+import { GitHubStarWidget } from '@nx/nx-dev-ui-common';
 
 const { sidebar } = Astro.locals.starlightRoute
+const githubStarsCount = (Astro.locals as any).githubStarsCount || 0;
 ---
 
 <div class="sidebar-wrapper" data-testid="sidebar-wrapper">
     <SidebarPersister>
         <SidebarSublist sublist={sidebar}/>
     </SidebarPersister>
+    {githubStarsCount > 0 && (
+        <div class="github-star-widget-sidebar">
+            <GitHubStarWidget starsCount={githubStarsCount} client:load />
+        </div>
+    )}
     <div class="md:sl-hidden">
         <MobileMenuFooter/>
     </div>
@@ -39,5 +46,10 @@ const { sidebar } = Astro.locals.starlightRoute
 
     .sidebar-wrapper :global(details[open] summary .group-label) {
         color: var(--sl-color-gray-2);
+    }
+
+    .github-star-widget-sidebar {
+        margin-top: 1rem;
+        padding: 0 1rem;
     }
 </style>
