@@ -10,7 +10,7 @@ export function assertCompatibleStorybookVersion() {
 
   if (storybookVersion && lt(storybookVersion, '8.0.0')) {
     throw new Error(
-      'Incompatible Storybook Version: Please version 8.0.0 or higher of @storybook/angular'
+      'Incompatible Storybook Version: Please use a version 8.0.0 or higher of @storybook/angular'
     );
   }
 }

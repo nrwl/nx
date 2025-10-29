@@ -12,7 +12,7 @@
     },
     "configDir": {
       "type": "array",
-      "description": "Directory(ies) where to load Storybook configurations from. Use this if you want to customize the Storybook proejcts you'd like to migrate.",
+      "description": "Directory(ies) where to load Storybook configurations from. Use this if you want to customize the Storybook projects you'd like to migrate.",
       "default": []
     }
   }
