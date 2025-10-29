@@ -112,16 +112,8 @@ The `@nx/maven` is configured in the `plugins` array in `nx.json`.
 ```json
 // nx.json
 {
-  "plugins": [
-    {
-      "plugin": "@nx/maven",
-      "options": {
-        "testTargetName": "test",
-        "buildTargetName": "build"
-      }
-    }
-  ]
+  "plugins": ["@nx/maven"]
 }
 ```
 
-Once a Maven configuration file has been identified, the targets are created with the name you specify under `testTargetName` or `buildTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `test` and `build`.
+Once a Maven configuration file has been identified, the targets are created with the default names `test` and `build`.
