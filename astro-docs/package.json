@@ -19,6 +19,7 @@
     "astro": "^5.10.1",
     "astro-og-canvas": "^0.7.0",
     "canvaskit-wasm": "^0.40.0",
+    "octokit": "^2.0.14",
     "tailwindcss": "4.1.11"
   }
 }

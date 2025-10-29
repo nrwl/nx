@@ -1360,6 +1360,9 @@ importers:
       canvaskit-wasm:
         specifier: ^0.40.0
         version: 0.40.0
+      octokit:
+        specifier: ^2.0.14
+        version: 2.1.0(encoding@0.1.13)
       tailwindcss:
         specifier: 4.1.11
         version: 4.1.11
