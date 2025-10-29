@@ -266,6 +266,28 @@ export class ReleaseGroupProcessor {
       if (Object.keys(finalConfigForProject.dockerOptions).length === 0) {
         continue;
       }
+
+      // Additionally verify that the project actually has the docker release target
+      // This prevents projects without docker capability from being processed
+      // even if they inherited group-level docker config.
+      // We specifically check for nx-release-publish with @nx/docker:release-publish
+      // executor as this is what the @nx/docker plugin creates for docker projects.
+      const projectNode = this.projectGraph.nodes[project];
+      const hasDockerReleaseTarget =
+        projectNode.data.targets?.['nx-release-publish']?.executor ===
+        '@nx/docker:release-publish';
+
+      if (!hasDockerReleaseTarget) {
+        continue;
+      }
+
+      // Skip projects that don't have a new version (no changes)
+      // This prevents docker tag failures when the version is empty
+      const projectVersionData = this.versionData.get(project);
+      if (!projectVersionData.newVersion) {
+        continue;
+      }
+
       dockerProjects.set(project, finalConfigForProject);
     }
     // If no docker projects to process, exit early to avoid unnecessary loading of docker handling

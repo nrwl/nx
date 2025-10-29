@@ -820,17 +820,33 @@ Valid values are: ${validReleaseVersionPrefixes
 
     /**
      * Merge docker options configured in project with release group config,
-     * project level configuration should take precedence
+     * project level configuration should take precedence.
+     *
+     * Only apply docker options if:
+     * 1. Project has explicit project-level docker config, OR
+     * 2. Project has the nx-release-publish target with @nx/docker:release-publish executor
+     *
+     * This prevents all projects in a group from inheriting docker options
+     * when only some projects should be dockerized. We specifically check for
+     * the nx-release-publish target as this is what the @nx/docker plugin creates
+     * for all docker projects.
      */
+    const projectHasDockerReleaseTarget =
+      projectGraphNode.data.targets?.['nx-release-publish']?.executor ===
+      '@nx/docker:release-publish';
+
+    const shouldApplyDockerOptions =
+      projectHasDockerReleaseTarget || projectDockerConfig;
+
     const dockerOptions: NxReleaseDockerConfiguration & {
       groupPreVersionCommand?: string;
-    } = Object.assign(
-      {},
-      releaseGroup.docker || {},
-      projectDockerConfig || {}
-    ) as NxReleaseDockerConfiguration & {
-      groupPreVersionCommand?: string;
-    };
+    } = shouldApplyDockerOptions
+      ? Object.assign(
+          {},
+          releaseGroup.docker || {},
+          projectDockerConfig || {}
+        )
+      : {};
 
     /**
      * currentVersionResolver, defaults to disk

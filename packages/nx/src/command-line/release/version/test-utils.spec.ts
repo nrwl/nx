@@ -15,6 +15,11 @@ describe('parseGraphDefinition', () => {
     );
     expect(testGraph).toMatchInlineSnapshot(`
       {
+        "groupConfigs": {
+          "__default__": {
+            "projectsRelationship": "fixed",
+          },
+        },
         "projects": {
           "projectD": {
             "alternateNameInManifest": undefined,
@@ -81,6 +86,11 @@ describe('parseGraphDefinition', () => {
     );
     expect(testGraph).toMatchInlineSnapshot(`
       {
+        "groupConfigs": {
+          "__default__": {
+            "projectsRelationship": "independent",
+          },
+        },
         "projects": {
           "projectA": {
             "alternateNameInManifest": undefined,
@@ -123,6 +133,11 @@ describe('parseGraphDefinition', () => {
     );
     expect(testGraph).toMatchInlineSnapshot(`
       {
+        "groupConfigs": {
+          "__default__": {
+            "projectsRelationship": "independent",
+          },
+        },
         "projects": {
           "projectA": {
             "alternateNameInManifest": undefined,
