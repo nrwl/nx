@@ -36,5 +36,5 @@ export const onRequest = defineRouteMiddleware(async (context) => {
   const starCount = await getNxRepoStarCount();
 
   // Extend the context with our custom data
-  (context.locals as any).githubStarsCount = starCount;
+  context.locals.githubStarsCount = starCount;
 });

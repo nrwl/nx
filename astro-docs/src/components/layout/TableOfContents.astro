@@ -5,7 +5,7 @@ import { GitHubStarWidget } from '@nx/nx-dev-ui-common';
 import { DEFAULT_STAR_COUNT } from '../../plugins/github-stars.middleware';
 
 const { toc } = Astro.locals.starlightRoute;
-const githubStarsCount = (Astro.locals as any).githubStarsCount || 0;
+const githubStarsCount = Astro.locals.githubStarsCount || 0;
 // Use a default value for demo/dev if no count is available
 const displayStarCount = githubStarsCount > 0 ? githubStarsCount : DEFAULT_STAR_COUNT;
 ---
