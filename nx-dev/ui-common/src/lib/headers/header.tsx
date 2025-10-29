@@ -62,7 +62,8 @@ export function Header({
   }).format(count);
   };
 
-  useEffect(() => {
+useEffect(() => {
+  let isMounted = true;
   const getStarCount = async () => {
     try {
       const response = await fetch('https://api.github.com/repos/nrwl/nx');
@@ -70,13 +71,18 @@ export function Header({
         throw new Error(`GitHub API error: ${response.status}`);
       }
       const data = await response.json();
-      setStarCount(data.stargazers_count);
+      if (isMounted) {
+        setStarCount(data.stargazers_count);
+      }
     } catch (error) {
       console.error('Failed to fetch GitHub stars:', error);
     }
   };
   getStarCount();
-  }, []);
+  return () => {
+    isMounted = false;
+  };
+}, []);
 
   const handleContextMenu = (e: MouseEvent) => {
     e.preventDefault();
