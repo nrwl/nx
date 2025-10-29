@@ -1,34 +1,37 @@
 import { defineRouteMiddleware } from '@astrojs/starlight/route-data';
-import { getGithubStars } from './utils/plugin-stats';
+import { Octokit } from 'octokit';
 
-let cachedStarCount: number | null = null;
-let lastFetchTime: number = 0;
-const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
-
-// Default star count for development/demo when GitHub API is unavailable
-export const DEFAULT_STAR_COUNT = 23000;
+let cachedStarCountPromise: Promise<number> | null = null;
 
 async function getNxRepoStarCount(): Promise<number> {
-  const now = Date.now();
-
-  // Return cached value if still valid
-  if (cachedStarCount !== null && now - lastFetchTime < CACHE_DURATION) {
-    return cachedStarCount;
+  if (cachedStarCountPromise !== null) {
+    // If the promise is in the cache, return it directly
+    return cachedStarCountPromise;
   }
 
-  try {
-    const ghStarMap = await getGithubStars([{ owner: 'nrwl', repo: 'nx' }]);
-    const starCount = ghStarMap.get('nrwl/nx')?.stargazers?.totalCount || 0;
+  cachedStarCountPromise = (async () => {
+    try {
+      const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+      const responseData = await octokit.request('GET /repos/{owner}/{repo}', {
+        owner: 'nrwl',
+        repo: 'nx',
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+        retry: { enabled: false },
+        throttle: {
+          enabled: true,
+        },
+      });
 
-    cachedStarCount = starCount;
-    lastFetchTime = now;
+      return responseData.data.stargazers_count;
+    } catch (error) {
+      console.error('Failed to fetch GitHub stars for nrwl/nx:', error);
+      return 0;
+    }
+  })();
 
-    return starCount;
-  } catch (error) {
-    console.error('Failed to fetch GitHub stars for nrwl/nx:', error);
-    // Return cached value if available, otherwise 0
-    return cachedStarCount || 0;
-  }
+  return cachedStarCountPromise;
 }
 
 export const onRequest = defineRouteMiddleware(async (context) => {

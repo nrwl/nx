@@ -2,19 +2,16 @@
 // recreated from https://github.com/withastro/starlight/blob/main/packages/starlight/components/TableOfContents.astro
 import TableOfContentsList from './TableOfContentsList.astro';
 import { GitHubStarWidget } from '@nx/nx-dev-ui-common';
-import { DEFAULT_STAR_COUNT } from '../../plugins/github-stars.middleware';
 
 const { toc } = Astro.locals.starlightRoute;
-const githubStarsCount = Astro.locals.githubStarsCount || 0;
-// Use a default value for demo/dev if no count is available
-const displayStarCount = githubStarsCount > 0 ? githubStarsCount : DEFAULT_STAR_COUNT;
+const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
 ---
 
 {
   toc && (
     <custom-toc data-min-h={toc.minHeadingLevel} data-max-h={toc.maxHeadingLevel}>
       <div class="github-star-widget-container">
-        <GitHubStarWidget starsCount={displayStarCount} client:load />
+        <GitHubStarWidget starsCount={githubStarsCount} client:load />
       </div>
       <nav aria-labelledby="starlight__on-this-page">
         <h2 id="starlight__on-this-page">{Astro.locals.t('tableOfContents.onThisPage')}</h2>

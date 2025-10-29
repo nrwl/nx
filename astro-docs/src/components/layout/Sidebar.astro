@@ -3,12 +3,9 @@ import MobileMenuFooter from '@astrojs/starlight/components/MobileMenuFooter.ast
 import SidebarPersister from '@astrojs/starlight/components/SidebarPersister.astro'
 import SidebarSublist from './SidebarSublist.astro'
 import { GitHubStarWidget } from '@nx/nx-dev-ui-common';
-import { DEFAULT_STAR_COUNT } from '../../plugins/github-stars.middleware';
 
 const { sidebar } = Astro.locals.starlightRoute
-const githubStarsCount = Astro.locals.githubStarsCount || 0;
-// Use a default value for demo/dev if no count is available
-const displayStarCount = githubStarsCount > 0 ? githubStarsCount : DEFAULT_STAR_COUNT;
+const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
 ---
 
 <div class="sidebar-wrapper" data-testid="sidebar-wrapper">
@@ -16,7 +13,7 @@ const displayStarCount = githubStarsCount > 0 ? githubStarsCount : DEFAULT_STAR_
         <SidebarSublist sublist={sidebar}/>
     </SidebarPersister>
     <div class="github-star-widget-sidebar">
-        <GitHubStarWidget starsCount={displayStarCount} client:load />
+        <GitHubStarWidget starsCount={githubStarsCount} client:load />
     </div>
     <div class="md:sl-hidden">
         <MobileMenuFooter/>
