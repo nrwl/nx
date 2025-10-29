@@ -657,6 +657,33 @@ describe('app', () => {
         const packageJson = readJson(tree, '/package.json');
         expect(packageJson).toMatchObject({
           devDependencies: {
+            'eslint-config-next': '^16.0.1',
+            '@next/eslint-plugin-next': '^16.0.1',
+          },
+        });
+      });
+
+      it('should install eslint-config-next@14 when an existing Next.js 15 project is detected', async () => {
+        tree.write(
+          '/package.json',
+          JSON.stringify({
+            name: '@proj/source',
+            dependencies: {
+              next: '~15.2.4',
+            },
+            devDependencies: {},
+          })
+        );
+
+        const name = uniq();
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+        });
+
+        const packageJson = readJson(tree, '/package.json');
+        expect(packageJson).toMatchObject({
+          devDependencies: {
             'eslint-config-next': '^15.2.4',
             '@next/eslint-plugin-next': '^15.2.4',
           },
