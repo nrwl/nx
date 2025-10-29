@@ -1,6 +1,13 @@
 import { minimatch } from 'minimatch';
 import { existsSync } from 'node:fs';
-import { dirname, join, basename, resolve, relative } from 'node:path';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+} from 'node:path';
 
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
@@ -11,8 +18,8 @@ import { NX_PREFIX } from '../../utils/logger';
 import { output } from '../../utils/output';
 import {
   getMetadataFromPackageJson,
-  PackageJson,
   getTagsFromPackageJson,
+  PackageJson,
   readTargetsFromPackageJson,
 } from '../../utils/package-json';
 import { joinPathFragments } from '../../utils/path';
@@ -54,7 +61,9 @@ export const createNodesV2: CreateNodesV2 = [
     return createNodesFromFiles(
       (packageJsonPath, options, context) => {
         const isInPackageManagerWorkspaces = isInPackageJsonWorkspaces(
-          relative(context.workspaceRoot, packageJsonPath)
+          isAbsolute(packageJsonPath)
+            ? relative(context.workspaceRoot, packageJsonPath)
+            : packageJsonPath
         );
         if (
           !isInPackageManagerWorkspaces &&
@@ -182,7 +191,11 @@ export function buildProjectConfigurationFromPackageJson(
   nxJson: NxJsonConfiguration,
   isInPackageManagerWorkspaces: boolean
 ): ProjectConfiguration & { name: string } {
-  const projectRoot = dirname(relative(workspaceRoot, packageJsonPath))
+  const projectRoot = dirname(
+    isAbsolute(packageJsonPath)
+      ? relative(workspaceRoot, packageJsonPath)
+      : packageJsonPath
+  )
     .split('\\')
     .join('/');
 

@@ -6,9 +6,11 @@ use rayon::prelude::*;
 use tracing::trace;
 
 use crate::native::types::FileData;
+use crate::native::utils::path::join_paths;
 use crate::native::workspace::types::{FileLocation, NxWorkspaceFiles, NxWorkspaceFilesExternals};
 
 pub(super) fn get_files(
+    workspace_root: &PathBuf,
     project_root_map: HashMap<String, String>,
     files: Vec<FileData>,
 ) -> napi::Result<NxWorkspaceFiles> {
@@ -16,7 +18,7 @@ pub(super) fn get_files(
         return Ok(Default::default());
     };
 
-    let root_map = transform_root_map(project_root_map);
+    let root_map = transform_root_map(workspace_root, project_root_map);
 
     trace!(?root_map);
 
@@ -24,17 +26,21 @@ pub(super) fn get_files(
         .par_iter()
         .cloned()
         .map(|file_data| {
-            let file_path = PathBuf::from(&file_data.file);
+            let file_path = join_paths(workspace_root, &file_data.file);
             let mut parent = file_path.parent().unwrap_or_else(|| Path::new("."));
 
             while root_map.get(parent).is_none() && parent != Path::new(".") {
                 parent = parent.parent().unwrap_or_else(|| Path::new("."));
             }
 
-            match root_map.get(parent) {
+            let res = match root_map.get(parent) {
                 Some(project_name) => (FileLocation::Project(project_name.into()), file_data),
                 None => (FileLocation::Global, file_data),
-            }
+            };
+
+            trace!("{file_path:?} {res:?}");
+
+            res
         })
         .collect::<Vec<(FileLocation, FileData)>>();
 
@@ -81,9 +87,17 @@ pub(super) fn get_files(
     })
 }
 
-fn transform_root_map(root_map: HashMap<String, String>) -> hashbrown::HashMap<PathBuf, String> {
+fn transform_root_map(
+    workspace_root: &PathBuf,
+    root_map: HashMap<String, String>,
+) -> hashbrown::HashMap<PathBuf, String> {
     root_map
         .into_iter()
-        .map(|(project_root, project_name)| (PathBuf::from(project_root), project_name))
+        .map(|(project_root, project_name)| {
+            (
+                join_paths(workspace_root, project_root.as_str()),
+                project_name,
+            )
+        })
         .collect()
 }

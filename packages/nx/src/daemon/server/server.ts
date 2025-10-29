@@ -142,7 +142,6 @@ import {
   REGISTER_PROJECT_GRAPH_LISTENER,
 } from '../message-types/register-project-graph-listener';
 import { deserialize, serialize } from 'v8';
-import { readNxJson } from '../../config/nx-json';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;

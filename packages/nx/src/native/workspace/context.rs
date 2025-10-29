@@ -1,3 +1,4 @@
+use crate::native::hasher::hash_file_path;
 use std::collections::{HashMap, HashSet};
 use std::mem;
 use std::ops::Deref;
@@ -15,7 +16,10 @@ use crate::native::workspace::files_hashing::{full_files_hash, selective_files_h
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
-use crate::native::workspace::{types::NxWorkspaceFiles, workspace_files};
+use crate::native::workspace::{
+    additional_project_directories::get_files_in_additional_project_directories,
+    types::NxWorkspaceFiles, workspace_files,
+};
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
 use tracing::{trace, warn};
@@ -217,9 +221,26 @@ impl WorkspaceContext {
     #[napi]
     pub fn get_workspace_files(
         &self,
+        additional_project_directories: Vec<String>,
         project_root_map: HashMap<String, String>,
     ) -> anyhow::Result<NxWorkspaceFiles> {
-        workspace_files::get_files(project_root_map, self.all_file_data())
+        let mut file_data = self.all_file_data();
+
+        // Gather files from additional project directories
+        let additional_files = get_files_in_additional_project_directories(
+            self.workspace_root.clone(),
+            additional_project_directories,
+        );
+
+        file_data.extend(additional_files.into_iter().flatten().map(|file| {
+            let path = file.full_path;
+
+            let hash = hash_file_path(path.clone()).expect("file could not be hashed");
+
+            FileData { file: path, hash }
+        }));
+
+        workspace_files::get_files(&self.workspace_root_path, project_root_map, file_data)
             .map_err(anyhow::Error::from)
     }
 

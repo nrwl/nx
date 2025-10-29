@@ -117,20 +117,6 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
   return res;
 }
 
-export async function retrieveProjectConfigurationPaths(
-  root: string,
-  additionalProjectDirectories: string[],
-  plugins: Array<LoadedNxPlugin>
-): Promise<string[]> {
-  const projectGlobPatterns = getGlobPatternsOfPlugins(plugins);
-  const pluginConfigFiles = await multiGlobWithWorkspaceContext(
-    root,
-    additionalProjectDirectories,
-    projectGlobPatterns
-  );
-  return pluginConfigFiles.flat();
-}
-
 const projectsWithoutPluginCache = new Map<
   string,
   Record<string, ProjectConfiguration>

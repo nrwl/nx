@@ -3,6 +3,7 @@ import { performance } from 'perf_hooks';
 import { workspaceDataDirectoryForWorkspace } from './cache-directory';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { daemonClient } from '../daemon/client/client';
+import { readNxJson } from '../config/nx-json';
 
 let workspaceContext: WorkspaceContext | undefined;
 
@@ -29,7 +30,10 @@ export async function getNxWorkspaceFilesFromContext(
 ) {
   if (!useDaemonProcess || isOnDaemon() || !daemonClient.enabled()) {
     ensureContextAvailable(workspaceRoot);
-    return workspaceContext.getWorkspaceFiles(projectRootMap);
+    return workspaceContext.getWorkspaceFiles(
+      readNxJson(workspaceRoot).additionalProjectDirectories ?? [],
+      projectRootMap
+    );
   }
   return daemonClient.getWorkspaceFiles(projectRootMap);
 }

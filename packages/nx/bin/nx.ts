@@ -21,7 +21,6 @@ import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
-import { readNxJson } from '../src/config/nx-json';
 
 async function main() {
   if (

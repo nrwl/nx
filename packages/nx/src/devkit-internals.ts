@@ -35,6 +35,7 @@ export {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
 } from './project-graph/utils/find-project-for-path';
+export { multiGlobInAdditionalProjectDirectories } from './native';
 export { retrieveProjectConfigurations } from './project-graph/utils/retrieve-workspace-files';
 export { LoadedNxPlugin } from './project-graph/plugins/loaded-nx-plugin';
 export * from './project-graph/error-types';

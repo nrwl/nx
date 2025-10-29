@@ -43,7 +43,7 @@ export declare class FileLock {
 }
 
 export declare class HashPlanInspector {
-  constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>)
+  constructor(workspaceRoot: string, allWorkspaceFiles: ExternalObject<Array<FileData>>, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>)
   inspect(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, string[]>
 }
 
@@ -136,7 +136,7 @@ export declare class Watcher {
 export declare class WorkspaceContext {
   workspaceRoot: string
   constructor(workspaceRoot: string, cacheDir: string)
-  getWorkspaceFiles(projectRootMap: Record<string, string>): NxWorkspaceFiles
+  getWorkspaceFiles(additionalProjectDirectories: Array<string>, projectRootMap: Record<string, string>): NxWorkspaceFiles
   glob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<string>
   /**
    * Performs multiple glob pattern matches against workspace files in parallel

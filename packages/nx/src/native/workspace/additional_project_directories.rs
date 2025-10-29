@@ -1,27 +1,11 @@
-use std::path::{Path, PathBuf, Component};
+use std::path::PathBuf;
 
 use crate::native::glob::glob_files::glob_files;
 use crate::native::types::FileData;
-use crate::native::walker::{nx_walker, NxFile};
+use crate::native::utils::path::join_paths;
+use crate::native::walker::{NxFile, nx_walker};
 use rayon::prelude::*;
 use xxhash_rust::xxh3;
-
-fn join_paths(base: &Path, relative: &str) -> PathBuf {
-    let mut path = base.to_path_buf();
-
-    for component in Path::new(relative).components() {
-        match component {
-            Component::ParentDir => {
-                path.pop();
-            }
-            Component::CurDir => {}
-            Component::Normal(c) => path.push(c),
-            _ => {}
-        }
-    }
-
-    path
-}
 
 pub fn get_files_in_additional_project_directories(
     workspace_root: String,
@@ -45,7 +29,8 @@ pub fn multi_glob_in_additional_project_directories(
     globs: Vec<String>,
     exclude: Option<Vec<String>>,
 ) -> napi::Result<Vec<Vec<String>>> {
-    let files = get_files_in_additional_project_directories(workspace_root, additional_project_directories);
+    let files =
+        get_files_in_additional_project_directories(workspace_root, additional_project_directories);
 
     globs
         .iter()
@@ -59,9 +44,10 @@ pub fn multi_glob_in_additional_project_directories(
                         hash: String::new(),
                     })
                     .collect();
-                let globbed_files: Vec<String> = glob_files(&file_data, vec![glob.clone()], exclude.clone())?
-                    .map(|f| f.file.to_owned())
-                    .collect();
+                let globbed_files: Vec<String> =
+                    glob_files(&file_data, vec![glob.clone()], exclude.clone())?
+                        .map(|f| f.file.to_owned())
+                        .collect();
                 result.extend(globbed_files);
             }
             Ok(result)
@@ -75,7 +61,8 @@ pub fn multi_hash_glob_in_additional_project_directories(
     additional_project_directories: Vec<String>,
     glob_groups: Vec<Vec<String>>,
 ) -> napi::Result<Vec<String>> {
-    let files = get_files_in_additional_project_directories(workspace_root, additional_project_directories);
+    let files =
+        get_files_in_additional_project_directories(workspace_root, additional_project_directories);
 
     glob_groups
         .iter()

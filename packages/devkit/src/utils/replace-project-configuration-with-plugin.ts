@@ -9,8 +9,11 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from 'nx/src/devkit-exports';
-import { findProjectForPath, hashObject } from 'nx/src/devkit-internals';
-import { multiGlobInAdditionalProjectDirectories } from 'nx/src/native';
+import {
+  findProjectForPath,
+  hashObject,
+  multiGlobInAdditionalProjectDirectories,
+} from 'nx/src/devkit-internals';
 
 export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   tree: Tree,
