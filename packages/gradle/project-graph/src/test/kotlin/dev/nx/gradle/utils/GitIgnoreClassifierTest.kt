@@ -118,6 +118,10 @@ class GitIgnoreClassifierTest {
         """
             .trimIndent())
 
+    // Create the directories so they exist
+    File(tempDir, "build").mkdirs()
+    File(tempDir, "dist").mkdirs()
+
     val classifier = GitIgnoreClassifier(tempDir)
 
     // Test root-level directories

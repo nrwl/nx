@@ -112,12 +112,11 @@ fun getInputsForTask(
     val inputs = mutableListOf<Any>()
     val externalDependencies = mutableListOf<String>()
 
-    // Get or create cached classifier for this workspace
     val classifier = gitignoreClassifierCache.getOrPut(workspaceRoot) {
       GitIgnoreClassifier(File(workspaceRoot))
     }
 
-    // Step 1: Collect outputs from dependent tasks (always treated as dependentTasksOutputFiles)
+    // Collect outputs from dependent tasks
     val tasksToProcess = dependsOnTasks ?: getDependsOnTask(task)
     tasksToProcess.forEach { dependentTask ->
       dependentTask.outputs.files.files.forEach { outputFile ->
@@ -128,7 +127,7 @@ fun getInputsForTask(
       }
     }
 
-    // Step 2: Process task's input files
+    // Process each tasks's input files from the tooling API
     task.inputs.files.forEach { inputFile ->
       val relativePath = replaceRootInPath(inputFile.path, projectRoot, workspaceRoot)
 

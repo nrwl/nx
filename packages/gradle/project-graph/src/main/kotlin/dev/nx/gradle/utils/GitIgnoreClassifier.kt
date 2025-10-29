@@ -37,6 +37,29 @@ class GitIgnoreClassifier(
         }
     }
 
+    private fun isPartOfWorkspace(path: File): Boolean {
+      // Use canonicalPath to resolve symlinks and normalize paths
+      val workspaceRootPath = try {
+        workspaceRoot.canonicalPath
+      } catch (e: Exception) {
+        workspaceRoot.absolutePath
+      }
+
+      val filePath = try {
+        path.canonicalPath
+      } catch (e: Exception) {
+        path.absolutePath
+      }
+
+      // Ensure the file path starts with the workspace root and is followed by a separator
+      // or is exactly the workspace root (which we exclude)
+      if (filePath == workspaceRootPath) {
+        return false
+      }
+
+      return filePath.startsWith(workspaceRootPath + File.separator)
+    }
+
     /**
      * Determines if a file path should be ignored according to gitignore rules
      * Works for both existing and non-existent paths by using pattern matching
@@ -46,11 +69,14 @@ class GitIgnoreClassifier(
             return false
         }
 
+        if (!isPartOfWorkspace(path)) {
+          return false
+        }
+
         val relativePath = try {
-            path.relativeTo(workspaceRoot).path
+          path.relativeTo(workspaceRoot).path
         } catch (e: IllegalArgumentException) {
-            // Path is outside workspace
-            return false
+          return false
         }
 
         return try {
