@@ -7,7 +7,7 @@ authors: ['Jeff Cross', 'Victor Savkin']
 tags: [webinar]
 cover_image: /blog/images/2025-10-27/October-2025-Webinar-Card-v2.avif
 time: 1pm ET/5pm UTC
-status: Upcoming
+status: Past - Gated
 registrationUrl: https://go.nx.dev/oct2025-webinar
 ---
 
@@ -21,4 +21,4 @@ The real transformation comes from addressing what happens after tasks run: the 
 
 In this data-driven webinar, we’ll show you how to stop settling for partial optimization and learn how modern CI should work—and how Nx Cloud makes it happen.
 
-{% call-to-action title="Register today!" url="https://go.nx.dev/oct2025-webinar" description="Save your spot" /%}
+{% call-to-action title="Download the recording" url="https://go.nx.dev/oct2025-webinar" description="Sign up to gain access" /%}
