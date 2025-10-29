@@ -6,17 +6,17 @@ import { GitHubStarWidget } from '@nx/nx-dev-ui-common';
 
 const { sidebar } = Astro.locals.starlightRoute
 const githubStarsCount = (Astro.locals as any).githubStarsCount || 0;
+// Use a default value for demo/dev if no count is available
+const displayStarCount = githubStarsCount > 0 ? githubStarsCount : 23000;
 ---
 
 <div class="sidebar-wrapper" data-testid="sidebar-wrapper">
     <SidebarPersister>
         <SidebarSublist sublist={sidebar}/>
     </SidebarPersister>
-    {githubStarsCount > 0 && (
-        <div class="github-star-widget-sidebar">
-            <GitHubStarWidget starsCount={githubStarsCount} client:load />
-        </div>
-    )}
+    <div class="github-star-widget-sidebar">
+        <GitHubStarWidget starsCount={displayStarCount} client:load />
+    </div>
     <div class="md:sl-hidden">
         <MobileMenuFooter/>
     </div>
