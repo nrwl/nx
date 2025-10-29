@@ -5,6 +5,9 @@ let cachedStarCount: number | null = null;
 let lastFetchTime: number = 0;
 const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
 
+// Default star count for development/demo when GitHub API is unavailable
+export const DEFAULT_STAR_COUNT = 23000;
+
 async function getNxRepoStarCount(): Promise<number> {
   const now = Date.now();
 
