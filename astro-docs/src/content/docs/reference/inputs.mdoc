@@ -30,18 +30,13 @@ Changing source code will often change the behavior of a task. Nx can consider t
 Source file inputs are defined like this:
 
 ```jsonc
-// nx.json
 {
-  "targetDefaults": {
-    "build": {
-      "inputs": [
-        "{projectRoot}/**/*", // All files in a project
-        "{workspaceRoot}/.gitignore", // A specific file in the workspace
-        "{projectRoot}/**/*.ts", // A glob pattern for files
-        "!{projectRoot}/**/*.spec.ts" // Excluding files matching a glob pattern
-      ]
-    }
-  }
+  "inputs": [
+    "{projectRoot}/**/*", // All files in a project
+    "{workspaceRoot}/.gitignore", // A specific file in the workspace
+    "{projectRoot}/**/*.ts", // A glob pattern for files
+    "!{projectRoot}/**/*.spec.ts" // Excluding files matching a glob pattern
+  ]
 }
 ```
 
@@ -180,16 +175,18 @@ You can reference named inputs from specific projects or from project dependenci
     { "input": "production", "projects": "mylib" },
     { "input": "production", "projects": ["mylib", "myapp"] },
 
-    // Reference a named input from all project dependencies
-    { "input": "production", "dependencies": true },
+    // Reference a named input from the current project
+    // Equivalent to: "production"
+    "production",
 
-    // Reference a named input from the current project (equivalent to just using the string)
-    { "input": "production" }
+    // Reference a named input from all project dependencies
+    // Equivalent to: { "input": "production", "dependencies": true }
+    "^production"
   ]
 }
 ```
 
-The `projects` property can be a string or an array of strings specifying which project(s) to reference the named input from. The `dependencies` property, when set to `true`, will reference the named input from all dependencies of the current project.
+The `projects` property can be a string or an array of strings specifying which project(s) to reference the named input from. Using just the string name (e.g., `"production"`) is shorthand for referencing the named input from the current project. Prefixing with `^` (e.g., `"^production"`) references the named input from all project dependencies.
 
 ## Named Inputs
 
