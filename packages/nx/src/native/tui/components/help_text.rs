@@ -63,7 +63,7 @@ impl HelpText {
                 Span::styled("?", key_style),
                 Span::styled("  ", label_style),
                 Span::styled("mode: ", label_style),
-                Span::styled("Ctrl+M", key_style),
+                Span::styled("F11", key_style),
             ];
             f.render_widget(
                 Paragraph::new(Line::from(hint)).alignment(if self.align_left {
@@ -98,7 +98,7 @@ impl HelpText {
                 Span::styled("<enter>", key_style),
                 Span::styled("  ", label_style),
                 Span::styled("mode: ", label_style),
-                Span::styled("Ctrl+M", key_style),
+                Span::styled("F11", key_style),
             ];
 
             f.render_widget(

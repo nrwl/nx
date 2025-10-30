@@ -365,12 +365,10 @@ impl AppLifeCycle {
                 if let Some(event) = tui.next().await {
                     // Check for mode switch hotkey FIRST (before app handles it)
                     if let tui::Event::Key(key) = &event {
-                        use crossterm::event::{KeyCode, KeyModifiers};
+                        use crossterm::event::KeyCode;
 
-                        if key.code == KeyCode::Char('m')
-                            && key.modifiers.contains(KeyModifiers::CONTROL)
-                        {
-                            // User pressed Ctrl+M - switch modes
+                        if key.code == KeyCode::F(11) {
+                            // User pressed F11 - switch modes
                             debug!("🔄 Mode switch requested");
 
                             // Determine new mode
