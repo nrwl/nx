@@ -1,7 +1,6 @@
 import {
   CreateDependencies,
   DependencyType,
-  ProjectConfiguration,
   RawProjectGraphDependency,
 } from '@nx/devkit';
 
@@ -10,24 +9,15 @@ import {
   readCachedAnalysisResult,
   isAnalysisErrorResult,
 } from '../analyzer/analyzer-client';
-
-function createProjectRootMappings(
-  projects: Record<string, ProjectConfiguration>
-): Record<string, string> {
-  const rootMap: Record<string, string> = {};
-  for (const [, project] of Object.entries(projects)) {
-    if (project.root && project.name) {
-      rootMap[project.root] = project.name;
-    }
-  }
-  return rootMap;
-}
+import { createProjectRootMappingsFromProjectConfigurations } from '@nx/devkit/internal';
 
 export const createDependencies: CreateDependencies<
   DotNetPluginOptions
 > = async (_, ctx) => {
   const dependencies: RawProjectGraphDependency[] = [];
-  const rootMap = createProjectRootMappings(ctx.projects);
+  const rootMap = createProjectRootMappingsFromProjectConfigurations(
+    ctx.projects
+  );
 
   // Read the cached analysis result populated by createNodes
   // createNodes always runs before createDependencies, so the cache should be populated
@@ -47,13 +37,13 @@ export const createDependencies: CreateDependencies<
   for (const [sourceRoot, referencedRoots] of Object.entries(
     referencesByRoot
   )) {
-    const sourceName = rootMap[sourceRoot];
+    const sourceName = rootMap.get(sourceRoot);
     if (!sourceName) {
       continue;
     }
 
     for (const targetRoot of referencedRoots.refs) {
-      const targetName = rootMap[targetRoot];
+      const targetName = rootMap.get(targetRoot);
       if (targetName) {
         dependencies.push({
           source: sourceName,
