@@ -236,19 +236,24 @@ impl Tui {
         // Step 1: Stop the event loop
         self.stop()?;
 
-        // Step 2: Exit current mode cleanly
-        if crossterm::terminal::is_raw_mode_enabled()? {
-            self.flush()?;
+        // Step 2: Flush current terminal state
+        self.flush()?;
 
-            // Leave alternate screen if we're currently in it (full-screen mode)
-            // For inline mode, we never entered alternate screen
-            execute!(std::io::stderr(), LeaveAlternateScreen, cursor::Show)?;
-
-            // Exit raw mode to reset terminal state
-            crossterm::terminal::disable_raw_mode()?;
+        // Step 3: Handle screen mode transitions while staying in raw mode
+        // Raw mode must stay enabled for cursor position queries to work
+        match new_mode {
+            TuiMode::FullScreen => {
+                // Switching TO full-screen: enter alternate screen
+                execute!(std::io::stderr(), EnterAlternateScreen)?;
+            }
+            TuiMode::Inline => {
+                // Switching TO inline: leave alternate screen
+                execute!(std::io::stderr(), LeaveAlternateScreen)?;
+            }
         }
 
-        // Step 3: Create new terminal with appropriate viewport
+        // Step 4: Create new terminal with appropriate viewport
+        // Still in raw mode, so cursor queries work reliably
         let backend = Backend::new(std::io::stderr());
         let terminal = match new_mode {
             TuiMode::FullScreen => {
@@ -258,30 +263,20 @@ impl Tui {
             TuiMode::Inline => {
                 debug!("📱 Creating inline terminal (inline viewport)");
 
-                // Enter raw mode BEFORE creating inline viewport
-                // This is required for cursor position queries
-                crossterm::terminal::enable_raw_mode()?;
-
                 // Use full terminal height for inline viewport
                 let inline_height = crossterm::terminal::size()
                     .map(|(_cols, rows)| rows)
                     .unwrap_or(24);
 
                 let viewport = ratatui::Viewport::Inline(inline_height);
-                let term = ratatui::Terminal::with_options(backend, ratatui::TerminalOptions { viewport })?;
-
-                // Exit raw mode immediately after terminal creation
-                // enter_with_mode will re-enable it and first render will initialize viewport
-                crossterm::terminal::disable_raw_mode()?;
-
-                term
+                ratatui::Terminal::with_options(backend, ratatui::TerminalOptions { viewport })?
             }
         };
 
         self.terminal = terminal;
 
-        // Step 4: Re-enter with new mode (which will handle raw mode and alternate screen)
-        self.enter_with_mode(new_mode)?;
+        // Step 5: Restart event loop (still in raw mode)
+        self.start();
 
         debug!("✅ Switched to {:?} mode", new_mode);
         Ok(())
