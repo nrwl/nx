@@ -171,33 +171,26 @@ impl AppLifeCycle {
         let initiating_tasks = initiating_tasks.into_iter().collect();
         let tasks = tasks.into_iter().collect();
 
-        // Create the appropriate app based on mode
+        // Create shared state first - this is the same regardless of mode
+        let shared_state = Arc::new(Mutex::new(TuiState::new(
+            tasks,
+            initiating_tasks,
+            run_mode,
+            pinned_tasks,
+            rust_tui_config,
+            title_text,
+            task_graph,
+            std::collections::HashMap::new(), // estimated_task_timings - will be set later
+        )));
+
+        // Create the appropriate app based on mode, passing the shared state
         let app = match &tui_mode {
             TuiMode::FullScreen => {
-                let app = App::new(
-                    tasks,
-                    initiating_tasks,
-                    run_mode,
-                    pinned_tasks,
-                    rust_tui_config,
-                    title_text,
-                    task_graph,
-                    tui_mode,
-                )
-                .unwrap();
+                let app = App::with_state(shared_state, tui_mode).unwrap();
                 TuiAppInstance::FullScreen(Arc::new(Mutex::new(app)))
             }
             TuiMode::Inline => {
-                let app = InlineApp::new(
-                    tasks,
-                    initiating_tasks,
-                    run_mode,
-                    pinned_tasks,
-                    rust_tui_config,
-                    title_text,
-                    task_graph,
-                )
-                .unwrap();
+                let app = InlineApp::with_state(shared_state).unwrap();
                 TuiAppInstance::Inline(Arc::new(Mutex::new(app)))
             }
         };
