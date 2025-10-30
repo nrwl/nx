@@ -506,10 +506,13 @@ impl AppLifeCycle {
             }
 
             // Cleanup and exit
+            debug!("🏁 Event loop exited - cleaning up");
             tui.exit().ok();
+            debug!("🏁 TUI exited - calling done callback");
             app.with_app(|tui_app| {
                 tui_app.call_done_callback();
             });
+            debug!("🏁 Done callback called - task complete");
         });
 
         Ok(())
