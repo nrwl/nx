@@ -249,6 +249,10 @@ impl Tui {
             TuiMode::Inline => {
                 // Switching TO inline: leave alternate screen
                 execute!(std::io::stderr(), LeaveAlternateScreen)?;
+
+                // Give terminal emulator time to process screen mode change
+                // before cursor position query. This prevents intermittent timeouts.
+                std::thread::sleep(Duration::from_millis(50));
             }
         }
 
