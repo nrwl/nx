@@ -110,9 +110,11 @@ impl Tui {
                     break;
                   }
                   _ = tick_interval.tick() => {
+                      trace!("⏱️  Sending Tick event");
                       _event_tx.send(Event::Tick).expect("cannot send event");
                   },
                   _ = render_interval.tick() => {
+                      trace!("🎨 Sending Render event");
                       _event_tx.send(Event::Render).expect("cannot send event");
                   },
                   maybe_event = crossterm_event => {
@@ -249,31 +251,58 @@ impl Tui {
             TuiMode::Inline => {
                 // Switching TO inline: leave alternate screen
                 execute!(std::io::stderr(), LeaveAlternateScreen)?;
-
-                // Give terminal emulator time to process screen mode change
-                // before cursor position query. This prevents intermittent timeouts.
-                std::thread::sleep(Duration::from_millis(50));
             }
         }
 
         // Step 4: Create new terminal with appropriate viewport
         // Still in raw mode, so cursor queries work reliably
-        let backend = Backend::new(std::io::stderr());
         let terminal = match new_mode {
             TuiMode::FullScreen => {
                 debug!("📺 Creating full-screen terminal (no viewport)");
+                let backend = Backend::new(std::io::stderr());
                 ratatui::Terminal::new(backend)?
             }
             TuiMode::Inline => {
                 debug!("📱 Creating inline terminal (inline viewport)");
 
-                // Use full terminal height for inline viewport
-                let inline_height = crossterm::terminal::size()
-                    .map(|(_cols, rows)| rows)
-                    .unwrap_or(24);
+                // Retry logic for cursor position query with exponential backoff
+                // Terminal emulators need time to stabilize after leaving alternate screen
+                let delays = [50, 100, 150]; // Try with 50ms, 100ms, 150ms delays
+                let mut last_error = None;
+                let mut terminal = None;
 
-                let viewport = ratatui::Viewport::Inline(inline_height);
-                ratatui::Terminal::with_options(backend, ratatui::TerminalOptions { viewport })?
+                for (attempt, delay_ms) in delays.iter().enumerate() {
+                    if attempt > 0 {
+                        debug!("⏳ Retry attempt {} after {}ms delay", attempt + 1, delay_ms);
+                    }
+
+                    // Wait for terminal to stabilize
+                    std::thread::sleep(Duration::from_millis(*delay_ms));
+
+                    // Try to create inline viewport
+                    let backend = Backend::new(std::io::stderr());
+                    let inline_height = crossterm::terminal::size()
+                        .map(|(_cols, rows)| rows)
+                        .unwrap_or(24);
+
+                    let viewport = ratatui::Viewport::Inline(inline_height);
+                    match ratatui::Terminal::with_options(backend, ratatui::TerminalOptions { viewport }) {
+                        Ok(term) => {
+                            if attempt > 0 {
+                                debug!("✅ Successfully created inline viewport on attempt {}", attempt + 1);
+                            }
+                            terminal = Some(term);
+                            break;
+                        }
+                        Err(e) => {
+                            debug!("❌ Failed to create inline viewport on attempt {}: {}", attempt + 1, e);
+                            last_error = Some(e);
+                        }
+                    }
+                }
+
+                // If all retries failed, return the last error
+                terminal.ok_or_else(|| last_error.unwrap())?
             }
         };
 
