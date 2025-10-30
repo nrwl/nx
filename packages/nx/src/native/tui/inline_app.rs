@@ -235,14 +235,21 @@ impl TuiApp for InlineApp {
 
     fn handle_action(
         &mut self,
-        _tui: &mut tui::Tui,
+        tui: &mut tui::Tui,
         action: Action,
         _action_tx: &UnboundedSender<Action>,
     ) {
         match action {
             Action::Render => {
-                // Rendering will be implemented in the next step
-                // For now, just acknowledge we received it
+                // Render scrollback content above the TUI using insert_before
+                self.render_scrollback_above_tui(tui);
+
+                // Draw the inline TUI layout
+                tui.draw(|f| {
+                    let area = f.area();
+                    self.render_inline_layout(f, area);
+                })
+                .ok();
             }
             Action::Quit => {
                 self.quit_immediately();
@@ -433,6 +440,236 @@ impl TuiApp for InlineApp {
 
     fn get_shared_state(&self) -> Arc<Mutex<TuiState>> {
         self.get_state()
+    }
+}
+
+// === Private Rendering Methods ===
+impl InlineApp {
+    fn render_scrollback_above_tui(&mut self, tui: &mut tui::Tui) {
+        // Increment render counter
+        self.scrollback_render_counter += 1;
+
+        // Only render scrollback every 20th iteration to batch updates for VSCode
+        let should_render_scrollback = self.scrollback_render_counter % 20 == 0;
+
+        if !should_render_scrollback {
+            return;
+        }
+
+        // Get the task to display (selected or first running)
+        let current_task = self.selected_task.clone().or_else(|| self.get_current_running_task());
+
+        if let Some(current_task) = current_task {
+            let state = self.state.lock();
+            if let Some(pty) = state.get_pty_instance(&current_task) {
+                let pty = pty.clone();
+                drop(state);
+
+                // Get last rendered scrollback line count for this task
+                let last_rendered_lines = self
+                    .task_last_rendered_scrollback
+                    .get(&current_task)
+                    .copied()
+                    .unwrap_or(0);
+
+                // Get buffered scrollback content since last render
+                let buffered_scrollback_lines =
+                    pty.get_buffered_scrollback_content_for_inline(last_rendered_lines);
+
+                // Update tracking for next buffered render
+                let current_scrollback_lines = pty.get_scrollback_line_count();
+                self.task_scrollback_lines
+                    .insert(current_task.clone(), current_scrollback_lines);
+
+                // Render buffered scrollback above TUI using terminal.insert_before
+                if !buffered_scrollback_lines.is_empty() {
+                    use ratatui::text::Line;
+                    use ratatui::widgets::Paragraph;
+                    use ratatui::style::Style;
+                    use crate::native::tui::theme::THEME;
+
+                    let height = buffered_scrollback_lines.len() as u16;
+                    let _ = tui.insert_before(height, |buf| {
+                        // Convert buffered scrollback lines to ratatui Lines
+                        let mut lines: Vec<Line> = buffered_scrollback_lines
+                            .iter()
+                            .map(|line| Line::from(line.as_str()))
+                            .collect();
+
+                        // Add a reset line at the end to ensure clean state for TUI below
+                        lines.push(Line::from("\x1b[0m"));
+
+                        // Create a paragraph with the buffered scrollback content + reset
+                        let paragraph =
+                            Paragraph::new(lines).style(Style::default().fg(THEME.secondary_fg));
+
+                        // Render using the Widget trait
+                        use ratatui::widgets::Widget;
+                        paragraph.render(buf.area, buf);
+                    });
+
+                    // Track total lines inserted for cleanup on exit
+                    self.total_inserted_lines += height as u32;
+
+                    // Update last rendered count after successful render
+                    self.task_last_rendered_scrollback
+                        .insert(current_task.clone(), current_scrollback_lines);
+                }
+            }
+        }
+    }
+
+    fn render_inline_layout(&mut self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
+        use ratatui::layout::{Constraint, Direction, Layout};
+
+        // Put terminal content at the top, status/progress at bottom
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Max(f.area().height.saturating_sub(8)), // Terminal output at top
+                Constraint::Length(4),                              // Status bar
+                Constraint::Length(4),                              // Progress bar
+            ])
+            .split(area);
+
+        // Render main content section (terminal at top)
+        self.render_inline_main_content(f, chunks[0]);
+
+        // Render status section below
+        self.render_inline_status(f, chunks[1]);
+
+        // Render progress section at bottom
+        self.render_inline_progress(f, chunks[2]);
+    }
+
+    fn render_inline_status(&self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
+        use ratatui::layout::{Constraint, Direction, Layout};
+        use ratatui::widgets::{Block, Borders, Paragraph};
+        use ratatui::style::Style;
+        use crate::native::tui::theme::THEME;
+
+        let current_task = self.selected_task.clone().or_else(|| self.get_current_running_task());
+        let status_text = if let Some(task_id) = current_task {
+            format!(" Running: {} ", task_id)
+        } else {
+            " Idle ".to_string()
+        };
+
+        let chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Min(20),    // Status text
+                Constraint::Length(30), // Help text
+            ])
+            .split(area);
+
+        let status = Paragraph::new(status_text)
+            .style(Style::default().fg(THEME.primary_fg))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Status ")
+                    .border_style(Style::default().fg(THEME.secondary_fg)),
+            );
+
+        let help = Paragraph::new(" Press 'q', Ctrl+C, or ESC to exit ")
+            .style(Style::default().fg(THEME.warning))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Help ")
+                    .border_style(Style::default().fg(THEME.secondary_fg)),
+            );
+
+        f.render_widget(status, chunks[0]);
+        f.render_widget(help, chunks[1]);
+    }
+
+    fn render_inline_progress(&self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
+        use ratatui::widgets::{Block, Borders, Gauge};
+        use ratatui::style::Style;
+        use crate::native::tui::theme::THEME;
+
+        let completed_count = self.get_completed_task_count();
+        let state = self.state.lock();
+        let total_count = state.get_task_status_map().len();
+        drop(state);
+
+        let progress = if total_count > 0 {
+            (completed_count as f64 / total_count as f64) * 100.0
+        } else {
+            0.0
+        };
+
+        let gauge = Gauge::default()
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Progress ")
+                    .border_style(Style::default().fg(THEME.secondary_fg)),
+            )
+            .gauge_style(Style::default().fg(THEME.success))
+            .percent(progress as u16)
+            .label(format!("{}/{} tasks", completed_count, total_count));
+
+        f.render_widget(gauge, area);
+    }
+
+    fn render_inline_main_content(&mut self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
+        // Show selected task output if available, otherwise first running task
+        let current_task = self.selected_task.clone().or_else(|| self.get_current_running_task());
+
+        if let Some(current_task) = current_task {
+            let state = self.state.lock();
+            if let Some(pty) = state.get_pty_instance(&current_task) {
+                let pty = pty.clone();
+                drop(state);
+                self.render_inline_task_output(f, area, &pty);
+                return;
+            }
+        }
+
+        // Fallback: show a message indicating no task is running
+        use ratatui::widgets::{Block, Borders, Paragraph};
+        use ratatui::style::Style;
+        use ratatui::layout::Alignment;
+        use crate::native::tui::theme::THEME;
+
+        let message = Paragraph::new(" Waiting for tasks to start... ")
+            .style(Style::default().fg(THEME.secondary_fg))
+            .alignment(Alignment::Center)
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Output ")
+                    .border_style(Style::default().fg(THEME.secondary_fg)),
+            );
+
+        f.render_widget(message, area);
+    }
+
+    fn render_inline_task_output(
+        &mut self,
+        f: &mut ratatui::Frame,
+        area: ratatui::layout::Rect,
+        pty: &Arc<PtyInstance>,
+    ) {
+        use ratatui::widgets::Block;
+        use ratatui::style::Style;
+        use tui_term::widget::PseudoTerminal;
+        use crate::native::tui::theme::THEME;
+
+        // Scrollback is handled separately via terminal.insert_before
+        // Just render the current terminal screen here
+        if let Some(screen) = pty.get_screen() {
+            let block = Block::default()
+                .borders(ratatui::widgets::Borders::NONE)
+                .border_style(Style::default().fg(THEME.primary_fg));
+
+            // Use PseudoTerminal with block
+            let pseudo_term = PseudoTerminal::new(&*screen).block(block);
+            f.render_widget(pseudo_term, area);
+        }
     }
 }
 
