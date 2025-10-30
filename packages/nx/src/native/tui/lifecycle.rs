@@ -14,10 +14,12 @@ use crate::native::{
 
 use crossterm::terminal;
 
+use super::action::Action;
 use super::app::App;
 use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
 use super::inline_app::InlineApp;
+use super::tui;
 use super::tui::Tui;
 use super::tui_app::TuiApp;
 use super::tui_state::TuiState;
@@ -69,7 +71,7 @@ pub enum RunMode {
 }
 
 #[napi]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TuiMode {
     FullScreen,
     Inline,
@@ -343,6 +345,11 @@ impl AppLifeCycle {
 
         // Spawn unified async task (identical for both modes!)
         napi::tokio::spawn(async move {
+            // Make variables mutable for mode switching
+            let mut app = app;
+            let mut tui = tui;
+            let mut tui_mode = tui_mode;
+
             // Set up console messenger (identical for both modes)
             {
                 let connection = NxConsoleMessageConnection::new(&workspace_root).await;
@@ -355,6 +362,68 @@ impl AppLifeCycle {
             loop {
                 // Handle events through TuiApp trait
                 if let Some(event) = tui.next().await {
+                    // Check for mode switch hotkey FIRST (before app handles it)
+                    if let tui::Event::Key(key) = &event {
+                        use crossterm::event::{KeyCode, KeyModifiers};
+
+                        if key.code == KeyCode::Char('m')
+                            && key.modifiers.contains(KeyModifiers::CONTROL)
+                        {
+                            // User pressed Ctrl+M - switch modes
+                            debug!("🔄 Mode switch requested");
+
+                            // Determine new mode
+                            let new_mode = match tui_mode {
+                                TuiMode::FullScreen => TuiMode::Inline,
+                                TuiMode::Inline => TuiMode::FullScreen,
+                            };
+
+                            // Get shared state from current app
+                            let shared_state = app.get_shared_state();
+
+                            // Switch terminal viewport
+                            if let Err(e) = tui.switch_mode(new_mode) {
+                                debug!("Failed to switch terminal mode: {}", e);
+                                continue;
+                            }
+
+                            // Create new app instance with same state
+                            let new_app = match new_mode {
+                                TuiMode::FullScreen => {
+                                    let app_instance = App::with_state(shared_state, new_mode)
+                                        .expect("Failed to create full-screen app");
+                                    TuiAppInstance::FullScreen(Arc::new(Mutex::new(app_instance)))
+                                }
+                                TuiMode::Inline => {
+                                    let app_instance = InlineApp::with_state(shared_state)
+                                        .expect("Failed to create inline app");
+                                    TuiAppInstance::Inline(Arc::new(Mutex::new(app_instance)))
+                                }
+                            };
+
+                            // Initialize new app
+                            new_app.with_app(|tui_app| {
+                                tui_app.register_action_handler(action_tx.clone()).ok();
+                                tui_app
+                                    .init(tui.size().unwrap_or(ratatui::layout::Size::new(80, 24)))
+                                    .ok();
+                            });
+
+                            // Replace app instance
+                            app = new_app;
+                            tui_mode = new_mode;
+
+                            debug!("✅ Switched to {:?} mode", new_mode);
+
+                            // Force a render
+                            action_tx.send(Action::Render).ok();
+
+                            // Don't pass this event to the app
+                            continue;
+                        }
+                    }
+
+                    // Normal event handling
                     let should_quit = app.with_app(|tui_app| {
                         tui_app.handle_event(event, &action_tx).unwrap_or(false)
                     });

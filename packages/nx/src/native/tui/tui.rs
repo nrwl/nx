@@ -215,6 +215,44 @@ impl Tui {
         Ok(())
     }
 
+    /// Switch between full-screen and inline viewport modes
+    ///
+    /// This method handles the terminal state transitions required to switch
+    /// between full-screen (alternate screen) and inline (normal screen) modes.
+    ///
+    /// # Arguments
+    /// * `new_mode` - The TUI mode to switch to
+    ///
+    /// # Returns
+    /// * `Ok(())` if the switch was successful
+    /// * `Err(...)` if there was an error during the terminal state transition
+    pub fn switch_mode(&mut self, new_mode: TuiMode) -> Result<()> {
+        debug!("🔄 Switching terminal mode to {:?}", new_mode);
+
+        match new_mode {
+            TuiMode::FullScreen => {
+                debug!("📺 Entering full-screen mode (alternate screen)");
+                // Enter alternate screen for full-screen rendering
+                execute!(self.terminal.backend_mut(), EnterAlternateScreen)?;
+
+                // Clear screen for full-screen rendering
+                self.terminal.clear()?;
+                debug!("✅ Full-screen mode activated");
+            }
+            TuiMode::Inline => {
+                debug!("📱 Entering inline mode (normal screen)");
+                // Leave alternate screen, return to inline
+                execute!(self.terminal.backend_mut(), LeaveAlternateScreen)?;
+
+                // Clear for inline rendering
+                self.terminal.clear()?;
+                debug!("✅ Inline mode activated");
+            }
+        }
+
+        Ok(())
+    }
+
     pub fn cancel(&self) {
         self.cancellation_token.cancel();
     }
@@ -241,5 +279,102 @@ impl DerefMut for Tui {
 impl Drop for Tui {
     fn drop(&mut self) {
         self.exit().unwrap();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::native::tui::lifecycle::TuiMode;
+
+    #[test]
+    fn test_tui_creation() {
+        let result = Tui::new();
+        assert!(result.is_ok(), "Tui should be created successfully");
+    }
+
+    #[test]
+    fn test_tui_with_viewport() {
+        let viewport = ratatui::Viewport::Inline(10);
+        let result = Tui::new_with_viewport(viewport);
+        assert!(
+            result.is_ok(),
+            "Tui with viewport should be created successfully"
+        );
+    }
+
+    #[test]
+    fn test_tick_rate_setting() {
+        let mut tui = Tui::new().unwrap();
+        let new_rate = 20.0;
+        tui.tick_rate(new_rate);
+        assert_eq!(
+            tui.tick_rate, new_rate,
+            "Tick rate should be updated to {}",
+            new_rate
+        );
+    }
+
+    #[test]
+    fn test_frame_rate_setting() {
+        let mut tui = Tui::new().unwrap();
+        let new_rate = 120.0;
+        tui.frame_rate(new_rate);
+        assert_eq!(
+            tui.frame_rate, new_rate,
+            "Frame rate should be updated to {}",
+            new_rate
+        );
+    }
+
+    #[test]
+    fn test_switch_mode_to_inline() {
+        let mut tui = Tui::new().unwrap();
+        let result = tui.switch_mode(TuiMode::Inline);
+        assert!(
+            result.is_ok(),
+            "Switching to inline mode should succeed: {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_switch_mode_to_fullscreen() {
+        let mut tui = Tui::new().unwrap();
+        let result = tui.switch_mode(TuiMode::FullScreen);
+        assert!(
+            result.is_ok(),
+            "Switching to full-screen mode should succeed: {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_switch_mode_multiple_times() {
+        let mut tui = Tui::new().unwrap();
+
+        // Switch to inline
+        let result = tui.switch_mode(TuiMode::Inline);
+        assert!(
+            result.is_ok(),
+            "First switch to inline should succeed: {:?}",
+            result
+        );
+
+        // Switch to full-screen
+        let result = tui.switch_mode(TuiMode::FullScreen);
+        assert!(
+            result.is_ok(),
+            "Switch to full-screen should succeed: {:?}",
+            result
+        );
+
+        // Switch back to inline
+        let result = tui.switch_mode(TuiMode::Inline);
+        assert!(
+            result.is_ok(),
+            "Second switch to inline should succeed: {:?}",
+            result
+        );
     }
 }
