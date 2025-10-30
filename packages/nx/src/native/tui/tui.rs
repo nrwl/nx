@@ -167,20 +167,26 @@ impl Tui {
     }
 
     pub fn stop(&self) -> Result<()> {
+        debug!("🛑 Stopping TUI event loop");
         self.cancel();
         let mut counter = 0;
         while !self.task.is_finished() {
             std::thread::sleep(Duration::from_millis(1));
             counter += 1;
             if counter > 50 {
+                debug!("⚠️  Event loop not finished after 50ms, aborting task");
                 self.task.abort();
             }
-            if counter > 100 {
-                // This log is hit most of the time, but this condition does not seem to be problematic in practice
-                // TODO: Investigate this moore deeply
-                // log::error!("Failed to abort task in 100 milliseconds for unknown reason");
+            if counter > 500 {
+                // Increased from 100ms to 500ms to give more time
+                debug!("❌ Failed to stop event loop after 500ms - forcing break");
                 break;
             }
+        }
+        if self.task.is_finished() {
+            debug!("✅ Event loop stopped successfully");
+        } else {
+            debug!("⚠️  Event loop may still be running");
         }
         Ok(())
     }

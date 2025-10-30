@@ -2304,7 +2304,11 @@ impl TuiApp for App {
     fn should_quit(&self) -> bool {
         // Check if quit_at is set in shared state
         let state = self.state.lock();
-        state.should_quit()
+        let result = state.should_quit();
+        if result {
+            debug!("⏰ App::should_quit() = true - quit timer expired");
+        }
+        result
     }
 
     fn get_selected_task_name(&self) -> Option<String> {

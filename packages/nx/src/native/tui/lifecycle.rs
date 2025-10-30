@@ -493,6 +493,7 @@ impl AppLifeCycle {
                     // Check if we should quit
                     let should_quit = app.with_app(|tui_app| tui_app.should_quit());
                     if should_quit {
+                        debug!("⏱️  should_quit() returned true - breaking event loop");
                         break;
                     }
                 }
