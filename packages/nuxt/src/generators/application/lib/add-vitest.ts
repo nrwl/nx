@@ -12,11 +12,16 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
       : p.plugin === '@nx/nuxt/plugin'
   );
 
-  const { createOrEditViteConfig, vitestGenerator } = ensurePackage<
-    typeof import('@nx/vite')
-  >('@nx/vite', nxVersion);
+  const { createOrEditViteConfig } = ensurePackage<typeof import('@nx/vite')>(
+    '@nx/vite',
+    nxVersion
+  );
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/vitest')>(
+    '@nx/vitest',
+    nxVersion
+  );
 
-  const vitestTask = await vitestGenerator(
+  const vitestTask = await configurationGenerator(
     tree,
     {
       project: options.projectName,

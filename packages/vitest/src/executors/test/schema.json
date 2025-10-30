@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "cli": "nx",
+  "title": "Vitest executor",
+  "description": "Test using Vitest.",
+  "type": "object",
+  "properties": {
+    "configFile": {
+      "type": "string",
+      "description": "The path to the local vitest config, relative to the workspace root.",
+      "x-completion-type": "file",
+      "x-completion-glob": "@(vitest|vite).config@(.js|.ts)",
+      "aliases": ["config"]
+    },
+    "reportsDirectory": {
+      "type": "string",
+      "description": "Directory to write coverage report to."
+    },
+    "mode": {
+      "type": "string",
+      "description": "Mode for Vite."
+    },
+    "testFiles": {
+      "aliases": ["testFile"],
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "watch": {
+      "description": "Watch files for changes and rerun tests related to changed files.",
+      "type": "boolean"
+    }
+  },
+  "required": [],
+  "examplesFile": "../../../docs/test-examples.md"
+}

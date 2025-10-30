@@ -7,13 +7,16 @@
   "include": [],
   "references": [
     {
+      "path": "../vitest"
+    },
+    {
       "path": "../js"
     },
     {
-      "path": "../nx"
+      "path": "../devkit"
     },
     {
-      "path": "../devkit"
+      "path": "../nx"
     },
     {
       "path": "./tsconfig.lib.json"

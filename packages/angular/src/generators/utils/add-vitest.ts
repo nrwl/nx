@@ -18,12 +18,12 @@ export async function addVitest(
   tree: Tree,
   options: AddVitestOptions
 ): Promise<void> {
-  const { vitestGenerator } = ensurePackage<typeof import('@nx/vite')>(
-    '@nx/vite',
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/vitest')>(
+    '@nx/vitest',
     nxVersion
   );
 
-  await vitestGenerator(tree, {
+  await configurationGenerator(tree, {
     project: options.name,
     uiFramework: 'angular',
     testEnvironment: 'jsdom',
