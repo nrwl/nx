@@ -89,14 +89,16 @@ class NxProjectAnalyzer(
     }.toMutableList()
 
     if (project.parent != null) {
-      dependencies.add(
-        NxDependency(
-          NxDependencyType.Static,
-          coordinatesMap.getValue(projectName),
-          coordinatesMap.getValue("${project.parent.groupId}:${project.parent.artifactId}"),
-          project.file
+      coordinatesMap.get("${project.parent.groupId}:${project.parent.artifactId}")?.let { parentPath ->
+        dependencies.add(
+          NxDependency(
+            NxDependencyType.Static,
+            coordinatesMap.getValue(projectName),
+            parentPath,
+            project.file
+          )
         )
-      )
+      }
     }
 
     val dependenciesJson = dependencies.map { nxDependency ->
