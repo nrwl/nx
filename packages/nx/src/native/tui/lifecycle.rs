@@ -421,8 +421,14 @@ impl AppLifeCycle {
 
                             debug!("✅ Switched to {:?} mode", new_mode);
 
-                            // Force a render (PTY resizing happens in init())
-                            action_tx.send(Action::Render).ok();
+                            // Force an immediate render (PTY resizing happens in init())
+                            // We call handle_action directly rather than sending Action::Render
+                            // because the event loop would block waiting for the next event before
+                            // processing actions, causing the UI to not appear until the user
+                            // presses a key
+                            app.with_app(|tui_app| {
+                                tui_app.handle_action(&mut tui, Action::Render, &action_tx);
+                            });
 
                             // Don't pass this event to the app
                             continue;
