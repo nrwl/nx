@@ -236,16 +236,19 @@ impl Tui {
         // Step 1: Stop the event loop
         self.stop()?;
 
-        // Step 2: Clean up current terminal state but stay in raw mode
-        // We need to stay in raw mode for cursor position queries to work
+        // Step 2: Exit current mode cleanly
         if crossterm::terminal::is_raw_mode_enabled()? {
             self.flush()?;
-            // Only leave alternate screen, don't exit raw mode yet
-            execute!(std::io::stderr(), LeaveAlternateScreen)?;
+
+            // Leave alternate screen if we're currently in it (full-screen mode)
+            // For inline mode, we never entered alternate screen
+            execute!(std::io::stderr(), LeaveAlternateScreen, cursor::Show)?;
+
+            // Exit raw mode to reset terminal state
+            crossterm::terminal::disable_raw_mode()?;
         }
 
         // Step 3: Create new terminal with appropriate viewport
-        // Still in raw mode, so cursor position queries will work
         let backend = Backend::new(std::io::stderr());
         let terminal = match new_mode {
             TuiMode::FullScreen => {
@@ -254,14 +257,25 @@ impl Tui {
             }
             TuiMode::Inline => {
                 debug!("📱 Creating inline terminal (inline viewport)");
-                let viewport = ratatui::Viewport::Inline(10); // Reserve space for inline rendering
-                ratatui::Terminal::with_options(backend, ratatui::TerminalOptions { viewport })?
+
+                // Enter raw mode BEFORE creating inline viewport
+                // This is required for cursor position queries
+                crossterm::terminal::enable_raw_mode()?;
+
+                let viewport = ratatui::Viewport::Inline(10);
+                let term = ratatui::Terminal::with_options(backend, ratatui::TerminalOptions { viewport })?;
+
+                // Exit raw mode immediately after terminal creation
+                // enter_with_mode will re-enable it
+                crossterm::terminal::disable_raw_mode()?;
+
+                term
             }
         };
 
         self.terminal = terminal;
 
-        // Step 4: Re-enter with new mode (which will handle cursor and alternate screen)
+        // Step 4: Re-enter with new mode (which will handle raw mode and alternate screen)
         self.enter_with_mode(new_mode)?;
 
         debug!("✅ Switched to {:?} mode", new_mode);
