@@ -1,1 +1,4 @@
-export { signalToCode } from 'nx/src/devkit-internals';
+export {
+  signalToCode,
+  createProjectRootMappingsFromProjectConfigurations,
+} from 'nx/src/devkit-internals';
