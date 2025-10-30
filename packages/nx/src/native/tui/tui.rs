@@ -263,7 +263,10 @@ impl Tui {
                 crossterm::terminal::enable_raw_mode()?;
 
                 let viewport = ratatui::Viewport::Inline(10);
-                let term = ratatui::Terminal::with_options(backend, ratatui::TerminalOptions { viewport })?;
+                let mut term = ratatui::Terminal::with_options(backend, ratatui::TerminalOptions { viewport })?;
+
+                // Clear the terminal to initialize the viewport position
+                term.clear()?;
 
                 // Exit raw mode immediately after terminal creation
                 // enter_with_mode will re-enable it
