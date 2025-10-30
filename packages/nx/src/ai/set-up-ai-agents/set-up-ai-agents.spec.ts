@@ -28,8 +28,8 @@ describe('setup-ai-agents generator', () => {
     await setupAiAgentsGenerator(tree, options);
 
     const claudeContent = tree.read('CLAUDE.md')?.toString();
-    // The template should include NX Cloud rules when writeNxCloudRules is true
-    expect(claudeContent).toContain('# CI Error Guidelines');
+    // The template should include Nx guidelines
+    expect(claudeContent).toContain('# General Guidelines for working with Nx');
   });
 
   it('should use specified directory', async () => {
