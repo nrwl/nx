@@ -236,14 +236,16 @@ impl Tui {
         // Step 1: Stop the event loop
         self.stop()?;
 
-        // Step 2: Exit raw mode and clean up current terminal
+        // Step 2: Clean up current terminal state but stay in raw mode
+        // We need to stay in raw mode for cursor position queries to work
         if crossterm::terminal::is_raw_mode_enabled()? {
             self.flush()?;
-            execute!(std::io::stderr(), LeaveAlternateScreen, cursor::Show)?;
-            crossterm::terminal::disable_raw_mode()?;
+            // Only leave alternate screen, don't exit raw mode yet
+            execute!(std::io::stderr(), LeaveAlternateScreen)?;
         }
 
         // Step 3: Create new terminal with appropriate viewport
+        // Still in raw mode, so cursor position queries will work
         let backend = Backend::new(std::io::stderr());
         let terminal = match new_mode {
             TuiMode::FullScreen => {
@@ -259,7 +261,7 @@ impl Tui {
 
         self.terminal = terminal;
 
-        // Step 4: Re-enter raw mode with new mode
+        // Step 4: Re-enter with new mode (which will handle cursor and alternate screen)
         self.enter_with_mode(new_mode)?;
 
         debug!("✅ Switched to {:?} mode", new_mode);

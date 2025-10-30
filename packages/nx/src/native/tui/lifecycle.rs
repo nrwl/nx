@@ -384,8 +384,12 @@ impl AppLifeCycle {
 
                             // Switch terminal viewport
                             if let Err(e) = tui.switch_mode(new_mode) {
-                                debug!("Failed to switch terminal mode: {}", e);
-                                continue;
+                                debug!("❌ Failed to switch terminal mode: {}", e);
+                                // Terminal is in a broken state, we need to exit gracefully
+                                app.with_app(|tui_app| {
+                                    tui_app.get_shared_state().lock().quit_immediately();
+                                });
+                                break;
                             }
 
                             // Create new app instance with same state
