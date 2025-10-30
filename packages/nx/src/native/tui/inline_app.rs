@@ -3,9 +3,10 @@ use crossterm::event::{KeyCode, KeyModifiers};
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
+use parking_lot::Mutex;
 use ratatui::layout::Size;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::native::{
@@ -140,14 +141,13 @@ impl InlineApp {
 
     /// Immediately set quit flag in shared state
     fn quit_immediately(&mut self) {
-        if let Ok(mut state) = self.state.lock() {
-            state.quit_immediately();
-        }
+        let mut state = self.state.lock();
+        state.quit_immediately();
     }
 
     /// Get the task ID of the currently running task (if any)
     fn get_current_running_task(&self) -> Option<String> {
-        let state = self.state.lock().ok()?;
+        let state = self.state.lock();
         state
             .get_task_status_map()
             .iter()
@@ -157,9 +157,7 @@ impl InlineApp {
 
     /// Get count of completed tasks (any terminal state)
     fn get_completed_task_count(&self) -> usize {
-        let Ok(state) = self.state.lock() else {
-            return 0;
-        };
+        let state = self.state.lock();
         state
             .get_task_status_map()
             .values()
@@ -245,18 +243,16 @@ impl TuiApp for InlineApp {
             }
             Action::StartCommand(_) => {
                 // Notify console messenger if connected
-                if let Ok(state) = self.state.lock() {
-                    if let Some(messenger) = state.get_console_messenger() {
-                        messenger.start_running_tasks();
-                    }
+                let state = self.state.lock();
+                if let Some(messenger) = state.get_console_messenger() {
+                    messenger.start_running_tasks();
                 }
             }
             Action::EndCommand => {
                 // Handle auto-exit logic here if needed
                 // Call done callback
-                if let Ok(state) = self.state.lock() {
-                    state.call_done_callback();
-                }
+                let state = self.state.lock();
+                state.call_done_callback();
             }
             _ => {} // Ignore other actions
         }
@@ -286,48 +282,43 @@ impl TuiApp for InlineApp {
 
     fn start_command(&mut self, _thread_count: Option<u32>) {
         // Notify console messenger if connected
-        if let Ok(state) = self.state.lock() {
-            if let Some(messenger) = state.get_console_messenger() {
-                messenger.start_running_tasks();
-            }
+        let state = self.state.lock();
+        if let Some(messenger) = state.get_console_messenger() {
+            messenger.start_running_tasks();
         }
     }
 
     fn start_tasks(&mut self, tasks: Vec<Task>) {
-        if let Ok(mut state) = self.state.lock() {
-            for task in &tasks {
-                state.record_task_start(task.id.clone());
-                state.update_task_status(task.id.clone(), TaskStatus::InProgress);
-            }
+        let mut state = self.state.lock();
+        for task in &tasks {
+            state.record_task_start(task.id.clone());
+            state.update_task_status(task.id.clone(), TaskStatus::InProgress);
         }
     }
 
     fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
-        if let Ok(mut state) = self.state.lock() {
-            state.update_task_status(task_id, status);
-        }
+        let mut state = self.state.lock();
+        state.update_task_status(task_id, status);
     }
 
     fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
-        if let Ok(mut state) = self.state.lock() {
-            for result in task_results {
-                state.record_task_end(result.task.id.clone());
-                // Update status based on result (0 = success)
-                let status = if result.code == 0 {
-                    TaskStatus::Success
-                } else {
-                    TaskStatus::Failure
-                };
-                state.update_task_status(result.task.id, status);
-            }
+        let mut state = self.state.lock();
+        for result in task_results {
+            state.record_task_end(result.task.id.clone());
+            // Update status based on result (0 = success)
+            let status = if result.code == 0 {
+                TaskStatus::Success
+            } else {
+                TaskStatus::Failure
+            };
+            state.update_task_status(result.task.id, status);
         }
     }
 
     fn end_command(&mut self) {
         // Call done callback
-        if let Ok(state) = self.state.lock() {
-            state.call_done_callback();
-        }
+        let state = self.state.lock();
+        state.call_done_callback();
     }
 
     // === PTY Registration ===
@@ -347,9 +338,9 @@ impl TuiApp for InlineApp {
         pty.resize(rows, cols).ok();
 
         let pty = Arc::new(pty);
-        if let Ok(mut state) = self.state.lock() {
-            state.register_pty_instance(task_id.clone(), pty);
-        }
+        let mut state = self.state.lock();
+        state.register_pty_instance(task_id.clone(), pty);
+        drop(state);
 
         // Initialize scrollback tracking
         self.task_scrollback_lines.insert(task_id.clone(), 0);
@@ -361,9 +352,9 @@ impl TuiApp for InlineApp {
         let pty = PtyInstance::non_interactive_with_dimensions(rows, cols);
 
         let pty = Arc::new(pty);
-        if let Ok(mut state) = self.state.lock() {
-            state.register_pty_instance(task_id.clone(), pty);
-        }
+        let mut state = self.state.lock();
+        state.register_pty_instance(task_id.clone(), pty);
+        drop(state);
 
         // Initialize scrollback tracking
         self.task_scrollback_lines.insert(task_id.clone(), 0);
@@ -371,14 +362,13 @@ impl TuiApp for InlineApp {
     }
 
     fn print_task_terminal_output(&mut self, task_id: String, output: String) {
-        if let Ok(state) = self.state.lock() {
-            if let Some(pty) = state.get_pty_instance(&task_id) {
-                // Add ANSI escape sequence to hide cursor at the end of output
-                let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
-                // Process output through PTY parser
-                let normalized_output = normalize_newlines(output_with_hidden_cursor.as_bytes());
-                pty.process_output(&normalized_output);
-            }
+        let state = self.state.lock();
+        if let Some(pty) = state.get_pty_instance(&task_id) {
+            // Add ANSI escape sequence to hide cursor at the end of output
+            let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
+            // Process output through PTY parser
+            let normalized_output = normalize_newlines(output_with_hidden_cursor.as_bytes());
+            pty.process_output(&normalized_output);
         }
     }
 
@@ -390,24 +380,21 @@ impl TuiApp for InlineApp {
     // === Callback Management ===
 
     fn set_done_callback(&mut self, callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>) {
-        if let Ok(mut state) = self.state.lock() {
-            state.set_done_callback(callback);
-        }
+        let mut state = self.state.lock();
+        state.set_done_callback(callback);
     }
 
     fn set_forced_shutdown_callback(
         &mut self,
         callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
     ) {
-        if let Ok(mut state) = self.state.lock() {
-            state.set_forced_shutdown_callback(callback);
-        }
+        let mut state = self.state.lock();
+        state.set_forced_shutdown_callback(callback);
     }
 
     fn call_done_callback(&self) {
-        if let Ok(state) = self.state.lock() {
-            state.call_done_callback();
-        }
+        let state = self.state.lock();
+        state.call_done_callback();
     }
 
     // === Misc ===
@@ -418,24 +405,20 @@ impl TuiApp for InlineApp {
     }
 
     fn set_console_messenger(&mut self, messenger: NxConsoleMessageConnection) {
-        if let Ok(mut state) = self.state.lock() {
-            state.set_console_messenger(messenger);
-        }
+        let mut state = self.state.lock();
+        state.set_console_messenger(messenger);
     }
 
     fn set_estimated_task_timings(&mut self, timings: HashMap<String, i64>) {
-        if let Ok(mut state) = self.state.lock() {
-            state.set_estimated_task_timings(timings);
-        }
+        let mut state = self.state.lock();
+        state.set_estimated_task_timings(timings);
     }
 
     // === Quit Check ===
 
     fn should_quit(&self) -> bool {
-        self.state
-            .lock()
-            .map(|state| state.should_quit())
-            .unwrap_or(false)
+        let state = self.state.lock();
+        state.should_quit()
     }
 }
 
@@ -497,7 +480,7 @@ mod tests {
         let app = create_test_inline_app();
 
         // Verify state is initialized
-        let state = app.state.lock().unwrap();
+        let state = app.state.lock();
         assert_eq!(state.tasks().len(), 2);
         assert_eq!(state.title_text(), "Test");
 
@@ -541,7 +524,7 @@ mod tests {
         assert!(Arc::ptr_eq(&app.state, &existing_state));
 
         // Verify state contents are preserved
-        let state = app.state.lock().unwrap();
+        let state = app.state.lock();
         assert_eq!(state.tasks().len(), 1);
         assert_eq!(state.title_text(), "Existing");
     }
@@ -660,7 +643,7 @@ mod tests {
         assert_eq!(app.task_last_rendered_scrollback.get("app1"), Some(&0));
 
         // Verify PTY registered in state
-        let state = app.state.lock().unwrap();
+        let state = app.state.lock();
         assert!(state.get_pty_instance("app1").is_some());
     }
 
@@ -690,7 +673,7 @@ mod tests {
         app.start_tasks(tasks);
 
         // Verify status updated in state
-        let state = app.state.lock().unwrap();
+        let state = app.state.lock();
         assert_eq!(
             state.get_task_status("app1"),
             Some(TaskStatus::InProgress)
@@ -703,7 +686,7 @@ mod tests {
 
         app.update_task_status(String::from("app1"), TaskStatus::Success);
 
-        let state = app.state.lock().unwrap();
+        let state = app.state.lock();
         assert_eq!(state.get_task_status("app1"), Some(TaskStatus::Success));
     }
 
@@ -724,7 +707,7 @@ mod tests {
         app.end_tasks(results);
 
         // Verify timing recorded
-        let state = app.state.lock().unwrap();
+        let state = app.state.lock();
         let (start, end) = state.get_task_timing("app1");
         assert!(start.is_some());
         assert!(end.is_some());
@@ -804,7 +787,7 @@ mod tests {
         let state_ref = app.get_state();
 
         // Verify we can access state
-        let state = state_ref.lock().unwrap();
+        let state = state_ref.lock();
         assert_eq!(state.tasks().len(), 2);
     }
 
@@ -831,7 +814,7 @@ mod tests {
         app.register_running_non_interactive_task(String::from("app1"));
 
         // Should overwrite, not panic
-        let state = app.state.lock().unwrap();
+        let state = app.state.lock();
         assert!(state.get_pty_instance("app1").is_some());
     }
 
@@ -843,7 +826,7 @@ mod tests {
         app.update_task_status(String::from("nonexistent"), TaskStatus::Success);
 
         // Status should be recorded anyway
-        let state = app.state.lock().unwrap();
+        let state = app.state.lock();
         assert_eq!(
             state.get_task_status("nonexistent"),
             Some(TaskStatus::Success)
@@ -929,7 +912,7 @@ mod integration_tests {
         app.end_command();
 
         // Verify final state
-        let state = app.state.lock().unwrap();
+        let state = app.state.lock();
         assert_eq!(state.get_task_status("app1"), Some(TaskStatus::Success));
         assert!(state.get_pty_instance("app1").is_some());
     }
@@ -969,7 +952,7 @@ mod integration_tests {
 
         // Verify visible through app2
         assert!(!app2.should_quit()); // Can access state without issues
-        let state2 = app2.state.lock().unwrap();
+        let state2 = app2.state.lock();
         assert_eq!(state2.get_task_status("shared"), Some(TaskStatus::Success));
     }
 }

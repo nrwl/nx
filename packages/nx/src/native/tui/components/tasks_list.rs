@@ -10,10 +10,9 @@ use ratatui::{
     },
 };
 use serde::{Deserialize, Serialize};
-use std::{
-    any::Any,
-    sync::{Arc, Mutex},
-};
+use std::any::Any;
+use parking_lot::Mutex;
+use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
 use super::help_text::HelpText;
@@ -276,12 +275,12 @@ impl TasksList {
 
     /// Moves the selection to the next task in the list.
     fn next_task(&mut self) {
-        self.selection_manager.lock().unwrap().next();
+        self.selection_manager.lock().next();
     }
 
     /// Moves the selection to the previous task in the list.
     fn previous_task(&mut self) {
-        self.selection_manager.lock().unwrap().previous();
+        self.selection_manager.lock().previous();
     }
 
     /// Scrolls the task list up with momentum support
@@ -292,7 +291,6 @@ impl TasksList {
         let lines = self.scroll_momentum.calculate_momentum(ScrollDirection::Up) as usize;
         self.selection_manager
             .lock()
-            .unwrap()
             .scroll_up(lines.max(1));
     }
 
@@ -306,7 +304,6 @@ impl TasksList {
             .calculate_momentum(ScrollDirection::Down) as usize;
         self.selection_manager
             .lock()
-            .unwrap()
             .scroll_down(lines.max(1));
     }
 
@@ -418,7 +415,7 @@ impl TasksList {
 
         // Only get viewport entries if we know we need them
         let viewport_entries = {
-            let manager = self.selection_manager.lock().unwrap();
+            let manager = self.selection_manager.lock();
             manager.get_viewport_entries()
         };
 
@@ -591,7 +588,7 @@ impl TasksList {
     /// - If no pinned tasks → TrackByName only if spacebar mode (terminal open)
     /// - Otherwise → TrackByPosition
     fn determine_selection_mode(&self) -> SelectionMode {
-        let selection_manager = self.selection_manager.lock().unwrap();
+        let selection_manager = self.selection_manager.lock();
         let selected_task_name = selection_manager.get_selected_task_name();
 
         // EXCEPTION: Terminal pane showing selected task → always track by name
@@ -639,7 +636,6 @@ impl TasksList {
 
         self.selection_manager
             .lock()
-            .unwrap()
             .set_selection_mode(mode);
 
         // Apply filter
@@ -660,7 +656,7 @@ impl TasksList {
 
         // Update entries in selection manager with separator
         let (entries, in_progress_size) = self.create_entries_with_separator(&self.filtered_names);
-        let mut manager = self.selection_manager.lock().unwrap();
+        let mut manager = self.selection_manager.lock();
         manager.update_entries_with_size(entries, in_progress_size);
         // Explicitly scroll to ensure selected task is visible
         manager.ensure_selected_visible();
@@ -706,7 +702,6 @@ impl TasksList {
 
         self.selection_manager
             .lock()
-            .unwrap()
             .set_selection_mode(mode);
 
         // If we're in run one mode, and there are initiating tasks, sort them as highlighted tasks
@@ -741,7 +736,6 @@ impl TasksList {
         let (entries, in_progress_size) = self.create_entries_with_separator(&self.filtered_names);
         self.selection_manager
             .lock()
-            .unwrap()
             .update_entries_with_size(entries, in_progress_size);
     }
 
@@ -940,7 +934,7 @@ impl TasksList {
     /// This should be called after tasks have been sorted to ensure entries are up-to-date.
     /// Returns true if a task was auto-selected, false otherwise.
     fn auto_select_first_in_progress_if_needed(&mut self) -> bool {
-        let mut selection_manager = self.selection_manager.lock().unwrap();
+        let mut selection_manager = self.selection_manager.lock();
 
         // Don't override existing selection
         if selection_manager.get_selected_task_name().is_some() {
@@ -992,7 +986,6 @@ impl TasksList {
 
             self.selection_manager
                 .lock()
-                .unwrap()
                 .handle_task_status_change(
                     task_id,
                     old_in_progress_index,
@@ -1005,7 +998,6 @@ impl TasksList {
         let final_mode = self.determine_selection_mode();
         self.selection_manager
             .lock()
-            .unwrap()
             .set_selection_mode(final_mode);
     }
 
@@ -1020,7 +1012,6 @@ impl TasksList {
             let old_in_progress_index = if old_is_in_progress {
                 self.selection_manager
                     .lock()
-                    .unwrap()
                     .get_index_in_in_progress_section(&task_id)
             } else {
                 None
@@ -1043,7 +1034,6 @@ impl TasksList {
             // Ensure selected task is visible
             self.selection_manager
                 .lock()
-                .unwrap()
                 .ensure_selected_visible();
         }
     }
@@ -1080,7 +1070,6 @@ impl TasksList {
         // Explicitly scroll to ensure selected task is visible after sort
         self.selection_manager
             .lock()
-            .unwrap()
             .ensure_selected_visible();
     }
 
@@ -1146,7 +1135,7 @@ impl TasksList {
     fn will_need_scrollbar(&self, table_height: u16) -> bool {
         let header_and_spacing_rows = 4;
         let dynamic_viewport_height = table_height.saturating_sub(header_and_spacing_rows) as usize;
-        let total_entries = self.selection_manager.lock().unwrap().get_total_entries();
+        let total_entries = self.selection_manager.lock().get_total_entries();
         total_entries > dynamic_viewport_height
     }
 
@@ -1162,7 +1151,6 @@ impl TasksList {
         let visible_entries = self
             .selection_manager
             .lock()
-            .unwrap()
             .get_viewport_entries();
         let selected_style = Style::default()
             .fg(THEME.primary_fg)
@@ -1340,7 +1328,6 @@ impl TasksList {
                     let is_selected = self
                         .selection_manager
                         .lock()
-                        .unwrap()
                         .is_selected(task_name);
 
                     // Calculate absolute position to determine if the task is in the parallel section
@@ -1918,7 +1905,7 @@ impl Component for TasksList {
         // --- 6. Render Table ---
         // Compute scroll metrics once here to reduce lock contention in render_task_table
         let scroll_metrics = {
-            let mut manager = self.selection_manager.lock().unwrap();
+            let mut manager = self.selection_manager.lock();
             manager.update_viewport_and_get_metrics(table_area.height.saturating_sub(4) as usize)
         };
         self.render_task_table(
@@ -2104,7 +2091,6 @@ impl Component for TasksList {
                 // Explicitly scroll to ensure selected task is visible after sort
                 self.selection_manager
                     .lock()
-                    .unwrap()
                     .ensure_selected_visible();
             }
             Action::UpdateTaskStatus(task_name, status) => {

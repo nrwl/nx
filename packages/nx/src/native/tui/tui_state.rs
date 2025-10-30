@@ -607,26 +607,28 @@ mod integration_tests {
 
     #[test]
     fn test_shared_state_across_threads() {
-        use std::sync::{Arc, Mutex};
+        use parking_lot::Mutex;
+        use std::sync::Arc;
 
         let state = Arc::new(Mutex::new(create_test_state()));
 
         let state_clone = state.clone();
         let handle = std::thread::spawn(move || {
-            let mut s = state_clone.lock().unwrap();
+            let mut s = state_clone.lock();
             s.update_task_status(String::from("app1"), TaskStatus::Success);
         });
 
         handle.join().unwrap();
 
         // Verify change is visible
-        let s = state.lock().unwrap();
+        let s = state.lock();
         assert_eq!(s.get_task_status("app1"), Some(TaskStatus::Success));
     }
 
     #[test]
     fn test_cheap_arc_clone() {
-        use std::sync::{Arc, Mutex};
+        use parking_lot::Mutex;
+        use std::sync::Arc;
 
         let state = Arc::new(Mutex::new(create_test_state()));
 

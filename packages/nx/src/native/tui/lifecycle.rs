@@ -1,7 +1,8 @@
 use napi::JsObject;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
-use std::sync::{Arc, Mutex};
+use parking_lot::Mutex;
+use std::sync::Arc;
 use tracing::{debug, trace};
 
 use crate::native::logger::enable_logger;
@@ -106,11 +107,11 @@ impl TuiAppInstance {
     {
         match self {
             TuiAppInstance::FullScreen(app) => {
-                let mut app = app.lock().unwrap();
+                let mut app = app.lock();
                 f(&mut *app)
             }
             TuiAppInstance::Inline(app) => {
-                let mut app = app.lock().unwrap();
+                let mut app = app.lock();
                 f(&mut *app)
             }
         }
@@ -123,8 +124,8 @@ impl TuiAppInstance {
     #[allow(dead_code)] // Will be used in Phase 4
     fn get_shared_state(&self) -> Arc<Mutex<TuiState>> {
         match self {
-            TuiAppInstance::FullScreen(app) => app.lock().unwrap().get_state(),
-            TuiAppInstance::Inline(app) => app.lock().unwrap().get_state(),
+            TuiAppInstance::FullScreen(app) => app.lock().get_state(),
+            TuiAppInstance::Inline(app) => app.lock().get_state(),
         }
     }
 }

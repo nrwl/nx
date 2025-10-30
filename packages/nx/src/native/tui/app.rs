@@ -10,7 +10,8 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Gauge, Paragraph};
 use std::collections::HashMap;
 use std::io;
-use std::sync::{Arc, Mutex};
+use parking_lot::Mutex;
+use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::{debug, trace};
@@ -88,7 +89,7 @@ impl App {
 
         // Get data from shared state to initialize UI components
         let (tasks, initiating_tasks, run_mode, pinned_tasks, title_text, task_count) = {
-            let state_lock = state.lock().unwrap();
+            let state_lock = state.lock();
             (
                 state_lock.tasks().clone(),
                 state_lock.initiating_tasks().clone(),
@@ -184,7 +185,7 @@ impl App {
     pub fn init(&mut self, _area: Size) -> Result<()> {
         // Iterate over the pinned tasks and assign them to the terminal panes (up to the maximum of 2), focusing the first one as well
         let (pinned_tasks, run_mode, task_count) = {
-            let state = self.state.lock().unwrap();
+            let state = self.state.lock();
             (
                 state.pinned_tasks().clone(),
                 state.run_mode(),
@@ -196,7 +197,6 @@ impl App {
             if idx < 2 {
                 self.selection_manager
                     .lock()
-                    .unwrap()
                     .select_task(task.clone());
 
                 if pinned_tasks.len() == 1 && idx == 0 {
@@ -220,7 +220,7 @@ impl App {
     pub fn start_tasks(&mut self, tasks: Vec<Task>) {
         // Update task status map in shared state
         {
-            let mut state = self.state.lock().unwrap();
+            let mut state = self.state.lock();
             for task in &tasks {
                 state.update_task_status(task.id.clone(), TaskStatus::InProgress);
             }
@@ -233,7 +233,6 @@ impl App {
         // Update the task status map in shared state first
         self.state
             .lock()
-            .unwrap()
             .update_task_status(task_id.clone(), status);
 
         // Auto-switch pane to failed dependency when a task becomes skipped
@@ -257,18 +256,18 @@ impl App {
 
     /// Get task status efficiently from shared state HashMap
     pub fn get_task_status(&self, task_id: &str) -> Option<TaskStatus> {
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         state.get_task_status(task_id)
     }
 
     /// Get task continuous flag efficiently from task graph in shared state
     pub fn is_task_continuous(&self, task_id: &str) -> bool {
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         is_task_continuous(state.task_graph(), task_id)
     }
 
     fn should_set_interactive_by_default(&self, task_id: &str) -> bool {
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         matches!(state.run_mode(), RunMode::RunOne)
             && state
                 .get_pty_instance(task_id)
@@ -277,7 +276,7 @@ impl App {
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
         // Check if a PTY instance already exists for this task
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         let has_pty = state.get_pty_instance(&task_id).is_some();
         if let Some(pty) = state.get_pty_instance(&task_id) {
             // Append output to the existing PTY instance to preserve scroll position
@@ -316,7 +315,7 @@ impl App {
 
     // Show countdown popup for the configured duration (making sure the help popup is not open first)
     pub fn end_command(&mut self) {
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         state
             .get_console_messenger()
             .as_ref()
@@ -329,7 +328,7 @@ impl App {
     // Internal method to handle Action::EndCommand
     fn handle_end_command(&mut self) {
         // If the user has interacted with the app or auto-exit is disabled, do nothing
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         let user_has_interacted = state.has_user_interacted();
         let should_exit_automatically = state.tui_config().auto_exit.should_exit_automatically();
         let task_graph_ref = state.task_graph();
@@ -347,7 +346,6 @@ impl App {
             if !self.has_visible_panes() {
                 self.selection_manager
                     .lock()
-                    .unwrap()
                     .select_task(failed_task_names.first().unwrap().clone());
 
                 // Display the task logs but keep focus on the task list to allow the user to navigate the failed tasks
@@ -364,14 +362,13 @@ impl App {
     }
 
     fn quit(&mut self) {
-        self.state.lock().unwrap().quit_immediately();
+        self.state.lock().quit_immediately();
     }
 
     fn begin_exit_countdown(&mut self) {
         let countdown_duration = self
             .state
             .lock()
-            .unwrap()
             .tui_config()
             .auto_exit
             .countdown_seconds();
@@ -392,7 +389,6 @@ impl App {
             self.update_focus(Focus::CountdownPopup);
             self.state
                 .lock()
-                .unwrap()
                 .schedule_quit(std::time::Duration::from_secs(countdown_duration));
         }
     }
@@ -430,7 +426,7 @@ impl App {
     }
 
     pub fn append_task_output(&mut self, task_id: String, output: String) {
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         let pty = state
             .get_pty_instance(&task_id)
             .unwrap_or_else(|| panic!("{} has not been registered yet.", task_id));
@@ -475,7 +471,7 @@ impl App {
                 // the running task, not the app itself
                 if !self.is_interactive_mode() {
                     // Record that the user has interacted with the app
-                    self.state.lock().unwrap().mark_user_interacted();
+                    self.state.lock().mark_user_interacted();
                 }
 
                 // Handle Ctrl+C to quit, unless we're in interactive mode and the focus is on a terminal pane
@@ -484,7 +480,7 @@ impl App {
                     && !(matches!(self.focus, Focus::MultipleOutput(_))
                         && self.is_interactive_mode())
                 {
-                    let mut state = self.state.lock().unwrap();
+                    let mut state = self.state.lock();
                     state
                         .get_console_messenger()
                         .as_ref()
@@ -555,13 +551,13 @@ impl App {
                             KeyCode::Char('q') => {
                                 // Quit immediately
                                 trace!("Confirming shutdown");
-                                self.state.lock().unwrap().quit_immediately();
+                                self.state.lock().quit_immediately();
                                 return Ok(true);
                             }
                             KeyCode::Char('c') if key.modifiers == KeyModifiers::CONTROL => {
                                 // Quit immediately
                                 trace!("Confirming shutdown");
-                                self.state.lock().unwrap().quit_immediately();
+                                self.state.lock().quit_immediately();
                                 return Ok(true);
                             }
                             KeyCode::Up | KeyCode::Char('k') if countdown_popup.is_scrollable() => {
@@ -576,7 +572,7 @@ impl App {
                             }
                             _ => {
                                 countdown_popup.cancel_countdown();
-                                self.state.lock().unwrap().cancel_quit();
+                                self.state.lock().cancel_quit();
                                 self.update_focus(self.previous_focus);
                             }
                         }
@@ -593,7 +589,7 @@ impl App {
                     // Handle Q to trigger countdown or immediate exit, depending on the tasks
                     if !tasks_list.filter_mode && key.code == KeyCode::Char('q') {
                         // Check if all tasks are in a completed state using the task status map
-                        let state = self.state.lock().unwrap();
+                        let state = self.state.lock();
                         let all_tasks_completed = state.get_task_status_map().values().all(|status| {
                             matches!(
                                 status,
@@ -610,13 +606,13 @@ impl App {
 
                         if all_tasks_completed {
                             // If all tasks are done, quit immediately like Ctrl+C
-                            let mut state = self.state.lock().unwrap();
+                            let mut state = self.state.lock();
                             state.set_forced_shutdown(true);
                             state.quit_immediately();
                             drop(state);
                         } else {
                             // Otherwise, start the exit countdown to give the user the chance to change their mind in case of an accidental keypress
-                            self.state.lock().unwrap().set_forced_shutdown(true);
+                            self.state.lock().set_forced_shutdown(true);
                             self.begin_exit_countdown();
                         }
                         return Ok(false);
@@ -861,7 +857,7 @@ impl App {
                 // the running task, not the app itself
                 if !self.is_interactive_mode() {
                     // Record that the user has interacted with the app
-                    self.state.lock().unwrap().mark_user_interacted();
+                    self.state.lock().mark_user_interacted();
                 }
 
                 if matches!(self.focus, Focus::MultipleOutput(_)) {
@@ -918,14 +914,14 @@ impl App {
         }
         match &action {
             Action::StartCommand(_) => {
-                let state = self.state.lock().unwrap();
+                let state = self.state.lock();
                 state
                     .get_console_messenger()
                     .as_ref()
                     .and_then(|c| c.start_running_tasks());
             }
             Action::Tick => {
-                let state = self.state.lock().unwrap();
+                let state = self.state.lock();
                 state.get_console_messenger().as_ref().and_then(|messenger| {
                     self.components
                         .iter()
@@ -938,11 +934,11 @@ impl App {
             }
             // Quit immediately
             Action::Quit => {
-                self.state.lock().unwrap().quit_immediately();
+                self.state.lock().quit_immediately();
             }
             // Cancel quitting
             Action::CancelQuit => {
-                self.state.lock().unwrap().cancel_quit();
+                self.state.lock().cancel_quit();
                 self.update_focus(self.previous_focus);
             }
             Action::Resize(w, h) => {
@@ -1088,7 +1084,6 @@ impl App {
                             let relevant_pane_task: Option<String> = if self.spacebar_mode {
                                 self.selection_manager
                                     .lock()
-                                    .unwrap()
                                     .get_selected_task_name()
                                     .cloned()
                             } else {
@@ -1101,7 +1096,7 @@ impl App {
                     // Calculate minimal view context once for all panes
                     let is_minimal =
                         self.is_task_list_hidden()
-                            && get_task_count(self.state.lock().unwrap().task_graph()) == 1;
+                            && get_task_count(self.state.lock().task_graph()) == 1;
 
                     for (pane_idx, pane_area, relevant_pane_task) in terminal_panes_data {
                         if let Some(task_name) = relevant_pane_task {
@@ -1142,7 +1137,7 @@ impl App {
                 .ok();
             }
             Action::SendConsoleMessage(msg) => {
-                let state = self.state.lock().unwrap();
+                let state = self.state.lock();
                 if let Some(connection) = state.get_console_messenger() {
                     connection.send_terminal_string(msg);
                 } else {
@@ -1167,7 +1162,7 @@ impl App {
         &mut self,
         done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
     ) {
-        self.state.lock().unwrap().set_done_callback(done_callback);
+        self.state.lock().set_done_callback(done_callback);
     }
 
     pub fn set_forced_shutdown_callback(
@@ -1176,12 +1171,11 @@ impl App {
     ) {
         self.state
             .lock()
-            .unwrap()
             .set_forced_shutdown_callback(forced_shutdown_callback);
     }
 
     pub fn call_done_callback(&self) {
-        self.state.lock().unwrap().call_done_callback();
+        self.state.lock().call_done_callback();
     }
 
     pub fn set_cloud_message(&mut self, message: Option<String>) {
@@ -1212,7 +1206,7 @@ impl App {
 
     /// Returns the names of tasks that have failed.
     fn get_failed_task_names(&self) -> Vec<String> {
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         state
             .get_task_status_map()
             .iter()
@@ -1259,7 +1253,6 @@ impl App {
         let task_name = match self
             .selection_manager
             .lock()
-            .unwrap()
             .get_selected_task_name()
         {
             Some(name) => name.clone(),
@@ -1292,7 +1285,6 @@ impl App {
         };
         self.selection_manager
             .lock()
-            .unwrap()
             .set_selection_mode(selection_mode_override.unwrap_or(selection_mode));
 
         if spacebar_mode {
@@ -1441,7 +1433,6 @@ impl App {
         let task_name = match self
             .selection_manager
             .lock()
-            .unwrap()
             .get_selected_task_name()
         {
             Some(name) => name.clone(),
@@ -1535,7 +1526,6 @@ impl App {
             let relevant_pane_task: Option<String> = if self.spacebar_mode {
                 self.selection_manager
                     .lock()
-                    .unwrap()
                     .get_selected_task_name()
                     .cloned()
             } else {
@@ -1665,7 +1655,6 @@ impl App {
         let pty = Arc::new(pty);
         self.state
             .lock()
-            .unwrap()
             .register_pty_instance(task_id.to_string(), pty);
     }
 
@@ -1744,7 +1733,6 @@ impl App {
         );
         self.state
             .lock()
-            .unwrap()
             .set_console_messenger(messenger);
 
         // ALWAYS dispatch ConsoleMessengerAvailable(true) regardless of connection status
@@ -1801,7 +1789,7 @@ impl App {
         } else {
             // Different task or no existing state - create a new one
             // This ensures we get fresh dependency analysis when task becomes SKIPPED
-            let state = self.state.lock().unwrap();
+            let state = self.state.lock();
             let task_graph = state.task_graph();
             let new_state = DependencyViewState::new(
                 task_name.clone(),
@@ -1817,7 +1805,7 @@ impl App {
 
         // No need to update status in DependencyViewState - we pass the full map to the widget
         if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
-            let state = self.state.lock().unwrap();
+            let state = self.state.lock();
             let task_status_map = state.get_task_status_map();
             let task_graph = state.task_graph();
             let dependency_view =
@@ -1840,7 +1828,7 @@ impl App {
             .get_task_status(&task_name)
             .unwrap_or(TaskStatus::NotStarted);
         let task_continuous = self.is_task_continuous(&task_name);
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         let has_pty = state.get_pty_instance(&task_name).is_some();
 
         let is_focused = match self.focus {
@@ -1934,7 +1922,6 @@ impl App {
     pub fn set_estimated_task_timings(&mut self, timings: HashMap<String, i64>) {
         self.state
             .lock()
-            .unwrap()
             .set_estimated_task_timings(timings);
     }
 
@@ -1984,7 +1971,7 @@ impl App {
         self.dependency_view_states[pane_idx] = None;
 
         // Assign the PTY for the new task to this pane if available
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         if let Some(pty_instance) = state.get_pty_instance(&task_id) {
             self.terminal_pane_data[pane_idx].pty = Some(pty_instance.clone());
 
@@ -2000,7 +1987,8 @@ impl App {
         }
 
         // Update the selection manager to prevent conflicts with manual selection
-        if let Ok(mut selection_manager) = self.selection_manager.lock() {
+        {
+            let mut selection_manager = self.selection_manager.lock();
             selection_manager.select_task(task_id);
         }
     }
@@ -2010,7 +1998,7 @@ impl App {
     /// Returns the task name of the first dependency that failed, causing this task to be skipped.
     /// This is used for automatic pane switching to show the root cause of failures.
     fn get_first_failed_dependency(&self, task_name: &str) -> Option<String> {
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         let failed_deps =
             get_failed_dependencies(task_name, state.task_graph(), state.get_task_status_map());
         failed_deps.into_iter().next()
@@ -2078,7 +2066,7 @@ impl App {
 
     fn render_inline_progress(&self, f: &mut ratatui::Frame, area: Rect) {
         let completed_count = self.get_completed_task_count();
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         let total_count = state.get_task_status_map().len();
 
         let progress = if total_count > 0 {
@@ -2105,7 +2093,7 @@ impl App {
         // Show running task output if available, otherwise show task list
         if let Some(current_task) = self.get_current_running_task() {
             // Clone the Arc to avoid borrow issues
-            let state = self.state.lock().unwrap();
+            let state = self.state.lock();
             if let Some(pty) = state.get_pty_instance(&current_task) {
                 drop(state);
                 self.render_inline_task_output(f, area, &current_task, &pty);
@@ -2164,7 +2152,7 @@ impl App {
 
     // Helper methods
     fn get_current_running_task(&self) -> Option<String> {
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         state
             .get_task_status_map()
             .iter()
@@ -2173,7 +2161,7 @@ impl App {
     }
 
     fn get_completed_task_count(&self) -> usize {
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         state
             .get_task_status_map()
             .values()
@@ -2315,7 +2303,7 @@ impl TuiApp for App {
 
     fn should_quit(&self) -> bool {
         // Check if quit_at is set in shared state
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock();
         state.should_quit()
     }
 }
