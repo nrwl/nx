@@ -48,10 +48,14 @@ export async function addVite(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // tests are already configured if bundler is vite
   ) {
-    const { vitestGenerator, createOrEditViteConfig } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
-    const vitestTask = await vitestGenerator(tree, {
+    const { createOrEditViteConfig } = ensurePackage<typeof import('@nx/vite')>(
+      '@nx/vite',
+      nxVersion
+    );
+    const { configurationGenerator } = ensurePackage<
+      typeof import('@nx/vitest')
+    >('@nx/vitest', nxVersion);
+    const vitestTask = await configurationGenerator(tree, {
       uiFramework: 'none',
       project: options.projectName,
       coverageProvider: 'v8',

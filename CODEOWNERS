@@ -76,6 +76,7 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /e2e/rollup/** @nrwl/nx-js-reviewers
 /packages/vite/** @nrwl/nx-js-reviewers
 /e2e/vite/** @nrwl/nx-js-reviewers
+/packages/vitest/** @nrwl/nx-js-reviewers
 
 ## Module Federation
 /packages/module-federation/** @nrwl/nx-js-reviewers

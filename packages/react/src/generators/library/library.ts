@@ -200,10 +200,14 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // tests are already configured if bundler is vite
   ) {
-    const { vitestGenerator, createOrEditViteConfig } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
-    const vitestTask = await vitestGenerator(host, {
+    const { createOrEditViteConfig } = ensurePackage<typeof import('@nx/vite')>(
+      '@nx/vite',
+      nxVersion
+    );
+    const { configurationGenerator } = ensurePackage<
+      typeof import('@nx/vitest')
+    >('@nx/vitest', nxVersion);
+    const vitestTask = await configurationGenerator(host, {
       uiFramework: 'react',
       project: options.name,
       coverageProvider: 'v8',

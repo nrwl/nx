@@ -386,10 +386,14 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    const { vitestGenerator, createOrEditViteConfig } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
-    const vitestTask = await vitestGenerator(host, {
+    const { createOrEditViteConfig } = ensurePackage<typeof import('@nx/vite')>(
+      '@nx/vite',
+      nxVersion
+    );
+    const { configurationGenerator } = ensurePackage<
+      typeof import('@nx/vitest')
+    >('@nx/vitest', nxVersion);
+    const vitestTask = await configurationGenerator(host, {
       uiFramework: 'none',
       project: options.projectName,
       coverageProvider: 'v8',

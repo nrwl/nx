@@ -131,6 +131,7 @@
       "@nx/rsbuild",
       "@nx/storybook",
       "@nx/vite",
+      "@nx/vitest",
       "@nx/vue",
       "@nx/web",
       "@nx/webpack",
