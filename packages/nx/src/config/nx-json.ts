@@ -11,6 +11,7 @@ import type {
   TargetConfiguration,
   TargetDependencyConfig,
 } from './workspace-json-project-json';
+import { getNxRequirePaths } from '../utils/installation-directory';
 
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;
@@ -892,12 +893,8 @@ export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
   if (existsSync(nxJson)) {
     const nxJsonConfiguration = readJsonFile<NxJsonConfiguration>(nxJson);
     if (nxJsonConfiguration.extends) {
-      const paths = [dirname(nxJson)];
-      if (nxJsonConfiguration.installation) {
-        paths.push(join(root, '.nx', 'installation'));
-      }
       const extendedNxJsonPath = require.resolve(nxJsonConfiguration.extends, {
-        paths,
+        paths: getNxRequirePaths(root),
       });
       const baseNxJson = readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
       return {
