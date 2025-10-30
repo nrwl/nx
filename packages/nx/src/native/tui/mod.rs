@@ -3,6 +3,7 @@ pub mod app;
 pub mod components;
 pub mod config;
 pub mod graph_utils;
+pub mod inline_app;
 pub mod lifecycle;
 pub mod pty;
 pub mod scroll_momentum;
@@ -14,5 +15,6 @@ pub mod tui_app;
 pub mod tui_state;
 pub mod utils;
 
+pub use inline_app::InlineApp;
 pub use tui_app::TuiApp;
 pub use tui_state::TuiState;
