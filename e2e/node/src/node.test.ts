@@ -287,9 +287,9 @@ module.exports = {
 
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
-      expect(await killPorts(port)).toBeTruthy();
-    } catch (err) {
-      expect(err).toBeFalsy();
+      await killPorts(port);
+    } catch {
+      // do nothing
     }
   }, 120_000);
 

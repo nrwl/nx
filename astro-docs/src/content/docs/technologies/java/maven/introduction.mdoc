@@ -77,10 +77,16 @@ In any Maven workspace, run the following command to add Nx and the `@nx/maven` 
 nx init
 ```
 
+After initialization, you can view all Maven projects in your workspace:
+
+```shell
+nx show projects
+```
+
 Then, you can run Maven tasks using Nx. For example:
 
 ```shell
-nx build <your maven module>
+nx verify <your maven module>
 ```
 
 ## How @nx/maven Infers Tasks
@@ -106,16 +112,8 @@ The `@nx/maven` is configured in the `plugins` array in `nx.json`.
 ```json
 // nx.json
 {
-  "plugins": [
-    {
-      "plugin": "@nx/maven",
-      "options": {
-        "testTargetName": "test",
-        "buildTargetName": "build"
-      }
-    }
-  ]
+  "plugins": ["@nx/maven"]
 }
 ```
 
-Once a Maven configuration file has been identified, the targets are created with the name you specify under `testTargetName` or `buildTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `test` and `build`.
+Once the plugin has been added, `@nx/maven` will automatically retrieve information about projects from Maven and create targets for each phase, goal, and some additional targets for CI.
