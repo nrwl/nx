@@ -33,6 +33,7 @@ export {
 } from './utils/workspace-context';
 export {
   createProjectRootMappingsFromProjectConfigurations,
+  createProjectRootMappings,
   findProjectForPath,
 } from './project-graph/utils/find-project-for-path';
 export { retrieveProjectConfigurations } from './project-graph/utils/retrieve-workspace-files';

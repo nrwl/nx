@@ -25,6 +25,8 @@ class PathFormatter {
 
     return "{projectRoot}/$relativePath"
   }
+
+  fun normalizeRelativePath(path: String): String = path.takeIf { it.isNotEmpty() } ?: "."
 }
 
 data class DependentTaskOutputs(val path: String, val transitive: Boolean = true)
