@@ -892,14 +892,22 @@ export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
   if (existsSync(nxJson)) {
     const nxJsonConfiguration = readJsonFile<NxJsonConfiguration>(nxJson);
     if (nxJsonConfiguration.extends) {
-      const extendedNxJsonPath = require.resolve(nxJsonConfiguration.extends, {
-        paths: [dirname(nxJson)],
-      });
-      const baseNxJson = readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
-      return {
-        ...baseNxJson,
-        ...nxJsonConfiguration,
-      };
+      try {
+        const extendedNxJsonPath = require.resolve(
+          nxJsonConfiguration.extends,
+          {
+            paths: [dirname(nxJson)],
+          }
+        );
+        const baseNxJson =
+          readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
+        return {
+          ...baseNxJson,
+          ...nxJsonConfiguration,
+        };
+      } catch (e) {
+        return nxJsonConfiguration;
+      }
     } else {
       return nxJsonConfiguration;
     }
