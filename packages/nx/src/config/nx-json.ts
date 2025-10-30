@@ -892,8 +892,12 @@ export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
   if (existsSync(nxJson)) {
     const nxJsonConfiguration = readJsonFile<NxJsonConfiguration>(nxJson);
     if (nxJsonConfiguration.extends) {
+      const paths = [dirname(nxJson)];
+      if (nxJsonConfiguration.installation) {
+        paths.push(join(root, '.nx', 'installation'));
+      }
       const extendedNxJsonPath = require.resolve(nxJsonConfiguration.extends, {
-        paths: [dirname(nxJson)],
+        paths,
       });
       const baseNxJson = readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
       return {
