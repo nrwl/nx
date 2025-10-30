@@ -237,17 +237,14 @@ impl TuiApp for InlineApp {
                 return Ok(true);
             }
             tui::Event::Key(key) => {
-                // Simple quit handling - no complex navigation
+                // Simple quit handling - only Ctrl+C
+                // Note: 'q' is handled at the lifecycle level to switch back to full-screen
                 match key.code {
-                    KeyCode::Char('q') | KeyCode::Esc => {
-                        self.quit_immediately();
-                        return Ok(true);
-                    }
                     KeyCode::Char('c') if key.modifiers == KeyModifiers::CONTROL => {
                         self.quit_immediately();
                         return Ok(true);
                     }
-                    _ => {} // Ignore all other keys
+                    _ => {} // Ignore all other keys (including 'q' and Esc)
                 }
             }
             tui::Event::Render => action_tx.send(Action::Render)?,

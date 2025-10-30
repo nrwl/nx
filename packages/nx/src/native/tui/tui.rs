@@ -46,6 +46,7 @@ pub struct Tui {
     pub event_tx: UnboundedSender<Event>,
     pub frame_rate: f64,
     pub tick_rate: f64,
+    pub current_mode: TuiMode,
 }
 
 impl Tui {
@@ -78,6 +79,7 @@ impl Tui {
             event_tx,
             frame_rate,
             tick_rate,
+            current_mode: TuiMode::FullScreen, // Default to full-screen
         })
     }
 
@@ -211,7 +213,18 @@ impl Tui {
         self.stop()?;
         if crossterm::terminal::is_raw_mode_enabled()? {
             self.flush()?;
-            execute!(std::io::stderr(), LeaveAlternateScreen, cursor::Show)?;
+
+            // Only leave alternate screen if we're in full-screen mode
+            match self.current_mode {
+                TuiMode::FullScreen => {
+                    execute!(std::io::stderr(), LeaveAlternateScreen, cursor::Show)?;
+                }
+                TuiMode::Inline => {
+                    // For inline mode, just show cursor (no alternate screen to leave)
+                    execute!(std::io::stderr(), cursor::Show)?;
+                }
+            }
+
             crossterm::terminal::disable_raw_mode()?;
         }
         Ok(())
@@ -307,6 +320,7 @@ impl Tui {
         };
 
         self.terminal = terminal;
+        self.current_mode = new_mode; // Track current mode
 
         // Step 5: Restart event loop (still in raw mode)
         self.start();

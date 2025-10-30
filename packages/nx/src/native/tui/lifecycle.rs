@@ -367,6 +367,52 @@ impl AppLifeCycle {
                     if let tui::Event::Key(key) = &event {
                         use crossterm::event::KeyCode;
 
+                        // Handle Q key in inline mode - switch back to full-screen instead of quitting
+                        if tui_mode == TuiMode::Inline && key.code == KeyCode::Char('q') {
+                            debug!("🔄 Q pressed in inline mode - switching to full-screen");
+
+                            // Get shared state and selected task from current app
+                            let (shared_state, selected_task) = app.with_app(|tui_app| {
+                                (tui_app.get_shared_state(), tui_app.get_selected_task_name())
+                            });
+
+                            // Switch to full-screen mode
+                            if let Err(e) = tui.switch_mode(TuiMode::FullScreen) {
+                                debug!("❌ Failed to switch terminal mode: {}", e);
+                                app.with_app(|tui_app| {
+                                    tui_app.get_shared_state().lock().quit_immediately();
+                                });
+                                break;
+                            }
+
+                            // Create full-screen app instance
+                            let app_instance = App::with_state(shared_state, TuiMode::FullScreen)
+                                .expect("Failed to create full-screen app");
+                            let new_app = TuiAppInstance::FullScreen(Arc::new(Mutex::new(app_instance)));
+
+                            // Initialize new app
+                            new_app.with_app(|tui_app| {
+                                tui_app.register_action_handler(action_tx.clone()).ok();
+                                tui_app
+                                    .init(tui.size().unwrap_or(ratatui::layout::Size::new(80, 24)))
+                                    .ok();
+                            });
+
+                            // Replace app instance
+                            app = new_app;
+                            tui_mode = TuiMode::FullScreen;
+
+                            debug!("✅ Switched back to full-screen mode");
+
+                            // Force immediate render
+                            app.with_app(|tui_app| {
+                                tui_app.handle_action(&mut tui, Action::Render, &action_tx);
+                            });
+
+                            // Don't pass this event to the app
+                            continue;
+                        }
+
                         if key.code == KeyCode::F(11) {
                             // User pressed F11 - switch modes
                             debug!("🔄 Mode switch requested");
