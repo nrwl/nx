@@ -196,6 +196,31 @@ impl InlineApp {
             (20, 80)
         }
     }
+
+    /// Resize all PTY instances to match current inline dimensions
+    ///
+    /// Called when switching to inline mode via init().
+    /// This ensures PTY output fits the available space, pushing excess content
+    /// into scrollback.
+    fn resize_all_ptys(&mut self) {
+        let (rows, cols) = self.calculate_inline_pty_dimensions();
+
+        let state = self.state.lock();
+
+        // Resize each PTY instance
+        for pty in state.get_pty_instances().values() {
+            // Get current dimensions to avoid unnecessary resizes
+            let (current_rows, current_cols) = pty.get_dimensions();
+
+            // Only resize if dimensions actually changed
+            if current_rows != rows || current_cols != cols {
+                // Clone the PTY instance (cheap - just Arc ref counts)
+                // so we can get mutable access for resize
+                let mut pty_clone = pty.as_ref().clone();
+                let _ = pty_clone.resize(rows, cols);
+            }
+        }
+    }
 }
 
 impl TuiApp for InlineApp {
@@ -267,7 +292,7 @@ impl TuiApp for InlineApp {
                 let state = self.state.lock();
                 state.call_done_callback();
             }
-            _ => {} // Ignore other actions
+            _ => {} // Ignore other actions (including Resize - ratatui doesn't handle it properly for inline viewports)
         }
     }
 
@@ -287,7 +312,9 @@ impl TuiApp for InlineApp {
     // === Initialization ===
 
     fn init(&mut self, _area: Size) -> Result<()> {
-        // No special initialization needed for inline mode
+        // Resize all existing PTYs to inline dimensions
+        // This is critical when switching from full-screen mode
+        self.resize_all_ptys();
         Ok(())
     }
 

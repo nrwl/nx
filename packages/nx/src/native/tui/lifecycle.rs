@@ -421,7 +421,7 @@ impl AppLifeCycle {
 
                             debug!("✅ Switched to {:?} mode", new_mode);
 
-                            // Force a render
+                            // Force a render (PTY resizing happens in init())
                             action_tx.send(Action::Render).ok();
 
                             // Don't pass this event to the app
