@@ -1,8 +1,10 @@
 use color_eyre::eyre::Result;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
+use parking_lot::Mutex;
 use ratatui::layout::Size;
 use std::collections::HashMap;
+use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::native::{
@@ -15,6 +17,7 @@ use super::action::Action;
 use super::components::tasks_list::TaskStatus;
 use super::lifecycle::TuiMode;
 use super::tui;
+use super::tui_state::TuiState;
 
 /// Common trait for both full-screen and inline TUI implementations
 ///
@@ -225,4 +228,16 @@ pub trait TuiApp: Send {
     ///
     /// Returns `true` if the app should exit the event loop.
     fn should_quit(&self) -> bool;
+
+    /// Get the currently selected/focused task name (for mode switching)
+    ///
+    /// Returns the name of the task that should be displayed when switching to inline mode.
+    /// For full-screen mode, this is the selected task from the task list.
+    /// For inline mode, this is the task currently being displayed.
+    fn get_selected_task_name(&self) -> Option<String>;
+
+    /// Get the shared state Arc (for mode switching)
+    ///
+    /// Returns a clone of the Arc<Mutex<TuiState>>, which is cheap (just increments ref count).
+    fn get_shared_state(&self) -> Arc<Mutex<TuiState>>;
 }

@@ -192,7 +192,8 @@ impl AppLifeCycle {
                 TuiAppInstance::FullScreen(Arc::new(Mutex::new(app)))
             }
             TuiMode::Inline => {
-                let app = InlineApp::with_state(shared_state).unwrap();
+                // For initial inline app creation, no task is selected yet
+                let app = InlineApp::with_state(shared_state, None).unwrap();
                 TuiAppInstance::Inline(Arc::new(Mutex::new(app)))
             }
         };
@@ -378,8 +379,10 @@ impl AppLifeCycle {
                                 TuiMode::Inline => TuiMode::FullScreen,
                             };
 
-                            // Get shared state from current app
-                            let shared_state = app.get_shared_state();
+                            // Get shared state and selected task from current app
+                            let (shared_state, selected_task) = app.with_app(|tui_app| {
+                                (tui_app.get_shared_state(), tui_app.get_selected_task_name())
+                            });
 
                             // Switch terminal viewport
                             if let Err(e) = tui.switch_mode(new_mode) {
@@ -395,7 +398,8 @@ impl AppLifeCycle {
                                     TuiAppInstance::FullScreen(Arc::new(Mutex::new(app_instance)))
                                 }
                                 TuiMode::Inline => {
-                                    let app_instance = InlineApp::with_state(shared_state)
+                                    debug!("Creating inline app with selected task: {:?}", selected_task);
+                                    let app_instance = InlineApp::with_state(shared_state, selected_task)
                                         .expect("Failed to create inline app");
                                     TuiAppInstance::Inline(Arc::new(Mutex::new(app_instance)))
                                 }

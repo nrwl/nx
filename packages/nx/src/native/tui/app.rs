@@ -2306,4 +2306,12 @@ impl TuiApp for App {
         let state = self.state.lock();
         state.should_quit()
     }
+
+    fn get_selected_task_name(&self) -> Option<String> {
+        self.selection_manager.lock().get_selected_task_name().cloned()
+    }
+
+    fn get_shared_state(&self) -> Arc<Mutex<TuiState>> {
+        self.get_state()
+    }
 }

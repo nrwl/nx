@@ -52,6 +52,9 @@ pub struct InlineApp {
     // === Inline UI State ===
     /// Channel for sending actions to the event loop
     action_tx: Option<UnboundedSender<Action>>,
+    /// The task whose output should be displayed (required for inline mode)
+    /// This is set during mode switching or defaults to the first running task
+    selected_task: Option<String>,
 
     // === Scrollback Rendering ===
     /// Track scrollback line count per task for incremental rendering
@@ -102,6 +105,7 @@ impl InlineApp {
         Ok(Self {
             state,
             action_tx: None,
+            selected_task: None, // Will auto-select first running task on render
             task_scrollback_lines: HashMap::new(),
             task_last_rendered_scrollback: HashMap::new(),
             scrollback_render_counter: 0,
@@ -119,10 +123,12 @@ impl InlineApp {
     /// # Arguments
     ///
     /// * `state` - Existing shared TuiState from another app instance
-    pub fn with_state(state: Arc<Mutex<TuiState>>) -> Result<Self> {
+    /// * `selected_task` - Optional task to display (from full-screen selection)
+    pub fn with_state(state: Arc<Mutex<TuiState>>, selected_task: Option<String>) -> Result<Self> {
         Ok(Self {
             state,
             action_tx: None,
+            selected_task, // Use the provided selection from mode switch
             task_scrollback_lines: HashMap::new(),
             task_last_rendered_scrollback: HashMap::new(),
             scrollback_render_counter: 0,
@@ -419,6 +425,14 @@ impl TuiApp for InlineApp {
     fn should_quit(&self) -> bool {
         let state = self.state.lock();
         state.should_quit()
+    }
+
+    fn get_selected_task_name(&self) -> Option<String> {
+        self.selected_task.clone()
+    }
+
+    fn get_shared_state(&self) -> Arc<Mutex<TuiState>> {
+        self.get_state()
     }
 }
 
