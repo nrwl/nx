@@ -217,8 +217,12 @@ impl Tui {
 
     /// Switch between full-screen and inline viewport modes
     ///
-    /// This method handles the terminal state transitions required to switch
-    /// between full-screen (alternate screen) and inline (normal screen) modes.
+    /// This method properly recreates the terminal with the correct viewport
+    /// for the new mode. It handles:
+    /// 1. Stopping the event loop
+    /// 2. Exiting raw mode and cleaning up the current terminal
+    /// 3. Creating a new terminal with the appropriate viewport
+    /// 4. Re-entering raw mode with the new mode
     ///
     /// # Arguments
     /// * `new_mode` - The TUI mode to switch to
@@ -229,27 +233,36 @@ impl Tui {
     pub fn switch_mode(&mut self, new_mode: TuiMode) -> Result<()> {
         debug!("🔄 Switching terminal mode to {:?}", new_mode);
 
-        match new_mode {
-            TuiMode::FullScreen => {
-                debug!("📺 Entering full-screen mode (alternate screen)");
-                // Enter alternate screen for full-screen rendering
-                execute!(self.terminal.backend_mut(), EnterAlternateScreen)?;
+        // Step 1: Stop the event loop
+        self.stop()?;
 
-                // Clear screen for full-screen rendering
-                self.terminal.clear()?;
-                debug!("✅ Full-screen mode activated");
-            }
-            TuiMode::Inline => {
-                debug!("📱 Entering inline mode (normal screen)");
-                // Leave alternate screen, return to inline
-                execute!(self.terminal.backend_mut(), LeaveAlternateScreen)?;
-
-                // Clear for inline rendering
-                self.terminal.clear()?;
-                debug!("✅ Inline mode activated");
-            }
+        // Step 2: Exit raw mode and clean up current terminal
+        if crossterm::terminal::is_raw_mode_enabled()? {
+            self.flush()?;
+            execute!(std::io::stderr(), LeaveAlternateScreen, cursor::Show)?;
+            crossterm::terminal::disable_raw_mode()?;
         }
 
+        // Step 3: Create new terminal with appropriate viewport
+        let backend = Backend::new(std::io::stderr());
+        let terminal = match new_mode {
+            TuiMode::FullScreen => {
+                debug!("📺 Creating full-screen terminal (no viewport)");
+                ratatui::Terminal::new(backend)?
+            }
+            TuiMode::Inline => {
+                debug!("📱 Creating inline terminal (inline viewport)");
+                let viewport = ratatui::Viewport::Inline(10); // Reserve space for inline rendering
+                ratatui::Terminal::with_options(backend, ratatui::TerminalOptions { viewport })?
+            }
+        };
+
+        self.terminal = terminal;
+
+        // Step 4: Re-enter raw mode with new mode
+        self.enter_with_mode(new_mode)?;
+
+        debug!("✅ Switched to {:?} mode", new_mode);
         Ok(())
     }
 
