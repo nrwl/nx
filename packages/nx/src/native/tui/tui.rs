@@ -262,7 +262,12 @@ impl Tui {
                 // This is required for cursor position queries
                 crossterm::terminal::enable_raw_mode()?;
 
-                let viewport = ratatui::Viewport::Inline(10);
+                // Use full terminal height for inline viewport
+                let inline_height = crossterm::terminal::size()
+                    .map(|(_cols, rows)| rows)
+                    .unwrap_or(24);
+
+                let viewport = ratatui::Viewport::Inline(inline_height);
                 let mut term = ratatui::Terminal::with_options(backend, ratatui::TerminalOptions { viewport })?;
 
                 // Clear the terminal to initialize the viewport position

@@ -188,7 +188,7 @@ impl InlineApp {
     fn calculate_inline_pty_dimensions(&self) -> (u16, u16) {
         // Get terminal size
         if let Ok((cols, rows)) = crossterm::terminal::size() {
-            // Reserve space for status/progress bars (6 lines)
+            // Reserve space for status/progress bars (6 lines: 3+3 with borders)
             let content_height = rows.saturating_sub(6);
             (content_height, cols)
         } else {
@@ -523,12 +523,13 @@ impl InlineApp {
         use ratatui::layout::{Constraint, Direction, Layout};
 
         // Put terminal content at the top, status/progress at bottom
+        // Minimize UI elements to maximize terminal output space
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Max(f.area().height.saturating_sub(8)), // Terminal output at top
-                Constraint::Length(4),                              // Status bar
-                Constraint::Length(4),                              // Progress bar
+                Constraint::Min(10),     // Terminal output (at least 10 lines, takes remaining space)
+                Constraint::Length(3),   // Status bar (compact: 3 lines with border)
+                Constraint::Length(3),   // Progress bar (compact: 3 lines with border)
             ])
             .split(area);
 
