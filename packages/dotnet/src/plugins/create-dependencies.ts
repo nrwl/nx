@@ -37,13 +37,13 @@ export const createDependencies: CreateDependencies<
   for (const [sourceRoot, referencedRoots] of Object.entries(
     referencesByRoot
   )) {
-    const sourceName = rootMap[sourceRoot];
+    const sourceName = rootMap.get(sourceRoot);
     if (!sourceName) {
       continue;
     }
 
     for (const targetRoot of referencedRoots.refs) {
-      const targetName = rootMap[targetRoot];
+      const targetName = rootMap.get(targetRoot);
       if (targetName) {
         dependencies.push({
           source: sourceName,
