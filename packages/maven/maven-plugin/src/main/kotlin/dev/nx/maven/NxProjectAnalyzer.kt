@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import dev.nx.maven.targets.NxTargetFactory
+import dev.nx.maven.utils.PathFormatter
 import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -18,7 +19,8 @@ class NxProjectAnalyzer(
   private val workspaceRoot: File,
   private val nxTargetFactory: NxTargetFactory,
   private val coordinatesMap: Map<String, String>,
-  private val mavenCommand: String
+  private val mavenCommand: String,
+  private val pathFormatter: PathFormatter,
 ) {
   private val objectMapper = ObjectMapper()
   private val log: Logger = LoggerFactory.getLogger(NxProjectAnalyzer::class.java)
@@ -35,7 +37,7 @@ class NxProjectAnalyzer(
     val pathCalculationStart = System.currentTimeMillis()
     val canonicalWorkspaceRoot = workspaceRoot.canonicalFile
     val canonicalBasedir = project.basedir.canonicalFile
-    val root = canonicalBasedir.relativeTo(canonicalWorkspaceRoot).path
+    val root = pathFormatter.normalizeRelativePath(canonicalBasedir.relativeTo(canonicalWorkspaceRoot).path)
     val projectName = "${project.groupId}:${project.artifactId}"
     val projectType = determineProjectType(project.packaging)
     val pathCalculationTime = System.currentTimeMillis() - pathCalculationStart
@@ -107,7 +109,7 @@ class NxProjectAnalyzer(
       dependency.put("type", nxDependency.type.name.lowercase())
       dependency.put("source", nxDependency.source)
       dependency.put("target", nxDependency.target)
-      dependency.put("sourceFile", nxDependency.sourceFile.canonicalFile.relativeTo(canonicalWorkspaceRoot).path)
+      dependency.put("sourceFile", pathFormatter.normalizeRelativePath(nxDependency.sourceFile.canonicalFile.relativeTo(canonicalWorkspaceRoot).path))
       dependency
     }
 

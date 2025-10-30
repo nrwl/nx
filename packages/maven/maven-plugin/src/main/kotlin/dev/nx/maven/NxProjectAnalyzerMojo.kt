@@ -13,10 +13,7 @@ import org.apache.maven.execution.MavenSession
 import org.apache.maven.lifecycle.DefaultLifecycles
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
-import org.apache.maven.plugins.annotations.Component
-import org.apache.maven.plugins.annotations.Mojo
-import org.apache.maven.plugins.annotations.Parameter
-import org.apache.maven.plugins.annotations.ResolutionScope
+import org.apache.maven.plugins.annotations.*
 import org.apache.maven.project.MavenProject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -120,7 +117,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     val projectStartTime = System.currentTimeMillis()
 
     // Generate coordinates map from all projects
-    val coordinatesMap = generateCoordinatesMap(allProjects);
+    val coordinatesMap = generateCoordinatesMap(pathFormatter, allProjects);
 
     // Process projects in parallel with separate analyzer instances
     val results = allProjects.parallelStream().map { mavenProject ->
@@ -133,7 +130,8 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
           workspaceRoot,
           sharedTargetFactory,
           coordinatesMap,
-          mavenCommand
+          mavenCommand,
+          pathFormatter
         )
 
         // Get Nx config for project
@@ -233,9 +231,10 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
   }
 
   private fun generateCoordinatesMap(
+    pathFormatter: PathFormatter,
     projects: List<MavenProject>
   ): Map<String, String> =
     projects.associate { project ->
-      "${project.groupId}:${project.artifactId}" to project.basedir.canonicalFile.relativeTo(workspaceRoot).path
+      "${project.groupId}:${project.artifactId}" to pathFormatter.normalizeRelativePath(project.basedir.canonicalFile.relativeTo(workspaceRoot).path)
     }
 }
