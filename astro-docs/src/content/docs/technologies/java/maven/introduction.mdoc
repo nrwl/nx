@@ -116,4 +116,4 @@ The `@nx/maven` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-Once a Maven configuration file has been identified, the targets are created with the default names `test` and `build`.
+Once the plugin has been added, `@nx/maven` will automatically retrieve information about projects from Maven and create targets for each phase, goal, and some additional targets for CI.
