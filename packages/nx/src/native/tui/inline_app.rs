@@ -20,7 +20,6 @@ use super::config::TuiConfig;
 use super::lifecycle::{RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
-use super::tui::Tui;
 use super::tui_app::TuiApp;
 use super::tui_state::TuiState;
 use super::utils::normalize_newlines;
