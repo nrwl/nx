@@ -21,10 +21,12 @@ import java.util.concurrent.TimeUnit
 
 /**
  * OutputStream that writes to both a logger and captures output in memory
+ * Flushes lines to logger on newline or when buffer exceeds max line length
  */
 class LoggingOutputStream(
   private val taskId: String,
-  private val log: org.slf4j.Logger
+  private val log: org.slf4j.Logger,
+  private val maxLineLength: Int = 4096
 ) : OutputStream() {
   private val buffer = ByteArrayOutputStream()
   private val lineBuffer = StringBuilder()
@@ -34,18 +36,29 @@ class LoggingOutputStream(
     val c = b.toChar()
 
     when (c) {
-      '\n' -> {
-        if (lineBuffer.isNotEmpty()) {
-          log.info("[$taskId] ${lineBuffer.toString()}")
-          lineBuffer.clear()
-        }
-      }
+      '\n' -> flushLine()
       '\r' -> {
         // Ignore carriage returns
       }
       else -> {
         lineBuffer.append(c)
+        // Flush if line gets too long (prevents unbounded growth)
+        if (lineBuffer.length >= maxLineLength) {
+          flushLine()
+        }
       }
+    }
+  }
+
+  override fun flush() {
+    flushLine()
+    buffer.flush()
+  }
+
+  private fun flushLine() {
+    if (lineBuffer.isNotEmpty()) {
+      log.info("[$taskId] ${lineBuffer.toString()}")
+      lineBuffer.clear()
     }
   }
 
