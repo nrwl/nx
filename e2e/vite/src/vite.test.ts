@@ -25,7 +25,7 @@ describe('@nx/vite/plugin', () => {
 
   afterAll(() => {
     process.env.NX_ADD_PLUGINS = originalEnv;
-    cleanupProject();
+    // cleanupProject();
   });
 
   describe('with react', () => {
@@ -42,11 +42,11 @@ describe('@nx/vite/plugin', () => {
     });
 
     afterAll(() => {
-      cleanupProject();
+      // cleanupProject();
     });
 
     describe('build and test React app', () => {
-      it('should build application', () => {
+      it('debug should build application', () => {
         expect(() => runCLI(`build ${myApp}`)).not.toThrow();
       }, 200_000);
 
@@ -290,7 +290,7 @@ describe('@nx/vite/plugin', () => {
 
     beforeAll(() => {
       proj = newProject({
-        packages: ['@nx/vite', '@nx/react'],
+        packages: ['@nx/vitest', '@nx/react'],
       });
       runCLI(
         `generate @nx/react:app ${reactVitest} --bundler=webpack --unitTestRunner=vitest --e2eTestRunner=none`
@@ -301,14 +301,11 @@ describe('@nx/vite/plugin', () => {
       cleanupProject();
     });
 
-    it('should contain targets build, test and lint', () => {
+    it('should contain targets test', () => {
       const nxJson = readJson('nx.json');
 
-      const vitePlugin = nxJson.plugins.find(
-        (p) => p.plugin === '@nx/vite/plugin'
-      );
+      const vitePlugin = nxJson.plugins.find((p) => p.plugin === '@nx/vite');
       expect(vitePlugin).toBeDefined();
-      expect(vitePlugin.options.buildTargetName).toEqual('build');
       expect(vitePlugin.options.testTargetName).toEqual('test');
     });
 

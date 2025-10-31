@@ -1273,8 +1273,8 @@ describe('app', () => {
       const nxJson = readNxJson(appTree);
       const vitestPlugin = nxJson.plugins.find(
         (p) =>
-          (typeof p === 'string' && p === '@nx/vitest/plugin') ||
-          (typeof p !== 'string' && p.plugin === '@nx/vitest/plugin')
+          (typeof p === 'string' && p === '@nx/vitest') ||
+          (typeof p !== 'string' && p.plugin === '@nx/vitest')
       );
       expect(vitestPlugin).toBeDefined();
     });

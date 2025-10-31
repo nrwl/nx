@@ -41,8 +41,8 @@ export function addOrChangeTestTarget(
 
   hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
-      ? p === '@nx/vitest/plugin'
-      : p.plugin === '@nx/vitest/plugin' || hasPlugin
+      ? p === '@nx/vitest'
+      : p.plugin === '@nx/vitest' || hasPlugin
   );
 
   if (hasPlugin) {

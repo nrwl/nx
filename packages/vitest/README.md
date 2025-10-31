@@ -49,7 +49,7 @@ You can configure the `@nx/vitest` plugin in your `nx.json`:
 {
   "plugins": [
     {
-      "plugin": "@nx/vitest/plugin",
+      "plugin": "@nx/vitest",
       "options": {
         "testTargetName": "test",
         "ciTargetName": "test-ci"

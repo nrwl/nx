@@ -16,7 +16,7 @@ Vitest functionality has been split from `@nx/vite` into a standalone `@nx/vites
 
 ### Plugins
 
-- `@nx/vite/plugin` (for vitest) → `@nx/vitest/plugin`
+- `@nx/vite/plugin` (for vitest) → `@nx/vitest`
 
 ## Migration Steps
 
@@ -85,7 +85,7 @@ yarn add -D @nx/vitest
 {
   "plugins": [
     {
-      "plugin": "@nx/vitest/plugin",
+      "plugin": "@nx/vitest",
       "options": {
         "testTargetName": "test"
       }

@@ -212,7 +212,7 @@ async function buildVitestTargets(
       for (const relativePath of projectRootRelativeTestPaths) {
         if (relativePath.includes('../')) {
           throw new Error(
-            '@nx/vitest/plugin attempted to run tests outside of the project root. This is not supported and should not happen. Please open an issue at https://github.com/nrwl/nx/issues/new/choose with the following information:\n\n' +
+            '@nx/vitest attempted to run tests outside of the project root. This is not supported and should not happen. Please open an issue at https://github.com/nrwl/nx/issues/new/choose with the following information:\n\n' +
               `\n\n${JSON.stringify(
                 {
                   projectRoot,
@@ -402,7 +402,7 @@ async function getTestPathsRelativeToProjectRoot(
   });
   const relevantTestSpecifications =
     await vitest.getRelevantTestSpecifications();
-  return relevantTestSpecifications.map((ts) =>
-    relative(projectRoot, ts.moduleId)
-  );
+  return relevantTestSpecifications
+    .filter((ts) => ts.moduleId.startsWith(fullProjectRoot))
+    .map((ts) => relative(projectRoot, ts.moduleId));
 }
