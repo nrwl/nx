@@ -170,5 +170,8 @@
       "x86_64-unknown-linux-musl",
       "x86_64-unknown-freebsd"
     ]
+  },
+  "devDependencies": {
+    "why-is-node-running": "^3.2.2"
   }
 }

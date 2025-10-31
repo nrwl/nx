@@ -608,6 +608,18 @@ export async function runCommandForTasks(
     throw e;
   } finally {
     nodeLog('=== runCommand finally block ===');
+
+    // Schedule why-is-node-running to execute after 15 seconds
+    // This will help us understand what's keeping the process alive
+    setTimeout(() => {
+      nodeLog('=== Running why-is-node-running after 15s ===');
+      try {
+        const whyIsNodeRunning = require('why-is-node-running');
+        whyIsNodeRunning();
+      } catch (err) {
+        nodeLog(`Failed to run why-is-node-running: ${err}`);
+      }
+    }, 15000);
   }
 }
 
