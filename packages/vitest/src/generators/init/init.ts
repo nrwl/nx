@@ -12,6 +12,7 @@ import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { InitGeneratorSchema } from './schema';
 import { nxVersion, vitestVersion, viteVersion } from '../../utils/versions';
 import { createNodesV2 } from '../../plugins/plugin';
+import { ignoreVitestTempFiles } from '../../utils/ignore-vitest-temp-files';
 
 export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
   return addDependenciesToPackageJson(
@@ -88,6 +89,7 @@ export async function initGeneratorInternal(
   }
 
   updateNxJsonSettings(tree);
+  await ignoreVitestTempFiles(tree, schema.projectRoot);
 
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {

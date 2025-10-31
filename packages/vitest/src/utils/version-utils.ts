@@ -18,6 +18,7 @@ import {
 
 type VitestDependenciesVersions = {
   vitest: string;
+  vitestUi: string;
   vitestCoverageV8: string;
   vitestCoverageIstanbul: string;
 };
@@ -28,12 +29,14 @@ export async function getVitestDependenciesVersionsToInstall(
   if (await isVitestV1(tree)) {
     return {
       vitest: vitestV1Version,
+      vitestUi: vitestV1Version,
       vitestCoverageV8: vitestV1CoverageV8Version,
       vitestCoverageIstanbul: vitestV1CoverageIstanbulVersion,
     };
   } else if (await isVitestV2(tree)) {
     return {
       vitest: vitestV2Version,
+      vitestUi: vitestV2Version,
       vitestCoverageV8: vitestV2CoverageV8Version,
       vitestCoverageIstanbul: vitestV2CoverageIstanbulVersion,
     };
@@ -41,6 +44,7 @@ export async function getVitestDependenciesVersionsToInstall(
     // Default to latest (v3)
     return {
       vitest: vitestVersion,
+      vitestUi: vitestVersion,
       vitestCoverageV8: vitestCoverageV8Version,
       vitestCoverageIstanbul: vitestCoverageIstanbulVersion,
     };

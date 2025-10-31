@@ -1,28 +1,27 @@
 import { ensurePackage, readJson, stripIndents, type Tree } from '@nx/devkit';
 import { nxVersion } from './versions';
 
-export async function ignoreViteTempFiles(
+export async function ignoreVitestTempFiles(
   tree: Tree,
   projectRoot?: string | undefined
 ): Promise<void> {
-  addViteTempFilesToGitIgnore(tree);
-  await ignoreViteTempFilesInEslintConfig(tree, projectRoot);
+  addVitestTempFilesToGitIgnore(tree);
+  await ignoreVitestTempFilesInEslintConfig(tree, projectRoot);
 }
 
-export function addViteTempFilesToGitIgnore(tree: Tree): void {
+export function addVitestTempFilesToGitIgnore(tree: Tree): void {
   let gitIgnoreContents = tree.exists('.gitignore')
     ? tree.read('.gitignore', 'utf-8')
     : '';
-
-  if (!/^vite\.config\.\*\.timestamp\*$/m.test(gitIgnoreContents)) {
+  if (!/^vitest\.config\.\*\.timestamp\*$/m.test(gitIgnoreContents)) {
     gitIgnoreContents = stripIndents`${gitIgnoreContents}
-      vite.config.*.timestamp*`;
+      vitest.config.*.timestamp*`;
   }
 
   tree.write('.gitignore', gitIgnoreContents);
 }
 
-async function ignoreViteTempFilesInEslintConfig(
+async function ignoreVitestTempFilesInEslintConfig(
   tree: Tree,
   projectRoot: string | undefined
 ): Promise<void> {
@@ -50,7 +49,7 @@ async function ignoreViteTempFilesInEslintConfig(
   // for flat config, we update the root config file
   const directory = isUsingFlatConfig ? '' : projectRoot ?? '';
 
-  addIgnoresToLintConfig(tree, directory, ['**/vite.config.*.timestamp*']);
+  addIgnoresToLintConfig(tree, directory, ['**/vitest.config.*.timestamp*']);
 }
 
 export function isEslintInstalled(tree: Tree): boolean {

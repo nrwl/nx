@@ -1,4 +1,4 @@
-export const nxVersion = '*';
+export const nxVersion = require('../../package.json').version;
 
 export const viteVersion = '^7.0.0';
 export const viteV6Version = '^6.0.0';

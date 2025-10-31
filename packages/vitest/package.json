@@ -46,7 +46,9 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
-    "tslib": "catalog:typescript"
+    "tslib": "catalog:typescript",
+    "semver": "catalog:",
+    "@phenomnomnominal/tsquery": "catalog:typescript"
   },
   "peerDependencies": {
     "vitest": "^1.0.0 || ^2.0.0 || ^3.0.0",

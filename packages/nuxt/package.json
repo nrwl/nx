@@ -46,7 +46,8 @@
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/vue": "workspace:*",
-    "@nx/vite": "workspace:*"
+    "@nx/vite": "workspace:*",
+    "@nx/vitest": "workspace:*"
   },
   "devDependencies": {
     "nx": "workspace:*"
