@@ -10,6 +10,7 @@ import org.apache.maven.cling.executor.embedded.EmbeddedMavenExecutor
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.concurrent.ConcurrentHashMap
@@ -17,6 +18,39 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+
+/**
+ * OutputStream that writes to both a logger and captures output in memory
+ */
+class LoggingOutputStream(
+  private val taskId: String,
+  private val log: org.slf4j.Logger
+) : OutputStream() {
+  private val buffer = ByteArrayOutputStream()
+  private val lineBuffer = StringBuilder()
+
+  override fun write(b: Int) {
+    buffer.write(b)
+    val c = b.toChar()
+
+    when (c) {
+      '\n' -> {
+        if (lineBuffer.isNotEmpty()) {
+          log.info("[$taskId] ${lineBuffer.toString()}")
+          lineBuffer.clear()
+        }
+      }
+      '\r' -> {
+        // Ignore carriage returns
+      }
+      else -> {
+        lineBuffer.append(c)
+      }
+    }
+  }
+
+  fun getOutput(): String = buffer.toString()
+}
 
 /**
  * Batch runner that executes Maven tasks using the Maven 4.x EmbeddedMavenExecutor API.
@@ -178,8 +212,8 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     val goals = buildGoals(mavenBatchTask)
     val arguments = buildArguments(taskId, mavenBatchTask)
 
-    // Capture Maven output
-    val output = ByteArrayOutputStream()
+    // Create output stream that logs to both logger and captures output
+    val output = LoggingOutputStream(taskId, log)
 
     return try {
       log.info("Executing ${goals.joinToString(", ")} for task: $taskId")
@@ -202,12 +236,9 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
       val success = exitCode == 0
       val endTime = System.currentTimeMillis()
-      val outputText = output.toString()
+      val outputText = output.getOutput()
 
       log.info("Task $taskId completed with exit code: $exitCode")
-      if (outputText.isNotEmpty()) {
-        log.info("Task $taskId output:\n$outputText")
-      }
 
       TaskResult(
         taskId = taskId,
