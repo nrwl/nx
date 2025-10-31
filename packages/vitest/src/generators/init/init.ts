@@ -42,9 +42,7 @@ export function updateNxJsonSettings(tree: Tree) {
   }
 
   const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/vitest/plugin'
-      : p.plugin === '@nx/vitest/plugin'
+    typeof p === 'string' ? p === '@nx/vitest' : p.plugin === '@nx/vitest'
   );
 
   if (!hasPlugin) {
@@ -78,7 +76,7 @@ export async function initGeneratorInternal(
     await addPlugin(
       tree,
       await createProjectGraphAsync(),
-      '@nx/vitest/plugin',
+      '@nx/vitest',
       createNodesV2,
       {
         testTargetName: ['test', 'vitest:test', 'vitest-test'],

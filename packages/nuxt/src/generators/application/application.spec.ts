@@ -142,7 +142,7 @@ describe('app', () => {
               options: { targetName: 'lint' },
             },
             {
-              plugin: '@nx/vitest/plugin',
+              plugin: '@nx/vitest',
               options: { testTargetName: 'test' },
             },
             {
