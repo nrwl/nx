@@ -315,9 +315,12 @@ impl AppLifeCycle {
 
         // Set panic hook (identical for both modes)
         std::panic::set_hook(Box::new(move |panic_info| {
-            if let Ok(mut t) = Tui::new() {
-                if let Err(r) = t.exit() {
-                    debug!("Unable to exit Terminal: {:?}", r);
+            // Only try to restore terminal if it's still in raw mode
+            if crossterm::terminal::is_raw_mode_enabled().unwrap_or(false) {
+                if let Ok(mut t) = Tui::new() {
+                    if let Err(r) = t.exit() {
+                        debug!("Unable to exit Terminal: {:?}", r);
+                    }
                 }
             }
             better_panic::Settings::auto()
@@ -606,12 +609,19 @@ impl AppLifeCycle {
 
 #[napi]
 pub fn restore_terminal() -> Result<()> {
+    // Check if terminal is already in a clean state
+    // If raw mode is disabled, we don't need to do anything
+    if !crossterm::terminal::is_raw_mode_enabled().unwrap_or(false) {
+        debug!("✅ Terminal already restored (raw mode disabled) - skipping");
+        return Ok(());
+    }
+
+    debug!("🔧 Restoring terminal to clean state");
     // Restore the terminal to a clean state
     if let Ok(mut t) = Tui::new() {
         if let Err(r) = t.exit() {
             debug!("Unable to exit Terminal: {:?}", r);
         }
     }
-    // TODO: Maybe need some additional cleanup here in addition to the tui cleanup performed at the end of the render loop?
     Ok(())
 }
