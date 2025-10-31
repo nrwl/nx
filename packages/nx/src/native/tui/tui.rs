@@ -266,8 +266,19 @@ impl Tui {
     pub fn switch_mode(&mut self, new_mode: TuiMode) -> Result<()> {
         debug!("🔄 Switching terminal mode to {:?}", new_mode);
 
-        // Step 1: Stop the event loop
+        // Step 1: Stop the event loop and ensure it's fully stopped
+        // We MUST wait for the old task to finish before creating a new one,
+        // otherwise we orphan the background task which prevents clean shutdown
         self.stop()?;
+
+        // Verify the task actually stopped - if not, we cannot safely proceed
+        // because start() would orphan the old task
+        if !self.task.is_finished() {
+            return Err(color_eyre::eyre::eyre!(
+                "Background event task did not stop - cannot switch modes without orphaning task"
+            ));
+        }
+        debug!("✅ Background task stopped, proceeding with mode switch");
 
         // Step 2: Flush current terminal state
         self.flush()?;
