@@ -57,7 +57,6 @@ export type Command = {
 export interface Schema {
   name: string;
   ci: 'github' | 'circleci';
-  packageManager?: null;
   commands?: Command[];
 }
 
