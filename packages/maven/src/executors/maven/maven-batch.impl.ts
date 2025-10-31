@@ -1,13 +1,10 @@
-import { ExecutorContext, TaskGraph, output, workspaceRoot } from '@nx/devkit';
-import { execSync } from 'child_process';
-import { existsSync, readFileSync, mkdirSync } from 'fs';
-import { join, resolve } from 'path';
-import {
-  LARGE_BUFFER,
-  RunCommandsOptions,
-} from 'nx/src/executors/run-commands/run-commands.impl';
-import { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
-import { MavenExecutorSchema } from './schema';
+import {ExecutorContext, output, TaskGraph, workspaceRoot} from '@nx/devkit';
+import {execSync} from 'child_process';
+import {existsSync} from 'fs';
+import {join, resolve} from 'path';
+import {LARGE_BUFFER, RunCommandsOptions,} from 'nx/src/executors/run-commands/run-commands.impl';
+import {BatchResults} from 'nx/src/tasks-runner/batch/batch-messages';
+import {MavenExecutorSchema} from './schema';
 
 /**
  * Get path to the batch runner JAR
@@ -61,8 +58,8 @@ function buildTaskData(
     goals: Array.isArray(options.goals)
       ? options.goals
       : options.goals
-      ? [options.goals]
-      : [],
+        ? [options.goals]
+        : [],
     args: normalizeMavenArgs(options.args),
     project: projectName,
   };
@@ -113,9 +110,7 @@ export default async function mavenBatchExecutor(
     const argsJson = args.join(' ').replaceAll("'", '"');
     const workspaceDataDir = join(workspaceRoot, '.nx');
 
-    const command = `java -jar "${batchRunnerJar}" --workspaceRoot="${workspaceRoot}" --workspaceDataDirectory="${workspaceDataDir}" --tasks='${tasksJson}' --args='${argsJson}'${
-      process.env.NX_VERBOSE_LOGGING === 'true' ? '' : ' --quiet'
-    }`;
+    const command = `java -jar "${batchRunnerJar}" --workspaceRoot="${workspaceRoot}" --workspaceDataDirectory="${workspaceDataDir}" --tasks='${tasksJson}' --args='${argsJson}'`;
 
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.log(`[Maven Batch] Executing: ${command}`);

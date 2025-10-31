@@ -14,7 +14,6 @@ object ArgParser {
         var tasksJson = ""
         var argsJson = "[]"
         var resultsFile = ""
-        var quiet = false
         var verbose = false
 
         var i = 0
@@ -43,9 +42,6 @@ object ArgParser {
                 }
                 args[i].startsWith("--resultsFile=") -> {
                     resultsFile = args[i].substringAfter("=")
-                }
-                args[i] == "--quiet" -> {
-                    quiet = true
                 }
                 args[i] == "--verbose" -> {
                     verbose = true
@@ -115,7 +111,6 @@ object ArgParser {
             tasks = tasksMap,
             args = argsList,
             resultsFile = cleanResultsFile,
-            quiet = quiet,
             verbose = verbose,
             taskGraph = taskGraph
         )

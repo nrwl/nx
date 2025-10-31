@@ -418,9 +418,6 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     if (options.verbose) {
       arguments.add("-X")
     }
-    if (options.quiet) {
-      arguments.add("-q")
-    }
 
     // Module selector (always pass the project)
     val task = options.taskGraph?.tasks?.get(taskId)

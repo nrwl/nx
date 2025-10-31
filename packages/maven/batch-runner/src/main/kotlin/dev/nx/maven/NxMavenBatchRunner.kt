@@ -31,7 +31,7 @@ fun main(args: Array<String>) {
         log.info("🚀 Starting Maven batch execution")
         log.info("   Workspace: ${workspaceRoot.absolutePath}")
         log.info("   Tasks: ${options.tasks.size}")
-        log.info("   Quiet: ${options.quiet}, Verbose: ${options.verbose}")
+        log.info("   Verbose: ${options.verbose}")
 
         // Run batch execution
         val runner = MavenInvokerRunner(workspaceRoot, options)

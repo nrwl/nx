@@ -6,7 +6,6 @@ data class MavenBatchOptions(
     val args: List<String> = emptyList(),
     val resultsFile: String = "",
     val workspaceDataDirectory: String = "",
-    val quiet: Boolean = false,
     val verbose: Boolean = false,
     val taskGraph: TaskGraph? = null
 )
