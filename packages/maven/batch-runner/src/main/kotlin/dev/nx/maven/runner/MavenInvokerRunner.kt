@@ -10,6 +10,7 @@ import org.apache.maven.cling.executor.embedded.EmbeddedMavenExecutor
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
@@ -174,9 +175,8 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     return try {
       log.info("Executing ${goals.joinToString(", ")} for task: $taskId")
 
-      // Get Maven home from environment
-      val mavenHome = System.getenv("MAVEN_HOME")
-        ?: throw IllegalStateException("MAVEN_HOME environment variable is not set")
+      // Resolve Maven home with fallbacks
+      val mavenHome = resolveMavenHome()
 
       // Build ExecutorRequest for EmbeddedMavenExecutor using mavenBuilder factory
       val request = ExecutorRequest.mavenBuilder(Paths.get(mavenHome))
@@ -255,6 +255,88 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     } catch (e: Exception) {
       log.error("Failed to close EmbeddedMavenExecutor: ${e.message}", e)
     }
+  }
+
+  private fun resolveMavenHome(): String {
+    // Strategy 1: Check MAVEN_HOME environment variable
+    val mavenHomeEnv = System.getenv("MAVEN_HOME")
+    if (mavenHomeEnv != null) {
+      val mavenPath = Paths.get(mavenHomeEnv)
+      if (Files.isDirectory(mavenPath)) {
+        log.info("Using MAVEN_HOME: $mavenHomeEnv")
+        return mavenHomeEnv
+      } else {
+        log.warn("MAVEN_HOME points to non-existent directory: $mavenHomeEnv")
+      }
+    }
+
+    // Strategy 2: Check maven.home system property (set by Maven itself)
+    val mavenHomeProp = System.getProperty("maven.home")
+    if (mavenHomeProp != null) {
+      val mavenPath = Paths.get(mavenHomeProp)
+      if (Files.isDirectory(mavenPath)) {
+        log.info("Using maven.home system property: $mavenHomeProp")
+        return mavenHomeProp
+      }
+    }
+
+    // Strategy 3: Try to find mvnw in workspace (check if Maven is available via wrapper)
+    val mvnw = File(workspaceRoot, "mvnw")
+    val mvnwDir = File(workspaceRoot, ".mvn")
+
+    if (mvnw.exists() && mvnwDir.exists()) {
+      log.info("Found mvnw wrapper in workspace - Maven may need to be initialized via wrapper")
+      // mvnw wrapper will download/use Maven, but we still need an installation
+      // Fall through to next strategy
+    }
+
+    // Strategy 4: Check common installation locations
+    val userHome = System.getProperty("user.home")
+    val commonLocations = mutableListOf(
+      "/usr/local/maven",
+      "/opt/maven",
+      "/usr/share/maven",
+      "$userHome/.m2/mvn",
+      "$userHome/.local/share/mise/installs/maven",  // mise version manager
+      System.getenv("M2_HOME")
+    ).filterNotNull().toMutableList()
+
+    // Also check for mise managed Maven installations
+    val miseDir = File(userHome, ".local/share/mise/installs/maven")
+    if (miseDir.exists()) {
+      miseDir.listFiles()?.sortedByDescending { it.name }?.forEach { versionDir ->
+        versionDir.listFiles()?.forEach { possibleMaven ->
+          if (possibleMaven.name.startsWith("apache-maven-") && possibleMaven.isDirectory) {
+            commonLocations.add(possibleMaven.absolutePath)
+          }
+        }
+      }
+    }
+
+    for (location in commonLocations) {
+      val mavenPath = Paths.get(location)
+      if (Files.isDirectory(mavenPath)) {
+        log.info("Found Maven at: $location")
+        return location
+      }
+    }
+
+    // If all strategies fail, provide helpful error message
+    throw IllegalStateException(
+      """
+      Could not find Maven installation. Please set MAVEN_HOME environment variable:
+        export MAVEN_HOME=/path/to/maven/4.0.0-rc-4
+
+      Or ensure Maven is installed in one of these common locations:
+        - /usr/local/maven
+        - /opt/maven
+        - /usr/share/maven
+        - ~/.m2/mvn
+
+      Current MAVEN_HOME: ${System.getenv("MAVEN_HOME") ?: "not set"}
+      Workspace root: ${workspaceRoot.absolutePath}
+      """.trimIndent()
+    )
   }
 
   private fun buildGoals(taskId: String): List<String> {

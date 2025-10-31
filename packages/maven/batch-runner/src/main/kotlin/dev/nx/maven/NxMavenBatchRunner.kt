@@ -15,9 +15,11 @@ fun main(args: Array<String>) {
         // Parse arguments
         val options = ArgParser.parseArgs(args)
 
-        // Validate required arguments
-        if (options.workspaceRoot.isBlank()) {
-            log.error("❌ Missing required argument: --workspaceRoot")
+        // Set workspaceRoot to ~/projects/nx4 (the Nx monorepo)
+        val workspaceRoot = File(System.getProperty("user.home"), "projects/nx4")
+
+        if (!workspaceRoot.exists()) {
+            log.error("❌ Nx workspace not found at: ${workspaceRoot.absolutePath}")
             exitProcess(1)
         }
 
@@ -26,10 +28,8 @@ fun main(args: Array<String>) {
             exitProcess(1)
         }
 
-      val workspaceRoot = File(options.workspaceRoot)
-
         log.info("🚀 Starting Maven batch execution")
-        log.info("   Workspace: ${options.workspaceRoot}")
+        log.info("   Workspace: ${workspaceRoot.absolutePath}")
         log.info("   Tasks: ${options.tasks.size}")
         log.info("   Quiet: ${options.quiet}, Verbose: ${options.verbose}")
 

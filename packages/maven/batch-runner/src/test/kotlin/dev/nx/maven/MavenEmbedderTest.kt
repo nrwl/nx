@@ -4,6 +4,8 @@ import org.apache.maven.api.cli.ExecutorRequest
 import org.apache.maven.cling.executor.embedded.EmbeddedMavenExecutor
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.nio.file.Files
 import java.nio.file.Paths
 
 /**
@@ -21,14 +23,61 @@ import java.nio.file.Paths
  */
 class MavenEmbedderTest {
 
-  @Test
-  fun `demonstrate embedded executor context caching across multiple invocations`() {
-    val mavenHome = System.getenv("MAVEN_HOME") ?: run {
-      println("MAVEN_HOME not set - test skipped")
-      return
+  private fun resolveMavenHome(): String? {
+    // Strategy 1: Check MAVEN_HOME environment variable
+    val mavenHomeEnv = System.getenv("MAVEN_HOME")
+    if (mavenHomeEnv != null && Files.isDirectory(Paths.get(mavenHomeEnv))) {
+      return mavenHomeEnv
     }
 
-    val workspaceRoot = Paths.get(System.getProperty("user.dir"))
+    // Strategy 2: Check maven.home system property
+    val mavenHomeProp = System.getProperty("maven.home")
+    if (mavenHomeProp != null && Files.isDirectory(Paths.get(mavenHomeProp))) {
+      return mavenHomeProp
+    }
+
+    // Strategy 3: Check common installation locations
+    val userHome = System.getProperty("user.home")
+    val commonLocations = listOf(
+      "/usr/local/maven",
+      "/opt/maven",
+      "/usr/share/maven",
+      "$userHome/.m2/mvn",
+      "$userHome/.local/share/mise/installs/maven"
+    )
+
+    for (location in commonLocations) {
+      val path = Paths.get(location)
+      if (Files.isDirectory(path)) {
+        return location
+      }
+    }
+
+    // Strategy 4: Check for mise managed Maven installations
+    val miseDir = File(userHome, ".local/share/mise/installs/maven")
+    if (miseDir.exists()) {
+      miseDir.listFiles()?.sortedByDescending { it.name }?.forEach { versionDir ->
+        versionDir.listFiles()?.forEach { possibleMaven ->
+          if (possibleMaven.name.startsWith("apache-maven-") && possibleMaven.isDirectory) {
+            return possibleMaven.absolutePath
+          }
+        }
+      }
+    }
+
+    return null
+  }
+
+  @Test
+  fun `demonstrate embedded executor context caching across multiple invocations`() {
+    // Use Nx workspace root
+    val workspaceRoot = Paths.get(System.getProperty("user.home"), "projects/nx4")
+
+    // Resolve Maven home
+    val mavenHome = resolveMavenHome() ?: run {
+      println("Maven installation not found - test skipped")
+      return
+    }
 
     // Initialize EmbeddedMavenExecutor ONCE with context caching enabled (true, true)
     // This is the key to performance: the executor reuses loaded classloaders
@@ -77,12 +126,14 @@ class MavenEmbedderTest {
 
   @Test
   fun `show executor behavior when caching is disabled`() {
-    val mavenHome = System.getenv("MAVEN_HOME") ?: run {
-      println("MAVEN_HOME not set - test skipped")
+    // Use Nx workspace root
+    val workspaceRoot = Paths.get(System.getProperty("user.home"), "projects/nx4")
+
+    // Resolve Maven home
+    val mavenHome = resolveMavenHome() ?: run {
+      println("Maven installation not found - test skipped")
       return
     }
-
-    val workspaceRoot = Paths.get(System.getProperty("user.dir"))
 
     // Initialize EmbeddedMavenExecutor with caching DISABLED (false, true)
     // This is useful for comparison: shows the difference caching makes
