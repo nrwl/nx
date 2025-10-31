@@ -26,13 +26,6 @@ class MavenEmbedderTest {
 
   @Test
   fun `demonstrate embedded executor context caching across multiple invocations`() {
-    // Resolve Maven installation directory with intelligent fallback strategy
-    val mavenHome = try {
-      resolveMavenHome()
-    } catch (e: IllegalStateException) {
-      println("⚠️  Maven not found: ${e.message}")
-      return  // Skip test if Maven not available
-    }
 
     // Initialize EmbeddedMavenExecutor ONCE with context caching enabled (true, true)
     // This is the key to performance: the executor reuses loaded classloaders
@@ -40,10 +33,8 @@ class MavenEmbedderTest {
 
     try {
       println("\n=== Demonstrating EmbeddedMavenExecutor Context Caching ===\n")
-      println("Using Maven installation at: $mavenHome\n")
 
       // Set maven.home system property for ExecutorRequest discovery
-      System.setProperty("maven.home", mavenHome)
 
       // Execute the same goal 3 times using the SAME executor instance
       // With context caching enabled, the Maven classloader is loaded once and reused
@@ -52,8 +43,9 @@ class MavenEmbedderTest {
 
         println("Iteration ${iteration + 1}: Building ExecutorRequest...")
 
+        System.setProperty("maven.home", "/home/jason/.local/share/mise/installs/maven/3.9.11/apache-maven-3.9.11")
         // ExecutorRequest uses a fluent builder API
-        val request = ExecutorRequest.mavenBuilder(Paths.get(mavenHome))
+        val request = ExecutorRequest.mavenBuilder(null)
           .arguments(listOf("--version"))  // Simple goal that always succeeds
           .cwd(workspaceRoot.toPath())
           .stdOut(output)
@@ -107,7 +99,24 @@ class MavenEmbedderTest {
       println("mvnw wrapper found but Maven not yet downloaded; checking other strategies...")
     }
 
-    // Strategy 2: Check MAVEN_HOME environment variable
+    // Strategy 2: Check "which mvn" and go up 2 directories to find Maven home
+    try {
+      val process = ProcessBuilder("which", "mvn").start()
+      val mvnPath = process.inputStream.bufferedReader().use { it.readText().trim() }
+      if (mvnPath.isNotEmpty()) {
+        val mvnFile = File(mvnPath).canonicalFile
+        val mavenHome = mvnFile.parentFile.parentFile.absolutePath
+        val mavenPath = Paths.get(mavenHome)
+        if (Files.isDirectory(mavenPath)) {
+          println("Found Maven via 'which mvn': $mavenHome")
+          return mavenHome
+        }
+      }
+    } catch (e: Exception) {
+      // "which" command not available or mvn not in PATH
+    }
+
+    // Strategy 3: Check MAVEN_HOME environment variable
     val mavenHomeEnv = System.getenv("MAVEN_HOME")
     if (mavenHomeEnv != null) {
       val mavenPath = Paths.get(mavenHomeEnv)
@@ -119,7 +128,7 @@ class MavenEmbedderTest {
       }
     }
 
-    // Strategy 3: Check maven.home system property (set by Maven itself)
+    // Strategy 4: Check maven.home system property (set by Maven itself)
     val mavenHomeProp = System.getProperty("maven.home")
     if (mavenHomeProp != null) {
       val mavenPath = Paths.get(mavenHomeProp)
@@ -129,7 +138,7 @@ class MavenEmbedderTest {
       }
     }
 
-    // Strategy 4: Check common installation locations
+    // Strategy 5: Check common installation locations
     val userHome = System.getProperty("user.home")
     val commonLocations = mutableListOf(
       "/usr/local/maven",

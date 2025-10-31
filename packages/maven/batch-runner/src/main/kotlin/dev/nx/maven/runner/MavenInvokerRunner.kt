@@ -282,7 +282,24 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       return workspaceRoot.absolutePath
     }
 
-    // Strategy 2: Check MAVEN_HOME environment variable
+    // Strategy 2: Check "which mvn" and go up 2 directories to find Maven home
+    try {
+      val process = ProcessBuilder("which", "mvn").start()
+      val mvnPath = process.inputStream.bufferedReader().use { it.readText().trim() }
+      if (mvnPath.isNotEmpty()) {
+        val mvnFile = File(mvnPath).canonicalFile
+        val mavenHome = mvnFile.parentFile.parentFile.absolutePath
+        val mavenPath = Paths.get(mavenHome)
+        if (Files.isDirectory(mavenPath)) {
+          log.info("Found Maven via 'which mvn': $mavenHome")
+          return mavenHome
+        }
+      }
+    } catch (e: Exception) {
+      // "which" command not available or mvn not in PATH
+    }
+
+    // Strategy 3: Check MAVEN_HOME environment variable
     val mavenHomeEnv = System.getenv("MAVEN_HOME")
     if (mavenHomeEnv != null) {
       val mavenPath = Paths.get(mavenHomeEnv)
@@ -294,7 +311,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       }
     }
 
-    // Strategy 3: Check maven.home system property (set by Maven itself)
+    // Strategy 4: Check maven.home system property (set by Maven itself)
     val mavenHomeProp = System.getProperty("maven.home")
     if (mavenHomeProp != null) {
       val mavenPath = Paths.get(mavenHomeProp)
@@ -304,7 +321,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       }
     }
 
-    // Strategy 4: Check common installation locations
+    // Strategy 5: Check common installation locations
     val userHome = System.getProperty("user.home")
     val commonLocations = mutableListOf(
       "/usr/local/maven",
