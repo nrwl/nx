@@ -160,11 +160,9 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
     // Get the task and its goals/arguments
     val mavenBatchTask = options.tasks.getValue(taskId)
-    val goals = buildGoals(mavenBatchTask)
-    val arguments = buildArguments(taskId, mavenBatchTask)
 
     // If task has no goals, return success immediately
-    if (goals.isEmpty()) {
+    if (mavenBatchTask.goals.isEmpty()) {
       log.info("Task $taskId has no goals, marking as successful")
       val endTime = System.currentTimeMillis()
       return TaskResult(
@@ -177,6 +175,8 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
         results[taskId] = it
       }
     }
+    val goals = buildGoals(mavenBatchTask)
+    val arguments = buildArguments(taskId, mavenBatchTask)
 
     // Capture Maven output
     val output = ByteArrayOutputStream()
@@ -202,13 +202,17 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
       val success = exitCode == 0
       val endTime = System.currentTimeMillis()
+      val outputText = output.toString()
 
       log.info("Task $taskId completed with exit code: $exitCode")
+      if (outputText.isNotEmpty()) {
+        log.info("Task $taskId output:\n$outputText")
+      }
 
       TaskResult(
         taskId = taskId,
         success = success,
-        terminalOutput = output.toString(),
+        terminalOutput = outputText,
         startTime = startTime,
         endTime = endTime
       ).also {
@@ -393,13 +397,13 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     val goals = mutableListOf<String>()
 
     // Add Nx Maven apply goal before user goals
-//    goals.add("dev.nx.maven:nx-maven-plugin:apply")
+    goals.add("dev.nx.maven:nx-maven-plugin:apply")
 
     // Add user-specified goals
     goals.addAll(mavenBatchTask.goals)
 
     // Add Nx Maven record goal after user goals
-//    goals.add("dev.nx.maven:nx-maven-plugin:record")
+    goals.add("dev.nx.maven:nx-maven-plugin:record")
 
     return goals
   }

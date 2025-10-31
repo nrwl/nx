@@ -168,7 +168,6 @@ export default async function mavenBatchExecutor(
               success: result.success ?? false,
               terminalOutput: result.terminalOutput ?? '',
             };
-            console.log(result.terminalOutput);
             return acc;
           },
           {} as BatchResults
