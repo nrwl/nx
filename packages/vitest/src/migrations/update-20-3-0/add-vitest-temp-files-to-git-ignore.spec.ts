@@ -46,8 +46,8 @@ describe('addVitestTempFilesToGitIgnore', () => {
     addVitestTempFilesToGitIgnore(tree);
 
     // ASSERT
-    expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
-      "vitest.config.*.timestamp*"
-    `);
+    expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(
+      `"vitest.config.*.timestamp*"`
+    );
   });
 });
