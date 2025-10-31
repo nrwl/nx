@@ -74,11 +74,14 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
         log.info("Executing batch of roots: ${remainingGraph.roots.joinToString(", ")}")
 
         // Execute all root tasks in parallel
+        val batchStartTime = System.currentTimeMillis()
         val batchResults = executeRootTasksInParallel(
           remainingGraph.roots,
           results,
           mavenHome
         )
+        val batchDuration = System.currentTimeMillis() - batchStartTime
+        log.info("Batch execution completed in ${batchDuration}ms")
 
         // Separate successful and failed tasks
         val graphUpdateStartTime = System.currentTimeMillis()
@@ -116,7 +119,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
         log.info("Successful tasks: ${successfulTaskIds.joinToString(", ")}")
         log.info("New roots: ${remainingGraph.roots.joinToString(", ")}")
         val graphUpdateDuration = System.currentTimeMillis() - graphUpdateStartTime
-        log.debug("Graph recalculation and task analysis took ${graphUpdateDuration}ms")
+        log.info("Graph recalculation and task analysis took ${graphUpdateDuration}ms")
       }
     } finally {
       gracefulShutdown()
