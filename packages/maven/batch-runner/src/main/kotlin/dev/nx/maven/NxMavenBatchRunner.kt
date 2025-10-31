@@ -35,6 +35,13 @@ fun main(args: Array<String>) {
 
         // Run batch execution
         val runner = MavenInvokerRunner(workspaceRoot, options)
+
+        // Register shutdown hook for graceful SIGINT handling
+        Runtime.getRuntime().addShutdownHook(Thread {
+            log.info("🛑 Received SIGINT, initiating graceful shutdown...")
+            runner.requestShutdown()
+        })
+
         val results = runner.runBatch()
 
         // Output results as JSON to specified file
