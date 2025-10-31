@@ -5,11 +5,12 @@ import dev.nx.maven.data.MavenBatchTask
 import dev.nx.maven.data.TaskGraph
 import dev.nx.maven.data.TaskResult
 import dev.nx.maven.utils.removeTasksFromTaskGraph
-import org.apache.maven.cli.MavenCli
+import org.apache.maven.api.cli.ExecutorRequest
+import org.apache.maven.cling.executor.embedded.EmbeddedMavenExecutor
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.PrintStream
+import java.nio.file.Paths
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
@@ -17,13 +18,14 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 /**
- * Batch runner that executes Maven tasks using the Maven Embedder API.
+ * Batch runner that executes Maven tasks using the Maven 4.x EmbeddedMavenExecutor API.
  *
  * Executes tasks in parallel batches based on task graph roots.
  * - Dynamic task graph execution with root recalculation
  * - Failure cascading: dependent tasks skipped when a task fails
  * - Parallel execution of independent root tasks
- * - Single Maven CLI instance reused for all tasks (in-process execution)
+ * - Single EmbeddedMavenExecutor instance reused with context caching (in-process execution)
+ * - Automatic state restoration and realm cleanup between tasks
  */
 class MavenInvokerRunner(private val workspaceRoot: File, private val options: MavenBatchOptions) {
   private val log = LoggerFactory.getLogger(MavenInvokerRunner::class.java)
@@ -32,14 +34,9 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
   private var shutdownRequested = false
   private var executor: ExecutorService? = null
 
-  // Single Maven CLI instance reused for all tasks
-  private val mavenCli: MavenCli
-
-  init {
-    // Maven 3.3.0+ requires this system property for proper initialization
-    System.setProperty("maven.multiModuleProjectDirectory", workspaceRoot.absolutePath)
-    mavenCli = MavenCli()
-  }
+  // Single EmbeddedMavenExecutor instance with context caching enabled
+  // Requires MAVEN_HOME environment variable to be set
+  private val embeddedExecutor = EmbeddedMavenExecutor(true, true)
 
   fun requestShutdown() {
     log.info("⚠️  Shutdown requested, stopping new task submissions...")
@@ -173,18 +170,24 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
     // Capture Maven output
     val output = ByteArrayOutputStream()
-    val printStream = PrintStream(output)
 
     return try {
       log.info("Executing ${goals.joinToString(", ")} for task: $taskId")
 
-      // Execute using embedded Maven CLI (reused instance)
-      val exitCode = mavenCli.doMain(
-        goals.toTypedArray(),
-        workspaceRoot.absolutePath,
-        printStream,
-        System.err
-      )
+      // Get Maven home from environment
+      val mavenHome = System.getenv("MAVEN_HOME")
+        ?: throw IllegalStateException("MAVEN_HOME environment variable is not set")
+
+      // Build ExecutorRequest for EmbeddedMavenExecutor using mavenBuilder factory
+      val request = ExecutorRequest.mavenBuilder(Paths.get(mavenHome))
+        .arguments(goals)
+        .cwd(workspaceRoot.toPath())
+        .stdOut(output)
+        .stdErr(System.err)
+        .build()
+
+      // Execute using EmbeddedMavenExecutor (reused instance with context caching)
+      val exitCode = embeddedExecutor.execute(request)
 
       val success = exitCode == 0
       val endTime = System.currentTimeMillis()
@@ -218,10 +221,10 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
   }
 
   private fun gracefulShutdown() {
-    val exec = executor ?: return
-
-    if (!exec.isShutdown) {
-      log.info("Initiating graceful shutdown of executor...")
+    // Shutdown thread pool executor
+    val exec = executor
+    if (exec != null && !exec.isShutdown) {
+      log.info("Initiating graceful shutdown of thread pool executor...")
       exec.shutdown()
 
       // Wait up to 30 seconds for tasks to complete
@@ -235,13 +238,22 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
             log.error("Executor still not terminated after force shutdown")
           }
         } else {
-          log.info("✅ Executor gracefully shut down")
+          log.info("✅ Thread pool executor gracefully shut down")
         }
       } catch (e: InterruptedException) {
         log.warn("Interrupted while waiting for executor shutdown, forcing shutdown...")
         exec.shutdownNow()
         Thread.currentThread().interrupt()
       }
+    }
+
+    // Close EmbeddedMavenExecutor (cleans up cached contexts and class realms)
+    try {
+      log.info("Closing EmbeddedMavenExecutor...")
+      embeddedExecutor.close()
+      log.info("✅ EmbeddedMavenExecutor closed")
+    } catch (e: Exception) {
+      log.error("Failed to close EmbeddedMavenExecutor: ${e.message}", e)
     }
   }
 

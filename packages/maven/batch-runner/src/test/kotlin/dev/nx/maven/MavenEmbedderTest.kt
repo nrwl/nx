@@ -1,67 +1,86 @@
 package dev.nx.maven
 
-import org.apache.maven.cli.MavenCli
+import org.apache.maven.api.cli.ExecutorRequest
+import org.apache.maven.cling.executor.embedded.EmbeddedMavenExecutor
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.PrintStream
+import java.nio.file.Paths
 
 /**
- * Test demonstrating Maven Embedder API for batch task execution.
+ * Test demonstrating Maven 4.x EmbeddedMavenExecutor API for batch task execution.
  *
- * Key difference from Invoker:
- * - Invoker spawns a subprocess for each task
- * - Embedder executes Maven in-process, reusing reactor and cache
+ * Key advantages over Maven Invoker:
+ * - Invoker spawns a subprocess for each task (~100-500ms per task overhead)
+ * - EmbeddedMavenExecutor executes Maven in-process, reusing reactor and cache
+ * - Context caching: loaded classloaders are cached per Maven installation
+ * - Automatic realm cleanup prevents memory leaks
+ * - Proper state restoration between invocations
  */
 class MavenEmbedderTest {
 
   @Test
-  fun `maven embedder executes multiple tasks with single instance`() {
-    val workspaceRoot = File(System.getProperty("user.dir"))
+  fun `embedded executor executes multiple tasks with single instance`() {
+    val mavenHome = System.getenv("MAVEN_HOME") ?: return // Skip if MAVEN_HOME not set
+    val workspaceRoot = Paths.get(System.getProperty("user.dir"))
 
-    // Initialize Maven CLI once (reused for all tasks)
-    val mavenCli = MavenCli()
+    // Initialize EmbeddedMavenExecutor once with context caching enabled
+    val executor = EmbeddedMavenExecutor(true, true)
 
-    // Simulate executing multiple tasks with same Maven instance
-    val tasksToExecute = listOf(
-      listOf("validate"),
-      listOf("help:describe")
-    )
-
-    for (goals in tasksToExecute) {
-      // Capture output for this task
-      val output = ByteArrayOutputStream()
-      val printStream = PrintStream(output)
-
-      // Execute goal using embedded Maven
-      // Key: Same MavenCli instance = same reactor + cache
-      val exitCode = mavenCli.doMain(
-        goals.toTypedArray(),
-        workspaceRoot.absolutePath,
-        printStream,
-        System.err
+    try {
+      // Simulate executing multiple tasks with same executor instance
+      val tasksToExecute = listOf(
+        listOf("validate"),
+        listOf("help:describe")
       )
 
-      // Task executed
-      assert(exitCode >= 0)
+      for (goals in tasksToExecute) {
+        // Capture output for this task
+        val output = ByteArrayOutputStream()
+
+        // Build ExecutorRequest using Maven 4.x API
+        val request = ExecutorRequest.mavenBuilder(Paths.get(mavenHome))
+          .arguments(goals)
+          .cwd(workspaceRoot)
+          .stdOut(output)
+          .stdErr(System.err)
+          .build()
+
+        // Execute goal using EmbeddedMavenExecutor
+        // Key: Same executor instance + context caching = reactor scanned once
+        val exitCode = executor.execute(request)
+
+        // Task executed
+        assert(exitCode == 0) { "Expected exit code 0, got $exitCode" }
+      }
+    } finally {
+      executor.close()
     }
   }
 
   @Test
-  fun `embedder reuses maven instance for multiple invocations`() {
-    val workspaceRoot = File(System.getProperty("user.dir"))
-    val mavenCli = MavenCli()
+  fun `executor reuses context for multiple invocations`() {
+    val mavenHome = System.getenv("MAVEN_HOME") ?: return // Skip if MAVEN_HOME not set
+    val workspaceRoot = Paths.get(System.getProperty("user.dir"))
 
-    // Multiple tasks use same instance
-    repeat(3) {
-      val output = ByteArrayOutputStream()
-      val exitCode = mavenCli.doMain(
-        arrayOf("help:describe"),
-        workspaceRoot.absolutePath,
-        PrintStream(output),
-        System.err
-      )
-      assert(exitCode >= 0)
+    // Multiple tasks use same executor instance with context caching
+    val executor = EmbeddedMavenExecutor(true, true)
+
+    try {
+      repeat(3) {
+        val output = ByteArrayOutputStream()
+
+        val request = ExecutorRequest.mavenBuilder(Paths.get(mavenHome))
+          .arguments(listOf("help:describe"))
+          .cwd(workspaceRoot)
+          .stdOut(output)
+          .stdErr(System.err)
+          .build()
+
+        val exitCode = executor.execute(request)
+        assert(exitCode == 0) { "Expected exit code 0, got $exitCode" }
+      }
+    } finally {
+      executor.close()
     }
   }
 }

@@ -5,7 +5,7 @@
   <artifactId>maven-batch-runner</artifactId>
   <name>Nx Maven Batch Runner</name>
   <version>0.0.8-SNAPSHOT</version>
-  <description>Batch runner for Nx Maven plugin using Maven Invoker API</description>
+  <description>Batch runner for Nx Maven plugin using Maven Embedder API</description>
   <url>https://github.com/nrwl/nx/packages/nx-maven-parent/maven-batch-runner</url>
   <developers>
     <developer>
@@ -27,13 +27,18 @@
     <developerConnection>scm:git:ssh://github.com:nrwl/nx.git/packages/nx-maven-parent/maven-batch-runner</developerConnection>
     <url>https://github.com/nrwl/nx/tree/master/packages/nx-maven-parent/maven-batch-runner</url>
   </scm>
+  <repositories>
+    <repository>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots />
+      <id>apache-snapshots</id>
+      <name>Apache Snapshots</name>
+      <url>https://repository.apache.org/snapshots</url>
+    </repository>
+  </repositories>
   <dependencies>
-    <dependency>
-      <groupId>org.apache.maven</groupId>
-      <artifactId>maven-core</artifactId>
-      <version>3.9.5</version>
-      <scope>provided</scope>
-    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
