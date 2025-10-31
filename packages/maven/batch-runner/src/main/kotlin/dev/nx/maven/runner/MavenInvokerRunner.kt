@@ -19,10 +19,11 @@ import java.util.concurrent.TimeUnit
 /**
  * Batch runner that executes Maven tasks using the Maven Embedder API.
  *
- * Key advantage: Single Maven instance reused for all tasks
- * - Reactor scanned once
- * - Cache reused between tasks
- * - No subprocess overhead per task
+ * Executes tasks in parallel batches based on task graph roots.
+ * - Dynamic task graph execution with root recalculation
+ * - Failure cascading: dependent tasks skipped when a task fails
+ * - Parallel execution of independent root tasks
+ * - Single Maven CLI instance reused for all tasks (in-process execution)
  */
 class MavenInvokerRunner(private val workspaceRoot: File, private val options: MavenBatchOptions) {
   private val log = LoggerFactory.getLogger(MavenInvokerRunner::class.java)
@@ -32,7 +33,13 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
   private var executor: ExecutorService? = null
 
   // Single Maven CLI instance reused for all tasks
-  private val mavenCli = MavenCli()
+  private val mavenCli: MavenCli
+
+  init {
+    // Maven 3.3.0+ requires this system property for proper initialization
+    System.setProperty("maven.multiModuleProjectDirectory", workspaceRoot.absolutePath)
+    mavenCli = MavenCli()
+  }
 
   fun requestShutdown() {
     log.info("⚠️  Shutdown requested, stopping new task submissions...")
