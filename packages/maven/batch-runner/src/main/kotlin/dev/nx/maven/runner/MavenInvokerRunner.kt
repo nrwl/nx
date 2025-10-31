@@ -2,7 +2,9 @@ package dev.nx.maven.runner
 
 import dev.nx.maven.data.MavenBatchOptions
 import dev.nx.maven.data.MavenBatchTask
+import dev.nx.maven.data.TaskGraph
 import dev.nx.maven.data.TaskResult
+import dev.nx.maven.utils.removeTasksFromTaskGraph
 import org.apache.maven.shared.invoker.DefaultInvocationRequest
 import org.apache.maven.shared.invoker.DefaultInvoker
 import org.apache.maven.shared.invoker.InvocationRequest
@@ -10,6 +12,7 @@ import org.apache.maven.shared.invoker.Invoker
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -31,34 +34,65 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
     log.info("Received ${options.tasks.size} tasks")
 
-    // Parse task graph to get execution order and extract task dependencies
-    val taskIds = getTaskExecutionOrder()
-    log.info("Task execution order from graph: ${taskIds.joinToString(", ")}")
-
-    // Group tasks by project
-    val tasksByProject = groupTasksByProject()
-    log.info("Grouped tasks into ${tasksByProject.size} projects")
-    for ((project, tasks) in tasksByProject) {
-      log.info("  Project '$project': ${tasks.joinToString(", ")}")
+    val initialGraph = options.taskGraph
+    if (initialGraph == null) {
+      log.error("Task graph is null, cannot execute tasks")
+      return emptyMap()
     }
 
-    // Get number of parallel threads (default to number of projects, min 1)
-    val numThreads = Math.max(1, tasksByProject.size)
+    var remainingGraph: TaskGraph = initialGraph
+    log.info("Initial roots: ${remainingGraph.roots.joinToString(", ")}")
+
+    // Create thread pool for parallel root execution
+    val numThreads = 4
     executor = Executors.newFixedThreadPool(numThreads)
 
     try {
-      // Submit tasks for parallel execution by project
-      val futures = tasksByProject.map { (project, projectTasks) ->
-        executor!!.submit {
-          executeProjectTasks(project, projectTasks, results)
-        }
-      }
 
-      // Wait for all projects to complete
-      futures.forEach {
-        if (!shutdownRequested) {
-          it.get()
+      // While loop: execute tasks as long as there are roots
+      while (remainingGraph.roots.isNotEmpty() && !shutdownRequested) {
+        log.info("Executing batch of roots: ${remainingGraph.roots.joinToString(", ")}")
+
+        // Execute all root tasks in parallel
+        val batchResults = executeRootTasksInParallel(
+          remainingGraph.roots,
+          results
+        )
+
+        // Separate successful and failed tasks
+        val successfulTaskIds = batchResults.filter { it.success }.map { it.taskId }
+        val failedTaskIds = batchResults.filter { !it.success }.map { it.taskId }
+
+        if (failedTaskIds.isNotEmpty()) {
+          log.warn("Failed tasks: ${failedTaskIds.joinToString(", ")}")
         }
+
+        // Remove completed/failed tasks from graph and recalculate roots
+        // Failed tasks and their dependents will be removed
+        val oldRemainingTasks = remainingGraph.tasks.keys
+        remainingGraph = removeTasksFromTaskGraph(
+          remainingGraph,
+          successfulTaskIds,
+          failedTaskIds
+        )
+
+        // Mark tasks that were removed due to failed dependencies as skipped
+        val skippedTasks = oldRemainingTasks - remainingGraph.tasks.keys - successfulTaskIds.toSet() - failedTaskIds.toSet()
+        for (skippedTaskId in skippedTasks) {
+          if (!results.containsKey(skippedTaskId)) {
+            results[skippedTaskId] = TaskResult(
+              taskId = skippedTaskId,
+              success = false,
+              terminalOutput = "SKIPPED: Task was skipped due to a failed dependency",
+              startTime = 0,
+              endTime = 0
+            )
+            log.info("Skipped task: $skippedTaskId (dependency failed)")
+          }
+        }
+
+        log.info("Successful tasks: ${successfulTaskIds.joinToString(", ")}")
+        log.info("New roots: ${remainingGraph.roots.joinToString(", ")}")
       }
     } finally {
       gracefulShutdown()
@@ -66,6 +100,96 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
     log.info("Returning ${results.size} results with task IDs: ${results.keys.joinToString(", ")}")
     return results.toMap()
+  }
+
+  private fun executeRootTasksInParallel(
+    rootTaskIds: List<String>,
+    results: ConcurrentHashMap<String, TaskResult>
+  ): List<TaskResult> {
+    val batchResults = mutableListOf<TaskResult>()
+    val latch = CountDownLatch(rootTaskIds.size)
+
+    for (taskId in rootTaskIds) {
+      if (shutdownRequested) break
+
+      executor!!.submit {
+        try {
+          val result = executeSingleTask(taskId, results)
+          synchronized(batchResults) {
+            batchResults.add(result)
+          }
+        } finally {
+          latch.countDown()
+        }
+      }
+    }
+
+    // Wait for all root tasks to complete
+    latch.await()
+    return batchResults
+  }
+
+  private fun executeSingleTask(
+    taskId: String,
+    results: ConcurrentHashMap<String, TaskResult>
+  ): TaskResult {
+    val startTime = System.currentTimeMillis()
+    val taskOutput = StringBuilder()
+    val invoker = createInvoker()
+
+    return try {
+      val request = createInvocationRequest(taskId)
+
+      // If task has no goals, return success immediately
+      if (request == null) {
+        log.info("Task $taskId has no goals, marking as successful")
+        val endTime = System.currentTimeMillis()
+        return TaskResult(
+          taskId = taskId,
+          success = true,
+          terminalOutput = "",
+          startTime = startTime,
+          endTime = endTime
+        ).also {
+          results[taskId] = it
+        }
+      }
+
+      invoker.setOutputHandler { line ->
+        taskOutput.append(line).append(System.lineSeparator())
+        log.info("[$taskId] $line")
+      }
+
+      val result = invoker.execute(request)
+      val success = result.exitCode == 0
+      val endTime = System.currentTimeMillis()
+
+      log.info("Task $taskId completed with exit code: ${result.exitCode}")
+
+      TaskResult(
+        taskId = taskId,
+        success = success,
+        terminalOutput = taskOutput.toString(),
+        startTime = startTime,
+        endTime = endTime
+      ).also {
+        results[taskId] = it
+      }
+    } catch (e: Exception) {
+      val errorMsg = e.message ?: "Unknown error"
+      val endTime = System.currentTimeMillis()
+      log.error("Task $taskId failed: $errorMsg", e)
+
+      TaskResult(
+        taskId = taskId,
+        success = false,
+        terminalOutput = taskOutput.toString() + "\nError: $errorMsg",
+        startTime = startTime,
+        endTime = endTime
+      ).also {
+        results[taskId] = it
+      }
+    }
   }
 
   private fun gracefulShutdown() {
@@ -96,110 +220,6 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     }
   }
 
-  private fun executeProjectTasks(
-    project: String,
-    projectTasks: List<String>,
-    results: ConcurrentHashMap<String, TaskResult>
-  ) {
-    log.info("Executing ${projectTasks.size} tasks for project: $project")
-
-    // Create a fresh invoker for this thread
-    val invoker = createInvoker()
-    // Collect output for this project
-
-    for (taskId in projectTasks) {
-      val taskOutput = StringBuilder()
-
-      val request = createInvocationRequest(project, taskId);
-      invoker.setOutputHandler { line ->
-        taskOutput.append(line).append(System.lineSeparator())
-        log.debug("[$project] $line")
-      }
-      val result = invoker.execute(request);
-      log.info("Project $project $taskId completed with exit code: ${result.exitCode}")
-      results[taskId] = TaskResult(
-        taskId = taskId,
-        success = result.exitCode == 0,
-        terminalOutput = taskOutput.toString()
-      )
-    }
-
-//        try {
-//            val request = createInvocationRequest(project, projectTasks)
-//
-//            // Set output handler to capture Maven output
-//            invoker.setOutputHandler { line ->
-//                projectOutput.append(line).append(System.lineSeparator())
-//                log.debug("[$project] $line")
-//            }
-//
-//            log.info("Executing Maven invocation for project: $project with tasks: ${projectTasks.joinToString(", ")}")
-//            val result = invoker.execute(request)
-//            val success = result.exitCode == 0
-//
-//            log.info("Project $project completed with exit code: ${result.exitCode}")
-//
-//            // Store result for each task in the project
-//            for (taskId in projectTasks) {
-//                results[taskId] = TaskResult(
-//                    taskId = taskId,
-//                    success = success,
-//                    terminalOutput = projectOutput.toString()
-//                )
-//
-//                if (success) {
-//                    log.info("✓ Task executed successfully: $taskId")
-//                } else {
-//                    log.warn("✗ Task failed with exit code ${result.exitCode}: $taskId")
-//                }
-//            }
-//        } catch (e: Exception) {
-//            val errorMsg = e.message ?: "Unknown error"
-//            log.error("✗ Project $project failed: $errorMsg", e)
-//
-//            // Store failure for each task in the project
-//            for (taskId in projectTasks) {
-//                results[taskId] = TaskResult(
-//                    taskId = taskId,
-//                    success = false,
-//                    terminalOutput = projectOutput.toString() + "\nError: $errorMsg"
-//                )
-//            }
-//        }
-  }
-
-  private fun getTaskExecutionOrder(): List<String> {
-    return try {
-      val taskGraph = options.taskGraph
-
-      if (taskGraph == null) {
-        log.warn("Task graph is null, using all available tasks")
-        options.tasks.keys.toList()
-      } else {
-        // Extract task IDs from the "tasks" field in the task graph
-        if (taskGraph.tasks.isNotEmpty()) {
-          taskGraph.tasks.keys.toList()
-        } else {
-          log.warn("No tasks in task graph, using all available tasks")
-          options.tasks.keys.toList()
-        }
-      }
-    } catch (e: Exception) {
-      log.warn("Failed to access task graph: ${e.message}, using all available tasks")
-      options.tasks.keys.toList()
-    }
-  }
-
-  private fun groupTasksByProject(): LinkedHashMap<String, MutableList<String>> {
-    val grouped = LinkedHashMap<String, MutableList<String>>()
-
-    for ((taskId, task) in options.tasks) {
-      val project = task.project
-      grouped.computeIfAbsent(project) { mutableListOf() }.add(taskId)
-    }
-
-    return grouped
-  }
 
   private fun buildTargets(task: MavenBatchTask): List<String> {
     val targets = mutableListOf<String>()
@@ -210,7 +230,18 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     return targets
   }
 
-  private fun createInvocationRequest(project: String, taskId: String): InvocationRequest {
+  private fun createInvocationRequest(taskId: String): InvocationRequest? {
+    val mavenBatchTask = options.tasks.getValue(taskId)
+    val targets = buildTargets(mavenBatchTask)
+
+    log.info("Task $taskId has ${targets.size} targets")
+
+    // If task has no goals, return null
+    if (targets.isEmpty()) {
+      log.debug("Task $taskId has no goals, skipping invocation request creation")
+      return null
+    }
+
     val request = DefaultInvocationRequest()
     request.baseDirectory = File(options.workspaceRoot)
 
@@ -224,7 +255,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     // Get the actual project from task graph and use projectRoot as module selector
     val task = options.taskGraph?.tasks?.get(taskId)
     if (task != null) {
-      log.info("DEBUG: Found task for project '$project'")
+      log.info("DEBUG: Found task for taskId '$taskId'")
       log.info("DEBUG: task.target.project = '${task.target.project}'")
       log.info("DEBUG: task.projectRoot = '${task.projectRoot}'")
 
@@ -241,13 +272,9 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     }
 
     request.goals = mutableListOf()
-    // Collect all goals from tasks (with Nx wrapper goals)
 
-
-    val mavenBatchTask = options.tasks.getValue(taskId)
-    // Add Nx Maven record goal after user goals
+    // Add Nx Maven record goal before user goals
     request.goals.add("dev.nx.maven:nx-maven-plugin:apply")
-    val targets = buildTargets(mavenBatchTask)
     request.goals.addAll(targets)
     log.debug("Added targets from task $taskId: ${targets.joinToString(", ")}")
 
@@ -256,13 +283,12 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
     request.isRecursive = false
 
-    log.info("Executing ${request.goals.joinToString(", ")} goals for project: $project")
+    log.info("Executing ${request.goals.joinToString(", ")} goals for task: $taskId")
 
     // Add additional arguments
     val allArgs = mutableListOf<String>()
     allArgs.addAll(options.args)
-
-      allArgs.addAll(mavenBatchTask.args)
+    allArgs.addAll(mavenBatchTask.args)
 
     request.isBatchMode = true
 
@@ -275,10 +301,6 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     request.mavenOpts = System.getenv("MAVEN_OPTS")
 
     log.debug("Invocation arguments: ${allArgs.joinToString(" ")}")
-
-    // Note: DefaultInvocationRequest doesn't have public setter for arguments
-    // Goals are already set above, additional args would need to be handled differently
-    // For now, we rely on goals being sufficient
 
     return request
   }

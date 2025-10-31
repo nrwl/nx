@@ -22,7 +22,9 @@ data class MavenBatchTask(
 data class TaskResult(
     val taskId: String,
     val success: Boolean,
-    val terminalOutput: String
+    val terminalOutput: String,
+    val startTime: Long = 0,
+    val endTime: Long = 0
 )
 
 /**
