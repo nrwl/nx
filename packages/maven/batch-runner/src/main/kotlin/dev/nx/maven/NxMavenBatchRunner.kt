@@ -44,7 +44,10 @@ fun main(args: Array<String>) {
             runner.requestShutdown()
         })
 
+        val batchExecutionStartTime = System.currentTimeMillis()
         val results = runner.runBatch()
+        val batchExecutionDuration = System.currentTimeMillis() - batchExecutionStartTime
+        log.info("🏃 Batch execution took ${batchExecutionDuration}ms")
 
         // Output results as JSON to specified file
         val jsonResults = results.mapValues { (_, result) ->
