@@ -219,7 +219,9 @@ impl Tui {
 
     pub fn exit(&mut self) -> Result<()> {
         // Make exit idempotent - only run once
-        if self.exited.swap(true, std::sync::atomic::Ordering::SeqCst) {
+        // swap returns the OLD value, so if it was already true, we've already exited
+        let was_already_exited = self.exited.swap(true, std::sync::atomic::Ordering::SeqCst);
+        if was_already_exited {
             debug!("⚠️  exit() called but already exited - skipping");
             return Ok(());
         }

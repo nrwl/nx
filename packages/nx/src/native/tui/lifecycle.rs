@@ -508,12 +508,13 @@ impl AppLifeCycle {
 
             // Cleanup and exit
             debug!("🏁 Event loop exited - cleaning up");
-            tui.exit().ok();
-            debug!("🏁 TUI exited - calling done callback");
+            // Don't call tui.exit() explicitly - let Drop handle it to avoid double-exit
+            // tui.exit().ok();
+            debug!("🏁 Calling done callback");
             app.with_app(|tui_app| {
                 tui_app.call_done_callback();
             });
-            debug!("🏁 Done callback called - task complete");
+            debug!("🏁 Done callback called - Tui will be dropped and exit() called from Drop");
         });
 
         Ok(())
