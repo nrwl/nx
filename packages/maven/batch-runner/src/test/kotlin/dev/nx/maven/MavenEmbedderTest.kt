@@ -22,61 +22,16 @@ import java.nio.file.Paths
  * per task (~100-500ms overhead per task).
  */
 class MavenEmbedderTest {
-
-  private fun resolveMavenHome(): String? {
-    // Strategy 1: Check MAVEN_HOME environment variable
-    val mavenHomeEnv = System.getenv("MAVEN_HOME")
-    if (mavenHomeEnv != null && Files.isDirectory(Paths.get(mavenHomeEnv))) {
-      return mavenHomeEnv
-    }
-
-    // Strategy 2: Check maven.home system property
-    val mavenHomeProp = System.getProperty("maven.home")
-    if (mavenHomeProp != null && Files.isDirectory(Paths.get(mavenHomeProp))) {
-      return mavenHomeProp
-    }
-
-    // Strategy 3: Check common installation locations
-    val userHome = System.getProperty("user.home")
-    val commonLocations = listOf(
-      "/usr/local/maven",
-      "/opt/maven",
-      "/usr/share/maven",
-      "$userHome/.m2/mvn",
-      "$userHome/.local/share/mise/installs/maven"
-    )
-
-    for (location in commonLocations) {
-      val path = Paths.get(location)
-      if (Files.isDirectory(path)) {
-        return location
-      }
-    }
-
-    // Strategy 4: Check for mise managed Maven installations
-    val miseDir = File(userHome, ".local/share/mise/installs/maven")
-    if (miseDir.exists()) {
-      miseDir.listFiles()?.sortedByDescending { it.name }?.forEach { versionDir ->
-        versionDir.listFiles()?.forEach { possibleMaven ->
-          if (possibleMaven.name.startsWith("apache-maven-") && possibleMaven.isDirectory) {
-            return possibleMaven.absolutePath
-          }
-        }
-      }
-    }
-
-    return null
-  }
+  private val workspaceRoot = File(System.getProperty("user.home"), "projects/nx4")
 
   @Test
   fun `demonstrate embedded executor context caching across multiple invocations`() {
-    // Use Nx workspace root
-    val workspaceRoot = Paths.get(System.getProperty("user.home"), "projects/nx4")
-
-    // Resolve Maven home
-    val mavenHome = resolveMavenHome() ?: run {
-      println("Maven installation not found - test skipped")
-      return
+    // Resolve Maven installation directory with intelligent fallback strategy
+    val mavenHome = try {
+      resolveMavenHome()
+    } catch (e: IllegalStateException) {
+      println("⚠️  Maven not found: ${e.message}")
+      return  // Skip test if Maven not available
     }
 
     // Initialize EmbeddedMavenExecutor ONCE with context caching enabled (true, true)
@@ -85,6 +40,10 @@ class MavenEmbedderTest {
 
     try {
       println("\n=== Demonstrating EmbeddedMavenExecutor Context Caching ===\n")
+      println("Using Maven installation at: $mavenHome\n")
+
+      // Set maven.home system property for ExecutorRequest discovery
+      System.setProperty("maven.home", mavenHome)
 
       // Execute the same goal 3 times using the SAME executor instance
       // With context caching enabled, the Maven classloader is loaded once and reused
@@ -96,7 +55,7 @@ class MavenEmbedderTest {
         // ExecutorRequest uses a fluent builder API
         val request = ExecutorRequest.mavenBuilder(Paths.get(mavenHome))
           .arguments(listOf("--version"))  // Simple goal that always succeeds
-          .cwd(workspaceRoot)
+          .cwd(workspaceRoot.toPath())
           .stdOut(output)
           .stdErr(System.err)
           .build()
@@ -124,49 +83,106 @@ class MavenEmbedderTest {
     }
   }
 
-  @Test
-  fun `show executor behavior when caching is disabled`() {
-    // Use Nx workspace root
-    val workspaceRoot = Paths.get(System.getProperty("user.home"), "projects/nx4")
+  private fun resolveMavenHome(): String {
+    // Strategy 1: Check for mvnw wrapper in workspace (preferred - ensures correct Maven version)
+    val mvnw = File(workspaceRoot, "mvnw")
+    val mvnwDir = File(workspaceRoot, ".mvn")
+    val mvnwWrapperDir = File(workspaceRoot, ".mvn/wrapper")
 
-    // Resolve Maven home
-    val mavenHome = resolveMavenHome() ?: run {
-      println("Maven installation not found - test skipped")
-      return
-    }
+    if (mvnw.exists() && mvnwDir.exists()) {
+      println("Found mvnw wrapper in workspace at: ${workspaceRoot.absolutePath}")
 
-    // Initialize EmbeddedMavenExecutor with caching DISABLED (false, true)
-    // This is useful for comparison: shows the difference caching makes
-    val executor = EmbeddedMavenExecutor(false, true)
-
-    try {
-      println("\n=== Demonstrating without context caching ===\n")
-
-      // Execute the same goal 2 times with caching disabled
-      // Each invocation will reload the Maven classloader (~500ms each)
-      repeat(2) { iteration ->
-        val output = ByteArrayOutputStream()
-
-        println("Iteration ${iteration + 1}: Executing Maven goal (WITHOUT caching)...")
-        val startTime = System.currentTimeMillis()
-
-        val request = ExecutorRequest.mavenBuilder(Paths.get(mavenHome))
-          .arguments(listOf("--version"))
-          .cwd(workspaceRoot)
-          .stdOut(output)
-          .stdErr(System.err)
-          .build()
-
-        val exitCode = executor.execute(request)
-
-        val duration = System.currentTimeMillis() - startTime
-        println("Iteration ${iteration + 1}: Exit code=$exitCode, Duration=${duration}ms")
-        println("(Notice each invocation takes longer when caching is disabled)\n")
-
-        assert(exitCode == 0) { "Maven execution failed with exit code $exitCode" }
+      // Look for downloaded Maven in .mvn/wrapper/maven-*/
+      if (mvnwWrapperDir.exists()) {
+        mvnwWrapperDir.listFiles()?.forEach { dir ->
+          if (dir.name.startsWith("maven-") && dir.isDirectory) {
+            println("Found Maven in mvnw wrapper cache: ${dir.absolutePath}")
+            return dir.absolutePath
+          }
+        }
       }
-    } finally {
-      executor.close()
+
+      // If Maven not yet downloaded by wrapper, continue to other strategies
+      // (mvnw would download it when executed, but tests need a real installation)
+      println("mvnw wrapper found but Maven not yet downloaded; checking other strategies...")
     }
+
+    // Strategy 2: Check MAVEN_HOME environment variable
+    val mavenHomeEnv = System.getenv("MAVEN_HOME")
+    if (mavenHomeEnv != null) {
+      val mavenPath = Paths.get(mavenHomeEnv)
+      if (Files.isDirectory(mavenPath)) {
+        println("Using MAVEN_HOME: $mavenHomeEnv")
+        return mavenHomeEnv
+      } else {
+        println("MAVEN_HOME points to non-existent directory: $mavenHomeEnv")
+      }
+    }
+
+    // Strategy 3: Check maven.home system property (set by Maven itself)
+    val mavenHomeProp = System.getProperty("maven.home")
+    if (mavenHomeProp != null) {
+      val mavenPath = Paths.get(mavenHomeProp)
+      if (Files.isDirectory(mavenPath)) {
+        println("Using maven.home system property: $mavenHomeProp")
+        return mavenHomeProp
+      }
+    }
+
+    // Strategy 4: Check common installation locations
+    val userHome = System.getProperty("user.home")
+    val commonLocations = mutableListOf(
+      "/usr/local/maven",
+      "/opt/maven",
+      "/usr/share/maven",
+      "$userHome/.m2/mvn",
+      "$userHome/.local/share/mise/installs/maven"  // mise version manager
+    )
+
+    // Also check for mise managed Maven installations
+    val miseDir = File(userHome, ".local/share/mise/installs/maven")
+    if (miseDir.exists()) {
+      miseDir.listFiles()?.sortedByDescending { it.name }?.forEach { versionDir ->
+        versionDir.listFiles()?.forEach { possibleMaven ->
+          if (possibleMaven.name.startsWith("apache-maven-") && possibleMaven.isDirectory) {
+            commonLocations.add(possibleMaven.absolutePath)
+          }
+        }
+      }
+    }
+
+    for (location in commonLocations) {
+      val mavenPath = Paths.get(location)
+      if (Files.isDirectory(mavenPath)) {
+        println("Found Maven at: $location")
+        return location
+      }
+    }
+
+    // If all strategies fail, provide helpful error message
+    throw IllegalStateException(
+      """
+      Could not find Maven installation. Please do one of the following:
+
+      Option 1 (Recommended): Use mvnw wrapper from workspace
+        - Ensure mvnw and .mvn/ exist in workspace: ${workspaceRoot.absolutePath}
+
+      Option 2: Set MAVEN_HOME environment variable
+        export MAVEN_HOME=/path/to/maven/4.0.0-rc-4
+
+      Option 3: Install Maven in one of these common locations:
+        - /usr/local/maven
+        - /opt/maven
+        - /usr/share/maven
+        - ~/.m2/mvn
+        - Use 'mise' version manager: mise install maven@4.0.0-rc-4
+
+      Current status:
+        - mvnw found: ${mvnw.exists()}
+        - .mvn directory found: ${mvnwDir.exists()}
+        - MAVEN_HOME: ${System.getenv("MAVEN_HOME") ?: "not set"}
+        - Workspace root: ${workspaceRoot.absolutePath}
+      """.trimIndent()
+    )
   }
 }

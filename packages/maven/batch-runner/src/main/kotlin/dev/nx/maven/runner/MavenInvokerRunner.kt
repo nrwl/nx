@@ -258,7 +258,31 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
   }
 
   private fun resolveMavenHome(): String {
-    // Strategy 1: Check MAVEN_HOME environment variable
+    // Strategy 1: Check for mvnw wrapper in workspace (preferred - ensures correct Maven version)
+    val mvnw = File(workspaceRoot, "mvnw")
+    val mvnwDir = File(workspaceRoot, ".mvn")
+    val mvnwWrapperDir = File(workspaceRoot, ".mvn/wrapper")
+
+    if (mvnw.exists() && mvnwDir.exists()) {
+      log.info("Found mvnw wrapper in workspace at: ${workspaceRoot.absolutePath}")
+
+      // Look for downloaded Maven in .mvn/wrapper/maven-*/
+      if (mvnwWrapperDir.exists()) {
+        mvnwWrapperDir.listFiles()?.forEach { dir ->
+          if (dir.name.startsWith("maven-") && dir.isDirectory) {
+            log.info("Found Maven in mvnw wrapper cache: ${dir.absolutePath}")
+            return dir.absolutePath
+          }
+        }
+      }
+
+      // If Maven not yet downloaded by wrapper, return workspace root
+      // mvnw will download and initialize it when executed
+      log.info("mvnw wrapper found but Maven not yet downloaded; will be initialized on first run")
+      return workspaceRoot.absolutePath
+    }
+
+    // Strategy 2: Check MAVEN_HOME environment variable
     val mavenHomeEnv = System.getenv("MAVEN_HOME")
     if (mavenHomeEnv != null) {
       val mavenPath = Paths.get(mavenHomeEnv)
@@ -270,7 +294,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       }
     }
 
-    // Strategy 2: Check maven.home system property (set by Maven itself)
+    // Strategy 3: Check maven.home system property (set by Maven itself)
     val mavenHomeProp = System.getProperty("maven.home")
     if (mavenHomeProp != null) {
       val mavenPath = Paths.get(mavenHomeProp)
@@ -278,16 +302,6 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
         log.info("Using maven.home system property: $mavenHomeProp")
         return mavenHomeProp
       }
-    }
-
-    // Strategy 3: Try to find mvnw in workspace (check if Maven is available via wrapper)
-    val mvnw = File(workspaceRoot, "mvnw")
-    val mvnwDir = File(workspaceRoot, ".mvn")
-
-    if (mvnw.exists() && mvnwDir.exists()) {
-      log.info("Found mvnw wrapper in workspace - Maven may need to be initialized via wrapper")
-      // mvnw wrapper will download/use Maven, but we still need an installation
-      // Fall through to next strategy
     }
 
     // Strategy 4: Check common installation locations
@@ -324,17 +338,26 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     // If all strategies fail, provide helpful error message
     throw IllegalStateException(
       """
-      Could not find Maven installation. Please set MAVEN_HOME environment variable:
+      Could not find Maven installation. Please do one of the following:
+
+      Option 1 (Recommended): Use mvnw wrapper from workspace
+        - Ensure mvnw and .mvn/ exist in workspace: ${workspaceRoot.absolutePath}
+
+      Option 2: Set MAVEN_HOME environment variable
         export MAVEN_HOME=/path/to/maven/4.0.0-rc-4
 
-      Or ensure Maven is installed in one of these common locations:
+      Option 3: Install Maven in one of these common locations:
         - /usr/local/maven
         - /opt/maven
         - /usr/share/maven
         - ~/.m2/mvn
+        - Use 'mise' version manager: mise install maven@4.0.0-rc-4
 
-      Current MAVEN_HOME: ${System.getenv("MAVEN_HOME") ?: "not set"}
-      Workspace root: ${workspaceRoot.absolutePath}
+      Current status:
+        - mvnw found: ${mvnw.exists()}
+        - .mvn directory found: ${mvnwDir.exists()}
+        - MAVEN_HOME: ${System.getenv("MAVEN_HOME") ?: "not set"}
+        - Workspace root: ${workspaceRoot.absolutePath}
       """.trimIndent()
     )
   }
