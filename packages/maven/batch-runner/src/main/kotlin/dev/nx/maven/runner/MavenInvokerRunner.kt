@@ -56,6 +56,10 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       return emptyMap()
     }
 
+    // Resolve Maven home once at the start (reused for all tasks)
+    val mavenHome = resolveMavenHome()
+    log.info("Using Maven home: $mavenHome")
+
     var remainingGraph: TaskGraph = initialGraph
     log.info("Initial roots: ${remainingGraph.roots.joinToString(", ")}")
 
@@ -72,7 +76,8 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
         // Execute all root tasks in parallel
         val batchResults = executeRootTasksInParallel(
           remainingGraph.roots,
-          results
+          results,
+          mavenHome
         )
 
         // Separate successful and failed tasks
@@ -120,7 +125,8 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
   private fun executeRootTasksInParallel(
     rootTaskIds: List<String>,
-    results: ConcurrentHashMap<String, TaskResult>
+    results: ConcurrentHashMap<String, TaskResult>,
+    mavenHome: String
   ): List<TaskResult> {
     val batchResults = mutableListOf<TaskResult>()
     val latch = CountDownLatch(rootTaskIds.size)
@@ -130,7 +136,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
       executor!!.submit {
         try {
-          val result = executeSingleTask(taskId, results)
+          val result = executeSingleTask(taskId, results, mavenHome)
           synchronized(batchResults) {
             batchResults.add(result)
           }
@@ -147,7 +153,8 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
   private fun executeSingleTask(
     taskId: String,
-    results: ConcurrentHashMap<String, TaskResult>
+    results: ConcurrentHashMap<String, TaskResult>,
+    mavenHome: String
   ): TaskResult {
     val startTime = System.currentTimeMillis()
 
@@ -173,10 +180,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     val output = ByteArrayOutputStream()
 
     return try {
-
-      // Resolve Maven home with fallbacks
-      val mavenHome = resolveMavenHome()
-      log.info("Executing ${goals.joinToString(", ")} for task: $taskId using Maven home: $mavenHome")
+      log.info("Executing ${goals.joinToString(", ")} for task: $taskId")
 
       // Build ExecutorRequest for EmbeddedMavenExecutor using mavenBuilder factory
       val request = ExecutorRequest.mavenBuilder(Paths.get(mavenHome))
