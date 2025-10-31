@@ -376,16 +376,6 @@ useEffect(() => {
               </svg>
               <span>{starCount !== null ? formatStarCount(starCount) : ''}</span>
             </a>
-            <a
-              title="Nx is open source, check the code on GitHub"
-              href="https://github.com/nrwl/nx"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center px-3 py-2 opacity-60 hover:opacity-90"
-            >
-              <span className="sr-only">Nx on GitHub</span>
-              <GitHubIcon aria-hidden="true" className="h-5 w-5" />
-            </a>
           </nav>
         </div>
       </div>
