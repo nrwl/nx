@@ -28,6 +28,8 @@ fun main(args: Array<String>) {
             exitProcess(1)
         }
 
+        val startTime = System.currentTimeMillis()
+
         log.info("🚀 Starting Maven batch execution")
         log.info("   Workspace: ${workspaceRoot.absolutePath}")
         log.info("   Tasks: ${options.tasks.size}")
@@ -68,6 +70,11 @@ fun main(args: Array<String>) {
         val failureCount = results.size - successCount
 
         log.info("📊 Summary: ✅ $successCount succeeded, ❌ $failureCount failed")
+
+        // Log execution time
+        val endTime = System.currentTimeMillis()
+        val duration = endTime - startTime
+        log.info("⏱️  Total execution time: ${duration}ms (${String.format("%.2f", duration / 1000.0)}s)")
 
         // Exit with appropriate code
         val hasFailures = results.any { !it.value.success }
