@@ -55,6 +55,10 @@ export type Command = {
 export interface Schema {
   name: string;
   ci: 'github' | 'circleci';
+  /**
+   * Custom commands to run in the CI workflow.
+   * If not provided, default commands will be generated based on the CI provider.
+   */
   commands?: Command[];
 }
 

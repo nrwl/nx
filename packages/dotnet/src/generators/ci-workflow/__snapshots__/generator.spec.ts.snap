@@ -20,7 +20,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: ./nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: ./nx start-ci-run --distribute-on="3 linux-medium" --stop-agents-after="build"
 
       - nx/set-shas:
           main-branch-name: 'main'
@@ -70,7 +70,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: ./nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: ./nx start-ci-run --distribute-on="3 linux-medium" --stop-agents-after="build"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -107,7 +107,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: ./nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: ./nx start-ci-run --distribute-on="3 linux-medium" --stop-agents-after="build"
 
       - nx/set-shas:
           main-branch-name: 'main'
@@ -157,7 +157,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: ./nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: ./nx start-ci-run --distribute-on="3 linux-medium" --stop-agents-after="build"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
