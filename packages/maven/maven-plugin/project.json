@@ -8,7 +8,7 @@
       "command": "for i in {1..5}; do ./mvnw install && break || sleep 10; done"
     },
     "_install": {
-      "command": "node scripts/build-maven-analyzer.js"
+      "command": "node scripts/run-native-target.js install nx-maven-plugin"
     }
   }
 }

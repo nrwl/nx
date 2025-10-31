@@ -133,6 +133,10 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /e2e/workspace-create/** @nrwl/nx-core-reviewers
 /e2e/release/** @nrwl/nx-core-reviewers
 
+# .NET
+/packages/dotnet/** @FrozenPandaz @AgentEnder
+/e2e/dotnet/** @FrozenPandaz @AgentEnder
+
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
 /e2e/utils/** @meeroslav @nrwl/nx-testing-tools-reviewers @vsavkin
