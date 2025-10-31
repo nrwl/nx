@@ -29,6 +29,7 @@ const scopes = [
   { value: 'storybook',         name: 'storybook:             anything Storybook specific' },
   { value: 'testing',           name: 'testing:               anything testing specific (e.g. jest or cypress)' },
   { value: 'vite',              name: 'vite:                  anything Vite specific' },
+  { value: 'vitest',            name: 'vitest:                anything Vitest specific' },
   { value: 'vue',               name: 'vue:                   anything Vue specific' },
   { value: 'web',               name: 'web:                   anything Web specific' },
   { value: 'webpack',           name: 'webpack:               anything Webpack specific' },
