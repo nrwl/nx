@@ -81,6 +81,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
         )
 
         // Separate successful and failed tasks
+        val graphUpdateStartTime = System.currentTimeMillis()
         val successfulTaskIds = batchResults.filter { it.success }.map { it.taskId }
         val failedTaskIds = batchResults.filter { !it.success }.map { it.taskId }
 
@@ -114,6 +115,8 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
         log.info("Successful tasks: ${successfulTaskIds.joinToString(", ")}")
         log.info("New roots: ${remainingGraph.roots.joinToString(", ")}")
+        val graphUpdateDuration = System.currentTimeMillis() - graphUpdateStartTime
+        log.debug("Graph recalculation and task analysis took ${graphUpdateDuration}ms")
       }
     } finally {
       gracefulShutdown()
