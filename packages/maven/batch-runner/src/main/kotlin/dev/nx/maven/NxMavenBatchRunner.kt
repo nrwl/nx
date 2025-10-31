@@ -15,8 +15,8 @@ fun main(args: Array<String>) {
         // Parse arguments
         val options = ArgParser.parseArgs(args)
 
-        // Set workspaceRoot to ~/projects/nx4 (the Nx monorepo)
-        val workspaceRoot = File(System.getProperty("user.home"), "projects/nx4")
+        // Get workspace root from options
+        val workspaceRoot = File(options.workspaceRoot)
 
         if (!workspaceRoot.exists()) {
             log.error("❌ Nx workspace not found at: ${workspaceRoot.absolutePath}")
