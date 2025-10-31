@@ -94,8 +94,8 @@ class MavenEmbedderTest {
         }
       }
 
-      // If Maven not yet downloaded by wrapper, continue to other strategies
-      // (mvnw would download it when executed, but tests need a real installation)
+      // If Maven not yet downloaded by wrapper, continue to next strategy
+      // EmbeddedMavenExecutor needs a real Maven installation, not the workspace root
       println("mvnw wrapper found but Maven not yet downloaded; checking other strategies...")
     }
 

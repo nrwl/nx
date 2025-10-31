@@ -173,17 +173,17 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     val output = ByteArrayOutputStream()
 
     return try {
-      log.info("Executing ${goals.joinToString(", ")} for task: $taskId")
 
       // Resolve Maven home with fallbacks
       val mavenHome = resolveMavenHome()
+      log.info("Executing ${goals.joinToString(", ")} for task: $taskId using Maven home: $mavenHome")
 
       // Build ExecutorRequest for EmbeddedMavenExecutor using mavenBuilder factory
       val request = ExecutorRequest.mavenBuilder(Paths.get(mavenHome))
         .arguments(goals)
         .cwd(workspaceRoot.toPath())
         .stdOut(output)
-        .stdErr(System.err)
+        .stdErr(output)
         .build()
 
       // Execute using EmbeddedMavenExecutor (reused instance with context caching)
@@ -276,10 +276,9 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
         }
       }
 
-      // If Maven not yet downloaded by wrapper, return workspace root
-      // mvnw will download and initialize it when executed
-      log.info("mvnw wrapper found but Maven not yet downloaded; will be initialized on first run")
-      return workspaceRoot.absolutePath
+      // If Maven not yet downloaded by wrapper, log and continue to next strategy
+      // EmbeddedMavenExecutor needs a real Maven installation, not the workspace root
+      log.info("mvnw wrapper found but Maven not yet downloaded; checking other strategies...")
     }
 
     // Strategy 2: Check "which mvn" and go up 2 directories to find Maven home
