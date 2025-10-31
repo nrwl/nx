@@ -8,7 +8,10 @@ export function initNodeLogger(workspaceRoot: string) {
   try {
     mkdirSync(dirname(logFilePath), { recursive: true });
     // Clear the log file on init
-    appendFileSync(logFilePath, `\n\n=== NEW SESSION ${new Date().toISOString()} ===\n\n`);
+    appendFileSync(
+      logFilePath,
+      `\n\n=== NEW SESSION ${new Date().toISOString()} ===\n\n`
+    );
   } catch (e) {
     console.error('Failed to initialize node logger:', e);
   }

@@ -102,7 +102,11 @@ async function getTerminalOutputLifeCycle(
   // Initialize node logger
   initNodeLogger(workspaceRoot);
   nodeLog('=== getTuiLifeCycle called ===');
-  nodeLog(`shouldUseTui: ${shouldUseTui}, tuiMode: ${tuiMode === TuiMode.Inline ? 'Inline' : 'FullScreen'}`);
+  nodeLog(
+    `shouldUseTui: ${shouldUseTui}, tuiMode: ${
+      tuiMode === TuiMode.Inline ? 'Inline' : 'FullScreen'
+    }`
+  );
 
   if (shouldUseTui) {
     nodeLog('Entering TUI mode initialization');
