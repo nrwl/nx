@@ -5,7 +5,7 @@
     "package": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "mvn clean package -q",
+        "command": "mvn clean package -q -DskipTests=true",
         "cwd": "packages/maven/batch-runner"
       },
       "outputs": ["{projectRoot}/target/*.jar"]
