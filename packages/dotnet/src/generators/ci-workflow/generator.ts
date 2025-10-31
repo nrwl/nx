@@ -9,14 +9,14 @@ import { join } from 'path';
 import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
 import { deduceDefaultBase } from 'nx/src/utils/default-base';
 
+const NX_AFFECTED_COMMENT = `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.`;
+
 function getCiCommands(ci: Schema['ci']): Command[] {
   switch (ci) {
     case 'circleci': {
       return [
         {
-          comments: [
-            `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.`,
-          ],
+          comments: [NX_AFFECTED_COMMENT],
         },
         {
           command: `./nx affected --base=$NX_BASE --head=$NX_HEAD -t build`,
@@ -27,9 +27,7 @@ function getCiCommands(ci: Schema['ci']): Command[] {
     default: {
       return [
         {
-          comments: [
-            `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.`,
-          ],
+          comments: [NX_AFFECTED_COMMENT],
           command: `./nx affected -t build`,
         },
         getNxCloudFixCiCommand(),
