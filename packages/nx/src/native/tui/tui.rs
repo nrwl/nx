@@ -47,6 +47,7 @@ pub struct Tui {
     pub frame_rate: f64,
     pub tick_rate: f64,
     pub current_mode: TuiMode,
+    exited: std::sync::Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl Tui {
@@ -80,6 +81,7 @@ impl Tui {
             frame_rate,
             tick_rate,
             current_mode: TuiMode::FullScreen, // Default to full-screen
+            exited: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
         })
     }
 
@@ -216,6 +218,13 @@ impl Tui {
     }
 
     pub fn exit(&mut self) -> Result<()> {
+        // Make exit idempotent - only run once
+        if self.exited.swap(true, std::sync::atomic::Ordering::SeqCst) {
+            debug!("⚠️  exit() called but already exited - skipping");
+            return Ok(());
+        }
+
+        debug!("🚪 Exiting TUI");
         self.stop()?;
         if crossterm::terminal::is_raw_mode_enabled()? {
             self.flush()?;
@@ -233,6 +242,7 @@ impl Tui {
 
             crossterm::terminal::disable_raw_mode()?;
         }
+        debug!("✅ TUI exit complete");
         Ok(())
     }
 
