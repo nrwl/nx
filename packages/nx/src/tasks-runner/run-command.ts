@@ -28,6 +28,7 @@ import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { printNxKey } from '../utils/nx-key';
+import { initNodeLogger, nodeLog } from '../utils/node-logger';
 import { output } from '../utils/output';
 import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
@@ -98,7 +99,13 @@ async function getTerminalOutputLifeCycle(
   const shouldUseTui = isTuiEnabled() && tasks.length > 0;
   const tuiMode = isRunOne ? TuiMode.Inline : TuiMode.FullScreen;
 
+  // Initialize node logger
+  initNodeLogger(workspaceRoot);
+  nodeLog('=== getTuiLifeCycle called ===');
+  nodeLog(`shouldUseTui: ${shouldUseTui}, tuiMode: ${tuiMode === TuiMode.Inline ? 'Inline' : 'FullScreen'}`);
+
   if (shouldUseTui) {
+    nodeLog('Entering TUI mode initialization');
     const interceptedNxCloudLogs: (string | Uint8Array<ArrayBufferLike>)[] = [];
 
     const createPatchedConsoleMethod = (
@@ -210,6 +217,7 @@ async function getTerminalOutputLifeCycle(
     const lifeCycles: LifeCycle[] = [tsLifeCycle];
     // Only run the TUI if there are tasks to run
     if (tasks.length > 0) {
+      nodeLog(`Creating AppLifeCycle with ${tasks.length} tasks`);
       appLifeCycle = new AppLifeCycle(
         tasks,
         initiatingTasks.map((t) => t.id),
@@ -222,6 +230,7 @@ async function getTerminalOutputLifeCycle(
         taskGraph,
         tuiMode
       );
+      nodeLog('AppLifeCycle created successfully');
       lifeCycles.unshift(appLifeCycle);
 
       /**
@@ -314,18 +323,25 @@ async function getTerminalOutputLifeCycle(
         }
       };
 
+      nodeLog('Creating renderIsDone Promise and calling __init');
       renderIsDone = new Promise<void>((resolve) => {
+        nodeLog('Inside Promise constructor, about to call __init');
         // The unified __init method now handles both TUI modes internally
         appLifeCycle.__init(() => {
+          nodeLog('!!! Rust done callback invoked !!!');
           resolve();
+          nodeLog('!!! Promise resolve() called !!!');
         });
+        nodeLog('__init call returned');
       }).finally(() => {
+        nodeLog('Promise .finally() block executing');
         restoreTerminal();
         // Revert the patched methods
         process.stdout.write = originalStdoutWrite;
         process.stderr.write = originalStderrWrite;
         console.log = originalConsoleLog;
         console.error = originalConsoleError;
+        nodeLog('Promise .finally() block completed');
       });
     }
 
@@ -553,6 +569,7 @@ export async function runCommandForTasks(
     );
 
   try {
+    nodeLog('About to invoke task runner');
     const taskResults = await invokeTasksRunner({
       tasks,
       projectGraph,
@@ -564,24 +581,33 @@ export async function runCommandForTasks(
       initiatingProject,
       initiatingTasks,
     });
+    nodeLog('Task runner completed, about to await renderIsDone');
 
     await renderIsDone;
+    nodeLog('!!! renderIsDone Promise resolved !!!');
 
     if (printSummary) {
+      nodeLog('Calling printSummary');
       printSummary();
     }
 
+    nodeLog('About to print Nx key');
     await printNxKey();
+    nodeLog('Nx key printed, about to return');
 
     return {
       taskResults,
       completed: didCommandComplete(tasks, taskGraph, taskResults),
     };
   } catch (e) {
+    nodeLog(`!!! Exception caught: ${e} !!!`);
     if (restoreTerminal) {
+      nodeLog('Calling restoreTerminal in catch block');
       restoreTerminal();
     }
     throw e;
+  } finally {
+    nodeLog('=== runCommand finally block ===');
   }
 }
 
