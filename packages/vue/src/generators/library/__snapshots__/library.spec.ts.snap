@@ -158,7 +158,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`library should add vue, vite and vitest to package.json 1`] = `
+exports[`library should add vue and vitest to package.json when non-buildable 1`] = `
 {
   "dependencies": {
     "vue": "^3.5.13",
@@ -170,8 +170,8 @@ exports[`library should add vue, vite and vitest to package.json 1`] = `
     "@nx/js": "0.0.1",
     "@nx/rollup": "0.0.1",
     "@nx/vite": "0.0.1",
+    "@nx/vitest": "0.0.1",
     "@nx/vue": "0.0.1",
-    "@nx/web": "0.0.1",
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
@@ -187,7 +187,6 @@ exports[`library should add vue, vite and vitest to package.json 1`] = `
     "eslint": "~8.57.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-vue": "^9.16.1",
-    "jiti": "2.4.2",
     "jsdom": "~22.1.0",
     "prettier": "^2.6.2",
     "typescript": "~5.9.2",
@@ -199,7 +198,7 @@ exports[`library should add vue, vite and vitest to package.json 1`] = `
 }
 `;
 
-exports[`library should add vue, vite and vitest to package.json 2`] = `
+exports[`library should add vue and vitest to package.json when non-buildable 2`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -245,7 +244,6 @@ exports[`library should generate files 1`] = `
   ],
   "ignorePatterns": [
     "!**/*",
-    "**/vite.config.*.timestamp*",
     "**/vitest.config.*.timestamp*",
   ],
   "overrides": [

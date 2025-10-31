@@ -15,18 +15,23 @@ import {
   vitePluginReactSwcVersion,
   vitePluginReactVersion,
 } from './versions';
+import { getVitestDependenciesVersionsToInstall } from './version-utils';
 
 export type EnsureDependenciesOptions = {
-  uiFramework: 'angular' | 'react' | 'none';
+  uiFramework: 'angular' | 'react' | 'vue' | 'none';
   compiler?: 'babel' | 'swc';
   includeLib?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
 };
 
-export function ensureDependencies(
-  host: Tree,
+export async function ensureDependencies(
+  tree: Tree,
   schema: EnsureDependenciesOptions
-): GeneratorCallback {
+): Promise<GeneratorCallback> {
+  const useVitestUi =
+    schema.uiFramework === 'angular' ||
+    schema.uiFramework === 'react' ||
+    schema.uiFramework === 'vue';
   const devDependencies: Record<string, string> = {};
 
   if (schema.testEnvironment === 'jsdom') {
@@ -61,5 +66,10 @@ export function ensureDependencies(
     }
   }
 
-  return addDependenciesToPackageJson(host, {}, devDependencies);
+  if (useVitestUi) {
+    const { vitestUi } = await getVitestDependenciesVersionsToInstall(tree);
+    devDependencies['@vitest/ui'] = vitestUi;
+  }
+
+  return addDependenciesToPackageJson(tree, {}, devDependencies);
 }

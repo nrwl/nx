@@ -1,5 +1,5 @@
 import { ExecutorContext, logger } from '@nx/devkit';
-import { ensurePackage } from '@nx/devkit/src/utils/package-manager';
+import { ensurePackage } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 import { VitestExecutorOptions } from './schema';
 

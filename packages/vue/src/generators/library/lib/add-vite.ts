@@ -56,7 +56,7 @@ export async function addVite(
       typeof import('@nx/vitest')
     >('@nx/vitest', nxVersion);
     const vitestTask = await configurationGenerator(tree, {
-      uiFramework: 'none',
+      uiFramework: 'vue',
       project: options.projectName,
       coverageProvider: 'v8',
       inSourceTests: options.inSourceTests,

@@ -239,7 +239,7 @@ describe('NxPlugin Plugin Generator', () => {
         ).targets;
 
         expect(projectTargets.test).toBeDefined();
-        expect(projectTargets.test?.executor).toEqual('@nx/vite:test');
+        expect(projectTargets.test?.executor).toEqual('@nx/vitest:test');
       });
     });
   });

@@ -72,16 +72,13 @@ export async function configurationGeneratorInternal(
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
 
-  const viteVersion =
-    getDependencyVersionFromPackageJson(tree, 'vite') ?? '7.0.0';
-  const useViteV5 = major(coerce(viteVersion)) === 5;
-  const useViteV6 = major(coerce(viteVersion)) === 6;
   const initTask = await initGenerator(tree, {
     skipFormat: true,
     addPlugin: schema.addPlugin,
+    projectRoot: root,
   });
   tasks.push(initTask);
-  tasks.push(ensureDependencies(tree, { ...schema, uiFramework }));
+  tasks.push(await ensureDependencies(tree, { ...schema, uiFramework }));
 
   addOrChangeTestTarget(tree, schema, hasPlugin);
 

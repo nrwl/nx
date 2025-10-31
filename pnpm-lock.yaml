@@ -2707,6 +2707,9 @@ importers:
       '@nx/cypress':
         specifier: workspace:*
         version: link:../cypress
+      '@nx/vitest':
+        specifier: workspace:*
+        version: link:../vitest
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -3567,6 +3570,9 @@ importers:
       '@nx/vite':
         specifier: workspace:*
         version: link:../vite
+      '@nx/vitest':
+        specifier: workspace:*
+        version: link:../vitest
       '@nx/vue':
         specifier: workspace:*
         version: link:../vue
@@ -3847,6 +3853,9 @@ importers:
       '@nx/rsbuild':
         specifier: workspace:*
         version: link:../rsbuild
+      '@nx/vitest':
+        specifier: workspace:*
+        version: link:../vitest
       '@nx/webpack':
         specifier: workspace:*
         version: link:../webpack
@@ -3931,6 +3940,9 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
     devDependencies:
+      '@nx/vitest':
+        specifier: workspace:*
+        version: link:../vitest
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -4209,6 +4221,12 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
+      '@phenomnomnominal/tsquery':
+        specifier: catalog:typescript
+        version: 5.0.1(typescript@5.9.2)
+      semver:
+        specifier: 'catalog:'
+        version: 7.7.2
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -4237,6 +4255,9 @@ importers:
       '@nx/vite':
         specifier: workspace:*
         version: link:../vite
+      '@nx/vitest':
+        specifier: workspace:*
+        version: link:../vitest
       '@nx/web':
         specifier: workspace:*
         version: link:../web
@@ -4275,6 +4296,9 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
     devDependencies:
+      '@nx/vitest':
+        specifier: workspace:*
+        version: link:../vitest
       nx:
         specifier: workspace:*
         version: link:../nx
