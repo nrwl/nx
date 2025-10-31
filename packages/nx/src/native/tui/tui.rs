@@ -250,41 +250,30 @@ impl Tui {
 
     /// Switch between full-screen and inline viewport modes
     ///
-    /// This method properly recreates the terminal with the correct viewport
-    /// for the new mode. It handles:
-    /// 1. Stopping the event loop
-    /// 2. Exiting raw mode and cleaning up the current terminal
-    /// 3. Creating a new terminal with the appropriate viewport
-    /// 4. Re-entering raw mode with the new mode
+    /// This method swaps the terminal backend while keeping the event loop running.
+    /// The crossterm EventStream, tick/render intervals, and event channels all
+    /// continue unchanged - only the terminal viewport is recreated.
+    ///
+    /// Process:
+    /// 1. Flush current terminal state
+    /// 2. Enter/leave alternate screen as needed (staying in raw mode)
+    /// 3. Create new terminal with appropriate viewport
     ///
     /// # Arguments
     /// * `new_mode` - The TUI mode to switch to
     ///
     /// # Returns
     /// * `Ok(())` if the switch was successful
-    /// * `Err(...)` if there was an error during the terminal state transition
+    /// * `Err(...)` if there was an error during viewport creation
     pub fn switch_mode(&mut self, new_mode: TuiMode) -> Result<()> {
         debug!("🔄 Switching terminal mode to {:?}", new_mode);
 
-        // Step 1: Stop the event loop and ensure it's fully stopped
-        // We MUST wait for the old task to finish before creating a new one,
-        // otherwise we orphan the background task which prevents clean shutdown
-        self.stop()?;
-
-        // Verify the task actually stopped - if not, we cannot safely proceed
-        // because start() would orphan the old task
-        if !self.task.is_finished() {
-            return Err(color_eyre::eyre::eyre!(
-                "Background event task did not stop - cannot switch modes without orphaning task"
-            ));
-        }
-        debug!("✅ Background task stopped, proceeding with mode switch");
-
-        // Step 2: Flush current terminal state
+        // Step 1: Flush current terminal state
         self.flush()?;
 
-        // Step 3: Handle screen mode transitions while staying in raw mode
+        // Step 2: Handle screen mode transitions while staying in raw mode
         // Raw mode must stay enabled for cursor position queries to work
+        // The event loop keeps running - we're just changing the terminal backend
         match new_mode {
             TuiMode::FullScreen => {
                 // Switching TO full-screen: enter alternate screen
@@ -296,8 +285,9 @@ impl Tui {
             }
         }
 
-        // Step 4: Create new terminal with appropriate viewport
-        // Still in raw mode, so cursor queries work reliably
+        // Step 3: Create new terminal with appropriate viewport
+        // The event loop (EventStream, intervals, channels) continues unchanged
+        // Only the terminal backend/viewport changes
         let terminal = match new_mode {
             TuiMode::FullScreen => {
                 debug!("📺 Creating full-screen terminal (no viewport)");
@@ -350,9 +340,6 @@ impl Tui {
 
         self.terminal = terminal;
         self.current_mode = new_mode; // Track current mode
-
-        // Step 5: Restart event loop (still in raw mode)
-        self.start();
 
         debug!("✅ Switched to {:?} mode", new_mode);
         Ok(())
