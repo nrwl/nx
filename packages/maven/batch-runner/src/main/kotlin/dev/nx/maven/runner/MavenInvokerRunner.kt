@@ -202,9 +202,10 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
       val success = exitCode == 0
       val endTime = System.currentTimeMillis()
+      val duration = endTime - startTime
       val outputText = output.toString()
 
-      log.info("Task $taskId completed with exit code: $exitCode")
+      log.info("Task $taskId completed with exit code: $exitCode (${duration}ms)")
       if (outputText.isNotEmpty()) {
         log.info("Task $taskId output:\n$outputText")
       }
