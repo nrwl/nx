@@ -45,7 +45,7 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "storybook": ">=7.0.0 <10.0.0"
+    "storybook": ">=7.0.0 <11.0.0"
   },
   "publishConfig": {
     "access": "public"
