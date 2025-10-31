@@ -1,5 +1,11 @@
-import { handleRunPreTasksExecution, handleRunPostTasksExecution } from './handle-tasks-execution-hooks';
-import type { PreTasksExecutionContext, PostTasksExecutionContext } from '../../project-graph/plugins/public-api';
+import {
+  handleRunPreTasksExecution,
+  handleRunPostTasksExecution,
+} from './handle-tasks-execution-hooks';
+import type {
+  PreTasksExecutionContext,
+  PostTasksExecutionContext,
+} from '../../project-graph/plugins/public-api';
 
 // Mock the tasks-execution-hooks module
 jest.mock('../../project-graph/plugins/tasks-execution-hooks', () => ({
@@ -7,7 +13,10 @@ jest.mock('../../project-graph/plugins/tasks-execution-hooks', () => ({
   runPostTasksExecution: jest.fn(),
 }));
 
-import { runPreTasksExecution, runPostTasksExecution } from '../../project-graph/plugins/tasks-execution-hooks';
+import {
+  runPreTasksExecution,
+  runPostTasksExecution,
+} from '../../project-graph/plugins/tasks-execution-hooks';
 
 describe('Task Execution Hooks', () => {
   beforeEach(() => {
