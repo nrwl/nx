@@ -305,7 +305,11 @@ impl Tui {
 
                 for (attempt, delay_ms) in delays.iter().enumerate() {
                     if attempt > 0 {
-                        debug!("⏳ Retry attempt {} after {}ms delay", attempt + 1, delay_ms);
+                        debug!(
+                            "⏳ Retry attempt {} after {}ms delay",
+                            attempt + 1,
+                            delay_ms
+                        );
                     }
 
                     // Wait for terminal to stabilize
@@ -318,16 +322,26 @@ impl Tui {
                         .unwrap_or(24);
 
                     let viewport = ratatui::Viewport::Inline(inline_height);
-                    match ratatui::Terminal::with_options(backend, ratatui::TerminalOptions { viewport }) {
+                    match ratatui::Terminal::with_options(
+                        backend,
+                        ratatui::TerminalOptions { viewport },
+                    ) {
                         Ok(term) => {
                             if attempt > 0 {
-                                debug!("✅ Successfully created inline viewport on attempt {}", attempt + 1);
+                                debug!(
+                                    "✅ Successfully created inline viewport on attempt {}",
+                                    attempt + 1
+                                );
                             }
                             terminal = Some(term);
                             break;
                         }
                         Err(e) => {
-                            debug!("❌ Failed to create inline viewport on attempt {}: {}", attempt + 1, e);
+                            debug!(
+                                "❌ Failed to create inline viewport on attempt {}: {}",
+                                attempt + 1,
+                                e
+                            );
                             last_error = Some(e);
                         }
                     }

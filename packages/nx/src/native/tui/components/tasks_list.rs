@@ -1,5 +1,6 @@
 use color_eyre::eyre::Result;
 use hashbrown::HashSet;
+use parking_lot::Mutex;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -11,7 +12,6 @@ use ratatui::{
 };
 use serde::{Deserialize, Serialize};
 use std::any::Any;
-use parking_lot::Mutex;
 use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -289,9 +289,7 @@ impl TasksList {
             return;
         }
         let lines = self.scroll_momentum.calculate_momentum(ScrollDirection::Up) as usize;
-        self.selection_manager
-            .lock()
-            .scroll_up(lines.max(1));
+        self.selection_manager.lock().scroll_up(lines.max(1));
     }
 
     /// Scrolls the task list down with momentum support
@@ -302,9 +300,7 @@ impl TasksList {
         let lines = self
             .scroll_momentum
             .calculate_momentum(ScrollDirection::Down) as usize;
-        self.selection_manager
-            .lock()
-            .scroll_down(lines.max(1));
+        self.selection_manager.lock().scroll_down(lines.max(1));
     }
 
     /// Creates a list of task entries with separators between different status groups.
@@ -634,9 +630,7 @@ impl TasksList {
     pub fn apply_filter(&mut self) {
         let mode = self.determine_selection_mode();
 
-        self.selection_manager
-            .lock()
-            .set_selection_mode(mode);
+        self.selection_manager.lock().set_selection_mode(mode);
 
         // Apply filter
         if self.filter_text.is_empty() {
@@ -700,9 +694,7 @@ impl TasksList {
     fn sort_tasks_with_mode(&mut self, mode_override: Option<SelectionMode>) {
         let mode = mode_override.unwrap_or_else(|| self.determine_selection_mode());
 
-        self.selection_manager
-            .lock()
-            .set_selection_mode(mode);
+        self.selection_manager.lock().set_selection_mode(mode);
 
         // If we're in run one mode, and there are initiating tasks, sort them as highlighted tasks
         let highlighted_tasks =
@@ -984,21 +976,17 @@ impl TasksList {
                 .iter()
                 .any(|t| t.status == TaskStatus::NotStarted);
 
-            self.selection_manager
-                .lock()
-                .handle_task_status_change(
-                    task_id,
-                    old_in_progress_index,
-                    false, // new_is_in_progress = false
-                    has_pending_tasks,
-                );
+            self.selection_manager.lock().handle_task_status_change(
+                task_id,
+                old_in_progress_index,
+                false, // new_is_in_progress = false
+                has_pending_tasks,
+            );
         }
 
         // Step 4: Set final mode based on current selection state
         let final_mode = self.determine_selection_mode();
-        self.selection_manager
-            .lock()
-            .set_selection_mode(final_mode);
+        self.selection_manager.lock().set_selection_mode(final_mode);
     }
 
     /// Updates a task's status and triggers a sort of the list.
@@ -1032,9 +1020,7 @@ impl TasksList {
             }
 
             // Ensure selected task is visible
-            self.selection_manager
-                .lock()
-                .ensure_selected_visible();
+            self.selection_manager.lock().ensure_selected_visible();
         }
     }
 
@@ -1068,9 +1054,7 @@ impl TasksList {
         }
         self.sort_tasks();
         // Explicitly scroll to ensure selected task is visible after sort
-        self.selection_manager
-            .lock()
-            .ensure_selected_visible();
+        self.selection_manager.lock().ensure_selected_visible();
     }
 
     fn generate_empty_row(&self, column_visibility: &ColumnVisibility) -> Row {
@@ -1148,10 +1132,7 @@ impl TasksList {
         needs_scrollbar: bool,
         scroll_metrics: &ScrollMetrics,
     ) {
-        let visible_entries = self
-            .selection_manager
-            .lock()
-            .get_viewport_entries();
+        let visible_entries = self.selection_manager.lock().get_viewport_entries();
         let selected_style = Style::default()
             .fg(THEME.primary_fg)
             .add_modifier(Modifier::BOLD);
@@ -1325,10 +1306,7 @@ impl TasksList {
             if let Some(task_name) = entry {
                 // Find the task in the filtered list
                 if let Some(task) = self.tasks.iter().find(|t| &t.name == task_name) {
-                    let is_selected = self
-                        .selection_manager
-                        .lock()
-                        .is_selected(task_name);
+                    let is_selected = self.selection_manager.lock().is_selected(task_name);
 
                     // Calculate absolute position to determine if the task is in the parallel section
                     let absolute_idx = scroll_metrics.scroll_offset + row_idx;
@@ -2089,9 +2067,7 @@ impl Component for TasksList {
             Action::SortTasks => {
                 self.sort_tasks();
                 // Explicitly scroll to ensure selected task is visible after sort
-                self.selection_manager
-                    .lock()
-                    .ensure_selected_visible();
+                self.selection_manager.lock().ensure_selected_visible();
             }
             Action::UpdateTaskStatus(task_name, status) => {
                 self.update_task_status(task_name, status);

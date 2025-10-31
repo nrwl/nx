@@ -9,11 +9,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
+use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::{
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
     tasks::types::{Task, TaskGraph, TaskResult},
 };
-use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 
 use super::action::Action;
 use super::components::tasks_list::TaskStatus;
@@ -365,10 +365,8 @@ impl TuiApp for InlineApp {
         task_id: String,
         parser_and_writer: External<(ParserArc, WriterArc)>,
     ) {
-        let mut pty = PtyInstance::interactive(
-            parser_and_writer.0.clone(),
-            parser_and_writer.1.clone(),
-        );
+        let mut pty =
+            PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
 
         // Resize PTY to inline dimensions
         let (rows, cols) = self.calculate_inline_pty_dimensions();
@@ -481,7 +479,10 @@ impl InlineApp {
         }
 
         // Get the task to display (selected or first running)
-        let current_task = self.selected_task.clone().or_else(|| self.get_current_running_task());
+        let current_task = self
+            .selected_task
+            .clone()
+            .or_else(|| self.get_current_running_task());
 
         if let Some(current_task) = current_task {
             let state = self.state.lock();
@@ -507,10 +508,10 @@ impl InlineApp {
 
                 // Render buffered scrollback above TUI using terminal.insert_before
                 if !buffered_scrollback_lines.is_empty() {
+                    use crate::native::tui::theme::THEME;
+                    use ratatui::style::Style;
                     use ratatui::text::Line;
                     use ratatui::widgets::Paragraph;
-                    use ratatui::style::Style;
-                    use crate::native::tui::theme::THEME;
 
                     let height = buffered_scrollback_lines.len() as u16;
                     let _ = tui.insert_before(height, |buf| {
@@ -551,9 +552,9 @@ impl InlineApp {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Min(10),     // Terminal output (at least 10 lines, takes remaining space)
-                Constraint::Length(3),   // Status bar (compact: 3 lines with border)
-                Constraint::Length(3),   // Progress bar (compact: 3 lines with border)
+                Constraint::Min(10), // Terminal output (at least 10 lines, takes remaining space)
+                Constraint::Length(3), // Status bar (compact: 3 lines with border)
+                Constraint::Length(3), // Progress bar (compact: 3 lines with border)
             ])
             .split(area);
 
@@ -568,12 +569,15 @@ impl InlineApp {
     }
 
     fn render_inline_status(&self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
-        use ratatui::layout::{Constraint, Direction, Layout};
-        use ratatui::widgets::{Block, Borders, Paragraph};
-        use ratatui::style::Style;
         use crate::native::tui::theme::THEME;
+        use ratatui::layout::{Constraint, Direction, Layout};
+        use ratatui::style::Style;
+        use ratatui::widgets::{Block, Borders, Paragraph};
 
-        let current_task = self.selected_task.clone().or_else(|| self.get_current_running_task());
+        let current_task = self
+            .selected_task
+            .clone()
+            .or_else(|| self.get_current_running_task());
         let status_text = if let Some(task_id) = current_task {
             format!(" Running: {} ", task_id)
         } else {
@@ -611,9 +615,9 @@ impl InlineApp {
     }
 
     fn render_inline_progress(&self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
-        use ratatui::widgets::{Block, Borders, Gauge};
-        use ratatui::style::Style;
         use crate::native::tui::theme::THEME;
+        use ratatui::style::Style;
+        use ratatui::widgets::{Block, Borders, Gauge};
 
         let completed_count = self.get_completed_task_count();
         let state = self.state.lock();
@@ -642,7 +646,10 @@ impl InlineApp {
 
     fn render_inline_main_content(&mut self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
         // Show selected task output if available, otherwise first running task
-        let current_task = self.selected_task.clone().or_else(|| self.get_current_running_task());
+        let current_task = self
+            .selected_task
+            .clone()
+            .or_else(|| self.get_current_running_task());
 
         if let Some(current_task) = current_task {
             let state = self.state.lock();
@@ -655,10 +662,10 @@ impl InlineApp {
         }
 
         // Fallback: show a message indicating no task is running
-        use ratatui::widgets::{Block, Borders, Paragraph};
-        use ratatui::style::Style;
-        use ratatui::layout::Alignment;
         use crate::native::tui::theme::THEME;
+        use ratatui::layout::Alignment;
+        use ratatui::style::Style;
+        use ratatui::widgets::{Block, Borders, Paragraph};
 
         let message = Paragraph::new(" Waiting for tasks to start... ")
             .style(Style::default().fg(THEME.secondary_fg))
@@ -679,10 +686,10 @@ impl InlineApp {
         area: ratatui::layout::Rect,
         pty: &Arc<PtyInstance>,
     ) {
-        use ratatui::widgets::Block;
-        use ratatui::style::Style;
-        use tui_term::widget::PseudoTerminal;
         use crate::native::tui::theme::THEME;
+        use ratatui::style::Style;
+        use ratatui::widgets::Block;
+        use tui_term::widget::PseudoTerminal;
 
         // Scrollback is handled separately via terminal.insert_before
         // Just render the current terminal screen here
@@ -794,7 +801,7 @@ mod tests {
         )));
 
         // Create app with existing state
-        let app = InlineApp::with_state(existing_state.clone()).unwrap();
+        let app = InlineApp::with_state(existing_state.clone(), None).unwrap();
 
         // Verify it uses the same state
         assert!(Arc::ptr_eq(&app.state, &existing_state));
@@ -839,10 +846,7 @@ mod tests {
         let mut app = create_test_inline_app();
         let (tx, _rx) = mpsc::unbounded_channel();
 
-        let event = tui::Event::Key(KeyEvent::new(
-            KeyCode::Char('c'),
-            KeyModifiers::CONTROL,
-        ));
+        let event = tui::Event::Key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL));
         let result = app.handle_event(event, &tx).unwrap();
 
         assert!(result);
@@ -950,10 +954,7 @@ mod tests {
 
         // Verify status updated in state
         let state = app.state.lock();
-        assert_eq!(
-            state.get_task_status("app1"),
-            Some(TaskStatus::InProgress)
-        );
+        assert_eq!(state.get_task_status("app1"), Some(TaskStatus::InProgress));
     }
 
     #[test]
@@ -1002,10 +1003,7 @@ mod tests {
         app.update_task_status(String::from("app1"), TaskStatus::InProgress);
 
         // Should find running task
-        assert_eq!(
-            app.get_current_running_task(),
-            Some(String::from("app1"))
-        );
+        assert_eq!(app.get_current_running_task(), Some(String::from("app1")));
     }
 
     #[test]
@@ -1220,8 +1218,8 @@ mod integration_tests {
         )));
 
         // Create two apps with same state
-        let mut app1 = InlineApp::with_state(state.clone()).unwrap();
-        let app2 = InlineApp::with_state(state.clone()).unwrap();
+        let mut app1 = InlineApp::with_state(state.clone(), None).unwrap();
+        let app2 = InlineApp::with_state(state.clone(), None).unwrap();
 
         // Modify through app1
         app1.update_task_status(String::from("shared"), TaskStatus::Success);

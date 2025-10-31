@@ -300,9 +300,7 @@ impl AppLifeCycle {
                 Tui::new().map_err(|e| napi::Error::from_reason(e.to_string()))?
             }
             TuiMode::Inline => {
-                let inline_height = terminal::size()
-                    .map(|(_cols, rows)| rows)
-                    .unwrap_or(24);
+                let inline_height = terminal::size().map(|(_cols, rows)| rows).unwrap_or(24);
 
                 Tui::new_with_viewport(ratatui::Viewport::Inline(inline_height))
                     .map_err(|e| napi::Error::from_reason(e.to_string()))?
@@ -342,7 +340,9 @@ impl AppLifeCycle {
         app.with_app(|tui_app| {
             tui_app.set_done_callback(done_callback);
             tui_app.register_action_handler(action_tx.clone()).ok();
-            tui_app.init(tui.size().unwrap_or(ratatui::layout::Size::new(80, 24))).ok();
+            tui_app
+                .init(tui.size().unwrap_or(ratatui::layout::Size::new(80, 24)))
+                .ok();
         });
 
         debug!("✅ Initialized TUI App");
@@ -391,7 +391,8 @@ impl AppLifeCycle {
                             // Create full-screen app instance
                             let app_instance = App::with_state(shared_state, TuiMode::FullScreen)
                                 .expect("Failed to create full-screen app");
-                            let new_app = TuiAppInstance::FullScreen(Arc::new(Mutex::new(app_instance)));
+                            let new_app =
+                                TuiAppInstance::FullScreen(Arc::new(Mutex::new(app_instance)));
 
                             // Initialize new app
                             new_app.with_app(|tui_app| {
@@ -449,9 +450,13 @@ impl AppLifeCycle {
                                     TuiAppInstance::FullScreen(Arc::new(Mutex::new(app_instance)))
                                 }
                                 TuiMode::Inline => {
-                                    debug!("Creating inline app with selected task: {:?}", selected_task);
-                                    let app_instance = InlineApp::with_state(shared_state, selected_task)
-                                        .expect("Failed to create inline app");
+                                    debug!(
+                                        "Creating inline app with selected task: {:?}",
+                                        selected_task
+                                    );
+                                    let app_instance =
+                                        InlineApp::with_state(shared_state, selected_task)
+                                            .expect("Failed to create inline app");
                                     TuiAppInstance::Inline(Arc::new(Mutex::new(app_instance)))
                                 }
                             };

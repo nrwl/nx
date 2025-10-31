@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use crate::native::tasks::types::{Task, TaskGraph};
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
+use crate::native::tasks::types::{Task, TaskGraph};
 
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
@@ -642,10 +642,7 @@ mod integration_tests {
     }
 
     fn create_test_state() -> TuiState {
-        let tasks = vec![
-            create_test_task("app1"),
-            create_test_task("app2"),
-        ];
+        let tasks = vec![create_test_task("app1"), create_test_task("app2")];
         let initiating_tasks = HashSet::from([String::from("app1")]);
         let task_graph = TaskGraph {
             tasks: HashMap::new(),

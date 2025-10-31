@@ -3,6 +3,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKi
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
+use parking_lot::Mutex;
 use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect, Size};
 use ratatui::style::Modifier;
 use ratatui::style::Style;
@@ -10,7 +11,6 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Gauge, Paragraph};
 use std::collections::HashMap;
 use std::io;
-use parking_lot::Mutex;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
@@ -195,9 +195,7 @@ impl App {
 
         for (idx, task) in pinned_tasks.iter().enumerate() {
             if idx < 2 {
-                self.selection_manager
-                    .lock()
-                    .select_task(task.clone());
+                self.selection_manager.lock().select_task(task.clone());
 
                 if pinned_tasks.len() == 1 && idx == 0 {
                     self.display_and_focus_current_task_in_terminal_pane(match run_mode {
@@ -366,12 +364,7 @@ impl App {
     }
 
     fn begin_exit_countdown(&mut self) {
-        let countdown_duration = self
-            .state
-            .lock()
-            .tui_config()
-            .auto_exit
-            .countdown_seconds();
+        let countdown_duration = self.state.lock().tui_config().auto_exit.countdown_seconds();
         // If countdown is disabled, exit immediately
         if countdown_duration.is_none() {
             self.quit();
@@ -590,18 +583,19 @@ impl App {
                     if !tasks_list.filter_mode && key.code == KeyCode::Char('q') {
                         // Check if all tasks are in a completed state using the task status map
                         let state = self.state.lock();
-                        let all_tasks_completed = state.get_task_status_map().values().all(|status| {
-                            matches!(
-                                status,
-                                TaskStatus::Success
-                                    | TaskStatus::Failure
-                                    | TaskStatus::Skipped
-                                    | TaskStatus::LocalCache
-                                    | TaskStatus::LocalCacheKeptExisting
-                                    | TaskStatus::RemoteCache
-                                    | TaskStatus::Stopped // Consider stopped continuous tasks as completed for exit purposes
-                            )
-                        });
+                        let all_tasks_completed =
+                            state.get_task_status_map().values().all(|status| {
+                                matches!(
+                                    status,
+                                    TaskStatus::Success
+                                        | TaskStatus::Failure
+                                        | TaskStatus::Skipped
+                                        | TaskStatus::LocalCache
+                                        | TaskStatus::LocalCacheKeptExisting
+                                        | TaskStatus::RemoteCache
+                                        | TaskStatus::Stopped // Consider stopped continuous tasks as completed for exit purposes
+                                )
+                            });
                         drop(state);
 
                         if all_tasks_completed {
@@ -922,15 +916,18 @@ impl App {
             }
             Action::Tick => {
                 let state = self.state.lock();
-                state.get_console_messenger().as_ref().and_then(|messenger| {
-                    self.components
-                        .iter()
-                        .find_map(|c| c.as_any().downcast_ref::<TasksList>())
-                        .and_then(|tasks_list| {
-                            let pty_instances = state.get_pty_instances();
-                            messenger.update_running_tasks(&tasks_list.tasks, &pty_instances)
-                        })
-                });
+                state
+                    .get_console_messenger()
+                    .as_ref()
+                    .and_then(|messenger| {
+                        self.components
+                            .iter()
+                            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+                            .and_then(|tasks_list| {
+                                let pty_instances = state.get_pty_instances();
+                                messenger.update_running_tasks(&tasks_list.tasks, &pty_instances)
+                            })
+                    });
             }
             // Quit immediately
             Action::Quit => {
@@ -1094,9 +1091,8 @@ impl App {
                         .collect();
 
                     // Calculate minimal view context once for all panes
-                    let is_minimal =
-                        self.is_task_list_hidden()
-                            && get_task_count(self.state.lock().task_graph()) == 1;
+                    let is_minimal = self.is_task_list_hidden()
+                        && get_task_count(self.state.lock().task_graph()) == 1;
 
                     for (pane_idx, pane_area, relevant_pane_task) in terminal_panes_data {
                         if let Some(task_name) = relevant_pane_task {
@@ -1250,11 +1246,7 @@ impl App {
             .set_task_list_visibility(TaskListVisibility::Visible);
 
         // Extract task name first to end the immutable borrow
-        let task_name = match self
-            .selection_manager
-            .lock()
-            .get_selected_task_name()
-        {
+        let task_name = match self.selection_manager.lock().get_selected_task_name() {
             Some(name) => name.clone(),
             None => return,
         };
@@ -1430,11 +1422,7 @@ impl App {
 
     fn assign_current_task_to_pane(&mut self, pane_idx: usize) {
         // Extract task name first to end the immutable borrow
-        let task_name = match self
-            .selection_manager
-            .lock()
-            .get_selected_task_name()
-        {
+        let task_name = match self.selection_manager.lock().get_selected_task_name() {
             Some(name) => name.clone(),
             None => return,
         };
@@ -1598,49 +1586,49 @@ impl App {
     fn handle_pty_resize(&mut self) -> io::Result<()> {
         // Always use fullscreen mode logic
         {
-                if self.layout_areas.is_none() {
-                    return Ok(());
-                }
+            if self.layout_areas.is_none() {
+                return Ok(());
+            }
 
-                let mut needs_sort = false;
+            let mut needs_sort = false;
 
-                for (pane_idx, pane_area) in self
-                    .layout_areas
-                    .as_ref()
-                    .unwrap()
-                    .terminal_panes
-                    .iter()
-                    .enumerate()
-                {
-                    let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-                    if let Some(pty) = terminal_pane_data.pty.as_ref() {
-                        let (pty_height, pty_width) =
-                            TerminalPane::calculate_pty_dimensions(*pane_area);
+            for (pane_idx, pane_area) in self
+                .layout_areas
+                .as_ref()
+                .unwrap()
+                .terminal_panes
+                .iter()
+                .enumerate()
+            {
+                let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+                if let Some(pty) = terminal_pane_data.pty.as_ref() {
+                    let (pty_height, pty_width) =
+                        TerminalPane::calculate_pty_dimensions(*pane_area);
 
-                        // Get current dimensions before resize
-                        let (current_rows, current_cols) = pty.get_dimensions();
+                    // Get current dimensions before resize
+                    let (current_rows, current_cols) = pty.get_dimensions();
 
-                        // Skip resize if dimensions haven't actually changed
-                        if current_rows == pty_height && current_cols == pty_width {
-                            continue;
-                        }
+                    // Skip resize if dimensions haven't actually changed
+                    if current_rows == pty_height && current_cols == pty_width {
+                        continue;
+                    }
 
-                        // With shared dimensions, we only need to call resize once per PTY instance
-                        // The shared Arc<RwLock<(u16, u16)>> ensures all references see the update
-                        let mut pty_clone = pty.as_ref().clone();
-                        pty_clone.resize(pty_height, pty_width)?;
+                    // With shared dimensions, we only need to call resize once per PTY instance
+                    // The shared Arc<RwLock<(u16, u16)>> ensures all references see the update
+                    let mut pty_clone = pty.as_ref().clone();
+                    pty_clone.resize(pty_height, pty_width)?;
 
-                        // If dimensions changed, mark for sort
-                        if current_rows != pty_height {
-                            needs_sort = true;
-                        }
+                    // If dimensions changed, mark for sort
+                    if current_rows != pty_height {
+                        needs_sort = true;
                     }
                 }
+            }
 
-                // Sort tasks if needed after all resizing is complete
-                if needs_sort {
-                    self.dispatch_action(Action::SortTasks);
-                }
+            // Sort tasks if needed after all resizing is complete
+            if needs_sort {
+                self.dispatch_action(Action::SortTasks);
+            }
         }
 
         Ok(())
@@ -1731,9 +1719,7 @@ impl App {
             "🔗 Setting console messenger: is_connected={}",
             is_connected
         );
-        self.state
-            .lock()
-            .set_console_messenger(messenger);
+        self.state.lock().set_console_messenger(messenger);
 
         // ALWAYS dispatch ConsoleMessengerAvailable(true) regardless of connection status
         // The TUI should work even without Nx Console connection
@@ -1808,8 +1794,7 @@ impl App {
             let state = self.state.lock();
             let task_status_map = state.get_task_status_map();
             let task_graph = state.task_graph();
-            let dependency_view =
-                DependencyView::new(task_status_map, task_graph, is_minimal);
+            let dependency_view = DependencyView::new(task_status_map, task_graph, is_minimal);
             f.render_stateful_widget(dependency_view, pane_area, dep_state);
         }
     }
@@ -1920,9 +1905,7 @@ impl App {
     }
 
     pub fn set_estimated_task_timings(&mut self, timings: HashMap<String, i64>) {
-        self.state
-            .lock()
-            .set_estimated_task_timings(timings);
+        self.state.lock().set_estimated_task_timings(timings);
     }
 
     /// Handles automatic pane switching when a task becomes skipped.
@@ -2312,7 +2295,10 @@ impl TuiApp for App {
     }
 
     fn get_selected_task_name(&self) -> Option<String> {
-        self.selection_manager.lock().get_selected_task_name().cloned()
+        self.selection_manager
+            .lock()
+            .get_selected_task_name()
+            .cloned()
     }
 
     fn get_shared_state(&self) -> Arc<Mutex<TuiState>> {

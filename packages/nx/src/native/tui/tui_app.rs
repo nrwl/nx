@@ -7,11 +7,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
+use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::{
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
     tasks::types::{Task, TaskResult},
 };
-use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 
 use super::action::Action;
 use super::components::tasks_list::TaskStatus;
