@@ -383,6 +383,7 @@ function registerPendingPromise(
 }
 
 global.nxPluginWorkerCount ??= 0;
+
 async function startPluginWorker() {
   // this should only really be true when running unit tests within
   // the Nx repo. We still need to start the worker in this case,
@@ -404,7 +405,7 @@ async function startPluginWorker() {
   };
 
   const ipcPath = getPluginOsSocketPath(
-    [process.pid, global.nxPluginWorkerCount++].join('-')
+    [process.pid, global.nxPluginWorkerCount++, performance.now()].join('-')
   );
 
   const worker = spawn(
