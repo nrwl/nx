@@ -75,6 +75,96 @@ class MavenEmbedderTest {
     }
   }
 
+  @Test
+  fun `measure overhead of multiple separate invocations vs single combined invocation`() {
+    val executor = EmbeddedMavenExecutor(true, true)
+
+    try {
+      println("\n=== Measuring POM Parse Overhead: Multiple vs Combined Invocations ===\n")
+
+      // Use some real modules from the workspace for realistic testing
+      val modules = listOf(
+        "dev.nx.maven:nx-maven-plugin",
+        "dev.nx.maven:batch-runner"
+      )
+
+
+      System.setProperty("maven.home", "/home/jason/.local/share/mise/installs/maven/3.9.11/apache-maven-3.9.11")
+
+      val modulesArg0 = modules.joinToString(",")
+      val request0 = ExecutorRequest.mavenBuilder(null)
+        .arguments(listOf("nx:apply", "-pl", modulesArg0))
+        .cwd(workspaceRoot.toPath())
+        .stdOut(ByteArrayOutputStream())
+        .stdErr(ByteArrayOutputStream())
+        .build()
+
+      val exitCode0 = executor.execute(request0)
+
+      // Test 1: Multiple separate invocations (each parses POMs)
+      println("Test 1: Running ${modules.size} modules in SEPARATE invocations...")
+      val separateStart = System.currentTimeMillis()
+      var separateTotalTime = 0L
+
+      modules.forEach { module ->
+        val output = ByteArrayOutputStream()
+        System.setProperty("maven.home", "/home/jason/.local/share/mise/installs/maven/3.9.11/apache-maven-3.9.11")
+
+        val request = ExecutorRequest.mavenBuilder(null)
+          .arguments(listOf("nx:apply", "-pl", module))
+          .cwd(workspaceRoot.toPath())
+          .stdOut(output)
+          .stdErr(ByteArrayOutputStream())
+          .build()
+
+        val iterStart = System.currentTimeMillis()
+        val exitCode = executor.execute(request)
+        val iterDuration = System.currentTimeMillis() - iterStart
+        separateTotalTime += iterDuration
+
+        println("  Module '$module': ${iterDuration}ms (exit code: $exitCode)")
+//        assert(exitCode == 0) { "Maven execution failed for module $module" }
+      }
+
+      val separateDuration = System.currentTimeMillis() - separateStart
+      println("Total time (separate invocations): ${separateDuration}ms\n")
+
+      // Test 2: Single combined invocation (parses POMs once)
+      println("Test 2: Running ${modules.size} modules in SINGLE combined invocation...")
+      val combinedStart = System.currentTimeMillis()
+
+      val output = ByteArrayOutputStream()
+      System.setProperty("maven.home", "/home/jason/.local/share/mise/installs/maven/3.9.11/apache-maven-3.9.11")
+
+      val modulesArg = modules.joinToString(",")
+      val request = ExecutorRequest.mavenBuilder(null)
+        .arguments(listOf("nx:apply", "-pl", modulesArg))
+        .cwd(workspaceRoot.toPath())
+        .stdOut(output)
+        .stdErr(ByteArrayOutputStream())
+        .build()
+
+      val exitCode = executor.execute(request)
+      val combinedDuration = System.currentTimeMillis() - combinedStart
+
+      println("  Combined (modules: $modulesArg): ${combinedDuration}ms (exit code: $exitCode)")
+      assert(exitCode == 0) { "Maven execution failed for combined invocation" }
+
+      // Calculate overhead
+      val overhead = separateDuration - combinedDuration
+      val overheadPercent = if (separateDuration > 0) (overhead.toDouble() / separateDuration * 100).toInt() else 0
+
+      println("\n=== Results ===")
+      println("Separate invocations: ${separateDuration}ms")
+      println("Combined invocation:  ${combinedDuration}ms")
+      println("Overhead:             ${overhead}ms (${overheadPercent}%)")
+      println("\nConclusion: ${if (overhead > 0) "Combining saves ${overhead}ms per batch" else "No significant difference"}\n")
+
+    } finally {
+      executor.close()
+    }
+  }
+
   private fun resolveMavenHome(): String {
     // Strategy 1: Check for mvnw wrapper in workspace (preferred - ensures correct Maven version)
     val mvnw = File(workspaceRoot, "mvnw")
