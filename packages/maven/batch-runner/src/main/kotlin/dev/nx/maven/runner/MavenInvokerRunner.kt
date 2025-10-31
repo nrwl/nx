@@ -39,14 +39,6 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
   // Requires MAVEN_HOME environment variable to be set
   private val embeddedExecutor = EmbeddedMavenExecutor(true, true)
 
-  /**
-   * Maven execution specification separating goals from options/arguments
-   */
-  data class MavenExecution(
-    val goals: List<String>,
-    val arguments: List<String>
-  )
-
   fun requestShutdown() {
     log.info("⚠️  Shutdown requested, stopping new task submissions...")
     shutdownRequested = true
@@ -167,10 +159,11 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     val startTime = System.currentTimeMillis()
 
     // Get goals and arguments for this task
-    val execution = buildMavenExecution(taskId)
+    val goals = buildGoals(taskId)
+    val arguments = buildArguments(taskId)
 
     // If task has no goals, return success immediately
-    if (execution.goals.isEmpty()) {
+    if (goals.isEmpty()) {
       log.info("Task $taskId has no goals, marking as successful")
       val endTime = System.currentTimeMillis()
       return TaskResult(
@@ -188,13 +181,13 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     val output = ByteArrayOutputStream()
 
     return try {
-      log.info("Executing ${execution.goals.joinToString(", ")} for task: $taskId")
+      log.info("Executing ${goals.joinToString(", ")} for task: $taskId")
 
       // Build ExecutorRequest for EmbeddedMavenExecutor using mavenBuilder factory
       // Combine goals and arguments for the request
       val allArguments = mutableListOf<String>()
-      allArguments.addAll(execution.goals)
-      allArguments.addAll(execution.arguments)
+      allArguments.addAll(goals)
+      allArguments.addAll(arguments)
 
       val request = ExecutorRequest.mavenBuilder(Paths.get(mavenHome))
         .arguments(allArguments)
@@ -395,10 +388,9 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     )
   }
 
-  private fun buildMavenExecution(taskId: String): MavenExecution {
+  private fun buildGoals(taskId: String): List<String> {
     val mavenBatchTask = options.tasks.getValue(taskId)
     val goals = mutableListOf<String>()
-    val arguments = mutableListOf<String>()
 
     // Add Nx Maven apply goal before user goals
 //    goals.add("dev.nx.maven:nx-maven-plugin:apply")
@@ -409,7 +401,13 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     // Add Nx Maven record goal after user goals
 //    goals.add("dev.nx.maven:nx-maven-plugin:record")
 
-    // Add Maven options/arguments
+    return goals
+  }
+
+  private fun buildArguments(taskId: String): List<String> {
+    val mavenBatchTask = options.tasks.getValue(taskId)
+    val arguments = mutableListOf<String>()
+
     // Batch mode flag
     arguments.add("-B")
 
@@ -427,8 +425,6 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     arguments.add("-pl")
     arguments.add(projectSelector)
 
-    // Filter out any arguments that were in user goals (avoid duplicates)
-    val filteredGoals = goals.filter { it !in mavenBatchTask.goals }
-    return MavenExecution(filteredGoals, arguments)
+    return arguments
   }
 }
