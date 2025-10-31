@@ -158,9 +158,10 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
   ): TaskResult {
     val startTime = System.currentTimeMillis()
 
-    // Get goals and arguments for this task
-    val goals = buildGoals(taskId)
-    val arguments = buildArguments(taskId)
+    // Get the task and its goals/arguments
+    val mavenBatchTask = options.tasks.getValue(taskId)
+    val goals = buildGoals(mavenBatchTask)
+    val arguments = buildArguments(taskId, mavenBatchTask)
 
     // If task has no goals, return success immediately
     if (goals.isEmpty()) {
@@ -388,8 +389,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     )
   }
 
-  private fun buildGoals(taskId: String): List<String> {
-    val mavenBatchTask = options.tasks.getValue(taskId)
+  private fun buildGoals(mavenBatchTask: MavenBatchTask): List<String> {
     val goals = mutableListOf<String>()
 
     // Add Nx Maven apply goal before user goals
@@ -404,8 +404,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     return goals
   }
 
-  private fun buildArguments(taskId: String): List<String> {
-    val mavenBatchTask = options.tasks.getValue(taskId)
+  private fun buildArguments(taskId: String, mavenBatchTask: MavenBatchTask): List<String> {
     val arguments = mutableListOf<String>()
 
     // Batch mode flag
