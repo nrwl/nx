@@ -54,7 +54,7 @@ describe('Workspace Context', () => {
       fs.tempDir,
       cacheDirectoryForWorkspace(fs.tempDir)
     );
-    let { projectFileMap, globalFiles } = await context.getWorkspaceFiles({
+    let { projectFileMap, globalFiles } = await context.getWorkspaceFiles([], {
       'libs/project1': 'project1',
       'libs/project2': 'project2',
       'libs/project3': 'project3',
@@ -156,9 +156,12 @@ describe('Workspace Context', () => {
       cacheDirectoryForWorkspace(fs.tempDir)
     );
 
-    const { globalFiles, projectFileMap } = await context.getWorkspaceFiles({
-      '.': 'repo-name',
-    });
+    const { globalFiles, projectFileMap } = await context.getWorkspaceFiles(
+      [],
+      {
+        '.': 'repo-name',
+      }
+    );
 
     expect(globalFiles).toEqual([]);
     expect(projectFileMap['repo-name']).toMatchInlineSnapshot(`

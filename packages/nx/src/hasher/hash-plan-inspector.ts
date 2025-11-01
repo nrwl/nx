@@ -44,6 +44,7 @@ export class HashPlanInspector {
       false
     );
     this.inspector = new NativeHashPlanInspector(
+      workspaceRoot,
       externalReferences.allWorkspaceFiles,
       this.projectGraphRef,
       externalReferences.projectFiles

@@ -9,6 +9,7 @@ use std::collections::HashMap;
 
 #[napi]
 pub struct HashPlanInspector {
+    workspace_root: String,
     all_workspace_files: External<Vec<FileData>>,
     project_graph: External<ProjectGraph>,
     project_file_map: External<HashMap<String, Vec<FileData>>>,
@@ -18,11 +19,13 @@ pub struct HashPlanInspector {
 impl HashPlanInspector {
     #[napi(constructor)]
     pub fn new(
+        workspace_root: String,
         all_workspace_files: External<Vec<FileData>>,
         project_graph: External<ProjectGraph>,
         project_file_map: External<HashMap<String, Vec<FileData>>>,
     ) -> Self {
         Self {
+            workspace_root,
             all_workspace_files,
             project_graph,
             project_file_map,
@@ -58,6 +61,7 @@ impl HashPlanInspector {
                         .ok_or_else(|| anyhow!("project {} not found", project_name))?;
 
                     let files = collect_project_files(
+                        &self.workspace_root,
                         project_name,
                         &project.root,
                         file_sets,

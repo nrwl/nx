@@ -1,20 +1,27 @@
-use std::collections::HashMap;
-
 use anyhow::*;
+use std::collections::HashMap;
+use std::path::PathBuf;
 use tracing::{trace, trace_span};
 
 use crate::native::glob::build_glob_set;
 use crate::native::types::FileData;
+use crate::native::utils::path::get_relative_path;
 
 pub fn hash_project_files(
+    workspace_root: &String,
     project_name: &str,
     project_root: &str,
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
 ) -> Result<String> {
     let _span = trace_span!("hash_project_files", project_name).entered();
-    let collected_files =
-        collect_project_files(project_name, project_root, file_sets, project_file_map)?;
+    let collected_files = collect_project_files(
+        workspace_root,
+        project_name,
+        project_root,
+        file_sets,
+        project_file_map,
+    )?;
     trace!("collected_files: {:?}", collected_files.len());
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
     for file in collected_files {
@@ -26,6 +33,7 @@ pub fn hash_project_files(
 
 /// base function that should be testable (to make sure that we're getting the proper files back)
 pub fn collect_project_files<'a>(
+    workspace_root: &String,
     project_name: &str,
     project_root: &str,
     file_sets: &[String],
@@ -52,7 +60,15 @@ pub fn collect_project_files<'a>(
             let now = std::time::Instant::now();
             let hashes = files
                 .iter()
-                .filter(|file| glob_set.is_match(&file.file))
+                .filter(|file| {
+                    let path = if PathBuf::from(&file.file).is_absolute() {
+                        &get_relative_path(workspace_root, &file.file)
+                    } else {
+                        &file.file
+                    };
+                    trace!("{} - {}", path, file.hash);
+                    glob_set.is_match(path)
+                })
                 .collect::<Vec<_>>();
             trace!("hash_files for {}: {:?}", project_name, now.elapsed());
             Ok(hashes)
@@ -68,6 +84,7 @@ mod tests {
 
     #[test]
     fn test_collect_files() {
+        let workspace_root = String::from("");
         let proj_name = "test_project";
         let proj_root = "test/root";
         let file_sets = &[
@@ -101,11 +118,14 @@ mod tests {
             ],
         );
 
-        let result = collect_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
+        let result =
+            collect_project_files(&workspace_root, proj_name, proj_root, file_sets, &file_map)
+                .unwrap();
 
         assert_eq!(result, vec![&tsfile_1, &tsfile_2]);
 
         let result = collect_project_files(
+            &workspace_root,
             proj_name,
             proj_root,
             &["!{projectRoot}/**/*.spec.ts".into()],
@@ -124,6 +144,7 @@ mod tests {
 
     #[test]
     fn should_hash_deterministically() {
+        let workspace_root = String::from("");
         let proj_name = "test_project";
         let proj_root = "test/root";
         let file_sets = &[
@@ -156,7 +177,9 @@ mod tests {
                 file_data4.clone(),
             ],
         );
-        let hash_result = hash_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
+        let hash_result =
+            hash_project_files(&workspace_root, proj_name, proj_root, file_sets, &file_map)
+                .unwrap();
         assert_eq!(
             hash_result,
             hash(
@@ -173,6 +196,7 @@ mod tests {
 
     #[test]
     fn should_hash_projects_with_root_as_dot() {
+        let workspace_root = String::from("");
         let proj_name = "test_project";
         // having "." as the project root means that this would be a standalone project
         let proj_root = ".";
@@ -206,7 +230,9 @@ mod tests {
                 file_data4.clone(),
             ],
         );
-        let hash_result = hash_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
+        let hash_result =
+            hash_project_files(&workspace_root, proj_name, proj_root, file_sets, &file_map)
+                .unwrap();
         assert_eq!(
             hash_result,
             hash(

@@ -856,6 +856,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   sync?: NxSyncConfiguration;
 
   /**
+   * Additional directories to discover projects within relative to the nx.json
+   */
+  additionalProjectDirectories?: string[];
+
+  /**
    * Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.
    */
   maxCacheSize?: string;

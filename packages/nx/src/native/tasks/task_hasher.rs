@@ -220,6 +220,7 @@ impl TaskHasher {
                     .get(project_name)
                     .ok_or_else(|| anyhow!("project {} not found", project_name))?;
                 let hashed_project_files = hash_project_files(
+                    &self.workspace_root,
                     project_name,
                     &project.root,
                     file_sets,

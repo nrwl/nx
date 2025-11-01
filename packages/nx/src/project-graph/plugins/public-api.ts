@@ -16,6 +16,7 @@ import type { TaskResults } from '../../tasks-runner/life-cycle';
 export interface CreateNodesContextV2 {
   readonly nxJsonConfiguration: NxJsonConfiguration;
   readonly workspaceRoot: string;
+  readonly additionalProjectConfigurationFiles?: string[];
 }
 
 export type CreateNodesResultV2 = Array<
