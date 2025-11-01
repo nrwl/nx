@@ -123,7 +123,10 @@ export function getSwcTranspiler(
   const register = require('@swc-node/register/register')
     .register as ISwcRegister;
 
-  const cleanupFn = register(compilerOptions);
+  const cleanupFn = register({
+    ...compilerOptions,
+    baseUrl: compilerOptions.baseUrl ?? './',
+  });
 
   return typeof cleanupFn === 'function' ? cleanupFn : () => {};
 }
