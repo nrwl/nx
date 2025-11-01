@@ -10,6 +10,7 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use std::collections::HashMap;
 use std::io;
+use std::io::Write;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
@@ -72,6 +73,7 @@ pub struct App {
     pinned_tasks: Vec<String>,
     task_graph: TaskGraph,
     task_status_map: HashMap<String, TaskStatus>, // App owns task status
+    incomplete_task_count: usize,                 // Count of tasks that are not yet complete
     debug_mode: bool,
     debug_state: TuiWidgetState,
     console_messenger: Option<NxConsoleMessageConnection>,
@@ -126,6 +128,9 @@ impl App {
 
         let main_terminal_pane_data = TerminalPaneData::new();
 
+        // All tasks start as NotStarted, so all are incomplete
+        let incomplete_task_count = task_status_map.len();
+
         Ok(Self {
             run_mode,
             components,
@@ -151,6 +156,7 @@ impl App {
             selection_manager,
             task_graph,
             task_status_map,
+            incomplete_task_count,
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
             console_messenger: None,
@@ -202,7 +208,6 @@ impl App {
     }
 
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
-        // Update the App's task status map first
         self.task_status_map.insert(task_id.clone(), status);
 
         // Auto-switch pane to failed dependency when a task becomes skipped
@@ -222,6 +227,12 @@ impl App {
                 }
             }
         }
+
+        // Update terminal progress indicator only when task reaches a completed state
+        if self.is_status_complete(status) {
+            self.incomplete_task_count = self.incomplete_task_count.saturating_sub(1);
+            self.update_terminal_progress();
+        }
     }
 
     /// Get task status efficiently from App's own HashMap
@@ -232,6 +243,14 @@ impl App {
     /// Get task continuous flag efficiently from task graph
     pub fn is_task_continuous(&self, task_id: &str) -> bool {
         is_task_continuous(&self.task_graph, task_id)
+    }
+
+    /// Check if a task status is considered complete
+    fn is_status_complete(&self, status: TaskStatus) -> bool {
+        !matches!(
+            status,
+            TaskStatus::NotStarted | TaskStatus::InProgress | TaskStatus::Shared
+        )
     }
 
     fn should_set_interactive_by_default(&self, task_id: &str) -> bool {
@@ -315,6 +334,7 @@ impl App {
     }
 
     fn quit(&mut self) {
+        App::clear_terminal_progress();
         self.quit_at = Some(std::time::Instant::now());
     }
 
@@ -1894,5 +1914,33 @@ impl App {
         let failed_deps =
             get_failed_dependencies(task_name, &self.task_graph, &self.task_status_map);
         failed_deps.into_iter().next()
+    }
+
+    /// Updates the terminal progress indicator (OSC 9;4).
+    /// Shows percentage of tasks that are complete (anything except NotStarted, InProgress, or Shared).
+    fn update_terminal_progress(&self) {
+        let total_tasks = self.task_status_map.len();
+        if total_tasks == 0 {
+            return;
+        }
+
+        // Use cached incomplete task count instead of recalculating
+        let completed_tasks = total_tasks - self.incomplete_task_count;
+        let percentage = (completed_tasks * 100) / total_tasks;
+
+        // Write OSC 9;4 escape sequence to stderr (less likely to conflict with TUI rendering)
+        // Format: ESC ] 9 ; 4 ; <state> ; <percentage> ST
+        // state: 1 = show progress, 0 = hide
+        // percentage: 0-100
+        // Using ST terminator (\x1b\\) for maximum compatibility (Ghostty, Windows Terminal, VTE)
+        let _ = io::stderr().write_all(format!("\x1b]9;4;1;{}\x1b\\", percentage).as_bytes());
+        let _ = io::stderr().flush();
+    }
+
+    /// Clears the terminal progress indicator.
+    pub fn clear_terminal_progress() {
+        // State 0 = hide progress (using ST terminator for compatibility)
+        let _ = io::stderr().write_all(b"\x1b]9;4;0;0\x1b\\");
+        let _ = io::stderr().flush();
     }
 }
