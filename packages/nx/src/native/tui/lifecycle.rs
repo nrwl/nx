@@ -312,6 +312,11 @@ impl AppLifeCycle {
 
 #[napi]
 pub fn restore_terminal() -> Result<()> {
+    // Clear Ghostty progress indicator (using ST terminator for compatibility)
+    use std::io::Write;
+    let _ = std::io::stderr().write_all(b"\x1b]9;4;0;0\x1b\\");
+    let _ = std::io::stderr().flush();
+
     // Restore the terminal to a clean state
     if let Ok(mut t) = Tui::new() {
         if let Err(r) = t.exit() {

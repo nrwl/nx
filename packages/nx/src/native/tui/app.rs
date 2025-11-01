@@ -199,6 +199,7 @@ impl App {
         }
 
         self.dispatch_action(Action::StartTasks(tasks));
+        self.update_ghostty_progress();
     }
 
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
@@ -222,6 +223,9 @@ impl App {
                 }
             }
         }
+
+        // Update Ghostty progress indicator
+        self.update_ghostty_progress();
     }
 
     /// Get task status efficiently from App's own HashMap
@@ -315,6 +319,7 @@ impl App {
     }
 
     fn quit(&mut self) {
+        self.clear_ghostty_progress();
         self.quit_at = Some(std::time::Instant::now());
     }
 
@@ -1894,5 +1899,45 @@ impl App {
         let failed_deps =
             get_failed_dependencies(task_name, &self.task_graph, &self.task_status_map);
         failed_deps.into_iter().next()
+    }
+
+    /// Updates the Ghostty terminal progress indicator (OSC 9;4).
+    /// Shows percentage of tasks that are complete (anything except NotStarted, InProgress, or Shared).
+    fn update_ghostty_progress(&self) {
+        let total_tasks = self.task_status_map.len();
+        if total_tasks == 0 {
+            return;
+        }
+
+        let incomplete_tasks = self
+            .task_status_map
+            .values()
+            .filter(|status| {
+                matches!(
+                    status,
+                    TaskStatus::NotStarted | TaskStatus::InProgress | TaskStatus::Shared
+                )
+            })
+            .count();
+
+        let completed_tasks = total_tasks - incomplete_tasks;
+        let percentage = (completed_tasks * 100) / total_tasks;
+
+        // Write OSC 9;4 escape sequence to stderr (less likely to conflict with TUI rendering)
+        // Format: ESC ] 9 ; 4 ; <state> ; <percentage> ST
+        // state: 1 = show progress, 0 = hide
+        // percentage: 0-100
+        // Using ST terminator (\x1b\\) for maximum compatibility (Ghostty, Windows Terminal, VTE)
+        use std::io::Write;
+        let _ = std::io::stderr().write_all(format!("\x1b]9;4;1;{}\x1b\\", percentage).as_bytes());
+        let _ = std::io::stderr().flush();
+    }
+
+    /// Clears the Ghostty terminal progress indicator.
+    fn clear_ghostty_progress(&self) {
+        use std::io::Write;
+        // State 0 = hide progress (using ST terminator for compatibility)
+        let _ = std::io::stderr().write_all(b"\x1b]9;4;0;0\x1b\\");
+        let _ = std::io::stderr().flush();
     }
 }
