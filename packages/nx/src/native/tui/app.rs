@@ -3,18 +3,20 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKi
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
-use ratatui::layout::{Alignment, Rect, Size};
+use parking_lot::Mutex;
+use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect, Size};
 use ratatui::style::Modifier;
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::widgets::{Block, Borders, Gauge, Paragraph};
 use std::collections::HashMap;
 use std::io;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::{debug, trace};
 use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetState};
+use tui_term::widget::PseudoTerminal;
 
 use crate::native::tui::tui::Tui;
 use crate::native::{
@@ -35,26 +37,23 @@ use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::config::TuiConfig;
 use super::graph_utils::{get_task_count, is_task_continuous};
-use super::lifecycle::RunMode;
+use super::lifecycle::{RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::theme::THEME;
 use super::tui;
 use super::utils::normalize_newlines;
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::tui::graph_utils::get_failed_dependencies;
+use crate::native::tui::tui_state::TuiState;
 
 pub struct App {
+    // === Shared State (accessed via Arc<Mutex<>>) ===
+    state: Arc<Mutex<TuiState>>,
+
+    // === Full-Screen UI State ===
     pub components: Vec<Box<dyn Component>>,
-    pub quit_at: Option<std::time::Instant>,
     focus: Focus,
-    run_mode: RunMode,
     previous_focus: Focus,
-    done_callback: Option<ThreadsafeFunction<(), ErrorStrategy::Fatal>>,
-    forced_shutdown_callback: Option<ThreadsafeFunction<(), ErrorStrategy::Fatal>>,
-    tui_config: TuiConfig,
-    // We track whether the user has interacted with the app to determine if we should show perform any auto-exit at all
-    user_has_interacted: bool,
-    is_forced_shutdown: bool,
     layout_manager: LayoutManager,
     // Cached frame area used for layout calculations, only updated on terminal resize
     frame_area: Option<Rect>,
@@ -66,16 +65,9 @@ pub struct App {
     pane_tasks: [Option<String>; 2], // Tasks assigned to panes 1 and 2 (0-indexed)
     action_tx: Option<UnboundedSender<Action>>,
     resize_debounce_timer: Option<u128>, // Timer for debouncing resize events
-    // task id -> pty instance
-    pty_instances: HashMap<String, Arc<PtyInstance>>,
     selection_manager: Arc<Mutex<TaskSelectionManager>>,
-    pinned_tasks: Vec<String>,
-    task_graph: TaskGraph,
-    task_status_map: HashMap<String, TaskStatus>, // App owns task status
     debug_mode: bool,
     debug_state: TuiWidgetState,
-    console_messenger: Option<NxConsoleMessageConnection>,
-    estimated_task_timings: HashMap<String, i64>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -87,25 +79,26 @@ pub enum Focus {
 }
 
 impl App {
-    pub fn new(
-        tasks: Vec<Task>,
-        initiating_tasks: HashSet<String>,
-        run_mode: RunMode,
-        pinned_tasks: Vec<String>,
-        tui_config: TuiConfig,
-        title_text: String,
-        task_graph: TaskGraph,
-    ) -> Result<Self> {
-        let task_count = get_task_count(&task_graph);
+    /// Create a new App with existing shared state (for mode switching)
+    ///
+    /// This constructor is used when switching from inline mode to full-screen mode,
+    /// allowing state to be preserved during the transition.
+    pub fn with_state(state: Arc<Mutex<TuiState>>, _tui_mode: TuiMode) -> Result<Self> {
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(5)));
-
         let initial_focus = Focus::TaskList;
 
-        // Initialize task status map - App owns this now
-        let mut task_status_map = HashMap::new();
-        for task in &tasks {
-            task_status_map.insert(task.id.clone(), TaskStatus::NotStarted);
-        }
+        // Get data from shared state to initialize UI components
+        let (tasks, initiating_tasks, run_mode, pinned_tasks, title_text, task_count) = {
+            let state_lock = state.lock();
+            (
+                state_lock.tasks().clone(),
+                state_lock.initiating_tasks().clone(),
+                state_lock.run_mode(),
+                state_lock.pinned_tasks().clone(),
+                state_lock.title_text().to_string(),
+                get_task_count(state_lock.task_graph()),
+            )
+        };
 
         let tasks_list = TasksList::new(
             tasks.clone(),
@@ -126,18 +119,13 @@ impl App {
 
         let main_terminal_pane_data = TerminalPaneData::new();
 
+        debug!("🚀 App::with_state - Full-screen mode");
+
         Ok(Self {
-            run_mode,
+            state,
             components,
-            pinned_tasks,
-            quit_at: None,
             focus: initial_focus,
             previous_focus: Focus::TaskList,
-            done_callback: None,
-            forced_shutdown_callback: None,
-            tui_config,
-            user_has_interacted: false,
-            is_forced_shutdown: false,
             layout_manager: LayoutManager::new_with_run_mode(task_count, run_mode),
             frame_area: None,
             layout_areas: None,
@@ -147,15 +135,46 @@ impl App {
             pane_tasks: [None, None],
             action_tx: None,
             resize_debounce_timer: None,
-            pty_instances: HashMap::new(),
             selection_manager,
-            task_graph,
-            task_status_map,
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
-            console_messenger: None,
-            estimated_task_timings: HashMap::new(),
         })
+    }
+
+    /// Get the shared state Arc (for mode switching)
+    pub fn get_state(&self) -> Arc<Mutex<TuiState>> {
+        self.state.clone()
+    }
+
+    /// Legacy constructor for backward compatibility
+    ///
+    /// This creates both the state and the app in one call.
+    /// Prefer using `with_state()` for new code, especially when mode switching is needed.
+    #[allow(dead_code)]
+    pub fn new(
+        tasks: Vec<Task>,
+        initiating_tasks: HashSet<String>,
+        run_mode: RunMode,
+        pinned_tasks: Vec<String>,
+        tui_config: TuiConfig,
+        title_text: String,
+        task_graph: TaskGraph,
+        tui_mode: TuiMode,
+    ) -> Result<Self> {
+        // Create shared state first
+        let state = Arc::new(Mutex::new(TuiState::new(
+            tasks,
+            initiating_tasks,
+            run_mode,
+            pinned_tasks,
+            tui_config,
+            title_text,
+            task_graph,
+            HashMap::new(), // estimated_task_timings
+        )));
+
+        // Use with_state() constructor
+        Self::with_state(state, tui_mode)
     }
 
     pub fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
@@ -165,18 +184,23 @@ impl App {
 
     pub fn init(&mut self, _area: Size) -> Result<()> {
         // Iterate over the pinned tasks and assign them to the terminal panes (up to the maximum of 2), focusing the first one as well
-        let pinned_tasks = self.pinned_tasks.clone();
+        let (pinned_tasks, run_mode, task_count) = {
+            let state = self.state.lock();
+            (
+                state.pinned_tasks().clone(),
+                state.run_mode(),
+                get_task_count(state.task_graph()),
+            )
+        };
+
         for (idx, task) in pinned_tasks.iter().enumerate() {
             if idx < 2 {
-                self.selection_manager
-                    .lock()
-                    .unwrap()
-                    .select_task(task.clone());
+                self.selection_manager.lock().select_task(task.clone());
 
                 if pinned_tasks.len() == 1 && idx == 0 {
-                    self.display_and_focus_current_task_in_terminal_pane(match self.run_mode {
+                    self.display_and_focus_current_task_in_terminal_pane(match run_mode {
                         RunMode::RunMany => true,
-                        RunMode::RunOne if get_task_count(&self.task_graph) == 1 => false,
+                        RunMode::RunOne if task_count == 1 => false,
                         RunMode::RunOne => true,
                     });
                 } else {
@@ -192,18 +216,22 @@ impl App {
     }
 
     pub fn start_tasks(&mut self, tasks: Vec<Task>) {
-        // Update App's task status map when tasks start
-        for task in &tasks {
-            self.task_status_map
-                .insert(task.id.clone(), TaskStatus::InProgress);
+        // Update task status map in shared state
+        {
+            let mut state = self.state.lock();
+            for task in &tasks {
+                state.update_task_status(task.id.clone(), TaskStatus::InProgress);
+            }
         }
 
         self.dispatch_action(Action::StartTasks(tasks));
     }
 
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
-        // Update the App's task status map first
-        self.task_status_map.insert(task_id.clone(), status);
+        // Update the task status map in shared state first
+        self.state
+            .lock()
+            .update_task_status(task_id.clone(), status);
 
         // Auto-switch pane to failed dependency when a task becomes skipped
         if status == TaskStatus::Skipped {
@@ -224,35 +252,43 @@ impl App {
         }
     }
 
-    /// Get task status efficiently from App's own HashMap
+    /// Get task status efficiently from shared state HashMap
     pub fn get_task_status(&self, task_id: &str) -> Option<TaskStatus> {
-        self.task_status_map.get(task_id).copied()
+        let state = self.state.lock();
+        state.get_task_status(task_id)
     }
 
-    /// Get task continuous flag efficiently from task graph
+    /// Get task continuous flag efficiently from task graph in shared state
     pub fn is_task_continuous(&self, task_id: &str) -> bool {
-        is_task_continuous(&self.task_graph, task_id)
+        let state = self.state.lock();
+        is_task_continuous(state.task_graph(), task_id)
     }
 
     fn should_set_interactive_by_default(&self, task_id: &str) -> bool {
-        matches!(self.run_mode, RunMode::RunOne)
-            && self
-                .pty_instances
-                .get(task_id)
+        let state = self.state.lock();
+        matches!(state.run_mode(), RunMode::RunOne)
+            && state
+                .get_pty_instance(task_id)
                 .is_some_and(|pty| pty.can_be_interactive())
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
         // Check if a PTY instance already exists for this task
-        if let Some(pty) = self.pty_instances.get(&task_id) {
+        let state = self.state.lock();
+        let has_pty = state.get_pty_instance(&task_id).is_some();
+        if let Some(pty) = state.get_pty_instance(&task_id) {
             // Append output to the existing PTY instance to preserve scroll position
             // Add ANSI escape sequence to hide cursor at the end of output
             let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
-            Self::write_output_to_parser(pty, output_with_hidden_cursor);
-        } else {
+            Self::write_output_to_parser(&pty, output_with_hidden_cursor);
+        }
+        drop(state); // Drop the lock before any mutable borrows
+
+        if !has_pty {
             // Tasks run within a pseudo-terminal always have a pty instance and do not need a new one
             // Tasks not run within a pseudo-terminal need a new pty instance to print output
-            let pty = PtyInstance::non_interactive();
+            let (rows, cols) = self.calculate_pty_dimensions_for_mode();
+            let pty = PtyInstance::non_interactive_with_dimensions(rows, cols);
 
             // Add ANSI escape sequence to hide cursor at the end of output, it would be confusing to have it visible when a task is a cache hit
             let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
@@ -277,9 +313,12 @@ impl App {
 
     // Show countdown popup for the configured duration (making sure the help popup is not open first)
     pub fn end_command(&mut self) {
-        self.console_messenger
+        let state = self.state.lock();
+        state
+            .get_console_messenger()
             .as_ref()
             .and_then(|c| c.end_running_tasks());
+        drop(state);
 
         self.dispatch_action(Action::EndCommand);
     }
@@ -287,7 +326,14 @@ impl App {
     // Internal method to handle Action::EndCommand
     fn handle_end_command(&mut self) {
         // If the user has interacted with the app or auto-exit is disabled, do nothing
-        if self.user_has_interacted || !self.tui_config.auto_exit.should_exit_automatically() {
+        let state = self.state.lock();
+        let user_has_interacted = state.has_user_interacted();
+        let should_exit_automatically = state.tui_config().auto_exit.should_exit_automatically();
+        let task_graph_ref = state.task_graph();
+        let task_count = get_task_count(task_graph_ref);
+        drop(state);
+
+        if user_has_interacted || !should_exit_automatically {
             return;
         }
 
@@ -298,7 +344,6 @@ impl App {
             if !self.has_visible_panes() {
                 self.selection_manager
                     .lock()
-                    .unwrap()
                     .select_task(failed_task_names.first().unwrap().clone());
 
                 // Display the task logs but keep focus on the task list to allow the user to navigate the failed tasks
@@ -307,7 +352,7 @@ impl App {
             return;
         }
 
-        if get_task_count(&self.task_graph) > 1 {
+        if task_count > 1 {
             self.begin_exit_countdown()
         } else {
             self.quit();
@@ -315,11 +360,11 @@ impl App {
     }
 
     fn quit(&mut self) {
-        self.quit_at = Some(std::time::Instant::now());
+        self.state.lock().quit_immediately();
     }
 
     fn begin_exit_countdown(&mut self) {
-        let countdown_duration = self.tui_config.auto_exit.countdown_seconds();
+        let countdown_duration = self.state.lock().tui_config().auto_exit.countdown_seconds();
         // If countdown is disabled, exit immediately
         if countdown_duration.is_none() {
             self.quit();
@@ -335,9 +380,9 @@ impl App {
         {
             countdown_popup.start_countdown(countdown_duration);
             self.update_focus(Focus::CountdownPopup);
-            self.quit_at = Some(
-                std::time::Instant::now() + std::time::Duration::from_secs(countdown_duration),
-            );
+            self.state
+                .lock()
+                .schedule_quit(std::time::Duration::from_secs(countdown_duration));
         }
     }
 
@@ -347,15 +392,21 @@ impl App {
         task_id: String,
         parser_and_writer: External<(ParserArc, WriterArc)>,
     ) {
-        debug!("Registering interactive task: {task_id}");
+        debug!("🔗 Registering interactive task: {}", task_id);
+        // Same logic for both full-screen and inline modes - the difference is in rendering, not task management
         let pty =
             PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
-        self.register_running_task(task_id, pty)
+        self.register_running_task(task_id, pty);
     }
 
     pub fn register_running_non_interactive_task(&mut self, task_id: String) {
-        debug!("Registering non-interactive task: {task_id}");
-        let pty = PtyInstance::non_interactive();
+        debug!("🔗 Registering NON-interactive task: {}", task_id);
+        debug!(
+            "❌ ISSUE: Task {} is being registered as NON-interactive - won't show in inline TUI!",
+            task_id
+        );
+        let (rows, cols) = self.calculate_pty_dimensions_for_mode();
+        let pty = PtyInstance::non_interactive_with_dimensions(rows, cols);
         self.register_pty_instance(&task_id, pty);
         self.update_task_status(task_id.clone(), TaskStatus::InProgress);
         // Ensure the pty instances get resized appropriately
@@ -368,9 +419,9 @@ impl App {
     }
 
     pub fn append_task_output(&mut self, task_id: String, output: String) {
-        let pty = self
-            .pty_instances
-            .get_mut(&task_id)
+        let state = self.state.lock();
+        let pty = state
+            .get_pty_instance(&task_id)
             .unwrap_or_else(|| panic!("{} has not been registered yet.", task_id));
         pty.process_output(output.as_bytes());
     }
@@ -413,7 +464,7 @@ impl App {
                 // the running task, not the app itself
                 if !self.is_interactive_mode() {
                     // Record that the user has interacted with the app
-                    self.user_has_interacted = true;
+                    self.state.lock().mark_user_interacted();
                 }
 
                 // Handle Ctrl+C to quit, unless we're in interactive mode and the focus is on a terminal pane
@@ -422,13 +473,16 @@ impl App {
                     && !(matches!(self.focus, Focus::MultipleOutput(_))
                         && self.is_interactive_mode())
                 {
-                    self.console_messenger
+                    let mut state = self.state.lock();
+                    state
+                        .get_console_messenger()
                         .as_ref()
                         .and_then(|c| c.end_running_tasks());
 
-                    self.is_forced_shutdown = true;
+                    state.set_forced_shutdown(true);
                     // Quit immediately
-                    self.quit_at = Some(std::time::Instant::now());
+                    state.quit_immediately();
+                    drop(state);
                     return Ok(true);
                 }
 
@@ -490,13 +544,13 @@ impl App {
                             KeyCode::Char('q') => {
                                 // Quit immediately
                                 trace!("Confirming shutdown");
-                                self.quit_at = Some(std::time::Instant::now());
+                                self.state.lock().quit_immediately();
                                 return Ok(true);
                             }
                             KeyCode::Char('c') if key.modifiers == KeyModifiers::CONTROL => {
                                 // Quit immediately
                                 trace!("Confirming shutdown");
-                                self.quit_at = Some(std::time::Instant::now());
+                                self.state.lock().quit_immediately();
                                 return Ok(true);
                             }
                             KeyCode::Up | KeyCode::Char('k') if countdown_popup.is_scrollable() => {
@@ -511,7 +565,7 @@ impl App {
                             }
                             _ => {
                                 countdown_popup.cancel_countdown();
-                                self.quit_at = None;
+                                self.state.lock().cancel_quit();
                                 self.update_focus(self.previous_focus);
                             }
                         }
@@ -528,26 +582,31 @@ impl App {
                     // Handle Q to trigger countdown or immediate exit, depending on the tasks
                     if !tasks_list.filter_mode && key.code == KeyCode::Char('q') {
                         // Check if all tasks are in a completed state using the task status map
-                        let all_tasks_completed = self.task_status_map.values().all(|status| {
-                            matches!(
-                                status,
-                                TaskStatus::Success
-                                    | TaskStatus::Failure
-                                    | TaskStatus::Skipped
-                                    | TaskStatus::LocalCache
-                                    | TaskStatus::LocalCacheKeptExisting
-                                    | TaskStatus::RemoteCache
-                                    | TaskStatus::Stopped // Consider stopped continuous tasks as completed for exit purposes
-                            )
-                        });
+                        let state = self.state.lock();
+                        let all_tasks_completed =
+                            state.get_task_status_map().values().all(|status| {
+                                matches!(
+                                    status,
+                                    TaskStatus::Success
+                                        | TaskStatus::Failure
+                                        | TaskStatus::Skipped
+                                        | TaskStatus::LocalCache
+                                        | TaskStatus::LocalCacheKeptExisting
+                                        | TaskStatus::RemoteCache
+                                        | TaskStatus::Stopped // Consider stopped continuous tasks as completed for exit purposes
+                                )
+                            });
+                        drop(state);
 
                         if all_tasks_completed {
                             // If all tasks are done, quit immediately like Ctrl+C
-                            self.is_forced_shutdown = true;
-                            self.quit_at = Some(std::time::Instant::now());
+                            let mut state = self.state.lock();
+                            state.set_forced_shutdown(true);
+                            state.quit_immediately();
+                            drop(state);
                         } else {
                             // Otherwise, start the exit countdown to give the user the chance to change their mind in case of an accidental keypress
-                            self.is_forced_shutdown = true;
+                            self.state.lock().set_forced_shutdown(true);
                             self.begin_exit_countdown();
                         }
                         return Ok(false);
@@ -792,7 +851,7 @@ impl App {
                 // the running task, not the app itself
                 if !self.is_interactive_mode() {
                     // Record that the user has interacted with the app
-                    self.user_has_interacted = true;
+                    self.state.lock().mark_user_interacted();
                 }
 
                 if matches!(self.focus, Focus::MultipleOutput(_)) {
@@ -849,27 +908,34 @@ impl App {
         }
         match &action {
             Action::StartCommand(_) => {
-                self.console_messenger
+                let state = self.state.lock();
+                state
+                    .get_console_messenger()
                     .as_ref()
                     .and_then(|c| c.start_running_tasks());
             }
             Action::Tick => {
-                self.console_messenger.as_ref().and_then(|messenger| {
-                    self.components
-                        .iter()
-                        .find_map(|c| c.as_any().downcast_ref::<TasksList>())
-                        .and_then(|tasks_list| {
-                            messenger.update_running_tasks(&tasks_list.tasks, &self.pty_instances)
-                        })
-                });
+                let state = self.state.lock();
+                state
+                    .get_console_messenger()
+                    .as_ref()
+                    .and_then(|messenger| {
+                        self.components
+                            .iter()
+                            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+                            .and_then(|tasks_list| {
+                                let pty_instances = state.get_pty_instances();
+                                messenger.update_running_tasks(&tasks_list.tasks, &pty_instances)
+                            })
+                    });
             }
             // Quit immediately
             Action::Quit => {
-                self.quit_at = Some(std::time::Instant::now());
+                self.state.lock().quit_immediately();
             }
             // Cancel quitting
             Action::CancelQuit => {
-                self.quit_at = None;
+                self.state.lock().cancel_quit();
                 self.update_focus(self.previous_focus);
             }
             Action::Resize(w, h) => {
@@ -887,12 +953,25 @@ impl App {
                 debug!("Debug mode: {}", self.debug_mode);
             }
             Action::Render => {
+                // INLINE-SPECIFIC: Inline TUI scrollback rendering is no longer used
+                // if self.should_use_inline_layout() {
+                //     self.render_scrollback_above_tui(tui);
+                // }
+
                 tui.draw(|f| {
                     let area = f.area();
+
                     // Cache the frame area if it's never been set before (will be updated in subsequent resize events if necessary)
                     if self.frame_area.is_none() {
                         self.frame_area = Some(area);
                     }
+
+                    // INLINE-SPECIFIC: Inline layout is no longer used
+                    // if self.should_use_inline_layout() {
+                    //     self.render_inline_layout(f, area);
+                    //     return;
+                    // }
+
                     // Determine the required layout areas for the tasks list and terminal panes using the LayoutManager
                     if self.layout_areas.is_none() {
                         self.recalculate_layout_areas();
@@ -1002,7 +1081,6 @@ impl App {
                             let relevant_pane_task: Option<String> = if self.spacebar_mode {
                                 self.selection_manager
                                     .lock()
-                                    .unwrap()
                                     .get_selected_task_name()
                                     .cloned()
                             } else {
@@ -1013,8 +1091,8 @@ impl App {
                         .collect();
 
                     // Calculate minimal view context once for all panes
-                    let is_minimal =
-                        self.is_task_list_hidden() && get_task_count(&self.task_graph) == 1;
+                    let is_minimal = self.is_task_list_hidden()
+                        && get_task_count(self.state.lock().task_graph()) == 1;
 
                     for (pane_idx, pane_area, relevant_pane_task) in terminal_panes_data {
                         if let Some(task_name) = relevant_pane_task {
@@ -1055,7 +1133,8 @@ impl App {
                 .ok();
             }
             Action::SendConsoleMessage(msg) => {
-                if let Some(connection) = &self.console_messenger {
+                let state = self.state.lock();
+                if let Some(connection) = state.get_console_messenger() {
                     connection.send_terminal_string(msg);
                 } else {
                     trace!("No console connection available");
@@ -1079,31 +1158,20 @@ impl App {
         &mut self,
         done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
     ) {
-        self.done_callback = Some(done_callback);
+        self.state.lock().set_done_callback(done_callback);
     }
 
     pub fn set_forced_shutdown_callback(
         &mut self,
         forced_shutdown_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
     ) {
-        self.forced_shutdown_callback = Some(forced_shutdown_callback);
+        self.state
+            .lock()
+            .set_forced_shutdown_callback(forced_shutdown_callback);
     }
 
     pub fn call_done_callback(&self) {
-        if self.is_forced_shutdown {
-            if let Some(cb) = &self.forced_shutdown_callback {
-                cb.call(
-                    (),
-                    napi::threadsafe_function::ThreadsafeFunctionCallMode::Blocking,
-                );
-            }
-        }
-        if let Some(cb) = &self.done_callback {
-            cb.call(
-                (),
-                napi::threadsafe_function::ThreadsafeFunctionCallMode::Blocking,
-            );
-        }
+        self.state.lock().call_done_callback();
     }
 
     pub fn set_cloud_message(&mut self, message: Option<String>) {
@@ -1134,7 +1202,9 @@ impl App {
 
     /// Returns the names of tasks that have failed.
     fn get_failed_task_names(&self) -> Vec<String> {
-        self.task_status_map
+        let state = self.state.lock();
+        state
+            .get_task_status_map()
             .iter()
             .filter_map(|(task_name, status)| {
                 if *status == TaskStatus::Failure {
@@ -1176,12 +1246,7 @@ impl App {
             .set_task_list_visibility(TaskListVisibility::Visible);
 
         // Extract task name first to end the immutable borrow
-        let task_name = match self
-            .selection_manager
-            .lock()
-            .unwrap()
-            .get_selected_task_name()
-        {
+        let task_name = match self.selection_manager.lock().get_selected_task_name() {
             Some(name) => name.clone(),
             None => return,
         };
@@ -1212,7 +1277,6 @@ impl App {
         };
         self.selection_manager
             .lock()
-            .unwrap()
             .set_selection_mode(selection_mode_override.unwrap_or(selection_mode));
 
         if spacebar_mode {
@@ -1358,12 +1422,7 @@ impl App {
 
     fn assign_current_task_to_pane(&mut self, pane_idx: usize) {
         // Extract task name first to end the immutable borrow
-        let task_name = match self
-            .selection_manager
-            .lock()
-            .unwrap()
-            .get_selected_task_name()
-        {
+        let task_name = match self.selection_manager.lock().get_selected_task_name() {
             Some(name) => name.clone(),
             None => return,
         };
@@ -1455,7 +1514,6 @@ impl App {
             let relevant_pane_task: Option<String> = if self.spacebar_mode {
                 self.selection_manager
                     .lock()
-                    .unwrap()
                     .get_selected_task_name()
                     .cloned()
             } else {
@@ -1526,47 +1584,51 @@ impl App {
 
     /// Actually processes the resize event by updating PTY dimensions.
     fn handle_pty_resize(&mut self) -> io::Result<()> {
-        if self.layout_areas.is_none() {
-            return Ok(());
-        }
-
-        let mut needs_sort = false;
-
-        for (pane_idx, pane_area) in self
-            .layout_areas
-            .as_ref()
-            .unwrap()
-            .terminal_panes
-            .iter()
-            .enumerate()
+        // Always use fullscreen mode logic
         {
-            let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-            if let Some(pty) = terminal_pane_data.pty.as_ref() {
-                let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(*pane_area);
+            if self.layout_areas.is_none() {
+                return Ok(());
+            }
 
-                // Get current dimensions before resize
-                let (current_rows, current_cols) = pty.get_dimensions();
+            let mut needs_sort = false;
 
-                // Skip resize if dimensions haven't actually changed
-                if current_rows == pty_height && current_cols == pty_width {
-                    continue;
-                }
+            for (pane_idx, pane_area) in self
+                .layout_areas
+                .as_ref()
+                .unwrap()
+                .terminal_panes
+                .iter()
+                .enumerate()
+            {
+                let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+                if let Some(pty) = terminal_pane_data.pty.as_ref() {
+                    let (pty_height, pty_width) =
+                        TerminalPane::calculate_pty_dimensions(*pane_area);
 
-                // With shared dimensions, we only need to call resize once per PTY instance
-                // The shared Arc<RwLock<(u16, u16)>> ensures all references see the update
-                let mut pty_clone = pty.as_ref().clone();
-                pty_clone.resize(pty_height, pty_width)?;
+                    // Get current dimensions before resize
+                    let (current_rows, current_cols) = pty.get_dimensions();
 
-                // If dimensions changed, mark for sort
-                if current_rows != pty_height {
-                    needs_sort = true;
+                    // Skip resize if dimensions haven't actually changed
+                    if current_rows == pty_height && current_cols == pty_width {
+                        continue;
+                    }
+
+                    // With shared dimensions, we only need to call resize once per PTY instance
+                    // The shared Arc<RwLock<(u16, u16)>> ensures all references see the update
+                    let mut pty_clone = pty.as_ref().clone();
+                    pty_clone.resize(pty_height, pty_width)?;
+
+                    // If dimensions changed, mark for sort
+                    if current_rows != pty_height {
+                        needs_sort = true;
+                    }
                 }
             }
-        }
 
-        // Sort tasks if needed after all resizing is complete
-        if needs_sort {
-            self.dispatch_action(Action::SortTasks);
+            // Sort tasks if needed after all resizing is complete
+            if needs_sort {
+                self.dispatch_action(Action::SortTasks);
+            }
         }
 
         Ok(())
@@ -1577,10 +1639,17 @@ impl App {
     }
 
     fn register_pty_instance(&mut self, task_id: &str, pty: PtyInstance) {
-        // Access the contents of the External
+        // Wrap in Arc
         let pty = Arc::new(pty);
+        self.state
+            .lock()
+            .register_pty_instance(task_id.to_string(), pty);
+    }
 
-        self.pty_instances.insert(task_id.to_string(), pty);
+    /// Calculate appropriate PTY dimensions based on the current TUI mode
+    fn calculate_pty_dimensions_for_mode(&self) -> (u16, u16) {
+        // For fullscreen mode, use reasonable defaults that will be resized later by terminal panes
+        (24, 80)
     }
 
     // Writes the given output to the given parser, used for the case where a task is a cache hit, or when it is run outside of the rust pseudo-terminal
@@ -1645,13 +1714,24 @@ impl App {
     }
 
     pub fn set_console_messenger(&mut self, messenger: NxConsoleMessageConnection) {
-        self.console_messenger = Some(messenger);
-        if self
-            .console_messenger
-            .as_ref()
-            .is_some_and(|c| c.is_connected())
-        {
-            self.dispatch_action(Action::ConsoleMessengerAvailable(true));
+        let is_connected = messenger.is_connected();
+        debug!(
+            "🔗 Setting console messenger: is_connected={}",
+            is_connected
+        );
+        self.state.lock().set_console_messenger(messenger);
+
+        // ALWAYS dispatch ConsoleMessengerAvailable(true) regardless of connection status
+        // The TUI should work even without Nx Console connection
+        debug!(
+            "✅ Dispatching ConsoleMessengerAvailable(true) - TUI should work with or without console connection"
+        );
+        self.dispatch_action(Action::ConsoleMessengerAvailable(true));
+
+        if !is_connected {
+            debug!(
+                "ℹ️ Console messenger is not connected - Nx Console features will be disabled, but TUI will work normally"
+            );
         }
     }
 
@@ -1695,21 +1775,26 @@ impl App {
         } else {
             // Different task or no existing state - create a new one
             // This ensures we get fresh dependency analysis when task becomes SKIPPED
+            let state = self.state.lock();
+            let task_graph = state.task_graph();
             let new_state = DependencyViewState::new(
                 task_name.clone(),
                 task_status,
-                &self.task_graph,
+                task_graph,
                 is_focused,
                 throbber_counter,
                 pane_area,
             );
+            drop(state);
             self.dependency_view_states[pane_idx] = Some(new_state);
         }
 
         // No need to update status in DependencyViewState - we pass the full map to the widget
         if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
-            let dependency_view =
-                DependencyView::new(&self.task_status_map, &self.task_graph, is_minimal);
+            let state = self.state.lock();
+            let task_status_map = state.get_task_status_map();
+            let task_graph = state.task_graph();
+            let dependency_view = DependencyView::new(task_status_map, task_graph, is_minimal);
             f.render_stateful_widget(dependency_view, pane_area, dep_state);
         }
     }
@@ -1728,7 +1813,8 @@ impl App {
             .get_task_status(&task_name)
             .unwrap_or(TaskStatus::NotStarted);
         let task_continuous = self.is_task_continuous(&task_name);
-        let has_pty = self.pty_instances.contains_key(&task_name);
+        let state = self.state.lock();
+        let has_pty = state.get_pty_instance(&task_name).is_some();
 
         let is_focused = match self.focus {
             Focus::MultipleOutput(focused_pane_idx) => pane_idx == focused_pane_idx,
@@ -1749,7 +1835,7 @@ impl App {
         }
 
         if has_pty {
-            if let Some(pty) = self.pty_instances.get(&task_name) {
+            if let Some(pty) = state.get_pty_instance(&task_name) {
                 terminal_pane_data.can_be_interactive = in_progress && pty.can_be_interactive();
                 terminal_pane_data.pty = Some(pty.clone());
 
@@ -1777,16 +1863,18 @@ impl App {
             .unwrap_or((None, None));
 
         // Get estimated duration from app's estimated_task_timings
-        let estimated_duration = self.estimated_task_timings.get(&task_name).copied();
+        let estimated_duration = state.estimated_task_timings().get(&task_name).copied();
+        let has_console_messenger = state.get_console_messenger().is_some();
+        drop(state);
 
-        let mut state = TerminalPaneState::new(
+        let mut pane_state = TerminalPaneState::new(
             task_name,
             task_status,
             task_continuous,
             is_focused,
             has_pty,
             is_next_tab_target,
-            self.console_messenger.is_some(),
+            has_console_messenger,
             estimated_duration,
             start_time,
             end_time,
@@ -1797,7 +1885,7 @@ impl App {
             .pty_data(terminal_pane_data)
             .continuous(task_continuous);
 
-        f.render_stateful_widget(terminal_pane, pane_area, &mut state);
+        f.render_stateful_widget(terminal_pane, pane_area, &mut pane_state);
     }
 
     /// Renders a placeholder for an empty pane
@@ -1817,7 +1905,7 @@ impl App {
     }
 
     pub fn set_estimated_task_timings(&mut self, timings: HashMap<String, i64>) {
-        self.estimated_task_timings = timings;
+        self.state.lock().set_estimated_task_timings(timings);
     }
 
     /// Handles automatic pane switching when a task becomes skipped.
@@ -1866,7 +1954,8 @@ impl App {
         self.dependency_view_states[pane_idx] = None;
 
         // Assign the PTY for the new task to this pane if available
-        if let Some(pty_instance) = self.pty_instances.get(&task_id) {
+        let state = self.state.lock();
+        if let Some(pty_instance) = state.get_pty_instance(&task_id) {
             self.terminal_pane_data[pane_idx].pty = Some(pty_instance.clone());
 
             // Immediately resize PTY to match the current terminal pane dimensions
@@ -1881,7 +1970,8 @@ impl App {
         }
 
         // Update the selection manager to prevent conflicts with manual selection
-        if let Ok(mut selection_manager) = self.selection_manager.lock() {
+        {
+            let mut selection_manager = self.selection_manager.lock();
             selection_manager.select_task(task_id);
         }
     }
@@ -1891,8 +1981,327 @@ impl App {
     /// Returns the task name of the first dependency that failed, causing this task to be skipped.
     /// This is used for automatic pane switching to show the root cause of failures.
     fn get_first_failed_dependency(&self, task_name: &str) -> Option<String> {
+        let state = self.state.lock();
         let failed_deps =
-            get_failed_dependencies(task_name, &self.task_graph, &self.task_status_map);
+            get_failed_dependencies(task_name, state.task_graph(), state.get_task_status_map());
         failed_deps.into_iter().next()
+    }
+
+    // Inline rendering methods
+    fn render_inline_layout(&mut self, f: &mut ratatui::Frame, area: Rect) {
+        // Put terminal content at the top, status/progress at bottom
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Max(f.area().height.saturating_sub(8)), // Terminal output FIRST (at top)
+                Constraint::Length(4),                              // Status bar (smaller)
+                Constraint::Length(4),                              // Progress bar (minimal)
+            ])
+            .split(area);
+
+        // Render main content section FIRST (terminal at top)
+        self.render_inline_main_content(f, chunks[0]);
+
+        // Render status section below
+        self.render_inline_status(f, chunks[1]);
+
+        // Render progress section at bottom
+        self.render_inline_progress(f, chunks[2]);
+    }
+
+    fn render_inline_status(&self, f: &mut ratatui::Frame, area: Rect) {
+        let current_task = self.get_current_running_task();
+        let status_text = if let Some(task_id) = current_task {
+            format!(" Running: {} ", task_id)
+        } else {
+            " Idle ".to_string()
+        };
+
+        let chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Min(20),    // Status text
+                Constraint::Length(30), // Help text
+            ])
+            .split(area);
+
+        let status = Paragraph::new(status_text)
+            .style(Style::default().fg(THEME.primary_fg))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Status ")
+                    .border_style(Style::default().fg(THEME.secondary_fg)),
+            );
+
+        let help = Paragraph::new(" Press 'q', Ctrl+C, or ESC to exit ")
+            .style(Style::default().fg(THEME.warning))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Help ")
+                    .border_style(Style::default().fg(THEME.secondary_fg)),
+            );
+
+        f.render_widget(status, chunks[0]);
+        f.render_widget(help, chunks[1]);
+    }
+
+    fn render_inline_progress(&self, f: &mut ratatui::Frame, area: Rect) {
+        let completed_count = self.get_completed_task_count();
+        let state = self.state.lock();
+        let total_count = state.get_task_status_map().len();
+
+        let progress = if total_count > 0 {
+            (completed_count as f64 / total_count as f64) * 100.0
+        } else {
+            0.0
+        };
+
+        let gauge = Gauge::default()
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Progress ")
+                    .border_style(Style::default().fg(THEME.secondary_fg)),
+            )
+            .gauge_style(Style::default().fg(THEME.success))
+            .percent(progress as u16)
+            .label(format!("{}/{} tasks", completed_count, total_count));
+
+        f.render_widget(gauge, area);
+    }
+
+    fn render_inline_main_content(&mut self, f: &mut ratatui::Frame, area: Rect) {
+        // Show running task output if available, otherwise show task list
+        if let Some(current_task) = self.get_current_running_task() {
+            // Clone the Arc to avoid borrow issues
+            let state = self.state.lock();
+            if let Some(pty) = state.get_pty_instance(&current_task) {
+                drop(state);
+                self.render_inline_task_output(f, area, &current_task, &pty);
+                return;
+            }
+        }
+
+        // Fallback: render task list
+        self.render_inline_task_list(f, area);
+    }
+
+    fn render_inline_task_output(
+        &mut self,
+        f: &mut ratatui::Frame,
+        area: Rect,
+        _task_name: &str,
+        pty: &Arc<PtyInstance>,
+    ) {
+        // Scrollback is now handled separately via terminal.insert_before in render_scrollback_above_tui
+        // Just render the current terminal screen here
+        if let Some(screen) = pty.get_screen() {
+            let block = Block::default()
+                .borders(Borders::NONE)
+                // .title(format!(" {} ", task_name))
+                .border_style(Style::default().fg(THEME.primary_fg));
+
+            // Use PseudoTerminal with block, just like terminal_pane does
+            let pseudo_term = PseudoTerminal::new(&*screen).block(block);
+            f.render_widget(pseudo_term, area);
+        }
+    }
+
+    fn render_inline_task_list(&mut self, f: &mut ratatui::Frame, area: Rect) {
+        // Reuse existing TasksList component but in simplified mode
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            let _ = tasks_list.draw(f, area);
+        }
+    }
+
+    // INLINE-SPECIFIC: This method is not used in fullscreen mode
+    fn render_scrollback_above_tui(&mut self, _tui: &mut Tui) {
+        // This method was specific to inline mode and is no longer used
+        // Kept as a no-op to avoid breaking any existing call sites
+    }
+
+    /// Clear scrollback lines that were inserted above the TUI on exit
+    /// INLINE-SPECIFIC: This method is not used in fullscreen mode
+    pub fn cleanup_scrollback_on_exit(&self) {
+        // This method was specific to inline mode and is no longer used
+        // Kept as a no-op to avoid breaking any existing call sites
+    }
+
+    // Helper methods
+    fn get_current_running_task(&self) -> Option<String> {
+        let state = self.state.lock();
+        state
+            .get_task_status_map()
+            .iter()
+            .find(|(_, status)| **status == TaskStatus::InProgress)
+            .map(|(id, _)| id.clone())
+    }
+
+    fn get_completed_task_count(&self) -> usize {
+        let state = self.state.lock();
+        state
+            .get_task_status_map()
+            .values()
+            .filter(|status| {
+                matches!(
+                    status,
+                    TaskStatus::Success
+                        | TaskStatus::Failure
+                        | TaskStatus::Skipped
+                        | TaskStatus::LocalCache
+                        | TaskStatus::LocalCacheKeptExisting
+                        | TaskStatus::RemoteCache
+                )
+            })
+            .count()
+    }
+}
+
+// === TuiApp Trait Implementation ===
+
+use crate::native::tui::tui_app::TuiApp;
+
+impl TuiApp for App {
+    fn handle_event(
+        &mut self,
+        event: tui::Event,
+        action_tx: &UnboundedSender<Action>,
+    ) -> Result<bool> {
+        // Delegate to existing handle_event method
+        self.handle_event(event, action_tx)
+    }
+
+    fn handle_action(
+        &mut self,
+        tui: &mut tui::Tui,
+        action: Action,
+        action_tx: &UnboundedSender<Action>,
+    ) {
+        // Delegate to existing handle_action method
+        self.handle_action(tui, action, action_tx);
+    }
+
+    fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
+        // Delegate to existing method
+        self.register_action_handler(tx)
+    }
+
+    fn get_tui_mode(&self) -> TuiMode {
+        // App is always full-screen mode
+        TuiMode::FullScreen
+    }
+
+    fn init(&mut self, area: Size) -> Result<()> {
+        // Delegate to existing init method
+        self.init(area)
+    }
+
+    fn start_command(&mut self, thread_count: Option<u32>) {
+        // Delegate to existing method
+        self.start_command(thread_count);
+    }
+
+    fn start_tasks(&mut self, tasks: Vec<Task>) {
+        // Delegate to existing method
+        self.start_tasks(tasks);
+    }
+
+    fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+        // Delegate to existing method
+        self.update_task_status(task_id, status);
+    }
+
+    fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
+        // Delegate to existing method
+        self.end_tasks(task_results);
+    }
+
+    fn end_command(&mut self) {
+        // Delegate to existing method
+        self.end_command();
+    }
+
+    fn register_running_interactive_task(
+        &mut self,
+        task_id: String,
+        parser_and_writer: External<(ParserArc, WriterArc)>,
+    ) {
+        // Delegate to existing method
+        self.register_running_interactive_task(task_id, parser_and_writer);
+    }
+
+    fn register_running_non_interactive_task(&mut self, task_id: String) {
+        // Delegate to existing method
+        self.register_running_non_interactive_task(task_id);
+    }
+
+    fn print_task_terminal_output(&mut self, task_id: String, output: String) {
+        // Delegate to existing method
+        self.print_task_terminal_output(task_id, output);
+    }
+
+    fn append_task_output(&mut self, task_id: String, output: String) {
+        // Delegate to existing method
+        self.append_task_output(task_id, output);
+    }
+
+    fn set_done_callback(&mut self, callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>) {
+        // Delegate to existing method
+        self.set_done_callback(callback);
+    }
+
+    fn set_forced_shutdown_callback(
+        &mut self,
+        callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+    ) {
+        // Delegate to existing method
+        self.set_forced_shutdown_callback(callback);
+    }
+
+    fn call_done_callback(&self) {
+        // Delegate to existing method
+        self.call_done_callback();
+    }
+
+    fn set_cloud_message(&mut self, message: Option<String>) {
+        // Delegate to existing method
+        self.set_cloud_message(message);
+    }
+
+    fn set_console_messenger(&mut self, messenger: NxConsoleMessageConnection) {
+        // Delegate to existing method
+        self.set_console_messenger(messenger);
+    }
+
+    fn set_estimated_task_timings(&mut self, timings: HashMap<String, i64>) {
+        // Delegate to existing method
+        self.set_estimated_task_timings(timings);
+    }
+
+    fn should_quit(&self) -> bool {
+        // Check if quit_at is set in shared state
+        let state = self.state.lock();
+        let result = state.should_quit();
+        if result {
+            debug!("⏰ App::should_quit() = true - quit timer expired");
+        }
+        result
+    }
+
+    fn get_selected_task_name(&self) -> Option<String> {
+        self.selection_manager
+            .lock()
+            .get_selected_task_name()
+            .cloned()
+    }
+
+    fn get_shared_state(&self) -> Arc<Mutex<TuiState>> {
+        self.get_state()
     }
 }

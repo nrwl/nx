@@ -69,6 +69,7 @@
     "tree-kill": "^1.2.2",
     "tsconfig-paths": "catalog:typescript",
     "tslib": "catalog:typescript",
+    "why-is-node-running": "^3.2.2",
     "yaml": "^2.6.0",
     "yargs": "catalog:",
     "yargs-parser": "catalog:"

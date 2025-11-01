@@ -405,5 +405,6 @@ module.exports.SupportedEditor = nativeBinding.SupportedEditor
 module.exports.TaskStatus = nativeBinding.TaskStatus
 module.exports.testOnlyTransferFileMap = nativeBinding.testOnlyTransferFileMap
 module.exports.transferProjectGraph = nativeBinding.transferProjectGraph
+module.exports.TuiMode = nativeBinding.TuiMode
 module.exports.validateOutputs = nativeBinding.validateOutputs
 module.exports.WorkspaceErrors = nativeBinding.WorkspaceErrors
