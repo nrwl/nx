@@ -122,3 +122,81 @@ export async function hashTask(
     'hashSingleTask:end'
   );
 }
+
+export async function hashTasks(
+  hasher: TaskHasher,
+  projectGraph: ProjectGraph,
+  taskGraph: TaskGraph,
+  env: NodeJS.ProcessEnv,
+  taskDetails: TaskDetails | null
+) {
+  performance.mark('hashMultipleTasks:start');
+
+  const projectsConfigurations =
+    readProjectsConfigurationFromProjectGraph(projectGraph);
+  const nxJson = readNxJson();
+
+  const tasks = Object.values(taskGraph.tasks).filter((task) => !task.hash);
+
+  // Separate tasks with custom hashers from those without
+  const tasksWithCustomHashers: Task[] = [];
+  const tasksWithoutCustomHashers: Task[] = [];
+
+  for (const task of tasks) {
+    const customHasher = getCustomHasher(task, projectGraph);
+    if (customHasher) {
+      tasksWithCustomHashers.push(task);
+    } else {
+      tasksWithoutCustomHashers.push(task);
+    }
+  }
+
+  // Hash tasks with custom hashers individually
+  const customHasherPromises = tasksWithCustomHashers.map(async (task) => {
+    const customHasher = getCustomHasher(task, projectGraph);
+    const { value, details } = await customHasher(task, {
+      hasher,
+      projectGraph,
+      taskGraph,
+      workspaceConfig: projectsConfigurations,
+      projectsConfigurations,
+      nxJsonConfiguration: nxJson,
+      env,
+    } as any);
+    task.hash = value;
+    task.hashDetails = details;
+  });
+
+  // Hash tasks without custom hashers in batch
+  let batchHashPromise: Promise<void> = Promise.resolve();
+  if (tasksWithoutCustomHashers.length > 0) {
+    batchHashPromise = hasher
+      .hashTasks(tasksWithoutCustomHashers, taskGraph, env)
+      .then((hashes) => {
+        for (let i = 0; i < tasksWithoutCustomHashers.length; i++) {
+          tasksWithoutCustomHashers[i].hash = hashes[i].value;
+          tasksWithoutCustomHashers[i].hashDetails = hashes[i].details;
+        }
+      });
+  }
+
+  await Promise.all([...customHasherPromises, batchHashPromise]);
+
+  if (taskDetails?.recordTaskDetails) {
+    taskDetails.recordTaskDetails(
+      tasks.map((task) => ({
+        hash: task.hash,
+        project: task.target.project,
+        target: task.target.target,
+        configuration: task.target.configuration,
+      }))
+    );
+  }
+
+  performance.mark('hashMultipleTasks:end');
+  performance.measure(
+    'hashMultipleTasks',
+    'hashMultipleTasks:start',
+    'hashMultipleTasks:end'
+  );
+}
