@@ -22,7 +22,7 @@
       "cache": true
     },
     "build-analyzer": {
-      "command": "node ./scripts/build-msbuild-analyzer.js",
+      "command": "node ./scripts/run-native-target.js _build-analyzer dotnet",
       "cache": true,
       "outputs": ["{workspaceRoot}/dist/msbuild-analyzer"],
       "inputs": ["{projectRoot}/analyzer/**", { "env": "SKIP_ANALYZER_BUILD" }]
@@ -38,6 +38,20 @@
           "node scripts/chmod.js dist/msbuild-analyzer/MsbuildAnalyzer"
         ],
         "parallel": false
+      }
+    },
+    "format-native": {
+      "command": "node ./scripts/run-native-target.js _format-native dotnet"
+    },
+    "_format-native": {
+      "command": "dotnet format {projectRoot}/analyzer/MsbuildAnalyzer.csproj",
+      "options": {
+        "args": ["--verify-no-changes"]
+      },
+      "configurations": {
+        "fix": {
+          "args": []
+        }
       }
     },
     "legacy-post-build": {
