@@ -1,6 +1,6 @@
 {
   "name": "@nx/maven",
-  "version": "0.0.1",
+  "version": "0.0.8",
   "private": false,
   "description": "Nx plugin for Maven integration",
   "repository": {
