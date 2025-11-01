@@ -7,7 +7,7 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
-import { getTaskDetails, hashTask } from '../hasher/hash-task';
+import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
 import { TaskHasher } from '../hasher/task-hasher';
 import {
   IS_WASM,
@@ -244,20 +244,18 @@ export class TaskOrchestrator {
   }
 
   private async processScheduledBatch(batch: Batch) {
+    await hashTasks(
+      this.hasher,
+      this.projectGraph,
+      batch.taskGraph,
+      this.batchEnv,
+      this.taskDetails
+    );
+
     await Promise.all(
-      Object.values(batch.taskGraph.tasks).map(async (task) => {
-        if (!task.hash) {
-          await hashTask(
-            this.hasher,
-            this.projectGraph,
-            this.taskGraphForHashing,
-            task,
-            this.batchEnv,
-            this.taskDetails
-          );
-        }
-        await this.options.lifeCycle.scheduleTask(task);
-      })
+      Object.values(batch.taskGraph.tasks).map((task) =>
+        this.options.lifeCycle.scheduleTask(task)
+      )
     );
   }
 
