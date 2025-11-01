@@ -13,9 +13,6 @@ common-init-steps: &common-init-steps
   - name: Checkout
     uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
 
-  - name: Check Node Version
-    script: node --version
-
   - name: Cache restore
     uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
     inputs:
@@ -23,70 +20,47 @@ common-init-steps: &common-init-steps
       paths: .pnpm-store
       base-branch: 'master'
 
-  - name: Install zip and unzip
-    script: sudo apt-get -yqq install zip unzip
+  # reads mise.toml and installs toolchains needed for repo
+  - name: Setup toolchains
+    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-mise/main.yaml'
 
-  - name: Install bun
+  - name: Verify toolchain versions
     script: |
-      curl -fsSL https://bun.sh/install | bash
-      echo "BUN_INSTALL=$HOME/.bun" >> $NX_CLOUD_ENV
-      echo "PATH=$HOME/.bun/bin:$PATH" >> $NX_CLOUD_ENV
+      echo "mise:   $(mise --version)"
+      echo "node:   $(node --version)"
+      echo "pnpm:   $(pnpm --version)"
+      echo "bun:    $(bun --version)"
+      echo "rust:   $(rustc --version) - $(cargo --version)"
+      echo "dotnet: $(dotnet --version)"
+      echo "java:   $(javac --version)"
 
-  - name: Check bun
-    script: |
-      bun --version
-
-  - name: Install e2e deps
+  - name: Install system deps
     script: |
       sudo apt-get update
-      sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
+      sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev zip unzip
 
   - name: Pnpm Install from lockfile
     script: |
       pnpm install --frozen-lockfile
 
-  - name: Install Browsers
+  - name: Install browsers
     script: |
       pnpm exec cypress install
       pnpm exec playwright install --with-deps
 
-  - name: Install Rust
+  - name: Install rust deps
     script: |
-      curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
-      source "$HOME/.cargo/env"
-      rustup toolchain install 1.70.0
+      cargo fetch
+
+  - name: Setup gradle
+    script: |
+      ./gradlew wrapper
+      ./gradlew --version
 
   - name: Configure git metadata (needed for lerna smoke tests)
     script: |
       git config --global user.email test@test.com
       git config --global user.name "Test Test"
-
-  - name: Load Cargo Env
-    script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
-
-  - name: Install Rust Dependencies
-    script: |
-      cargo fetch
-
-  - name: Setup Java 21
-    script: |
-      sudo apt update
-      sudo apt install -y openjdk-21-jdk
-      sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
-      java -version
-
-  - name: Setup Gradle
-    script: |
-      ./gradlew wrapper
-      ./gradlew --version
-
-  - name: Setup .NET 9
-    script: |
-      wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-      sudo dpkg -i packages-microsoft-prod.deb
-      sudo apt-get update
-      sudo apt-get install -y dotnet-sdk-9.0
-      dotnet --version
 
 launch-templates:
   linux-large:
