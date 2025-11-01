@@ -12,6 +12,7 @@ import {
   type Target,
 } from '@nx/devkit';
 import type { AssetGlobPattern } from '@nx/webpack';
+import { satisfies } from 'semver';
 
 export interface WithNxOptions extends NextConfig {
   nx?: {
@@ -243,12 +244,21 @@ export function getNextConfig(
   }
   const userWebpack = nextConfig.webpack || ((x) => x);
   const { nx, ...validNextConfig } = nextConfig;
-  return {
-    eslint: {
+
+  const baseConfig: NextConfig = {
+    ...validNextConfig,
+  };
+
+  const nextJsVersion = require('next/package.json')?.version ?? '16.0.1';
+  if (satisfies(nextJsVersion, '<16.0.0', { includePrerelease: true })) {
+    baseConfig.eslint = {
       ignoreDuringBuilds: true,
       ...(validNextConfig.eslint ?? {}),
-    },
-    ...validNextConfig,
+    };
+  }
+
+  return {
+    ...baseConfig,
     webpack: (config, options) => {
       /**
        * To support ESM library export, we need to ensure the extensionAlias contains both `.js` and `.ts` extensions.
