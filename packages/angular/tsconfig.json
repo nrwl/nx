@@ -8,6 +8,9 @@
   "files": [],
   "references": [
     {
+      "path": "../vitest"
+    },
+    {
       "path": "../workspace"
     },
     {
@@ -32,10 +35,10 @@
       "path": "../devkit"
     },
     {
-      "path": "../cypress"
+      "path": "../nx"
     },
     {
-      "path": "../nx"
+      "path": "../cypress"
     },
     {
       "path": "./tsconfig.lib.json"

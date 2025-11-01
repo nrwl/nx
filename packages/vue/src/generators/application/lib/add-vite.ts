@@ -3,12 +3,10 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
+  ensurePackage,
 } from '@nx/devkit';
-import {
-  createOrEditViteConfig,
-  viteConfigurationGenerator,
-  vitestGenerator,
-} from '@nx/vite';
+import { createOrEditViteConfig, viteConfigurationGenerator } from '@nx/vite';
+import { nxVersion } from '../../../utils/versions';
 
 import { NormalizedSchema } from '../schema';
 
@@ -54,7 +52,11 @@ export async function addVite(
 
 export async function addVitest(tree: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
-  const vitestTask = await vitestGenerator(tree, {
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/vitest')>(
+    '@nx/vitest',
+    nxVersion
+  );
+  const vitestTask = await configurationGenerator(tree, {
     uiFramework: 'none',
     project: options.projectName,
     coverageProvider: 'v8',

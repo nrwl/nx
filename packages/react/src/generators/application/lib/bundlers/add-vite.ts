@@ -68,11 +68,16 @@ export async function setupVitestConfiguration(
   options: NormalizedSchema<Schema>,
   tasks: any[]
 ) {
-  const { createOrEditViteConfig, vitestGenerator } = ensurePackage<
-    typeof import('@nx/vite')
-  >('@nx/vite', nxVersion);
+  const { createOrEditViteConfig } = ensurePackage<typeof import('@nx/vite')>(
+    '@nx/vite',
+    nxVersion
+  );
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/vitest')>(
+    '@nx/vitest',
+    nxVersion
+  );
 
-  const vitestTask = await vitestGenerator(tree, {
+  const vitestTask = await configurationGenerator(tree, {
     uiFramework: 'react',
     coverageProvider: 'v8',
     project: options.projectName,

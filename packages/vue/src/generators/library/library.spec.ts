@@ -66,7 +66,7 @@ describe('library', () => {
     );
   });
 
-  it('should add vue, vite and vitest to package.json', async () => {
+  it('should add vue and vitest to package.json when non-buildable', async () => {
     await libraryGenerator(tree, defaultSchema);
     expect(readJson(tree, '/package.json')).toMatchSnapshot();
     expect(tree.read('my-lib/tsconfig.lib.json', 'utf-8')).toMatchSnapshot();
@@ -606,7 +606,7 @@ module.exports = [
                 "executor": "@nx/eslint:lint"
               },
               "test": {
-                "executor": "@nx/vite:test",
+                "executor": "@nx/vitest:test",
                 "outputs": [
                   "{options.reportsDirectory}"
                 ],

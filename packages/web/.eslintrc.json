@@ -57,6 +57,7 @@
               "@nx/cypress",
               "@nx/playwright",
               "@nx/vite",
+              "@nx/vitest",
               "@nx/webpack",
               "@nx/jest"
             ]

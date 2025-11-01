@@ -37,7 +37,8 @@
     "@phenomnomnominal/tsquery": "catalog:typescript"
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "@nx/vitest": "workspace:*"
   },
   "peerDependencies": {
     "@remix-run/dev": "^2.14.0"
