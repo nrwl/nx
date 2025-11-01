@@ -3357,8 +3357,8 @@ importers:
   packages/maven:
     dependencies:
       '@nx/devkit':
-        specifier: workspace:*
-        version: link:../devkit
+        specifier: 22.1.0
+        version: 22.1.0(nx@packages+nx)
       '@xmldom/xmldom':
         specifier: ^0.8.10
         version: 0.8.11
@@ -9211,6 +9211,11 @@ packages:
     resolution: {integrity: sha512-eVFFLMUcxO/holHdWo0YabyUs6H3wNvnovt/0LddIRGoiMHWpbFZLB/KThiyUWvuFVuqqyDzRmS0XRo/M2kOqQ==}
     peerDependencies:
       nx: '>= 20 <= 22'
+
+  '@nx/devkit@22.1.0':
+    resolution: {integrity: sha512-8vWDUDMn2yZnsVDmNKvy0H6XCnXnB6taK25XxS1RGrnkCxrLE7NWDbTfi3SlydYy5LdQgnji8Gy4BjqHVJRlLQ==}
+    peerDependencies:
+      nx: '>= 21 <= 23 || ^22.0.0-0'
 
   '@nx/devkit@22.1.0-beta.2':
     resolution: {integrity: sha512-CNYW3DZRKKOjwN8PnHxoBktlhsgOmMrrJJ51K1KUyPdmbhNVB/3bseXTGQvPAZ/ooCwKYhZTjPnDAomOcTTu9w==}
@@ -21164,6 +21169,7 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qs@6.11.0:
@@ -22367,6 +22373,7 @@ packages:
   sitemap@8.0.0:
     resolution: {integrity: sha512-+AbdxhM9kJsHtruUF39bwS/B0Fytw6Fr1o4ZAIAEqA6cke2xcoO2GleBw9Zw7nRzILVEgz7zBM5GiTJjie1G9A==}
     engines: {node: '>=14.0.0', npm: '>=6.0.0'}
+    deprecated: 'SECURITY: Multiple vulnerabilities fixed in 8.0.1 (XML injection, path traversal, command injection, protocol injection). Upgrade immediately: npm install sitemap@8.0.1'
     hasBin: true
 
   skin-tone@2.0.0:
@@ -32359,6 +32366,17 @@ snapshots:
       nx: 22.1.0-beta.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.9.2))(@swc/core@1.5.7(@swc/helpers@0.5.11))
       semver: 7.7.2
       tmp: 0.2.4
+      tslib: 2.8.1
+      yargs-parser: 21.1.1
+
+  '@nx/devkit@22.1.0(nx@packages+nx)':
+    dependencies:
+      '@zkochan/js-yaml': 0.0.7
+      ejs: 3.1.10
+      enquirer: 2.3.6
+      minimatch: 9.0.3
+      nx: link:packages/nx
+      semver: 7.7.2
       tslib: 2.8.1
       yargs-parser: 21.1.1
 
