@@ -18,6 +18,7 @@ dependencies {
   implementation(libs.gson)
   implementation(libs.javaparser.core)
   implementation(libs.kotlinx.coroutines.core)
+  implementation(libs.jgit)
   // Use compileOnly to avoid runtime conflicts with Kotlin Gradle plugin
   compileOnly(libs.kotlin.compiler.embeddable) {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-gradle-plugin")
