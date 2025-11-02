@@ -7,6 +7,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { readNxJson } from '../config/nx-json';
 import { HashedTask, IS_WASM, TaskDetails } from '../native';
 import { getDbConnection } from '../utils/db-connection';
+import { getTaskSpecificEnv } from '../tasks-runner/task-env';
 
 let taskDetails: TaskDetails;
 
@@ -52,11 +53,19 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     })
     .map((t) => t.task);
 
-  const hashes = await hasher.hashTasks(tasksToHash, taskGraph, process.env);
-  for (let i = 0; i < tasksToHash.length; i++) {
-    tasksToHash[i].hash = hashes[i].value;
-    tasksToHash[i].hashDetails = hashes[i].details;
-  }
+  // Hash each task individually with its specific environment
+  await Promise.all(
+    tasksToHash.map(async (task) => {
+      const taskEnv = getTaskSpecificEnv(task);
+      const { value, details } = await hasher.hashTask(
+        task,
+        taskGraph,
+        taskEnv
+      );
+      task.hash = value;
+      task.hashDetails = details;
+    })
+  );
   if (tasksDetails?.recordTaskDetails) {
     tasksDetails.recordTaskDetails(
       tasksToHash.map((task) => ({
