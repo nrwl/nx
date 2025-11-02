@@ -20,7 +20,7 @@ module.exports = {
       optimization: false,
       outputHashing: 'none',
       generatePackageJson: <%= webpackPluginOptions.generatePackageJson %>,
-      sourceMaps: true,
+      sourceMap: true,
     })
   ],
 };
