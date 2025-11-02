@@ -6,7 +6,9 @@ sidebar:
   label: GitHub
 ---
 
-The [Nx Cloud GitHub App](https://github.com/marketplace/official-nx-cloud-app) lets you access the result of every run—with all its logs and build insights—straight from your PR.
+Integrate Nx Cloud with your source control platform to access run results, logs, and build insights directly from your pull requests or merge requests. This integration is required to use core Nx Cloud features like task distribution and flaky task re-trying.
+
+The [Nx Cloud GitHub App](https://github.com/marketplace/official-nx-cloud-app) lets you access the result of every run—with all its logs and build insights—straight from your PR. It will comment on your PR with the results of the latest CI run, with a summary of the results and links to detailed, structured logs. If you’re using Self-Healing CI, Nx Cloud will comment with proposed fixes for CI failures.
 
 ## Install the App
 
@@ -21,19 +23,21 @@ Once on the VCS Integrations setup page, you can choose what VCS you want to con
 
 ### Choosing an Authentication Method
 
-It is easier to configure the Nx Cloud GitHub Integration to use its GitHub App to authenticate, and this method should be preferred for users on Nx Public Cloud. Advanced users or Nx Enterprise clients may instead wish to generate a personal access token instead.
+The easiest way to configure the Nx Cloud GitHub Integration is through the Nx Cloud GitHub App, and this method should be preferred for users on [https://cloud.nx.app](https://cloud.nx.app). Users with strict privacy considerations may wish to generate a personal access token (PAT) instead.
 
 #### Using the GitHub App
 
-To use the Nx Cloud GitHub App for authentication, select the radio button and then click "Connect".
+To use the Nx Cloud GitHub App for authentication, select the **Use GitHub application** radio button and then click **Connect**.
 This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved.
-Check the "_CI Platform Considerations_" section below and if there are no additional instructions for your platform of choice, setup is complete.
+Check if there's any [additional setup required for your CI platform](/docs/guides/nx-cloud/source-control-integration#ci-platform-considerations), then your setup is complete.
 
-![Use GitHub App for Authentication](../../../../../assets/nx-cloud/set-up/use-github-app-auth.webp)
+![Use GitHub App for Authentication](../../../../assets/nx-cloud/set-up/use-github-app-auth.webp)
 
 #### Using a Personal Access Token
 
-Github supports two [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#about-personal-access-tokens) types: Classic and Fine-grained.
+Note that users who authenticate with a PAT will not receive Nx Cloud comments with command results and self-healing CI fixes.
+
+Github supports two [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#about-personal-access-tokens) types: classic and fine-grained.
 
 To use a Personal Access Token for authentication, one must be generated with proper permissions. The minimum required permissions are shown in the screenshot below.
 
@@ -56,6 +60,10 @@ Once this token is created, select the radio button for providing a personal acc
 ### Advanced Configuration
 
 If your company runs a self-hosted GitHub installation, you may need to override the default URL that Nx Cloud uses to connect to the GitHub API. To do so, check the box labeled "Override GitHub API URL" and enter the correct URL for your organization.
+
+### Connect to GitHub For More Features
+
+Get access to [easy workspace setup](/docs/features/ci-features/github-integration#easy-workspace-setup) and [access control through Github organizations](/docs/features/ci-features/github-integration#access-control) when you [connect your Github account to Nx Cloud](/docs/features/ci-features/github-integration#connect-to-github).
 
 ## CI Platform Considerations
 
