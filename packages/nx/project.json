@@ -29,6 +29,7 @@
       }
     },
     "build-native": {
+      "inputs": ["native", "{projectRoot}/src/native/index.js"],
       "outputs": [
         "{projectRoot}/src/native/*.node",
         "{projectRoot}/src/native/*.js",
