@@ -3,7 +3,7 @@
   "generators": {
     "update-0.0.8": {
       "cli": "nx",
-      "version": "0.0.8-beta.0",
+      "version": "22.1.0-beta.4",
       "description": "Update Maven plugin version from 0.0.7 to 0.0.8 in pom.xml files",
       "factory": "./dist/migrations/0-0-8/update-pom-xml-version"
     }
