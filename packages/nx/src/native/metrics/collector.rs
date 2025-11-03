@@ -9,9 +9,9 @@ use parking_lot::Mutex;
 use sysinfo::{Pid, ProcessRefreshKind, System, UpdateKind};
 
 use crate::native::metrics::types::{
-    BatchMetricsSnapshot, BatchRegistration, CollectorConfig, DaemonMetrics,
-    IndividualTaskRegistration, MetricsError, MetricsUpdate, ProcessMetadata, ProcessMetrics,
-    ProcessMetricsSnapshot, SystemInfo,
+    BatchMetricsSnapshot, BatchRegistration, CollectorConfig, IndividualTaskRegistration,
+    MetricsError, MetricsUpdate, ProcessMetadata, ProcessMetrics, ProcessMetricsSnapshot,
+    ProcessTreeMetrics, SystemInfo,
 };
 use crate::native::utils::time::current_timestamp_millis;
 use napi::threadsafe_function::{
@@ -78,6 +78,9 @@ pub struct MetricsCollector {
     /// Batch executions with multiple tasks sharing a worker
     /// Using DashMap for concurrent access
     batches: Arc<DashMap<String, BatchRegistration>>,
+    /// Main CLI subprocess PIDs (e.g., plugin workers when daemon is not used)
+    /// Using DashMap for concurrent access
+    main_cli_subprocess_pids: Arc<DashMap<i32, ()>>,
     /// Main CLI process PID (set once at initialization, uses Mutex for &self methods)
     main_cli_pid: Arc<Mutex<Option<i32>>>,
     /// Daemon process PID (can be updated when daemon connects)
@@ -108,6 +111,7 @@ impl MetricsCollector {
             config,
             individual_tasks: Arc::new(DashMap::new()),
             batches: Arc::new(DashMap::new()),
+            main_cli_subprocess_pids: Arc::new(DashMap::new()),
             main_cli_pid: Arc::new(Mutex::new(None)),
             daemon_pid: Arc::new(Mutex::new(None)),
             system: Arc::new(Mutex::new(System::new_all())),
@@ -140,6 +144,7 @@ impl MetricsCollector {
         let is_collecting = Arc::clone(&self.is_collecting);
         let individual_tasks = Arc::clone(&self.individual_tasks);
         let batches = Arc::clone(&self.batches);
+        let main_cli_subprocess_pids = Arc::clone(&self.main_cli_subprocess_pids);
         let main_cli_pid = Arc::clone(&self.main_cli_pid);
         let daemon_pid = Arc::clone(&self.daemon_pid);
         let system = Arc::clone(&self.system);
@@ -156,6 +161,7 @@ impl MetricsCollector {
                     is_collecting,
                     individual_tasks,
                     batches,
+                    main_cli_subprocess_pids,
                     main_cli_pid,
                     daemon_pid,
                     system,
@@ -264,6 +270,23 @@ impl MetricsCollector {
         );
     }
 
+    /// Register a subprocess of the main CLI (e.g., plugin worker)
+    /// Idempotent - safe to call multiple times with same PID
+    /// No validation at registration time - validation happens during collection
+    pub fn register_main_cli_subprocess(&self, pid: i32) {
+        self.main_cli_subprocess_pids.insert(pid, ());
+
+        // Establish baseline immediately for this subprocess
+        // This ensures accurate CPU data from the first collection cycle after spawn
+        let mut sys = self.system.lock();
+        let target_pid = Pid::from(pid as usize);
+        sys.refresh_processes_specifics(
+            sysinfo::ProcessesToUpdate::Some(&[target_pid]),
+            false, // don't remove dead processes
+            ProcessRefreshKind::nothing().with_cpu(),
+        );
+    }
+
     /// The main collection loop that runs in a separate thread
     /// Discovers current metrics and directly notifies subscribers (true push-based)
     fn collection_loop(
@@ -271,6 +294,7 @@ impl MetricsCollector {
         is_collecting: Arc<AtomicBool>,
         individual_tasks: Arc<DashMap<String, IndividualTaskRegistration>>,
         batches: Arc<DashMap<String, BatchRegistration>>,
+        main_cli_subprocess_pids: Arc<DashMap<i32, ()>>,
         main_cli_pid: Arc<Mutex<Option<i32>>>,
         daemon_pid: Arc<Mutex<Option<i32>>>,
         system: Arc<Mutex<System>>,
@@ -286,6 +310,7 @@ impl MetricsCollector {
                 &system,
                 &individual_tasks,
                 &batches,
+                &main_cli_subprocess_pids,
                 &main_cli_pid,
                 &daemon_pid,
                 &metadata_store,
@@ -477,6 +502,7 @@ impl MetricsCollector {
         system: &Mutex<System>,
         individual_tasks: &DashMap<String, IndividualTaskRegistration>,
         batches: &DashMap<String, BatchRegistration>,
+        main_cli_subprocess_pids: &DashMap<i32, ()>,
         main_cli_pid: &Mutex<Option<i32>>,
         daemon_pid: &Mutex<Option<i32>>,
         metadata_store: &MetadataStore,
@@ -517,6 +543,9 @@ impl MetricsCollector {
                 .is_some()
         });
 
+        // Clean up dead CLI subprocesses
+        main_cli_subprocess_pids.retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
+
         // Pre-allocate HashSet for tracking all live PIDs to reduce allocations
         let mut live_pids = HashSet::with_capacity(
             1 + // main_cli
@@ -528,16 +557,39 @@ impl MetricsCollector {
         // Track new metadata discovered during collection (conditionally populated)
         let mut new_metadata = HashMap::new();
 
-        // Collect main CLI process
+        // Collect main CLI process and its registered subprocesses
         let main_cli_metrics = {
             let cli_pid = main_cli_pid.lock();
             if let Some(pid) = *cli_pid {
-                let metrics =
+                // Collect main CLI process itself
+                let main_metrics =
                     Self::collect_process_info(&sys, pid, metadata_store, &mut new_metadata);
-                if let Some(ref m) = metrics {
-                    live_pids.insert(m.pid);
+
+                if let Some(main) = main_metrics {
+                    live_pids.insert(main.pid);
+
+                    // Collect registered subprocesses
+                    let subprocesses: Vec<ProcessMetrics> = main_cli_subprocess_pids
+                        .iter()
+                        .filter_map(|entry| {
+                            let subprocess_pid = *entry.key();
+                            let metrics = Self::collect_process_info(
+                                &sys,
+                                subprocess_pid,
+                                metadata_store,
+                                &mut new_metadata,
+                            );
+                            if let Some(ref m) = metrics {
+                                live_pids.insert(m.pid);
+                            }
+                            metrics
+                        })
+                        .collect();
+
+                    Some(ProcessTreeMetrics { main, subprocesses })
+                } else {
+                    None
                 }
-                metrics
             } else {
                 None
             }
@@ -559,10 +611,10 @@ impl MetricsCollector {
                     })
                     .collect();
 
-                // Build DaemonMetrics from collected processes
+                // Build ProcessTreeMetrics from collected processes
                 if let Some(main) = daemon_process_metrics.first().copied() {
                     let subprocesses = daemon_process_metrics.into_iter().skip(1).collect();
-                    Some(DaemonMetrics { main, subprocesses })
+                    Some(ProcessTreeMetrics { main, subprocesses })
                 } else {
                     None
                 }

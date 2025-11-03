@@ -126,6 +126,8 @@ export declare class ProcessMetricsCollector {
   registerTaskProcess(taskId: string, pid: number): void
   /** Register a batch with multiple tasks sharing a worker */
   registerBatch(batchId: string, taskIds: Array<string>, pid: number): void
+  /** Register a subprocess of the main CLI for metrics collection */
+  registerMainCliSubprocess(pid: number): void
   /** Subscribe to push-based metrics notifications from TypeScript */
   subscribe(callback: (err: Error | null, event: MetricsUpdate) => void): void
 }
@@ -214,12 +216,6 @@ export declare export declare function closeDbConnection(connection: ExternalObj
 export declare export declare function connectToNxDb(cacheDir: string, nxVersion: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
 
 export declare export declare function copy(src: string, dest: string): number
-
-/** Daemon metrics with main process and subprocesses */
-export interface DaemonMetrics {
-  main: ProcessMetrics
-  subprocesses: Array<ProcessMetrics>
-}
 
 export interface DepsOutputsInput {
   dependentTasksOutputFiles: string
@@ -359,10 +355,16 @@ export interface ProcessMetrics {
 /** Organized collection of process metrics with timestamp */
 export interface ProcessMetricsSnapshot {
   timestamp: number
-  mainCli?: ProcessMetrics
-  daemon?: DaemonMetrics
+  mainCli?: ProcessTreeMetrics
+  daemon?: ProcessTreeMetrics
   tasks: Record<string, Array<ProcessMetrics>>
   batches: Record<string, BatchMetricsSnapshot>
+}
+
+/** Metrics for a process and its subprocesses (used for both CLI and daemon) */
+export interface ProcessTreeMetrics {
+  main: ProcessMetrics
+  subprocesses: Array<ProcessMetrics>
 }
 
 export interface Project {

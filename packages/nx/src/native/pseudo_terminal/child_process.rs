@@ -22,6 +22,7 @@ pub enum ChildProcessMessage {
 #[napi]
 pub struct ChildProcess {
     parser: Arc<RwLock<Parser>>,
+    pid: i32,
     process_killer: ProcessKiller,
     message_receiver: Receiver<String>,
     pub(crate) wait_receiver: Receiver<String>,
@@ -33,6 +34,7 @@ impl ChildProcess {
     pub fn new(
         parser: Arc<RwLock<Parser>>,
         writer_arc: Arc<Mutex<Box<dyn Write + Send>>>,
+        pid: i32,
         process_killer: ProcessKiller,
         message_receiver: Receiver<String>,
         exit_receiver: Receiver<String>,
@@ -40,6 +42,7 @@ impl ChildProcess {
         Self {
             parser,
             writer_arc,
+            pid,
             process_killer,
             message_receiver,
             wait_receiver: exit_receiver,
@@ -54,7 +57,7 @@ impl ChildProcess {
 
     #[napi]
     pub fn get_pid(&self) -> i32 {
-        self.process_killer.get_pid()
+        self.pid
     }
 
     #[napi(ts_args_type = "signal?: NodeJS.Signals")]

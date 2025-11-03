@@ -2,7 +2,7 @@ import {
   ProcessMetricsCollector,
   ProcessMetadata,
   ProcessMetrics,
-  DaemonMetrics,
+  ProcessTreeMetrics,
   ProcessMetricsSnapshot,
   BatchMetricsSnapshot,
   MetricsUpdate,
@@ -13,7 +13,7 @@ import { getDaemonProcessIdSync } from '../daemon/cache';
 export type {
   ProcessMetadata,
   ProcessMetrics,
-  DaemonMetrics,
+  ProcessTreeMetrics,
   ProcessMetricsSnapshot,
   BatchMetricsSnapshot,
   MetricsUpdate,
@@ -131,6 +131,17 @@ class ProcessMetricsService {
   registerDaemonProcess(pid: number): void {
     try {
       this.collector?.registerDaemonProcess(pid);
+    } catch {
+      // Silent failure - metrics collection is optional
+    }
+  }
+
+  /**
+   * Register a subprocess of the main CLI (e.g., plugin worker)
+   */
+  registerMainCliSubprocess(pid: number): void {
+    try {
+      this.collector?.registerMainCliSubprocess(pid);
     } catch {
       // Silent failure - metrics collection is optional
     }

@@ -85,10 +85,10 @@ pub struct ProcessMetrics {
     pub memory: i64,
 }
 
-/// Daemon metrics with main process and subprocesses
+/// Metrics for a process and its subprocesses (used for both CLI and daemon)
 #[napi(object)]
 #[derive(Debug, Clone)]
-pub struct DaemonMetrics {
+pub struct ProcessTreeMetrics {
     pub main: ProcessMetrics,
     pub subprocesses: Vec<ProcessMetrics>,
 }
@@ -107,8 +107,8 @@ pub struct BatchMetricsSnapshot {
 #[derive(Debug, Clone)]
 pub struct ProcessMetricsSnapshot {
     pub timestamp: i64,
-    pub main_cli: Option<ProcessMetrics>,
-    pub daemon: Option<DaemonMetrics>,
+    pub main_cli: Option<ProcessTreeMetrics>,
+    pub daemon: Option<ProcessTreeMetrics>,
     pub tasks: HashMap<String, Vec<ProcessMetrics>>,
     pub batches: HashMap<String, BatchMetricsSnapshot>,
 }

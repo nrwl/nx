@@ -23,12 +23,12 @@ pub struct ProcessMetricsCollector {
 impl ProcessMetricsCollector {
     /// Create a new metrics collector with default configuration
     #[napi(constructor)]
-    pub fn new() -> anyhow::Result<Self> {
+    pub fn new() -> Self {
         let collector = MetricsCollector::new();
 
-        Ok(Self {
+        Self {
             collector: Arc::new(RwLock::new(collector)),
-        })
+        }
     }
 
     /// Start metrics collection
@@ -92,6 +92,13 @@ impl ProcessMetricsCollector {
     pub fn register_batch(&self, batch_id: String, task_ids: Vec<String>, pid: i32) {
         let collector = self.collector.read();
         collector.register_batch(batch_id, task_ids, pid);
+    }
+
+    /// Register a subprocess of the main CLI for metrics collection
+    #[napi]
+    pub fn register_main_cli_subprocess(&self, pid: i32) {
+        let collector = self.collector.read();
+        collector.register_main_cli_subprocess(pid);
     }
 
     /// Subscribe to push-based metrics notifications from TypeScript
