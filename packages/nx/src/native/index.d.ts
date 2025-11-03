@@ -94,11 +94,11 @@ export declare class NxTaskHistory {
 }
 
 /**
- * NAPI wrapper for the process metrics collector
- * Provides a JavaScript-friendly interface for metrics collection
+ * High-performance metrics collector for Nx tasks
+ * Thread-safe and designed for minimal overhead
  */
 export declare class ProcessMetricsCollector {
-  /** Create a new metrics collector with default configuration */
+  /** Create a new ProcessMetricsCollector with default configuration */
   constructor()
   /**
    * Start metrics collection

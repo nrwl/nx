@@ -5,13 +5,16 @@ use std::thread::JoinHandle;
 
 use anyhow::Result;
 use dashmap::DashMap;
+use napi::{Env, JsFunction};
+use napi_derive::napi;
 use parking_lot::Mutex;
 use sysinfo::{Pid, ProcessRefreshKind, System, UpdateKind};
+use tracing::error;
 
 use crate::native::metrics::types::{
     BatchMetricsSnapshot, BatchRegistration, CollectorConfig, IndividualTaskRegistration,
-    MetricsError, MetricsUpdate, ProcessMetadata, ProcessMetrics, ProcessMetricsSnapshot,
-    ProcessTreeMetrics, SystemInfo,
+    MetricsUpdate, ProcessMetadata, ProcessMetrics, ProcessMetricsSnapshot, ProcessTreeMetrics,
+    SystemInfo,
 };
 use crate::native::utils::time::current_timestamp_millis;
 use napi::threadsafe_function::{
@@ -69,7 +72,8 @@ pub(crate) struct SubscriberState {
 
 /// High-performance metrics collector for Nx tasks
 /// Thread-safe and designed for minimal overhead
-pub struct MetricsCollector {
+#[napi]
+pub struct ProcessMetricsCollector {
     /// Configuration for the collector
     config: CollectorConfig,
     /// Individual tasks with one or more anchor processes
@@ -85,6 +89,10 @@ pub struct MetricsCollector {
     main_cli_pid: Arc<Mutex<Option<i32>>>,
     /// Daemon process PID (can be updated when daemon connects)
     daemon_pid: Arc<Mutex<Option<i32>>>,
+    /// Cached CPU core count (set once at initialization)
+    cpu_cores: u32,
+    /// Cached total memory in bytes (set once at initialization)
+    total_memory: i64,
     /// System info instance (shared for process querying)
     system: Arc<Mutex<System>>,
     /// Subscribers for metrics events (thread-safe)
@@ -92,21 +100,27 @@ pub struct MetricsCollector {
     /// Metadata store for process metadata
     pub(crate) metadata_store: Arc<MetadataStore>,
     /// Collection thread state
-    collection_thread: Option<JoinHandle<()>>,
+    collection_thread: Mutex<Option<JoinHandle<()>>>,
     /// Atomic flag to control collection thread
     should_collect: Arc<AtomicBool>,
     /// Atomic flag to indicate if collection is running
     is_collecting: Arc<AtomicBool>,
 }
 
-impl MetricsCollector {
-    /// Create a new MetricsCollector with default configuration
+#[napi]
+impl ProcessMetricsCollector {
+    /// Create a new ProcessMetricsCollector with default configuration
+    #[napi(constructor)]
     pub fn new() -> Self {
         Self::with_config(CollectorConfig::default())
     }
 
-    /// Create a new MetricsCollector with custom configuration
-    pub fn with_config(config: CollectorConfig) -> Self {
+    /// Create a new ProcessMetricsCollector with custom configuration
+    fn with_config(config: CollectorConfig) -> Self {
+        let sys = System::new_all();
+        let cpu_cores = sys.cpus().len() as u32;
+        let total_memory = sys.total_memory() as i64;
+
         Self {
             config,
             individual_tasks: Arc::new(DashMap::new()),
@@ -114,18 +128,21 @@ impl MetricsCollector {
             main_cli_subprocess_pids: Arc::new(DashMap::new()),
             main_cli_pid: Arc::new(Mutex::new(None)),
             daemon_pid: Arc::new(Mutex::new(None)),
-            system: Arc::new(Mutex::new(System::new_all())),
+            cpu_cores,
+            total_memory,
+            system: Arc::new(Mutex::new(sys)),
             subscribers: Arc::new(Mutex::new(Vec::new())),
             metadata_store: Arc::new(MetadataStore::new()),
-            collection_thread: None,
+            collection_thread: Mutex::new(None),
             should_collect: Arc::new(AtomicBool::new(false)),
             is_collecting: Arc::new(AtomicBool::new(false)),
         }
     }
 
     /// Start metrics collection
-    /// Idempotent - safe to call multiple times, subsequent calls are no-ops
-    pub fn start_collection(&mut self) -> Result<(), MetricsError> {
+    /// Idempotent - safe to call multiple times
+    #[napi]
+    pub fn start_collection(&self) -> anyhow::Result<()> {
         // Atomically check if collection is not running and start it
         // If already running, this is a no-op (idempotent behavior)
         if self
@@ -174,32 +191,35 @@ impl MetricsCollector {
                 // Failed to spawn thread - reset flag so future attempts can try again
                 self.is_collecting.store(false, Ordering::Release);
                 self.should_collect.store(false, Ordering::Release);
-                MetricsError::SystemError(format!("Failed to start collection thread: {}", e))
+                error!("Failed to start metrics collection: {}", e);
+                anyhow::anyhow!("Failed to start collection: {}", e)
             })?;
 
-        self.collection_thread = Some(collection_thread);
+        *self.collection_thread.lock() = Some(collection_thread);
 
         Ok(())
     }
 
     /// Stop metrics collection
-    pub fn stop_collection(&mut self) -> Result<(), MetricsError> {
+    /// Returns true if collection was stopped, false if not running
+    #[napi]
+    pub fn stop_collection(&self) -> anyhow::Result<bool> {
         if !self.is_collecting.load(Ordering::Acquire) {
-            return Err(MetricsError::CollectionNotStarted);
+            return Ok(false);
         }
 
         // Signal the collection thread to stop
         self.should_collect.store(false, Ordering::Release);
 
         // Wait for the collection thread to finish
-        if let Some(thread) = self.collection_thread.take() {
+        if let Some(thread) = self.collection_thread.lock().take() {
             if let Err(e) = thread.join() {
-                tracing::error!("Collection thread panicked: {:?}", e);
+                error!("Collection thread panicked: {:?}", e);
             }
         }
 
         self.is_collecting.store(false, Ordering::Release);
-        Ok(())
+        Ok(true)
     }
 
     /// Check if collection is currently running
@@ -208,33 +228,32 @@ impl MetricsCollector {
     }
 
     /// Get system information (CPU cores and total memory)
+    /// This is separate from the collection interval and meant to be called imperatively
+    #[napi]
     pub fn get_system_info(&self) -> SystemInfo {
-        let sys = self.system.lock();
         SystemInfo {
-            cpu_cores: sys.cpus().len() as u32,
-            total_memory: sys.total_memory() as i64,
+            cpu_cores: self.cpu_cores,
+            total_memory: self.total_memory,
         }
     }
 
-    /// Register the main CLI process
-    /// Idempotent - safe to call multiple times with same PID
-    /// No validation at registration time - validation happens during collection
+    /// Register the main CLI process for metrics collection
+    #[napi]
     pub fn register_main_cli_process(&self, pid: i32) {
         let mut cli_pid = self.main_cli_pid.lock();
         *cli_pid = Some(pid);
     }
 
-    /// Register the daemon process
-    /// Idempotent - safe to call multiple times, overwrites with new PID
-    /// No validation at registration time - validation happens during collection
+    /// Register the daemon process for metrics collection
+    #[napi]
     pub fn register_daemon_process(&self, pid: i32) {
         let mut daemon_pid = self.daemon_pid.lock();
         *daemon_pid = Some(pid);
     }
 
-    /// Register a process for an individual task (called when process spawns)
-    /// Can be called multiple times with same task_id to add more processes
-    /// No validation at registration time - validation happens during collection
+    /// Register a process for a specific task
+    /// Automatically creates the task if it doesn't exist
+    #[napi]
     pub fn register_task_process(&self, task_id: String, pid: i32) {
         self.individual_tasks
             .entry(task_id.clone())
@@ -254,6 +273,7 @@ impl MetricsCollector {
     }
 
     /// Register a batch with multiple tasks sharing a worker
+    #[napi]
     pub fn register_batch(&self, batch_id: String, task_ids: Vec<String>, pid: i32) {
         self.batches.insert(
             batch_id.clone(),
@@ -270,9 +290,8 @@ impl MetricsCollector {
         );
     }
 
-    /// Register a subprocess of the main CLI (e.g., plugin worker)
-    /// Idempotent - safe to call multiple times with same PID
-    /// No validation at registration time - validation happens during collection
+    /// Register a subprocess of the main CLI for metrics collection
+    #[napi]
     pub fn register_main_cli_subprocess(&self, pid: i32) {
         self.main_cli_subprocess_pids.insert(pid, ());
 
@@ -697,21 +716,36 @@ impl MetricsCollector {
         })
     }
 
-    /// Subscribe to metrics updates
-    pub fn subscribe(&mut self, callback: ThreadsafeFunction<MetricsUpdate, CalleeHandled>) {
+    /// Subscribe to push-based metrics notifications from TypeScript
+    #[napi(ts_args_type = "callback: (err: Error | null, event: MetricsUpdate) => void")]
+    pub fn subscribe(&self, env: Env, callback: JsFunction) -> anyhow::Result<()> {
+        // Create threadsafe function for updates
+        let mut tsfn: ThreadsafeFunction<MetricsUpdate, CalleeHandled> =
+            callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
+        tsfn.unref(&env)?;
+
+        // Store callback for future updates
+        // The subscriber will receive full metadata on first update via needs_full_metadata flag
         let mut subscribers = self.subscribers.lock();
         subscribers.push(SubscriberState {
-            callback,
+            callback: tsfn,
             needs_full_metadata: true,
         });
+
+        Ok(())
     }
 }
 
-impl Drop for MetricsCollector {
+impl Drop for ProcessMetricsCollector {
     fn drop(&mut self) {
         // Ensure collection is stopped when dropping (RAII pattern)
         if self.is_collecting.load(Ordering::Acquire) {
-            let _ = self.stop_collection();
+            if let Err(e) = self.stop_collection() {
+                error!(
+                    "Failed to stop collection during ProcessMetricsCollector drop: {}",
+                    e
+                );
+            }
         }
     }
 }
