@@ -68,8 +68,8 @@ Turbopack is a cutting-edge bundler designed for JavaScript and TypeScript. To r
 
 **Important: Next.js 16 changed the default bundler**
 
-- **Next.js 15 and below**: webpack is the default bundler. Use `--turbo` to enable Turbopack.
-- **Next.js 16 and above**: Turbopack is the default bundler. Use `--webpack` to use webpack instead.
+- **Next.js 15 and below**: Webpack is the default bundler. Use `--turbo` to enable Turbopack.
+- **Next.js 16 and above**: Turbopack is the default bundler. Use `--webpack` to use Webpack instead.
 
 ### Using Turbopack in Next.js 15 and below
 
@@ -99,9 +99,9 @@ Or update the serve options to include `turbo`:
     }
 ```
 
-### Using webpack in Next.js 16 and above
+### Using Webpack in Next.js 16 and above
 
-If you need to use webpack instead of the default Turbopack in Next.js 16+:
+If you need to use Webpack instead of the default Turbopack in Next.js 16+:
 
 ```shell
 nx run acme:serve --webpack

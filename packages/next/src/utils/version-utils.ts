@@ -50,6 +50,14 @@ export async function getEslintConfigNextDependenciesVersionsToInstall(
   }
 }
 
+export async function isNext16(tree: Tree) {
+  let installedNextVersion = await getInstalledNextVersionFromGraph();
+  if (!installedNextVersion) {
+    installedNextVersion = getInstalledNextVersion(tree);
+  }
+  return major(installedNextVersion) === 16;
+}
+
 export async function isNext15(tree: Tree) {
   let installedNextVersion = await getInstalledNextVersionFromGraph();
   if (!installedNextVersion) {

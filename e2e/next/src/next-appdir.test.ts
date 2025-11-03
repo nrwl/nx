@@ -31,6 +31,8 @@ describe('Next.js App Router', () => {
     );
     runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
 
+    // Turbopack interprets the TS source incorrectly assuming ESM despite package.json type stating module
+    // TODO(Colum): remove this when JS Lib generator switches to ESM
     updateJson(`${jsLib}/package.json`, (json) => {
       delete json.type;
       return json;
