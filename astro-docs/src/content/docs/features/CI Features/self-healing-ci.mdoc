@@ -56,6 +56,11 @@ jobs:
 
 ### Enable Auto-fixing
 
+{% youtube
+src="https://youtu.be/EmZcENiCG64"
+title="Enable Auto-fixing"
+/%}
+
 By default, Self-Healing CI proposes a fix for you to review and only applies it automatically to your PR after you confirm it. However, for some tasks, it makes sense to have them be auto-fixed without waiting for manual approval. Auto-fixes are only applied if the verification phase passes.
 
 Below is an example of enabling auto-fixing for the Nx `format` command and `lint` tasks using the [`--auto-apply-fixes`](/docs/reference/nx-cloud-cli#--auto-apply-fixes) flag:
@@ -77,6 +82,11 @@ jobs:
 Tasks are passed to the `--auto-apply-fixes` as `<project>:<task-name>:<configuration>`. Commands like `nx format` which you configure with `nx-cloud record --` are passed as `nx-cloud record -- <params>`.
 
 ### Specify Which Tasks to Fix
+
+{% youtube
+src="https://youtu.be/KSb48zHbaHg"
+title="Specify Which Tasks to Fix"
+/%}
 
 By using the [`--fix-tasks`](/docs/reference/nx-cloud-cli#--fix-tasks) flag you can fine-tune which tasks should be considered by the Nx Cloud self-healing CI. Below is an example of running self-healing on all tasks except `deploy` and `test` tasks.
 
