@@ -663,7 +663,7 @@ describe('app', () => {
         });
       });
 
-      it('should install eslint-config-next@14 when an existing Next.js 15 project is detected', async () => {
+      it('should install eslint-config-next@15 when an existing Next.js 15 project is detected', async () => {
         tree.write(
           '/package.json',
           JSON.stringify({
