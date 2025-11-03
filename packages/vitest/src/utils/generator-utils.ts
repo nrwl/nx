@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   joinPathFragments,
   logger,
   offsetFromRoot,
@@ -13,6 +14,7 @@ import {
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
+import { nxVersion } from './versions';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -151,7 +153,7 @@ export function createOrEditViteConfig(
   const imports: string[] = options.imports ? [...options.imports] : [];
   const plugins: string[] = options.plugins ? [...options.plugins] : [];
 
-  if (!onlyVitest && options.includeLib) {
+  if (!onlyVitest && options.includeLib && !isTsSolutionSetup) {
     imports.push(
       `import dts from 'vite-plugin-dts'`,
       `import * as path from 'path'`
@@ -164,6 +166,7 @@ export function createOrEditViteConfig(
       `import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'`
     );
     plugins.push(`nxViteTsPaths()`, `nxCopyAssetsPlugin(['*.md'])`);
+    addDependenciesToPackageJson(tree, {}, { '@nx/vite': nxVersion });
   }
 
   if (!onlyVitest && options.includeLib) {

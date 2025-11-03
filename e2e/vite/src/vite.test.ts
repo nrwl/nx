@@ -304,7 +304,7 @@ describe('@nx/vite/plugin', () => {
     it('should contain targets test', () => {
       const nxJson = readJson('nx.json');
 
-      const vitePlugin = nxJson.plugins.find((p) => p.plugin === '@nx/vite');
+      const vitePlugin = nxJson.plugins.find((p) => p.plugin === '@nx/vitest');
       expect(vitePlugin).toBeDefined();
       expect(vitePlugin.options.testTargetName).toEqual('test');
     });

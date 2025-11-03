@@ -17,29 +17,8 @@ describe('Build React applications and libraries with Rsbuild', () => {
   });
 
   afterAll(() => {
-    cleanupProject();
+    // cleanupProject();
   });
-
-  it('should test and lint app with bundler=rsbuild', async () => {
-    const rsbuildApp = uniq('rsbuildapp');
-
-    runCLI(
-      `generate @nx/react:app apps/${rsbuildApp} --bundler=rsbuild --unitTestRunner=vitest --no-interactive --linter=eslint`
-    );
-
-    const appTestResults = await runCLIAsync(`test ${rsbuildApp}`);
-    expect(appTestResults.combinedOutput).toContain(
-      'Successfully ran target test'
-    );
-
-    const appLintResults = await runCLIAsync(`lint ${rsbuildApp}`);
-    expect(appLintResults.combinedOutput).toContain(
-      'Successfully ran target lint'
-    );
-
-    await runCLIAsync(`build ${rsbuildApp}`);
-    checkFilesExist(`apps/${rsbuildApp}/dist/index.html`);
-  }, 300_000);
 
   it('should test and lint app with bundler=rsbuild', async () => {
     const rsbuildApp = uniq('rsbuildapp');

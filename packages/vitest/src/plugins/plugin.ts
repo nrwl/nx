@@ -9,7 +9,6 @@ import {
   ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
-  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
@@ -207,7 +206,10 @@ async function buildVitestTargets(
       };
 
       const projectRootRelativeTestPaths =
-        await getTestPathsRelativeToProjectRoot(projectRoot);
+        await getTestPathsRelativeToProjectRoot(
+          projectRoot,
+          context.workspaceRoot
+        );
 
       for (const relativePath of projectRootRelativeTestPaths) {
         if (relativePath.includes('../')) {
@@ -391,11 +393,13 @@ function checkIfConfigFileShouldBeProject(
 }
 
 async function getTestPathsRelativeToProjectRoot(
-  projectRoot: string
+  projectRoot: string,
+  workspaceRoot: string
 ): Promise<string[]> {
   const fullProjectRoot = join(workspaceRoot, projectRoot);
   const { createVitest } = await import('vitest/node');
   const vitest = await createVitest('test', {
+    root: fullProjectRoot,
     dir: fullProjectRoot,
     filesOnly: true,
     watch: false,
@@ -403,6 +407,8 @@ async function getTestPathsRelativeToProjectRoot(
   const relevantTestSpecifications =
     await vitest.getRelevantTestSpecifications();
   return relevantTestSpecifications
-    .filter((ts) => ts.moduleId.startsWith(fullProjectRoot))
+    .filter((ts) =>
+      fullProjectRoot === '.' ? true : ts.moduleId.startsWith(fullProjectRoot)
+    )
     .map((ts) => relative(projectRoot, ts.moduleId));
 }
