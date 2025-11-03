@@ -7,6 +7,8 @@ sidebar:
 filter: 'type:Guides'
 ---
 
+{% course_video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-01-nx-init" /%}
+
 In many situations, you have an existing codebase and want to improve it with Nx using an **incremental adoption approach**.
 
 Thanks to [Nx's modular architecture](/docs/getting-started/intro), you can start with just **Nx Core** and then gradually add [technology-specific plugins](/docs/technologies), [CI integrations](/docs/getting-started/nx-cloud), or other capabilities as your requirements evolve.
@@ -25,12 +27,13 @@ Whether a monorepo, single project or something in between, `nx init` walks you 
 
 ## Next Steps
 
-After initializing Nx, you can explore your workspace with the following commands:
+After initializing Nx, you can [run tasks](/docs/features/run-tasks) with `nx <task> <project-name>` (e.g. `nx build myproject`) or run one or many tasks across all projects with `nx run-many -t <task1> <task2>`.
+
+You can also explore your codebase using:
 
 - `nx graph` to view an interactive graph
 - `nx show projects` to see a list of all projects
 - `nx show project <project-name>` to view an interactive project detailed view
-- `nx run-many -t <target>` to run tasks with Nx, e.g. `nx run-many -t build`
 
 ### Update CI Configurations
 
