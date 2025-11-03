@@ -311,7 +311,10 @@ impl AppLifeCycle {
 }
 
 #[napi]
-pub fn restore_terminal() -> Result<()> {
+pub fn restore_terminal() -> napi::Result<()> {
+    // Clear terminal progress indicator
+    App::clear_terminal_progress();
+
     // Restore the terminal to a clean state
     if let Ok(mut t) = Tui::new() {
         if let Err(r) = t.exit() {
