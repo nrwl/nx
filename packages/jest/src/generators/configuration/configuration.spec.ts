@@ -703,10 +703,8 @@ describe('jestProject', () => {
   describe('Jest 30+', () => {
     const { getInstalledJestMajorVersion } = require('../../utils/versions');
 
-    it('should create jest.config.cts for Jest 30+', async () => {
-      // Mock returns Jest 30 twice because generator calls it in two places
-      getInstalledJestMajorVersion
-        .mockReturnValue(30);
+    it('should create jest.config.cts', async () => {
+      getInstalledJestMajorVersion.mockReturnValue(30);
 
       await configurationGenerator(tree, {
         ...defaultOptions,
@@ -724,9 +722,7 @@ describe('jestProject', () => {
     });
 
     it('should create jest.config.cts when Jest version cannot be determined (null)', async () => {
-      // Mock returns null twice because generator calls it in two places
-      getInstalledJestMajorVersion
-        .mockReturnValue(null);
+      getInstalledJestMajorVersion.mockReturnValue(null);
 
       await configurationGenerator(tree, {
         ...defaultOptions,
@@ -740,10 +736,8 @@ describe('jestProject', () => {
       );
     });
 
-    it('should exclude jest.config.cts from tsconfig for Jest 30+', async () => {
-      // Mock returns Jest 30 twice because generator calls it in two places
-      getInstalledJestMajorVersion
-        .mockReturnValue(30);
+    it('should exclude jest.config.ts and jest.config.cts from tsconfig', async () => {
+      getInstalledJestMajorVersion.mockReturnValue(30);
 
       // Create tsconfig.lib.json first
       writeJson(tree, 'libs/lib1/tsconfig.lib.json', {
@@ -761,14 +755,12 @@ describe('jestProject', () => {
       } as JestProjectSchema);
 
       const tsConfig = readJson(tree, 'libs/lib1/tsconfig.lib.json');
+      expect(tsConfig.exclude).toContain('jest.config.ts');
       expect(tsConfig.exclude).toContain('jest.config.cts');
-      expect(tsConfig.exclude).not.toContain('jest.config.ts');
     });
 
-    it('root jest.config.cts should be project config for Jest 30+', async () => {
-      // Mock returns Jest 30 twice because generator calls it in two places
-      getInstalledJestMajorVersion
-        .mockReturnValue(30);
+    it('root jest.config.cts should be project config', async () => {
+      getInstalledJestMajorVersion.mockReturnValue(30);
 
       writeJson(tree, 'tsconfig.json', {
         files: [],
