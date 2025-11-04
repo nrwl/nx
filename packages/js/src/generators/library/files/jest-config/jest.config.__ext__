@@ -1,5 +1,5 @@
 /* eslint-disable */
-<% if(js) {%>const { readFileSync } = require('fs')<% } else { %>import { readFileSync } from 'fs';<% } %>
+<% if(ext === 'js' || ext === 'cts') {%>const { readFileSync } = require('fs')<% } else { %>import { readFileSync } from 'fs';<% } %>
 
 // Reading the SWC compilation config and remove the "exclude"
 // for the test files to be compiled by SWC
@@ -18,7 +18,7 @@ if (swcJestConfig.swcrc === undefined) {
 // jest needs EsModule Interop to find the default exported setup/teardown functions
 // swcJestConfig.module.noInterop = false;
 
-<% if(js) {%>module.exports =<% } else { %>export default<% } %> {
+<% if(ext === 'js' || ext === 'cts') {%>module.exports =<% } else { %>export default<% } %> {
   displayName: '<%= project %>',
   preset: '<%= offsetFromRoot %><%= jestPreset %>',
   transform: {
