@@ -34,7 +34,7 @@ export async function addJest(
   });
 
   // overwrite the jest.config.ts file because react native needs to have special transform property
-  const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'ts'}`;
+  const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'cts'}`;
   const content = `module.exports = {
   displayName: '${projectName}',
   preset: 'react-native',

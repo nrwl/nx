@@ -69,7 +69,7 @@ describe('app', () => {
     expect(tsconfig.extends).toEqual('../tsconfig.base.json');
 
     expect(appTree.exists('my-app/.eslintrc.json')).toBe(true);
-    expect(appTree.read('my-app/jest.config.ts', 'utf-8'))
+    expect(appTree.read('my-app/jest.config.cts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "module.exports = {
         displayName: 'my-app',
@@ -108,7 +108,7 @@ describe('app', () => {
       bundler: 'vite',
     });
 
-    expect(appTree.exists('my-app/jest.config.ts')).toBeTruthy();
+    expect(appTree.exists('my-app/jest.config.cts')).toBeTruthy();
   });
 
   it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
@@ -387,6 +387,7 @@ describe('app', () => {
             "src/**/*.spec.jsx",
             "src/test-setup.ts",
             "jest.config.ts",
+            "jest.config.cts",
             "eslint.config.js",
             "eslint.config.cjs",
             "eslint.config.mjs",
