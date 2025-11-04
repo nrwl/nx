@@ -447,13 +447,31 @@ async function startPluginWorker(name: string) {
       name,
     ],
     {
-      stdio: 'inherit',
+      stdio: 'pipe',
       env,
       detached: true,
       shell: false,
       windowsHide: true,
     }
   );
+
+  // To make debugging easier and allow plugins to communicate things
+  // like performance metrics, we pipe the stdout/stderr of the worker
+  // to the main process.
+  // This adds one listener per plugin to a few events on process.stdout/stderr,
+  // so we need to increase the max listener count to avoid warnings.
+  //
+  // We originally used `inherit` for stdio, but that caused issues with
+  // some environments where the terminal was left in an inconsistent state
+  // that prevented `↑`/`↓` arrow keys from working correctly after Nx finished execution.
+  // Instead, they would print things like `^[[A`/`^[[B` to the terminal.
+  const stdoutMaxListeners = process.stdout.getMaxListeners();
+  const stderrMaxListeners = process.stderr.getMaxListeners();
+  process.stdout.setMaxListeners(stdoutMaxListeners + 1);
+  process.stderr.setMaxListeners(stderrMaxListeners + 1);
+  worker.stdout.pipe(process.stdout);
+  worker.stderr.pipe(process.stderr);
+
   worker.unref();
 
   let attempts = 0;
