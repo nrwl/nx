@@ -90,6 +90,14 @@ nx add @nx/dotnet
 The `@nx/dotnet` plugin only became available in Nx 22.0.0. Your Nx Workspace will need to be on this version or higher to use it.
 {% /aside %}
 
+New projects can be created with the `dotnet new` CLI command, or any other method you may be familiar with. For example:
+
+```shell
+dotnet new webapi -o ./apps/my-api
+```
+
+Full project creation docs can be found here [on the official Microsoft documentation](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-new).
+
 ## How @nx/dotnet Infers Tasks
 
 The `@nx/dotnet` plugin uses MSBuild to analyze your .NET solution and project structure. When using `nx add`, the plugin is automatically configured in your `nx.json` file.
