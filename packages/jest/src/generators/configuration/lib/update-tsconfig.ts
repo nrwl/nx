@@ -7,6 +7,7 @@ import {
 } from '@nx/devkit';
 import type { NormalizedJestProjectSchema } from '../schema';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getInstalledJestMajorVersion } from '../../../utils/versions';
 
 export function updateTsConfig(
   host: Tree,
@@ -23,6 +24,18 @@ export function updateTsConfig(
         'tsconfig.json'
       )} to exist. Please create one.`
     );
+  }
+
+  // Detect Jest 30+ to determine the correct config extension
+  const jestMajorVersion = getInstalledJestMajorVersion(host);
+  const useCommonJsConfig = jestMajorVersion === null || jestMajorVersion >= 30;
+  let jestConfigFile: string;
+  if (useCommonJsConfig) {
+    jestConfigFile = 'jest.config.cts';
+  } else if (options.js) {
+    jestConfigFile = 'jest.config.js';
+  } else {
+    jestConfigFile = 'jest.config.ts';
   }
   updateJson(host, joinPathFragments(root, 'tsconfig.json'), (json) => {
     if (
@@ -69,7 +82,7 @@ export function updateTsConfig(
     updateJson(host, runtimeTsconfigPath, (json) => {
       const uniqueExclude = new Set([
         ...(json.exclude || []),
-        options.js ? 'jest.config.js' : 'jest.config.ts',
+        jestConfigFile,
         'src/**/*.spec.ts',
         'src/**/*.test.ts',
         ...(options.js ? ['src/**/*.spec.js', 'src/**/*.test.js'] : []),
