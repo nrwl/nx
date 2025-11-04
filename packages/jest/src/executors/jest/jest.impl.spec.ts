@@ -112,7 +112,7 @@ describe('Jest Executor', () => {
           testPathPatterns: [],
           watch: false,
         }),
-        ['/root/jest.config.ts']
+        ['/root/jest.config']
       );
     });
 
