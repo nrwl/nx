@@ -44,7 +44,7 @@ describe('nx init (React)', () => {
       'tools/tsconfig.tools.json',
       'babel.config.json',
       'jest.preset.js',
-      'jest.config.ts'
+      'jest.config.cts'
     );
 
     const packageJson = readJson('package.json');
