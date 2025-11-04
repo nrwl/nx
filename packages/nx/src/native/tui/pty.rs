@@ -1,6 +1,6 @@
 use super::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use super::utils::normalize_newlines;
-use crossterm::event::{KeyCode, KeyEvent, MouseEvent, MouseEventKind};
+use crossterm::event::{KeyCode, KeyEvent};
 use parking_lot::Mutex;
 use std::{
     io::{self, Write},
@@ -190,43 +190,6 @@ impl PtyInstance {
                     self.scroll_up(amount);
                 }
                 KeyCode::Down => {
-                    let amount = self
-                        .scroll_momentum
-                        .lock()
-                        .calculate_momentum(ScrollDirection::Down);
-                    self.scroll_down(amount);
-                }
-                _ => {}
-            }
-        }
-    }
-
-    pub fn send_mouse_event(&mut self, event: MouseEvent) {
-        let is_interactive = self.handles_arrow_keys();
-        debug!("Mouse event: {:?}, Interactive: {}", event, is_interactive);
-
-        if is_interactive {
-            // Interactive program - send scroll as arrow keys
-            match event.kind {
-                MouseEventKind::ScrollUp => {
-                    self.write_input(b"\x1b[A").ok();
-                }
-                MouseEventKind::ScrollDown => {
-                    self.write_input(b"\x1b[B").ok();
-                }
-                _ => {}
-            }
-        } else {
-            // Non-interactive program - handle scrolling ourselves
-            match event.kind {
-                MouseEventKind::ScrollUp => {
-                    let amount = self
-                        .scroll_momentum
-                        .lock()
-                        .calculate_momentum(ScrollDirection::Up);
-                    self.scroll_up(amount);
-                }
-                MouseEventKind::ScrollDown => {
                     let amount = self
                         .scroll_momentum
                         .lock()

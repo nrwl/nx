@@ -1,5 +1,5 @@
 use color_eyre::eyre::Result;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
@@ -807,45 +807,6 @@ impl App {
                     }
                 }
             }
-            tui::Event::Mouse(mouse) => {
-                // If the app is in interactive mode, interactions are with
-                // the running task, not the app itself
-                if !self.is_interactive_mode() {
-                    // Record that the user has interacted with the app
-                    self.user_has_interacted = true;
-                }
-
-                if matches!(self.focus, Focus::MultipleOutput(_)) {
-                    self.handle_mouse_event(mouse).ok();
-                    return Ok(false);
-                }
-
-                match mouse.kind {
-                    MouseEventKind::ScrollUp => {
-                        if matches!(self.focus, Focus::TaskList) {
-                            self.dispatch_action(Action::ScrollUp);
-                        } else {
-                            self.handle_key_event(KeyEvent::new(
-                                KeyCode::Up,
-                                KeyModifiers::empty(),
-                            ))
-                            .ok();
-                        }
-                    }
-                    MouseEventKind::ScrollDown => {
-                        if matches!(self.focus, Focus::TaskList) {
-                            self.dispatch_action(Action::ScrollDown);
-                        } else {
-                            self.handle_key_event(KeyEvent::new(
-                                KeyCode::Down,
-                                KeyModifiers::empty(),
-                            ))
-                            .ok();
-                        }
-                    }
-                    _ => {}
-                }
-            }
             _ => {}
         }
 
@@ -1456,15 +1417,6 @@ impl App {
         self.recalculate_layout_areas();
         // Ensure the pty instances get resized appropriately (no debounce as this is based on an imperative user action)
         let _ = self.handle_pty_resize();
-    }
-
-    fn handle_mouse_event(&mut self, mouse_event: MouseEvent) -> io::Result<()> {
-        if let Focus::MultipleOutput(pane_idx) = self.focus {
-            let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-            terminal_pane_data.handle_mouse_event(mouse_event)
-        } else {
-            Ok(())
-        }
     }
 
     /// Forward key events to the currently focused pane, if any.
