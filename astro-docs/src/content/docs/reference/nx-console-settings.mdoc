@@ -9,6 +9,27 @@ filter: 'type:References'
 
 This page provides a complete reference of all configuration settings available for Nx Console. Each setting shows how to configure it in both VSCode and JetBrains IDEs (IntelliJ IDEA, WebStorm, etc.).
 
+## VSCode Configuration
+
+VSCode uses JSON files for configuration. Settings can be configured at different scopes:
+
+**User Settings** (global across all workspaces):
+
+- Apply to all VSCode projects
+- Location: `~/.config/Code/User/settings.json` (Linux/macOS) or `%APPDATA%\Code\User\settings.json` (Windows)
+- Access via: `Cmd+,` (macOS) or `Ctrl+,` (Windows/Linux), then click the "Open Settings (JSON)" icon
+
+**Workspace Settings** (specific to one workspace):
+
+- Apply only to the current workspace
+- Location: `.vscode/settings.json` in your workspace root
+- Recommended for team-shared configurations (commit to version control)
+- Override user settings
+
+Learn more about VSCode settings in the [official VSCode documentation](https://code.visualstudio.com/docs/getstarted/settings).
+
+## JetBrains IDE Configuration
+
 {% callout type="note" title="JetBrains IDE Configuration" %}
 JetBrains IDEs configure Nx Console through the Settings/Preferences UI panel (**Settings > Tools > Nx Console**) rather than JSON configuration files. Only a subset of VSCode settings are available.
 {% /callout %}
@@ -78,8 +99,26 @@ Defines how the Projects view displays entries in the sidebar.
 {% /tabitem %}
 {% tabitem label="JetBrains" %}
 
-{% callout type="warning" title="Not Available" %}
-This setting is not available in JetBrains IDEs. The project view style is determined by the IDE's native project structure view.
+**Location:** Settings > Tools > Nx Console > Tool Window Style
+
+**Type:** Dropdown
+
+**Options:** List | Tree | Automatic
+
+**Default:** Automatic
+
+**Configuration:**
+
+Navigate to **Settings/Preferences > Tools > Nx Console** and select the desired style from the "Tool Window Style" dropdown.
+
+**Options explained:**
+
+- **List**: Shows projects as a flat ordered list
+- **Tree**: Displays projects in a folder/tree structure
+- **Automatic**: Adaptively switches between list and tree based on workspace structure
+
+{% callout type="note" title="Screenshots Needed" %}
+TODO: Add screenshot showing the Tool Window Style dropdown in JetBrains settings panel
 {% /callout %}
 
 {% /tabitem %}
@@ -493,19 +532,7 @@ This setting is not available in JetBrains IDEs. MCP port configuration is not c
 {% /tabitem %}
 {% /tabs %}
 
-## Configuration File Locations
-
-### VSCode
-
-Settings can be configured in multiple locations:
-
-1. **User Settings** (global): `~/.config/Code/User/settings.json` (Linux/macOS) or `%APPDATA%\Code\User\settings.json` (Windows)
-2. **Workspace Settings**: `.vscode/settings.json` in your workspace root
-3. **UI Settings Editor**: Open with `Cmd+,` (macOS) or `Ctrl+,` (Windows/Linux)
-
-Workspace settings override user settings.
-
-### JetBrains IDEs
+## JetBrains Settings Storage
 
 Settings are configured through the IDE's Settings/Preferences panel:
 
@@ -620,7 +647,7 @@ To reduce notifications and automatic behaviors:
 | Setting                      | VSCode | JetBrains |
 | ---------------------------- | ------ | --------- |
 | Common Nx Commands           | ✅     | ❌        |
-| Project Viewing Style        | ✅     | ❌        |
+| Project Viewing Style        | ✅     | ✅        |
 | Nx Workspace Path            | ✅     | ✅        |
 | Enable CodeLens              | ✅     | ❌        |
 | Enable Library Imports       | ✅     | ❌        |
