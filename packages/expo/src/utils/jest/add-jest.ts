@@ -35,7 +35,7 @@ export async function addJest(
 
   // Overwrite the jest.config.ts file because react native needs to have special transform property
   // use preset from https://github.com/expo/expo/blob/main/packages/jest-expo/jest-preset.js
-  const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'ts'}`;
+  const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'cts'}`;
   const content = `module.exports = {
   displayName: '${projectName}',
   resolver: require.resolve('./jest.resolver.js'),

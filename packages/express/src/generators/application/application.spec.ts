@@ -100,6 +100,7 @@ describe('app', () => {
         },
         "exclude": [
           "jest.config.ts",
+          "jest.config.cts",
           "src/**/*.spec.ts",
           "src/**/*.test.ts",
         ],
@@ -329,6 +330,7 @@ describe('app', () => {
             "out-tsc",
             "dist",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "eslint.config.js",

@@ -159,6 +159,7 @@ describe('application generator', () => {
     expect(tsConfig.compilerOptions.target).toBe('es2021');
     expect(tsConfig.exclude).toEqual([
       'jest.config.ts',
+      'jest.config.cts',
       'src/**/*.spec.ts',
       'src/**/*.test.ts',
     ]);
@@ -390,6 +391,7 @@ describe('application generator', () => {
             "out-tsc",
             "dist",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "eslint.config.js",

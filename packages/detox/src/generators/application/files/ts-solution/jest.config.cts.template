@@ -1,5 +1,5 @@
 /* eslint-disable */
-<% if (js) { %>const { readFileSync } = require('fs')<% } else { %>import { readFileSync } from 'fs';<% } %>
+const { readFileSync } = require('fs');
 
 // Reading the SWC compilation config for the spec files
 const swcJestConfig = JSON.parse(
@@ -9,7 +9,7 @@ const swcJestConfig = JSON.parse(
 // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
 swcJestConfig.swcrc = false;
 
-<% if (js) { %>module.exports =<% } else { %>export default<% } %> {
+module.exports = {
   preset: "<%= offsetFromRoot %>jest.preset",
   rootDir: ".",
   testMatch: [

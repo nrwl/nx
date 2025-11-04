@@ -1,9 +1,6 @@
 import { Tree, offsetFromRoot } from '@nx/devkit';
 
-function findProjectJestConfig(
-  host: Tree,
-  projectRoot: string
-): string | null {
+function findProjectJestConfig(host: Tree, projectRoot: string): string | null {
   const extensions = ['js', 'ts', 'cts'];
 
   for (const ext of extensions) {
