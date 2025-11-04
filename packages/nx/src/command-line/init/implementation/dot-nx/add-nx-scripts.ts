@@ -48,7 +48,7 @@ const SHELL_SCRIPT_CONTENTS = [
   // Gets the path to the root of the project
   `path_to_root=$(dirname $BASH_SOURCE)`,
   // Executes the nx wrapper script
-  `node ${path.posix.join('$path_to_root', nxWrapperPath(path.posix))} $@`,
+  `node ${path.posix.join('$path_to_root', nxWrapperPath(path.posix))} "$@"`,
 ].join('\n');
 
 export function generateDotNxSetup(version?: string) {
