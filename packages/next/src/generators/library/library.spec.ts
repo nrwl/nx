@@ -255,6 +255,7 @@ describe('next library', () => {
             "out-tsc",
             "dist",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "src/**/*.spec.tsx",
