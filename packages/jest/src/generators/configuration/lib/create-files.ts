@@ -115,10 +115,10 @@ export function createFiles(
 
   const configPath = join(projectConfig.root, 'jest.config.ts');
   if (tree.exists(configPath)) {
-    if (useCommonJsConfig) {
-      tree.rename(configPath, join(projectConfig.root, 'jest.config.cts'));
-    } else if (options.js) {
+    if (options.js) {
       tree.rename(configPath, join(projectConfig.root, 'jest.config.js'));
+    } else if (useCommonJsConfig) {
+      tree.rename(configPath, join(projectConfig.root, 'jest.config.cts'));
     }
   }
 }

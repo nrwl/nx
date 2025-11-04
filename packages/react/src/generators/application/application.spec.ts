@@ -314,6 +314,7 @@ describe('app', () => {
         'src/**/*.test.js',
         'src/**/*.spec.jsx',
         'src/**/*.test.jsx',
+        'jest.config.ts',
         'jest.config.cts',
       ]);
 
@@ -452,6 +453,7 @@ describe('app', () => {
             'src/**/*.test.js',
             'src/**/*.spec.jsx',
             'src/**/*.test.jsx',
+            'jest.config.ts',
             'jest.config.cts',
           ],
         },

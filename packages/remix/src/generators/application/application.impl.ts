@@ -325,7 +325,7 @@ export default {...nxPreset};
 
       updateJestTestMatch(
         tree,
-        'jest.config.ts',
+        'jest.config.cts',
         '<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
       );
     }

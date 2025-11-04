@@ -183,6 +183,7 @@ describe('lib', () => {
     await libraryGenerator(tree, defaultSchema);
     const tsconfigJson = readJson(tree, 'my-lib/tsconfig.lib.json');
     expect(tsconfigJson.exclude).toEqual([
+      'jest.config.ts',
       'jest.config.cts',
       'src/**/*.spec.ts',
       'src/**/*.test.ts',

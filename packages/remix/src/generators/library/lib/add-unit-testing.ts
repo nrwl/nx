@@ -44,7 +44,7 @@ export function addUnitTestingSetup(tree: Tree, options: RemixLibraryOptions) {
   } else if (options.unitTestRunner === 'jest') {
     const pathToJestConfig = joinPathFragments(
       options.projectRoot,
-      `jest.config.ts`
+      `jest.config.cts`
     );
     updateJestTestSetup(tree, pathToJestConfig, './src/test-setup.ts');
   }
