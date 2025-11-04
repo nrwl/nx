@@ -698,6 +698,7 @@ async function getTestPathsRelativeToProjectRoot(
   const fullProjectRoot = join(workspaceRoot, projectRoot);
   const { createVitest } = await import('vitest/node');
   const vitest = await createVitest('test', {
+    root: fullProjectRoot,
     dir: fullProjectRoot,
     filesOnly: true,
     watch: false,
