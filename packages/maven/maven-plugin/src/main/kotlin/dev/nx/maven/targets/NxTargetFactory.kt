@@ -54,7 +54,6 @@ class NxTargetFactory(
     val nxTargets = objectMapper.createObjectNode()
     val targetGroups = mutableMapOf<String, List<String>>()
 
-    val phaseDependsOn = mutableMapOf<String, MutableList<String>>()
     val plugins = getExecutablePlugins(project)
 
     // Collect all goals by phase from plugin executions
@@ -73,7 +72,6 @@ class NxTargetFactory(
       mavenCommand,
       phaseTargets,
       ciPhaseTargets,
-      phaseDependsOn,
       ciPhasesWithGoals
     )
 
@@ -98,9 +96,9 @@ class NxTargetFactory(
       val atomizedTestTargets = generateAtomizedTestTargets(
         project,
         mavenCommand,
+        nxTargets,
         ciPhaseTargets["test-ci"]!!,
-        phaseGoals["test"]!!,
-        phaseDependsOn["test-ci"]!!
+        phaseGoals["test"]!!
       )
 
       atomizedTestTargets.forEach { (goal, target) ->
@@ -205,8 +203,6 @@ class NxTargetFactory(
       commandParts.add("-N")
     }
 
-    commandParts.add("--batch-mode")
-
     val command = commandParts.joinToString(" ")
     options.put("command", command)
 
@@ -238,7 +234,6 @@ class NxTargetFactory(
     mavenCommand: String,
     phaseTargets: MutableMap<String, NxTarget>,
     ciPhaseTargets: MutableMap<String, NxTarget>,
-    phaseDependsOn: MutableMap<String, MutableList<String>>,
     ciPhasesWithGoals: MutableSet<String>
   ) {
     lifecycles.forEach { lifecycle ->
@@ -255,7 +250,7 @@ class NxTargetFactory(
       lifecycle.phases.forEachIndexed { index, phase ->
         createRegularPhaseTarget(
           lifecycle.phases, index, phase, phaseGoals, project, mavenCommand,
-          phaseTargets, phaseDependsOn, hasInstall
+          phaseTargets, hasInstall
         )
       }
 
@@ -264,7 +259,7 @@ class NxTargetFactory(
         if (testIndex > -1) {
           createCiPhaseTarget(
             lifecycle.phases, index, phase, phaseGoals, project, mavenCommand,
-            ciPhaseTargets, phaseDependsOn, ciPhasesWithGoals, hasInstall
+            ciPhaseTargets, ciPhasesWithGoals, hasInstall
           )
         }
       }
@@ -279,7 +274,6 @@ class NxTargetFactory(
     project: MavenProject,
     mavenCommand: String,
     phaseTargets: MutableMap<String, NxTarget>,
-    phaseDependsOn: MutableMap<String, MutableList<String>>,
     hasInstall: Boolean
   ) {
     val goalsForPhase = phaseGoals[phase]
@@ -292,19 +286,23 @@ class NxTargetFactory(
       createNoopPhaseTarget(phase)
     }
 
-    phaseDependsOn[phase] = mutableListOf()
     target.dependsOn = target.dependsOn ?: objectMapper.createArrayNode()
 
     if (hasInstall) {
-      target.dependsOn?.add("^install")
-      phaseDependsOn[phase]?.add("^install")
+      val dependsOnNode = objectMapper.createObjectNode()
+      dependsOnNode.put("target", "install")
+      dependsOnNode.put("dependencies", true)
+      dependsOnNode.put("params", "forward")
+      target.dependsOn?.add(dependsOnNode)
     }
 
     // Add dependency on immediate previous phase (if exists)
     val previousPhase = phases.getOrNull(index - 1)
     if (previousPhase != null) {
-      target.dependsOn?.add(previousPhase)
-      phaseDependsOn[phase]?.add(previousPhase)
+      val dependsOnNode = objectMapper.createObjectNode()
+      dependsOnNode.put("target", previousPhase)
+      dependsOnNode.put("params", "forward")
+      target.dependsOn?.add(dependsOnNode)
     }
 
     phaseTargets[phase] = target
@@ -324,7 +322,6 @@ class NxTargetFactory(
     project: MavenProject,
     mavenCommand: String,
     ciPhaseTargets: MutableMap<String, NxTarget>,
-    phaseDependsOn: MutableMap<String, MutableList<String>>,
     ciPhasesWithGoals: MutableSet<String>,
     hasInstall: Boolean
   ) {
@@ -345,29 +342,28 @@ class NxTargetFactory(
       // Noop for test phase (will be orchestrated by atomized tests) or structural phases
       createNoopPhaseTarget(phase)
     }
-    val ciPhaseDependsOn = mutableListOf<String>()
+    // Initialize dependsOn for all CI targets (for atomized tests or phase dependencies)
+    ciTarget.dependsOn = ciTarget.dependsOn ?: objectMapper.createArrayNode()
 
     // Find the nearest previous phase that has a CI target
     val previousCiPhase = findPreviousCiPhase(phases, index, ciPhasesWithGoals)
 
     if (previousCiPhase != null) {
-      ciPhaseDependsOn.add("$previousCiPhase-ci")
       log.info("CI phase '$phase' depends on previous CI phase: '$previousCiPhase'")
+      val dependsOnNode = objectMapper.createObjectNode()
+      dependsOnNode.put("target", "$previousCiPhase-ci")
+      dependsOnNode.put("params", "forward")
+      ciTarget.dependsOn?.add(dependsOnNode)
     }
 
     if (hasInstall) {
-      ciPhaseDependsOn.add("^install-ci")
+      val dependsOnNode = objectMapper.createObjectNode()
+      dependsOnNode.put("target", "install-ci")
+      dependsOnNode.put("dependencies", true)
+      dependsOnNode.put("params", "forward")
+      ciTarget.dependsOn?.add(dependsOnNode)
     }
 
-    // Initialize dependsOn for all CI targets (for atomized tests or phase dependencies)
-    ciTarget.dependsOn = ciTarget.dependsOn ?: objectMapper.createArrayNode()
-
-    // Add phase dependencies to all CI targets
-    ciPhaseDependsOn.forEach {
-      ciTarget.dependsOn?.add(it)
-    }
-
-    phaseDependsOn[ciPhaseName] = ciPhaseDependsOn
     ciPhaseTargets[ciPhaseName] = ciTarget
     // Track all CI phases so the dependency chain is preserved
     ciPhasesWithGoals.add(phase)
@@ -527,7 +523,7 @@ class NxTargetFactory(
     val nonRecursiveFlag = if (mavenVersion.startsWith("4")) "-N" else ""
     val goalSpec = if (execution != null) "$goalPrefix:$goalName@${execution.id}" else "$goalPrefix:$goalName"
     val command =
-      "$mavenCommand $goalSpec -pl ${project.groupId}:${project.artifactId} $nonRecursiveFlag --batch-mode".replace(
+      "$mavenCommand $goalSpec -pl ${project.groupId}:${project.artifactId} $nonRecursiveFlag".replace(
         "  ",
         " "
       )
@@ -567,9 +563,9 @@ class NxTargetFactory(
   private fun generateAtomizedTestTargets(
     project: MavenProject,
     mavenCommand: String,
+    nxTargets: ObjectNode,
     testCiTarget: NxTarget,
-    testGoals: MutableList<GoalDescriptor>,
-    testDependsOn: MutableList<String>
+    testGoals: MutableList<GoalDescriptor>
   ): Map<String, NxTarget> {
     val goalDescriptor = testGoals.first()
     val targets = mutableMapOf<String, NxTarget>()
@@ -591,16 +587,13 @@ class NxTargetFactory(
         "$mavenCommand $APPLY_GOAL ${goalDescriptor.goalSpecifier} $RECORD_GOAL -pl ${project.groupId}:${project.artifactId} -Dtest=${testClass.packagePath}.${testClass.className} -Dsurefire.failIfNoSpecifiedTests=false"
       )
 
-      val dependsOn = objectMapper.createArrayNode()
-      testDependsOn.forEach { dependsOn.add(it) }
-
       val target = NxTarget(
         "nx:run-commands",
         options,
         analysis.isCacheable,
         analysis.isContinuous,
         analysis.isThreadSafe,
-        dependsOn,
+        nxTargets["test-ci"].get("dependsOn").deepCopy() as ArrayNode,
         objectMapper.createArrayNode(),
         objectMapper.createArrayNode()
       )
@@ -617,7 +610,10 @@ class NxTargetFactory(
       targets[targetName] = target
       testCiTargetGroup.add(targetName)
 
-      testCiTarget.dependsOn!!.add(targetName)
+      val dependsOnNode = objectMapper.createObjectNode()
+      dependsOnNode.put("target", targetName)
+      dependsOnNode.put("params", "forward")
+      testCiTarget.dependsOn!!.add(dependsOnNode)
       addBuildStateJsonInputsAndOutputs(project, target)
     }
 
