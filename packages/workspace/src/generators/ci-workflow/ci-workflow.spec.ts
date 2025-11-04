@@ -420,7 +420,7 @@ describe('CI Workflow generator', () => {
         "version: 2.1
 
         orbs:
-          nx: nrwl/nx@1.6.2
+          nx: nrwl/nx@1.7.0
 
         jobs:
           main:
