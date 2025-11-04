@@ -22,60 +22,15 @@ To generate only a host application in your workspace, run the following command
 {% tabs %}
 {% tabitem label="React" %}
 
-```text {% title="nx g @nx/react:host apps/react/shell" frame="terminal" %}
-NX  Generating @nx/react:host
-
-CREATE apps/react/shell/src/app/app.spec.tsx
-CREATE apps/react/shell/src/assets/.gitkeep
-CREATE apps/react/shell/src/environments/environment.prod.ts
-CREATE apps/react/shell/src/environments/environment.ts
-CREATE apps/react/shell/src/favicon.ico
-CREATE apps/react/shell/src/index.html
-CREATE apps/react/shell/tsconfig.app.json
-CREATE apps/react/shell/rspack.config.ts
-CREATE apps/react/shell/.babelrc
-CREATE apps/react/shell/src/app/nx-welcome.tsx
-CREATE apps/react/shell/src/app/app.module.css
-CREATE apps/react/shell/src/app/app.tsx
-CREATE apps/react/shell/src/styles.css
-CREATE apps/react/shell/tsconfig.json
-CREATE apps/react/shell/project.json
-CREATE apps/react/shell/.eslintrc.json
-CREATE apps/react/shell/jest.config.ts
-CREATE apps/react/shell/tsconfig.spec.json
-CREATE apps/react/shell/src/bootstrap.tsx
-CREATE apps/react/shell/module-federation.config.ts
-CREATE apps/react/shell/src/main.ts
+```shell
+nx g @nx/react:host apps/react/shell
 ```
 
 {% /tabitem %}
 {% tabitem label="Angular" %}
 
-```text {% title="nx g @nx/angular:host apps/angular/shell" frame="terminal" %}
-NX Generating @nx/angular:host
-
-CREATE apps/angular/shell/project.json
-CREATE apps/angular/shell/src/assets/.gitkeep
-CREATE apps/angular/shell/src/favicon.ico
-CREATE apps/angular/shell/src/index.html
-CREATE apps/angular/shell/src/styles.css
-CREATE apps/angular/shell/tsconfig.app.json
-CREATE apps/angular/shell/tsconfig.json
-CREATE apps/angular/shell/src/app/app.css
-CREATE apps/angular/shell/src/app/app.html
-CREATE apps/angular/shell/src/app/app.spec.ts
-CREATE apps/angular/shell/src/app/app.ts
-CREATE apps/angular/shell/src/app/app.routes.ts
-CREATE apps/angular/shell/src/app/nx-welcome.ts
-CREATE apps/angular/shell/src/main.ts
-CREATE apps/angular/shell/.eslintrc.json
-CREATE apps/angular/shell/jest.config.ts
-CREATE apps/angular/shell/src/test-setup.ts
-CREATE apps/angular/shell/tsconfig.spec.json
-CREATE apps/angular/shell/module-federation.config.ts
-CREATE apps/angular/shell/webpack.config.ts
-CREATE apps/angular/shell/webpack.prod.config.ts
-CREATE apps/angular/shell/src/bootstrap.ts
+```shell
+nx g @nx/angular:host apps/angular/shell
 ```
 
 {% /tabitem %}
@@ -88,154 +43,15 @@ To scaffold a host application along with remote applications in your workspace,
 {% tabs %}
 {% tabitem label="React" %}
 
-```text {% title="nx g @nx/react:host apps/react/with-remotes/shell --remotes=remote1,remote2" frame="terminal" %}
-NX  Generating @nx/react:host
-
-CREATE apps/react/with-remotes/shell/src/app/app.spec.tsx
-CREATE apps/react/with-remotes/shell/src/assets/.gitkeep
-CREATE apps/react/with-remotes/shell/src/environments/environment.prod.ts
-CREATE apps/react/with-remotes/shell/src/environments/environment.ts
-CREATE apps/react/with-remotes/shell/src/favicon.ico
-CREATE apps/react/with-remotes/shell/src/index.html
-CREATE apps/react/with-remotes/shell/tsconfig.app.json
-CREATE apps/react/with-remotes/shell/rspack.config.ts
-CREATE apps/react/with-remotes/shell/.babelrc
-CREATE apps/react/with-remotes/shell/src/app/nx-welcome.tsx
-CREATE apps/react/with-remotes/shell/src/app/app.module.css
-CREATE apps/react/with-remotes/shell/src/app/app.tsx
-CREATE apps/react/with-remotes/shell/src/styles.css
-CREATE apps/react/with-remotes/shell/tsconfig.json
-CREATE apps/react/with-remotes/shell/project.json
-CREATE apps/react/with-remotes/shell/.eslintrc.json
-CREATE apps/react/with-remotes/shell/jest.config.ts
-CREATE apps/react/with-remotes/shell/tsconfig.spec.json
-CREATE apps/react/with-remotes/shell/src/bootstrap.tsx
-CREATE apps/react/with-remotes/shell/module-federation.config.ts
-CREATE apps/react/with-remotes/shell/src/main.ts
-
-CREATE apps/react/with-remotes/remote1/src/app/app.spec.tsx
-CREATE apps/react/with-remotes/remote1/src/assets/.gitkeep
-CREATE apps/react/with-remotes/remote1/src/environments/environment.prod.ts
-CREATE apps/react/with-remotes/remote1/src/environments/environment.ts
-CREATE apps/react/with-remotes/remote1/src/favicon.ico
-CREATE apps/react/with-remotes/remote1/src/index.html
-CREATE apps/react/with-remotes/remote1/tsconfig.app.json
-CREATE apps/react/with-remotes/remote1/rspack.config.ts
-CREATE apps/react/with-remotes/remote1/.babelrc
-CREATE apps/react/with-remotes/remote1/src/app/nx-welcome.tsx
-CREATE apps/react/with-remotes/remote1/src/app/app.module.css
-CREATE apps/react/with-remotes/remote1/src/app/app.tsx
-CREATE apps/react/with-remotes/remote1/src/styles.css
-CREATE apps/react/with-remotes/remote1/tsconfig.json
-CREATE apps/react/with-remotes/remote1/project.json
-CREATE apps/react/with-remotes/remote1/.eslintrc.json
-CREATE apps/react/with-remotes/remote1/jest.config.ts
-CREATE apps/react/with-remotes/remote1/tsconfig.spec.json
-CREATE apps/react/with-remotes/remote1/src/bootstrap.tsx
-CREATE apps/react/with-remotes/remote1/module-federation.config.ts
-CREATE apps/react/with-remotes/remote1/src/main.ts
-CREATE apps/react/with-remotes/remote1/src/remote-entry.ts
-
-UPDATE tsconfig.base.json
-
-CREATE apps/react/with-remotes/remote2/src/app/app.spec.tsx
-CREATE apps/react/with-remotes/remote2/src/assets/.gitkeep
-CREATE apps/react/with-remotes/remote2/src/environments/environment.prod.ts
-CREATE apps/react/with-remotes/remote2/src/environments/environment.ts
-CREATE apps/react/with-remotes/remote2/src/favicon.ico
-CREATE apps/react/with-remotes/remote2/src/index.html
-CREATE apps/react/with-remotes/remote2/tsconfig.app.json
-CREATE apps/react/with-remotes/remote2/rspack.config.ts
-CREATE apps/react/with-remotes/remote2/.babelrc
-CREATE apps/react/with-remotes/remote2/src/app/nx-welcome.tsx
-CREATE apps/react/with-remotes/remote2/src/app/app.module.css
-CREATE apps/react/with-remotes/remote2/src/app/app.tsx
-CREATE apps/react/with-remotes/remote2/src/styles.css
-CREATE apps/react/with-remotes/remote2/tsconfig.json
-CREATE apps/react/with-remotes/remote2/project.json
-CREATE apps/react/with-remotes/remote2/.eslintrc.json
-CREATE apps/react/with-remotes/remote2/jest.config.ts
-CREATE apps/react/with-remotes/remote2/tsconfig.spec.json
-CREATE apps/react/with-remotes/remote2/src/bootstrap.tsx
-CREATE apps/react/with-remotes/remote2/module-federation.config.ts
-CREATE apps/react/with-remotes/remote2/src/main.ts
-CREATE apps/react/with-remotes/remote2/src/remote-entry.ts
+```shell
+nx g @nx/react:host apps/react/with-remotes/shell --remotes=remote1,remote2
 ```
 
 {% /tabitem %}
 {% tabitem label="Angular" %}
 
-```text {% title="nx g @nx/angular:host apps/angular/with-remotes/shell --remotes=remote1,remote2" frame="terminal" %}
-> NX Generating @nx/angular:host
-
-CREATE apps/angular/with-remotes/shell/project.json
-CREATE apps/angular/with-remotes/shell/src/assets/.gitkeep
-CREATE apps/angular/with-remotes/shell/src/favicon.ico
-CREATE apps/angular/with-remotes/shell/src/index.html
-CREATE apps/angular/with-remotes/shell/src/styles.css
-CREATE apps/angular/with-remotes/shell/tsconfig.app.json
-CREATE apps/angular/with-remotes/shell/tsconfig.json
-CREATE apps/angular/with-remotes/shell/src/app/app.css
-CREATE apps/angular/with-remotes/shell/src/app/app.html
-CREATE apps/angular/with-remotes/shell/src/app/app.spec.ts
-CREATE apps/angular/with-remotes/shell/src/app/app.ts
-CREATE apps/angular/with-remotes/shell/src/app/app.routes.ts
-CREATE apps/angular/with-remotes/shell/src/app/nx-welcome.ts
-CREATE apps/angular/with-remotes/shell/src/main.ts
-CREATE apps/angular/with-remotes/shell/.eslintrc.json
-CREATE apps/angular/with-remotes/shell/jest.config.ts
-CREATE apps/angular/with-remotes/shell/src/test-setup.ts
-CREATE apps/angular/with-remotes/shell/tsconfig.spec.json
-CREATE apps/angular/with-remotes/shell/module-federation.config.ts
-CREATE apps/angular/with-remotes/shell/webpack.config.ts
-CREATE apps/angular/with-remotes/shell/webpack.prod.config.ts
-CREATE apps/angular/with-remotes/shell/src/bootstrap.ts
-
-CREATE apps/angular/with-remotes/ng-remote1/project.json
-CREATE apps/angular/with-remotes/ng-remote1/src/assets/.gitkeep
-CREATE apps/angular/with-remotes/ng-remote1/src/favicon.ico
-CREATE apps/angular/with-remotes/ng-remote1/src/index.html
-CREATE apps/angular/with-remotes/ng-remote1/src/styles.css
-CREATE apps/angular/with-remotes/ng-remote1/tsconfig.app.json
-CREATE apps/angular/with-remotes/ng-remote1/tsconfig.json
-CREATE apps/angular/with-remotes/ng-remote1/src/app/app.ts
-CREATE apps/angular/with-remotes/ng-remote1/src/app/app.routes.ts
-CREATE apps/angular/with-remotes/ng-remote1/src/main.ts
-CREATE apps/angular/with-remotes/ng-remote1/.eslintrc.json
-CREATE apps/angular/with-remotes/ng-remote1/jest.config.ts
-CREATE apps/angular/with-remotes/ng-remote1/src/test-setup.ts
-CREATE apps/angular/with-remotes/ng-remote1/tsconfig.spec.json
-CREATE apps/angular/with-remotes/ng-remote1/src/app/remote-entry/entry.ts
-CREATE apps/angular/with-remotes/ng-remote1/src/app/remote-entry/entry.routes.ts
-CREATE apps/angular/with-remotes/ng-remote1/src/app/remote-entry/nx-welcome.ts
-CREATE apps/angular/with-remotes/ng-remote1/module-federation.config.ts
-CREATE apps/angular/with-remotes/ng-remote1/webpack.config.ts
-CREATE apps/angular/with-remotes/ng-remote1/webpack.prod.config.ts
-CREATE apps/angular/with-remotes/ng-remote1/src/bootstrap.ts
-
-UPDATE tsconfig.base.json
-
-CREATE apps/angular/with-remotes/ng-remote2/project.json
-CREATE apps/angular/with-remotes/ng-remote2/src/assets/.gitkeep
-CREATE apps/angular/with-remotes/ng-remote2/src/favicon.ico
-CREATE apps/angular/with-remotes/ng-remote2/src/index.html
-CREATE apps/angular/with-remotes/ng-remote2/src/styles.css
-CREATE apps/angular/with-remotes/ng-remote2/tsconfig.app.json
-CREATE apps/angular/with-remotes/ng-remote2/tsconfig.json
-CREATE apps/angular/with-remotes/ng-remote2/src/app/app.ts
-CREATE apps/angular/with-remotes/ng-remote2/src/app/app.routes.ts
-CREATE apps/angular/with-remotes/ng-remote2/src/main.ts
-CREATE apps/angular/with-remotes/ng-remote2/.eslintrc.json
-CREATE apps/angular/with-remotes/ng-remote2/jest.config.ts
-CREATE apps/angular/with-remotes/ng-remote2/src/test-setup.ts
-CREATE apps/angular/with-remotes/ng-remote2/tsconfig.spec.json
-CREATE apps/angular/with-remotes/ng-remote2/src/app/remote-entry/entry.ts
-CREATE apps/angular/with-remotes/ng-remote2/src/app/remote-entry/entry.routes.ts
-CREATE apps/angular/with-remotes/ng-remote2/src/app/remote-entry/nx-welcome.ts
-CREATE apps/angular/with-remotes/ng-remote2/module-federation.config.ts
-CREATE apps/angular/with-remotes/ng-remote2/webpack.config.ts
-CREATE apps/angular/with-remotes/ng-remote2/webpack.prod.config.ts
-CREATE apps/angular/with-remotes/ng-remote2/src/bootstrap.ts
+```shell
+nx g @nx/angular:host apps/angular/with-remotes/shell --remotes=remote1,remote2
 ```
 
 {% /tabitem %}
