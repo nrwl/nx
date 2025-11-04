@@ -15,7 +15,19 @@ Nx Cloud improves many aspects of the CI/CD process:
 - **Cost** - 40% - 75% reduction in CI costs (observed on the Nx OSS monorepo)
 - **Reliability** - by automatically identifying flaky tasks (e2e tests in particular) and re-running them
 
-{% call_to_action variant="default" title="Recover lost time with Nx Cloud" url="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=nx-cloud_intro&utm_campaign=try-nx-cloud" description="Setup takes less than 2 minutes" /%}
+## Connect your workspace to Nx Cloud
+
+The most straightforward way to connect your Nx workspace with Nx Cloud is via the web application:
+
+{% call_to_action variant="default" title="Create a new or connect an existing repo" url="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=nx-cloud_intro&utm_campaign=try-nx-cloud" description="Setup takes less than 2 minutes" /%}
+
+Alternatively, you can also run the following command in your Nx workspace (make sure you have it pushed to a remote repository first):
+
+```shell
+nx connect
+```
+
+For more details, [follow our in-depth guide](/docs/guides/nx-cloud/setup-ci) for setting up CI with Nx.
 
 ## How Nx Cloud improves CI
 
@@ -31,7 +43,7 @@ For example:
 - More work needs to run in CI - Add more agent machines, Nx Cloud automatically assigns available work to extra agent machines.
 - Known flaky tasks waste CI time on needed reruns - Nx Cloud automatically detects flaky tasks and reruns automatically in the current CI execution.
 
-[Read more customer stories](https://nx.dev/blog?filterBy=customer+story)
+[Learn how our customers use Nx Cloud](https://nx.dev/blog?filterBy=customer+story) to help them scale their workspaces and be more efficient.
 
 ## Learn more
 
