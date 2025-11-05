@@ -133,7 +133,7 @@ describe('NxPlugin e2e-project Generator', () => {
         ],
         "executor": "@nx/jest:jest",
         "options": {
-          "jestConfig": "my-plugin-e2e/jest.config.ts",
+          "jestConfig": "my-plugin-e2e/jest.config.cts",
           "runInBand": true,
         },
         "outputs": [
@@ -187,13 +187,13 @@ describe('NxPlugin e2e-project Generator', () => {
 
     expect(project.targets.e2e).toMatchObject({
       options: expect.objectContaining({
-        jestConfig: 'my-plugin-e2e/jest.config.ts',
+        jestConfig: 'my-plugin-e2e/jest.config.cts',
       }),
     });
 
     expect(tree.exists('my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();
-    expect(tree.exists('my-plugin-e2e/jest.config.ts')).toBeTruthy();
-    expect(tree.read('my-plugin-e2e/jest.config.ts', 'utf-8'))
+    expect(tree.exists('my-plugin-e2e/jest.config.cts')).toBeTruthy();
+    expect(tree.read('my-plugin-e2e/jest.config.cts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "export default {
         displayName: 'my-plugin-e2e',
@@ -264,15 +264,15 @@ describe('NxPlugin e2e-project Generator', () => {
 
       expect(project.targets.e2e).toMatchObject({
         options: expect.objectContaining({
-          jestConfig: 'packages/my-plugin-e2e/jest.config.ts',
+          jestConfig: 'packages/my-plugin-e2e/jest.config.cts',
         }),
       });
 
       expect(
         tree.exists('packages/my-plugin-e2e/tsconfig.spec.json')
       ).toBeTruthy();
-      expect(tree.exists('packages/my-plugin-e2e/jest.config.ts')).toBeTruthy();
-      expect(tree.read('packages/my-plugin-e2e/jest.config.ts', 'utf-8'))
+      expect(tree.exists('packages/my-plugin-e2e/jest.config.cts')).toBeTruthy();
+      expect(tree.read('packages/my-plugin-e2e/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/* eslint-disable */
         import { readFileSync } from 'fs';

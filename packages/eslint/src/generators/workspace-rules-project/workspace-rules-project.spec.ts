@@ -51,7 +51,7 @@ describe('@nx/eslint:workspace-rules-project', () => {
       tree.read('tools/eslint-rules/tsconfig.spec.json', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('tools/eslint-rules/jest.config.ts', 'utf-8')
+      tree.read('tools/eslint-rules/jest.config.cts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -74,8 +74,8 @@ describe('@nx/eslint:workspace-rules-project', () => {
   it('should create the jest config using ts-jest', async () => {
     await lintWorkspaceRulesProjectGenerator(tree);
 
-    expect(tree.exists('tools/eslint-rules/jest.config.ts')).toBeTruthy();
-    expect(tree.read('tools/eslint-rules/jest.config.ts', 'utf-8'))
+    expect(tree.exists('tools/eslint-rules/jest.config.cts')).toBeTruthy();
+    expect(tree.read('tools/eslint-rules/jest.config.cts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "export default {
         displayName: 'eslint-rules',
@@ -141,8 +141,8 @@ describe('@nx/eslint:workspace-rules-project', () => {
     it('should create the jest config using @swc/jest', async () => {
       await lintWorkspaceRulesProjectGenerator(tree);
 
-      expect(tree.exists('tools/eslint-rules/jest.config.ts')).toBeTruthy();
-      expect(tree.read('tools/eslint-rules/jest.config.ts', 'utf-8'))
+      expect(tree.exists('tools/eslint-rules/jest.config.cts')).toBeTruthy();
+      expect(tree.read('tools/eslint-rules/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/* eslint-disable */
         import { readFileSync } from 'fs';

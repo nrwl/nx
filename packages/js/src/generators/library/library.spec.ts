@@ -1849,7 +1849,7 @@ describe('lib', () => {
             "test": {
               "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "my-lib/jest.config.ts",
+                "jestConfig": "my-lib/jest.config.cts",
               },
               "outputs": [
                 "{workspaceRoot}/coverage/{projectRoot}",
@@ -2091,7 +2091,7 @@ describe('lib', () => {
           },
           "sourceMaps": true,
           "exclude": [
-            "jest.config.ts",
+            "jest.config.cts",
             ".*\\\\.spec.tsx?$",
             ".*\\\\.test.tsx?$",
             "./src/jest-setup.ts$",
