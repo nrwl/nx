@@ -8,7 +8,7 @@ import {
 import { getRootTsConfigFileName } from '@nx/js';
 import { getNeededCompilerOptionOverrides } from '@nx/js/src/utils/typescript/configuration';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { gte, lt } from 'semver';
+import { gte } from 'semver';
 import { updateAppEditorTsConfigExcludedFiles } from '../../utils/update-app-editor-tsconfig-excluded-files';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import { enableStrictTypeChecking } from './enable-strict-type-checking';
@@ -29,6 +29,7 @@ export function updateTsconfigFiles(tree: Tree, options: NormalizedSchema) {
     skipLibCheck: true,
     experimentalDecorators: true,
     importHelpers: true,
+    isolatedModules: true,
     target: 'es2022',
     moduleResolution: 'bundler',
   };
@@ -43,8 +44,6 @@ export function updateTsconfigFiles(tree: Tree, options: NormalizedSchema) {
     if (shouldDisableEmitDecoratorMetadata(tree, rootTsConfigPath)) {
       compilerOptions.emitDecoratorMetadata = false;
     }
-  } else {
-    compilerOptions.isolatedModules = true;
   }
   if (angularMajorVersion >= 20) {
     compilerOptions.module = 'preserve';
