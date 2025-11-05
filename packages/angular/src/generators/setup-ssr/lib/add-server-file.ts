@@ -25,7 +25,7 @@ export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
         : 'server-builder',
       'server'
     );
-  } else if (angularMajorVersion === 19) {
+  } else {
     pathToFiles = join(
       baseFilesPath,
       'v19',
@@ -35,29 +35,15 @@ export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
         : 'server-builder',
       'server'
     );
-  } else {
-    pathToFiles = join(
-      baseFilesPath,
-      'pre-v19',
-      'server',
-      options.isUsingApplicationBuilder
-        ? 'application-builder'
-        : 'server-builder'
-    );
   }
 
   const sourceRoot = getProjectSourceRoot(project, tree);
 
-  generateFiles(
-    tree,
-    pathToFiles,
-    angularMajorVersion >= 19 ? sourceRoot : project.root,
-    {
-      ...options,
-      browserDistDirectory,
-      tpl: '',
-    }
-  );
+  generateFiles(tree, pathToFiles, sourceRoot, {
+    ...options,
+    browserDistDirectory,
+    tpl: '',
+  });
 }
 
 function getApplicationBuilderBrowserOutputPath(

@@ -37,18 +37,14 @@ export function updateTsconfigFiles(tree: Tree, options: NormalizedSchema) {
 
   const { major: angularMajorVersion, version: angularVersion } =
     getInstalledAngularVersionInfo(tree);
-  if (lt(angularVersion, '18.1.0')) {
-    compilerOptions.useDefineForClassFields = false;
-  }
-  if (gte(angularVersion, '18.2.0')) {
-    compilerOptions.isolatedModules = true;
-  }
   if (gte(angularVersion, '19.1.0')) {
     // Angular started warning about emitDecoratorMetadata and isolatedModules
     // in v19.1.0. If enabled in the root tsconfig, we need to disable it.
     if (shouldDisableEmitDecoratorMetadata(tree, rootTsConfigPath)) {
       compilerOptions.emitDecoratorMetadata = false;
     }
+  } else {
+    compilerOptions.isolatedModules = true;
   }
   if (angularMajorVersion >= 20) {
     compilerOptions.module = 'preserve';

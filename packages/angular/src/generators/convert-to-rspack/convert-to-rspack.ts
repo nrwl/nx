@@ -351,13 +351,6 @@ export async function convertToRspack(
 
   validateSupportedBuildExecutor(Object.values(project.targets));
 
-  const angularRspackVersion = getAngularRspackVersion(tree);
-  if (!angularRspackVersion) {
-    throw new Error(
-      'Angular Rspack requires Angular 19 or higher. Please upgrade your Angular version before converting to Rspack.'
-    );
-  }
-
   let projectServePort = DEFAULT_PORT;
   const projectServeConfigurationOptions: Record<string, { port?: number }> =
     {};
@@ -721,6 +714,7 @@ export async function convertToRspack(
 
   if (!schema.skipInstall) {
     const { webpackMergeVersion, tsNodeVersion } = versions(tree);
+    const angularRspackVersion = getAngularRspackVersion(tree);
     const installTask = addDependenciesToPackageJson(
       tree,
       {},

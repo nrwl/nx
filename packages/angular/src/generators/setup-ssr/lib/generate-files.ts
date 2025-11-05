@@ -44,19 +44,13 @@ export function generateSSRFiles(
         : 'server-builder',
       options.standalone ? 'standalone-src' : 'ngmodule-src'
     );
-  } else if (angularMajorVersion === 19) {
+  } else {
     pathToFiles = join(
       baseFilesPath,
       'v19',
       options.isUsingApplicationBuilder
         ? 'application-builder'
         : 'server-builder',
-      options.standalone ? 'standalone-src' : 'ngmodule-src'
-    );
-  } else {
-    pathToFiles = join(
-      baseFilesPath,
-      'pre-v19',
       options.standalone ? 'standalone-src' : 'ngmodule-src'
     );
   }
@@ -79,9 +73,7 @@ export function generateSSRFiles(
     // https://github.com/angular/angular-cli/releases/tag/20.3.0
     gte(angularVersion, '20.3.0') ||
     // https://github.com/angular/angular-cli/releases/tag/19.2.16
-    (angularMajorVersion === 19 && gte(angularVersion, '19.2.16')) ||
-    // https://github.com/angular/angular-cli/releases/tag/18.2.21
-    (angularMajorVersion === 18 && gte(angularVersion, '18.2.21'));
+    (angularMajorVersion === 19 && gte(angularVersion, '19.2.16'));
 
   generateFiles(tree, pathToFiles, sourceRoot, {
     ...options,

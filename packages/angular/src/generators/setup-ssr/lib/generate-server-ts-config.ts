@@ -29,15 +29,9 @@ export function setServerTsConfigOptionsForApplicationBuilder(
       return json;
     }
 
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-
     const files = new Set(json.files ?? []);
     files.add(joinPathFragments('src', options.main));
-    if (angularMajorVersion >= 19) {
-      files.add(joinPathFragments('src', options.serverFileName));
-    } else {
-      files.add(joinPathFragments(options.serverFileName));
-    }
+    files.add(joinPathFragments('src', options.serverFileName));
     json.files = Array.from(files);
 
     return json;
@@ -61,10 +55,8 @@ export function generateTsConfigServerJsonForBrowserBuilder(
   let pathToFiles: string;
   if (angularMajorVersion >= 20) {
     pathToFiles = join(baseFilesPath, 'v20+', 'server-builder', 'root');
-  } else if (angularMajorVersion === 19) {
-    pathToFiles = join(baseFilesPath, 'v19', 'server-builder', 'root');
   } else {
-    pathToFiles = join(baseFilesPath, 'pre-v19', 'root');
+    pathToFiles = join(baseFilesPath, 'v19', 'server-builder', 'root');
   }
 
   generateFiles(tree, pathToFiles, project.root, {

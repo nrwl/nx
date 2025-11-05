@@ -35,7 +35,7 @@ export async function normalizeOptions(
         { serverRouting: false }
       ).then(({ serverRouting }) => serverRouting);
     } else {
-      options.serverRouting = angularMajorVersion >= 20;
+      options.serverRouting = true;
     }
   } else if (
     options.serverRouting !== undefined &&
