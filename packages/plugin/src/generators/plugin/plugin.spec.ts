@@ -195,7 +195,7 @@ describe('NxPlugin Plugin Generator', () => {
         expect(tree.exists('my-plugin/jest.config.cts')).toBeTruthy();
         expect(tree.read('my-plugin/jest.config.cts', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "export default {
+          "module.exports = {
             displayName: 'my-plugin',
             preset: '../jest.preset.js',
             testEnvironment: 'node',
@@ -362,7 +362,7 @@ describe('NxPlugin Plugin Generator', () => {
       expect(tree.read('my-plugin/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/* eslint-disable */
-        import { readFileSync } from 'fs';
+        const { readFileSync } = require('fs');
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
@@ -372,7 +372,7 @@ describe('NxPlugin Plugin Generator', () => {
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;
 
-        export default {
+        module.exports = {
           displayName: '@proj/my-plugin',
           preset: '../jest.preset.js',
           testEnvironment: 'node',
