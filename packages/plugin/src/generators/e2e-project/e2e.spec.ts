@@ -133,7 +133,7 @@ describe('NxPlugin e2e-project Generator', () => {
         ],
         "executor": "@nx/jest:jest",
         "options": {
-          "jestConfig": "my-plugin-e2e/jest.config.ts",
+          "jestConfig": "my-plugin-e2e/jest.config.cts",
           "runInBand": true,
         },
         "outputs": [
@@ -195,7 +195,7 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(tree.exists('my-plugin-e2e/jest.config.cts')).toBeTruthy();
     expect(tree.read('my-plugin-e2e/jest.config.cts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "export default {
+      "module.exports = {
         displayName: 'my-plugin-e2e',
         preset: '../jest.preset.js',
         transform: {
@@ -277,7 +277,7 @@ describe('NxPlugin e2e-project Generator', () => {
       expect(tree.read('packages/my-plugin-e2e/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/* eslint-disable */
-        import { readFileSync } from 'fs';
+        const { readFileSync } = require('fs');
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
@@ -287,7 +287,7 @@ describe('NxPlugin e2e-project Generator', () => {
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;
 
-        export default {
+        module.exports = {
           displayName: 'my-plugin-e2e',
           preset: '../../jest.preset.js',
           transform: {
