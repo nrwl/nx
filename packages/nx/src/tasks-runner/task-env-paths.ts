@@ -4,7 +4,7 @@ export function getEnvPathsForTask(
   configuration?: string,
   nonAtomizedTarget?: string
 ): string[] {
-  const indentifiers = [];
+  const identifiers = [];
   // Configuration-specific identifier (like build.development, build.production)
   if (configuration) {
     indentifiers.push(`${target}.${configuration}`);
