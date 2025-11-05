@@ -362,6 +362,7 @@ describe('app', () => {
             'src/test-setup.ts',
             'src/**/*.test.ts',
             'src/**/*.spec.ts',
+            'jest.config.cts',
           ],
         },
         {
@@ -451,6 +452,7 @@ describe('app', () => {
             'src/test-setup.ts',
             'src/**/*.test.ts',
             'src/**/*.spec.ts',
+            'jest.config.cts',
           ],
         },
         {
@@ -1589,7 +1591,8 @@ describe('app', () => {
             "jest.config.ts",
             "src/test-setup.ts",
             "src/**/*.test.ts",
-            "src/**/*.spec.ts"
+            "src/**/*.spec.ts",
+            "jest.config.cts"
           ]
         }
         "
@@ -1606,7 +1609,8 @@ describe('app', () => {
             "jest.config.ts",
             "src/test-setup.ts",
             "src/**/*.test.ts",
-            "src/**/*.spec.ts"
+            "src/**/*.spec.ts",
+            "jest.config.cts"
           ]
         }
         "
