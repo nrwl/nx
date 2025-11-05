@@ -1849,7 +1849,7 @@ describe('lib', () => {
             "test": {
               "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "my-lib/jest.config.cts",
+                "jestConfig": "my-lib/jest.config.ts",
               },
               "outputs": [
                 "{workspaceRoot}/coverage/{projectRoot}",
@@ -1900,8 +1900,10 @@ describe('lib', () => {
 
         expect(tree.read('pnpm-workspace.yaml', 'utf-8'))
           .toMatchInlineSnapshot(`
-                  "packages:
-                  - '`);
+          "packages:
+            - '${expected}'
+          "
+        `);
       }
     );
 
@@ -2091,7 +2093,7 @@ describe('lib', () => {
           },
           "sourceMaps": true,
           "exclude": [
-            "jest.config.cts",
+            "jest.config.[ct]s",
             ".*\\\\.spec.tsx?$",
             ".*\\\\.test.tsx?$",
             "./src/jest-setup.ts$",

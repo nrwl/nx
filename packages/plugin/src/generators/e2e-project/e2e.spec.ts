@@ -271,7 +271,9 @@ describe('NxPlugin e2e-project Generator', () => {
       expect(
         tree.exists('packages/my-plugin-e2e/tsconfig.spec.json')
       ).toBeTruthy();
-      expect(tree.exists('packages/my-plugin-e2e/jest.config.cts')).toBeTruthy();
+      expect(
+        tree.exists('packages/my-plugin-e2e/jest.config.cts')
+      ).toBeTruthy();
       expect(tree.read('packages/my-plugin-e2e/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/* eslint-disable */
