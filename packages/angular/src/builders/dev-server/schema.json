@@ -94,7 +94,7 @@
     },
     "hmr": {
       "type": "boolean",
-      "description": "Enable hot module replacement. It defaults to `false` in Angular versions < 19.0.0. Otherwise, the value will be `undefined`."
+      "description": "Enable hot module replacement."
     },
     "watch": {
       "type": "boolean",
@@ -112,7 +112,7 @@
     },
     "inspect": {
       "default": false,
-      "description": "Activate debugging inspector. This option only has an effect when 'SSR' or 'SSG' are enabled. _Note: this is only supported in Angular versions >= 18.1.0_.",
+      "description": "Activate debugging inspector. This option only has an effect when 'SSR' or 'SSG' are enabled.",
       "oneOf": [
         {
           "type": "string",

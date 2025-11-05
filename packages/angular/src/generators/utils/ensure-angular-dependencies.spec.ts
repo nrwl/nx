@@ -38,7 +38,7 @@ describe('ensureAngularDependencies', () => {
   it('should add both packages for builders when angular version is less than 20', () => {
     updateJson(tree, 'package.json', (json) => ({
       ...json,
-      dependencies: { ...json.dependencies, '@angular/core': '~18.0.0' },
+      dependencies: { ...json.dependencies, '@angular/core': '~19.0.0' },
     }));
 
     ensureAngularDependencies(tree);
@@ -46,10 +46,10 @@ describe('ensureAngularDependencies', () => {
     const { devDependencies } = readJson(tree, 'package.json');
 
     expect(devDependencies['@angular/build']).toBe(
-      backwardCompatibleVersions.angularV18.angularDevkitVersion
+      backwardCompatibleVersions.angularV19.angularDevkitVersion
     );
     expect(devDependencies['@angular-devkit/build-angular']).toBe(
-      backwardCompatibleVersions.angularV18.angularDevkitVersion
+      backwardCompatibleVersions.angularV19.angularDevkitVersion
     );
   });
 
