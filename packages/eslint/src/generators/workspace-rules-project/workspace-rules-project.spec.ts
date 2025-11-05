@@ -77,7 +77,7 @@ describe('@nx/eslint:workspace-rules-project', () => {
     expect(tree.exists('tools/eslint-rules/jest.config.cts')).toBeTruthy();
     expect(tree.read('tools/eslint-rules/jest.config.cts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "export default {
+      "module.exports = {
         displayName: 'eslint-rules',
         preset: '../../jest.preset.js',
         testEnvironment: 'node',
@@ -145,7 +145,7 @@ describe('@nx/eslint:workspace-rules-project', () => {
       expect(tree.read('tools/eslint-rules/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/* eslint-disable */
-        import { readFileSync } from 'fs';
+        const { readFileSync } = require('fs');
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
@@ -155,7 +155,7 @@ describe('@nx/eslint:workspace-rules-project', () => {
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;
 
-        export default {
+        module.exports = {
           displayName: 'eslint-rules',
           preset: '../../jest.preset.js',
           testEnvironment: 'node',

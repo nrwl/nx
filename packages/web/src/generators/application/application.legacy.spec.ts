@@ -121,7 +121,7 @@ describe('web app generator (legacy)', () => {
           "test": {
             "executor": "@nx/jest:jest",
             "options": {
-              "jestConfig": "my-app/jest.config.cts",
+              "jestConfig": "my-app/jest.config.ts",
             },
             "outputs": [
               "{workspaceRoot}/coverage/{projectRoot}",
@@ -230,7 +230,7 @@ describe('web app generator (legacy)', () => {
           "test": {
             "executor": "@nx/jest:jest",
             "options": {
-              "jestConfig": "my-vite-app/jest.config.cts",
+              "jestConfig": "my-vite-app/jest.config.ts",
             },
             "outputs": [
               "{workspaceRoot}/coverage/{projectRoot}",

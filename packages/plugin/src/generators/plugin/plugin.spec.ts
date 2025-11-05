@@ -491,6 +491,7 @@ describe('NxPlugin Plugin Generator', () => {
             ],
           },
           "exclude": [
+            "jest.config.ts",
             "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
@@ -516,7 +517,7 @@ describe('NxPlugin Plugin Generator', () => {
           },
           "extends": "../tsconfig.base.json",
           "include": [
-            "jest.config.cts",
+            "jest.config.ts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.d.ts",

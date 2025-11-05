@@ -133,7 +133,7 @@ describe('NxPlugin e2e-project Generator', () => {
         ],
         "executor": "@nx/jest:jest",
         "options": {
-          "jestConfig": "my-plugin-e2e/jest.config.cts",
+          "jestConfig": "my-plugin-e2e/jest.config.ts",
           "runInBand": true,
         },
         "outputs": [

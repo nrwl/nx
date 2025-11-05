@@ -619,7 +619,7 @@ describe('app', () => {
 
       expect(tree.read(`my-app/jest.config.cts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "export default {
+        "module.exports = {
           displayName: 'my-app',
           preset: '../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
@@ -645,7 +645,7 @@ describe('app', () => {
 
       expect(tree.read(`my-app/jest.config.cts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "export default {
+        "module.exports = {
           displayName: 'my-app',
           preset: '../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],

@@ -129,7 +129,12 @@ exports[`@nx/vite:configuration js library with --bundler=vite should respect pr
     "types": ["node", "vite/client"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["jest.config.cts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+  "exclude": [
+    "jest.config.ts",
+    "jest.config.cts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts"
+  ]
 }
 "
 `;
