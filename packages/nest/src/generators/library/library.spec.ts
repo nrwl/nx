@@ -472,6 +472,7 @@ describe('lib', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.d.ts",

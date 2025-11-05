@@ -318,6 +318,7 @@ describe('lib', () => {
           "files": ["src/test-setup.ts"],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -654,6 +655,7 @@ describe('lib', () => {
           ],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
