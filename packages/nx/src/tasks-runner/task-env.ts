@@ -27,7 +27,7 @@ export function getTaskSpecificEnv(task: Task, graph: ProjectGraph) {
   return process.env.NX_LOAD_DOT_ENV_FILES === 'true'
     ? loadDotEnvFilesForTask(task, graph, taskEnv)
     : // If not loading dot env files, ensure env vars created by system are still loaded
-      taskEnv;
+    taskEnv;
 }
 
 export function getEnvVariablesForTask(
@@ -166,64 +166,122 @@ export function unloadDotEnvFile(
   });
 }
 
-function getOwnerTargetForTask(task: Task, graph: ProjectGraph): string {
+function getOwnerTargetForTask(task: Task, graph: ProjectGraph): [string, string?] {
   const project = graph.nodes[task.target.project];
   if (project.data.metadata?.targetGroups) {
     for (const targets of Object.values(project.data.metadata.targetGroups)) {
       if (targets.includes(task.target.target)) {
-        return targets[0];
+        for (const target of targets) {
+          if (project.data.targets[target].metadata?.nonAtomizedTarget) {
+            return [target, project.data.targets[target].metadata?.nonAtomizedTarget];
+          }
+        }
       }
     }
   }
-  return task.target.target;
+  return [task.target.target];
 }
 
 function getEnvFilesForTask(task: Task, graph: ProjectGraph): string[] {
-  const target = getOwnerTargetForTask(task, graph);
+  const [target, nonAtomizedTarget] = getOwnerTargetForTask(task, graph);
+  const originalTarget = task.target.target;
   // Collect dot env files that may pertain to a task
   return [
     // Load DotEnv Files for a configuration in the project root
     ...(task.target.configuration
       ? [
-          `${task.projectRoot}/.env.${target}.${task.target.configuration}.local`,
-          `${task.projectRoot}/.env.${target}.${task.target.configuration}`,
-          `${task.projectRoot}/.env.${task.target.configuration}.local`,
-          `${task.projectRoot}/.env.${task.target.configuration}`,
-          `${task.projectRoot}/.${target}.${task.target.configuration}.local.env`,
-          `${task.projectRoot}/.${target}.${task.target.configuration}.env`,
-          `${task.projectRoot}/.${task.target.configuration}.local.env`,
-          `${task.projectRoot}/.${task.target.configuration}.env`,
-        ]
+        ...(originalTarget !== target ? [
+          `${task.projectRoot}/.env.${originalTarget}.${task.target.configuration}.local`,
+          `${task.projectRoot}/.env.${originalTarget}.${task.target.configuration}`,
+          `${task.projectRoot}/.${originalTarget}.${task.target.configuration}.local.env`,
+          `${task.projectRoot}/.${originalTarget}.${task.target.configuration}.env`,
+        ] : []),
+        `${task.projectRoot}/.env.${target}.${task.target.configuration}.local`,
+        `${task.projectRoot}/.env.${target}.${task.target.configuration}`,
+        `${task.projectRoot}/.${target}.${task.target.configuration}.local.env`,
+        `${task.projectRoot}/.${target}.${task.target.configuration}.env`,
+        `${task.projectRoot}/.env.${target}.${task.target.configuration}.local`,
+        `${task.projectRoot}/.env.${target}.${task.target.configuration}`,
+        `${task.projectRoot}/.${target}.${task.target.configuration}.local.env`,
+        `${task.projectRoot}/.${target}.${task.target.configuration}.env`,
+        ...(nonAtomizedTarget ? [
+          `${task.projectRoot}/.env.${nonAtomizedTarget}.${task.target.configuration}.local`,
+          `${task.projectRoot}/.env.${nonAtomizedTarget}.${task.target.configuration}`,
+          `${task.projectRoot}/.${nonAtomizedTarget}.${task.target.configuration}.local.env`,
+          `${task.projectRoot}/.${nonAtomizedTarget}.${task.target.configuration}.env`,
+        ] : []),
+        `${task.projectRoot}/.env.${task.target.configuration}.local`,
+        `${task.projectRoot}/.env.${task.target.configuration}`,
+        `${task.projectRoot}/.${task.target.configuration}.local.env`,
+        `${task.projectRoot}/.${task.target.configuration}.env`,
+      ]
       : []),
 
     // Load DotEnv Files for a target in the project root
+    ...(originalTarget !== target ? [
+      `${task.projectRoot}/.env.${originalTarget}.local`,
+      `${task.projectRoot}/.env.${originalTarget}`,
+      `${task.projectRoot}/.${originalTarget}.local.env`,
+      `${task.projectRoot}/.${originalTarget}.env`,
+    ] : []),
     `${task.projectRoot}/.env.${target}.local`,
     `${task.projectRoot}/.env.${target}`,
     `${task.projectRoot}/.${target}.local.env`,
     `${task.projectRoot}/.${target}.env`,
+    ...(nonAtomizedTarget ? [
+      `${task.projectRoot}/.env.${nonAtomizedTarget}.local`,
+      `${task.projectRoot}/.env.${nonAtomizedTarget}`,
+      `${task.projectRoot}/.${nonAtomizedTarget}.local.env`,
+      `${task.projectRoot}/.${nonAtomizedTarget}.env`,
+    ] : []),
     `${task.projectRoot}/.env.local`,
     `${task.projectRoot}/.local.env`,
     `${task.projectRoot}/.env`,
 
+
     // Load DotEnv Files for a configuration in the workspace root
     ...(task.target.configuration
       ? [
-          `.env.${target}.${task.target.configuration}.local`,
-          `.env.${target}.${task.target.configuration}`,
-          `.env.${task.target.configuration}.local`,
-          `.env.${task.target.configuration}`,
-          `.${target}.${task.target.configuration}.local.env`,
-          `.${target}.${task.target.configuration}.env`,
-          `.${task.target.configuration}.local.env`,
-          `.${task.target.configuration}.env`,
-        ]
+        ...(originalTarget !== target ? [
+          `.env.${originalTarget}.${task.target.configuration}.local`,
+          `.env.${originalTarget}.${task.target.configuration}`,
+          `.${originalTarget}.${task.target.configuration}.local.env`,
+          `.${originalTarget}.${task.target.configuration}.env`,
+        ] : []),
+        `.env.${target}.${task.target.configuration}.local`,
+        `.env.${target}.${task.target.configuration}`,
+        `.${target}.${task.target.configuration}.local.env`,
+        `.${target}.${task.target.configuration}.env`,
+        ...(nonAtomizedTarget ? [
+          `.env.${nonAtomizedTarget}.${task.target.configuration}.local`,
+          `.env.${nonAtomizedTarget}.${task.target.configuration}`,
+          `.${nonAtomizedTarget}.${task.target.configuration}.local.env`,
+          `.${nonAtomizedTarget}.${task.target.configuration}.env`,
+        ] : []),
+        `.env.${task.target.configuration}.local`,
+        `.env.${task.target.configuration}`,
+        `.${task.target.configuration}.local.env`,
+        `.${task.target.configuration}.env`,
+      ]
       : []),
 
     // Load DotEnv Files for a target in the workspace root
+    ...(originalTarget !== target ? [
+      `.env.${originalTarget}.local`,
+      `.env.${originalTarget}`,
+      `.${originalTarget}.local.env`,
+      `.${originalTarget}.env`,
+    ] : []),
     `.env.${target}.local`,
     `.env.${target}`,
     `.${target}.local.env`,
     `.${target}.env`,
+    ...(nonAtomizedTarget ? [
+      `.env.${nonAtomizedTarget}.local`,
+      `.env.${nonAtomizedTarget}`,
+      `.${nonAtomizedTarget}.local.env`,
+      `.${nonAtomizedTarget}.env`,
+    ] : []),
 
     // Load base DotEnv Files at workspace root
     `.local.env`,
