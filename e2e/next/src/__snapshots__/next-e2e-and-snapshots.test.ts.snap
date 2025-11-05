@@ -1,8 +1,9 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Next.js Applications - E2E and Snapshots next-env.d.ts should remain the same after a build 1`] = `
 "/// <reference types="next" />
 /// <reference types="next/image-types/global" />
+import './.next/types/routes.d.ts';
 
 // NOTE: This file should not be edited
 // see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
@@ -12,6 +13,27 @@ exports[`Next.js Applications - E2E and Snapshots next-env.d.ts should remain th
 exports[`Next.js Applications - E2E and Snapshots next-env.d.ts should remain the same after a build 2`] = `
 "/// <reference types="next" />
 /// <reference types="next/image-types/global" />
+import './.next/types/routes.d.ts';
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/pages/api-reference/config/typescript for more information.
+"
+`;
+
+exports[`Next.js Applications - E2E and Snapshots next-env.d.ts should remain the same after a build 3`] = `
+"/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+import "./.next/types/routes.d.ts";
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+"
+`;
+
+exports[`Next.js Applications - E2E and Snapshots next-env.d.ts should remain the same after a build 4`] = `
+"/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+import "./.next/types/routes.d.ts";
 
 // NOTE: This file should not be edited
 // see https://nextjs.org/docs/pages/api-reference/config/typescript for more information.

@@ -590,19 +590,12 @@ describe('app', () => {
 
         expect(tree.read(`${name}/eslint.config.mjs`, 'utf-8'))
           .toMatchInlineSnapshot(`
-          "import { FlatCompat } from '@eslint/eslintrc';
-          import { dirname } from 'path';
-          import { fileURLToPath } from 'url';
-          import js from '@eslint/js';
+          "import nextEslintPluginNext from '@next/eslint-plugin-next';
           import nx from '@nx/eslint-plugin';
           import baseConfig from '../eslint.config.mjs';
-          const compat = new FlatCompat({
-            baseDirectory: dirname(fileURLToPath(import.meta.url)),
-            recommendedConfig: js.configs.recommended,
-          });
 
           export default [
-            ...compat.extends('next', 'next/core-web-vitals'),
+            { plugins: { '@next/next': nextEslintPluginNext } },
             ...baseConfig,
             ...nx.configs['flat/react-typescript'],
             {
@@ -624,18 +617,12 @@ describe('app', () => {
 
         expect(tree.read(`${name}/eslint.config.cjs`, 'utf-8'))
           .toMatchInlineSnapshot(`
-          "const { FlatCompat } = require('@eslint/eslintrc');
-          const js = require('@eslint/js');
+          "const nextEslintPluginNext = require('@next/eslint-plugin-next');
           const nx = require('@nx/eslint-plugin');
           const baseConfig = require('../eslint.config.cjs');
 
-          const compat = new FlatCompat({
-            baseDirectory: __dirname,
-            recommendedConfig: js.configs.recommended,
-          });
-
           module.exports = [
-            ...compat.extends('next', 'next/core-web-vitals'),
+            { plugins: { '@next/next': nextEslintPluginNext } },
 
             ...baseConfig,
             ...nx.configs['flat/react-typescript'],
@@ -648,6 +635,33 @@ describe('app', () => {
       });
 
       it('should install eslint-config-next@15 when generating a new Next.js application in an empty Nx workspace', async () => {
+        const name = uniq();
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+        });
+
+        const packageJson = readJson(tree, '/package.json');
+        expect(packageJson).toMatchObject({
+          devDependencies: {
+            'eslint-config-next': '^16.0.1',
+            '@next/eslint-plugin-next': '^16.0.1',
+          },
+        });
+      });
+
+      it('should install eslint-config-next@15 when an existing Next.js 15 project is detected', async () => {
+        tree.write(
+          '/package.json',
+          JSON.stringify({
+            name: '@proj/source',
+            dependencies: {
+              next: '~15.2.4',
+            },
+            devDependencies: {},
+          })
+        );
+
         const name = uniq();
         await applicationGenerator(tree, {
           directory: name,
@@ -775,6 +789,57 @@ describe('app', () => {
           ]
         `
         );
+      });
+
+      it('should setup eslint config for standalone projects', async () => {
+        const name = uniq();
+        const prevEslintUseFlatConfigEnvVarValue =
+          process.env['ESLINT_USE_FLAT_CONFIG'];
+        process.env['ESLINT_USE_FLAT_CONFIG'] = 'true';
+        await applicationGenerator(tree, {
+          name,
+          directory: '.',
+          style: 'css',
+          linter: 'eslint',
+          appDir: true,
+          rootProject: true,
+        });
+
+        const eslintContents = tree.read('eslint.config.mjs', 'utf-8');
+
+        expect(eslintContents).toMatchInlineSnapshot(`
+          "import nextEslintPluginNext from '@next/eslint-plugin-next';
+          import nx from '@nx/eslint-plugin';
+
+          export default [
+            { plugins: { '@next/next': nextEslintPluginNext } },
+            ...nx.configs['flat/base'],
+            ...nx.configs['flat/typescript'],
+            ...nx.configs['flat/javascript'],
+            {
+              ignores: ['**/dist', '.next/**/*'],
+            },
+            {
+              files: [
+                '**/*.ts',
+                '**/*.tsx',
+                '**/*.cts',
+                '**/*.mts',
+                '**/*.js',
+                '**/*.jsx',
+                '**/*.cjs',
+                '**/*.mjs',
+              ],
+              rules: {
+                '@next/next/no-html-link-for-pages': ['error', './pages'],
+              },
+            },
+            ...nx.configs['flat/react-typescript'],
+          ];
+          "
+        `);
+        process.env['ESLINT_USE_FLAT_CONFIG'] =
+          prevEslintUseFlatConfigEnvVarValue;
       });
 
       it('should scope tsconfig to the src/ project directory', async () => {
@@ -1047,33 +1112,36 @@ describe('app', () => {
           }
         `);
       expect(readJson(tree, 'myapp-e2e/tsconfig.json')).toMatchInlineSnapshot(`
-          {
-            "compilerOptions": {
-              "allowJs": true,
-              "outDir": "out-tsc/cypress",
-              "sourceMap": false,
-              "types": [
-                "cypress",
-                "node",
-              ],
-            },
-            "exclude": [
-              "out-tsc",
-              "test-output",
+        {
+          "compilerOptions": {
+            "allowJs": true,
+            "outDir": "out-tsc/cypress",
+            "sourceMap": false,
+            "types": [
+              "cypress",
+              "node",
             ],
-            "extends": "../tsconfig.base.json",
-            "include": [
-              "**/*.ts",
-              "**/*.js",
-              "cypress.config.ts",
-              "**/*.cy.ts",
-              "**/*.cy.tsx",
-              "**/*.cy.js",
-              "**/*.cy.jsx",
-              "**/*.d.ts",
-            ],
-          }
-        `);
+          },
+          "exclude": [
+            "out-tsc",
+            "test-output",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "**/*.ts",
+            "**/*.js",
+            "cypress.config.ts",
+            "**/*.cy.ts",
+            "**/*.cy.tsx",
+            "**/*.cy.js",
+            "**/*.cy.jsx",
+            "**/*.d.ts",
+          ],
+        }
+      `);
     });
 
     it('should respect the provided name', async () => {

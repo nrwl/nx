@@ -11,12 +11,17 @@ import { NormalizedSchema } from './normalize-options';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
+  addPluginsToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
   updateOverrideInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import { getEslintConfigNextDependenciesVersionsToInstall } from '../../../utils/version-utils';
+import {
+  getEslintConfigNextDependenciesVersionsToInstall,
+  isNext16,
+} from '../../../utils/version-utils';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+import { addImportToFlatConfig } from '@nx/eslint/src/generators/utils/flat-config/ast-utils';
 
 export async function addLinting(
   host: Tree,
@@ -48,16 +53,23 @@ export async function addLinting(
         options.appProjectRoot,
         'flat/react-typescript'
       );
-      // Since Next.js does not support flat configs yet, we need to use compat fixup.
-      const addExtendsTask = addExtendsToLintConfig(
-        host,
-        options.appProjectRoot,
-        [
-          { name: 'next', needCompatFixup: true },
-          { name: 'next/core-web-vitals', needCompatFixup: true },
-        ]
-      );
-      tasks.push(addExtendsTask);
+      if (await isNext16(host)) {
+        addPluginsToLintConfig(host, options.appProjectRoot, ['@next/next']);
+      } else {
+        // Since Next.js < 16 does not support flat configs yet, we need to use compat fixup.
+        const addExtendsTask = addExtendsToLintConfig(
+          host,
+          options.appProjectRoot,
+          [
+            { name: 'next', needCompatFixup: true },
+            {
+              name: 'next/core-web-vitals',
+              needCompatFixup: true,
+            },
+          ]
+        );
+        tasks.push(addExtendsTask);
+      }
     } else {
       const addExtendsTask = addExtendsToLintConfig(
         host,

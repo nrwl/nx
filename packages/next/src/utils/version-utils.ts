@@ -6,9 +6,11 @@ import {
 import { clean, coerce, major } from 'semver';
 import {
   nextVersion,
+  next15Version,
   next14Version,
-  eslintConfigNext14Version,
   eslintConfigNextVersion,
+  eslintConfigNext15Version,
+  eslintConfigNext14Version,
 } from './versions';
 
 type NextDependenciesVersions = {
@@ -25,6 +27,10 @@ export async function getNextDependenciesVersionsToInstall(
     return {
       next: next14Version,
     };
+  } else if (await isNext15(tree)) {
+    return {
+      next: next15Version,
+    };
   } else {
     return {
       next: nextVersion,
@@ -35,11 +41,29 @@ export async function getNextDependenciesVersionsToInstall(
 export async function getEslintConfigNextDependenciesVersionsToInstall(
   tree: Tree
 ): Promise<EslintConfigNextVersion> {
-  if (await isNext14(tree)) {
+  if (await isNext15(tree)) {
+    return eslintConfigNext15Version;
+  } else if (await isNext14(tree)) {
     return eslintConfigNext14Version;
   } else {
     return eslintConfigNextVersion;
   }
+}
+
+export async function isNext16(tree: Tree) {
+  let installedNextVersion = await getInstalledNextVersionFromGraph();
+  if (!installedNextVersion) {
+    installedNextVersion = getInstalledNextVersion(tree);
+  }
+  return major(installedNextVersion) === 16;
+}
+
+export async function isNext15(tree: Tree) {
+  let installedNextVersion = await getInstalledNextVersionFromGraph();
+  if (!installedNextVersion) {
+    installedNextVersion = getInstalledNextVersion(tree);
+  }
+  return major(installedNextVersion) === 15;
 }
 
 export async function isNext14(tree: Tree) {

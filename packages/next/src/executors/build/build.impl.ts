@@ -20,6 +20,7 @@ import { NextBuildBuilderOptions } from '../../utils/types';
 import { ChildProcess, fork } from 'child_process';
 import { createCliOptions } from '../../utils/create-cli-options';
 import { signalToCode } from '@nx/devkit/internal';
+import { getInstalledNextVersionRuntime } from '../../utils/runtime-version-utils';
 
 let childProcess: ChildProcess;
 
@@ -138,18 +139,54 @@ function runCliBuild(
     profile,
     debug,
     outputPath,
+    turbo,
+    webpack,
   } = options;
 
   // Set output path here since it can also be set via CLI
   // We can retrieve it inside plugins/with-nx
   process.env.NX_NEXT_OUTPUT_PATH ??= outputPath;
 
-  const args = createCliOptions({
+  // Check for conflicting flags
+  if (turbo && webpack) {
+    throw new Error(
+      'Cannot specify both --turbo and --webpack flags. Please use only one bundler option.'
+    );
+  }
+
+  // Determine bundler flag based on Next.js version and options
+  const cliOptions: Record<string, string | number | boolean> = {
     experimentalAppOnly,
     experimentalBuildMode,
     profile,
     debug,
-  });
+  };
+
+  const nextJsVersion = getInstalledNextVersionRuntime();
+  const isNext16Plus = nextJsVersion !== null && nextJsVersion >= 16;
+
+  if (isNext16Plus) {
+    // Next.js 16+: Turbopack is default, use --webpack to opt-in to webpack
+    if (webpack) {
+      cliOptions.webpack = true;
+      logger.info('Using webpack bundler for build (Next.js 16+ detected)');
+    } else if (turbo) {
+      logger.warn(
+        'The --turbo flag is redundant in Next.js 16+ as Turbopack is now the default bundler. You can remove this flag.'
+      );
+    }
+  } else {
+    // Next.js 15 and below: webpack is default, use --turbo to opt-in to turbopack
+    if (turbo) {
+      cliOptions.turbo = true;
+    } else if (webpack) {
+      logger.warn(
+        'The --webpack flag is only applicable in Next.js 16 and above. It will be ignored.'
+      );
+    }
+  }
+
+  const args = createCliOptions(cliOptions);
   return new Promise((resolve, reject) => {
     childProcess = fork(
       require.resolve('next/dist/bin/next'),
