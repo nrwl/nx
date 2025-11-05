@@ -4,30 +4,30 @@ export function getEnvPathsForTask(
   configuration?: string,
   nonAtomizedTarget?: string
 ): string[] {
-  const identifiers = [];
+  const identifiers: string[] = [];
   // Configuration-specific identifier (like build.development, build.production)
   if (configuration) {
-    indentifiers.push(`${target}.${configuration}`);
+    identifiers.push(`${target}.${configuration}`);
     if (nonAtomizedTarget) {
-      indentifiers.push(`${nonAtomizedTarget}.${configuration}`);
+      identifiers.push(`${nonAtomizedTarget}.${configuration}`);
     }
-    indentifiers.push(configuration);
+    identifiers.push(configuration);
   }
   // Non-configuration-specific identifier (like build, test, serve)
-  indentifiers.push(target);
+  identifiers.push(target);
   if (nonAtomizedTarget) {
-    indentifiers.push(nonAtomizedTarget);
+    identifiers.push(nonAtomizedTarget);
   }
   // Non-deterministic identifier (for files like .env.local, .local.env, .env)
-  indentifiers.push('');
+  identifiers.push('');
 
   const envPaths = [];
   // Add DotEnv Files in the project root folder
-  for (const identifier of indentifiers) {
+  for (const identifier of identifiers) {
     envPaths.push(...getEnvFileVariants(identifier, projectRoot));
   }
   // Add DotEnv Files in the workspace root folder
-  for (const identifier of indentifiers) {
+  for (const identifier of identifiers) {
     envPaths.push(...getEnvFileVariants(identifier));
   }
 
