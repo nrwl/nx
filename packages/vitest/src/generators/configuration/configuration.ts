@@ -76,6 +76,7 @@ export async function configurationGeneratorInternal(
     skipFormat: true,
     addPlugin: schema.addPlugin,
     projectRoot: root,
+    viteVersion: schema.viteVersion,
   });
   tasks.push(initTask);
   tasks.push(await ensureDependencies(tree, { ...schema, uiFramework }));

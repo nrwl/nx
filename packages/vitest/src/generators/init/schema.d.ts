@@ -6,4 +6,6 @@ export interface InitGeneratorSchema {
   updatePackageScripts?: boolean;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
+  // Internal only
+  viteVersion?: 5 | 6 | 7;
 }

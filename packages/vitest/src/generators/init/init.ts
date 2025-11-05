@@ -10,18 +10,31 @@ import {
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { InitGeneratorSchema } from './schema';
-import { nxVersion, vitestVersion, viteVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  vitestVersion,
+  viteV5Version,
+  viteV6Version,
+  viteVersion,
+} from '../../utils/versions';
 import { createNodesV2 } from '../../plugins/plugin';
 import { ignoreVitestTempFiles } from '../../utils/ignore-vitest-temp-files';
 
 export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
+  const viteVersionToUse = schema.viteVersion
+    ? schema.viteVersion === 5
+      ? viteV5Version
+      : schema.viteVersion === 6
+      ? viteV6Version
+      : viteVersion
+    : viteVersion;
   return addDependenciesToPackageJson(
     tree,
     {},
     {
       '@nx/vitest': nxVersion,
       vitest: vitestVersion,
-      vite: viteVersion,
+      vite: viteVersionToUse,
     },
     undefined,
     schema.keepExistingVersions
