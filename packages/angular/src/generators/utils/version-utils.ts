@@ -60,8 +60,6 @@ export function versions(
 ): PackageLatestVersions | PackageCompatVersions {
   const majorAngularVersion = getInstalledAngularMajorVersion(tree);
   switch (majorAngularVersion) {
-    case 18:
-      return backwardCompatibleVersions.angularV18;
     case 19:
       return backwardCompatibleVersions.angularV19;
     default:
@@ -73,18 +71,12 @@ export function versions(
  * Temporary helper to abstract away the version of angular-rspack to be installed
  * until we stop supporting Angular 19.
  */
-export function getAngularRspackVersion(tree: Tree): string | null {
+export function getAngularRspackVersion(tree: Tree): string {
   const majorAngularVersion = getInstalledAngularMajorVersion(tree);
 
-  if (majorAngularVersion === 19) {
-    return backwardCompatibleVersions.angularV19.angularRspackVersion;
-  }
-  if (majorAngularVersion >= 20) {
-    // Starting with Angular 20, we can use an Angular Rspack version that is
-    // aligned with the Nx version
-    return latestVersions.nxVersion;
-  }
-
-  // Lower versions of Angular are not supported
-  return null;
+  // Starting with Angular 20, we can use an Angular Rspack version that is
+  // aligned with the Nx version
+  return majorAngularVersion === 19
+    ? backwardCompatibleVersions.angularV19.angularRspackVersion
+    : latestVersions.nxVersion;
 }

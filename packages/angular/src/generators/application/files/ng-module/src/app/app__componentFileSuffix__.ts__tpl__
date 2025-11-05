@@ -1,8 +1,8 @@
 import { Component<% if(viewEncapsulation) { %>, ViewEncapsulation<% } %> } from '@angular/core';
 
 @Component({
-  selector: '<%= rootSelector %>',<% if (setStandaloneFalse) { %>
-  standalone: false,<% } if(!inlineTemplate) { %>
+  selector: '<%= rootSelector %>',
+  standalone: false,<% if(!inlineTemplate) { %>
   templateUrl: './app<%= componentFileSuffix %>.html',<% } else { %>
   template: `<% if(minimal) { %><h1>Welcome <%= appName %></h1><% } else { %><<%= nxWelcomeSelector %>></<%= nxWelcomeSelector %>><% } %> <% if(routing) { %><router-outlet></router-outlet><% } %>`,<% } %><% if(!inlineStyle) { %>
   styleUrl: './app<%= componentFileSuffix %>.<%= style %>',<% } else { %>
