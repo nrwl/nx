@@ -284,7 +284,7 @@ describe('app', () => {
               "test": {
                 "executor": "@nx/jest:jest",
                 "options": {
-                  "jestConfig": "myapp/jest.config.ts",
+                  "jestConfig": "myapp/jest.config.cts",
                   "passWithNoTests": true,
                 },
                 "outputs": [
@@ -496,7 +496,7 @@ describe('app', () => {
             "test": {
               "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "myapp/jest.config.ts",
+                "jestConfig": "myapp/jest.config.cts",
                 "passWithNoTests": true,
               },
               "outputs": [

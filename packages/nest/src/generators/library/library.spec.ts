@@ -385,7 +385,7 @@ describe('lib', () => {
               "test": {
                 "executor": "@nx/jest:jest",
                 "options": {
-                  "jestConfig": "mylib/jest.config.ts",
+                  "jestConfig": "mylib/jest.config.cts",
                 },
                 "outputs": [
                   "{projectRoot}/test-output/jest/coverage",
@@ -522,7 +522,7 @@ describe('lib', () => {
                   "{projectRoot}/test-output/jest/coverage"
                 ],
                 "options": {
-                  "jestConfig": "mylib/jest.config.ts"
+                  "jestConfig": "mylib/jest.config.cts"
                 }
               },
               "build": {
@@ -634,7 +634,7 @@ describe('lib', () => {
             "test": {
               "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "mylib/jest.config.ts",
+                "jestConfig": "mylib/jest.config.cts",
               },
               "outputs": [
                 "{projectRoot}/test-output/jest/coverage",

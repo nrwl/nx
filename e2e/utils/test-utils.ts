@@ -6,7 +6,7 @@ import {
   runCommand,
 } from './command-utils';
 import { uniq } from './create-project-utils';
-import { readFile, updateFile } from './file-utils';
+import { readFile, fileExists, updateFile } from './file-utils';
 
 type GeneratorsWithDefaultTests =
   | '@nx/js:lib'
@@ -48,9 +48,21 @@ export function expectNoAngularDevkit() {
 
 // TODO(meeroslav): This is test specific, it should not be in the utils
 export function expectNoTsJestInJestConfig(appName: string) {
-  const jestConfig = readFile(
-    joinPathFragments('apps', appName, 'jest.config.ts')
-  );
+  const candidates = [
+    joinPathFragments('apps', appName, 'jest.config.js'),
+    joinPathFragments('apps', appName, 'jest.config.ts'),
+    joinPathFragments('apps', appName, 'jest.config.cts'),
+  ];
+  let jestConfig: string;
+  for (const c of candidates) {
+    if (fileExists(c)) {
+      jestConfig = readFile(c);
+      break;
+    }
+  }
+  if (!jestConfig) {
+    throw new Error(`Could not find jest config for app/lib: ${appName}`);
+  }
   expect(jestConfig).not.toContain('ts-jest');
 }
 
