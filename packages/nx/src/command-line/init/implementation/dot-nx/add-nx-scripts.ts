@@ -104,6 +104,16 @@ export function getNxWrapperContents() {
   );
 }
 
+// Gets the contents for the nx bash script
+export function getShellScriptContents() {
+  return SHELL_SCRIPT_CONTENTS;
+}
+
+// Gets the contents for the nx.bat batch script
+export function getBatchScriptContents() {
+  return BATCH_SCRIPT_CONTENTS;
+}
+
 // Remove any empty comments or comments that start with `//#: ` or eslint-disable comments.
 // This removes the sourceMapUrl since it is invalid, as well as any internal comments.
 export function sanitizeWrapperScript(input: string) {
