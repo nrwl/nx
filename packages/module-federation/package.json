@@ -24,9 +24,9 @@
   "main": "index.js",
   "executors": "./executors.json",
   "dependencies": {
-    "@module-federation/enhanced": "^0.18.0",
-    "@module-federation/node": "^2.7.11",
-    "@module-federation/sdk": "^0.18.0",
+    "@module-federation/enhanced": "^0.21.2",
+    "@module-federation/node": "^2.7.21",
+    "@module-federation/sdk": "^0.21.2",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/web": "workspace:*",
