@@ -1,4 +1,4 @@
-import { joinPathFragments } from '@nx/devkit';
+import { join } from 'node:path';
 import {
   getPackageManagerCommand,
   runCLI,
@@ -6,6 +6,7 @@ import {
   runCommand,
 } from './command-utils';
 import { uniq } from './create-project-utils';
+import { tmpProjPath } from './create-project-utils';
 import { readFile, fileExists, updateFile } from './file-utils';
 
 type GeneratorsWithDefaultTests =
@@ -49,9 +50,9 @@ export function expectNoAngularDevkit() {
 // TODO(meeroslav): This is test specific, it should not be in the utils
 export function expectNoTsJestInJestConfig(appName: string) {
   const candidates = [
-    joinPathFragments('apps', appName, 'jest.config.js'),
-    joinPathFragments('apps', appName, 'jest.config.ts'),
-    joinPathFragments('apps', appName, 'jest.config.cts'),
+    tmpProjPath(join('apps', appName, 'jest.config.js')),
+    tmpProjPath(join('apps', appName, 'jest.config.ts')),
+    tmpProjPath(join('apps', appName, 'jest.config.cts')),
   ];
   let jestConfig: string;
   for (const c of candidates) {

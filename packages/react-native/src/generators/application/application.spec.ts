@@ -71,7 +71,9 @@ describe('app', () => {
     expect(appTree.exists('my-app/.eslintrc.json')).toBe(true);
     expect(appTree.read('my-app/jest.config.cts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "module.exports = {
+      "// <reference types="jest" />
+      // <reference types="node" />
+      module.exports = {
         displayName: 'my-app',
         preset: 'react-native',
         resolver: '@nx/jest/plugins/resolver',

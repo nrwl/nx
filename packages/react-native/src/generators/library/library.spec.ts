@@ -283,7 +283,9 @@ describe('lib', () => {
       `);
       expect(appTree.read('my-lib/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "// <reference types="jest" />
+        // <reference types="node" />
+        module.exports = {
           displayName: 'my-lib',
           preset: 'react-native',
           resolver: '@nx/jest/plugins/resolver',

@@ -1147,6 +1147,7 @@ describe('app', () => {
         'vite/client',
         'vitest',
         '@react-router/node',
+        'node',
       ]);
     });
 
