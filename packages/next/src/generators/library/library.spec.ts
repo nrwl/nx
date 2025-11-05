@@ -292,6 +292,7 @@ describe('next library', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -394,7 +395,7 @@ describe('next library', () => {
                   "{projectRoot}/test-output/jest/coverage"
                 ],
                 "options": {
-                  "jestConfig": "mylib/jest.config.ts"
+                  "jestConfig": "mylib/jest.config.cts"
                 }
               }
             },

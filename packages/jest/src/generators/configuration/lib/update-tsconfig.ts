@@ -34,6 +34,16 @@ export function updateTsConfig(
         path: './tsconfig.spec.json',
       });
     }
+
+    // If compilerOptions.types is defined, ensure "node" is included to support
+    // module.exports syntax in jest.config.cts. If types is not defined,
+    // TypeScript automatically loads @types/node.
+    if (json.compilerOptions?.types) {
+      if (!json.compilerOptions.types.includes('node')) {
+        json.compilerOptions.types.push('node');
+      }
+    }
+
     return json;
   });
   const projectType = getProjectType(host, root, _projectType);
