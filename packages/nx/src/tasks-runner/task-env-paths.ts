@@ -4,65 +4,46 @@ export function getEnvPathsForTask(
   configuration?: string,
   nonAtomizedTarget?: string
 ): string[] {
-  // Collect dot env files that may pertain to a task
+  const indentifiers = [];
+  // Configuration-specific identifier (like build.development, build.production)
+  if (configuration) {
+    indentifiers.push(`${target}.${configuration}`);
+    if (nonAtomizedTarget) {
+      indentifiers.push(`${nonAtomizedTarget}.${configuration}`);
+    }
+    indentifiers.push(configuration);
+  }
+  // Non-configuration-specific identifier (like build, test, serve)
+  indentifiers.push(target);
+  if (nonAtomizedTarget) {
+    indentifiers.push(nonAtomizedTarget);
+  }
+  // Non-deterministic identifier (for files like .env.local, .local.env, .env)
+  indentifiers.push('');
+
   const envPaths = [];
-  // Load DotEnv Files for a configuration in the project root folder
-  if (configuration) {
-    envPaths.push(
-      ...getEnvFileVariants(`${target}.${configuration}`, projectRoot)
-    );
-    if (nonAtomizedTarget) {
-      envPaths.push(
-        ...getEnvFileVariants(
-          `${nonAtomizedTarget}.${configuration}`,
-          projectRoot
-        )
-      );
-    }
-    envPaths.push(...getEnvFileVariants(configuration, projectRoot));
+  // Add DotEnv Files in the project root folder
+  for (const identifier of indentifiers) {
+    envPaths.push(...getEnvFileVariants(identifier, projectRoot));
   }
-  // Load DotEnv Files for a target in the project root folder
-  envPaths.push(...getEnvFileVariants(target, projectRoot));
-  if (nonAtomizedTarget) {
-    envPaths.push(...getEnvFileVariants(nonAtomizedTarget, projectRoot));
+  // Add DotEnv Files in the workspace root folder
+  for (const identifier of indentifiers) {
+    envPaths.push(...getEnvFileVariants(identifier));
   }
-  // Load base DotEnv Files at project root
-  envPaths.push(
-    ...[
-      `${projectRoot}/.env.local`,
-      `${projectRoot}/.local.env`,
-      `${projectRoot}/.env`,
-    ]
-  );
-
-  // Load DotEnv Files for a configuration in the workspace root
-  if (configuration) {
-    envPaths.push(...getEnvFileVariants(`${target}.${configuration}`));
-    if (nonAtomizedTarget) {
-      envPaths.push(
-        ...getEnvFileVariants(`${nonAtomizedTarget}.${configuration}`)
-      );
-    }
-    envPaths.push(...getEnvFileVariants(configuration));
-  }
-  // Load DotEnv Files for a target in the workspace root folder
-  envPaths.push(...getEnvFileVariants(target));
-  if (nonAtomizedTarget) {
-    envPaths.push(...getEnvFileVariants(nonAtomizedTarget));
-  }
-
-  // Load base DotEnv Files at workspace root
-  envPaths.push(...[`.env.local`, `.local.env`, `.env`]);
 
   return envPaths;
 }
 
 function getEnvFileVariants(identifier: string, root?: string) {
   const path = root ? root + '/' : '';
-  return [
-    `${path}.env.${identifier}.local`,
-    `${path}.env.${identifier}`,
-    `${path}.${identifier}.local.env`,
-    `${path}.${identifier}.env`,
-  ];
+  if (identifier) {
+    return [
+      `${path}.env.${identifier}.local`,
+      `${path}.env.${identifier}`,
+      `${path}.${identifier}.local.env`,
+      `${path}.${identifier}.env`,
+    ];
+  } else {
+    return [`${path}.env.local`, `${path}.local.env`, `${path}.env`];
+  }
 }
