@@ -43,11 +43,7 @@ export function updateTsConfigFiles(
       : {}),
   };
 
-  const { major: angularMajorVersion, version: angularVersion } =
-    getInstalledAngularVersionInfo(tree);
-  if (lt(angularVersion, '18.1.0')) {
-    compilerOptions.useDefineForClassFields = false;
-  }
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   if (angularMajorVersion >= 20) {
     compilerOptions.module = 'preserve';
   } else {
