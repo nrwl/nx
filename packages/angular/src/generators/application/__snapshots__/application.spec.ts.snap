@@ -582,6 +582,7 @@ exports[`app --strict should enable strict type checking: app tsconfig.json 1`] 
   "compilerOptions": {
     "experimentalDecorators": true,
     "importHelpers": true,
+    "isolatedModules": true,
     "module": "preserve",
     "moduleResolution": "bundler",
     "noFallthroughCasesInSwitch": true,
@@ -1144,6 +1145,7 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
   "compilerOptions": {
     "experimentalDecorators": true,
     "importHelpers": true,
+    "isolatedModules": true,
     "module": "preserve",
     "moduleResolution": "bundler",
     "noFallthroughCasesInSwitch": true,
