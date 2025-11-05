@@ -1304,7 +1304,7 @@ describe('app', () => {
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~18.2.0',
+          '@angular/core': '~19.2.0',
         },
       }));
     });
@@ -1314,31 +1314,14 @@ describe('app', () => {
 
       const { devDependencies } = readJson(appTree, 'package.json');
       expect(devDependencies['@angular-devkit/build-angular']).toEqual(
-        backwardCompatibleVersions.angularV18.angularDevkitVersion
+        backwardCompatibleVersions.angularV19.angularDevkitVersion
       );
       expect(devDependencies['@angular-devkit/schematics']).toEqual(
-        backwardCompatibleVersions.angularV18.angularDevkitVersion
+        backwardCompatibleVersions.angularV19.angularDevkitVersion
       );
       expect(devDependencies['@schematics/angular']).toEqual(
-        backwardCompatibleVersions.angularV18.angularDevkitVersion
+        backwardCompatibleVersions.angularV19.angularDevkitVersion
       );
-    });
-
-    it('should disable modern class fields behavior for versions lower than v18.1', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~18.0.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app');
-
-      expect(
-        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .useDefineForClassFields
-      ).toBe(false);
     });
 
     it('should set the "index" option of the application builder for versions lower than v20', async () => {
