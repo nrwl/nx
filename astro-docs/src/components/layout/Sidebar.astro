@@ -12,9 +12,6 @@ const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
     <SidebarPersister>
         <SidebarSublist sublist={sidebar}/>
     </SidebarPersister>
-    <div class="github-star-widget-sidebar">
-        <GitHubStarWidget starsCount={githubStarsCount} client:load />
-    </div>
     <div class="md:sl-hidden">
         <MobileMenuFooter/>
     </div>
@@ -44,10 +41,5 @@ const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
 
     .sidebar-wrapper :global(details[open] summary .group-label) {
         color: var(--sl-color-gray-2);
-    }
-
-    .github-star-widget-sidebar {
-        margin-top: 1rem;
-        padding: 0 1rem;
     }
 </style>
