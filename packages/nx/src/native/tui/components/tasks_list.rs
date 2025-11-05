@@ -917,7 +917,7 @@ impl TasksList {
                 task_item.update_status(TaskStatus::InProgress);
                 if task_item.start_time.is_none() {
                     // It should be set, but just in case
-                    let current_time = current_timestamp_millis().unwrap_or(0);
+                    let current_time = current_timestamp_millis();
                     task_item.start_time = Some(current_time);
                 }
                 // Update duration to show "..." initially for non-continuous tasks

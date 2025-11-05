@@ -411,7 +411,7 @@ impl App {
 
                 // Check if we have a pending resize that needs to be processed
                 if let Some(timer) = self.resize_debounce_timer {
-                    let now = current_timestamp_millis().unwrap_or(0) as u128;
+                    let now = current_timestamp_millis() as u128;
 
                     if now >= timer {
                         // Timer expired, process the resize
@@ -1475,7 +1475,7 @@ impl App {
     /// Ensures that the PTY instances get resized appropriately based on the latest layout areas.
     fn debounce_pty_resize(&mut self) -> io::Result<()> {
         // Get current time in milliseconds
-        let now = current_timestamp_millis().unwrap_or(0) as u128;
+        let now = current_timestamp_millis() as u128;
 
         // If we have a timer and it's not expired yet, just return
         if let Some(timer) = self.resize_debounce_timer {

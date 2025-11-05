@@ -27,7 +27,7 @@ pub fn format_duration_since(start_ms: i64, end_ms: i64) -> String {
 
 /// Formats the duration from a start time to the current time
 pub fn format_live_duration(start_ms: i64) -> String {
-    let current_ms = current_timestamp_millis().unwrap_or(0);
+    let current_ms = current_timestamp_millis();
     format_duration(current_ms.saturating_sub(start_ms))
 }
 

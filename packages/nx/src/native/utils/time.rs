@@ -1,8 +1,9 @@
-use std::time::{SystemTime, SystemTimeError, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Returns the current time in milliseconds since Unix epoch
-pub fn current_timestamp_millis() -> Result<i64, SystemTimeError> {
+pub fn current_timestamp_millis() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_millis() as i64)
+        .unwrap_or_default()
+        .as_millis() as i64
 }

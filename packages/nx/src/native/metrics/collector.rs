@@ -29,8 +29,6 @@ struct MetricsCollectionResult {
     metrics_snapshot: ProcessMetricsSnapshot,
     /// New metadata discovered during collection
     new_metadata: HashMap<i32, ProcessMetadata>,
-    /// All PIDs that we collected metrics for
-    live_pids: HashSet<i32>,
 }
 
 /// Metadata store for process metadata
@@ -322,6 +320,8 @@ impl ProcessMetricsCollector {
         metadata_store: Arc<MetadataStore>,
     ) {
         let interval = std::time::Duration::from_millis(config.collection_interval_ms);
+        // Reuse HashSet across collection cycles to avoid repeated allocations
+        let mut live_pids = HashSet::with_capacity(128);
 
         while should_collect.load(Ordering::Acquire) {
             // Collect current metrics
@@ -333,6 +333,7 @@ impl ProcessMetricsCollector {
                 &main_cli_pid,
                 &daemon_pid,
                 &metadata_store,
+                &mut live_pids,
             ) {
                 Ok(result) => {
                     let snapshot = result.metrics_snapshot;
@@ -344,7 +345,7 @@ impl ProcessMetricsCollector {
                     }
 
                     // Clean up dead metadata and task registrations
-                    metadata_store.cleanup_dead_metadata(&result.live_pids);
+                    metadata_store.cleanup_dead_metadata(&live_pids);
 
                     // Wrap data in Arc for efficient sharing across subscribers
                     let snapshot = Arc::new(snapshot);
@@ -525,12 +526,10 @@ impl ProcessMetricsCollector {
         main_cli_pid: &Mutex<Option<i32>>,
         daemon_pid: &Mutex<Option<i32>>,
         metadata_store: &MetadataStore,
+        live_pids: &mut HashSet<i32>,
     ) -> Result<MetricsCollectionResult, Box<dyn std::error::Error>> {
         // Capture timestamp FIRST for accuracy
-        let timestamp = current_timestamp_millis().unwrap_or_else(|e| {
-            tracing::warn!("System time before UNIX epoch: {}", e);
-            0
-        });
+        let timestamp = current_timestamp_millis();
 
         // Single system refresh for ALL processes (one scan, all data)
         // Remove dead processes to prevent stale metrics from terminated processes
@@ -565,13 +564,8 @@ impl ProcessMetricsCollector {
         // Clean up dead CLI subprocesses
         main_cli_subprocess_pids.retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
 
-        // Pre-allocate HashSet for tracking all live PIDs to reduce allocations
-        let mut live_pids = HashSet::with_capacity(
-            1 + // main_cli
-            10 + // daemon + estimated subprocesses
-            individual_tasks.len() * 5 + // individual tasks × avg processes per task
-            batches.len() * 5, // batch tasks × avg processes per batch
-        );
+        // Clear live PIDs from previous collection cycle (keeps allocated capacity)
+        live_pids.clear();
 
         // Track new metadata discovered during collection (conditionally populated)
         let mut new_metadata = HashMap::new();
@@ -712,7 +706,6 @@ impl ProcessMetricsCollector {
         Ok(MetricsCollectionResult {
             metrics_snapshot,
             new_metadata,
-            live_pids,
         })
     }
 
