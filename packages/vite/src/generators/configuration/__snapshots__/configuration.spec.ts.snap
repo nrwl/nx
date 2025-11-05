@@ -135,7 +135,7 @@ exports[`@nx/vite:configuration js library with --bundler=vite should respect pr
 `;
 
 exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 3`] = `
-"export default {
+"module.exports = {
   displayName: 'my-lib',
   preset: '../jest.preset.js',
   transform: {
