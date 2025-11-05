@@ -7,6 +7,7 @@ describe('nx package.json workspaces plugin', () => {
   const context = {
     workspaceRoot: '/root',
     nxJsonConfiguration: {},
+    additionalProjectConfigurationFiles: [],
   };
 
   afterEach(() => {
@@ -255,6 +256,7 @@ describe('nx package.json workspaces plugin', () => {
       const context = {
         workspaceRoot: '/root',
         nxJsonConfiguration: {},
+        additionalProjectConfigurationFiles: [],
       };
 
       // No matching project based on the package.json "workspace" config
@@ -358,6 +360,7 @@ describe('nx package.json workspaces plugin', () => {
       const context = {
         workspaceRoot: '/root',
         nxJsonConfiguration: {},
+        additionalProjectConfigurationFiles: [],
       };
 
       // No matching project based on the pnpm-workspace.yaml "packages" config

@@ -1,8 +1,5 @@
 import { TempFs } from '../../internal-testing-utils/temp-fs';
-import {
-  retrieveProjectConfigurationPaths,
-  retrieveProjectConfigurations,
-} from './retrieve-workspace-files';
+import { retrieveProjectConfigurations } from './retrieve-workspace-files';
 import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import { dirname, join } from 'path';
 import { readFile } from 'fs/promises';
@@ -13,47 +10,6 @@ import {
 } from '../plugins';
 
 describe('retrieve-workspace-files', () => {
-  describe('retrieveProjectConfigurationPaths', () => {
-    let fs: TempFs;
-    beforeAll(() => {
-      fs = new TempFs('retrieveProjectConfigurationPaths');
-    });
-    afterAll(() => {
-      fs.cleanup();
-    });
-
-    it('should not find files that are listed by .nxignore', async () => {
-      await fs.createFile('.nxignore', `not-projects`);
-      await fs.createFile(
-        'not-projects/project.json',
-        JSON.stringify({
-          name: 'not-project-1',
-        })
-      );
-      await fs.createFile(
-        'projects/project.json',
-        JSON.stringify({
-          name: 'project-1',
-        })
-      );
-
-      const configPaths = await retrieveProjectConfigurationPaths(fs.tempDir, [
-        {
-          name: 'test',
-          createNodes: [
-            '{project.json,**/project.json}',
-            async () => {
-              return [];
-            },
-          ],
-        },
-      ]);
-
-      expect(configPaths).not.toContain('not-projects/project.json');
-      expect(configPaths).toContain('projects/project.json');
-    });
-  });
-
   describe('retrieveProjectConfigurations', () => {
     let fs: TempFs;
     beforeAll(() => {
