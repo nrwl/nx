@@ -4,6 +4,7 @@ import { expand } from 'dotenv-expand';
 import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'node:path';
 import { ProjectGraph } from '../config/project-graph';
+import { getEnvPathsForTask } from './task-env-paths';
 
 export function getEnvVariablesForBatchProcess(
   skipNxCache: boolean,
@@ -189,133 +190,14 @@ function getOwnerTargetForTask(
 }
 
 export function getEnvFilesForTask(task: Task, graph: ProjectGraph): string[] {
-  const [parentTarget, nonAtomizedParentTarget] = getOwnerTargetForTask(
-    task,
-    graph
+  const [target, nonAtomizedTarget] = getOwnerTargetForTask(task, graph);
+
+  return getEnvPathsForTask(
+    task.projectRoot,
+    target,
+    task.target.configuration,
+    nonAtomizedTarget
   );
-  const target = encodeURIComponent(parentTarget);
-  const nonAtomizedTarget = nonAtomizedParentTarget
-    ? encodeURIComponent(nonAtomizedParentTarget)
-    : undefined;
-  const originalTarget = encodeURIComponent(task.target.target);
-  // Collect dot env files that may pertain to a task
-  return [
-    // Load DotEnv Files for a configuration in the project root
-    ...(task.target.configuration
-      ? [
-          ...(originalTarget !== target
-            ? [
-                `${task.projectRoot}/.env.${originalTarget}.${task.target.configuration}.local`,
-                `${task.projectRoot}/.env.${originalTarget}.${task.target.configuration}`,
-                `${task.projectRoot}/.${originalTarget}.${task.target.configuration}.local.env`,
-                `${task.projectRoot}/.${originalTarget}.${task.target.configuration}.env`,
-              ]
-            : []),
-          `${task.projectRoot}/.env.${target}.${task.target.configuration}.local`,
-          `${task.projectRoot}/.env.${target}.${task.target.configuration}`,
-          `${task.projectRoot}/.${target}.${task.target.configuration}.local.env`,
-          `${task.projectRoot}/.${target}.${task.target.configuration}.env`,
-          `${task.projectRoot}/.env.${target}.${task.target.configuration}.local`,
-          `${task.projectRoot}/.env.${target}.${task.target.configuration}`,
-          `${task.projectRoot}/.${target}.${task.target.configuration}.local.env`,
-          `${task.projectRoot}/.${target}.${task.target.configuration}.env`,
-          ...(nonAtomizedTarget
-            ? [
-                `${task.projectRoot}/.env.${nonAtomizedTarget}.${task.target.configuration}.local`,
-                `${task.projectRoot}/.env.${nonAtomizedTarget}.${task.target.configuration}`,
-                `${task.projectRoot}/.${nonAtomizedTarget}.${task.target.configuration}.local.env`,
-                `${task.projectRoot}/.${nonAtomizedTarget}.${task.target.configuration}.env`,
-              ]
-            : []),
-          `${task.projectRoot}/.env.${task.target.configuration}.local`,
-          `${task.projectRoot}/.env.${task.target.configuration}`,
-          `${task.projectRoot}/.${task.target.configuration}.local.env`,
-          `${task.projectRoot}/.${task.target.configuration}.env`,
-        ]
-      : []),
-
-    // Load DotEnv Files for a target in the project root
-    ...(originalTarget !== target
-      ? [
-          `${task.projectRoot}/.env.${originalTarget}.local`,
-          `${task.projectRoot}/.env.${originalTarget}`,
-          `${task.projectRoot}/.${originalTarget}.local.env`,
-          `${task.projectRoot}/.${originalTarget}.env`,
-        ]
-      : []),
-    `${task.projectRoot}/.env.${target}.local`,
-    `${task.projectRoot}/.env.${target}`,
-    `${task.projectRoot}/.${target}.local.env`,
-    `${task.projectRoot}/.${target}.env`,
-    ...(nonAtomizedTarget
-      ? [
-          `${task.projectRoot}/.env.${nonAtomizedTarget}.local`,
-          `${task.projectRoot}/.env.${nonAtomizedTarget}`,
-          `${task.projectRoot}/.${nonAtomizedTarget}.local.env`,
-          `${task.projectRoot}/.${nonAtomizedTarget}.env`,
-        ]
-      : []),
-    `${task.projectRoot}/.env.local`,
-    `${task.projectRoot}/.local.env`,
-    `${task.projectRoot}/.env`,
-
-    // Load DotEnv Files for a configuration in the workspace root
-    ...(task.target.configuration
-      ? [
-          ...(originalTarget !== target
-            ? [
-                `.env.${originalTarget}.${task.target.configuration}.local`,
-                `.env.${originalTarget}.${task.target.configuration}`,
-                `.${originalTarget}.${task.target.configuration}.local.env`,
-                `.${originalTarget}.${task.target.configuration}.env`,
-              ]
-            : []),
-          `.env.${target}.${task.target.configuration}.local`,
-          `.env.${target}.${task.target.configuration}`,
-          `.${target}.${task.target.configuration}.local.env`,
-          `.${target}.${task.target.configuration}.env`,
-          ...(nonAtomizedTarget
-            ? [
-                `.env.${nonAtomizedTarget}.${task.target.configuration}.local`,
-                `.env.${nonAtomizedTarget}.${task.target.configuration}`,
-                `.${nonAtomizedTarget}.${task.target.configuration}.local.env`,
-                `.${nonAtomizedTarget}.${task.target.configuration}.env`,
-              ]
-            : []),
-          `.env.${task.target.configuration}.local`,
-          `.env.${task.target.configuration}`,
-          `.${task.target.configuration}.local.env`,
-          `.${task.target.configuration}.env`,
-        ]
-      : []),
-
-    // Load DotEnv Files for a target in the workspace root
-    ...(originalTarget !== target
-      ? [
-          `.env.${originalTarget}.local`,
-          `.env.${originalTarget}`,
-          `.${originalTarget}.local.env`,
-          `.${originalTarget}.env`,
-        ]
-      : []),
-    `.env.${target}.local`,
-    `.env.${target}`,
-    `.${target}.local.env`,
-    `.${target}.env`,
-    ...(nonAtomizedTarget
-      ? [
-          `.env.${nonAtomizedTarget}.local`,
-          `.env.${nonAtomizedTarget}`,
-          `.${nonAtomizedTarget}.local.env`,
-          `.${nonAtomizedTarget}.env`,
-        ]
-      : []),
-
-    // Load base DotEnv Files at workspace root
-    `.local.env`,
-    `.env.local`,
-    `.env`,
-  ];
 }
 
 function loadDotEnvFilesForTask(
