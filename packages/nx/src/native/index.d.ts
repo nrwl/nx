@@ -27,6 +27,7 @@ export declare class AppLifeCycle {
 
 export declare class ChildProcess {
   getParserAndWriter(): ExternalObject<[ParserArc, WriterArc]>
+  getPid(): number
   kill(signal?: NodeJS.Signals): void
   onExit(callback: (message: string) => void): void
   onOutput(callback: (message: string) => void): void
@@ -92,6 +93,45 @@ export declare class NxTaskHistory {
   getEstimatedTaskTimings(targets: Array<TaskTarget>): Record<string, number>
 }
 
+/**
+ * High-performance metrics collector for Nx tasks
+ * Thread-safe and designed for minimal overhead
+ */
+export declare class ProcessMetricsCollector {
+  /** Create a new ProcessMetricsCollector with default configuration */
+  constructor()
+  /**
+   * Start metrics collection
+   * Idempotent - safe to call multiple times
+   */
+  startCollection(): void
+  /**
+   * Stop metrics collection
+   * Returns true if collection was stopped, false if not running
+   */
+  stopCollection(): boolean
+  /**
+   * Get system information (CPU cores and total memory)
+   * This is separate from the collection interval and meant to be called imperatively
+   */
+  getSystemInfo(): SystemInfo
+  /** Register the main CLI process for metrics collection */
+  registerMainCliProcess(pid: number): void
+  /** Register the daemon process for metrics collection */
+  registerDaemonProcess(pid: number): void
+  /**
+   * Register a process for a specific task
+   * Automatically creates the task if it doesn't exist
+   */
+  registerTaskProcess(taskId: string, pid: number): void
+  /** Register a batch with multiple tasks sharing a worker */
+  registerBatch(batchId: string, taskIds: Array<string>, pid: number): void
+  /** Register a subprocess of the main CLI for metrics collection */
+  registerMainCliSubprocess(pid: number): void
+  /** Subscribe to push-based metrics notifications from TypeScript */
+  subscribe(callback: (err: Error | null, event: MetricsUpdate) => void): void
+}
+
 export declare class RunningTasksService {
   constructor(db: ExternalObject<NxDbConnection>)
   getRunningTasks(ids: Array<string>): Array<string>
@@ -151,6 +191,13 @@ export declare class WorkspaceContext {
   updateProjectFiles(projectRootMappings: ProjectRootMappings, projectFiles: ExternalObject<ProjectFiles>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
   getFilesInDirectory(directory: string): Array<string>
+}
+
+/** Batch metrics snapshot */
+export interface BatchMetricsSnapshot {
+  batchId: string
+  taskIds: Array<string>
+  processes: Array<ProcessMetrics>
 }
 
 export interface CachedResult {
@@ -264,6 +311,12 @@ export declare export declare function isEditorInstalled(editor: SupportedEditor
 
 export declare export declare function logDebug(message: string): void
 
+/** Metrics update sent every collection cycle */
+export interface MetricsUpdate {
+  metrics: ProcessMetricsSnapshot
+  metadata?: Record<string, ProcessMetadata>
+}
+
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
   namedInputs?: Record<string, Array<JsInputs>>
@@ -282,6 +335,37 @@ export interface NxWorkspaceFilesExternals {
 }
 
 export declare export declare function parseTaskStatus(stringStatus: string): TaskStatus
+
+/** Process metadata (static, doesn't change during process lifetime) */
+export interface ProcessMetadata {
+  ppid: number
+  name: string
+  command: string
+  exePath: string
+  cwd: string
+}
+
+/** Process metrics (dynamic, changes every collection) */
+export interface ProcessMetrics {
+  pid: number
+  cpu: number
+  memory: number
+}
+
+/** Organized collection of process metrics with timestamp */
+export interface ProcessMetricsSnapshot {
+  timestamp: number
+  mainCli?: ProcessTreeMetrics
+  daemon?: ProcessTreeMetrics
+  tasks: Record<string, Array<ProcessMetrics>>
+  batches: Record<string, BatchMetricsSnapshot>
+}
+
+/** Metrics for a process and its subprocesses (used for both CLI and daemon) */
+export interface ProcessTreeMetrics {
+  main: ProcessMetrics
+  subprocesses: Array<ProcessMetrics>
+}
 
 export interface Project {
   root: string
@@ -316,6 +400,12 @@ export declare const enum SupportedEditor {
   Windsurf = 3,
   JetBrains = 4,
   Unknown = 5
+}
+
+/** System information (static system-level data) */
+export interface SystemInfo {
+  cpuCores: number
+  totalMemory: number
 }
 
 export interface Target {

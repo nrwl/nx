@@ -43,6 +43,7 @@ use super::tui;
 use super::utils::normalize_newlines;
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::tui::graph_utils::get_failed_dependencies;
+use crate::native::utils::time::current_timestamp_millis;
 
 pub struct App {
     pub components: Vec<Box<dyn Component>>,
@@ -410,10 +411,7 @@ impl App {
 
                 // Check if we have a pending resize that needs to be processed
                 if let Some(timer) = self.resize_debounce_timer {
-                    let now = std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap()
-                        .as_millis();
+                    let now = current_timestamp_millis() as u128;
 
                     if now >= timer {
                         // Timer expired, process the resize
@@ -1477,10 +1475,7 @@ impl App {
     /// Ensures that the PTY instances get resized appropriately based on the latest layout areas.
     fn debounce_pty_resize(&mut self) -> io::Result<()> {
         // Get current time in milliseconds
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis();
+        let now = current_timestamp_millis() as u128;
 
         // If we have a timer and it's not expired yet, just return
         if let Some(timer) = self.resize_debounce_timer {

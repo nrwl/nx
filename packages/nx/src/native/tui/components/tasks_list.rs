@@ -32,10 +32,9 @@ use crate::native::{
         app::Focus,
         components::Component,
         lifecycle::RunMode,
-        utils::{
-            format_duration_since, format_live_duration, get_current_time_ms, sort_task_items,
-        },
+        utils::{format_duration_since, format_live_duration, sort_task_items},
     },
+    utils::time::current_timestamp_millis,
 };
 
 const TASK_NAME_WAITING_FOR_TASKS: &str = "Waiting for task...";
@@ -918,7 +917,7 @@ impl TasksList {
                 task_item.update_status(TaskStatus::InProgress);
                 if task_item.start_time.is_none() {
                     // It should be set, but just in case
-                    let current_time = get_current_time_ms();
+                    let current_time = current_timestamp_millis();
                     task_item.start_time = Some(current_time);
                 }
                 // Update duration to show "..." initially for non-continuous tasks
