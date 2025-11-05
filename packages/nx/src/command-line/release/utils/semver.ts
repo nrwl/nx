@@ -41,7 +41,7 @@ export function determineSemverChange(
     let highestChange: SemverSpecifier | null = null;
 
     for (const { commit, isProjectScopedCommit } of relevantCommit) {
-      if (!isProjectScopedCommit) {
+      if (config.useCommitScope && !isProjectScopedCommit) {
         // commit is relevant to the project, but not directly, report patch change to match side-effectful bump behavior in update dependents in release-group-processor
         highestChange = Math.max(SemverSpecifier.PATCH, highestChange ?? 0);
         continue;
