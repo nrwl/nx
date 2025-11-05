@@ -1856,23 +1856,6 @@ describe('lib', () => {
   });
 
   describe('angular compat support', () => {
-    it('should disable modern class fields behavior in versions lower than v18.1', async () => {
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~18.0.0',
-        },
-      }));
-
-      await runLibraryGeneratorWithOpts();
-
-      expect(
-        readJson(tree, 'my-lib/tsconfig.json').compilerOptions
-          .useDefineForClassFields
-      ).toBe(false);
-    });
-
     it('should not set "typeCheckHostBindings" when strict is true if Angular version is lower than v20', async () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
