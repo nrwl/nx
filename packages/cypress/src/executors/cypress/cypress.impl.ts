@@ -16,7 +16,7 @@ export interface CypressExecutorOptions extends Json {
   headed?: boolean;
   /**
    * @deprecated Cypress runs headless by default. Use the --watch flag to
-   * control head/headless behavior instead. It will be removed in Nx v22.
+   * control head/headless behavior instead. It will be removed in Nx v23.
    **/
   headless?: boolean;
   exit?: boolean;
