@@ -37,8 +37,8 @@ export async function addJest(
   // use preset from https://github.com/expo/expo/blob/main/packages/jest-expo/jest-preset.js
   // Workaround issue where Jest is not picking tyope node nor jest types from tsconfig by using <reference>.
   const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'cts'}`;
-  const content = `// <reference types="jest" />
-// <reference types="node" />
+  const content = `/// <reference types="jest" />
+/// <reference types="node" />
 module.exports = {
   displayName: '${projectName}',
   resolver: require.resolve('./jest.resolver.js'),
