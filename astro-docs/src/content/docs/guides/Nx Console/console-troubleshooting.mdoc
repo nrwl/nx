@@ -8,6 +8,35 @@ sidebar:
 
 Often, issues with Nx Console are the result of underlying issues with Nx. Make sure to read the [Nx installation troubleshooting docs](/docs/troubleshooting/troubleshoot-nx-install-issues) for more help.
 
+## Enable Debug Logging
+
+If you're experiencing issues with Nx Console, enabling debug logging can help diagnose the problem by providing detailed information about the extension's internal operations.
+
+### VS Code
+
+1. Open Settings (`Ctrl/Cmd + ,`)
+2. Search for `nxConsole.enableDebugLogging`
+3. Enable the checkbox
+4. Restart VS Code or reload the window (`Ctrl/Cmd + Shift + P` → `Developer: Reload Window`)
+
+#### Viewing Debug Logs
+
+1. Open Command Palette (`Ctrl/Cmd + Shift + P`)
+2. Run `View: Toggle Output`
+3. Select from the dropdown:
+   - **Nx Console** - Main extension output
+   - **Nx Language Server** - Language server diagnostics
+
+### JetBrains IDEs (IntelliJ, WebStorm, etc.)
+
+1. Enable verbose logging:
+   - Go to `Help` → `Diagnostic Tools` → `Debug Log Settings...`
+   - Add: `#dev.nx.console:trace`
+   - Click `OK` and restart the IDE
+2. Reproduce the issue
+3. Access logs via `Help` → `Show Log in Explorer` (Windows) / `Show Log in Finder` (macOS) / `Show Log in Files` (Linux)
+4. Look for `idea.log` file and paste relevant sections when reporting issues
+
 ## VSCode + nvm Issues
 
 VSCode loads a version of Node when it starts. It can use versions set via [`nvm`](https://github.com/nvm-sh/nvm) but there are some caveats.
