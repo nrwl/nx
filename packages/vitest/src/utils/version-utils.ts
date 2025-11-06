@@ -112,7 +112,7 @@ export function getInstalledViteMajorVersion(
   }
 
   const installedMajor = major(installedViteVersion);
-  if (installedMajor < 5 && installedMajor > 7) {
+  if (installedMajor < 5 || installedMajor > 7) {
     return undefined;
   }
   return installedMajor as 5 | 6 | 7;
