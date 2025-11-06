@@ -21,11 +21,11 @@ class GitIgnoreClassifierTest {
     val gitignore = File(tempDir, ".gitignore")
     gitignore.writeText(
         """
-            # Comments should be ignored
-            node_modules
-            *.log
-            dist
-            build
+        # Comments should be ignored
+        node_modules
+        *.log
+        dist
+        build
         """
             .trimIndent())
 
@@ -54,9 +54,9 @@ class GitIgnoreClassifierTest {
     val gitignore = File(tempDir, ".gitignore")
     gitignore.writeText(
         """
-            build
-            .gradle
-            out
+        build
+        .gradle
+        out
         """
             .trimIndent())
 
@@ -83,10 +83,10 @@ class GitIgnoreClassifierTest {
     val gitignore = File(tempDir, ".gitignore")
     gitignore.writeText(
         """
-            *.class
-            *.jar
-            *.log
-            **/*.tmp
+        *.class
+        *.jar
+        *.log
+        **/*.tmp
         """
             .trimIndent())
 
@@ -113,8 +113,8 @@ class GitIgnoreClassifierTest {
     val gitignore = File(tempDir, ".gitignore")
     gitignore.writeText(
         """
-            /build/
-            /dist/
+        /build/
+        /dist/
         """
             .trimIndent())
 
@@ -136,8 +136,8 @@ class GitIgnoreClassifierTest {
     val gitignore = File(tempDir, ".gitignore")
     gitignore.writeText(
         """
-            *.log
-            !important.log
+        *.log
+        !important.log
         """
             .trimIndent())
 
@@ -168,22 +168,22 @@ class GitIgnoreClassifierTest {
     val gitignore = File(tempDir, ".gitignore")
     gitignore.writeText(
         """
-            # Build outputs
-            build
-            .gradle
-            dist
-            out
-            target
+        # Build outputs
+        build
+        .gradle
+        dist
+        out
+        target
 
-            # IDE
-            .idea
-            .vscode
+        # IDE
+        .idea
+        .vscode
 
-            # Logs
-            *.log
+        # Logs
+        *.log
 
-            # OS
-            .DS_Store
+        # OS
+        .DS_Store
         """
             .trimIndent())
 
@@ -256,10 +256,10 @@ class GitIgnoreClassifierTest {
     val gitignore = File(tempDir, ".gitignore")
     gitignore.writeText(
         """
-            # This is a comment
-            # Another comment
+        # This is a comment
+        # Another comment
 
-            # Yet another comment
+        # Yet another comment
         """
             .trimIndent())
 
