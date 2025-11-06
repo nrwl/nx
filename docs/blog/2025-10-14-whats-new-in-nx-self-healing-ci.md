@@ -5,7 +5,6 @@ authors: ['Juri Strumpflohner']
 tags: [nx, nx-cloud, self-healing, ai]
 cover_image: /blog/images/articles/self-healing-ci-update-blog-hero.avif
 description: 'Enhanced GitHub integration, interactive diffs, fine-grained task control, auto-apply fixes, and local fix application—discover the latest improvements to Nx Self-Healing CI.'
-pinned: true
 ---
 
 AI agents and AI-assisted coding are here to stay. Our mission: integrate it with Nx such that it's actually useful for day-to-day developer work. We've been heads-down fine-tuning [Self-Healing CI](/docs/features/ci-features/self-healing-ci), improving its correctness and making sure it shows up when it should without being annoying.
