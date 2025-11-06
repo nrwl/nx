@@ -25,7 +25,7 @@ describe('@nx/vite/plugin', () => {
 
   afterAll(() => {
     process.env.NX_ADD_PLUGINS = originalEnv;
-    // cleanupProject();
+    cleanupProject();
   });
 
   describe('with react', () => {
@@ -42,11 +42,11 @@ describe('@nx/vite/plugin', () => {
     });
 
     afterAll(() => {
-      // cleanupProject();
+      cleanupProject();
     });
 
     describe('build and test React app', () => {
-      it('debug should build application', () => {
+      it('should build application', () => {
         expect(() => runCLI(`build ${myApp}`)).not.toThrow();
       }, 200_000);
 

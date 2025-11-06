@@ -29,10 +29,11 @@ import {
 } from '../../utils/generator-utils';
 import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
-
-export type { VitestGeneratorSchema };
 import { detectUiFramework } from '../../utils/detect-ui-framework';
-import { getVitestDependenciesVersionsToInstall } from '../../utils/version-utils';
+import {
+  getInstalledViteMajorVersion,
+  getVitestDependenciesVersionsToInstall,
+} from '../../utils/version-utils';
 import { clean, coerce, major } from 'semver';
 
 /**
@@ -58,6 +59,10 @@ export async function configurationGeneratorInternal(
   // Setting default to jsdom since it is the most common use case (React, Web).
   // The @nx/js:lib generator specifically sets this to node to be more generic.
   schema.testEnvironment ??= 'jsdom';
+
+  // Set the viteVersion to the installed version if it already exists in the workspace
+  const installedViteVersion = getInstalledViteMajorVersion(tree);
+  schema.viteVersion ??= installedViteVersion;
 
   const tasks: GeneratorCallback[] = [];
 

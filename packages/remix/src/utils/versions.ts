@@ -18,7 +18,7 @@ export const testingLibraryReactVersion = '^14.1.2';
 export const testingLibraryJestDomVersion = '6.4.2';
 export const testingLibraryDomVersion = '^10.4.0';
 export const testingLibraryUserEventsVersion = '^14.5.2';
-export const viteVersion = '^6.0.0';
+export const viteVersion = '^5.0.0';
 
 export function getRemixVersion(tree: Tree): string {
   return (

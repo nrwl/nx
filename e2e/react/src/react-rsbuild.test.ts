@@ -17,7 +17,7 @@ describe('Build React applications and libraries with Rsbuild', () => {
   });
 
   afterAll(() => {
-    // cleanupProject();
+    cleanupProject();
   });
 
   it('should test and lint app with bundler=rsbuild', async () => {
