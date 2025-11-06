@@ -84,6 +84,9 @@ fun processTargetsForProject(
 
   logger.info("Using workspace root: $workspaceRoot")
 
+  // Create GitIgnoreClassifier once for the entire project
+  val gitIgnoreClassifier = GitIgnoreClassifier(File(workspaceRoot))
+
   val projectBuildPath = project.buildTreePath.trimEnd(':')
 
   logger.info("${Date()} ${project}: Process targets")
@@ -123,7 +126,8 @@ fun processTargetsForProject(
               workspaceRoot,
               externalNodes,
               dependencies,
-              targetNameOverrides)
+              targetNameOverrides,
+              gitIgnoreClassifier)
 
       targets[targetName] = target
 
@@ -160,7 +164,8 @@ fun processTargetsForProject(
               targetGroups,
               projectRoot,
               workspaceRoot,
-              ciTestTargetName)
+              ciTestTargetName,
+              gitIgnoreClassifier)
         }
       }
 

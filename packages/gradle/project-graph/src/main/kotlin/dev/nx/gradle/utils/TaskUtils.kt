@@ -21,7 +21,8 @@ fun processTask(
     workspaceRoot: String,
     externalNodes: MutableMap<String, ExternalNode>,
     dependencies: MutableSet<Dependency>,
-    targetNameOverrides: Map<String, String>
+    targetNameOverrides: Map<String, String>,
+    gitIgnoreClassifier: GitIgnoreClassifier
 ): MutableMap<String, Any?> {
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
@@ -51,7 +52,7 @@ fun processTask(
   }
 
   // process inputs
-  val inputs = getInputsForTask(dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes)
+  val inputs = getInputsForTask(dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, gitIgnoreClassifier)
   if (!inputs.isNullOrEmpty()) {
     logger.info("${task}: processed ${inputs.size} inputs")
     target["inputs"] = inputs
@@ -87,20 +88,14 @@ fun getGradlewCommand(): String {
 }
 
 /**
- * Cache the gitignore classifier per workspace root to avoid recreating it for every task
- *
- * TODO(lourw): refactor this out. The structure of this plugin should be refactored to use
- *   dependency injection rather than maintaining a cached instance
- */
-private val gitignoreClassifierCache = mutableMapOf<String, GitIgnoreClassifier>()
-
-/**
  * Parse task and get inputs for this task
  *
+ * @param dependsOnTasks set of tasks this task depends on
  * @param task task to process
  * @param projectRoot the project root path
  * @param workspaceRoot the workspace root path
  * @param externalNodes map of external nodes
+ * @param gitIgnoreClassifier classifier to determine if files match gitignore patterns
  * @return a list of inputs including external dependencies, null if empty or an error occurred
  */
 fun getInputsForTask(
@@ -108,16 +103,12 @@ fun getInputsForTask(
     task: Task,
     projectRoot: String,
     workspaceRoot: String,
-    externalNodes: MutableMap<String, ExternalNode>? = null
+    externalNodes: MutableMap<String, ExternalNode>? = null,
+    gitIgnoreClassifier: GitIgnoreClassifier
 ): List<Any>? {
   return try {
     val inputs = mutableListOf<Any>()
     val externalDependencies = mutableListOf<String>()
-
-    val classifier =
-        gitignoreClassifierCache.getOrPut(workspaceRoot) {
-          GitIgnoreClassifier(File(workspaceRoot))
-        }
 
     // Collect outputs from dependent tasks
     val tasksToProcess = dependsOnTasks ?: getDependsOnTask(task)
@@ -147,7 +138,7 @@ fun getInputsForTask(
         }
 
         // File matches gitignore pattern - treat as dependentTasksOutputFiles (build artifact)
-        classifier.isIgnored(inputFile) -> {
+        gitIgnoreClassifier.isIgnored(inputFile) -> {
           val relativePathOrGlob = toRelativePathOrGlob(inputFile, workspaceRoot)
           inputs.add(mapOf("dependentTasksOutputFiles" to relativePathOrGlob))
         }

@@ -92,6 +92,7 @@ class ProcessTaskUtilsTest {
     task.group = "build"
     task.description = "Compiles Java source files"
 
+    val gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir)
     val result =
         processTask(
             task,
@@ -100,7 +101,8 @@ class ProcessTaskUtilsTest {
             workspaceRoot = project.rootDir.path,
             externalNodes = mutableMapOf(),
             dependencies = mutableSetOf(),
-            targetNameOverrides = emptyMap())
+            targetNameOverrides = emptyMap(),
+            gitIgnoreClassifier = gitIgnoreClassifier)
 
     assertEquals(true, result["cache"])
     assertEquals(result["executor"], "@nx/gradle:gradle")
@@ -142,7 +144,8 @@ class ProcessTaskUtilsTest {
       val inputFile2 = java.io.File("$workspaceRoot/src/main.kt") // Should be included
       mainTask.inputs.files(inputFile1, inputFile2)
 
-      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
       assertNotNull(result)
 
@@ -169,7 +172,8 @@ class ProcessTaskUtilsTest {
       val mainTask = project.tasks.register("mainTask").get()
       mainTask.dependsOn(dependentTask)
 
-      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
       assertNotNull(result)
 
@@ -202,14 +206,15 @@ class ProcessTaskUtilsTest {
       // Pre-compute dependsOnTasks using getDependsOnTask
       val preComputedDependsOn = getDependsOnTask(mainTask)
 
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
       // Test with pre-computed dependsOnTasks
       val resultWithPreComputed =
           getInputsForTask(
-              preComputedDependsOn, mainTask, projectRoot, workspaceRoot, mutableMapOf())
+              preComputedDependsOn, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
       // Test without pre-computed (should compute internally)
       val resultWithoutPreComputed =
-          getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
+          getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
       // Both results should be identical
       assertNotNull(resultWithPreComputed)
@@ -303,8 +308,9 @@ class ProcessTaskUtilsTest {
 
       // Get dependsOnTasks once and reuse
       val dependsOnTasks = getDependsOnTask(mainTask)
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
       val result =
-          getInputsForTask(dependsOnTasks, mainTask, projectRoot, workspaceRoot, mutableMapOf())
+          getInputsForTask(dependsOnTasks, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
       assertNotNull(result)
 
@@ -374,7 +380,8 @@ class ProcessTaskUtilsTest {
 
       mainTask.inputs.files(sourceFile, buildFile, logFile, configFile)
 
-      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
       assertNotNull(result)
 
@@ -422,7 +429,8 @@ class ProcessTaskUtilsTest {
 
       mainTask.inputs.files(javaSource, compiledClass, jarTarget)
 
-      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf())
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
       assertNotNull(result)
 
@@ -459,6 +467,7 @@ class ProcessTaskUtilsTest {
     val inputFile = java.io.File("${project.rootDir.path}/src/test.kt")
     mainTask.inputs.files(inputFile)
 
+    val gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir)
     val result =
         processTask(
             mainTask,
@@ -467,7 +476,8 @@ class ProcessTaskUtilsTest {
             workspaceRoot = project.rootDir.path,
             externalNodes = mutableMapOf(),
             dependencies = mutableSetOf(),
-            targetNameOverrides = emptyMap())
+            targetNameOverrides = emptyMap(),
+            gitIgnoreClassifier = gitIgnoreClassifier)
 
     assertNotNull(result)
 
