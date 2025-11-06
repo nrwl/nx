@@ -579,7 +579,7 @@ describe('application generator', () => {
               ],
               "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "myapp-e2e/jest.config.ts",
+                "jestConfig": "myapp-e2e/jest.config.cts",
                 "passWithNoTests": true,
               },
               "outputs": [

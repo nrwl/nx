@@ -58,9 +58,28 @@ describe('e2eProjectGenerator', () => {
       addPlugin: true,
     });
 
-    expect(tree.read('api-e2e/jest.config.cts', 'utf-8')).toMatchInlineSnapshot(
-      `null`
-    );
+    expect(tree.read('api-e2e/jest.config.cts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "export default {
+        displayName: 'api-e2e',
+        preset: '../jest.preset.js',
+        globalSetup: '<rootDir>/src/support/global-setup.ts',
+        globalTeardown: '<rootDir>/src/support/global-teardown.ts',
+        setupFiles: ['<rootDir>/src/support/test-setup.ts'],
+        testEnvironment: 'node',
+        transform: {
+          '^.+\\\\.[tj]s$': [
+            'ts-jest',
+            {
+              tsconfig: '<rootDir>/tsconfig.spec.json',
+            },
+          ],
+        },
+        moduleFileExtensions: ['ts', 'js', 'html'],
+        coverageDirectory: '../coverage/api-e2e',
+      };
+      "
+    `);
     expect(tree.exists('api-e2e/.spec.swcrc')).toBeFalsy();
   });
 
@@ -107,9 +126,26 @@ describe('e2eProjectGenerator', () => {
       addPlugin: true,
     });
 
-    expect(tree.read('cli-e2e/jest.config.cts', 'utf-8')).toMatchInlineSnapshot(
-      `null`
-    );
+    expect(tree.read('cli-e2e/jest.config.cts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "export default {
+        displayName: 'cli-e2e',
+        preset: '../jest.preset.js',
+        setupFiles: ['<rootDir>/src/test-setup.ts'],
+        testEnvironment: 'node',
+        transform: {
+          '^.+\\\\.[tj]s$': [
+            'ts-jest',
+            {
+              tsconfig: '<rootDir>/tsconfig.spec.json',
+            },
+          ],
+        },
+        moduleFileExtensions: ['ts', 'js', 'html'],
+        coverageDirectory: '../coverage/cli-e2e',
+      };
+      "
+    `);
     expect(tree.exists('cli-e2e/.spec.swcrc')).toBeFalsy();
   });
 
@@ -189,9 +225,34 @@ describe('e2eProjectGenerator', () => {
         addPlugin: true,
       });
 
-      expect(
-        tree.read('api-e2e/jest.config.cts', 'utf-8')
-      ).toMatchInlineSnapshot(`null`);
+      expect(tree.read('api-e2e/jest.config.cts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        import { readFileSync } from 'fs';
+
+        // Reading the SWC compilation config for the spec files
+        const swcJestConfig = JSON.parse(
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+        );
+
+        // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+        swcJestConfig.swcrc = false;
+
+        export default {
+          displayName: 'api-e2e',
+          preset: '../jest.preset.js',
+          globalSetup: '<rootDir>/src/support/global-setup.ts',
+          globalTeardown: '<rootDir>/src/support/global-teardown.ts',
+          setupFiles: ['<rootDir>/src/support/test-setup.ts'],
+          testEnvironment: 'node',
+          transform: {
+            '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: 'test-output/jest/coverage',
+        };
+        "
+      `);
       expect(tree.read('api-e2e/.spec.swcrc', 'utf-8')).toMatchInlineSnapshot(`
         "{
           "jsc": {
@@ -234,9 +295,32 @@ describe('e2eProjectGenerator', () => {
         useProjectJson: false,
       });
 
-      expect(
-        tree.read('cli-e2e/jest.config.cts', 'utf-8')
-      ).toMatchInlineSnapshot(`null`);
+      expect(tree.read('cli-e2e/jest.config.cts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        import { readFileSync } from 'fs';
+
+        // Reading the SWC compilation config for the spec files
+        const swcJestConfig = JSON.parse(
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+        );
+
+        // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+        swcJestConfig.swcrc = false;
+
+        export default {
+          displayName: 'cli-e2e',
+          preset: '../jest.preset.js',
+          setupFiles: ['<rootDir>/src/test-setup.ts'],
+          testEnvironment: 'node',
+          transform: {
+            '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: 'test-output/jest/coverage',
+        };
+        "
+      `);
       expect(tree.read('cli-e2e/.spec.swcrc', 'utf-8')).toMatchInlineSnapshot(`
         "{
           "jsc": {
