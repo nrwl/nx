@@ -47,7 +47,7 @@ const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
     )
   }
   <div class="main-frame"><slot /></div>
-  <Footer disableThemeSwitcher={true} useDomainPrefix={true} className="mt-32 dark:bg-slate-900" />
+  <Footer disableThemeSwitcher={true} useDomainPrefix={true} className="dark:bg-slate-900" />
   <WebinarNotifier client:load />
 </div>
 
