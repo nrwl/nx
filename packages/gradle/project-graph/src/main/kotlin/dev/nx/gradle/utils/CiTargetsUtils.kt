@@ -70,7 +70,12 @@ private fun processTestFiles(
           val targetName = "$ciTestTargetName--$className"
           targets[targetName] =
               buildTestCiTarget(
-                  projectBuildPath, testClassPackagePath, testTask, projectRoot, workspaceRoot, gitIgnoreClassifier)
+                  projectBuildPath,
+                  testClassPackagePath,
+                  testTask,
+                  projectRoot,
+                  workspaceRoot,
+                  gitIgnoreClassifier)
           targetGroups[testCiTargetGroup]?.add(targetName)
 
           ciDependsOn.add(
@@ -102,7 +107,8 @@ private fun buildTestCiTarget(
     workspaceRoot: String,
     gitIgnoreClassifier: GitIgnoreClassifier
 ): MutableMap<String, Any?> {
-  val taskInputs = getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
+  val taskInputs =
+      getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
 
   val target =
       mutableMapOf<String, Any?>(
@@ -138,7 +144,8 @@ private fun ensureParentCiTarget(
     gitIgnoreClassifier: GitIgnoreClassifier
 ) {
   if (ciDependsOn.isNotEmpty()) {
-    val taskInputs = getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
+    val taskInputs =
+        getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
 
     targets[ciTestTargetName] =
         mutableMapOf<String, Any?>(

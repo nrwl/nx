@@ -145,7 +145,9 @@ class ProcessTaskUtilsTest {
       mainTask.inputs.files(inputFile1, inputFile2)
 
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
-      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+      val result =
+          getInputsForTask(
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
       assertNotNull(result)
 
@@ -173,7 +175,9 @@ class ProcessTaskUtilsTest {
       mainTask.dependsOn(dependentTask)
 
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
-      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+      val result =
+          getInputsForTask(
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
       assertNotNull(result)
 
@@ -210,11 +214,17 @@ class ProcessTaskUtilsTest {
       // Test with pre-computed dependsOnTasks
       val resultWithPreComputed =
           getInputsForTask(
-              preComputedDependsOn, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              preComputedDependsOn,
+              mainTask,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              gitIgnoreClassifier)
 
       // Test without pre-computed (should compute internally)
       val resultWithoutPreComputed =
-          getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+          getInputsForTask(
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
       // Both results should be identical
       assertNotNull(resultWithPreComputed)
@@ -310,7 +320,13 @@ class ProcessTaskUtilsTest {
       val dependsOnTasks = getDependsOnTask(mainTask)
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
       val result =
-          getInputsForTask(dependsOnTasks, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+          getInputsForTask(
+              dependsOnTasks,
+              mainTask,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              gitIgnoreClassifier)
 
       assertNotNull(result)
 
@@ -381,7 +397,9 @@ class ProcessTaskUtilsTest {
       mainTask.inputs.files(sourceFile, buildFile, logFile, configFile)
 
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
-      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+      val result =
+          getInputsForTask(
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
       assertNotNull(result)
 
@@ -430,7 +448,9 @@ class ProcessTaskUtilsTest {
       mainTask.inputs.files(javaSource, compiledClass, jarTarget)
 
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
-      val result = getInputsForTask(null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+      val result =
+          getInputsForTask(
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
       assertNotNull(result)
 

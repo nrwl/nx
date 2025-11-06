@@ -52,7 +52,9 @@ fun processTask(
   }
 
   // process inputs
-  val inputs = getInputsForTask(dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, gitIgnoreClassifier)
+  val inputs =
+      getInputsForTask(
+          dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, gitIgnoreClassifier)
   if (!inputs.isNullOrEmpty()) {
     logger.info("${task}: processed ${inputs.size} inputs")
     target["inputs"] = inputs
