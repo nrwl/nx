@@ -100,7 +100,7 @@ describe('app', () => {
       unitTestRunner: 'jest',
     });
 
-    expect(appTree.exists('my-app/jest.config.ts')).toBeTruthy();
+    expect(appTree.exists('my-app/jest.config.cts')).toBeTruthy();
     expect(appTree.exists('my-app/src/app/App.spec.tsx')).toBeTruthy();
     expect(appTree.exists('my-app/tsconfig.spec.json')).toBeTruthy();
     expect(readJson(appTree, 'my-app/tsconfig.json').references).toEqual(
@@ -127,7 +127,7 @@ describe('app', () => {
       unitTestRunner: 'none',
     });
 
-    expect(appTree.exists('my-app/jest.config.ts')).toBe(false);
+    expect(appTree.exists('my-app/jest.config.cts')).toBe(false);
     expect(appTree.exists('my-app/src/app/App.spec.tsx')).toBe(false);
     expect(appTree.exists('my-app/tsconfig.spec.json')).toBe(false);
     expect(readJson(appTree, 'my-app/tsconfig.json').references).not.toEqual(
@@ -463,6 +463,7 @@ describe('app', () => {
             "**/*.spec.jsx",
             "src/test-setup.ts",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "jest.resolver.js",
@@ -504,6 +505,7 @@ describe('app', () => {
           ],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",

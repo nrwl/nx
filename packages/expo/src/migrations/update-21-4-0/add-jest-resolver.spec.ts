@@ -72,7 +72,7 @@ describe('add-jest-resolver migration', () => {
         test: {
           executor: '@nx/jest:jest',
           options: {
-            jestConfig: 'apps/my-expo-app/jest.config.ts',
+            jestConfig: 'apps/my-expo-app/jest.config.cts',
           },
         },
       },
@@ -102,7 +102,7 @@ describe('add-jest-resolver migration', () => {
 
     // Create jest config with expo preset
     tree.write(
-      'apps/my-expo-app/jest.config.ts',
+      'apps/my-expo-app/jest.config.cts',
       `module.exports = {
   displayName: 'my-expo-app',
   resolver: '@nx/jest/plugins/resolver',
@@ -143,7 +143,10 @@ describe('add-jest-resolver migration', () => {
     expect(resolverContent).toContain('./runtime.ts');
 
     // Check that the jest config was updated
-    const updatedConfig = tree.read('apps/my-expo-app/jest.config.ts', 'utf-8');
+    const updatedConfig = tree.read(
+      'apps/my-expo-app/jest.config.cts',
+      'utf-8'
+    );
     expect(updatedConfig).toContain(
       "resolver: require.resolve('./jest.resolver.js')"
     );
@@ -159,7 +162,7 @@ describe('add-jest-resolver migration', () => {
         test: {
           executor: '@nx/jest:jest',
           options: {
-            jestConfig: 'apps/my-react-app/jest.config.ts',
+            jestConfig: 'apps/my-react-app/jest.config.cts',
           },
         },
       },
@@ -185,7 +188,7 @@ describe('add-jest-resolver migration', () => {
 
     // Create jest config without expo preset
     tree.write(
-      'apps/my-react-app/jest.config.ts',
+      'apps/my-react-app/jest.config.cts',
       `module.exports = {
         displayName: 'my-react-app',
         resolver: '@nx/jest/plugins/resolver',
@@ -205,7 +208,7 @@ describe('add-jest-resolver migration', () => {
     expect(tree.exists('apps/my-react-app/jest.resolver.js')).toBe(false);
 
     // Check that the jest config was NOT modified
-    const config = tree.read('apps/my-react-app/jest.config.ts', 'utf-8');
+    const config = tree.read('apps/my-react-app/jest.config.cts', 'utf-8');
     expect(config).toContain("resolver: '@nx/jest/plugins/resolver'");
     expect(config).not.toContain('transformIgnorePatterns');
   });
@@ -218,7 +221,7 @@ describe('add-jest-resolver migration', () => {
         test: {
           executor: '@nx/jest:jest',
           options: {
-            jestConfig: 'apps/my-expo-app/jest.config.ts',
+            jestConfig: 'apps/my-expo-app/jest.config.cts',
           },
         },
       },
@@ -248,7 +251,7 @@ describe('add-jest-resolver migration', () => {
 
     // Create jest config with expo preset and existing custom resolver
     tree.write(
-      'apps/my-expo-app/jest.config.ts',
+      'apps/my-expo-app/jest.config.cts',
       `module.exports = {
         displayName: 'my-expo-app',
         resolver: './my-custom-resolver.js',

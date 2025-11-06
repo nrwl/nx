@@ -289,7 +289,7 @@ describe('app', () => {
       expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeTruthy();
       expect(appTree.exists('my-app/src/app/app.module.css')).toBeTruthy();
 
-      const jestConfig = appTree.read('my-app/jest.config.ts').toString();
+      const jestConfig = appTree.read('my-app/jest.config.cts').toString();
       expect(jestConfig).toContain('@nx/react/plugins/jest');
 
       const tsconfig = readJson(appTree, 'my-app/tsconfig.json');
@@ -315,6 +315,7 @@ describe('app', () => {
         'src/**/*.spec.jsx',
         'src/**/*.test.jsx',
         'jest.config.ts',
+        'jest.config.cts',
       ]);
 
       const eslintJson = readJson(appTree, 'my-app/.eslintrc.json');
@@ -453,6 +454,7 @@ describe('app', () => {
             'src/**/*.spec.jsx',
             'src/**/*.test.jsx',
             'jest.config.ts',
+            'jest.config.cts',
           ],
         },
         {
@@ -560,7 +562,7 @@ describe('app', () => {
   it('should setup jest with tsx support', async () => {
     await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
-    expect(appTree.read('my-app/jest.config.ts').toString()).toContain(
+    expect(appTree.read('my-app/jest.config.cts').toString()).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
     );
   });
@@ -568,7 +570,7 @@ describe('app', () => {
   it('should setup jest with babel-jest support', async () => {
     await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
-    expect(appTree.read('my-app/jest.config.ts').toString()).toContain(
+    expect(appTree.read('my-app/jest.config.cts').toString()).toContain(
       "['babel-jest', { presets: ['@nx/react/babel'] }]"
     );
   });
@@ -576,7 +578,7 @@ describe('app', () => {
   it('should setup jest without serializers', async () => {
     await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
-    expect(appTree.read('my-app/jest.config.ts').toString()).not.toContain(
+    expect(appTree.read('my-app/jest.config.cts').toString()).not.toContain(
       `'jest-preset-angular/build/AngularSnapshotSerializer.js',`
     );
   });
@@ -637,10 +639,10 @@ describe('app', () => {
         unitTestRunner: 'none',
       });
 
-      expect(appTree.exists('jest.config.ts')).toBeFalsy();
+      expect(appTree.exists('jest.config.cts')).toBeFalsy();
       expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeFalsy();
       expect(appTree.exists('my-app/tsconfig.spec.json')).toBeFalsy();
-      expect(appTree.exists('my-app/jest.config.ts')).toBeFalsy();
+      expect(appTree.exists('my-app/jest.config.cts')).toBeFalsy();
     });
   });
 
@@ -1145,6 +1147,7 @@ describe('app', () => {
         'vite/client',
         'vitest',
         '@react-router/node',
+        'node',
       ]);
     });
 
@@ -1175,7 +1178,7 @@ describe('app', () => {
         unitTestRunner: 'jest',
       });
 
-      const jestConfig = appTree.read('my-app/jest.config.ts').toString();
+      const jestConfig = appTree.read('my-app/jest.config.cts').toString();
       expect(jestConfig).toContain('@nx/react/plugins/jest');
       expect(appTree.read('my-app/tsconfig.spec.json').toString())
         .toMatchInlineSnapshot(`
@@ -1196,6 +1199,7 @@ describe('app', () => {
           "files": ["src/test-setup.ts"],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",

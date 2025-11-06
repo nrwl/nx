@@ -168,7 +168,7 @@ describe('NxPlugin Plugin Generator', () => {
           })
         );
 
-        ['my-plugin/jest.config.ts'].forEach((path) =>
+        ['my-plugin/jest.config.cts'].forEach((path) =>
           expect(tree.exists(path)).toBeFalsy()
         );
 
@@ -183,7 +183,7 @@ describe('NxPlugin Plugin Generator', () => {
     });
 
     describe('jest', () => {
-      it('should generate test files with jest.config.ts', async () => {
+      it('should generate test files with jest.config.cts', async () => {
         await pluginGenerator(
           tree,
           getSchema({
@@ -192,10 +192,10 @@ describe('NxPlugin Plugin Generator', () => {
           })
         );
 
-        expect(tree.exists('my-plugin/jest.config.ts')).toBeTruthy();
-        expect(tree.read('my-plugin/jest.config.ts', 'utf-8'))
+        expect(tree.exists('my-plugin/jest.config.cts')).toBeTruthy();
+        expect(tree.read('my-plugin/jest.config.cts', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "export default {
+          "module.exports = {
             displayName: 'my-plugin',
             preset: '../jest.preset.js',
             testEnvironment: 'node',
@@ -348,7 +348,7 @@ describe('NxPlugin Plugin Generator', () => {
       });
     });
 
-    it('should generate test files with jest.config.ts', async () => {
+    it('should generate test files with jest.config.cts', async () => {
       await pluginGenerator(
         tree,
         getSchema({
@@ -358,11 +358,11 @@ describe('NxPlugin Plugin Generator', () => {
         })
       );
 
-      expect(tree.exists('my-plugin/jest.config.ts')).toBeTruthy();
-      expect(tree.read('my-plugin/jest.config.ts', 'utf-8'))
+      expect(tree.exists('my-plugin/jest.config.cts')).toBeTruthy();
+      expect(tree.read('my-plugin/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/* eslint-disable */
-        import { readFileSync } from 'fs';
+        const { readFileSync } = require('fs');
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
@@ -372,7 +372,7 @@ describe('NxPlugin Plugin Generator', () => {
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;
 
-        export default {
+        module.exports = {
           displayName: '@proj/my-plugin',
           preset: '../jest.preset.js',
           testEnvironment: 'node',
@@ -492,6 +492,7 @@ describe('NxPlugin Plugin Generator', () => {
           },
           "exclude": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
           ],
@@ -517,6 +518,7 @@ describe('NxPlugin Plugin Generator', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.d.ts",

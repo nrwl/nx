@@ -129,13 +129,18 @@ exports[`@nx/vite:configuration js library with --bundler=vite should respect pr
     "types": ["node", "vite/client"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+  "exclude": [
+    "jest.config.ts",
+    "jest.config.cts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts"
+  ]
 }
 "
 `;
 
 exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 3`] = `
-"export default {
+"module.exports = {
   displayName: 'my-lib',
   preset: '../jest.preset.js',
   transform: {

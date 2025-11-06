@@ -95,7 +95,7 @@ describe('Jest', () => {
     );
 
     updateFile(
-      `libs/${mylib}/jest.config.ts`,
+      `libs/${mylib}/jest.config.cts`,
       stripIndents`
         export default {
           testEnvironment: 'node',

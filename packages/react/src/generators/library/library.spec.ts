@@ -184,6 +184,7 @@ describe('lib', () => {
     const tsconfigJson = readJson(tree, 'my-lib/tsconfig.lib.json');
     expect(tsconfigJson.exclude).toEqual([
       'jest.config.ts',
+      'jest.config.cts',
       'src/**/*.spec.ts',
       'src/**/*.test.ts',
       'src/**/*.spec.tsx',
@@ -198,7 +199,7 @@ describe('lib', () => {
   it('should generate files', async () => {
     await libraryGenerator(tree, { ...defaultSchema, skipFormat: false });
     expect(tree.exists('my-lib/package.json')).toBeFalsy();
-    expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
+    expect(tree.exists(`my-lib/jest.config.cts`)).toBeTruthy();
     expect(tree.exists('my-lib/src/index.ts')).toBeTruthy();
     expect(tree.exists('my-lib/src/lib/my-lib.tsx')).toBeTruthy();
     expect(tree.exists('my-lib/src/lib/my-lib.module.css')).toBeTruthy();
@@ -242,13 +243,13 @@ describe('lib', () => {
         }
       `);
   });
-  it('should update jest.config.ts for babel', async () => {
+  it('should update jest.config.cts for babel', async () => {
     await libraryGenerator(tree, {
       ...defaultSchema,
       buildable: true,
       compiler: 'babel',
     });
-    expect(tree.read('my-lib/jest.config.ts', 'utf-8')).toContain(
+    expect(tree.read('my-lib/jest.config.cts', 'utf-8')).toContain(
       "['babel-jest', { presets: ['@nx/react/babel'] }]"
     );
   });
@@ -302,7 +303,7 @@ describe('lib', () => {
         name: 'my-dir-my-lib',
       });
 
-      expect(tree.exists(`my-dir/my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-dir/my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
         tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.tsx')
@@ -315,14 +316,14 @@ describe('lib', () => {
       ).toBeTruthy();
     });
 
-    it('should update jest.config.ts for babel', async () => {
+    it('should update jest.config.cts for babel', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
         directory: 'my-dir/my-lib',
         buildable: true,
         compiler: 'babel',
       });
-      expect(tree.read('my-dir/my-lib/jest.config.ts', 'utf-8')).toContain(
+      expect(tree.read('my-dir/my-lib/jest.config.cts', 'utf-8')).toContain(
         "['babel-jest', { presets: ['@nx/react/babel'] }]"
       );
     });
@@ -460,7 +461,7 @@ describe('lib', () => {
       });
 
       expect(tree.exists('my-lib/tsconfig.spec.json')).toBeFalsy();
-      expect(tree.exists('my-lib/jest.config.ts')).toBeFalsy();
+      expect(tree.exists('my-lib/jest.config.cts')).toBeFalsy();
     });
   });
 

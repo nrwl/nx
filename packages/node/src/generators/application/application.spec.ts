@@ -157,7 +157,7 @@ describe('app', () => {
         directory: 'my-node-app',
         addPlugin: true,
       });
-      expect(tree.exists(`my-node-app/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-node-app/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-node-app/src/main.ts')).toBeTruthy();
 
       const tsconfig = readJson(tree, 'my-node-app/tsconfig.json');
@@ -185,6 +185,7 @@ describe('app', () => {
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
       expect(tsconfigApp.exclude).toEqual([
         'jest.config.ts',
+        'jest.config.cts',
         'src/**/*.spec.ts',
         'src/**/*.test.ts',
       ]);
@@ -391,7 +392,7 @@ describe('app', () => {
 
       // Make sure these exist
       [
-        `my-dir/my-node-app/jest.config.ts`,
+        `my-dir/my-node-app/jest.config.cts`,
         'my-dir/my-node-app/src/main.ts',
       ].forEach((path) => {
         expect(tree.exists(path)).toBeTruthy();
@@ -414,6 +415,7 @@ describe('app', () => {
           lookupFn: (json) => json.exclude,
           expectedValue: [
             'jest.config.ts',
+            'jest.config.cts',
             'src/**/*.spec.ts',
             'src/**/*.test.ts',
           ],
@@ -434,11 +436,11 @@ describe('app', () => {
         unitTestRunner: 'none',
         addPlugin: true,
       });
-      expect(tree.exists('jest.config.ts')).toBeFalsy();
+      expect(tree.exists('jest.config.cts')).toBeFalsy();
       expect(tree.exists('my-node-app/src/test-setup.ts')).toBeFalsy();
       expect(tree.exists('my-node-app/src/test.ts')).toBeFalsy();
       expect(tree.exists('my-node-app/tsconfig.spec.json')).toBeFalsy();
-      expect(tree.exists('my-node-app/jest.config.ts')).toBeFalsy();
+      expect(tree.exists('my-node-app/jest.config.cts')).toBeFalsy();
     });
   });
 
@@ -495,9 +497,9 @@ describe('app', () => {
         addPlugin: true,
       } as Schema);
 
-      expect(tree.read(`my-node-app/jest.config.ts`, 'utf-8'))
+      expect(tree.read(`my-node-app/jest.config.cts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "export default {
+        "module.exports = {
           displayName: 'my-node-app',
           preset: '../jest.preset.js',
           testEnvironment: 'node',
@@ -521,9 +523,9 @@ describe('app', () => {
         addPlugin: true,
       } as Schema);
 
-      expect(tree.read(`my-node-app/jest.config.ts`, 'utf-8'))
+      expect(tree.read(`my-node-app/jest.config.cts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "export default {
+        "module.exports = {
           displayName: 'my-node-app',
           preset: '../jest.preset.js',
           testEnvironment: 'node',
@@ -628,7 +630,7 @@ describe('app', () => {
         addPlugin: true,
       });
 
-      expect(tree.exists(`api/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`api/jest.config.cts`)).toBeTruthy();
 
       if (checkSpecFile) {
         expect(tree.exists(`api/src/app/app.spec.ts`)).toBeTruthy();
@@ -808,6 +810,7 @@ describe('app', () => {
             "out-tsc",
             "dist",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "eslint.config.js",
@@ -834,6 +837,7 @@ describe('app', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.d.ts",
@@ -879,10 +883,10 @@ describe('app', () => {
         useProjectJson: false,
       } as Schema);
 
-      expect(tree.read('apps/my-app/jest.config.ts', 'utf-8'))
+      expect(tree.read('apps/my-app/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/* eslint-disable */
-        import { readFileSync } from 'fs';
+        const { readFileSync } = require('fs');
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
@@ -892,7 +896,7 @@ describe('app', () => {
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;
 
-        export default {
+        module.exports = {
           displayName: '@proj/my-app',
           preset: '../../jest.preset.js',
           testEnvironment: 'node',
@@ -1105,7 +1109,7 @@ describe('app', () => {
               ],
               "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "myapp-e2e/jest.config.ts",
+                "jestConfig": "myapp-e2e/jest.config.cts",
                 "passWithNoTests": true,
               },
               "outputs": [

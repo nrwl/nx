@@ -188,7 +188,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(jestTask);
     const jestConfigPath = joinPathFragments(
       options.projectRoot,
-      options.js ? 'jest.config.js' : 'jest.config.ts'
+      options.js ? 'jest.config.js' : 'jest.config.cts'
     );
     if (options.compiler === 'babel' && host.exists(jestConfigPath)) {
       const updatedContent = updateJestConfigContent(
