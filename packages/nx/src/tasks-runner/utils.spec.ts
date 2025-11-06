@@ -679,6 +679,149 @@ describe('utils', () => {
     });
   });
 
+  describe('normalizeDependencyConfigProjects validation', () => {
+    it('should throw error when both projects and dependencies are specified', () => {
+      const projectGraph = {
+        dependencies: {},
+        nodes: {
+          project1: {
+            name: 'project1',
+            type: 'app',
+            data: {
+              root: 'libs/project1',
+            },
+          },
+        },
+      } as ProjectGraph;
+
+      expect(() =>
+        getDependencyConfigs(
+          { project: 'project1', target: 'build' },
+          {},
+          {
+            ...projectGraph,
+            nodes: {
+              project1: {
+                name: 'project1',
+                type: 'app',
+                data: {
+                  root: 'libs/project1',
+                  targets: {
+                    build: {
+                      executor: 'nx:run-commands',
+                      dependsOn: [
+                        {
+                          target: 'build',
+                          projects: ['project1'],
+                          dependencies: true,
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          ['build']
+        )
+      ).toThrow('TargetDependencyConfig cannot specify multiple of');
+    });
+
+    it('should throw error when both projects and dependents are specified', () => {
+      const projectGraph = {
+        dependencies: {},
+        nodes: {
+          project1: {
+            name: 'project1',
+            type: 'app',
+            data: {
+              root: 'libs/project1',
+            },
+          },
+        },
+      } as ProjectGraph;
+
+      expect(() =>
+        getDependencyConfigs(
+          { project: 'project1', target: 'build' },
+          {},
+          {
+            ...projectGraph,
+            nodes: {
+              project1: {
+                name: 'project1',
+                type: 'app',
+                data: {
+                  root: 'libs/project1',
+                  targets: {
+                    build: {
+                      executor: 'nx:run-commands',
+                      dependsOn: [
+                        {
+                          target: 'build',
+                          projects: ['project1'],
+                          dependents: true,
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          ['build']
+        )
+      ).toThrow('TargetDependencyConfig cannot specify multiple of');
+    });
+
+    it('should throw error when both dependencies and dependents are specified', () => {
+      const projectGraph = {
+        dependencies: {},
+        nodes: {
+          project1: {
+            name: 'project1',
+            type: 'app',
+            data: {
+              root: 'libs/project1',
+            },
+          },
+        },
+      } as ProjectGraph;
+
+      expect(() =>
+        getDependencyConfigs(
+          { project: 'project1', target: 'build' },
+          {},
+          {
+            ...projectGraph,
+            nodes: {
+              project1: {
+                name: 'project1',
+                type: 'app',
+                data: {
+                  root: 'libs/project1',
+                  targets: {
+                    build: {
+                      executor: 'nx:run-commands',
+                      dependsOn: [
+                        {
+                          target: 'build',
+                          dependencies: true,
+                          dependents: true,
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          ['build']
+        )
+      ).toThrow('TargetDependencyConfig cannot specify multiple of');
+    });
+  });
+
   describe('expandWildcardDependencies', () => {
     it('should expand wildcard dependencies', () => {
       const allTargets = ['build', 'build:test', 'build:prod', 'build:dev'];
