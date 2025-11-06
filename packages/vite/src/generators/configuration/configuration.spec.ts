@@ -308,7 +308,7 @@ describe('@nx/vite:configuration', () => {
     it.each`
       unitTestRunner | configPath
       ${'none'}      | ${undefined}
-      ${'jest'}      | ${'my-lib/jest.config.ts'}
+      ${'jest'}      | ${'my-lib/jest.config.cts'}
     `(
       'should respect provided unitTestRunner="$unitTestRunner"',
       async ({ unitTestRunner, configPath }) => {

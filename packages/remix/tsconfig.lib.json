@@ -7,7 +7,12 @@
     "resolveJsonModule": true,
     "tsBuildInfoFile": "../../dist/packages/remix/tsconfig.tsbuildinfo"
   },
-  "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "jest.config.ts",
+    "jest.config.cts"
+  ],
   "include": ["**/*.ts", "**/*.json"],
   "references": [
     {

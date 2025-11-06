@@ -753,7 +753,7 @@ function replaceJestConfig(
   // the existing config has to be deleted otherwise the new config won't overwrite it
   const existingJestConfig = joinPathFragments(
     filesDir,
-    `jest.config.${options.js ? 'js' : 'ts'}`
+    `jest.config.${options.js ? 'js' : 'cts'}`
   );
   if (tree.exists(existingJestConfig)) {
     tree.delete(existingJestConfig);
@@ -762,7 +762,7 @@ function replaceJestConfig(
 
   // replace with JS:SWC specific jest config
   generateFiles(tree, filesDir, options.projectRoot, {
-    ext: options.js ? 'js' : 'ts',
+    ext: options.js ? 'js' : 'cts',
     jestPreset,
     js: !!options.js,
     project: options.name,

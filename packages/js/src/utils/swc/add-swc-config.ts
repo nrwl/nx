@@ -2,7 +2,7 @@ import { type Tree } from '@nx/devkit';
 import { join } from 'path';
 
 export const defaultExclude = [
-  'jest.config.ts',
+  'jest.config.[ct]s',
   '.*\\.spec.tsx?$',
   '.*\\.test.tsx?$',
   './src/jest-setup.ts$',
