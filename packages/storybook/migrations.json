@@ -634,8 +634,8 @@
         }
       }
     },
-    "21.2.0": {
-      "version": "21.2.0-beta.3",
+    "22.1.0": {
+      "version": "22.1.0-beta.6",
       "x-prompt": "Do you want to update Storybook to version 10?",
       "implementation": "./src/migrations/update-21-2-0/migrate-to-storybook-10",
       "requires": {
