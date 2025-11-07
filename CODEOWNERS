@@ -152,6 +152,7 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 
 # CI
 /.nx/workflows/** @nrwl/nx-pipelines-reviewers
+mise.toml @nrwl/nx-pipelines-reviewers @FrozenPandaz
 /.github/** @nrwl/nx-pipelines-reviewers
 /.husky/** @nrwl/nx-pipelines-reviewers
 /packages/workspace/src/generators/ci-workflow/** @nrwl/nx-pipelines-reviewers
