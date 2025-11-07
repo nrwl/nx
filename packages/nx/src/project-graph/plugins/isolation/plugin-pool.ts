@@ -55,7 +55,8 @@ const nxPluginWorkerCache: NxPluginWorkerCache = (global[
 
 export async function loadRemoteNxPlugin(
   plugin: PluginConfiguration,
-  root: string
+  root: string,
+  index?: number
 ): Promise<[Promise<LoadedNxPlugin>, () => void]> {
   const cacheKey = JSON.stringify({ plugin, root });
   if (nxPluginWorkerCache.has(cacheKey)) {
@@ -72,15 +73,22 @@ export async function loadRemoteNxPlugin(
   // This allows metrics collection when the daemon is not used
   if (worker.pid) {
     try {
-      const { isDaemonEnabled } = await import('../../../daemon/client/client');
-
-      // Only register if daemon is not enabled - when daemon is enabled,
-      // plugin workers are spawned as children of the daemon and tracked automatically
-      if (!isDaemonEnabled()) {
+      const { isOnDaemon } = await import('../../../daemon/is-on-daemon');
+      /**
+       * We can only register the plugin worker as a subprocess of the main CLI
+       * when the daemon is not used. Additionally, we can't explcitly register
+       * the plugin worker as a subprocess of the daemon, because when on the
+       * daemon, we'd get a different instance of the process metrics service.
+       */
+      if (!isOnDaemon()) {
         const { getProcessMetricsService } = await import(
           '../../../tasks-runner/process-metrics-service'
         );
-        getProcessMetricsService().registerMainCliSubprocess(worker.pid);
+
+        getProcessMetricsService().registerMainCliSubprocess(
+          worker.pid,
+          `${name}${index !== undefined ? ` (${index})` : ''}`
+        );
       }
     } catch {
       // Silently ignore - metrics collection is optional
