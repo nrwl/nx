@@ -8,13 +8,15 @@ use dashmap::DashMap;
 use napi::{Env, JsFunction};
 use napi_derive::napi;
 use parking_lot::Mutex;
-use sysinfo::{Pid, ProcessRefreshKind, System, UpdateKind};
+use sysinfo::{
+    CpuRefreshKind, MemoryRefreshKind, Pid, ProcessRefreshKind, RefreshKind, System, UpdateKind,
+};
 use tracing::error;
 
 use crate::native::metrics::types::{
     BatchMetricsSnapshot, BatchRegistration, CollectorConfig, IndividualTaskRegistration,
     MetricsUpdate, ProcessMetadata, ProcessMetrics, ProcessMetricsSnapshot, ProcessTreeMetrics,
-    SystemInfo,
+    SystemInfo, SystemMetrics,
 };
 use crate::native::utils::time::current_timestamp_millis;
 use napi::threadsafe_function::{
@@ -358,13 +360,8 @@ impl CollectionRunner {
         let daemon_process_metrics: Vec<ProcessMetrics> = discovered_pids
             .into_iter()
             .filter_map(|p| {
-                let metrics = Self::collect_process_info(
-                    sys,
-                    p,
-                    &self.metadata_store,
-                    new_metadata,
-                    None,
-                );
+                let metrics =
+                    Self::collect_process_info(sys, p, &self.metadata_store, new_metadata, None);
                 if let Some(ref m) = metrics {
                     live_pids.insert(m.pid);
                 }
@@ -481,16 +478,27 @@ impl CollectionRunner {
 
         // Single system refresh for ALL processes (one scan, all data)
         let mut sys = self.system.lock();
-        sys.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::All,
-            true, // remove_dead_processes
-            ProcessRefreshKind::nothing()
-                .with_memory()
-                .with_cpu()
-                .with_exe(UpdateKind::OnlyIfNotSet)
-                .with_cmd(UpdateKind::OnlyIfNotSet)
-                .with_cwd(UpdateKind::OnlyIfNotSet),
+        sys.refresh_specifics(
+            RefreshKind::nothing()
+                .with_processes(
+                    ProcessRefreshKind::nothing()
+                        .with_memory()
+                        .with_cpu()
+                        .with_exe(UpdateKind::OnlyIfNotSet)
+                        .with_cmd(UpdateKind::OnlyIfNotSet)
+                        .with_cwd(UpdateKind::OnlyIfNotSet),
+                )
+                .with_cpu(CpuRefreshKind::nothing().with_cpu_usage())
+                .with_memory(MemoryRefreshKind::nothing().with_ram()),
         );
+
+        let system_metrics = SystemMetrics {
+            cpu: sys.global_cpu_usage() as f64,
+            memory: sys.used_memory() as i64,
+            available_memory: sys.available_memory() as i64,
+            swap_used: sys.used_swap() as i64,
+            swap_total: sys.total_swap() as i64,
+        };
 
         let children_map = Self::build_parent_child_map(&sys);
 
@@ -518,16 +526,17 @@ impl CollectionRunner {
         let main_cli_metrics = self.collect_main_cli_metrics(&sys, &mut new_metadata, live_pids);
         let daemon_metrics =
             self.collect_daemon_metrics(&sys, &children_map, &mut new_metadata, live_pids);
-        let tasks =
+        let tasks_metrics =
             self.collect_all_task_metrics(&sys, &children_map, &mut new_metadata, live_pids);
         let batches_metrics =
             self.collect_all_batch_metrics(&sys, &children_map, &mut new_metadata, live_pids);
 
         let metrics_snapshot = ProcessMetricsSnapshot {
             timestamp,
+            system: system_metrics,
             main_cli: main_cli_metrics,
             daemon: daemon_metrics,
-            tasks,
+            tasks: tasks_metrics,
             batches: batches_metrics,
         };
 

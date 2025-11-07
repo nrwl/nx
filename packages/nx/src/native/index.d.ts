@@ -356,6 +356,7 @@ export interface ProcessMetrics {
 /** Organized collection of process metrics with timestamp */
 export interface ProcessMetricsSnapshot {
   timestamp: number
+  system: SystemMetrics
   mainCli?: ProcessTreeMetrics
   daemon?: ProcessTreeMetrics
   tasks: Record<string, Array<ProcessMetrics>>
@@ -407,6 +408,15 @@ export declare const enum SupportedEditor {
 export interface SystemInfo {
   cpuCores: number
   totalMemory: number
+}
+
+/** System metrics (dynamic, changes every collection) */
+export interface SystemMetrics {
+  cpu: number
+  memory: number
+  availableMemory: number
+  swapUsed: number
+  swapTotal: number
 }
 
 export interface Target {
