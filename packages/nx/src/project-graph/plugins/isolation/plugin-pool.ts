@@ -55,7 +55,8 @@ const nxPluginWorkerCache: NxPluginWorkerCache = (global[
 
 export async function loadRemoteNxPlugin(
   plugin: PluginConfiguration,
-  root: string
+  root: string,
+  index?: number
 ): Promise<[Promise<LoadedNxPlugin>, () => void]> {
   const cacheKey = JSON.stringify({ plugin, root });
   if (nxPluginWorkerCache.has(cacheKey)) {
@@ -84,15 +85,10 @@ export async function loadRemoteNxPlugin(
           '../../../tasks-runner/process-metrics-service'
         );
 
-        // name + plugin registration details to differentiate multiple registrations
-        // of the same plugin
-        let alias = name;
-        if (typeof plugin !== 'string') {
-          const { plugin: _pluginName, ...registrationDetails } = plugin;
-          alias += `|${JSON.stringify(registrationDetails)}`;
-        }
-
-        getProcessMetricsService().registerMainCliSubprocess(worker.pid, alias);
+        getProcessMetricsService().registerMainCliSubprocess(
+          worker.pid,
+          `${name}${index !== undefined ? ` (${index})` : ''}`
+        );
       }
     } catch {
       // Silently ignore - metrics collection is optional

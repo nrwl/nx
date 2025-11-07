@@ -108,10 +108,6 @@ export function cleanupPlugins() {
  * Stuff for generic loading
  */
 
-const loadingMethod = isIsolationEnabled()
-  ? loadNxPluginInIsolation
-  : loadNxPlugin;
-
 async function loadDefaultNxPlugins(root = workspaceRoot) {
   performance.mark('loadDefaultNxPlugins:start');
 
@@ -123,10 +119,9 @@ async function loadDefaultNxPlugins(root = workspaceRoot) {
       plugins.map(async (plugin) => {
         performance.mark(`Load Nx Plugin: ${plugin} - start`);
 
-        const [loadedPluginPromise, cleanup] = await loadingMethod(
-          plugin,
-          root
-        );
+        const [loadedPluginPromise, cleanup] = await (isIsolationEnabled()
+          ? loadNxPluginInIsolation(plugin, root)
+          : loadNxPlugin(plugin, root));
 
         cleanupFunctions.push(cleanup);
         const res = await loadedPluginPromise;
@@ -173,10 +168,9 @@ async function loadSpecifiedNxPlugins(
         const pluginPath = typeof plugin === 'string' ? plugin : plugin.plugin;
         performance.mark(`Load Nx Plugin: ${pluginPath} - start`);
 
-        const [loadedPluginPromise, cleanup] = await loadingMethod(
-          plugin,
-          root
-        );
+        const [loadedPluginPromise, cleanup] = await (isIsolationEnabled()
+          ? loadNxPluginInIsolation(plugin, root, index)
+          : loadNxPlugin(plugin, root));
 
         cleanupFunctions.push(cleanup);
         const res = await loadedPluginPromise;
