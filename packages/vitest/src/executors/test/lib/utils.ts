@@ -32,8 +32,8 @@ export async function getOptions(
         Unable to load test config from config file ${viteConfigPath}.
         
         Please make sure that vitest is configured correctly, 
-        or use the @nx/vite:vitest generator to configure it for you.
-        You can read more here: https://nx.dev/nx-api/vite/generators/vitest
+        or use the @nx/vitest:configuration generator to configure it for you.
+        You can read more here: https://nx.dev/nx-api/vitest/generators/configuration
         `
     );
   }
