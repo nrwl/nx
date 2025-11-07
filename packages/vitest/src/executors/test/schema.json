@@ -31,6 +31,5 @@
       "type": "boolean"
     }
   },
-  "required": [],
-  "examplesFile": "../../../docs/test-examples.md"
+  "required": []
 }

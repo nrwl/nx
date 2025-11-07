@@ -285,6 +285,7 @@ describe('@nx/vite/plugin', () => {
     });
   });
 
+  // TODO(Colum): Move this to a vitest specific e2e project when one is created
   describe('react with vitest only', () => {
     const reactVitest = uniq('reactVitest');
 
