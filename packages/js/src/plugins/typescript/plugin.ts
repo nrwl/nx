@@ -110,6 +110,16 @@ let cache: {
   isExternalProjectReference: Record<string, boolean>;
   tsConfigDirNames: Map<string, string>;
   projectBoundaries: Set<string> | null;
+  // Performance optimization caches
+  extensionArrays: Map<string, Extension[]>;
+  picomatchInstances: Map<string, ReturnType<typeof picomatch>>;
+  projectReferencesResults: Map<
+    string,
+    {
+      internal: Record<string, ParsedTsconfigData>;
+      external: Record<string, ParsedTsconfigData>;
+    }
+  >;
 };
 
 function readFromCache<T extends object>(cachePath: string): T {
@@ -181,6 +191,9 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
       isExternalProjectReference: {},
       tsConfigDirNames: new Map(),
       projectBoundaries: null,
+      extensionArrays: new Map(),
+      picomatchInstances: new Map(),
+      projectReferencesResults: new Map(),
     };
     initializeTsConfigCache(configFilePaths, context.workspaceRoot);
     await initializeProjectBoundaries(context.workspaceRoot);
@@ -308,7 +321,12 @@ async function getConfigFileHash(
   const {
     internal: internalReferencedFiles,
     external: externalProjectReferences,
-  } = resolveProjectReferences(tsConfig, workspaceRoot, projectRoot);
+  } = resolveProjectReferences(
+    tsConfig,
+    workspaceRoot,
+    projectRoot,
+    fullConfigPath
+  );
 
   let packageJson = null;
   try {
@@ -394,7 +412,12 @@ function buildTscTargets(
     tsConfig.raw?.['nx']?.addTypecheckTarget !== false
   ) {
     const { internal, external: externalProjectReferences } =
-      resolveProjectReferences(tsConfig, context.workspaceRoot, projectRoot);
+      resolveProjectReferences(
+        tsConfig,
+        context.workspaceRoot,
+        projectRoot,
+        configFilePath
+      );
     internalProjectReferences = internal;
     const targetName = options.typecheck.targetName;
     if (!targets[targetName]) {
@@ -598,16 +621,34 @@ function getInputs(
     ts.Extension.Mjs,
   ];
 
+  const getExtensionsForConfig = (
+    allowJs: boolean,
+    resolveJsonModule: boolean
+  ): Extension[] => {
+    const cacheKey = `${allowJs}:${resolveJsonModule}`;
+    if (cache.extensionArrays.has(cacheKey)) {
+      return cache.extensionArrays.get(cacheKey)!;
+    }
+
+    const extensions = allowJs
+      ? [...allSupportedExtensions]
+      : [...supportedTSExtensions];
+    if (resolveJsonModule) {
+      extensions.push(ts.Extension.Json);
+    }
+
+    cache.extensionArrays.set(cacheKey, extensions);
+    return extensions;
+  };
+
   const normalizeInput = (
     input: string,
     config: ParsedTsconfigData
   ): string[] => {
-    const extensions = config.options.allowJs
-      ? [...allSupportedExtensions]
-      : [...supportedTSExtensions];
-    if (config.options.resolveJsonModule) {
-      extensions.push(ts.Extension.Json);
-    }
+    const extensions = getExtensionsForConfig(
+      config.options.allowJs ?? false,
+      config.options.resolveJsonModule ?? false
+    );
 
     const segments = input.split('/');
     // An "includes" path "foo" is implicitly a glob "foo/**/*" if its last
@@ -653,12 +694,15 @@ function getInputs(
       const normalize = (p: string) => (p.startsWith('./') ? p.slice(2) : p);
       config.raw.exclude.forEach((e: string) => {
         const excludePath = substituteConfigDir(e);
+        const normalizedExcludePath = normalize(excludePath);
         if (
-          !otherFilesInclude.some(
-            (includePath) =>
-              picomatch(normalize(excludePath))(normalize(includePath)) ||
-              picomatch(normalize(includePath))(normalize(excludePath))
-          )
+          !otherFilesInclude.some((includePath) => {
+            const normalizedIncludePath = normalize(includePath);
+            return (
+              getMatcher(normalizedExcludePath)(normalizedIncludePath) ||
+              getMatcher(normalizedIncludePath)(normalizedExcludePath)
+            );
+          })
         ) {
           excludePaths.add(excludePath);
         }
@@ -720,6 +764,16 @@ function getInputs(
   // inputs.push({ externalDependencies });
 
   return inputs;
+}
+
+function getMatcher(pattern: string): ReturnType<typeof picomatch> {
+  let matcher: ReturnType<typeof picomatch> =
+    cache.picomatchInstances.get(pattern);
+  if (!matcher) {
+    matcher = picomatch(pattern);
+    cache.picomatchInstances.set(pattern, matcher);
+  }
+  return matcher;
 }
 
 function getOutputs(
@@ -1029,13 +1083,22 @@ function resolveShallowExternalProjectReferences(
 function resolveProjectReferences(
   tsConfig: ParsedTsconfigData,
   workspaceRoot: string,
-  projectRoot: string
+  projectRoot: string,
+  configFilePath: string
 ): {
   internal: Record<string, ParsedTsconfigData>;
   external: Record<string, ParsedTsconfigData>;
 } {
+  // Check cache first for memoized results
+  const cacheKey = `${workspaceRoot}:${projectRoot}:${configFilePath}`;
+  if (cache.projectReferencesResults.has(cacheKey)) {
+    return cache.projectReferencesResults.get(cacheKey)!;
+  }
+
   if (!tsConfig.projectReferences?.length) {
-    return { internal: {}, external: {} };
+    const emptyResult = { internal: {}, external: {} };
+    cache.projectReferencesResults.set(cacheKey, emptyResult);
+    return emptyResult;
   }
 
   const internalReferences: Record<string, ParsedTsconfigData> = {};
@@ -1087,7 +1150,9 @@ function resolveProjectReferences(
     }
   }
 
-  return { internal: internalReferences, external: externalReferences };
+  const result = { internal: internalReferences, external: externalReferences };
+  cache.projectReferencesResults.set(cacheKey, result);
+  return result;
 }
 
 function hasExternalProjectReferences(
