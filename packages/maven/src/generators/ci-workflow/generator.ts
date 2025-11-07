@@ -19,7 +19,7 @@ function getCiCommands(ci: Schema['ci']): Command[] {
           ],
         },
         {
-          command: `./nx affected --base=$NX_BASE --head=$NX_HEAD -t verify`,
+          command: `./nx affected --base=$NX_BASE --head=$NX_HEAD -t verify-ci`,
         },
         getNxCloudFixCiCommand(),
       ];
@@ -30,7 +30,7 @@ function getCiCommands(ci: Schema['ci']): Command[] {
           comments: [
             `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.`,
           ],
-          command: `./nx affected -t verify`,
+          command: `./nx affected -t verify-ci`,
         },
         getNxCloudFixCiCommand(),
       ];
