@@ -139,9 +139,9 @@ class ProcessMetricsService {
   /**
    * Register a subprocess of the main CLI (e.g., plugin worker)
    */
-  registerMainCliSubprocess(pid: number): void {
+  registerMainCliSubprocess(pid: number, alias?: string): void {
     try {
-      this.collector?.registerMainCliSubprocess(pid);
+      this.collector?.registerMainCliSubprocess(pid, alias);
     } catch {
       // Silent failure - metrics collection is optional
     }

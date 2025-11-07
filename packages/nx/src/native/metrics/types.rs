@@ -74,6 +74,7 @@ pub struct ProcessMetadata {
     pub command: String,
     pub exe_path: String,
     pub cwd: String,
+    pub alias: Option<String>,
 }
 
 /// Process metrics (dynamic, changes every collection)

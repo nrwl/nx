@@ -117,6 +117,8 @@ export declare class ProcessMetricsCollector {
   getSystemInfo(): SystemInfo
   /** Register the main CLI process for metrics collection */
   registerMainCliProcess(pid: number): void
+  /** Register a subprocess of the main CLI for metrics collection */
+  registerMainCliSubprocess(pid: number, alias?: string | undefined | null): void
   /** Register the daemon process for metrics collection */
   registerDaemonProcess(pid: number): void
   /**
@@ -126,8 +128,6 @@ export declare class ProcessMetricsCollector {
   registerTaskProcess(taskId: string, pid: number): void
   /** Register a batch with multiple tasks sharing a worker */
   registerBatch(batchId: string, taskIds: Array<string>, pid: number): void
-  /** Register a subprocess of the main CLI for metrics collection */
-  registerMainCliSubprocess(pid: number): void
   /** Subscribe to push-based metrics notifications from TypeScript */
   subscribe(callback: (err: Error | null, event: MetricsUpdate) => void): void
 }
@@ -343,6 +343,7 @@ export interface ProcessMetadata {
   command: string
   exePath: string
   cwd: string
+  alias?: string
 }
 
 /** Process metrics (dynamic, changes every collection) */
