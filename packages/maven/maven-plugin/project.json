@@ -4,11 +4,8 @@
   "sourceRoot": "packages/maven/maven-plugin",
   "projectType": "library",
   "targets": {
-    "install": {
-      "command": "for i in {1..5}; do ./mvnw install && break || sleep 10; done"
-    },
-    "_install": {
-      "command": "node scripts/run-native-target.js install nx-maven-plugin"
+    "mvn-install-with-retries": {
+      "command": "for i in {1..5}; do npx nx run nx-maven-plugin:mvn-install && break || sleep 10; done"
     }
   },
   "tags": ["maven:dev.nx.maven"],

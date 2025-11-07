@@ -644,6 +644,9 @@ importers:
       '@nx/key':
         specifier: 3.0.0
         version: 3.0.0
+      '@nx/maven':
+        specifier: 22.1.0-rc.5
+        version: 22.1.0-rc.5(nx@22.1.0-rc.5(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.9.2))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
       '@nx/next':
         specifier: 22.5.0-beta.4
         version: 22.5.0-beta.4(62aca7ab769c8039d90e453c2181d9c9)
