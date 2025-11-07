@@ -282,6 +282,12 @@
             </execution>
           </executions>
         </plugin>
+    
+      <plugin>
+        <groupId>dev.nx.maven</groupId>
+        <artifactId>nx-maven-plugin</artifactId>
+        <version>0.0.8</version>
+      </plugin>
     </plugins>
     </pluginManagement>
 
