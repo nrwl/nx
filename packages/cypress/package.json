@@ -49,7 +49,7 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "cypress": ">= 3 < 16"
+    "cypress": ">= 13 < 16"
   },
   "peerDependenciesMeta": {
     "cypress": {
