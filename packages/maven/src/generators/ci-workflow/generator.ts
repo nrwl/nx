@@ -28,7 +28,7 @@ function getCiCommands(ci: Schema['ci']): Command[] {
       return [
         {
           comments: [
-            `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.`,
+            `Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.`,
           ],
           command: `./nx affected -t verify-ci`,
         },
