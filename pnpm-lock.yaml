@@ -4414,6 +4414,9 @@ importers:
       '@nx/plugin':
         specifier: workspace:*
         version: link:../../packages/plugin
+      '@xmldom/xmldom':
+        specifier: ^0.8.10
+        version: 0.8.11
       nx:
         specifier: workspace:*
         version: link:../../packages/nx
