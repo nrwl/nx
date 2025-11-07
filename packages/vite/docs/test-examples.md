@@ -6,7 +6,7 @@ description: This page contains examples for the Vitest @nx/vite:test executor.
 {% callout type="warning" title="Deprecated" %}
 The `@nx/vite:test` executor is deprecated. Please use `@nx/vitest:test` instead. This executor will be removed in Nx 23.
 
-See the [migration guide](/packages/vitest/documents/migrating-from-nx-vite) for more information.
+See the [migration guide](/docs/technologies/test-tools/vitest/guides/migrating-from-nx-vite) for more information.
 {% /callout %}
 
 `project.json`:
