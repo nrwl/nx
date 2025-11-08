@@ -173,6 +173,12 @@ export default ESLintUtils.RuleCreator(
 
     const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
 
+    function isWorkspacePackage(packageName: string): boolean {
+      return Object.values(projectGraph.nodes).some(
+        (node) => node.data.name === packageName
+      );
+    }
+
     function getDependencySection(node: AST.JSONProperty): string | undefined {
       // Check if this node is a dependency section itself
       const directSection = (node.key as JSONLiteral)?.value as string;
@@ -214,7 +220,8 @@ export default ESLintUtils.RuleCreator(
             missingDeps.forEach((d) => {
               if (
                 dependencySection === 'peerDependencies' &&
-                peerDepsVersionStrategy === 'workspace'
+                peerDepsVersionStrategy === 'workspace' &&
+                isWorkspacePackage(d)
               ) {
                 projPackageJsonDeps[d] = WORKSPACE_VERSION_WILDCARD;
               } else {
@@ -288,6 +295,7 @@ export default ESLintUtils.RuleCreator(
       if (
         dependencySection === 'peerDependencies' &&
         peerDepsVersionStrategy === 'workspace' &&
+        isWorkspacePackage(packageName) &&
         packageRange !== WORKSPACE_VERSION_WILDCARD
       ) {
         context.report({
