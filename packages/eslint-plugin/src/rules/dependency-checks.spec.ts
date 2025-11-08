@@ -2760,6 +2760,266 @@ describe('Dependency checks (eslint)', () => {
         }"
       `);
     });
+
+    it('should only use workspace:* for workspace packages when peerDepsVersionStrategy is workspace', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        peerDependencies: {},
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './libs/libb/package.json': JSON.stringify(
+          { name: '@mycompany/libb' },
+          null,
+          2
+        ),
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        { peerDepsVersionStrategy: 'workspace' },
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+            libb: {
+              name: 'libb',
+              type: 'lib',
+              data: {
+                root: 'libs/libb',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [
+              { source: 'liba', target: 'libb', type: 'static' },
+              { source: 'liba', target: 'npm:external1', type: 'static' },
+            ],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, ['libb', 'npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+
+      // Apply fix
+      const content = JSON.stringify(packageJson, null, 2);
+      const result =
+        content.slice(0, failures[0].fix.range[0]) +
+        failures[0].fix.text +
+        content.slice(failures[0].fix.range[1]);
+
+      // Workspace package (libb) should use workspace:*
+      // External package (external1) should use installed version
+      const resultObj = JSON.parse(result);
+      expect(resultObj.peerDependencies['@mycompany/libb']).toBe('workspace:*');
+      expect(resultObj.peerDependencies.external1).toBe('~16.1.2');
+    });
+
+    it('should not use workspace:* for external packages even when peerDepsVersionStrategy is workspace', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        peerDependencies: {},
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        { peerDepsVersionStrategy: 'workspace' },
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+          },
+        },
+        {
+          liba: [createFile(`libs/liba/src/main.ts`, ['npm:external1'])],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+
+      // Apply fix
+      const content = JSON.stringify(packageJson, null, 2);
+      const result =
+        content.slice(0, failures[0].fix.range[0]) +
+        failures[0].fix.text +
+        content.slice(failures[0].fix.range[1]);
+
+      // External package should NOT use workspace:*, should use installed version
+      expect(result).toMatchInlineSnapshot(`
+        "{
+          "name": "@mycompany/liba",
+          "peerDependencies": {
+            "external1": "~16.1.2"
+          }
+        }"
+      `);
+    });
+
+    it('should not report version mismatch for external packages when peerDepsVersionStrategy is workspace', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        peerDependencies: {
+          external1: '~16.1.2',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        { peerDepsVersionStrategy: 'workspace' },
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+          },
+        },
+        {
+          liba: [createFile(`libs/liba/src/main.ts`, ['npm:external1'])],
+        }
+      );
+
+      // Should not report any error for external packages with correct version
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should report version mismatch for workspace packages when peerDepsVersionStrategy is workspace', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        peerDependencies: {
+          '@mycompany/libb': '^1.0.0',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './libs/libb/package.json': JSON.stringify(
+          { name: '@mycompany/libb' },
+          null,
+          2
+        ),
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        { peerDepsVersionStrategy: 'workspace' },
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+            libb: {
+              name: 'libb',
+              type: 'lib',
+              data: {
+                root: 'libs/libb',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'libb', type: 'static' }],
+          },
+        },
+        {
+          liba: [createFile(`libs/liba/src/main.ts`, ['libb'])],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain('workspace:*');
+
+      // Apply fix
+      const content = JSON.stringify(packageJson, null, 2);
+      const result =
+        content.slice(0, failures[0].fix.range[0]) +
+        failures[0].fix.text +
+        content.slice(failures[0].fix.range[1]);
+
+      // Workspace package should use workspace:*
+      expect(result).toMatchInlineSnapshot(`
+        "{
+          "name": "@mycompany/liba",
+          "peerDependencies": {
+            "@mycompany/libb": "workspace:*"
+          }
+        }"
+      `);
+    });
   });
 });
 
