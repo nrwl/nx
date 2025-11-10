@@ -7,10 +7,7 @@
   "// targets": "to see all targets run: nx show project graph-migrate --web",
   "targets": {
     "typecheck": {
-      "dependsOn": [
-        "^typecheck",
-        "nx:build-native"
-      ]
+      "dependsOn": ["^typecheck", "nx:build-native"]
     }
   }
 }

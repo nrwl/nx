@@ -43,10 +43,7 @@
       }
     },
     "typecheck": {
-      "dependsOn": [
-        "^typecheck",
-        "nx:build-native"
-      ]
+      "dependsOn": ["^typecheck", "nx:build-native"]
     }
   },
   "implicitDependencies": ["!devkit"]
