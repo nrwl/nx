@@ -41,6 +41,12 @@
           "buildTarget": "graph-ui-project-details:build-storybook:ci"
         }
       }
+    },
+    "typecheck": {
+      "dependsOn": [
+        "^typecheck",
+        "nx:build-native"
+      ]
     }
   },
   "implicitDependencies": ["!devkit"]
