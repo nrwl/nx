@@ -29,9 +29,9 @@ export default async function migrateToStorybook10(tree: Tree) {
   }
 
   const contents = readFileSync(pathToAiInstructions);
-  tree.write('MIGRATE_STORYBOOK_10.md', contents);
+  tree.write('ai-migrations/MIGRATE_STORYBOOK_10.md', contents);
   return [
     `Storybook 10 requires Storybook Configs to use ESM.`,
-    `We created 'MIGRATE_STORYBOOK_10.md' with instructions for an AI Agent to convert CJS Storybook Configs to ESM in your workspace.`,
+    `We created 'ai-migrations/MIGRATE_STORYBOOK_10.md' with instructions for an AI Agent to convert CJS Storybook Configs to ESM in your workspace.`,
   ];
 }
