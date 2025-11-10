@@ -7,9 +7,9 @@ import { clean, coerce, major } from 'semver';
 import {
   vitestCoverageIstanbulVersion,
   vitestCoverageV8Version,
-  vitestV1CoverageIstanbulVersion,
-  vitestV1CoverageV8Version,
-  vitestV1Version,
+  vitestV3CoverageIstanbulVersion,
+  vitestV3CoverageV8Version,
+  vitestV3Version,
   vitestV2CoverageIstanbulVersion,
   vitestV2CoverageV8Version,
   vitestV2Version,
@@ -26,12 +26,12 @@ type VitestDependenciesVersions = {
 export async function getVitestDependenciesVersionsToInstall(
   tree: Tree
 ): Promise<VitestDependenciesVersions> {
-  if (await isVitestV1(tree)) {
+  if (await isVitestV3(tree)) {
     return {
-      vitest: vitestV1Version,
-      vitestUi: vitestV1Version,
-      vitestCoverageV8: vitestV1CoverageV8Version,
-      vitestCoverageIstanbul: vitestV1CoverageIstanbulVersion,
+      vitest: vitestV3Version,
+      vitestUi: vitestV3Version,
+      vitestCoverageV8: vitestV3CoverageV8Version,
+      vitestCoverageIstanbul: vitestV3CoverageIstanbulVersion,
     };
   } else if (await isVitestV2(tree)) {
     return {
@@ -51,12 +51,12 @@ export async function getVitestDependenciesVersionsToInstall(
   }
 }
 
-export async function isVitestV1(tree: Tree) {
+export async function isVitestV3(tree: Tree) {
   let installedVitestVersion = await getInstalledVitestVersionFromGraph();
   if (!installedVitestVersion) {
     installedVitestVersion = getInstalledVitestVersion(tree);
   }
-  return major(installedVitestVersion) === 1;
+  return major(installedVitestVersion) === 3;
 }
 
 export async function isVitestV2(tree: Tree) {
