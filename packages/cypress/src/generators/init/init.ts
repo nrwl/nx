@@ -12,7 +12,11 @@ import {
 } from '@nx/devkit';
 import { addPlugin as _addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodesV2 } from '../../plugins/plugin';
-import { cypressVersion, nxVersion } from '../../utils/versions';
+import {
+  cypressVersion,
+  getInstalledCypressVersion,
+  nxVersion,
+} from '../../utils/versions';
 import { Schema } from './schema';
 
 function setupE2ETargetDefaults(tree: Tree) {
@@ -40,14 +44,18 @@ function updateDependencies(tree: Tree, options: Schema) {
   const tasks: GeneratorCallback[] = [];
   tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/cypress'], []));
 
+  const devDependencies: Record<string, string> = {
+    ['@nx/cypress']: nxVersion,
+  };
+  if (!getInstalledCypressVersion(tree)) {
+    devDependencies.cypress = cypressVersion;
+  }
+
   tasks.push(
     addDependenciesToPackageJson(
       tree,
       {},
-      {
-        ['@nx/cypress']: nxVersion,
-        cypress: cypressVersion,
-      },
+      devDependencies,
       undefined,
       options.keepExistingVersions
     )
