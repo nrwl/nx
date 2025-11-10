@@ -6,7 +6,7 @@
   "targets": {
     "build": {
       "command": "node ./scripts/copy-readme.js vitest",
-      "outputs": ["{workspaceRoot}/build/packages/vitest/README.md"]
+      "outputs": ["{workspaceRoot}/dist/packages/vitest/README.md"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",

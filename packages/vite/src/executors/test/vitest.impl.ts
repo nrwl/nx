@@ -14,9 +14,10 @@ export async function* vitestExecutor(
     `The '@nx/vite:test' executor is deprecated. Please use '@nx/vitest:test' instead. This executor will be removed in Nx 23.`
   );
 
-  const { vitestExecutor: actualVitestExecutor } = ensurePackage<
-    typeof import('@nx/vitest')
-  >('@nx/vitest', nxVersion);
+  ensurePackage('@nx/vitest', nxVersion);
+  const { vitestExecutor: actualVitestExecutor } = await import(
+    '@nx/vitest/executors'
+  );
 
   yield* actualVitestExecutor(options, context);
 }

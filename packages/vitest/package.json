@@ -33,6 +33,10 @@
       "types": "./generators.d.ts",
       "default": "./generators.js"
     },
+    "./executors": {
+      "types": "./executors.d.ts",
+      "default": "./executors.js"
+    },
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",

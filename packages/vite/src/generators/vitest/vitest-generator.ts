@@ -15,10 +15,8 @@ export async function vitestGenerator(
     `The '@nx/vite:vitest' generator is deprecated. Please use '@nx/vitest:configuration' instead. This generator will be removed in Nx 23.`
   );
 
-  const { configurationGenerator } = ensurePackage<typeof import('@nx/vitest')>(
-    '@nx/vitest',
-    nxVersion
-  );
+  ensurePackage('@nx/vitest', nxVersion);
+  const { configurationGenerator } = await import('@nx/vitest/generators');
 
   return await configurationGenerator(tree, schema, hasPlugin);
 }
