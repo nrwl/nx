@@ -19,7 +19,6 @@ class NxProjectAnalyzer(
   private val workspaceRoot: File,
   private val nxTargetFactory: NxTargetFactory,
   private val coordinatesMap: Map<String, String>,
-  private val mavenCommand: String,
   private val pathFormatter: PathFormatter,
 ) {
   private val objectMapper = ObjectMapper()
@@ -54,7 +53,7 @@ class NxProjectAnalyzer(
     log.info("Basic config creation took ${configCreationTime}ms for project: ${project.artifactId}")
 
     val targetAnalysisStart = System.currentTimeMillis()
-    val (nxTargets, targetGroups) = nxTargetFactory.createNxTargets(mavenCommand, project)
+    val (nxTargets, targetGroups) = nxTargetFactory.createNxTargets(project)
     val targetAnalysisTime = System.currentTimeMillis() - targetAnalysisStart
     log.info("Target analysis took ${targetAnalysisTime}ms for project: ${project.artifactId}")
 
