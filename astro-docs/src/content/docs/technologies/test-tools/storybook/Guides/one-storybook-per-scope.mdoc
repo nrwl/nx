@@ -88,15 +88,15 @@ Let's assume in this case that all our libraries are using Angular.
 
 Let's generate three Angular libraries, one for each scope, and let's call them `storybook-host-client`, `storybook-host-admin`, and `storybook-host-shared`. We can do this by running the following commands:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:lib libs/storybook-host-client
 ```
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:lib libs/storybook-host-admin
 ```
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:lib libs/storybook-host-shared
 ```
 
@@ -104,15 +104,15 @@ nx g @nx/angular:lib libs/storybook-host-shared
 
 Now, we need to generate Storybook configuration for all these new libraries. We don't want to generate `stories` for these libraries, so we can run the following commands:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/storybook:configuration storybook-host-client --uiFramework=@storybook/angular --interactionTests=true
 ```
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/storybook:configuration storybook-host-admin --uiFramework=@storybook/angular --interactionTests=true
 ```
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/storybook:configuration storybook-host-shared --uiFramework=@storybook/angular --interactionTests=true
 ```
 

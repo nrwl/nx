@@ -21,7 +21,8 @@ fun processTask(
     workspaceRoot: String,
     externalNodes: MutableMap<String, ExternalNode>,
     dependencies: MutableSet<Dependency>,
-    targetNameOverrides: Map<String, String>
+    targetNameOverrides: Map<String, String>,
+    gitIgnoreClassifier: GitIgnoreClassifier
 ): MutableMap<String, Any?> {
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
@@ -51,7 +52,9 @@ fun processTask(
   }
 
   // process inputs
-  val inputs = getInputsForTask(dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes)
+  val inputs =
+      getInputsForTask(
+          dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, gitIgnoreClassifier)
   if (!inputs.isNullOrEmpty()) {
     logger.info("${task}: processed ${inputs.size} inputs")
     target["inputs"] = inputs
@@ -89,10 +92,12 @@ fun getGradlewCommand(): String {
 /**
  * Parse task and get inputs for this task
  *
+ * @param dependsOnTasks set of tasks this task depends on
  * @param task task to process
  * @param projectRoot the project root path
  * @param workspaceRoot the workspace root path
  * @param externalNodes map of external nodes
+ * @param gitIgnoreClassifier classifier to determine if files match gitignore patterns
  * @return a list of inputs including external dependencies, null if empty or an error occurred
  */
 fun getInputsForTask(
@@ -100,82 +105,80 @@ fun getInputsForTask(
     task: Task,
     projectRoot: String,
     workspaceRoot: String,
-    externalNodes: MutableMap<String, ExternalNode>? = null
+    externalNodes: MutableMap<String, ExternalNode>? = null,
+    gitIgnoreClassifier: GitIgnoreClassifier
 ): List<Any>? {
-  fun getDependentTasksOutputFile(file: File): String {
-    val relativePathToWorkspaceRoot =
-        file.path.substring(workspaceRoot.length + 1) // also remove the file separator
-    val dependentTasksOutputFiles =
-        if (file.name.contains('.') ||
-            (file.exists() &&
-                file.isFile)) { // if file does not exists, file.isFile would always be false
-          relativePathToWorkspaceRoot
-        } else {
-          "$relativePathToWorkspaceRoot${File.separator}**${File.separator}*"
-        }
-    return dependentTasksOutputFiles
-  }
-
   return try {
-    val mappedInputsIncludeExternal: MutableList<Any> = mutableListOf()
+    val inputs = mutableListOf<Any>()
+    val externalDependencies = mutableListOf<String>()
 
-    val dependsOnOutputs: MutableSet<File> = mutableSetOf()
-    val combinedDependsOn: Set<Task> = dependsOnTasks ?: getDependsOnTask(task)
-    combinedDependsOn.forEach { dependsOnTask ->
-      dependsOnTask.outputs.files.files.forEach { file ->
-        if (file.path.startsWith(workspaceRoot + File.separator)) {
-          dependsOnOutputs.add(file)
-          val dependentTasksOutputFiles = getDependentTasksOutputFile(file)
-          mappedInputsIncludeExternal.add(
-              mapOf("dependentTasksOutputFiles" to dependentTasksOutputFiles))
+    // Collect outputs from dependent tasks
+    val tasksToProcess = dependsOnTasks ?: getDependsOnTask(task)
+    tasksToProcess.forEach { dependentTask ->
+      dependentTask.outputs.files.files.forEach { outputFile ->
+        if (isFileInWorkspace(outputFile, workspaceRoot)) {
+          val relativePath = toRelativePathOrGlob(outputFile, workspaceRoot)
+          inputs.add(mapOf("dependentTasksOutputFiles" to relativePath))
         }
       }
     }
 
-    val externalDependencies = mutableListOf<String>()
-    val buildDir = task.project.layout.buildDirectory.get().asFile
+    // Process each tasks's input files from the tooling API
+    task.inputs.files.forEach { inputFile ->
+      val relativePath = replaceRootInPath(inputFile.path, projectRoot, workspaceRoot)
 
-    task.inputs.files.forEach { file ->
-      val path: String = file.path
-      val pathWithReplacedRoot = replaceRootInPath(path, projectRoot, workspaceRoot)
-
-      if (pathWithReplacedRoot != null) {
-        val isInTaskOutputBuildDir = file.path.startsWith(buildDir.path + File.separator)
-        if (!isInTaskOutputBuildDir) {
-          mappedInputsIncludeExternal.add(pathWithReplacedRoot)
-        } else {
-          val isInDependsOnOutputs =
-              dependsOnOutputs.any { outputFile ->
-                file == outputFile || file.path.startsWith(outputFile.path + File.separator)
-              }
-          if (!isInDependsOnOutputs) {
-            val dependentTasksOutputFile = getDependentTasksOutputFile(file)
-            mappedInputsIncludeExternal.add(
-                mapOf("dependentTasksOutputFiles" to dependentTasksOutputFile))
+      when {
+        // File is outside workspace - treat as external dependency
+        relativePath == null -> {
+          try {
+            val externalDep =
+                getExternalDepFromInputFile(inputFile.path, externalNodes, task.logger)
+            externalDep?.let { externalDependencies.add(it) }
+          } catch (e: Exception) {
+            task.logger.info("Error resolving external dependency for ${inputFile.path}: $e")
           }
         }
-      } else {
-        try {
-          val externalDep = getExternalDepFromInputFile(path, externalNodes, task.logger)
-          externalDep?.let { externalDependencies.add(it) }
-        } catch (e: Exception) {
-          task.logger.info("${task}: get external dependency error $e")
+
+        // File matches gitignore pattern - treat as dependentTasksOutputFiles (build artifact)
+        gitIgnoreClassifier.isIgnored(inputFile) -> {
+          val relativePathOrGlob = toRelativePathOrGlob(inputFile, workspaceRoot)
+          inputs.add(mapOf("dependentTasksOutputFiles" to relativePathOrGlob))
+        }
+
+        // Regular source file - add as direct input
+        else -> {
+          inputs.add(relativePath)
         }
       }
     }
 
+    // Step 3: Add external dependencies if any
     if (externalDependencies.isNotEmpty()) {
-      mappedInputsIncludeExternal.add(mapOf("externalDependencies" to externalDependencies))
+      inputs.add(mapOf("externalDependencies" to externalDependencies))
     }
 
-    if (mappedInputsIncludeExternal.isNotEmpty()) {
-      return mappedInputsIncludeExternal
-    }
-    return null
+    inputs.ifEmpty { null }
   } catch (e: Exception) {
     task.logger.info("Error getting inputs for ${task.path}: ${e.message}")
     task.logger.debug("Stack trace:", e)
     null
+  }
+}
+
+/** Checks if a file is within the workspace. */
+private fun isFileInWorkspace(file: File, workspaceRoot: String): Boolean {
+  return file.path.startsWith(workspaceRoot + File.separator)
+}
+
+/** Converts a file to a relative path. If it's a directory, returns a glob pattern. */
+private fun toRelativePathOrGlob(file: File, workspaceRoot: String): String {
+  val relativePath = file.path.substring(workspaceRoot.length + 1)
+  val isFile = file.name.contains('.') || (file.exists() && file.isFile)
+
+  return if (isFile) {
+    relativePath
+  } else {
+    "$relativePath${File.separator}**${File.separator}*"
   }
 }
 

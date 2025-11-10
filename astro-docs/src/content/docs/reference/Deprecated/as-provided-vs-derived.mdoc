@@ -28,7 +28,7 @@ You can use [Nx Console](/docs/getting-started/editor-setup) for an intuitive ex
 
 To mitigate the impact of this change of direction, Nx will prompt you when running most generators until Nx 20. We know changing these habits may take time so this prompt allows you to choose the previous behavior.
 
-```{% title="nx g lib my-lib --directory=shared/my-lib" frame="none" %}
+```text {% title="nx g lib my-lib --directory=shared/my-lib" frame="none" %}
 ✔ Which generator would you like to use? · @nx/node:library
 
 NX  Generating @nx/node:library
@@ -86,7 +86,7 @@ This makes app or lib generators behave in the following way:
 - `nx g app my-app --directory=nested` creates a new application named `nested-my-app` in the `/demos/nested/my-app` folder
 - `nx g lib my-lib --directory=shared/ui` creates a new library named `shared-ui-my-lib` in the `/packages/shared/ui/my-lib` folder
 
-If you accidentally generate a project in the wrong folder, use the [move generator](/docs/reference/core-api/workspace/generators/move) to move it to the correct location.
+If you accidentally generate a project in the wrong folder, use the [move generator](/docs/reference/workspace/generators#move) to move it to the correct location.
 
 ## Code Generators
 

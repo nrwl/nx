@@ -11,6 +11,15 @@
       "version": "21.2.0-beta.3",
       "description": "Remove deprecated Storybook addon dependencies",
       "implementation": "./src/migrations/update-21-2-0/remove-addon-dependencies"
+    },
+    "update-22-1-0-migrate-storybook-v10": {
+      "cli": "nx",
+      "version": "22.1.0-beta.3",
+      "requires": {
+        "storybook": ">=10.0.0"
+      },
+      "description": "Update workspce to use Storybok v10",
+      "implementation": "./src/migrations/update-22-1-0/migrate-to-storybook-10"
     }
   },
   "packageJsonUpdates": {
@@ -529,7 +538,7 @@
       }
     },
     "21.1.0": {
-      "version": "21.2.0-beta.3",
+      "version": "22.1.0-beta.3",
       "packages": {
         "@storybook/angular": {
           "version": "^9.0.5",
@@ -621,6 +630,108 @@
         },
         "@storybook/web-components-vite": {
           "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.1.0": {
+      "version": "22.1.0-beta.6",
+      "x-prompt": "Do you want to update Storybook to version 10?",
+      "implementation": "./src/migrations/update-21-2-0/migrate-to-storybook-10",
+      "requires": {
+        "storybook": ">=9.0.0 <10.0.0"
+      },
+      "packages": {
+        "@storybook/angular": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "storybook": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@storybook/addon-onboarding": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-themes": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/builder-webpack5": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/core-webpack": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/html": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/html-vite": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/nextjs": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/preact": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/preact-vite": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react-vite": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react-webpack5": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/server": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/server-webpack5": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/svelte": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/svelte-vite": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/sveltekit": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/vue3": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/vue3-vite": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/web-components": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/web-components-vite": {
+          "version": "^10.0.0",
           "alwaysAddToPackageJson": false
         }
       }

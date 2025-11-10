@@ -99,6 +99,10 @@ import {
   POST_TASKS_EXECUTION,
   PRE_TASKS_EXECUTION,
 } from '../message-types/run-tasks-execution-hooks';
+import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
+import { deserialize } from 'node:v8';
+import { isJsonMessage } from '../../utils/consume-messages-from-socket';
+import { isV8SerializerEnabled } from '../is-v8-serializer-enabled';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -259,7 +263,10 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
-      env,
+      env:
+        process.env.NX_USE_V8_SERIALIZER !== 'false'
+          ? structuredClone(process.env)
+          : env,
       tasks,
       taskGraph,
     });
@@ -297,7 +304,9 @@ export class DaemonClient {
       ).listen(
         (message) => {
           try {
-            const parsedMessage = JSON.parse(message);
+            const parsedMessage = isJsonMessage(message)
+              ? JSON.parse(message)
+              : deserialize(Buffer.from(message, 'binary'));
             callback(null, parsedMessage);
           } catch (e) {
             callback(e, null);
@@ -316,12 +325,57 @@ export class DaemonClient {
     };
   }
 
-  processInBackground(requirePath: string, data: any): Promise<any> {
-    return this.sendToDaemonViaQueue({
-      type: 'PROCESS_IN_BACKGROUND',
-      requirePath,
-      data,
+  async registerProjectGraphRecomputationListener(
+    callback: (
+      error: Error | null | 'closed',
+      data: {
+        projectGraph: ProjectGraph;
+        sourceMaps: ConfigurationSourceMaps;
+      } | null
+    ) => void
+  ): Promise<UnregisterCallback> {
+    let messenger: DaemonSocketMessenger | undefined;
+
+    await this.queue.sendToQueue(() => {
+      messenger = new DaemonSocketMessenger(
+        connect(getFullOsSocketPath())
+      ).listen(
+        (message) => {
+          try {
+            const parsedMessage = isJsonMessage(message)
+              ? JSON.parse(message)
+              : deserialize(Buffer.from(message, 'binary'));
+            callback(null, parsedMessage);
+          } catch (e) {
+            callback(e, null);
+          }
+        },
+        () => {
+          callback('closed', null);
+        },
+        (err) => callback(err, null)
+      );
+      return messenger.sendMessage({
+        type: REGISTER_PROJECT_GRAPH_LISTENER,
+      });
     });
+
+    return () => {
+      messenger?.close();
+    };
+  }
+
+  processInBackground(requirePath: string, data: any): Promise<any> {
+    return this.sendToDaemonViaQueue(
+      {
+        type: 'PROCESS_IN_BACKGROUND',
+        requirePath,
+        data,
+        // This method is sometimes passed data that cannot be serialized with v8
+        // so we force JSON serialization here
+      },
+      'json'
+    );
   }
 
   recordOutputsHash(outputs: string[], hash: string): Promise<any> {
@@ -512,9 +566,12 @@ export class DaemonClient {
     });
   }
 
-  private async sendToDaemonViaQueue(messageToDaemon: Message): Promise<any> {
+  private async sendToDaemonViaQueue(
+    messageToDaemon: Message,
+    force?: 'v8' | 'json'
+  ): Promise<any> {
     return this.queue.sendToQueue(() =>
-      this.sendMessageToDaemon(messageToDaemon)
+      this.sendMessageToDaemon(messageToDaemon, force)
     );
   }
 
@@ -550,16 +607,6 @@ export class DaemonClient {
           return this.currentReject(daemonProcessException(err.toString()));
         }
 
-        if (err.message.startsWith('LOCK-FILES-CHANGED')) {
-          // retry the current message
-          // we cannot send it via the queue because we are in the middle of processing
-          // a message from the queue
-          return this.sendMessageToDaemon(this.currentMessage).then(
-            this.currentResolve,
-            this.currentReject
-          );
-        }
-
         let error: any;
         if (err.message.startsWith('connect ENOENT')) {
           error = daemonProcessException('The Daemon Server is not running');
@@ -580,18 +627,27 @@ export class DaemonClient {
     );
   }
 
-  private async sendMessageToDaemon(message: Message): Promise<any> {
+  private async sendMessageToDaemon(
+    message: Message,
+    force?: 'v8' | 'json'
+  ): Promise<any> {
     if (this._daemonStatus == DaemonStatus.DISCONNECTED) {
       this._daemonStatus = DaemonStatus.CONNECTING;
 
+      let daemonPid: number | null = null;
       if (!(await this.isServerAvailable())) {
-        await this.startInBackground();
+        daemonPid = await this.startInBackground();
       }
       this.setUpConnection();
       this._daemonStatus = DaemonStatus.CONNECTED;
       this._daemonReady();
+
+      daemonPid ??= getDaemonProcessIdSync();
+      await this.registerDaemonProcessWithMetricsService(daemonPid);
     } else if (this._daemonStatus == DaemonStatus.CONNECTING) {
       await this._waitForDaemonReady;
+      const daemonPid = getDaemonProcessIdSync();
+      await this.registerDaemonProcessWithMetricsService(daemonPid);
     }
     // An open promise isn't enough to keep the event loop
     // alive, so we set a timeout here and clear it when we hear
@@ -604,10 +660,27 @@ export class DaemonClient {
       this.currentResolve = resolve;
       this.currentReject = reject;
 
-      this.socketMessenger.sendMessage(message);
+      this.socketMessenger.sendMessage(message, force);
     }).finally(() => {
       clearTimeout(keepAlive);
     });
+  }
+
+  private async registerDaemonProcessWithMetricsService(
+    daemonPid: number | null
+  ) {
+    if (!daemonPid) {
+      return;
+    }
+
+    try {
+      const { getProcessMetricsService } = await import(
+        '../../tasks-runner/process-metrics-service'
+      );
+      getProcessMetricsService().registerDaemonProcess(daemonPid);
+    } catch {
+      // don't error, this is a secondary concern that should not break task execution
+    }
   }
 
   private retryMessageAfterNewDaemonStarts() {
@@ -637,13 +710,15 @@ export class DaemonClient {
 
   private handleMessage(serializedResult: string) {
     try {
-      performance.mark('json-parse-start');
-      const parsedResult = JSON.parse(serializedResult);
-      performance.mark('json-parse-end');
+      performance.mark('result-parse-start');
+      const parsedResult = isJsonMessage(serializedResult)
+        ? JSON.parse(serializedResult)
+        : deserialize(Buffer.from(serializedResult, 'binary'));
+      performance.mark('result-parse-end');
       performance.measure(
         'deserialize daemon response',
-        'json-parse-start',
-        'json-parse-end'
+        'result-parse-start',
+        'result-parse-end'
       );
       if (parsedResult.error) {
         if (
@@ -659,7 +734,7 @@ export class DaemonClient {
         performance.measure(
           'total for sendMessageToDaemon()',
           'sendMessageToDaemon-start',
-          'json-parse-end'
+          'result-parse-end'
         );
         return this.currentResolve(parsedResult);
       }

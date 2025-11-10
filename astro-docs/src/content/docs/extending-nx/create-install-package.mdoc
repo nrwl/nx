@@ -17,7 +17,7 @@ These packages are used to set up a new project in some form.
 
 Customizing your initial project setup is already possible with an [Nx Preset generator](/docs/extending-nx/create-preset). By creating and shipping a generator named `preset` in your Nx plugin, you can then pass it via the `--preset` flag to the `create-nx-workspace` command:
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace --preset my-plugin
 ```
 
@@ -29,13 +29,13 @@ There are a few methods to create a package that will work with `create-nx-works
 
 You can setup a new Nx plugin workspace and immediately pass the `--create-package-name`:
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-plugin my-plugin --create-package-name create-my-plugin
 ```
 
 Alternatively, if you already have an existing Nx plugin workspace, you can run the following generator to set up a new create package:
 
-```shell {% frame="none" %}
+```shell
 nx g create-package create-my-plugin --project my-plugin
 ```
 
@@ -118,7 +118,7 @@ _(If you don't have such a `local-registry` target, refer to the following [docs
 
 By running
 
-```shell {% frame="none" %}
+```shell
 npx nx local-registry
 ```
 
@@ -130,7 +130,7 @@ Note, after terminating the terminal window where the `nx local-registry` comman
 
 Next, you can **publish** your packages to your new local registry. All of the generated packages can use `nx release` to publish whatever is in your `build` output folder, so you can simply run:
 
-```shell {% frame="none" %}
+```shell
 npx nx run-many --targets build
 npx nx release version 1.0.0
 npx nx release publish --tag latest
@@ -138,7 +138,7 @@ npx nx release publish --tag latest
 
 Once the packages are published, you should be able to test the behavior of your "create package" as follows:
 
-```shell {% frame="none" %}
+```shell
 npx create-my-plugin test-workspace
 ```
 
@@ -146,7 +146,7 @@ npx create-my-plugin test-workspace
 
 When setting up the workspace, you should also have gotten a `my-plugin-e2e` package. This package contains the e2e tests for your plugin, and can be run with the following command:
 
-```shell {% frame="none" %}
+```shell
 npx nx e2e my-plugin-e2e
 ```
 

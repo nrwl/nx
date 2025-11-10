@@ -296,6 +296,33 @@ export async function detectPlugins(
     detectedPlugins.add('@nx/gradle');
   }
 
+  const dotnetProjectGlobs = ['**/*.csproj', '**/*.fsproj', '**/*.vbproj'];
+  const dotnetFiles = globWithWorkspaceContextSync(process.cwd(), [
+    ...dotnetProjectGlobs,
+  ]);
+  if (dotnetFiles.length > 0) {
+    detectedPlugins.add('@nx/dotnet');
+  }
+
+  let mvnwFiles = globWithWorkspaceContextSync(process.cwd(), [
+    'mvnw',
+    'mvnw.cmd',
+    'pom.xml',
+    '**/mvnw',
+    '**/mvnw.cmd',
+    '**/pom.xml',
+  ]);
+  if (mvnwFiles.length > 0) {
+    detectedPlugins.add('@nx/maven');
+  }
+
+  let dockerFiles = ['Dockerfile'].concat(
+    globWithWorkspaceContextSync(process.cwd(), ['**/Dockerfile'])
+  );
+  if (dockerFiles.some((f) => existsSync(f))) {
+    detectedPlugins.add('@nx/docker');
+  }
+
   // Remove existing plugins
   for (const plugin of detectedPlugins) {
     if (currentPlugins.has(plugin)) {

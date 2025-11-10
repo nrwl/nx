@@ -3,6 +3,7 @@ import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  logger,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
@@ -37,6 +38,7 @@ import {
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 import { updateJestConfig } from '../../utils/jest-config-util';
+import { isNext14, isNext15, isNext16 } from '../../utils/version-utils';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
@@ -73,7 +75,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   });
   tasks.push(nextTask);
 
-  createApplicationFiles(host, options);
+  await createApplicationFiles(host, options);
 
   addProject(host, options);
 
@@ -83,14 +85,14 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     await addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
   }
 
+  const lintTask = await addLinting(host, options);
+  tasks.push(lintTask);
+
   const e2eTask = await addE2e(host, options);
   tasks.push(e2eTask);
 
   const jestTask = await addJest(host, options);
   tasks.push(jestTask);
-
-  const lintTask = await addLinting(host, options);
-  tasks.push(lintTask);
 
   if (options.style === 'tailwind') {
     const tailwindTask = await setupTailwindGenerator(host, {
@@ -98,6 +100,14 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     });
 
     tasks.push(tailwindTask);
+  }
+
+  // LESS is not currrently supported with Turbopack
+  // Turbopack is default in Next 16, set to webpack
+  if (options.style === 'less' && (await isNext16(host))) {
+    logger.warn(
+      "NX LESS is only supported with Webpack bundler. Please ensure you run your application with '--webpack'."
+    );
   }
 
   const styledTask = addStyleDependencies(host, {

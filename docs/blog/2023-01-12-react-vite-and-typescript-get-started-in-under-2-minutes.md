@@ -95,7 +95,7 @@ And in a matter of milliseconds, your app should be served at [http://localhost:
 }
 ```
 
-Internally this delegates to `nx serve`, where `serve` is the [Nx target](/reference/glossary#target) to be invoked. You can find those in the `project.json`:
+Internally this delegates to `nx serve`, where `serve` is the [Nx target](/docs/reference/glossary#target) to be invoked. You can find those in the `project.json`:
 
 ```json {% fileName="project.json" %}
 {
@@ -135,7 +135,7 @@ This is where you can see all the targets available for a given project, and you
 - `options` - this is where you can pass options to the `executor`
 - `configurations` - allows you to create different versions of the `options` . You control which configuration is used by passing it via the `--configuration=production` flag to your commands. Also, note the `defaultConfiguration`.
 
-You can go more in-depth if you want on the [Nx docs](/concepts/executors-and-configurations).
+You can go more in-depth if you want on the [Nx docs](/docs/concepts/executors-and-configurations).
 
 ## Building the app
 
@@ -200,7 +200,7 @@ This might look weird initially, but basically, we run the `e2e` target (see `e2
 
 By default, these tests run in headless mode, but you can pass `--watch` to run it interactively with the Cypress test runner such that the tests get re-executed whenever we change our source.
 
-> _Want Cypress Component testing? There's an Nx generator that can help set that up. Check out the docs:_ [_/nx-api/react/generators/cypress-component-configuration_](/technologies/react/api/generators/cypress-component-configuration)
+> _Want Cypress Component testing? There's an Nx generator that can help set that up. Check out the docs:_ [_/nx-api/react/generators/cypress-component-configuration_](/docs/technologies/react/generators)
 
 ## Linting
 
@@ -253,11 +253,11 @@ Nx is known for its caching that helps optimize the speed in monorepos. Caching 
 
 On every run, Nx compares that hash against a local cache folder. If the hash exists, Nx restores the command line output and potential artifacts (JS, CSS,… files) produced by a previous run. This helps speed up computation because you don't run it if you don't need to.
 
-> _See Nx the docs for more info:_ [_/concepts/how-caching-works_](/concepts/how-caching-works)
+> _See Nx the docs for more info:_ [_/concepts/how-caching-works_](/docs/concepts/how-caching-works)
 
 While this obviously makes a lot of sense in a monorepo, it can also help **speed up single-project workspaces**. Most projects have multiple targets, such as `build`, `test`, `lint`. These can be cached! Imagine you have a PR where you change some `*.spec.ts` files because you add a test or fix some. Your CI script probably runs all the targets (`build`, `test`, `lint`) all the time. And it should totally do that. But you could avoid the `build` step because your spec file should not influence that outcome. As such, it could be restored from the cache. `test` needs to run and potentially also `lint` if you run linting also for spec files.
 
-You can fine-tune what goes into the cache for each command. [More on the Nx docs](/recipes/running-tasks/configure-inputs)
+You can fine-tune what goes into the cache for each command. [More on the Nx docs](/docs/guides/tasks--caching/configure-inputs)
 
 ## Hidden gem: Easily modularize your app
 
@@ -397,7 +397,7 @@ It becomes even more interesting if you select the "Group by folder" checkbox as
 
 Scaling a software product is more than just the initial structuring and modularization. It consists of a constant ongoing process of ensuring modules stay in shape and don't contain any undesired cross-references or circular dependencies. You could leverage the Nx graph to verify that visually, but that doesn't scale.
 
-To help with that, Nx has a built-in [module boundary lint rule](/features/enforce-module-boundaries). Projects can be assigned "tags", like `type:domain`, `type:utils`, `type:shared` and `domain:products`, `domain:orders`, `domain:auth`. These tags can be assigned in the `project.json`, like
+To help with that, Nx has a built-in [module boundary lint rule](/docs/features/enforce-module-boundaries). Projects can be assigned "tags", like `type:domain`, `type:utils`, `type:shared` and `domain:products`, `domain:orders`, `domain:auth`. These tags can be assigned in the `project.json`, like
 
 ```json
 {
@@ -446,7 +446,7 @@ If you're curious, you can read more [here](/blog/mastering-the-project-boundari
 
 ## Hidden gem: Just run what changed
 
-In such a modular structure (as shown above) where your code is organized in smaller modules/libraries, it is very common that a given team member just works within a single domain area. Hence, very often PRs just touch a subset of the entire set of libraries. Nx comes with a backed-in command that allows you to take advantage of that on CI, using the so-called "[affected commands](/ci/features/affected)".
+In such a modular structure (as shown above) where your code is organized in smaller modules/libraries, it is very common that a given team member just works within a single domain area. Hence, very often PRs just touch a subset of the entire set of libraries. Nx comes with a backed-in command that allows you to take advantage of that on CI, using the so-called "[affected commands](/docs/features/ci-features/affected)".
 
 Let's say we make a change in the `product-detail` library of our application. This would affect all other libraries that depend on it. You can also visualize it by running
 
@@ -470,7 +470,7 @@ npx nx affected:test
 
 ## Hidden gem: A dedicated Editor extension
 
-If you are not the "command line interface type" developer and you'd rather prefer something integrated within your IDE, then there's good news. The Nx core team also ships a dedicated VSCode extension: [Nx Console](/getting-started/editor-setup).
+If you are not the "command line interface type" developer and you'd rather prefer something integrated within your IDE, then there's good news. The Nx core team also ships a dedicated VSCode extension: [Nx Console](/docs/getting-started/editor-setup).
 
 It has a dedicated view within VSCode to trigger common commands, browse the workspace structure and even inline render the graph.
 
@@ -500,7 +500,7 @@ npx nx migrate latest
 
 Nx gathers the currently installed packages and updates them to the latest version. If a package comes with Nx migration scripts, Nx collects them in a `migrations.json` file. You can inspect and then run them. This dramatically helps to keep your project tooling up to date.
 
-Read more about how [Nx migrations work](/features/automate-updating-dependencies) on the docs.
+Read more about how [Nx migrations work](/docs/features/automate-updating-dependencies) on the docs.
 
 ## Using CRA? Automatically migrate to Vite + Nx
 
@@ -512,7 +512,7 @@ If you're currently on a [CRA](https://create-react-app.dev/) setup, you can eas
 npx nx@latest init
 ```
 
-Read more on the Nx docs: [/recipes/adopting-nx/adding-to-existing-project](/recipes/adopting-nx/adding-to-existing-project)
+Read more on the Nx docs: [/recipes/adopting-nx/adding-to-existing-project](/docs/guides/adopting-nx/adding-to-existing-project)
 
 > _If for some reason you cannot migrate to Vite just yet, you can pass_ `_--vite=false_` _to keep a Webpack-based setup for now._
 
@@ -528,7 +528,7 @@ And let us know what you think :)
 
 ## Learn more
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)

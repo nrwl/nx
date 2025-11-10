@@ -150,7 +150,7 @@ describe('Remix Application', () => {
         expectTargetsToBeCorrect(tree, '.');
 
         expect(tree.exists('remix.config.js')).toBeFalsy();
-        expect(tree.read('jest.config.ts', 'utf-8')).toMatchSnapshot();
+        expect(tree.read('jest.config.cts', 'utf-8')).toMatchSnapshot();
         expect(tree.read('test-setup.ts', 'utf-8')).toMatchSnapshot();
         expect(
           tree.read('tests/routes/_index.spec.tsx', 'utf-8')
@@ -368,7 +368,7 @@ describe('Remix Application', () => {
 
         expect(tree.exists(`${appDir}/remix.config.js`)).toBeFalsy();
         expect(
-          tree.read(`${appDir}/jest.config.ts`, 'utf-8')
+          tree.read(`${appDir}/jest.config.cts`, 'utf-8')
         ).toMatchSnapshot();
         expect(tree.read(`${appDir}/test-setup.ts`, 'utf-8')).toMatchSnapshot();
       });
@@ -543,6 +543,8 @@ describe('Remix Application', () => {
           "exclude": [
             "out-tsc",
             "dist",
+            "jest.config.ts",
+            "jest.config.cts",
             "tests/**/*.spec.ts",
             "tests/**/*.test.ts",
             "tests/**/*.spec.tsx",
@@ -551,7 +553,6 @@ describe('Remix Application', () => {
             "tests/**/*.test.js",
             "tests/**/*.spec.jsx",
             "tests/**/*.test.jsx",
-            "jest.config.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "eslint.config.js",
@@ -724,10 +725,11 @@ describe('Remix Application', () => {
 
       expect(tree.exists('myapp/tsconfig.spec.json')).toBeTruthy();
       expect(tree.exists('myapp/tests/routes/_index.spec.tsx')).toBeTruthy();
-      expect(tree.exists('myapp/jest.config.ts')).toBeTruthy();
-      expect(tree.read('myapp/jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+      expect(tree.exists('myapp/jest.config.cts')).toBeTruthy();
+      expect(tree.read('myapp/jest.config.cts', 'utf-8'))
+        .toMatchInlineSnapshot(`
         "/* eslint-disable */
-        import { readFileSync } from 'fs';
+        const { readFileSync } = require('fs')
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
@@ -737,7 +739,7 @@ describe('Remix Application', () => {
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;
 
-        export default {
+        module.exports = {
           displayName: '@proj/myapp',
           preset: '../jest.preset.js',
           transform: {

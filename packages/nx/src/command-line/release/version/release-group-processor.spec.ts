@@ -19,6 +19,7 @@ jest.doMock('./project-logger', () => ({
   // Don't slow down or add noise to unit tests output unnecessarily
   ProjectLogger: class ProjectLogger {
     buffer() {}
+
     flush() {}
   },
 }));
@@ -406,6 +407,194 @@ describe('ReleaseGroupProcessor', () => {
       `);
     });
 
+    it('should only bump projects based on their own specifiers if no dependencies have resolved specifiers and file:// ref is used and preserveLocalDependencyProtocols is false', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectJ@1.0.0 [js]
+              -> depends on projectK(file://../projectK)
+            - projectK@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // Only projectJ has a specifier, it is not depended on by anything else
+          if (projectName === 'projectJ') return 'minor';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // Called for each project
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        2
+      );
+
+      // Only projectJ is bumped
+      expect(readJson(tree, 'projectJ/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectK": "2.0.0",
+          },
+          "name": "projectJ",
+          "version": "1.1.0",
+        }
+      `);
+      expect(readJson(tree, 'projectK/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectK",
+          "version": "2.0.0",
+        }
+      `);
+    });
+
+    it('should only bump projects based on their own specifiers if no dependencies have resolved specifiers and file:// ref is used and preserveLocalDependencyProtocols is true', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectJ@1.0.0 [js]
+              -> depends on projectK(file://../projectK)
+            - projectK@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              preserveLocalDependencyProtocols: true,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // Only projectJ has a specifier, it is not depended on by anything else
+          if (projectName === 'projectJ') return 'minor';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // Called for each project
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        2
+      );
+
+      // Only projectJ is bumped
+      expect(readJson(tree, 'projectJ/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectK": "file://../projectK",
+          },
+          "name": "projectJ",
+          "version": "1.1.0",
+        }
+      `);
+      expect(readJson(tree, 'projectK/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectK",
+          "version": "2.0.0",
+        }
+      `);
+    });
+
+    it('should bump dependents when their dependencies have been bumped and they are linked via file:// ref and preserveLocalDependencyProtocols is false', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectJ@1.0.0 [js]
+              -> depends on projectK(file://../projectK)
+            - projectK@2.0.0 [js]
+              -> depends on projectL(file://../projectL)
+            - projectL@3.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // Only projectJ has a specifier, it is not depended on by anything else
+          if (projectName === 'projectJ') return 'patch';
+          if (projectName === 'projectL') return 'patch';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // Called for each project
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        3
+      );
+
+      // projectL is patch bumped
+      expect(readJson(tree, 'projectL/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectL",
+          "version": "3.0.1",
+        }
+      `);
+      // projectK is patch bumped, and its dependency on projectL is bumped
+      expect(readJson(tree, 'projectK/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectL": "3.0.1",
+          },
+          "name": "projectK",
+          "version": "2.0.1",
+        }
+      `);
+      // projectJ has its dep on projectK updated to projectK's new patch bumped version as a result of its dependency on projectL updating and projectJ's own version is patch bumped
+      expect(readJson(tree, 'projectJ/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectK": "2.0.1",
+          },
+          "name": "projectJ",
+          "version": "1.0.1",
+        }
+      `);
+    });
+
     it('should handle projects with mixed dependency types', async () => {
       const { nxReleaseConfig, projectGraph, filters } =
         await createNxReleaseConfigAndPopulateWorkspace(
@@ -706,7 +895,7 @@ describe('ReleaseGroupProcessor', () => {
     });
 
     describe('updateDependents', () => {
-      it('should bump projects if their dependencies have resolved specifiers, even when they have not resolved their own specifiers, when updateDependents is set to its default of "auto" - SINGLE LEVEL DEPENDENCY', async () => {
+      it('should bump projects if their dependencies have resolved specifiers, even when they have not resolved their own specifiers, when updateDependents is set to its default of "always" - SINGLE LEVEL DEPENDENCY', async () => {
         mockDeriveSpecifierFromConventionalCommits.mockImplementation(
           (_, __, ___, ____, { name: projectName }) => {
             // Only projectK has a specifier. This should cause both itself and projectJ to be bumped.
@@ -750,7 +939,7 @@ describe('ReleaseGroupProcessor', () => {
         `);
       });
 
-      it('should bump projects if their dependencies have resolved specifiers, even when they have not resolved their own specifiers, when updateDependents is set to its default of "auto" - TRANSITIVE DEPENDENCY', async () => {
+      it('should bump projects if their dependencies have resolved specifiers, even when they have not resolved their own specifiers, when updateDependents is set to its default of "always" - TRANSITIVE DEPENDENCY', async () => {
         // This time bump projectL which should cause a cascade of bumps across projectK and projectJ
         mockDeriveSpecifierFromConventionalCommits.mockImplementation(
           (_, __, ___, ____, { name: projectName }) => {
@@ -795,7 +984,7 @@ describe('ReleaseGroupProcessor', () => {
         `);
       });
 
-      it('should bump projects if their dependencies have resolved specifiers, even when they have not resolved their own specifiers, when updateDependents is set to its default of "auto" - TRANSITIVE DEPENDENCY MANY LEVELS AWAY', async () => {
+      it('should bump projects if their dependencies have resolved specifiers, even when they have not resolved their own specifiers, when updateDependents is set to its default of "always" - TRANSITIVE DEPENDENCY MANY LEVELS AWAY', async () => {
         const { nxReleaseConfig, projectGraph, filters } =
           await createNxReleaseConfigAndPopulateWorkspace(
             tree,
@@ -901,7 +1090,7 @@ describe('ReleaseGroupProcessor', () => {
         `);
       });
 
-      it('should bump projects by the maximum of their own specifier and the updateDependents bump but not both, when updateDependents is set to its default of "auto"', async () => {
+      it('should bump projects by the maximum of their own specifier and the updateDependents bump but not both, when updateDependents is set to its default of "always"', async () => {
         mockDeriveSpecifierFromConventionalCommits.mockImplementation(
           (_, __, ___, ____, { name: projectName }) => {
             // projectL has a specifier, this will cause projectK and projectJ to need to be bumped.
@@ -1091,6 +1280,198 @@ describe('ReleaseGroupProcessor', () => {
           }
         `);
       });
+    });
+
+    it('should bump projects within same group when updateDependents is explicitly set to "auto"', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectJ@1.0.0 [js]
+              -> depends on projectK
+            - projectK@2.0.0 [js]
+              -> depends on projectL
+            - projectL@3.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              updateDependents: 'auto', // Explicitly set to 'auto'
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          if (projectName === 'projectK') return 'minor';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        3
+      );
+
+      // projectJ is bumped because updateDependents is 'auto' and both are in same group
+      expect(readJson(tree, 'projectJ/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectK": "2.1.0",
+          },
+          "name": "projectJ",
+          "version": "1.0.1",
+        }
+      `);
+
+      expect(readJson(tree, 'projectK/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectL": "3.0.0",
+          },
+          "name": "projectK",
+          "version": "2.1.0",
+        }
+      `);
+
+      expect(readJson(tree, 'projectL/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectL",
+          "version": "3.0.0",
+        }
+      `);
+    });
+
+    it('should NOT bump projects across different release groups when updateDependents is set to "auto" and a filter is applied', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          group1 ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+              -> depends on projectB
+          group2 ({ "projectsRelationship": "independent" }):
+            - projectB@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              updateDependents: 'auto', // 'auto' respects group boundaries when filtering
+            },
+          },
+          mockResolveCurrentVersion,
+          {
+            projects: ['projectB'], // Only release projectB in group2
+          }
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // Only projectB in group2 has changes
+          if (projectName === 'projectB') return 'minor';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        1
+      );
+
+      // projectA in group1 is NOT bumped because updateDependents is 'auto' and projectA is not in the filtered group
+      expect(readJson(tree, 'projectA/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectB": "2.0.0",
+          },
+          "name": "projectA",
+          "version": "1.0.0",
+        }
+      `);
+
+      // projectB in group2 is bumped based on its own specifier
+      expect(readJson(tree, 'projectB/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectB",
+          "version": "2.1.0",
+        }
+      `);
+    });
+
+    it('should bump projects across different release groups when updateDependents is explicitly set to "always"', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          group1 ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+              -> depends on projectB
+          group2 ({ "projectsRelationship": "independent" }):
+            - projectB@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              updateDependents: 'always', // Explicitly set to 'always' to propagate across groups
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // Only projectB in group2 has changes
+          if (projectName === 'projectB') return 'minor';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        2
+      );
+
+      // projectA in group1 is bumped because updateDependents is 'always' (propagates across groups)
+      expect(readJson(tree, 'projectA/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectB": "2.1.0",
+          },
+          "name": "projectA",
+          "version": "1.0.1",
+        }
+      `);
+
+      // projectB in group2 is bumped based on its own specifier
+      expect(readJson(tree, 'projectB/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectB",
+          "version": "2.1.0",
+        }
+      `);
     });
   });
 

@@ -23,8 +23,8 @@ import {
 import { updateJestTestMatch } from '../../utils/testing-config-utils';
 import {
   eslintVersion,
-  getPackageVersion,
   isbotVersion,
+  nxVersion,
   reactDomVersion,
   reactVersion,
   remixVersion,
@@ -191,7 +191,7 @@ export async function remixApplicationGeneratorInternal(
     if (options.unitTestRunner === 'vitest') {
       const { vitestGenerator, createOrEditViteConfig } = ensurePackage<
         typeof import('@nx/vite')
-      >('@nx/vite', getPackageVersion(tree, 'nx'));
+      >('@nx/vite', nxVersion);
       const vitestTask = await vitestGenerator(tree, {
         uiFramework: 'react',
         project: options.projectName,
@@ -219,10 +219,7 @@ export async function remixApplicationGeneratorInternal(
       tasks.push(vitestTask);
     } else {
       const { configurationGenerator: jestConfigurationGenerator } =
-        ensurePackage<typeof import('@nx/jest')>(
-          '@nx/jest',
-          getPackageVersion(tree, 'nx')
-        );
+        ensurePackage<typeof import('@nx/jest')>('@nx/jest', nxVersion);
       const jestTask = await jestConfigurationGenerator(tree, {
         project: options.projectName,
         setupFile: 'none',
@@ -258,7 +255,7 @@ export async function remixApplicationGeneratorInternal(
   if (options.linter !== 'none') {
     const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
       '@nx/eslint',
-      getPackageVersion(tree, 'nx')
+      nxVersion
     );
     const { addIgnoresToLintConfig } = await import(
       '@nx/eslint/src/generators/utils/eslint-file'
@@ -328,7 +325,7 @@ export default {...nxPreset};
 
       updateJestTestMatch(
         tree,
-        'jest.config.ts',
+        'jest.config.cts',
         '<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
       );
     }

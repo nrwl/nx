@@ -597,11 +597,11 @@ describe('detox application generator', () => {
 
       expect(tree.exists('apps/my-app-e2e/test-setup.ts')).toBeTruthy();
       const detoxrc = readJson(tree, 'apps/my-app-e2e/.detoxrc.json');
-      expect(detoxrc.testRunner.args.config).toEqual('./jest.config.ts');
-      expect(tree.read('apps/my-app-e2e/jest.config.ts', 'utf-8'))
+      expect(detoxrc.testRunner.args.config).toEqual('./jest.config.cts');
+      expect(tree.read('apps/my-app-e2e/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/* eslint-disable */
-        import { readFileSync } from 'fs';
+        const { readFileSync } = require('fs');
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
@@ -611,7 +611,7 @@ describe('detox application generator', () => {
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;
 
-        export default {
+        module.exports = {
           preset: "../../jest.preset",
           rootDir: ".",
           testMatch: [

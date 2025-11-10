@@ -1254,6 +1254,22 @@
               ]
             },
             {
+              "name": ".NET",
+              "id": "dotnet",
+              "itemList": [
+                {
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/dotnet/dotnet-plugin"
+                },
+                {
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/dotnet/dotnet-plugin"
+                }
+              ]
+            },
+            {
               "name": "Module Federation",
               "id": "module-federation",
               "description": "Advanced guides to utilize Module Federation with Nx.",
@@ -2579,12 +2595,6 @@
               "id": "flaky-tasks",
               "description": "Learn how Nx Cloud is able to automatically identify flaky tasks and re-run them for you.",
               "file": "nx-cloud/features/flaky-tasks"
-            },
-            {
-              "name": "Explain With AI",
-              "id": "explain-with-ai",
-              "description": "Learn how to use AI to explain cryptic failure logs into actionable errors.",
-              "file": "nx-cloud/features/explain-with-ai"
             },
             {
               "name": "GitHub Integration",

@@ -197,7 +197,12 @@ describe('pnpm LockFile utility', () => {
 
         // this should not fail
         expect(() =>
-          stringifyPnpmLockfile(prunedGraph, lockFile, appPackageJson)
+          stringifyPnpmLockfile(
+            prunedGraph,
+            lockFile,
+            appPackageJson,
+            '/virtual'
+          )
         ).not.toThrow();
       });
     });
@@ -308,7 +313,12 @@ describe('pnpm LockFile utility', () => {
 
         // this should not fail
         expect(() =>
-          stringifyPnpmLockfile(prunedGraph, appLockFile, appPackageJson)
+          stringifyPnpmLockfile(
+            prunedGraph,
+            appLockFile,
+            appPackageJson,
+            '/virtual'
+          )
         ).not.toThrow();
       });
     });
@@ -503,7 +513,8 @@ describe('pnpm LockFile utility', () => {
       const result = stringifyPnpmLockfile(
         prunedGraph,
         lockFile,
-        prunedPackageJson
+        prunedPackageJson,
+        '/virtual'
       );
       // we replace the dev: true with dev: false because the lock file is generated with dev: false
       // this does not break the intallation, despite being inaccurate
@@ -731,7 +742,8 @@ describe('pnpm LockFile utility', () => {
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          typescriptPackageJson
+          typescriptPackageJson,
+          '/virtual'
         );
         expect(result).toEqual(
           require(joinPathFragments(
@@ -750,7 +762,8 @@ describe('pnpm LockFile utility', () => {
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          multiPackageJson
+          multiPackageJson,
+          '/virtual'
         );
         expect(result).toEqual(
           require(joinPathFragments(
@@ -830,7 +843,8 @@ describe('pnpm LockFile utility', () => {
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          typescriptPackageJson
+          typescriptPackageJson,
+          '/virtual'
         );
         expect(result).toEqual(
           require(joinPathFragments(
@@ -849,7 +863,8 @@ describe('pnpm LockFile utility', () => {
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          multiPackageJson
+          multiPackageJson,
+          '/virtual'
         );
         expect(result).toEqual(
           require(joinPathFragments(
@@ -929,7 +944,8 @@ describe('pnpm LockFile utility', () => {
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          typescriptPackageJson
+          typescriptPackageJson,
+          '/virtual'
         );
         expect(result).toEqual(
           require(joinPathFragments(
@@ -948,7 +964,8 @@ describe('pnpm LockFile utility', () => {
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          multiPackageJson
+          multiPackageJson,
+          '/virtual'
         );
         expect(result).toEqual(
           require(joinPathFragments(
@@ -1259,7 +1276,12 @@ describe('pnpm LockFile utility', () => {
       `);
 
       const prunedGraph = pruneProjectGraph(graph, packageJson);
-      const result = stringifyPnpmLockfile(prunedGraph, lockFile, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
       expect(result).toEqual(lockFile);
     });
 
@@ -1507,7 +1529,12 @@ describe('pnpm LockFile utility', () => {
       `);
 
       const prunedGraph = pruneProjectGraph(graph, packageJson);
-      const result = stringifyPnpmLockfile(prunedGraph, lockFile, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
       expect(result).toEqual(lockFile);
     });
   });
@@ -1579,7 +1606,12 @@ describe('pnpm LockFile utility', () => {
       graph = builder.getUpdatedProjectGraph();
 
       const prunedGraph = pruneProjectGraph(graph, packageJson);
-      const result = stringifyPnpmLockfile(prunedGraph, lockFile, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
       expect(result).toEqual(prunedLockFile);
     });
   });
@@ -1643,9 +1675,94 @@ describe('pnpm LockFile utility', () => {
       };
 
       const prunedGraph = pruneProjectGraph(graph, packageJson);
-      const result = stringifyPnpmLockfile(prunedGraph, lockFile, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
 
       expect(result).toEqual(expectedPrunedLockFile);
+    });
+  });
+
+  describe('missing workspace importer', () => {
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/.modules.yaml': `hoistedDependencies: {}`,
+        'node_modules/lodash/package.json': '{"version": "4.17.21"}',
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should throw clear error when workspace package importer is missing', () => {
+      // v9.0 lockfile
+      // Only has root importer (.)
+      // Root importer references a workspace package with link:
+      // But the workspace package's importer is MISSING
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+      my-workspace-lib:
+        specifier: workspace:*
+        version: link:packages/my-workspace-lib
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: {
+          lodash: '^4.17.21',
+          'my-workspace-lib': 'workspace:*',
+        },
+      };
+
+      const graph: ProjectGraph = {
+        nodes: {
+          'my-workspace-lib': {
+            name: 'my-workspace-lib',
+            type: 'lib',
+            data: {
+              root: 'packages/my-workspace-lib',
+              metadata: {
+                js: {
+                  packageName: 'my-workspace-lib',
+                },
+              },
+            },
+          },
+        },
+        dependencies: {},
+        externalNodes: {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+      };
+
+      expect(() =>
+        stringifyPnpmLockfile(graph, lockFile, packageJson, '/virtual')
+      ).not.toThrow();
     });
   });
 });

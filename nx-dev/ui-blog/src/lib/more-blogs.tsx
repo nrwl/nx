@@ -19,9 +19,7 @@ export function MoreBlogs({ blogs }: MoreBlogsProps) {
               year: 'numeric',
             }
           );
-          const tags = post.tags.map(
-            (tag) => `${tag.substring(0, 1).toUpperCase()}${tag.substring(1)}`
-          );
+          const tags = post.tags;
           return (
             <Link
               href={`/blog/${post.slug}`}

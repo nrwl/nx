@@ -187,7 +187,7 @@ export function mockReactAppGenerator(tree: Tree, userAppName?: string): Tree {
         "../../node_modules/@nx/react/typings/image.d.ts"
       ],
       "exclude": [
-        "jest.config.ts",
+        "jest.config.cts",
         "**/*.spec.ts",
         "**/*.test.ts",
         "**/*.spec.tsx",
@@ -276,7 +276,7 @@ export function mockReactMixedAppGenerator(tree: Tree): Tree {
         "../../node_modules/@nx/react/typings/image.d.ts"
       ],
       "exclude": [
-        "jest.config.ts",
+        "jest.config.cts",
         "**/*.spec.ts",
         "**/*.test.ts",
         "**/*.spec.tsx",
@@ -536,7 +536,7 @@ export function mockReactLibNonBuildableJestTestRunnerGenerator(
         "../../node_modules/@nx/react/typings/image.d.ts"
       ],
       "exclude": [
-        "jest.config.ts",
+        "jest.config.cts",
         "src/**/*.spec.ts",
         "src/**/*.test.ts",
         "src/**/*.spec.tsx",

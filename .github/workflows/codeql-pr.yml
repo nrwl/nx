@@ -46,6 +46,8 @@ jobs:
           build-mode: none
         - language: rust
           build-mode: none
+        - language: csharp
+          build-mode: autobuild
         # CodeQL supports the following values keywords for 'language': 'actions', 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
         # Use 'java-kotlin' to analyze code written in Java, Kotlin or both
@@ -57,6 +59,9 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+    - name: Setup Language Tooling
+      uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
 
     # Add any setup steps before running the `github/codeql-action/init` action.
     # This includes steps like installing compilers or runtimes (`actions/setup-node`

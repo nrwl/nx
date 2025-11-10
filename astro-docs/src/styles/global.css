@@ -416,7 +416,7 @@ iframe[src*='youtube'] {
 }
 
 table code {
-  word-wrap: break-word;
+  white-space: nowrap;
 }
 
 [role='tablist'] {

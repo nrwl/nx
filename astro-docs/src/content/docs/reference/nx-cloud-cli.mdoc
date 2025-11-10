@@ -19,7 +19,7 @@ This command is the same as running `nx login`.
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud login [nxCloudUrl]
 ```
 
@@ -64,7 +64,7 @@ Revoke a personal access token from your local environment. This will remove the
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud logout
 ```
 
@@ -74,7 +74,7 @@ To provision more than one personal access token for multiple contexts (e.g. hom
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud configure
 ```
 
@@ -87,13 +87,13 @@ npx nx-cloud configure
 
 #### Examples
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN
 ```
 
 To configure multiple tokens for different instances of the Nx Cloud app:
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN --nx-cloud-url=https://nx-cloud.my-domain.app
 ```
 
@@ -105,7 +105,7 @@ If you are connecting to Nx Cloud with a workspace that is version 19.6 or lower
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud convert-to-nx-cloud-id
 ```
 
@@ -115,7 +115,7 @@ At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tell
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud start-ci-run
 ```
 
@@ -135,7 +135,7 @@ If you accidentally run this command locally, remove all generated marker files 
 | `--assignment-rules`            | string  | Path to the [assignment rules configuration](/docs/reference/nx-cloud/assignment-rules#using-assignment-rules-with-manual-dte) for manual distribution.                                   |         |
 | `--require-explicit-completion` | boolean | Disable automatic completion monitoring and require explicit `nx-cloud complete-ci-run`                                                                                                   | `false` |
 | `--stop-agents-after`           | string  | Comma-separated list of targets after which agents should terminate                                                                                                                       |         |
-| `--stop-agents-on-failure`      | boolean | Terminate all agents when a command fails                                                                                                                                                 | `true`  |
+| `--stop-agents-on-failure`      | boolean | Terminate all agents when a command fails. This flag does not interrupt the command itself. To cancel the command on failure use [nxBail](/docs/reference/nx-commands)                    | `true`  |
 | `--use-dte-by-default`          | boolean | Configure Nx to distribute all commands by default                                                                                                                                        | `true`  |
 | `--with-env-vars`               | string  | Comma-separated list of environment variables to pass to Nx Agents                                                                                                                        |         |
 | `--fix-tasks`                   | string  | Comma-separated glob patterns for tasks to enable [AI self-healing](/docs/features/ci-features/self-healing-ci). Supports negation with `!` prefix                                        |         |
@@ -266,7 +266,7 @@ Enable [AI-powered self-healing](/docs/features/ci-features/self-healing-ci) for
 
 Examples:
 
-```shell {% frame="none" %}
+```shell
 # Enable for lint and format tasks only
 npx nx-cloud start-ci-run --fix-tasks="*lint*,*format*" --no-distribution
 
@@ -286,7 +286,7 @@ Automatically apply [AI-generated fixes](/docs/features/ci-features/self-healing
 
 Examples:
 
-```shell {% frame="none" %}
+```shell
 # Auto-apply fixes for linting tasks only
 npx nx-cloud start-ci-run --auto-apply-fixes="*lint*" --no-distribution
 
@@ -304,13 +304,13 @@ individual commands as follows:
 
 Explicitly enable distribution:
 
-```shell {% frame="none"%}
+```shell
 nx affected -t build --agents
 ```
 
 Explicitly disable distribution:
 
-```shell {% frame="none"%}
+```shell
 nx affected -t build --no-agents
 ```
 
@@ -319,18 +319,44 @@ nx affected -t build --no-agents
 
 Explicitly enable distribution:
 
-```shell {% frame="none"%}
+```shell
 nx affected -t build --dte
 ```
 
 Explicitly disable distribution:
 
-```shell {% frame="none"%}
+```shell
 nx affected -t build --no-dte
 ```
 
 {% /tabitem %}
 {% /tabs %}
+
+### `nx-cloud start-agent`
+
+Starts an agent process for [manual distributed task execution](/docs/guides/nx-cloud/manual-dte). The agent waits for Nx Cloud to assign tasks that have been distributed by the main CI job via `start-ci-run`. For automatic agent management, use [Nx Agents](/docs/features/ci-features/distribute-task-execution) instead.
+
+**Usage:**
+
+```shell
+npx nx-cloud start-agent
+```
+
+#### Options
+
+| Option      | Type    | Description                          | Default |
+| ----------- | ------- | ------------------------------------ | ------- |
+| `--verbose` | boolean | Enable verbose logging for debugging | `false` |
+
+#### Environment Variables
+
+Use the `NX_AGENT_NAME` environment variable to assign a name to the agent for identification in logs and the Nx Cloud UI:
+
+```shell
+NX_AGENT_NAME=agent-1 npx nx-cloud start-agent
+```
+
+For complete examples across different CI providers, see the [Manual Distributed Task Execution guide](/docs/guides/nx-cloud/manual-dte).
 
 ### `nx-cloud stop-all-agents`
 
@@ -342,7 +368,7 @@ and terminate associated agents automatically.
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud stop-all-agents
 ```
 
@@ -352,7 +378,7 @@ Explicitly complete a CI run when using `--require-explicit-completion` with `st
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud complete-ci-run
 ```
 
@@ -362,7 +388,7 @@ Remove temporary marker files created by `start-ci-run` if accidentally run loca
 
 **Usage:**
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud cleanup
 ```
 
@@ -370,6 +396,6 @@ npx nx-cloud cleanup
 
 You can get help for any command by adding the `--help` flag:
 
-```shell {% frame="none" %}
+```shell
 npx nx-cloud <command> --help
 ```

@@ -202,7 +202,7 @@ export class ReleaseGraph {
 
         const updateDependents =
           (group.version as NxReleaseVersionConfiguration)?.updateDependents ||
-          'auto';
+          'always';
         this.projectToUpdateDependentsSetting.set(project, updateDependents);
       }
     }
@@ -399,7 +399,7 @@ export class ReleaseGraph {
 
   /**
    * Apply dependency-aware filtering that considers updateDependents configuration.
-   * This includes transitive dependents when updateDependents='auto'.
+   * This includes transitive dependents based on updateDependents setting ('always' by default, or 'auto').
    */
   private applyDependencyAwareFiltering(): void {
     // Track the original filtered projects before adding dependents
@@ -621,7 +621,7 @@ export class ReleaseGraph {
         let latestMatchingGitTag:
           | Awaited<ReturnType<typeof getLatestGitTagForPattern>>
           | undefined;
-        const releaseTagPattern = releaseGroupNode.group.releaseTagPattern;
+        const releaseTagPattern = releaseGroupNode.group.releaseTag.pattern;
 
         if (finalConfigForProject.currentVersionResolver === 'git-tag') {
           latestMatchingGitTag = await getLatestGitTagForPattern(
@@ -631,12 +631,10 @@ export class ReleaseGraph {
             },
             {
               checkAllBranchesWhen:
-                releaseGroupNode.group.releaseTagPatternCheckAllBranchesWhen,
+                releaseGroupNode.group.releaseTag.checkAllBranchesWhen,
               preid: preid,
-              releaseTagPatternRequireSemver:
-                releaseGroupNode.group.releaseTagPatternRequireSemver,
-              releaseTagPatternStrictPreid:
-                releaseGroupNode.group.releaseTagPatternStrictPreid,
+              requireSemver: releaseGroupNode.group.releaseTag.requireSemver,
+              strictPreid: releaseGroupNode.group.releaseTag.strictPreid,
             }
           );
           this.cachedLatestMatchingGitTag.set(

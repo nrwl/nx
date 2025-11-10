@@ -20,7 +20,7 @@ Make sure to install the `@nx/storybook` version that matches the version of `nx
 
 In any Nx workspace, you can install `@nx/storybook` by running the following command:
 
-```shell frame="none"
+```shell
 nx add @nx/storybook
 ```
 
@@ -70,7 +70,7 @@ The `builtStorybookTargetName`, `serveStorybookTargetName`, `testStorybookTarget
 
 You can generate Storybook configuration for an individual project with this command:
 
-```shell frame="none"
+```shell
 nx g @nx/storybook:configuration project-name
 ```
 
@@ -79,21 +79,21 @@ or
 {% tabs %}
 {% tabitem label="Angular" %}
 
-```shell frame="none"
+```shell
 nx g @nx/angular:storybook-configuration my-angular-project
 ```
 
 {% /tabitem %}
 {% tabitem label="React" %}
 
-```shell frame="none"
+```shell
 nx g @nx/react:storybook-configuration my-react-project
 ```
 
 {% /tabitem %}
 {% tabitem label="Vue" %}
 
-```shell frame="none"
+```shell
 nx g @nx/vue:storybook-configuration my-vue-project
 ```
 
@@ -129,13 +129,13 @@ Make sure to **use the framework-specific generators** if your project is using 
 
 Serve Storybook using this command:
 
-```shell frame="none"
+```shell
 nx run project-name:storybook
 ```
 
 or
 
-```shell frame="none"
+```shell
 nx storybook project-name
 ```
 
@@ -143,13 +143,13 @@ nx storybook project-name
 
 Build Storybook using this command:
 
-```shell frame="none"
+```shell
 nx run project-name:build-storybook
 ```
 
 or
 
-```shell frame="none"
+```shell
 nx build-storybook project-name
 ```
 
@@ -157,13 +157,13 @@ nx build-storybook project-name
 
 With the Storybook server running, you can test Storybook (run all the interaction tests) using this command:
 
-```shell frame="none"
+```shell
 nx run project-name:test-storybook
 ```
 
 or
 
-```shell frame="none"
+```shell
 nx test-storybook project-name
 ```
 

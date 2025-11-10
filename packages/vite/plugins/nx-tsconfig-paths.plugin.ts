@@ -72,6 +72,7 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
   options.mainFields ??= [['exports', '.', 'import'], 'module', 'main'];
   options.buildLibsFromSource ??= true;
   let projectRoot = '';
+  let projectRootFromWorkspaceRoot: string;
 
   return {
     name: 'nx-vite-ts-paths',
@@ -80,7 +81,7 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
     enforce: 'pre',
     async configResolved(config: any) {
       projectRoot = config.root;
-      const projectRootFromWorkspaceRoot = relative(workspaceRoot, projectRoot);
+      projectRootFromWorkspaceRoot = relative(workspaceRoot, projectRoot);
       foundTsConfigPath = getTsConfig(
         process.env.NX_TSCONFIG_PATH ??
           join(
@@ -203,9 +204,9 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
       if (isUsingTsSolutionSetup()) return;
       const outDir = options.dir || 'dist';
       const src = resolve(projectRoot, 'package.json');
-      if (existsSync(src)) {
-        const dest = join(outDir, 'package.json');
+      const dest = join(outDir, 'package.json');
 
+      if (existsSync(src) && !existsSync(dest)) {
         try {
           copyFileSync(src, dest);
         } catch (err) {
@@ -216,10 +217,14 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
   } as Plugin;
 
   function getTsConfig(preferredTsConfigPath: string): string {
-    const projectTsConfigPath = getProjectTsConfigPath(projectRoot);
+    const projectTsConfigPath = getProjectTsConfigPath(
+      projectRootFromWorkspaceRoot
+    );
     return [
       resolve(preferredTsConfigPath),
-      projectTsConfigPath ? resolve(projectTsConfigPath) : null,
+      projectTsConfigPath
+        ? resolve(join(workspaceRoot, projectTsConfigPath))
+        : null,
       resolve(join(workspaceRoot, 'tsconfig.base.json')),
       resolve(join(workspaceRoot, 'tsconfig.json')),
       resolve(join(workspaceRoot, 'jsconfig.json')),

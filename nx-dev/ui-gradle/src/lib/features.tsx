@@ -11,7 +11,7 @@ export function Features(): ReactElement {
 
       <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
         The Nx Plugin for Java integrates seamlessly with your existing Gradle
-        builds, adding powerful capabilities to your workflow.
+        and Maven builds, adding powerful capabilities to your workflow.
       </p>
 
       <div className="mt-12 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">

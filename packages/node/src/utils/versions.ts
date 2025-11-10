@@ -7,8 +7,8 @@ export const typesNodeVersion = '20.19.9';
 export const expressVersion = '^4.21.2';
 export const expressTypingsVersion = '^4.17.21';
 
-export const koaVersion = '~2.14.1';
-export const koaTypingsVersion = '~2.13.5';
+export const koaVersion = '^3.0.3';
+export const koaTypingsVersion = '^3.0.0';
 
 export const fastifyVersion = '~5.2.1';
 export const fastifyAutoloadVersion = '~6.0.3';

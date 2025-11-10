@@ -25,7 +25,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   // Configuration for building your library.
-  // See: https://vitejs.dev/guide/build.html#library-mode
+  // See: https://vite.dev/guide/build.html#library-mode
   build: {
     outDir: '../dist/my-lib',
     emptyOutDir: true,
@@ -129,13 +129,18 @@ exports[`@nx/vite:configuration js library with --bundler=vite should respect pr
     "types": ["node", "vite/client"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+  "exclude": [
+    "jest.config.ts",
+    "jest.config.cts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts"
+  ]
 }
 "
 `;
 
 exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 3`] = `
-"export default {
+"module.exports = {
   displayName: 'my-lib',
   preset: '../jest.preset.js',
   transform: {
@@ -198,7 +203,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   // Configuration for building your library.
-  // See: https://vitejs.dev/guide/build.html#library-mode
+  // See: https://vite.dev/guide/build.html#library-mode
   build: {
     outDir: '../../dist/libs/react-lib-nonb-jest',
     emptyOutDir: true,
@@ -251,7 +256,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   // Configuration for building your library.
-  // See: https://vitejs.dev/guide/build.html#library-mode
+  // See: https://vite.dev/guide/build.html#library-mode
   build: {
     outDir: '../../dist/libs/react-lib-nonb-jest',
     emptyOutDir: true,
@@ -299,7 +304,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
   // Configuration for building your library.
-  // See: https://vitejs.dev/guide/build.html#library-mode
+  // See: https://vite.dev/guide/build.html#library-mode
   build: {
     outDir: '../../dist/libs/react-lib-nonb-vitest',
     emptyOutDir: true,

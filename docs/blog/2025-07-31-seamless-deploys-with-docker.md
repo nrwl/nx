@@ -149,9 +149,9 @@ If you're interested in knowing more, let us know! Join our community Discord an
 
 Learn more:
 
-- 🌌 [Nx Plugin for Gradle Tutorial](/getting-started/tutorials/gradle-tutorial)
-- 📖 [API for the Nx plugin for Gradle](/technologies/java/api)
-- 📦 [Nx Release](/features/manage-releases)
+- 🌌 [Nx Plugin for Gradle Tutorial](/docs/getting-started/tutorials/gradle-tutorial)
+- 📖 [API for the Nx plugin for Gradle](/docs/technologies/angular/guides/angular-nx-version-matrix)
+- 📦 [Nx Release](/docs/features/manage-releases)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)

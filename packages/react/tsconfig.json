@@ -13,9 +13,6 @@
       "path": "../module-federation"
     },
     {
-      "path": "../vite"
-    },
-    {
       "path": "../web"
     },
     {
@@ -28,13 +25,22 @@
       "path": "../devkit"
     },
     {
+      "path": "../nx"
+    },
+    {
+      "path": "../webpack"
+    },
+    {
+      "path": "../rsbuild"
+    },
+    {
       "path": "../playwright"
     },
     {
       "path": "../cypress"
     },
     {
-      "path": "../nx"
+      "path": "../vite"
     },
     {
       "path": "./tsconfig.lib.json"

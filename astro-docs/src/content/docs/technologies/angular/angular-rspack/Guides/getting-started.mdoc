@@ -78,14 +78,14 @@ You can learn more about Nx migrations [here](/docs/features/automate-updating-d
 {% tabs %}
 {% tabitem label="Client-Side Rendering (CSR)" %}
 
-```shell {% frame="none" %}
+```shell
 npx nx g @nx/angular:app myapp --bundler=rspack
 ```
 
 {% /tabitem %}
 {% tabitem label="Server-Side Rendering (SSR)" %}
 
-```shell {% frame="none" %}
+```shell
 npx nx g @nx/angular:app myapp --bundler=rspack --ssr
 ```
 
@@ -110,7 +110,7 @@ The `project.json` file does not contain the `targets.build` or `targets.serve` 
 
 To build your Angular Rspack application, run the following command:
 
-```shell {% frame="none" %}
+```shell
 npx nx build myapp
 ```
 
@@ -121,7 +121,7 @@ If you are using the Angular Rspack application with Server-Side Rendering (SSR)
 
 To serve your Angular Rspack application, run the following command:
 
-```shell {% frame="none" %}
+```shell
 npx nx serve myapp
 ```
 

@@ -14,6 +14,10 @@ impl ProcessKiller {
         Self { pid }
     }
 
+    pub fn get_pid(&self) -> i32 {
+        self.pid
+    }
+
     // windows doesn't have different signals to kill with
     pub fn kill(&self, _: Option<&str>) -> anyhow::Result<()> {
         let pc = WinProcess::open(self.pid as DWORD).expect("!open");

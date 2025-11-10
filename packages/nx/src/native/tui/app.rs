@@ -1,5 +1,5 @@
 use color_eyre::eyre::Result;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
@@ -10,6 +10,7 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use std::collections::HashMap;
 use std::io;
+use std::io::Write;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
@@ -42,6 +43,7 @@ use super::tui;
 use super::utils::normalize_newlines;
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::tui::graph_utils::get_failed_dependencies;
+use crate::native::utils::time::current_timestamp_millis;
 
 pub struct App {
     pub components: Vec<Box<dyn Component>>,
@@ -72,6 +74,7 @@ pub struct App {
     pinned_tasks: Vec<String>,
     task_graph: TaskGraph,
     task_status_map: HashMap<String, TaskStatus>, // App owns task status
+    incomplete_task_count: usize,                 // Count of tasks that are not yet complete
     debug_mode: bool,
     debug_state: TuiWidgetState,
     console_messenger: Option<NxConsoleMessageConnection>,
@@ -126,6 +129,9 @@ impl App {
 
         let main_terminal_pane_data = TerminalPaneData::new();
 
+        // All tasks start as NotStarted, so all are incomplete
+        let incomplete_task_count = task_status_map.len();
+
         Ok(Self {
             run_mode,
             components,
@@ -151,6 +157,7 @@ impl App {
             selection_manager,
             task_graph,
             task_status_map,
+            incomplete_task_count,
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
             console_messenger: None,
@@ -202,7 +209,6 @@ impl App {
     }
 
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
-        // Update the App's task status map first
         self.task_status_map.insert(task_id.clone(), status);
 
         // Auto-switch pane to failed dependency when a task becomes skipped
@@ -211,16 +217,11 @@ impl App {
         }
 
         self.dispatch_action(Action::UpdateTaskStatus(task_id.clone(), status));
-        if status == TaskStatus::InProgress && self.should_set_interactive_by_default(&task_id) {
-            // Find which pane this task is assigned to
-            for (pane_idx, pane_task) in self.pane_tasks.iter().enumerate() {
-                if let Some(pane_task_id) = pane_task {
-                    if pane_task_id == &task_id {
-                        self.terminal_pane_data[pane_idx].set_interactive(true);
-                        break;
-                    }
-                }
-            }
+
+        // Update terminal progress indicator only when task reaches a completed state
+        if self.is_status_complete(status) {
+            self.incomplete_task_count = self.incomplete_task_count.saturating_sub(1);
+            self.update_terminal_progress();
         }
     }
 
@@ -234,12 +235,12 @@ impl App {
         is_task_continuous(&self.task_graph, task_id)
     }
 
-    fn should_set_interactive_by_default(&self, task_id: &str) -> bool {
-        matches!(self.run_mode, RunMode::RunOne)
-            && self
-                .pty_instances
-                .get(task_id)
-                .is_some_and(|pty| pty.can_be_interactive())
+    /// Check if a task status is considered complete
+    fn is_status_complete(&self, status: TaskStatus) -> bool {
+        !matches!(
+            status,
+            TaskStatus::NotStarted | TaskStatus::InProgress | TaskStatus::Shared
+        )
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
@@ -315,6 +316,7 @@ impl App {
     }
 
     fn quit(&mut self) {
+        App::clear_terminal_progress();
         self.quit_at = Some(std::time::Instant::now());
     }
 
@@ -390,10 +392,7 @@ impl App {
 
                 // Check if we have a pending resize that needs to be processed
                 if let Some(timer) = self.resize_debounce_timer {
-                    let now = std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap()
-                        .as_millis();
+                    let now = current_timestamp_millis() as u128;
 
                     if now >= timer {
                         // Timer expired, process the resize
@@ -785,45 +784,6 @@ impl App {
                             }
                         }
                     }
-                }
-            }
-            tui::Event::Mouse(mouse) => {
-                // If the app is in interactive mode, interactions are with
-                // the running task, not the app itself
-                if !self.is_interactive_mode() {
-                    // Record that the user has interacted with the app
-                    self.user_has_interacted = true;
-                }
-
-                if matches!(self.focus, Focus::MultipleOutput(_)) {
-                    self.handle_mouse_event(mouse).ok();
-                    return Ok(false);
-                }
-
-                match mouse.kind {
-                    MouseEventKind::ScrollUp => {
-                        if matches!(self.focus, Focus::TaskList) {
-                            self.dispatch_action(Action::ScrollUp);
-                        } else {
-                            self.handle_key_event(KeyEvent::new(
-                                KeyCode::Up,
-                                KeyModifiers::empty(),
-                            ))
-                            .ok();
-                        }
-                    }
-                    MouseEventKind::ScrollDown => {
-                        if matches!(self.focus, Focus::TaskList) {
-                            self.dispatch_action(Action::ScrollDown);
-                        } else {
-                            self.handle_key_event(KeyEvent::new(
-                                KeyCode::Down,
-                                KeyModifiers::empty(),
-                            ))
-                            .ok();
-                        }
-                    }
-                    _ => {}
                 }
             }
             _ => {}
@@ -1438,15 +1398,6 @@ impl App {
         let _ = self.handle_pty_resize();
     }
 
-    fn handle_mouse_event(&mut self, mouse_event: MouseEvent) -> io::Result<()> {
-        if let Focus::MultipleOutput(pane_idx) = self.focus {
-            let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-            terminal_pane_data.handle_mouse_event(mouse_event)
-        } else {
-            Ok(())
-        }
-    }
-
     /// Forward key events to the currently focused pane, if any.
     fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
         if let Focus::MultipleOutput(pane_idx) = self.focus {
@@ -1505,10 +1456,7 @@ impl App {
     /// Ensures that the PTY instances get resized appropriately based on the latest layout areas.
     fn debounce_pty_resize(&mut self) -> io::Result<()> {
         // Get current time in milliseconds
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis();
+        let now = current_timestamp_millis() as u128;
 
         // If we have a timer and it's not expired yet, just return
         if let Some(timer) = self.resize_debounce_timer {
@@ -1894,5 +1842,33 @@ impl App {
         let failed_deps =
             get_failed_dependencies(task_name, &self.task_graph, &self.task_status_map);
         failed_deps.into_iter().next()
+    }
+
+    /// Updates the terminal progress indicator (OSC 9;4).
+    /// Shows percentage of tasks that are complete (anything except NotStarted, InProgress, or Shared).
+    fn update_terminal_progress(&self) {
+        let total_tasks = self.task_status_map.len();
+        if total_tasks == 0 {
+            return;
+        }
+
+        // Use cached incomplete task count instead of recalculating
+        let completed_tasks = total_tasks - self.incomplete_task_count;
+        let percentage = (completed_tasks * 100) / total_tasks;
+
+        // Write OSC 9;4 escape sequence to stderr (less likely to conflict with TUI rendering)
+        // Format: ESC ] 9 ; 4 ; <state> ; <percentage> ST
+        // state: 1 = show progress, 0 = hide
+        // percentage: 0-100
+        // Using ST terminator (\x1b\\) for maximum compatibility (Ghostty, Windows Terminal, VTE)
+        let _ = io::stderr().write_all(format!("\x1b]9;4;1;{}\x1b\\", percentage).as_bytes());
+        let _ = io::stderr().flush();
+    }
+
+    /// Clears the terminal progress indicator.
+    pub fn clear_terminal_progress() {
+        // State 0 = hide progress (using ST terminator for compatibility)
+        let _ = io::stderr().write_all(b"\x1b]9;4;0;0\x1b\\");
+        let _ = io::stderr().flush();
     }
 }

@@ -57,7 +57,7 @@ Nx can help with the process of moving an existing project from another reposito
 
 In this example, the source repository contains a single application while the destination repository is already a monorepo. You can also import a project from a sub-directory of the source repository (if the source repository is a monorepo, for instance). The `nx import` command can be run with no arguments and you will be prompted to for the required arguments:
 
-```shell {% frame="none" %}
+```shell
 nx import
 ```
 
@@ -65,7 +65,7 @@ Make sure to run `nx import` from within the **destination repository**.
 
 You can also directly specify arguments from the terminal, like one of these commands:
 
-```shell {% frame="none" %}
+```shell
 nx import [sourceRepository] [destinationDirectory]
 nx import ../inventory-app apps/inventory
 nx import https://github.com/myorg/inventory-app.git apps/inventory

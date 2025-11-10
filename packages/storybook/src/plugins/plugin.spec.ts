@@ -38,7 +38,6 @@ describe('@nx/storybook/plugin', () => {
   afterEach(() => {
     jest.resetModules();
     tempFs.cleanup();
-    tempFs = null;
   });
 
   it('should create nodes', async () => {
@@ -59,6 +58,8 @@ describe('@nx/storybook/plugin', () => {
         staticStorybookTargetName: 'static-storybook',
         serveStorybookTargetName: 'serve-storybook',
         testStorybookTargetName: 'test-storybook',
+        buildDepsTargetName: 'build-deps',
+        watchDepsTargetName: 'watch-deps',
       },
       context
     );
@@ -72,6 +73,11 @@ describe('@nx/storybook/plugin', () => {
               "my-app": {
                 "root": "my-app",
                 "targets": {
+                  "build-deps": {
+                    "dependsOn": [
+                      "^build",
+                    ],
+                  },
                   "build-storybook": {
                     "cache": true,
                     "command": "storybook build",
@@ -112,6 +118,13 @@ describe('@nx/storybook/plugin', () => {
                       "staticFilePath": "my-app/storybook-static",
                     },
                   },
+                  "watch-deps": {
+                    "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "continuous": true,
+                    "dependsOn": [
+                      "build-deps",
+                    ],
+                  },
                 },
               },
             },
@@ -139,6 +152,8 @@ describe('@nx/storybook/plugin', () => {
         staticStorybookTargetName: 'static-storybook',
         serveStorybookTargetName: 'serve-storybook',
         testStorybookTargetName: 'test-storybook',
+        buildDepsTargetName: 'build-deps',
+        watchDepsTargetName: 'watch-deps',
       },
       context
     );
@@ -152,6 +167,11 @@ describe('@nx/storybook/plugin', () => {
               "my-ng-app": {
                 "root": "my-ng-app",
                 "targets": {
+                  "build-deps": {
+                    "dependsOn": [
+                      "^build",
+                    ],
+                  },
                   "build-storybook": {
                     "cache": true,
                     "executor": "@storybook/angular:build-storybook",
@@ -198,6 +218,13 @@ describe('@nx/storybook/plugin', () => {
                       "staticFilePath": "my-ng-app/storybook-static",
                     },
                   },
+                  "watch-deps": {
+                    "command": "npx nx watch --projects my-ng-app --includeDependentProjects -- npx nx build-deps my-ng-app",
+                    "continuous": true,
+                    "dependsOn": [
+                      "build-deps",
+                    ],
+                  },
                 },
               },
             },
@@ -229,6 +256,8 @@ describe('@nx/storybook/plugin', () => {
         staticStorybookTargetName: 'static-storybook',
         serveStorybookTargetName: 'serve-storybook',
         testStorybookTargetName: 'test-storybook',
+        buildDepsTargetName: 'build-deps',
+        watchDepsTargetName: 'watch-deps',
       },
       context
     );
@@ -242,6 +271,11 @@ describe('@nx/storybook/plugin', () => {
               "my-react-lib": {
                 "root": "my-react-lib",
                 "targets": {
+                  "build-deps": {
+                    "dependsOn": [
+                      "^build",
+                    ],
+                  },
                   "build-storybook": {
                     "cache": true,
                     "command": "storybook build",
@@ -281,6 +315,13 @@ describe('@nx/storybook/plugin', () => {
                       "buildTarget": "build-storybook",
                       "staticFilePath": "my-react-lib/storybook-static",
                     },
+                  },
+                  "watch-deps": {
+                    "command": "npx nx watch --projects my-react-lib --includeDependentProjects -- npx nx build-deps my-react-lib",
+                    "continuous": true,
+                    "dependsOn": [
+                      "build-deps",
+                    ],
                   },
                 },
               },

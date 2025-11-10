@@ -1,5 +1,5 @@
-// @ts-expect-error: This is a client-side file
-const socket = new WebSocket(`ws://localhost:60000`);
+// casting is needed to force the type to be the global WebSocket and avoid type errors
+const socket: WebSocket = new WebSocket(`ws://localhost:60000`);
 
 socket.addEventListener('message', (event) => {
   if (event.data === 'ssr-reload') {

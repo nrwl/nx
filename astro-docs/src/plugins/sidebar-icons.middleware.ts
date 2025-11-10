@@ -11,6 +11,7 @@ const iconMap: Record<string, string> = {
   Vue: 'vuedotjs',
   'Node.js': 'nodedotjs',
   Java: 'java',
+  '.NET': 'dotnet',
   'Module Federation': 'module-federation',
   ESLint: 'eslint',
   'Build Tools': 'buildtools',

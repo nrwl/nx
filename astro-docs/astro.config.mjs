@@ -9,6 +9,7 @@ import { sidebar } from './sidebar.mts';
 
 const BASE = '/docs';
 
+// This is exposed as window.__CONFIG
 const PUBLIC_CONFIG = {
   cookiebotDisabled: process.env.COOKIEBOT_DISABLED === 'true',
   cookiebotId: process.env.COOKIEBOT_ID ?? null,
@@ -49,6 +50,7 @@ export default defineConfig({
         dark: './src/assets/nx/Nx-light.png',
         replacesTitle: true,
       },
+      disable404Route: true,
       head: [
         {
           tag: 'script',
@@ -88,6 +90,7 @@ export default defineConfig({
         './src/plugins/sidebar-reference-updater.middleware.ts',
         './src/plugins/sidebar-icons.middleware.ts',
         './src/plugins/og.middleware.ts',
+        './src/plugins/github-stars.middleware.ts',
       ],
       markdown: {
         // this breaks the renderMarkdown function in the plugin loader due to starlight path normalization

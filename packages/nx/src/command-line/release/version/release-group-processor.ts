@@ -159,6 +159,10 @@ export class ReleaseGroupProcessor {
       if (this.processedGroups.has(nextGroup)) {
         continue;
       }
+      // The next group might not present in the groupGraph if it has been filtered out
+      if (!this.releaseGraph.groupGraph.has(nextGroup)) {
+        continue;
+      }
 
       const allDependenciesProcessed = Array.from(
         this.releaseGraph.groupGraph.get(nextGroup)!.dependencies
@@ -171,6 +175,10 @@ export class ReleaseGroupProcessor {
         for (const dep of this.releaseGraph.groupGraph.get(nextGroup)!
           .dependencies) {
           if (!this.processedGroups.has(dep)) {
+            // The next group might not present in the groupGraph if it has been filtered out
+            if (!this.releaseGraph.groupGraph.has(dep)) {
+              continue;
+            }
             await this.processGroup(dep);
             this.processedGroups.add(dep);
             processOrder.push(dep);
@@ -269,7 +277,8 @@ export class ReleaseGroupProcessor {
       projectGraphNode: ProjectGraphProjectNode,
       finalConfigForProject: FinalConfigForProject,
       dockerVersionScheme?: string,
-      dockerVersion?: string
+      dockerVersion?: string,
+      versionActionsVersion?: string
     ) => Promise<{ newVersion: string; logs: string[] }>;
     try {
       const {
@@ -286,19 +295,21 @@ export class ReleaseGroupProcessor {
     }
     for (const [project, finalConfigForProject] of dockerProjects.entries()) {
       const projectNode = this.projectGraph.nodes[project];
+      const projectVersionData = this.versionData.get(project);
       const { newVersion, logs } = await handleDockerVersion(
         workspaceRoot,
         projectNode,
         finalConfigForProject,
         dockerVersionScheme,
-        dockerVersion
+        dockerVersion,
+        projectVersionData.newVersion
       );
 
       logs.forEach((log) =>
         this.getProjectLoggerForProject(project).buffer(log)
       );
       const newVersionData = {
-        ...this.versionData.get(project),
+        ...projectVersionData,
         dockerVersion: newVersion,
       };
       this.versionData.set(project, newVersionData);
@@ -757,10 +768,7 @@ export class ReleaseGroupProcessor {
     const dependencies = this.projectGraph.dependencies[projectName] || [];
 
     for (const dep of dependencies) {
-      if (
-        this.releaseGraph.allProjectsToProcess.has(dep.target) &&
-        this.bumpedProjects.has(dep.target)
-      ) {
+      if (this.releaseGraph.allProjectsToProcess.has(dep.target)) {
         const targetVersionData = this.versionData.get(dep.target);
         if (targetVersionData) {
           const { currentVersion: currentDependencyVersion } =
@@ -782,11 +790,13 @@ export class ReleaseGroupProcessor {
             finalPrefix = cachedFinalConfigForProject.versionPrefix;
           }
 
+          const newVersion =
+            targetVersionData.newVersion ??
+            this.releaseGraph.cachedCurrentVersions.get(dep.target) ??
+            currentDependencyVersion;
+
           // Remove any existing prefix from the new version before applying the finalPrefix
-          const cleanNewVersion = targetVersionData.newVersion.replace(
-            /^[~^=]/,
-            ''
-          );
+          const cleanNewVersion = newVersion.replace(/^[~^=]/, '');
           dependenciesToUpdate[dep.target] = `${finalPrefix}${cleanNewVersion}`;
         }
       }
@@ -866,7 +876,7 @@ export class ReleaseGroupProcessor {
       (releaseGroupVersionConfig?.updateDependents as
         | 'auto'
         | 'always'
-        | 'never') || 'auto';
+        | 'never') || 'always';
 
     // Only update dependencies for dependents if the group's updateDependents is 'auto' or 'always'
     if (updateDependents === 'auto' || updateDependents === 'always') {

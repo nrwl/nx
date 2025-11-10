@@ -105,9 +105,12 @@ export interface ChangelogChange {
 export type PostGitTask = (latestCommit: string) => Promise<void>;
 
 export const releaseChangelogCLIHandler = (args: ChangelogOptions) =>
-  handleErrors(args.verbose, () => createAPI({})(args));
+  handleErrors(args.verbose, () => createAPI({}, false)(args));
 
-export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
+export function createAPI(
+  overrideReleaseConfig: NxReleaseConfiguration,
+  ignoreNxJsonConfig: boolean
+) {
   /**
    * NOTE: This function is also exported for programmatic usage and forms part of the public API
    * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
@@ -117,11 +120,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     args: ChangelogOptions
   ): Promise<NxReleaseChangelogResult> {
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-    const nxJson = readNxJson();
-    const userProvidedReleaseConfig = deepMergeJson(
-      nxJson.release ?? {},
-      overrideReleaseConfig ?? {}
-    );
+    const overriddenConfig = overrideReleaseConfig ?? {};
+    const userProvidedReleaseConfig = ignoreNxJsonConfig
+      ? overriddenConfig
+      : deepMergeJson(readNxJson().release ?? {}, overriddenConfig);
 
     // Apply default configuration to any optional user configuration
     const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
@@ -358,18 +360,16 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         args.from ||
         (
           await getLatestGitTagForPattern(
-            nxReleaseConfig.releaseTagPattern,
+            nxReleaseConfig.releaseTag.pattern,
             {},
             {
               checkAllBranchesWhen:
-                nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
+                nxReleaseConfig.releaseTag.checkAllBranchesWhen,
               preid:
                 workspacePreid ??
                 projectsPreid?.[Object.keys(projectsPreid)[0]],
-              releaseTagPatternRequireSemver:
-                nxReleaseConfig.releaseTagPatternRequireSemver,
-              releaseTagPatternStrictPreid:
-                nxReleaseConfig.releaseTagPatternStrictPreid,
+              requireSemver: nxReleaseConfig.releaseTag.requireSemver,
+              strictPreid: nxReleaseConfig.releaseTag.strictPreid,
             }
           )
         )?.tag;
@@ -383,7 +383,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           }
         } else {
           throw new Error(
-            `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+            `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
           );
         }
       }
@@ -541,19 +541,17 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               args.from ||
               (
                 await getLatestGitTagForPattern(
-                  releaseGroup.releaseTagPattern,
+                  releaseGroup.releaseTag.pattern,
                   {
                     projectName: project.name,
                     releaseGroupName: releaseGroup.name,
                   },
                   {
                     checkAllBranchesWhen:
-                      releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                      releaseGroup.releaseTag.checkAllBranchesWhen,
                     preid: projectsPreid[project.name],
-                    releaseTagPatternRequireSemver:
-                      releaseGroup.releaseTagPatternRequireSemver,
-                    releaseTagPatternStrictPreid:
-                      releaseGroup.releaseTagPatternStrictPreid,
+                    requireSemver: releaseGroup.releaseTag.requireSemver,
+                    strictPreid: releaseGroup.releaseTag.strictPreid,
                   }
                 )
               )?.tag;
@@ -577,7 +575,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
             if (!fromRef && !commits) {
               throw new Error(
-                `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+                `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
               );
             }
 
@@ -690,18 +688,16 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             args.from ||
             (
               await getLatestGitTagForPattern(
-                releaseGroup.releaseTagPattern,
+                releaseGroup.releaseTag.pattern,
                 {},
                 {
                   checkAllBranchesWhen:
-                    releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                    releaseGroup.releaseTag.checkAllBranchesWhen,
                   preid:
                     workspacePreid ??
                     projectsPreid?.[Object.keys(projectsPreid)[0]],
-                  releaseTagPatternRequireSemver:
-                    releaseGroup.releaseTagPatternRequireSemver,
-                  releaseTagPatternStrictPreid:
-                    releaseGroup.releaseTagPatternStrictPreid,
+                  requireSemver: releaseGroup.releaseTag.requireSemver,
+                  strictPreid: releaseGroup.releaseTag.strictPreid,
                 }
               )
             )?.tag;
@@ -715,7 +711,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               }
             } else {
               throw new Error(
-                `Unable to determine the previous git tag. If this is the first release of your release group, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+                `Unable to determine the previous git tag. If this is the first release of your release group, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
               );
             }
           }
@@ -829,7 +825,7 @@ function resolveChangelogVersions(
          */
         if (!args.versionData[projectName]) {
           throw new Error(
-            `The provided versionData object does not contain a version for project "${projectName}". This suggests a filtering mismatch between the version and changelog command invocations.`
+            `The provided versionData object does not contain a version for project "${projectName}". This suggests a filtering mismatch between the version and changelog command invocations. Please ensure that you have used the same "group" or "project" filter between commands.`
           );
         }
       }
@@ -1096,7 +1092,7 @@ async function generateChangelogForWorkspace({
 
   const releaseVersion = new ReleaseVersion({
     version: workspaceChangelogVersion,
-    releaseTagPattern: nxReleaseConfig.releaseTagPattern,
+    releaseTagPattern: nxReleaseConfig.releaseTag.pattern,
   });
 
   if (interpolatedTreePath) {
@@ -1120,7 +1116,7 @@ async function generateChangelogForWorkspace({
     changes,
     changelogEntryVersion: releaseVersion.rawVersion,
     project: null,
-    isVersionPlans: false,
+    isVersionPlans: !!nxReleaseConfig.versionPlans,
     entryWhenNoChanges: config.entryWhenNoChanges,
     changelogRenderOptions: config.renderOptions,
     conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
@@ -1148,7 +1144,7 @@ async function generateChangelogForWorkspace({
     let rootChangelogContents = tree.exists(interpolatedTreePath)
       ? tree.read(interpolatedTreePath).toString()
       : '';
-    if (rootChangelogContents) {
+    if (rootChangelogContents && !args.replaceExistingContents) {
       // NOTE: right now existing releases are always expected to be in markdown format, but in the future we could potentially support others via a custom parser option
       const changelogReleases = parseChangelogMarkdown(
         rootChangelogContents
@@ -1167,7 +1163,7 @@ async function generateChangelogForWorkspace({
         rootChangelogContents = `${contents}\n\n${rootChangelogContents}`;
       }
     } else {
-      // No existing changelog contents, simply create a new one using the generated contents
+      // No existing changelog contents, or replaceExistingContents is true, simply use the generated contents directly
       rootChangelogContents = contents;
     }
 
@@ -1262,7 +1258,7 @@ async function generateChangelogForProjects({
         projectsVersionData[project.name].dockerVersion
           ? projectsVersionData[project.name].dockerVersion
           : projectsVersionData[project.name].newVersion,
-      releaseTagPattern: releaseGroup.releaseTagPattern,
+      releaseTagPattern: releaseGroup.releaseTag.pattern,
       projectName: project.name,
     });
 
@@ -1289,9 +1285,7 @@ async function generateChangelogForProjects({
           : false,
       changelogRenderOptions: config.renderOptions,
       isVersionPlans: !!releaseGroup.versionPlans,
-      conventionalCommitsConfig: releaseGroup.versionPlans
-        ? null
-        : nxReleaseConfig.conventionalCommits,
+      conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
       dependencyBumps: projectToAdditionalDependencyBumps.get(project.name),
       remoteReleaseClient,
     });

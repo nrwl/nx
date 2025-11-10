@@ -13,6 +13,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { minimatch } from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
+import { existsSync } from 'node:fs';
 
 import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
@@ -37,6 +38,7 @@ import {
   getExecutorInformation,
   parseExecutor,
 } from '../../command-line/run/executor-utils';
+import { toProjectName } from '../../config/to-project-name';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -668,6 +670,16 @@ function validateAndNormalizeProjectRootMap(
     // Strip it before returning configuration for usage.
     if (project['// targets']) delete project['// targets'];
 
+    // We initially did this in the project.json plugin, but
+    // that resulted in project.json files without names causing
+    // the resulting project to change names from earlier plugins...
+    if (
+      !project.name &&
+      existsSync(join(workspaceRoot, project.root, 'project.json'))
+    ) {
+      project.name = toProjectName(join(root, 'project.json'));
+    }
+
     try {
       validateProject(project, projects);
       projects[project.name] = project;
@@ -684,7 +696,10 @@ function validateAndNormalizeProjectRootMap(
         throw e;
       }
     }
+  }
 
+  for (const root in projectRootMap) {
+    const project = projectRootMap[root];
     normalizeTargets(
       project,
       sourceMaps,
@@ -718,7 +733,8 @@ function normalizeTargets(
       project.targets[targetName],
       project,
       workspaceRoot,
-      projects
+      projects,
+      [project.root, targetName].join(':')
     );
 
     const projectSourceMaps = sourceMaps[project.root];
@@ -737,7 +753,13 @@ function normalizeTargets(
       project.targets[targetName] = mergeTargetDefaultWithTargetDefinition(
         targetName,
         project,
-        normalizeTarget(targetDefaults, project, workspaceRoot, projects),
+        normalizeTarget(
+          targetDefaults,
+          project,
+          workspaceRoot,
+          projects,
+          ['nx.json[targetDefaults]', targetName].join(':')
+        ),
         projectSourceMaps
       );
     }
@@ -1190,7 +1212,8 @@ export function normalizeTarget(
   target: TargetConfiguration,
   project: ProjectConfiguration,
   workspaceRoot: string,
-  projectsMap: Record<string, ProjectConfiguration>
+  projectsMap: Record<string, ProjectConfiguration>,
+  errorMsgKey: string
 ) {
   target = {
     ...target,
@@ -1204,7 +1227,7 @@ export function normalizeTarget(
   target.options = resolveNxTokensInOptions(
     target.options,
     project,
-    `${project.root}:${target}`
+    errorMsgKey
   );
 
   for (const configuration in target.configurations) {

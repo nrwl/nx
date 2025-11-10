@@ -9,4 +9,4 @@ Learn how Nx's sophisticated caching system ensures code is never rebuilt twice.
 - drastically speeds up your task execution times while developing locally and in CI
 - saves you money on CI/CD costs by reducing the number of tasks that need to be executed
 
-Read more [in our docs](/features/cache-task-results)
+Read more [in our docs](/docs/features/cache-task-results)

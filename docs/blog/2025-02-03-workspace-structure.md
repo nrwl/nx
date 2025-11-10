@@ -180,7 +180,7 @@ With Nx, we’ve always emphasized that a monorepo approach to development requi
 
 ### Define tags
 
-Now that we have our structure together, [tags](/features/enforce-module-boundaries#tags) can be used to further enforce that our structure stays consistent. We recommend using as small a set of tags as possible. Each project should have two tags: its scope and its type. We have boiled our own down to the types of projects we defined previously: feature, ui, data-access, and util. You may need other ones, but developing too many tags can make them frustrating to use.
+Now that we have our structure together, [tags](/docs/features/enforce-module-boundaries#tags) can be used to further enforce that our structure stays consistent. We recommend using as small a set of tags as possible. Each project should have two tags: its scope and its type. We have boiled our own down to the types of projects we defined previously: feature, ui, data-access, and util. You may need other ones, but developing too many tags can make them frustrating to use.
 
 ### Define module boundary rules
 
@@ -212,7 +212,7 @@ If you want more insight into this topic, here are other resources we recommend:
 - [Enterprise Angular](https://www.angulararchitects.io/en/ebooks/micro-frontends-and-moduliths-with-angular/) by [Manfred Steyer](https://bsky.app/profile/manfredsteyer.bsky.social)
 - [Nx for Scalable Architecture workshop](https://push-based.io/workshop/nx-for-scalable-architecture-february25) by [Push-Based](https://push-based.io/)
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

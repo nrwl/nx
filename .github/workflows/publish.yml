@@ -3,7 +3,7 @@ name: publish
 on:
   # Automated schedule - canary releases from master
   schedule:
-    - cron: "0 20 * * 1-5" # Monday - Friday, at 20:00 UTC (8pm UTC)
+    - cron: "0 19 * * 1-5" # Monday - Friday, at 19:00 UTC (7pm UTC)
   # Manual trigger - PR releases or dry-runs (based on workflow inputs)
   workflow_dispatch:
     inputs:

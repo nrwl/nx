@@ -12,7 +12,7 @@ const docsToAstroRedirects = {
   '/ci/features/dynamic-agents': '/docs/features/ci-features/dynamic-agents',
   '/ci/features/split-e2e-tasks': '/docs/features/ci-features/split-e2e-tasks',
   '/ci/features/flaky-tasks': '/docs/features/ci-features/flaky-tasks',
-  '/ci/features/explain-with-ai': '/docs/features/ci-features/explain-with-ai',
+  '/ci/features/explain-with-ai': '/docs/features/ci-features/self-healing-ci',
   '/ci/features/github-integration':
     '/docs/features/ci-features/github-integration',
   '/ci/concepts': '/docs/concepts/ci-concepts',
@@ -52,7 +52,7 @@ const docsToAstroRedirects = {
   '/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center':
     '/docs/enterprise/single-tenant/auth-bitbucket-data-center',
   '/ci/recipes/enterprise/single-tenant/auth-saml':
-    '/docs/enterprise/single-tenant/auth-saml',
+    '/docs/enterprise/single-tenant',
   '/ci/recipes/enterprise/single-tenant/custom-github-app':
     '/docs/enterprise/single-tenant/custom-github-app',
   '/ci/recipes/enterprise/conformance':
@@ -934,6 +934,8 @@ const docsToAstroRedirects = {
     '/docs/technologies/test-tools/playwright',
   '/technologies/test-tools/playwright/introduction':
     '/docs/technologies/test-tools/playwright/introduction',
+  '/technologies/test-tools/playwright/recipes/merge-atomized-outputs':
+    '/docs/technologies/test-tools/playwright/guides/merge-atomized-outputs',
   '/technologies/test-tools/storybook':
     '/docs/technologies/test-tools/storybook',
   '/technologies/test-tools/storybook/introduction':
@@ -1034,8 +1036,7 @@ const docsToAstroRedirects = {
     '/docs/technologies/node/guides/wait-for-tasks',
   '/technologies/node/express/api': '/docs/technologies/node/express',
   '/technologies/node/nest/api': '/docs/technologies/node/nest',
-  '/technologies/java/introduction':
-    '/docs/technologies/angular/angular-rspack/introduction',
+  '/technologies/java/introduction': '/docs/technologies/java/introduction',
   '/technologies/module-federation/recipes/create-a-host':
     '/docs/technologies/module-federation/guides/create-a-host',
   '/technologies/module-federation/recipes/create-a-remote':

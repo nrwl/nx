@@ -25,6 +25,7 @@ The default changelog renderer for `nx release` generates a changelog entry for 
 There are a few options available to modify the default changelog renderer output. They can be applied to both `workspaceChangelog` and `projectChangelogs` in exactly the same way. All four options are true by default:
 
 ```json
+// nx.json
 {
   "release": {
     "changelog": {
@@ -66,6 +67,7 @@ Whether to include the date in the version title. It can be set to `false` to di
 If you prefer a more minimalist changelog, you can set all the options to false, like this:
 
 ```json
+// nx.json
 {
   "release": {
     "changelog": {
@@ -91,3 +93,40 @@ Which will generate a changelog that looks similar to the following:
 
 - **rule-tester:** check for missing placeholder data in the message
 ```
+
+## Custom Changelog Renderer {% badge  text="Nx 22+" /%}
+
+For complete control over changelog formatting, you can provide a custom changelog renderer implementation. The renderer can be specified as a path to a module that exports a class extending the base `ChangelogRenderer`.
+
+```jsonc
+{
+  "release": {
+    "changelog": {
+      "projectChangelogs": {
+        "renderer": "./tools/custom-changelog-renderer.ts"
+      }
+    }
+  }
+}
+```
+
+Your custom renderer must extend the `ChangelogRenderer` class and implement the required methods:
+
+```typescript
+// tools/custom-changelog-renderer.ts
+import { ChangelogRenderer, ChangelogRenderOptions } from '@nx/js/release';
+
+export default class CustomChangelogRenderer extends ChangelogRenderer {
+  async renderMarkdown(
+    changes: any[],
+    options: ChangelogRenderOptions
+  ): Promise<string> {
+    // Your custom changelog generation logic
+    return '# My Custom Changelog\n\n...';
+  }
+}
+```
+
+{% aside type="note" title="Programmatic API" %}
+When using the programmatic `ReleaseClient` API (Nx 22+), you can also pass the renderer implementation class directly instead of a file path, allowing for dynamic renderer selection without file system access.
+{% /aside %}

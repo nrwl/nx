@@ -26,7 +26,7 @@ Manually splitting these slow tasks can be complex and require ongoing maintenan
 
 To use **automated task splitting**, you need to connect your workspace to Nx Cloud (if you haven't already).
 
-```shell {% frame="none" %}
+```shell
 npx nx@latest connect
 ```
 
@@ -39,28 +39,35 @@ Run this command to set up inferred tasks and enable task splitting for each plu
 {% tabs syncKey="test-runner" %}
 {% tabitem label="Cypress" %}
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/cypress
 ```
 
 {% /tabitem %}
 {% tabitem label="Playwright" %}
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/playwright
 ```
 
 {% /tabitem %}
 {% tabitem label="Jest" %}
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/jest
+```
+
+{% /tabitem %}
+{% tabitem label="Vitest" %}
+
+```shell
+nx add @nx/vite
 ```
 
 {% /tabitem %}
 {% tabitem label="Gradle" %}
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/gradle
 ```
 
@@ -82,12 +89,13 @@ If you upgraded Nx from an older version, ensure that [inferred tasks](/docs/con
 
 ## Update an Existing Project to use Automated Task Splitting
 
-If you are already using the `@nx/cypress`, `@nx/playwright`, `@nx/jest`, or `@nx/gradle` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
+If you are already using the `@nx/cypress`, `@nx/playwright`, `@nx/jest`, `@nx/vite` or `@nx/gradle` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
 
 - [Configure Cypress Task Splitting](/docs/technologies/test-tools/cypress/introduction#nxcypress-configuration)
 - [Configure Playwright Task Splitting](/docs/technologies/test-tools/playwright/introduction#nxplaywright-configuration)
 - [Configure Jest Task Splitting](/docs/technologies/test-tools/jest/introduction#splitting-e2e-tests)
-- [Configure Gradle Testing Task Splitting](/docs/technologies/java/introduction#test-distribution)
+- [Configure Vitest Task Splitting](/docs/technologies/build-tools/vite/introduction#splitting-e2e-tests)
+- [Configure Gradle Testing Task Splitting](/docs/technologies/java/gradle/introduction#test-distribution)
 
 ## Verify Automated Task Splitting Works
 
@@ -96,7 +104,7 @@ Run the following command to open the project detail view for your test project:
 {% tabs %}
 {% tabitem label="CLI" %}
 
-```shell {% frame="none" %}
+```shell
 nx show project my-project-e2e
 ```
 
@@ -422,7 +430,7 @@ If you configured Nx Atomizer properly, you'll see that there are tasks named `e
 
 During local development, you'll want to continue using the base task (e.g., `e2e`, `test`) as it is more efficient on a single machine.
 
-```shell {% frame="none" %}
+```shell
 nx e2e my-project-e2e
 ```
 

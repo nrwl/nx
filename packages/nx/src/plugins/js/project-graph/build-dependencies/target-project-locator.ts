@@ -1,5 +1,5 @@
 import { isBuiltin } from 'node:module';
-import { dirname, join, posix, relative, resolve } from 'node:path';
+import { dirname, join, posix, relative } from 'node:path';
 import { clean, satisfies } from 'semver';
 import type {
   ProjectGraphExternalNode,
@@ -357,7 +357,7 @@ export class TargetProjectLocator {
       const targetPath = maybeDep?.data.root;
 
       const normalizedPath = normalizedRange.replace('file:', '');
-      const resolvedPath = join(dirname(packageJsonPath), normalizedPath);
+      const resolvedPath = posix.join(dirname(packageJsonPath), normalizedPath);
 
       if (targetPath === resolvedPath) {
         return maybeDep?.name;

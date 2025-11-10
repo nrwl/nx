@@ -155,7 +155,7 @@ describe('generator utils', () => {
           //  plugins: [ nxViteTsPaths() ],
           // },
           // Configuration for building your library.
-          // See: https://vitejs.dev/guide/build.html#library-mode
+          // See: https://vite.dev/guide/build.html#library-mode
           build: {
             outDir: '../dist/myproj',
             emptyOutDir: true,
@@ -296,10 +296,10 @@ describe('generator utils', () => {
           plugins: [dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //  plugins: [],
           // },
           // Configuration for building your library.
-          // See: https://vitejs.dev/guide/build.html#library-mode
+          // See: https://vite.dev/guide/build.html#library-mode
           build: {
             outDir: './dist',
             emptyOutDir: true,

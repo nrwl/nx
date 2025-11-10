@@ -2,7 +2,7 @@
   "extends": "<%= offsetFromRoot %>tsconfig.base.json",
   "compilerOptions": {
       "lib": ["DOM", "DOM.Iterable", "ES2019"],
-      "types": ["@react-router/node", "vite/client"],
+      "types": ["@react-router/node", "vite/client", "node"],
       "isolatedModules": true,
       "esModuleInterop": true,
       "jsx": "react-jsx",

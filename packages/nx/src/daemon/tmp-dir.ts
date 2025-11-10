@@ -33,8 +33,8 @@ export function writeDaemonLogs(error?: string) {
   return file;
 }
 
-export function markDaemonAsDisabled() {
-  writeFileSync(join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'disabled'), 'true');
+export function markDaemonAsDisabled(reason: string) {
+  writeFileSync(join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'disabled'), reason);
 }
 
 export function isDaemonDisabled() {

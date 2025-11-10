@@ -55,7 +55,8 @@ const nxPluginWorkerCache: NxPluginWorkerCache = (global[
 
 export async function loadRemoteNxPlugin(
   plugin: PluginConfiguration,
-  root: string
+  root: string,
+  index?: number
 ): Promise<[Promise<LoadedNxPlugin>, () => void]> {
   const cacheKey = JSON.stringify({ plugin, root });
   if (nxPluginWorkerCache.has(cacheKey)) {
@@ -67,6 +68,32 @@ export async function loadRemoteNxPlugin(
     await resolveNxPlugin(moduleName, root, getNxRequirePaths(root));
 
   const { worker, socket } = await startPluginWorker();
+
+  // Register plugin worker as a subprocess of the main CLI
+  // This allows metrics collection when the daemon is not used
+  if (worker.pid) {
+    try {
+      const { isOnDaemon } = await import('../../../daemon/is-on-daemon');
+      /**
+       * We can only register the plugin worker as a subprocess of the main CLI
+       * when the daemon is not used. Additionally, we can't explcitly register
+       * the plugin worker as a subprocess of the daemon, because when on the
+       * daemon, we'd get a different instance of the process metrics service.
+       */
+      if (!isOnDaemon()) {
+        const { getProcessMetricsService } = await import(
+          '../../../tasks-runner/process-metrics-service'
+        );
+
+        getProcessMetricsService().registerMainCliSubprocess(
+          worker.pid,
+          `${name}${index !== undefined ? ` (${index})` : ''}`
+        );
+      }
+    } catch {
+      // Silently ignore - metrics collection is optional
+    }
+  }
 
   const pendingPromises = new Map<string, PendingPromise>();
 
@@ -263,7 +290,7 @@ function createWorkerHandler(
         }
       },
       createDependenciesResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver(result.dependencies);
         } else if (result.success === false) {
@@ -271,7 +298,7 @@ function createWorkerHandler(
         }
       },
       createNodesResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver(result.result);
         } else if (result.success === false) {
@@ -279,7 +306,7 @@ function createWorkerHandler(
         }
       },
       createMetadataResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver(result.metadata);
         } else if (result.success === false) {
@@ -287,7 +314,7 @@ function createWorkerHandler(
         }
       },
       preTasksExecutionResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver(result.mutations);
         } else if (result.success === false) {
@@ -295,7 +322,7 @@ function createWorkerHandler(
         }
       },
       postTasksExecutionResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver();
         } else if (result.success === false) {
@@ -320,6 +347,25 @@ function createWorkerExitHandler(
         )
       );
     }
+  };
+}
+
+function getPendingPromise(tx: string, pending: Map<string, PendingPromise>) {
+  const pendingPromise = pending.get(tx);
+
+  if (!pendingPromise) {
+    throw new Error(
+      `No pending promise found for transaction "${tx}". This may indicate a bug in the plugin pool. Currently pending promises:\n` +
+        Array.from(pending.keys())
+          .map((t) => `  -  ${t}`)
+          .join('\n')
+    );
+  }
+
+  const { rejector, resolver } = pendingPromise;
+  return {
+    rejector,
+    resolver,
   };
 }
 
@@ -364,6 +410,7 @@ function registerPendingPromise(
 }
 
 global.nxPluginWorkerCount ??= 0;
+
 async function startPluginWorker() {
   // this should only really be true when running unit tests within
   // the Nx repo. We still need to start the worker in this case,
@@ -385,7 +432,7 @@ async function startPluginWorker() {
   };
 
   const ipcPath = getPluginOsSocketPath(
-    [process.pid, global.nxPluginWorkerCount++].join('-')
+    [process.pid, global.nxPluginWorkerCount++, performance.now()].join('-')
   );
 
   const worker = spawn(

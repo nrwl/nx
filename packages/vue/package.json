@@ -29,13 +29,14 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "picomatch": "^4.0.2",
-    "tslib": "^2.3.0",
     "@nx/devkit": "workspace:*",
-    "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
+    "@nx/js": "workspace:*",
     "@nx/vite": "workspace:*",
-    "@nx/web": "workspace:*"
+    "@nx/web": "workspace:*",
+    "picomatch": "catalog:",
+    "semver": "catalog:",
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
     "nx": "workspace:*"
