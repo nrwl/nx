@@ -390,9 +390,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       '@nx/vite',
       nxVersion
     );
-    const { configurationGenerator } = ensurePackage<
-      typeof import('@nx/vitest')
-    >('@nx/vitest', nxVersion);
+    ensurePackage('@nx/vitest', nxVersion);
+    const { configurationGenerator } = await import('@nx/vitest/generators');
     const vitestTask = await configurationGenerator(host, {
       uiFramework: 'none',
       project: options.projectName,
