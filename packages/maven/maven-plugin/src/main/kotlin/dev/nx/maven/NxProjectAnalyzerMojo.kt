@@ -46,8 +46,8 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
   @Parameter(property = "workspaceRoot", defaultValue = "\${session.executionRootDirectory}")
   private lateinit var workspaceRoot: File
 
-  @Parameter(property = "targetNamePrefix", defaultValue = "")
-  private var targetNamePrefix: String = ""
+  @Parameter(property = "targetNamePrefix")
+  private var targetNamePrefix: String? = null
 
   private val objectMapper = ObjectMapper()
 
@@ -106,7 +106,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
       mojoAnalyzer,
       pathFormatter,
       gitIgnoreClassifier,
-      targetNamePrefix
+      targetNamePrefix ?: ""
     )
 
     // Resolve Maven command once for all projects
