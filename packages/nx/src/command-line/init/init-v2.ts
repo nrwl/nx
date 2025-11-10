@@ -218,7 +218,7 @@ const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   storybook: '@nx/storybook',
   // Bundlers
   vite: '@nx/vite',
-  vitest: '@nx/vite',
+  vitest: '@nx/vitest',
   webpack: '@nx/webpack',
   '@rspack/core': '@nx/rspack',
   rollup: '@nx/rollup',

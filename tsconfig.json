@@ -95,6 +95,9 @@
       "path": "./packages/vite"
     },
     {
+      "path": "./packages/vitest"
+    },
+    {
       "path": "./packages/vue"
     },
     {

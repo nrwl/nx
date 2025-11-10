@@ -1,0 +1,68 @@
+{
+  "name": "@nx/vitest",
+  "description": "The Nx Plugin for Vitest to enable fast unit testing with Vitest.",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/vitest"
+  },
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "keywords": [
+    "Monorepo",
+    "Vitest",
+    "Testing",
+    "Unit Testing"
+  ],
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "homepage": "https://nx.dev",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./generators": {
+      "types": "./generators.d.ts",
+      "default": "./generators.js"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json"
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json"
+  },
+  "executors": "./executors.json",
+  "generators": "./generators.json",
+  "dependencies": {
+    "@nx/devkit": "workspace:*",
+    "@nx/js": "workspace:*",
+    "tslib": "catalog:typescript",
+    "semver": "catalog:",
+    "@phenomnomnominal/tsquery": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "vitest": "^1.0.0 || ^2.0.0 || ^3.0.0 || ^4.0.0",
+    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
+  }
+}

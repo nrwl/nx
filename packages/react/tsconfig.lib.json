@@ -17,6 +17,9 @@
   "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
+      "path": "../vitest/tsconfig.lib.json"
+    },
+    {
       "path": "../rollup/tsconfig.lib.json"
     },
     {

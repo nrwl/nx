@@ -1,19 +1,18 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import addViteTempFilesToGitIgnore from './add-vitest-temp-files-to-git-ignore';
+import addVitestTempFilesToGitIgnore from './add-vitest-temp-files-to-git-ignore';
 
-describe('addViteTempFilesToGitIgnore', () => {
+describe('addVitestTempFilesToGitIgnore', () => {
   it('should update an existing .gitignore file to add the glob correctly', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
     tree.write('.gitignore', '.idea');
 
     // ACT
-    addViteTempFilesToGitIgnore(tree);
+    addVitestTempFilesToGitIgnore(tree);
 
     // ASSERT
     expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
       ".idea
-      vite.config.*.timestamp*
       vitest.config.*.timestamp*"
     `);
   });
@@ -28,13 +27,12 @@ describe('addViteTempFilesToGitIgnore', () => {
     );
 
     // ACT
-    addViteTempFilesToGitIgnore(tree);
+    addVitestTempFilesToGitIgnore(tree);
 
     // ASSERT
     expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
       ".idea
 
-      vite.config.*.timestamp*
       vitest.config.*.timestamp*"
     `);
   });
@@ -45,12 +43,11 @@ describe('addViteTempFilesToGitIgnore', () => {
     tree.delete('.gitignore');
 
     // ACT
-    addViteTempFilesToGitIgnore(tree);
+    addVitestTempFilesToGitIgnore(tree);
 
     // ASSERT
-    expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
-      "vite.config.*.timestamp*
-      vitest.config.*.timestamp*"
-    `);
+    expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(
+      `"vitest.config.*.timestamp*"`
+    );
   });
 });

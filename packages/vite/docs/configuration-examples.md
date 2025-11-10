@@ -24,6 +24,10 @@ You must provide a `project` and a `uiFramework` for the generator to work.
 
 You may also pass the `includeVitest` flag. This will also configure your project for testing with [Vitest](https://vitest.dev/), by adding the `test` configuration in your `vite.config.ts` file.
 
+{% callout type="note" title="Vitest-only configuration" %}
+If you only need to add Vitest to a project (without Vite build configuration), use the `@nx/vitest:configuration` generator instead. See the [@nx/vitest package](/packages/vitest) for more information.
+{% /callout %}
+
 ## How to use
 
 If you have an existing project that does not use Vite, you may want to convert it to use Vite. This can be a `webpack` project, a buildable JS library that uses the `@nx/js:babel`, the `@nx/js:swc` or the `@nx/rollup:rollup` executor, or even a non-buildable library.

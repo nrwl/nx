@@ -39,7 +39,8 @@
     "@nx/js": "workspace:*"
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "@nx/vitest": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

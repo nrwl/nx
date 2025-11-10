@@ -285,12 +285,13 @@ describe('@nx/vite/plugin', () => {
     });
   });
 
+  // TODO(Colum): Move this to a vitest specific e2e project when one is created
   describe('react with vitest only', () => {
     const reactVitest = uniq('reactVitest');
 
     beforeAll(() => {
       proj = newProject({
-        packages: ['@nx/vite', '@nx/react'],
+        packages: ['@nx/vitest', '@nx/react'],
       });
       runCLI(
         `generate @nx/react:app ${reactVitest} --bundler=webpack --unitTestRunner=vitest --e2eTestRunner=none`
@@ -301,14 +302,11 @@ describe('@nx/vite/plugin', () => {
       cleanupProject();
     });
 
-    it('should contain targets build, test and lint', () => {
+    it('should contain targets test', () => {
       const nxJson = readJson('nx.json');
 
-      const vitePlugin = nxJson.plugins.find(
-        (p) => p.plugin === '@nx/vite/plugin'
-      );
+      const vitePlugin = nxJson.plugins.find((p) => p.plugin === '@nx/vitest');
       expect(vitePlugin).toBeDefined();
-      expect(vitePlugin.options.buildTargetName).toEqual('build');
       expect(vitePlugin.options.testTargetName).toEqual('test');
     });
 

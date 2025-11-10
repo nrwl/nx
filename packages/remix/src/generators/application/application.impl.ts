@@ -189,10 +189,13 @@ export async function remixApplicationGeneratorInternal(
 
   if (options.unitTestRunner !== 'none') {
     if (options.unitTestRunner === 'vitest') {
-      const { vitestGenerator, createOrEditViteConfig } = ensurePackage<
+      const { createOrEditViteConfig } = ensurePackage<
         typeof import('@nx/vite')
       >('@nx/vite', nxVersion);
-      const vitestTask = await vitestGenerator(tree, {
+      const { configurationGenerator } = ensurePackage<
+        typeof import('@nx/vitest')
+      >('@nx/vitest', nxVersion);
+      const vitestTask = await configurationGenerator(tree, {
         uiFramework: 'react',
         project: options.projectName,
         coverageProvider: 'v8',
@@ -201,6 +204,7 @@ export async function remixApplicationGeneratorInternal(
         testEnvironment: 'jsdom',
         skipViteConfig: true,
         addPlugin: true,
+        viteVersion: 5,
       });
       createOrEditViteConfig(
         tree,

@@ -1,0 +1,9 @@
+{
+  "generators": {
+    "update-20-3-0": {
+      "version": "20.3.0-beta.2",
+      "description": "Add gitignore entry for temporary vitest config files.",
+      "implementation": "./src/migrations/update-20-3-0/add-vitest-temp-files-to-git-ignore"
+    }
+  }
+}
