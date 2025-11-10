@@ -98,7 +98,7 @@ class NxTargetFactory(
         project,
         mavenCommand,
         nxTargets,
-        ciPhaseTargets["test-ci"]!!,
+        ciPhaseTargets["${applyPrefix("test-ci")}"]!!,
         phaseGoals["test"]!!
       )
 
