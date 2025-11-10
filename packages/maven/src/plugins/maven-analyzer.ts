@@ -71,6 +71,7 @@ export async function runMavenAnalysis(
     '-am',
     `-DoutputFile=${outputFile}`,
     `-DworkspaceRoot=${workspaceRoot}`,
+    `-DtargetNamePrefix=${options.targetNamePrefix || ''}`,
     '--batch-mode',
     '--no-transfer-progress',
   ];
