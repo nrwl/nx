@@ -228,6 +228,107 @@ class NxTargetFactory(
     return target
   }
 
+  /**
+   * Creates a phase target that uses the batch executor for multi-task Maven execution.
+   * This is similar to createPhaseTarget but delegates to the Maven batch runner.
+   */
+  private fun createPhaseBatchTarget(
+    project: MavenProject, phase: String, goals: List<GoalDescriptor>
+  ): NxTarget {
+    // Sort goals by priority (lower numbers execute first)
+    val sortedGoals = goals.sortedWith(compareBy<GoalDescriptor> { it.executionPriority }.thenBy { it.executionId })
+
+    // Inline analysis logic from PhaseAnalyzer
+    val plugins = project.build.plugins
+    var isThreadSafe = true
+    var isCacheable = true
+    var isContinuous = false
+    val inputs = objectMapper.createArrayNode()
+    val outputs = mutableSetOf<String>()
+
+    val analyses = plugins
+      .flatMap { plugin ->
+        val pluginDescriptor = runCatching { getPluginDescriptor(plugin, project) }
+          .getOrElse { throwable ->
+            log.warn(
+              "Failed to resolve plugin descriptor for ${plugin.groupId}:${plugin.artifactId}: ${throwable.message}"
+            )
+            return@flatMap emptyList()
+          }
+
+        plugin.executions
+          .filter { execution -> normalizePhase(execution.phase) == phase }
+          .flatMap { execution ->
+            log.info(
+              "Analyzing ${project.groupId}:${project.artifactId} execution: ${execution.id} -> phase: ${execution.phase}, goals: ${execution.goals}"
+            )
+
+            execution.goals.filterNotNull().mapNotNull { goal ->
+              mojoAnalyzer.analyzeMojo(pluginDescriptor, goal, project)
+            }
+          }
+      }
+
+    // Aggregate analysis results
+    analyses.forEach { analysis ->
+
+      if (!analysis.isThreadSafe) {
+        isThreadSafe = false
+      }
+      if (!analysis.isCacheable) {
+        isCacheable = false
+      }
+      if (analysis.isContinuous) {
+        isContinuous = true
+      }
+
+      analysis.inputs.forEach { input -> inputs.add(input) }
+      analysis.outputs.forEach { output -> outputs.add(output) }
+      analysis.dependentTaskOutputInputs.forEach { input ->
+        val obj = objectMapper.createObjectNode()
+        obj.put("dependentTasksOutputFiles", input.path)
+        if (input.transitive) obj.put("transitive", true)
+        inputs.add(obj)
+      }
+    }
+
+    log.info("Phase $phase batch analysis: thread safe: $isThreadSafe, cacheable: $isCacheable, inputs: $inputs, outputs: $outputs")
+
+    val options = objectMapper.createObjectNode()
+
+    // Build phase and goals configuration for batch executor
+    options.put("phase", phase)
+
+    // Add all goals for this phase (sorted by priority)
+    val goalsArray = objectMapper.createArrayNode()
+    sortedGoals.forEach { goal -> goalsArray.add(goal.goalSpecifier) }
+    options.set<ArrayNode>("goals", goalsArray)
+
+    // Add standard Maven arguments
+    options.put("project", "${project.groupId}:${project.artifactId}")
+
+    log.info("Created batch phase target '$phase' with executor: @nx/maven:maven-batch")
+
+    // Use the batch executor instead of run-commands
+    val target = NxTarget("@nx/maven:maven", options, isCacheable, isContinuous, isThreadSafe)
+
+    // Copy caching info from analysis
+    if (isCacheable) {
+      // Convert inputs to JsonNode array
+      val inputsArray = objectMapper.createArrayNode()
+      inputs.forEach { input -> inputsArray.add(input) }
+      target.inputs = inputsArray
+
+      // Convert outputs to JsonNode array
+      val outputsArray = objectMapper.createArrayNode()
+      outputs.forEach { output -> outputsArray.add(output) }
+      target.outputs = outputsArray
+      addBuildStateJsonInputsAndOutputs(project, target)
+    }
+
+    return target
+  }
+
   private fun processLifecyclePhases(
     lifecycles: List<org.apache.maven.lifecycle.Lifecycle>,
     phaseGoals: Map<String, MutableList<GoalDescriptor>>,
@@ -281,11 +382,8 @@ class NxTargetFactory(
     val hasGoals = goalsForPhase?.isNotEmpty() == true
 
     // Create target for all phases - either with goals or as noop
-    val target = if (hasGoals) {
-      createPhaseTarget(project, phase, mavenCommand, goalsForPhase!!)
-    } else {
-      createNoopPhaseTarget(phase)
-    }
+    val target = createPhaseBatchTarget(project, phase, goalsForPhase ?: emptyList())
+
 
     target.dependsOn = target.dependsOn ?: objectMapper.createArrayNode()
 
@@ -440,7 +538,6 @@ class NxTargetFactory(
 
           val goalTargetName = applyPrefix("$goalPrefix:$goal@${execution.id}")
           val goalTarget = createSimpleGoalTarget(
-            mavenCommand,
             project,
             pluginDescriptor,
             goalPrefix,
@@ -459,7 +556,6 @@ class NxTargetFactory(
         if (!boundGoals.contains(goal)) {
           val goalTargetName = applyPrefix("$goalPrefix:$goal")
           val goalTarget = createSimpleGoalTarget(
-            mavenCommand,
             project,
             pluginDescriptor,
             goalPrefix,
@@ -510,7 +606,6 @@ class NxTargetFactory(
   }
 
   private fun createSimpleGoalTarget(
-    mavenCommand: String,
     project: MavenProject,
     pluginDescriptor: PluginDescriptor,
     goalPrefix: String,
@@ -518,21 +613,28 @@ class NxTargetFactory(
     execution: PluginExecution?
   ): NxTarget? {
     val options = objectMapper.createObjectNode()
-
-    // Simple command without nx:apply/nx:record
-    val mavenVersion = session.systemProperties.getProperty("maven.version") ?: ""
-    val nonRecursiveFlag = if (mavenVersion.startsWith("4")) "-N" else ""
     val goalSpec = if (execution != null) "$goalPrefix:$goalName@${execution.id}" else "$goalPrefix:$goalName"
-    val command =
-      "$mavenCommand $goalSpec -pl ${project.groupId}:${project.artifactId} $nonRecursiveFlag".replace(
-        "  ",
-        " "
-      )
-    options.put("command", command)
+
+    // Use Maven executor with goal specifier
+    options.put("goals", goalSpec)
+
+    // Add standard arguments
+    val args = mutableListOf<String>()
+    options.put("project", "${project.groupId}:${project.artifactId}")
+
+    val mavenVersion = session.systemProperties.getProperty("maven.version") ?: ""
+    if (mavenVersion.startsWith("4")) {
+      args.add("-N")
+    }
+
+    val argsArray = objectMapper.createArrayNode()
+    args.forEach { arg -> argsArray.add(arg) }
+    options.set<ArrayNode>("args", argsArray)
+
     val analysis = mojoAnalyzer.analyzeMojo(pluginDescriptor, goalName, project)
       ?: return null
 
-    val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isContinuous, analysis.isThreadSafe)
+    val target = NxTarget("@nx/maven:maven", options, analysis.isCacheable, analysis.isContinuous, analysis.isThreadSafe)
 
     // Add inputs and outputs if cacheable
     if (analysis.isCacheable) {

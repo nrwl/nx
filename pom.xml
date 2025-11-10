@@ -2,9 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0          http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>dev.nx</groupId>
+  <groupId>dev.nx.maven</groupId>
   <artifactId>nx-parent</artifactId>
-  <version>0.0.10</version>
+  <version>0.0.10-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Nx Parent</name>
@@ -36,7 +36,7 @@
 
 
   <modules>
-    <module>packages/maven/maven-plugin</module>
+    <module>packages/maven</module>
   </modules>
 
   <properties>
@@ -282,6 +282,12 @@
             </execution>
           </executions>
         </plugin>
+
+      <plugin>
+        <groupId>dev.nx.maven</groupId>
+        <artifactId>nx-maven-plugin</artifactId>
+        <version>{project.version}</version>
+      </plugin>
     </plugins>
     </pluginManagement>
 
