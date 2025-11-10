@@ -6,56 +6,39 @@ import dev.nx.gradle.dsl.asJson
 import dev.nx.gradle.dsl.asJsonMap
 import javax.inject.Inject
 import org.gradle.api.Action
-import org.gradle.api.Task
+import org.gradle.api.Project
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 
 /**
- * Extension for Gradle tasks to declare Nx-specific task configuration.
+ * Extension for Gradle projects to declare Nx-specific project metadata.
  *
- * This extension allows Gradle tasks to specify additional Nx metadata including:
- * - Task dependencies (via dependsOn property)
- * - Any Nx target properties (via JSON DSL)
+ * This extension allows Gradle projects to specify project-level metadata such as name, tags, and
+ * description. The configuration is exposed as JSON that Nx will process later.
+ *
+ * Note: This is ONLY for project-level metadata. Targets are automatically discovered from Gradle
+ * tasks and should NOT be defined here.
  *
  * Example usage in Kotlin DSL:
  * ```
- * tasks.named("integrationTest") {
- *   nx {
- *     dependsOn.addAll("^build", "app:lint")
- *     set("cache", false)
- *     array("tags", "integration", "slow")
- *     set("metadata") {
- *       set("description", "Run integration tests")
- *       set("priority", 1)
- *     }
- *   }
+ * nx {
+ *   set("name", "my-project")
+ *   array("tags", "service:payments", "tier:2")
+ *   set("description", "Payment processing service")
  * }
  * ```
  *
  * Example usage in Groovy DSL:
  * ```
- * tasks.named('integrationTest') {
- *   nx {
- *     dependsOn.addAll('^build', 'app:lint')
- *     set 'cache', false
- *     array 'tags', 'integration', 'slow'
- *   }
+ * nx {
+ *   set 'name', 'my-project'
+ *   array 'tags', 'service:payments', 'tier:2'
+ *   set 'description', 'Payment processing service'
  * }
  * ```
  */
-open class NxTaskExtension @Inject constructor(objects: ObjectFactory) {
-  /**
-   * List of Nx task dependencies for this Gradle task.
-   *
-   * Supports Nx dependency patterns such as:
-   * - "^build" - depends on the 'build' target of all upstream projects
-   * - "project:target" - depends on a specific target of a specific project
-   * - "target" - depends on a target of the same project
-   */
-  val dependsOn: ListProperty<String> = objects.listProperty(String::class.java)
-
-  /** JSON root for task-level Nx config */
+open class NxProjectExtension @Inject constructor(objects: ObjectFactory) {
+  /** JSON root for project-level Nx config */
   val json: MapProperty<String, Any?> = objects.mapProperty(String::class.java, Any::class.java)
 
   // DSL methods for building JSON config
@@ -88,22 +71,21 @@ open class NxTaskExtension @Inject constructor(objects: ObjectFactory) {
 }
 
 /**
- * Type-safe accessor for the nx extension in Kotlin DSL.
+ * Type-safe accessor for the nx extension in Kotlin DSL at project level.
  *
  * Example:
  * ```
- * tasks.named("test") {
- *   nx {
- *     dependsOn.add("^build")
- *   }
+ * nx {
+ *   set("name", "my-project")
+ *   array("tags", "service", "backend")
  * }
  * ```
  */
-fun Task.nx(configure: NxTaskExtension.() -> Unit) {
+fun Project.nx(configure: NxProjectExtension.() -> Unit) {
   val extension =
-      extensions.findByType(NxTaskExtension::class.java)
+      extensions.findByType(NxProjectExtension::class.java)
           ?: throw IllegalStateException(
-              "NxTaskExtension not found on task '${this.name}'. " +
+              "NxProjectExtension not found on project '${this.name}'. " +
                   "Make sure the dev.nx.gradle.project-graph plugin is applied.")
   configure(extension)
 }
