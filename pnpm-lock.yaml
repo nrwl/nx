@@ -4159,9 +4159,6 @@ importers:
       semver:
         specifier: 'catalog:'
         version: 7.7.2
-      storybook:
-        specifier: '>=7.0.0 <11.0.0'
-        version: 9.0.6(@testing-library/dom@10.4.0)(prettier@3.6.2)
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -4169,6 +4166,9 @@ importers:
       nx:
         specifier: workspace:*
         version: link:../nx
+      storybook:
+        specifier: 9.0.6
+        version: 9.0.6(@testing-library/dom@10.4.0)(prettier@3.6.2)
 
   packages/vite:
     dependencies:
