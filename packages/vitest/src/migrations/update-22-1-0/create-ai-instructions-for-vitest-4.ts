@@ -13,8 +13,8 @@ export default async function createAiInstructionsForVitest(tree: Tree) {
   }
 
   const contents = readFileSync(pathToAiInstructions);
-  tree.write('ai-files/MIGRATE_VITEST_4.md', contents);
+  tree.write('ai-migrations/MIGRATE_VITEST_4.md', contents);
   return [
-    `We created 'MIGRATE_VITEST_4.md' with instructions for an AI Agent to help migrate your Vitest projects to Vitest 4.`,
+    `We created 'ai-migrations/MIGRATE_VITEST_4.md' with instructions for an AI Agent to help migrate your Vitest projects to Vitest 4.`,
   ];
 }
