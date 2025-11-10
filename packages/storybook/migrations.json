@@ -14,11 +14,11 @@
     },
     "update-22-1-0-migrate-storybook-v10": {
       "cli": "nx",
-      "version": "22.1.0-beta.3",
+      "version": "22.1.0-beta.8",
       "requires": {
-        "storybook": ">=10.0.0"
+        "storybook": ">=9.0.0 <10.0.0"
       },
-      "description": "Update workspce to use Storybok v10",
+      "description": "Update workspace to use Storybook v10",
       "implementation": "./src/migrations/update-22-1-0/migrate-to-storybook-10"
     }
   },
@@ -635,9 +635,7 @@
       }
     },
     "22.1.0": {
-      "version": "22.1.0-beta.6",
-      "x-prompt": "Do you want to update Storybook to version 10?",
-      "implementation": "./src/migrations/update-21-2-0/migrate-to-storybook-10",
+      "version": "22.1.0-beta.8",
       "requires": {
         "storybook": ">=9.0.0 <10.0.0"
       },
