@@ -5,6 +5,7 @@ import {
   runCLI,
   uniq,
   readJson,
+  updateJson,
 } from '@nx/e2e-utils';
 
 import { createMavenProject } from './utils/create-maven-project';
@@ -81,5 +82,36 @@ describe('Maven', () => {
       target: `com.example:${mavenProjectName}`,
       type: 'static',
     });
+  });
+
+  it('should support targetNamePrefix option', () => {
+    // Update nx.json to add targetNamePrefix
+    updateJson('nx.json', (nxJson) => {
+      const mavenPlugin = nxJson.plugins.find(
+        (p) => typeof p === 'object' && p.plugin === '@nx/maven'
+      );
+      if (mavenPlugin && typeof mavenPlugin === 'object') {
+        mavenPlugin.options = {
+          ...mavenPlugin.options,
+          targetNamePrefix: 'mvn-',
+        };
+      }
+      return nxJson;
+    });
+
+    // Reset daemon to pick up nx.json changes
+    runCLI('reset');
+
+    // Verify prefixed targets exist
+    const output = runCLI('show project app --json=false');
+    expect(output).toContain('- mvn-install:');
+    expect(output).toContain('- mvn-compile:');
+    expect(output).toContain('- mvn-test:');
+    expect(output).toContain('- mvn-package:');
+    expect(output).toContain('- mvn-install-ci:');
+
+    // Verify prefixed target works
+    const buildOutput = runCLI('run app:mvn-compile');
+    expect(buildOutput).toContain('BUILD SUCCESS');
   });
 });

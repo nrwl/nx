@@ -71,10 +71,13 @@ export async function runMavenAnalysis(
     '-am',
     `-DoutputFile=${outputFile}`,
     `-DworkspaceRoot=${workspaceRoot}`,
-    `-DtargetNamePrefix=${options.targetNamePrefix || ''}`,
     '--batch-mode',
     '--no-transfer-progress',
   ];
+
+  if (options.targetNamePrefix) {
+    mavenArgs.push(`-DtargetNamePrefix=${options.targetNamePrefix}`);
+  }
 
   if (!isVerbose) {
     mavenArgs.push('-q');
