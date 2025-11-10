@@ -3,15 +3,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>dev.nx</groupId>
-    <artifactId>nx-parent</artifactId>
-    <version>0.0.11</version>
-    <relativePath>../../../pom.xml</relativePath>
+    <groupId>dev.nx.maven</groupId>
+    <artifactId>nx-maven-parent</artifactId>
+    <version>0.0.10</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <groupId>dev.nx.maven</groupId>
   <artifactId>nx-maven-plugin</artifactId>
-  <version>${project.parent.version}</version>
   <packaging>maven-plugin</packaging>
 
   <name>Nx Maven Plugin</name>
@@ -49,6 +47,15 @@
   </properties>
 
   <dependencies>
+    <!-- Shared Nx Maven utilities (bundled into JAR, not published as dependency) -->
+    <dependency>
+      <groupId>dev.nx.maven</groupId>
+      <artifactId>nx-maven-shared</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+
     <!-- Maven Plugin API -->
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -73,18 +80,10 @@
       <scope>provided</scope>
     </dependency>
 
-    <!-- JSON Processing -->
+    <!-- JSON Processing (Gson - used by shared module and plugin code) -->
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-
-    <!-- Jackson Kotlin Module -->
-    <dependency>
-      <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-kotlin</artifactId>
-      <version>${jackson.version}</version>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
     </dependency>
 
     <!-- Removed JavaParser - was causing StackOverflowError -->
@@ -217,6 +216,34 @@
         </configuration>
       </plugin>
 
+      <!-- Unpack shared module classes into plugin JAR -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.6.1</version>
+        <executions>
+          <execution>
+            <id>unpack-shared</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>dev.nx.maven</groupId>
+                  <artifactId>nx-maven-shared</artifactId>
+                  <version>${project.version}</version>
+                  <type>jar</type>
+                  <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                  <includes>**/*.class</includes>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <!-- Maven Surefire Plugin for running tests -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -257,6 +284,7 @@
           <outputDirectory>${project.build.directory}</outputDirectory>
         </configuration>
       </plugin>
+
     </plugins>
     <sourceDirectory>src/main/kotlin</sourceDirectory>
     <testSourceDirectory>src/test/kotlin</testSourceDirectory>

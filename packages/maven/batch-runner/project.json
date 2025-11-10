@@ -1,0 +1,18 @@
+{
+  "projectType": "application",
+  "name": "maven-batch-runner",
+  "targets": {
+    "package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./mvnw clean package -am -pl dev.nx.maven:maven-batch-runner"
+      },
+      "outputs": ["{projectRoot}/target/*.jar"]
+    },
+    "_package": {
+      "command": "node scripts/run-native-target.js package maven-batch-runner"
+    }
+  },
+  "tags": ["maven:dev.nx.maven"],
+  "implicitDependencies": ["maven-shared"]
+}
