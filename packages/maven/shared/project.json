@@ -1,0 +1,9 @@
+{
+  "projectType": "library",
+  "name": "maven-shared",
+  "targets": {
+    "maven:test": {
+      "command": "./mvnw clean verify -am -pl dev.nx.maven:maven-shared"
+    }
+  }
+}

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import dev.nx.maven.targets.NxTargetFactory
 import dev.nx.maven.targets.TestClassDiscovery
-import dev.nx.maven.utils.MavenCommandResolver
+import dev.nx.maven.shared.MavenCommandResolver
 import dev.nx.maven.utils.MavenExpressionResolver
 import dev.nx.maven.utils.MojoAnalyzer
 import dev.nx.maven.utils.PathFormatter
@@ -109,12 +109,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
       targetNamePrefix ?: ""
     )
 
-    // Resolve Maven command once for all projects
-    val mavenCommandStart = System.currentTimeMillis()
-    val mavenCommand = MavenCommandResolver.getMavenCommand(workspaceRoot)
-    val mavenCommandTime = System.currentTimeMillis() - mavenCommandStart
-    log.info("Maven command resolved to '$mavenCommand' in ${mavenCommandTime}ms")
-
     val setupTime = System.currentTimeMillis() - startTime
     log.info("Shared components created in ${setupTime}ms, analyzing ${allProjects.size} projects...")
 
@@ -134,7 +128,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
           workspaceRoot,
           sharedTargetFactory,
           coordinatesMap,
-          mavenCommand,
           pathFormatter
         )
 
