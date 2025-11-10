@@ -7,11 +7,9 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
-  logger,
   names,
   offsetFromRoot,
   ProjectConfiguration,
-  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -175,7 +173,9 @@ export async function libraryGeneratorInternal(
     options.bundler !== 'vite' // Test would have been set up already
   ) {
     const { createOrEditViteConfig } = ensurePackage('@nx/vite', nxVersion);
-    const { configurationGenerator } = ensurePackage('@nx/vitest', nxVersion);
+    ensurePackage('@nx/vitest', nxVersion);
+    // nx-ignore-next-line
+    const { configurationGenerator } = require('@nx/vitest/generators');
     const vitestTask = await configurationGenerator(tree, {
       project: options.name,
       uiFramework: 'none',
