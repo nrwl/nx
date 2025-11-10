@@ -226,7 +226,7 @@ export default defineConfig({
 `;
 
 exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using jest 1`] = `
-"export default {
+"module.exports = {
   displayName: 'test',
   preset: '../jest.preset.js',
   transform: {
@@ -405,7 +405,7 @@ export default defineConfig({
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 1`] = `
-"export default {
+"module.exports = {
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   displayName: 'test',
   preset: './jest.preset.cjs',

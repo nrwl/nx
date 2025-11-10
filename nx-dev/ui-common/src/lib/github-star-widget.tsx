@@ -47,7 +47,7 @@ export function GitHubStarWidget({
         href="https://github.com/nrwl/nx"
         target="_blank"
         rel="noreferrer noopener"
-        className="flex items-center gap-2 border-transparent font-bold text-white dark:text-slate-950"
+        className="flex items-center gap-2 border-transparent font-bold text-white no-underline dark:text-slate-950"
         onClick={() => handleClick('githubstars_buttonclick')}
       >
         <span className="absolute inset-0" />

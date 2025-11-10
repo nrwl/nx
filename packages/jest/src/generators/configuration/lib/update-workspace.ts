@@ -4,6 +4,7 @@ import {
   type Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { getInstalledJestMajorVersion } from '../../../utils/versions';
 import type { NormalizedJestProjectSchema } from '../schema';
 
 export function updateWorkspace(
@@ -14,6 +15,11 @@ export function updateWorkspace(
   if (!projectConfig.targets) {
     projectConfig.targets = {};
   }
+
+  // Detect Jest 30+ to use .cts config files (CommonJS TypeScript)
+  const jestMajorVersion = getInstalledJestMajorVersion(tree);
+  const useCommonJsConfig = jestMajorVersion === null || jestMajorVersion >= 30;
+  const jestConfigExt = options.js ? 'js' : useCommonJsConfig ? 'cts' : 'ts';
 
   projectConfig.targets[options.targetName] = {
     executor: '@nx/jest:jest',
@@ -29,7 +35,7 @@ export function updateWorkspace(
     options: {
       jestConfig: joinPathFragments(
         projectConfig.root,
-        `jest.config.${options.js ? 'js' : 'ts'}`
+        `jest.config.${jestConfigExt}`
       ),
     },
   };

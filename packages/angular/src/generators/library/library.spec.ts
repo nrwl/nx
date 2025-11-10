@@ -412,6 +412,7 @@ describe('lib', () => {
           'src/test-setup.ts',
           'jest.config.ts',
           'src/**/*.test.ts',
+          'jest.config.cts',
         ]);
       });
 
@@ -861,6 +862,7 @@ describe('lib', () => {
           'src/test-setup.ts',
           'jest.config.ts',
           'src/**/*.test.ts',
+          'jest.config.cts',
         ]);
 
         expect(moduleContents2).toMatchInlineSnapshot(`
@@ -894,6 +896,7 @@ describe('lib', () => {
           'src/test-setup.ts',
           'jest.config.ts',
           'src/**/*.test.ts',
+          'jest.config.cts',
         ]);
 
         expect(moduleContents3).toMatchSnapshot();
@@ -903,6 +906,7 @@ describe('lib', () => {
           'src/test-setup.ts',
           'jest.config.ts',
           'src/**/*.test.ts',
+          'jest.config.cts',
         ]);
       });
 

@@ -68,7 +68,8 @@ describe('setupSSR', () => {
             "jest.config.ts",
             "src/test-setup.ts",
             "src/**/*.test.ts",
-            "src/**/*.spec.ts"
+            "src/**/*.spec.ts",
+            "jest.config.cts"
           ]
         }
         "
@@ -175,7 +176,8 @@ describe('setupSSR', () => {
             "jest.config.ts",
             "src/test-setup.ts",
             "src/**/*.test.ts",
-            "src/**/*.spec.ts"
+            "src/**/*.spec.ts",
+            "jest.config.cts"
           ]
         }
         "
@@ -1080,16 +1082,16 @@ describe('setupSSR', () => {
 
         expect(tree.read('app1/src/main.server.ts', 'utf-8'))
           .toMatchInlineSnapshot(`
-        "import { BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
-        import { AppComponent } from './app/app.component';
-        import { config } from './app/app.config.server';
+                  "import { BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
+                  import { AppComponent } from './app/app.component';
+                  import { config } from './app/app.config.server';
 
-        const bootstrap = (context: BootstrapContext) =>
-          bootstrapApplication(AppComponent, config, context);
+                  const bootstrap = (context: BootstrapContext) =>
+                    bootstrapApplication(AppComponent, config, context);
 
-        export default bootstrap;
-        "
-        `);
+                  export default bootstrap;
+                  "
+                `);
       }
     );
 
@@ -1114,15 +1116,15 @@ describe('setupSSR', () => {
 
         expect(tree.read('app1/src/main.server.ts', 'utf-8'))
           .toMatchInlineSnapshot(`
-        "import { bootstrapApplication } from '@angular/platform-browser';
-        import { AppComponent } from './app/app.component';
-        import { config } from './app/app.config.server';
+                  "import { bootstrapApplication } from '@angular/platform-browser';
+                  import { AppComponent } from './app/app.component';
+                  import { config } from './app/app.config.server';
 
-        const bootstrap = () => bootstrapApplication(AppComponent, config);
+                  const bootstrap = () => bootstrapApplication(AppComponent, config);
 
-        export default bootstrap;
-        "
-        `);
+                  export default bootstrap;
+                  "
+                `);
       }
     );
 

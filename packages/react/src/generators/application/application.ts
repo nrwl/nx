@@ -217,6 +217,7 @@ export async function applicationGeneratorInternal(
       (json) => {
         const types = new Set(json.compilerOptions?.types || []);
         types.add('@react-router/node');
+        types.add('node');
         return {
           ...json,
           compilerOptions: {

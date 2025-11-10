@@ -209,6 +209,7 @@ describe('lib', () => {
             "src/**/*.spec.jsx",
             "src/test-setup.ts",
             "jest.config.ts",
+            "jest.config.cts",
           ],
           "extends": "./tsconfig.json",
           "include": [
@@ -243,7 +244,7 @@ describe('lib', () => {
       });
 
       expect(appTree.exists('my-lib/tsconfig.spec.json')).toBeFalsy();
-      expect(appTree.exists('my-lib/jest.config.ts')).toBeFalsy();
+      expect(appTree.exists('my-lib/jest.config.cts')).toBeFalsy();
     });
 
     it('should generate test configuration', async () => {
@@ -266,6 +267,7 @@ describe('lib', () => {
           "files": ["src/test-setup.ts"],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -279,9 +281,11 @@ describe('lib', () => {
         }
         "
       `);
-      expect(appTree.read('my-lib/jest.config.ts', 'utf-8'))
+      expect(appTree.read('my-lib/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "/// <reference types="jest" />
+        /// <reference types="node" />
+        module.exports = {
           displayName: 'my-lib',
           preset: 'react-native',
           resolver: '@nx/jest/plugins/resolver',
@@ -548,6 +552,7 @@ describe('lib', () => {
             "src/**/*.spec.jsx",
             "src/test-setup.ts",
             "jest.config.ts",
+            "jest.config.cts",
             "eslint.config.js",
             "eslint.config.cjs",
             "eslint.config.mjs",
@@ -580,6 +585,7 @@ describe('lib', () => {
           ],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",

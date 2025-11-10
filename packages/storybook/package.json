@@ -42,7 +42,8 @@
     "@nx/eslint": "workspace:*"
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "storybook": "9.0.6"
   },
   "peerDependencies": {
     "storybook": ">=7.0.0 <11.0.0"

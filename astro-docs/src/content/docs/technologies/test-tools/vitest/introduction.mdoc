@@ -1,0 +1,163 @@
+---
+title: Overview of the Nx Vitest Plugin
+description: The Nx Plugin for Vitest contains executors and generators that support testing projects using Vitest. This page also explains how to configure Vitest on your Nx workspace.
+sidebar:
+  label: Introduction
+filter: 'type:References'
+---
+
+[Vitest](https://vitest.dev/) is a fast unit test framework powered by Vite. It provides a modern testing experience with:
+
+- Lightning fast test execution powered by Vite
+- Native ESM, TypeScript, and JSX support out of the box
+- Jest-compatible API for easy migration
+- Smart instant watch mode
+- Component testing for UI frameworks
+
+## Setting Up @nx/vitest
+
+### Installation
+
+{% aside type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/vitest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+{% /aside %}
+
+In any Nx workspace, you can install `@nx/vitest` by running the following command:
+
+```shell
+nx add @nx/vitest
+```
+
+This will install the correct version of `@nx/vitest`.
+
+### How @nx/vitest Infers Tasks
+
+{% aside type="note" title="Inferred Tasks" %}
+Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/inferred-tasks).
+{% /aside %}
+
+The `@nx/vitest` plugin will create a task for any project that has a Vitest configuration file present. Any of the following files will be recognized as a Vitest configuration file:
+
+- `vitest.config.js`
+- `vitest.config.ts`
+- `vitest.config.mjs`
+- `vitest.config.mts`
+- `vitest.config.cjs`
+- `vitest.config.cts`
+- `vite.config.js` (with test configuration)
+- `vite.config.ts` (with test configuration)
+- `vite.config.mjs` (with test configuration)
+- `vite.config.mts` (with test configuration)
+- `vite.config.cjs` (with test configuration)
+- `vite.config.cts` (with test configuration)
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+
+### @nx/vitest Configuration
+
+The `@nx/vitest` plugin is configured in the `plugins` array in `nx.json`.
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "targetName": "test"
+      }
+    }
+  ]
+}
+```
+
+- The `targetName` option controls the name of the inferred Vitest tasks. The default name is `test`.
+
+## Using Vitest
+
+### Add Vitest to a Project
+
+Run the `configuration` generator to add Vitest to an existing project:
+
+```shell
+nx g @nx/vitest:configuration --project=<project-name>
+```
+
+> Hint: You can use the `--dry-run` flag to see what will be generated.
+
+Replace `<project-name>` with the name of the project you're wanting to add Vitest to.
+
+### Testing Applications
+
+The recommended way to run/debug Vitest tests is via an editor:
+
+- [VSCode Vitest Extension](https://marketplace.visualstudio.com/items?itemName=vitest.explorer)
+- [WebStorm](https://www.jetbrains.com/help/webstorm/vitest.html)
+
+To run Vitest tests via Nx use:
+
+```shell
+nx test frontend
+```
+
+### Testing Specific Files
+
+You can test specific files by passing a pattern:
+
+```shell
+nx test frontend -- HomePage.spec.ts
+```
+
+### Watching for Changes
+
+Using the `--watch` flag will run the tests in watch mode:
+
+```shell
+nx test frontend --watch
+```
+
+### Testing UI Mode
+
+Vitest provides a UI for interacting with your tests. You can run tests in UI mode with:
+
+```shell
+nx test frontend --ui
+```
+
+### Code Coverage
+
+Enable code coverage with the `--coverage` flag:
+
+```shell
+nx test frontend --coverage
+```
+
+By default, coverage reports will be generated in the `coverage/` directory under the project root.
+
+### Performance in CI
+
+Typically, in CI it's recommended to use `nx affected -t test --parallel=[# CPUs]` for the best performance.
+
+This allows Nx to run tests across multiple projects in parallel while leveraging caching to skip tests for unchanged projects.
+
+## Configurations
+
+### Vitest
+
+Primary configurations for Vitest will be via the `vitest.config.ts` or `vite.config.ts` file that is generated for your project. Learn more about [Vitest configurations](https://vitest.dev/config/).
+
+### Nx
+
+The Nx task options can be configured via the [project config file](/docs/reference/project-configuration) or via the command line flags.
+
+If you're using [inferred tasks](/docs/concepts/inferred-tasks), you can [provide the Vitest args](/docs/guides/tasks--caching/pass-args-to-commands) for the command you're running.
+
+## Migrating from @nx/vite
+
+If you're currently using `@nx/vite` for Vitest testing, see the [migration guide](/docs/technologies/test-tools/vitest/guides/migrating-from-nx-vite) for instructions on switching to `@nx/vitest`.
+
+## More Documentation
+
+- [Vitest Docs](https://vitest.dev/)

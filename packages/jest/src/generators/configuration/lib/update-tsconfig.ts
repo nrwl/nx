@@ -24,6 +24,7 @@ export function updateTsConfig(
       )} to exist. Please create one.`
     );
   }
+
   updateJson(host, joinPathFragments(root, 'tsconfig.json'), (json) => {
     if (
       json.references &&
@@ -33,6 +34,16 @@ export function updateTsConfig(
         path: './tsconfig.spec.json',
       });
     }
+
+    // If compilerOptions.types is defined, ensure "node" is included to support
+    // module.exports syntax in jest.config.cts. If types is not defined,
+    // TypeScript automatically loads @types/node.
+    if (json.compilerOptions?.types) {
+      if (!json.compilerOptions.types.includes('node')) {
+        json.compilerOptions.types.push('node');
+      }
+    }
+
     return json;
   });
   const projectType = getProjectType(host, root, _projectType);
@@ -69,7 +80,9 @@ export function updateTsConfig(
     updateJson(host, runtimeTsconfigPath, (json) => {
       const uniqueExclude = new Set([
         ...(json.exclude || []),
-        options.js ? 'jest.config.js' : 'jest.config.ts',
+        ...(options.js
+          ? ['jest.config.js']
+          : ['jest.config.ts', 'jest.config.cts']),
         'src/**/*.spec.ts',
         'src/**/*.test.ts',
         ...(options.js ? ['src/**/*.spec.js', 'src/**/*.test.js'] : []),

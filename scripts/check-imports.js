@@ -51,6 +51,8 @@ function check() {
     'packages/cypress/src/migrations/update-16-4-0/warn-incompatible-angular-cypress.ts',
     'packages/cypress/src/migrations/update-20-8-0/update-component-testing-mount-imports.spec.ts',
     'packages/cypress/src/migrations/update-20-8-0/update-component-testing-mount-imports.ts',
+    'packages/cypress/src/migrations/update-22-1-0/update-angular-component-testing-support.spec.ts',
+    'packages/cypress/src/migrations/update-22-1-0/update-angular-component-testing-support.ts',
   ];
 
   const files = [

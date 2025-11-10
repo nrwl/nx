@@ -217,17 +217,6 @@ impl App {
         }
 
         self.dispatch_action(Action::UpdateTaskStatus(task_id.clone(), status));
-        if status == TaskStatus::InProgress && self.should_set_interactive_by_default(&task_id) {
-            // Find which pane this task is assigned to
-            for (pane_idx, pane_task) in self.pane_tasks.iter().enumerate() {
-                if let Some(pane_task_id) = pane_task {
-                    if pane_task_id == &task_id {
-                        self.terminal_pane_data[pane_idx].set_interactive(true);
-                        break;
-                    }
-                }
-            }
-        }
 
         // Update terminal progress indicator only when task reaches a completed state
         if self.is_status_complete(status) {
@@ -252,14 +241,6 @@ impl App {
             status,
             TaskStatus::NotStarted | TaskStatus::InProgress | TaskStatus::Shared
         )
-    }
-
-    fn should_set_interactive_by_default(&self, task_id: &str) -> bool {
-        matches!(self.run_mode, RunMode::RunOne)
-            && self
-                .pty_instances
-                .get(task_id)
-                .is_some_and(|pty| pty.can_be_interactive())
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {

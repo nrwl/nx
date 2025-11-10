@@ -76,6 +76,7 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /e2e/rollup/** @nrwl/nx-js-reviewers
 /packages/vite/** @nrwl/nx-js-reviewers
 /e2e/vite/** @nrwl/nx-js-reviewers
+/packages/vitest/** @nrwl/nx-js-reviewers
 
 ## Module Federation
 /packages/module-federation/** @nrwl/nx-js-reviewers
@@ -152,6 +153,7 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 
 # CI
 /.nx/workflows/** @nrwl/nx-pipelines-reviewers
+mise.toml @nrwl/nx-pipelines-reviewers @FrozenPandaz
 /.github/** @nrwl/nx-pipelines-reviewers
 /.husky/** @nrwl/nx-pipelines-reviewers
 /packages/workspace/src/generators/ci-workflow/** @nrwl/nx-pipelines-reviewers

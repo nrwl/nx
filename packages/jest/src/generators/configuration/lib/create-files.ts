@@ -7,6 +7,7 @@ import {
 import { addSwcTestConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import { join } from 'path';
 import type { JestPresetExtension } from '../../../utils/config/config-file';
+import { getInstalledJestMajorVersion } from '../../../utils/versions';
 import { NormalizedJestProjectSchema } from '../schema';
 
 export function createFiles(
@@ -15,6 +16,12 @@ export function createFiles(
   presetExt: JestPresetExtension
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
+
+  // Detect Jest 30+ to use .cts config files (CommonJS TypeScript)
+  // Treat null (version cannot be determined) as Jest 30+
+  const jestMajorVersion = getInstalledJestMajorVersion(tree);
+  const useCommonJsConfig = jestMajorVersion === null || jestMajorVersion >= 30;
+  const useJsSyntax = useCommonJsConfig || !!options.js;
 
   const commonFilesFolder =
     options.setupFile === 'angular' ? '../files-angular' : '../files/common';
@@ -59,7 +66,7 @@ export function createFiles(
     testEnvironment,
     transformer,
     transformerOptions,
-    js: !!options.js,
+    js: useJsSyntax,
     rootProject: options.rootProject,
     projectRoot,
     offsetFromRoot: rootOffset,
@@ -93,7 +100,7 @@ export function createFiles(
         testEnvironment,
         transformer,
         transformerOptions,
-        js: !!options.js,
+        js: useJsSyntax,
         rootProject: options.rootProject,
         offsetFromRoot: rootOffset,
         presetExt,
@@ -106,10 +113,12 @@ export function createFiles(
     tree.delete(join(projectConfig.root, './src/test-setup.ts'));
   }
 
-  if (options.js) {
-    tree.rename(
-      join(projectConfig.root, 'jest.config.ts'),
-      join(projectConfig.root, 'jest.config.js')
-    );
+  const configPath = join(projectConfig.root, 'jest.config.ts');
+  if (tree.exists(configPath)) {
+    if (options.js) {
+      tree.rename(configPath, join(projectConfig.root, 'jest.config.js'));
+    } else if (useCommonJsConfig) {
+      tree.rename(configPath, join(projectConfig.root, 'jest.config.cts'));
+    }
   }
 }

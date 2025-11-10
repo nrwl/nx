@@ -48,7 +48,7 @@ export function updateUnitTestConfig(
     );
     updateVitestTestSetup(tree, pathToViteConfig, 'test-setup.ts');
   } else if (unitTestRunner === 'jest' && rootProject) {
-    const pathToJestConfig = joinPathFragments(pathToRoot, 'jest.config.ts');
+    const pathToJestConfig = joinPathFragments(pathToRoot, 'jest.config.cts');
     tree.write('jest.preset.cjs', tree.read('jest.preset.js', 'utf-8'));
     updateJestTestSetup(tree, pathToJestConfig, `<rootDir>/test-setup.ts`);
     tree.write(

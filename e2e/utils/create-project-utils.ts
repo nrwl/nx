@@ -62,6 +62,7 @@ const nxPackages = [
   `@nx/storybook`,
   `@nx/vue`,
   `@nx/vite`,
+  `@nx/vitest`,
   `@nx/web`,
   `@nx/webpack`,
   `@nx/react-native`,
@@ -531,6 +532,7 @@ export function runNgNew(
       }
     });
   }
+
   updateJson('package.json', (json) => {
     updateAngularDependencies(json.dependencies ?? {});
     updateAngularDependencies(json.devDependencies ?? {});

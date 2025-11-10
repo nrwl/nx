@@ -9,6 +9,7 @@
     "@nx/eslint": "workspace:*",
     "@nx/plugin": "workspace:*",
     "@nx/js": "workspace:*",
+    "@xmldom/xmldom": "^0.8.10",
     "nx": "workspace:*",
     "tslib": "catalog:typescript"
   },

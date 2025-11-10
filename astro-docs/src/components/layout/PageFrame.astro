@@ -1,10 +1,11 @@
 ---
 // Copied from https://github.com/withastro/starlight/blob/f14eb0c/packages/starlight/components/PageFrame.astro with modifications.
 import MobileMenuToggle from '@astrojs/starlight/components/MobileMenuToggle.astro';
-import { Footer } from '@nx/nx-dev-ui-common';
+import { Footer, GitHubStarWidget  } from '@nx/nx-dev-ui-common';
 import { WebinarNotifier } from '@nx/nx-dev-ui-common/src/lib/webinar-notifier';
 
 const { hasSidebar } = Astro.locals.starlightRoute;
+const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
 ---
 
 <div class="page sl-flex">
@@ -19,22 +20,25 @@ const { hasSidebar } = Astro.locals.starlightRoute;
             <!-- CTA Buttons for Mobile Menu - Show when not in header (below xl breakpoint) -->
             <div class="mobile-cta-buttons xl:hidden mt-auto pt-4 pb-4 border-t border-slate-800 dark:border-slate-700">
               <div class="flex flex-col gap-2">
-                <a 
-                  href="https://nx.dev/contact"
-                  class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition no-underline border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm"
-                  title="Contact Us"
-                >
-                  Contact
-                </a>
-                <a 
-                  href="https://cloud.nx.app?utm_source=nx-dev&utm_medium=header"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition no-underline bg-blue-500 dark:bg-sky-500 text-white hover:bg-blue-600 dark:hover:bg-sky-600 shadow-sm"
-                  title="Login to Nx Cloud"
-                >
-                  Login
-                </a>
+                <GitHubStarWidget starsCount={githubStarsCount} client:load />
+                <div class="flex flex-col mx-2 gap-2">
+                  <a
+                    href="https://nx.dev/contact"
+                    class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition no-underline border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm"
+                    title="Contact Us"
+                  >
+                    Contact
+                  </a>
+                  <a
+                    href="https://cloud.nx.app?utm_source=nx-dev&utm_medium=header"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition no-underline bg-blue-500 dark:bg-sky-500 text-white hover:bg-blue-600 dark:hover:bg-sky-600 shadow-sm"
+                    title="Login to Nx Cloud"
+                  >
+                    Login
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -43,7 +47,7 @@ const { hasSidebar } = Astro.locals.starlightRoute;
     )
   }
   <div class="main-frame"><slot /></div>
-  <Footer disableThemeSwitcher={true} useDomainPrefix={true} className="mt-32 dark:bg-slate-900" />
+  <Footer disableThemeSwitcher={true} useDomainPrefix={true} className="dark:bg-slate-900" />
   <WebinarNotifier client:load />
 </div>
 

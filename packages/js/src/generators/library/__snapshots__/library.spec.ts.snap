@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`lib --unit-test-runner jest should generate test configuration with swc and js 1`] = `
 "/* eslint-disable */

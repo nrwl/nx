@@ -198,6 +198,11 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
             items: getPluginItems('cypress', 'test-tools'),
           },
           {
+            label: 'Vitest',
+            collapsed: true,
+            items: getPluginItems('vitest', 'test-tools'),
+          },
+          {
             label: 'Jest',
             collapsed: true,
             items: getPluginItems('jest', 'test-tools'),

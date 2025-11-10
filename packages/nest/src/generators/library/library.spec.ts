@@ -145,6 +145,7 @@ describe('lib', () => {
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
       expect(tsconfigJson.exclude).toEqual([
         'jest.config.ts',
+        'jest.config.cts',
         'src/**/*.spec.ts',
         'src/**/*.test.ts',
       ]);
@@ -155,7 +156,7 @@ describe('lib', () => {
         directory: 'my-lib',
       });
 
-      expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists(`my-lib/src/index.ts`)).toBeTruthy();
       expect(tree.exists(`my-lib/src/lib/my-lib.spec.ts`)).toBeFalsy();
       expect(readJson(tree, `my-lib/.eslintrc.json`)).toMatchSnapshot();
@@ -182,7 +183,7 @@ describe('lib', () => {
         directory: 'my-dir/my-lib',
       });
 
-      expect(tree.exists(`my-dir/my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-dir/my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists(`my-dir/my-lib/src/index.ts`)).toBeTruthy();
       expect(tree.exists(`my-dir/my-lib/src/lib/my-lib.spec.ts`)).toBeFalsy();
     });
@@ -234,7 +235,7 @@ describe('lib', () => {
       });
 
       expect(tree.exists(`my-lib/tsconfig.spec.json`)).toBeFalsy();
-      expect(tree.exists(`my-lib/jest.config.ts`)).toBeFalsy();
+      expect(tree.exists(`my-lib/jest.config.cts`)).toBeFalsy();
       expect(tree.exists(`my-lib/lib/my-lib.spec.ts`)).toBeFalsy();
       expect(readJson(tree, `my-lib/tsconfig.json`)).toMatchSnapshot();
     });
@@ -315,7 +316,7 @@ describe('lib', () => {
         directory: 'my-lib',
       });
 
-      expect(tree.read(`my-lib/jest.config.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`my-lib/jest.config.cts`, 'utf-8')).toMatchSnapshot();
     });
 
     it('should set target jest testEnvironment to jsdom', async () => {
@@ -324,7 +325,7 @@ describe('lib', () => {
         testEnvironment: 'jsdom',
       });
 
-      expect(tree.read(`my-lib/jest.config.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`my-lib/jest.config.cts`, 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -384,7 +385,7 @@ describe('lib', () => {
               "test": {
                 "executor": "@nx/jest:jest",
                 "options": {
-                  "jestConfig": "mylib/jest.config.ts",
+                  "jestConfig": "mylib/jest.config.cts",
                 },
                 "outputs": [
                   "{projectRoot}/test-output/jest/coverage",
@@ -440,6 +441,7 @@ describe('lib', () => {
           },
           "exclude": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
           ],
@@ -470,6 +472,7 @@ describe('lib', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.d.ts",
@@ -520,7 +523,7 @@ describe('lib', () => {
                   "{projectRoot}/test-output/jest/coverage"
                 ],
                 "options": {
-                  "jestConfig": "mylib/jest.config.ts"
+                  "jestConfig": "mylib/jest.config.cts"
                 }
               },
               "build": {
@@ -632,7 +635,7 @@ describe('lib', () => {
             "test": {
               "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "mylib/jest.config.ts",
+                "jestConfig": "mylib/jest.config.cts",
               },
               "outputs": [
                 "{projectRoot}/test-output/jest/coverage",

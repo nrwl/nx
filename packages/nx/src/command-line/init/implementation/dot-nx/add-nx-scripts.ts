@@ -48,7 +48,7 @@ const SHELL_SCRIPT_CONTENTS = [
   // Gets the path to the root of the project
   `path_to_root=$(dirname $BASH_SOURCE)`,
   // Executes the nx wrapper script
-  `node ${path.posix.join('$path_to_root', nxWrapperPath(path.posix))} $@`,
+  `node ${path.posix.join('$path_to_root', nxWrapperPath(path.posix))} "$@"`,
 ].join('\n');
 
 export function generateDotNxSetup(version?: string) {
@@ -102,6 +102,16 @@ export function getNxWrapperContents() {
   return sanitizeWrapperScript(
     readFileSync(path.join(__dirname, 'nxw.js'), 'utf-8')
   );
+}
+
+// Gets the contents for the nx bash script
+export function getShellScriptContents() {
+  return SHELL_SCRIPT_CONTENTS;
+}
+
+// Gets the contents for the nx.bat batch script
+export function getBatchScriptContents() {
+  return BATCH_SCRIPT_CONTENTS;
 }
 
 // Remove any empty comments or comments that start with `//#: ` or eslint-disable comments.

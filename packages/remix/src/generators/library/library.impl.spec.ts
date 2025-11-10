@@ -74,7 +74,7 @@ describe('Remix Library Generator', () => {
       });
 
       // ASSERT
-      expect(tree.exists(`test/jest.config.ts`)).toBeFalsy();
+      expect(tree.exists(`test/jest.config.cts`)).toBeFalsy();
       expect(tree.exists(`test/vite.config.ts`)).toBeFalsy();
     });
 
@@ -91,7 +91,7 @@ describe('Remix Library Generator', () => {
       });
 
       // ASSERT
-      expect(tree.read(`test/jest.config.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`test/jest.config.cts`, 'utf-8')).toMatchSnapshot();
       expect(tree.read(`test/src/test-setup.ts`, 'utf-8')).toMatchSnapshot();
     });
 

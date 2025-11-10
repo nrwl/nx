@@ -3,7 +3,7 @@ let loadedCypress = false;
 
 /**
  * @deprecated use the `getInstalledCypressMajorVersion` exported from
- * `@nx/cypress/src/utils/versions` instead. It will be removed in v22.
+ * `@nx/cypress/src/utils/versions` instead. It will be removed in v23.
  */
 export function installedCypressVersion() {
   if (!loadedCypress) {
@@ -26,7 +26,7 @@ export function installedCypressVersion() {
 /**
  * will not throw if cypress is not installed
  * @deprecated use the `assertMinimumCypressVersion` exported from
- * `@nx/cypress/src/utils/versions` instead. It will be removed in v22.
+ * `@nx/cypress/src/utils/versions` instead. It will be removed in v23.
  */
 export function assertMinimumCypressVersion(minVersion: number) {
   const version = installedCypressVersion();

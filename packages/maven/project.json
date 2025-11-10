@@ -28,12 +28,12 @@
         "outputPath": "packages/maven/dist",
         "assets": [
           {
-            "input": "packages/maven",
+            "input": "packages/maven/src",
             "glob": "**/@(files|files-angular)/**",
             "output": "/"
           },
           {
-            "input": "packages/maven",
+            "input": "packages/maven/src",
             "glob": "**/files/**/.gitkeep",
             "output": "/"
           },

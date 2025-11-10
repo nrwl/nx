@@ -283,7 +283,7 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${readmePath}`);
       checkFilesExist(readmePath);
 
-      const jestConfigPath = `${newPath}/jest.config.ts`;
+      const jestConfigPath = `${newPath}/jest.config.cts`;
       expect(moveOutput).toContain(`CREATE ${jestConfigPath}`);
       checkFilesExist(jestConfigPath);
       const jestConfig = readFile(jestConfigPath);
@@ -420,7 +420,7 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${readmePath}`);
       checkFilesExist(readmePath);
 
-      const jestConfigPath = `${newPath}/jest.config.ts`;
+      const jestConfigPath = `${newPath}/jest.config.cts`;
       expect(moveOutput).toContain(`CREATE ${jestConfigPath}`);
       checkFilesExist(jestConfigPath);
       const jestConfig = readFile(jestConfigPath);
@@ -543,7 +543,7 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${readmePath}`);
       checkFilesExist(readmePath);
 
-      const jestConfigPath = `${newPath}/jest.config.ts`;
+      const jestConfigPath = `${newPath}/jest.config.cts`;
       expect(moveOutput).toContain(`CREATE ${jestConfigPath}`);
       checkFilesExist(jestConfigPath);
       const jestConfig = readFile(jestConfigPath);

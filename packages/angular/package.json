@@ -67,6 +67,7 @@
   },
   "devDependencies": {
     "@nx/cypress": "workspace:*",
+    "@nx/vitest": "workspace:*",
     "nx": "workspace:*"
   },
   "peerDependencies": {

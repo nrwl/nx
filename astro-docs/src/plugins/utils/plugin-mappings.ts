@@ -53,6 +53,7 @@ export const pluginToTechnology: Record<string, string> = {
   playwright: 'test-tools',
   storybook: 'test-tools',
   detox: 'test-tools',
+  vitest: 'test-tools',
 };
 
 /**

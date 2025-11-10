@@ -58,6 +58,7 @@
               "@nx/playwright",
               "@nx/storybook",
               "@nx/vite",
+              "@nx/vitest",
               "@schematics/angular",
               "browserslist",
               "cypress",

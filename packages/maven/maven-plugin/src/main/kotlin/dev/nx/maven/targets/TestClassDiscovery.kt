@@ -93,8 +93,8 @@ class TestClassDiscovery() {
         // Extract package name (simple approach)
         val packageName = extractPackageName(content)
 
-        // Extract public class name (simple approach)
-        val className = extractPublicClassName(content) ?: return null
+        // Extract class name (simple approach)
+        val className = extractClassName(content) ?: return null
 
         // Double check: does this class actually have test methods?
         if (!hasTestMethodsInClass(content, className)) {
@@ -129,14 +129,15 @@ class TestClassDiscovery() {
     }
 
     /**
-     * Extract public class name from Java file content using simple string matching
+     * Extract class name from Java file content using simple string matching
+     * Matches any class declaration, not just public ones (test classes can be package-private)
      */
-    private fun extractPublicClassName(content: String): String? {
+    private fun extractClassName(content: String): String? {
         val lines = content.lines()
         for (line in lines) {
             val trimmed = line.trim()
-            if (trimmed.contains("public class ")) {
-                // Simple extraction: find "public class ClassName"
+            if (trimmed.contains("class ")) {
+                // Simple extraction: find "class ClassName" (handles public, package-private, etc.)
                 val parts = trimmed.split(" ", "\t").filter { it.isNotEmpty() }
                 val classIndex = parts.indexOf("class")
                 if (classIndex >= 0 && classIndex + 1 < parts.size) {

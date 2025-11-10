@@ -24,21 +24,27 @@ const { data} = Astro.locals.starlightRoute.entry;
     }
 
     @media (min-width: 72rem) {
+      .lg\:sl-flex {
+        align-items: stretch;
+      }
+
       .right-sidebar-container {
         order: 2;
         position: relative;
         width: calc(
           var(--sl-sidebar-width) + (100% - var(--sl-content-width) - var(--sl-sidebar-width)) / 2
         );
+        display: flex;
+        flex-direction: column;
       }
 
       .right-sidebar {
-        position: fixed;
-        top: 0;
+        position: sticky;
+        top: var(--sl-nav-height);
         border-inline-start: 1px solid var(--sl-color-hairline);
-        padding-top: var(--sl-nav-height);
+        padding-top: 1rem;
         width: 100%;
-        height: auto; // MODIFIED: full height conflicts with footer
+        max-height: calc(100vh - var(--sl-nav-height));
         overflow-y: auto;
         scrollbar-width: none;
       }

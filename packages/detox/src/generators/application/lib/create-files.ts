@@ -25,7 +25,7 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
     offsetFromRoot,
     rootTsConfigPath,
     jestConfigFileName: options.isUsingTsSolutionConfig
-      ? 'jest.config.ts'
+      ? 'jest.config.cts'
       : 'jest.config.json',
   });
   if (options.isUsingTsSolutionConfig) {

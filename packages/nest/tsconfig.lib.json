@@ -12,6 +12,7 @@
     "**/*_spec.ts",
     "**/*_test.ts",
     "jest.config.ts",
+    "jest.config.cts",
     "test-setup.ts"
   ],
   "include": ["**/*.ts", "**/*.json"],

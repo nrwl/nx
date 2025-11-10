@@ -66,6 +66,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
             '@nx/rollup',
             '@rollup/plugin-url',
             '@svgr/rollup',
+            'jest-expo',
           ];
           for (const dep of ignoredDeps) {
             if (!rule[1].ignoredDependencies.includes(dep)) {

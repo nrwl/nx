@@ -483,7 +483,7 @@ describe('app', () => {
       style: 'css',
     });
 
-    expect(tree.read(`${name}/jest.config.ts`, 'utf-8')).toContain(
+    expect(tree.read(`${name}/jest.config.cts`, 'utf-8')).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
     );
     expect(
@@ -499,7 +499,7 @@ describe('app', () => {
       style: 'css',
     });
 
-    expect(tree.read(`${name}/jest.config.ts`, 'utf-8')).toContain(
+    expect(tree.read(`${name}/jest.config.cts`, 'utf-8')).toContain(
       `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest'`
     );
   });
@@ -546,7 +546,7 @@ describe('app', () => {
         style: 'css',
         unitTestRunner: 'none',
       });
-      expect(tree.exists('jest.config.ts')).toBeFalsy();
+      expect(tree.exists('jest.config.cts')).toBeFalsy();
       expect(tree.exists(`${name}/specs/index.spec.tsx`)).toBeFalsy();
     });
   });
@@ -1017,100 +1017,102 @@ describe('app', () => {
           ]
         `);
       expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
-          {
-            "compilerOptions": {
-              "allowJs": true,
-              "allowSyntheticDefaultImports": true,
-              "emitDeclarationOnly": false,
-              "esModuleInterop": true,
-              "forceConsistentCasingInFileNames": true,
-              "incremental": true,
-              "isolatedModules": true,
-              "jsx": "preserve",
-              "lib": [
-                "dom",
-                "dom.iterable",
-                "esnext",
-              ],
-              "module": "esnext",
-              "moduleResolution": "bundler",
-              "noEmit": true,
-              "outDir": "dist",
-              "paths": {
-                "@/*": [
-                  "./src/*",
-                ],
-              },
-              "plugins": [
-                {
-                  "name": "next",
-                },
-              ],
-              "resolveJsonModule": true,
-              "rootDir": "src",
-              "strict": true,
-              "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
-              "types": [
-                "jest",
-                "node",
+        {
+          "compilerOptions": {
+            "allowJs": true,
+            "allowSyntheticDefaultImports": true,
+            "emitDeclarationOnly": false,
+            "esModuleInterop": true,
+            "forceConsistentCasingInFileNames": true,
+            "incremental": true,
+            "isolatedModules": true,
+            "jsx": "preserve",
+            "lib": [
+              "dom",
+              "dom.iterable",
+              "esnext",
+            ],
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "noEmit": true,
+            "outDir": "dist",
+            "paths": {
+              "@/*": [
+                "./src/*",
               ],
             },
-            "exclude": [
-              "out-tsc",
-              "dist",
-              "node_modules",
-              "jest.config.ts",
-              "src/**/*.spec.ts",
-              "src/**/*.test.ts",
-              ".next",
-              "eslint.config.js",
-              "eslint.config.cjs",
-              "eslint.config.mjs",
-            ],
-            "extends": "../tsconfig.base.json",
-            "include": [
-              "src/**/*.ts",
-              "src/**/*.tsx",
-              "src/**/*.js",
-              "src/**/*.jsx",
-              "../myapp/.next/types/**/*.ts",
-              "../dist/myapp/.next/types/**/*.ts",
-              "next-env.d.ts",
-            ],
-          }
-        `);
-      expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
-          {
-            "compilerOptions": {
-              "jsx": "preserve",
-              "module": "esnext",
-              "moduleResolution": "bundler",
-              "outDir": "./out-tsc/jest",
-              "types": [
-                "jest",
-                "node",
-              ],
-            },
-            "extends": "../tsconfig.base.json",
-            "include": [
-              "jest.config.ts",
-              "src/**/*.test.ts",
-              "src/**/*.spec.ts",
-              "src/**/*.test.tsx",
-              "src/**/*.spec.tsx",
-              "src/**/*.test.js",
-              "src/**/*.spec.js",
-              "src/**/*.test.jsx",
-              "src/**/*.spec.jsx",
-              "src/**/*.d.ts",
-            ],
-            "references": [
+            "plugins": [
               {
-                "path": "./tsconfig.json",
+                "name": "next",
               },
             ],
-          }
-        `);
+            "resolveJsonModule": true,
+            "rootDir": "src",
+            "strict": true,
+            "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "exclude": [
+            "out-tsc",
+            "dist",
+            "node_modules",
+            "jest.config.ts",
+            "jest.config.cts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+            ".next",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.ts",
+            "src/**/*.tsx",
+            "src/**/*.js",
+            "src/**/*.jsx",
+            "../myapp/.next/types/**/*.ts",
+            "../dist/myapp/.next/types/**/*.ts",
+            "next-env.d.ts",
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "preserve",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "./out-tsc/jest",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "jest.config.ts",
+            "jest.config.cts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.json",
+            },
+          ],
+        }
+      `);
       expect(readJson(tree, 'myapp-e2e/tsconfig.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
@@ -1250,16 +1252,15 @@ describe('app', () => {
         unitTestRunner: 'jest',
       });
 
-      const jestConfig = tree.read(`${name}/jest.config.ts`, 'utf-8');
+      const jestConfig = tree.read(`${name}/jest.config.cts`, 'utf-8');
       expect(jestConfig).toMatchInlineSnapshot(`
-        "import type { Config } from 'jest';
-        import nextJest from 'next/jest.js';
+        "const nextJest = require('next/jest.js');
 
         const createJestConfig = nextJest({
           dir: './',
         });
 
-        const config: Config = {
+        const config = {
           displayName: 'myapp',
           preset: '../jest.preset.js',
           transform: {
@@ -1270,7 +1271,7 @@ describe('app', () => {
           testEnvironment: 'jsdom',
         };
 
-        export default createJestConfig(config);
+        module.exports = createJestConfig(config);
         "
       `);
     });
@@ -1358,16 +1359,15 @@ describe('app (legacy)', () => {
         unitTestRunner: 'jest',
       });
 
-      const jestConfig = tree.read(`${name}/jest.config.ts`, 'utf-8');
+      const jestConfig = tree.read(`${name}/jest.config.cts`, 'utf-8');
       expect(jestConfig).toMatchInlineSnapshot(`
-        "import type { Config } from 'jest';
-        import nextJest from 'next/jest.js';
+        "const nextJest = require('next/jest.js');
 
         const createJestConfig = nextJest({
           dir: './',
         });
 
-        const config: Config = {
+        const config = {
           displayName: 'myapp',
           preset: '../jest.preset.js',
           transform: {
@@ -1378,7 +1378,7 @@ describe('app (legacy)', () => {
           testEnvironment: 'jsdom',
         };
 
-        export default createJestConfig(config);
+        module.exports = createJestConfig(config);
         "
       `);
     });

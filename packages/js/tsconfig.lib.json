@@ -10,7 +10,8 @@
     "**/*.spec.ts",
     "**/*.test.ts",
     "./src/**/test-fixtures/**/*",
-    "jest.config.ts"
+    "jest.config.ts",
+    "jest.config.cts"
   ],
   "include": ["**/*.ts"],
   "references": [

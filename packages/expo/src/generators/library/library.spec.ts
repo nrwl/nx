@@ -132,6 +132,7 @@ describe('lib', () => {
             "**/*.spec.jsx",
             "src/test-setup.ts",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "jest.resolver.js",
@@ -255,7 +256,7 @@ describe('lib', () => {
       });
 
       expect(appTree.exists('my-lib/tsconfig.spec.json')).toBeFalsy();
-      expect(appTree.exists('my-lib/jest.config.ts')).toBeFalsy();
+      expect(appTree.exists('my-lib/jest.config.cts')).toBeFalsy();
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
       expect(projectConfiguration).toMatchInlineSnapshot(`
         {
@@ -317,6 +318,7 @@ describe('lib', () => {
           "files": ["src/test-setup.ts"],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -331,9 +333,11 @@ describe('lib', () => {
         }
         "
       `);
-      expect(appTree.read('my-lib/jest.config.ts', 'utf-8'))
+      expect(appTree.read('my-lib/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "/// <reference types="jest" />
+        /// <reference types="node" />
+        module.exports = {
           displayName: 'my-lib',
           resolver: require.resolve('./jest.resolver.js'),
           preset: 'jest-expo',
@@ -622,6 +626,7 @@ describe('lib', () => {
             "eslint.config.cjs",
             "eslint.config.mjs",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "jest.resolver.js",
@@ -652,6 +657,7 @@ describe('lib', () => {
           ],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",

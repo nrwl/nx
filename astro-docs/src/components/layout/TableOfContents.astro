@@ -175,16 +175,10 @@ const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
     
     /* Container with proper scrolling */
     .toc-container {
-      /* Calculate height based on viewport minus nav and footer with padding */
-      max-height: calc(100vh - var(--sl-nav-height) - 25rem);
-      /* 
-      * prevent ToC from going to 0 height.
-      * if this overlaps the footer it's not a huge issue for such small viewport
-      * */
-      min-height: 300px; 
+      /* Allow ToC to be its natural height - parent sticky container handles viewport constraints */
+      max-height: calc(100vh - var(--sl-nav-height) - 4rem);
       overflow-y: auto;
       overflow-x: hidden;
-      padding-bottom: 1rem;
     }
     
     /* Only enable smooth scrolling if user doesn't prefer reduced motion */

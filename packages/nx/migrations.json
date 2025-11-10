@@ -135,6 +135,12 @@
       "version": "22.0.0-beta.2",
       "description": "Consolidates releaseTag* options into nested releaseTag object structure",
       "implementation": "./src/migrations/update-22-0-0/consolidate-release-tag-config"
+    },
+    "22-1-0-update-nx-wrapper": {
+      "cli": "nx",
+      "version": "22.1.0-beta.5",
+      "description": "Updates the nx wrapper.",
+      "implementation": "./src/migrations/update-22-1-0/update-nx-wrapper"
     }
   }
 }

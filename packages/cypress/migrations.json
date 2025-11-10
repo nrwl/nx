@@ -40,6 +40,30 @@
       "version": "21.0.0-beta.10",
       "description": "Removes the `tsConfig` and `copyFiles` options from the `@nx/cypress:cypress` executor.",
       "implementation": "./src/migrations/update-21-0-0/remove-tsconfig-and-copy-files-options-from-cypress-executor"
+    },
+    "rename-cy-exec-code-property": {
+      "version": "22.1.0-beta.6",
+      "requires": {
+        "cypress": ">=15.0.0"
+      },
+      "description": "Renames `cy.exec().its('code')` usages to the new `exitCode` property introduced in Cypress v15.",
+      "implementation": "./src/migrations/update-22-1-0/rename-cy-exec-code-property"
+    },
+    "update-selector-playground-api": {
+      "version": "22.1.0-beta.6",
+      "requires": {
+        "cypress": ">=15.0.0"
+      },
+      "description": "Updates the deprecated `Cypress.SelectorPlayground` API to `Cypress.ElementSelector` and removes the unsupported `onElement` option.",
+      "implementation": "./src/migrations/update-22-1-0/update-selector-playground-api"
+    },
+    "update-angular-component-testing-support": {
+      "version": "22.1.0-beta.6",
+      "requires": {
+        "cypress": ">=15.0.0"
+      },
+      "description": "For Angular component testing projects below v18, switches to the fallback `@cypress/angular` harness required by Cypress v15.",
+      "implementation": "./src/migrations/update-22-1-0/update-angular-component-testing-support"
     }
   },
   "packageJsonUpdates": {
@@ -60,6 +84,27 @@
         },
         "@cypress/webpack-dev-server": {
           "version": "^4.0.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.1.0": {
+      "version": "22.1.0-beta.6",
+      "x-prompt": "Do you want to update the Cypress version to v15?",
+      "requires": {
+        "cypress": ">=14.0.0 <15.0.0"
+      },
+      "packages": {
+        "cypress": {
+          "version": "^15.6.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@cypress/vite-dev-server": {
+          "version": "^7.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@cypress/webpack-dev-server": {
+          "version": "^5.1.4",
           "alwaysAddToPackageJson": false
         }
       }
