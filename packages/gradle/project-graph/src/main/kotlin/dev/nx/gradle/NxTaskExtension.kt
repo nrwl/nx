@@ -79,8 +79,6 @@ open class NxTaskExtension @Inject constructor(objects: ObjectFactory) {
 
   fun set(key: String, value: Boolean) = json.put(key, value)
 
-  fun setNull(key: String) = json.put(key, null as Any?)
-
   fun set(key: String, block: NxObjectBuilder.() -> Unit) {
     val obj = NxObjectBuilder().apply(block).content
     json.put(key, obj)

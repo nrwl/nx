@@ -75,23 +75,6 @@ describe('Gradle DSL - nx {} configuration', () => {
           expect(config.isPublic).toBe(true);
         });
 
-        it('should handle null values', () => {
-          const dslContent =
-            type === 'kotlin'
-              ? `\nnx {\n  setNull("optionalField")\n}`
-              : `\nnx {\n  setNull 'optionalField'\n}`;
-
-          updateFile(
-            `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
-          );
-
-          runCLI('reset');
-          const config = JSON.parse(runCLI('show project app --json'));
-
-          expect(config.optionalField).toBeUndefined();
-        });
-
         it('should handle arrays', () => {
           const dslContent =
             type === 'kotlin'
