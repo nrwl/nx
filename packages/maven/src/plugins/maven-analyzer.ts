@@ -75,6 +75,10 @@ export async function runMavenAnalysis(
     '--no-transfer-progress',
   ];
 
+  if (options.targetNamePrefix) {
+    mavenArgs.push(`-DtargetNamePrefix=${options.targetNamePrefix}`);
+  }
+
   if (!isVerbose) {
     mavenArgs.push('-q');
   }
