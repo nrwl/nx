@@ -32,8 +32,10 @@ use super::components::help_popup::HelpPopup;
 use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
 };
-use super::components::task_selection_manager::{SelectionMode, TaskSelectionManager};
-use super::components::tasks_list::{TaskStatus, TasksList};
+use super::components::task_selection_manager::{
+    SelectedItemType, SelectionMode, TaskSelectionManager,
+};
+use super::components::tasks_list::{BatchGroupItem, BatchStatus, TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::config::TuiConfig;
 use super::graph_utils::{get_task_count, is_task_continuous};
@@ -46,13 +48,6 @@ use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::tui::graph_utils::get_failed_dependencies;
 use crate::native::utils::time::current_timestamp_millis;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum BatchStatus {
-    Running,
-    Success, 
-    Failure,
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BatchInfo {
     pub executor_name: String,
@@ -61,8 +56,9 @@ pub struct BatchInfo {
 
 #[derive(Debug, Clone)]
 pub struct BatchState {
-    pub info: BatchInfo,     // executor_name, task_ids  
+    pub info: BatchInfo,     // executor_name, task_ids
     pub status: BatchStatus, // Running/Success/Failure
+    pub start_time: i64,     // Timestamp when batch was registered
 }
 
 pub struct App {
@@ -85,7 +81,7 @@ pub struct App {
     terminal_pane_data: [TerminalPaneData; 2],
     dependency_view_states: [Option<DependencyViewState>; 2],
     spacebar_mode: bool,
-    pane_tasks: [Option<String>; 2], // Tasks assigned to panes 1 and 2 (0-indexed)
+    pane_tasks: [Option<(String, SelectedItemType)>; 2], // Tasks (ID, type) assigned to panes 1 and 2 (0-indexed)
     action_tx: Option<UnboundedSender<Action>>,
     resize_debounce_timer: Option<u128>, // Timer for debouncing resize events
     // task id -> pty instance
@@ -100,8 +96,7 @@ pub struct App {
     console_messenger: Option<NxConsoleMessageConnection>,
     estimated_task_timings: HashMap<String, i64>,
     // Batch tracking
-    batch_states: HashMap<String, BatchState>,               // batch_id → BatchState
-    batch_pty_instances: HashMap<String, Arc<PtyInstance>>,   // batch_id → PTY
+    batch_states: HashMap<String, BatchState>, // batch_id → BatchState
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -187,7 +182,6 @@ impl App {
             estimated_task_timings: HashMap::new(),
             // Initialize batch tracking
             batch_states: HashMap::new(),
-            batch_pty_instances: HashMap::new(),
         })
     }
 
@@ -402,40 +396,65 @@ impl App {
     }
 
     // Batch methods
-    pub fn register_running_batch(&mut self, batch_id: String, batch_info: BatchInfo) {        
+    pub fn register_running_batch(&mut self, batch_id: String, batch_info: BatchInfo) {
+        // Early validation
+        if batch_id.is_empty() {
+            return;
+        }
+
+        if batch_info.task_ids.is_empty() {
+            return;
+        }
+
+        // Check if batch is already registered
+        if self.batch_states.contains_key(&batch_id) {
+            return;
+        }
+
         // Create PTY instance for batch output
         let pty = PtyInstance::non_interactive();
-        self.batch_pty_instances.insert(batch_id.clone(), Arc::new(pty));
-        
-        // Store batch state with initial Running status
-        self.batch_states.insert(batch_id.clone(), BatchState {
-            info: batch_info.clone(),
-            status: BatchStatus::Running, // Always starts as Running
-        });
-        
+        self.pty_instances.insert(batch_id.clone(), Arc::new(pty));
+
+        // Store batch state with initial Running status and current timestamp
+        self.batch_states.insert(
+            batch_id.clone(),
+            BatchState {
+                info: batch_info.clone(),
+                status: BatchStatus::Running, // Always starts as Running
+                start_time: current_timestamp_millis(),
+            },
+        );
+
         // Trigger resize for new PTY instance
         let _ = self.debounce_pty_resize();
-        
+
         self.dispatch_action(Action::StartBatch(batch_id, batch_info));
     }
 
     pub fn append_batch_output(&mut self, batch_id: String, output: String) {
-        if let Some(pty) = self.batch_pty_instances.get_mut(&batch_id) {
+        if let Some(pty) = self.pty_instances.get_mut(&batch_id) {
             pty.process_output(output.as_bytes());
         }
-        self.dispatch_action(Action::AppendBatchOutput(batch_id, output));
     }
 
     pub fn set_batch_status(&mut self, batch_id: String, status_str: String) {
+        // Early validation
+        if batch_id.is_empty() {
+            return;
+        }
+
         if let Some(batch_state) = self.batch_states.get_mut(&batch_id) {
             let new_status = match status_str.as_str() {
                 "success" => BatchStatus::Success,
-                "failure" => BatchStatus::Failure, 
+                "failure" => BatchStatus::Failure,
                 _ => BatchStatus::Running,
             };
-            
-            batch_state.status = new_status;
-            self.dispatch_action(Action::UpdateBatchStatus(batch_id, new_status));
+
+            // Only update if status actually changed to avoid unnecessary UI updates
+            if batch_state.status != new_status {
+                batch_state.status = new_status.clone();
+                self.dispatch_action(Action::UpdateBatchStatus(batch_id, new_status));
+            }
         }
     }
 
@@ -741,6 +760,34 @@ impl App {
                                     KeyCode::Up => {
                                         self.dispatch_action(Action::PreviousTask);
                                     }
+                                    KeyCode::Right if !is_filter_mode => {
+                                        // Handle Right arrow for expanding batch groups
+                                        if let Some(selected_id) = tasks_list.get_selected_item() {
+                                            // Check if this is a batch group selection using TaskSelectionManager
+                                            if tasks_list.get_selected_item_type()
+                                                == SelectedItemType::BatchGroup
+                                            {
+                                                self.dispatch_action(Action::ExpandBatch(
+                                                    selected_id,
+                                                ));
+                                            }
+                                        }
+                                    }
+                                    KeyCode::Left if !is_filter_mode => {
+                                        // Handle Left arrow for collapsing batch groups
+                                        if let Some(selected_id) = tasks_list.get_selected_item() {
+                                            // Check if this is a batch group selection using TaskSelectionManager
+                                            if tasks_list.get_selected_item_type()
+                                                == SelectedItemType::BatchGroup
+                                            {
+                                                if tasks_list.can_collapse_batch(&selected_id) {
+                                                    self.dispatch_action(Action::CollapseBatch(
+                                                        selected_id,
+                                                    ));
+                                                }
+                                            }
+                                        }
+                                    }
                                     KeyCode::Esc => {
                                         if matches!(self.focus, Focus::HelpPopup) {
                                             if let Some(help_popup) =
@@ -881,7 +928,10 @@ impl App {
                         .iter()
                         .find_map(|c| c.as_any().downcast_ref::<TasksList>())
                         .and_then(|tasks_list| {
-                            messenger.update_running_tasks(&tasks_list.tasks, &self.pty_instances)
+                            messenger.update_running_tasks(
+                                &tasks_list.get_all_tasks(),
+                                &self.pty_instances,
+                            )
                         })
                 });
             }
@@ -1026,15 +1076,13 @@ impl App {
 
                     // Clone pane_tasks upfront to avoid borrow conflicts when calling render methods
                     // This is a small fixed-size array (2 elements), so the clone cost is minimal
-                    let pane_tasks_snapshot: [Option<String>; 2] = if self.spacebar_mode {
-                        // In spacebar mode, use the selected task in pane 0
-                        let task = self
-                            .selection_manager
-                            .lock()
-                            .unwrap()
-                            .get_selected_task_name()
-                            .cloned();
-                        [task, None]
+                    let pane_tasks_snapshot: [Option<(String, SelectedItemType)>; 2] = if self
+                        .spacebar_mode
+                    {
+                        // In spacebar mode, use the current selection from selection manager
+                        let manager = self.selection_manager.lock().unwrap();
+                        let selection = manager.get_selected_item().map(|(id, t)| (id.clone(), t));
+                        [selection, None]
                     } else {
                         self.pane_tasks.clone()
                     };
@@ -1045,8 +1093,8 @@ impl App {
                     // Iterate over panes in order, mapping to physical positions
                     // Physical position 0 gets the first pinned task, position 1 gets the second
                     let mut physical_idx = 0;
-                    for (pane_idx, task_opt) in pane_tasks_snapshot.iter().enumerate() {
-                        if let Some(task_name) = task_opt {
+                    for (pane_idx, selection_opt) in pane_tasks_snapshot.iter().enumerate() {
+                        if let Some((selected_identifier, selection_type)) = selection_opt {
                             if physical_idx < terminal_panes.len() {
                                 let pane_area = terminal_panes[physical_idx];
 
@@ -1066,32 +1114,54 @@ impl App {
                                         _ => false,
                                     };
 
-                                let task_status = self
-                                    .get_task_status(task_name)
-                                    .unwrap_or(TaskStatus::NotStarted);
+                                match selection_type {
+                                    SelectedItemType::BatchGroup => {
+                                        // Show batch terminal output (identifier is pure batch ID)
+                                        self.render_batch_terminal_pane_internal(
+                                            f,
+                                            pane_idx,
+                                            pane_area,
+                                            selected_identifier.clone(),
+                                            is_minimal,
+                                            is_focused,
+                                            is_next_tab_target,
+                                        );
+                                    }
+                                    SelectedItemType::Task => {
+                                        // Show individual task output (identifier is pure task name)
+                                        let task_name = selected_identifier;
 
-                                // If task is pending or skipped, show dependency view
-                                if task_status == TaskStatus::NotStarted
-                                    || task_status == TaskStatus::Skipped
-                                {
-                                    self.render_dependency_view_internal(
-                                        f,
-                                        pane_idx,
-                                        pane_area,
-                                        task_name.clone(),
-                                        is_minimal,
-                                        is_focused,
-                                    );
-                                } else {
-                                    self.render_terminal_pane_internal(
-                                        f,
-                                        pane_idx,
-                                        pane_area,
-                                        task_name.clone(),
-                                        is_minimal,
-                                        is_focused,
-                                        is_next_tab_target,
-                                    );
+                                        let task_status = self
+                                            .get_task_status(task_name)
+                                            .unwrap_or(TaskStatus::NotStarted);
+
+                                        // If task is pending or skipped, show dependency view
+                                        if task_status == TaskStatus::NotStarted
+                                            || task_status == TaskStatus::Skipped
+                                        {
+                                            self.render_dependency_view_internal(
+                                                f,
+                                                pane_idx,
+                                                pane_area,
+                                                task_name.clone(),
+                                                is_minimal,
+                                                is_focused,
+                                            );
+                                        } else {
+                                            self.render_terminal_pane_internal(
+                                                f,
+                                                pane_idx,
+                                                pane_area,
+                                                task_name.clone(),
+                                                is_minimal,
+                                                is_focused,
+                                                is_next_tab_target,
+                                            );
+                                        }
+                                    }
+                                    SelectedItemType::None => {
+                                        // No selection - skip rendering (empty panes are not shown)
+                                    }
                                 }
 
                                 physical_idx += 1;
@@ -1123,6 +1193,12 @@ impl App {
             }
             Action::EndCommand => {
                 self.handle_end_command();
+            }
+            Action::StartBatch(batch_id, batch_info) => {
+                self.handle_batch_start(batch_id.clone(), batch_info.clone());
+            }
+            Action::UpdateBatchStatus(batch_id, status) => {
+                self.handle_batch_status_update(batch_id.clone(), status.clone());
             }
             _ => {}
         }
@@ -1251,7 +1327,7 @@ impl App {
             self.set_spacebar_mode(false, None);
         } else {
             // Show current task in pane 1 in spacebar mode
-            self.pane_tasks = [Some(task_name), None];
+            self.pane_tasks = [Some((task_name, SelectedItemType::Task)), None];
             self.set_spacebar_mode(true, None);
         }
     }
@@ -1436,18 +1512,22 @@ impl App {
             self.clear_pane_pty_reference(0);
             self.dependency_view_states[0] = None;
 
-            // Exit spacebar mode
+            // Exit spacebar mode first
             self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
 
             // Pin the task to the requested pane
-            self.pane_tasks[pane_idx] = Some(task_name.clone());
+            self.pane_tasks[pane_idx] = Some((task_name.clone(), SelectedItemType::Task));
             self.layout_manager
                 .set_pane_arrangement(PaneArrangement::Single);
             self.dispatch_action(Action::PinTask(task_name.clone(), pane_idx));
         } else {
             // Check if the task is already pinned to the OTHER pane
             let other_pane_idx = 1 - pane_idx;
-            if self.pane_tasks[other_pane_idx].as_deref() == Some(task_name.as_str()) {
+            if self.pane_tasks[other_pane_idx]
+                .as_ref()
+                .map(|(id, _)| id.as_str())
+                == Some(task_name.as_str())
+            {
                 // Clear the other pane - task is "moving" to the new pane
                 self.pane_tasks[other_pane_idx] = None;
                 self.clear_pane_pty_reference(other_pane_idx);
@@ -1460,7 +1540,11 @@ impl App {
             }
 
             // Check if the task is already pinned to the pane
-            if self.pane_tasks[pane_idx].as_deref() == Some(task_name.as_str()) {
+            if self.pane_tasks[pane_idx]
+                .as_ref()
+                .map(|(id, _)| id.as_str())
+                == Some(task_name.as_str())
+            {
                 // Unpin the task if it's already pinned
                 self.pane_tasks[pane_idx] = None;
 
@@ -1488,7 +1572,7 @@ impl App {
                 self.dispatch_action(Action::UnpinTask(task_name.clone(), pane_idx));
             } else {
                 // Pin the task to the specified pane
-                self.pane_tasks[pane_idx] = Some(task_name.clone());
+                self.pane_tasks[pane_idx] = Some((task_name.clone(), SelectedItemType::Task));
                 self.update_focus(Focus::TaskList);
 
                 // Exit spacebar mode when pinning
@@ -1524,33 +1608,54 @@ impl App {
         if let Focus::MultipleOutput(pane_idx) = self.focus {
             // Get the task assigned to this pane to determine how to handle keys
             // In spacebar mode, use selection manager; in pinned mode, use pane_tasks
-            let relevant_pane_task: Option<String> = if self.spacebar_mode {
+            let (selected_identifier, selection_type) = if self.spacebar_mode {
                 self.selection_manager
                     .lock()
                     .unwrap()
-                    .get_selected_task_name()
-                    .cloned()
+                    .get_selected_item()
+                    .map(|(id, t)| (Some(id.clone()), t))
+                    .unwrap_or((None, SelectedItemType::None))
             } else {
-                self.pane_tasks[pane_idx].clone()
+                self.pane_tasks[pane_idx]
+                    .as_ref()
+                    .map(|(id, t)| (Some(id.clone()), *t))
+                    .unwrap_or((None, SelectedItemType::None))
             };
 
-            if let Some(task_name) = relevant_pane_task {
-                let task_status = self
-                    .get_task_status(&task_name)
-                    .unwrap_or(TaskStatus::NotStarted);
-
-                if matches!(task_status, TaskStatus::NotStarted | TaskStatus::Skipped) {
-                    // Task is pending - handle keys in dependency view
-                    if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
-                        if dep_state.handle_key_event(key) {
-                            return Ok(()); // Key was handled by dependency view
+            if let Some(selected_identifier) = selected_identifier {
+                match selection_type {
+                    SelectedItemType::BatchGroup => {
+                        // Batch groups show terminal output, handle keys in terminal pane
+                        // Batch PTY instances are typically non-interactive, but still handle scrolling
+                        let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+                        if let Some(action) = terminal_pane_data.handle_key_event(key)? {
+                            self.dispatch_action(action);
                         }
                     }
-                } else {
-                    // Task is running/completed - handle keys in terminal pane
-                    let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-                    if let Some(action) = terminal_pane_data.handle_key_event(key)? {
-                        self.dispatch_action(action);
+                    SelectedItemType::Task => {
+                        // Handle task (identifier is pure task name)
+                        let task_name = selected_identifier;
+
+                        let task_status = self
+                            .get_task_status(&task_name)
+                            .unwrap_or(TaskStatus::NotStarted);
+                        if matches!(task_status, TaskStatus::NotStarted | TaskStatus::Skipped) {
+                            // Task is pending - handle keys in dependency view
+                            if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
+                                if dep_state.handle_key_event(key) {
+                                    return Ok(()); // Key was handled by dependency view
+                                }
+                            }
+                        } else {
+                            // Task is running/completed - handle keys in terminal pane
+                            let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+                            if let Some(action) = terminal_pane_data.handle_key_event(key)? {
+                                self.dispatch_action(action);
+                            }
+                        }
+                    }
+                    SelectedItemType::None => {
+                        // No selection, do nothing
                     }
                 }
             }
@@ -1630,16 +1735,6 @@ impl App {
                 if current_rows != pty_height {
                     needs_sort = true;
                 }
-            }
-        }
-
-        for pty in self.batch_pty_instances.values() {
-            // Use the first terminal pane area as reference for batch PTY dimensions
-            // This ensures batch PTY instances have consistent dimensions with task PTYs
-            if let Some(first_pane_area) = self.layout_areas.as_ref().unwrap().terminal_panes.first() {
-                let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(*first_pane_area);
-                let mut pty_clone = pty.as_ref().clone();
-                pty_clone.resize(pty_height, pty_width)?;
             }
         }
 
@@ -1809,7 +1904,6 @@ impl App {
             .get_task_status(&task_name)
             .unwrap_or(TaskStatus::NotStarted);
         let task_continuous = self.is_task_continuous(&task_name);
-        let has_pty = self.pty_instances.contains_key(&task_name);
 
         let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
         terminal_pane_data.is_continuous = task_continuous;
@@ -1818,25 +1912,47 @@ impl App {
             terminal_pane_data.set_interactive(false);
         }
 
-        if has_pty {
-            if let Some(pty) = self.pty_instances.get(&task_name) {
-                terminal_pane_data.can_be_interactive = in_progress && pty.can_be_interactive();
-                terminal_pane_data.pty = Some(pty.clone());
+        // Check if we need to create a PTY from stored output
+        if !self.pty_instances.contains_key(&task_name) {
+            // No PTY yet - check if we have stored terminal output
+            let stored_output = self
+                .components
+                .iter()
+                .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+                .and_then(|tasks_list| tasks_list.get_task_terminal_output(&task_name));
 
-                // Immediately resize PTY to match the current terminal pane dimensions
+            if let Some(output) = stored_output {
+                // Create PTY from stored output and cache it in pty_instances
+                let mut pty = PtyInstance::non_interactive();
+
+                // Resize PTY to match terminal pane dimensions before processing output
                 let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(pane_area);
-                let mut pty_clone = pty.as_ref().clone();
-                pty_clone.resize(pty_height, pty_width).ok();
-            } else {
-                // Clear PTY data if the task exists but doesn't have a PTY instance
-                terminal_pane_data.pty = None;
-                terminal_pane_data.can_be_interactive = false;
+                pty.resize(pty_height, pty_width).ok();
+
+                pty.process_output(output.as_bytes());
+
+                // Cache in pty_instances for scroll persistence across frames
+                self.pty_instances.insert(task_name.clone(), Arc::new(pty));
             }
+        }
+
+        // Use PTY from pty_instances if available
+        if let Some(pty) = self.pty_instances.get(&task_name) {
+            terminal_pane_data.can_be_interactive = in_progress && pty.can_be_interactive();
+            terminal_pane_data.pty = Some(pty.clone());
+
+            // Immediately resize PTY to match the current terminal pane dimensions
+            let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(pane_area);
+            let mut pty_clone = pty.as_ref().clone();
+            pty_clone.resize(pty_height, pty_width).ok();
         } else {
-            // Clear PTY data when switching to a task that doesn't have a PTY instance
+            // No PTY available
             terminal_pane_data.pty = None;
             terminal_pane_data.can_be_interactive = false;
         }
+
+        // Determine if we have a PTY after setup
+        let has_pty = terminal_pane_data.pty.is_some();
 
         // Get task timing information from TasksList
         let (start_time, end_time) = self
@@ -1870,6 +1986,97 @@ impl App {
         f.render_stateful_widget(terminal_pane, pane_area, &mut state);
     }
 
+    /// Renders the terminal pane for a batch group showing combined batch output
+    fn render_batch_terminal_pane_internal(
+        &mut self,
+        f: &mut ratatui::Frame,
+        pane_idx: usize,
+        pane_area: Rect,
+        batch_id: String,
+        is_minimal: bool,
+        is_focused: bool,
+        is_next_tab_target: bool,
+    ) {
+        // Get batch state to determine status
+        let batch_status = self
+            .batch_states
+            .get(&batch_id)
+            .map(|state| match state.status {
+                BatchStatus::Running => TaskStatus::InProgress,
+                BatchStatus::Success => TaskStatus::Success,
+                BatchStatus::Failure => TaskStatus::Failure,
+            })
+            .unwrap_or(TaskStatus::NotStarted);
+
+        // Get batch info for task name display
+        let batch_name = self
+            .batch_states
+            .get(&batch_id)
+            .map(|state| {
+                format!(
+                    "Batch: {} ({})",
+                    state.info.executor_name,
+                    state.info.task_ids.len()
+                )
+            })
+            .unwrap_or_else(|| format!("Batch: {}", batch_id));
+
+        let has_pty = self.pty_instances.contains_key(&batch_id);
+
+        let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+        terminal_pane_data.is_continuous = false; // Batches are not continuous
+
+        let in_progress = batch_status == TaskStatus::InProgress;
+        if !in_progress && terminal_pane_data.is_interactive() {
+            terminal_pane_data.set_interactive(false);
+        }
+
+        if has_pty {
+            if let Some(pty) = self.pty_instances.get(&batch_id) {
+                // Batch PTY instances are typically non-interactive
+                terminal_pane_data.can_be_interactive = false;
+                terminal_pane_data.pty = Some(pty.clone());
+
+                // Immediately resize PTY to match the current terminal pane dimensions
+                let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(pane_area);
+                let mut pty_clone = pty.as_ref().clone();
+                pty_clone.resize(pty_height, pty_width).ok();
+            } else {
+                terminal_pane_data.pty = None;
+                terminal_pane_data.can_be_interactive = false;
+            }
+        } else {
+            terminal_pane_data.pty = None;
+            terminal_pane_data.can_be_interactive = false;
+        }
+
+        // Batch groups typically don't have individual timing info
+        // We could aggregate timing from individual tasks in the future
+        let estimated_duration = None;
+        let start_time = None;
+        let end_time = None;
+
+        let mut state = TerminalPaneState::new(
+            batch_name,
+            batch_status,
+            false, // not continuous
+            is_focused,
+            has_pty,
+            is_next_tab_target,
+            self.console_messenger.is_some(),
+            estimated_duration,
+            start_time,
+            end_time,
+        );
+
+        let terminal_pane = TerminalPane::new()
+            .minimal(is_minimal)
+            .pty_data(terminal_pane_data)
+            .continuous(false);
+
+        f.render_stateful_widget(terminal_pane, pane_area, &mut state);
+    }
+
     pub fn set_estimated_task_timings(&mut self, timings: HashMap<String, i64>) {
         self.estimated_task_timings = timings;
     }
@@ -1883,7 +2090,9 @@ impl App {
                 .pane_tasks
                 .iter()
                 .enumerate()
-                .filter(|(_, task)| task.as_deref() == Some(skipped_task_id))
+                .filter(|(_, task)| {
+                    task.as_ref().map(|(id, _)| id.as_str()) == Some(skipped_task_id)
+                })
                 .map(|(idx, _)| idx)
                 .collect();
 
@@ -1891,7 +2100,7 @@ impl App {
             let will_duplicate = panes_to_update.len() > 1
                 || (panes_to_update.len() == 1 && {
                     let other_pane = 1 - panes_to_update[0];
-                    self.pane_tasks[other_pane].as_ref() == Some(&failed_dep)
+                    self.pane_tasks[other_pane].as_ref().map(|(id, _)| id) == Some(&failed_dep)
                 });
 
             if will_duplicate {
@@ -1914,13 +2123,25 @@ impl App {
 
     /// Switches a pane to display a different task, updating all necessary state.
     fn switch_pane_to_task(&mut self, pane_idx: usize, task_id: String) {
-        self.pane_tasks[pane_idx] = Some(task_id.clone());
+        self.switch_pane_to_selection(pane_idx, task_id);
+    }
 
-        // Clear cached states so they get recreated for the new task
+    /// Switches a pane to display a different selection (task, batch, or nested task), updating all necessary state.
+    fn switch_pane_to_selection(&mut self, pane_idx: usize, selection_identifier: String) {
+        // Determine the type of the selection
+        let selection_type = if self.batch_states.contains_key(&selection_identifier) {
+            SelectedItemType::BatchGroup
+        } else {
+            SelectedItemType::Task
+        };
+
+        self.pane_tasks[pane_idx] = Some((selection_identifier.clone(), selection_type));
+
+        // Clear cached states so they get recreated for the new selection
         self.dependency_view_states[pane_idx] = None;
 
-        // Assign the PTY for the new task to this pane if available
-        if let Some(pty_instance) = self.pty_instances.get(&task_id) {
+        // Assign PTY from unified pty_instances (works for both tasks and batches)
+        if let Some(pty_instance) = self.pty_instances.get(&selection_identifier) {
             self.terminal_pane_data[pane_idx].pty = Some(pty_instance.clone());
 
             // Immediately resize PTY to match the current terminal pane dimensions
@@ -1932,11 +2153,13 @@ impl App {
                     pty_clone.resize(pty_height, pty_width).ok();
                 }
             }
+        } else {
+            self.terminal_pane_data[pane_idx].pty = None;
         }
 
         // Update the selection manager to prevent conflicts with manual selection
         if let Ok(mut selection_manager) = self.selection_manager.lock() {
-            selection_manager.select_task(task_id);
+            selection_manager.select_task(selection_identifier);
         }
     }
 
@@ -1976,5 +2199,168 @@ impl App {
         // State 0 = hide progress (using ST terminator for compatibility)
         let _ = io::stderr().write_all(b"\x1b]9;4;0;0\x1b\\");
         let _ = io::stderr().flush();
+    }
+
+    /// Handles the start of a batch by grouping individual tasks into a batch group.
+    /// Tasks are removed from individual display and shown as nested items under the batch.
+    fn handle_batch_start(&mut self, batch_id: String, batch_info: BatchInfo) {
+        // Early validation
+        if batch_info.task_ids.is_empty() {
+            return;
+        }
+
+        if batch_id.is_empty() {
+            return;
+        }
+
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            // Validate that batch tasks exist in the task lookup
+            let valid_task_ids: Vec<String> = batch_info
+                .task_ids
+                .iter()
+                .filter(|task_id| tasks_list.task_lookup.contains_key(*task_id))
+                .cloned()
+                .collect();
+
+            if valid_task_ids.is_empty() {
+                return;
+            }
+
+            // Check if any of the batch tasks are currently selected
+            let currently_selected = self
+                .selection_manager
+                .lock()
+                .ok()
+                .and_then(|sm| sm.get_selected_task_name().cloned());
+
+            let (expand_batch, convert_selection) = if let Some(selected_task) = &currently_selected
+            {
+                let is_batch_task = valid_task_ids.contains(selected_task);
+                (is_batch_task, is_batch_task)
+            } else {
+                (false, false)
+            };
+
+            // Create batch group item with timestamp from batch state
+            let start_time = self
+                .batch_states
+                .get(&batch_id)
+                .map(|state| state.start_time)
+                .unwrap_or_else(|| current_timestamp_millis());
+            let mut batch_group = BatchGroupItem::new_with_timestamp(
+                batch_id.clone(),
+                batch_info.executor_name.clone(),
+                start_time,
+            );
+            batch_group.is_expanded = expand_batch; // Expand if a nested task was selected
+
+            // Add only valid task IDs to the batch group
+            for task_id in &valid_task_ids {
+                batch_group.add_task(task_id.clone());
+            }
+
+            // Group the tasks into the batch
+            tasks_list.group_tasks_into_batch(valid_task_ids.clone(), batch_group);
+
+            // Keep the same task selection (no conversion needed since we use pure task names)
+            if convert_selection {
+                if let Some(selected_task) = currently_selected {
+                    if let Ok(mut sm) = self.selection_manager.lock() {
+                        sm.select_task(selected_task);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Handles batch status updates and ungrouping when batch completes.
+    fn handle_batch_status_update(&mut self, batch_id: String, status: BatchStatus) {
+        // Early validation
+        if batch_id.is_empty() {
+            return;
+        }
+
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            // Update the batch status first
+            if let Some(batch_group) = tasks_list.get_batch_group_mut(&batch_id) {
+                batch_group.update_status(status.clone());
+
+                // If batch is complete (success or failure), ungroup the tasks
+                if matches!(status, BatchStatus::Success | BatchStatus::Failure) {
+                    self.handle_batch_complete(batch_id);
+                }
+            }
+        }
+    }
+
+    /// Handles batch completion by ungrouping tasks back to individual display.
+    /// This is called when a batch reaches a terminal state (success or failure).
+    fn handle_batch_complete(&mut self, batch_id: String) {
+        // Early validation
+        if batch_id.is_empty() {
+            return;
+        }
+
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            // Store currently selected task to preserve selection
+            let currently_selected = self
+                .selection_manager
+                .lock()
+                .ok()
+                .and_then(|sm| sm.get_selected_task_name().cloned());
+
+            // Get batch info before ungrouping for better selection handling
+            let batch_tasks = if let Some(batch_group) = tasks_list.get_batch_group_by_id(&batch_id)
+            {
+                batch_group.nested_tasks.clone()
+            } else {
+                Vec::new()
+            };
+
+            // Ungroup the batch tasks
+            tasks_list.ungroup_batch_tasks(&batch_id);
+
+            // Enhanced selection restoration logic
+            if let Some(selected_task) = currently_selected {
+                let new_selection = if selected_task == batch_id {
+                    // Batch group was selected - select the first task from the completed batch
+                    batch_tasks.first().cloned()
+                } else if batch_tasks.contains(&selected_task) {
+                    // Task from this batch was selected - preserve the selection
+                    Some(selected_task)
+                } else {
+                    // Task not in this batch - preserve as is
+                    Some(selected_task)
+                };
+
+                if let Some(task_to_select) = new_selection {
+                    if let Ok(mut sm) = self.selection_manager.lock() {
+                        sm.select_task(task_to_select);
+                    }
+                }
+            }
+
+            // Clean up batch PTY instance
+            self.cleanup_batch_pty(&batch_id);
+        }
+    }
+
+    /// Cleans up batch PTY instance when batch completes
+    fn cleanup_batch_pty(&mut self, batch_id: &str) {
+        self.pty_instances.remove(batch_id);
+        // Note: batch_states is kept for potential future reference
+        // Could be cleaned up later if needed
     }
 }

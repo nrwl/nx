@@ -918,6 +918,9 @@ export function setEnvVarsBasedOnArgs(
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'false';
   }
+  if (nxArgs.outputStyle === 'dynamic' || nxArgs.outputStyle === 'tui') {
+    process.env.NX_STREAM_OUTPUT = 'true';
+  }
   if (loadDotEnvFiles) {
     process.env.NX_LOAD_DOT_ENV_FILES = 'true';
   }
