@@ -518,6 +518,11 @@ impl CollectionRunner {
         });
         self.main_cli_subprocess_pids
             .retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
+        if let Some(pid) = *self.daemon_pid.lock() {
+            if sys.process(Pid::from(pid as usize)).is_none() {
+                *self.daemon_pid.lock() = None;
+            }
+        }
 
         // Clear live PIDs from previous collection cycle (keeps allocated capacity)
         live_pids.clear();
