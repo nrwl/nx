@@ -133,7 +133,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       options
     );
     const report = getCurrentProjectGraphReport();
-    const { nodes, externalNodes, buildFiles = [] } = report;
+    const { nodes, externalNodes = {}, buildFiles = [] } = report;
 
     // Combine buildFilesFromSplitConfigFiles and buildFiles, making each value distinct
     const allBuildFiles = Array.from(
