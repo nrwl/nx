@@ -83,6 +83,11 @@ import {
   filterHiddenChanges,
   mapCommitToChange,
 } from './changelog/commit-utils';
+import {
+  filterVersionPlansByCommitRange,
+  resolveWorkspaceChangelogFromSHA,
+  resolveChangelogFromSHA,
+} from './changelog/version-plan-filtering';
 
 export interface NxReleaseChangelogResult {
   workspaceChangelog?: {
@@ -190,24 +195,7 @@ export function createAPI(
       output.note(releaseGraph.filterLog);
     }
 
-    const rawVersionPlans = await readRawVersionPlans();
-    await setResolvedVersionPlansOnGroups(
-      rawVersionPlans,
-      releaseGraph.releaseGroups,
-      Object.keys(projectGraph.nodes),
-      args.verbose
-    );
-
-    // Validate version plans against the filter after resolution
-    const versionPlanValidationError =
-      validateResolvedVersionPlansAgainstFilter(
-        releaseGraph.releaseGroups,
-        releaseGraph.releaseGroupToFilteredProjects
-      );
-    if (versionPlanValidationError) {
-      output.error(versionPlanValidationError);
-      process.exit(1);
-    }
+    let rawVersionPlans = await readRawVersionPlans();
 
     if (args.deleteVersionPlans === undefined) {
       // default to deleting version plans in this command instead of after versioning
@@ -250,6 +238,50 @@ export function createAPI(
     const to = args.to || 'HEAD';
     const toSHA = await getCommitHash(to);
     const headSHA = to === 'HEAD' ? toSHA : await getCommitHash('HEAD');
+
+    // Resolve the from SHA once for reuse across different contexts
+    const fromSHA = await resolveWorkspaceChangelogFromSHA({
+      args,
+      nxReleaseConfig,
+      useAutomaticFromRef,
+    });
+
+    // Filter version plans based on resolveVersionPlans option
+    const shouldFilterVersionPlans =
+      args.resolveVersionPlans === 'using-from-and-to';
+    if (shouldFilterVersionPlans && rawVersionPlans.length > 0 && fromSHA) {
+      rawVersionPlans = await filterVersionPlansByCommitRange(
+        rawVersionPlans,
+        fromSHA,
+        toSHA,
+        args.verbose
+      );
+
+      if (args.verbose) {
+        console.log(
+          `Using version plans committed between ${fromSHA} and ${toSHA}`
+        );
+      }
+    }
+
+    // Set resolved version plans on groups
+    await setResolvedVersionPlansOnGroups(
+      rawVersionPlans,
+      releaseGraph.releaseGroups,
+      Object.keys(projectGraph.nodes),
+      args.verbose
+    );
+
+    // Validate version plans against the filter after resolution
+    const versionPlanValidationError =
+      validateResolvedVersionPlansAgainstFilter(
+        releaseGraph.releaseGroups,
+        releaseGraph.releaseGroupToFilteredProjects
+      );
+    if (versionPlanValidationError) {
+      output.error(versionPlanValidationError);
+      process.exit(1);
+    }
 
     /**
      * Extract the preid from the workspace version and the project versions
@@ -309,6 +341,7 @@ export function createAPI(
       projectsPreid,
       useAutomaticFromRef,
       toSHA,
+      fromSHA,
     });
 
     const workspaceChangelog = await generateChangelogForWorkspace({
@@ -323,6 +356,42 @@ export function createAPI(
     if (workspaceChangelog && workspaceChangelog.postGitTask) {
       postGitTasks.push(workspaceChangelog.postGitTask);
     }
+
+    /**
+     * Create a cache for from SHA resolution to avoid duplicate git operations
+     */
+    const fromSHACache = new Map<string, string | null>();
+    // Cache the workspace from SHA if available
+    if (fromSHA) {
+      fromSHACache.set('workspace', fromSHA);
+    }
+
+    // Helper function to get cached from SHA or resolve and cache it
+    const getCachedFromSHA = async (
+      cacheKey: string,
+      pattern: string,
+      templateValues: Record<string, string>,
+      preid: string | undefined,
+      checkAllBranchesWhen: boolean | string[],
+      requireSemver: boolean,
+      strictPreid: boolean
+    ): Promise<string | null> => {
+      if (fromSHACache.has(cacheKey)) {
+        return fromSHACache.get(cacheKey);
+      }
+      const sha = await resolveChangelogFromSHA({
+        fromRef: args.from,
+        tagPattern: pattern,
+        tagPatternValues: templateValues,
+        checkAllBranchesWhen,
+        preid,
+        requireSemver,
+        strictPreid,
+        useAutomaticFromRef,
+      });
+      fromSHACache.set(cacheKey, sha);
+      return sha;
+    };
 
     /**
      * Compute any additional dependency bumps up front because there could be cases of circular dependencies,
@@ -409,39 +478,38 @@ export function createAPI(
               project.name
             );
           } else {
-            let fromRef =
-              args.from ||
-              (
-                await getLatestGitTagForPattern(
-                  releaseGroup.releaseTag.pattern,
-                  {
-                    projectName: project.name,
-                    releaseGroupName: releaseGroup.name,
-                  },
-                  {
-                    checkAllBranchesWhen:
-                      releaseGroup.releaseTag.checkAllBranchesWhen,
-                    preid: projectsPreid[project.name],
-                    requireSemver: releaseGroup.releaseTag.requireSemver,
-                    strictPreid: releaseGroup.releaseTag.strictPreid,
-                  }
-                )
-              )?.tag;
+            const projectCacheKey = `${releaseGroup.name}:${project.name}`;
+            const fromSHA = await getCachedFromSHA(
+              projectCacheKey,
+              releaseGroup.releaseTag.pattern,
+              {
+                projectName: project.name,
+                releaseGroupName: releaseGroup.name,
+              },
+              projectsPreid[project.name],
+              releaseGroup.releaseTag.checkAllBranchesWhen,
+              releaseGroup.releaseTag.requireSemver,
+              releaseGroup.releaseTag.strictPreid
+            );
 
             let commits: GitCommit[];
+            let fromRef = fromSHA;
             if (!fromRef && useAutomaticFromRef) {
-              const firstCommit = await getFirstGitCommit();
-              commits = await filterProjectCommits({
-                fromSHA: firstCommit,
-                toSHA,
-                projectPath: project.data.root,
-              });
+              // For automatic from ref, we already have it cached
+              fromRef = fromSHACache.get(projectCacheKey);
+              if (fromRef) {
+                commits = await filterProjectCommits({
+                  fromSHA: fromRef,
+                  toSHA,
+                  projectPath: project.data.root,
+                });
 
-              fromRef = commits[0]?.shortHash;
-              if (args.verbose) {
-                console.log(
-                  `Determined --from ref for ${project.name} from the first commit in which it exists: ${fromRef}`
-                );
+                fromRef = commits[0]?.shortHash;
+                if (args.verbose) {
+                  console.log(
+                    `Determined --from ref for ${project.name} from the first commit in which it exists: ${fromRef}`
+                  );
+                }
               }
             }
 
@@ -505,40 +573,28 @@ export function createAPI(
             releaseGroup.resolvedVersionPlans as GroupVersionPlan[]
           );
         } else {
-          let fromRef =
-            args.from ||
-            (
-              await getLatestGitTagForPattern(
-                releaseGroup.releaseTag.pattern,
-                {},
-                {
-                  checkAllBranchesWhen:
-                    releaseGroup.releaseTag.checkAllBranchesWhen,
-                  preid:
-                    workspacePreid ??
-                    projectsPreid?.[Object.keys(projectsPreid)[0]],
-                  requireSemver: releaseGroup.releaseTag.requireSemver,
-                  strictPreid: releaseGroup.releaseTag.strictPreid,
-                }
-              )
-            )?.tag;
-          if (!fromRef) {
-            if (useAutomaticFromRef) {
-              fromRef = await getFirstGitCommit();
-              if (args.verbose) {
-                console.log(
-                  `Determined release group --from ref from the first commit in the workspace: ${fromRef}`
-                );
-              }
-            } else {
-              throw new Error(
-                `Unable to determine the previous git tag. If this is the first release of your release group, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
-              );
-            }
+          const groupCacheKey = `${releaseGroup.name}:fixed`;
+          const fromSHA = await getCachedFromSHA(
+            groupCacheKey,
+            releaseGroup.releaseTag.pattern,
+            {},
+            workspacePreid ?? projectsPreid?.[Object.keys(projectsPreid)[0]],
+            releaseGroup.releaseTag.checkAllBranchesWhen,
+            releaseGroup.releaseTag.requireSemver,
+            releaseGroup.releaseTag.strictPreid
+          );
+
+          if (!fromSHA) {
+            throw new Error(
+              `Unable to determine the previous git tag. If this is the first release of your release group, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
+            );
           }
 
-          // Make sure that the fromRef is actually resolvable
-          const fromSHA = await getCommitHash(fromRef);
+          if (args.verbose && useAutomaticFromRef && !args.from) {
+            console.log(
+              `Determined release group --from ref from the first commit in the workspace: ${fromSHA}`
+            );
+          }
 
           const { fileMap } = await createFileMapUsingProjectGraph(
             projectGraph
@@ -1240,6 +1296,7 @@ async function resolveWorkspaceChangelogChanges({
   projectsPreid,
   useAutomaticFromRef,
   toSHA,
+  fromSHA,
 }: {
   releaseGraph: ReleaseGraph;
   nxReleaseConfig: NxReleaseConfig;
@@ -1248,6 +1305,7 @@ async function resolveWorkspaceChangelogChanges({
   projectsPreid: Record<string, string | undefined>;
   useAutomaticFromRef: boolean;
   toSHA: string;
+  fromSHA: string | null;
 }): Promise<ChangelogChange[]> {
   // NOTE: If there are multiple release groups, we'll just skip the workspace changelog anyway.
   const versionPlansEnabledForWorkspaceChangelog =
@@ -1266,6 +1324,7 @@ async function resolveWorkspaceChangelogChanges({
     projectsPreid,
     useAutomaticFromRef,
     toSHA,
+    fromSHA,
   });
 }
 
@@ -1294,6 +1353,7 @@ async function resolveWorkspaceChangelogFromCommits({
   projectsPreid,
   useAutomaticFromRef,
   toSHA,
+  fromSHA,
 }: {
   nxReleaseConfig: NxReleaseConfig;
   args: ChangelogOptions;
@@ -1301,42 +1361,16 @@ async function resolveWorkspaceChangelogFromCommits({
   projectsPreid: Record<string, string | undefined>;
   useAutomaticFromRef: boolean;
   toSHA: string;
+  fromSHA: string | null;
 }): Promise<ChangelogChange[]> {
-  let workspaceChangelogFromRef =
-    args.from ||
-    (
-      await getLatestGitTagForPattern(
-        nxReleaseConfig.releaseTag.pattern,
-        {},
-        {
-          checkAllBranchesWhen: nxReleaseConfig.releaseTag.checkAllBranchesWhen,
-          preid:
-            workspacePreid ?? projectsPreid?.[Object.keys(projectsPreid)[0]],
-          requireSemver: nxReleaseConfig.releaseTag.requireSemver,
-          strictPreid: nxReleaseConfig.releaseTag.strictPreid,
-        }
-      )
-    )?.tag;
-
-  if (!workspaceChangelogFromRef) {
-    if (useAutomaticFromRef) {
-      workspaceChangelogFromRef = await getFirstGitCommit();
-      if (args.verbose) {
-        console.log(
-          `Determined workspace --from ref from the first commit in the workspace: ${workspaceChangelogFromRef}`
-        );
-      }
-    } else {
-      throw new Error(
-        `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
-      );
-    }
+  // Use the cached fromSHA if available, otherwise throw an error
+  if (!fromSHA) {
+    throw new Error(
+      `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
+    );
   }
 
-  // Make sure that the fromRef is actually resolvable
-  const workspaceChangelogFromSHA = await getCommitHash(
-    workspaceChangelogFromRef
-  );
+  const workspaceChangelogFromSHA = fromSHA;
 
   const commits = await getCommits(workspaceChangelogFromSHA, toSHA);
   // For workspace changelog, all commits affect all projects
