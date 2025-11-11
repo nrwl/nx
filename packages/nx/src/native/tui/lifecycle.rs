@@ -327,12 +327,18 @@ impl AppLifeCycle {
 
     // Batch lifecycle methods
     #[napi]
-    pub fn register_running_batch(&mut self, batch_id: String, batch_info: BatchInfo) -> napi::Result<()> {
-        self.app.lock().register_running_batch(batch_id, batch_info.into());
+    pub fn register_running_batch(
+        &mut self,
+        batch_id: String,
+        batch_info: BatchInfo,
+    ) -> napi::Result<()> {
+        self.app
+            .lock()
+            .register_running_batch(batch_id, batch_info.into());
         Ok(())
     }
 
-    #[napi] 
+    #[napi]
     pub fn append_batch_output(&mut self, batch_id: String, output: String) -> napi::Result<()> {
         self.app.lock().append_batch_output(batch_id, output);
         Ok(())
