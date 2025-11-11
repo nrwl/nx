@@ -120,7 +120,7 @@ jobs:
       fail-fast: false
       matrix:
         settings:
-          - host: macos-13
+          - host: macos-latest
             target: x86_64-apple-darwin
             setup: |-
               rustup target add aarch64-apple-darwin
@@ -199,7 +199,7 @@ jobs:
                 rustup target add x86_64-unknown-linux-musl
                 pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-musl
               "
-          - host: macos-13
+          - host: macos-latest
             target: aarch64-apple-darwin
             setup: |-
               rustup target add aarch64-apple-darwin
