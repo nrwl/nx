@@ -6,7 +6,6 @@ export default defineConfig({
   plugins: [],
   test: {
     watch: false,
-    globals: true,
     environment: 'node',
     include: ['src/**/*.spec.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     setupFiles: ['./test-utils/fs-memfs.setup-file.ts'],

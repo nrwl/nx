@@ -4,7 +4,10 @@ import {
   getPnpmLockfileDependencies,
   stringifyPnpmLockfile,
 } from './pnpm-parser';
-import { ProjectGraph } from '../../../config/project-graph';
+import {
+  ProjectGraph,
+  type ProjectGraphExternalNode,
+} from '../../../config/project-graph';
 import { vol } from 'memfs';
 import { pruneProjectGraph } from './project-graph-pruning';
 import {
@@ -128,6 +131,7 @@ describe('pnpm LockFile utility', () => {
     });
 
     let externalNodes: ProjectGraph['externalNodes'];
+    let keyMap: Map<string, Set<ProjectGraphExternalNode>>;
     let dependencies: RawProjectGraphDependency[];
     let graph: ProjectGraph;
 
@@ -142,7 +146,9 @@ describe('pnpm LockFile utility', () => {
         )).default;
         lockFileHash = '__fixtures__/nextjs/pnpm-lock.yaml';
 
-        externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+        const result = getPnpmLockfileNodes(lockFile, lockFileHash);
+        externalNodes = result.nodes;
+        keyMap = result.keyMap;
         graph = {
           nodes: {},
           dependencies: {},
@@ -162,7 +168,12 @@ describe('pnpm LockFile utility', () => {
           nxJsonConfiguration: null,
           workspaceRoot: '/virtual',
         };
-        dependencies = getPnpmLockfileDependencies(lockFile, lockFileHash, ctx);
+        dependencies = getPnpmLockfileDependencies(
+          lockFile,
+          lockFileHash,
+          ctx,
+          keyMap
+        );
 
         const builder = new ProjectGraphBuilder(graph);
         for (const dep of dependencies) {
@@ -214,7 +225,9 @@ describe('pnpm LockFile utility', () => {
           '__fixtures__/nextjs/pnpm-lock-v6.yaml'
         )).default;
         lockFileHash = '__fixtures__/nextjs/pnpm-lock-v6.yaml';
-        externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+        const result = getPnpmLockfileNodes(lockFile, lockFileHash);
+        externalNodes = result.nodes;
+        keyMap = result.keyMap;
         graph = {
           nodes: {},
           dependencies: {},
@@ -234,7 +247,12 @@ describe('pnpm LockFile utility', () => {
           nxJsonConfiguration: null,
           workspaceRoot: '/virtual',
         };
-        dependencies = getPnpmLockfileDependencies(lockFile, lockFileHash, ctx);
+        dependencies = getPnpmLockfileDependencies(
+          lockFile,
+          lockFileHash,
+          ctx,
+          keyMap
+        );
 
         const builder = new ProjectGraphBuilder(graph);
         for (const dep of dependencies) {
@@ -264,7 +282,7 @@ describe('pnpm LockFile utility', () => {
         )).default;
         const appLockFileHash = '__fixtures__/nextjs/app/pnpm-lock-v6.yaml';
 
-        const externalNodes = getPnpmLockfileNodes(
+        const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
           appLockFile,
           appLockFileHash
         );
@@ -290,7 +308,8 @@ describe('pnpm LockFile utility', () => {
         const dependencies = getPnpmLockfileDependencies(
           appLockFile,
           appLockFileHash,
-          appCtx
+          appCtx,
+          keyMap
         );
 
         const builder = new ProjectGraphBuilder(appGraph);
@@ -356,7 +375,10 @@ describe('pnpm LockFile utility', () => {
       )).default;
       const lockFileHash = '__fixtures__/auxiliary-packages/pnpm-lock.yaml';
 
-      const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+      const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
+        lockFile,
+        lockFileHash
+      );
       let graph: ProjectGraph = {
         nodes: {},
         dependencies: {},
@@ -379,7 +401,8 @@ describe('pnpm LockFile utility', () => {
       const dependencies = getPnpmLockfileDependencies(
         lockFile,
         lockFileHash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(graph);
@@ -473,7 +496,10 @@ describe('pnpm LockFile utility', () => {
         },
       };
 
-      const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+      const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
+        lockFile,
+        lockFileHash
+      );
       let graph: ProjectGraph = {
         nodes: {},
         dependencies: {},
@@ -496,7 +522,8 @@ describe('pnpm LockFile utility', () => {
       const dependencies = getPnpmLockfileDependencies(
         lockFile,
         lockFileHash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(graph);
@@ -548,7 +575,10 @@ describe('pnpm LockFile utility', () => {
       )).default;
       const lockFileHash = '__fixtures__/duplicate-package/pnpm-lock.yaml';
 
-      const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+      const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
+        lockFile,
+        lockFileHash
+      );
       let graph: ProjectGraph = {
         nodes: {},
         dependencies: {},
@@ -571,7 +601,8 @@ describe('pnpm LockFile utility', () => {
       const dependencies = getPnpmLockfileDependencies(
         lockFile,
         lockFileHash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(graph);
@@ -608,7 +639,10 @@ describe('pnpm LockFile utility', () => {
         '__fixtures__/optional/pnpm-lock.yaml'
       )).default;
       const lockFileHash = '__fixtures__/optional/pnpm-lock.yaml';
-      const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+      const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
+        lockFile,
+        lockFileHash
+      );
       let graph: ProjectGraph = {
         nodes: {},
         dependencies: {},
@@ -631,7 +665,8 @@ describe('pnpm LockFile utility', () => {
       const dependencies = getPnpmLockfileDependencies(
         lockFile,
         lockFileHash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(graph);
@@ -681,7 +716,10 @@ describe('pnpm LockFile utility', () => {
         )).default;
         lockFileHash = '__fixtures__/pruning/pnpm-lock.yaml';
 
-        const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+        const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
+          lockFile,
+          lockFileHash
+        );
         graph = {
           nodes: {},
           dependencies: {},
@@ -704,7 +742,8 @@ describe('pnpm LockFile utility', () => {
         const dependencies = getPnpmLockfileDependencies(
           lockFile,
           lockFileHash,
-          ctx
+          ctx,
+          keyMap
         );
 
         const builder = new ProjectGraphBuilder(graph);
@@ -782,7 +821,10 @@ describe('pnpm LockFile utility', () => {
         )).default;
         lockFileHash = '__fixtures__/pruning/pnpm-lock-v6.yaml';
 
-        const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+        const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
+          lockFile,
+          lockFileHash
+        );
         graph = {
           nodes: {},
           dependencies: {},
@@ -805,7 +847,8 @@ describe('pnpm LockFile utility', () => {
         const dependencies = getPnpmLockfileDependencies(
           lockFile,
           lockFileHash,
-          ctx
+          ctx,
+          keyMap
         );
 
         const builder = new ProjectGraphBuilder(graph);
@@ -883,7 +926,10 @@ describe('pnpm LockFile utility', () => {
         )).default;
         lockFileHash = '__fixtures__/pruning/pnpm-lock-v9.yaml';
 
-        const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+        const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
+          lockFile,
+          lockFileHash
+        );
         graph = {
           nodes: {},
           dependencies: {},
@@ -906,7 +952,8 @@ describe('pnpm LockFile utility', () => {
         const dependencies = getPnpmLockfileDependencies(
           lockFile,
           lockFileHash,
-          ctx
+          ctx,
+          keyMap
         );
 
         const builder = new ProjectGraphBuilder(graph);
@@ -998,7 +1045,10 @@ describe('pnpm LockFile utility', () => {
     });
 
     it('should parse lock file', async () => {
-      const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+      const { nodes: externalNodes } = getPnpmLockfileNodes(
+        lockFile,
+        lockFileHash
+      );
       expect(Object.keys(externalNodes).length).toEqual(5);
     });
   });
@@ -1044,7 +1094,10 @@ describe('pnpm LockFile utility', () => {
         '__fixtures__/mixed-keys/package.json'
       ));
 
-      const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+      const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
+        lockFile,
+        lockFileHash
+      );
       let graph: ProjectGraph = {
         nodes: {},
         dependencies: {},
@@ -1067,7 +1120,8 @@ describe('pnpm LockFile utility', () => {
       const dependencies = getPnpmLockfileDependencies(
         lockFile,
         lockFileHash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(graph);
@@ -1297,7 +1351,10 @@ describe('pnpm LockFile utility', () => {
         '__fixtures__/mixed-keys/package.json'
       ));
 
-      const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+      const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
+        lockFile,
+        lockFileHash
+      );
       let graph: ProjectGraph = {
         nodes: {},
         dependencies: {},
@@ -1320,7 +1377,8 @@ describe('pnpm LockFile utility', () => {
       const dependencies = getPnpmLockfileDependencies(
         lockFile,
         lockFileHash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(graph);
@@ -1568,7 +1626,10 @@ describe('pnpm LockFile utility', () => {
         '__fixtures__/pnpm-regression/package.json'
       ));
 
-      const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+      const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
+        lockFile,
+        lockFileHash
+      );
       let graph: ProjectGraph = {
         nodes: {},
         dependencies: {},
@@ -1591,7 +1652,8 @@ describe('pnpm LockFile utility', () => {
       const dependencies = getPnpmLockfileDependencies(
         lockFile,
         lockFileHash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(graph);

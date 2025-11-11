@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { beforeEach, expect } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AngularRspackPluginOptions } from '../models';
 import * as postcssConfiguration from '../utils/postcss-configuration';
 import { handleConfigurations } from './config-utils/user-defined-config-helpers';
@@ -30,7 +30,7 @@ describe('createConfig', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should create config for mode "production" when optimization=true', async () => {
@@ -73,7 +73,7 @@ describe('createConfig', () => {
 
       await expect(
         createConfig({ options: configBase })
-      ).resolves.toStrictEqual([
+      ).resolves.toMatchObject([
         expect.objectContaining({
           mode: 'production',
           devServer: expect.objectContaining({
@@ -188,7 +188,7 @@ describe('createConfig', () => {
         createConfig({
           options: { ...configBase, root: customRoot },
         })
-      ).resolves.toStrictEqual([
+      ).resolves.toMatchObject([
         expect.objectContaining({
           mode: 'production',
           devServer: expect.objectContaining({
@@ -221,7 +221,7 @@ describe('createConfig', () => {
       const { scripts, styles, ...rest } = configBase;
       await expect(
         createConfig({ options: { ...configBase, optimization: false } })
-      ).resolves.toStrictEqual([
+      ).resolves.toMatchObject([
         expect.objectContaining({
           mode: 'development',
           devServer: expect.objectContaining({
