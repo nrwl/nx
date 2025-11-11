@@ -39,9 +39,10 @@ function readProjectsCache(cachePath: string): GradleTargets {
 function stripNxConfig(
   project: Partial<ProjectConfiguration>
 ): Partial<ProjectConfiguration> {
-  const { nxConfig, targets, ...rest } = project as Partial<ProjectConfiguration> & {
-    nxConfig?: Record<string, any>;
-  };
+  const { nxConfig, targets, ...rest } =
+    project as Partial<ProjectConfiguration> & {
+      nxConfig?: Record<string, any>;
+    };
 
   const cleanedTargets: Record<string, any> = {};
   if (targets) {
@@ -97,9 +98,9 @@ function extractNxConfigOnly(
 
   // Merge project-level nxConfig into root
   if (projectLevelNxConfig) {
-  result = {
-  ...projectLevelNxConfig
-  }
+    result = {
+      ...projectLevelNxConfig,
+    };
   }
 
   // Add target-level nxConfig if any exist

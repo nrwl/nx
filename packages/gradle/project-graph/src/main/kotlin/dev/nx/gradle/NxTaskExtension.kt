@@ -48,10 +48,23 @@ open class NxTaskExtension @Inject constructor(objects: ObjectFactory) {
   /**
    * List of Nx task dependencies for this Gradle task.
    *
+   * **IMPORTANT: This property merges with Gradle-detected dependencies.** Using this ListProperty
+   * will ADD to dependencies that Gradle already detected, whereas using `set("dependsOn", ...)` in
+   * the JSON DSL will REPLACE all dependencies.
+   *
    * Supports Nx dependency patterns such as:
    * - "^build" - depends on the 'build' target of all upstream projects
    * - "project:target" - depends on a specific target of a specific project
    * - "target" - depends on a target of the same project
+   *
+   * Example - MERGES with Gradle dependencies (recommended):
+   * ```kotlin
+   * tasks.named("integrationTest") {
+   *   nx {
+   *     dependsOn.addAll("^build", "app:lint")  // Adds to Gradle dependencies
+   *   }
+   * }
+   * ```
    */
   val dependsOn: ListProperty<String> = objects.listProperty(String::class.java)
 
