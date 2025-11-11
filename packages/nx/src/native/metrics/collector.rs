@@ -476,18 +476,21 @@ impl CollectionRunner {
         // Capture timestamp FIRST for accuracy
         let timestamp = current_timestamp_millis();
 
-        // Single system refresh for ALL processes (one scan, all data)
+        // Refresh all processes
         let mut sys = self.system.lock();
+        sys.refresh_processes_specifics(
+            sysinfo::ProcessesToUpdate::All,
+            true, // remove_dead_processes
+            ProcessRefreshKind::nothing()
+                .with_memory()
+                .with_cpu()
+                .with_exe(UpdateKind::OnlyIfNotSet)
+                .with_cmd(UpdateKind::OnlyIfNotSet)
+                .with_cwd(UpdateKind::OnlyIfNotSet),
+        );
+        // Refresh system-wide metrics
         sys.refresh_specifics(
             RefreshKind::nothing()
-                .with_processes(
-                    ProcessRefreshKind::nothing()
-                        .with_memory()
-                        .with_cpu()
-                        .with_exe(UpdateKind::OnlyIfNotSet)
-                        .with_cmd(UpdateKind::OnlyIfNotSet)
-                        .with_cwd(UpdateKind::OnlyIfNotSet),
-                )
                 .with_cpu(CpuRefreshKind::nothing().with_cpu_usage())
                 .with_memory(MemoryRefreshKind::nothing().with_ram()),
         );
@@ -515,6 +518,11 @@ impl CollectionRunner {
         });
         self.main_cli_subprocess_pids
             .retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
+        if let Some(pid) = *self.daemon_pid.lock() {
+            if sys.process(Pid::from(pid as usize)).is_none() {
+                *self.daemon_pid.lock() = None;
+            }
+        }
 
         // Clear live PIDs from previous collection cycle (keeps allocated capacity)
         live_pids.clear();
