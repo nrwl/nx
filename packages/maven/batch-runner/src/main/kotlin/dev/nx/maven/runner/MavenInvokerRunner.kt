@@ -297,6 +297,9 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     arguments.add("-pl")
     arguments.add(mavenBatchTask.project)
 
+    // Add task-specific arguments (e.g., -Dtest=TestClass for atomized tests)
+    arguments.addAll(mavenBatchTask.args)
+
     return arguments
   }
 }

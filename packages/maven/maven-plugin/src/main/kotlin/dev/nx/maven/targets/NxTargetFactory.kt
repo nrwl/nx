@@ -685,13 +685,22 @@ class NxTargetFactory(
       log.info("Generating target for test class: $targetName'")
 
       val options = objectMapper.createObjectNode()
-      options.put(
-        "command",
-        "$mavenCommand $APPLY_GOAL ${goalDescriptor.goalSpecifier} $RECORD_GOAL -pl ${project.groupId}:${project.artifactId} -Dtest=${testClass.packagePath}.${testClass.className} -Dsurefire.failIfNoSpecifiedTests=false"
-      )
+
+      // Use batch executor with structured options for test class filtering
+      val goalsArray = objectMapper.createArrayNode()
+      goalsArray.add(goalDescriptor.goalSpecifier)
+      options.set<ArrayNode>("goals", goalsArray)
+
+      // Add test class filtering arguments
+      val argsArray = objectMapper.createArrayNode()
+      argsArray.add("-Dtest=${testClass.packagePath}.${testClass.className}")
+      argsArray.add("-Dsurefire.failIfNoSpecifiedTests=false")
+      options.set<ArrayNode>("args", argsArray)
+
+      options.put("project", "${project.groupId}:${project.artifactId}")
 
       val target = NxTarget(
-        "nx:run-commands",
+        "@nx/maven:maven",
         options,
         analysis.isCacheable,
         analysis.isContinuous,
