@@ -87,13 +87,20 @@ describe('Maven', () => {
   it('should support targetNamePrefix option', () => {
     // Update nx.json to add targetNamePrefix
     updateJson('nx.json', (nxJson) => {
-      const mavenPlugin = nxJson.plugins.find(
-        (p) => typeof p === 'object' && p.plugin === '@nx/maven'
+      // Find the Maven plugin - it could be a string or an object
+      const pluginIndex = nxJson.plugins.findIndex(
+        (p: string | { plugin: string }) =>
+          p === '@nx/maven' ||
+          (typeof p === 'object' && p.plugin === '@nx/maven')
       );
-      if (mavenPlugin && typeof mavenPlugin === 'object') {
-        mavenPlugin.options = {
-          ...mavenPlugin.options,
-          targetNamePrefix: 'mvn-',
+
+      if (pluginIndex !== -1) {
+        // Convert string plugin to object with options
+        nxJson.plugins[pluginIndex] = {
+          plugin: '@nx/maven',
+          options: {
+            targetNamePrefix: 'mvn-',
+          },
         };
       }
       return nxJson;
