@@ -40,7 +40,8 @@ describe('nx init (NPM repo - legacy)', () => {
     const output = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --cacheable=echo --no-interactive`
+      } nx@${getPublishedVersion()} init --cacheable=echo --no-interactive`,
+      { env: { NX_USE_LOCAL: 'true' } }
     );
     expect(output).toContain('Learn more about what to do next');
 
@@ -68,7 +69,8 @@ describe('nx init (NPM repo - legacy)', () => {
     runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --cacheable=compound --no-interactive`
+      } nx@${getPublishedVersion()} init --cacheable=compound --no-interactive`,
+      { env: { NX_USE_LOCAL: 'true' } }
     );
 
     const output = runCommand('npm run compound TEST');
