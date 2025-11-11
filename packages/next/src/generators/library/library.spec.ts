@@ -87,7 +87,7 @@ describe('next library', () => {
       bundler: 'vite',
     });
 
-    expect(appTree.exists('my-buildable-lib/vite.config.ts')).toBeTruthy();
+    expect(appTree.exists('my-buildable-lib/vite.config.mts')).toBeTruthy();
   });
 
   it('should configure server entry point for buildable library with Vite', async () => {
@@ -103,8 +103,11 @@ describe('next library', () => {
       bundler: 'vite',
     });
 
-    // Check vite.config.ts has multiple entry points
-    const viteConfig = appTree.read('my-buildable-lib/vite.config.ts', 'utf-8');
+    // Check vite.config.mts has multiple entry points
+    const viteConfig = appTree.read(
+      'my-buildable-lib/vite.config.mts',
+      'utf-8'
+    );
     expect(viteConfig).toContain("index: 'src/index.ts'");
     expect(viteConfig).toContain("server: 'src/server.ts'");
     expect(viteConfig).toContain('fileName: (format, entryName) =>');
@@ -325,7 +328,7 @@ describe('next library', () => {
         bundler: 'vite',
       });
 
-      expect(appTree.exists('my-buildable-lib/vite.config.ts')).toBeTruthy();
+      expect(appTree.exists('my-buildable-lib/vite.config.mts')).toBeTruthy();
     });
 
     it('should create a correct package.json for buildable libraries', async () => {

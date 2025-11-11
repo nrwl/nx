@@ -122,7 +122,7 @@ describe('preset', () => {
       linter: 'eslint',
     });
     expect(tree.exists(`apps/${name}/src/main.ts`)).toBe(true);
-    expect(tree.read(`apps/${name}/vite.config.ts`, 'utf-8'))
+    expect(tree.read(`apps/${name}/vite.config.mts`, 'utf-8'))
       .toMatchInlineSnapshot(`
       "/// <reference types='vitest' />
       import { defineConfig } from 'vite';
@@ -277,8 +277,8 @@ describe('preset', () => {
       linter: 'eslint',
       bundler: 'vite',
     });
-    expect(tree.exists('vite.config.ts')).toBe(true);
-    expect(tree.read('vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.exists('vite.config.mts')).toBe(true);
+    expect(tree.read('vite.config.mts', 'utf-8')).toMatchInlineSnapshot(`
       "/// <reference types='vitest' />
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
@@ -334,8 +334,8 @@ describe('preset', () => {
       style: 'css',
       e2eTestRunner: 'cypress',
     });
-    expect(tree.exists('vite.config.ts')).toBe(true);
-    expect(tree.read('vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.exists('vite.config.mts')).toBe(true);
+    expect(tree.read('vite.config.mts', 'utf-8')).toMatchInlineSnapshot(`
       "/// <reference types='vitest' />
       import { defineConfig } from 'vite';
       import vue from '@vitejs/plugin-vue';

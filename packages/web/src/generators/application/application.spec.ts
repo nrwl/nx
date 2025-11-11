@@ -282,7 +282,7 @@ describe('app', () => {
         tree.read('my-app-e2e/playwright.config.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.exists('my-app/index.html')).toBeTruthy();
-      expect(tree.exists('my-app/vite.config.ts')).toBeTruthy();
+      expect(tree.exists('my-app/vite.config.mts')).toBeTruthy();
       expect(tree.exists(`my-app/environments/environment.ts`)).toBeFalsy();
       expect(
         tree.exists(`my-app/environments/environment.prod.ts`)
@@ -556,7 +556,7 @@ describe('app', () => {
         unitTestRunner: 'jest',
         addPlugin: true,
       });
-      expect(tree.exists('my-vite-app/vite.config.ts')).toBeTruthy();
+      expect(tree.exists('my-vite-app/vite.config.mts')).toBeTruthy();
       expect(tree.exists('my-vite-app/jest.config.cts')).toBeTruthy();
     });
 
@@ -567,8 +567,8 @@ describe('app', () => {
         unitTestRunner: 'none',
         addPlugin: true,
       });
-      expect(tree.exists('my-vite-app/vite.config.ts')).toBeTruthy();
-      expect(tree.read('my-vite-app/vite.config.ts', 'utf-8')).not.toContain(
+      expect(tree.exists('my-vite-app/vite.config.mts')).toBeTruthy();
+      expect(tree.read('my-vite-app/vite.config.mts', 'utf-8')).not.toContain(
         'test: {'
       );
       expect(tree.exists('my-vite-app/tsconfig.spec.json')).toBeFalsy();
@@ -581,7 +581,7 @@ describe('app', () => {
         unitTestRunner: 'vitest',
         addPlugin: true,
       });
-      expect(tree.exists('my-webpack-app/vite.config.ts')).toBeTruthy();
+      expect(tree.exists('my-webpack-app/vite.config.mts')).toBeTruthy();
       expect(tree.exists('my-webpack-app/jest.config.cts')).toBeFalsy();
       expect(
         readJson(tree, 'my-webpack-app/tsconfig.spec.json').compilerOptions
@@ -686,7 +686,7 @@ describe('app', () => {
     });
 
     it('should setup vite configuration', () => {
-      expect(tree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
     it('should add dependencies in package.json', () => {
       const packageJson = readJson(viteAppTree, '/package.json');
@@ -703,7 +703,7 @@ describe('app', () => {
 
     it('should create index.html and vite.config file at the root of the app', () => {
       expect(viteAppTree.exists('/my-app/index.html')).toBe(true);
-      expect(viteAppTree.exists('/my-app/vite.config.ts')).toBe(true);
+      expect(viteAppTree.exists('/my-app/vite.config.mts')).toBe(true);
     });
 
     it('should not include a spec file when the bundler or unitTestRunner is vite and insourceTests is false', async () => {

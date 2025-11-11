@@ -92,7 +92,7 @@ describe('lib', () => {
       'node',
       'vitest',
     ]);
-    expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('my-lib/vite.config.mts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should update tags', async () => {
@@ -473,7 +473,7 @@ describe('lib', () => {
         bundler: 'none',
       });
 
-      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-lib/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -985,7 +985,7 @@ module.exports = withNx(
         useProjectJson: false,
       });
 
-      expect(tree.read('libs/mylib/vite.config.ts', 'utf-8'))
+      expect(tree.read('libs/mylib/vite.config.mts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';

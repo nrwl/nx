@@ -294,15 +294,32 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`@nx/vite:configuration library mode should set up non buildable library which already has vite.config.ts correctly 1`] = `
-"import dts from 'vite-plugin-dts';
-import * as path from 'path';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+exports[`@nx/vite:configuration library mode should set up non buildable library which already has vite.config.mts correctly 1`] = `
+"/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import dts from 'vite-plugin-dts';
+import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-vitest',
+  plugins: [
+    react(),
+    nxViteTsPaths(),
+    nxCopyAssetsPlugin(['*.md']),
+    dts({
+      entryRoot: 'src',
+      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
+      pathsToAliases: false,
+    }),
+  ],
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
   // Configuration for building your library.
   // See: https://vite.dev/guide/build.html#library-mode
   build: {
@@ -326,29 +343,19 @@ export default defineConfig({
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
   },
-  cacheDir: '../../node_modules/.vitest',
-  plugins: [
-    nxViteTsPaths(),
-    react(),
-    nxCopyAssetsPlugin(['*.md']),
-    dts({
-      entryRoot: 'src',
-      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
-      pathsToAliases: false,
-    }),
-  ],
-
   test: {
+    name: 'react-lib-nonb-vitest',
+    watch: false,
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/libs/react-lib-nonb-vitest',
       provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 

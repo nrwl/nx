@@ -94,7 +94,7 @@ describe('Nx Import', () => {
       'projects/vite-app/.gitignore',
       'projects/vite-app/package.json',
       'projects/vite-app/index.html',
-      'projects/vite-app/vite.config.ts',
+      'projects/vite-app/vite.config.mts',
       'projects/vite-app/src/main.tsx',
       'projects/vite-app/src/App.tsx'
     );

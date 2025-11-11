@@ -588,6 +588,8 @@ export function normalizeViteConfigFilePathWithTree(
 ): string {
   return configFile && tree.exists(configFile)
     ? configFile
+    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.mts`))
+    ? joinPathFragments(`${projectRoot}/vite.config.mts`)
     : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
     ? joinPathFragments(`${projectRoot}/vite.config.ts`)
     : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))

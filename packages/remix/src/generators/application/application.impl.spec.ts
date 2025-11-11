@@ -125,7 +125,7 @@ describe('Remix Application', () => {
         expectTargetsToBeCorrect(tree, '.');
 
         expect(tree.exists('remix.config.js')).toBeFalsy();
-        expect(tree.read('vitest.config.ts', 'utf-8')).toMatchSnapshot();
+        expect(tree.read('vitest.config.mts', 'utf-8')).toMatchSnapshot();
         expect(
           tree.read('tests/routes/_index.spec.tsx', 'utf-8')
         ).toMatchSnapshot();
@@ -344,7 +344,7 @@ describe('Remix Application', () => {
 
         expect(tree.exists(`${appDir}/remix.config.js`)).toBeFalsy();
         expect(
-          tree.read(`${appDir}/vitest.config.ts`, 'utf-8')
+          tree.read(`${appDir}/vitest.config.mts`, 'utf-8')
         ).toMatchSnapshot();
         expect(tree.read(`${appDir}/test-setup.ts`, 'utf-8')).toMatchSnapshot();
         expect(
@@ -587,7 +587,9 @@ describe('Remix Application', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "vite.config.ts",
+            "vite.config.mts",
             "vitest.config.ts",
+            "vitest.config.mts",
             "app/**/*.ts",
             "app/**/*.tsx",
             "app/**/*.js",

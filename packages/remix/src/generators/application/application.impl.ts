@@ -214,6 +214,7 @@ export async function remixApplicationGeneratorInternal(
           testEnvironment: 'jsdom',
           imports: [`import react from '@vitejs/plugin-react';`],
           plugins: [`react()`],
+          useEsmExtension: true,
         },
         true,
         undefined,

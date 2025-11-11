@@ -35,7 +35,7 @@ export function updateUnitTestConfig(
   );
 
   if (unitTestRunner === 'vitest') {
-    const pathToViteConfig = joinPathFragments(pathToRoot, 'vitest.config.ts');
+    const pathToViteConfig = joinPathFragments(pathToRoot, 'vitest.config.mts');
     updateVitestTestIncludes(
       tree,
       pathToViteConfig,
@@ -67,7 +67,9 @@ export function updateUnitTestConfig(
   updateJson(tree, pathToTsConfigSpec, (json) => {
     json.include = [
       'vite.config.ts',
+      'vite.config.mts',
       'vitest.config.ts',
+      'vitest.config.mts',
       'app/**/*.ts',
       'app/**/*.tsx',
       'app/**/*.js',

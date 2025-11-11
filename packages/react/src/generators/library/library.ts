@@ -161,6 +161,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
             : `import react from '@vitejs/plugin-react'`,
         ],
         plugins: ['react()'],
+        useEsmExtension: true,
       },
       false
     );
@@ -235,6 +236,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
             : `import react from '@vitejs/plugin-react'`,
         ],
         plugins: ['react()'],
+        useEsmExtension: true,
       },
       true
     );

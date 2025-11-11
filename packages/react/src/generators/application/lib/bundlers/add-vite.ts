@@ -55,6 +55,7 @@ export async function setupViteConfiguration(
       rollupOptionsExternal: ["'react'", "'react-dom'", "'react/jsx-runtime'"],
       port: options.port,
       previewPort: options.port,
+      useEsmExtension: true,
       ...(options.useReactRouter
         ? reactRouterFrameworkConfig
         : baseReactConfig),
@@ -98,13 +99,14 @@ export async function setupVitestConfiguration(
           : `import react from '@vitejs/plugin-react'`,
       ],
       plugins: ['react()'],
+      useEsmExtension: true,
     },
     true
   );
   if (options.bundler === 'rsbuild') {
     tree.rename(
-      joinPathFragments(options.appProjectRoot, 'vite.config.ts'),
-      joinPathFragments(options.appProjectRoot, 'vitest.config.ts')
+      joinPathFragments(options.appProjectRoot, 'vite.config.mts'),
+      joinPathFragments(options.appProjectRoot, 'vitest.config.mts')
     );
   }
 }

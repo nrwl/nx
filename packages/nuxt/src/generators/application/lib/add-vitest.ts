@@ -42,6 +42,7 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
       testEnvironment: 'jsdom',
       imports: [`import vue from '@vitejs/plugin-vue'`],
       plugins: ['vue()'],
+      useEsmExtension: true,
     },
     true,
     undefined,

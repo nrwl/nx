@@ -34,7 +34,7 @@ describe('React Router Applications - TS paths', () => {
     checkFilesExist(`${appName}/app/entry.server.tsx`);
     checkFilesExist(`${appName}/app/routes.tsx`);
     checkFilesExist(`${appName}/react-router.config.ts`);
-    checkFilesExist(`${appName}/vite.config.ts`);
+    checkFilesExist(`${appName}/vite.config.mts`);
   });
 
   it('should be able to build, lint, test and typecheck a react-router application', async () => {
