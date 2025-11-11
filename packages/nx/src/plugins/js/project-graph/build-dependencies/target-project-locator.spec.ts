@@ -1291,12 +1291,10 @@ describe('TargetProjectLocator', () => {
 describe('isBuiltinModuleImport()', () => {
   const withExclusions = builtinModules
     .concat(
-      builtinModules
-        .filter((a) => true)
-        .map((s) =>
-          // Node 24 includes node:sea, node:sqlite, etc. that already prefixes with `node:`.
-          s.startsWith('node:') ? s : 'node:' + s
-        )
+      builtinModules.map((s) =>
+        // Node 24 includes node:sea, node:sqlite, etc. that already prefixes with `node:`.
+        s.startsWith('node:') ? s : 'node:' + s
+      )
     )
     .concat(['node:test', 'node:sqlite']);
 
