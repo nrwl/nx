@@ -336,6 +336,11 @@ export class TaskOrchestrator {
     // Wait for batch to be processed
     await this.processedBatches.get(batch);
 
+    this.options.lifeCycle.registerRunningBatch?.(batch.id, {
+      executorName: batch.executorName,
+      taskIds: Object.keys(batch.taskGraph.tasks),
+    });
+
     await this.preRunSteps(tasks, { groupId });
 
     let results: TaskResult[] = doNotSkipCache
@@ -344,12 +349,14 @@ export class TaskOrchestrator {
 
     // Run tasks that were not cached
     if (results.length !== taskEntries.length) {
+      await this.postRunSteps(tasks, results, doNotSkipCache, { groupId });
+
       const unrunTaskGraph = removeTasksFromTaskGraph(
         batch.taskGraph,
         results.map(({ task }) => task.id)
       );
 
-      const batchResults = await this.runBatch(
+      results = await this.runBatch(
         {
           id: batch.id,
           executorName: batch.executorName,
@@ -357,11 +364,20 @@ export class TaskOrchestrator {
         },
         this.batchEnv
       );
-
-      results.push(...batchResults);
     }
 
     await this.postRunSteps(tasks, results, doNotSkipCache, { groupId });
+
+    // Update batch status based on all task results
+    const hasFailures = taskEntries.some(([taskId]) => {
+      const status = this.completedTasks[taskId];
+      return status === 'failure' || status === 'skipped';
+    });
+    this.options.lifeCycle.setBatchStatus?.(
+      batch.id,
+      hasFailures ? 'failure' : 'success'
+    );
+
     this.forkedProcessTaskRunner.cleanUpBatchProcesses();
 
     const tasksCompleted = taskEntries.filter(
@@ -409,33 +425,13 @@ export class TaskOrchestrator {
           env
         );
 
-      // Register batch for TUI output if enabled
-      if (this.tuiEnabled) {
-        // Register the batch using dedicated batch lifecycle methods
-        this.options.lifeCycle.registerRunningBatch?.(batch.id, {
-          executorName: batch.executorName,
-          taskIds: Object.keys(batch.taskGraph.tasks),
-        });
-
-        // Stream output from batch process to the batch
-        batchProcess.onOutput((output) => {
-          this.options.lifeCycle.appendBatchOutput?.(batch.id, output);
-        });
-      }
+      // Stream output from batch process to the batch
+      batchProcess.onOutput((output) => {
+        this.options.lifeCycle.appendBatchOutput?.(batch.id, output);
+      });
 
       const results = await batchProcess.getResults();
       const batchResultEntries = Object.entries(results);
-
-      // Update batch status based on results
-      if (this.tuiEnabled) {
-        const hasFailures = batchResultEntries.some(
-          ([, result]) => !result.success
-        );
-        this.options.lifeCycle.setBatchStatus?.(
-          batch.id,
-          hasFailures ? 'failure' : 'success'
-        );
-      }
 
       return batchResultEntries.map(([taskId, result]) => ({
         ...result,
@@ -449,11 +445,6 @@ export class TaskOrchestrator {
         terminalOutput: result.terminalOutput,
       }));
     } catch (e) {
-      // Update batch status on error
-      if (this.tuiEnabled) {
-        this.options.lifeCycle.setBatchStatus?.(batch.id, 'failure');
-      }
-
       return batch.taskGraph.roots.map((rootTaskId) => ({
         task: this.taskGraph.tasks[rootTaskId],
         code: 1,
