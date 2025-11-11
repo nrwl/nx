@@ -53,8 +53,6 @@ class NxObjectBuilder internal constructor() {
     content[key] = child.content
   }
 
-  fun set(key: String, action: Action<NxObjectBuilder>) = set(key) { action.execute(this) }
-
   // Arrays
   fun array(key: String, vararg values: Any?) {
     content[key] = values.map { asJson(it) }
