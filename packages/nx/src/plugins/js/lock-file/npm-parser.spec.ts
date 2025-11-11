@@ -33,7 +33,7 @@ describe('NPM lock file utility', () => {
 
     beforeEach(() => {
       const hash = uniq('mock-hash');
-      const externalNodes = getNpmLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
         JSON.stringify(rootLockFile),
         hash
       );
@@ -59,7 +59,8 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -90,7 +91,7 @@ describe('NPM lock file utility', () => {
 
       // this is original generated lock file
       const hash = uniq('mock-hash');
-      const externalNodes = getNpmLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
         JSON.stringify(appLockFile),
         hash
       );
@@ -116,7 +117,8 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(appLockFile),
         hash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -175,7 +177,7 @@ describe('NPM lock file utility', () => {
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getNpmLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
         JSON.stringify(rootLockFile),
         hash
       );
@@ -201,7 +203,8 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -271,7 +274,7 @@ describe('NPM lock file utility', () => {
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getNpmLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
         JSON.stringify(rootV2LockFile),
         hash
       );
@@ -297,7 +300,8 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootV2LockFile),
         hash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -407,7 +411,7 @@ describe('NPM lock file utility', () => {
       cleanupTypes(prunedV2LockFile.dependencies, true);
 
       const hash = uniq('mock-hash');
-      const externalNodes = getNpmLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
         JSON.stringify(rootV2LockFile),
         hash
       );
@@ -433,7 +437,8 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootV2LockFile),
         hash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -532,7 +537,7 @@ describe('NPM lock file utility', () => {
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getNpmLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
         JSON.stringify(rootLockFile),
         hash
       );
@@ -558,7 +563,8 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -581,7 +587,7 @@ describe('NPM lock file utility', () => {
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getNpmLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
         JSON.stringify(rootLockFile),
         hash
       );
@@ -607,7 +613,8 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -637,7 +644,10 @@ describe('NPM lock file utility', () => {
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getNpmLockfileNodes(JSON.stringify(lockFile), hash);
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        JSON.stringify(lockFile),
+        hash
+      );
       const pg = {
         nodes: {},
         dependencies: {},
@@ -660,7 +670,8 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(lockFile),
         hash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -698,7 +709,7 @@ describe('NPM lock file utility', () => {
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getNpmLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
         JSON.stringify(rootLockFile),
         hash
       );
@@ -724,7 +735,8 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -764,7 +776,7 @@ describe('NPM lock file utility', () => {
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getNpmLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
         JSON.stringify(rootLockFile),
         hash
       );
@@ -790,7 +802,8 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -841,7 +854,7 @@ describe('NPM lock file utility', () => {
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getNpmLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
         JSON.stringify(rootLockFile),
         hash
       );
@@ -867,7 +880,8 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -910,7 +924,7 @@ describe('NPM lock file utility', () => {
         '__fixtures__/workspaces/package-lock.json'
       ));
 
-      const externalNodes = getNpmLockfileNodes(
+      const { nodes: externalNodes } = getNpmLockfileNodes(
         JSON.stringify(lockFile),
         uniq('mock-hash')
       );
@@ -923,7 +937,7 @@ describe('NPM lock file utility', () => {
         __dirname,
         '__fixtures__/workspaces/package-lock.v1.json'
       ));
-      const externalNodes = getNpmLockfileNodes(
+      const { nodes: externalNodes } = getNpmLockfileNodes(
         JSON.stringify(lockFile),
         uniq('mock')
       );
@@ -948,7 +962,7 @@ describe('NPM lock file utility', () => {
         '__fixtures__/mixed-keys/package.json'
       ));
 
-      const externalNodes = getNpmLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
         JSON.stringify(lockFile),
         lockFileHash
       );
@@ -974,7 +988,8 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(lockFile),
         lockFileHash,
-        ctx
+        ctx,
+        keyMap
       );
 
       const builder = new ProjectGraphBuilder(graph);

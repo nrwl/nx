@@ -183,7 +183,11 @@ describe('yarn LockFile utility', () => {
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
       const pg = {
         nodes: {},
         dependencies: {},
@@ -203,7 +207,12 @@ describe('yarn LockFile utility', () => {
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const dependencies = getYarnLockfileDependencies(
+        lockFile,
+        hash,
+        ctx,
+        keyMap
+      );
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
@@ -421,7 +430,7 @@ describe('yarn LockFile utility', () => {
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
         classicLockFile,
         hash,
         packageJson
@@ -507,7 +516,11 @@ describe('yarn LockFile utility', () => {
       )).default;
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
       const pg = {
         nodes: {},
         dependencies: {},
@@ -527,7 +540,12 @@ describe('yarn LockFile utility', () => {
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const dependencies = getYarnLockfileDependencies(
+        lockFile,
+        hash,
+        ctx,
+        keyMap
+      );
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
@@ -576,7 +594,7 @@ describe('yarn LockFile utility', () => {
       )).default;
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
         lockFile,
         hash,
         normalizedPackageJson
@@ -600,7 +618,12 @@ describe('yarn LockFile utility', () => {
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const dependencies = getYarnLockfileDependencies(
+        lockFile,
+        hash,
+        ctx,
+        keyMap
+      );
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
@@ -638,7 +661,7 @@ describe('yarn LockFile utility', () => {
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
         berryLockFile,
         hash,
         packageJson
@@ -725,7 +748,11 @@ describe('yarn LockFile utility', () => {
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
       const pg = {
         nodes: {},
         dependencies: {},
@@ -745,7 +772,12 @@ describe('yarn LockFile utility', () => {
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const dependencies = getYarnLockfileDependencies(
+        lockFile,
+        hash,
+        ctx,
+        keyMap
+      );
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
@@ -808,7 +840,11 @@ __metadata:
         };
 
         const hash = uniq('mock-hash');
-        const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+        const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+          lockFile,
+          hash,
+          packageJson
+        );
         const pg = {
           nodes: {},
           dependencies: {},
@@ -828,7 +864,12 @@ __metadata:
           nxJsonConfiguration: null,
           workspaceRoot: '/virtual',
         };
-        const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+        const dependencies = getYarnLockfileDependencies(
+          lockFile,
+          hash,
+          ctx,
+          keyMap
+        );
 
         const builder = new ProjectGraphBuilder(pg);
         for (const dep of dependencies) {
@@ -903,7 +944,11 @@ __metadata:
         };
 
         const hash = uniq('mock-hash');
-        const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+        const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+          lockFile,
+          hash,
+          packageJson
+        );
 
         expect(externalNodes).toMatchInlineSnapshot(`
                   {
@@ -981,7 +1026,11 @@ __metadata:
         };
 
         const hash = uniq('mock-hash');
-        const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+        const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+          lockFile,
+          hash,
+          packageJson
+        );
         const pg = {
           nodes: {},
           dependencies: {},
@@ -1001,7 +1050,12 @@ __metadata:
           nxJsonConfiguration: null,
           workspaceRoot: '/virtual',
         };
-        const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+        const dependencies = getYarnLockfileDependencies(
+          lockFile,
+          hash,
+          ctx,
+          keyMap
+        );
         const builder = new ProjectGraphBuilder(pg);
         for (const dep of dependencies) {
           builder.addDependency(
@@ -1100,7 +1154,11 @@ postgres@charsleysa/postgres#fix-errors-compiled:
       };
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
 
       expect(externalNodes['npm:@nrwl/nx-cloud']).toMatchInlineSnapshot(`
         {
@@ -1170,7 +1228,11 @@ postgres@charsleysa/postgres#fix-errors-compiled:
       };
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
 
       expect(externalNodes['npm:@nrwl/nx-cloud']).toMatchInlineSnapshot(`
           {
@@ -1226,7 +1288,11 @@ nx-cloud@latest:
       };
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
 
       expect(externalNodes['npm:nx-cloud']).toMatchInlineSnapshot(`
           {
@@ -1254,7 +1320,7 @@ nx-cloud@latest:
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
         berryLockFile,
         hash,
         packageJson
@@ -1370,7 +1436,7 @@ nx-cloud@latest:
         '__fixtures__/duplicate-package/package.json'
       ));
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
         classicLockFile,
         hash,
         packageJson
@@ -1405,7 +1471,11 @@ nx-cloud@latest:
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
       const pg = {
         nodes: {},
         dependencies: {},
@@ -1425,7 +1495,12 @@ nx-cloud@latest:
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const dependencies = getYarnLockfileDependencies(
+        lockFile,
+        hash,
+        ctx,
+        keyMap
+      );
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
@@ -1620,7 +1695,11 @@ nx-cloud@latest:
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
       const pg = {
         nodes: {},
         dependencies: {},
@@ -1640,7 +1719,12 @@ nx-cloud@latest:
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const dependencies = getYarnLockfileDependencies(
+        lockFile,
+        hash,
+        ctx,
+        keyMap
+      );
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
@@ -1683,7 +1767,11 @@ nx-cloud@latest:
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
       const pg = {
         nodes: {},
         dependencies: {},
@@ -1703,7 +1791,12 @@ nx-cloud@latest:
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const dependencies = getYarnLockfileDependencies(
+        lockFile,
+        hash,
+        ctx,
+        keyMap
+      );
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
@@ -1751,7 +1844,11 @@ nx-cloud@latest:
         '__fixtures__/workspaces/package.json'
       ));
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
 
       expect(Object.keys(externalNodes).length).toEqual(5);
     });
@@ -1766,7 +1863,11 @@ nx-cloud@latest:
         '__fixtures__/workspaces/package.json'
       ));
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
 
       expect(Object.keys(externalNodes).length).toEqual(5);
     });
@@ -1832,7 +1933,11 @@ type-fest@^0.20.2:
         },
       };
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
       const pg = {
         nodes: {},
         dependencies: {},
@@ -1852,7 +1957,12 @@ type-fest@^0.20.2:
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const dependencies = getYarnLockfileDependencies(
+        lockFile,
+        hash,
+        ctx,
+        keyMap
+      );
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
@@ -1951,7 +2061,11 @@ __metadata:
       };
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
       const pg = {
         nodes: {},
         dependencies: {},
@@ -1971,7 +2085,12 @@ __metadata:
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const dependencies = getYarnLockfileDependencies(
+        lockFile,
+        hash,
+        ctx,
+        keyMap
+      );
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
@@ -2080,7 +2199,11 @@ __metadata:
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
       const pg = {
         nodes: {},
         dependencies: {},
@@ -2100,7 +2223,12 @@ __metadata:
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const dependencies = getYarnLockfileDependencies(
+        lockFile,
+        hash,
+        ctx,
+        keyMap
+      );
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
@@ -2323,7 +2451,11 @@ __metadata:
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
       const pg = {
         nodes: {},
         dependencies: {},
@@ -2343,7 +2475,12 @@ __metadata:
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const dependencies = getYarnLockfileDependencies(
+        lockFile,
+        hash,
+        ctx,
+        keyMap
+      );
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
@@ -2618,7 +2755,11 @@ __metadata:
       };
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
 
       expect(externalNodes).toMatchInlineSnapshot(`
         {
@@ -2717,7 +2858,11 @@ __metadata:
       };
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
       const pg = {
         nodes: {},
         dependencies: {},
@@ -2737,7 +2882,12 @@ __metadata:
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const dependencies = getYarnLockfileDependencies(
+        lockFile,
+        hash,
+        ctx,
+        keyMap
+      );
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
@@ -2843,7 +2993,11 @@ __metadata:
       };
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
       const pg = {
         nodes: {},
         dependencies: {},
@@ -2863,7 +3017,12 @@ __metadata:
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const dependencies = getYarnLockfileDependencies(
+        lockFile,
+        hash,
+        ctx,
+        keyMap
+      );
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
@@ -2944,7 +3103,11 @@ __metadata:
       ));
 
       const hash = uniq('mock-hash');
-      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        packageJson
+      );
       const pg = {
         nodes: {},
         dependencies: {},
@@ -2964,7 +3127,12 @@ __metadata:
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const dependencies = getYarnLockfileDependencies(
+        lockFile,
+        hash,
+        ctx,
+        keyMap
+      );
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
         builder.addDependency(
