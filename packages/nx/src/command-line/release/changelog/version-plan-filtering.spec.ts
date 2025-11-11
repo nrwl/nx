@@ -1,5 +1,5 @@
-import { exec } from 'child_process';
 import { RawVersionPlan } from '../config/version-plans';
+import * as execCommandModule from '../utils/exec-command';
 import * as gitUtils from '../utils/git';
 import type { VersionData } from '../utils/shared';
 import {
@@ -9,11 +9,14 @@ import {
   resolveWorkspaceChangelogFromSHA,
 } from './version-plan-filtering';
 
-jest.mock('node:child_process');
+jest.mock('../utils/exec-command');
 jest.mock('../utils/git');
+jest.mock('../../../utils/workspace-root', () => ({
+  workspaceRoot: '/',
+}));
 
 describe('version-plan-filtering', () => {
-  const mockExec = exec as unknown as jest.Mock;
+  const mockExecCommand = execCommandModule.execCommand as jest.Mock;
   const mockGetCommitHash = gitUtils.getCommitHash as jest.Mock;
   const mockGetFirstGitCommit = gitUtils.getFirstGitCommit as jest.Mock;
   const mockGetLatestGitTagForPattern =
@@ -38,21 +41,15 @@ describe('version-plan-filtering', () => {
 
     it('should include version plans added within the commit range', async () => {
       const versionPlans = [
-        createMockVersionPlan('plan-1.md', '/path/to/plan-1.md'),
-        createMockVersionPlan('plan-2.md', '/path/to/plan-2.md'),
-        createMockVersionPlan('plan-3.md', '/path/to/plan-3.md'),
+        createMockVersionPlan('plan-1.md', '/.nx/version-plans/plan-1.md'),
+        createMockVersionPlan('plan-2.md', '/.nx/version-plans/plan-2.md'),
+        createMockVersionPlan('plan-3.md', '/.nx/version-plans/plan-3.md'),
       ];
 
-      // Mock git log responses
-      mockExec.mockImplementation((command, options, callback) => {
-        if (command.includes('plan-1.md')) {
-          callback(null, 'abc123', ''); // Has commit in range
-        } else if (command.includes('plan-2.md')) {
-          callback(null, '', ''); // No commit in range
-        } else if (command.includes('plan-3.md')) {
-          callback(null, 'def456', ''); // Has commit in range
-        }
-      });
+      // Mock git log response with files added in the range
+      mockExecCommand.mockResolvedValue(
+        '.nx/version-plans/plan-1.md\n.nx/version-plans/plan-3.md\n'
+      );
 
       const result = await filterVersionPlansByCommitRange(
         versionPlans,
@@ -66,14 +63,12 @@ describe('version-plan-filtering', () => {
       expect(result[1].fileName).toBe('plan-3.md');
     });
 
-    it('should include all plans when there is a git error', async () => {
+    it('should return empty array when there is a git error', async () => {
       const versionPlans = [
-        createMockVersionPlan('plan-1.md', '/path/to/plan-1.md'),
+        createMockVersionPlan('plan-1.md', '/.nx/version-plans/plan-1.md'),
       ];
 
-      mockExec.mockImplementation((command, options, callback) => {
-        callback(new Error('Git error'), '', '');
-      });
+      mockExecCommand.mockRejectedValue(new Error('Git error'));
 
       const result = await filterVersionPlansByCommitRange(
         versionPlans,
@@ -82,24 +77,18 @@ describe('version-plan-filtering', () => {
         false
       );
 
-      expect(result).toHaveLength(1);
-      expect(result[0].fileName).toBe('plan-1.md');
+      // When git fails, we return empty array (no files were added in range)
+      expect(result).toHaveLength(0);
     });
 
     it('should log verbose output when verbose is true', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       const versionPlans = [
-        createMockVersionPlan('plan-1.md', '/path/to/plan-1.md'),
-        createMockVersionPlan('plan-2.md', '/path/to/plan-2.md'),
+        createMockVersionPlan('plan-1.md', '/.nx/version-plans/plan-1.md'),
+        createMockVersionPlan('plan-2.md', '/.nx/version-plans/plan-2.md'),
       ];
 
-      mockExec.mockImplementation((command, options, callback) => {
-        if (command.includes('plan-1.md')) {
-          callback(null, 'abc123', '');
-        } else {
-          callback(null, '', '');
-        }
-      });
+      mockExecCommand.mockResolvedValue('.nx/version-plans/plan-1.md\n');
 
       await filterVersionPlansByCommitRange(
         versionPlans,
@@ -108,6 +97,11 @@ describe('version-plan-filtering', () => {
         true
       );
 
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Found 1 version plan files added in commit range'
+        )
+      );
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           "Version plan 'plan-1.md' was added in commit range"
@@ -132,7 +126,7 @@ describe('version-plan-filtering', () => {
       );
 
       expect(result).toEqual([]);
-      expect(mockExec).not.toHaveBeenCalled();
+      expect(mockExecCommand).not.toHaveBeenCalled();
     });
   });
 

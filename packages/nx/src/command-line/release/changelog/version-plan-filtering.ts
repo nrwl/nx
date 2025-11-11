@@ -1,8 +1,10 @@
-import { exec } from 'node:child_process';
+import { join } from 'path';
 import { prerelease } from 'semver';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import type { ChangelogOptions } from '../command-object';
 import type { NxReleaseConfig } from '../config/config';
 import { RawVersionPlan } from '../config/version-plans';
+import { execCommand } from '../utils/exec-command';
 import {
   getCommitHash,
   getFirstGitCommit,
@@ -24,23 +26,29 @@ export async function filterVersionPlansByCommitRange(
   toSHA: string,
   isVerbose: boolean
 ): Promise<RawVersionPlan[]> {
-  const filteredPlans: RawVersionPlan[] = [];
+  if (versionPlans.length === 0) {
+    return [];
+  }
 
-  for (const plan of versionPlans) {
-    const isInRange = await isVersionPlanInCommitRange(
-      plan,
-      fromSHA,
-      toSHA,
-      isVerbose
-    );
-    if (isInRange) {
-      filteredPlans.push(plan);
-    } else if (isVerbose) {
+  // Get all files added within the commit range with a single git command
+  const filesAddedInRange = await getFilesAddedInCommitRange(
+    fromSHA,
+    toSHA,
+    isVerbose
+  );
+
+  // Filter version plans based on whether they were added in the range
+  const filteredPlans = versionPlans.filter((plan) => {
+    const isInRange = filesAddedInRange.has(plan.absolutePath);
+    if (!isInRange && isVerbose) {
       console.log(
         `Filtering out version plan '${plan.fileName}' as it was not committed in the range ${fromSHA}..${toSHA}`
       );
+    } else if (isInRange && isVerbose) {
+      console.log(`Version plan '${plan.fileName}' was added in commit range`);
     }
-  }
+    return isInRange;
+  });
 
   if (isVerbose) {
     console.log(
@@ -52,55 +60,59 @@ export async function filterVersionPlansByCommitRange(
 }
 
 /**
- * Checks if a version plan file was added in the commit range
- * @param versionPlan The version plan to check
+ * Gets all version plan files that were added within the commit range
  * @param fromSHA The starting commit SHA (exclusive)
  * @param toSHA The ending commit SHA (inclusive)
  * @param isVerbose Whether to output verbose logging
- * @returns True if the version plan was added in the commit range
+ * @returns Set of absolute file paths that were added in the range
  */
-async function isVersionPlanInCommitRange(
-  versionPlan: RawVersionPlan,
+async function getFilesAddedInCommitRange(
   fromSHA: string,
   toSHA: string,
   isVerbose: boolean
-): Promise<boolean> {
-  return new Promise((resolve) => {
-    // Use git log to check if the file was added (A) in the commit range
-    const command = `git log ${fromSHA}..${toSHA} --diff-filter=A --pretty=format:"%H" -- ${versionPlan.absolutePath}`;
+): Promise<Set<string>> {
+  try {
+    // Use git log to get version plan files added within the commit range
+    // --name-only shows just the file paths
+    // --diff-filter=A shows only added files
+    // -- .nx/version-plans/ limits to only files in that directory
+    // Note: Git pathspecs always use forward slashes, even on Windows
+    const stdout = await execCommand('git', [
+      'log',
+      `${fromSHA}..${toSHA}`,
+      '--diff-filter=A',
+      '--name-only',
+      '--pretty=format:',
+      '--',
+      '.nx/version-plans/',
+    ]);
 
-    exec(
-      command,
-      {
-        windowsHide: false,
-      },
-      (error, stdout, stderr) => {
-        if (error) {
-          if (isVerbose) {
-            console.error(
-              `Error checking commit range for ${versionPlan.relativePath}: ${error.message}`
-            );
-          }
-          // If there's an error, we'll include the plan to be safe
-          return resolve(true);
-        }
-        if (stderr && isVerbose) {
-          console.error(
-            `Git command stderr for ${versionPlan.relativePath}: ${stderr}`
-          );
-        }
+    // Parse the output to get unique file paths
+    const files = stdout
+      .split('\n')
+      .filter((line) => line.trim().length > 0)
+      .map((relativePath) => {
+        // Convert relative paths to absolute paths
+        return join(workspaceRoot, relativePath);
+      });
+    const uniqueFiles = new Set(files);
 
-        // If stdout has content, the file was added in the range
-        const hasCommit = stdout.trim().length > 0;
-        if (isVerbose && hasCommit) {
-          console.log(
-            `Version plan '${versionPlan.fileName}' was added in commit range`
-          );
-        }
-        resolve(hasCommit);
-      }
-    );
-  });
+    if (isVerbose && uniqueFiles.size > 0) {
+      console.log(
+        `Found ${uniqueFiles.size} version plan files added in commit range`
+      );
+    }
+
+    return uniqueFiles;
+  } catch (err) {
+    if (isVerbose) {
+      console.error(
+        `Error getting files in commit range: ${err.message || err}`
+      );
+    }
+    // If there's an error, return empty set (no filtering)
+    return new Set();
+  }
 }
 
 /**
