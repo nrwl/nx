@@ -1,7 +1,5 @@
 package dev.nx.gradle.dsl
 
-import org.gradle.api.Action
-
 @DslMarker annotation class NxDslMarker
 
 // --- JSON adapters (restrict to JSON-friendly types) ---
