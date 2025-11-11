@@ -421,13 +421,13 @@ tasks.named('integrationTest') {
 
 **Available DSL methods for task-level configuration:**
 
-- `dependsOn` - ListProperty for adding Nx task dependencies (see important note below)
+- `dependsOn` - ListProperty for adding Nx task dependencies
 - `set(key, value)` - Set string, number, or boolean values
 - `array(key, ...values)` - Set array values
 - `set(key) { ... }` - Create nested objects
 - `merge(map)` - Merge a map of properties
 
-{% aside type="warning" title="Important: dependsOn Merge Behavior" %}
+{% aside type="note" title="Important: dependsOn Merge Behavior" %}
 The `dependsOn` property behaves differently from other configuration options:
 
 - **Using `dependsOn.addAll(...)`** (recommended): **Merges** with Gradle-detected dependencies. This adds to the existing dependencies that Gradle automatically discovers.

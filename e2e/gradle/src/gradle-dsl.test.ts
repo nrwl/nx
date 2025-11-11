@@ -27,8 +27,8 @@ describe('Gradle DSL - nx {} configuration', () => {
         it('should handle string values', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\nnx {\n  set("name", "custom-app-name")\n}`
-              : `\nnx {\n  set 'name', 'custom-app-name'\n}`;
+              ? `\nnx {\n  set("type", "custom-app-name")\n}`
+              : `\nnx {\n  set 'type', 'custom-app-name'\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -38,7 +38,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
 
-          expect(config.name).toBe('custom-app-name');
+          expect(config.type).toBe('custom-app-name');
         });
 
         it('should handle number values', () => {
@@ -113,8 +113,8 @@ describe('Gradle DSL - nx {} configuration', () => {
         it('should handle complex nested structures', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\nnx {\n  set("name", "my-custom-app")\n  array("tags", "api", "service")\n  set("generators") {\n    set("owner", "platform-team")\n    array("environments", "dev", "staging", "prod")\n    set("tier", 1)\n  }\n}`
-              : `\nnx {\n  set 'name', 'my-custom-app'\n  array 'tags', 'api', 'service'\n  set 'generators', {\n    set 'owner', 'platform-team'\n    array 'environments', 'dev', 'staging', 'prod'\n    set 'tier', 1\n  }\n}`;
+              ? `\nnx {\n  set("type", "my-custom-app")\n  array("tags", "api", "service")\n  set("generators") {\n    set("owner", "platform-team")\n    array("environments", "dev", "staging", "prod")\n    set("tier", 1)\n  }\n}`
+              : `\nnx {\n  set 'type', 'my-custom-app'\n  array 'tags', 'api', 'service'\n  set 'generators', {\n    set 'owner', 'platform-team'\n    array 'environments', 'dev', 'staging', 'prod'\n    set 'tier', 1\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -124,7 +124,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
 
-          expect(config.name).toBe('my-custom-app');
+          expect(config.type).toBe('my-custom-app');
           expect(config.tags).toEqual(['api', 'service']);
           expect(config.generators.owner).toBe('platform-team');
           expect(config.generators.environments).toEqual([
@@ -293,8 +293,8 @@ describe('Gradle DSL - nx {} configuration', () => {
         it('should handle both project and task-level config', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\nnx {\n  set("name", "integrated-app")\n  array("tags", "api", "backend")\n}\n\ntasks.register<DefaultTask>("package") {\n  nx {\n    set("cache", false)\n    set("configurations") {\n      set("profile", "production")\n    }\n  }\n}`
-              : `\nnx {\n  set 'name', 'integrated-app'\n  array 'tags', 'api', 'backend'\n}\n\ntasks.register('package') {\n  nx {\n    set 'cache', false\n    set 'configurations', {\n      set 'profile', 'production'\n    }\n  }\n}`;
+              ? `\nnx {\n  set("type", "integrated-app")\n  array("tags", "api", "backend")\n}\n\ntasks.register<DefaultTask>("package") {\n  nx {\n    set("cache", false)\n    set("configurations") {\n      set("profile", "production")\n    }\n  }\n}`
+              : `\nnx {\n  set 'type', 'integrated-app'\n  array 'tags', 'api', 'backend'\n}\n\ntasks.register('package') {\n  nx {\n    set 'cache', false\n    set 'configurations', {\n      set 'profile', 'production'\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -305,7 +305,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const config = JSON.parse(runCLI('show project app --json'));
 
           // Project-level config
-          expect(config.name).toBe('integrated-app');
+          expect(config.type).toBe('integrated-app');
           expect(config.tags).toEqual(['api', 'backend']);
 
           // Task-level config
@@ -318,8 +318,8 @@ describe('Gradle DSL - nx {} configuration', () => {
         it('should handle complex project with multiple configured tasks', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\nnx {\n  set("name", "complex-app")\n  array("tags", "monorepo", "service")\n  set("generators") {\n    set("owner", "platform")\n    set("tier", 1)\n  }\n}\n\ntasks.register<DefaultTask>("compile") {\n  nx {\n    dependsOn.add("^build")\n    dependsOn.add("app:test")\n    set("cache", true)\n  }\n}\n\ntasks.register<DefaultTask>("validate") {\n  nx {\n    set("cache", false)\n    array("inputs", "src/**/*", "test/**/*")\n    set("configurations") {\n      set("parallel", true)\n    }\n  }\n}`
-              : `\nnx {\n  set 'name', 'complex-app'\n  array 'tags', 'monorepo', 'service'\n  set 'generators', {\n    set 'owner', 'platform'\n    set 'tier', 1\n  }\n}\n\ntasks.register('compile') {\n  nx {\n    dependsOn.add('^build')\n    dependsOn.add('app:test')\n    set 'cache', true\n  }\n}\n\ntasks.register('validate') {\n  nx {\n    set 'cache', false\n    array 'inputs', 'src/**/*', 'test/**/*'\n    set 'configurations', {\n      set 'parallel', true\n    }\n  }\n}`;
+              ? `\nnx {\n  set("type", "complex-app")\n  array("tags", "monorepo", "service")\n  set("generators") {\n    set("owner", "platform")\n    set("tier", 1)\n  }\n}\n\ntasks.register<DefaultTask>("compile") {\n  nx {\n    dependsOn.add("^build")\n    dependsOn.add("app:test")\n    set("cache", true)\n  }\n}\n\ntasks.register<DefaultTask>("validate") {\n  nx {\n    set("cache", false)\n    array("inputs", "src/**/*", "test/**/*")\n    set("configurations") {\n      set("parallel", true)\n    }\n  }\n}`
+              : `\nnx {\n  set 'type', 'complex-app'\n  array 'tags', 'monorepo', 'service'\n  set 'generators', {\n    set 'owner', 'platform'\n    set 'tier', 1\n  }\n}\n\ntasks.register('compile') {\n  nx {\n    dependsOn.add('^build')\n    dependsOn.add('app:test')\n    set 'cache', true\n  }\n}\n\ntasks.register('validate') {\n  nx {\n    set 'cache', false\n    array 'inputs', 'src/**/*', 'test/**/*'\n    set 'configurations', {\n      set 'parallel', true\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -330,7 +330,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const config = JSON.parse(runCLI('show project app --json'));
 
           // Project-level
-          expect(config.name).toBe('complex-app');
+          expect(config.type).toBe('complex-app');
           expect(config.tags).toEqual(['monorepo', 'service']);
           expect(config.generators.owner).toBe('platform');
           expect(config.generators.tier).toBe(1);
@@ -351,8 +351,8 @@ describe('Gradle DSL - nx {} configuration', () => {
           // Configure app project
           const appDslContent =
             type === 'kotlin'
-              ? `\nnx {\n  set("name", "app-project")\n  array("tags", "app")\n}`
-              : `\nnx {\n  set 'name', 'app-project'\n  array 'tags', 'app'\n}`;
+              ? `\nnx {\n  set("type", "app-project")\n  array("tags", "app")\n}`
+              : `\nnx {\n  set 'type', 'app-project'\n  array 'tags', 'app'\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -362,8 +362,8 @@ describe('Gradle DSL - nx {} configuration', () => {
           // Configure list project
           const listDslContent =
             type === 'kotlin'
-              ? `\nnx {\n  set("name", "list-project")\n  array("tags", "lib")\n}`
-              : `\nnx {\n  set 'name', 'list-project'\n  array 'tags', 'lib'\n}`;
+              ? `\nnx {\n  set("type", "list-project")\n  array("tags", "lib")\n}`
+              : `\nnx {\n  set 'type', 'list-project'\n  array 'tags', 'lib'\n}`;
 
           updateFile(
             `list/build.gradle${buildFileExt}`,
@@ -375,10 +375,10 @@ describe('Gradle DSL - nx {} configuration', () => {
           const appConfig = JSON.parse(runCLI('show project app --json'));
           const listConfig = JSON.parse(runCLI('show project list --json'));
 
-          expect(appConfig.name).toBe('app-project');
+          expect(appConfig.type).toBe('app-project');
           expect(appConfig.tags).toEqual(['app']);
 
-          expect(listConfig.name).toBe('list-project');
+          expect(listConfig.type).toBe('list-project');
           expect(listConfig.tags).toEqual(['lib']);
         });
       });
