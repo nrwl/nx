@@ -6,6 +6,7 @@ tags: ['nx', 'nx cloud', 'release']
 cover_image: /blog/images/2025-11-07/header.avif
 description: 'Eliminate CI guesswork with Enterprise Task Analytics. Identify performance regressions, prioritize flaky task fixes, and make data-driven decisions about workspace health—all with graph-powered insights only Nx can provide.'
 pinned: true
+youtubeUrl: https://youtu.be/TChFr9V__Mc
 ---
 
 It’s the end of the sprint, and you’re staring at your PR, hoping that it turns green soon. You already had to re-run the CI pipeline because that one flaky test failed. Once again, you’re wondering why on earth the pipeline takes so long. Didn’t we just fix this last month? What happened?
