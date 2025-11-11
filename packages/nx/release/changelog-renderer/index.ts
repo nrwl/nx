@@ -422,6 +422,24 @@ export default class DefaultChangelogRenderer {
     if (change.scope) {
       breakingLine += `**${change.scope.trim()}:** `;
     }
+    // Ensure first line of the breaking change contains the commit title
+    if (change.description) {
+      breakingLine += `${change.description.trim()} `;
+    }
+
+    // Add PR/commit references
+    if (
+      this.remoteReleaseClient.getRemoteRepoData() &&
+      this.changelogRenderOptions.commitReferences &&
+      change.githubReferences
+    ) {
+      breakingLine += `${this.remoteReleaseClient.formatReferences(
+        change.githubReferences
+      )}`;
+    }
+
+    const indentation = '  ';
+    breakingLine += `\n${indentation}`;
 
     // Handle multi-line explanations
     let explanationText = explanation;
@@ -432,26 +450,14 @@ export default class DefaultChangelogRenderer {
 
     breakingLine += explanationText;
 
-    // Add PR/commit references
-    if (
-      this.remoteReleaseClient.getRemoteRepoData() &&
-      this.changelogRenderOptions.commitReferences &&
-      change.githubReferences
-    ) {
-      breakingLine += this.remoteReleaseClient.formatReferences(
-        change.githubReferences
-      );
-    }
-
     // Add extra lines with indentation (matching formatChange behavior)
     if (extraLines.length > 0) {
-      const indentation = '  ';
       const extraLinesStr = extraLines
         .filter((l) => l.trim().length > 0)
         .map((l) => `${indentation}${l}`)
         .join('\n');
       if (extraLinesStr) {
-        breakingLine += '\n\n' + extraLinesStr;
+        breakingLine += '\n' + extraLinesStr;
       }
     }
 
