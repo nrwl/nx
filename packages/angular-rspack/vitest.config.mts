@@ -11,7 +11,6 @@ export default defineConfig({
   },
   test: {
     watch: false,
-    globals: true,
     environment: 'node',
     include: ['src/**/*.spec.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     coverage: {

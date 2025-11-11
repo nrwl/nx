@@ -1,4 +1,5 @@
-import type { File, Reporter } from 'vitest';
+import type { RunnerTestFile } from 'vitest/node';
+import type { Reporter } from 'vitest/reporters';
 
 export class NxReporter implements Reporter {
   deferred: {
@@ -32,8 +33,9 @@ export class NxReporter implements Reporter {
   onTestRunEnd(files: any[], errors?: any) {
     this._handleFinished(files, errors);
   }
+
   /** Vitest ≤ 0.28 */
-  onFinished(files: File[], errors?: unknown[]) {
+  onFinished(files: RunnerTestFile[], errors?: unknown[]) {
     this._handleFinished(files, errors);
   }
 
