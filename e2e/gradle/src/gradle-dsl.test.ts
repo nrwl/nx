@@ -179,8 +179,8 @@ describe('Gradle DSL - nx {} configuration', () => {
         it('should handle dependsOn property', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\ntasks.named("build") {\n  nx {\n    dependsOn.add("^build")\n    dependsOn.add("app:test")\n  }\n}`
-              : `\ntasks.named('build') {\n  nx {\n    dependsOn.add('^build')\n    dependsOn.add('app:test')\n  }\n}`;
+              ? `\ntasks.register<DefaultTask>("customTask") {\n  nx {\n    dependsOn.add("^build")\n    dependsOn.add("app:test")\n  }\n}`
+              : `\ntasks.register('customTask') {\n  nx {\n    dependsOn.add('^build')\n    dependsOn.add('app:test')\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -190,15 +190,15 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
 
-          expect(config.targets.build.dependsOn).toContain('^build');
-          expect(config.targets.build.dependsOn).toContain('app:test');
+          expect(config.targets.customTask.dependsOn).toContain('^build');
+          expect(config.targets.customTask.dependsOn).toContain('app:test');
         });
 
         it('should handle scalar values on targets', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\ntasks.named("build") {\n  nx {\n    set("cache", false)\n  }\n}`
-              : `\ntasks.named('build') {\n  nx {\n    set 'cache', false\n  }\n}`;
+              ? `\ntasks.register<DefaultTask>("myBuild") {\n  nx {\n    set("cache", false)\n  }\n}`
+              : `\ntasks.register('myBuild') {\n  nx {\n    set 'cache', false\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -208,14 +208,14 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
 
-          expect(config.targets.build.cache).toBe(false);
+          expect(config.targets.myBuild.cache).toBe(false);
         });
 
         it('should handle arrays on targets', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\ntasks.named("test") {\n  nx {\n    array("inputs", "src/**/*", "config/**/*")\n  }\n}`
-              : `\ntasks.named('test') {\n  nx {\n    array 'inputs', 'src/**/*', 'config/**/*'\n  }\n}`;
+              ? `\ntasks.register<DefaultTask>("myTest") {\n  nx {\n    array("inputs", "src/**/*", "config/**/*")\n  }\n}`
+              : `\ntasks.register('myTest') {\n  nx {\n    array 'inputs', 'src/**/*', 'config/**/*'\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -225,15 +225,15 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
 
-          expect(config.targets.test.inputs).toContain('src/**/*');
-          expect(config.targets.test.inputs).toContain('config/**/*');
+          expect(config.targets.myTest.inputs).toContain('src/**/*');
+          expect(config.targets.myTest.inputs).toContain('config/**/*');
         });
 
         it('should handle nested objects in target config', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\ntasks.named("build") {\n  nx {\n    set("configurations") {\n      set("production", true)\n      set("environment", "prod")\n    }\n  }\n}`
-              : `\ntasks.named('build') {\n  nx {\n    set 'configurations', {\n      set 'production', true\n      set 'environment', 'prod'\n    }\n  }\n}`;
+              ? `\ntasks.register<DefaultTask>("deploy") {\n  nx {\n    set("configurations") {\n      set("production", true)\n      set("environment", "prod")\n    }\n  }\n}`
+              : `\ntasks.register('deploy') {\n  nx {\n    set 'configurations', {\n      set 'production', true\n      set 'environment', 'prod'\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -243,15 +243,15 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
 
-          expect(config.targets.build.configurations.production).toBe(true);
-          expect(config.targets.build.configurations.environment).toBe('prod');
+          expect(config.targets.deploy.configurations.production).toBe(true);
+          expect(config.targets.deploy.configurations.environment).toBe('prod');
         });
 
         it('should handle multiple properties on target', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\ntasks.named("test") {\n  nx {\n    dependsOn.add("^build")\n    set("cache", false)\n    array("outputs", "coverage/**/*", "reports/**/*")\n    set("configurations") {\n      set("timeout", 3600)\n    }\n  }\n}`
-              : `\ntasks.named('test') {\n  nx {\n    dependsOn.add('^build')\n    set 'cache', false\n    array 'outputs', 'coverage/**/*', 'reports/**/*'\n    set 'configurations', {\n      set 'timeout', 3600\n    }\n  }\n}`;
+              ? `\ntasks.register<DefaultTask>("e2e") {\n  nx {\n    dependsOn.add("^build")\n    set("cache", false)\n    array("outputs", "coverage/**/*", "reports/**/*")\n    set("configurations") {\n      set("timeout", 3600)\n    }\n  }\n}`
+              : `\ntasks.register('e2e') {\n  nx {\n    dependsOn.add('^build')\n    set 'cache', false\n    array 'outputs', 'coverage/**/*', 'reports/**/*'\n    set 'configurations', {\n      set 'timeout', 3600\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -261,18 +261,18 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
 
-          expect(config.targets.test.dependsOn).toContain('^build');
-          expect(config.targets.test.cache).toBe(false);
-          expect(config.targets.test.outputs).toContain('coverage/**/*');
-          expect(config.targets.test.outputs).toContain('reports/**/*');
-          expect(config.targets.test.configurations.timeout).toBe(3600);
+          expect(config.targets.e2e.dependsOn).toContain('^build');
+          expect(config.targets.e2e.cache).toBe(false);
+          expect(config.targets.e2e.outputs).toContain('coverage/**/*');
+          expect(config.targets.e2e.outputs).toContain('reports/**/*');
+          expect(config.targets.e2e.configurations.timeout).toBe(3600);
         });
 
         it('should configure multiple tasks', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\ntasks.named("build") {\n  nx {\n    set("cache", true)\n  }\n}\n\ntasks.named("test") {\n  nx {\n    set("cache", false)\n    array("inputs", "src/**/*", "test/**/*")\n  }\n}`
-              : `\ntasks.named('build') {\n  nx {\n    set 'cache', true\n  }\n}\n\ntasks.named('test') {\n  nx {\n    set 'cache', false\n    array 'inputs', 'src/**/*', 'test/**/*'\n  }\n}`;
+              ? `\ntasks.register<DefaultTask>("customBuild") {\n  nx {\n    set("cache", true)\n  }\n}\n\ntasks.register<DefaultTask>("verify") {\n  nx {\n    set("cache", false)\n    array("inputs", "src/**/*", "test/**/*")\n  }\n}`
+              : `\ntasks.register('customBuild') {\n  nx {\n    set 'cache', true\n  }\n}\n\ntasks.register('verify') {\n  nx {\n    set 'cache', false\n    array 'inputs', 'src/**/*', 'test/**/*'\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -282,10 +282,10 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
 
-          expect(config.targets.build.cache).toBe(true);
-          expect(config.targets.test.cache).toBe(false);
-          expect(config.targets.test.inputs).toContain('src/**/*');
-          expect(config.targets.test.inputs).toContain('test/**/*');
+          expect(config.targets.customBuild.cache).toBe(true);
+          expect(config.targets.verify.cache).toBe(false);
+          expect(config.targets.verify.inputs).toContain('src/**/*');
+          expect(config.targets.verify.inputs).toContain('test/**/*');
         });
       });
 
@@ -293,8 +293,8 @@ describe('Gradle DSL - nx {} configuration', () => {
         it('should handle both project and task-level config', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\nnx {\n  set("name", "integrated-app")\n  array("tags", "api", "backend")\n}\n\ntasks.named("build") {\n  nx {\n    set("cache", false)\n    set("configurations") {\n      set("profile", "production")\n    }\n  }\n}`
-              : `\nnx {\n  set 'name', 'integrated-app'\n  array 'tags', 'api', 'backend'\n}\n\ntasks.named('build') {\n  nx {\n    set 'cache', false\n    set 'configurations', {\n      set 'profile', 'production'\n    }\n  }\n}`;
+              ? `\nnx {\n  set("name", "integrated-app")\n  array("tags", "api", "backend")\n}\n\ntasks.register<DefaultTask>("package") {\n  nx {\n    set("cache", false)\n    set("configurations") {\n      set("profile", "production")\n    }\n  }\n}`
+              : `\nnx {\n  set 'name', 'integrated-app'\n  array 'tags', 'api', 'backend'\n}\n\ntasks.register('package') {\n  nx {\n    set 'cache', false\n    set 'configurations', {\n      set 'profile', 'production'\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -309,8 +309,8 @@ describe('Gradle DSL - nx {} configuration', () => {
           expect(config.tags).toEqual(['api', 'backend']);
 
           // Task-level config
-          expect(config.targets.build.cache).toBe(false);
-          expect(config.targets.build.configurations.profile).toBe(
+          expect(config.targets.package.cache).toBe(false);
+          expect(config.targets.package.configurations.profile).toBe(
             'production'
           );
         });
@@ -318,8 +318,8 @@ describe('Gradle DSL - nx {} configuration', () => {
         it('should handle complex project with multiple configured tasks', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\nnx {\n  set("name", "complex-app")\n  array("tags", "monorepo", "service")\n  set("generators") {\n    set("owner", "platform")\n    set("tier", 1)\n  }\n}\n\ntasks.named("build") {\n  nx {\n    dependsOn.add("^build")\n    dependsOn.add("app:test")\n    set("cache", true)\n  }\n}\n\ntasks.named("test") {\n  nx {\n    set("cache", false)\n    array("inputs", "src/**/*", "test/**/*")\n    set("configurations") {\n      set("parallel", true)\n    }\n  }\n}`
-              : `\nnx {\n  set 'name', 'complex-app'\n  array 'tags', 'monorepo', 'service'\n  set 'generators', {\n    set 'owner', 'platform'\n    set 'tier', 1\n  }\n}\n\ntasks.named('build') {\n  nx {\n    dependsOn.add('^build')\n    dependsOn.add('app:test')\n    set 'cache', true\n  }\n}\n\ntasks.named('test') {\n  nx {\n    set 'cache', false\n    array 'inputs', 'src/**/*', 'test/**/*'\n    set 'configurations', {\n      set 'parallel', true\n    }\n  }\n}`;
+              ? `\nnx {\n  set("name", "complex-app")\n  array("tags", "monorepo", "service")\n  set("generators") {\n    set("owner", "platform")\n    set("tier", 1)\n  }\n}\n\ntasks.register<DefaultTask>("compile") {\n  nx {\n    dependsOn.add("^build")\n    dependsOn.add("app:test")\n    set("cache", true)\n  }\n}\n\ntasks.register<DefaultTask>("validate") {\n  nx {\n    set("cache", false)\n    array("inputs", "src/**/*", "test/**/*")\n    set("configurations") {\n      set("parallel", true)\n    }\n  }\n}`
+              : `\nnx {\n  set 'name', 'complex-app'\n  array 'tags', 'monorepo', 'service'\n  set 'generators', {\n    set 'owner', 'platform'\n    set 'tier', 1\n  }\n}\n\ntasks.register('compile') {\n  nx {\n    dependsOn.add('^build')\n    dependsOn.add('app:test')\n    set 'cache', true\n  }\n}\n\ntasks.register('validate') {\n  nx {\n    set 'cache', false\n    array 'inputs', 'src/**/*', 'test/**/*'\n    set 'configurations', {\n      set 'parallel', true\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -335,16 +335,16 @@ describe('Gradle DSL - nx {} configuration', () => {
           expect(config.generators.owner).toBe('platform');
           expect(config.generators.tier).toBe(1);
 
-          // Build target
-          expect(config.targets.build.dependsOn).toContain('^build');
-          expect(config.targets.build.dependsOn).toContain('app:test');
-          expect(config.targets.build.cache).toBe(true);
+          // Compile target
+          expect(config.targets.compile.dependsOn).toContain('^build');
+          expect(config.targets.compile.dependsOn).toContain('app:test');
+          expect(config.targets.compile.cache).toBe(true);
 
-          // Test target
-          expect(config.targets.test.cache).toBe(false);
-          expect(config.targets.test.inputs).toContain('src/**/*');
-          expect(config.targets.test.inputs).toContain('test/**/*');
-          expect(config.targets.test.configurations.parallel).toBe(true);
+          // Validate target
+          expect(config.targets.validate.cache).toBe(false);
+          expect(config.targets.validate.inputs).toContain('src/**/*');
+          expect(config.targets.validate.inputs).toContain('test/**/*');
+          expect(config.targets.validate.configurations.parallel).toBe(true);
         });
 
         it('should configure multiple projects independently', () => {
