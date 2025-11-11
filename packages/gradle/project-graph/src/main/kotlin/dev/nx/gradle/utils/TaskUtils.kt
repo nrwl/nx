@@ -53,26 +53,25 @@ fun processTask(
   val nxDependsOn = nxExtension?.dependsOn?.getOrNull()
 
   val combinedDependsOn =
-    when {
-      gradleDependsOn != null && nxDependsOn != null && nxDependsOn.isNotEmpty() -> {
-        // Both Gradle and Nx dependencies exist, merge them
-        logger.info(
-          "${task}: merging ${gradleDependsOn.size} Gradle dependencies with ${nxDependsOn.size} Nx dependencies"
-        )
-        gradleDependsOn + nxDependsOn
-      }
+      when {
+        gradleDependsOn != null && nxDependsOn != null && nxDependsOn.isNotEmpty() -> {
+          // Both Gradle and Nx dependencies exist, merge them
+          logger.info(
+              "${task}: merging ${gradleDependsOn.size} Gradle dependencies with ${nxDependsOn.size} Nx dependencies")
+          gradleDependsOn + nxDependsOn
+        }
 
-      nxDependsOn != null && nxDependsOn.isNotEmpty() -> {
-        // Only Nx dependencies exist
-        logger.info("${task}: using ${nxDependsOn.size} Nx dependencies")
-        nxDependsOn
-      }
+        nxDependsOn != null && nxDependsOn.isNotEmpty() -> {
+          // Only Nx dependencies exist
+          logger.info("${task}: using ${nxDependsOn.size} Nx dependencies")
+          nxDependsOn
+        }
 
-      else -> {
-        // Only Gradle dependencies or no dependencies
-        gradleDependsOn
+        else -> {
+          // Only Gradle dependencies or no dependencies
+          gradleDependsOn
+        }
       }
-    }
 
   if (!combinedDependsOn.isNullOrEmpty()) {
     logger.info("${task}: processed ${combinedDependsOn.size} total dependsOn")
@@ -80,19 +79,7 @@ fun processTask(
   }
 
   // Merge nx.json config into target (this allows users to set any Nx target properties)
-  nxExtension?.json?.getOrNull()?.let { nxJson ->
-    if (nxJson.isNotEmpty()) {
-      logger.info("${task}: merging ${nxJson.size} Nx JSON properties")
-      // Merge json properties, but don't override already-set values like dependsOn
-      nxJson.forEach { (key, value) ->
-        if (!target.containsKey(key)) {
-          target[key] = value
-        } else {
-          logger.debug("${task}: skipping nx.json key '$key' as it's already set")
-        }
-      }
-    }
-  }
+  nxExtension?.json?.getOrNull()?.let { nxJson -> target["nxConfig"] = nxJson }
 
   // process inputs
   val inputs =
@@ -106,21 +93,19 @@ fun processTask(
   target["executor"] = "@nx/gradle:gradle"
 
   val metadata =
-    getMetadata(
-      task.description ?: "Run ${projectBuildPath}.${task.name}", projectBuildPath, task.name
-    )
+      getMetadata(
+          task.description ?: "Run ${projectBuildPath}.${task.name}", projectBuildPath, task.name)
   target["metadata"] = metadata
 
   target["options"] =
-    if (continuous) {
-      mapOf(
-        "taskName" to "${projectBuildPath}:${task.name}",
-        "continuous" to true,
-        "excludeDependsOn" to shouldExcludeDependsOn(task)
-      )
-    } else {
-      mapOf("taskName" to "${projectBuildPath}:${task.name}")
-    }
+      if (continuous) {
+        mapOf(
+            "taskName" to "${projectBuildPath}:${task.name}",
+            "continuous" to true,
+            "excludeDependsOn" to shouldExcludeDependsOn(task))
+      } else {
+        mapOf("taskName" to "${projectBuildPath}:${task.name}")
+      }
 
   return target
 }
@@ -258,29 +243,27 @@ fun getDependsOnTask(task: Task): Set<Task> {
   return try {
     // First try to get dependencies from task.dependsOn property
     val dependsOnFromProperty: Set<Task> =
-      try {
-        task.dependsOn.filterIsInstance<Task>().toSet()
-      } catch (e: Exception) {
-        task.logger.info(
-          "Cannot access task.dependsOn for ${task.path}, possibly due to configuration cache: ${e.message}"
-        )
-        emptySet()
-      }
+        try {
+          task.dependsOn.filterIsInstance<Task>().toSet()
+        } catch (e: Exception) {
+          task.logger.info(
+              "Cannot access task.dependsOn for ${task.path}, possibly due to configuration cache: ${e.message}")
+          emptySet()
+        }
 
     // Then try to get dependencies from taskDependencies (more comprehensive but riskier with
     // config cache)
     val dependsOnFromTaskDependencies: Set<Task> =
-      try {
-        task.taskDependencies.getDependencies(task)
-      } catch (e: UnsupportedOperationException) {
-        task.logger.info(
-          "Cannot access taskDependencies for ${task.path} due to configuration cache restrictions"
-        )
-        emptySet()
-      } catch (e: Exception) {
-        task.logger.info("Error calling getDependencies for ${task.path}: ${e.message}")
-        emptySet()
-      }
+        try {
+          task.taskDependencies.getDependencies(task)
+        } catch (e: UnsupportedOperationException) {
+          task.logger.info(
+              "Cannot access taskDependencies for ${task.path} due to configuration cache restrictions")
+          emptySet()
+        } catch (e: Exception) {
+          task.logger.info("Error calling getDependencies for ${task.path}: ${e.message}")
+          emptySet()
+        }
 
     val combinedDependsOn = dependsOnFromTaskDependencies.union(dependsOnFromProperty)
 
@@ -306,10 +289,10 @@ fun getDependsOnTask(task: Task): Set<Task> {
 internal val taskDependencyCache = ThreadLocal.withInitial { mutableMapOf<String, List<String>?>() }
 
 fun getDependsOnForTask(
-  dependsOnTasks: Set<Task>?,
-  task: Task,
-  dependencies: MutableSet<Dependency>? = null,
-  targetNameOverrides: Map<String, String> = emptyMap()
+    dependsOnTasks: Set<Task>?,
+    task: Task,
+    dependencies: MutableSet<Dependency>? = null,
+    targetNameOverrides: Map<String, String> = emptyMap()
 ): List<String>? {
 
   // Check cache to prevent infinite recursion, but only if dependsOnTasks is null
@@ -327,26 +310,23 @@ fun getDependsOnForTask(
       val taskProject = task.project
 
       if (task.name != "buildDependents" &&
-        depProject != taskProject &&
-        dependencies != null &&
-        taskProject.buildFile.exists()
-      ) {
+          depProject != taskProject &&
+          dependencies != null &&
+          taskProject.buildFile.exists()) {
         dependencies.add(
-          Dependency(
-            taskProject.projectDir.path,
-            depProject.projectDir.path,
-            taskProject.buildFile.path
-          )
-        )
+            Dependency(
+                taskProject.projectDir.path,
+                depProject.projectDir.path,
+                taskProject.buildFile.path))
       }
 
       if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
         val taskName =
-          if (depTask.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
-            targetNameOverrides["testTargetName"]!!
-          } else {
-            depTask.name
-          }
+            if (depTask.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
+              targetNameOverrides["testTargetName"]!!
+            } else {
+              depTask.name
+            }
         "${depProject.name}:${taskName}"
       } else {
         null
@@ -361,11 +341,11 @@ fun getDependsOnForTask(
       // Compute dependencies
       val combinedDependsOn = getDependsOnTask(task)
       val result =
-        if (combinedDependsOn.isNotEmpty()) {
-          mapTasksToNames(combinedDependsOn)
-        } else {
-          null
-        }
+          if (combinedDependsOn.isNotEmpty()) {
+            mapTasksToNames(combinedDependsOn)
+          } else {
+            null
+          }
       // Cache the actual result before returning
       cache[taskKey] = result
       return result
@@ -383,11 +363,11 @@ fun getDependsOnForTask(
     // When using pre-computed dependencies, don't use cache
     return try {
       val result =
-        if (dependsOnTasks.isNotEmpty()) {
-          mapTasksToNames(dependsOnTasks)
-        } else {
-          null
-        }
+          if (dependsOnTasks.isNotEmpty()) {
+            mapTasksToNames(dependsOnTasks)
+          } else {
+            null
+          }
       result
     } catch (e: Exception) {
       task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
@@ -406,19 +386,18 @@ fun getDependsOnForTask(
  * @param nonAtomizedTarget non-atomized target name
  */
 fun getMetadata(
-  description: String?,
-  projectBuildPath: String,
-  helpTaskName: String,
-  nonAtomizedTarget: String? = null
+    description: String?,
+    projectBuildPath: String,
+    helpTaskName: String,
+    nonAtomizedTarget: String? = null
 ): Map<String, Any?> {
   val gradlewCommand = getGradlewCommand()
   return mapOf(
-    "description" to description,
-    "technologies" to arrayOf("gradle"),
-    "help" to
-      mapOf("command" to "$gradlewCommand help --task ${projectBuildPath}:${helpTaskName}"),
-    "nonAtomizedTarget" to nonAtomizedTarget
-  )
+      "description" to description,
+      "technologies" to arrayOf("gradle"),
+      "help" to
+          mapOf("command" to "$gradlewCommand help --task ${projectBuildPath}:${helpTaskName}"),
+      "nonAtomizedTarget" to nonAtomizedTarget)
 }
 
 /**
@@ -436,9 +415,9 @@ fun getMetadata(
  *   fails.
  */
 fun getExternalDepFromInputFile(
-  inputFile: String,
-  externalNodes: MutableMap<String, ExternalNode>?,
-  logger: org.gradle.api.logging.Logger
+    inputFile: String,
+    externalNodes: MutableMap<String, ExternalNode>?,
+    logger: org.gradle.api.logging.Logger
 ): String? {
   try {
     val segments = inputFile.split("/")
@@ -485,7 +464,7 @@ fun replaceRootInPath(path: String, projectRoot: String, workspaceRoot: String):
     path.startsWith(projectRoot + File.separator) -> path.replaceFirst(projectRoot, "{projectRoot}")
     path == projectRoot -> "{projectRoot}"
     path.startsWith(workspaceRoot + File.separator) ->
-      path.replaceFirst(workspaceRoot, "{workspaceRoot}")
+        path.replaceFirst(workspaceRoot, "{workspaceRoot}")
 
     path == workspaceRoot -> "{workspaceRoot}"
     else -> null
