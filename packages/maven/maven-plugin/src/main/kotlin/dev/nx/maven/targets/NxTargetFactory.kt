@@ -439,7 +439,7 @@ class NxTargetFactory(
       createPhaseBatchTarget(project, phase, goalsForPhase!!)
     } else {
       // Noop for test phase (will be orchestrated by atomized tests) or structural phases
-      createNoopPhaseTarget(phase)
+      createPhaseBatchTarget(project, phase, emptyList())
     }
     // Initialize dependsOn for all CI targets (for atomized tests or phase dependencies)
     ciTarget.dependsOn = ciTarget.dependsOn ?: objectMapper.createArrayNode()
