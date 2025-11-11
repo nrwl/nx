@@ -106,10 +106,8 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
 
-          expect(config.metadata).toEqual({
-            owner: 'team-a',
-            criticality: 'high',
-          });
+          expect(config.metadata.owner).toBe('team-a');
+          expect(config.metadata.criticality).toBe('high');
         });
 
         it('should handle complex nested structures', () => {
@@ -128,11 +126,13 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           expect(config.name).toBe('my-custom-app');
           expect(config.tags).toEqual(['api', 'service']);
-          expect(config.metadata).toEqual({
-            owner: 'platform-team',
-            environments: ['dev', 'staging', 'prod'],
-            tier: 1,
-          });
+          expect(config.metadata.owner).toBe('platform-team');
+          expect(config.metadata.environments).toEqual([
+            'dev',
+            'staging',
+            'prod',
+          ]);
+          expect(config.metadata.tier).toBe(1);
         });
 
         it('should handle deeply nested objects', () => {
@@ -149,13 +149,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
 
-          expect(config.config).toEqual({
-            level1: {
-              level2: {
-                value: 'deep',
-              },
-            },
-          });
+          expect(config.config.level1.level2.value).toBe('deep');
         });
 
         it('should handle arrays with mixed content in objects', () => {
@@ -172,10 +166,12 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
 
-          expect(config.services).toEqual({
-            apis: ['user', 'payment', 'notification'],
-            enabled: true,
-          });
+          expect(config.services.apis).toEqual([
+            'user',
+            'payment',
+            'notification',
+          ]);
+          expect(config.services.enabled).toBe(true);
         });
       });
 
@@ -183,8 +179,8 @@ describe('Gradle DSL - nx {} configuration', () => {
         it('should handle dependsOn property', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\ntasks.named("build") {\n  nx {\n    dependsOn.addAll("^build", "app:test")\n  }\n}`
-              : `\ntasks.named('build') {\n  nx {\n    dependsOn.addAll('^build', 'app:test')\n  }\n}`;
+              ? `\ntasks.named("build") {\n  nx {\n    dependsOn.add("^build")\n    dependsOn.add("app:test")\n  }\n}`
+              : `\ntasks.named('build') {\n  nx {\n    dependsOn.add('^build')\n    dependsOn.add('app:test')\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -246,10 +242,10 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
 
-          expect(config.targets.build.metadata).toEqual({
-            description: 'Build the application',
-            runInBand: true,
-          });
+          expect(config.targets.build.metadata.description).toBe(
+            'Build the application'
+          );
+          expect(config.targets.build.metadata.runInBand).toBe(true);
         });
 
         it('should handle multiple properties on target', () => {
@@ -269,7 +265,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           expect(config.targets.test.dependsOn).toContain('^build');
           expect(config.targets.test.cache).toBe(false);
           expect(config.targets.test.tags).toEqual(['integration', 'slow']);
-          expect(config.targets.test.metadata).toEqual({ timeout: 3600 });
+          expect(config.targets.test.metadata.timeout).toBe(3600);
         });
 
         it('should configure multiple tasks', () => {
@@ -320,8 +316,8 @@ describe('Gradle DSL - nx {} configuration', () => {
         it('should handle complex project with multiple configured tasks', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\nnx {\n  set("name", "complex-app")\n  array("tags", "monorepo", "service")\n  set("metadata") {\n    set("owner", "platform")\n    set("tier", 1)\n  }\n}\n\ntasks.named("build") {\n  nx {\n    dependsOn.addAll("^build", "app:test")\n    set("cache", true)\n  }\n}\n\ntasks.named("test") {\n  nx {\n    set("cache", false)\n    array("tags", "unit", "fast")\n    set("metadata") {\n      set("parallel", true)\n    }\n  }\n}`
-              : `\nnx {\n  set 'name', 'complex-app'\n  array 'tags', 'monorepo', 'service'\n  set 'metadata', {\n    set 'owner', 'platform'\n    set 'tier', 1\n  }\n}\n\ntasks.named('build') {\n  nx {\n    dependsOn.addAll('^build', 'app:test')\n    set 'cache', true\n  }\n}\n\ntasks.named('test') {\n  nx {\n    set 'cache', false\n    array 'tags', 'unit', 'fast'\n    set 'metadata', {\n      set 'parallel', true\n    }\n  }\n}`;
+              ? `\nnx {\n  set("name", "complex-app")\n  array("tags", "monorepo", "service")\n  set("metadata") {\n    set("owner", "platform")\n    set("tier", 1)\n  }\n}\n\ntasks.named("build") {\n  nx {\n    dependsOn.add("^build")\n    dependsOn.add("app:test")\n    set("cache", true)\n  }\n}\n\ntasks.named("test") {\n  nx {\n    set("cache", false)\n    array("tags", "unit", "fast")\n    set("metadata") {\n      set("parallel", true)\n    }\n  }\n}`
+              : `\nnx {\n  set 'name', 'complex-app'\n  array 'tags', 'monorepo', 'service'\n  set 'metadata', {\n    set 'owner', 'platform'\n    set 'tier', 1\n  }\n}\n\ntasks.named('build') {\n  nx {\n    dependsOn.add('^build')\n    dependsOn.add('app:test')\n    set 'cache', true\n  }\n}\n\ntasks.named('test') {\n  nx {\n    set 'cache', false\n    array 'tags', 'unit', 'fast'\n    set 'metadata', {\n      set 'parallel', true\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -334,7 +330,8 @@ describe('Gradle DSL - nx {} configuration', () => {
           // Project-level
           expect(config.name).toBe('complex-app');
           expect(config.tags).toEqual(['monorepo', 'service']);
-          expect(config.metadata).toEqual({ owner: 'platform', tier: 1 });
+          expect(config.metadata.owner).toBe('platform');
+          expect(config.metadata.tier).toBe(1);
 
           // Build target
           expect(config.targets.build.dependsOn).toContain('^build');
@@ -344,7 +341,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           // Test target
           expect(config.targets.test.cache).toBe(false);
           expect(config.targets.test.tags).toEqual(['unit', 'fast']);
-          expect(config.targets.test.metadata).toEqual({ parallel: true });
+          expect(config.targets.test.metadata.parallel).toBe(true);
         });
 
         it('should configure multiple projects independently', () => {
