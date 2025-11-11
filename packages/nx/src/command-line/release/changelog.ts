@@ -48,7 +48,6 @@ import {
   gitPush,
   gitTag,
   parseCommits,
-  parseVersionPlanCommit,
 } from './utils/git';
 import { launchEditor } from './utils/launch-editor';
 import { parseChangelogMarkdown } from './utils/markdown';
@@ -73,6 +72,17 @@ import {
   areAllVersionPlanProjectsFiltered,
   validateResolvedVersionPlansAgainstFilter,
 } from './utils/version-plan-utils';
+import {
+  ChangelogChange,
+  createChangesFromGroupVersionPlans,
+  createChangesFromProjectsVersionPlans,
+} from './changelog/version-plan-utils';
+import {
+  createChangesFromCommits,
+  createFileToProjectMap,
+  filterHiddenChanges,
+  mapCommitToChange,
+} from './changelog/commit-utils';
 
 export interface NxReleaseChangelogResult {
   workspaceChangelog?: {
@@ -89,18 +99,8 @@ export interface NxReleaseChangelogResult {
   };
 }
 
-export interface ChangelogChange {
-  type: string;
-  scope: string;
-  description: string;
-  affectedProjects: string[] | '*';
-  body?: string;
-  isBreaking?: boolean;
-  githubReferences?: Reference[];
-  authors?: { name: string; email: string }[];
-  shortHash?: string;
-  revertedHashes?: string[];
-}
+// ChangelogChange is now exported from ./changelog/version-plan-utils
+export type { ChangelogChange } from './changelog/version-plan-utils';
 
 export type PostGitTask = (latestCommit: string) => Promise<void>;
 
@@ -301,116 +301,15 @@ export function createAPI(
 
     const postGitTasks: PostGitTask[] = [];
 
-    let workspaceChangelogChanges: ChangelogChange[] = [];
-
-    // If there are multiple release groups, we'll just skip the workspace changelog anyway.
-    const versionPlansEnabledForWorkspaceChangelog =
-      releaseGraph.releaseGroups[0].resolvedVersionPlans;
-    if (versionPlansEnabledForWorkspaceChangelog) {
-      if (releaseGraph.releaseGroups.length === 1) {
-        const releaseGroup = releaseGraph.releaseGroups[0];
-        if (releaseGroup.projectsRelationship === 'fixed') {
-          const versionPlans =
-            releaseGroup.resolvedVersionPlans as GroupVersionPlan[];
-          workspaceChangelogChanges = versionPlans
-            .flatMap((vp) => {
-              const releaseType = versionPlanSemverReleaseTypeToChangelogType(
-                vp.groupVersionBump
-              );
-              let githubReferences = [];
-              let authors = undefined;
-              const parsedCommit = vp.commit
-                ? parseVersionPlanCommit(vp.commit)
-                : null;
-              if (parsedCommit) {
-                githubReferences = parsedCommit.references;
-                authors = parsedCommit.authors;
-              }
-              const changes: ChangelogChange | ChangelogChange[] =
-                !vp.triggeredByProjects
-                  ? {
-                      type: releaseType.type,
-                      scope: '',
-                      description: vp.message,
-                      body: '',
-                      isBreaking: releaseType.isBreaking,
-                      githubReferences,
-                      authors,
-                      affectedProjects: '*',
-                    }
-                  : vp.triggeredByProjects.map((project) => {
-                      return {
-                        type: releaseType.type,
-                        scope: project,
-                        description: vp.message,
-                        body: '',
-                        isBreaking: releaseType.isBreaking,
-                        githubReferences,
-                        authors,
-                        affectedProjects: [project],
-                      };
-                    });
-              return changes;
-            })
-            .filter(Boolean);
-        }
-      }
-    } else {
-      let workspaceChangelogFromRef =
-        args.from ||
-        (
-          await getLatestGitTagForPattern(
-            nxReleaseConfig.releaseTag.pattern,
-            {},
-            {
-              checkAllBranchesWhen:
-                nxReleaseConfig.releaseTag.checkAllBranchesWhen,
-              preid:
-                workspacePreid ??
-                projectsPreid?.[Object.keys(projectsPreid)[0]],
-              requireSemver: nxReleaseConfig.releaseTag.requireSemver,
-              strictPreid: nxReleaseConfig.releaseTag.strictPreid,
-            }
-          )
-        )?.tag;
-      if (!workspaceChangelogFromRef) {
-        if (useAutomaticFromRef) {
-          workspaceChangelogFromRef = await getFirstGitCommit();
-          if (args.verbose) {
-            console.log(
-              `Determined workspace --from ref from the first commit in the workspace: ${workspaceChangelogFromRef}`
-            );
-          }
-        } else {
-          throw new Error(
-            `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
-          );
-        }
-      }
-
-      // Make sure that the fromRef is actually resolvable
-      const workspaceChangelogFromSHA = await getCommitHash(
-        workspaceChangelogFromRef
-      );
-
-      workspaceChangelogChanges = filterHiddenChanges(
-        (await getCommits(workspaceChangelogFromSHA, toSHA)).map((c) => {
-          return {
-            type: c.type,
-            scope: c.scope,
-            description: c.description,
-            body: c.body,
-            isBreaking: c.isBreaking,
-            githubReferences: c.references,
-            authors: c.authors,
-            shortHash: c.shortHash,
-            revertedHashes: c.revertedHashes,
-            affectedProjects: '*',
-          };
-        }),
-        nxReleaseConfig.conventionalCommits
-      );
-    }
+    const workspaceChangelogChanges = await resolveWorkspaceChangelogChanges({
+      releaseGraph,
+      nxReleaseConfig,
+      args,
+      workspacePreid,
+      projectsPreid,
+      useAutomaticFromRef,
+      toSHA,
+    });
 
     const workspaceChangelog = await generateChangelogForWorkspace({
       tree,
@@ -505,37 +404,10 @@ export function createAPI(
           let changes: ChangelogChange[] | null = null;
 
           if (releaseGroup.resolvedVersionPlans) {
-            changes = (
-              releaseGroup.resolvedVersionPlans as ProjectsVersionPlan[]
-            )
-              .map((vp) => {
-                const bumpForProject = vp.projectVersionBumps[project.name];
-                if (!bumpForProject) {
-                  return null;
-                }
-                const releaseType =
-                  versionPlanSemverReleaseTypeToChangelogType(bumpForProject);
-                let githubReferences = [];
-                let authors = [];
-                const parsedCommit = vp.commit
-                  ? parseVersionPlanCommit(vp.commit)
-                  : null;
-                if (parsedCommit) {
-                  githubReferences = parsedCommit.references;
-                  authors = parsedCommit.authors;
-                }
-                return {
-                  type: releaseType.type,
-                  scope: project.name,
-                  description: vp.message,
-                  body: '',
-                  isBreaking: releaseType.isBreaking,
-                  affectedProjects: Object.keys(vp.projectVersionBumps),
-                  githubReferences,
-                  authors,
-                } as ChangelogChange;
-              })
-              .filter(Boolean);
+            changes = createChangesFromProjectsVersionPlans(
+              releaseGroup.resolvedVersionPlans as ProjectsVersionPlan[],
+              project.name
+            );
           } else {
             let fromRef =
               args.from ||
@@ -594,24 +466,10 @@ export function createAPI(
               fileMap.projectFileMap
             );
 
-            changes = filterHiddenChanges(
-              commits.map((c) => ({
-                type: c.type,
-                scope: c.scope,
-                description: c.description,
-                body: c.body,
-                isBreaking: c.isBreaking,
-                githubReferences: c.references,
-                authors: c.authors,
-                shortHash: c.shortHash,
-                revertedHashes: c.revertedHashes,
-                affectedProjects: commitChangesNonProjectFiles(
-                  c,
-                  fileMap.nonProjectFiles
-                )
-                  ? '*'
-                  : getProjectsAffectedByCommit(c, fileToProjectMap),
-              })),
+            changes = createChangesFromCommits(
+              commits,
+              fileMap,
+              fileToProjectMap,
               nxReleaseConfig.conventionalCommits
             );
           }
@@ -642,47 +500,10 @@ export function createAPI(
       } else {
         let changes: ChangelogChange[] = [];
         if (releaseGroup.resolvedVersionPlans) {
-          changes = (releaseGroup.resolvedVersionPlans as GroupVersionPlan[])
-            .flatMap((vp) => {
-              const releaseType = versionPlanSemverReleaseTypeToChangelogType(
-                vp.groupVersionBump
-              );
-              let githubReferences = [];
-              let authors = undefined;
-              const parsedCommit = vp.commit
-                ? parseVersionPlanCommit(vp.commit)
-                : null;
-              if (parsedCommit) {
-                githubReferences = parsedCommit.references;
-                authors = parsedCommit.authors;
-              }
-              const changes: ChangelogChange | ChangelogChange[] =
-                !vp.triggeredByProjects
-                  ? {
-                      type: releaseType.type,
-                      scope: '',
-                      description: vp.message,
-                      body: '',
-                      isBreaking: releaseType.isBreaking,
-                      githubReferences,
-                      authors,
-                      affectedProjects: '*',
-                    }
-                  : vp.triggeredByProjects.map((project) => {
-                      return {
-                        type: releaseType.type,
-                        scope: project,
-                        description: vp.message,
-                        body: '',
-                        isBreaking: releaseType.isBreaking,
-                        githubReferences,
-                        authors,
-                        affectedProjects: [project],
-                      };
-                    });
-              return changes;
-            })
-            .filter(Boolean);
+          // This is identical to workspace changelog for fixed groups
+          changes = createChangesFromGroupVersionPlans(
+            releaseGroup.resolvedVersionPlans as GroupVersionPlan[]
+          );
         } else {
           let fromRef =
             args.from ||
@@ -726,24 +547,11 @@ export function createAPI(
             fileMap.projectFileMap
           );
 
-          changes = filterHiddenChanges(
-            (await getCommits(fromSHA, toSHA)).map((c) => ({
-              type: c.type,
-              scope: c.scope,
-              description: c.description,
-              body: c.body,
-              isBreaking: c.isBreaking,
-              githubReferences: c.references,
-              authors: c.authors,
-              shortHash: c.shortHash,
-              revertedHashes: c.revertedHashes,
-              affectedProjects: commitChangesNonProjectFiles(
-                c,
-                fileMap.nonProjectFiles
-              )
-                ? '*'
-                : getProjectsAffectedByCommit(c, fileToProjectMap),
-            })),
+          const commits = await getCommits(fromSHA, toSHA);
+          changes = createChangesFromCommits(
+            commits,
+            fileMap,
+            fileToProjectMap,
             nxReleaseConfig.conventionalCommits
           );
         }
@@ -1404,22 +1212,6 @@ async function filterProjectCommits({
   );
 }
 
-function filterHiddenChanges(
-  changes: ChangelogChange[],
-  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
-): ChangelogChange[] {
-  return changes.filter((change) => {
-    const type = change.type;
-
-    const typeConfig = conventionalCommitsConfig.types[type];
-    if (!typeConfig) {
-      // don't include changes with unknown types
-      return false;
-    }
-    return !typeConfig.changelog.hidden;
-  });
-}
-
 async function promptForRemoteRelease(): Promise<boolean> {
   try {
     const result = await prompt<{ confirmation: boolean }>([
@@ -1440,56 +1232,118 @@ async function promptForRemoteRelease(): Promise<boolean> {
   }
 }
 
-function getProjectsAffectedByCommit(
-  commit: GitCommit,
-  fileToProjectMap: Record<string, string>
-): string[] {
-  const affectedProjects = new Set<string>();
-  for (const file of commit.affectedFiles) {
-    affectedProjects.add(fileToProjectMap[file]);
+async function resolveWorkspaceChangelogChanges({
+  releaseGraph,
+  nxReleaseConfig,
+  args,
+  workspacePreid,
+  projectsPreid,
+  useAutomaticFromRef,
+  toSHA,
+}: {
+  releaseGraph: ReleaseGraph;
+  nxReleaseConfig: NxReleaseConfig;
+  args: ChangelogOptions;
+  workspacePreid: string | undefined;
+  projectsPreid: Record<string, string | undefined>;
+  useAutomaticFromRef: boolean;
+  toSHA: string;
+}): Promise<ChangelogChange[]> {
+  // NOTE: If there are multiple release groups, we'll just skip the workspace changelog anyway.
+  const versionPlansEnabledForWorkspaceChangelog =
+    releaseGraph.releaseGroups[0]?.resolvedVersionPlans;
+
+  // Derive changes from version plan files
+  if (versionPlansEnabledForWorkspaceChangelog) {
+    return resolveWorkspaceChangelogFromVersionPlans(releaseGraph);
   }
-  return Array.from(affectedProjects);
+
+  // Derive changes from commits
+  return resolveWorkspaceChangelogFromCommits({
+    nxReleaseConfig,
+    args,
+    workspacePreid,
+    projectsPreid,
+    useAutomaticFromRef,
+    toSHA,
+  });
 }
 
-function commitChangesNonProjectFiles(
-  commit: GitCommit,
-  nonProjectFiles: FileData[]
-): boolean {
-  return nonProjectFiles.some((fileData) =>
-    commit.affectedFiles.includes(fileData.file)
-  );
+function resolveWorkspaceChangelogFromVersionPlans(
+  releaseGraph: ReleaseGraph
+): ChangelogChange[] {
+  const firstReleaseGroup = releaseGraph.releaseGroups[0];
+
+  // We only produce a workspace changelog in the case of a single, fixed relationship release group
+  if (
+    releaseGraph.releaseGroups.length !== 1 ||
+    firstReleaseGroup?.projectsRelationship !== 'fixed'
+  ) {
+    return [];
+  }
+
+  const versionPlans =
+    firstReleaseGroup.resolvedVersionPlans as GroupVersionPlan[];
+  return createChangesFromGroupVersionPlans(versionPlans);
 }
 
-function createFileToProjectMap(
-  projectFileMap: ProjectFileMap
-): Record<string, string> {
-  const fileToProjectMap = {};
-  for (const [projectName, projectFiles] of Object.entries(projectFileMap)) {
-    for (const file of projectFiles) {
-      fileToProjectMap[file.file] = projectName;
+async function resolveWorkspaceChangelogFromCommits({
+  nxReleaseConfig,
+  args,
+  workspacePreid,
+  projectsPreid,
+  useAutomaticFromRef,
+  toSHA,
+}: {
+  nxReleaseConfig: NxReleaseConfig;
+  args: ChangelogOptions;
+  workspacePreid: string | undefined;
+  projectsPreid: Record<string, string | undefined>;
+  useAutomaticFromRef: boolean;
+  toSHA: string;
+}): Promise<ChangelogChange[]> {
+  let workspaceChangelogFromRef =
+    args.from ||
+    (
+      await getLatestGitTagForPattern(
+        nxReleaseConfig.releaseTag.pattern,
+        {},
+        {
+          checkAllBranchesWhen: nxReleaseConfig.releaseTag.checkAllBranchesWhen,
+          preid:
+            workspacePreid ?? projectsPreid?.[Object.keys(projectsPreid)[0]],
+          requireSemver: nxReleaseConfig.releaseTag.requireSemver,
+          strictPreid: nxReleaseConfig.releaseTag.strictPreid,
+        }
+      )
+    )?.tag;
+
+  if (!workspaceChangelogFromRef) {
+    if (useAutomaticFromRef) {
+      workspaceChangelogFromRef = await getFirstGitCommit();
+      if (args.verbose) {
+        console.log(
+          `Determined workspace --from ref from the first commit in the workspace: ${workspaceChangelogFromRef}`
+        );
+      }
+    } else {
+      throw new Error(
+        `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
+      );
     }
   }
-  return fileToProjectMap;
-}
 
-function versionPlanSemverReleaseTypeToChangelogType(bump: ReleaseType): {
-  type: 'fix' | 'feat';
-  isBreaking: boolean;
-} {
-  switch (bump) {
-    case 'premajor':
-    case 'major':
-      return { type: 'feat', isBreaking: true };
-    case 'preminor':
-    case 'minor':
-      return { type: 'feat', isBreaking: false };
-    case 'prerelease':
-    case 'prepatch':
-    case 'patch':
-      return { type: 'fix', isBreaking: false };
-    default:
-      throw new Error(`Invalid semver bump type: ${bump}`);
-  }
+  // Make sure that the fromRef is actually resolvable
+  const workspaceChangelogFromSHA = await getCommitHash(
+    workspaceChangelogFromRef
+  );
+
+  const commits = await getCommits(workspaceChangelogFromSHA, toSHA);
+  // For workspace changelog, all commits affect all projects
+  return filterHiddenChanges(
+    commits.map((c) => mapCommitToChange(c, '*')),
+    nxReleaseConfig.conventionalCommits
+  );
 }
 
 function extractPreid(version: string): string | undefined {
