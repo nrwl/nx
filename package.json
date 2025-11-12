@@ -173,7 +173,7 @@
     "autoprefixer": "10.4.13",
     "babel-jest": "catalog:jest",
     "babel-loader": "^9.1.2",
-    "browserslist": "^4.21.4",
+    "browserslist": "^4.26.0",
     "chalk": "catalog:",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
