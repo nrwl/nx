@@ -98,9 +98,7 @@ open class NxTaskExtension @Inject constructor(objects: ObjectFactory) {
   fun merge(map: Map<String, Any?>) = json.putAll(asJsonMap(map))
 }
 
-/**
- * Type-safe accessor for the nx extension in Kotlin DSL.
- */
+/** Type-safe accessor for the nx extension in Kotlin DSL. */
 fun Task.nx(configure: NxTaskExtension.() -> Unit) {
   val extension =
       extensions.findByType(NxTaskExtension::class.java)
