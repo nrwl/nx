@@ -85,7 +85,7 @@ impl TaskHasher {
         // Create a fresh task output cache for this invocation
         // This ensures no stale caches across multiple CLI commands when the daemon holds
         // the TaskHasher instance
-        let task_output_cache = Arc::new(DashMap::new());
+        let task_output_cache = DashMap::new();
 
         let function_start = std::time::Instant::now();
 
@@ -268,12 +268,8 @@ impl TaskHasher {
                 ts_hash
             }
             HashInstruction::TaskOutput(glob, outputs) => {
-                let hashed_task_output = hash_task_output(
-                    &self.workspace_root,
-                    glob,
-                    outputs,
-                    Arc::clone(task_output_cache),
-                )?;
+                let hashed_task_output =
+                    hash_task_output(&self.workspace_root, glob, outputs, task_output_cache)?;
                 trace!(parent: &span, "hash_task_output: {:?}", now.elapsed());
                 hashed_task_output
             }
@@ -306,5 +302,5 @@ struct HashInstructionArgs<'a> {
     project_root_mappings: &'a ProjectRootMappings,
     sorted_externals: &'a [&'a String],
     selectively_hash_tsconfig: bool,
-    task_output_cache: &'a Arc<DashMap<String, String>>,
+    task_output_cache: &'a DashMap<String, String>,
 }

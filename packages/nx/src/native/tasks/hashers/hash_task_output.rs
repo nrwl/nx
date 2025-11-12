@@ -5,7 +5,6 @@ use anyhow::*;
 use dashmap::DashMap;
 use rayon::prelude::*;
 use std::path::Path;
-use std::sync::Arc;
 use tracing::trace;
 use xxhash_rust::xxh3;
 
@@ -13,7 +12,7 @@ pub fn hash_task_output(
     workspace_root: &str,
     glob: &str,
     outputs: &[String],
-    cache: Arc<DashMap<String, String>>,
+    cache: &DashMap<String, String>,
 ) -> Result<String> {
     // Create cache key from glob pattern and outputs
     let cache_key = format!("{}|{}", glob, outputs.join("|"));
