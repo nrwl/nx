@@ -290,6 +290,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     meta: [
       messages.codeOfSelectedPromptMessage('setupCI'),
       messages.codeOfSelectedPromptMessage('setupNxCloud'),
+      messages.codeOfSelectedPromptMessage('setupNxCloudSimple'),
       parsedArgs.nxCloud,
       rawArgs.nxCloud,
       workspaceInfo.pushedToVcs,
@@ -369,12 +370,18 @@ async function normalizeArgsMiddleware(
       // Use simplified Cloud prompt for templates (yes/no only, no CI selection)
       const nxCloud =
         argv.skipGit === true ? 'skip' : await determineNxCloudSimple(argv);
+      // Capture prompt variant code for tracking
+      const nxCloudPromptCode =
+        nxCloud === 'skip'
+          ? undefined
+          : messages.metaCodeOfSelectedPromptMessage('setupNxCloudSimple');
       const useGitHub =
         nxCloud === 'skip'
           ? undefined
           : await determineIfGitHubWillBeUsed(argv);
       Object.assign(argv, {
         nxCloud,
+        nxCloudPromptCode,
         useGitHub,
         packageManager,
         defaultBase,
