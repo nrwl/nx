@@ -82,6 +82,11 @@ impl TaskHasher {
         hash_plans: External<HashMap<String, Vec<HashInstruction>>>,
         js_env: HashMap<String, String>,
     ) -> anyhow::Result<NapiDashMap<String, HashDetails>> {
+        // Create a fresh task output cache for this invocation
+        // This ensures no stale caches across multiple CLI commands when the daemon holds
+        // the TaskHasher instance
+        let task_output_cache = Arc::new(DashMap::new());
+
         let function_start = std::time::Instant::now();
 
         trace!("hashing plans {:?}", hash_plans.as_ref());
@@ -126,6 +131,7 @@ impl TaskHasher {
                         project_root_mappings: &project_root_mappings,
                         sorted_externals: &sorted_externals,
                         selectively_hash_tsconfig,
+                        task_output_cache: &task_output_cache,
                     },
                 )?;
 
@@ -184,6 +190,7 @@ impl TaskHasher {
             project_root_mappings,
             sorted_externals,
             selectively_hash_tsconfig,
+            task_output_cache,
         }: HashInstructionArgs,
     ) -> anyhow::Result<(String, String)> {
         let now = std::time::Instant::now();
@@ -261,7 +268,12 @@ impl TaskHasher {
                 ts_hash
             }
             HashInstruction::TaskOutput(glob, outputs) => {
-                let hashed_task_output = hash_task_output(&self.workspace_root, glob, outputs)?;
+                let hashed_task_output = hash_task_output(
+                    &self.workspace_root,
+                    glob,
+                    outputs,
+                    Arc::clone(task_output_cache),
+                )?;
                 trace!(parent: &span, "hash_task_output: {:?}", now.elapsed());
                 hashed_task_output
             }
@@ -294,4 +306,5 @@ struct HashInstructionArgs<'a> {
     project_root_mappings: &'a ProjectRootMappings,
     sorted_externals: &'a [&'a String],
     selectively_hash_tsconfig: bool,
+    task_output_cache: &'a Arc<DashMap<String, String>>,
 }
