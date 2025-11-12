@@ -1,0 +1,16 @@
+!dist
+dist/tsconfig.lib.tsbuildinfo
+.eslintrc.json
+project.json
+tsconfig.json
+tsconfig.lib.json
+tsconfig.spec.json
+jest.config.cts
+vitest*.config.*
+src/**/*.ts
+!src/**/*.d.ts
+**/*.spec.ts
+**/*.test.ts
+mocks/
+test-utils/
+readme-template.md
