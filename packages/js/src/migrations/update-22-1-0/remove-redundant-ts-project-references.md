@@ -6,10 +6,10 @@ Removes redundant TypeScript project references from `tsconfig.json` files when 
 
 When a project has runtime tsconfig files like `tsconfig.lib.json`, the migration will remove external project references from the project's `tsconfig.json` file:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="libs/my-lib/tsconfig.json" highlightLines=["6-8"] %}
+```jsonc {7-9}
+// libs/my-lib/tsconfig.json
 {
   "compilerOptions": {
     "composite": true
@@ -22,27 +22,24 @@ When a project has runtime tsconfig files like `tsconfig.lib.json`, the migratio
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="libs/my-lib/tsconfig.json" %}
+```jsonc {6}
+// libs/my-lib/tsconfig.json
 {
   "compilerOptions": {
     "composite": true
-  }
+  },
+  "references": []
 }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 The external references remain in the runtime tsconfig file where they belong:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="libs/my-lib/tsconfig.lib.json" highlightLines=["6-8"] %}
+```jsonc {7-9}
+// libs/my-lib/tsconfig.lib.json
 {
   "compilerOptions": {
     "composite": true
@@ -55,11 +52,10 @@ The external references remain in the runtime tsconfig file where they belong:
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="libs/my-lib/tsconfig.lib.json" highlightLines=["6-8"] %}
+```jsonc {7-9}
+// libs/my-lib/tsconfig.lib.json
 {
   "compilerOptions": {
     "composite": true
@@ -71,16 +67,13 @@ The external references remain in the runtime tsconfig file where they belong:
   ]
 }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 For projects without runtime tsconfig files, the project's `tsconfig.json` file will continue to contain external project references:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="libs/legacy-lib/tsconfig.json" highlightLines=["6-8"] %}
+```jsonc {7-9}
+// libs/legacy-lib/tsconfig.json
 {
   "compilerOptions": {
     "composite": true
@@ -93,11 +86,10 @@ For projects without runtime tsconfig files, the project's `tsconfig.json` file 
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="libs/legacy-lib/tsconfig.json" highlightLines=["6-8"] %}
+```jsonc {7-9}
+// libs/legacy-lib/tsconfig.json
 {
   "compilerOptions": {
     "composite": true
@@ -109,16 +101,13 @@ For projects without runtime tsconfig files, the project's `tsconfig.json` file 
   ]
 }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 Internal project references (references within the same project directory) are preserved in the project's `tsconfig.json`:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="libs/my-lib/tsconfig.json" highlightLines=["6-11"] %}
+```jsonc {7-12}
+// libs/my-lib/tsconfig.json
 {
   "compilerOptions": {
     "composite": true
@@ -134,11 +123,10 @@ Internal project references (references within the same project directory) are p
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="libs/my-lib/tsconfig.json" highlightLines=["6-11"] %}
+```jsonc {7-12}
+// libs/my-lib/tsconfig.json
 {
   "compilerOptions": {
     "composite": true
@@ -153,6 +141,3 @@ Internal project references (references within the same project directory) are p
   ]
 }
 ```
-
-{% /tab %}
-{% /tabs %}
