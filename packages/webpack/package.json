@@ -72,5 +72,42 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "@nx/nx-source": "./src/index.ts"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./app-plugin": {
+      "import": "./dist/app-plugin.js",
+      "types": "./dist/app-plugin.d.ts",
+      "@nx/nx-source": "./app-plugin.ts"
+    },
+    "./src/plugins/*": {
+      "import": "./dist/plugins/*.js",
+      "types": "./dist/plugins/*.d.ts",
+      "@nx/nx-source": "./src/plugins/*.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/utils/*.js",
+      "types": "./dist/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/executors/*": {
+      "import": "./dist/executors/*.js",
+      "types": "./dist/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts"
+    },
+    "./src/executors/*/lib/*": {
+      "import": "./dist/executors/*/lib/*.js",
+      "types": "./dist/executors/*/lib/*.d.ts",
+      "@nx/nx-source": "./src/executors/*/lib/*.ts"
+    },
+    "./src/executors/*/schema.json": "./src/executors/*/schema.json"
   }
 }

@@ -52,5 +52,26 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "@nx/nx-source": "./src/index.ts"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./src/utilities/*": {
+      "import": "./dist/utilities/*.js",
+      "types": "./dist/utilities/*.d.ts",
+      "@nx/nx-source": "./src/utilities/*.ts"
+    },
+    "./src/utilities/typescript/*": {
+      "import": "./dist/utilities/typescript/*.js",
+      "types": "./dist/utilities/typescript/*.d.ts",
+      "@nx/nx-source": "./src/utilities/typescript/*.ts"
+    }
   }
 }

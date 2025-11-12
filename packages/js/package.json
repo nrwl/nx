@@ -72,5 +72,96 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "@nx/nx-source": "./src/index.ts"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./internal": {
+      "import": "./dist/internal.js",
+      "types": "./dist/internal.d.ts",
+      "@nx/nx-source": "./src/internal.ts"
+    },
+    "./babel": {
+      "import": "./dist/babel.js",
+      "types": "./dist/babel.d.ts",
+      "@nx/nx-source": "./babel.ts"
+    },
+    "./typescript": {
+      "import": "./dist/typescript.js",
+      "types": "./dist/typescript.d.ts",
+      "@nx/nx-source": "./typescript.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/utils/*.js",
+      "types": "./dist/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/utils/typescript/*": {
+      "import": "./dist/utils/typescript/*.js",
+      "types": "./dist/utils/typescript/*.d.ts",
+      "@nx/nx-source": "./src/utils/typescript/*.ts"
+    },
+    "./src/utils/assets/*": {
+      "import": "./dist/utils/assets/*.js",
+      "types": "./dist/utils/assets/*.d.ts",
+      "@nx/nx-source": "./src/utils/assets/*.ts"
+    },
+    "./src/utils/package-json/*": {
+      "import": "./dist/utils/package-json/*.js",
+      "types": "./dist/utils/package-json/*.d.ts",
+      "@nx/nx-source": "./src/utils/package-json/*.ts"
+    },
+    "./src/utils/swc/*": {
+      "import": "./dist/utils/swc/*.js",
+      "types": "./dist/utils/swc/*.d.ts",
+      "@nx/nx-source": "./src/utils/swc/*.ts"
+    },
+    "./src/generators/*": {
+      "import": "./dist/generators/*.js",
+      "types": "./dist/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/generators/library/*": {
+      "import": "./dist/generators/library/*.js",
+      "types": "./dist/generators/library/*.d.ts",
+      "@nx/nx-source": "./src/generators/library/*.ts"
+    },
+    "./src/generators/library/utils/*": {
+      "import": "./dist/generators/library/utils/*.js",
+      "types": "./dist/generators/library/utils/*.d.ts",
+      "@nx/nx-source": "./src/generators/library/utils/*.ts"
+    },
+    "./src/plugins/*": {
+      "import": "./dist/plugins/*.js",
+      "types": "./dist/plugins/*.d.ts",
+      "@nx/nx-source": "./src/plugins/*.ts"
+    },
+    "./src/plugins/typescript/*": {
+      "import": "./dist/plugins/typescript/*.js",
+      "types": "./dist/plugins/typescript/*.d.ts",
+      "@nx/nx-source": "./src/plugins/typescript/*.ts"
+    },
+    "./src/plugins/jest/*": {
+      "import": "./dist/plugins/jest/*.js",
+      "types": "./dist/plugins/jest/*.d.ts",
+      "@nx/nx-source": "./src/plugins/jest/*.ts"
+    },
+    "./plugins/*": {
+      "import": "./plugins/*.js",
+      "types": "./plugins/*.d.ts",
+      "@nx/nx-source": "./plugins/*.ts"
+    },
+    "./plugins/jest/*": {
+      "import": "./plugins/jest/*.js",
+      "types": "./plugins/jest/*.d.ts",
+      "@nx/nx-source": "./plugins/jest/*.ts"
+    }
   }
 }

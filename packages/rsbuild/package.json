@@ -45,19 +45,33 @@
   },
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "default": "./index.js"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "@nx/nx-source": "./src/index.ts"
     },
-    "./package.json": {
-      "default": "./package.json"
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./src/utils/*": {
+      "import": "./dist/utils/*.js",
+      "types": "./dist/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
     },
-    "./generators": {
-      "types": "./generators.d.ts",
-      "default": "./generators.js"
+    "./src/generators/*": {
+      "import": "./dist/generators/*.js",
+      "types": "./dist/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
     },
-    "./config-utils": {
-      "types": "./config-utils.d.ts",
-      "default": "./config-utils.js"
+    "./src/executors/*": {
+      "import": "./dist/executors/*.js",
+      "types": "./dist/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts"
+    },
+    "./plugins/*": {
+      "import": "./plugins/*.js",
+      "types": "./plugins/*.d.ts",
+      "@nx/nx-source": "./plugins/*.ts"
     }
   }
 }

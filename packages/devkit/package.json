@@ -48,5 +48,59 @@
   },
   "nx-migrations": {
     "migrations": "./migrations.json"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "@nx/nx-source": "./src/index.ts"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./testing": {
+      "import": "./dist/testing.js",
+      "types": "./dist/testing.d.ts",
+      "@nx/nx-source": "./testing.ts"
+    },
+    "./internal": {
+      "import": "./dist/internal.js",
+      "types": "./dist/internal.d.ts",
+      "@nx/nx-source": "./internal.ts"
+    },
+    "./internal-testing-utils": {
+      "import": "./dist/internal-testing-utils.js",
+      "types": "./dist/internal-testing-utils.d.ts",
+      "@nx/nx-source": "./internal-testing-utils.ts"
+    },
+    "./ngcli-adapter": {
+      "import": "./dist/ngcli-adapter.js",
+      "types": "./dist/ngcli-adapter.d.ts",
+      "@nx/nx-source": "./ngcli-adapter.ts"
+    },
+    "./src/generators/*": {
+      "import": "./dist/generators/*.js",
+      "types": "./dist/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/generators/plugin-migrations/*": {
+      "import": "./dist/generators/plugin-migrations/*.js",
+      "types": "./dist/generators/plugin-migrations/*.d.ts",
+      "@nx/nx-source": "./src/generators/plugin-migrations/*.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/utils/*.js",
+      "types": "./dist/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/utils/async-iterable/*": {
+      "import": "./dist/utils/async-iterable/*.js",
+      "types": "./dist/utils/async-iterable/*.d.ts",
+      "@nx/nx-source": "./src/utils/async-iterable/*.ts"
+    },
+    "./src/utils/catalog/*": {
+      "import": "./dist/utils/catalog/*.js",
+      "types": "./dist/utils/catalog/*.d.ts",
+      "@nx/nx-source": "./src/utils/catalog/*.ts"
+    }
   }
 }

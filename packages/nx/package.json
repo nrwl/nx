@@ -171,5 +171,36 @@
       "x86_64-unknown-linux-musl",
       "x86_64-unknown-freebsd"
     ]
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "@nx/nx-source": "./src/index.ts"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./src/utils/*": {
+      "import": "./dist/utils/*.js",
+      "types": "./dist/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/generators/*": {
+      "import": "./dist/generators/*.js",
+      "types": "./dist/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/executors/*": {
+      "import": "./dist/executors/*.js",
+      "types": "./dist/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts"
+    },
+    "./plugins/*": {
+      "import": "./plugins/*.js",
+      "types": "./plugins/*.d.ts",
+      "@nx/nx-source": "./plugins/*.ts"
+    }
   }
 }

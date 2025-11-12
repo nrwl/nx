@@ -29,20 +29,30 @@
   "typings": "./dist/lib/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/lib/index.d.ts",
-      "default": "./dist/lib/index.js"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "@nx/nx-source": "./src/index.ts"
     },
-    "./loaders/angular-partial-transform-loader": {
-      "types": "./dist/lib/plugins/loaders/angular-partial-transform.loader.d.ts",
-      "default": "./dist/lib/plugins/loaders/angular-partial-transform.loader.js"
+    "./package.json": "./package.json",
+    "./src/utils/*": {
+      "import": "./dist/utils/*.js",
+      "types": "./dist/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
     },
-    "./loaders/angular-loader": {
-      "types": "./dist/lib/plugins/loaders/angular-transform.loader.d.ts",
-      "default": "./dist/lib/plugins/loaders/angular-transform.loader.js"
+    "./src/generators/*": {
+      "import": "./dist/generators/*.js",
+      "types": "./dist/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
     },
-    "./loaders/platform-server-exports-loader": {
-      "types": "./dist/lib/plugins/loaders/platform-server-exports.loader.d.ts",
-      "default": "./dist/lib/plugins/loaders/platform-server-exports.loader.js"
+    "./src/executors/*": {
+      "import": "./dist/executors/*.js",
+      "types": "./dist/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts"
+    },
+    "./plugins/*": {
+      "import": "./plugins/*.js",
+      "types": "./plugins/*.d.ts",
+      "@nx/nx-source": "./plugins/*.ts"
     }
   },
   "dependencies": {

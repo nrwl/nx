@@ -54,14 +54,27 @@
   "executors": "./executors.json",
   "generators": "./generators.json",
   "exports": {
-    ".": "./index.js",
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "@nx/nx-source": "./src/index.ts"
+    },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
     "./executors.json": "./executors.json",
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./dist/plugin.d.ts",
+      "@nx/nx-source": "./plugin.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/utils/*.js",
+      "types": "./dist/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./generators/*/schema.json": "./src/generators/*/schema.json",
     "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./plugin": "./plugin.js",
     "./preset": "./src/utils/preset.js"
   },
   "nx-migrations": {

@@ -69,5 +69,36 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "@nx/nx-source": "./src/index.ts"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./module-federation": {
+      "import": "./dist/module-federation.js",
+      "types": "./dist/module-federation.d.ts",
+      "@nx/nx-source": "./module-federation.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/utils/*.js",
+      "types": "./dist/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/executors/*": {
+      "import": "./dist/executors/*.js",
+      "types": "./dist/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts"
+    },
+    "./src/plugins/*": {
+      "import": "./dist/plugins/*.js",
+      "types": "./dist/plugins/*.d.ts",
+      "@nx/nx-source": "./src/plugins/*.ts"
+    }
   }
 }
