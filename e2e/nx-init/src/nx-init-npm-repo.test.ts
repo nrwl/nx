@@ -40,8 +40,7 @@ describe('nx init (NPM repo - legacy)', () => {
     const output = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --cacheable=echo --no-interactive`,
-      { env: { NX_USE_LOCAL: 'true' } }
+      } nx@${getPublishedVersion()} init --cacheable=echo --no-interactive`
     );
     expect(output).toContain('Learn more about what to do next');
 

@@ -152,7 +152,6 @@ export function getStrippedEnvironmentVariables() {
         'NX_ISOLATE_PLUGINS',
         'NX_VERBOSE_LOGGING',
         'NX_NATIVE_LOGGING',
-        'NX_USE_LOCAL',
       ];
 
       if (key.startsWith('NX_') && !allowedKeys.includes(key)) {

@@ -48,8 +48,7 @@ describe('nx init (Monorepo - legacy)', () => {
     const output = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --cacheable=build --no-interactive`,
-      { env: { NX_USE_LOCAL: 'true' } }
+      } nx@${getPublishedVersion()} init --cacheable=build --no-interactive`
     );
 
     expect(output).toContain('🎉 Done!');

@@ -34,8 +34,7 @@ describe('nx init (Angular CLI - legacy)', () => {
     const output = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive`,
-      { env: { NX_USE_LOCAL: 'true' } }
+      } nx@${getPublishedVersion()} init --no-interactive`
     );
 
     expect(output).toContain('🎉 Done!');
@@ -69,8 +68,7 @@ describe('nx init (Angular CLI - legacy)', () => {
     const output = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --integrated --no-interactive`,
-      { env: { NX_USE_LOCAL: 'true' } }
+      } nx@${getPublishedVersion()} init --integrated --no-interactive`
     );
 
     expect(output).toContain('🎉 Done!');

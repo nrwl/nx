@@ -45,7 +45,7 @@ describe('nx init (for NestCLI - legacy)', () => {
       {
         cwd: projectRoot,
         encoding: 'utf-8',
-        env: { ...process.env, NX_USE_LOCAL: 'true' },
+        env: { ...process.env },
         stdio: 'pipe',
       }
     );
