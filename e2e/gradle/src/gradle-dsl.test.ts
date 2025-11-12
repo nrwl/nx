@@ -197,11 +197,6 @@ describe('Gradle DSL - nx {} configuration', () => {
 
       describe('Task-level DSL', () => {
         it('should handle mergedDependsOn with method syntax', () => {
-          console.log(
-            'task-level buildfile content',
-            readFile(`app/build.gradle${buildFileExt}`)
-          );
-
           const dslContent =
             type === 'kotlin'
               ? `tasks.register<DefaultTask>("customTask") {\n  nx {\n    mergedDependsOn("^build", "app:test")\n  }\n}`
@@ -214,8 +209,6 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
-
-          console.log('target dependsOn', config);
 
           expect(config.targets.customTask.dependsOn).toContain('^build');
           expect(config.targets.customTask.dependsOn).toContain('app:test');
@@ -253,8 +246,6 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
 
-          console.log('target scalar', config);
-
           expect(config.targets.myBuild.cache).toBe(false);
         });
 
@@ -271,8 +262,6 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
-
-          console.log('target arrays', config);
 
           expect(config.targets.myTest.inputs).toContain('src/**/*');
           expect(config.targets.myTest.inputs).toContain('config/**/*');
