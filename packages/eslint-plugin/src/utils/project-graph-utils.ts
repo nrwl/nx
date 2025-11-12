@@ -3,7 +3,7 @@ import {
   ProjectGraph,
   readCachedProjectGraph,
 } from '@nx/devkit';
-import { isTerminalRun } from './runtime-lint-utils';
+import { isTerminalRun } from './runtime-lint-utils.js';
 import chalk = require('chalk');
 import {
   createProjectRootMappings,

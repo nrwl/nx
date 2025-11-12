@@ -3,15 +3,15 @@ import {
   Generator,
   GeneratorsJson,
   GeneratorsJsonEntry,
-} from '../../config/misc-interfaces';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+} from '../../config/misc-interfaces.js';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json.js';
 import {
   getImplementationFactory,
   resolveSchema,
-} from '../../config/schema-utils';
-import { readJsonFile } from '../../utils/fileutils';
-import { readPluginPackageJson } from '../../project-graph/plugins';
-import { getNxRequirePaths } from '../../utils/installation-directory';
+} from '../../config/schema-utils.js';
+import { readJsonFile } from '../../utils/fileutils.js';
+import { readPluginPackageJson } from '../../project-graph/plugins/index.js';
+import { getNxRequirePaths } from '../../utils/installation-directory.js';
 
 export type GeneratorInformation = {
   resolvedCollectionName: string;

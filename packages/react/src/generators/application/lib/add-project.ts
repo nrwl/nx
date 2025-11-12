@@ -1,4 +1,4 @@
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 import {
   addProjectConfiguration,
   joinPathFragments,
@@ -8,9 +8,9 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
-import { maybeJs } from '../../../utils/maybe-js';
-import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
+import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin.js';
+import { maybeJs } from '../../../utils/maybe-js.js';
+import { hasRspackPlugin } from '../../../utils/has-rspack-plugin.js';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function addProject(host: Tree, options: NormalizedSchema) {

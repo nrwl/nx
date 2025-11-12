@@ -6,7 +6,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { getComponentNode } from './ast-utils';
+import { getComponentNode } from './ast-utils.js';
 import { type FoundTarget } from '@nx/cypress/src/utils/find-target-options';
 import type { NxComponentTestingOptions } from '@nx/cypress/plugins/cypress-preset';
 

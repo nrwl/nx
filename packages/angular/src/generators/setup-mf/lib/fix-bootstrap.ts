@@ -20,7 +20,7 @@ export function fixBootstrap(
     tree.write(joinPathFragments(appRoot, 'src/bootstrap.ts'), bootstrapCode);
   }
 
-  const bootstrapImportCode = `import('./bootstrap').catch(err => console.error(err))`;
+  const bootstrapImportCode = `import('./bootstrap.js').catch(err => console.error(err))`;
   if (options.mfType === 'remote' || options.federationType === 'static') {
     tree.write(mainFilePath, `${bootstrapImportCode};`);
   } else {
@@ -49,7 +49,7 @@ const standaloneBootstrapCode = (
   componentType: string,
   componentFileSuffix: string
 ) => `import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
+import { appConfig } from './app/app.config.js';
 import { RemoteEntry${componentType} } from './app/remote-entry/entry${componentFileSuffix}';
 
 bootstrapApplication(RemoteEntry${componentType}, appConfig).catch((err) =>

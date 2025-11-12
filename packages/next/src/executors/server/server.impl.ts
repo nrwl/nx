@@ -9,13 +9,13 @@ import { resolve } from 'path';
 import {
   NextBuildBuilderOptions,
   NextServeBuilderOptions,
-} from '../../utils/types';
+} from '../../utils/types.js';
 import { fork } from 'child_process';
 import customServer from './custom-server.impl';
-import { createCliOptions } from '../../utils/create-cli-options';
+import { createCliOptions } from '../../utils/create-cli-options.js';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { getInstalledNextVersionRuntime } from '../../utils/runtime-version-utils';
+import { getInstalledNextVersionRuntime } from '../../utils/runtime-version-utils.js';
 
 export default async function* serveExecutor(
   options: NextServeBuilderOptions,

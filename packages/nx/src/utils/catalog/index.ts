@@ -1,7 +1,7 @@
 import type { Tree } from '../../generators/tree';
-import { readJson } from '../../generators/utils/json';
+import { readJson } from '../../generators/utils/json.js';
 import type { CatalogManager } from './manager';
-import { getCatalogManager } from './manager-factory';
+import { getCatalogManager } from './manager-factory.js';
 
 export { type CatalogManager, getCatalogManager };
 

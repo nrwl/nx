@@ -1,5 +1,5 @@
 import type { HandlerResult } from './server';
-import { flushSyncGeneratorChangesToDisk } from './sync-generators';
+import { flushSyncGeneratorChangesToDisk } from './sync-generators.js';
 
 export async function handleFlushSyncGeneratorChangesToDisk(
   generators: string[]

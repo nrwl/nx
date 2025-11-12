@@ -1,10 +1,10 @@
 import type { ExecutorContext } from '@nx/devkit';
 import { parseTargetString } from '@nx/devkit';
 import { join, relative } from 'path';
-import { CopyAssetsHandler } from '../../../../utils/assets/copy-assets-handler';
-import { calculateProjectBuildableDependencies } from '../../../../utils/buildable-libs-utils';
+import { CopyAssetsHandler } from '../../../../utils/assets/copy-assets-handler.js';
+import { calculateProjectBuildableDependencies } from '../../../../utils/buildable-libs-utils.js';
 import type { NormalizedExecutorOptions } from '../../../../utils/schema';
-import { getTaskOptions } from '../get-task-options';
+import { getTaskOptions } from '../get-task-options.js';
 import type { TypescriptInMemoryTsConfig } from '../typescript-compilation';
 import type { TaskInfo } from './types';
 

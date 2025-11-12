@@ -10,13 +10,13 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodesV2 } from '../../plugins/plugin';
-import { assertNotUsingTsSolutionSetup } from '../utils/validations';
+import { createNodesV2 } from '../../plugins/plugin.js';
+import { assertNotUsingTsSolutionSetup } from '../utils/validations.js';
 import {
   getInstalledAngularDevkitVersion,
   versions,
-} from '../utils/version-utils';
-import { Schema } from './schema';
+} from '../utils/version-utils.js';
+import { Schema } from './schema.js';
 
 export async function angularInitGenerator(
   tree: Tree,

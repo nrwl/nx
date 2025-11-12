@@ -7,7 +7,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { extraEslintDependencies } from '@nx/react/src/utils/lint';
-import { NormalizedSchema } from './normalize-options';
+import { NormalizedSchema } from './normalize-options.js';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
@@ -19,7 +19,7 @@ import {
 import {
   getEslintConfigNextDependenciesVersionsToInstall,
   isNext16,
-} from '../../../utils/version-utils';
+} from '../../../utils/version-utils.js';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 import { addImportToFlatConfig } from '@nx/eslint/src/generators/utils/flat-config/ast-utils';
 

@@ -1,10 +1,10 @@
 import { ExecutorContext, workspaceRoot } from '@nx/devkit';
-import { VitestExecutorOptions } from './schema';
+import { VitestExecutorOptions } from './schema.js';
 import { resolve } from 'path';
 import { registerTsConfigPaths } from '@nx/js/src/internal';
-import { NxReporter } from './lib/nx-reporter';
-import { getOptions } from './lib/utils';
-import { loadVitestDynamicImport } from '../../utils/executor-utils';
+import { NxReporter } from './lib/nx-reporter.js';
+import { getOptions } from './lib/utils.js';
+import { loadVitestDynamicImport } from '../../utils/executor-utils.js';
 
 export async function* vitestExecutor(
   options: VitestExecutorOptions,

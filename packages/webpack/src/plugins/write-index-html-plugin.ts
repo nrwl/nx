@@ -3,9 +3,9 @@ import { Compiler } from 'webpack';
 import { createHash } from 'crypto';
 import { readFileSync } from 'fs';
 
-import { EmittedFile, ExtraEntryPoint } from '../utils/models';
-import { interpolateEnvironmentVariablesToIndex } from '../utils/webpack/interpolate-env-variables-to-index';
-import { generateEntryPoints } from '../utils/webpack/package-chunk-sort';
+import { EmittedFile, ExtraEntryPoint } from '../utils/models.js';
+import { interpolateEnvironmentVariablesToIndex } from '../utils/webpack/interpolate-env-variables-to-index.js';
+import { generateEntryPoints } from '../utils/webpack/package-chunk-sort.js';
 import { extname } from 'path';
 
 const parse5 = require('parse5');

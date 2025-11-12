@@ -16,7 +16,7 @@ import {
 import {
   addRemoteRoute,
   addRemoteToConfig,
-} from '../../../module-federation/ast-utils';
+} from '../../../module-federation/ast-utils.js';
 
 let tsModule: typeof import('typescript');
 

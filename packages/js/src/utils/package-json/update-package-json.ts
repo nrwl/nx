@@ -20,14 +20,14 @@ import {
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { DependentBuildableProjectNode } from '../buildable-libs-utils';
+import { DependentBuildableProjectNode } from '../buildable-libs-utils.js';
 import { existsSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, parse, relative } from 'path';
 import { fileExists } from 'nx/src/utils/fileutils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
-import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
+import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir.js';
 
 export type SupportedFormat = 'cjs' | 'esm';
 

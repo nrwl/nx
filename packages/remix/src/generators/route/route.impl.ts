@@ -1,12 +1,12 @@
 import { formatFiles, names, stripIndents, Tree } from '@nx/devkit';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { basename, dirname } from 'path';
-import { checkRoutePathForErrors } from '../../utils/remix-route-utils';
+import { checkRoutePathForErrors } from '../../utils/remix-route-utils.js';
 import ActionGenerator from '../action/action.impl';
 import LoaderGenerator from '../loader/loader.impl';
 import MetaGenerator from '../meta/meta.impl';
 import StyleGenerator from '../style/style.impl';
-import { RemixRouteSchema } from './schema';
+import { RemixRouteSchema } from './schema.js';
 
 export default async function (tree: Tree, options: RemixRouteSchema) {
   const { artifactName: name, filePath: routeFilePath } =

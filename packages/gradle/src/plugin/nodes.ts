@@ -18,15 +18,15 @@ import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
   gradleConfigAndTestGlob,
   splitConfigFiles,
-} from '../utils/split-config-files';
+} from '../utils/split-config-files.js';
 import {
   getCurrentProjectGraphReport,
   populateProjectGraph,
-} from './utils/get-project-graph-from-gradle-plugin';
+} from './utils/get-project-graph-from-gradle-plugin.js';
 import {
   GradlePluginOptions,
   normalizeOptions,
-} from './utils/gradle-plugin-options';
+} from './utils/gradle-plugin-options.js';
 
 type GradleTargets = Record<string, Partial<ProjectConfiguration>>;
 

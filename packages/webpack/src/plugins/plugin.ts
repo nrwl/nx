@@ -20,8 +20,8 @@ import { existsSync, readdirSync } from 'fs';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
-import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
-import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
+import { readWebpackOptions } from '../utils/webpack/read-webpack-options.js';
+import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config.js';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 const pmc = getPackageManagerCommand();

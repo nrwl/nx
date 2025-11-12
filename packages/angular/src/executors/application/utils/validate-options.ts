@@ -1,5 +1,5 @@
 import { lt } from 'semver';
-import { getInstalledAngularVersionInfo } from '../../utilities/angular-version-utils';
+import { getInstalledAngularVersionInfo } from '../../utilities/angular-version-utils.js';
 import type { ApplicationExecutorOptions } from '../schema';
 
 export function validateOptions(options: ApplicationExecutorOptions): void {

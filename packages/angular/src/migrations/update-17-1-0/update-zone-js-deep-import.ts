@@ -1,5 +1,5 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
-import { getProjectsFilteredByDependencies } from '../utils/projects';
+import { getProjectsFilteredByDependencies } from '../utils/projects.js';
 
 export default async function (tree: Tree) {
   const angularProjects = await getProjectsFilteredByDependencies([

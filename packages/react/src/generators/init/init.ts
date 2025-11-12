@@ -8,11 +8,11 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
-import { InitSchema } from './schema';
-import { getReactDependenciesVersionsToInstall } from '../../utils/version-utils';
+import { nxVersion } from '../../utils/versions.js';
+import { InitSchema } from './schema.js';
+import { getReactDependenciesVersionsToInstall } from '../../utils/version-utils.js';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodesV2 } from '../../plugins/router-plugin';
+import { createNodesV2 } from '../../plugins/router-plugin.js';
 
 export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
   const tasks: GeneratorCallback[] = [];

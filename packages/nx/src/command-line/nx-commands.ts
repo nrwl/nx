@@ -1,58 +1,58 @@
 import * as chalk from 'chalk';
 import * as yargs from 'yargs';
 
-import { yargsRegisterCommand } from './register/command-object';
+import { yargsRegisterCommand } from './register/command-object.js';
 import {
   yargsAffectedBuildCommand,
   yargsAffectedCommand,
   yargsAffectedE2ECommand,
   yargsAffectedLintCommand,
   yargsAffectedTestCommand,
-} from './affected/command-object';
+} from './affected/command-object.js';
 import {
   yargsConnectCommand,
   yargsViewLogsCommand,
-} from './nx-cloud/connect/command-object';
-import { yargsDaemonCommand } from './daemon/command-object';
-import { yargsGraphCommand } from './graph/command-object';
-import { yargsExecCommand } from './exec/command-object';
+} from './nx-cloud/connect/command-object.js';
+import { yargsDaemonCommand } from './daemon/command-object.js';
+import { yargsGraphCommand } from './graph/command-object.js';
+import { yargsExecCommand } from './exec/command-object.js';
 import {
   yargsFormatCheckCommand,
   yargsFormatWriteCommand,
-} from './format/command-object';
-import { yargsGenerateCommand } from './generate/command-object';
-import { yargsImportCommand } from './import/command-object';
-import { yargsInitCommand } from './init/command-object';
-import { yargsListCommand } from './list/command-object';
+} from './format/command-object.js';
+import { yargsGenerateCommand } from './generate/command-object.js';
+import { yargsImportCommand } from './import/command-object.js';
+import { yargsInitCommand } from './init/command-object.js';
+import { yargsListCommand } from './list/command-object.js';
 import {
   yargsInternalMigrateCommand,
   yargsMigrateCommand,
-} from './migrate/command-object';
-import { yargsNewCommand } from './new/command-object';
-import { yargsRepairCommand } from './repair/command-object';
-import { yargsReportCommand } from './report/command-object';
-import { yargsNxInfixCommand, yargsRunCommand } from './run/command-object';
-import { yargsRunManyCommand } from './run-many/command-object';
-import { yargsShowCommand } from './show/command-object';
-import { yargsWatchCommand } from './watch/command-object';
-import { yargsResetCommand } from './reset/command-object';
-import { yargsReleaseCommand } from './release/command-object';
-import { yargsAddCommand } from './add/command-object';
-import { yargsConfigureAiAgentsCommand } from './configure-ai-agents/command-object';
-import { yargsLoginCommand } from './nx-cloud/login/command-object';
-import { yargsLogoutCommand } from './nx-cloud/logout/command-object';
-import { yargsRecordCommand } from './nx-cloud/record/command-object';
-import { yargsStartCiRunCommand } from './nx-cloud/start-ci-run/command-object';
-import { yargsStartAgentCommand } from './nx-cloud/start-agent/command-object';
-import { yargsStopAllAgentsCommand } from './nx-cloud/complete-run/command-object';
-import { yargsFixCiCommand } from './nx-cloud/fix-ci/command-object';
+} from './migrate/command-object.js';
+import { yargsNewCommand } from './new/command-object.js';
+import { yargsRepairCommand } from './repair/command-object.js';
+import { yargsReportCommand } from './report/command-object.js';
+import { yargsNxInfixCommand, yargsRunCommand } from './run/command-object.js';
+import { yargsRunManyCommand } from './run-many/command-object.js';
+import { yargsShowCommand } from './show/command-object.js';
+import { yargsWatchCommand } from './watch/command-object.js';
+import { yargsResetCommand } from './reset/command-object.js';
+import { yargsReleaseCommand } from './release/command-object.js';
+import { yargsAddCommand } from './add/command-object.js';
+import { yargsConfigureAiAgentsCommand } from './configure-ai-agents/command-object.js';
+import { yargsLoginCommand } from './nx-cloud/login/command-object.js';
+import { yargsLogoutCommand } from './nx-cloud/logout/command-object.js';
+import { yargsRecordCommand } from './nx-cloud/record/command-object.js';
+import { yargsStartCiRunCommand } from './nx-cloud/start-ci-run/command-object.js';
+import { yargsStartAgentCommand } from './nx-cloud/start-agent/command-object.js';
+import { yargsStopAllAgentsCommand } from './nx-cloud/complete-run/command-object.js';
+import { yargsFixCiCommand } from './nx-cloud/fix-ci/command-object.js';
 import {
   yargsPrintAffectedCommand,
   yargsAffectedGraphCommand,
-} from './deprecated/command-objects';
-import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
-import { output } from '../utils/output';
-import { yargsMcpCommand } from './mcp/command-object';
+} from './deprecated/command-objects.js';
+import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object.js';
+import { output } from '../utils/output.js';
+import { yargsMcpCommand } from './mcp/command-object.js';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());

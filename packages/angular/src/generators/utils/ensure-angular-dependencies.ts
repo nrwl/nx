@@ -10,7 +10,7 @@ import {
   getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
   versions,
-} from './version-utils';
+} from './version-utils.js';
 
 export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
   const dependencies: Record<string, string> = {};

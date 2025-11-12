@@ -11,8 +11,8 @@ import { mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import type { RspackPluginInstance, Compiler } from '@rspack/core';
-import { assertIsError } from '../utils/misc-helpers';
-import { addError } from '../utils/rspack-diagnostics';
+import { assertIsError } from '../utils/misc-helpers.js';
+import { addError } from '../utils/rspack-diagnostics.js';
 
 export class StatsJsonPlugin implements RspackPluginInstance {
   constructor(private readonly statsOutputPath: string) {}

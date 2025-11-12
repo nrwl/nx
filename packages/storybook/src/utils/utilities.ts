@@ -5,7 +5,7 @@ import { findNodes } from '@nx/js';
 import ts = require('typescript');
 import { gte, major } from 'semver';
 import { join } from 'path';
-import { storybookVersion } from './versions';
+import { storybookVersion } from './versions.js';
 
 export const Constants = {
   addonDependencies: ['@storybook/addons'],

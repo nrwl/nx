@@ -1,15 +1,15 @@
 import { join } from 'path';
 import { prerelease } from 'semver';
-import { workspaceRoot } from '../../../utils/workspace-root';
+import { workspaceRoot } from '../../../utils/workspace-root.js';
 import type { ChangelogOptions } from '../command-object';
 import type { NxReleaseConfig } from '../config/config';
-import { RawVersionPlan } from '../config/version-plans';
-import { execCommand } from '../utils/exec-command';
+import { RawVersionPlan } from '../config/version-plans.js';
+import { execCommand } from '../utils/exec-command.js';
 import {
   getCommitHash,
   getFirstGitCommit,
   getLatestGitTagForPattern,
-} from '../utils/git';
+} from '../utils/git.js';
 import type { VersionData } from '../utils/shared';
 
 /**

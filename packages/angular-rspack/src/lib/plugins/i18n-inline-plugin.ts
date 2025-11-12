@@ -15,8 +15,8 @@ import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
 } from '../models';
-import { getLocaleOutputPaths } from '../utils/i18n';
-import { loadEsmModule } from '../utils/misc-helpers';
+import { getLocaleOutputPaths } from '../utils/i18n.js';
+import { loadEsmModule } from '../utils/misc-helpers.js';
 
 /**
  * A Type representing the localize tools module.

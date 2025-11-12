@@ -2,8 +2,8 @@ import * as chalk from 'chalk';
 import * as path from 'path';
 import type { BuilderProgram, Diagnostic, Program } from 'typescript';
 import { codeFrameColumns } from 'nx/src/utils/code-frames';
-import { highlight } from '../code-frames/highlight';
-import { readTsConfig } from '../../utils/typescript/ts-config';
+import { highlight } from '../code-frames/highlight.js';
+import { readTsConfig } from '../../utils/typescript/ts-config.js';
 
 export interface TypeCheckResult {
   warnings?: string[];

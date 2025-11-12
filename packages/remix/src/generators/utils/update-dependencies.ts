@@ -10,7 +10,7 @@ import {
   typesReactDomVersion,
   typesReactVersion,
   viteVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 
 export function updateDependencies(tree: Tree) {
   return addDependenciesToPackageJson(

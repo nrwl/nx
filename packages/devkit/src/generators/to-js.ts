@@ -1,7 +1,7 @@
 import type { Tree } from 'nx/src/devkit-exports';
 import type { ModuleKind, ScriptTarget } from 'typescript';
-import { typescriptVersion } from '../utils/versions';
-import { ensurePackage } from '../utils/package-json';
+import { typescriptVersion } from '../utils/versions.js';
+import { ensurePackage } from '../utils/package-json.js';
 
 export type ToJSOptions = {
   extension?: '.js' | '.mjs' | '.cjs';

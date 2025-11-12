@@ -7,7 +7,7 @@ import {
   ModuleFederationConfig,
   sharePackages,
   shareWorkspaceLibraries,
-} from '../../utils';
+} from '../../utils/index.js';
 
 import {
   createProjectGraphAsync,
@@ -15,8 +15,8 @@ import {
   readCachedProjectGraph,
 } from '@nx/devkit';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
-import { applyDefaultEagerPackages as applyReactEagerPackages } from '../react/utils';
-import { isReactProject } from '../../utils/framework-detection';
+import { applyDefaultEagerPackages as applyReactEagerPackages } from '../react/utils.js';
+import { isReactProject } from '../../utils/framework-detection.js';
 
 export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
   const target = 'serve';

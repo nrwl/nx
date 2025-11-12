@@ -1,30 +1,30 @@
 import { existsSync, mkdirSync, renameSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json.js';
 import type {
   FileData,
   FileMap,
   ProjectFileMap,
   ProjectGraph,
 } from '../config/project-graph';
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { workspaceDataDirectory } from '../utils/cache-directory';
+import { ProjectConfiguration } from '../config/workspace-json-project-json.js';
+import { workspaceDataDirectory } from '../utils/cache-directory.js';
 import {
   directoryExists,
   fileExists,
   readJsonFile,
   writeJsonFile,
-} from '../utils/fileutils';
-import { nxVersion } from '../utils/versions';
-import { ConfigurationSourceMaps } from './utils/project-configuration-utils';
+} from '../utils/fileutils.js';
+import { nxVersion } from '../utils/versions.js';
+import { ConfigurationSourceMaps } from './utils/project-configuration-utils.js';
 import {
   ProjectGraphError,
   ProjectGraphErrorTypes,
   StaleProjectGraphCacheError,
-} from './error-types';
-import { isOnDaemon } from '../daemon/is-on-daemon';
-import { serverLogger } from '../daemon/server/logger';
+} from './error-types.js';
+import { isOnDaemon } from '../daemon/is-on-daemon.js';
+import { serverLogger } from '../daemon/server/logger.js';
 
 export interface FileMapCache {
   version: string;

@@ -2,16 +2,16 @@ import {
   FileData,
   ProjectGraph,
   ProjectGraphProjectNode,
-} from '../config/project-graph';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { Task, TaskGraph } from '../config/task-graph';
-import { DaemonClient } from '../daemon/client/client';
-import { hashArray } from './file-hasher';
-import { InputDefinition } from '../config/workspace-json-project-json';
+} from '../config/project-graph.js';
+import { NxJsonConfiguration } from '../config/nx-json.js';
+import { Task, TaskGraph } from '../config/task-graph.js';
+import { DaemonClient } from '../daemon/client/client.js';
+import { hashArray } from './file-hasher.js';
+import { InputDefinition } from '../config/workspace-json-project-json.js';
 import { minimatch } from 'minimatch';
-import { NativeTaskHasherImpl } from './native-task-hasher-impl';
-import { workspaceRoot } from '../utils/workspace-root';
-import { NxWorkspaceFilesExternals } from '../native';
+import { NativeTaskHasherImpl } from './native-task-hasher-impl.js';
+import { workspaceRoot } from '../utils/workspace-root.js';
+import { NxWorkspaceFilesExternals } from '../native/index.js';
 
 /**
  * A data structure returned by the default hasher.

@@ -4,10 +4,10 @@
  */
 import { relative } from 'node:path';
 import { minimatch } from 'minimatch';
-import { interpolate } from '../../../tasks-runner/utils';
-import { workspaceRoot } from '../../../utils/workspace-root';
-import { execCommand } from './exec-command';
-import { isPrerelease } from './shared';
+import { interpolate } from '../../../tasks-runner/utils.js';
+import { workspaceRoot } from '../../../utils/workspace-root.js';
+import { execCommand } from './exec-command.js';
+import { isPrerelease } from './shared.js';
 
 export interface GitCommitAuthor {
   name: string;

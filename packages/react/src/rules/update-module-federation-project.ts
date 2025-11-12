@@ -6,8 +6,8 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { nxVersion } from '../utils/versions';
-import { maybeJs } from '../utils/maybe-js';
+import { nxVersion } from '../utils/versions.js';
+import { maybeJs } from '../utils/maybe-js.js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function updateModuleFederationProject(

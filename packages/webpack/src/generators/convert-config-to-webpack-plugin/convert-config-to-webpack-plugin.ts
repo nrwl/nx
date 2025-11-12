@@ -8,11 +8,11 @@ import {
   ProjectConfiguration,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { WebpackExecutorOptions } from '../../executors/webpack/schema';
-import { extractWebpackOptions } from './lib/extract-webpack-options';
-import { normalizePathOptions } from './lib/normalize-path-options';
+import { WebpackExecutorOptions } from '../../executors/webpack/schema.js';
+import { extractWebpackOptions } from './lib/extract-webpack-options.js';
+import { normalizePathOptions } from './lib/normalize-path-options.js';
 import { parse } from 'path';
-import { validateProject } from './lib/validate-project';
+import { validateProject } from './lib/validate-project.js';
 
 interface Schema {
   project?: string;

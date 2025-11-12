@@ -1,6 +1,6 @@
 import { ReleaseType } from 'semver';
-import { GroupVersionPlan, ProjectsVersionPlan } from '../config/version-plans';
-import { RawGitCommit, parseVersionPlanCommit, Reference } from '../utils/git';
+import { GroupVersionPlan, ProjectsVersionPlan } from '../config/version-plans.js';
+import { RawGitCommit, parseVersionPlanCommit, Reference } from '../utils/git.js';
 
 export interface ChangelogChange {
   type: string;

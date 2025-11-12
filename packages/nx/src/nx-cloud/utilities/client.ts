@@ -1,6 +1,6 @@
-import { findAncestorNodeModules } from '../resolution-helpers';
-import { verifyOrUpdateNxCloudClient } from '../update-manager';
-import { CloudTaskRunnerOptions } from '../nx-cloud-tasks-runner-shell';
+import { findAncestorNodeModules } from '../resolution-helpers.js';
+import { verifyOrUpdateNxCloudClient } from '../update-manager.js';
+import { CloudTaskRunnerOptions } from '../nx-cloud-tasks-runner-shell.js';
 
 export class UnknownCommandError extends Error {
   constructor(public command: string, public availableCommands: string[]) {

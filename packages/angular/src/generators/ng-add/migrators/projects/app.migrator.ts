@@ -14,14 +14,14 @@ import type {
   Target,
   ValidationResult,
 } from '../../utilities';
-import { convertToNxProject } from '../../utilities';
+import { convertToNxProject } from '../../utilities/index.js';
 import type { BuilderMigratorClassType } from '../builders';
 import {
   AngularDevkitKarmaMigrator,
   AngularEslintLintMigrator,
-} from '../builders';
-import { E2eMigrator } from './e2e.migrator';
-import { ProjectMigrator } from './project.migrator';
+} from '../builders/index.js';
+import { E2eMigrator } from './e2e.migrator.js';
+import { ProjectMigrator } from './project.migrator.js';
 
 type SupportedTargets =
   | 'build'

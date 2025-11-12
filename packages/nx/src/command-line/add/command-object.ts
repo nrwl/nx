@@ -1,5 +1,5 @@
 import { CommandModule } from 'yargs';
-import { withOverrides, withVerbose } from '../yargs-utils/shared-options';
+import { withOverrides, withVerbose } from '../yargs-utils/shared-options.js';
 
 export interface AddOptions {
   packageSpecifier: string;
@@ -41,7 +41,7 @@ export const yargsAddCommand: CommandModule<{}, AddOptions> = {
       ) as any,
   handler: async (args) => {
     process.exit(
-      await import('./add').then((m) => m.addHandler(withOverrides(args)))
+      await import('./add.js').then((m) => m.addHandler(withOverrides(args)))
     );
   },
 };

@@ -7,8 +7,8 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { existsSync } from 'fs';
-import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
-import { loadViteDynamicImport } from './executor-utils';
+import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema.js';
+import { loadViteDynamicImport } from './executor-utils.js';
 
 /**
  * Returns the path to the vite config file or undefined when not found.

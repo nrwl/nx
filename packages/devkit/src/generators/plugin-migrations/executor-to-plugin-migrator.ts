@@ -26,8 +26,8 @@ import {
 } from 'nx/src/devkit-internals';
 import type { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
-import { forEachExecutorOptions } from '../executor-options-utils';
-import { deleteMatchingProperties } from './plugin-migration-utils';
+import { forEachExecutorOptions } from '../executor-options-utils.js';
+import { deleteMatchingProperties } from './plugin-migration-utils.js';
 import { logger as devkitLogger } from 'nx/src/devkit-exports';
 
 export type InferredTargetConfiguration = TargetConfiguration & {

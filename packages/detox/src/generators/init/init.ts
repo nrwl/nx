@@ -9,9 +9,9 @@ import {
   Tree,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodesV2 } from '../../plugins/plugin';
-import { detoxVersion, nxVersion } from '../../utils/versions';
-import { Schema } from './schema';
+import { createNodesV2 } from '../../plugins/plugin.js';
+import { detoxVersion, nxVersion } from '../../utils/versions.js';
+import { Schema } from './schema.js';
 
 export function detoxInitGenerator(host: Tree, schema: Schema) {
   return detoxInitGeneratorInternal(host, { addPlugin: false, ...schema });

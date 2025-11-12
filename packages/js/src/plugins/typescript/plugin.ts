@@ -42,7 +42,7 @@ import {
   isValidPackageJsonBuildConfig,
   type ExtendedConfigFile,
   type ParsedTsconfigData,
-} from './util';
+} from './util.js';
 
 export interface TscPluginOptions {
   typecheck?:

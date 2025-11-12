@@ -1,6 +1,6 @@
 import { ensurePackage, GeneratorCallback, Tree, updateJson } from '@nx/devkit';
-import { NormalizedSchema } from '../schema';
-import { nxVersion } from '../../../utils/versions';
+import { NormalizedSchema } from '../schema.js';
+import { nxVersion } from '../../../utils/versions.js';
 import { join } from 'node:path';
 
 export async function addJest(

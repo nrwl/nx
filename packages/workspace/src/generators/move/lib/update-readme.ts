@@ -1,6 +1,6 @@
 import { Tree } from '@nx/devkit';
 import { join } from 'path';
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 
 /**
  * Update the README.md file of the project if it exists.

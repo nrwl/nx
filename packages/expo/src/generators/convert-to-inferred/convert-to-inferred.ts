@@ -9,16 +9,16 @@ import {
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { createNodesV2 } from '../../../plugins/plugin';
-import { processBuildOptions } from './lib/process-build-options';
-import { postTargetTransformer } from './lib/post-target-transformer';
-import { processExportOptions } from './lib/process-export-options';
-import { processRunOptions } from './lib/process-run-options';
-import { processServeOptions } from './lib/process-serve-options';
-import { processStartOptions } from './lib/process-start-options';
-import { processSubmitOptions } from './lib/process-submit-options';
-import { processPrebuildOptions } from './lib/process-prebuild-options';
-import { processInstallOptions } from './lib/process-install-options';
+import { createNodesV2 } from '../../../plugins/plugin.js';
+import { processBuildOptions } from './lib/process-build-options.js';
+import { postTargetTransformer } from './lib/post-target-transformer.js';
+import { processExportOptions } from './lib/process-export-options.js';
+import { processRunOptions } from './lib/process-run-options.js';
+import { processServeOptions } from './lib/process-serve-options.js';
+import { processStartOptions } from './lib/process-start-options.js';
+import { processSubmitOptions } from './lib/process-submit-options.js';
+import { processPrebuildOptions } from './lib/process-prebuild-options.js';
+import { processInstallOptions } from './lib/process-install-options.js';
 
 interface Schema {
   project?: string;

@@ -6,9 +6,9 @@ import {
   readProjectConfiguration,
 } from '@nx/devkit';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
-import { rxjsVersion as defaultRxjsVersion } from '../../../utils/versions';
+import { rxjsVersion as defaultRxjsVersion } from '../../../utils/versions.js';
 import type { Schema } from '../schema';
-import { isNgStandaloneApp } from '../../../utils/nx-devkit/ast-utils';
+import { isNgStandaloneApp } from '../../../utils/nx-devkit/ast-utils.js';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export type NormalizedNgRxRootStoreGeneratorOptions = Schema & {

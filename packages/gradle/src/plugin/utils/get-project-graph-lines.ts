@@ -1,6 +1,6 @@
 import { AggregateCreateNodesError, output, workspaceRoot } from '@nx/devkit';
-import { execGradleAsync, newLineSeparator } from '../../utils/exec-gradle';
-import { GradlePluginOptions } from './gradle-plugin-options';
+import { execGradleAsync, newLineSeparator } from '../../utils/exec-gradle.js';
+import { GradlePluginOptions } from './gradle-plugin-options.js';
 import { dirname } from 'node:path';
 
 export async function getNxProjectGraphLines(

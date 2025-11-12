@@ -1,6 +1,6 @@
 import { type Tree, type TargetConfiguration } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { getConfigFilePath } from './utils';
+import { getConfigFilePath } from './utils.js';
 import { processTargetOutputs } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 
 export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {

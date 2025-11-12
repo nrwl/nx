@@ -4,7 +4,7 @@ import {
   eslintPluginReactVersion,
   eslintPluginReactHooksVersion,
   eslintPluginJsxA11yVersion,
-} from './versions';
+} from './versions.js';
 
 export const extraEslintDependencies = {
   dependencies: {},

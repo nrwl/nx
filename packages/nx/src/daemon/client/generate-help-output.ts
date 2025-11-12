@@ -1,6 +1,6 @@
 import { spawnSync } from 'child_process';
-import { getDaemonProcessIdSync } from '../cache';
-import { DAEMON_OUTPUT_LOG_FILE } from '../tmp-dir';
+import { getDaemonProcessIdSync } from '../cache.js';
+import { DAEMON_OUTPUT_LOG_FILE } from '../tmp-dir.js';
 
 export function generateDaemonHelpOutput(): string {
   /**

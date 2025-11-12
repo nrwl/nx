@@ -1,26 +1,26 @@
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
-import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json';
-import { runNxAsync } from '../../utils/child-process';
-import { writeJsonFile } from '../../utils/fileutils';
-import { logger } from '../../utils/logger';
-import { output } from '../../utils/output';
+import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json.js';
+import { runNxAsync } from '../../utils/child-process.js';
+import { writeJsonFile } from '../../utils/fileutils.js';
+import { logger } from '../../utils/logger.js';
+import { output } from '../../utils/output.js';
 import {
   detectPackageManager,
   getPackageManagerCommand,
   getPackageManagerVersion,
-} from '../../utils/package-manager';
-import { handleErrors } from '../../utils/handle-errors';
-import { nxVersion } from '../../utils/versions';
-import { workspaceRoot } from '../../utils/workspace-root';
+} from '../../utils/package-manager.js';
+import { handleErrors } from '../../utils/handle-errors.js';
+import { nxVersion } from '../../utils/versions.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 import type { AddOptions } from './command-object';
-import { normalizeVersionForNxJson } from '../init/implementation/dot-nx/add-nx-scripts';
+import { normalizeVersionForNxJson } from '../init/implementation/dot-nx/add-nx-scripts.js';
 import { gte } from 'semver';
 import {
   runPluginInitGenerator,
   getFailedToInstallPluginErrorMessages,
-} from '../init/configure-plugins';
-import { globalSpinner } from '../../utils/spinner';
+} from '../init/configure-plugins.js';
+import { globalSpinner } from '../../utils/spinner.js';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {

@@ -7,7 +7,7 @@ import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import type { WebpackExecutorOptions } from '../../../executors/webpack/schema';
 import type { NxAppWebpackPluginOptions } from '../../../plugins/nx-webpack-plugin/nx-app-webpack-plugin-options';
-import { toPropertyAssignment } from './ast';
+import { toPropertyAssignment } from './ast.js';
 import type { MigrationContext, TransformerContext } from './types';
 
 export function buildPostTargetTransformerFactory(

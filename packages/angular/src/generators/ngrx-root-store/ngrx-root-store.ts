@@ -7,7 +7,7 @@ import {
   addNgRxToPackageJson,
   normalizeOptions,
   validateOptions,
-} from './lib';
+} from './lib/index.js';
 
 import ngrxFeatureStoreGenerator from '../ngrx-feature-store/ngrx-feature-store';
 

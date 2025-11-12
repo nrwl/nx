@@ -1,5 +1,5 @@
 import { Tree } from '@nx/devkit';
-import { RemixGeneratorSchema } from '../schema';
+import { RemixGeneratorSchema } from '../schema.js';
 
 export interface NormalizedSchema extends RemixGeneratorSchema {
   appName: string;

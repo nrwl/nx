@@ -3,12 +3,12 @@
  */
 
 import type { Observable } from 'rxjs';
-import { readNxJson } from '../../config/nx-json';
-import { Executor, ExecutorContext } from '../../config/misc-interfaces';
-import { retrieveProjectConfigurations } from '../../project-graph/utils/retrieve-workspace-files';
-import { readProjectConfigurationsFromRootMap } from '../../project-graph/utils/project-configuration-utils';
-import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
-import { getPlugins } from '../../project-graph/plugins/get-plugins';
+import { readNxJson } from '../../config/nx-json.js';
+import { Executor, ExecutorContext } from '../../config/misc-interfaces.js';
+import { retrieveProjectConfigurations } from '../../project-graph/utils/retrieve-workspace-files.js';
+import { readProjectConfigurationsFromRootMap } from '../../project-graph/utils/project-configuration-utils.js';
+import { ProjectsConfigurations } from '../../config/workspace-json-project-json.js';
+import { getPlugins } from '../../project-graph/plugins/get-plugins.js';
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder

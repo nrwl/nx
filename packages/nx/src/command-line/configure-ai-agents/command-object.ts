@@ -1,5 +1,5 @@
 import { CommandModule } from 'yargs';
-import { withVerbose } from '../yargs-utils/shared-options';
+import { withVerbose } from '../yargs-utils/shared-options.js';
 
 export interface ConfigureAiAgentsOptions {
   agents?: string[];
@@ -66,7 +66,7 @@ export const yargsConfigureAiAgentsCommand: CommandModule<
       ) as any, // because of the coerce function
   handler: async (args) => {
     await (
-      await import('./configure-ai-agents')
+      await import('./configure-ai-agents.js')
     ).configureAiAgentsHandler(args);
   },
 };

@@ -1,6 +1,6 @@
-import { Tree } from '../../generators/tree';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { updateJson } from '../../generators/utils/json';
+import { Tree } from '../../generators/tree.js';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
+import { updateJson } from '../../generators/utils/json.js';
 
 export default async function (tree: Tree) {
   updateJson(tree, 'package.json', (json) => {

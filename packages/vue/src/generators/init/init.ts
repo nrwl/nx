@@ -6,8 +6,8 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { nxVersion, vueVersion } from '../../utils/versions';
-import { InitSchema } from './schema';
+import { nxVersion, vueVersion } from '../../utils/versions.js';
+import { InitSchema } from './schema.js';
 
 function updateDependencies(host: Tree, schema: InitSchema) {
   const tasks: GeneratorCallback[] = [];

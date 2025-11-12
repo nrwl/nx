@@ -5,7 +5,7 @@ import {
   joinPathFragments,
   formatFiles,
 } from '@nx/devkit';
-import { addMfEnvToTargetDefaultInputs } from '../../generators/utils/add-mf-env-to-inputs';
+import { addMfEnvToTargetDefaultInputs } from '../../generators/utils/add-mf-env-to-inputs.js';
 
 export default async function (tree: Tree) {
   if (!isWebpackBrowserUsed(tree)) {

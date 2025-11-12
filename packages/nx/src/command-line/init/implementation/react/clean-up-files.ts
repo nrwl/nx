@@ -1,5 +1,5 @@
 import { rmSync } from 'node:fs';
-import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils';
+import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils.js';
 
 export function cleanUpFiles(appName: string, isStandalone: boolean) {
   // Delete targets from project since we delegate to npm scripts.

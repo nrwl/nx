@@ -2,37 +2,37 @@ import {
   NxJsonConfiguration,
   NxReleaseConfiguration,
   readNxJson,
-} from '../../config/nx-json';
+} from '../../config/nx-json.js';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
-} from '../../config/project-graph';
-import { FsTree } from '../../generators/tree';
-import { hashArray } from '../../native';
-import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
+} from '../../config/project-graph.js';
+import { FsTree } from '../../generators/tree.js';
+import { hashArray } from '../../native/index.js';
+import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils.js';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
-} from '../../project-graph/plugins/tasks-execution-hooks';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { runCommandForTasks } from '../../tasks-runner/run-command';
+} from '../../project-graph/plugins/tasks-execution-hooks.js';
+import { createProjectGraphAsync } from '../../project-graph/project-graph.js';
+import { runCommandForTasks } from '../../tasks-runner/run-command.js';
 import {
   createOverrides,
   readGraphFileFromGraphArg,
-} from '../../utils/command-line-utils';
-import { handleErrors } from '../../utils/handle-errors';
-import { output } from '../../utils/output';
-import { projectHasTarget } from '../../utils/project-graph-utils';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { generateGraph } from '../graph/graph';
-import { PublishOptions } from './command-object';
+} from '../../utils/command-line-utils.js';
+import { handleErrors } from '../../utils/handle-errors.js';
+import { output } from '../../utils/output.js';
+import { projectHasTarget } from '../../utils/project-graph-utils.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { generateGraph } from '../graph/graph.js';
+import { PublishOptions } from './command-object.js';
 import {
   createNxReleaseConfig,
   handleNxReleaseConfigError,
-} from './config/config';
-import { deepMergeJson } from './config/deep-merge-json';
-import { printConfigAndExit } from './utils/print-config';
-import { createReleaseGraph } from './utils/release-graph';
+} from './config/config.js';
+import { deepMergeJson } from './config/deep-merge-json.js';
+import { printConfigAndExit } from './utils/print-config.js';
+import { createReleaseGraph } from './utils/release-graph.js';
 
 export interface PublishProjectsResult {
   [projectName: string]: {

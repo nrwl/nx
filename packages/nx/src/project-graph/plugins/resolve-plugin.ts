@@ -4,16 +4,16 @@ import { existsSync } from 'node:fs';
 import {
   getWorkspacePackagesMetadata,
   matchImportToWildcardEntryPointsToProjectMap,
-} from '../../plugins/js/utils/packages';
-import { readJsonFile } from '../../utils/fileutils';
-import { logger } from '../../utils/logger';
-import { normalizePath } from '../../utils/path';
-import { workspaceRoot } from '../../utils/workspace-root';
+} from '../../plugins/js/utils/packages.js';
+import { readJsonFile } from '../../utils/fileutils.js';
+import { logger } from '../../utils/logger.js';
+import { normalizePath } from '../../utils/path.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 import {
   findProjectForPath,
   ProjectRootMappings,
-} from '../utils/find-project-for-path';
-import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/retrieve-workspace-files';
+} from '../utils/find-project-for-path.js';
+import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/retrieve-workspace-files.js';
 
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 

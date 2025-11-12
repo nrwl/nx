@@ -1,6 +1,6 @@
 import { workspaceRoot, type Tree } from 'nx/src/devkit-exports';
 import { valid } from 'semver';
-import { getCatalogManager } from './catalog';
+import { getCatalogManager } from './catalog/index.js';
 
 export function checkAndCleanWithSemver(
   pkgName: string,

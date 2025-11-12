@@ -5,8 +5,8 @@ import {
   addDependenciesToPackageJson,
   ensurePackage,
 } from '@nx/devkit';
-import { NormalizedSchema } from '../schema';
-import { nxVersion } from '../../../utils/versions';
+import { NormalizedSchema } from '../schema.js';
+import { nxVersion } from '../../../utils/versions.js';
 
 export async function addRsbuild(tree: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];

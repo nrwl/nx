@@ -8,11 +8,11 @@ import {
   runTasksInSerial,
   type Tree,
 } from '@nx/devkit';
-import { type Schema } from './schema';
-import { normalizeOptions } from './lib';
+import { type Schema } from './schema.js';
+import { normalizeOptions } from './lib/index.js';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { initGenerator } from '../init/init';
-import { rsbuildVersion } from '../../utils/versions';
+import { initGenerator } from '../init/init.js';
+import { rsbuildVersion } from '../../utils/versions.js';
 import { join } from 'path';
 
 export async function configurationGenerator(tree: Tree, schema: Schema) {

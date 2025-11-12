@@ -9,4 +9,4 @@ export {
   releaseVersion,
   VersionActions,
   AfterAllProjectsVersioned,
-} from '../src/command-line/release';
+} from '../src/command-line/release/index.js';

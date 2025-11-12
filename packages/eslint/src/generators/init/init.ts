@@ -10,13 +10,13 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { eslintVersion, nxVersion } from '../../utils/versions';
+import { eslintVersion, nxVersion } from '../../utils/versions.js';
 import {
   determineEslintConfigFormat,
   findEslintFile,
-} from '../utils/eslint-file';
-import { createNodesV2 } from '../../plugins/plugin';
-import { hasEslintPlugin } from '../utils/plugin';
+} from '../utils/eslint-file.js';
+import { createNodesV2 } from '../../plugins/plugin.js';
+import { hasEslintPlugin } from '../utils/plugin.js';
 import { extname } from 'path';
 
 export interface LinterInitOptions {

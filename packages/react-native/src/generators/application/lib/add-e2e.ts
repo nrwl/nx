@@ -1,9 +1,9 @@
 import { addE2e as addE2eReact } from '@nx/react/src/generators/application/lib/add-e2e';
 import { GeneratorCallback, Tree, ensurePackage, names } from '@nx/devkit';
 
-import { nxVersion } from '../../../utils/versions';
+import { nxVersion } from '../../../utils/versions.js';
 
-import { NormalizedSchema } from './normalize-options';
+import { NormalizedSchema } from './normalize-options.js';
 
 export async function addE2e(
   host: Tree,

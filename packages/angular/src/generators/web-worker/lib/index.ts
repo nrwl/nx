@@ -1,2 +1,2 @@
-export * from './normalize-options';
-export * from './add-snippet';
+export * from './normalize-options.js';
+export * from './add-snippet.js';

@@ -1,9 +1,9 @@
 import { parse, join } from 'path';
 import { writeFileSync } from 'fs';
-import { LifeCycle, TaskResult } from '../../tasks-runner/life-cycle';
-import { Task } from '../../config/task-graph';
-import { TaskStatus } from '../../tasks-runner/tasks-runner';
-import { cacheDir } from '../../utils/cache-directory';
+import { LifeCycle, TaskResult } from '../../tasks-runner/life-cycle.js';
+import { Task } from '../../config/task-graph.js';
+import { TaskStatus } from '../../tasks-runner/tasks-runner.js';
+import { cacheDir } from '../../utils/cache-directory.js';
 
 export class StoreRunInformationLifeCycle implements LifeCycle {
   private startTime: string;

@@ -1,6 +1,6 @@
 import { logger, Tree } from '@nx/devkit';
 import ignore from 'ignore';
-import { gitIgnoreEntriesForReactNative } from './gitignore-entries';
+import { gitIgnoreEntriesForReactNative } from './gitignore-entries.js';
 
 export function addGitIgnoreEntry(host: Tree) {
   if (!host.exists('.gitignore')) {

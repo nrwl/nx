@@ -7,7 +7,7 @@ import {
   addUnitTestingSetup,
   normalizeOptions,
   updateBuildableConfig,
-} from './lib';
+} from './lib/index.js';
 import type { NxRemixGeneratorSchema } from './schema';
 import {
   addProjectToTsSolutionWorkspace,
@@ -15,7 +15,7 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
-import { updateDependencies } from '../utils/update-dependencies';
+import { updateDependencies } from '../utils/update-dependencies.js';
 
 export async function remixLibraryGenerator(
   tree: Tree,

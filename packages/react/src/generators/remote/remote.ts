@@ -21,28 +21,28 @@ import {
   getProjectSourceRoot,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
-import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
-import { normalizeRemoteName } from '../../utils/normalize-remote';
-import { maybeJs } from '../../utils/maybe-js';
+import { updateModuleFederationProject } from '../../rules/update-module-federation-project.js';
+import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs.js';
+import { normalizeRemoteName } from '../../utils/normalize-remote.js';
+import { maybeJs } from '../../utils/maybe-js.js';
 import {
   moduleFederationEnhancedVersion,
   nxVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 import applicationGenerator from '../application/application';
 import {
   createNxRspackPluginOptions,
   getDefaultTemplateVariables,
-} from '../application/lib/create-application-files';
-import { normalizeOptions } from '../application/lib/normalize-options';
-import { NormalizedSchema } from '../application/schema';
+} from '../application/lib/create-application-files.js';
+import { normalizeOptions } from '../application/lib/normalize-options.js';
+import { NormalizedSchema } from '../application/schema.js';
 import setupSsrGenerator from '../setup-ssr/setup-ssr';
-import { addRemoteToDynamicHost } from './lib/add-remote-to-dynamic-host';
-import { setupPackageJsonExportsForRemote } from './lib/setup-package-json-exports-for-remote';
-import { setupSsrForRemote } from './lib/setup-ssr-for-remote';
-import { setupTspathForRemote } from './lib/setup-tspath-for-remote';
-import { updateHostWithRemote } from './lib/update-host-with-remote';
-import { Schema } from './schema';
+import { addRemoteToDynamicHost } from './lib/add-remote-to-dynamic-host.js';
+import { setupPackageJsonExportsForRemote } from './lib/setup-package-json-exports-for-remote.js';
+import { setupSsrForRemote } from './lib/setup-ssr-for-remote.js';
+import { setupTspathForRemote } from './lib/setup-tspath-for-remote.js';
+import { updateHostWithRemote } from './lib/update-host-with-remote.js';
+import { Schema } from './schema.js';
 
 export function addModuleFederationFiles(
   host: Tree,

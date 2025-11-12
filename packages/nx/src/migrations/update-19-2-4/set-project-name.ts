@@ -1,9 +1,9 @@
-import { toProjectName } from '../../config/to-project-name';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { Tree } from '../../generators/tree';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { readJson, writeJson } from '../../generators/utils/json';
-import { getProjects } from '../../generators/utils/project-configuration';
+import { toProjectName } from '../../config/to-project-name.js';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json.js';
+import { Tree } from '../../generators/tree.js';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
+import { readJson, writeJson } from '../../generators/utils/json.js';
+import { getProjects } from '../../generators/utils/project-configuration.js';
 import type { PackageJson } from '../../utils/package-json';
 
 export default async function setProjectName(tree: Tree) {

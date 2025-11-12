@@ -33,31 +33,31 @@ import {
 } from 'rxjs/operators';
 
 import type { GenerateOptions } from '../command-line/generate/generate';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { FsTree, Tree } from '../generators/tree';
-import { readJson } from '../generators/utils/json';
+import { NxJsonConfiguration } from '../config/nx-json.js';
+import { ProjectConfiguration } from '../config/workspace-json-project-json.js';
+import { FsTree, Tree } from '../generators/tree.js';
+import { readJson } from '../generators/utils/json.js';
 import {
   addProjectConfiguration,
   getProjects,
   updateProjectConfiguration,
-} from '../generators/utils/project-configuration';
+} from '../generators/utils/project-configuration.js';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
-} from '../project-graph/project-graph';
-import { readJsonFile } from '../utils/fileutils';
-import { getNxRequirePaths } from '../utils/installation-directory';
-import { parseJson } from '../utils/json';
-import { NX_ERROR, NX_PREFIX } from '../utils/logger';
-import { readModulePackageJson } from '../utils/package-json';
-import { detectPackageManager } from '../utils/package-manager';
+} from '../project-graph/project-graph.js';
+import { readJsonFile } from '../utils/fileutils.js';
+import { getNxRequirePaths } from '../utils/installation-directory.js';
+import { parseJson } from '../utils/json.js';
+import { NX_ERROR, NX_PREFIX } from '../utils/logger.js';
+import { readModulePackageJson } from '../utils/package-json.js';
+import { detectPackageManager } from '../utils/package-manager.js';
 import {
   isAngularPluginInstalled,
   toNewFormat,
   toOldFormat,
-} from './angular-json';
-import { normalizeExecutorSchema } from '../command-line/run/executor-utils';
+} from './angular-json.js';
+import { normalizeExecutorSchema } from '../command-line/run/executor-utils.js';
 import {
   CustomHasher,
   Executor,
@@ -67,14 +67,14 @@ import {
   ExecutorsJson,
   GeneratorCallback,
   TaskGraphExecutor,
-} from '../config/misc-interfaces';
-import { readPluginPackageJson } from '../project-graph/plugins';
+} from '../config/misc-interfaces.js';
+import { readPluginPackageJson } from '../project-graph/plugins/index.js';
 import {
   getImplementationFactory,
   resolveImplementation,
   resolveSchema,
-} from '../config/schema-utils';
-import { resolveNxTokensInOptions } from '../project-graph/utils/project-configuration-utils';
+} from '../config/schema-utils.js';
+import { resolveNxTokensInOptions } from '../project-graph/utils/project-configuration-utils.js';
 
 export async function createBuilderContext(
   builderInfo: {

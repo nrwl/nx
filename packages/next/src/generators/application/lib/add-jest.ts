@@ -7,8 +7,8 @@ import {
   GeneratorCallback,
 } from '@nx/devkit';
 
-import { nxVersion } from '../../../utils/versions';
-import { NormalizedSchema } from './normalize-options';
+import { nxVersion } from '../../../utils/versions.js';
+import { NormalizedSchema } from './normalize-options.js';
 
 export async function addJest(
   host: Tree,

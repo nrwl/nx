@@ -1,10 +1,10 @@
-import { LifeCycle, TaskMetadata, TaskResult } from '../life-cycle';
-import { TaskStatus } from '../tasks-runner';
+import { LifeCycle, TaskMetadata, TaskResult } from '../life-cycle.js';
+import { TaskStatus } from '../tasks-runner.js';
 
 import { performance } from 'perf_hooks';
 import { join } from 'path';
-import { Task } from '../../config/task-graph';
-import { writeJsonFile } from '../../utils/fileutils';
+import { Task } from '../../config/task-graph.js';
+import { writeJsonFile } from '../../utils/fileutils.js';
 
 export class TaskProfilingLifeCycle implements LifeCycle {
   private timings: {

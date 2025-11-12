@@ -1,24 +1,24 @@
 // This file contains methods and utilities that should **only** be used by the plugin worker.
 
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json.js';
 
-import { getNxRequirePaths } from '../../utils/installation-directory';
+import { getNxRequirePaths } from '../../utils/installation-directory.js';
 import {
   PackageJson,
   readModulePackageJsonWithoutFallbacks,
-} from '../../utils/package-json';
-import { readJsonFile } from '../../utils/fileutils';
+} from '../../utils/package-json.js';
+import { readJsonFile } from '../../utils/fileutils.js';
 
 import type { PluginConfiguration } from '../../config/nx-json';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
-import { LoadPluginError } from '../error-types';
+import { LoadPluginError } from '../error-types.js';
 import path = require('node:path/posix');
-import { loadResolvedNxPluginAsync } from './load-resolved-plugin';
-import { resolveLocalNxPlugin, resolveNxPlugin } from './resolve-plugin';
+import { loadResolvedNxPluginAsync } from './load-resolved-plugin.js';
+import { resolveLocalNxPlugin, resolveNxPlugin } from './resolve-plugin.js';
 import {
   pluginTranspilerIsRegistered,
   registerPluginTSTranspiler,
-} from './transpiler';
+} from './transpiler.js';
 
 export function readPluginPackageJson(
   pluginName: string,

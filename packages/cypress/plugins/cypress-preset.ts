@@ -7,7 +7,7 @@ import { request as httpsRequest } from 'https';
 import { dirname, join, relative } from 'path';
 import type { InlineConfig } from 'vite';
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
-import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
+import { NX_PLUGIN_OPTIONS } from '../src/utils/constants.js';
 const treeKill = require('tree-kill');
 
 // Importing the cypress type here causes the angular and next unit

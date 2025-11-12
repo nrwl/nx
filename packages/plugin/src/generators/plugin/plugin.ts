@@ -19,10 +19,10 @@ import {
 import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-dependencies';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import * as path from 'path';
-import { e2eProjectGenerator } from '../e2e-project/e2e';
+import { e2eProjectGenerator } from '../e2e-project/e2e.js';
 import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
-import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema';
+import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema.js';
 
 const nxVersion = require('../../../package.json').version;
 

@@ -15,7 +15,7 @@ import {
 
 import type { Schema as EsLintExecutorOptions } from '@nx/eslint/src/executors/lint/schema';
 
-import { PluginLintChecksGeneratorSchema } from './schema';
+import { PluginLintChecksGeneratorSchema } from './schema.js';
 import { NX_PREFIX } from 'nx/src/utils/logger';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
 import {

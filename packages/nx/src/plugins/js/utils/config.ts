@@ -3,10 +3,10 @@ import { join } from 'node:path';
 import {
   NrwlJsPluginConfig,
   NxJsonConfiguration,
-} from '../../../config/nx-json';
-import { fileExists, readJsonFile } from '../../../utils/fileutils';
-import { PackageJson } from '../../../utils/package-json';
-import { workspaceRoot } from '../../../utils/workspace-root';
+} from '../../../config/nx-json.js';
+import { fileExists, readJsonFile } from '../../../utils/fileutils.js';
+import { PackageJson } from '../../../utils/package-json.js';
+import { workspaceRoot } from '../../../utils/workspace-root.js';
 import { existsSync } from 'fs';
 
 export function jsPluginConfig(

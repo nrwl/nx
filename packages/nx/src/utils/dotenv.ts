@@ -1,6 +1,6 @@
 import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
-import { workspaceRoot } from './workspace-root';
+import { workspaceRoot } from './workspace-root.js';
 import { join } from 'path';
 
 /**

@@ -1,6 +1,6 @@
-import { logger } from '../../utils/logger';
-import { getCloudUrl } from './get-cloud-options';
-import { getVcsRemoteInfo } from '../../utils/git-utils';
+import { logger } from '../../utils/logger.js';
+import { getCloudUrl } from './get-cloud-options.js';
+import { getVcsRemoteInfo } from '../../utils/git-utils.js';
 
 /**
  * This is currently duplicated in Nx Console. Please let @MaxKless know if you make changes here.

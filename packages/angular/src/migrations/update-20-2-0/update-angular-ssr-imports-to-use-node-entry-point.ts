@@ -1,7 +1,7 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
 import * as ts from 'typescript';
-import { FileChangeRecorder } from '../../utils/file-change-recorder';
-import { getProjectsFilteredByDependencies } from '../utils/projects';
+import { FileChangeRecorder } from '../../utils/file-change-recorder.js';
+import { getProjectsFilteredByDependencies } from '../utils/projects.js';
 
 export default async function (tree: Tree) {
   const projects = await getProjectsFilteredByDependencies([

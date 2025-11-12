@@ -10,9 +10,9 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 
-import { getClientEnvironment } from '../../../utils/environment-variables';
-import { NormalizedEsBuildExecutorOptions } from '../schema';
-import { getEntryPoints } from '../../../utils/get-entry-points';
+import { getClientEnvironment } from '../../../utils/environment-variables.js';
+import { NormalizedEsBuildExecutorOptions } from '../schema.js';
+import { getEntryPoints } from '../../../utils/get-entry-points.js';
 import { join, relative } from 'path';
 
 const ESM_FILE_EXTENSION = '.js';

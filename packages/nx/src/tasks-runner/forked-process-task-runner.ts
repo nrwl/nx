@@ -1,24 +1,24 @@
 import { writeFileSync } from 'fs';
 import { fork, Serializable } from 'child_process';
-import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { output } from '../utils/output';
-import { getCliPath, getPrintableCommandArgsForTask } from './utils';
-import { Batch } from './tasks-schedule';
+import { DefaultTasksRunnerOptions } from './default-tasks-runner.js';
+import { output } from '../utils/output.js';
+import { getCliPath, getPrintableCommandArgsForTask } from './utils.js';
+import { Batch } from './tasks-schedule.js';
 import { join } from 'path';
-import { BatchMessageType } from './batch/batch-messages';
-import { stripIndents } from '../utils/strip-indents';
-import { Task, TaskGraph } from '../config/task-graph';
-import { PseudoTerminal, PseudoTtyProcess } from './pseudo-terminal';
-import { signalToCode } from '../utils/exit-codes';
-import { ProjectGraph } from '../config/project-graph';
+import { BatchMessageType } from './batch/batch-messages.js';
+import { stripIndents } from '../utils/strip-indents.js';
+import { Task, TaskGraph } from '../config/task-graph.js';
+import { PseudoTerminal, PseudoTtyProcess } from './pseudo-terminal.js';
+import { signalToCode } from '../utils/exit-codes.js';
+import { ProjectGraph } from '../config/project-graph.js';
 import {
   NodeChildProcessWithDirectOutput,
   NodeChildProcessWithNonDirectOutput,
-} from './running-tasks/node-child-process';
-import { BatchProcess } from './running-tasks/batch-process';
-import { RunningTask } from './running-tasks/running-task';
-import { RustPseudoTerminal } from '../native';
-import { getProcessMetricsService } from './process-metrics-service';
+} from './running-tasks/node-child-process.js';
+import { BatchProcess } from './running-tasks/batch-process.js';
+import { RunningTask } from './running-tasks/running-task.js';
+import { RustPseudoTerminal } from '../native/index.js';
+import { getProcessMetricsService } from './process-metrics-service.js';
 
 const forkScript = join(__dirname, './fork.js');
 

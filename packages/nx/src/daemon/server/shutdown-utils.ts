@@ -1,16 +1,16 @@
-import { workspaceRoot } from '../../utils/workspace-root';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 import type { Server, Socket } from 'net';
-import { serverLogger } from './logger';
-import { serializeResult } from '../socket-utils';
-import { deleteDaemonJsonProcessCache } from '../cache';
+import { serverLogger } from './logger.js';
+import { serializeResult } from '../socket-utils.js';
+import { deleteDaemonJsonProcessCache } from '../cache.js';
 import type { Watcher } from '../../native';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
-} from '../../project-graph/error-types';
-import { removeDbConnections } from '../../utils/db-connection';
-import { cleanupPlugins } from '../../project-graph/plugins/get-plugins';
-import { MESSAGE_END_SEQ } from '../../utils/consume-messages-from-socket';
+} from '../../project-graph/error-types.js';
+import { removeDbConnections } from '../../utils/db-connection.js';
+import { cleanupPlugins } from '../../project-graph/plugins/get-plugins.js';
+import { MESSAGE_END_SEQ } from '../../utils/consume-messages-from-socket.js';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 

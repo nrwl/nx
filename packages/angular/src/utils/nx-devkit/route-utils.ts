@@ -1,6 +1,6 @@
 import { Tree } from '@nx/devkit';
 import { insertImport } from '@nx/js';
-import { addRouteToNgModule } from './ast-utils';
+import { addRouteToNgModule } from './ast-utils.js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');

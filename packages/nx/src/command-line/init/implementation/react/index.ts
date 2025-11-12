@@ -2,19 +2,19 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 import { appendFileSync } from 'fs';
 
-import { InitArgs } from '../../init-v1';
-import { fileExists } from '../../../../utils/fileutils';
-import { output } from '../../../../utils/output';
+import { InitArgs } from '../../init-v1.js';
+import { fileExists } from '../../../../utils/fileutils.js';
+import { output } from '../../../../utils/output.js';
 import {
   detectPackageManager,
   getPackageManagerCommand,
   PackageManagerCommands,
-} from '../../../../utils/package-manager';
-import { checkForCustomWebpackSetup } from './check-for-custom-webpack-setup';
-import { readNameFromPackageJson } from './read-name-from-package-json';
-import { renameJsToJsx } from './rename-js-to-jsx';
-import { writeViteConfig } from './write-vite-config';
-import { writeViteIndexHtml } from './write-vite-index-html';
+} from '../../../../utils/package-manager.js';
+import { checkForCustomWebpackSetup } from './check-for-custom-webpack-setup.js';
+import { readNameFromPackageJson } from './read-name-from-package-json.js';
+import { renameJsToJsx } from './rename-js-to-jsx.js';
+import { writeViteConfig } from './write-vite-config.js';
+import { writeViteIndexHtml } from './write-vite-index-html.js';
 
 type Options = InitArgs;
 
@@ -93,9 +93,7 @@ async function normalizeOptions(options: Options): Promise<NormalizedOptions> {
 }
 
 async function addBundler(options: NormalizedOptions) {
-  const { addViteCommandsToPackageScripts } = await import(
-    './add-vite-commands-to-package-scripts'
-  );
+  const { addViteCommandsToPackageScripts } = await import('./add-vite-commands-to-package-scripts.js');
   addViteCommandsToPackageScripts(options.reactAppName, options.isStandalone);
   writeViteConfig(options.reactAppName, options.isStandalone, options.appIsJs);
   writeViteIndexHtml(

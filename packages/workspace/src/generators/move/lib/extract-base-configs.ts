@@ -4,7 +4,7 @@ import {
   ProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-import { findProjectJestConfig } from '../../utils/jest-config';
+import { findProjectJestConfig } from '../../utils/jest-config.js';
 
 export function maybeExtractTsConfigBase(tree: Tree): void {
   let extractTsConfigBase: any;

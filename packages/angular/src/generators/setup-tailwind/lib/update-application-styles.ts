@@ -5,7 +5,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { NormalizedGeneratorOptions } from '../schema';
+import { NormalizedGeneratorOptions } from '../schema.js';
 
 export function updateApplicationStyles(
   tree: Tree,

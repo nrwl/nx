@@ -1,6 +1,6 @@
 import chalk = require('chalk');
 import yargs = require('yargs');
-import { examples } from '../examples';
+import { examples } from '../examples.js';
 
 export function linkToNxDevAndExamples<T>(
   yargs: yargs.Argv<T>,

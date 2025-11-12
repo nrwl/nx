@@ -1,7 +1,7 @@
 import { Tree, readNxJson } from '@nx/devkit';
-import { hasGradlePlugin } from '../../utils/has-gradle-plugin';
-import { addNxProjectGraphPlugin } from '../../generators/init/gradle-project-graph-plugin-utils';
-import { updateNxPluginVersionInCatalogsAst } from '../../utils/version-catalog-ast-utils';
+import { hasGradlePlugin } from '../../utils/has-gradle-plugin.js';
+import { addNxProjectGraphPlugin } from '../../generators/init/gradle-project-graph-plugin-utils.js';
+import { updateNxPluginVersionInCatalogsAst } from '../../utils/version-catalog-ast-utils.js';
 
 /* Change the plugin version to 0.1.6
  */

@@ -1,21 +1,21 @@
 import { existsSync, readFileSync } from 'fs';
 import { satisfies } from 'semver';
-import { workspaceRoot } from '../../../utils/workspace-root';
-import { reverse } from '../../../project-graph/operators';
-import { NormalizedPackageJson } from './utils/package-json';
+import { workspaceRoot } from '../../../utils/workspace-root.js';
+import { reverse } from '../../../project-graph/operators.js';
+import { NormalizedPackageJson } from './utils/package-json.js';
 import {
   RawProjectGraphDependency,
   validateDependency,
-} from '../../../project-graph/project-graph-builder';
+} from '../../../project-graph/project-graph-builder.js';
 import {
   DependencyType,
   ProjectGraph,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
-} from '../../../config/project-graph';
-import { hashArray } from '../../../hasher/file-hasher';
-import { CreateDependenciesContext } from '../../../project-graph/plugins';
-import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+} from '../../../config/project-graph.js';
+import { hashArray } from '../../../hasher/file-hasher.js';
+import { CreateDependenciesContext } from '../../../project-graph/plugins/index.js';
+import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph.js';
 
 /**
  * NPM

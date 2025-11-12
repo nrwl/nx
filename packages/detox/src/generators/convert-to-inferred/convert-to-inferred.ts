@@ -10,10 +10,10 @@ import {
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { createNodesV2 } from '../../plugins/plugin';
-import { processBuildOptions } from './lib/process-build-options';
-import { postTargetTransformer } from './lib/post-target-transformer';
-import { processTestOptions } from './lib/process-test-options';
+import { createNodesV2 } from '../../plugins/plugin.js';
+import { processBuildOptions } from './lib/process-build-options.js';
+import { postTargetTransformer } from './lib/post-target-transformer.js';
+import { processTestOptions } from './lib/process-test-options.js';
 
 interface Schema {
   project?: string;

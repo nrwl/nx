@@ -1,5 +1,5 @@
 import { Tree, getProjects, names, offsetFromRoot } from '@nx/devkit';
-import { WebConfigurationGeneratorSchema } from '../schema';
+import { WebConfigurationGeneratorSchema } from '../schema.js';
 
 export interface NormalizedSchema extends WebConfigurationGeneratorSchema {
   projectRoot: string;

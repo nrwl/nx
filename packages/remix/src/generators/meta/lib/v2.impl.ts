@@ -1,8 +1,8 @@
 import { formatFiles, Tree } from '@nx/devkit';
-import { getDefaultExportName } from '../../../utils/get-default-export-name';
-import { insertImport } from '../../../utils/insert-import';
-import { insertStatementAfterImports } from '../../../utils/insert-statement-after-imports';
-import { MetaSchema } from '../schema';
+import { getDefaultExportName } from '../../../utils/get-default-export-name.js';
+import { insertImport } from '../../../utils/insert-import.js';
+import { insertStatementAfterImports } from '../../../utils/insert-statement-after-imports.js';
+import { MetaSchema } from '../schema.js';
 
 export async function v2MetaGenerator(tree: Tree, schema: MetaSchema) {
   const routeFilePath = schema.path;

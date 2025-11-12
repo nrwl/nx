@@ -8,8 +8,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
-import { nxVersion } from '../../../utils/versions';
-import { NormalizedSchema } from '../schema';
+import { nxVersion } from '../../../utils/versions.js';
+import { NormalizedSchema } from '../schema.js';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function addE2e(

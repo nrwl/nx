@@ -1,7 +1,7 @@
-export * from './public-api';
+export * from './public-api.js';
 
-// export * from './get-plugins';
+// export * from './get-plugins.js';
 
-export { readPluginPackageJson } from './in-process-loader';
-export { registerPluginTSTranspiler } from './transpiler';
-export { createNodesFromFiles } from './utils';
+export { readPluginPackageJson } from './in-process-loader.js';
+export { registerPluginTSTranspiler } from './transpiler.js';
+export { createNodesFromFiles } from './utils.js';

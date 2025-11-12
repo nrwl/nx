@@ -3,4 +3,4 @@ export {
   setRemoteDefinition,
   setRemoteDefinitions,
   setRemoteUrlResolver,
-} from './dynamic-federation';
+} from './dynamic-federation.js';

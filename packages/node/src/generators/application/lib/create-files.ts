@@ -7,9 +7,9 @@ import {
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { join } from 'path';
-import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
-import { addVSCodeDebugConfiguration } from '../../../utils/vscode-debug-config';
-import { NormalizedSchema } from './normalized-schema';
+import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin.js';
+import { addVSCodeDebugConfiguration } from '../../../utils/vscode-debug-config.js';
+import { NormalizedSchema } from './normalized-schema.js';
 
 export function addAppFiles(tree: Tree, options: NormalizedSchema) {
   generateFiles(

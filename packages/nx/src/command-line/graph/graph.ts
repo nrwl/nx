@@ -23,40 +23,40 @@ import {
 } from 'node:path';
 import * as net from 'node:net';
 import { performance } from 'node:perf_hooks';
-import { readNxJson, workspaceLayout } from '../../config/configuration';
+import { readNxJson, workspaceLayout } from '../../config/configuration.js';
 import {
   FileData,
   ProjectFileMap,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
-} from '../../config/project-graph';
-import { writeJsonFile } from '../../utils/fileutils';
-import { output } from '../../utils/output';
-import { workspaceRoot } from '../../utils/workspace-root';
+} from '../../config/project-graph.js';
+import { writeJsonFile } from '../../utils/fileutils.js';
+import { output } from '../../utils/output.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 
-import { TaskGraph } from '../../config/task-graph';
-import { daemonClient } from '../../daemon/client/client';
-import { getRootTsConfigPath } from '../../plugins/js/utils/typescript';
-import { pruneExternalNodes } from '../../project-graph/operators';
+import { TaskGraph } from '../../config/task-graph.js';
+import { daemonClient } from '../../daemon/client/client.js';
+import { getRootTsConfigPath } from '../../plugins/js/utils/typescript.js';
+import { pruneExternalNodes } from '../../project-graph/operators.js';
 import {
   createProjectGraphAndSourceMapsAsync,
   createProjectGraphAsync,
   handleProjectGraphError,
-} from '../../project-graph/project-graph';
-import { createTaskGraph } from '../../tasks-runner/create-task-graph';
-import { allFileData } from '../../utils/all-file-data';
-import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { HashPlanner, transferProjectGraph, NxJson } from '../../native';
-import { transformProjectGraphForRust } from '../../native/transform-objects';
-import { getAffectedGraphNodes } from '../affected/affected';
-import { readFileMapCache } from '../../project-graph/nx-deps-cache';
-import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
-import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+} from '../../project-graph/project-graph.js';
+import { createTaskGraph } from '../../tasks-runner/create-task-graph.js';
+import { allFileData } from '../../utils/all-file-data.js';
+import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils.js';
+import { HashPlanner, transferProjectGraph, NxJson } from '../../native/index.js';
+import { transformProjectGraphForRust } from '../../native/transform-objects.js';
+import { getAffectedGraphNodes } from '../affected/affected.js';
+import { readFileMapCache } from '../../project-graph/nx-deps-cache.js';
+import { filterUsingGlobPatterns } from '../../hasher/task-hasher.js';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils.js';
 
-import { createTaskHasher } from '../../hasher/create-task-hasher';
-import { ProjectGraphError } from '../../project-graph/error-types';
-import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { createTaskHasher } from '../../hasher/create-task-hasher.js';
+import { ProjectGraphError } from '../../project-graph/error-types.js';
+import { isNxCloudUsed } from '../../utils/nx-cloud-utils.js';
 
 export interface GraphError {
   message: string;

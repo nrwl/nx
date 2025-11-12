@@ -1,6 +1,6 @@
 import type { buildApplication } from '@angular/build';
 import { registerTsProject } from '@nx/js/src/internal';
-import { loadModule } from './module-loader';
+import { loadModule } from './module-loader.js';
 
 // This is a workaround to make sure we use the same esbuild version as the
 // Angular DevKit uses. This is only used internally to load the plugins and

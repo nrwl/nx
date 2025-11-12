@@ -9,17 +9,17 @@ import {
   WebpackPluginInstance,
 } from 'webpack';
 
-import { WriteIndexHtmlPlugin } from '../../write-index-html-plugin';
-import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
-import { getOutputHashFormat } from '../../../utils/hash-format';
-import { getClientEnvironment } from '../../../utils/get-client-environment';
-import { normalizeExtraEntryPoints } from '../../../utils/webpack/normalize-entry';
+import { WriteIndexHtmlPlugin } from '../../write-index-html-plugin.js';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options.js';
+import { getOutputHashFormat } from '../../../utils/hash-format.js';
+import { getClientEnvironment } from '../../../utils/get-client-environment.js';
+import { normalizeExtraEntryPoints } from '../../../utils/webpack/normalize-entry.js';
 import {
   getCommonLoadersForCssModules,
   getCommonLoadersForGlobalCss,
   getCommonLoadersForGlobalStyle,
-} from './stylesheet-loaders';
-import { instantiateScriptPlugins } from './instantiate-script-plugins';
+} from './stylesheet-loaders.js';
+import { instantiateScriptPlugins } from './instantiate-script-plugins.js';
 import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 

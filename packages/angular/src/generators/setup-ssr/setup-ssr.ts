@@ -16,7 +16,7 @@ import {
   updateProjectConfigForApplicationBuilder,
   updateProjectConfigForBrowserBuilder,
   validateOptions,
-} from './lib';
+} from './lib/index.js';
 import type { Schema } from './schema';
 
 export async function setupSsr(tree: Tree, schema: Schema) {

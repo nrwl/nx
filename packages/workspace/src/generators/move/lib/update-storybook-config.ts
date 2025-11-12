@@ -2,7 +2,7 @@ import { ProjectConfiguration, Tree } from '@nx/devkit';
 import { workspaceRoot } from '@nx/devkit';
 import * as path from 'path';
 import { join } from 'path';
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 
 /**
  * Updates relative path to root storybook config for `main.js` & `webpack.config.js`

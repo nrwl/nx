@@ -3,10 +3,10 @@ import autoprefixer = require('autoprefixer');
 import postcssImports = require('postcss-import');
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
-import { getCSSModuleLocalIdent } from '../../../utils/get-css-module-local-ident';
-import { getOutputHashFormat } from '../../../utils/hash-format';
-import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
-import { PostcssCliResources } from '../../../utils/webpack/plugins/postcss-cli-resources';
+import { getCSSModuleLocalIdent } from '../../../utils/get-css-module-local-ident.js';
+import { getOutputHashFormat } from '../../../utils/hash-format.js';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options.js';
+import { PostcssCliResources } from '../../../utils/webpack/plugins/postcss-cli-resources.js';
 
 interface PostcssOptions {
   (loader: any): any;

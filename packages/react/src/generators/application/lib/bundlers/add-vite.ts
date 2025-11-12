@@ -1,6 +1,6 @@
 import { type Tree, ensurePackage, joinPathFragments } from '@nx/devkit';
-import { nxVersion } from '../../../../utils/versions';
-import { NormalizedSchema, Schema } from '../../schema';
+import { nxVersion } from '../../../../utils/versions.js';
+import { NormalizedSchema, Schema } from '../../schema.js';
 
 export async function setupViteConfiguration(
   tree: Tree,

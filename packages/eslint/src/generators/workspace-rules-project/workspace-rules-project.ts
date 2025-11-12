@@ -17,8 +17,8 @@ import { getRelativePathToRootTsConfig } from '@nx/js';
 import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
-import { nxVersion, typescriptESLintVersion } from '../../utils/versions';
-import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
+import { nxVersion, typescriptESLintVersion } from '../../utils/versions.js';
+import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules.js';
 
 export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
 

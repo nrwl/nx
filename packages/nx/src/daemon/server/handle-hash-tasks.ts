@@ -1,8 +1,8 @@
-import { Task, TaskGraph } from '../../config/task-graph';
-import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
-import { InProcessTaskHasher } from '../../hasher/task-hasher';
-import { readNxJson } from '../../config/configuration';
-import { DaemonProjectGraphError } from '../../project-graph/error-types';
+import { Task, TaskGraph } from '../../config/task-graph.js';
+import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation.js';
+import { InProcessTaskHasher } from '../../hasher/task-hasher.js';
+import { readNxJson } from '../../config/configuration.js';
+import { DaemonProjectGraphError } from '../../project-graph/error-types.js';
 
 /**
  * We use this not to recreated hasher for every hash operation

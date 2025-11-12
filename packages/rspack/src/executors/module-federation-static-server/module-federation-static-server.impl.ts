@@ -24,9 +24,9 @@ import type { Express } from 'express';
 import { cpSync, existsSync, readFileSync, rmSync } from 'fs';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { basename, extname, join } from 'path';
-import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
+import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema.js';
 import type { RspackExecutorSchema } from '../rspack/schema';
-import { ModuleFederationStaticServerSchema } from './schema';
+import { ModuleFederationStaticServerSchema } from './schema.js';
 
 function getBuildAndServeOptionsFromServeTarget(
   serveTarget: string,

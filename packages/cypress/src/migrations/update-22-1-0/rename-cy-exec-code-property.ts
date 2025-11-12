@@ -2,7 +2,7 @@ import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import type { CallExpression } from 'typescript';
-import { cypressProjectConfigs } from '../../utils/migrations';
+import { cypressProjectConfigs } from '../../utils/migrations.js';
 
 let ts: typeof import('typescript');
 

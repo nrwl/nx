@@ -4,8 +4,8 @@ import {
   addPathMapping,
   normalizeOptions,
   updateTsConfigIncludedFiles,
-} from './lib';
-import { GeneratorOptions } from './schema';
+} from './lib/index.js';
+import { GeneratorOptions } from './schema.js';
 
 export async function librarySecondaryEntryPointGenerator(
   tree: Tree,

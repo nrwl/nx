@@ -4,7 +4,7 @@ import {
   type Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { getInstalledJestMajorVersion } from '../../../utils/versions';
+import { getInstalledJestMajorVersion } from '../../../utils/versions.js';
 import type { NormalizedJestProjectSchema } from '../schema';
 
 export function updateWorkspace(

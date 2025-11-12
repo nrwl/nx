@@ -1,4 +1,4 @@
-import { RunningTask } from './running-task';
+import { RunningTask } from './running-task.js';
 
 export class NoopChildProcess implements RunningTask {
   constructor(private results: { code: number; terminalOutput: string }) {}

@@ -21,7 +21,7 @@ import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { dirname, join, relative } from 'path';
-import { NX_PLUGIN_OPTIONS } from '../utils/constants';
+import { NX_PLUGIN_OPTIONS } from '../utils/constants.js';
 
 export interface CypressPluginOptions {
   ciTargetName?: string;

@@ -7,7 +7,7 @@ import {
   logger,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
-import { getAllReactNativeProjects } from '../../utils/react-native-project-detection';
+import { getAllReactNativeProjects } from '../../utils/react-native-project-detection.js';
 
 export default async function update(tree: Tree) {
   const projects = getProjects(tree);

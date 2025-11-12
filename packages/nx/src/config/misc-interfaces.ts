@@ -1,10 +1,10 @@
-import { Hash, TaskHasher } from '../hasher/task-hasher';
-import { ProjectGraph } from './project-graph';
-import { Task, TaskGraph } from './task-graph';
+import { Hash, TaskHasher } from '../hasher/task-hasher.js';
+import { ProjectGraph } from './project-graph.js';
+import { Task, TaskGraph } from './task-graph.js';
 import {
   TargetConfiguration,
   ProjectsConfigurations,
-} from './workspace-json-project-json';
+} from './workspace-json-project-json.js';
 
 import type { NxJsonConfiguration } from './nx-json';
 import type { Schema } from '../utils/params';

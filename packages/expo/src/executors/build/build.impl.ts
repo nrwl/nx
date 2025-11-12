@@ -14,9 +14,9 @@ import { copyFileSync, existsSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve as pathResolve } from 'path';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
-import { resolveEas } from '../../utils/resolve-eas';
+import { resolveEas } from '../../utils/resolve-eas.js';
 
-import { ExpoEasBuildOptions } from './schema';
+import { ExpoEasBuildOptions } from './schema.js';
 
 export interface ReactNativeBuildOutput {
   success: boolean;

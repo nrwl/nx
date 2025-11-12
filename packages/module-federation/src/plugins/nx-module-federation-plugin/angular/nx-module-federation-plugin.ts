@@ -2,9 +2,9 @@ import { Compiler, RspackPluginInstance } from '@rspack/core';
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '../../../utils/models';
-import { getModuleFederationConfigSync } from '../../../with-module-federation/angular/utils';
-import { normalizeProjectName } from '../../../utils';
+} from '../../../utils/models/index.js';
+import { getModuleFederationConfigSync } from '../../../with-module-federation/angular/utils.js';
+import { normalizeProjectName } from '../../../utils/index.js';
 
 export class NxModuleFederationPlugin implements RspackPluginInstance {
   constructor(

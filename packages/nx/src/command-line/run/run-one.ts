@@ -1,26 +1,26 @@
-import { runCommand } from '../../tasks-runner/run-command';
+import { runCommand } from '../../tasks-runner/run-command.js';
 import {
   readGraphFileFromGraphArg,
   splitArgsIntoNxArgsAndOverrides,
-} from '../../utils/command-line-utils';
-import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
+} from '../../utils/command-line-utils.js';
+import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud.js';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
-} from '../../project-graph/project-graph';
+} from '../../project-graph/project-graph.js';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
-} from '../../config/project-graph';
-import { NxJsonConfiguration } from '../../config/nx-json';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { splitTarget } from '../../utils/split-target';
-import { output } from '../../utils/output';
-import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
-import { readNxJson } from '../../config/configuration';
-import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
-import { generateGraph } from '../graph/graph';
-import { findMatchingProjects } from '../../utils/find-matching-projects';
+} from '../../config/project-graph.js';
+import { NxJsonConfiguration } from '../../config/nx-json.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { splitTarget } from '../../utils/split-target.js';
+import { output } from '../../utils/output.js';
+import { TargetDependencyConfig } from '../../config/workspace-json-project-json.js';
+import { readNxJson } from '../../config/configuration.js';
+import { calculateDefaultProjectName } from '../../config/calculate-default-project-name.js';
+import { generateGraph } from '../graph/graph.js';
+import { findMatchingProjects } from '../../utils/find-matching-projects.js';
 
 export async function runOne(
   cwd: string,
@@ -57,7 +57,7 @@ export async function runOne(
   );
 
   if (nxArgs.help) {
-    await (await import('./run')).printTargetRunHelp(opts, workspaceRoot);
+    await (await import('./run.js')).printTargetRunHelp(opts, workspaceRoot);
     process.exit(0);
   }
 

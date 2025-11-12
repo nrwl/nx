@@ -11,12 +11,12 @@ import {
   writeJson,
 } from '@nx/devkit';
 
-import { webpackInitGenerator } from '../init/init';
-import { ConfigurationGeneratorSchema } from './schema';
-import { WebpackExecutorOptions } from '../../executors/webpack/schema';
-import { hasPlugin } from '../../utils/has-plugin';
+import { webpackInitGenerator } from '../init/init.js';
+import { ConfigurationGeneratorSchema } from './schema.js';
+import { WebpackExecutorOptions } from '../../executors/webpack/schema.js';
+import { hasPlugin } from '../../utils/has-plugin.js';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { ensureDependencies } from '../../utils/ensure-dependencies.js';
 
 export function configurationGenerator(
   tree: Tree,

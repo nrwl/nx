@@ -1,9 +1,9 @@
-import { readNxJson } from '../../config/nx-json';
+import { readNxJson } from '../../config/nx-json.js';
 import type { ProjectGraph } from '../../config/project-graph';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { FsTree, type Tree } from '../../generators/tree';
-import { hashArray } from '../../hasher/file-hasher';
-import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph';
+import { FsTree, type Tree } from '../../generators/tree.js';
+import { hashArray } from '../../hasher/file-hasher.js';
+import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph.js';
 import {
   collectEnabledTaskSyncGeneratorsFromProjectGraph,
   collectRegisteredGlobalSyncGenerators,
@@ -12,10 +12,10 @@ import {
   type FlushSyncGeneratorChangesResult,
   type SyncGeneratorRunResult,
   type SyncGeneratorRunSuccessResult,
-} from '../../utils/sync-generators';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { serverLogger } from './logger';
-import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
+} from '../../utils/sync-generators.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { serverLogger } from './logger.js';
+import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation.js';
 
 const syncGeneratorsCacheResultPromises = new Map<
   string,

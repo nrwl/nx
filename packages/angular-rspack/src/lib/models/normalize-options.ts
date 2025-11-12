@@ -16,8 +16,8 @@ import {
 import {
   findProjectForPath,
   normalizeProjectRoot,
-} from '../utils/find-project-for-path';
-import { retrieveOrCreateProjectGraph } from '../utils/graph';
+} from '../utils/find-project-for-path.js';
+import { retrieveOrCreateProjectGraph } from '../utils/graph.js';
 import type {
   AngularRspackPluginOptions,
   AssetElement,

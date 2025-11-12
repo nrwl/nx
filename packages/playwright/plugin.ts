@@ -2,4 +2,4 @@ export {
   createNodes,
   createNodesV2,
   PlaywrightPluginOptions,
-} from './src/plugins/plugin';
+} from './src/plugins/plugin.js';

@@ -1,1 +1,1 @@
-export { createWatchPaths } from './src/utils/create-watch-paths';
+export { createWatchPaths } from './src/utils/create-watch-paths.js';

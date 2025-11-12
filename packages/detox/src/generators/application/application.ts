@@ -2,13 +2,13 @@ import { formatFiles, runTasksInSerial, Tree } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import detoxInitGenerator from '../init/init';
-import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
-import { addLinting } from './lib/add-linting';
-import { addProject } from './lib/add-project';
-import { createFiles } from './lib/create-files';
-import { normalizeOptions } from './lib/normalize-options';
-import { Schema } from './schema';
-import { ensureDependencies } from './lib/ensure-dependencies';
+import { addGitIgnoreEntry } from './lib/add-git-ignore-entry.js';
+import { addLinting } from './lib/add-linting.js';
+import { addProject } from './lib/add-project.js';
+import { createFiles } from './lib/create-files.js';
+import { normalizeOptions } from './lib/normalize-options.js';
+import { Schema } from './schema.js';
+import { ensureDependencies } from './lib/ensure-dependencies.js';
 import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,

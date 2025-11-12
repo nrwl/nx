@@ -3,24 +3,24 @@ import {
   FileMap,
   ProjectFileMap,
   ProjectGraph,
-} from '../config/project-graph';
+} from '../config/project-graph.js';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
-} from '../config/workspace-json-project-json';
-import { daemonClient } from '../daemon/client/client';
-import { NxWorkspaceFilesExternals } from '../native';
+} from '../config/workspace-json-project-json.js';
+import { daemonClient } from '../daemon/client/client.js';
+import { NxWorkspaceFilesExternals } from '../native/index.js';
 import {
   getAllFileDataInContext,
   updateProjectFiles,
-} from '../utils/workspace-context';
-import { workspaceRoot } from '../utils/workspace-root';
-import { readProjectsConfigurationFromProjectGraph } from './project-graph';
-import { buildAllWorkspaceFiles } from './utils/build-all-workspace-files';
+} from '../utils/workspace-context.js';
+import { workspaceRoot } from '../utils/workspace-root.js';
+import { readProjectsConfigurationFromProjectGraph } from './project-graph.js';
+import { buildAllWorkspaceFiles } from './utils/build-all-workspace-files.js';
 import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
-} from './utils/find-project-for-path';
+} from './utils/find-project-for-path.js';
 
 export interface WorkspaceFileMap {
   allWorkspaceFiles: FileData[];

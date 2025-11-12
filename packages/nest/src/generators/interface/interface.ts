@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import type { NestGeneratorOptions } from '../utils';
-import { normalizeOptions, runNestSchematic } from '../utils';
+import { normalizeOptions, runNestSchematic } from '../utils/index.js';
 
 export type InterfaceGeneratorOptions = NestGeneratorOptions;
 

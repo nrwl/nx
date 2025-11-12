@@ -3,7 +3,7 @@ import {
   addOrUpdateProperty,
   jestConfigObjectAst,
   removeProperty,
-} from './functions';
+} from './functions.js';
 
 /**
  * Add a property to the jest config

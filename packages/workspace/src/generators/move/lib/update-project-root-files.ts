@@ -2,7 +2,7 @@ import { updateJson, ProjectConfiguration, Tree } from '@nx/devkit';
 import { workspaceRoot } from '@nx/devkit';
 import * as path from 'path';
 import { extname, join } from 'path';
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 const allowedExt = ['.ts', '.js', '.json', '.cts', '.cjs'];
 
 /**

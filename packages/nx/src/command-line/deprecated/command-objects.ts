@@ -1,10 +1,10 @@
 import { CommandModule } from 'yargs';
-import { handleErrors } from '../../utils/handle-errors';
+import { handleErrors } from '../../utils/handle-errors.js';
 import {
   withAffectedOptions,
   withTargetAndConfigurationOption,
-} from '../yargs-utils/shared-options';
-import { withGraphOptions } from '../graph/command-object';
+} from '../yargs-utils/shared-options.js';
+import { withGraphOptions } from '../graph/command-object.js';
 
 const affectedGraphDeprecationMessage =
   'Use `nx graph --affected`, or `nx affected --graph` instead depending on which best suits your use case. The `affected:graph` command has been removed in Nx 19.';

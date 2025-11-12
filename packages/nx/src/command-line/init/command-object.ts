@@ -1,5 +1,5 @@
 import { Argv, CommandModule } from 'yargs';
-import { parseCSV } from '../yargs-utils/shared-options';
+import { parseCSV } from '../yargs-utils/shared-options.js';
 
 export const yargsInitCommand: CommandModule = {
   command: 'init',
@@ -26,7 +26,7 @@ export const yargsInitCommand: CommandModule = {
 async function isInitV2() {
   return (
     process.env['NX_ADD_PLUGINS'] !== 'false' &&
-    (await import('../../config/nx-json')).readNxJson().useInferencePlugins !==
+    (await import('../../config/nx-json.js')).readNxJson().useInferencePlugins !==
       false
   );
 }

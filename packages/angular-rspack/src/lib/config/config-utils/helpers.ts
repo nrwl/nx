@@ -13,8 +13,8 @@ import {
   NormalizedAngularRspackPluginOptions,
   normalizeOptions,
   OutputHashing,
-} from '../../models';
-import { configureI18n } from '../i18n/create-i18n-options';
+} from '../../models/index.js';
+import { configureI18n } from '../i18n/create-i18n-options.js';
 import type { Configuration } from '@rspack/core';
 
 /**

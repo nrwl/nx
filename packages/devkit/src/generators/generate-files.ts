@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'fs';
 import * as path from 'path';
-import { isBinaryPath } from '../utils/binary-extensions';
+import { isBinaryPath } from '../utils/binary-extensions.js';
 
 import { logger, type Tree } from 'nx/src/devkit-exports';
 

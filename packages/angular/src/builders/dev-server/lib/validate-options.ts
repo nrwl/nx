@@ -1,6 +1,6 @@
 import { stripIndents } from '@nx/devkit';
 import { lt } from 'semver';
-import { getInstalledAngularVersionInfo } from '../../../executors/utilities/angular-version-utils';
+import { getInstalledAngularVersionInfo } from '../../../executors/utilities/angular-version-utils.js';
 import type { Schema } from '../schema';
 
 export function validateOptions(options: Schema): void {

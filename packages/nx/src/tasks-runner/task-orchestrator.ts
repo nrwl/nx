@@ -2,40 +2,40 @@ import { defaultMaxListeners } from 'events';
 import { writeFileSync } from 'fs';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { ProjectGraph } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
-import { DaemonClient } from '../daemon/client/client';
-import { runCommands } from '../executors/run-commands/run-commands.impl';
-import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
-import { TaskHasher } from '../hasher/task-hasher';
+import { NxJsonConfiguration } from '../config/nx-json.js';
+import { ProjectGraph } from '../config/project-graph.js';
+import { Task, TaskGraph } from '../config/task-graph.js';
+import { DaemonClient } from '../daemon/client/client.js';
+import { runCommands } from '../executors/run-commands/run-commands.impl.js';
+import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task.js';
+import { TaskHasher } from '../hasher/task-hasher.js';
 import {
   IS_WASM,
   parseTaskStatus,
   RunningTasksService,
   TaskDetails,
   TaskStatus as NativeTaskStatus,
-} from '../native';
-import { NxArgs } from '../utils/command-line-utils';
-import { getDbConnection } from '../utils/db-connection';
-import { output } from '../utils/output';
-import { combineOptionsForExecutor } from '../utils/params';
-import { workspaceRoot } from '../utils/workspace-root';
-import { Cache, DbCache, dbCacheEnabled, getCache } from './cache';
-import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { isTuiEnabled } from './is-tui-enabled';
-import { TaskMetadata, TaskResult } from './life-cycle';
-import { PseudoTtyProcess } from './pseudo-terminal';
-import { NoopChildProcess } from './running-tasks/noop-child-process';
-import { RunningTask } from './running-tasks/running-task';
+} from '../native/index.js';
+import { NxArgs } from '../utils/command-line-utils.js';
+import { getDbConnection } from '../utils/db-connection.js';
+import { output } from '../utils/output.js';
+import { combineOptionsForExecutor } from '../utils/params.js';
+import { workspaceRoot } from '../utils/workspace-root.js';
+import { Cache, DbCache, dbCacheEnabled, getCache } from './cache.js';
+import { DefaultTasksRunnerOptions } from './default-tasks-runner.js';
+import { ForkedProcessTaskRunner } from './forked-process-task-runner.js';
+import { isTuiEnabled } from './is-tui-enabled.js';
+import { TaskMetadata, TaskResult } from './life-cycle.js';
+import { PseudoTtyProcess } from './pseudo-terminal.js';
+import { NoopChildProcess } from './running-tasks/noop-child-process.js';
+import { RunningTask } from './running-tasks/running-task.js';
 import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
   getTaskSpecificEnv,
-} from './task-env';
-import { TaskStatus } from './tasks-runner';
-import { Batch, TasksSchedule } from './tasks-schedule';
+} from './task-env.js';
+import { TaskStatus } from './tasks-runner.js';
+import { Batch, TasksSchedule } from './tasks-schedule.js';
 import {
   calculateReverseDeps,
   getExecutorForTask,
@@ -44,8 +44,8 @@ import {
   isCacheableTask,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
-} from './utils';
-import { SharedRunningTask } from './running-tasks/shared-running-task';
+} from './utils.js';
+import { SharedRunningTask } from './running-tasks/shared-running-task.js';
 
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();

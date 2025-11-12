@@ -1,7 +1,7 @@
 import chalk = require('chalk');
 import yargs = require('yargs');
-import { NxCloudChoices, messages } from '../utils/nx/ab-testing';
-import { packageManagerList } from '../utils/package-manager';
+import { NxCloudChoices, messages } from '../utils/nx/ab-testing.js';
+import { packageManagerList } from '../utils/package-manager.js';
 
 export function withNxCloud<T = unknown>(argv: yargs.Argv<T>) {
   const { message } = messages.getPrompt('setupCI');

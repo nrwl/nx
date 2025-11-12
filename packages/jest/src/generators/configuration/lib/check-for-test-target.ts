@@ -1,5 +1,5 @@
 import { readProjectConfiguration, Tree } from '@nx/devkit';
-import { NormalizedJestProjectSchema } from '../schema';
+import { NormalizedJestProjectSchema } from '../schema.js';
 
 export function checkForTestTarget(
   tree: Tree,

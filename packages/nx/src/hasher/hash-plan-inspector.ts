@@ -4,18 +4,18 @@ import {
   transferProjectGraph,
   ExternalObject,
   ProjectGraph as NativeProjectGraph,
-} from '../native';
-import { readNxJson, NxJsonConfiguration } from '../config/nx-json';
-import { transformProjectGraphForRust } from '../native/transform-objects';
-import { ProjectGraph } from '../config/project-graph';
-import { workspaceRoot } from '../utils/workspace-root';
-import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
-import { createTaskGraph } from '../tasks-runner/create-task-graph';
+} from '../native/index.js';
+import { readNxJson, NxJsonConfiguration } from '../config/nx-json.js';
+import { transformProjectGraphForRust } from '../native/transform-objects.js';
+import { ProjectGraph } from '../config/project-graph.js';
+import { workspaceRoot } from '../utils/workspace-root.js';
+import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path.js';
+import { createTaskGraph } from '../tasks-runner/create-task-graph.js';
 import type { Target } from '../command-line/run/run';
-import { TargetDependencies } from '../config/nx-json';
-import { TargetDependencyConfig } from '../config/workspace-json-project-json';
-import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
-import { getNxWorkspaceFilesFromContext } from '../utils/workspace-context';
+import { TargetDependencies } from '../config/nx-json.js';
+import { TargetDependencyConfig } from '../config/workspace-json-project-json.js';
+import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils.js';
+import { getNxWorkspaceFilesFromContext } from '../utils/workspace-context.js';
 
 export class HashPlanInspector {
   private readonly projectGraphRef: ExternalObject<NativeProjectGraph>;

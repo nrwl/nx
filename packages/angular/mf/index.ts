@@ -3,4 +3,4 @@ export {
   setRemoteDefinitions,
   setRemoteDefinition,
   loadRemoteModule,
-} from './mf';
+} from './mf.js';

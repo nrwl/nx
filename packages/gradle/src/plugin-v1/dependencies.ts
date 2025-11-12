@@ -8,8 +8,8 @@ import {
 } from '@nx/devkit';
 import { basename, dirname } from 'node:path';
 
-import { getCurrentGradleReport } from './utils/get-gradle-report';
-import { GRADLE_BUILD_FILES } from '../utils/split-config-files';
+import { getCurrentGradleReport } from './utils/get-gradle-report.js';
+import { GRADLE_BUILD_FILES } from '../utils/split-config-files.js';
 
 export const createDependencies: CreateDependencies = async (
   _,

@@ -9,7 +9,7 @@ import {
   SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
-} from '../../utils';
+} from '../../utils/index.js';
 
 import {
   createProjectGraphAsync,

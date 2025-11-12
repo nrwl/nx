@@ -6,7 +6,7 @@ import {
   findClosestOpening,
   findElements,
   addImport,
-} from '../utils/ast-utils';
+} from '../utils/ast-utils.js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');

@@ -10,7 +10,7 @@ import {
   getNxCloudAppOnBoardingUrl,
 } from 'nx/src/nx-cloud/utilities/onboarding';
 import { join } from 'path';
-import { NormalizedSchema } from './normalize-options';
+import { NormalizedSchema } from './normalize-options.js';
 
 export async function createApplicationFiles(
   host: Tree,

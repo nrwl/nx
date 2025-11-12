@@ -1,8 +1,8 @@
 import type { NxReleaseConfiguration } from '../../config/nx-json';
-import { createAPI as createReleaseChangelogAPI } from './changelog';
-import { createAPI as createReleasePublishAPI } from './publish';
-import { createAPI as createReleaseAPI } from './release';
-import { createAPI as createReleaseVersionAPI } from './version';
+import { createAPI as createReleaseChangelogAPI } from './changelog.js';
+import { createAPI as createReleasePublishAPI } from './publish.js';
+import { createAPI as createReleaseAPI } from './release.js';
+import { createAPI as createReleaseVersionAPI } from './version.js';
 
 /**
  * @public
@@ -45,7 +45,7 @@ export const releaseChangelog = defaultClient.releaseChangelog.bind(
 /**
  * @public
  */
-export { PublishProjectsResult } from './publish';
+export { PublishProjectsResult } from './publish.js';
 /**
  * @public
  */
@@ -73,4 +73,4 @@ export const release = defaultClient.release.bind(
 export {
   AfterAllProjectsVersioned,
   VersionActions,
-} from './version/version-actions';
+} from './version/version-actions.js';

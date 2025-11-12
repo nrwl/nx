@@ -9,7 +9,7 @@ import { lt } from 'semver';
 import {
   eslint9__typescriptESLintVersion,
   typescriptESLintVersion,
-} from './versions';
+} from './versions.js';
 
 export function getInstalledPackageVersion(
   pkgName: string,

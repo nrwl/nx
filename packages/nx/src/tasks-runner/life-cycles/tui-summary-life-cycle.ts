@@ -1,15 +1,15 @@
 import { EOL } from 'node:os';
-import { TaskStatus as NativeTaskStatus } from '../../native';
-import { Task, TaskGraph } from '../../config/task-graph';
-import { output } from '../../utils/output';
+import { TaskStatus as NativeTaskStatus } from '../../native/index.js';
+import { Task, TaskGraph } from '../../config/task-graph.js';
+import { output } from '../../utils/output.js';
 import type { LifeCycle } from '../life-cycle';
 import type { TaskStatus } from '../tasks-runner';
-import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
-import { prettyTime } from './pretty-time';
-import { viewLogsFooterRows } from './view-logs-utils';
+import { formatFlags, formatTargetsAndProjects } from './formatting-utils.js';
+import { prettyTime } from './pretty-time.js';
+import { viewLogsFooterRows } from './view-logs-utils.js';
 import * as figures from 'figures';
-import { getTasksHistoryLifeCycle } from './task-history-life-cycle';
-import { getLeafTasks } from '../task-graph-utils';
+import { getTasksHistoryLifeCycle } from './task-history-life-cycle.js';
+import { getLeafTasks } from '../task-graph-utils.js';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;

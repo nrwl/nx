@@ -1,6 +1,6 @@
 import { detectPackageManager } from 'nx/src/devkit-exports';
 import type { CatalogManager } from './manager';
-import { PnpmCatalogManager } from './pnpm-manager';
+import { PnpmCatalogManager } from './pnpm-manager.js';
 
 /**
  * Factory function to get the appropriate catalog manager based on the package manager

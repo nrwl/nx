@@ -7,15 +7,15 @@ import {
 } from '@nx/devkit';
 import type * as ts from 'typescript';
 
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 import {
   addBrowserRouter,
   addRoute,
   findComponentImportPath,
-} from '../../../utils/ast-utils';
-import { addInitialRoutes } from '../../../utils/ast-utils';
-import { maybeJs } from '../../../utils/maybe-js';
-import { reactRouterDomVersion } from '../../../utils/versions';
+} from '../../../utils/ast-utils.js';
+import { addInitialRoutes } from '../../../utils/ast-utils.js';
+import { maybeJs } from '../../../utils/maybe-js.js';
+import { reactRouterDomVersion } from '../../../utils/versions.js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');

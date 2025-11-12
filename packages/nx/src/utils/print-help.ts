@@ -1,10 +1,10 @@
 import * as chalk from 'chalk';
 import * as stringWidth from 'string-width';
-import { logger } from './logger';
-import { output } from './output';
-import { Schema } from './params';
-import { nxVersion } from './versions';
-import { readModulePackageJson } from './package-json';
+import { logger } from './logger.js';
+import { output } from './output.js';
+import { Schema } from './params.js';
+import { nxVersion } from './versions.js';
+import { readModulePackageJson } from './package-json.js';
 
 // cliui is the CLI layout engine developed by, and used within, yargs
 // the typings for cliui do not play nice with our tsconfig, it either

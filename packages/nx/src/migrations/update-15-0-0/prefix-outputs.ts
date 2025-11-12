@@ -1,18 +1,18 @@
-import { Tree } from '../../generators/tree';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { Tree } from '../../generators/tree.js';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
 import {
   getProjects,
   updateProjectConfiguration,
-} from '../../generators/utils/project-configuration';
-import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
-import { joinPathFragments } from '../../utils/path';
+} from '../../generators/utils/project-configuration.js';
+import { readNxJson, updateNxJson } from '../../generators/utils/nx-json.js';
+import { joinPathFragments } from '../../utils/path.js';
 import { join } from 'path';
 import {
   transformLegacyOutputs,
   validateOutputs,
-} from '../../tasks-runner/utils';
-import { updateJson } from '../../generators/utils/json';
-import { PackageJson } from '../../utils/package-json';
+} from '../../tasks-runner/utils.js';
+import { updateJson } from '../../generators/utils/json.js';
+import { PackageJson } from '../../utils/package-json.js';
 
 export default async function (tree: Tree) {
   // If the workspace doesn't have a nx.json, don't make any changes

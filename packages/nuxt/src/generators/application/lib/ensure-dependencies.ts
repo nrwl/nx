@@ -12,7 +12,7 @@ import {
   nuxtUiTemplatesVersion,
   nuxtVersion,
   nxVersion,
-} from '../../../utils/versions';
+} from '../../../utils/versions.js';
 import type { NormalizedSchema } from '../schema';
 
 export function ensureDependencies(host: Tree, options: NormalizedSchema) {

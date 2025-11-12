@@ -1,10 +1,10 @@
 import type { AxiosRequestConfig } from 'axios';
 import axios from 'axios';
 import type { PostGitTask } from '../../changelog';
-import { ResolvedCreateRemoteReleaseProvider } from '../../config/config';
+import { ResolvedCreateRemoteReleaseProvider } from '../../config/config.js';
 import type { Reference } from '../git';
-import { printDiff } from '../print-changes';
-import { noDiffInChangelogMessage, type ReleaseVersion } from '../shared';
+import { printDiff } from '../print-changes.js';
+import { noDiffInChangelogMessage, type ReleaseVersion } from '../shared.js';
 import type { GithubRemoteReleaseClient } from './github';
 import type { GitLabRemoteReleaseClient } from './gitlab';
 
@@ -250,7 +250,7 @@ export async function createRemoteReleaseClient(
         createReleaseConfig.provider === 'github'):
     // If remote releases are disabled, assume GitHub repo data resolution (but don't attempt to resolve a token) to match existing behavior
     case createReleaseConfig === false: {
-      const { GithubRemoteReleaseClient } = await import('./github');
+      const { GithubRemoteReleaseClient } = await import('./github.js');
       const repoData = GithubRemoteReleaseClient.resolveRepoData(
         createReleaseConfig,
         remoteName
@@ -268,7 +268,7 @@ export async function createRemoteReleaseClient(
     // GitLab
     case typeof createReleaseConfig === 'object' &&
       createReleaseConfig.provider === 'gitlab': {
-      const { GitLabRemoteReleaseClient } = await import('./gitlab');
+      const { GitLabRemoteReleaseClient } = await import('./gitlab.js');
       const repoData = GitLabRemoteReleaseClient.resolveRepoData(
         createReleaseConfig,
         remoteName

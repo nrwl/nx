@@ -11,7 +11,7 @@ import {
   eslintConfigNextVersion,
   eslintConfigNext15Version,
   eslintConfigNext14Version,
-} from './versions';
+} from './versions.js';
 
 type NextDependenciesVersions = {
   next: string;

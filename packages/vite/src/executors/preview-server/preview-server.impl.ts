@@ -9,12 +9,12 @@ import {
   getNxTargetOptions,
   getProxyConfig,
   normalizeViteConfigFilePath,
-} from '../../utils/options-utils';
-import { ViteBuildExecutorOptions } from '../build/schema';
-import { VitePreviewServerExecutorOptions } from './schema';
+} from '../../utils/options-utils.js';
+import { ViteBuildExecutorOptions } from '../build/schema.js';
+import { VitePreviewServerExecutorOptions } from './schema.js';
 import { relative } from 'path';
-import { getBuildExtraArgs } from '../build/build.impl';
-import { loadViteDynamicImport } from '../../utils/executor-utils';
+import { getBuildExtraArgs } from '../build/build.impl.js';
+import { loadViteDynamicImport } from '../../utils/executor-utils.js';
 
 export async function* vitePreviewServerExecutor(
   options: VitePreviewServerExecutorOptions,

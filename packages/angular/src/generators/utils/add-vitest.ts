@@ -3,8 +3,8 @@ import {
   ensurePackage,
   type Tree,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
-import { getInstalledAngularDevkitVersion, versions } from './version-utils';
+import { nxVersion } from '../../utils/versions.js';
+import { getInstalledAngularDevkitVersion, versions } from './version-utils.js';
 
 export type AddVitestOptions = {
   name: string;

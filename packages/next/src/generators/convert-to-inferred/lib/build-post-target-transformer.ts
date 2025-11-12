@@ -4,8 +4,8 @@ import {
   processTargetOutputs,
   toProjectRelativePath,
 } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
-import { NextBuildBuilderOptions } from '../../../utils/types';
-import { updateNextConfig } from './update-next-config';
+import { NextBuildBuilderOptions } from '../../../utils/types.js';
+import { updateNextConfig } from './update-next-config.js';
 
 export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
   return (

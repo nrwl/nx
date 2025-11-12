@@ -11,9 +11,9 @@ import { dirname, relative } from 'path';
 import {
   getInstalledPackageVersionInfo,
   versions,
-} from '../../generators/utils/version-utils';
-import { allTargetOptions } from '../../utils/targets';
-import { getProjectsFilteredByDependencies } from '../utils/projects';
+} from '../../generators/utils/version-utils.js';
+import { allTargetOptions } from '../../utils/targets.js';
+import { getProjectsFilteredByDependencies } from '../utils/projects.js';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 const UNIVERSAL_PACKAGES = [
@@ -165,7 +165,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import bootstrap from './src/main.server';` +
     (hasExpressTokens
-      ? `\nimport { REQUEST, RESPONSE } from './src/express.tokens';`
+      ? `\nimport { REQUEST, RESPONSE } from './src/express.tokens.js';`
       : '') +
     `
 

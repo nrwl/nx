@@ -3,13 +3,13 @@ import {
   getExecutorForTask,
   getExecutorNameForTask,
   removeTasksFromTaskGraph,
-} from './utils';
-import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { Task, TaskGraph } from '../config/task-graph';
-import { ProjectGraph } from '../config/project-graph';
-import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
-import { reverse } from '../project-graph/operators';
-import { TaskHistory, getTaskHistory } from '../utils/task-history';
+} from './utils.js';
+import { DefaultTasksRunnerOptions } from './default-tasks-runner.js';
+import { Task, TaskGraph } from '../config/task-graph.js';
+import { ProjectGraph } from '../config/project-graph.js';
+import { findAllProjectNodeDependencies } from '../utils/project-graph-utils.js';
+import { reverse } from '../project-graph/operators.js';
+import { TaskHistory, getTaskHistory } from '../utils/task-history.js';
 
 export interface Batch {
   executorName: string;

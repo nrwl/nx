@@ -10,8 +10,8 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { assertValidStyle } from '../../../utils/assertion';
-import { NormalizedSchema, Schema } from '../schema';
+import { assertValidStyle } from '../../../utils/assertion.js';
+import { NormalizedSchema, Schema } from '../schema.js';
 import {
   getProjectSourceRoot,
   getProjectType,

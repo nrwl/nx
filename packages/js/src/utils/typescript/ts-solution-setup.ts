@@ -17,8 +17,8 @@ import {
   getPackageManagerWorkspacesPatterns,
   getProjectPackageManagerWorkspaceState,
   isUsingPackageManagerWorkspaces,
-} from '../package-manager-workspaces';
-import { getNeededCompilerOptionOverrides } from './configuration';
+} from '../package-manager-workspaces.js';
+import { getNeededCompilerOptionOverrides } from './configuration.js';
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
   const nxJson = readNxJson(tree);

@@ -2,7 +2,7 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
-} from '../config/project-graph';
+} from '../config/project-graph.js';
 
 const reverseMemo = new Map<ProjectGraph, ProjectGraph>();
 

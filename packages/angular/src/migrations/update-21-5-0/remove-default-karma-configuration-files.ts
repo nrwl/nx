@@ -4,12 +4,12 @@ import {
   updateProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { allProjectTargets, allTargetOptions } from '../../utils/targets';
-import { analyzeKarmaConfig } from './utils/karma-config-analyzer';
+import { allProjectTargets, allTargetOptions } from '../../utils/targets.js';
+import { analyzeKarmaConfig } from './utils/karma-config-analyzer.js';
 import {
   compareKarmaConfigToDefault,
   hasDifferences,
-} from './utils/karma-config-comparer';
+} from './utils/karma-config-comparer.js';
 
 export default async function (tree: Tree) {
   const removableKarmaConfigs = new Map<string, boolean>();

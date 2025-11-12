@@ -1,8 +1,8 @@
-import { ProjectGraph } from '../config/project-graph';
-import { findCycle, makeAcyclic } from '../tasks-runner/task-graph-utils';
-import { NxArgs } from '../utils/command-line-utils';
-import { output } from '../utils/output';
-import { CommandGraph } from './command-graph';
+import { ProjectGraph } from '../config/project-graph.js';
+import { findCycle, makeAcyclic } from '../tasks-runner/task-graph-utils.js';
+import { NxArgs } from '../utils/command-line-utils.js';
+import { output } from '../utils/output.js';
+import { CommandGraph } from './command-graph.js';
 
 /**
  * Make structure { lib: [dep], dep: [dep1], dep1: [] } from projectName lib and projectGraph

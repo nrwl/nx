@@ -8,9 +8,9 @@ import {
   runTasksInSerial,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { InitGeneratorSchema } from './schema';
-import { createNodesV2 } from '../../plugins/plugin';
-import { nxVersion, rsbuildVersion } from '../../utils/versions';
+import { InitGeneratorSchema } from './schema.js';
+import { createNodesV2 } from '../../plugins/plugin.js';
+import { nxVersion, rsbuildVersion } from '../../utils/versions.js';
 
 export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
   return addDependenciesToPackageJson(

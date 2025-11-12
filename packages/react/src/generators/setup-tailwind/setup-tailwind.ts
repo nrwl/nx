@@ -13,10 +13,10 @@ import {
   autoprefixerVersion,
   postcssVersion,
   tailwindcssVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 import type { SetupTailwindOptions } from './schema';
-import { addTailwindStyleImports } from './lib/add-tailwind-style-imports';
-import { updateProject } from './lib/update-project';
+import { addTailwindStyleImports } from './lib/add-tailwind-style-imports.js';
+import { updateProject } from './lib/update-project.js';
 import { join } from 'path';
 
 export async function setupTailwindGenerator(

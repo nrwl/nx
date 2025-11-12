@@ -2,14 +2,14 @@ import { execSync } from 'child_process';
 import { readFileSync, constants as FsConstants } from 'fs';
 import * as path from 'path';
 import { valid } from 'semver';
-import { NxJsonConfiguration } from '../../../../config/nx-json';
+import { NxJsonConfiguration } from '../../../../config/nx-json.js';
 import {
   flushChanges,
   FsTree,
   printChanges,
   Tree,
-} from '../../../../generators/tree';
-import { writeJson } from '../../../../generators/utils/json';
+} from '../../../../generators/tree.js';
+import { writeJson } from '../../../../generators/utils/json.js';
 
 export const nxWrapperPath = (p: typeof import('path') = path) =>
   p.join('.nx', 'nxw.js');

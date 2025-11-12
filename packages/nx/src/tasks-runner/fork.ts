@@ -1,7 +1,7 @@
 import { fork, Serializable } from 'child_process';
 import { join } from 'path';
-import { PseudoIPCClient } from './pseudo-ipc';
-import { signalToCode } from '../utils/exit-codes';
+import { PseudoIPCClient } from './pseudo-ipc.js';
+import { signalToCode } from '../utils/exit-codes.js';
 
 const pseudoIPCPath = process.argv[2];
 const forkId = process.argv[3];

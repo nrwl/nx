@@ -1,18 +1,18 @@
-import { FileChange, readPackageJson } from '../file-utils';
+import { FileChange, readPackageJson } from '../file-utils.js';
 import {
   getImplicitlyTouchedProjects,
   getTouchedProjects,
-} from './locators/workspace-projects';
-import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js/project-graph/affected/touched-projects';
+} from './locators/workspace-projects.js';
+import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js/project-graph/affected/touched-projects.js';
 import {
   AffectedProjectGraphContext,
   TouchedProjectLocator,
-} from './affected-project-graph-models';
-import { NxJsonConfiguration } from '../../config/nx-json';
-import { ProjectGraph } from '../../config/project-graph';
-import { reverse } from '../operators';
-import { readNxJson } from '../../config/configuration';
-import { getTouchedProjectsFromProjectGlobChanges } from './locators/project-glob-changes';
+} from './affected-project-graph-models.js';
+import { NxJsonConfiguration } from '../../config/nx-json.js';
+import { ProjectGraph } from '../../config/project-graph.js';
+import { reverse } from '../operators.js';
+import { readNxJson } from '../../config/configuration.js';
+import { getTouchedProjectsFromProjectGlobChanges } from './locators/project-glob-changes.js';
 
 export async function filterAffected(
   graph: ProjectGraph,

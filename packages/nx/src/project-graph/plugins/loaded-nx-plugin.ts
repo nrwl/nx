@@ -1,9 +1,9 @@
 import type { ProjectGraph } from '../../config/project-graph';
-import { type PluginConfiguration } from '../../config/nx-json';
+import { type PluginConfiguration } from '../../config/nx-json.js';
 import {
   AggregateCreateNodesError,
   isAggregateCreateNodesError,
-} from '../error-types';
+} from '../error-types.js';
 import type { RawProjectGraphDependency } from '../project-graph-builder';
 import type {
   CreateDependenciesContext,
@@ -15,8 +15,8 @@ import type {
   PreTasksExecutionContext,
   ProjectsMetadata,
 } from './public-api';
-import { isIsolationEnabled } from './isolation/enabled';
-import { isDaemonEnabled } from '../../daemon/client/client';
+import { isIsolationEnabled } from './isolation/enabled.js';
+import { isDaemonEnabled } from '../../daemon/client/client.js';
 
 export class LoadedNxPlugin {
   index?: number;

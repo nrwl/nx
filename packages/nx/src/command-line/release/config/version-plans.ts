@@ -3,10 +3,10 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { join } from 'path';
 import { RELEASE_TYPES, ReleaseType } from 'semver';
-import { workspaceRoot } from '../../../utils/workspace-root';
-import { RawGitCommit } from '../utils/git';
-import { IMPLICIT_DEFAULT_RELEASE_GROUP } from './config';
-import { ReleaseGroupWithName } from './filter-release-groups';
+import { workspaceRoot } from '../../../utils/workspace-root.js';
+import { RawGitCommit } from '../utils/git.js';
+import { IMPLICIT_DEFAULT_RELEASE_GROUP } from './config.js';
+import { ReleaseGroupWithName } from './filter-release-groups.js';
 const fm = require('front-matter');
 
 export interface VersionPlanFile {

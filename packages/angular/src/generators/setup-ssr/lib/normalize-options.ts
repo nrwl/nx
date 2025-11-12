@@ -4,8 +4,8 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
-import { isNgStandaloneApp } from '../../../utils/nx-devkit/ast-utils';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import { isNgStandaloneApp } from '../../../utils/nx-devkit/ast-utils.js';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { NormalizedGeneratorOptions, Schema } from '../schema';
 
 export async function normalizeOptions(

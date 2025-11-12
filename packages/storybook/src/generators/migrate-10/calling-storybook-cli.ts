@@ -4,7 +4,7 @@ import {
   output,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
-import { Schema } from './schema';
+import { Schema } from './schema.js';
 
 export function callUpgrade(schema: Schema): 1 | Buffer {
   const packageManager = detectPackageManager();

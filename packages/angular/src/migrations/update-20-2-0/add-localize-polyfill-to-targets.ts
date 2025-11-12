@@ -4,7 +4,7 @@ import {
   updateProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { allTargetOptions } from '../../utils/targets';
+import { allTargetOptions } from '../../utils/targets.js';
 
 export const executorsToAddPolyfillTo = [
   '@angular/build:application',

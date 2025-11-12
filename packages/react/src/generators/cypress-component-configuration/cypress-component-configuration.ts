@@ -6,10 +6,10 @@ import {
   Tree,
 } from '@nx/devkit';
 import type { GeneratorCallback } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
-import { addFiles } from './lib/add-files';
-import { configureCypressCT } from '../../utils/ct-utils';
-import { CypressComponentConfigurationSchema } from './schema.d';
+import { nxVersion } from '../../utils/versions.js';
+import { addFiles } from './lib/add-files.js';
+import { configureCypressCT } from '../../utils/ct-utils.js';
+import { CypressComponentConfigurationSchema } from './schema.d.js';
 
 export function cypressComponentConfigGenerator(
   tree: Tree,

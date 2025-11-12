@@ -6,12 +6,12 @@ import {
 import { Compilation, RspackPluginInstance, type Compiler } from '@rspack/core';
 import { basename, extname, join } from 'node:path';
 import type { I18nOptions, IndexExpandedDefinition } from '../models';
-import { addEventDispatchContract } from '../utils/index-file/add-event-dispatch-contract';
-import { assertIsError } from '../utils/misc-helpers';
-import { ensureOutputPaths } from '../utils/i18n';
-import { addError, addWarning } from '../utils/rspack-diagnostics';
-import { urlJoin } from '../utils/url-join';
-import { getIndexOutputFile } from '../utils/index-file/get-index-output-file';
+import { addEventDispatchContract } from '../utils/index-file/add-event-dispatch-contract.js';
+import { assertIsError } from '../utils/misc-helpers.js';
+import { ensureOutputPaths } from '../utils/i18n.js';
+import { addError, addWarning } from '../utils/rspack-diagnostics.js';
+import { urlJoin } from '../utils/url-join.js';
+import { getIndexOutputFile } from '../utils/index-file/get-index-output-file.js';
 
 export interface IndexHtmlPluginOptions extends IndexHtmlGeneratorOptions {
   baseHref: string | undefined;

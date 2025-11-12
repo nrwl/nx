@@ -12,9 +12,9 @@ import type * as ts from 'typescript';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
-} from '../../utils/ast-utils';
-import { getComponentPropDefaults } from '../../utils/component-props';
-import { getUiFramework } from '../../utils/framework';
+} from '../../utils/ast-utils.js';
+import { getComponentPropDefaults } from '../../utils/component-props.js';
+import { getUiFramework } from '../../utils/framework.js';
 import { join } from 'path';
 
 let tsModule: typeof import('typescript');

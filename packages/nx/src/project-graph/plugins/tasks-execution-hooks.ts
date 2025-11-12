@@ -2,9 +2,9 @@ import type {
   PostTasksExecutionContext,
   PreTasksExecutionContext,
 } from './public-api';
-import { getPlugins } from './get-plugins';
-import { isOnDaemon } from '../../daemon/is-on-daemon';
-import { daemonClient, isDaemonEnabled } from '../../daemon/client/client';
+import { getPlugins } from './get-plugins.js';
+import { isOnDaemon } from '../../daemon/is-on-daemon.js';
+import { daemonClient, isDaemonEnabled } from '../../daemon/client/client.js';
 
 export async function runPreTasksExecution(
   pluginContext: PreTasksExecutionContext

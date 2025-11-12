@@ -1,6 +1,6 @@
 import { joinPathFragments, readProjectConfiguration, Tree } from '@nx/devkit';
 import { relative } from 'path';
-import { getRemixConfigValues } from './remix-config';
+import { getRemixConfigValues } from './remix-config.js';
 
 export function normalizeRoutePath(path: string) {
   return path.indexOf('/routes/') > -1

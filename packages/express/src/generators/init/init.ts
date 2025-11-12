@@ -6,7 +6,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { expressVersion, nxVersion } from '../../utils/versions';
+import { expressVersion, nxVersion } from '../../utils/versions.js';
 import type { Schema } from './schema';
 
 function updateDependencies(tree: Tree, schema: Schema) {

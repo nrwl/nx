@@ -8,7 +8,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
-import { mavenPluginVersion, nxVersion } from '../../utils/versions';
+import { mavenPluginVersion, nxVersion } from '../../utils/versions.js';
 
 export interface MavenInitGeneratorSchema {
   skipFormat?: boolean;

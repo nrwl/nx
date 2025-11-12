@@ -1,5 +1,5 @@
 import { type TargetConfiguration, type Tree } from '@nx/devkit';
-import { toProjectRelativePath } from './utils';
+import { toProjectRelativePath } from './utils.js';
 import { processTargetOutputs } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 
 export function testPostTargetTransformer(

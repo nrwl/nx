@@ -1,6 +1,6 @@
-import { detectPackageManager } from '../package-manager';
+import { detectPackageManager } from '../package-manager.js';
 import type { CatalogManager } from './manager';
-import { PnpmCatalogManager } from './pnpm-manager';
+import { PnpmCatalogManager } from './pnpm-manager.js';
 
 /**
  * Factory function to get the appropriate catalog manager based on the package manager

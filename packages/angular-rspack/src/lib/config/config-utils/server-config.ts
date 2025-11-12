@@ -5,11 +5,11 @@ import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
 } from '../../models';
-import { NgRspackPlugin } from '../../plugins/ng-rspack';
-import { PrerenderPlugin } from '../../plugins/prerender-plugin';
-import { isPackageInstalled } from '../../utils/misc-helpers';
-import { getDevServerConfig } from './dev-server-config-utils';
-import { getOptimization } from './optimization-config';
+import { NgRspackPlugin } from '../../plugins/ng-rspack.js';
+import { PrerenderPlugin } from '../../plugins/prerender-plugin.js';
+import { isPackageInstalled } from '../../utils/misc-helpers.js';
+import { getDevServerConfig } from './dev-server-config-utils.js';
+import { getOptimization } from './optimization-config.js';
 
 export async function getServerConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,

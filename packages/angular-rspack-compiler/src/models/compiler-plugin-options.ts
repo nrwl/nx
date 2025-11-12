@@ -1,4 +1,4 @@
-import { SourceFileCache } from '../utils/source-file-cache';
+import { SourceFileCache } from '../utils/source-file-cache.js';
 
 export interface CompilerPluginOptions {
   sourcemap: boolean;

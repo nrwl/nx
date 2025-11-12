@@ -10,9 +10,9 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import ignore = require('ignore');
-import { nxVersion } from '../../utils/versions';
-import { InitGeneratorSchema } from './schema';
-import { hasDotNetPlugin } from '../../utils/has-dotnet-plugin';
+import { nxVersion } from '../../utils/versions.js';
+import { InitGeneratorSchema } from './schema.js';
+import { hasDotNetPlugin } from '../../utils/has-dotnet-plugin.js';
 
 export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   const tasks: GeneratorCallback[] = [];

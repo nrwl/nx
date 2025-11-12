@@ -3,7 +3,7 @@ import type {
   ProjectsConfigurations,
   Workspace,
 } from './workspace-json-project-json';
-import { NxJsonConfiguration } from './nx-json';
+import { NxJsonConfiguration } from './nx-json.js';
 
 /**
  * Some metadata about a file

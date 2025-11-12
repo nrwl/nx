@@ -4,27 +4,27 @@ import { join } from 'node:path/posix';
 import {
   getExecutorInformation,
   parseExecutor,
-} from '../command-line/run/executor-utils';
-import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
-import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
+} from '../command-line/run/executor-utils.js';
+import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces.js';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph.js';
+import { Task, TaskGraph } from '../config/task-graph.js';
 import {
   TargetConfiguration,
   TargetDependencyConfig,
-} from '../config/workspace-json-project-json';
+} from '../config/workspace-json-project-json.js';
 import {
   getTransformableOutputs,
   validateOutputs as nativeValidateOutputs,
-} from '../native';
-import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
-import { isRelativePath } from '../utils/fileutils';
-import { findMatchingProjects } from '../utils/find-matching-projects';
-import { isGlobPattern } from '../utils/globs';
-import { joinPathFragments } from '../utils/path';
-import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
-import { splitTarget } from '../utils/split-target';
-import { workspaceRoot } from '../utils/workspace-root';
-import { isTuiEnabled } from './is-tui-enabled';
+} from '../native/index.js';
+import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph.js';
+import { isRelativePath } from '../utils/fileutils.js';
+import { findMatchingProjects } from '../utils/find-matching-projects.js';
+import { isGlobPattern } from '../utils/globs.js';
+import { joinPathFragments } from '../utils/path.js';
+import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line.js';
+import { splitTarget } from '../utils/split-target.js';
+import { workspaceRoot } from '../utils/workspace-root.js';
+import { isTuiEnabled } from './is-tui-enabled.js';
 
 export type NormalizedTargetDependencyConfig = TargetDependencyConfig & {
   projects: string[];

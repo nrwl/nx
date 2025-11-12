@@ -1,7 +1,7 @@
 import {
   ModuleFederationSsrDevServerOptions,
   NormalizedModuleFederationSsrDevServerOptions,
-} from '../schema';
+} from '../schema.js';
 import { join } from 'path';
 import {
   workspaceRoot,

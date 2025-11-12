@@ -2,9 +2,9 @@ import { globAsync, logger, Tree, workspaceRoot } from '@nx/devkit';
 import {
   gradleProjectGraphPluginName,
   gradleProjectGraphVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 import { dirname, join } from 'path';
-import { execGradleAsync, findGradlewFile } from '../../utils/exec-gradle';
+import { execGradleAsync, findGradlewFile } from '../../utils/exec-gradle.js';
 
 /**
  * Adds a `build.gradle(.kts)` file next to each `settings.gradle(.kts)` file found in the workspace.

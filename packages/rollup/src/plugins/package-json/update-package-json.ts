@@ -96,10 +96,10 @@ export function updatePackageJson(
             join(workspaceRoot, options.outputPath, fauxEsmFilePath),
             // Re-export from relative CJS file, and Node will synthetically export it as ESM.
             stripIndents`
-            export * from './${relativeFile}';
+            export * from './${relativeFile}.js';
             export { _default as default } from './${relativeFile.replace(
               /\.cjs\.js$/,
-              '.cjs.default.js'
+              .js'.cjs.default.js'
             )}';
             `
           );

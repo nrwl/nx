@@ -3,7 +3,7 @@ import { signalToCode } from '@nx/devkit/internal';
 import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
-import { UpgradeExecutorSchema } from './schema';
+import { UpgradeExecutorSchema } from './schema.js';
 
 export interface ReactNativeUpgradeOutput {
   success: boolean;

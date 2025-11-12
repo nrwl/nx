@@ -2,8 +2,8 @@ import {
   ModuleFederationConfig,
   normalizeProjectName,
   NxModuleFederationConfigOverride,
-} from '../../utils';
-import { getModuleFederationConfig } from './utils';
+} from '../../utils/index.js';
+import { getModuleFederationConfig } from './utils.js';
 import type { NormalModuleReplacementPlugin } from 'webpack';
 
 export async function withModuleFederationForSSR(

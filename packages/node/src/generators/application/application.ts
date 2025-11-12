@@ -19,11 +19,11 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { nxVersion } from '../../utils/versions';
-import { e2eProjectGenerator } from '../e2e-project/e2e-project';
-import { initGenerator } from '../init/init';
-import { setupDockerGenerator } from '../setup-docker/setup-docker';
-import { Schema } from './schema';
+import { nxVersion } from '../../utils/versions.js';
+import { e2eProjectGenerator } from '../e2e-project/e2e-project.js';
+import { initGenerator } from '../init/init.js';
+import { setupDockerGenerator } from '../setup-docker/setup-docker.js';
+import { Schema } from './schema.js';
 import {
   addAppFiles,
   addLintingToApplication,
@@ -32,7 +32,7 @@ import {
   addProxy,
   normalizeOptions,
   NormalizedSchema,
-} from './lib';
+} from './lib/index.js';
 
 function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
   if (options.isUsingTsSolutionConfig) {

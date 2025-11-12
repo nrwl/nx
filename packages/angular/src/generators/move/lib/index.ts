@@ -1,3 +1,3 @@
-export * from './update-module-name';
-export * from './update-ng-package';
-export * from './update-secondary-entry-points';
+export * from './update-module-name.js';
+export * from './update-ng-package.js';
+export * from './update-secondary-entry-points.js';

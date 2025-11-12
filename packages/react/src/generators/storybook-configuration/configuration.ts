@@ -7,9 +7,9 @@ import {
   runTasksInSerial,
   type Tree,
 } from '@nx/devkit';
-import { getUiFramework } from '../../utils/framework';
-import { nxVersion, reactViteVersion } from '../../utils/versions';
-import { storiesGenerator } from '../stories/stories';
+import { getUiFramework } from '../../utils/framework.js';
+import { nxVersion, reactViteVersion } from '../../utils/versions.js';
+import { storiesGenerator } from '../stories/stories.js';
 import type { StorybookConfigureSchema } from './schema';
 
 export function storybookConfigurationGenerator(

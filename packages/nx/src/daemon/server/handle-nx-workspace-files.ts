@@ -1,6 +1,6 @@
-import { getNxWorkspaceFilesFromContext } from '../../utils/workspace-context';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { HandlerResult } from './server';
+import { getNxWorkspaceFilesFromContext } from '../../utils/workspace-context.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { HandlerResult } from './server.js';
 
 export async function handleNxWorkspaceFiles(
   projectRootMap: Record<string, string>

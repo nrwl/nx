@@ -11,7 +11,7 @@ import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-
 import {
   findRootJestConfig,
   type JestPresetExtension,
-} from '../../../utils/config/config-file';
+} from '../../../utils/config/config-file.js';
 import type { NormalizedJestProjectSchema } from '../schema';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 

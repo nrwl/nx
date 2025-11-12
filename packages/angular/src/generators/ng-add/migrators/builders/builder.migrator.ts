@@ -10,8 +10,8 @@ import type {
   ValidationResult,
   WorkspaceRootFileType,
 } from '../../utilities';
-import { arrayToString } from '../../utilities';
-import { Migrator } from '../migrator';
+import { arrayToString } from '../../utilities/index.js';
+import { Migrator } from '../migrator.js';
 
 export abstract class BuilderMigrator extends Migrator {
   targets: Map<string, TargetConfiguration> = new Map();

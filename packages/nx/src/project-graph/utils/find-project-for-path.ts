@@ -1,7 +1,7 @@
 import { dirname } from 'path';
-import { ProjectGraphProjectNode } from '../../config/project-graph';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { normalizePath } from '../../utils/path';
+import { ProjectGraphProjectNode } from '../../config/project-graph.js';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json.js';
+import { normalizePath } from '../../utils/path.js';
 
 export type ProjectRootMappings = Map<string, string>;
 

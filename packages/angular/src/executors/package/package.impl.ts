@@ -9,8 +9,8 @@ import type { NgPackagr } from 'ng-packagr';
 import { join, resolve } from 'path';
 import { from } from 'rxjs';
 import { mapTo, switchMap } from 'rxjs/operators';
-import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
-import { getNgPackagrInstance } from './ng-packagr-adjustments/ng-packagr';
+import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript.js';
+import { getNgPackagrInstance } from './ng-packagr-adjustments/ng-packagr.js';
 import type { BuildAngularLibraryExecutorOptions } from './schema';
 
 async function initializeNgPackagr(

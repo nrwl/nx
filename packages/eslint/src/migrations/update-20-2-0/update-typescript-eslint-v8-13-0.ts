@@ -4,7 +4,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { gte, lt } from 'semver';
-import { getInstalledPackageVersion } from '../../utils/version-utils';
+import { getInstalledPackageVersion } from '../../utils/version-utils.js';
 
 export default async function (tree: Tree): Promise<GeneratorCallback> {
   const devDependencies: Record<string, string> = {};

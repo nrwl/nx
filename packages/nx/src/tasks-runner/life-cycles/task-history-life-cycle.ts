@@ -1,13 +1,13 @@
-import { readNxJson } from '../../config/nx-json';
-import { Task } from '../../config/task-graph';
-import { IS_WASM, type TaskRun as NativeTaskRun } from '../../native';
-import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
-import { output } from '../../utils/output';
-import { serializeTarget } from '../../utils/serialize-target';
-import { getTaskHistory, TaskHistory } from '../../utils/task-history';
-import { isTuiEnabled } from '../is-tui-enabled';
-import { LifeCycle, TaskResult } from '../life-cycle';
-import { LegacyTaskHistoryLifeCycle } from './task-history-life-cycle-old';
+import { readNxJson } from '../../config/nx-json.js';
+import { Task } from '../../config/task-graph.js';
+import { IS_WASM, type TaskRun as NativeTaskRun } from '../../native/index.js';
+import { isNxCloudUsed } from '../../utils/nx-cloud-utils.js';
+import { output } from '../../utils/output.js';
+import { serializeTarget } from '../../utils/serialize-target.js';
+import { getTaskHistory, TaskHistory } from '../../utils/task-history.js';
+import { isTuiEnabled } from '../is-tui-enabled.js';
+import { LifeCycle, TaskResult } from '../life-cycle.js';
+import { LegacyTaskHistoryLifeCycle } from './task-history-life-cycle-old.js';
 
 interface TaskRun extends NativeTaskRun {
   target: Task['target'];

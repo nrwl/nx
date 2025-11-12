@@ -1,6 +1,6 @@
 import { exec, ExecOptions, execSync } from 'child_process';
 import { dirname, join, posix, sep } from 'path';
-import { logger } from './logger';
+import { logger } from './logger.js';
 
 function execAsync(command: string, execOptions: ExecOptions) {
   return new Promise<string>((res, rej) => {

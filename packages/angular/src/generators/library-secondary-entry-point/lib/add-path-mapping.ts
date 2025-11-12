@@ -1,6 +1,6 @@
 import { Tree, updateJson } from '@nx/devkit';
 import { getRootTsConfigPathInTree } from '@nx/js';
-import { NormalizedGeneratorOptions } from '../schema';
+import { NormalizedGeneratorOptions } from '../schema.js';
 
 export function addPathMapping(
   tree: Tree,

@@ -16,8 +16,8 @@ import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript'
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';
-import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
-import { getInstalledAngularVersionInfo as getInstalledAngularVersionInfoFromTree } from '../../generators/utils/version-utils';
+import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils.js';
+import { getInstalledAngularVersionInfo as getInstalledAngularVersionInfoFromTree } from '../../generators/utils/version-utils.js';
 
 let tsModule: typeof import('typescript');
 

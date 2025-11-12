@@ -8,11 +8,11 @@ import {
   ProjectConfiguration,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { RspackExecutorSchema } from '../../executors/rspack/schema';
-import { extractRspackOptions } from './lib/extract-rspack-options';
-import { normalizePathOptions } from './lib/normalize-path-options';
+import { RspackExecutorSchema } from '../../executors/rspack/schema.js';
+import { extractRspackOptions } from './lib/extract-rspack-options.js';
+import { normalizePathOptions } from './lib/normalize-path-options.js';
 import { parse } from 'path';
-import { validateProject } from './lib/validate-project';
+import { validateProject } from './lib/validate-project.js';
 
 interface Schema {
   project?: string;

@@ -1,5 +1,5 @@
 import { type Tree } from '@nx/devkit';
-import { indentBy } from './indent-by';
+import { indentBy } from './indent-by.js';
 import { tsquery } from '@phenomnomnominal/tsquery';
 
 const DEFINE_CONFIG_SELECTOR =

@@ -1,1 +1,1 @@
-export { applicationGenerator } from './src/generators/application/application';
+export { applicationGenerator } from './src/generators/application/application.js';

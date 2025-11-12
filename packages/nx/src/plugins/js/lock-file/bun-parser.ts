@@ -4,14 +4,14 @@ import { satisfies } from 'semver';
 import {
   DependencyType,
   type ProjectGraphExternalNode,
-} from '../../../config/project-graph';
-import { hashArray } from '../../../hasher/file-hasher';
+} from '../../../config/project-graph.js';
+import { hashArray } from '../../../hasher/file-hasher.js';
 import type { CreateDependenciesContext } from '../../../project-graph/plugins';
 import {
   type RawProjectGraphDependency,
   validateDependency,
-} from '../../../project-graph/project-graph-builder';
-import { parseJson } from '../../../utils/json';
+} from '../../../project-graph/project-graph-builder.js';
+import { parseJson } from '../../../utils/json.js';
 
 const DEPENDENCY_TYPES = [
   'dependencies',

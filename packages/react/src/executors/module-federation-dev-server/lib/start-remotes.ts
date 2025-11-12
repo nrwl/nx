@@ -1,5 +1,5 @@
 import { ExecutorContext, ProjectConfiguration, runExecutor } from '@nx/devkit';
-import { NormalizedModuleFederationDevServerOptions } from '../schema';
+import { NormalizedModuleFederationDevServerOptions } from '../schema.js';
 
 export async function startRemotes(
   remotes: string[],

@@ -18,14 +18,14 @@ import {
   populateGradleReport,
   getCurrentGradleReport,
   GradleReport,
-} from './utils/get-gradle-report';
+} from './utils/get-gradle-report.js';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
   gradleConfigAndTestGlob,
   gradleConfigGlob,
   splitConfigFiles,
-} from '../utils/split-config-files';
-import { getGradleExecFile, findGradlewFile } from '../utils/exec-gradle';
+} from '../utils/split-config-files.js';
+import { getGradleExecFile, findGradlewFile } from '../utils/exec-gradle.js';
 
 const cacheableTaskType = new Set(['Build', 'Verification']);
 const dependsOnMap = {

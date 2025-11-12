@@ -1,8 +1,8 @@
 import * as path from 'path';
 import type * as Prettier from 'prettier';
-import { isUsingPrettier } from '../../utils/is-using-prettier';
+import { isUsingPrettier } from '../../utils/is-using-prettier.js';
 import type { Tree } from '../tree';
-import { getNxRequirePaths } from '../../utils/installation-directory';
+import { getNxRequirePaths } from '../../utils/installation-directory.js';
 
 /**
  * Formats all the created or updated files using Prettier

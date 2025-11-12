@@ -1,5 +1,5 @@
-import { RspackExecutorSchema } from '../../../executors/rspack/schema';
-import { toProjectRelativePath } from './utils';
+import { RspackExecutorSchema } from '../../../executors/rspack/schema.js';
+import { toProjectRelativePath } from './utils.js';
 
 const executorFieldsToNormalize: Array<keyof RspackExecutorSchema> = [
   'outputPath',

@@ -15,9 +15,9 @@ import { tsquery } from '@phenomnomnominal/tsquery';
 import { basename, resolve } from 'path';
 import * as ts from 'typescript';
 import type { RspackOptionsNormalized } from '@rspack/core';
-import { buildServePath } from '../../../executors/dev-server/lib/serve-path';
+import { buildServePath } from '../../../executors/dev-server/lib/serve-path.js';
 import type { DevServerExecutorSchema as DevServerExecutorOptions } from '../../../executors/dev-server/schema';
-import { toPropertyAssignment } from './ast';
+import { toPropertyAssignment } from './ast.js';
 import type { MigrationContext, TransformerContext } from './types';
 
 export function servePostTargetTransformerFactory(

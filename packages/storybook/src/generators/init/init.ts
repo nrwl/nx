@@ -12,15 +12,15 @@ import {
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { gte } from 'semver';
-import { createNodesV2 } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin.js';
 import {
   getInstalledStorybookVersion,
   getStorybookVersionToInstall,
   storybookMajorVersion,
-} from '../../utils/utilities';
-import { nxVersion, storybookVersion } from '../../utils/versions';
-import { Schema } from './schema';
-import { updateGitignore } from './lib/update-gitignore';
+} from '../../utils/utilities.js';
+import { nxVersion, storybookVersion } from '../../utils/versions.js';
+import { Schema } from './schema.js';
+import { updateGitignore } from './lib/update-gitignore.js';
 
 function checkDependenciesInstalled(
   host: Tree,

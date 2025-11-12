@@ -17,7 +17,7 @@ import {
   typesReactIsVersion,
   typesReactV18Version,
   typesReactVersion,
-} from './versions';
+} from './versions.js';
 
 type ReactDependenciesVersions = {
   react: string;

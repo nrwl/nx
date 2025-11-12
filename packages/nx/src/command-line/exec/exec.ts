@@ -5,28 +5,28 @@ import * as yargs from 'yargs-parser';
 import { Arguments } from 'yargs';
 import { existsSync } from 'fs';
 
-import { findMatchingProjects } from '../../utils/find-matching-projects';
-import { readNxJson } from '../../config/configuration';
+import { findMatchingProjects } from '../../utils/find-matching-projects.js';
+import { readNxJson } from '../../config/configuration.js';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
-} from '../../config/project-graph';
+} from '../../config/project-graph.js';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
-} from '../../project-graph/project-graph';
+} from '../../project-graph/project-graph.js';
 import {
   NxArgs,
   splitArgsIntoNxArgsAndOverrides,
-} from '../../utils/command-line-utils';
-import { readJsonFile } from '../../utils/fileutils';
-import { output } from '../../utils/output';
-import { PackageJson } from '../../utils/package-json';
-import { getPackageManagerCommand } from '../../utils/package-manager';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { joinPathFragments } from '../../utils/path';
-import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
-import { getCommandProjects } from '../../commands-runner/get-command-projects';
+} from '../../utils/command-line-utils.js';
+import { readJsonFile } from '../../utils/fileutils.js';
+import { output } from '../../utils/output.js';
+import { PackageJson } from '../../utils/package-json.js';
+import { getPackageManagerCommand } from '../../utils/package-manager.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { joinPathFragments } from '../../utils/path.js';
+import { calculateDefaultProjectName } from '../../config/calculate-default-project-name.js';
+import { getCommandProjects } from '../../commands-runner/get-command-projects.js';
 
 export async function nxExecCommand(
   args: Record<string, string | string[] | boolean>

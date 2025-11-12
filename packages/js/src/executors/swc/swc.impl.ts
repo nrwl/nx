@@ -2,25 +2,25 @@ import { ExecutorContext, readJsonFile } from '@nx/devkit';
 import { rmSync } from 'node:fs';
 import { dirname, join, normalize, relative, resolve } from 'path';
 import { globSync } from 'tinyglobby';
-import { copyAssets } from '../../utils/assets';
-import { assetGlobsToFiles, FileInputOutput } from '../../utils/assets/assets';
+import { copyAssets } from '../../utils/assets/index.js';
+import { assetGlobsToFiles, FileInputOutput } from '../../utils/assets/assets.js';
 import type { DependentBuildableProjectNode } from '../../utils/buildable-libs-utils';
-import { checkDependencies } from '../../utils/check-dependencies';
+import { checkDependencies } from '../../utils/check-dependencies.js';
 import {
   getHelperDependency,
   HelperDependency,
-} from '../../utils/compiler-helper-dependency';
+} from '../../utils/compiler-helper-dependency.js';
 import {
   copyPackageJson,
   type CopyPackageJsonResult,
-} from '../../utils/package-json';
+} from '../../utils/package-json/index.js';
 import {
   NormalizedSwcExecutorOptions,
   SwcExecutorOptions,
-} from '../../utils/schema';
-import { compileSwc, compileSwcWatch } from '../../utils/swc/compile-swc';
-import { getSwcrcPath } from '../../utils/swc/get-swcrc-path';
-import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
+} from '../../utils/schema.js';
+import { compileSwc, compileSwcWatch } from '../../utils/swc/compile-swc.js';
+import { getSwcrcPath } from '../../utils/swc/get-swcrc-path.js';
+import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup.js';
 
 function normalizeOptions(
   options: SwcExecutorOptions,

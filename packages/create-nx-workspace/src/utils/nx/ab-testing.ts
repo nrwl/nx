@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process';
-import { isCI } from '../ci/is-ci';
-import { getPackageManagerCommand } from '../package-manager';
+import { isCI } from '../ci/is-ci.js';
+import { getPackageManagerCommand } from '../package-manager.js';
 
 export const NxCloudChoices = [
   'github',

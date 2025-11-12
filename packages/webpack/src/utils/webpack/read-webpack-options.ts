@@ -1,5 +1,5 @@
 import { workspaceRoot } from '@nx/devkit';
-import { isNxWebpackComposablePlugin } from '../config';
+import { isNxWebpackComposablePlugin } from '../config.js';
 import { Configuration } from 'webpack';
 import { readNxJsonFromDisk } from 'nx/src/devkit-internals';
 

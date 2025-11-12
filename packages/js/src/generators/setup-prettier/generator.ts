@@ -4,8 +4,8 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { generatePrettierSetup } from '../../utils/prettier';
-import { prettierVersion } from '../../utils/versions';
+import { generatePrettierSetup } from '../../utils/prettier.js';
+import { prettierVersion } from '../../utils/versions.js';
 import type { GeneratorOptions } from './schema';
 
 export async function setupPrettierGenerator(

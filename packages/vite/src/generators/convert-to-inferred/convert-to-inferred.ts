@@ -3,11 +3,11 @@ import {
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { createNodesV2, VitePluginOptions } from '../../plugins/plugin';
-import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
-import { servePostTargetTransformer } from './lib/serve-post-target-transformer';
-import { previewPostTargetTransformer } from './lib/preview-post-target-transformer';
-import { testPostTargetTransformer } from './lib/test-post-target-transformer';
+import { createNodesV2, VitePluginOptions } from '../../plugins/plugin.js';
+import { buildPostTargetTransformer } from './lib/build-post-target-transformer.js';
+import { servePostTargetTransformer } from './lib/serve-post-target-transformer.js';
+import { previewPostTargetTransformer } from './lib/preview-post-target-transformer.js';
+import { testPostTargetTransformer } from './lib/test-post-target-transformer.js';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 
 interface Schema {

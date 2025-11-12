@@ -4,11 +4,11 @@ import {
   RawProjectGraphDependency,
 } from '@nx/devkit';
 
-import { DotNetPluginOptions } from './create-nodes';
+import { DotNetPluginOptions } from './create-nodes.js';
 import {
   readCachedAnalysisResult,
   isAnalysisErrorResult,
-} from '../analyzer/analyzer-client';
+} from '../analyzer/analyzer-client.js';
 import { createProjectRootMappingsFromProjectConfigurations } from '@nx/devkit/internal';
 
 export const createDependencies: CreateDependencies<

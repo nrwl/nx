@@ -4,8 +4,8 @@ import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 import { platform } from 'os';
 
-import { ReactNativeBuildIosOptions } from './schema';
-import { getCliOptions } from '../../utils/get-cli-options';
+import { ReactNativeBuildIosOptions } from './schema.js';
+import { getCliOptions } from '../../utils/get-cli-options.js';
 
 export interface ReactNativeBuildIosOutput {
   success: boolean;

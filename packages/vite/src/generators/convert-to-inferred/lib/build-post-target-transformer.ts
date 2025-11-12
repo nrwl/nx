@@ -9,7 +9,7 @@ import {
   addConfigValuesToViteConfig,
   getViteConfigPath,
   toProjectRelativePath,
-} from './utils';
+} from './utils.js';
 import { processTargetOutputs } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 
 export function buildPostTargetTransformer(

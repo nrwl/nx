@@ -1,4 +1,4 @@
-import { logger } from './logger';
+import { logger } from './logger.js';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import type {
   ProjectsConfigurations,

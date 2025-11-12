@@ -7,7 +7,7 @@ import {
   NamedImports,
   ScriptTarget,
 } from 'typescript';
-import { insertStatementAfterImports } from './insert-statement-after-imports';
+import { insertStatementAfterImports } from './insert-statement-after-imports.js';
 
 export function insertImport(
   tree: Tree,

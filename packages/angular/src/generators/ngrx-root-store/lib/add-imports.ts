@@ -4,10 +4,10 @@ import {
   addImportToModule,
   addProviderToAppConfig,
   addProviderToBootstrapApplication,
-} from '../../../utils/nx-devkit/ast-utils';
+} from '../../../utils/nx-devkit/ast-utils.js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { insertImport } from '@nx/js';
-import { NormalizedNgRxRootStoreGeneratorOptions } from './normalize-options';
+import { NormalizedNgRxRootStoreGeneratorOptions } from './normalize-options.js';
 
 let tsModule: typeof import('typescript');
 

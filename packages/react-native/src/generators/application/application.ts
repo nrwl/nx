@@ -10,20 +10,20 @@ import {
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
-import { addLinting } from '../../utils/add-linting';
-import { addJest } from '../../utils/add-jest';
-import { chmodAndroidGradlewFilesTask } from '../../utils/chmod-android-gradle-files';
-import { runPodInstall } from '../../utils/pod-install-task';
-import { webConfigurationGenerator } from '../web-configuration/web-configuration';
+import { addLinting } from '../../utils/add-linting.js';
+import { addJest } from '../../utils/add-jest.js';
+import { chmodAndroidGradlewFilesTask } from '../../utils/chmod-android-gradle-files.js';
+import { runPodInstall } from '../../utils/pod-install-task.js';
+import { webConfigurationGenerator } from '../web-configuration/web-configuration.js';
 
-import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
+import { NormalizedSchema, normalizeOptions } from './lib/normalize-options.js';
 import initGenerator from '../init/init';
-import { addProject } from './lib/add-project';
-import { createApplicationFiles } from './lib/create-application-files';
-import { addE2e } from './lib/add-e2e';
-import { Schema } from './schema';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
-import { syncDeps } from '../../executors/sync-deps/sync-deps.impl';
+import { addProject } from './lib/add-project.js';
+import { createApplicationFiles } from './lib/create-application-files.js';
+import { addE2e } from './lib/add-e2e.js';
+import { Schema } from './schema.js';
+import { ensureDependencies } from '../../utils/ensure-dependencies.js';
+import { syncDeps } from '../../executors/sync-deps/sync-deps.impl.js';
 import { PackageJson } from 'nx/src/utils/package-json';
 import {
   addProjectToTsSolutionWorkspace,

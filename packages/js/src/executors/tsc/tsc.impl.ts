@@ -6,19 +6,19 @@ import {
   output,
 } from '@nx/devkit';
 import type { TypeScriptCompilationOptions } from '@nx/workspace/src/utilities/typescript/compilation';
-import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler';
-import { checkDependencies } from '../../utils/check-dependencies';
+import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler.js';
+import { checkDependencies } from '../../utils/check-dependencies.js';
 import {
   getHelperDependency,
   HelperDependency,
-} from '../../utils/compiler-helper-dependency';
-import { updatePackageJson } from '../../utils/package-json/update-package-json';
-import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema';
-import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
-import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
-import { getCustomTrasformersFactory, normalizeOptions } from './lib';
-import { readTsConfig } from '../../utils/typescript/ts-config';
-import { createEntryPoints } from '../../utils/package-json/create-entry-points';
+} from '../../utils/compiler-helper-dependency.js';
+import { updatePackageJson } from '../../utils/package-json/update-package-json.js';
+import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema.js';
+import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files.js';
+import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes.js';
+import { getCustomTrasformersFactory, normalizeOptions } from './lib/index.js';
+import { readTsConfig } from '../../utils/typescript/ts-config.js';
+import { createEntryPoints } from '../../utils/package-json/create-entry-points.js';
 
 export function determineModuleFormatFromTsConfig(
   absolutePathToTsConfig: string

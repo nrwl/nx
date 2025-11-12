@@ -12,13 +12,13 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { NormalizedGeneratorOptions } from '../schema';
 import {
   DEFAULT_BROWSER_DIR,
   DEFAULT_MEDIA_DIR,
   DEFAULT_SERVER_DIR,
-} from './constants';
+} from './constants.js';
 
 export function updateProjectConfigForApplicationBuilder(
   tree: Tree,

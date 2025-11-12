@@ -21,7 +21,7 @@ import { connect, Server, Socket } from 'net';
 import {
   consumeMessagesFromSocket,
   MESSAGE_END_SEQ,
-} from '../utils/consume-messages-from-socket';
+} from '../utils/consume-messages-from-socket.js';
 import { Serializable } from 'child_process';
 
 export interface PseudoIPCMessage {

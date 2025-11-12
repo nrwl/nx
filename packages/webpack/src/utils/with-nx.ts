@@ -1,8 +1,8 @@
 import { Configuration } from 'webpack';
-import { NxComposableWebpackPlugin, NxWebpackExecutionContext } from './config';
-import { applyBaseConfig } from '../plugins/nx-webpack-plugin/lib/apply-base-config';
-import { NxAppWebpackPluginOptions } from '../plugins/nx-webpack-plugin/nx-app-webpack-plugin-options';
-import { normalizeAssets } from '../plugins/nx-webpack-plugin/lib/normalize-options';
+import { NxComposableWebpackPlugin, NxWebpackExecutionContext } from './config.js';
+import { applyBaseConfig } from '../plugins/nx-webpack-plugin/lib/apply-base-config.js';
+import { NxAppWebpackPluginOptions } from '../plugins/nx-webpack-plugin/nx-app-webpack-plugin-options.js';
+import { normalizeAssets } from '../plugins/nx-webpack-plugin/lib/normalize-options.js';
 
 const processed = new Set();
 

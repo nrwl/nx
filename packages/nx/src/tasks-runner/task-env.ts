@@ -1,7 +1,7 @@
-import { Task } from '../config/task-graph';
+import { Task } from '../config/task-graph.js';
 import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
-import { workspaceRoot } from '../utils/workspace-root';
+import { workspaceRoot } from '../utils/workspace-root.js';
 import { join } from 'node:path';
 
 export function getEnvVariablesForBatchProcess(

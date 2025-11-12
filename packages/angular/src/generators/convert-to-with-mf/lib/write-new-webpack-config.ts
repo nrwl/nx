@@ -3,7 +3,7 @@ import {
   getExposedModulesFromRemote,
   getRemotesFromHost,
   IsHostRemoteConfigResult,
-} from './is-host-remote-config';
+} from './is-host-remote-config.js';
 
 export function writeNewWebpackConfig(
   ast: SourceFile,

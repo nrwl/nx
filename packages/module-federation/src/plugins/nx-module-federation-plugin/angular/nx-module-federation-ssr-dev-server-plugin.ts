@@ -11,7 +11,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
   workspaceRoot,
 } from '@nx/devkit';
-import { ModuleFederationConfig } from '../../../utils/models';
+import { ModuleFederationConfig } from '../../../utils/models/index.js';
 import { dirname, extname, join } from 'path';
 import { existsSync } from 'fs';
 import {
@@ -22,8 +22,8 @@ import {
   parseRemotesConfig,
   startRemoteProxies,
   startStaticRemotesFileServer,
-} from '../../utils';
-import { NxModuleFederationDevServerConfig } from '../../models';
+} from '../../utils/index.js';
+import { NxModuleFederationDevServerConfig } from '../../models/index.js';
 import { ChildProcess, fork } from 'node:child_process';
 
 const PLUGIN_NAME = 'NxModuleFederationSSRDevServerPlugin';

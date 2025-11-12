@@ -6,7 +6,7 @@ import {
 } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import type { AngularProjectConfiguration } from '../../../utils/types';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function createProject(tree: Tree, options: NormalizedSchema) {

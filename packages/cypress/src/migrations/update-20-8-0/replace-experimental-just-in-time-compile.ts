@@ -8,13 +8,13 @@ import type {
   Printer,
   PropertyAssignment,
 } from 'typescript';
-import { resolveCypressConfigObject } from '../../utils/config';
+import { resolveCypressConfigObject } from '../../utils/config.js';
 import {
   cypressProjectConfigs,
   getObjectProperty,
   removeObjectProperty,
   updateObjectProperty,
-} from '../../utils/migrations';
+} from '../../utils/migrations.js';
 
 let printer: Printer;
 let ts: typeof import('typescript');

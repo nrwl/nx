@@ -2,8 +2,8 @@ import { logger, names, readProjectConfiguration, Tree } from '@nx/devkit';
 
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
-import { assertValidStyle } from '../../../utils/assertion';
-import { NormalizedSchema, Schema } from '../schema';
+import { assertValidStyle } from '../../../utils/assertion.js';
+import { NormalizedSchema, Schema } from '../schema.js';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function normalizeOptions(

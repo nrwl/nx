@@ -1,4 +1,4 @@
-import { getCloudUrl, isNxCloudId } from './get-cloud-options';
+import { getCloudUrl, isNxCloudId } from './get-cloud-options.js';
 
 export async function isWorkspaceClaimed(accessToken: string) {
   if (!accessToken) return false;

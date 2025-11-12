@@ -1,7 +1,7 @@
 import { CommandModule } from 'yargs';
-import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
-import { withVerbose } from '../yargs-utils/shared-options';
-import { handleErrors } from '../../utils/handle-errors';
+import { linkToNxDevAndExamples } from '../yargs-utils/documentation.js';
+import { withVerbose } from '../yargs-utils/shared-options.js';
+import { handleErrors } from '../../utils/handle-errors.js';
 
 export const yargsImportCommand: CommandModule = {
   command: 'import [sourceRepository] [destinationDirectory]',
@@ -46,7 +46,7 @@ export const yargsImportCommand: CommandModule = {
     ),
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      return (await import('./import')).importHandler(args as any);
+      return (await import('./import.js')).importHandler(args as any);
     });
     process.exit(exitCode);
   },

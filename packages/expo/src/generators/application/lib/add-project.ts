@@ -9,8 +9,8 @@ import {
 } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
-import { NormalizedSchema } from './normalize-options';
+import { hasExpoPlugin } from '../../../utils/has-expo-plugin.js';
+import { NormalizedSchema } from './normalize-options.js';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const hasPlugin = hasExpoPlugin(host);

@@ -1,5 +1,5 @@
 import type { NxReleaseConfiguration } from '../../../config/nx-json';
-import { output } from '../../../utils/output';
+import { output } from '../../../utils/output.js';
 import type { NxReleaseConfig } from '../config/config';
 
 export function printConfigAndExit({

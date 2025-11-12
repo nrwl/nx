@@ -1,9 +1,9 @@
-import { workspaceRoot } from '../../utils/workspace-root';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 import {
   hashMultiGlobWithWorkspaceContext,
   hashWithWorkspaceContext,
-} from '../../utils/workspace-context';
-import { HandlerResult } from './server';
+} from '../../utils/workspace-context.js';
+import { HandlerResult } from './server.js';
 
 export async function handleHashGlob(
   globs: string[],

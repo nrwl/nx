@@ -3,8 +3,8 @@ import {
   SwcJsMinimizerRspackPlugin,
   Configuration,
 } from '@rspack/core';
-import { NormalizedAngularRspackPluginOptions } from '../../models';
-import { TransferSizePlugin } from '../../plugins/transfer-size-plugin';
+import { NormalizedAngularRspackPluginOptions } from '../../models/index.js';
+import { TransferSizePlugin } from '../../plugins/transfer-size-plugin.js';
 
 export const VENDORS_TEST = /[\\/]node_modules[\\/]/;
 

@@ -6,7 +6,7 @@ import {
   getConfigFilePath,
   getInstalledPackageVersionInfo,
   STORYBOOK_PROP_MAPPINGS,
-} from './utils';
+} from './utils.js';
 export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
   return (
     target: TargetConfiguration,

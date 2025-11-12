@@ -5,7 +5,7 @@ import {
   getPackageManagerWorkspacesPatterns,
   isProjectIncludedInPackageManagerWorkspaces,
   isUsingPackageManagerWorkspaces,
-} from '../package-manager-workspaces';
+} from '../package-manager-workspaces.js';
 
 /**
  * The TS solution setup requires:

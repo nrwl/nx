@@ -8,9 +8,9 @@ import {
 import { getRootTsConfigFileName } from '@nx/js';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { parse } from 'semver';
-import { UnitTestRunner } from '../../../utils/test-runners';
+import { UnitTestRunner } from '../../../utils/test-runners.js';
 import type { AngularProjectConfiguration } from '../../../utils/types';
-import { getInstalledAngularVersion } from '../../utils/version-utils';
+import { getInstalledAngularVersion } from '../../utils/version-utils.js';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function createFiles(

@@ -6,9 +6,9 @@ import {
   ensurePackage,
 } from '@nx/devkit';
 import { createOrEditViteConfig, viteConfigurationGenerator } from '@nx/vite';
-import { nxVersion } from '../../../utils/versions';
+import { nxVersion } from '../../../utils/versions.js';
 
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 
 export async function addVite(
   tree: Tree,

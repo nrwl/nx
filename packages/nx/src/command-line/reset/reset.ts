@@ -1,16 +1,16 @@
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { daemonClient } from '../../daemon/client/client';
-import { cacheDir, workspaceDataDirectory } from '../../utils/cache-directory';
-import { output } from '../../utils/output';
-import { getNativeFileCacheLocation } from '../../native/native-file-cache-location';
-import { ResetCommandOptions } from './command-object';
-import { getCloudClient } from '../../nx-cloud/utilities/client';
-import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options';
-import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
-import { readNxJson } from '../../config/configuration';
-import { getBundleInstallDefaultLocation as getCloudClientLocation } from '../../nx-cloud/update-manager';
+import { daemonClient } from '../../daemon/client/client.js';
+import { cacheDir, workspaceDataDirectory } from '../../utils/cache-directory.js';
+import { output } from '../../utils/output.js';
+import { getNativeFileCacheLocation } from '../../native/native-file-cache-location.js';
+import { ResetCommandOptions } from './command-object.js';
+import { getCloudClient } from '../../nx-cloud/utilities/client.js';
+import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options.js';
+import { isNxCloudUsed } from '../../utils/nx-cloud-utils.js';
+import { readNxJson } from '../../config/configuration.js';
+import { getBundleInstallDefaultLocation as getCloudClientLocation } from '../../nx-cloud/update-manager.js';
 
 // Wait at max 5 seconds before giving up on a failing operation.
 const INCREMENTAL_BACKOFF_MAX_DURATION = 5000;

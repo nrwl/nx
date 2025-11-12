@@ -4,8 +4,8 @@ import {
   ACCESS_TOKEN,
   NX_CLOUD_NO_TIMEOUTS,
   UNLIMITED_TIMEOUT,
-} from './environment';
-import { CloudTaskRunnerOptions } from '../nx-cloud-tasks-runner-shell';
+} from './environment.js';
+import { CloudTaskRunnerOptions } from '../nx-cloud-tasks-runner-shell.js';
 
 export function createApiAxiosInstance(options: CloudTaskRunnerOptions) {
   let axiosConfigBuilder = (axiosConfig: AxiosRequestConfig) => axiosConfig;

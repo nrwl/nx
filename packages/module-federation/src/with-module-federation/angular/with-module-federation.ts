@@ -2,8 +2,8 @@ import {
   normalizeProjectName,
   type ModuleFederationConfig,
   type NxModuleFederationConfigOverride,
-} from '../../utils';
-import { getModuleFederationConfig } from './utils';
+} from '../../utils/index.js';
+import { getModuleFederationConfig } from './utils.js';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
 
 export async function withModuleFederation(

@@ -5,8 +5,8 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { getDefinedCustomConditionName } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { maybeJs } from '../../../utils/maybe-js';
-import { NormalizedSchema } from '../../application/schema';
+import { maybeJs } from '../../../utils/maybe-js.js';
+import { NormalizedSchema } from '../../application/schema.js';
 
 export function setupPackageJsonExportsForRemote(
   tree: Tree,

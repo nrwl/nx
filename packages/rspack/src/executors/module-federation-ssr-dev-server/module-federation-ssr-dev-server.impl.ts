@@ -9,8 +9,8 @@ import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
 import ssrDevServerExecutor from '../ssr-dev-server/ssr-dev-server.impl';
-import { normalizeOptions, startRemotes } from './lib';
-import { ModuleFederationSsrDevServerOptions } from './schema';
+import { normalizeOptions, startRemotes } from './lib/index.js';
+import { ModuleFederationSsrDevServerOptions } from './schema.js';
 
 export default async function* moduleFederationSsrDevServer(
   ssrDevServerOptions: ModuleFederationSsrDevServerOptions,

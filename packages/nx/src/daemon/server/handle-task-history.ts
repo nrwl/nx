@@ -1,4 +1,4 @@
-import { getTaskHistory } from '../../utils/task-history';
+import { getTaskHistory } from '../../utils/task-history.js';
 import type { TaskRun, TaskTarget } from '../../native';
 
 export async function handleRecordTaskRuns(taskRuns: TaskRun[]) {

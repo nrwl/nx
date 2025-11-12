@@ -9,14 +9,14 @@ import {
   type I18nOptions,
   IndexExpandedDefinition,
   NormalizedAngularRspackPluginOptions,
-} from '../models';
-import { getIndexOutputFile } from '../utils/index-file/get-index-output-file';
-import { WorkerPool } from './tools/worker-pool';
-import { maxWorkers } from '../utils/max-workers';
-import { ensureOutputPaths, getLocaleOutputPaths } from '../utils/i18n';
-import { RenderOptions, RenderResult } from './tools/render-worker';
-import { addError, addWarning } from '../utils/rspack-diagnostics';
-import { assertIsError } from '../utils/misc-helpers';
+} from '../models/index.js';
+import { getIndexOutputFile } from '../utils/index-file/get-index-output-file.js';
+import { WorkerPool } from './tools/worker-pool.js';
+import { maxWorkers } from '../utils/max-workers.js';
+import { ensureOutputPaths, getLocaleOutputPaths } from '../utils/i18n.js';
+import { RenderOptions, RenderResult } from './tools/render-worker.js';
+import { addError, addWarning } from '../utils/rspack-diagnostics.js';
+import { assertIsError } from '../utils/misc-helpers.js';
 
 class RoutesSet extends Set<string> {
   override add(value: string): this {

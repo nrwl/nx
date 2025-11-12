@@ -2,16 +2,16 @@ import type { BuilderOutput } from '@angular-devkit/architect';
 import type { ExecutorContext } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
-import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils';
-import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
-import { assertBuilderPackageIsInstalled } from '../utilities/builder-package';
+import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils.js';
+import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs.js';
+import { assertBuilderPackageIsInstalled } from '../utilities/builder-package.js';
 import {
   loadIndexHtmlTransformer,
   loadPlugins,
-} from '../utilities/esbuild-extensions';
+} from '../utilities/esbuild-extensions.js';
 import type { ApplicationExecutorOptions } from './schema';
-import { normalizeOptions } from './utils/normalize-options';
-import { validateOptions } from './utils/validate-options';
+import { normalizeOptions } from './utils/normalize-options.js';
+import { validateOptions } from './utils/validate-options.js';
 
 export default async function* applicationExecutor(
   options: ApplicationExecutorOptions,

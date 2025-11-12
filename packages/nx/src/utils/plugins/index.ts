@@ -1,9 +1,9 @@
-export { getInstalledPluginsAndCapabilities } from './installed-plugins';
-export { getLocalWorkspacePlugins } from './local-plugins';
+export { getInstalledPluginsAndCapabilities } from './installed-plugins.js';
+export { getLocalWorkspacePlugins } from './local-plugins.js';
 export {
   listPlugins,
   listAlsoAvailableCorePlugins,
   listPluginCapabilities,
-} from './output';
-export { getPluginCapabilities } from './plugin-capabilities';
-export { deriveGroupNameFromTarget } from './atomizer-utils';
+} from './output.js';
+export { getPluginCapabilities } from './plugin-capabilities.js';
+export { deriveGroupNameFromTarget } from './atomizer-utils.js';

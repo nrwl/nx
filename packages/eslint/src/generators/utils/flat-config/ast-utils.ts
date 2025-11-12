@@ -6,7 +6,7 @@ import {
 } from '@nx/devkit';
 import { Linter } from 'eslint';
 import * as ts from 'typescript';
-import { mapFilePath } from './path-utils';
+import { mapFilePath } from './path-utils.js';
 
 /**
  * Supports direct identifiers, and those nested within an object (of arbitrary depth)

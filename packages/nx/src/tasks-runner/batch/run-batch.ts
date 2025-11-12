@@ -4,20 +4,20 @@ import {
   BatchMessageType,
   CompleteTaskMessage,
   BatchResults,
-} from './batch-messages';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { combineOptionsForExecutor } from '../../utils/params';
-import { TaskGraph } from '../../config/task-graph';
-import { ExecutorContext } from '../../config/misc-interfaces';
-import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph';
-import { readNxJson } from '../../config/configuration';
-import { isAsyncIterator } from '../../utils/async-iterator';
+} from './batch-messages.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { combineOptionsForExecutor } from '../../utils/params.js';
+import { TaskGraph } from '../../config/task-graph.js';
+import { ExecutorContext } from '../../config/misc-interfaces.js';
+import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph.js';
+import { readNxJson } from '../../config/configuration.js';
+import { isAsyncIterator } from '../../utils/async-iterator.js';
 import {
   getExecutorInformation,
   parseExecutor,
-} from '../../command-line/run/executor-utils';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { ProjectGraph } from '../../config/project-graph';
+} from '../../command-line/run/executor-utils.js';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json.js';
+import { ProjectGraph } from '../../config/project-graph.js';
 
 function getBatchExecutor(
   executorName: string,

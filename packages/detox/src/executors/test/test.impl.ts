@@ -8,10 +8,10 @@ import { names } from '@nx/devkit';
 import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
-import { DetoxBuildOptions } from '../build/schema';
-import { runCliBuild } from '../build/build.impl';
+import { DetoxBuildOptions } from '../build/schema.js';
+import { runCliBuild } from '../build/build.impl.js';
 
-import { DetoxTestOptions } from './schema';
+import { DetoxTestOptions } from './schema.js';
 
 export interface DetoxTestOutput {
   success: boolean;

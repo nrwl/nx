@@ -9,8 +9,8 @@ import {
   writeJsonFile,
 } from '@nx/devkit';
 
-import { ExpoSyncDepsOptions } from './schema';
-import { findAllNpmDependencies } from '../../utils/find-all-npm-dependencies';
+import { ExpoSyncDepsOptions } from './schema.js';
+import { findAllNpmDependencies } from '../../utils/find-all-npm-dependencies.js';
 import { PackageJson } from 'nx/src/utils/package-json';
 
 export interface ReactNativeSyncDepsOutput {

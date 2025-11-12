@@ -1,7 +1,7 @@
 import ignore = require('ignore');
-import { readFileIfExisting } from './fileutils';
-import { workspaceRoot } from './workspace-root';
-import { Tree } from '../generators/tree';
+import { readFileIfExisting } from './fileutils.js';
+import { workspaceRoot } from './workspace-root.js';
+import { Tree } from '../generators/tree.js';
 
 export function getIgnoreObject(
   root: string = workspaceRoot

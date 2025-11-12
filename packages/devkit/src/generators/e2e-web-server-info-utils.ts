@@ -4,7 +4,7 @@ import {
   readNxJson,
 } from 'nx/src/devkit-exports';
 import type { PackageManagerCommands } from 'nx/src/utils/package-manager';
-import { findPluginForConfigFile } from '../utils/find-plugin-for-config-file';
+import { findPluginForConfigFile } from '../utils/find-plugin-for-config-file.js';
 
 interface E2EWebServerDefaultValues {
   defaultServeTargetName: string;

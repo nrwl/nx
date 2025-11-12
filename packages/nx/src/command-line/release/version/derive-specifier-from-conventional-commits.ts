@@ -2,13 +2,13 @@ import type {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
-import { NxReleaseConfig } from '../config/config';
-import { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { getFirstGitCommit, getLatestGitTagForPattern } from '../utils/git';
-import { resolveSemverSpecifierFromConventionalCommits } from '../utils/resolve-semver-specifier';
-import { ProjectLogger } from './project-logger';
-import { SemverBumpType } from './version-actions';
-import { SemverSpecifier, SemverSpecifierType } from '../utils/semver';
+import { NxReleaseConfig } from '../config/config.js';
+import { ReleaseGroupWithName } from '../config/filter-release-groups.js';
+import { getFirstGitCommit, getLatestGitTagForPattern } from '../utils/git.js';
+import { resolveSemverSpecifierFromConventionalCommits } from '../utils/resolve-semver-specifier.js';
+import { ProjectLogger } from './project-logger.js';
+import { SemverBumpType } from './version-actions.js';
+import { SemverSpecifier, SemverSpecifierType } from '../utils/semver.js';
 
 export async function deriveSpecifierFromConventionalCommits(
   nxReleaseConfig: NxReleaseConfig,

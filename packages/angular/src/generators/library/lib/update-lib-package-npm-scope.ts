@@ -1,5 +1,5 @@
 import { Tree, updateJson } from '@nx/devkit';
-import { NormalizedSchema } from './normalized-schema';
+import { NormalizedSchema } from './normalized-schema.js';
 
 export function updateLibPackageNpmScope(
   host: Tree,

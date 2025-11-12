@@ -1,6 +1,6 @@
-import { Task } from '../../config/task-graph';
-import { LifeCycle, TaskResult } from '../life-cycle';
-import { TaskStatus } from '../tasks-runner';
+import { Task } from '../../config/task-graph.js';
+import { LifeCycle, TaskResult } from '../life-cycle.js';
+import { TaskStatus } from '../tasks-runner.js';
 
 export class TaskTimingsLifeCycle implements LifeCycle {
   private timings: {

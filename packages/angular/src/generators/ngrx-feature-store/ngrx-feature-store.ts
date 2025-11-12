@@ -8,7 +8,7 @@ import {
   generateFilesFromTemplates,
   normalizeOptions,
   validateOptions,
-} from './lib';
+} from './lib/index.js';
 
 export async function ngrxFeatureStoreGenerator(tree: Tree, schema: Schema) {
   validateOptions(tree, schema);

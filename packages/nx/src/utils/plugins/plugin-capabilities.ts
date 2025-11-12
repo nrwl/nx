@@ -2,14 +2,14 @@ import { dirname, join } from 'path';
 import {
   ExecutorsJsonEntry,
   GeneratorsJsonEntry,
-} from '../../config/misc-interfaces';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { readJsonFile } from '../fileutils';
-import { getNxRequirePaths } from '../installation-directory';
-import { readPluginPackageJson } from '../../project-graph/plugins';
-import { loadNxPlugin } from '../../project-graph/plugins/in-process-loader';
-import { PackageJson } from '../package-json';
-import { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
+} from '../../config/misc-interfaces.js';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json.js';
+import { readJsonFile } from '../fileutils.js';
+import { getNxRequirePaths } from '../installation-directory.js';
+import { readPluginPackageJson } from '../../project-graph/plugins/index.js';
+import { loadNxPlugin } from '../../project-graph/plugins/in-process-loader.js';
+import { PackageJson } from '../package-json.js';
+import { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin.js';
 
 export interface PluginCapabilities {
   name: string;

@@ -1,7 +1,7 @@
 import { ensurePackage, readNxJson, Tree, updateJson } from '@nx/devkit';
-import { NormalizedSchema } from '../schema';
-import { addVitestTargetDefaults } from '../../init/lib/utils';
-import { nxVersion } from '../../../utils/versions';
+import { NormalizedSchema } from '../schema.js';
+import { addVitestTargetDefaults } from '../../init/lib/utils.js';
+import { nxVersion } from '../../../utils/versions.js';
 
 export async function addVitest(tree: Tree, options: NormalizedSchema) {
   addVitestTargetDefaults(tree);

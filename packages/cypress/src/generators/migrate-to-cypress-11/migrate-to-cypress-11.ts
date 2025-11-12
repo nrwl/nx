@@ -11,11 +11,11 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
+import { CypressExecutorOptions } from '../../executors/cypress/cypress.impl.js';
 import {
   assertMinimumCypressVersion,
   getInstalledCypressMajorVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 import {
   addConfigToTsConfig,
   createNewCypressConfig,
@@ -23,7 +23,7 @@ import {
   updatePluginFile,
   updateProjectPaths,
   writeNewConfig,
-} from './conversion.util';
+} from './conversion.util.js';
 
 function migrateCypressExecutorOptions(
   tree: Tree,

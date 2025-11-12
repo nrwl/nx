@@ -1,5 +1,5 @@
 import type { HandlerResult } from './server';
-import { getCachedRegisteredSyncGenerators } from './sync-generators';
+import { getCachedRegisteredSyncGenerators } from './sync-generators.js';
 
 export async function handleGetRegisteredSyncGenerators(): Promise<HandlerResult> {
   const syncGenerators = await getCachedRegisteredSyncGenerators();

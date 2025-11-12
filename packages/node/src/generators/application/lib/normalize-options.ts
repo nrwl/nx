@@ -4,8 +4,8 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { Schema } from '../schema';
-import { NormalizedSchema } from './normalized-schema';
+import { Schema } from '../schema.js';
+import { NormalizedSchema } from './normalized-schema.js';
 
 export async function normalizeOptions(
   host: Tree,

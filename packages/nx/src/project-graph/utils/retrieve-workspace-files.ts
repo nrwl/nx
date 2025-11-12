@@ -1,23 +1,23 @@
 import { performance } from 'perf_hooks';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json.js';
 import {
   NX_ANGULAR_JSON_PLUGIN_NAME,
   shouldMergeAngularProjects,
-} from '../../adapter/angular-json';
-import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
+} from '../../adapter/angular-json.js';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json.js';
 import {
   ConfigurationResult,
   createProjectConfigurationsWithPlugins,
-} from './project-configuration-utils';
-import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
+} from './project-configuration-utils.js';
+import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin.js';
 import {
   getNxWorkspaceFilesFromContext,
   globWithWorkspaceContext,
   multiGlobWithWorkspaceContext,
-} from '../../utils/workspace-context';
-import { buildAllWorkspaceFiles } from './build-all-workspace-files';
+} from '../../utils/workspace-context.js';
+import { buildAllWorkspaceFiles } from './build-all-workspace-files.js';
 import { join } from 'path';
-import { getOnlyDefaultPlugins, getPlugins } from '../plugins/get-plugins';
+import { getOnlyDefaultPlugins, getPlugins } from '../plugins/get-plugins.js';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`

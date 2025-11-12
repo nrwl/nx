@@ -3,13 +3,13 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
-} from '../../../config/project-graph';
-import { reverse } from '../../../project-graph/operators';
-import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
-import { getCatalogManager } from '../../../utils/catalog';
-import { PackageJson } from '../../../utils/package-json';
-import { workspaceRoot } from '../../../utils/workspace-root';
-import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+} from '../../../config/project-graph.js';
+import { reverse } from '../../../project-graph/operators.js';
+import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder.js';
+import { getCatalogManager } from '../../../utils/catalog/index.js';
+import { PackageJson } from '../../../utils/package-json.js';
+import { workspaceRoot } from '../../../utils/workspace-root.js';
+import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph.js';
 
 /**
  * Prune project graph's external nodes and their dependencies

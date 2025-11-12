@@ -6,9 +6,9 @@ import {
 import {
   assertValidReactRouter,
   assertValidStyle,
-} from '../../../utils/assertion';
-import { NormalizedSchema, Schema } from '../schema';
-import { findFreePort } from './find-free-port';
+} from '../../../utils/assertion.js';
+import { NormalizedSchema, Schema } from '../schema.js';
+import { findFreePort } from './find-free-port.js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function normalizeOptions<T extends Schema = Schema>(

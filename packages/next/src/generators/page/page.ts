@@ -7,8 +7,8 @@ import {
   Tree,
 } from '@nx/devkit';
 
-import { addStyleDependencies } from '../../utils/styles';
-import { Schema } from './schema';
+import { addStyleDependencies } from '../../utils/styles.js';
+import { Schema } from './schema.js';
 import {
   determineArtifactNameAndDirectoryOptions,
   getRelativeCwd,

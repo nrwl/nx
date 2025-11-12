@@ -15,8 +15,8 @@ import {
 } from '@angular/build/private';
 import * as path from 'node:path';
 import { Compilation, type Compiler, RspackPluginInstance } from '@rspack/core';
-import { addError, addWarning } from '../utils/rspack-diagnostics';
-import { assertNever } from '../utils/misc-helpers';
+import { addError, addWarning } from '../utils/rspack-diagnostics.js';
+import { assertNever } from '../utils/misc-helpers.js';
 
 const PLUGIN_NAME = 'AnyComponentStyleBudgetChecker';
 

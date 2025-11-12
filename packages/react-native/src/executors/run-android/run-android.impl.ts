@@ -3,10 +3,10 @@ import { signalToCode } from '@nx/devkit/internal';
 import { join, resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
-import { ReactNativeRunAndroidOptions } from './schema';
-import { runCliStart } from '../start/start.impl';
-import { chmodAndroidGradlewFiles } from '../../utils/chmod-android-gradle-files';
-import { getCliOptions } from '../../utils/get-cli-options';
+import { ReactNativeRunAndroidOptions } from './schema.js';
+import { runCliStart } from '../start/start.impl.js';
+import { chmodAndroidGradlewFiles } from '../../utils/chmod-android-gradle-files.js';
+import { getCliOptions } from '../../utils/get-cli-options.js';
 
 export interface ReactNativeRunAndroidOutput {
   success: boolean;

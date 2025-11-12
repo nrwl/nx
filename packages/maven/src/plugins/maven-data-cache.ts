@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { readJsonFile, writeJsonFile } from '@nx/devkit';
-import { MavenAnalysisData } from './types';
+import { MavenAnalysisData } from './types.js';
 
 /**
  * Read the Maven targets cache from disk

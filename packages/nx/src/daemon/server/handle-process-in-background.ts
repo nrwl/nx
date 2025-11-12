@@ -1,6 +1,6 @@
-import { HandlerResult } from './server';
-import { serverLogger } from './logger';
-import { getNxRequirePaths } from '../../utils/installation-directory';
+import { HandlerResult } from './server.js';
+import { serverLogger } from './logger.js';
+import { getNxRequirePaths } from '../../utils/installation-directory.js';
 
 export async function handleProcessInBackground(payload: {
   type: string;

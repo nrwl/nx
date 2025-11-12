@@ -5,8 +5,8 @@ import {
   Tree,
 } from '@nx/devkit';
 import { esbuildVersion } from '@nx/js/src/utils/versions';
-import { nxVersion } from '../../utils/versions';
-import { Schema } from './schema';
+import { nxVersion } from '../../utils/versions.js';
+import { Schema } from './schema.js';
 
 export async function esbuildInitGenerator(tree: Tree, schema: Schema) {
   let installTask: GeneratorCallback = () => {};

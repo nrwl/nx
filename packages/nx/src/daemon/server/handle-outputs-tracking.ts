@@ -1,5 +1,5 @@
-import { HandlerResult } from './server';
-import { outputsHashesMatch, recordOutputsHash } from './outputs-tracking';
+import { HandlerResult } from './server.js';
+import { outputsHashesMatch, recordOutputsHash } from './outputs-tracking.js';
 
 export async function handleRecordOutputsHash(payload: {
   type: string;

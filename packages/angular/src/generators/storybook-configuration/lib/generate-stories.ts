@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { readProjectConfiguration } from '@nx/devkit';
-import { angularStoriesGenerator } from '../../stories/stories';
+import { angularStoriesGenerator } from '../../stories/stories.js';
 import type { StorybookConfigurationOptions } from '../schema';
 
 export async function generateStories(

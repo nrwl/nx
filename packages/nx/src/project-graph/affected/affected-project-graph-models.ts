@@ -1,9 +1,9 @@
 import type { Change, FileChange } from '../file-utils';
-import { NxJsonConfiguration } from '../../config/nx-json';
+import { NxJsonConfiguration } from '../../config/nx-json.js';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
-} from '../../config/project-graph';
+} from '../../config/project-graph.js';
 
 export interface AffectedProjectGraphContext {
   projectGraphNodes: Record<string, ProjectGraphProjectNode>;

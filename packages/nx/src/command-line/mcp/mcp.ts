@@ -2,8 +2,8 @@ import { spawnSync } from 'child_process';
 import {
   detectPackageManager,
   getPackageManagerCommand,
-} from '../../utils/package-manager';
-import { workspaceRoot } from '../../utils/workspace-root';
+} from '../../utils/package-manager.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 
 export async function mcpHandler(args: any) {
   const packageManager = detectPackageManager();

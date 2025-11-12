@@ -5,10 +5,10 @@
  */
 import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
-import { workspaceDataDirectory } from '../utils/cache-directory';
+import { workspaceDataDirectory } from '../utils/cache-directory.js';
 import { createHash } from 'crypto';
 import { tmpdir } from 'tmp';
-import { workspaceRoot } from '../utils/workspace-root';
+import { workspaceRoot } from '../utils/workspace-root.js';
 
 export const DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(
   workspaceDataDirectory,

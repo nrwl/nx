@@ -12,9 +12,9 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { VitestExecutorOptions } from '../executors/test/schema';
-import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
-import { nxVersion } from './versions';
+import { VitestExecutorOptions } from '../executors/test/schema.js';
+import { ensureViteConfigIsCorrect } from './vite-config-edit-utils.js';
+import { nxVersion } from './versions.js';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;

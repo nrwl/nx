@@ -3,19 +3,19 @@ import { prompt } from 'enquirer';
 import { execSync } from 'node:child_process';
 import { existsSync, promises as fsp } from 'node:fs';
 import { homedir } from 'node:os';
-import { output } from '../../../../utils/output';
-import { joinPathFragments } from '../../../../utils/path';
+import { output } from '../../../../utils/output.js';
+import { joinPathFragments } from '../../../../utils/path.js';
 import type { PostGitTask } from '../../changelog';
-import { type ResolvedCreateRemoteReleaseProvider } from '../../config/config';
-import { Reference } from '../git';
-import { ReleaseVersion } from '../shared';
+import { type ResolvedCreateRemoteReleaseProvider } from '../../config/config.js';
+import { Reference } from '../git.js';
+import { ReleaseVersion } from '../shared.js';
 import {
   RemoteReleaseClient,
   RemoteReleaseOptions,
   RemoteReleaseResult,
   RemoteRepoData,
   RemoteRepoSlug,
-} from './remote-release-client';
+} from './remote-release-client.js';
 
 // axios types and values don't seem to match
 import _axios = require('axios');

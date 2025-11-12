@@ -1,4 +1,4 @@
-import { workspaceRoot } from '../../utils/workspace-root';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 import { ChildProcess, spawn } from 'child_process';
 import {
   existsSync,
@@ -11,54 +11,54 @@ import { FileHandle, open } from 'fs/promises';
 import { connect } from 'net';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { output } from '../../utils/output';
-import { getFullOsSocketPath, killSocketOrPath } from '../socket-utils';
+import { output } from '../../utils/output.js';
+import { getFullOsSocketPath, killSocketOrPath } from '../socket-utils.js';
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
   isDaemonDisabled,
   removeSocketDir,
-} from '../tmp-dir';
-import { FileData, ProjectGraph } from '../../config/project-graph';
-import { isCI } from '../../utils/is-ci';
-import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
-import { readNxJson } from '../../config/configuration';
-import { PromisedBasedQueue } from '../../utils/promised-based-queue';
-import { DaemonSocketMessenger, Message } from './daemon-socket-messenger';
+} from '../tmp-dir.js';
+import { FileData, ProjectGraph } from '../../config/project-graph.js';
+import { isCI } from '../../utils/is-ci.js';
+import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json.js';
+import { readNxJson } from '../../config/configuration.js';
+import { PromisedBasedQueue } from '../../utils/promised-based-queue.js';
+import { DaemonSocketMessenger, Message } from './daemon-socket-messenger.js';
 import {
   getDaemonProcessIdSync,
   waitForDaemonToExitAndCleanupProcessJson,
-} from '../cache';
-import { Hash } from '../../hasher/task-hasher';
-import { Task, TaskGraph } from '../../config/task-graph';
-import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+} from '../cache.js';
+import { Hash } from '../../hasher/task-hasher.js';
+import { Task, TaskGraph } from '../../config/task-graph.js';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils.js';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
-} from '../../project-graph/error-types';
-import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
+} from '../../project-graph/error-types.js';
+import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native/index.js';
 import {
   HandleGlobMessage,
   HandleMultiGlobMessage,
-} from '../message-types/glob';
+} from '../message-types/glob.js';
 import {
   GET_NX_WORKSPACE_FILES,
   HandleNxWorkspaceFilesMessage,
-} from '../message-types/get-nx-workspace-files';
+} from '../message-types/get-nx-workspace-files.js';
 import {
   GET_CONTEXT_FILE_DATA,
   HandleContextFileDataMessage,
-} from '../message-types/get-context-file-data';
+} from '../message-types/get-context-file-data.js';
 import {
   GET_FILES_IN_DIRECTORY,
   HandleGetFilesInDirectoryMessage,
-} from '../message-types/get-files-in-directory';
+} from '../message-types/get-files-in-directory.js';
 import {
   HASH_GLOB,
   HASH_MULTI_GLOB,
   HandleHashGlobMessage,
   HandleHashMultiGlobMessage,
-} from '../message-types/hash-glob';
+} from '../message-types/hash-glob.js';
 import {
   GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
@@ -66,12 +66,12 @@ import {
   HandleGetFlakyTasks,
   HandleRecordTaskRunsMessage,
   RECORD_TASK_RUNS,
-} from '../message-types/task-history';
-import { FORCE_SHUTDOWN } from '../message-types/force-shutdown';
+} from '../message-types/task-history.js';
+import { FORCE_SHUTDOWN } from '../message-types/force-shutdown.js';
 import {
   GET_SYNC_GENERATOR_CHANGES,
   type HandleGetSyncGeneratorChangesMessage,
-} from '../message-types/get-sync-generator-changes';
+} from '../message-types/get-sync-generator-changes.js';
 import type {
   FlushSyncGeneratorChangesResult,
   SyncGeneratorRunResult,
@@ -79,30 +79,30 @@ import type {
 import {
   GET_REGISTERED_SYNC_GENERATORS,
   type HandleGetRegisteredSyncGeneratorsMessage,
-} from '../message-types/get-registered-sync-generators';
+} from '../message-types/get-registered-sync-generators.js';
 import {
   UPDATE_WORKSPACE_CONTEXT,
   type HandleUpdateWorkspaceContextMessage,
-} from '../message-types/update-workspace-context';
+} from '../message-types/update-workspace-context.js';
 import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   type HandleFlushSyncGeneratorChangesToDiskMessage,
-} from '../message-types/flush-sync-generator-changes-to-disk';
-import { DelayedSpinner } from '../../utils/delayed-spinner';
+} from '../message-types/flush-sync-generator-changes-to-disk.js';
+import { DelayedSpinner } from '../../utils/delayed-spinner.js';
 import {
   PostTasksExecutionContext,
   PreTasksExecutionContext,
-} from '../../project-graph/plugins/public-api';
+} from '../../project-graph/plugins/public-api.js';
 import {
   HandlePostTasksExecutionMessage,
   HandlePreTasksExecutionMessage,
   POST_TASKS_EXECUTION,
   PRE_TASKS_EXECUTION,
-} from '../message-types/run-tasks-execution-hooks';
-import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
+} from '../message-types/run-tasks-execution-hooks.js';
+import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener.js';
 import { deserialize } from 'node:v8';
-import { isJsonMessage } from '../../utils/consume-messages-from-socket';
-import { isV8SerializerEnabled } from '../is-v8-serializer-enabled';
+import { isJsonMessage } from '../../utils/consume-messages-from-socket.js';
+import { isV8SerializerEnabled } from '../is-v8-serializer-enabled.js';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -674,9 +674,7 @@ export class DaemonClient {
     }
 
     try {
-      const { getProcessMetricsService } = await import(
-        '../../tasks-runner/process-metrics-service'
-      );
+      const { getProcessMetricsService } = await import('../../tasks-runner/process-metrics-service.js');
       getProcessMetricsService().registerDaemonProcess(daemonPid);
     } catch {
       // don't error, this is a secondary concern that should not break task execution

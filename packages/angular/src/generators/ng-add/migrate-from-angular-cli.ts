@@ -1,7 +1,7 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { installPackagesTask, readJson, updateJson } from '@nx/devkit';
 import type { ProjectMigrator } from './migrators';
-import { AppMigrator, LibMigrator } from './migrators';
+import { AppMigrator, LibMigrator } from './migrators/index.js';
 import type { GeneratorOptions } from './schema';
 import {
   cleanupEsLintPackages,
@@ -19,7 +19,7 @@ import {
   updateRootTsConfig,
   updateWorkspaceConfigDefaults,
   validateWorkspace,
-} from './utilities';
+} from './utilities/index.js';
 
 export async function migrateFromAngularCli(
   tree: Tree,

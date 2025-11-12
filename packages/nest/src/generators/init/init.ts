@@ -1,7 +1,7 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { formatFiles } from '@nx/devkit';
 
-import { addDependencies } from './lib';
+import { addDependencies } from './lib/index.js';
 import type { InitGeneratorOptions } from './schema';
 
 export async function initGenerator(

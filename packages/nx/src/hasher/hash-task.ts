@@ -1,12 +1,12 @@
-import { Task, TaskGraph } from '../config/task-graph';
-import { getCustomHasher } from '../tasks-runner/utils';
-import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
-import { getInputs, TaskHasher } from './task-hasher';
-import { ProjectGraph } from '../config/project-graph';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { readNxJson } from '../config/nx-json';
-import { HashedTask, IS_WASM, TaskDetails } from '../native';
-import { getDbConnection } from '../utils/db-connection';
+import { Task, TaskGraph } from '../config/task-graph.js';
+import { getCustomHasher } from '../tasks-runner/utils.js';
+import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph.js';
+import { getInputs, TaskHasher } from './task-hasher.js';
+import { ProjectGraph } from '../config/project-graph.js';
+import { NxJsonConfiguration } from '../config/nx-json.js';
+import { readNxJson } from '../config/nx-json.js';
+import { HashedTask, IS_WASM, TaskDetails } from '../native/index.js';
+import { getDbConnection } from '../utils/db-connection.js';
 
 let taskDetails: TaskDetails;
 

@@ -1,7 +1,7 @@
 import { join, resolve } from 'path';
 import { cpSync } from 'fs';
 import { fork } from 'node:child_process';
-import { StaticRemoteConfig } from '../../utils';
+import { StaticRemoteConfig } from '../../utils/index.js';
 import { workspaceRoot } from '@nx/devkit';
 import { readModulePackageJson } from 'nx/src/devkit-internals';
 

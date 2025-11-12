@@ -1,4 +1,4 @@
-import { htmlRewritingStream } from './html-rewriting-stream';
+import { htmlRewritingStream } from './html-rewriting-stream.js';
 
 export async function addBodyScript(
   html: string,

@@ -1,5 +1,5 @@
 import type { WorkspaceLibrary } from './models';
-import { WorkspaceLibrarySecondaryEntryPoint } from './models';
+import { WorkspaceLibrarySecondaryEntryPoint } from './models/index.js';
 import { dirname, join, relative } from 'path';
 import { existsSync, lstatSync, readdirSync } from 'fs';
 import { readJsonFile, joinPathFragments, workspaceRoot } from '@nx/devkit';

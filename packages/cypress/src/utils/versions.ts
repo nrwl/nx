@@ -13,7 +13,7 @@ export const htmlWebpackPluginVersion = '^5.5.0';
 
 export type CypressVersions = Record<
   keyof Omit<
-    typeof import('./versions'),
+    typeof import('./versions.js'),
     | 'nxVersion'
     | 'versions'
     | 'getInstalledCypressVersion'

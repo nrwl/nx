@@ -1,27 +1,27 @@
 import * as semver from 'semver';
-import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
+import { NxReleaseVersionConfiguration } from '../../../config/nx-json.js';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
-} from '../../../config/project-graph';
-import { Tree } from '../../../generators/tree';
-import { workspaceRoot } from '../../../utils/workspace-root';
+} from '../../../config/project-graph.js';
+import { Tree } from '../../../generators/tree.js';
+import { workspaceRoot } from '../../../utils/workspace-root.js';
 import {
   IMPLICIT_DEFAULT_RELEASE_GROUP,
   type NxReleaseConfig,
-} from '../config/config';
+} from '../config/config.js';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { FinalConfigForProject, ReleaseGraph } from '../utils/release-graph';
-import { resolveSemverSpecifierFromPrompt } from '../utils/resolve-semver-specifier';
+import { FinalConfigForProject, ReleaseGraph } from '../utils/release-graph.js';
+import { resolveSemverSpecifierFromPrompt } from '../utils/resolve-semver-specifier.js';
 import type { VersionData, VersionDataEntry } from '../utils/shared';
-import { deriveSpecifierFromConventionalCommits } from './derive-specifier-from-conventional-commits';
-import { deriveSpecifierFromVersionPlan } from './deriver-specifier-from-version-plans';
-import { ProjectLogger } from './project-logger';
+import { deriveSpecifierFromConventionalCommits } from './derive-specifier-from-conventional-commits.js';
+import { deriveSpecifierFromVersionPlan } from './deriver-specifier-from-version-plans.js';
+import { ProjectLogger } from './project-logger.js';
 import {
   NOOP_VERSION_ACTIONS,
   SemverBumpType,
   VersionActions,
-} from './version-actions';
+} from './version-actions.js';
 
 // Any semver version string such as "1.2.3" or "1.2.3-beta.1"
 type SemverVersion = string;

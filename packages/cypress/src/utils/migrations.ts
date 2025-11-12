@@ -13,7 +13,7 @@ import type {
   PropertyAssignment,
 } from 'typescript';
 import type { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
-import { CYPRESS_CONFIG_FILE_NAME_PATTERN } from './config';
+import { CYPRESS_CONFIG_FILE_NAME_PATTERN } from './config.js';
 
 let ts: typeof import('typescript');
 

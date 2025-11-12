@@ -13,8 +13,8 @@ import {
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'path';
 import { tmpdir } from 'os';
-import { joinPathFragments } from '../utils/path';
-import { setWorkspaceRoot, workspaceRoot } from '../utils/workspace-root';
+import { joinPathFragments } from '../utils/path.js';
+import { setWorkspaceRoot, workspaceRoot } from '../utils/workspace-root.js';
 
 type NestedFiles = {
   [fileName: string]: string;

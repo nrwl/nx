@@ -14,7 +14,7 @@ import {
   emotionServerVersion,
   lessLoader,
   sassVersion,
-} from './versions';
+} from './versions.js';
 
 const nextSpecificStyleDependenciesCommon = {
   css: {

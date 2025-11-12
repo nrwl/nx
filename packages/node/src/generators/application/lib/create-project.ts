@@ -7,15 +7,15 @@ import {
 } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
-import { NormalizedSchema } from './normalized-schema';
+import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin.js';
+import { NormalizedSchema } from './normalized-schema.js';
 import {
   getEsBuildConfig,
   getNestWebpackBuildConfig,
   getServeConfig,
   getWebpackBuildConfig,
   getPruneTargets,
-} from './create-targets';
+} from './create-targets.js';
 
 export function addProject(
   tree: Tree,

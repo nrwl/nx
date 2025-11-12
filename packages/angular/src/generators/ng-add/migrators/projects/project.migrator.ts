@@ -13,9 +13,9 @@ import {
   arrayToString,
   getProjectValidationResultMessage,
   Logger,
-} from '../../utilities';
+} from '../../utilities/index.js';
 import type { BuilderMigrator, BuilderMigratorClassType } from '../builders';
-import { Migrator } from '../migrator';
+import { Migrator } from '../migrator.js';
 
 export class ProjectMigrator<
   TargetType extends string = string

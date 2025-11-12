@@ -1,8 +1,8 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Tree } from '../generators/tree';
-import { readJson } from '../generators/utils/json';
-import { readJsonFile } from './fileutils';
+import { readJson } from '../generators/utils/json.js';
+import { readJsonFile } from './fileutils.js';
 
 /**
  * Possible configuration files are taken from https://prettier.io/docs/configuration

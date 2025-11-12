@@ -17,7 +17,7 @@ import {
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import { nuxtEslintConfigVersion } from './versions';
+import { nuxtEslintConfigVersion } from './versions.js';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 // TODO(colum): Look into the recommended set up using `withNuxt` inside eslint.config.mjs. https://eslint.nuxt.com/packages/config

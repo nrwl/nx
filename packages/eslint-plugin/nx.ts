@@ -1,4 +1,4 @@
-import { workspaceRules } from './src/resolve-workspace-rules';
+import { workspaceRules } from './src/resolve-workspace-rules.js';
 import dependencyChecks, {
   RULE_NAME as dependencyChecksRuleName,
 } from './src/rules/dependency-checks';

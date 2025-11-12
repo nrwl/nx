@@ -10,8 +10,8 @@ import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
 import devServerExecutor from '../dev-server/dev-server.impl';
-import { normalizeOptions, startRemotes } from './lib';
-import { ModuleFederationDevServerOptions } from './schema';
+import { normalizeOptions, startRemotes } from './lib/index.js';
+import { ModuleFederationDevServerOptions } from './schema.js';
 
 export default async function* moduleFederationDevServer(
   schema: ModuleFederationDevServerOptions,

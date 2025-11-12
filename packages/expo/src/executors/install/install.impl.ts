@@ -2,12 +2,12 @@ import { ExecutorContext, names } from '@nx/devkit';
 import { readJsonFile } from 'nx/src/utils/fileutils';
 import { ChildProcess, fork } from 'child_process';
 
-import { ExpoInstallOptions } from './schema';
+import { ExpoInstallOptions } from './schema.js';
 import { join } from 'path';
 import {
   displayNewlyAddedDepsMessage,
   syncDeps,
-} from '../sync-deps/sync-deps.impl';
+} from '../sync-deps/sync-deps.impl.js';
 
 export interface ExpoInstallOutput {
   success: boolean;

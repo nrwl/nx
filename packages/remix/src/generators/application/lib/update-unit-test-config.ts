@@ -10,14 +10,14 @@ import {
   updateJestTestSetup,
   updateVitestTestIncludes,
   updateVitestTestSetup,
-} from '../../../utils/testing-config-utils';
+} from '../../../utils/testing-config-utils.js';
 import {
   getRemixVersion,
   testingLibraryDomVersion,
   testingLibraryJestDomVersion,
   testingLibraryReactVersion,
   testingLibraryUserEventsVersion,
-} from '../../../utils/versions';
+} from '../../../utils/versions.js';
 
 export function updateUnitTestConfig(
   tree: Tree,

@@ -1,15 +1,15 @@
-import { updateJson } from '../../generators/utils/json';
-import { Tree } from '../../generators/tree';
-import { NxJsonConfiguration } from '../../config/nx-json';
-import { PackageJson } from '../../utils/package-json';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { readNxJson } from '../../generators/utils/nx-json';
+import { updateJson } from '../../generators/utils/json.js';
+import { Tree } from '../../generators/tree.js';
+import { NxJsonConfiguration } from '../../config/nx-json.js';
+import { PackageJson } from '../../utils/package-json.js';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
+import { readNxJson } from '../../generators/utils/nx-json.js';
 import {
   NxCloudEnterpriseOutdatedError,
   verifyOrUpdateNxCloudClient,
-} from '../../nx-cloud/update-manager';
-import { getRunnerOptions } from '../../tasks-runner/run-command';
-import { output } from '../../utils/output';
+} from '../../nx-cloud/update-manager.js';
+import { getRunnerOptions } from '../../tasks-runner/run-command.js';
+import { output } from '../../utils/output.js';
 
 export default async function migrate(tree: Tree) {
   if (!tree.exists('nx.json')) {

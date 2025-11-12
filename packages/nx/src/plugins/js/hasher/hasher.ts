@@ -1,10 +1,10 @@
-import { ProjectGraphProjectNode } from '../../../config/project-graph';
-import { readJsonFile } from '../../../utils/fileutils';
-import { getRootTsConfigPath } from '../utils/typescript';
+import { ProjectGraphProjectNode } from '../../../config/project-graph.js';
+import { readJsonFile } from '../../../utils/fileutils.js';
+import { getRootTsConfigPath } from '../utils/typescript.js';
 import {
   findProjectForPath,
   ProjectRootMappings,
-} from '../../../project-graph/utils/find-project-for-path';
+} from '../../../project-graph/utils/find-project-for-path.js';
 
 interface CompilerOptions {
   paths: Record<string, string[]>;

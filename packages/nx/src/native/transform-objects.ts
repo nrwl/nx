@@ -1,10 +1,10 @@
-import { ProjectGraph } from '../config/project-graph';
+import { ProjectGraph } from '../config/project-graph.js';
 import {
   ExternalNode,
   Project,
   Target,
   ProjectGraph as RustProjectGraph,
-} from './index';
+} from './index.js';
 
 export function transformProjectGraphForRust(
   graph: ProjectGraph

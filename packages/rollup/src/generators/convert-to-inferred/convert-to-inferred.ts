@@ -8,8 +8,8 @@ import {
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import type { RollupExecutorOptions } from '../../executors/rollup/schema';
 import type { RollupPluginOptions } from '../../plugins/plugin';
-import { extractRollupConfigFromExecutorOptions } from './lib/extract-rollup-config-from-executor-options';
-import { addPluginRegistrations } from './lib/add-plugin-registrations';
+import { extractRollupConfigFromExecutorOptions } from './lib/extract-rollup-config-from-executor-options.js';
+import { addPluginRegistrations } from './lib/add-plugin-registrations.js';
 import { NoTargetsToMigrateError } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 
 interface Schema {

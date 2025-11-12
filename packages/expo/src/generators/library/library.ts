@@ -20,12 +20,12 @@ import {
   initGenerator as jsInitGenerator,
 } from '@nx/js';
 import init from '../init/init';
-import { addLinting } from '../../utils/add-linting';
-import { addJest } from '../../utils/jest/add-jest';
-import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
-import { Schema } from './schema';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
-import { initRootBabelConfig } from '../../utils/init-root-babel-config';
+import { addLinting } from '../../utils/add-linting.js';
+import { addJest } from '../../utils/jest/add-jest.js';
+import { NormalizedSchema, normalizeOptions } from './lib/normalize-options.js';
+import { Schema } from './schema.js';
+import { ensureDependencies } from '../../utils/ensure-dependencies.js';
+import { initRootBabelConfig } from '../../utils/init-root-babel-config.js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,
@@ -36,9 +36,9 @@ import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields
 import { PackageJson } from 'nx/src/utils/package-json';
 import { addRollupBuildTarget } from '@nx/react/src/generators/library/lib/add-rollup-build-target';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-import { expoComponentGenerator } from '../component/component';
+import { expoComponentGenerator } from '../component/component.js';
 import { relative, join } from 'path';
-import { reactNativeVersion, reactVersion } from '../../utils/versions';
+import { reactNativeVersion, reactVersion } from '../../utils/versions.js';
 
 export async function expoLibraryGenerator(
   host: Tree,

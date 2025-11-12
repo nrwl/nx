@@ -1,6 +1,6 @@
 import { ExecutorContext, logger } from '@nx/devkit';
-import { type StaticRemotesConfig } from '../../utils';
-import { type BuildStaticRemotesOptions } from './models';
+import { type StaticRemotesConfig } from '../../utils/index.js';
+import { type BuildStaticRemotesOptions } from './models.js';
 import { fork } from 'node:child_process';
 import { join } from 'path';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';

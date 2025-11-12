@@ -1,6 +1,6 @@
 import { installPackagesTask, names, readNxJson, Tree } from '@nx/devkit';
-import { Schema } from './schema';
-import { Preset } from '../utils/presets';
+import { Schema } from './schema.js';
+import { Preset } from '../utils/presets.js';
 import { join } from 'path';
 
 export async function presetGenerator(tree: Tree, options: Schema) {

@@ -9,7 +9,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { dirname, isAbsolute } from 'path';
-import { tmpFolder, tmpProjPath } from './paths';
+import { tmpFolder, tmpProjPath } from './paths.js';
 import { parseJson } from '@nx/devkit';
 import type { JsonParseOptions } from '@nx/devkit';
 import { directoryExists, fileExists } from 'nx/src/utils/fileutils';

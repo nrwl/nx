@@ -5,13 +5,13 @@ import {
   stripIndents,
   type Tree,
 } from '@nx/devkit';
-import { type Schema } from './schema';
+import { type Schema } from './schema.js';
 import {
   addFileToRemoteTsconfig,
   addPathToExposes,
   addPathToTsConfig,
   addRemote,
-} from './lib';
+} from './lib/index.js';
 
 export async function federateModuleGenerator(tree: Tree, schema: Schema) {
   if (!tree.exists(schema.path)) {

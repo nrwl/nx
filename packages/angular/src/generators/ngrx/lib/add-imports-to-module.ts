@@ -8,9 +8,9 @@ import {
   addProviderToAppConfig,
   addProviderToBootstrapApplication,
   addProviderToModule,
-} from '../../../utils/nx-devkit/ast-utils';
+} from '../../../utils/nx-devkit/ast-utils.js';
 import type { NormalizedNgRxGeneratorOptions } from './normalize-options';
-import { addProviderToRoute } from '../../../utils/nx-devkit/route-utils';
+import { addProviderToRoute } from '../../../utils/nx-devkit/route-utils.js';
 
 let tsModule: typeof import('typescript');
 

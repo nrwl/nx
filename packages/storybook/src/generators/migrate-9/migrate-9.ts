@@ -1,15 +1,15 @@
 import { formatFiles, readJson, Tree } from '@nx/devkit';
 
 import { output } from 'nx/src/utils/output';
-import { callAutomigrate, callUpgrade } from './calling-storybook-cli';
+import { callAutomigrate, callUpgrade } from './calling-storybook-cli.js';
 import {
   checkStorybookInstalled,
   getAllStorybookInfo,
   handleMigrationResult,
   logResult,
   onlyShowGuide,
-} from './helper-functions';
-import { Schema } from './schema';
+} from './helper-functions.js';
+import { Schema } from './schema.js';
 
 export async function migrate9Generator(tree: Tree, schema: Schema) {
   schema.versionTag = schema.versionTag ?? 'latest';

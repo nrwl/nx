@@ -30,21 +30,21 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { extractTsConfigBase } from '../../utils/create-ts-config';
-import { updateJestConfigContent } from '../../utils/jest-utils';
-import { maybeJs } from '../../utils/maybe-js';
-import { nxVersion } from '../../utils/versions';
+import { extractTsConfigBase } from '../../utils/create-ts-config.js';
+import { updateJestConfigContent } from '../../utils/jest-utils.js';
+import { maybeJs } from '../../utils/maybe-js.js';
+import { nxVersion } from '../../utils/versions.js';
 import componentGenerator from '../component/component';
 import initGenerator from '../init/init';
-import { addLinting } from './lib/add-linting';
-import { addRollupBuildTarget } from './lib/add-rollup-build-target';
-import { createFiles } from './lib/create-files';
-import { determineEntryFields } from './lib/determine-entry-fields';
-import { installCommonDependencies } from './lib/install-common-dependencies';
-import { normalizeOptions } from './lib/normalize-options';
-import { setDefaults } from './lib/set-defaults';
-import { updateAppRoutes } from './lib/update-app-routes';
-import { Schema } from './schema';
+import { addLinting } from './lib/add-linting.js';
+import { addRollupBuildTarget } from './lib/add-rollup-build-target.js';
+import { createFiles } from './lib/create-files.js';
+import { determineEntryFields } from './lib/determine-entry-fields.js';
+import { installCommonDependencies } from './lib/install-common-dependencies.js';
+import { normalizeOptions } from './lib/normalize-options.js';
+import { setDefaults } from './lib/set-defaults.js';
+import { updateAppRoutes } from './lib/update-app-routes.js';
+import { Schema } from './schema.js';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {

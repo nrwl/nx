@@ -1,4 +1,4 @@
-import { Schema } from './schema';
+import { Schema } from './schema.js';
 import {
   applyChangesToString,
   formatFiles,
@@ -7,8 +7,8 @@ import {
   joinPathFragments,
   Tree,
 } from '@nx/devkit';
-import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
-import { addImport } from './lib/add-import';
+import { NormalizedSchema, normalizeOptions } from './lib/normalize-options.js';
+import { addImport } from './lib/add-import.js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { dirname, join, parse, relative } from 'path';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';

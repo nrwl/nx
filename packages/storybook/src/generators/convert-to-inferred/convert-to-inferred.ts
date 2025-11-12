@@ -10,10 +10,10 @@ import {
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
-import { servePostTargetTransformer } from './lib/serve-post-target-transformer';
-import { createNodesV2 } from '../../plugins/plugin';
-import { storybookVersion } from '../../utils/versions';
+import { buildPostTargetTransformer } from './lib/build-post-target-transformer.js';
+import { servePostTargetTransformer } from './lib/serve-post-target-transformer.js';
+import { createNodesV2 } from '../../plugins/plugin.js';
+import { storybookVersion } from '../../utils/versions.js';
 
 interface Schema {
   project?: string;

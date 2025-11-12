@@ -23,12 +23,12 @@ import {
 import { dirname, join, relative } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { RollupExecutorOptions } from '../../executors/rollup/schema';
-import { RollupWithNxPluginOptions } from '../../plugins/with-nx/with-nx-options';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
-import { hasPlugin } from '../../utils/has-plugin';
-import { rollupInitGenerator } from '../init/init';
-import { RollupProjectSchema } from './schema';
+import { RollupExecutorOptions } from '../../executors/rollup/schema.js';
+import { RollupWithNxPluginOptions } from '../../plugins/with-nx/with-nx-options.js';
+import { ensureDependencies } from '../../utils/ensure-dependencies.js';
+import { hasPlugin } from '../../utils/has-plugin.js';
+import { rollupInitGenerator } from '../init/init.js';
+import { RollupProjectSchema } from './schema.js';
 
 let ts: typeof import('typescript');
 

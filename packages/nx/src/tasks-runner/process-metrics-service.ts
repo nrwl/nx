@@ -7,8 +7,8 @@ import {
   BatchMetricsSnapshot,
   MetricsUpdate,
   SystemInfo,
-} from '../native';
-import { getDaemonProcessIdSync } from '../daemon/cache';
+} from '../native/index.js';
+import { getDaemonProcessIdSync } from '../daemon/cache.js';
 
 export type {
   ProcessMetadata,

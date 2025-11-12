@@ -7,9 +7,9 @@ import type {
   StringLiteral,
 } from 'typescript';
 import * as path from 'path';
-import { DependencyType } from '../../../../config/project-graph';
-import { defaultFileRead } from '../../../../project-graph/file-utils';
-import { stripSourceCode } from './strip-source-code';
+import { DependencyType } from '../../../../config/project-graph.js';
+import { defaultFileRead } from '../../../../project-graph/file-utils.js';
+import { stripSourceCode } from './strip-source-code.js';
 
 let tsModule: typeof import('typescript');
 

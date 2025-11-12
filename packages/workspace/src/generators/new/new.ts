@@ -8,10 +8,10 @@ import {
 } from '@nx/devkit';
 
 import { join } from 'path';
-import { Preset } from '../utils/presets';
-import { Linter, LinterType } from '../../utils/lint';
-import { generateWorkspaceFiles } from './generate-workspace-files';
-import { addPresetDependencies, generatePreset } from './generate-preset';
+import { Preset } from '../utils/presets.js';
+import { Linter, LinterType } from '../../utils/lint.js';
+import { generateWorkspaceFiles } from './generate-workspace-files.js';
+import { addPresetDependencies, generatePreset } from './generate-preset.js';
 import { execSync } from 'child_process';
 import { Agent } from 'nx/src/ai/utils';
 

@@ -1,6 +1,6 @@
 import { type Tree, ensurePackage } from '@nx/devkit';
-import { nxVersion } from '../../../../utils/versions';
-import { Schema, NormalizedSchema } from '../../schema';
+import { nxVersion } from '../../../../utils/versions.js';
+import { Schema, NormalizedSchema } from '../../schema.js';
 
 export async function initWebpack(
   tree: Tree,

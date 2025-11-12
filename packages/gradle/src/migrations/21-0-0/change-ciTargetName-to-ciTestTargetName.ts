@@ -1,5 +1,5 @@
 import { Tree, readNxJson, updateNxJson } from '@nx/devkit';
-import { hasGradlePlugin } from '../../utils/has-gradle-plugin';
+import { hasGradlePlugin } from '../../utils/has-gradle-plugin.js';
 
 /* This function changes the @nx/gradle plugin option from ciTargetName to ciTestTargetName
  */

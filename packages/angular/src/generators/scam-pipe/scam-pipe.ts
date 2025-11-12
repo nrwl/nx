@@ -1,8 +1,8 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles } from '@nx/devkit';
-import { pipeGenerator } from '../pipe/pipe';
-import { exportScam } from '../utils/export-scam';
-import { convertPipeToScam, normalizeOptions } from './lib';
+import { pipeGenerator } from '../pipe/pipe.js';
+import { exportScam } from '../utils/export-scam.js';
+import { convertPipeToScam, normalizeOptions } from './lib/index.js';
 import type { Schema } from './schema';
 
 export async function scamPipeGenerator(tree: Tree, rawOptions: Schema) {

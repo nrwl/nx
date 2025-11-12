@@ -2,8 +2,8 @@ import type {
   ProjectConfigurationsError,
   ProjectGraphError,
 } from '../project-graph/error-types';
-import { logger } from './logger';
-import { output } from './output';
+import { logger } from './logger.js';
+import { output } from './output.js';
 
 export async function handleErrors(
   isVerbose: boolean,
@@ -66,7 +66,7 @@ export async function handleErrors(
         bodyLines,
       });
     }
-    const { daemonClient } = await import('../daemon/client/client');
+    const { daemonClient } = await import('../daemon/client/client.js');
     if (daemonClient.enabled()) {
       daemonClient.reset();
     }

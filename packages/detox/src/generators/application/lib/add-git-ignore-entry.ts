@@ -1,5 +1,5 @@
 import { logger, Tree } from '@nx/devkit';
-import { NormalizedSchema } from './normalize-options';
+import { NormalizedSchema } from './normalize-options.js';
 
 export function addGitIgnoreEntry(host: Tree, options: NormalizedSchema) {
   if (host.exists('.gitignore')) {

@@ -1,11 +1,11 @@
 import { Configuration } from 'webpack';
 
-import { NxComposableWebpackPlugin, NxWebpackExecutionContext } from './config';
+import { NxComposableWebpackPlugin, NxWebpackExecutionContext } from './config.js';
 import {
   ExtraEntryPointClass,
   NormalizedWebpackExecutorOptions,
-} from '../executors/webpack/schema';
-import { applyWebConfig } from '../plugins/nx-webpack-plugin/lib/apply-web-config';
+} from '../executors/webpack/schema.js';
+import { applyWebConfig } from '../plugins/nx-webpack-plugin/lib/apply-web-config.js';
 
 const processed = new Set();
 

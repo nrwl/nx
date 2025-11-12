@@ -4,7 +4,7 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { type NxRemixGeneratorSchema } from '../schema';
+import { type NxRemixGeneratorSchema } from '../schema.js';
 
 export interface NormalizedSchema extends NxRemixGeneratorSchema {
   projectName: string;

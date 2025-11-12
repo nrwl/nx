@@ -1,6 +1,6 @@
 import { ProjectConfiguration, Tree } from '@nx/devkit';
 import * as path from 'path';
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 
 interface PartialCypressJson {
   videosFolder: string;

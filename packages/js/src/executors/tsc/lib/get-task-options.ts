@@ -7,7 +7,7 @@ import type {
   ExecutorOptions,
   NormalizedExecutorOptions,
 } from '../../../utils/schema';
-import { normalizeOptions } from './normalize-options';
+import { normalizeOptions } from './normalize-options.js';
 
 const tasksOptionsCache = new Map<string, NormalizedExecutorOptions>();
 export function getTaskOptions(

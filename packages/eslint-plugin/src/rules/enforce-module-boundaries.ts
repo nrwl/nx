@@ -18,15 +18,15 @@ import {
   getBarrelEntryPointByImportScope,
   getBarrelEntryPointProjectNode,
   getRelativeImportPath,
-} from '../utils/ast-utils';
+} from '../utils/ast-utils.js';
 import {
   checkCircularPath,
   circularPathHasPair,
   expandIgnoredCircularDependencies,
   findFilesInCircularPath,
   findFilesWithDynamicImports,
-} from '../utils/graph-utils';
-import { readProjectGraph } from '../utils/project-graph-utils';
+} from '../utils/graph-utils.js';
+import { readProjectGraph } from '../utils/project-graph-utils.js';
 import {
   appIsMFERemote,
   belongsToDifferentEntryPoint,
@@ -49,7 +49,7 @@ import {
   isDirectDependency,
   matchImportWithWildcard,
   stringifyTags,
-} from '../utils/runtime-lint-utils';
+} from '../utils/runtime-lint-utils.js';
 import { isProjectGraphProjectNode } from 'nx/src/config/project-graph';
 
 export type Options = [

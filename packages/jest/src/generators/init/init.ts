@@ -10,16 +10,16 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodesV2 } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin.js';
 import {
   getPresetExt,
   type JestPresetExtension,
-} from '../../utils/config/config-file';
+} from '../../utils/config/config-file.js';
 import {
   getInstalledJestVersion,
   validateInstalledJestVersion,
   versions,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 import type { JestInitSchema } from './schema';
 
 function updateProductionFileSet(tree: Tree) {

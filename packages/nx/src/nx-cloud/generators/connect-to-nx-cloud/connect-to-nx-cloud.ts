@@ -1,14 +1,14 @@
 import { execSync } from 'child_process';
-import { output } from '../../../utils/output';
-import { Tree } from '../../../generators/tree';
-import { readJson, updateJson } from '../../../generators/utils/json';
-import { NxJsonConfiguration } from '../../../config/nx-json';
-import { readNxJson } from '../../../generators/utils/nx-json';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { createNxCloudOnboardingURL } from '../../utilities/url-shorten';
-import { getCloudUrl } from '../../utilities/get-cloud-options';
+import { output } from '../../../utils/output.js';
+import { Tree } from '../../../generators/tree.js';
+import { readJson, updateJson } from '../../../generators/utils/json.js';
+import { NxJsonConfiguration } from '../../../config/nx-json.js';
+import { readNxJson } from '../../../generators/utils/nx-json.js';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
+import { createNxCloudOnboardingURL } from '../../utilities/url-shorten.js';
+import { getCloudUrl } from '../../utilities/get-cloud-options.js';
 import { join } from 'path';
-import { getVcsRemoteInfo } from '../../../utils/git-utils';
+import { getVcsRemoteInfo } from '../../../utils/git-utils.js';
 
 function printCloudConnectionDisabledMessage() {
   output.error({

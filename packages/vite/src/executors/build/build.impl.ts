@@ -10,8 +10,8 @@ import {
 import {
   getProjectTsConfigPath,
   normalizeViteConfigFilePath,
-} from '../../utils/options-utils';
-import { ViteBuildExecutorOptions } from './schema';
+} from '../../utils/options-utils.js';
+import { ViteBuildExecutorOptions } from './schema.js';
 import {
   copyAssets,
   createLockFile,
@@ -28,7 +28,7 @@ import {
   createBuildableTsConfig,
   loadViteDynamicImport,
   validateTypes,
-} from '../../utils/executor-utils';
+} from '../../utils/executor-utils.js';
 import { type Plugin } from 'vite';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 

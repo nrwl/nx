@@ -19,11 +19,11 @@ import {
   TargetFlags,
   UserProvidedTargetName,
   writeRspackConfigFile,
-} from '../../utils/generator-utils';
+} from '../../utils/generator-utils.js';
 import rspackInitGenerator from '../init/init';
-import { ConfigurationSchema } from './schema';
+import { ConfigurationSchema } from './schema.js';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { Framework } from '../init/schema';
+import { Framework } from '../init/schema.js';
 
 function projectIsRootProjectInStandaloneWorkspace(projectRoot: string) {
   return relative(workspaceRoot, projectRoot).length === 0;

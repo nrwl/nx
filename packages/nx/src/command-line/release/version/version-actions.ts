@@ -1,24 +1,24 @@
 import { dirname, join } from 'node:path';
 import { ReleaseType } from 'semver';
-import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
+import { NxReleaseVersionConfiguration } from '../../../config/nx-json.js';
 import type {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
 import type { Tree } from '../../../generators/tree';
-import { registerTsProject } from '../../../plugins/js/utils/register';
-import { getRootTsConfigPath } from '../../../plugins/js/utils/typescript';
-import { interpolate } from '../../../tasks-runner/utils';
-import { workspaceRoot } from '../../../utils/workspace-root';
-import { DEFAULT_VERSION_ACTIONS_PATH } from '../config/config';
+import { registerTsProject } from '../../../plugins/js/utils/register.js';
+import { getRootTsConfigPath } from '../../../plugins/js/utils/typescript.js';
+import { interpolate } from '../../../tasks-runner/utils.js';
+import { workspaceRoot } from '../../../utils/workspace-root.js';
+import { DEFAULT_VERSION_ACTIONS_PATH } from '../config/config.js';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import type { FinalConfigForProject } from '../utils/release-graph';
 import {
   deriveNewSemverVersion,
   isRelativeVersionKeyword,
-} from '../utils/semver';
-import { BUMP_TYPE_REASON_TEXT } from './release-group-processor';
+} from '../utils/semver.js';
+import { BUMP_TYPE_REASON_TEXT } from './release-group-processor.js';
 
 export type SemverBumpType = ReleaseType | 'none';
 

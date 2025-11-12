@@ -3,7 +3,7 @@ import {
   type Tree,
   type ProjectConfiguration,
 } from '@nx/devkit';
-import { type Schema } from '../schema';
+import { type Schema } from '../schema.js';
 import { relative } from 'path';
 
 export interface NormalizedOptions extends Schema {

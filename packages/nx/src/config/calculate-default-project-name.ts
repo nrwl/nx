@@ -2,11 +2,11 @@ import type { NxJsonConfiguration } from './nx-json';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
-} from './workspace-json-project-json';
+} from './workspace-json-project-json.js';
 import {
   findProjectForPath,
   normalizeProjectRoot,
-} from '../project-graph/utils/find-project-for-path';
+} from '../project-graph/utils/find-project-for-path.js';
 import { relative } from 'path';
 
 export function calculateDefaultProjectName(

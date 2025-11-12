@@ -15,9 +15,9 @@ import {
 } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 import { readConfig } from 'jest-config';
 import { join, normalize, posix } from 'node:path';
-import { createNodesV2, type JestPluginOptions } from '../../plugins/plugin';
-import { jestConfigExtensions } from '../../utils/config/config-file';
-import { getInstalledJestMajorVersion } from '../../utils/versions';
+import { createNodesV2, type JestPluginOptions } from '../../plugins/plugin.js';
+import { jestConfigExtensions } from '../../utils/config/config-file.js';
+import { getInstalledJestMajorVersion } from '../../utils/versions.js';
 
 interface Schema {
   project?: string;

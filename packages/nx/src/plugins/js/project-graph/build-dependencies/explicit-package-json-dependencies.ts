@@ -1,15 +1,15 @@
-import { DependencyType } from '../../../../config/project-graph';
+import { DependencyType } from '../../../../config/project-graph.js';
 import type { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
-import { defaultFileRead } from '../../../../project-graph/file-utils';
+import { defaultFileRead } from '../../../../project-graph/file-utils.js';
 import type { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import {
   type RawProjectGraphDependency,
   validateDependency,
-} from '../../../../project-graph/project-graph-builder';
-import { parseJson } from '../../../../utils/json';
+} from '../../../../project-graph/project-graph-builder.js';
+import { parseJson } from '../../../../utils/json.js';
 import type { PackageJson } from '../../../../utils/package-json';
-import { joinPathFragments } from '../../../../utils/path';
-import { TargetProjectLocator } from './target-project-locator';
+import { joinPathFragments } from '../../../../utils/path.js';
+import { TargetProjectLocator } from './target-project-locator.js';
 
 export function buildExplicitPackageJsonDependencies(
   ctx: CreateDependenciesContext,

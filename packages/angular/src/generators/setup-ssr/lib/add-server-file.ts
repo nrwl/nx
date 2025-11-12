@@ -2,9 +2,9 @@ import type { Tree } from '@nx/devkit';
 import { generateFiles, readProjectConfiguration } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { NormalizedGeneratorOptions } from '../schema';
-import { DEFAULT_BROWSER_DIR } from './constants';
+import { DEFAULT_BROWSER_DIR } from './constants.js';
 
 export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
   const project = readProjectConfiguration(tree, options.project);

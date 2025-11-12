@@ -13,9 +13,9 @@ import {
   autoprefixerVersion,
   postcssVersion,
   tailwindVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 import type { SetupTailwindSchema } from './schema';
-import { insertStatementAfterImports } from '../../utils/insert-statement-after-imports';
+import { insertStatementAfterImports } from '../../utils/insert-statement-after-imports.js';
 
 export default async function setupTailwind(
   tree: Tree,
@@ -32,7 +32,7 @@ export default async function setupTailwind(
   insertStatementAfterImports(
     tree,
     pathToRoot,
-    stripIndents`import './tailwind.css';`
+    stripIndents`import './tailwind.css.js';`
   );
 
   addDependenciesToPackageJson(

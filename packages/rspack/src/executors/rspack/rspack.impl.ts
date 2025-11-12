@@ -5,10 +5,10 @@ import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-se
 import { Compiler, MultiCompiler, MultiStats, Stats } from '@rspack/core';
 import { rmSync } from 'fs';
 import { join, resolve } from 'path';
-import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
-import { isMode } from '../../utils/mode-utils';
-import { normalizeOptions } from './lib/normalize-options';
-import { RspackExecutorSchema } from './schema';
+import { createCompiler, isMultiCompiler } from '../../utils/create-compiler.js';
+import { isMode } from '../../utils/mode-utils.js';
+import { normalizeOptions } from './lib/normalize-options.js';
+import { RspackExecutorSchema } from './schema.js';
 
 export default async function* runExecutor(
   options: RspackExecutorSchema,

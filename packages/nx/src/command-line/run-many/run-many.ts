@@ -1,22 +1,22 @@
-import { runCommand } from '../../tasks-runner/run-command';
+import { runCommand } from '../../tasks-runner/run-command.js';
 import {
   NxArgs,
   readGraphFileFromGraphArg,
   splitArgsIntoNxArgsAndOverrides,
-} from '../../utils/command-line-utils';
-import { projectHasTarget } from '../../utils/project-graph-utils';
-import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
+} from '../../utils/command-line-utils.js';
+import { projectHasTarget } from '../../utils/project-graph-utils.js';
+import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud.js';
 import { performance } from 'perf_hooks';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
-} from '../../config/project-graph';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
-import { readNxJson } from '../../config/configuration';
-import { output } from '../../utils/output';
-import { findMatchingProjects } from '../../utils/find-matching-projects';
-import { generateGraph } from '../graph/graph';
+} from '../../config/project-graph.js';
+import { createProjectGraphAsync } from '../../project-graph/project-graph.js';
+import { TargetDependencyConfig } from '../../config/workspace-json-project-json.js';
+import { readNxJson } from '../../config/configuration.js';
+import { output } from '../../utils/output.js';
+import { findMatchingProjects } from '../../utils/find-matching-projects.js';
+import { generateGraph } from '../graph/graph.js';
 
 export async function runMany(
   args: { [k: string]: any },

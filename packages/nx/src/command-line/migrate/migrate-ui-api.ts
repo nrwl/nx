@@ -6,7 +6,7 @@ import type { FileChange } from '../../generators/tree';
 import {
   getImplementationPath as getMigrationImplementationPath,
   readMigrationCollection,
-} from './migrate';
+} from './migrate.js';
 
 let currentMigrationProcess: ChildProcess | null = null;
 let currentMigrationId: string | null = null;

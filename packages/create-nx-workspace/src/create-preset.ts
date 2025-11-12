@@ -1,12 +1,12 @@
-import { CreateWorkspaceOptions } from './create-workspace-options';
-import { output } from './utils/output';
+import { CreateWorkspaceOptions } from './create-workspace-options.js';
+import { output } from './utils/output.js';
 import {
   getPackageManagerCommand,
   getPackageManagerVersion,
   PackageManager,
-} from './utils/package-manager';
-import { spawnAndWait } from './utils/child-process-utils';
-import { unparse } from './utils/unparse';
+} from './utils/package-manager.js';
+import { spawnAndWait } from './utils/child-process-utils.js';
+import { unparse } from './utils/unparse.js';
 
 export async function createPreset<T extends CreateWorkspaceOptions>(
   preset: string,

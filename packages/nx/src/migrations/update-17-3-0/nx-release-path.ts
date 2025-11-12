@@ -1,6 +1,6 @@
 import { join, relative, sep } from 'node:path';
-import { Tree } from '../../generators/tree';
-import { getIgnoreObject } from '../../utils/ignore';
+import { Tree } from '../../generators/tree.js';
+import { getIgnoreObject } from '../../utils/ignore.js';
 
 export default function nxReleasePath(tree: Tree) {
   visitNotIgnoredFiles(tree, '', (file) => {

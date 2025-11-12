@@ -11,9 +11,9 @@ import type { NgEntryPoint } from 'ng-packagr/src/lib/ng-package/entry-point/ent
 import type { NgPackagrOptions } from 'ng-packagr/src/lib/ng-package/options.di';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { dirname, join, normalize } from 'node:path';
-import { getNgPackagrVersionInfo } from '../../../../utilities/ng-packagr/ng-packagr-version';
-import { importNgPackagrPath } from '../../../../utilities/ng-packagr/package-imports';
-import { createNgEntryPoint, type NgEntryPointType } from './entry-point';
+import { getNgPackagrVersionInfo } from '../../../../utilities/ng-packagr/ng-packagr-version.js';
+import { importNgPackagrPath } from '../../../../utilities/ng-packagr/package-imports.js';
+import { createNgEntryPoint, type NgEntryPointType } from './entry-point.js';
 
 async function shouldWriteFile(
   filePath: string,

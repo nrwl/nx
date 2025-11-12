@@ -7,7 +7,7 @@ import {
 import type { NxWebpackExecutionContext } from '../../utils/config';
 import type { NxAppWebpackPluginOptions } from '../nx-webpack-plugin/nx-app-webpack-plugin-options';
 import type { Compiler, Configuration } from 'webpack';
-import { normalizeOptions } from '../nx-webpack-plugin/lib/normalize-options';
+import { normalizeOptions } from '../nx-webpack-plugin/lib/normalize-options.js';
 import { readNxJson } from 'nx/src/config/configuration';
 
 /**

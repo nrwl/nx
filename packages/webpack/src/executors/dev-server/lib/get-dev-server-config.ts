@@ -2,9 +2,9 @@ import { logger } from '@nx/devkit';
 import type { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 import * as path from 'path';
 import { readFileSync } from 'fs';
-import { WebDevServerOptions } from '../schema';
-import { buildServePath } from './serve-path';
-import { NormalizedWebpackExecutorOptions } from '../../webpack/schema';
+import { WebDevServerOptions } from '../schema.js';
+import { buildServePath } from './serve-path.js';
+import { NormalizedWebpackExecutorOptions } from '../../webpack/schema.js';
 
 export function getDevServerOptions(
   root: string,

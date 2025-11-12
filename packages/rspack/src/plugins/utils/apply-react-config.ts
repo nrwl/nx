@@ -1,6 +1,6 @@
 import { Configuration, RspackOptionsNormalized } from '@rspack/core';
 import { logger } from '@nx/devkit';
-import { SvgrOptions } from './models';
+import { SvgrOptions } from './models.js';
 
 // TODO(v23): Remove SVGR support
 export function applyReactConfig(

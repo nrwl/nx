@@ -14,9 +14,9 @@ import {
   corsVersion,
   moduleFederationNodeVersion,
   typesCorsVersion,
-} from '../../../utils/versions';
-import { getComponentType } from '../../utils/artifact-types';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+} from '../../../utils/versions.js';
+import { getComponentType } from '../../utils/artifact-types.js';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 
 export async function updateSsrSetup(
   tree: Tree,

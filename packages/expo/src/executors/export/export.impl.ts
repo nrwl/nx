@@ -8,7 +8,7 @@ import { signalToCode } from '@nx/devkit/internal';
 import { ChildProcess, fork } from 'child_process';
 import { resolve as pathResolve } from 'path';
 
-import { ExportExecutorSchema } from './schema';
+import { ExportExecutorSchema } from './schema.js';
 
 export interface ExpoExportOutput {
   success: boolean;

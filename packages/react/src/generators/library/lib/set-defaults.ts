@@ -1,5 +1,5 @@
 import { readNxJson, Tree, updateNxJson } from '@nx/devkit';
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 
 export function setDefaults(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);

@@ -1,4 +1,4 @@
-export * from './start-static-remotes-file-server';
-export * from './build-static-remotes';
-export * from './start-remote-iterators';
-export { DevRemoteDefinition } from './models';
+export * from './start-static-remotes-file-server.js';
+export * from './build-static-remotes.js';
+export * from './start-remote-iterators.js';
+export { DevRemoteDefinition } from './models.js';

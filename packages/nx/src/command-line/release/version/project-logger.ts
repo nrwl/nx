@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import { output } from '../../../utils/output';
+import { output } from '../../../utils/output.js';
 
 const colors = [
   { instance: chalk.green, spinnerColor: 'green' },

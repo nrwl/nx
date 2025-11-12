@@ -11,11 +11,11 @@ import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript'
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { lt, valid } from 'semver';
 import type { ImportDeclaration, Printer } from 'typescript';
-import { resolveCypressConfigObject } from '../../utils/config';
+import { resolveCypressConfigObject } from '../../utils/config.js';
 import {
   cypressProjectConfigs,
   getObjectProperty,
-} from '../../utils/migrations';
+} from '../../utils/migrations.js';
 
 const DEPRECATED_MAX_ANGULAR_VERSION = '18.0.0';
 const CYPRESS_ANGULAR_FALLBACK_VERSION = '^3.0.0';

@@ -1,4 +1,4 @@
-import { ProjectGraph } from '../config/project-graph';
+import { ProjectGraph } from '../config/project-graph.js';
 
 function findMatchingSegments(
   s: string,

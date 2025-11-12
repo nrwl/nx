@@ -1,10 +1,10 @@
 import { Socket } from 'net';
-import { findMatchingProjects } from '../../../utils/find-matching-projects';
-import { findAllProjectNodeDependencies } from '../../../utils/project-graph-utils';
-import { PromisedBasedQueue } from '../../../utils/promised-based-queue';
-import { currentProjectGraph } from '../project-graph-incremental-recomputation';
-import { handleResult } from '../server';
-import { getProjectsAndGlobalChanges } from './changed-projects';
+import { findMatchingProjects } from '../../../utils/find-matching-projects.js';
+import { findAllProjectNodeDependencies } from '../../../utils/project-graph-utils.js';
+import { PromisedBasedQueue } from '../../../utils/promised-based-queue.js';
+import { currentProjectGraph } from '../project-graph-incremental-recomputation.js';
+import { handleResult } from '../server.js';
+import { getProjectsAndGlobalChanges } from './changed-projects.js';
 
 const queue = new PromisedBasedQueue();
 

@@ -5,8 +5,8 @@ import {
   Tree,
 } from '@nx/devkit';
 import { join } from 'path';
-import { addExportsToBarrel, normalizeOptions } from './lib/utils';
-import { NormalizedSchema, ComponentGeneratorSchema } from './schema';
+import { addExportsToBarrel, normalizeOptions } from './lib/utils.js';
+import { NormalizedSchema, ComponentGeneratorSchema } from './schema.js';
 
 export async function componentGenerator(
   host: Tree,

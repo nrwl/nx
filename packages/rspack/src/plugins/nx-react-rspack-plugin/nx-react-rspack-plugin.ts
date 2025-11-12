@@ -1,5 +1,5 @@
 import type { Compiler } from '@rspack/core';
-import { applyReactConfig } from '../utils/apply-react-config';
+import { applyReactConfig } from '../utils/apply-react-config.js';
 
 export class NxReactRspackPlugin {
   constructor(

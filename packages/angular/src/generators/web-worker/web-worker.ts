@@ -8,7 +8,7 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { addSnippet, normalizeOptions } from './lib';
+import { addSnippet, normalizeOptions } from './lib/index.js';
 import type { WebWorkerGeneratorOptions } from './schema';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 

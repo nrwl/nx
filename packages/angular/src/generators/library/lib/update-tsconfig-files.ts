@@ -7,8 +7,8 @@ import {
 } from '@nx/js';
 import { getNeededCompilerOptionOverrides } from '@nx/js/src/utils/typescript/configuration';
 import { lt } from 'semver';
-import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig.js';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function updateTsConfigFiles(

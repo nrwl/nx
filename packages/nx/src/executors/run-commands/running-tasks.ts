@@ -3,24 +3,24 @@ import { ChildProcess, exec, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
 import * as treeKill from 'tree-kill';
-import { ExecutorContext } from '../../config/misc-interfaces';
+import { ExecutorContext } from '../../config/misc-interfaces.js';
 import {
   createPseudoTerminal,
   PseudoTerminal,
   PseudoTtyProcess,
-} from '../../tasks-runner/pseudo-terminal';
-import { RunningTask } from '../../tasks-runner/running-tasks/running-task';
+} from '../../tasks-runner/pseudo-terminal.js';
+import { RunningTask } from '../../tasks-runner/running-tasks/running-task.js';
 import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
-} from '../../tasks-runner/task-env';
-import { getProcessMetricsService } from '../../tasks-runner/process-metrics-service';
-import { signalToCode } from '../../utils/exit-codes';
+} from '../../tasks-runner/task-env.js';
+import { getProcessMetricsService } from '../../tasks-runner/process-metrics-service.js';
+import { signalToCode } from '../../utils/exit-codes.js';
 import {
   LARGE_BUFFER,
   NormalizedRunCommandsOptions,
   RunCommandsCommandOptions,
-} from './run-commands.impl';
+} from './run-commands.impl.js';
 
 export class ParallelRunningTasks implements RunningTask {
   private readonly childProcesses: RunningNodeProcess[];

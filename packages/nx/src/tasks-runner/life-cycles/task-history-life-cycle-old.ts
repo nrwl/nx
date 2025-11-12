@@ -1,15 +1,15 @@
-import { readNxJson } from '../../config/nx-json';
-import { Task } from '../../config/task-graph';
+import { readNxJson } from '../../config/nx-json.js';
+import { Task } from '../../config/task-graph.js';
 import {
   getHistoryForHashes,
   TaskRun,
   writeTaskRunsToHistory,
-} from '../../utils/legacy-task-history';
-import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
-import { output } from '../../utils/output';
-import { serializeTarget } from '../../utils/serialize-target';
-import { isTuiEnabled } from '../is-tui-enabled';
-import { LifeCycle, TaskResult } from '../life-cycle';
+} from '../../utils/legacy-task-history.js';
+import { isNxCloudUsed } from '../../utils/nx-cloud-utils.js';
+import { output } from '../../utils/output.js';
+import { serializeTarget } from '../../utils/serialize-target.js';
+import { isTuiEnabled } from '../is-tui-enabled.js';
+import { LifeCycle, TaskResult } from '../life-cycle.js';
 
 export class LegacyTaskHistoryLifeCycle implements LifeCycle {
   private startTimings: Record<string, number> = {};

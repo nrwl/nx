@@ -3,11 +3,11 @@ import { type Configuration } from '@rspack/core';
 import {
   composePluginsSync,
   isNxRspackComposablePlugin,
-} from '../../../utils/config';
-import { resolveUserDefinedRspackConfig } from '../../../utils/resolve-user-defined-rspack-config';
-import { withNx } from '../../../utils/with-nx';
-import { withWeb } from '../../../utils/with-web';
-import { type NormalizedRspackExecutorSchema } from '../schema';
+} from '../../../utils/config.js';
+import { resolveUserDefinedRspackConfig } from '../../../utils/resolve-user-defined-rspack-config.js';
+import { withNx } from '../../../utils/with-nx.js';
+import { withWeb } from '../../../utils/with-web.js';
+import { type NormalizedRspackExecutorSchema } from '../schema.js';
 
 export async function getRspackConfigs(
   options: NormalizedRspackExecutorSchema & { devServer?: any },

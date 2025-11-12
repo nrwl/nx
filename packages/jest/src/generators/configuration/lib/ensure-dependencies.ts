@@ -1,5 +1,5 @@
 import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
-import { versions } from '../../../utils/versions';
+import { versions } from '../../../utils/versions.js';
 import type { NormalizedJestProjectSchema } from '../schema';
 
 export function ensureDependencies(

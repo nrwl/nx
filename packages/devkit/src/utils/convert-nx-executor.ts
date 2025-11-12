@@ -5,7 +5,7 @@ import type {
   ProjectsConfigurations,
 } from 'nx/src/devkit-exports';
 
-import { NX_VERSION } from './package-json';
+import { NX_VERSION } from './package-json.js';
 import { lt } from 'semver';
 import {
   readNxJsonFromDisk,

@@ -9,7 +9,7 @@ import {
   replaceModuleUsagesWithComponent,
   verifyIsInlineScam,
   verifyModuleIsScam,
-} from './lib';
+} from './lib/index.js';
 
 export async function scamToStandalone(
   tree: Tree,

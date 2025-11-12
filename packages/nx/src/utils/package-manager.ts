@@ -14,18 +14,18 @@ import {
   YAMLSeq,
   stringify as YAMLStringify,
 } from 'yaml';
-import { readNxJson } from '../config/configuration';
-import { readPackageJson } from '../project-graph/file-utils';
-import { getCatalogManager } from './catalog';
+import { readNxJson } from '../config/configuration.js';
+import { readPackageJson } from '../project-graph/file-utils.js';
+import { getCatalogManager } from './catalog/index.js';
 import {
   readFileIfExisting,
   readJsonFile,
   readYamlFile,
   writeJsonFile,
-} from './fileutils';
-import { getNxInstallationPath } from './installation-directory';
-import { PackageJson, readModulePackageJson } from './package-json';
-import { workspaceRoot } from './workspace-root';
+} from './fileutils.js';
+import { getNxInstallationPath } from './installation-directory.js';
+import { PackageJson, readModulePackageJson } from './package-json.js';
+import { workspaceRoot } from './workspace-root.js';
 
 const execAsync = promisify(exec);
 

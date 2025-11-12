@@ -1,9 +1,9 @@
 import { performance } from 'perf_hooks';
 
-import { commandsObject } from '../src/command-line/nx-commands';
-import { WorkspaceTypeAndRoot } from '../src/utils/find-workspace-root';
-import { stripIndents } from '../src/utils/strip-indents';
-import { ensureNxConsoleInstalled } from '../src/utils/nx-console-prompt';
+import { commandsObject } from '../src/command-line/nx-commands.js';
+import { WorkspaceTypeAndRoot } from '../src/utils/find-workspace-root.js';
+import { stripIndents } from '../src/utils/strip-indents.js';
+import { ensureNxConsoleInstalled } from '../src/utils/nx-console-prompt.js';
 
 /**
  * Nx is being run inside a workspace.

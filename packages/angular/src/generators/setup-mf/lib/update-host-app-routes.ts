@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { addRoute } from '../../../utils/nx-devkit/route-utils';
+import { addRoute } from '../../../utils/nx-devkit/route-utils.js';
 import type { NormalizedOptions } from '../schema';
 
 export function updateHostAppRoutes(tree: Tree, options: NormalizedOptions) {

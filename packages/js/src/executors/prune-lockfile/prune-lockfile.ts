@@ -16,7 +16,7 @@ import {
   getLockFileName,
   createLockFile,
 } from 'nx/src/plugins/js/lock-file/lock-file';
-import { type PruneLockfileOptions } from './schema';
+import { type PruneLockfileOptions } from './schema.js';
 
 export default async function pruneLockfileExecutor(
   schema: PruneLockfileOptions,

@@ -1,6 +1,6 @@
 import { Server } from 'net';
-import { handleServerProcessTermination } from './shutdown-utils';
-import { openSockets } from './server';
+import { handleServerProcessTermination } from './shutdown-utils.js';
+import { openSockets } from './server.js';
 
 export async function handleRequestShutdown(
   server: Server,

@@ -3,7 +3,7 @@ import { signalToCode } from '@nx/devkit/internal';
 import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
-import { DetoxBuildOptions } from './schema';
+import { DetoxBuildOptions } from './schema.js';
 
 export interface DetoxBuildOutput {
   success: boolean;

@@ -2,8 +2,8 @@ import { ExecutorContext, logger, names } from '@nx/devkit';
 import { signalToCode } from '@nx/devkit/internal';
 import { ChildProcess, fork } from 'child_process';
 import { resolve as pathResolve } from 'path';
-import { isPackagerRunning } from './lib/is-packager-running';
-import { ExpoServeExecutorSchema } from './schema';
+import { isPackagerRunning } from './lib/is-packager-running.js';
+import { ExpoServeExecutorSchema } from './schema.js';
 
 export interface ExpoServeOutput {
   port?: number;

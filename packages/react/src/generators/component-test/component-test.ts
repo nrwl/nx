@@ -11,10 +11,10 @@ import { basename, dirname, extname, join, relative } from 'path';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
-} from '../../utils/ast-utils';
-import { getComponentPropDefaults } from '../../utils/component-props';
-import { nxVersion } from '../../utils/versions';
-import { ComponentTestSchema } from './schema';
+} from '../../utils/ast-utils.js';
+import { getComponentPropDefaults } from '../../utils/component-props.js';
+import { nxVersion } from '../../utils/versions.js';
+import { ComponentTestSchema } from './schema.js';
 
 let tsModule: typeof import('typescript');
 

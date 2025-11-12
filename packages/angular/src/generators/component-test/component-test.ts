@@ -6,12 +6,12 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions.js';
 import {
   getArgsDefaultValue,
   getComponentProps,
-} from '../utils/storybook-ast/storybook-inputs';
-import { ComponentTestSchema } from './schema';
+} from '../utils/storybook-ast/storybook-inputs.js';
+import { ComponentTestSchema } from './schema.js';
 
 export async function componentTestGenerator(
   tree: Tree,

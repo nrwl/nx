@@ -13,9 +13,9 @@ import {
   mapRemotes,
   mapRemotesForSSR,
   getDependentPackagesForProject,
-} from '../../utils';
-import { applyDefaultEagerPackages as applyReactEagerPackages } from '../react/utils';
-import { isReactProject } from '../../utils/framework-detection';
+} from '../../utils/index.js';
+import { applyDefaultEagerPackages as applyReactEagerPackages } from '../react/utils.js';
+import { isReactProject } from '../../utils/framework-detection.js';
 
 export function getFunctionDeterminateRemoteUrl(isServer = false) {
   const target = 'serve';

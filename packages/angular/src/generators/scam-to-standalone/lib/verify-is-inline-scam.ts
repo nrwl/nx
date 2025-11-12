@@ -1,4 +1,4 @@
-import { selectorExistsInAST } from './selector-exists-in-ast';
+import { selectorExistsInAST } from './selector-exists-in-ast.js';
 import type { SourceFile } from 'typescript';
 
 export function verifyIsInlineScam(componentAST: SourceFile) {

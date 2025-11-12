@@ -1,9 +1,9 @@
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
-import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages';
-import { registerPluginTSTranspiler } from '../project-graph/plugins';
-import { normalizePath } from '../utils/path';
+import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages.js';
+import { registerPluginTSTranspiler } from '../project-graph/plugins/index.js';
+import { normalizePath } from '../utils/path.js';
 import type { ProjectConfiguration } from './workspace-json-project-json';
 
 /**

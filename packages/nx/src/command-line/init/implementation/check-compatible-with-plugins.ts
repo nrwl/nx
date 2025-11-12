@@ -2,17 +2,17 @@ import { existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { bold } from 'chalk';
 
-import { NxJsonConfiguration } from '../../../config/nx-json';
+import { NxJsonConfiguration } from '../../../config/nx-json.js';
 import {
   isAggregateCreateNodesError,
   isMergeNodesError,
   isProjectsWithNoNameError,
   ProjectGraphError,
-} from '../../../project-graph/error-types';
-import { workspaceRoot } from '../../../utils/workspace-root';
-import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
-import { output } from '../../../utils/output';
-import { createProjectGraphAsync } from '../../../project-graph/project-graph';
+} from '../../../project-graph/error-types.js';
+import { workspaceRoot } from '../../../utils/workspace-root.js';
+import { readJsonFile, writeJsonFile } from '../../../utils/fileutils.js';
+import { output } from '../../../utils/output.js';
+import { createProjectGraphAsync } from '../../../project-graph/project-graph.js';
 
 export interface IncompatibleFiles {
   [pluginIndex: number]: { file: string; error?: any }[];

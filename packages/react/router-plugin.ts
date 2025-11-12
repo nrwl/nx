@@ -1,4 +1,4 @@
 export {
   createNodesV2,
   ReactRouterPluginOptions,
-} from './src/plugins/router-plugin';
+} from './src/plugins/router-plugin.js';

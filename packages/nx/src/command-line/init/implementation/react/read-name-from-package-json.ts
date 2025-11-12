@@ -1,4 +1,4 @@
-import { fileExists, readJsonFile } from '../../../../utils/fileutils';
+import { fileExists, readJsonFile } from '../../../../utils/fileutils.js';
 
 export function readNameFromPackageJson(): string {
   let appName = 'webapp';

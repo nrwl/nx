@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { getPackageManagerCommand } from '../../../../utils/package-manager';
+import { getPackageManagerCommand } from '../../../../utils/package-manager.js';
 
 export function setupIntegratedWorkspace(): void {
   const pmc = getPackageManagerCommand();

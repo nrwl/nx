@@ -4,9 +4,9 @@ import {
   joinPathFragments,
   addDependenciesToPackageJson,
 } from '@nx/devkit';
-import { nxVersion } from '../../../../utils/versions';
-import { maybeJs } from '../../../../utils/maybe-js';
-import { NormalizedSchema, Schema } from '../../schema';
+import { nxVersion } from '../../../../utils/versions.js';
+import { maybeJs } from '../../../../utils/maybe-js.js';
+import { NormalizedSchema, Schema } from '../../schema.js';
 
 export async function initRsbuild(
   tree: Tree,

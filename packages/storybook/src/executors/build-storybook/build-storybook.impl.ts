@@ -5,7 +5,7 @@ import {
   storybookConfigExistsCheck,
   storybookMajorVersion,
   getInstalledStorybookVersion,
-} from '../../utils/utilities';
+} from '../../utils/utilities.js';
 import { gte } from 'semver';
 
 export default async function buildStorybookExecutor(

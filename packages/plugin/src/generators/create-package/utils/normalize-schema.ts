@@ -9,7 +9,7 @@ import {
   isUsingTsSolutionSetup,
   shouldConfigureTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { CreatePackageSchema } from '../schema';
+import { CreatePackageSchema } from '../schema.js';
 
 export interface NormalizedSchema extends CreatePackageSchema {
   bundler: 'swc' | 'tsc';

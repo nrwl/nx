@@ -1,5 +1,5 @@
 import { CommandModule } from 'yargs';
-import { withVerbose } from '../../yargs-utils/shared-options';
+import { withVerbose } from '../../yargs-utils/shared-options.js';
 
 export const yargsStartCiRunCommand: CommandModule = {
   command: 'start-ci-run [options]',
@@ -12,7 +12,7 @@ export const yargsStartCiRunCommand: CommandModule = {
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
     process.exit(
-      await (await import('./start-ci-run')).startCiRunHandler(args)
+      await (await import('./start-ci-run.js')).startCiRunHandler(args)
     );
   },
 };

@@ -1,46 +1,46 @@
 import { performance } from 'perf_hooks';
-import { readNxJson } from '../../config/nx-json';
+import { readNxJson } from '../../config/nx-json.js';
 import {
   FileData,
   FileMap,
   ProjectGraph,
   ProjectGraphExternalNode,
-} from '../../config/project-graph';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { hashArray } from '../../hasher/file-hasher';
-import { buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap } from '../../project-graph/build-project-graph';
-import { updateFileMap } from '../../project-graph/file-map-utils';
+} from '../../config/project-graph.js';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json.js';
+import { hashArray } from '../../hasher/file-hasher.js';
+import { buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap } from '../../project-graph/build-project-graph.js';
+import { updateFileMap } from '../../project-graph/file-map-utils.js';
 import {
   FileMapCache,
   nxProjectGraph,
   readFileMapCache,
   writeCache,
-} from '../../project-graph/nx-deps-cache';
+} from '../../project-graph/nx-deps-cache.js';
 import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
-} from '../../project-graph/utils/retrieve-workspace-files';
-import { fileExists } from '../../utils/fileutils';
+} from '../../project-graph/utils/retrieve-workspace-files.js';
+import { fileExists } from '../../utils/fileutils.js';
 import {
   resetWorkspaceContext,
   updateFilesInContext,
-} from '../../utils/workspace-context';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
-import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
-import { serverLogger } from './logger';
-import { NxWorkspaceFilesExternals } from '../../native';
+} from '../../utils/workspace-context.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets.js';
+import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets.js';
+import { serverLogger } from './logger.js';
+import { NxWorkspaceFilesExternals } from '../../native/index.js';
 import {
   ConfigurationResult,
   ConfigurationSourceMaps,
-} from '../../project-graph/utils/project-configuration-utils';
+} from '../../project-graph/utils/project-configuration-utils.js';
 import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 import {
   DaemonProjectGraphError,
   ProjectConfigurationsError,
   isAggregateProjectGraphError,
-} from '../../project-graph/error-types';
-import { getPlugins } from '../../project-graph/plugins/get-plugins';
+} from '../../project-graph/error-types.js';
+import { getPlugins } from '../../project-graph/plugins/get-plugins.js';
 
 interface SerializedProjectGraph {
   error: Error | null;

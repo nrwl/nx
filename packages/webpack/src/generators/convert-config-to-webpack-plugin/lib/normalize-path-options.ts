@@ -1,5 +1,5 @@
-import { WebpackExecutorOptions } from '../../../executors/webpack/schema';
-import { toProjectRelativePath } from './utils';
+import { WebpackExecutorOptions } from '../../../executors/webpack/schema.js';
+import { toProjectRelativePath } from './utils.js';
 
 const executorFieldsToNormalize: Array<keyof WebpackExecutorOptions> = [
   'outputPath',

@@ -5,7 +5,7 @@ import {
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { WorkspaceLibrary } from './models';
-import { readTsPathMappings } from './typescript';
+import { readTsPathMappings } from './typescript.js';
 
 export function getDependentPackagesForProject(
   projectGraph: ProjectGraph,

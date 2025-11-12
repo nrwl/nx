@@ -1,4 +1,4 @@
-import { GitRepository } from '../../../utils/git-utils';
+import { GitRepository } from '../../../utils/git-utils.js';
 const createSpinner = require('ora');
 
 export async function mergeRemoteSource(

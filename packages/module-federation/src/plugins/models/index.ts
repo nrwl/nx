@@ -1,4 +1,4 @@
-import { ModuleFederationConfig } from '../../utils/models';
+import { ModuleFederationConfig } from '../../utils/models/index.js';
 
 export interface NxModuleFederationDevServerConfig {
   host?: string;

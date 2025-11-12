@@ -1,14 +1,14 @@
 import { join, relative } from 'path';
-import { DependencyType } from '../../../../config/project-graph';
-import { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
-import { CreateDependenciesContext } from '../../../../project-graph/plugins';
+import { DependencyType } from '../../../../config/project-graph.js';
+import { ProjectConfiguration } from '../../../../config/workspace-json-project-json.js';
+import { CreateDependenciesContext } from '../../../../project-graph/plugins/index.js';
 import {
   RawProjectGraphDependency,
   validateDependency,
-} from '../../../../project-graph/project-graph-builder';
-import { normalizePath } from '../../../../utils/path';
-import { workspaceRoot } from '../../../../utils/workspace-root';
-import { TargetProjectLocator } from './target-project-locator';
+} from '../../../../project-graph/project-graph-builder.js';
+import { normalizePath } from '../../../../utils/path.js';
+import { workspaceRoot } from '../../../../utils/workspace-root.js';
+import { TargetProjectLocator } from './target-project-locator.js';
 
 function isRoot(
   projects: Record<string, ProjectConfiguration>,

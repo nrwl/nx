@@ -1,6 +1,6 @@
 import { joinPathFragments, stripIndents, Tree } from '@nx/devkit';
-import { RollupExecutorOptions } from '../../../executors/rollup/schema';
-import { normalizePathOptions } from './normalize-path-options';
+import { RollupExecutorOptions } from '../../../executors/rollup/schema.js';
+import { normalizePathOptions } from './normalize-path-options.js';
 
 const aliases = {
   entryFile: 'main',

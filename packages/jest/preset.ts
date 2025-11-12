@@ -1,4 +1,4 @@
-import { nxPreset } from './preset/jest-preset';
+import { nxPreset } from './preset/jest-preset.js';
 
 export { nxPreset };
 

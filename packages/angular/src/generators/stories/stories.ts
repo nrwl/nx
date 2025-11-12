@@ -13,12 +13,12 @@ import type { ComponentInfo } from '../utils/storybook-ast/component-info';
 import {
   getComponentsInfo,
   getStandaloneComponentsInfo,
-} from '../utils/storybook-ast/component-info';
-import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
-import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
+} from '../utils/storybook-ast/component-info.js';
+import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point.js';
+import { getModuleFilePaths } from '../utils/storybook-ast/module-info.js';
 import type { StoriesGeneratorOptions } from './schema';
 import picomatch = require('picomatch');
-import { nxVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions.js';
 
 export async function angularStoriesGenerator(
   tree: Tree,

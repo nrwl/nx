@@ -2,25 +2,25 @@ import { existsSync } from 'fs';
 
 import { prompt } from 'enquirer';
 import { prerelease } from 'semver';
-import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
-import { readJsonFile } from '../../utils/fileutils';
-import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
-import { output } from '../../utils/output';
-import { PackageJson } from '../../utils/package-json';
-import { getPackageManagerCommand } from '../../utils/package-manager';
-import { nxVersion } from '../../utils/versions';
-import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
-import { connectExistingRepoToNxCloudPrompt } from '../nx-cloud/connect/connect-to-nx-cloud';
-import { configurePlugins, installPluginPackages } from './configure-plugins';
-import { determineAiAgents } from './ai-agent-prompts';
-import { setupAiAgentsGenerator } from '../../ai/set-up-ai-agents/set-up-ai-agents';
-import { FsTree, flushChanges } from '../../generators/tree';
-import { Agent } from '../../ai/utils';
-import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
-import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
-import { addNxToTurborepo } from './implementation/add-nx-to-turborepo';
-import { addNxToAngularCliRepo } from './implementation/angular';
-import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json.js';
+import { readJsonFile } from '../../utils/fileutils.js';
+import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path.js';
+import { output } from '../../utils/output.js';
+import { PackageJson } from '../../utils/package-json.js';
+import { getPackageManagerCommand } from '../../utils/package-manager.js';
+import { nxVersion } from '../../utils/versions.js';
+import { globWithWorkspaceContextSync } from '../../utils/workspace-context.js';
+import { connectExistingRepoToNxCloudPrompt } from '../nx-cloud/connect/connect-to-nx-cloud.js';
+import { configurePlugins, installPluginPackages } from './configure-plugins.js';
+import { determineAiAgents } from './ai-agent-prompts.js';
+import { setupAiAgentsGenerator } from '../../ai/set-up-ai-agents/set-up-ai-agents.js';
+import { FsTree, flushChanges } from '../../generators/tree.js';
+import { Agent } from '../../ai/utils.js';
+import { addNxToMonorepo } from './implementation/add-nx-to-monorepo.js';
+import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo.js';
+import { addNxToTurborepo } from './implementation/add-nx-to-turborepo.js';
+import { addNxToAngularCliRepo } from './implementation/angular/index.js';
+import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts.js';
 import {
   createNxJsonFile,
   initCloud,
@@ -28,10 +28,10 @@ import {
   isMonorepo,
   printFinalMessage,
   updateGitIgnore,
-} from './implementation/utils';
-import { addNxToCraRepo } from './implementation/react';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
-import { installPackageToTmp } from '../../devkit-internals';
+} from './implementation/utils.js';
+import { addNxToCraRepo } from './implementation/react/index.js';
+import { ensurePackageHasProvenance } from '../../utils/provenance.js';
+import { installPackageToTmp } from '../../devkit-internals.js';
 
 export interface InitArgs {
   interactive: boolean;

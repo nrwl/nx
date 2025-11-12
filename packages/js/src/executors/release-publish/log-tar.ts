@@ -1,7 +1,7 @@
 // Adapted from https://github.com/npm/cli/blob/c736b622b8504b07f5a19f631ade42dd40063269/lib/utils/tar.js
 import * as chalk from 'chalk';
 import * as columnify from 'columnify';
-import { formatBytes } from './format-bytes';
+import { formatBytes } from './format-bytes.js';
 
 export const logTar = (tarball, opts = {}) => {
   // @ts-ignore

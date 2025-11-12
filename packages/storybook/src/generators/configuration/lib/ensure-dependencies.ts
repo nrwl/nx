@@ -8,13 +8,13 @@ import { coerce, gte } from 'semver';
 import {
   getInstalledStorybookVersion,
   storybookMajorVersion,
-} from '../../../utils/utilities';
+} from '../../../utils/utilities.js';
 import {
   litVersion,
   reactVersion,
   storybookVersion,
   viteVersion,
-} from '../../../utils/versions';
+} from '../../../utils/versions.js';
 import type { StorybookConfigureSchema } from '../schema';
 
 export type EnsureDependenciesOptions = {

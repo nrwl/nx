@@ -7,8 +7,8 @@ import {
 import { addSwcTestConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import { join } from 'path';
 import type { JestPresetExtension } from '../../../utils/config/config-file';
-import { getInstalledJestMajorVersion } from '../../../utils/versions';
-import { NormalizedJestProjectSchema } from '../schema';
+import { getInstalledJestMajorVersion } from '../../../utils/versions.js';
+import { NormalizedJestProjectSchema } from '../schema.js';
 
 export function createFiles(
   tree: Tree,

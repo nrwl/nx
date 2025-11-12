@@ -1,7 +1,7 @@
 import { Configuration } from '@rspack/core';
-import { ExtraEntryPointClass } from './model';
-import { applyWebConfig } from '../plugins/utils/apply-web-config';
-import { NxRspackExecutionContext } from './config';
+import { ExtraEntryPointClass } from './model.js';
+import { applyWebConfig } from '../plugins/utils/apply-web-config.js';
+import { NxRspackExecutionContext } from './config.js';
 
 export interface WithWebOptions {
   baseHref?: string;

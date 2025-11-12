@@ -1,5 +1,5 @@
 import type { ESLint } from 'eslint';
-import { useFlatConfig } from '../utils/flat-config';
+import { useFlatConfig } from '../utils/flat-config.js';
 
 export async function resolveESLintClass(opts?: {
   useFlatConfigOverrideVal: boolean;

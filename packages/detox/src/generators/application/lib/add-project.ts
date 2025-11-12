@@ -11,8 +11,8 @@ import {
   expoTestTarget,
   reactNativeBuildTarget,
   reactNativeTestTarget,
-} from './get-targets';
-import { NormalizedSchema } from './normalize-options';
+} from './get-targets.js';
+import { NormalizedSchema } from './normalize-options.js';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function addProject(host: Tree, options: NormalizedSchema) {

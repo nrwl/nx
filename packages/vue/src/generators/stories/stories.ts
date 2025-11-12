@@ -11,8 +11,8 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { basename, join } from 'path';
-import { nxVersion } from '../../utils/versions';
-import { createComponentStories } from './lib/component-story';
+import { nxVersion } from '../../utils/versions.js';
+import { createComponentStories } from './lib/component-story.js';
 import picomatch = require('picomatch');
 
 export interface StorybookStoriesSchema {

@@ -1,8 +1,8 @@
 import { readFileSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
-import { readJsonFile } from '../utils/fileutils';
-import { getAgentRules } from './set-up-ai-agents/get-agent-rules';
+import { readJsonFile } from '../utils/fileutils.js';
+import { getAgentRules } from './set-up-ai-agents/get-agent-rules.js';
 
 export function agentsMdPath(root: string): string {
   return join(root, 'AGENTS.md');

@@ -7,7 +7,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { interpolate } from 'nx/src/tasks-runner/utils';
-import { type CopyWorkspaceModulesOptions } from './schema';
+import { type CopyWorkspaceModulesOptions } from './schema.js';
 import { cpSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'path';
 import { lstatSync } from 'fs';

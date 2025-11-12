@@ -21,7 +21,7 @@ import {
   ProjectRootMappings,
 } from 'nx/src/project-graph/utils/find-project-for-path';
 import { readFileIfExisting } from 'nx/src/utils/fileutils';
-import { getPath, pathExists } from './graph-utils';
+import { getPath, pathExists } from './graph-utils.js';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 type SingleSourceTagConstraint = {
@@ -466,8 +466,8 @@ export function isTerminalRun(): boolean {
 
 /**
  * Takes an array of imports and tries to group them, so rather than having
- * `import { A } from './some-location'` and `import { B } from './some-location'` you get
- * `import { A, B } from './some-location'`
+ * `import { A } from './some-location.js'` and `import { B } from './some-location.js'` you get
+ * `import { A, B } from './some-location.js'`
  * @param importsToRemap
  * @returns
  */

@@ -11,7 +11,7 @@ import {
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { addSwcTestConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import { join } from 'path';
-import { NormalizedSchema } from './normalize-options';
+import { NormalizedSchema } from './normalize-options.js';
 
 export function createFiles(host: Tree, options: NormalizedSchema) {
   const offsetFromRoot = _offsetFromRoot(options.e2eProjectRoot);

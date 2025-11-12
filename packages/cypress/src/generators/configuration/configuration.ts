@@ -34,13 +34,13 @@ import {
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
-import { addLinterToCyProject } from '../../utils/add-linter';
-import { addDefaultE2EConfig } from '../../utils/config';
+import { addLinterToCyProject } from '../../utils/add-linter.js';
+import { addDefaultE2EConfig } from '../../utils/config.js';
 import {
   getInstalledCypressMajorVersion,
   versions,
-} from '../../utils/versions';
-import { addBaseCypressSetup } from '../base-setup/base-setup';
+} from '../../utils/versions.js';
+import { addBaseCypressSetup } from '../base-setup/base-setup.js';
 import cypressInitGenerator, { addPlugin } from '../init/init';
 
 export interface CypressE2EConfigSchema {

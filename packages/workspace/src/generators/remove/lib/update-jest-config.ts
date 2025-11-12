@@ -4,19 +4,19 @@ import {
   ProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-import { getSourceNodes } from '../../../utilities/typescript/get-source-nodes';
+import { getSourceNodes } from '../../../utilities/typescript/get-source-nodes.js';
 
-import { Schema } from '../schema';
+import { Schema } from '../schema.js';
 import type {
   ArrayLiteralExpression,
   PropertyAssignment,
   StringLiteral,
 } from 'typescript';
-import { ensureTypescript } from '../../../utilities/typescript';
+import { ensureTypescript } from '../../../utilities/typescript.js';
 import {
   findRootJestConfig,
   findProjectJestConfig,
-} from '../../utils/jest-config';
+} from '../../utils/jest-config.js';
 
 let tsModule: typeof import('typescript');
 

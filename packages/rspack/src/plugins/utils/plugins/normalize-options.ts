@@ -12,7 +12,7 @@ import {
   FileReplacement,
   NormalizedNxAppRspackPluginOptions,
   NxAppRspackPluginOptions,
-} from '../models';
+} from '../models.js';
 
 export function normalizeOptions(
   options: NxAppRspackPluginOptions

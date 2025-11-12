@@ -7,7 +7,7 @@ import {
   getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
   versions,
-} from '../../utils/version-utils';
+} from '../../utils/version-utils.js';
 
 export function addDependencies(
   tree: Tree,

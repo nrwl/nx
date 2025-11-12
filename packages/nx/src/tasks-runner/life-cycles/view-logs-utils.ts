@@ -1,6 +1,6 @@
-import { readNxJson } from '../../config/nx-json';
-import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
-import { output } from '../../utils/output';
+import { readNxJson } from '../../config/nx-json.js';
+import { isNxCloudUsed } from '../../utils/nx-cloud-utils.js';
+import { output } from '../../utils/output.js';
 
 const VIEW_LOGS_MESSAGE = `Hint: Try "nx view-logs" to get structured, searchable errors logs in your browser.`;
 

@@ -1,5 +1,5 @@
-import { RunningTask } from './running-task';
-import { RunningTasksService } from '../../native';
+import { RunningTask } from './running-task.js';
+import { RunningTasksService } from '../../native/index.js';
 
 export class SharedRunningTask implements RunningTask {
   private exitCallbacks: ((code: number) => void)[] = [];

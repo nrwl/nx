@@ -5,8 +5,8 @@ import {
   globAsync,
   type Tree,
 } from '@nx/devkit';
-import { isEslintInstalled } from '../../utils/ignore-vite-temp-files';
-import { nxVersion } from '../../utils/versions';
+import { isEslintInstalled } from '../../utils/ignore-vite-temp-files.js';
+import { nxVersion } from '../../utils/versions.js';
 
 export default async function (tree: Tree) {
   if (!isEslintInstalled(tree)) {

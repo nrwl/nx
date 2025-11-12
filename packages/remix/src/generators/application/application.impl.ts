@@ -20,7 +20,7 @@ import {
   createNxCloudOnboardingURLForWelcomeApp,
   getNxCloudAppOnBoardingUrl,
 } from 'nx/src/nx-cloud/utilities/onboarding';
-import { updateJestTestMatch } from '../../utils/testing-config-utils';
+import { updateJestTestMatch } from '../../utils/testing-config-utils.js';
 import {
   eslintVersion,
   isbotVersion,
@@ -32,16 +32,16 @@ import {
   typesReactDomVersion,
   typesReactVersion,
   viteVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 import initGenerator from '../init/init';
-import { updateDependencies } from '../utils/update-dependencies';
+import { updateDependencies } from '../utils/update-dependencies.js';
 import {
   addE2E,
   ignoreViteTempFiles,
   normalizeOptions,
   updateUnitTestConfig,
-} from './lib';
-import { NxRemixGeneratorSchema } from './schema';
+} from './lib/index.js';
+import { NxRemixGeneratorSchema } from './schema.js';
 import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,

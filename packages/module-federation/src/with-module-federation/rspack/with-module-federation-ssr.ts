@@ -3,8 +3,8 @@ import {
   ModuleFederationConfig,
   normalizeProjectName,
   NxModuleFederationConfigOverride,
-} from '../../utils';
-import { getModuleFederationConfig } from './utils';
+} from '../../utils/index.js';
+import { getModuleFederationConfig } from './utils.js';
 
 export async function withModuleFederationForSSR(
   options: ModuleFederationConfig,

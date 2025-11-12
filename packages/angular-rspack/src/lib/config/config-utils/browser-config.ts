@@ -5,12 +5,12 @@ import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
 } from '../../models';
-import { NgRspackPlugin } from '../../plugins/ng-rspack';
-import { getDevServerConfig } from './dev-server-config-utils';
-import { getPolyfillsEntry, toRspackEntries } from './entry-points';
-import { getOptimization } from './optimization-config';
+import { NgRspackPlugin } from '../../plugins/ng-rspack.js';
+import { getDevServerConfig } from './dev-server-config-utils.js';
+import { getPolyfillsEntry, toRspackEntries } from './entry-points.js';
+import { getOptimization } from './optimization-config.js';
 import { resolve } from 'path';
-import { HmrLoader } from '../../plugins/loaders/hmr-accept-loader';
+import { HmrLoader } from '../../plugins/loaders/hmr-accept-loader.js';
 
 export async function getBrowserConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,

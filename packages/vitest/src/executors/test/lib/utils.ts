@@ -4,13 +4,13 @@ import {
   logger,
   stripIndents,
 } from '@nx/devkit';
-import { VitestExecutorOptions } from '../schema';
-import { normalizeViteConfigFilePath } from '../../../utils/options-utils';
+import { VitestExecutorOptions } from '../schema.js';
+import { normalizeViteConfigFilePath } from '../../../utils/options-utils.js';
 import { relative } from 'path';
 import {
   loadViteDynamicImport,
   loadVitestDynamicImport,
-} from '../../../utils/executor-utils';
+} from '../../../utils/executor-utils.js';
 
 export async function getOptions(
   options: VitestExecutorOptions,

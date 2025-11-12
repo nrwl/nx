@@ -11,7 +11,7 @@ import {
   vitestV1CoverageV8Version,
   vitestV1Version,
   vitestVersion,
-} from './versions';
+} from './versions.js';
 
 type VitestDependenciesVersions = {
   vitest: string;

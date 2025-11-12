@@ -1,11 +1,11 @@
 import { prompt } from 'enquirer';
 import { RELEASE_TYPES, valid } from 'semver';
-import { ProjectGraph } from '../../../config/project-graph';
-import { NxReleaseConfig } from '../config/config';
-import { SemverBumpType } from '../version/version-actions';
-import { getGitDiff, parseCommits } from './git';
-import { determineSemverChange, SemverSpecifier } from './semver';
-import { getCommitsRelevantToProjects } from './shared';
+import { ProjectGraph } from '../../../config/project-graph.js';
+import { NxReleaseConfig } from '../config/config.js';
+import { SemverBumpType } from '../version/version-actions.js';
+import { getGitDiff, parseCommits } from './git.js';
+import { determineSemverChange, SemverSpecifier } from './semver.js';
+import { getCommitsRelevantToProjects } from './shared.js';
 
 export async function resolveSemverSpecifierFromConventionalCommits(
   from: string,

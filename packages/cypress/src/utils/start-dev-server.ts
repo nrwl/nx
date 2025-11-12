@@ -10,7 +10,7 @@ import {
   targetToTargetString,
 } from '@nx/devkit';
 import { join } from 'path';
-import { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
+import { CypressExecutorOptions } from '../executors/cypress/cypress.impl.js';
 import * as detectPort from 'detect-port';
 import {
   getExecutorInformation,

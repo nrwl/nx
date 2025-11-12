@@ -5,7 +5,7 @@ import {
   joinPathFragments,
   formatFiles,
 } from '@nx/devkit';
-import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
+import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs.js';
 
 export default async function (tree: Tree) {
   const bundler = hasModuleFederationProject(tree);

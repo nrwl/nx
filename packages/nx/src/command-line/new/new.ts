@@ -1,7 +1,7 @@
-import { flushChanges, FsTree } from '../../generators/tree';
-import { combineOptionsForGenerator } from '../../utils/params';
-import { handleErrors } from '../../utils/handle-errors';
-import { getGeneratorInformation } from '../generate/generator-utils';
+import { flushChanges, FsTree } from '../../generators/tree.js';
+import { combineOptionsForGenerator } from '../../utils/params.js';
+import { handleErrors } from '../../utils/handle-errors.js';
+import { getGeneratorInformation } from '../generate/generator-utils.js';
 
 function removeSpecialFlags(generatorOptions: { [p: string]: any }): void {
   delete generatorOptions.interactive;

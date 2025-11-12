@@ -1,1 +1,1 @@
-export * from './normalize-options';
+export * from './normalize-options.js';

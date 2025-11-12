@@ -8,8 +8,8 @@
 import { workspaceRoot } from '@nx/devkit';
 import browserslist from 'browserslist';
 import type { NgPackageEntryConfig } from 'ng-packagr/src/ng-entrypoint.schema';
-import { getNgPackagrVersionInfo } from '../ng-packagr-version';
-import { importNgPackagrPath } from '../package-imports';
+import { getNgPackagrVersionInfo } from '../ng-packagr-version.js';
+import { importNgPackagrPath } from '../package-imports.js';
 
 export enum CssUrl {
   inline = 'inline',

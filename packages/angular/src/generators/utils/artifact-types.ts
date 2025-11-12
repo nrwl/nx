@@ -1,5 +1,5 @@
 import { readNxJson, type Tree } from '@nx/devkit';
-import { getInstalledAngularVersionInfo } from './version-utils';
+import { getInstalledAngularVersionInfo } from './version-utils.js';
 
 export function getComponentType(tree: Tree): string | undefined {
   const nxJson = readNxJson(tree);

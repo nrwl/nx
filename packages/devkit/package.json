@@ -60,22 +60,22 @@
     "./testing": {
       "import": "./dist/testing.js",
       "types": "./dist/testing.d.ts",
-      "@nx/nx-source": "./testing.ts"
+      "@nx/nx-source": "./src/testing.ts"
     },
     "./internal": {
       "import": "./dist/internal.js",
       "types": "./dist/internal.d.ts",
-      "@nx/nx-source": "./internal.ts"
+      "@nx/nx-source": "./src/internal.ts"
     },
     "./internal-testing-utils": {
       "import": "./dist/internal-testing-utils.js",
       "types": "./dist/internal-testing-utils.d.ts",
-      "@nx/nx-source": "./internal-testing-utils.ts"
+      "@nx/nx-source": "./src/internal-testing-utils.ts"
     },
     "./ngcli-adapter": {
       "import": "./dist/ngcli-adapter.js",
       "types": "./dist/ngcli-adapter.d.ts",
-      "@nx/nx-source": "./ngcli-adapter.ts"
+      "@nx/nx-source": "./src/ngcli-adapter.ts"
     },
     "./src/generators/*": {
       "import": "./dist/generators/*.js",

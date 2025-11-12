@@ -1,1 +1,1 @@
-export * from './src/utils/testing-utils';
+export * from './src/utils/testing-utils/index.js';

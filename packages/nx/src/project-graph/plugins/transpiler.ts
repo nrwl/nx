@@ -4,9 +4,9 @@ import type * as ts from 'typescript';
 import {
   registerTranspiler,
   registerTsConfigPaths,
-} from '../../plugins/js/utils/register';
-import { readTsConfigWithoutFiles } from '../../plugins/js/utils/typescript';
-import { workspaceRoot } from '../../utils/workspace-root';
+} from '../../plugins/js/utils/register.js';
+import { readTsConfigWithoutFiles } from '../../plugins/js/utils/typescript.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 
 export let unregisterPluginTSTranspiler: (() => void) | null = null;
 

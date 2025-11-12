@@ -8,7 +8,7 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { NormalizedSchema } from './normalize-options';
+import { NormalizedSchema } from './normalize-options.js';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function addProject(host: Tree, options: NormalizedSchema) {

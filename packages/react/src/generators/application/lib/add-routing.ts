@@ -5,10 +5,10 @@ import {
   addDependenciesToPackageJson,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { addInitialRoutes } from '../../../utils/ast-utils';
-import { reactRouterDomVersion } from '../../../utils/versions';
-import { maybeJs } from '../../../utils/maybe-js';
-import { NormalizedSchema } from '../schema';
+import { addInitialRoutes } from '../../../utils/ast-utils.js';
+import { reactRouterDomVersion } from '../../../utils/versions.js';
+import { maybeJs } from '../../../utils/maybe-js.js';
+import { NormalizedSchema } from '../schema.js';
 
 let tsModule: typeof import('typescript');
 

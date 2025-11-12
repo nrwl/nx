@@ -21,7 +21,7 @@ import {
   testingLibraryReactNativeVersion,
   typesNodeVersion,
   typesReactVersion,
-} from './versions';
+} from './versions.js';
 
 export function ensureDependencies(
   tree: Tree,

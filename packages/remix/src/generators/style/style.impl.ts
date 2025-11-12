@@ -5,16 +5,16 @@ import {
   stripIndents,
   Tree,
 } from '@nx/devkit';
-import { RemixStyleSchema } from './schema';
+import { RemixStyleSchema } from './schema.js';
 
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { dirname, relative } from 'path';
-import { insertImport } from '../../utils/insert-import';
-import { insertStatementAfterImports } from '../../utils/insert-statement-after-imports';
+import { insertImport } from '../../utils/insert-import.js';
+import { insertStatementAfterImports } from '../../utils/insert-statement-after-imports.js';
 import {
   normalizeRoutePath,
   resolveRemixAppDirectory,
-} from '../../utils/remix-route-utils';
+} from '../../utils/remix-route-utils.js';
 
 export default async function (tree: Tree, options: RemixStyleSchema) {
   const {

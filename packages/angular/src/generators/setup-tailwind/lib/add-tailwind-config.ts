@@ -7,7 +7,7 @@ import {
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { relative } from 'path';
-import { GeneratorOptions } from '../schema';
+import { GeneratorOptions } from '../schema.js';
 
 export function addTailwindConfig(
   tree: Tree,

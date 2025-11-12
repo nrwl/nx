@@ -1,6 +1,6 @@
 export {
   playwrightExecutor,
   PlaywrightExecutorSchema,
-} from './src/executors/playwright/playwright.impl';
-export { initGenerator } from './src/generators/init/init';
-export { configurationGenerator } from './src/generators/configuration/configuration';
+} from './src/executors/playwright/playwright.impl.js';
+export { initGenerator } from './src/generators/init/init.js';
+export { configurationGenerator } from './src/generators/configuration/configuration.js';

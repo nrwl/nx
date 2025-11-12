@@ -3,8 +3,8 @@ import { join } from 'path';
 import { createWriteStream } from 'node:fs';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { workspaceRoot } from '@nx/devkit';
-import { StaticRemoteConfig } from '../../utils';
-import { NxModuleFederationDevServerConfig } from '../models';
+import { StaticRemoteConfig } from '../../utils/index.js';
+import { NxModuleFederationDevServerConfig } from '../models/index.js';
 
 export async function buildStaticRemotes(
   staticRemotesConfig: Record<string, StaticRemoteConfig>,

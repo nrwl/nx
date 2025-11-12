@@ -1,6 +1,6 @@
-import { Remotes } from './models';
-import { processRemoteLocation } from './url-helpers';
-import { normalizeProjectName } from './normalize-project-name';
+import { Remotes } from './models/index.js';
+import { processRemoteLocation } from './url-helpers.js';
+import { normalizeProjectName } from './normalize-project-name.js';
 
 /**
  * Map remote names to a format that can be understood and used by Module

@@ -1,6 +1,6 @@
-import { logger } from './logger';
-import { getPackageManagerCommand } from './package-manager';
-import { workspaceRoot } from './workspace-root';
+import { logger } from './logger.js';
+import { getPackageManagerCommand } from './package-manager.js';
+import { workspaceRoot } from './workspace-root.js';
 import type { NxKey } from '@nx/key';
 
 export function createNxKeyLicenseeInformation(nxKey: NxKey) {

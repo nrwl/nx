@@ -1,9 +1,9 @@
 import * as ora from 'ora';
 
-import { execAndWait } from '../child-process-utils';
-import { mapErrorToBodyLines } from '../error-utils';
-import { output } from '../output';
-import { getPackageManagerCommand, PackageManager } from '../package-manager';
+import { execAndWait } from '../child-process-utils.js';
+import { mapErrorToBodyLines } from '../error-utils.js';
+import { output } from '../output.js';
+import { getPackageManagerCommand, PackageManager } from '../package-manager.js';
 
 export async function setupCI(
   directory: string,

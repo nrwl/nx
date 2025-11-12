@@ -1,11 +1,11 @@
-import { workspaceRoot } from '../../utils/workspace-root';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 import { relative } from 'path';
-import { handleServerProcessTermination } from './shutdown-utils';
+import { handleServerProcessTermination } from './shutdown-utils.js';
 import { Server } from 'net';
-import { normalizePath } from '../../utils/path';
-import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
+import { normalizePath } from '../../utils/path.js';
+import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache.js';
 import type { WatchEvent } from '../../native';
-import { openSockets } from './server';
+import { openSockets } from './server.js';
 
 export type FileWatcherCallback = (
   err: Error | string | null,
@@ -13,7 +13,7 @@ export type FileWatcherCallback = (
 ) => Promise<void>;
 
 export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
-  const { Watcher } = await import('../../native');
+  const { Watcher } = await import('../../native/index.js');
 
   const watcher = new Watcher(workspaceRoot);
   watcher.watch((err, events) => {
@@ -43,7 +43,7 @@ export async function watchOutputFiles(
   server: Server,
   cb: FileWatcherCallback
 ) {
-  const { Watcher } = await import('../../native');
+  const { Watcher } = await import('../../native/index.js');
 
   const relativeServerProcess = normalizePath(
     relative(workspaceRoot, serverProcessJsonPath)

@@ -1,4 +1,4 @@
-import { VcsPushStatus } from '../git/git';
+import { VcsPushStatus } from '../git/git.js';
 
 function getSetupMessage(
   url: string | null,

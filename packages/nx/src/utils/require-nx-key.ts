@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { getPackageManagerCommand } from './package-manager';
+import { getPackageManagerCommand } from './package-manager.js';
 
 export async function requireNxKey(): Promise<typeof import('@nx/key')> {
   // @ts-ignore

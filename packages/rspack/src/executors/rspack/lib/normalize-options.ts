@@ -3,7 +3,7 @@ import { resolve } from 'path';
 import {
   normalizeAssets,
   normalizeFileReplacements,
-} from '../../../plugins/utils/plugins/normalize-options';
+} from '../../../plugins/utils/plugins/normalize-options.js';
 import type {
   RspackExecutorSchema,
   NormalizedRspackExecutorSchema,

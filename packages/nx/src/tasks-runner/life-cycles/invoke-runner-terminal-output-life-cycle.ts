@@ -1,8 +1,8 @@
-import { output } from '../../utils/output';
-import { TaskStatus } from '../tasks-runner';
-import { getPrintableCommandArgsForTask } from '../utils';
+import { output } from '../../utils/output.js';
+import { TaskStatus } from '../tasks-runner.js';
+import { getPrintableCommandArgsForTask } from '../utils.js';
 import type { LifeCycle, TaskResult } from '../life-cycle';
-import { Task } from '../../config/task-graph';
+import { Task } from '../../config/task-graph.js';
 
 export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
   failedTasks = [] as Task[];

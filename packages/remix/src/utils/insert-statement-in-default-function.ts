@@ -1,5 +1,5 @@
 import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
-import { getDefaultExport } from './get-default-export';
+import { getDefaultExport } from './get-default-export.js';
 
 export function insertStatementInDefaultFunction(
   tree: Tree,

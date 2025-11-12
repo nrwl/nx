@@ -6,7 +6,7 @@ import {
   generateFlatOverride,
   generateFlatPredefinedConfig,
   stringifyNodeList,
-} from '../utils/flat-config/ast-utils';
+} from '../utils/flat-config/ast-utils.js';
 
 /**
  * This configuration is intended to apply to all TypeScript source files.

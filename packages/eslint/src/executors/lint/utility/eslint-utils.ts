@@ -1,7 +1,7 @@
 import type { ESLint } from 'eslint';
 import { gte } from 'semver';
-import { isFlatConfig } from '../../../utils/config-file';
-import { resolveESLintClass } from '../../../utils/resolve-eslint-class';
+import { isFlatConfig } from '../../../utils/config-file.js';
+import { resolveESLintClass } from '../../../utils/resolve-eslint-class.js';
 import type { Schema } from '../schema';
 
 export async function resolveAndInstantiateESLint(

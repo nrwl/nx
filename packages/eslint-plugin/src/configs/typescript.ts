@@ -1,5 +1,5 @@
 import { workspaceRoot } from '@nx/devkit';
-import { packageExists } from '../utils/config-utils';
+import { packageExists } from '../utils/config-utils.js';
 
 const isPrettierAvailable =
   packageExists('prettier') && packageExists('eslint-config-prettier');

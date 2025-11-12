@@ -9,7 +9,7 @@
 import { promisify } from 'node:util';
 import { brotliCompress } from 'node:zlib';
 import { Compiler, RspackPluginInstance } from '@rspack/core';
-import { addWarning } from '../utils/rspack-diagnostics';
+import { addWarning } from '../utils/rspack-diagnostics.js';
 
 const brotliCompressAsync = promisify(brotliCompress);
 

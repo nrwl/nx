@@ -14,7 +14,7 @@ import {
   vitePluginDtsVersion,
   vitePluginReactSwcVersion,
   vitePluginReactVersion,
-} from './versions';
+} from './versions.js';
 
 export type EnsureDependenciesOptions = {
   uiFramework: 'angular' | 'react' | 'none';

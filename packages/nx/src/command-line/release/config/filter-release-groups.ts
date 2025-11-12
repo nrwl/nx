@@ -1,9 +1,9 @@
-import { ProjectGraph } from '../../../config/project-graph';
-import { findMatchingProjects } from '../../../utils/find-matching-projects';
-import { output } from '../../../utils/output';
-import { IMPLICIT_DEFAULT_RELEASE_GROUP, NxReleaseConfig } from './config';
-import { GroupVersionPlan, ProjectsVersionPlan } from './version-plans';
-import { NxReleaseDockerConfiguration } from '../../../config/nx-json';
+import { ProjectGraph } from '../../../config/project-graph.js';
+import { findMatchingProjects } from '../../../utils/find-matching-projects.js';
+import { output } from '../../../utils/output.js';
+import { IMPLICIT_DEFAULT_RELEASE_GROUP, NxReleaseConfig } from './config.js';
+import { GroupVersionPlan, ProjectsVersionPlan } from './version-plans.js';
+import { NxReleaseDockerConfiguration } from '../../../config/nx-json.js';
 
 export type ReleaseGroupWithName = Omit<
   NxReleaseConfig['groups'][string],

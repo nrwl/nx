@@ -6,7 +6,7 @@ import {
   Tree,
 } from '@nx/devkit';
 
-import { SetupTailwindOptions } from '../schema';
+import { SetupTailwindOptions } from '../schema.js';
 
 // base directories and file types to simplify locating the stylesheet
 const baseDirs = ['src', 'pages', 'src/pages', 'src/app', 'app'];

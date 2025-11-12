@@ -17,15 +17,15 @@ import {
   reactNativeWebVersion,
   reactNativeSvgWebVersion,
   typesReactDomVersion,
-} from '../../utils/versions';
-import { NormalizedSchema, normalizeSchema } from './lib/normalize-schema';
+} from '../../utils/versions.js';
+import { NormalizedSchema, normalizeSchema } from './lib/normalize-schema.js';
 import {
   createBuildTarget,
   createNxWebpackPluginOptions,
   createServeTarget,
-} from './lib/webpack-targets';
+} from './lib/webpack-targets.js';
 
-import { WebConfigurationGeneratorSchema } from './schema';
+import { WebConfigurationGeneratorSchema } from './schema.js';
 
 /**
  * This function sets web configuration for react native apps with react-native-web.

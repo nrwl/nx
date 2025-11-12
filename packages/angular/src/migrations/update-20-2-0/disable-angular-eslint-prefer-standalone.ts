@@ -5,7 +5,7 @@ import {
   lintConfigHasOverride,
   updateOverrideInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import { getProjectsFilteredByDependencies } from '../utils/projects';
+import { getProjectsFilteredByDependencies } from '../utils/projects.js';
 
 const preferStandaloneRule = '@angular-eslint/prefer-standalone';
 

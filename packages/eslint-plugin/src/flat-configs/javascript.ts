@@ -1,7 +1,7 @@
 import eslint from '@eslint/js';
 import globals from 'globals';
 import tseslint, { type ConfigArray } from 'typescript-eslint';
-import { packageExists } from '../utils/config-utils';
+import { packageExists } from '../utils/config-utils.js';
 
 const isPrettierAvailable =
   packageExists('prettier') && packageExists('eslint-config-prettier');

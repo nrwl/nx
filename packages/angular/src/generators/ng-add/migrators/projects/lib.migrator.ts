@@ -7,14 +7,14 @@ import type {
   ValidationError,
   ValidationResult,
 } from '../../utilities';
-import { convertToNxProject } from '../../utilities';
+import { convertToNxProject } from '../../utilities/index.js';
 import type { BuilderMigratorClassType } from '../builders';
 import {
   AngularDevkitKarmaMigrator,
   AngularDevkitNgPackagrMigrator,
   AngularEslintLintMigrator,
-} from '../builders';
-import { ProjectMigrator } from './project.migrator';
+} from '../builders/index.js';
+import { ProjectMigrator } from './project.migrator.js';
 
 const supportedBuilderMigrators: BuilderMigratorClassType[] = [
   AngularDevkitNgPackagrMigrator,

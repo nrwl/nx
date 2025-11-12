@@ -3,10 +3,10 @@ import {
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { getNpmScope } from '../../../utilities/get-import-path';
+import { getNpmScope } from '../../../utilities/get-import-path.js';
 import type { NormalizedSchema, Schema } from '../schema';
-import { normalizePathSlashes } from './utils';
-import { getProjectType } from '../../../utils/ts-solution-setup';
+import { normalizePathSlashes } from './utils.js';
+import { getProjectType } from '../../../utils/ts-solution-setup.js';
 
 export async function normalizeSchema(
   tree: Tree,

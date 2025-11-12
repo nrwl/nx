@@ -1,8 +1,8 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, joinPathFragments } from '@nx/devkit';
-import { addToNgModule, findModule } from '../utils';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
-import { normalizeOptions } from './lib';
+import { addToNgModule, findModule } from '../utils/index.js';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils.js';
+import { normalizeOptions } from './lib/index.js';
 import type { Schema } from './schema';
 
 export async function directiveGenerator(tree: Tree, schema: Schema) {

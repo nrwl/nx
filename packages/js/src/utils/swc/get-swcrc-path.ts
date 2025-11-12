@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { SwcExecutorOptions } from '../schema';
+import { SwcExecutorOptions } from '../schema.js';
 
 export function getSwcrcPath(
   options: SwcExecutorOptions,

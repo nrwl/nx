@@ -1,5 +1,5 @@
 import { addDependenciesToPackageJson, Tree } from '@nx/devkit';
-import { versions } from './version-utils';
+import { versions } from './version-utils.js';
 
 export function addBuildableLibrariesPostCssDependencies(tree: Tree): void {
   const pkgVersions = versions(tree);

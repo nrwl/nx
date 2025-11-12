@@ -2,10 +2,10 @@ import { Compiler } from 'webpack';
 import {
   NormalizedNxAppWebpackPluginOptions,
   NxAppWebpackPluginOptions,
-} from './nx-app-webpack-plugin-options';
-import { normalizeOptions } from './lib/normalize-options';
-import { applyBaseConfig } from './lib/apply-base-config';
-import { applyWebConfig } from './lib/apply-web-config';
+} from './nx-app-webpack-plugin-options.js';
+import { normalizeOptions } from './lib/normalize-options.js';
+import { applyBaseConfig } from './lib/apply-base-config.js';
+import { applyWebConfig } from './lib/apply-web-config.js';
 
 /**
  * This plugin provides features to build Node and Web applications.

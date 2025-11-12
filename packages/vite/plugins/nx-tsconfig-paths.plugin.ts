@@ -17,9 +17,9 @@ import {
   MatchPath,
 } from 'tsconfig-paths';
 import { Plugin } from 'vite';
-import { findFile } from '../src/utils/nx-tsconfig-paths-find-file';
-import { getProjectTsConfigPath } from '../src/utils/options-utils';
-import { nxViteBuildCoordinationPlugin } from './nx-vite-build-coordination.plugin';
+import { findFile } from '../src/utils/nx-tsconfig-paths-find-file.js';
+import { getProjectTsConfigPath } from '../src/utils/options-utils.js';
+import { nxViteBuildCoordinationPlugin } from './nx-vite-build-coordination.plugin.js';
 
 export interface nxViteTsPathsOptions {
   /**

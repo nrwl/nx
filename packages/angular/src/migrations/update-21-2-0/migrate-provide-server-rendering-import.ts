@@ -5,9 +5,9 @@ import {
   type Tree,
 } from '@nx/devkit';
 import * as ts from 'typescript';
-import { FileChangeRecorder } from '../../utils/file-change-recorder';
-import { angularDevkitVersion } from '../../utils/versions';
-import { getProjectsFilteredByDependencies } from '../utils/projects';
+import { FileChangeRecorder } from '../../utils/file-change-recorder.js';
+import { angularDevkitVersion } from '../../utils/versions.js';
+import { getProjectsFilteredByDependencies } from '../utils/projects.js';
 
 export default async function (tree: Tree) {
   const projects = await getProjectsFilteredByDependencies([

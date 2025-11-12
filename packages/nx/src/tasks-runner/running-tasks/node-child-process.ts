@@ -1,6 +1,6 @@
 import { ChildProcess, Serializable } from 'child_process';
-import { signalToCode } from '../../utils/exit-codes';
-import { RunningTask } from './running-task';
+import { signalToCode } from '../../utils/exit-codes.js';
+import { RunningTask } from './running-task.js';
 import { Transform } from 'stream';
 import * as chalk from 'chalk';
 import { readFileSync } from 'fs';

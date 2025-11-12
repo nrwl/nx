@@ -1,10 +1,10 @@
 import {
   readNxJson,
   updateNxJson,
-} from '../../generators/utils/project-configuration';
-import { Tree } from '../../generators/tree';
-import { updateJson } from '../../generators/utils/json';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+} from '../../generators/utils/project-configuration.js';
+import { Tree } from '../../generators/tree.js';
+import { updateJson } from '../../generators/utils/json.js';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
 
 export default async function (tree: Tree) {
   updateJson(tree, 'package.json', (json) => {

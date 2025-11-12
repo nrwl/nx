@@ -4,7 +4,7 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { NormalizedSchema } from './normalized-schema';
+import { NormalizedSchema } from './normalized-schema.js';
 
 export function addProxy(tree: Tree, options: NormalizedSchema) {
   const projectConfig = readProjectConfiguration(tree, options.frontendProject);

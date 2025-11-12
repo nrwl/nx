@@ -1,6 +1,6 @@
 import { ExecutorContext } from '@nx/devkit';
 
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
+import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink.js';
 
 export interface ExpoEnsureSymlinkOutput {
   success: boolean;

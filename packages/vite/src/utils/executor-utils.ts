@@ -3,7 +3,7 @@ import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
 } from '@nx/js/src/utils/buildable-libs-utils';
-import { getProjectTsConfigPath } from './options-utils';
+import { getProjectTsConfigPath } from './options-utils.js';
 import { execSync } from 'node:child_process';
 import { printDiagnostics, runTypeCheck } from '@nx/js';
 import { join } from 'path';

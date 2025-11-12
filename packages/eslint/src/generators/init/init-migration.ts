@@ -14,13 +14,13 @@ import {
   determineEslintConfigFormat,
   findEslintFile,
   isEslintConfigSupported,
-} from '../utils/eslint-file';
+} from '../utils/eslint-file.js';
 import {
   getGlobalEsLintConfiguration,
   getGlobalFlatEslintConfiguration,
-} from './global-eslint-config';
-import { useFlatConfig } from '../../utils/flat-config';
-import { eslintVersion, nxVersion } from '../../utils/versions';
+} from './global-eslint-config.js';
+import { useFlatConfig } from '../../utils/flat-config.js';
+import { eslintVersion, nxVersion } from '../../utils/versions.js';
 import {
   addBlockToFlatConfigExport,
   addImportToFlatConfig,
@@ -28,9 +28,9 @@ import {
   removeCompatExtends,
   removePlugin,
   removePredefinedConfigs,
-} from '../utils/flat-config/ast-utils';
-import { hasEslintPlugin } from '../utils/plugin';
-import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
+} from '../utils/flat-config/ast-utils.js';
+import { hasEslintPlugin } from '../utils/plugin.js';
+import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file.js';
 
 export function migrateConfigToMonorepoStyle(
   projects: ProjectConfiguration[],

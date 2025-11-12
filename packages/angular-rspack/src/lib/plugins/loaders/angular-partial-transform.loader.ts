@@ -1,5 +1,5 @@
 import { LoaderContext } from '@rspack/core';
-import { NG_RSPACK_SYMBOL_NAME, NgRspackCompilation } from '../../models';
+import { NG_RSPACK_SYMBOL_NAME, NgRspackCompilation } from '../../models/index.js';
 
 export default function loader(this: LoaderContext<unknown>, content: string) {
   const callback = this.async();

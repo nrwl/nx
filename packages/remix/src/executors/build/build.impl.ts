@@ -11,7 +11,7 @@ import { fork } from 'child_process';
 import { copySync, mkdir, writeFileSync } from 'fs-extra';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
-import { type RemixBuildSchema } from './schema';
+import { type RemixBuildSchema } from './schema.js';
 
 function buildRemixBuildArgs(options: RemixBuildSchema) {
   const args = ['build'];

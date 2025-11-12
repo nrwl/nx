@@ -1,9 +1,9 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
+import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners.js';
 import remoteGenerator from '../../remote/remote';
-import { type Schema } from '../schema';
-import { getRemoteIfExists } from './check-remote-exists';
+import { type Schema } from '../schema.js';
+import { getRemoteIfExists } from './check-remote-exists.js';
 
 export async function addRemote(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];

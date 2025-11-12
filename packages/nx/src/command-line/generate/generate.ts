@@ -2,27 +2,27 @@ import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { relative } from 'path';
 
-import { readNxJson } from '../../config/configuration';
-import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
-import { FileChange, flushChanges, FsTree } from '../../generators/tree';
+import { readNxJson } from '../../config/configuration.js';
+import { ProjectsConfigurations } from '../../config/workspace-json-project-json.js';
+import { FileChange, flushChanges, FsTree } from '../../generators/tree.js';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
-} from '../../project-graph/project-graph';
-import { logger, NX_PREFIX } from '../../utils/logger';
+} from '../../project-graph/project-graph.js';
+import { logger, NX_PREFIX } from '../../utils/logger.js';
 import {
   combineOptionsForGenerator,
   Options,
   Schema,
-} from '../../utils/params';
-import { handleErrors } from '../../utils/handle-errors';
-import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins';
-import { printHelp } from '../../utils/print-help';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
-import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
-import { getGeneratorInformation } from './generator-utils';
-import { getCwd } from '../../utils/path';
+} from '../../utils/params.js';
+import { handleErrors } from '../../utils/handle-errors.js';
+import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins.js';
+import { printHelp } from '../../utils/print-help.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { calculateDefaultProjectName } from '../../config/calculate-default-project-name.js';
+import { findInstalledPlugins } from '../../utils/plugins/installed-plugins.js';
+import { getGeneratorInformation } from './generator-utils.js';
+import { getCwd } from '../../utils/path.js';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -408,7 +408,7 @@ export async function generate(args: { [k: string]: any }) {
       }
     } else {
       require('../../adapter/compat');
-      return (await import('../../adapter/ngcli-adapter')).generate(
+      return (await import('../../adapter/ngcli-adapter.js')).generate(
         workspaceRoot,
         {
           ...opts,

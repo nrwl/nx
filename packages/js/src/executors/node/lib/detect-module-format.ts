@@ -1,7 +1,7 @@
 import { readJsonFile } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { readTsConfig } from '../../../utils/typescript/ts-config';
+import { readTsConfig } from '../../../utils/typescript/ts-config.js';
 import * as ts from 'typescript';
 
 export type ModuleFormat = 'cjs' | 'esm';

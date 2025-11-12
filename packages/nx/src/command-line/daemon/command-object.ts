@@ -1,5 +1,5 @@
 import { CommandModule, Argv } from 'yargs';
-import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
+import { linkToNxDevAndExamples } from '../yargs-utils/documentation.js';
 
 export const yargsDaemonCommand: CommandModule = {
   command: 'daemon',
@@ -7,7 +7,7 @@ export const yargsDaemonCommand: CommandModule = {
     'Prints information about the Nx Daemon process or starts a daemon process.',
   builder: (yargs) =>
     linkToNxDevAndExamples(withDaemonOptions(yargs), 'daemon'),
-  handler: async (args) => (await import('./daemon')).daemonHandler(args),
+  handler: async (args) => (await import('./daemon.js')).daemonHandler(args),
 };
 
 function withDaemonOptions(yargs: Argv): Argv {

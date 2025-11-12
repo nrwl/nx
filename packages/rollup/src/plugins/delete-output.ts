@@ -1,5 +1,5 @@
 import type { Plugin } from 'rollup';
-import { deleteOutputDir } from '../utils/fs';
+import { deleteOutputDir } from '../utils/fs.js';
 
 export interface DeleteOutputOptions {
   dirs: string[];

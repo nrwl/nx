@@ -6,13 +6,13 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
-import { getRootTsConfigPathInTree } from '../../../utilities/ts-config';
-import { Schema } from '../schema';
+import { getRootTsConfigPathInTree } from '../../../utilities/ts-config.js';
+import { Schema } from '../schema.js';
 import {
   createProjectRootMappings,
   findProjectForPath,
 } from 'nx/src/project-graph/utils/find-project-for-path';
-import { isUsingTsSolutionSetup } from '../../../utilities/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '../../../utilities/typescript/ts-solution-setup.js';
 import { relative } from 'path';
 
 /**

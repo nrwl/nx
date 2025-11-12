@@ -1,24 +1,24 @@
-import { output } from '../../utils/output';
-import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
+import { output } from '../../utils/output.js';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json.js';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
-} from '../../config/project-graph';
-import { filterAffected } from '../../project-graph/affected/affected-project-graph';
+} from '../../config/project-graph.js';
+import { filterAffected } from '../../project-graph/affected/affected-project-graph.js';
 import {
   FileChange,
   calculateFileChanges,
-} from '../../project-graph/file-utils';
-import { filterNodes } from '../../project-graph/operators';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { allFileData } from '../../utils/all-file-data';
+} from '../../project-graph/file-utils.js';
+import { filterNodes } from '../../project-graph/operators.js';
+import { createProjectGraphAsync } from '../../project-graph/project-graph.js';
+import { allFileData } from '../../utils/all-file-data.js';
 import {
   NxArgs,
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
-} from '../../utils/command-line-utils';
-import { findMatchingProjects } from '../../utils/find-matching-projects';
-import { ShowProjectsOptions } from './command-object';
+} from '../../utils/command-line-utils.js';
+import { findMatchingProjects } from '../../utils/find-matching-projects.js';
+import { ShowProjectsOptions } from './command-object.js';
 
 export async function showProjectsHandler(
   args: ShowProjectsOptions

@@ -17,10 +17,10 @@ import {
   tap,
 } from 'rxjs/operators';
 import type { Configuration, Stats } from 'webpack';
-import { isNxWebpackComposablePlugin } from '../../utils/config';
-import { resolveUserDefinedWebpackConfig } from '../../utils/webpack/resolve-user-defined-webpack-config';
-import { normalizeOptions } from './lib/normalize-options';
-import { runWebpack } from './lib/run-webpack';
+import { isNxWebpackComposablePlugin } from '../../utils/config.js';
+import { resolveUserDefinedWebpackConfig } from '../../utils/webpack/resolve-user-defined-webpack-config.js';
+import { normalizeOptions } from './lib/normalize-options.js';
+import { runWebpack } from './lib/run-webpack.js';
 import type {
   NormalizedWebpackExecutorOptions,
   WebpackExecutorOptions,

@@ -22,18 +22,18 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { typesNodeVersion } from '@nx/js/src/utils/versions';
 import { join } from 'path';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { ensureDependencies } from '../../utils/ensure-dependencies.js';
 import {
   addOrChangeTestTarget,
   createOrEditViteConfig,
-} from '../../utils/generator-utils';
+} from '../../utils/generator-utils.js';
 import initGenerator from '../init/init';
-import { VitestGeneratorSchema } from './schema';
-import { detectUiFramework } from '../../utils/detect-ui-framework';
+import { VitestGeneratorSchema } from './schema.js';
+import { detectUiFramework } from '../../utils/detect-ui-framework.js';
 import {
   getInstalledViteMajorVersion,
   getVitestDependenciesVersionsToInstall,
-} from '../../utils/version-utils';
+} from '../../utils/version-utils.js';
 import { clean, coerce, major } from 'semver';
 
 /**

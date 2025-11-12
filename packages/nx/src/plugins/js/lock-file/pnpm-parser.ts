@@ -9,27 +9,27 @@ import {
   loadPnpmHoistedDepsDefinition,
   parseAndNormalizePnpmLockfile,
   stringifyToPnpmYaml,
-} from './utils/pnpm-normalizer';
+} from './utils/pnpm-normalizer.js';
 import {
   getHoistedPackageVersion,
   NormalizedPackageJson,
-} from './utils/package-json';
-import { sortObjectByKeys } from '../../../utils/object-sort';
+} from './utils/package-json.js';
+import { sortObjectByKeys } from '../../../utils/object-sort.js';
 import {
   RawProjectGraphDependency,
   validateDependency,
-} from '../../../project-graph/project-graph-builder';
+} from '../../../project-graph/project-graph-builder.js';
 import {
   DependencyType,
   ProjectGraph,
   ProjectGraphExternalNode,
-} from '../../../config/project-graph';
-import { hashArray } from '../../../hasher/file-hasher';
-import { CreateDependenciesContext } from '../../../project-graph/plugins';
-import { getCatalogManager } from '../../../utils/catalog';
-import { findNodeMatchingVersion } from './project-graph-pruning';
+} from '../../../config/project-graph.js';
+import { hashArray } from '../../../hasher/file-hasher.js';
+import { CreateDependenciesContext } from '../../../project-graph/plugins/index.js';
+import { getCatalogManager } from '../../../utils/catalog/index.js';
+import { findNodeMatchingVersion } from './project-graph-pruning.js';
 import { join } from 'path';
-import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph.js';
 let currentLockFileHash: string;
 
 let parsedLockFile: Lockfile;

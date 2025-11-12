@@ -8,12 +8,12 @@ import {
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 import { clean, coerce, gte } from 'semver';
-import { getAppComponentInfo } from '../../utils/app-components-info';
+import { getAppComponentInfo } from '../../utils/app-components-info.js';
 import {
   getComponentType,
   getModuleTypeSeparator,
-} from '../../utils/artifact-types';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+} from '../../utils/artifact-types.js';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { NormalizedGeneratorOptions } from '../schema';
 
 export function generateSSRFiles(

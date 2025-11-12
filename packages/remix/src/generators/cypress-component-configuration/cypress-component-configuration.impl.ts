@@ -6,7 +6,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { join } from 'path';
-import { type CypressComponentConfigurationSchema } from './schema';
+import { type CypressComponentConfigurationSchema } from './schema.js';
 import { cypressComponentConfigGenerator } from '@nx/react';
 
 export function cypressComponentConfigurationGenerator(

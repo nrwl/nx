@@ -16,7 +16,7 @@ import { fileExists } from 'nx/src/utils/fileutils';
 import { output } from 'nx/src/utils/output';
 import { dirname, join, relative, extname, resolve } from 'path';
 import type * as ts from 'typescript';
-import { readTsConfigPaths } from './typescript/ts-config';
+import { readTsConfigPaths } from './typescript/ts-config.js';
 import { randomUUID } from 'crypto';
 import {
   isProjectGraphExternalNode,

@@ -1,14 +1,14 @@
 import * as yargsParser from 'yargs-parser';
-import { ExecutorContext } from '../../config/misc-interfaces';
-import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled';
-import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
-import { createTaskId } from '../../tasks-runner/utils';
-import { NoopChildProcess } from '../../tasks-runner/running-tasks/noop-child-process';
+import { ExecutorContext } from '../../config/misc-interfaces.js';
+import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled.js';
+import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal.js';
+import { createTaskId } from '../../tasks-runner/utils.js';
+import { NoopChildProcess } from '../../tasks-runner/running-tasks/noop-child-process.js';
 import {
   ParallelRunningTasks,
   runSingleCommandWithPseudoTerminal,
   SeriallyRunningTasks,
-} from './running-tasks';
+} from './running-tasks.js';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 export type Json = {

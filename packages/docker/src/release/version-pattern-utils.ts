@@ -1,5 +1,5 @@
 import { getLatestCommitSha } from 'nx/src/utils/git-utils';
-import { interpolatePattern } from '../utils/interpolate-pattern';
+import { interpolatePattern } from '../utils/interpolate-pattern.js';
 
 /**
  * Support Tokens in Version Patterns

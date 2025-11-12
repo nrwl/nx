@@ -1,7 +1,7 @@
 import { Tree } from '@nx/devkit';
 import { output } from 'nx/src/utils/output';
 import migrate9Generator from '../../generators/migrate-9/migrate-9';
-import { storybookMajorVersion } from '../../utils/utilities';
+import { storybookMajorVersion } from '../../utils/utilities.js';
 
 export default async function changeStorybookTargets(tree: Tree) {
   const storybookVersion = storybookMajorVersion();

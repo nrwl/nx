@@ -14,8 +14,8 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generat
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
-import { getArtifactMetadataDirectory } from '../../utils/paths';
-import { nxVersion } from '../../utils/versions';
+import { getArtifactMetadataDirectory } from '../../utils/paths.js';
+import { nxVersion } from '../../utils/versions.js';
 import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
 

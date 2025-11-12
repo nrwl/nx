@@ -1,7 +1,7 @@
 import { Tree, offsetFromRoot, generateFiles, ensurePackage } from '@nx/devkit';
 import { join } from 'path';
-import { updateTsConfigFiles } from '../update-tsconfig-files';
-import { nxVersion } from '../versions';
+import { updateTsConfigFiles } from '../update-tsconfig-files.js';
+import { nxVersion } from '../versions.js';
 
 export async function addJest(
   host: Tree,

@@ -1,4 +1,4 @@
-import { FsTree } from '../tree';
+import { FsTree } from '../tree.js';
 import type { Tree } from '../tree';
 
 /**

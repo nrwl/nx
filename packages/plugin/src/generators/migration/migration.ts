@@ -13,9 +13,9 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generat
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'node:path';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
-import { getArtifactMetadataDirectory } from '../../utils/paths';
-import { nxVersion } from '../../utils/versions';
-import { addMigrationJsonChecks } from '../lint-checks/generator';
+import { getArtifactMetadataDirectory } from '../../utils/paths.js';
+import { nxVersion } from '../../utils/versions.js';
+import { addMigrationJsonChecks } from '../lint-checks/generator.js';
 import type { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {

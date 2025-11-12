@@ -18,7 +18,7 @@ import {
 import { deduceDefaultBase } from 'nx/src/utils/default-base';
 import { prettierVersion } from '@nx/js/src/utils/versions';
 import { toNewFormat } from 'nx/src/adapter/angular-json';
-import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
+import { angularDevkitVersion, nxVersion } from '../../../utils/versions.js';
 import type { ProjectMigrator } from '../migrators';
 import type { GeneratorOptions } from '../schema';
 import type { WorkspaceRootFileTypesInfo } from './types';

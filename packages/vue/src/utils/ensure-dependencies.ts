@@ -10,7 +10,7 @@ import {
   vueRouterVersion,
   vueTestUtilsVersion,
   vueTscVersion,
-} from './versions';
+} from './versions.js';
 
 export type EnsureDependenciesOptions = {
   routing?: boolean;

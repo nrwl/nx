@@ -4,7 +4,7 @@ import {
   SourceMapDevToolPlugin,
 } from '@rspack/core';
 import type { SourceMap } from '../../models';
-import { DevToolsIgnorePlugin } from '../../plugins/tools/dev-tools-ignore-plugin';
+import { DevToolsIgnorePlugin } from '../../plugins/tools/dev-tools-ignore-plugin.js';
 
 export function configureSourceMap(sourceMap: SourceMap) {
   const { scripts, styles, hidden, vendor } = sourceMap;

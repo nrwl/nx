@@ -1,5 +1,5 @@
 import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
-import { ensureTypescript } from '../../utilities/typescript';
+import { ensureTypescript } from '../../utilities/typescript.js';
 
 let tsModule: typeof import('typescript');
 

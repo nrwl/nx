@@ -7,8 +7,8 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { allProjectTargets } from '../../utils/targets';
-import { getProjectsFilteredByDependencies } from '../utils/projects';
+import { allProjectTargets } from '../../utils/targets.js';
+import { getProjectsFilteredByDependencies } from '../utils/projects.js';
 
 const buildExecutors = new Set([
   '@nx/angular:ng-packagr-lite',

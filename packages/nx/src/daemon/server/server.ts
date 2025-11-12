@@ -2,50 +2,50 @@ import { existsSync, statSync } from 'fs';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { PerformanceObserver } from 'perf_hooks';
-import { hashArray } from '../../hasher/file-hasher';
-import { hashFile } from '../../native';
+import { hashArray } from '../../hasher/file-hasher.js';
+import { hashFile } from '../../native/index.js';
 import {
   consumeMessagesFromSocket,
   isJsonMessage,
-} from '../../utils/consume-messages-from-socket';
-import { readJsonFile } from '../../utils/fileutils';
-import { PackageJson } from '../../utils/package-json';
-import { nxVersion } from '../../utils/versions';
-import { setupWorkspaceContext } from '../../utils/workspace-context';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
+} from '../../utils/consume-messages-from-socket.js';
+import { readJsonFile } from '../../utils/fileutils.js';
+import { PackageJson } from '../../utils/package-json.js';
+import { nxVersion } from '../../utils/versions.js';
+import { setupWorkspaceContext } from '../../utils/workspace-context.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache.js';
 import {
   getFullOsSocketPath,
   isWindows,
   killSocketOrPath,
-} from '../socket-utils';
+} from '../socket-utils.js';
 import {
   hasRegisteredFileWatcherSockets,
   registeredFileWatcherSockets,
   removeRegisteredFileWatcherSocket,
-} from './file-watching/file-watcher-sockets';
+} from './file-watching/file-watcher-sockets.js';
 import {
   hasRegisteredProjectGraphListenerSockets,
   registeredProjectGraphListenerSockets,
   removeRegisteredProjectGraphListenerSocket,
-} from './project-graph-listener-sockets';
-import { handleHashTasks } from './handle-hash-tasks';
+} from './project-graph-listener-sockets.js';
+import { handleHashTasks } from './handle-hash-tasks.js';
 import {
   handleOutputsHashesMatch,
   handleRecordOutputsHash,
-} from './handle-outputs-tracking';
-import { handleProcessInBackground } from './handle-process-in-background';
-import { handleRequestProjectGraph } from './handle-request-project-graph';
-import { handleRequestShutdown } from './handle-request-shutdown';
-import { serverLogger } from './logger';
+} from './handle-outputs-tracking.js';
+import { handleProcessInBackground } from './handle-process-in-background.js';
+import { handleRequestProjectGraph } from './handle-request-project-graph.js';
+import { handleRequestShutdown } from './handle-request-shutdown.js';
+import { serverLogger } from './logger.js';
 import {
   disableOutputsTracking,
   processFileChangesInOutputs,
-} from './outputs-tracking';
+} from './outputs-tracking.js';
 import {
   addUpdatedAndDeletedFiles,
   registerProjectGraphRecomputationListener,
-} from './project-graph-incremental-recomputation';
+} from './project-graph-incremental-recomputation.js';
 import {
   getOutputWatcherInstance,
   getWatcherInstance,
@@ -56,41 +56,41 @@ import {
   SERVER_INACTIVITY_TIMEOUT_MS,
   storeOutputWatcherInstance,
   storeWatcherInstance,
-} from './shutdown-utils';
+} from './shutdown-utils.js';
 import {
   convertChangeEventsToLogMessage,
   FileWatcherCallback,
   watchOutputFiles,
   watchWorkspace,
-} from './watcher';
-import { handleGlob, handleMultiGlob } from './handle-glob';
+} from './watcher.js';
+import { handleGlob, handleMultiGlob } from './handle-glob.js';
 import {
   GLOB,
   isHandleGlobMessage,
   isHandleMultiGlobMessage,
   MULTI_GLOB,
-} from '../message-types/glob';
+} from '../message-types/glob.js';
 import {
   GET_NX_WORKSPACE_FILES,
   isHandleNxWorkspaceFilesMessage,
-} from '../message-types/get-nx-workspace-files';
-import { handleNxWorkspaceFiles } from './handle-nx-workspace-files';
+} from '../message-types/get-nx-workspace-files.js';
+import { handleNxWorkspaceFiles } from './handle-nx-workspace-files.js';
 import {
   GET_CONTEXT_FILE_DATA,
   isHandleContextFileDataMessage,
-} from '../message-types/get-context-file-data';
-import { handleContextFileData } from './handle-context-file-data';
+} from '../message-types/get-context-file-data.js';
+import { handleContextFileData } from './handle-context-file-data.js';
 import {
   GET_FILES_IN_DIRECTORY,
   isHandleGetFilesInDirectoryMessage,
-} from '../message-types/get-files-in-directory';
-import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
+} from '../message-types/get-files-in-directory.js';
+import { handleGetFilesInDirectory } from './handle-get-files-in-directory.js';
 import {
   HASH_GLOB,
   isHandleHashGlobMessage,
   isHandleHashMultiGlobMessage,
-} from '../message-types/hash-glob';
-import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
+} from '../message-types/hash-glob.js';
+import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob.js';
 import {
   GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
@@ -98,49 +98,49 @@ import {
   isHandleGetFlakyTasksMessage,
   isHandleWriteTaskRunsToHistoryMessage,
   RECORD_TASK_RUNS,
-} from '../message-types/task-history';
+} from '../message-types/task-history.js';
 import {
   handleRecordTaskRuns,
   handleGetFlakyTasks,
   handleGetEstimatedTaskTimings,
-} from './handle-task-history';
-import { isHandleForceShutdownMessage } from '../message-types/force-shutdown';
-import { handleForceShutdown } from './handle-force-shutdown';
+} from './handle-task-history.js';
+import { isHandleForceShutdownMessage } from '../message-types/force-shutdown.js';
+import { handleForceShutdown } from './handle-force-shutdown.js';
 import {
   GET_SYNC_GENERATOR_CHANGES,
   isHandleGetSyncGeneratorChangesMessage,
-} from '../message-types/get-sync-generator-changes';
-import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
-import { collectAndScheduleSyncGenerators } from './sync-generators';
+} from '../message-types/get-sync-generator-changes.js';
+import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes.js';
+import { collectAndScheduleSyncGenerators } from './sync-generators.js';
 import {
   GET_REGISTERED_SYNC_GENERATORS,
   isHandleGetRegisteredSyncGeneratorsMessage,
-} from '../message-types/get-registered-sync-generators';
-import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
+} from '../message-types/get-registered-sync-generators.js';
+import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators.js';
 import {
   UPDATE_WORKSPACE_CONTEXT,
   isHandleUpdateWorkspaceContextMessage,
-} from '../message-types/update-workspace-context';
-import { handleUpdateWorkspaceContext } from './handle-update-workspace-context';
+} from '../message-types/update-workspace-context.js';
+import { handleUpdateWorkspaceContext } from './handle-update-workspace-context.js';
 import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   isHandleFlushSyncGeneratorChangesToDiskMessage,
-} from '../message-types/flush-sync-generator-changes-to-disk';
-import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk';
+} from '../message-types/flush-sync-generator-changes-to-disk.js';
+import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk.js';
 import {
   isHandlePostTasksExecutionMessage,
   isHandlePreTasksExecutionMessage,
   POST_TASKS_EXECUTION,
   PRE_TASKS_EXECUTION,
-} from '../message-types/run-tasks-execution-hooks';
+} from '../message-types/run-tasks-execution-hooks.js';
 import {
   handleRunPostTasksExecution,
   handleRunPreTasksExecution,
-} from './handle-tasks-execution-hooks';
+} from './handle-tasks-execution-hooks.js';
 import {
   isRegisterProjectGraphListenerMessage,
   REGISTER_PROJECT_GRAPH_LISTENER,
-} from '../message-types/register-project-graph-listener';
+} from '../message-types/register-project-graph-listener.js';
 import { deserialize, serialize } from 'v8';
 
 let performanceObserver: PerformanceObserver | undefined;

@@ -2,17 +2,17 @@ import { execSync } from 'child_process';
 import { prompt } from 'enquirer';
 import { existsSync } from 'fs';
 import { prerelease } from 'semver';
-import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
-import { addNxToNest } from './implementation/add-nx-to-nest';
-import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
-import { addNxToAngularCliRepo } from './implementation/angular';
-import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
-import { addNxToCraRepo } from './implementation/react';
-import { runNxSync } from '../../utils/child-process';
-import { directoryExists, readJsonFile } from '../../utils/fileutils';
-import { PackageJson } from '../../utils/package-json';
-import { nxVersion } from '../../utils/versions';
-import { isMonorepo, printFinalMessage } from './implementation/utils';
+import { addNxToMonorepo } from './implementation/add-nx-to-monorepo.js';
+import { addNxToNest } from './implementation/add-nx-to-nest.js';
+import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo.js';
+import { addNxToAngularCliRepo } from './implementation/angular/index.js';
+import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts.js';
+import { addNxToCraRepo } from './implementation/react/index.js';
+import { runNxSync } from '../../utils/child-process.js';
+import { directoryExists, readJsonFile } from '../../utils/fileutils.js';
+import { PackageJson } from '../../utils/package-json.js';
+import { nxVersion } from '../../utils/versions.js';
+import { isMonorepo, printFinalMessage } from './implementation/utils.js';
 
 export interface InitArgs {
   addE2e: boolean;

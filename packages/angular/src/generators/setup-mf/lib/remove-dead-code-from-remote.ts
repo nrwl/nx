@@ -75,7 +75,7 @@ import { ${appComponentInfo.symbolName} } from './${appComponentInfo.extensionle
     BrowserModule,
     RouterModule.forRoot([{
       path: '',
-      loadChildren: () => import('./remote-entry/${entryModuleFileName}').then(m => m.RemoteEntryModule)
+      loadChildren: () => import('./remote-entry/${entryModuleFileName}.js').then(m => m.RemoteEntryModule)
     }], { initialNavigation: 'enabledBlocking' }),
   ],
   providers: [],

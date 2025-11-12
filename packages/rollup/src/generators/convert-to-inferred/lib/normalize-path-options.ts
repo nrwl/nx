@@ -1,5 +1,5 @@
 import { joinPathFragments, offsetFromRoot } from '@nx/devkit';
-import { RollupExecutorOptions } from '../../../executors/rollup/schema';
+import { RollupExecutorOptions } from '../../../executors/rollup/schema.js';
 
 const executorPathFieldsToMigrate: Array<keyof RollupExecutorOptions> = [
   'tsConfig',

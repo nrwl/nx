@@ -1,8 +1,8 @@
 import { existsSync } from 'fs';
 import { isAbsolute, join } from 'path';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { readJsonFile } from './fileutils';
-import { workspaceRoot } from './workspace-root';
+import { NxJsonConfiguration } from '../config/nx-json.js';
+import { readJsonFile } from './fileutils.js';
+import { workspaceRoot } from './workspace-root.js';
 
 function readCacheDirectoryProperty(root: string): string | undefined {
   try {

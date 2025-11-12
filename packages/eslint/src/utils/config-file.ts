@@ -3,7 +3,7 @@ import { basename, dirname, join, resolve } from 'path';
 import {
   baseEslintConfigFilenames,
   eslintFlatConfigFilenames,
-} from './flat-config';
+} from './flat-config.js';
 
 export const ESLINT_FLAT_CONFIG_FILENAMES = eslintFlatConfigFilenames;
 

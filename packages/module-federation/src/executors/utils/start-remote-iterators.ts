@@ -1,4 +1,4 @@
-import { StartRemoteFn, type StartRemoteIteratorsOptions } from './models';
+import { StartRemoteFn, type StartRemoteIteratorsOptions } from './models.js';
 import {
   getBuildTargetNameFromMFDevServer,
   getModuleFederationConfig,
@@ -8,12 +8,12 @@ import {
   parseStaticSsrRemotesConfig,
   startRemoteProxies,
   startSsrRemoteProxies,
-} from '../../utils';
-import { buildStaticRemotes } from './build-static-remotes';
+} from '../../utils/index.js';
+import { buildStaticRemotes } from './build-static-remotes.js';
 import {
   startSsrStaticRemotesFileServer,
   startStaticRemotesFileServer,
-} from './start-static-remotes-file-server';
+} from './start-static-remotes-file-server.js';
 import {
   type ExecutorContext,
   readProjectsConfigurationFromProjectGraph,

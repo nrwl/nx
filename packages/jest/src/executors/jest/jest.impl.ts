@@ -4,7 +4,7 @@ import { utils as jestReporterUtils } from '@jest/reporters';
 import { addResult, makeEmptyAggregatedTestResult } from '@jest/test-result';
 import * as path from 'path';
 import { join } from 'path';
-import { JestExecutorOptions } from './schema';
+import { JestExecutorOptions } from './schema.js';
 import { Config } from '@jest/types';
 import {
   ExecutorContext,
@@ -12,7 +12,7 @@ import {
   TaskGraph,
   workspaceRoot,
 } from '@nx/devkit';
-import { getSummary } from './summary';
+import { getSummary } from './summary.js';
 import { readFileSync } from 'fs';
 import type { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
 process.env.NODE_ENV ??= 'test';

@@ -1,18 +1,18 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { execSync } from 'node:child_process';
-import { output } from '../../../../utils/output';
+import { output } from '../../../../utils/output.js';
 import type { PostGitTask } from '../../changelog';
 import type { ResolvedCreateRemoteReleaseProvider } from '../../config/config';
 import type { Reference } from '../git';
-import { ReleaseVersion } from '../shared';
+import { ReleaseVersion } from '../shared.js';
 import {
   RemoteReleaseClient,
   RemoteReleaseOptions,
   RemoteReleaseResult,
   RemoteRepoData,
   RemoteRepoSlug,
-} from './remote-release-client';
+} from './remote-release-client.js';
 
 export interface GitLabRepoData extends RemoteRepoData {
   projectId: string;

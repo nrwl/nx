@@ -1,6 +1,6 @@
 import { addDependenciesToPackageJson, readJson, Tree } from '@nx/devkit';
-import { getPkgVersionForAngularMajorVersion } from '../../../utils/version-utils';
-import { getInstalledAngularMajorVersion } from '../../utils/version-utils';
+import { getPkgVersionForAngularMajorVersion } from '../../../utils/version-utils.js';
+import { getInstalledAngularMajorVersion } from '../../utils/version-utils.js';
 
 export function ensureAngularDevKitPeerDependenciesAreInstalled(
   tree: Tree

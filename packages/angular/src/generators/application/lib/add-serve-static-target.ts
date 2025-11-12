@@ -5,7 +5,7 @@ import {
   updateProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { nxVersion } from '../../../utils/versions';
+import { nxVersion } from '../../../utils/versions.js';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function addServeStaticTarget(

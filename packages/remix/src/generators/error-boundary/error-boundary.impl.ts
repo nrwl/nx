@@ -1,5 +1,5 @@
 import { formatFiles, type Tree } from '@nx/devkit';
-import { addV2ErrorBoundary, normalizeOptions } from './lib';
+import { addV2ErrorBoundary, normalizeOptions } from './lib/index.js';
 import type { ErrorBoundarySchema } from './schema';
 
 export default async function errorBoundaryGenerator(

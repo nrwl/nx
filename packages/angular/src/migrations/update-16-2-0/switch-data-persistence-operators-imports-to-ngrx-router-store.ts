@@ -8,9 +8,9 @@ import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript'
 import { fileDataDepTarget } from 'nx/src/config/project-graph';
 import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 import type { ImportDeclaration, ImportSpecifier, Node } from 'typescript';
-import { versions } from '../../generators/utils/version-utils';
-import { FileChangeRecorder } from '../../utils/file-change-recorder';
-import { getProjectsFilteredByDependencies } from '../utils/projects';
+import { versions } from '../../generators/utils/version-utils.js';
+import { FileChangeRecorder } from '../../utils/file-change-recorder.js';
+import { getProjectsFilteredByDependencies } from '../utils/projects.js';
 
 let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
 

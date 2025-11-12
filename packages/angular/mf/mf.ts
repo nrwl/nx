@@ -1,4 +1,4 @@
-import { processRuntimeRemoteUrl } from './url-helpers';
+import { processRuntimeRemoteUrl } from './url-helpers.js';
 
 export type ResolveRemoteUrlFunction = (
   remoteName: string

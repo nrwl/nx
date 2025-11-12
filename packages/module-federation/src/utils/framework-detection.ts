@@ -1,5 +1,5 @@
 import type { ProjectGraph } from '@nx/devkit';
-import { getDependentPackagesForProject } from './dependencies';
+import { getDependentPackagesForProject } from './dependencies.js';
 
 export function isReactProject(
   projectName: string,

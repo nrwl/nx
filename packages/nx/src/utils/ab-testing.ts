@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process';
-import { isCI } from './is-ci';
-import { getPackageManagerCommand } from './package-manager';
-import { getCloudUrl } from '../nx-cloud/utilities/get-cloud-options';
+import { isCI } from './is-ci.js';
+import { getPackageManagerCommand } from './package-manager.js';
+import { getCloudUrl } from '../nx-cloud/utilities/get-cloud-options.js';
 
 export type MessageOptionKey = 'yes' | 'skip';
 

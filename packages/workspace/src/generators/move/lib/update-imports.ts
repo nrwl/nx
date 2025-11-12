@@ -13,16 +13,16 @@ import {
 } from '@nx/devkit';
 import { isAbsolute, normalize, relative } from 'path';
 import type * as ts from 'typescript';
-import { getImportPath } from '../../../utilities/get-import-path';
+import { getImportPath } from '../../../utilities/get-import-path.js';
 import {
   findNodes,
   getRootTsConfigPathInTree,
-} from '../../../utilities/ts-config';
-import { ensureTypescript } from '../../../utilities/typescript';
-import { NormalizedSchema } from '../schema';
-import { normalizePathSlashes } from './utils';
-import { isUsingTsSolutionSetup } from '../../../utilities/typescript/ts-solution-setup';
-import { getProjectSourceRoot } from '../../utils/project-config';
+} from '../../../utilities/ts-config.js';
+import { ensureTypescript } from '../../../utilities/typescript.js';
+import { NormalizedSchema } from '../schema.js';
+import { normalizePathSlashes } from './utils.js';
+import { isUsingTsSolutionSetup } from '../../../utilities/typescript/ts-solution-setup.js';
+import { getProjectSourceRoot } from '../../utils/project-config.js';
 
 let tsModule: typeof import('typescript');
 

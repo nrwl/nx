@@ -11,13 +11,13 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { addPlugin as _addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodesV2 } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin.js';
 import {
   cypressVersion,
   getInstalledCypressVersion,
   nxVersion,
-} from '../../utils/versions';
-import { Schema } from './schema';
+} from '../../utils/versions.js';
+import { Schema } from './schema.js';
 
 function setupE2ETargetDefaults(tree: Tree) {
   const nxJson = readNxJson(tree);

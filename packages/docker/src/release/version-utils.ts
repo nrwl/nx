@@ -4,7 +4,7 @@ import { dirname, join } from 'path';
 import { prompt } from 'enquirer';
 import { ProjectGraphProjectNode, workspaceRoot } from '@nx/devkit';
 import type { FinalConfigForProject } from 'nx/src/command-line/release/utils/release-graph';
-import { interpolateVersionPattern } from './version-pattern-utils';
+import { interpolateVersionPattern } from './version-pattern-utils.js';
 
 const DEFAULT_VERSION_SCHEMES = {
   production: '{currentDate|YYMM.DD}.{shortCommitSha}',

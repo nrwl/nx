@@ -1,8 +1,8 @@
 import type ChangelogRenderer from '../../../../release/changelog-renderer';
-import { registerTsProject } from '../../../plugins/js/utils/register';
-import { getRootTsConfigPath } from '../../../plugins/js/utils/typescript';
-import { interpolate } from '../../../tasks-runner/utils';
-import { workspaceRoot } from '../../../utils/workspace-root';
+import { registerTsProject } from '../../../plugins/js/utils/register.js';
+import { getRootTsConfigPath } from '../../../plugins/js/utils/typescript.js';
+import { interpolate } from '../../../tasks-runner/utils.js';
+import { workspaceRoot } from '../../../utils/workspace-root.js';
 
 export function resolveChangelogRenderer(
   changelogRendererPathOrImplementation: string | typeof ChangelogRenderer

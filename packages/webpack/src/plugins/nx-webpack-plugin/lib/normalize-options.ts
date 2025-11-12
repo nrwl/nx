@@ -12,7 +12,7 @@ import {
   FileReplacement,
   NormalizedNxAppWebpackPluginOptions,
   NxAppWebpackPluginOptions,
-} from '../nx-app-webpack-plugin-options';
+} from '../nx-app-webpack-plugin-options.js';
 
 export function normalizeOptions(
   options: NxAppWebpackPluginOptions

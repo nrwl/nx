@@ -4,7 +4,7 @@ import {
   swcCoreVersion,
   swcHelpersVersion,
   swcNodeVersion,
-} from '../versions';
+} from '../versions.js';
 
 export function getSwcDependencies(): {
   dependencies: Record<string, string>;

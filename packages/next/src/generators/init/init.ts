@@ -12,9 +12,9 @@ import {
   getReactDependenciesVersionsToInstall,
   isReact18,
 } from '@nx/react/src/utils/version-utils';
-import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
-import { nxVersion } from '../../utils/versions';
-import { getNextDependenciesVersionsToInstall } from '../../utils/version-utils';
+import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry.js';
+import { nxVersion } from '../../utils/versions.js';
+import { getNextDependenciesVersionsToInstall } from '../../utils/version-utils.js';
 import type { InitSchema } from './schema';
 
 async function updateDependencies(host: Tree, schema: InitSchema) {
@@ -62,7 +62,7 @@ export async function nextInitGeneratorInternal(
 
   schema.addPlugin ??= addPluginDefault;
   if (schema.addPlugin) {
-    const { createNodesV2 } = await import('../../plugins/plugin');
+    const { createNodesV2 } = await import('../../plugins/plugin.js');
     await addPlugin(
       host,
       await createProjectGraphAsync(),

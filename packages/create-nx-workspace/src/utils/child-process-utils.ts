@@ -1,7 +1,7 @@
 import { spawn, exec } from 'child_process';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
-import { CreateNxWorkspaceError } from './error-utils';
+import { CreateNxWorkspaceError } from './error-utils.js';
 
 /**
  * Use spawn only for interactive shells

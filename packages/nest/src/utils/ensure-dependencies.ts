@@ -5,7 +5,7 @@ import {
   reflectMetadataVersion,
   rxjsVersion,
   tsLibVersion,
-} from './versions';
+} from './versions.js';
 
 export function ensureDependencies(
   tree: Tree,

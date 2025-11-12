@@ -1,8 +1,8 @@
 import { existsSync } from 'fs';
 import * as path from 'path';
-import { readJsonFile } from '../utils/fileutils';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
-import { CreateNodesV2, NxPluginV2 } from '../project-graph/plugins';
+import { readJsonFile } from '../utils/fileutils.js';
+import { ProjectsConfigurations } from '../config/workspace-json-project-json.js';
+import { CreateNodesV2, NxPluginV2 } from '../project-graph/plugins/index.js';
 
 export const NX_ANGULAR_JSON_PLUGIN_NAME = 'nx-angular-json-plugin';
 

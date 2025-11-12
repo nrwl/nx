@@ -2,25 +2,25 @@
 import {
   findWorkspaceRoot,
   WorkspaceTypeAndRoot,
-} from '../src/utils/find-workspace-root';
+} from '../src/utils/find-workspace-root.js';
 import * as chalk from 'chalk';
-import { loadRootEnvFiles } from '../src/utils/dotenv';
-import { initLocal } from './init-local';
-import { output } from '../src/utils/output';
+import { loadRootEnvFiles } from '../src/utils/dotenv.js';
+import { initLocal } from './init-local.js';
+import { output } from '../src/utils/output.js';
 import {
   getNxInstallationPath,
   getNxRequirePaths,
-} from '../src/utils/installation-directory';
+} from '../src/utils/installation-directory.js';
 import { major } from 'semver';
-import { stripIndents } from '../src/utils/strip-indents';
-import { readModulePackageJson } from '../src/utils/package-json';
+import { stripIndents } from '../src/utils/strip-indents.js';
+import { readModulePackageJson } from '../src/utils/package-json.js';
 import { execSync } from 'child_process';
 import { join } from 'path';
-import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
+import { assertSupportedPlatform } from '../src/native/assert-supported-platform.js';
 import { performance } from 'perf_hooks';
-import { setupWorkspaceContext } from '../src/utils/workspace-context';
-import { daemonClient } from '../src/daemon/client/client';
-import { removeDbConnections } from '../src/utils/db-connection';
+import { setupWorkspaceContext } from '../src/utils/workspace-context.js';
+import { daemonClient } from '../src/daemon/client/client.js';
+import { removeDbConnections } from '../src/utils/db-connection.js';
 
 async function main() {
   if (

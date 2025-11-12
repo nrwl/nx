@@ -9,7 +9,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { NormalizedSchema, Schema } from '../schema';
+import { NormalizedSchema, Schema } from '../schema.js';
 import {
   getProjectSourceRoot,
   getProjectType,

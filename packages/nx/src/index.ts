@@ -1,1 +1,1 @@
-export { initTasksRunner } from './tasks-runner/init-tasks-runner';
+export { initTasksRunner } from './tasks-runner/init-tasks-runner.js';

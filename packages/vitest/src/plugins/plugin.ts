@@ -19,7 +19,7 @@ import { dirname, isAbsolute, join, relative } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
-import { loadViteDynamicImport } from '../utils/executor-utils';
+import { loadViteDynamicImport } from '../utils/executor-utils.js';
 
 const pmc = getPackageManagerCommand();
 

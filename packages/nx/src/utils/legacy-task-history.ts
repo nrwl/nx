@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { workspaceDataDirectory } from './cache-directory';
+import { workspaceDataDirectory } from './cache-directory.js';
 
 const taskRunKeys = [
   'project',

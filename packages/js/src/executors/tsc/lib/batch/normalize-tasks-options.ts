@@ -4,7 +4,7 @@ import type {
   ExecutorOptions,
   NormalizedExecutorOptions,
 } from '../../../../utils/schema';
-import { normalizeOptions } from '../normalize-options';
+import { normalizeOptions } from '../normalize-options.js';
 
 export function normalizeTasksOptions(
   inputs: Record<string, ExecutorOptions>,

@@ -3,11 +3,11 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { UnitTestRunner } from '../../../utils/test-runners';
+import { UnitTestRunner } from '../../../utils/test-runners.js';
 import {
   getComponentType,
   getModuleTypeSeparator,
-} from '../../utils/artifact-types';
+} from '../../utils/artifact-types.js';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 

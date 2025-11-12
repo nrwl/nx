@@ -1,40 +1,40 @@
 import * as chalk from 'chalk';
-import { output } from '../../utils/output';
+import { output } from '../../utils/output.js';
 import { join } from 'path';
 import {
   detectPackageManager,
   getPackageManagerVersion,
   PackageManager,
-} from '../../utils/package-manager';
-import { readJsonFile } from '../../utils/fileutils';
+} from '../../utils/package-manager.js';
+import { readJsonFile } from '../../utils/fileutils.js';
 import {
   PackageJson,
   readModulePackageJson,
   readNxMigrateConfig,
-} from '../../utils/package-json';
-import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins';
+} from '../../utils/package-json.js';
+import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins.js';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
-} from '../../project-graph/project-graph';
+} from '../../project-graph/project-graph.js';
 import { gt, valid } from 'semver';
-import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
-import { getNxRequirePaths } from '../../utils/installation-directory';
-import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
-import { ProjectGraph } from '../../config/project-graph';
-import { ProjectGraphError } from '../../project-graph/error-types';
+import { findInstalledPlugins } from '../../utils/plugins/installed-plugins.js';
+import { getNxRequirePaths } from '../../utils/installation-directory.js';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json.js';
+import { ProjectGraph } from '../../config/project-graph.js';
+import { ProjectGraphError } from '../../project-graph/error-types.js';
 import {
   getNxKeyInformation,
   NxKeyNotInstalledError,
   createNxKeyLicenseeInformation,
-} from '../../utils/nx-key';
+} from '../../utils/nx-key.js';
 import { type NxKey } from '@nx/key';
 import {
   DbCache,
   dbCacheEnabled,
   formatCacheSize,
   resolveMaxCacheSize,
-} from '../../tasks-runner/cache';
+} from '../../tasks-runner/cache.js';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')
@@ -462,7 +462,7 @@ export function findInstalledPackagesWeCareAbout() {
   }));
 }
 
-function isNativeAvailable(): typeof import('../../native') | false {
+function isNativeAvailable(): typeof import('../../native/index.js') | false {
   try {
     return require('../../native');
   } catch {

@@ -7,7 +7,7 @@ import {
 import type { WithReactOptions } from '@nx/react';
 import type { WithNxOptions } from '@nx/webpack';
 
-import { NormalizedSchema } from './normalize-schema';
+import { NormalizedSchema } from './normalize-schema.js';
 
 export function createBuildTarget(
   tree: Tree,

@@ -26,7 +26,7 @@ import {
   eslintPluginVueVersion,
   vueEslintConfigPrettierVersion,
   vueEslintConfigTypescriptVersion,
-} from './versions';
+} from './versions.js';
 import { lt } from 'semver';
 
 export async function addLinting(

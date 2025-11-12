@@ -20,7 +20,7 @@ import { getLockFileName } from '@nx/js';
 import { type AppConfig } from '@remix-run/dev';
 import { dirname, join } from 'path';
 import { existsSync, readdirSync, readFileSync } from 'fs';
-import { loadViteDynamicImport } from '../utils/executor-utils';
+import { loadViteDynamicImport } from '../utils/executor-utils.js';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 

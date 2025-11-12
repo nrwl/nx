@@ -1,7 +1,7 @@
 import { dirname } from 'path';
-import { WatchEvent, getFilesForOutputs } from '../../native';
-import { collapseExpandedOutputs } from '../../utils/collapse-expanded-outputs';
-import { workspaceRoot } from '../../utils/workspace-root';
+import { WatchEvent, getFilesForOutputs } from '../../native/index.js';
+import { collapseExpandedOutputs } from '../../utils/collapse-expanded-outputs.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 
 let disabled = false;
 

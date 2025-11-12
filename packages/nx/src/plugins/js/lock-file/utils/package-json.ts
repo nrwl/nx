@@ -1,6 +1,6 @@
-import { PackageJson } from '../../../../utils/package-json';
-import { workspaceRoot } from '../../../../utils/workspace-root';
-import { readJsonFile } from '../../../../utils/fileutils';
+import { PackageJson } from '../../../../utils/package-json.js';
+import { workspaceRoot } from '../../../../utils/workspace-root.js';
+import { readJsonFile } from '../../../../utils/fileutils.js';
 
 /**
  * Get version of hoisted package if available

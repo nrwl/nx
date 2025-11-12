@@ -1,31 +1,31 @@
 import { exec, execSync } from 'node:child_process';
 import * as path from 'node:path';
 import * as yargs from 'yargs';
-import { calculateFileChanges, FileData } from '../../project-graph/file-utils';
+import { calculateFileChanges, FileData } from '../../project-graph/file-utils.js';
 import {
   getProjectRoots,
   NxArgs,
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
-} from '../../utils/command-line-utils';
-import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils';
-import { getIgnoreObject } from '../../utils/ignore';
+} from '../../utils/command-line-utils.js';
+import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils.js';
+import { getIgnoreObject } from '../../utils/ignore.js';
 
 import type { SupportInfo } from 'prettier';
-import { readNxJson } from '../../config/configuration';
-import { ProjectGraph } from '../../config/project-graph';
+import { readNxJson } from '../../config/configuration.js';
+import { ProjectGraph } from '../../config/project-graph.js';
 import {
   getRootTsConfigFileName,
   getRootTsConfigPath,
-} from '../../plugins/js/utils/typescript';
-import { filterAffected } from '../../project-graph/affected/affected-project-graph';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { allFileData } from '../../utils/all-file-data';
-import { chunkify } from '../../utils/chunkify';
-import { sortObjectByKeys } from '../../utils/object-sort';
-import { output } from '../../utils/output';
-import { readModulePackageJson } from '../../utils/package-json';
-import { workspaceRoot } from '../../utils/workspace-root';
+} from '../../plugins/js/utils/typescript.js';
+import { filterAffected } from '../../project-graph/affected/affected-project-graph.js';
+import { createProjectGraphAsync } from '../../project-graph/project-graph.js';
+import { allFileData } from '../../utils/all-file-data.js';
+import { chunkify } from '../../utils/chunkify.js';
+import { sortObjectByKeys } from '../../utils/object-sort.js';
+import { output } from '../../utils/output.js';
+import { readModulePackageJson } from '../../utils/package-json.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 
 export async function format(
   command: 'check' | 'write',

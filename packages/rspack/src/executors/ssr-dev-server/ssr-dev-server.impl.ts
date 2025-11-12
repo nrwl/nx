@@ -7,9 +7,9 @@ import {
 import { combineAsyncIterables } from '@nx/devkit/src/utils/async-iterable';
 import * as pc from 'picocolors';
 
-import { RspackExecutorSchema } from '../rspack/schema';
-import { waitUntilServerIsListening } from './lib/wait-until-server-is-listening';
-import { RspackSsrDevServerOptions, TargetOptions } from './schema';
+import { RspackExecutorSchema } from '../rspack/schema.js';
+import { waitUntilServerIsListening } from './lib/wait-until-server-is-listening.js';
+import { RspackSsrDevServerOptions, TargetOptions } from './schema.js';
 
 export async function* ssrDevServerExecutor(
   options: RspackSsrDevServerOptions,

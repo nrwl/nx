@@ -1,10 +1,10 @@
 import { ExecutorContext } from '@nx/devkit';
-import { DependentBuildableProjectNode } from '../buildable-libs-utils';
+import { DependentBuildableProjectNode } from '../buildable-libs-utils.js';
 
-import { watchForSingleFileChanges } from '../watch-for-single-file-changes';
+import { watchForSingleFileChanges } from '../watch-for-single-file-changes.js';
 import type { UpdatePackageJsonOption } from './update-package-json';
-import { updatePackageJson } from './update-package-json';
-import { checkDependencies } from '../check-dependencies';
+import { updatePackageJson } from './update-package-json.js';
+import { checkDependencies } from '../check-dependencies.js';
 
 export interface CopyPackageJsonOptions
   extends Omit<UpdatePackageJsonOption, 'projectRoot'> {

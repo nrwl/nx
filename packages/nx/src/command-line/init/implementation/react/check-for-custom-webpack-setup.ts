@@ -1,4 +1,4 @@
-import { readJsonFile } from '../../../../utils/fileutils';
+import { readJsonFile } from '../../../../utils/fileutils.js';
 
 export function checkForCustomWebpackSetup() {
   const packageJson = readJsonFile('package.json');

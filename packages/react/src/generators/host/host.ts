@@ -11,29 +11,29 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
+import { updateModuleFederationProject } from '../../rules/update-module-federation-project.js';
 import applicationGenerator from '../application/application';
-import { normalizeOptions } from '../application/lib/normalize-options';
+import { normalizeOptions } from '../application/lib/normalize-options.js';
 import remoteGenerator from '../remote/remote';
 import setupSsrGenerator from '../setup-ssr/setup-ssr';
-import { addModuleFederationFiles } from './lib/add-module-federation-files';
+import { addModuleFederationFiles } from './lib/add-module-federation-files.js';
 import {
   normalizeRemoteDirectory,
   normalizeRemoteName,
-} from '../../utils/normalize-remote';
-import { setupSsrForHost } from './lib/setup-ssr-for-host';
-import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
-import { NormalizedSchema, Schema } from './schema';
-import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
+} from '../../utils/normalize-remote.js';
+import { setupSsrForHost } from './lib/setup-ssr-for-host.js';
+import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project.js';
+import { NormalizedSchema, Schema } from './schema.js';
+import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs.js';
 import { isValidVariable } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import {
   moduleFederationEnhancedVersion,
   nxVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { updateModuleFederationTsconfig } from './lib/update-module-federation-tsconfig';
-import { normalizeHostName } from './lib/normalize-host-name';
+import { updateModuleFederationTsconfig } from './lib/update-module-federation-tsconfig.js';
+import { normalizeHostName } from './lib/normalize-host-name.js';
 
 export async function hostGenerator(
   host: Tree,

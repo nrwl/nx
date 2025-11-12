@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, joinPathFragments } from '@nx/devkit';
-import { getComponentProps } from '../utils/storybook-ast/storybook-inputs';
+import { getComponentProps } from '../utils/storybook-ast/storybook-inputs.js';
 import type { ComponentStoryGeneratorOptions } from './schema';
 
 export async function componentStoryGenerator(

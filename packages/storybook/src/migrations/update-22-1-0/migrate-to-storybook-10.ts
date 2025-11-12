@@ -1,7 +1,7 @@
 import { Tree } from '@nx/devkit';
 import { output } from 'nx/src/utils/output';
 import migrate10Generator from '../../generators/migrate-10/migrate-10';
-import { storybookMajorVersion } from '../../utils/utilities';
+import { storybookMajorVersion } from '../../utils/utilities.js';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 

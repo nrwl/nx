@@ -7,7 +7,7 @@ import {
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { Configuration } from '@rspack/core';
 import { readNxJson } from 'nx/src/config/configuration';
-import { NormalizedRspackExecutorSchema } from '../executors/rspack/schema';
+import { NormalizedRspackExecutorSchema } from '../executors/rspack/schema.js';
 
 export const nxRspackComposablePlugin = 'nxRspackComposablePlugin';
 

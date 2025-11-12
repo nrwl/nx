@@ -3,15 +3,15 @@ import { dirname, join } from 'node:path';
 import type ChangelogRenderer from '../../release/changelog-renderer';
 import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
 import type { validReleaseVersionPrefixes } from '../command-line/release/utils/release-graph';
-import { readJsonFile } from '../utils/fileutils';
+import { readJsonFile } from '../utils/fileutils.js';
 import type { PackageManager } from '../utils/package-manager';
-import { workspaceRoot } from '../utils/workspace-root';
+import { workspaceRoot } from '../utils/workspace-root.js';
 import type {
   InputDefinition,
   TargetConfiguration,
   TargetDependencyConfig,
 } from './workspace-json-project-json';
-import { getNxRequirePaths } from '../utils/installation-directory';
+import { getNxRequirePaths } from '../utils/installation-directory.js';
 
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;

@@ -13,7 +13,7 @@ import {
 import { hasRulesRequiringTypeChecking } from '@nx/eslint';
 import { dirname } from 'path';
 import type { Logger, ProjectMigrationInfo } from '../../utilities';
-import { BuilderMigrator } from './builder.migrator';
+import { BuilderMigrator } from './builder.migrator.js';
 
 export class AngularEslintLintMigrator extends BuilderMigrator {
   private oldEsLintConfigPath: string;

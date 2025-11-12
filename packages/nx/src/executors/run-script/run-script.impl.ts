@@ -5,8 +5,8 @@ import type { ExecutorContext } from '../../config/misc-interfaces';
 import {
   createPseudoTerminal,
   PseudoTerminal,
-} from '../../tasks-runner/pseudo-terminal';
-import { getPackageManagerCommand } from '../../utils/package-manager';
+} from '../../tasks-runner/pseudo-terminal.js';
+import { getPackageManagerCommand } from '../../utils/package-manager.js';
 
 const LARGE_BUFFER = 1024 * 1000000;
 

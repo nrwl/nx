@@ -9,8 +9,8 @@ import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
 } from '@nx/js/src/utils/buildable-libs-utils';
-import { NormalizedNxAppRspackPluginOptions } from '../models';
-import { RspackNxBuildCoordinationPlugin } from './rspack-nx-build-coordination-plugin';
+import { NormalizedNxAppRspackPluginOptions } from '../models.js';
+import { RspackNxBuildCoordinationPlugin } from './rspack-nx-build-coordination-plugin.js';
 import { unlinkSync } from 'fs';
 
 export class NxTsconfigPathsRspackPlugin {

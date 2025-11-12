@@ -6,7 +6,7 @@ import {
   detectPackageManager,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { NormalizedSchema } from './normalized-schema';
+import { NormalizedSchema } from './normalized-schema.js';
 import { getLockFileName } from '@nx/js';
 
 export function getWebpackBuildConfig(

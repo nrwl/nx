@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Tree } from '../../generators/tree';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
-import { NxJsonConfiguration } from '../../config/nx-json';
+import { Tree } from '../../generators/tree.js';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
+import { readNxJson, updateNxJson } from '../../generators/utils/nx-json.js';
+import { NxJsonConfiguration } from '../../config/nx-json.js';
 
 export default async function update(tree: Tree) {
   const nxJson = readNxJson(tree) as NxJsonConfiguration;

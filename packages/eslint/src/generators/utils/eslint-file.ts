@@ -15,17 +15,17 @@ import {
   ESLINT_CONFIG_FILENAMES,
   BASE_ESLINT_CONFIG_FILENAMES,
   ESLINT_FLAT_CONFIG_FILENAMES,
-} from '../../utils/config-file';
+} from '../../utils/config-file.js';
 import {
   eslintFlatConfigFilenames,
   useFlatConfig,
-} from '../../utils/flat-config';
-import { getInstalledEslintVersion } from '../../utils/version-utils';
+} from '../../utils/flat-config.js';
+import { getInstalledEslintVersion } from '../../utils/version-utils.js';
 import {
   eslint9__eslintVersion,
   eslintCompat,
   eslintrcVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 import {
   addBlockToFlatConfigExport,
   addFlatCompatToFlatConfig,
@@ -42,8 +42,8 @@ import {
   overrideNeedsCompat,
   removeOverridesFromLintConfig,
   replaceOverride,
-} from './flat-config/ast-utils';
-import { mapFilePath } from './flat-config/path-utils';
+} from './flat-config/ast-utils.js';
+import { mapFilePath } from './flat-config/path-utils.js';
 import ts = require('typescript');
 import { dirname } from 'node:path/posix';
 

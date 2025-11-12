@@ -7,7 +7,7 @@ import {
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions.js';
 
 const NX_ANGULAR_MODULE_FEDERATION_IMPORT_SELECTOR =
   'ImportDeclaration > StringLiteral[value=@nx/angular/module-federation], VariableStatement CallExpression:has(Identifier[name=require]) > StringLiteral[value=@nx/angular/module-federation]';

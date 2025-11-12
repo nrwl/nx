@@ -4,9 +4,9 @@ import {
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { createNodesV2 } from '../../plugins/plugin';
-import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
-import { servePosTargetTransformer } from './lib/serve-post-target-tranformer';
+import { createNodesV2 } from '../../plugins/plugin.js';
+import { buildPostTargetTransformer } from './lib/build-post-target-transformer.js';
+import { servePosTargetTransformer } from './lib/serve-post-target-tranformer.js';
 
 interface Schema {
   project?: string;

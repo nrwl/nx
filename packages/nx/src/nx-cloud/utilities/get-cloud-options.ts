@@ -1,7 +1,7 @@
-import { CloudTaskRunnerOptions } from '../nx-cloud-tasks-runner-shell';
-import { readNxJson } from '../../config/nx-json';
-import { getRunnerOptions } from '../../tasks-runner/run-command';
-import { workspaceRoot } from '../../utils/workspace-root';
+import { CloudTaskRunnerOptions } from '../nx-cloud-tasks-runner-shell.js';
+import { readNxJson } from '../../config/nx-json.js';
+import { getRunnerOptions } from '../../tasks-runner/run-command.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 
 export function getCloudOptions(
   directory = workspaceRoot

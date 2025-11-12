@@ -1,26 +1,26 @@
-import { calculateFileChanges } from '../../project-graph/file-utils';
-import { runCommand } from '../../tasks-runner/run-command';
-import { output } from '../../utils/output';
-import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
+import { calculateFileChanges } from '../../project-graph/file-utils.js';
+import { runCommand } from '../../tasks-runner/run-command.js';
+import { output } from '../../utils/output.js';
+import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud.js';
 import type { NxArgs } from '../../utils/command-line-utils';
 import {
   parseFiles,
   readGraphFileFromGraphArg,
   splitArgsIntoNxArgsAndOverrides,
-} from '../../utils/command-line-utils';
+} from '../../utils/command-line-utils.js';
 import { performance } from 'perf_hooks';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
+import { createProjectGraphAsync } from '../../project-graph/project-graph.js';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
-} from '../../config/project-graph';
-import { projectHasTarget } from '../../utils/project-graph-utils';
-import { filterAffected } from '../../project-graph/affected/affected-project-graph';
-import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
-import { readNxJson } from '../../config/configuration';
-import { findMatchingProjects } from '../../utils/find-matching-projects';
-import { generateGraph } from '../graph/graph';
-import { allFileData } from '../../utils/all-file-data';
+} from '../../config/project-graph.js';
+import { projectHasTarget } from '../../utils/project-graph-utils.js';
+import { filterAffected } from '../../project-graph/affected/affected-project-graph.js';
+import { TargetDependencyConfig } from '../../config/workspace-json-project-json.js';
+import { readNxJson } from '../../config/configuration.js';
+import { findMatchingProjects } from '../../utils/find-matching-projects.js';
+import { generateGraph } from '../graph/graph.js';
+import { allFileData } from '../../utils/all-file-data.js';
 
 export async function affected(
   command: 'graph' | 'print-affected' | 'affected',

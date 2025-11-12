@@ -8,7 +8,7 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 import { copyFileSync, unlinkSync } from 'fs';
-import { Schema } from './schema';
+import { Schema } from './schema.js';
 import { platform } from 'os';
 import { join, resolve } from 'path';
 import { readModulePackageJson } from 'nx/src/utils/package-json';

@@ -1,5 +1,5 @@
 import { readJson, type Tree } from 'nx/src/devkit-exports';
-import { getCatalogManager } from './manager-factory';
+import { getCatalogManager } from './manager-factory.js';
 import type { CatalogManager } from './manager';
 
 export { type CatalogManager, getCatalogManager };

@@ -1,5 +1,5 @@
-import { I18nOptions } from '../models';
-import { urlJoin } from './url-join';
+import { I18nOptions } from '../models/index.js';
+import { urlJoin } from './url-join.js';
 
 export function getLocaleBaseHref(
   i18n: I18nOptions,

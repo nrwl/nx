@@ -7,7 +7,7 @@
         "cypress": ">=14.0.0"
       },
       "description": "Replaces the `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option.",
-      "implementation": "./src/migrations/update-20-8-0/set-inject-document-domain"
+      "implementation": "./dist/src/migrations/update-20-8-0/set-inject-document-domain"
     },
     "remove-experimental-fetch-polyfill": {
       "cli": "nx",
@@ -16,7 +16,7 @@
         "cypress": ">=14.0.0"
       },
       "description": "Removes the `experimentalFetchPolyfill` configuration option.",
-      "implementation": "./src/migrations/update-20-8-0/remove-experimental-fetch-polyfill"
+      "implementation": "./dist/src/migrations/update-20-8-0/remove-experimental-fetch-polyfill"
     },
     "replace-experimental-just-in-time-compile": {
       "cli": "nx",
@@ -25,7 +25,7 @@
         "cypress": ">=14.0.0"
       },
       "description": "Replaces the `experimentalJustInTimeCompile` configuration option with the new `justInTimeCompile` configuration option.",
-      "implementation": "./src/migrations/update-20-8-0/replace-experimental-just-in-time-compile"
+      "implementation": "./dist/src/migrations/update-20-8-0/replace-experimental-just-in-time-compile"
     },
     "update-component-testing-mount-imports": {
       "cli": "nx",
@@ -34,12 +34,12 @@
         "cypress": ">=14.0.0"
       },
       "description": "Updates the module specifier for the Component Testing `mount` function.",
-      "implementation": "./src/migrations/update-20-8-0/update-component-testing-mount-imports"
+      "implementation": "./dist/src/migrations/update-20-8-0/update-component-testing-mount-imports"
     },
     "remove-tsconfig-and-copy-files-options-from-cypress-executor": {
       "version": "21.0.0-beta.10",
       "description": "Removes the `tsConfig` and `copyFiles` options from the `@nx/cypress:cypress` executor.",
-      "implementation": "./src/migrations/update-21-0-0/remove-tsconfig-and-copy-files-options-from-cypress-executor"
+      "implementation": "./dist/src/migrations/update-21-0-0/remove-tsconfig-and-copy-files-options-from-cypress-executor"
     },
     "rename-cy-exec-code-property": {
       "version": "22.1.0-beta.6",
@@ -47,7 +47,7 @@
         "cypress": ">=15.0.0"
       },
       "description": "Renames `cy.exec().its('code')` usages to the new `exitCode` property introduced in Cypress v15.",
-      "implementation": "./src/migrations/update-22-1-0/rename-cy-exec-code-property"
+      "implementation": "./dist/src/migrations/update-22-1-0/rename-cy-exec-code-property"
     },
     "update-selector-playground-api": {
       "version": "22.1.0-beta.6",
@@ -55,7 +55,7 @@
         "cypress": ">=15.0.0"
       },
       "description": "Updates the deprecated `Cypress.SelectorPlayground` API to `Cypress.ElementSelector` and removes the unsupported `onElement` option.",
-      "implementation": "./src/migrations/update-22-1-0/update-selector-playground-api"
+      "implementation": "./dist/src/migrations/update-22-1-0/update-selector-playground-api"
     },
     "update-angular-component-testing-support": {
       "version": "22.1.0-beta.6",
@@ -63,7 +63,7 @@
         "cypress": ">=15.0.0"
       },
       "description": "For Angular component testing projects below v18, switches to the fallback `@cypress/angular` harness required by Cypress v15.",
-      "implementation": "./src/migrations/update-22-1-0/update-angular-component-testing-support"
+      "implementation": "./dist/src/migrations/update-22-1-0/update-angular-component-testing-support"
     }
   },
   "packageJsonUpdates": {

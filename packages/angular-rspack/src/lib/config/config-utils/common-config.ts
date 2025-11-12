@@ -9,13 +9,13 @@ import {
   HashFormat,
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
-} from '../../models';
-import { getStylesConfig } from './style-config-utils';
-import { getCrossOriginLoading } from './helpers';
-import { configureSourceMap } from './sourcemap-utils';
-import { StatsJsonPlugin } from '../../plugins/stats-json-plugin';
-import { WatchFilesLogsPlugin } from '../../plugins/watch-file-logs-plugin';
-import { getIndexInputFile } from '../../utils/index-file/get-index-input-file';
+} from '../../models/index.js';
+import { getStylesConfig } from './style-config-utils.js';
+import { getCrossOriginLoading } from './helpers.js';
+import { configureSourceMap } from './sourcemap-utils.js';
+import { StatsJsonPlugin } from '../../plugins/stats-json-plugin.js';
+import { WatchFilesLogsPlugin } from '../../plugins/watch-file-logs-plugin.js';
+import { getIndexInputFile } from '../../utils/index-file/get-index-input-file.js';
 
 export async function getCommonConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,

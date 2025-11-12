@@ -3,7 +3,7 @@ import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from './buildable-libs-utils';
+} from './buildable-libs-utils.js';
 
 export function checkDependencies(
   context: ExecutorContext,

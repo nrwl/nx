@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
-import { getCloudOptions } from '../src/nx-cloud/utilities/get-cloud-options';
+import { getCloudOptions } from '../src/nx-cloud/utilities/get-cloud-options.js';
 import {
   NxCloudClientUnavailableError,
   NxCloudEnterpriseOutdatedError,
-} from '../src/nx-cloud/update-manager';
+} from '../src/nx-cloud/update-manager.js';
 import type { CloudTaskRunnerOptions } from '../src/nx-cloud/nx-cloud-tasks-runner-shell';
-import { output } from '../src/utils/output';
+import { output } from '../src/utils/output.js';
 import {
   UnknownCommandError,
   getCloudClient,
-} from '../src/nx-cloud/utilities/client';
+} from '../src/nx-cloud/utilities/client.js';
 
 const command = process.argv[2];
 

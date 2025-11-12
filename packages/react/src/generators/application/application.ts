@@ -15,35 +15,35 @@ import {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { extractTsConfigBase } from '../../utils/create-ts-config';
-import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
-import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
+import { extractTsConfigBase } from '../../utils/create-ts-config.js';
+import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies.js';
+import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind.js';
 import reactInitGenerator from '../init/init';
-import { createApplicationFiles } from './lib/create-application-files';
-import { updateSpecConfig } from './lib/update-jest-config';
-import { normalizeOptions } from './lib/normalize-options';
-import { addProject } from './lib/add-project';
-import { addJest } from './lib/add-jest';
-import { addRouting } from './lib/add-routing';
-import { setDefaults } from './lib/set-defaults';
-import { addLinting } from './lib/add-linting';
-import { addE2e } from './lib/add-e2e';
-import { showPossibleWarnings } from './lib/show-possible-warnings';
-import { installCommonDependencies } from './lib/install-common-dependencies';
-import { initWebpack } from './lib/bundlers/add-webpack';
+import { createApplicationFiles } from './lib/create-application-files.js';
+import { updateSpecConfig } from './lib/update-jest-config.js';
+import { normalizeOptions } from './lib/normalize-options.js';
+import { addProject } from './lib/add-project.js';
+import { addJest } from './lib/add-jest.js';
+import { addRouting } from './lib/add-routing.js';
+import { setDefaults } from './lib/set-defaults.js';
+import { addLinting } from './lib/add-linting.js';
+import { addE2e } from './lib/add-e2e.js';
+import { showPossibleWarnings } from './lib/show-possible-warnings.js';
+import { installCommonDependencies } from './lib/install-common-dependencies.js';
+import { initWebpack } from './lib/bundlers/add-webpack.js';
 import {
   handleStyledJsxForRspack,
   initRspack,
-} from './lib/bundlers/add-rspack';
+} from './lib/bundlers/add-rspack.js';
 import {
   initRsbuild,
   setupRsbuildConfiguration,
-} from './lib/bundlers/add-rsbuild';
+} from './lib/bundlers/add-rsbuild.js';
 import {
   setupViteConfiguration,
   setupVitestConfiguration,
-} from './lib/bundlers/add-vite';
-import { Schema } from './schema';
+} from './lib/bundlers/add-vite.js';
+import { Schema } from './schema.js';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 

@@ -20,19 +20,19 @@ import {
   NxReleaseDockerConfiguration,
   NxReleaseGitConfiguration,
   NxReleaseVersionConfiguration,
-} from '../../../config/nx-json';
-import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph';
-import { readJsonFile } from '../../../utils/fileutils';
-import { findMatchingProjects } from '../../../utils/find-matching-projects';
-import { output } from '../../../utils/output';
-import { PackageJson } from '../../../utils/package-json';
-import { normalizePath } from '../../../utils/path';
-import { workspaceRoot } from '../../../utils/workspace-root';
-import { defaultCreateReleaseProvider as defaultGitHubCreateReleaseProvider } from '../utils/remote-release-clients/github';
-import { defaultCreateReleaseProvider as defaultGitLabCreateReleaseProvider } from '../utils/remote-release-clients/gitlab';
-import { resolveChangelogRenderer } from '../utils/resolve-changelog-renderer';
-import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
-import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
+} from '../../../config/nx-json.js';
+import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph.js';
+import { readJsonFile } from '../../../utils/fileutils.js';
+import { findMatchingProjects } from '../../../utils/find-matching-projects.js';
+import { output } from '../../../utils/output.js';
+import { PackageJson } from '../../../utils/package-json.js';
+import { normalizePath } from '../../../utils/path.js';
+import { workspaceRoot } from '../../../utils/workspace-root.js';
+import { defaultCreateReleaseProvider as defaultGitHubCreateReleaseProvider } from '../utils/remote-release-clients/github.js';
+import { defaultCreateReleaseProvider as defaultGitLabCreateReleaseProvider } from '../utils/remote-release-clients/gitlab.js';
+import { resolveChangelogRenderer } from '../utils/resolve-changelog-renderer.js';
+import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message.js';
+import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits.js';
 
 type DeepRequired<T> = Required<{
   [K in keyof T]: T[K] extends Required<T[K]> ? T[K] : DeepRequired<T[K]>;

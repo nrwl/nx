@@ -11,7 +11,7 @@ import type {
   Configuration,
   RspackOptionsNormalized,
 } from '@rspack/core';
-import { normalizeOptions } from '../utils/plugins/normalize-options';
+import { normalizeOptions } from '../utils/plugins/normalize-options.js';
 import { readNxJson } from 'nx/src/config/configuration';
 
 /**

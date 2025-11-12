@@ -1,6 +1,6 @@
 import { CommandModule } from 'yargs';
-import { handleErrors } from '../../utils/handle-errors';
-import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
+import { handleErrors } from '../../utils/handle-errors.js';
+import { linkToNxDevAndExamples } from '../yargs-utils/documentation.js';
 import {
   withBatch,
   withOutputStyleOption,
@@ -8,7 +8,7 @@ import {
   withRunManyOptions,
   withTargetAndConfigurationOption,
   withTuiOptions,
-} from '../yargs-utils/shared-options';
+} from '../yargs-utils/shared-options.js';
 
 export const yargsRunManyCommand: CommandModule = {
   command: 'run-many',
@@ -28,7 +28,7 @@ export const yargsRunManyCommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        await import('./run-many').then((m) => m.runMany(withOverrides(args)));
+        await import('./run-many.js').then((m) => m.runMany(withOverrides(args)));
       }
     );
     process.exit(exitCode);

@@ -7,8 +7,8 @@ import {
   readNxJson,
   writeJson,
 } from '@nx/devkit';
-import { type NormalizedSchema } from './normalize-options';
-import { nxVersion } from '../../../utils/versions';
+import { type NormalizedSchema } from './normalize-options.js';
+import { nxVersion } from '../../../utils/versions.js';
 import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 

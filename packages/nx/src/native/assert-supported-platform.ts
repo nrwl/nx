@@ -1,4 +1,4 @@
-import { output } from '../utils/output';
+import { output } from '../utils/output.js';
 
 export function assertSupportedPlatform() {
   try {

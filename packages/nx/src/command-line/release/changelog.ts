@@ -4,39 +4,39 @@ import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { ReleaseType, prerelease } from 'semver';
 import { dirSync } from 'tmp';
 import type { DependencyBump } from '../../../release/changelog-renderer';
-import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
+import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json.js';
 import {
   FileData,
   ProjectFileMap,
   ProjectGraphProjectNode,
-} from '../../config/project-graph';
-import { FsTree, Tree } from '../../generators/tree';
+} from '../../config/project-graph.js';
+import { FsTree, Tree } from '../../generators/tree.js';
 import {
   createFileMapUsingProjectGraph,
   createProjectFileMapUsingProjectGraph,
-} from '../../project-graph/file-map-utils';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { interpolate } from '../../tasks-runner/utils';
-import { handleErrors } from '../../utils/handle-errors';
-import { isCI } from '../../utils/is-ci';
-import { output } from '../../utils/output';
-import { joinPathFragments } from '../../utils/path';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { ChangelogOptions } from './command-object';
+} from '../../project-graph/file-map-utils.js';
+import { createProjectGraphAsync } from '../../project-graph/project-graph.js';
+import { interpolate } from '../../tasks-runner/utils.js';
+import { handleErrors } from '../../utils/handle-errors.js';
+import { isCI } from '../../utils/is-ci.js';
+import { output } from '../../utils/output.js';
+import { joinPathFragments } from '../../utils/path.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { ChangelogOptions } from './command-object.js';
 import {
   NxReleaseConfig,
   ResolvedCreateRemoteReleaseProvider,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
-} from './config/config';
-import { deepMergeJson } from './config/deep-merge-json';
-import { ReleaseGroupWithName } from './config/filter-release-groups';
+} from './config/config.js';
+import { deepMergeJson } from './config/deep-merge-json.js';
+import { ReleaseGroupWithName } from './config/filter-release-groups.js';
 import {
   GroupVersionPlan,
   ProjectsVersionPlan,
   readRawVersionPlans,
   setResolvedVersionPlansOnGroups,
-} from './config/version-plans';
+} from './config/version-plans.js';
 import {
   GitCommit,
   Reference,
@@ -48,15 +48,15 @@ import {
   gitPush,
   gitTag,
   parseCommits,
-} from './utils/git';
-import { launchEditor } from './utils/launch-editor';
-import { parseChangelogMarkdown } from './utils/markdown';
-import { printAndFlushChanges } from './utils/print-changes';
-import { printConfigAndExit } from './utils/print-config';
-import { ReleaseGraph, createReleaseGraph } from './utils/release-graph';
-import { createRemoteReleaseClient } from './utils/remote-release-clients/remote-release-client';
-import { resolveChangelogRenderer } from './utils/resolve-changelog-renderer';
-import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
+} from './utils/git.js';
+import { launchEditor } from './utils/launch-editor.js';
+import { parseChangelogMarkdown } from './utils/markdown.js';
+import { printAndFlushChanges } from './utils/print-changes.js';
+import { printConfigAndExit } from './utils/print-config.js';
+import { ReleaseGraph, createReleaseGraph } from './utils/release-graph.js';
+import { createRemoteReleaseClient } from './utils/remote-release-clients/remote-release-client.js';
+import { resolveChangelogRenderer } from './utils/resolve-changelog-renderer.js';
+import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message.js';
 import {
   ReleaseVersion,
   VersionData,
@@ -67,27 +67,27 @@ import {
   isPrerelease,
   noDiffInChangelogMessage,
   shouldPreferDockerVersionForReleaseGroup,
-} from './utils/shared';
+} from './utils/shared.js';
 import {
   areAllVersionPlanProjectsFiltered,
   validateResolvedVersionPlansAgainstFilter,
-} from './utils/version-plan-utils';
+} from './utils/version-plan-utils.js';
 import {
   ChangelogChange,
   createChangesFromGroupVersionPlans,
   createChangesFromProjectsVersionPlans,
-} from './changelog/version-plan-utils';
+} from './changelog/version-plan-utils.js';
 import {
   createChangesFromCommits,
   createFileToProjectMap,
   filterHiddenChanges,
   mapCommitToChange,
-} from './changelog/commit-utils';
+} from './changelog/commit-utils.js';
 import {
   filterVersionPlansByCommitRange,
   resolveWorkspaceChangelogFromSHA,
   resolveChangelogFromSHA,
-} from './changelog/version-plan-filtering';
+} from './changelog/version-plan-filtering.js';
 
 export interface NxReleaseChangelogResult {
   workspaceChangelog?: {

@@ -9,8 +9,8 @@ import {
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { nxVersion } from 'nx/src/utils/versions';
-import { getActualBundler, isComponent } from '../../../utils/ct-utils';
-import { componentTestGenerator } from '../../component-test/component-test';
+import { getActualBundler, isComponent } from '../../../utils/ct-utils.js';
+import { componentTestGenerator } from '../../component-test/component-test.js';
 import type { CypressComponentConfigurationSchema } from '../schema';
 
 export async function addFiles(

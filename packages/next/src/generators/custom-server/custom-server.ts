@@ -8,9 +8,9 @@ import {
   updateProjectConfiguration,
   readNxJson,
 } from '@nx/devkit';
-import { CustomServerSchema } from './schema';
+import { CustomServerSchema } from './schema.js';
 import { join } from 'path';
-import { configureForSwc } from '../../utils/add-swc-to-custom-server';
+import { configureForSwc } from '../../utils/add-swc-to-custom-server.js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function customServerGenerator(

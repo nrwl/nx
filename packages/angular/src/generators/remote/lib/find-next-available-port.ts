@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { readProjectConfiguration } from '@nx/devkit';
-import { getMFProjects } from '../../../utils/get-mf-projects';
+import { getMFProjects } from '../../../utils/get-mf-projects.js';
 
 export function findNextAvailablePort(tree: Tree) {
   const mfProjects = getMFProjects(tree);

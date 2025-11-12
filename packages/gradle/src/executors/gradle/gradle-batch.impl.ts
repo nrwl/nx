@@ -10,11 +10,11 @@ import {
   RunCommandsOptions,
 } from 'nx/src/executors/run-commands/run-commands.impl';
 import { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
-import { GradleExecutorSchema } from './schema';
+import { GradleExecutorSchema } from './schema.js';
 import {
   findGradlewFile,
   getCustomGradleExecutableDirectoryFromPlugin,
-} from '../../utils/exec-gradle';
+} from '../../utils/exec-gradle.js';
 import { dirname, join } from 'path';
 import { execSync } from 'child_process';
 import {
@@ -25,8 +25,8 @@ import {
   getAllDependsOn,
   getExcludeTasks,
   getGradleTaskNameWithNxTaskId,
-} from './get-exclude-task';
-import { GradlePluginOptions } from '../../plugin/utils/gradle-plugin-options';
+} from './get-exclude-task.js';
+import { GradlePluginOptions } from '../../plugin/utils/gradle-plugin-options.js';
 
 export const batchRunnerPath = join(
   __dirname,

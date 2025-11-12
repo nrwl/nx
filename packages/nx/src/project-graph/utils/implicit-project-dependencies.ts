@@ -1,5 +1,5 @@
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { ProjectGraphBuilder } from '../project-graph-builder';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json.js';
+import { ProjectGraphBuilder } from '../project-graph-builder.js';
 
 export function applyImplicitDependencies(
   projects: Record<string, ProjectConfiguration>,

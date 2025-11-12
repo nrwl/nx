@@ -1,28 +1,28 @@
 import { minimatch } from 'minimatch';
 import { basename, dirname, join, relative } from 'path';
 
-import { getGlobPatternsFromPackageManagerWorkspaces } from '../../plugins/package-json';
-import { buildProjectFromProjectJson } from '../../plugins/project-json/build-nodes/project-json';
-import { renamePropertyWithStableKeys } from '../../adapter/angular-json';
+import { getGlobPatternsFromPackageManagerWorkspaces } from '../../plugins/package-json/index.js';
+import { buildProjectFromProjectJson } from '../../plugins/project-json/build-nodes/project-json.js';
+import { renamePropertyWithStableKeys } from '../../adapter/angular-json.js';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
-} from '../../config/workspace-json-project-json';
+} from '../../config/workspace-json-project-json.js';
 import {
   mergeProjectConfigurationIntoRootMap,
   readProjectConfigurationsFromRootMap,
-} from '../../project-graph/utils/project-configuration-utils';
-import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
-import { output } from '../../utils/output';
-import { PackageJson } from '../../utils/package-json';
-import { joinPathFragments, normalizePath } from '../../utils/path';
-import { readJson, writeJson } from './json';
-import { readNxJson } from './nx-json';
+} from '../../project-graph/utils/project-configuration-utils.js';
+import { globWithWorkspaceContextSync } from '../../utils/workspace-context.js';
+import { output } from '../../utils/output.js';
+import { PackageJson } from '../../utils/package-json.js';
+import { joinPathFragments, normalizePath } from '../../utils/path.js';
+import { readJson, writeJson } from './json.js';
+import { readNxJson } from './nx-json.js';
 
 import type { Tree } from '../tree';
-import { toProjectName } from '../../config/to-project-name';
+import { toProjectName } from '../../config/to-project-name.js';
 
-export { readNxJson, updateNxJson } from './nx-json';
+export { readNxJson, updateNxJson } from './nx-json.js';
 
 /**
  * Adds project configuration to the Nx workspace.

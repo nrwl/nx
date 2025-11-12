@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { generateFiles, joinPathFragments } from '@nx/devkit';
-import { addRoute } from '../../../utils/nx-devkit/route-utils';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import { addRoute } from '../../../utils/nx-devkit/route-utils.js';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { NormalizedOptions } from '../schema';
 
 export function addRemoteEntry(
@@ -50,13 +50,13 @@ export function addRemoteEntry(
     addRoute(
       tree,
       joinPathFragments(appRoot, 'src/app/app.routes.ts'),
-      `{path: '', loadChildren: () => import('./remote-entry/entry.routes').then(m => m.remoteRoutes)}`
+      `{path: '', loadChildren: () => import('./remote-entry/entry.routes.js').then(m => m.remoteRoutes)}`
     );
   } else if (routing) {
     addRoute(
       tree,
       joinPathFragments(appRoot, 'src/app/app.routes.ts'),
-      `{ path: '', loadChildren: () => import('./remote-entry/${entryModuleFileName}').then(m => m.RemoteEntryModule) }`
+      `{ path: '', loadChildren: () => import('./remote-entry/${entryModuleFileName}.js').then(m => m.RemoteEntryModule) }`
     );
   }
 }

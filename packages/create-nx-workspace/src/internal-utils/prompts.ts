@@ -2,22 +2,22 @@ import * as yargs from 'yargs';
 import * as enquirer from 'enquirer';
 import * as chalk from 'chalk';
 
-import { MessageKey, messages } from '../utils/nx/ab-testing';
-import { output } from '../utils/output';
-import { deduceDefaultBase } from '../utils/git/default-base';
+import { MessageKey, messages } from '../utils/nx/ab-testing.js';
+import { output } from '../utils/output.js';
+import { deduceDefaultBase } from '../utils/git/default-base.js';
 import {
   detectInvokedPackageManager,
   PackageManager,
   packageManagerList,
-} from '../utils/package-manager';
-import { stringifyCollection } from '../utils/string-utils';
-import { NxCloud } from '../utils/nx/nx-cloud';
-import { isCI } from '../utils/ci/is-ci';
+} from '../utils/package-manager.js';
+import { stringifyCollection } from '../utils/string-utils.js';
+import { NxCloud } from '../utils/nx/nx-cloud.js';
+import { isCI } from '../utils/ci/is-ci.js';
 import {
   Agent,
   agentDisplayMap,
   supportedAgents,
-} from '../create-workspace-options';
+} from '../create-workspace-options.js';
 
 export async function determineNxCloud(
   parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>

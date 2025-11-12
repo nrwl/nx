@@ -1,4 +1,4 @@
-import { executeNxCloudCommand } from '../utils';
+import { executeNxCloudCommand } from '../utils.js';
 
 export interface LogoutArgs {
   verbose?: boolean;

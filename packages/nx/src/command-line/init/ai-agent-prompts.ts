@@ -1,6 +1,6 @@
 import { prompt } from 'enquirer';
-import { isCI } from '../../utils/is-ci';
-import { Agent, agentDisplayMap, supportedAgents } from '../../ai/utils';
+import { isCI } from '../../utils/is-ci.js';
+import { Agent, agentDisplayMap, supportedAgents } from '../../ai/utils.js';
 import chalk = require('chalk');
 
 export async function determineAiAgents(

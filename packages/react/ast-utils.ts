@@ -6,4 +6,4 @@ export {
   findDefaultExport,
   findClosestOpening,
   isTag,
-} from './src/utils/ast-utils';
+} from './src/utils/ast-utils.js';

@@ -1,6 +1,6 @@
-import { NxJsonConfiguration } from '../config/nx-json';
-import { ProjectGraph } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
+import { NxJsonConfiguration } from '../config/nx-json.js';
+import { ProjectGraph } from '../config/project-graph.js';
+import { Task, TaskGraph } from '../config/task-graph.js';
 import {
   ExternalObject,
   FileData,
@@ -10,11 +10,11 @@ import {
   ProjectGraph as NativeProjectGraph,
   TaskHasher,
   transferProjectGraph,
-} from '../native';
-import { transformProjectGraphForRust } from '../native/transform-objects';
-import { PartialHash, TaskHasherImpl } from './task-hasher';
-import { readJsonFile } from '../utils/fileutils';
-import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
+} from '../native/index.js';
+import { transformProjectGraphForRust } from '../native/transform-objects.js';
+import { PartialHash, TaskHasherImpl } from './task-hasher.js';
+import { readJsonFile } from '../utils/fileutils.js';
+import { getRootTsConfigPath } from '../plugins/js/utils/typescript.js';
 
 export class NativeTaskHasherImpl implements TaskHasherImpl {
   hasher: TaskHasher;

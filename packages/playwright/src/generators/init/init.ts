@@ -8,9 +8,9 @@ import {
   Tree,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodesV2 } from '../../plugins/plugin';
-import { nxVersion, playwrightVersion } from '../../utils/versions';
-import { InitGeneratorSchema } from './schema';
+import { createNodesV2 } from '../../plugins/plugin.js';
+import { nxVersion, playwrightVersion } from '../../utils/versions.js';
+import { InitGeneratorSchema } from './schema.js';
 
 export function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   return initGeneratorInternal(tree, { addPlugin: false, ...options });

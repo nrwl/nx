@@ -1,6 +1,6 @@
-import { ProjectGraph } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
-import { output } from '../utils/output';
+import { ProjectGraph } from '../config/project-graph.js';
+import { Task, TaskGraph } from '../config/task-graph.js';
+import { output } from '../utils/output.js';
 
 function _findCycle(
   graph: {

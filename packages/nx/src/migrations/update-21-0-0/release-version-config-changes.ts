@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import type { NxJsonConfiguration } from '../../config/nx-json';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
 import type { Tree } from '../../generators/tree';
-import { readJson, writeJson } from '../../generators/utils/json';
-import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
-import { getProjects } from '../../generators/utils/project-configuration';
+import { readJson, writeJson } from '../../generators/utils/json.js';
+import { readNxJson, updateNxJson } from '../../generators/utils/nx-json.js';
+import { getProjects } from '../../generators/utils/project-configuration.js';
 
 export default async function update(tree: Tree) {
   const nxJson = readNxJson(tree) as NxJsonConfiguration;

@@ -1,8 +1,8 @@
 import { CreateDependencies, logger, hashArray } from '@nx/devkit';
-import { readMavenCache, getCachePath } from './maven-data-cache';
+import { readMavenCache, getCachePath } from './maven-data-cache.js';
 import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { createProjectRootMappingsFromProjectConfigurations } from '@nx/devkit/internal';
-import { DEFAULT_OPTIONS, MavenPluginOptions } from './types';
+import { DEFAULT_OPTIONS, MavenPluginOptions } from './types.js';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { dirname } from 'path';
 import { hashObject } from 'nx/src/devkit-internals';

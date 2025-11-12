@@ -1,18 +1,18 @@
-import { readNxJson } from '../../config/nx-json';
+import { readNxJson } from '../../config/nx-json.js';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
-} from '../../project-graph/project-graph';
-import { output } from '../../utils/output';
+} from '../../project-graph/project-graph.js';
+import { output } from '../../utils/output.js';
 import {
   getInstalledPluginsAndCapabilities,
   getLocalWorkspacePlugins,
   listAlsoAvailableCorePlugins,
   listPluginCapabilities,
   listPlugins,
-} from '../../utils/plugins';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { listPowerpackPlugins } from '../../utils/plugins/output';
+} from '../../utils/plugins/index.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { listPowerpackPlugins } from '../../utils/plugins/output.js';
 
 export interface ListArgs {
   /** The name of an installed plugin to query  */

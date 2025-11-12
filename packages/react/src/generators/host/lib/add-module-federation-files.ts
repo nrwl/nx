@@ -10,12 +10,12 @@ import {
   getProjectSourceRoot,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { maybeJs } from '../../../utils/maybe-js';
+import { maybeJs } from '../../../utils/maybe-js.js';
 import {
   createNxRspackPluginOptions,
   getDefaultTemplateVariables,
-} from '../../application/lib/create-application-files';
-import { NormalizedSchema } from '../schema';
+} from '../../application/lib/create-application-files.js';
+import { NormalizedSchema } from '../schema.js';
 import { join } from 'path';
 
 export function addModuleFederationFiles(

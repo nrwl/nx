@@ -12,9 +12,9 @@ export {
   createAngularCompilation,
 };
 
-export * from './inline-style-language';
-export * from './file-replacement';
-export * from './style-preprocessor-options';
+export * from './inline-style-language.js';
+export * from './file-replacement.js';
+export * from './style-preprocessor-options.js';
 
 export enum DiagnosticModes {
   None = 0,

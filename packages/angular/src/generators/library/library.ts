@@ -10,25 +10,25 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { releaseTasks } from '@nx/js/src/generators/library/utils/add-release-config';
 import init from '../../generators/init/init';
-import { UnitTestRunner } from '../../utils/test-runners';
+import { UnitTestRunner } from '../../utils/test-runners.js';
 import addLintingGenerator from '../add-linting/add-linting';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
-import { addJest } from '../utils/add-jest';
-import { addVitest } from '../utils/add-vitest';
-import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
-import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
-import { assertNotUsingTsSolutionSetup } from '../utils/validations';
-import { versions } from '../utils/version-utils';
-import { addModule } from './lib/add-module';
-import { addProject } from './lib/add-project';
-import { addStandaloneComponent } from './lib/add-standalone-component';
-import { createFiles } from './lib/create-files';
-import { normalizeOptions } from './lib/normalize-options';
-import { NormalizedSchema } from './lib/normalized-schema';
-import { setGeneratorDefaults } from './lib/set-generator-defaults';
-import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
-import { updateTsConfigFiles } from './lib/update-tsconfig-files';
-import { Schema } from './schema';
+import { addJest } from '../utils/add-jest.js';
+import { addVitest } from '../utils/add-vitest.js';
+import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies.js';
+import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies.js';
+import { assertNotUsingTsSolutionSetup } from '../utils/validations.js';
+import { versions } from '../utils/version-utils.js';
+import { addModule } from './lib/add-module.js';
+import { addProject } from './lib/add-project.js';
+import { addStandaloneComponent } from './lib/add-standalone-component.js';
+import { createFiles } from './lib/create-files.js';
+import { normalizeOptions } from './lib/normalize-options.js';
+import { NormalizedSchema } from './lib/normalized-schema.js';
+import { setGeneratorDefaults } from './lib/set-generator-defaults.js';
+import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope.js';
+import { updateTsConfigFiles } from './lib/update-tsconfig-files.js';
+import { Schema } from './schema.js';
 
 export async function libraryGenerator(
   tree: Tree,

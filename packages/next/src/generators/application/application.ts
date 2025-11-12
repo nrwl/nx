@@ -8,27 +8,27 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
+import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind.js';
 import {
   testingLibraryDomVersion,
   testingLibraryReactVersion,
 } from '@nx/react/src/utils/versions';
 import { getReactDependenciesVersionsToInstall } from '@nx/react/src/utils/version-utils';
 
-import { normalizeOptions } from './lib/normalize-options';
-import { Schema } from './schema';
-import { addE2e } from './lib/add-e2e';
-import { addJest } from './lib/add-jest';
-import { addProject } from './lib/add-project';
-import { createApplicationFiles } from './lib/create-application-files';
-import { setDefaults } from './lib/set-defaults';
-import { nextInitGenerator } from '../init/init';
-import { addStyleDependencies } from '../../utils/styles';
-import { addLinting } from './lib/add-linting';
-import { customServerGenerator } from '../custom-server/custom-server';
-import { updateCypressTsConfig } from './lib/update-cypress-tsconfig';
-import { showPossibleWarnings } from './lib/show-possible-warnings';
-import { tsLibVersion } from '../../utils/versions';
+import { normalizeOptions } from './lib/normalize-options.js';
+import { Schema } from './schema.js';
+import { addE2e } from './lib/add-e2e.js';
+import { addJest } from './lib/add-jest.js';
+import { addProject } from './lib/add-project.js';
+import { createApplicationFiles } from './lib/create-application-files.js';
+import { setDefaults } from './lib/set-defaults.js';
+import { nextInitGenerator } from '../init/init.js';
+import { addStyleDependencies } from '../../utils/styles.js';
+import { addLinting } from './lib/add-linting.js';
+import { customServerGenerator } from '../custom-server/custom-server.js';
+import { updateCypressTsConfig } from './lib/update-cypress-tsconfig.js';
+import { showPossibleWarnings } from './lib/show-possible-warnings.js';
+import { tsLibVersion } from '../../utils/versions.js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,
@@ -36,9 +36,9 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
-import { configureForSwc } from '../../utils/add-swc-to-custom-server';
-import { updateJestConfig } from '../../utils/jest-config-util';
-import { isNext14, isNext15, isNext16 } from '../../utils/version-utils';
+import { configureForSwc } from '../../utils/add-swc-to-custom-server.js';
+import { updateJestConfig } from '../../utils/jest-config-util.js';
+import { isNext14, isNext15, isNext16 } from '../../utils/version-utils.js';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {

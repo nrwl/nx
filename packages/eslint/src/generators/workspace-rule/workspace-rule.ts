@@ -14,10 +14,10 @@ import {
 import { camelize } from '@nx/devkit/src/utils/string-utils';
 import { join } from 'path';
 import * as ts from 'typescript';
-import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
-import { lintWorkspaceRulesProjectGenerator } from '../workspace-rules-project/workspace-rules-project';
-import { useFlatConfig } from '../../utils/flat-config';
-import { eslint9__typescriptESLintVersion } from '../../utils/versions';
+import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules.js';
+import { lintWorkspaceRulesProjectGenerator } from '../workspace-rules-project/workspace-rules-project.js';
+import { useFlatConfig } from '../../utils/flat-config.js';
+import { eslint9__typescriptESLintVersion } from '../../utils/versions.js';
 
 export interface LintWorkspaceRuleGeneratorOptions {
   name: string;

@@ -1,4 +1,4 @@
-import { StaticRemoteConfig } from '../../utils';
+import { StaticRemoteConfig } from '../../utils/index.js';
 import { existsSync, readFileSync } from 'fs';
 import { Express } from 'express';
 

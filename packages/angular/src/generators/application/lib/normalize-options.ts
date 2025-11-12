@@ -3,7 +3,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
+import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners.js';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 

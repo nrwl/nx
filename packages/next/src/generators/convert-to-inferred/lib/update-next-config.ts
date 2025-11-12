@@ -1,5 +1,5 @@
 import { Tree } from '@nx/devkit';
-import { findNextConfigPath } from './utils';
+import { findNextConfigPath } from './utils.js';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';

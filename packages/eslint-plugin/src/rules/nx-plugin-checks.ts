@@ -13,12 +13,12 @@ import { getRootTsConfigPath } from '@nx/js';
 import { registerTsProject } from '@nx/js/src/internal';
 import * as path from 'path';
 import { valid } from 'semver';
-import { readProjectGraph } from '../utils/project-graph-utils';
+import { readProjectGraph } from '../utils/project-graph-utils.js';
 import {
   findProject,
   getParserServices,
   getSourceFilePath,
-} from '../utils/runtime-lint-utils';
+} from '../utils/runtime-lint-utils.js';
 
 export type Options = [
   {

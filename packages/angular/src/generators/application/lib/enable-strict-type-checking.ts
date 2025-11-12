@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { updateJson } from '@nx/devkit';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function enableStrictTypeChecking(

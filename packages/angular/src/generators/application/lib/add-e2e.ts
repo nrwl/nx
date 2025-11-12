@@ -6,7 +6,7 @@ import {
   joinPathFragments,
   readNxJson,
 } from '@nx/devkit';
-import { nxVersion } from '../../../utils/versions';
+import { nxVersion } from '../../../utils/versions.js';
 import type { NormalizedSchema } from './normalized-schema';
 import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 

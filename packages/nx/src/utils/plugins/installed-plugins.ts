@@ -1,14 +1,14 @@
 import { join } from 'path';
-import { readNxJson } from '../../config/nx-json';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { readJsonFile } from '../fileutils';
-import { getNxRequirePaths } from '../installation-directory';
-import { PackageJson, readModulePackageJson } from '../package-json';
-import { workspaceRoot } from '../workspace-root';
+import { readNxJson } from '../../config/nx-json.js';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json.js';
+import { readJsonFile } from '../fileutils.js';
+import { getNxRequirePaths } from '../installation-directory.js';
+import { PackageJson, readModulePackageJson } from '../package-json.js';
+import { workspaceRoot } from '../workspace-root.js';
 import {
   PluginCapabilities,
   getPluginCapabilities,
-} from './plugin-capabilities';
+} from './plugin-capabilities.js';
 
 export function findInstalledPlugins(): PackageJson[] {
   const packageJsonDeps = getDependenciesFromPackageJson();

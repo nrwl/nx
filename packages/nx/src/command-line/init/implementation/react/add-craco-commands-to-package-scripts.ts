@@ -1,4 +1,4 @@
-import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils';
+import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils.js';
 
 export function addCracoCommandsToPackageScripts(
   appName: string,

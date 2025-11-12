@@ -2,4 +2,4 @@ export {
   createNodes,
   createNodesV2,
   JestPluginOptions,
-} from './src/plugins/plugin';
+} from './src/plugins/plugin.js';

@@ -1,6 +1,6 @@
-import { FsTree } from '../tree';
+import { FsTree } from '../tree.js';
 import type { Tree } from '../tree';
-import { workspaceRoot } from '../../utils/workspace-root';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 
 /**
  * Creates a host for testing.

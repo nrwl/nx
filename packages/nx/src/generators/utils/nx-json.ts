@@ -3,7 +3,7 @@ import type { NxJsonConfiguration } from '../../config/nx-json';
 
 import type { Tree } from '../tree';
 
-import { readJson, updateJson } from './json';
+import { readJson, updateJson } from './json.js';
 
 /**
  * Reads nx.json

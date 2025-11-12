@@ -1,14 +1,14 @@
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { NxJsonConfiguration } from '../../config/nx-json';
-import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
-import { readJsonFile } from '../fileutils';
-import { PackageJson } from '../package-json';
-import { workspaceRoot } from '../workspace-root';
+import { NxJsonConfiguration } from '../../config/nx-json.js';
+import { ProjectsConfigurations } from '../../config/workspace-json-project-json.js';
+import { readJsonFile } from '../fileutils.js';
+import { PackageJson } from '../package-json.js';
+import { workspaceRoot } from '../workspace-root.js';
 import {
   PluginCapabilities,
   getPluginCapabilities,
-} from './plugin-capabilities';
+} from './plugin-capabilities.js';
 
 export async function getLocalWorkspacePlugins(
   projectsConfiguration: ProjectsConfigurations,

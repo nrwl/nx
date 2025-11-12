@@ -5,7 +5,7 @@
 
 import * as chalk from 'chalk';
 import { EOL } from 'os';
-import { isCI } from './ci/is-ci';
+import { isCI } from './ci/is-ci.js';
 
 export interface CLIErrorMessageConfig {
   title: string;

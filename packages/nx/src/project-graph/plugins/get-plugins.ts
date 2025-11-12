@@ -1,19 +1,19 @@
 import { join } from 'node:path';
 
-import { shouldMergeAngularProjects } from '../../adapter/angular-json';
-import { PluginConfiguration, readNxJson } from '../../config/nx-json';
-import { hashObject } from '../../hasher/file-hasher';
-import { IS_WASM } from '../../native';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { loadNxPluginInIsolation } from './isolation';
-import { loadNxPlugin } from './in-process-loader';
+import { shouldMergeAngularProjects } from '../../adapter/angular-json.js';
+import { PluginConfiguration, readNxJson } from '../../config/nx-json.js';
+import { hashObject } from '../../hasher/file-hasher.js';
+import { IS_WASM } from '../../native/index.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { loadNxPluginInIsolation } from './isolation/index.js';
+import { loadNxPlugin } from './in-process-loader.js';
 
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 import {
   cleanupPluginTSTranspiler,
   pluginTranspilerIsRegistered,
-} from './transpiler';
-import { isIsolationEnabled } from './isolation/enabled';
+} from './transpiler.js';
+import { isIsolationEnabled } from './isolation/enabled.js';
 
 /**
  * Stuff for specified NX Plugins.

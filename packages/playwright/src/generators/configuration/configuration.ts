@@ -32,9 +32,9 @@ import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-
 import { execSync } from 'child_process';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
-import { addLinterToPlaywrightProject } from '../../utils/add-linter';
-import { nxVersion } from '../../utils/versions';
-import { initGenerator } from '../init/init';
+import { addLinterToPlaywrightProject } from '../../utils/add-linter.js';
+import { nxVersion } from '../../utils/versions.js';
+import { initGenerator } from '../init/init.js';
 import type {
   ConfigurationGeneratorSchema,
   NormalizedGeneratorOptions,

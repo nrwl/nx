@@ -12,17 +12,17 @@ import {
 } from '@nx/devkit';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { convertToRspack } from '../convert-to-rspack/convert-to-rspack';
-import { angularInitGenerator } from '../init/init';
-import { setupSsr } from '../setup-ssr/setup-ssr';
-import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
-import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
-import { assertNotUsingTsSolutionSetup } from '../utils/validations';
+import { convertToRspack } from '../convert-to-rspack/convert-to-rspack.js';
+import { angularInitGenerator } from '../init/init.js';
+import { setupSsr } from '../setup-ssr/setup-ssr.js';
+import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind.js';
+import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies.js';
+import { assertNotUsingTsSolutionSetup } from '../utils/validations.js';
 import {
   getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
   versions,
-} from '../utils/version-utils';
+} from '../utils/version-utils.js';
 import {
   addE2e,
   addLinting,
@@ -34,7 +34,7 @@ import {
   normalizeOptions,
   setGeneratorDefaults,
   updateTsconfigFiles,
-} from './lib';
+} from './lib/index.js';
 import type { Schema } from './schema';
 
 export async function applicationGenerator(

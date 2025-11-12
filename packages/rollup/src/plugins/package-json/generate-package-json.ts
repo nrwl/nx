@@ -1,6 +1,6 @@
 import type { Plugin } from 'rollup';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { updatePackageJson } from './update-package-json';
+import { updatePackageJson } from './update-package-json.js';
 
 export interface GeneratePackageJsonOptions {
   outputPath: string;

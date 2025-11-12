@@ -4,30 +4,30 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { RELEASE_TYPES } from 'semver';
 import { dirSync } from 'tmp';
-import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
-import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { allFileData } from '../../utils/all-file-data';
+import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json.js';
+import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils.js';
+import { createProjectGraphAsync } from '../../project-graph/project-graph.js';
+import { allFileData } from '../../utils/all-file-data.js';
 import {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
-} from '../../utils/command-line-utils';
-import { handleErrors } from '../../utils/handle-errors';
-import { output } from '../../utils/output';
-import { PlanOptions } from './command-object';
+} from '../../utils/command-line-utils.js';
+import { handleErrors } from '../../utils/handle-errors.js';
+import { output } from '../../utils/output.js';
+import { PlanOptions } from './command-object.js';
 import {
   createNxReleaseConfig,
   handleNxReleaseConfigError,
   IMPLICIT_DEFAULT_RELEASE_GROUP,
-} from './config/config';
-import { deepMergeJson } from './config/deep-merge-json';
-import { filterReleaseGroups } from './config/filter-release-groups';
-import { getVersionPlansAbsolutePath } from './config/version-plans';
-import { generateVersionPlanContent } from './utils/generate-version-plan-content';
-import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-for-group';
-import { launchEditor } from './utils/launch-editor';
-import { printDiff } from './utils/print-changes';
-import { printConfigAndExit } from './utils/print-config';
+} from './config/config.js';
+import { deepMergeJson } from './config/deep-merge-json.js';
+import { filterReleaseGroups } from './config/filter-release-groups.js';
+import { getVersionPlansAbsolutePath } from './config/version-plans.js';
+import { generateVersionPlanContent } from './utils/generate-version-plan-content.js';
+import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-for-group.js';
+import { launchEditor } from './utils/launch-editor.js';
+import { printDiff } from './utils/print-changes.js';
+import { printConfigAndExit } from './utils/print-config.js';
 
 export const releasePlanCLIHandler = (args: PlanOptions) =>
   handleErrors(args.verbose, () => createAPI({})(args));

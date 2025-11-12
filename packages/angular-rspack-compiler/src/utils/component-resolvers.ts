@@ -26,7 +26,7 @@
 import { dirname, resolve } from 'node:path';
 import { Project, SyntaxKind } from 'ts-morph';
 import { normalize } from 'path';
-import { getAllTextByProperty, getTextByProperty } from './utils';
+import { getAllTextByProperty, getTextByProperty } from './utils.js';
 
 interface StyleUrlsCacheEntry {
   matchedStyleUrls: string[];

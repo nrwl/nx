@@ -12,15 +12,15 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { isValidVariable } from '@nx/js';
-import { E2eTestRunner } from '../../utils/test-runners';
+import { E2eTestRunner } from '../../utils/test-runners.js';
 import applicationGenerator from '../application/application';
 import convertToRspack from '../convert-to-rspack/convert-to-rspack';
 import remoteGenerator from '../remote/remote';
-import { setupMf } from '../setup-mf/setup-mf';
-import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
-import { assertRspackIsCSR } from '../utils/assert-mf-utils';
-import { assertNotUsingTsSolutionSetup } from '../utils/validations';
-import { updateSsrSetup } from './lib';
+import { setupMf } from '../setup-mf/setup-mf.js';
+import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs.js';
+import { assertRspackIsCSR } from '../utils/assert-mf-utils.js';
+import { assertNotUsingTsSolutionSetup } from '../utils/validations.js';
+import { updateSsrSetup } from './lib/index.js';
 import type { Schema } from './schema';
 
 export async function host(tree: Tree, schema: Schema) {

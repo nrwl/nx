@@ -23,10 +23,10 @@ import {
   findStorybookAndBuildTargetsAndCompiler,
   storybookMajorVersion as getStorybookMajorVersion,
   TsConfig,
-} from '../../../utils/utilities';
-import { StorybookConfigureSchema } from '../schema';
-import { UiFramework } from '../../../utils/models';
-import { nxVersion } from '../../../utils/versions';
+} from '../../../utils/utilities.js';
+import { StorybookConfigureSchema } from '../schema.js';
+import { UiFramework } from '../../../utils/models.js';
+import { nxVersion } from '../../../utils/versions.js';
 import { findEslintFile } from '@nx/eslint/src/generators/utils/eslint-file';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 import {

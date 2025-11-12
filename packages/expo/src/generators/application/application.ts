@@ -12,18 +12,18 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
-import { addLinting } from '../../utils/add-linting';
-import { addJest } from '../../utils/jest/add-jest';
+import { addLinting } from '../../utils/add-linting.js';
+import { addJest } from '../../utils/jest/add-jest.js';
 
-import { normalizeOptions } from './lib/normalize-options';
+import { normalizeOptions } from './lib/normalize-options.js';
 import initGenerator from '../init/init';
-import { addProject } from './lib/add-project';
-import { createApplicationFiles } from './lib/create-application-files';
-import { addEasScripts } from './lib/add-eas-scripts';
-import { addE2e } from './lib/add-e2e';
-import { Schema } from './schema';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
-import { initRootBabelConfig } from '../../utils/init-root-babel-config';
+import { addProject } from './lib/add-project.js';
+import { createApplicationFiles } from './lib/create-application-files.js';
+import { addEasScripts } from './lib/add-eas-scripts.js';
+import { addE2e } from './lib/add-e2e.js';
+import { Schema } from './schema.js';
+import { ensureDependencies } from '../../utils/ensure-dependencies.js';
+import { initRootBabelConfig } from '../../utils/init-root-babel-config.js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 

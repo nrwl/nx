@@ -1,13 +1,13 @@
-import { joinPathFragments } from '../../utils/path';
-import { NxJsonConfiguration } from '../../config/nx-json';
-import { TargetConfiguration } from '../../config/workspace-json-project-json';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { Tree } from '../../generators/tree';
-import { updateJson } from '../../generators/utils/json';
+import { joinPathFragments } from '../../utils/path.js';
+import { NxJsonConfiguration } from '../../config/nx-json.js';
+import { TargetConfiguration } from '../../config/workspace-json-project-json.js';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
+import { Tree } from '../../generators/tree.js';
+import { updateJson } from '../../generators/utils/json.js';
 import {
   getProjects,
   updateProjectConfiguration,
-} from '../../generators/utils/project-configuration';
+} from '../../generators/utils/project-configuration.js';
 
 export default async function removeRunCommandsOutputPath(tree: Tree) {
   for (const [project, configuration] of getProjects(tree).entries()) {

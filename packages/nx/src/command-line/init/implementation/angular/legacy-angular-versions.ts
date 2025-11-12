@@ -1,19 +1,19 @@
 import { execSync } from 'child_process';
 import { join } from 'path';
 import { gte, major } from 'semver';
-import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils';
-import { getNxRequirePaths } from '../../../../utils/installation-directory';
-import { sortObjectByKeys } from '../../../../utils/object-sort';
-import { output } from '../../../../utils/output';
-import { readModulePackageJson } from '../../../../utils/package-json';
+import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils.js';
+import { getNxRequirePaths } from '../../../../utils/installation-directory.js';
+import { sortObjectByKeys } from '../../../../utils/object-sort.js';
+import { output } from '../../../../utils/output.js';
+import { readModulePackageJson } from '../../../../utils/package-json.js';
 import {
   getPackageManagerCommand,
   PackageManagerCommands,
   resolvePackageVersionUsingInstallation,
   resolvePackageVersionUsingRegistry,
-} from '../../../../utils/package-manager';
-import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
-import { initCloud } from '../utils';
+} from '../../../../utils/package-manager.js';
+import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud.js';
+import { initCloud } from '../utils.js';
 import type { Options } from './types';
 
 // map of Angular major versions to Nx versions to use for legacy `nx init` migrations,

@@ -2,10 +2,10 @@ import type { Tree } from '@nx/devkit';
 import { logger, readProjectConfiguration, stripIndents } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import type { StringLiteral } from 'typescript';
-import { locateLibraryEntryPointFromDirectory } from '../../utils/entry-point';
-import { getRelativeImportToFile } from '../../utils/path';
+import { locateLibraryEntryPointFromDirectory } from '../../utils/entry-point.js';
+import { getRelativeImportToFile } from '../../utils/path.js';
 import type { NormalizedSchema } from '../schema';
-import { findModuleFromOptions } from './module';
+import { findModuleFromOptions } from './module.js';
 
 export function exportComponentInEntryPoint(
   tree: Tree,

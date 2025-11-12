@@ -1,5 +1,5 @@
-import { AssetGlob } from './assets';
-import { CopyAssetsHandler, FileEvent } from './copy-assets-handler';
+import { AssetGlob } from './assets.js';
+import { CopyAssetsHandler, FileEvent } from './copy-assets-handler.js';
 import { ExecutorContext, isDaemonEnabled, output } from '@nx/devkit';
 
 export interface CopyAssetsOptions {

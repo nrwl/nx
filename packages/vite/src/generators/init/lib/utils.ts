@@ -12,9 +12,9 @@ import {
   viteV5Version,
   viteV6Version,
   viteVersion,
-} from '../../../utils/versions';
-import { InitGeneratorSchema } from '../schema';
-import { getVitestDependenciesVersionsToInstall } from '../../../utils/version-utils';
+} from '../../../utils/versions.js';
+import { InitGeneratorSchema } from '../schema.js';
+import { getVitestDependenciesVersionsToInstall } from '../../../utils/version-utils.js';
 
 export async function checkDependenciesInstalled(
   host: Tree,

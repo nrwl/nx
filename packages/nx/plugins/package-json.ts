@@ -1,13 +1,13 @@
-import { createNodesFromFiles, NxPluginV2 } from '../src/project-graph/plugins';
-import { workspaceRoot } from '../src/utils/workspace-root';
+import { createNodesFromFiles, NxPluginV2 } from '../src/project-graph/plugins/index.js';
+import { workspaceRoot } from '../src/utils/workspace-root.js';
 import {
   buildPackageJsonWorkspacesMatcher,
   createNodeFromPackageJson,
-} from '../src/plugins/package-json';
-import { workspaceDataDirectory } from '../src/utils/cache-directory';
+} from '../src/plugins/package-json/index.js';
+import { workspaceDataDirectory } from '../src/utils/cache-directory.js';
 import { join } from 'path';
-import { ProjectConfiguration } from '../src/config/workspace-json-project-json';
-import { readJsonFile, writeJsonFile } from '../src/utils/fileutils';
+import { ProjectConfiguration } from '../src/config/workspace-json-project-json.js';
+import { readJsonFile, writeJsonFile } from '../src/utils/fileutils.js';
 
 export type PackageJsonConfigurationCache = {
   [hash: string]: ProjectConfiguration;

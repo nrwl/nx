@@ -23,12 +23,12 @@ import {
   initGenerator as jsInitGenerator,
 } from '@nx/js';
 import init from '../init/init';
-import { addLinting } from '../../utils/add-linting';
-import { addJest } from '../../utils/add-jest';
+import { addLinting } from '../../utils/add-linting.js';
+import { addJest } from '../../utils/add-jest.js';
 import componentGenerator from '../component/component';
-import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
-import { Schema } from './schema';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { NormalizedSchema, normalizeOptions } from './lib/normalize-options.js';
+import { Schema } from './schema.js';
+import { ensureDependencies } from '../../utils/ensure-dependencies.js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,
@@ -40,7 +40,7 @@ import { PackageJson } from 'nx/src/utils/package-json';
 import { addRollupBuildTarget } from '@nx/react/src/generators/library/lib/add-rollup-build-target';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { relative } from 'path';
-import { reactNativeVersion, reactVersion } from '../../utils/versions';
+import { reactNativeVersion, reactVersion } from '../../utils/versions.js';
 import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,

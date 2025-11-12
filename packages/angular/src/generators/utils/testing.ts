@@ -2,15 +2,15 @@ import type { Tree } from '@nx/devkit';
 import { names, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { UnitTestRunner } from '../../utils/test-runners';
-import { applicationGenerator } from '../application/application';
+import { UnitTestRunner } from '../../utils/test-runners.js';
+import { applicationGenerator } from '../application/application.js';
 import type { Schema as ApplicationOptions } from '../application/schema';
-import { componentGenerator } from '../component/component';
-import { host } from '../host/host';
+import { componentGenerator } from '../component/component.js';
+import { host } from '../host/host.js';
 import type { Schema as HostOptions } from '../host/schema';
-import { libraryGenerator } from '../library/library';
+import { libraryGenerator } from '../library/library.js';
 import type { Schema as LibraryOptions } from '../library/schema';
-import { remote } from '../remote/remote';
+import { remote } from '../remote/remote.js';
 import type { Schema as RemoteOptions } from '../remote/schema';
 
 export async function generateTestApplication(
@@ -119,14 +119,14 @@ export class TestButton {
 
   tree.write(
     `${libName}/src/lib/barrel/barrel-button/index.ts`,
-    `export * from './barrel-button';`
+    `export * from './barrel-button.js';`
   );
 
   tree.write(
     `${libName}/src/lib/barrel/barrel-module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BarrelButton } from './barrel-button';
+import { BarrelButton } from './barrel-button.js';
 
 @NgModule({
   imports: [CommonModule],
@@ -161,8 +161,8 @@ export class BarrelModule {}`
     `${libName}/src/lib/variable-declare/variable-declare-module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VariableDeclareButton } from './variable-declare-button/variable-declare-button';
-import { VariableDeclareView } from './variable-declare-view/variable-declare-view';
+import { VariableDeclareButton } from './variable-declare-button/variable-declare-button.js';
+import { VariableDeclareView } from './variable-declare-view/variable-declare-view.js';
 
 const COMPONENTS = [
   VariableDeclareButton,
@@ -211,9 +211,9 @@ export class VariableDeclareModule {}`
     `${libName}/src/lib/variable-spread-declare/variable-spread-declare-module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VariableSpreadDeclareButton } from './variable-spread-declare-button/variable-spread-declare-button';
-import { VariableSpreadDeclareView } from './variable-spread-declare-view/variable-spread-declare-view';
-import { VariableSpreadDeclareAnotherview } from './variable-spread-declare-anotherview/variable-spread-declare-anotherview';
+import { VariableSpreadDeclareButton } from './variable-spread-declare-button/variable-spread-declare-button.js';
+import { VariableSpreadDeclareView } from './variable-spread-declare-view/variable-spread-declare-view.js';
+import { VariableSpreadDeclareAnotherview } from './variable-spread-declare-anotherview/variable-spread-declare-anotherview.js';
 
 const COMPONENTS = [
   VariableSpreadDeclareButton,
@@ -253,8 +253,8 @@ export class VariableSpreadDeclareModule {}`
     `${libName}/src/lib/static-member-declarations/static-member-declarations-module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Cmp1 } from './cmp1/cmp1';
-import { Cmp2 } from './cmp2/cmp2';
+import { Cmp1 } from './cmp1/cmp1.js';
+import { Cmp2 } from './cmp2/cmp2.js';
 
 @NgModule({
   imports: [CommonModule],

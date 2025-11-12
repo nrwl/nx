@@ -13,12 +13,12 @@ import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
 import { relative } from 'path';
 import { from, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package';
-import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
+import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package.js';
+import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs.js';
 import {
   mergeCustomWebpackConfig,
   resolveIndexHtmlTransformer,
-} from '../utilities/webpack';
+} from '../utilities/webpack.js';
 import type { BrowserBuilderSchema } from './schema';
 // This is required to ensure that the webpack version used by the Module Federation is the same as the one used by the builders.
 const Module = require('module');

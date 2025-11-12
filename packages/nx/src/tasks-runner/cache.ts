@@ -1,16 +1,16 @@
-import { workspaceRoot } from '../utils/workspace-root';
+import { workspaceRoot } from '../utils/workspace-root.js';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import {
   DefaultTasksRunnerOptions,
   RemoteCache,
   RemoteCacheV2,
-} from './default-tasks-runner';
+} from './default-tasks-runner.js';
 import { spawn } from 'child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { cacheDir } from '../utils/cache-directory';
-import { Task } from '../config/task-graph';
+import { cacheDir } from '../utils/cache-directory.js';
+import { Task } from '../config/task-graph.js';
 import { machineId } from 'node-machine-id';
 import {
   NxCache,
@@ -18,18 +18,18 @@ import {
   IS_WASM,
   getDefaultMaxCacheSize,
   HttpRemoteCache,
-} from '../native';
-import { getDbConnection } from '../utils/db-connection';
-import { isNxCloudUsed } from '../utils/nx-cloud-utils';
-import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
+} from '../native/index.js';
+import { getDbConnection } from '../utils/db-connection.js';
+import { isNxCloudUsed } from '../utils/nx-cloud-utils.js';
+import { NxJsonConfiguration, readNxJson } from '../config/nx-json.js';
 import {
   NxCloudClientUnavailableError,
   verifyOrUpdateNxCloudClient,
-} from '../nx-cloud/update-manager';
-import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options';
-import { isCI } from '../utils/is-ci';
-import { output } from '../utils/output';
-import { logger } from '../utils/logger';
+} from '../nx-cloud/update-manager.js';
+import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options.js';
+import { isCI } from '../utils/is-ci.js';
+import { output } from '../utils/output.js';
+import { logger } from '../utils/logger.js';
 
 export type CachedResult = {
   terminalOutput: string;

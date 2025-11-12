@@ -1,8 +1,8 @@
 import { join } from 'path';
 import { ExecutorContext } from '@nx/devkit';
 
-import { runPodInstall } from '../../utils/pod-install-task';
-import { ReactNativePodInstallOptions } from './schema';
+import { runPodInstall } from '../../utils/pod-install-task.js';
+import { ReactNativePodInstallOptions } from './schema.js';
 
 export interface ReactNativePodInstallOutput {
   success: boolean;

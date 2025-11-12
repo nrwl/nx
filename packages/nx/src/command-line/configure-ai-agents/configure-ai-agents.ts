@@ -1,6 +1,6 @@
 import { prompt } from 'enquirer';
-import { output } from '../../utils/output';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { output } from '../../utils/output.js';
+import { ensurePackageHasProvenance } from '../../utils/provenance.js';
 import * as chalk from 'chalk';
 
 import {
@@ -10,10 +10,10 @@ import {
   configureAgents,
   getAgentConfigurations,
   AgentConfiguration,
-} from '../../ai/utils';
-import { installPackageToTmp } from '../../devkit-internals';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { ConfigureAiAgentsOptions } from './command-object';
+} from '../../ai/utils.js';
+import { installPackageToTmp } from '../../devkit-internals.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { ConfigureAiAgentsOptions } from './command-object.js';
 import ora = require('ora');
 import { relative } from 'path';
 

@@ -2,31 +2,31 @@ import { minimatch } from 'minimatch';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json.js';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { toProjectName } from '../../config/to-project-name';
-import { readJsonFile, readYamlFile } from '../../utils/fileutils';
-import { combineGlobPatterns } from '../../utils/globs';
-import { NX_PREFIX } from '../../utils/logger';
-import { output } from '../../utils/output';
+import { toProjectName } from '../../config/to-project-name.js';
+import { readJsonFile, readYamlFile } from '../../utils/fileutils.js';
+import { combineGlobPatterns } from '../../utils/globs.js';
+import { NX_PREFIX } from '../../utils/logger.js';
+import { output } from '../../utils/output.js';
 import {
   getMetadataFromPackageJson,
   PackageJson,
   getTagsFromPackageJson,
   readTargetsFromPackageJson,
-} from '../../utils/package-json';
-import { joinPathFragments } from '../../utils/path';
-import { nxVersion } from '../../utils/versions';
+} from '../../utils/package-json.js';
+import { joinPathFragments } from '../../utils/path.js';
+import { nxVersion } from '../../utils/versions.js';
 import {
   createNodesFromFiles,
   CreateNodesV2,
-} from '../../project-graph/plugins';
+} from '../../project-graph/plugins/index.js';
 import { basename } from 'path';
-import { hashObject } from '../../hasher/file-hasher';
+import { hashObject } from '../../hasher/file-hasher.js';
 import {
   PackageJsonConfigurationCache,
   readPackageJsonConfigurationCache,
-} from '../../../plugins/package-json';
+} from '../../../plugins/package-json.js';
 
 export const createNodesV2: CreateNodesV2 = [
   combineGlobPatterns(

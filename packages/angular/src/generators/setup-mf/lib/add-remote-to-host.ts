@@ -10,7 +10,7 @@ import { insertImport } from '@nx/js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { ArrayLiteralExpression } from 'typescript';
-import { addRoute } from '../../../utils/nx-devkit/route-utils';
+import { addRoute } from '../../../utils/nx-devkit/route-utils.js';
 
 let tsModule: typeof import('typescript');
 

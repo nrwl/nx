@@ -6,7 +6,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import type { Schema } from './schema';
-import { getMFProjects } from '../../utils/get-mf-projects';
+import { getMFProjects } from '../../utils/get-mf-projects.js';
 import {
   checkOutputNameMatchesProjectName,
   checkSharedNpmPackagesMatchExpected,
@@ -14,7 +14,7 @@ import {
   isHostRemoteConfig,
   parseASTOfWebpackConfig,
   writeNewWebpackConfig,
-} from './lib';
+} from './lib/index.js';
 
 export async function convertToWithMF(tree: Tree, schema: Schema) {
   const projects = new Set(getMFProjects(tree, { legacy: true }));

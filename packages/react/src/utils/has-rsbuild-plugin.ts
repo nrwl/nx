@@ -1,5 +1,5 @@
 import { ensurePackage, Tree } from '@nx/devkit';
-import { nxVersion } from './versions';
+import { nxVersion } from './versions.js';
 
 export async function hasRsbuildPlugin(tree: Tree, projectPath?: string) {
   ensurePackage('@nx/rsbuild', nxVersion);

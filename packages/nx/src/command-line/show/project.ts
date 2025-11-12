@@ -1,8 +1,8 @@
-import { output } from '../../utils/output';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { ShowProjectOptions } from './command-object';
-import { generateGraph } from '../graph/graph';
-import { findMatchingProjects } from '../../utils/find-matching-projects';
+import { output } from '../../utils/output.js';
+import { createProjectGraphAsync } from '../../project-graph/project-graph.js';
+import { ShowProjectOptions } from './command-object.js';
+import { generateGraph } from '../graph/graph.js';
+import { findMatchingProjects } from '../../utils/find-matching-projects.js';
 
 export async function showProjectHandler(
   args: ShowProjectOptions

@@ -1,17 +1,17 @@
 import * as enquirer from 'enquirer';
 import { unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
-import { InitArgs } from '../init-v1';
-import { NxJsonConfiguration } from '../../../config/nx-json';
-import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
+import { InitArgs } from '../init-v1.js';
+import { NxJsonConfiguration } from '../../../config/nx-json.js';
+import { ProjectConfiguration } from '../../../config/workspace-json-project-json.js';
 import {
   fileExists,
   readJsonFile,
   writeJsonFile,
-} from '../../../utils/fileutils';
-import { output } from '../../../utils/output';
-import { PackageJson } from '../../../utils/package-json';
-import { getPackageManagerCommand } from '../../../utils/package-manager';
+} from '../../../utils/fileutils.js';
+import { output } from '../../../utils/output.js';
+import { PackageJson } from '../../../utils/package-json.js';
+import { getPackageManagerCommand } from '../../../utils/package-manager.js';
 import {
   addDepsToPackageJson,
   createNxJsonFile,
@@ -19,9 +19,9 @@ import {
   markRootPackageJsonAsNxProjectLegacy,
   runInstall,
   updateGitIgnore,
-} from './utils';
-import { nxVersion } from '../../../utils/versions';
-import { connectExistingRepoToNxCloudPrompt } from '../../nx-cloud/connect/connect-to-nx-cloud';
+} from './utils.js';
+import { nxVersion } from '../../../utils/versions.js';
+import { connectExistingRepoToNxCloudPrompt } from '../../nx-cloud/connect/connect-to-nx-cloud.js';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
 type NestCLIConfiguration = any;

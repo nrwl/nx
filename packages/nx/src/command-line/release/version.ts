@@ -5,42 +5,42 @@ import {
   NxReleaseConfiguration,
   NxReleaseVersionConfiguration,
   readNxJson,
-} from '../../config/nx-json';
-import { LARGE_BUFFER } from '../../executors/run-commands/run-commands.impl';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { FsTree, Tree, flushChanges } from '../../generators/tree';
-import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { handleErrors } from '../../utils/handle-errors';
-import { output } from '../../utils/output';
-import { joinPathFragments } from '../../utils/path';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { VersionOptions } from './command-object';
+} from '../../config/nx-json.js';
+import { LARGE_BUFFER } from '../../executors/run-commands/run-commands.impl.js';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
+import { FsTree, Tree, flushChanges } from '../../generators/tree.js';
+import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils.js';
+import { createProjectGraphAsync } from '../../project-graph/project-graph.js';
+import { handleErrors } from '../../utils/handle-errors.js';
+import { output } from '../../utils/output.js';
+import { joinPathFragments } from '../../utils/path.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { VersionOptions } from './command-object.js';
 import {
   createNxReleaseConfig,
   handleNxReleaseConfigError,
-} from './config/config';
-import { deepMergeJson } from './config/deep-merge-json';
-import { ReleaseGroupWithName } from './config/filter-release-groups';
+} from './config/config.js';
+import { deepMergeJson } from './config/deep-merge-json.js';
+import { ReleaseGroupWithName } from './config/filter-release-groups.js';
 import {
   readRawVersionPlans,
   setResolvedVersionPlansOnGroups,
-} from './config/version-plans';
-import { gitAdd, gitPush, gitTag } from './utils/git';
-import { printDiff } from './utils/print-changes';
-import { printConfigAndExit } from './utils/print-config';
-import { ReleaseGraph, createReleaseGraph } from './utils/release-graph';
-import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
+} from './config/version-plans.js';
+import { gitAdd, gitPush, gitTag } from './utils/git.js';
+import { printDiff } from './utils/print-changes.js';
+import { printConfigAndExit } from './utils/print-config.js';
+import { ReleaseGraph, createReleaseGraph } from './utils/release-graph.js';
+import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message.js';
 import {
   VersionData,
   commitChanges,
   createCommitMessageValues,
   createGitTagValues,
   handleDuplicateGitTags,
-} from './utils/shared';
-import { validateResolvedVersionPlansAgainstFilter } from './utils/version-plan-utils';
-import { ReleaseGroupProcessor } from './version/release-group-processor';
-import { SemverBumpType } from './version/version-actions';
+} from './utils/shared.js';
+import { validateResolvedVersionPlansAgainstFilter } from './utils/version-plan-utils.js';
+import { ReleaseGroupProcessor } from './version/release-group-processor.js';
+import { SemverBumpType } from './version/version-actions.js';
 
 export interface NxReleaseVersionResult {
   /**

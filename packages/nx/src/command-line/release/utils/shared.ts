@@ -1,12 +1,12 @@
 import * as chalk from 'chalk';
 import { prerelease } from 'semver';
-import { ProjectGraph } from '../../../config/project-graph';
-import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
-import { WholeFileChange } from '../../../project-graph/file-utils';
-import { interpolate } from '../../../tasks-runner/utils';
-import { output } from '../../../utils/output';
+import { ProjectGraph } from '../../../config/project-graph.js';
+import { filterAffected } from '../../../project-graph/affected/affected-project-graph.js';
+import { WholeFileChange } from '../../../project-graph/file-utils.js';
+import { interpolate } from '../../../tasks-runner/utils.js';
+import { output } from '../../../utils/output.js';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { GitCommit, gitAdd, gitCommit } from './git';
+import { GitCommit, gitAdd, gitCommit } from './git.js';
 
 export const noDiffInChangelogMessage = chalk.yellow(
   `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`

@@ -1,14 +1,14 @@
 import * as chalk from 'chalk';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { output } from '../output';
-import { getPackageManagerCommand } from '../package-manager';
-import { workspaceRoot } from '../workspace-root';
-import { CORE_PLUGINS } from './core-plugins';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json.js';
+import { output } from '../output.js';
+import { getPackageManagerCommand } from '../package-manager.js';
+import { workspaceRoot } from '../workspace-root.js';
+import { CORE_PLUGINS } from './core-plugins.js';
 import {
   PluginCapabilities,
   getPluginCapabilities,
-} from './plugin-capabilities';
-import { readModulePackageJson } from '../package-json';
+} from './plugin-capabilities.js';
+import { readModulePackageJson } from '../package-json.js';
 
 export function listPlugins(
   plugins: Map<string, PluginCapabilities>,

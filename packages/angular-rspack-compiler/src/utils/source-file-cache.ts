@@ -9,7 +9,7 @@
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type ts from 'typescript';
-import { isUsingWindows } from './utils';
+import { isUsingWindows } from './utils.js';
 
 const WINDOWS_SEP_REGEXP = new RegExp(`\\${path.win32.sep}`, 'g');
 

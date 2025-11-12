@@ -18,20 +18,20 @@ import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-gra
 import { relative } from 'path';
 import { combineLatest, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package';
+import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package.js';
 import {
   loadIndexHtmlTransformer,
   loadMiddleware,
   loadPlugins,
   type PluginSpec,
-} from '../../executors/utilities/esbuild-extensions';
-import { patchBuilderContext } from '../../executors/utilities/patch-builder-context';
-import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
+} from '../../executors/utilities/esbuild-extensions.js';
+import { patchBuilderContext } from '../../executors/utilities/patch-builder-context.js';
+import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs.js';
 import {
   mergeCustomWebpackConfig,
   resolveIndexHtmlTransformer,
-} from '../utilities/webpack';
-import { normalizeOptions, validateOptions } from './lib';
+} from '../utilities/webpack.js';
+import { normalizeOptions, validateOptions } from './lib/index.js';
 import type { NormalizedSchema, Schema } from './schema';
 
 type BuildTargetOptions = {

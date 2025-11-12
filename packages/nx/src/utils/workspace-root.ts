@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { fileExists } from './fileutils';
+import { fileExists } from './fileutils.js';
 
 /**
  * The root of the workspace

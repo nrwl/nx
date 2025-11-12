@@ -1,5 +1,5 @@
 import { type ProjectGraph } from '@nx/devkit';
-import { isBuildableLibrary } from './is-lib-buildable';
+import { isBuildableLibrary } from './is-lib-buildable.js';
 
 /**
  * Get all transitive dependencies of a target that are non-buildable libraries.

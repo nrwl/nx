@@ -1,25 +1,25 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
-import { readNxJson } from '../config/nx-json';
-import { NxArgs } from '../utils/command-line-utils';
-import { createProjectGraphAsync } from '../project-graph/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
+import { readNxJson } from '../config/nx-json.js';
+import { NxArgs } from '../utils/command-line-utils.js';
+import { createProjectGraphAsync } from '../project-graph/project-graph.js';
+import { Task, TaskGraph } from '../config/task-graph.js';
 import {
   constructLifeCycles,
   getRunner,
   invokeTasksRunner,
   setEnvVarsBasedOnArgs,
-} from './run-command';
-import { InvokeRunnerTerminalOutputLifeCycle } from './life-cycles/invoke-runner-terminal-output-life-cycle';
+} from './run-command.js';
+import { InvokeRunnerTerminalOutputLifeCycle } from './life-cycles/invoke-runner-terminal-output-life-cycle.js';
 import { performance } from 'perf_hooks';
-import { getOutputs } from './utils';
-import { loadRootEnvFiles } from '../utils/dotenv';
-import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle';
-import { TaskOrchestrator } from './task-orchestrator';
-import { createTaskHasher } from '../hasher/create-task-hasher';
+import { getOutputs } from './utils.js';
+import { loadRootEnvFiles } from '../utils/dotenv.js';
+import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle.js';
+import { TaskOrchestrator } from './task-orchestrator.js';
+import { createTaskHasher } from '../hasher/create-task-hasher.js';
 import type { ProjectGraph } from '../config/project-graph';
-import { daemonClient } from '../daemon/client/client';
-import { RunningTask } from './running-tasks/running-task';
-import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
+import { daemonClient } from '../daemon/client/client.js';
+import { RunningTask } from './running-tasks/running-task.js';
+import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle.js';
 
 /**
  * This function is deprecated. Do not use this

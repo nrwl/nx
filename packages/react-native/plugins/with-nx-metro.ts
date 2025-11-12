@@ -23,7 +23,7 @@ function getMetroConfig() {
 
 type MetroConfig = any; // We'll use any to avoid importing the type
 
-import { getResolveRequest } from './metro-resolver';
+import { getResolveRequest } from './metro-resolver.js';
 
 interface WithNxOptions {
   /**

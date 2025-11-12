@@ -8,10 +8,10 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { join } from 'path';
-import { addSwcConfig } from '../../utils/swc/add-swc-config';
-import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
-import { swcHelpersVersion } from '../../utils/versions';
-import { ConvertToSwcGeneratorSchema } from './schema';
+import { addSwcConfig } from '../../utils/swc/add-swc-config.js';
+import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies.js';
+import { swcHelpersVersion } from '../../utils/versions.js';
+import { ConvertToSwcGeneratorSchema } from './schema.js';
 
 export async function convertToSwcGenerator(
   tree: Tree,

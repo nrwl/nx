@@ -7,8 +7,8 @@
  */
 
 import ora from 'ora';
-import { colors } from './color';
-import { isTTY } from './tty';
+import { colors } from './color.js';
+import { isTTY } from './tty.js';
 
 export class Spinner {
   private readonly spinner: ora.Ora;

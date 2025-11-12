@@ -1,6 +1,6 @@
 import { stripIndents, type Tree } from '@nx/devkit';
-import { insertImport } from '../../../utils/insert-import';
-import { insertStatementAfterImports } from '../../../utils/insert-statement-after-imports';
+import { insertImport } from '../../../utils/insert-import.js';
+import { insertStatementAfterImports } from '../../../utils/insert-statement-after-imports.js';
 import type { ErrorBoundarySchema } from '../schema';
 
 export function addV2ErrorBoundary(tree: Tree, options: ErrorBoundarySchema) {

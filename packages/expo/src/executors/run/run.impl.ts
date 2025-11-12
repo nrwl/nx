@@ -5,9 +5,9 @@ import { existsSync } from 'node:fs';
 import { platform } from 'os';
 import { join, resolve as pathResolve } from 'path';
 
-import { ExpoRunOptions } from './schema';
-import { prebuildAsync } from '../prebuild/prebuild.impl';
-import { podInstall } from '../../utils/pod-install-task';
+import { ExpoRunOptions } from './schema.js';
+import { prebuildAsync } from '../prebuild/prebuild.impl.js';
+import { podInstall } from '../../utils/pod-install-task.js';
 
 export interface ExpoRunOutput {
   success: boolean;

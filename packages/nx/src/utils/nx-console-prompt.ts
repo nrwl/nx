@@ -1,11 +1,11 @@
 import { prompt } from 'enquirer';
 import { homedir } from 'os';
-import { output } from './output';
+import { output } from './output.js';
 import {
   installNxConsole,
   canInstallNxConsole,
   NxConsolePreferences,
-} from '../native';
+} from '../native/index.js';
 
 export async function ensureNxConsoleInstalled() {
   const preferences = new NxConsolePreferences(homedir());

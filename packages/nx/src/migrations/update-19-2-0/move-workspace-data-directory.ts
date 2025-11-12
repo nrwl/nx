@@ -1,4 +1,4 @@
-import { Tree } from '../../generators/tree';
+import { Tree } from '../../generators/tree.js';
 
 export default async function moveGraphCacheDirectory(tree: Tree) {
   updateGitIgnore(tree);

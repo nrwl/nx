@@ -1,4 +1,4 @@
-export * from './regex-filters';
-export * from './component-resolvers';
-export * from './load-compiler-cli';
-export { maxWorkers } from './utils';
+export * from './regex-filters.js';
+export * from './component-resolvers.js';
+export * from './load-compiler-cli.js';
+export { maxWorkers } from './utils.js';

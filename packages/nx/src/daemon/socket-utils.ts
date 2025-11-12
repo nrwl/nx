@@ -1,9 +1,9 @@
 import { unlinkSync } from 'fs';
 import { platform, tmpdir } from 'os';
 import { join, resolve } from 'path';
-import { getDaemonSocketDir, getSocketDir } from './tmp-dir';
-import { createSerializableError } from '../utils/serializable-error';
-import { isV8SerializerEnabled } from './is-v8-serializer-enabled';
+import { getDaemonSocketDir, getSocketDir } from './tmp-dir.js';
+import { createSerializableError } from '../utils/serializable-error.js';
+import { isV8SerializerEnabled } from './is-v8-serializer-enabled.js';
 import { serialize as v8_serialize } from 'v8';
 
 export const isWindows = platform() === 'win32';

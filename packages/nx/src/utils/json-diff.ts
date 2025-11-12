@@ -1,4 +1,4 @@
-import { Change } from '../project-graph/file-utils';
+import { Change } from '../project-graph/file-utils.js';
 
 export enum JsonDiffType {
   Deleted = 'JsonPropertyDeleted',

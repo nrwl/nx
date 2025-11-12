@@ -2,9 +2,9 @@ import { ExecutorContext } from '@nx/devkit';
 import { signalToCode } from '@nx/devkit/internal';
 import { join, resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
-import { ReactNativeBuildAndroidOptions } from './schema';
-import { chmodAndroidGradlewFiles } from '../../utils/chmod-android-gradle-files';
-import { getCliOptions } from '../../utils/get-cli-options';
+import { ReactNativeBuildAndroidOptions } from './schema.js';
+import { chmodAndroidGradlewFiles } from '../../utils/chmod-android-gradle-files.js';
+import { getCliOptions } from '../../utils/get-cli-options.js';
 
 export interface ReactNativeBuildOutput {
   success: boolean;

@@ -22,7 +22,7 @@ import dependencyChecks, {
 } from './rules/dependency-checks';
 
 // Resolve any custom rules that might exist in the current workspace
-import { workspaceRules } from './resolve-workspace-rules';
+import { workspaceRules } from './resolve-workspace-rules.js';
 
 const configs = {
   // eslintrc configs
@@ -38,28 +38,28 @@ const configs = {
   // flat configs
   // Note: Using getters here to avoid importing packages `angular-eslint` statically, which can lead to errors if not installed.
   'flat/base': flatBase,
-  get ['flat/typescript'](): typeof import('./flat-configs/typescript').default {
+  get ['flat/typescript'](): typeof import('./flat-configs/typescript.js').default {
     return require('./flat-configs/typescript').default;
   },
-  get ['flat/javascript'](): typeof import('./flat-configs/javascript').default {
+  get ['flat/javascript'](): typeof import('./flat-configs/javascript.js').default {
     return require('./flat-configs/javascript').default;
   },
-  get ['flat/react'](): typeof import('./flat-configs/react-tmp').default {
+  get ['flat/react'](): typeof import('./flat-configs/react-tmp.js').default {
     return require('./flat-configs/react-tmp').default;
   },
-  get ['flat/react-base'](): typeof import('./flat-configs/react-base').default {
+  get ['flat/react-base'](): typeof import('./flat-configs/react-base.js').default {
     return require('./flat-configs/react-base').default;
   },
-  get ['flat/react-typescript'](): typeof import('./flat-configs/react-typescript').default {
+  get ['flat/react-typescript'](): typeof import('./flat-configs/react-typescript.js').default {
     return require('./flat-configs/react-typescript').default;
   },
-  get ['flat/react-jsx'](): typeof import('./flat-configs/react-jsx').default {
+  get ['flat/react-jsx'](): typeof import('./flat-configs/react-jsx.js').default {
     return require('./flat-configs/react-jsx').default;
   },
-  get ['flat/angular'](): typeof import('./flat-configs/angular').default {
+  get ['flat/angular'](): typeof import('./flat-configs/angular.js').default {
     return require('./flat-configs/angular').default;
   },
-  get ['flat/angular-template'](): typeof import('./flat-configs/angular-template').default {
+  get ['flat/angular-template'](): typeof import('./flat-configs/angular-template.js').default {
     return require('./flat-configs/angular-template').default;
   },
 };

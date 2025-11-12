@@ -3,7 +3,7 @@ import { existsSync } from 'fs';
 import { spawn } from 'child_process';
 import { logger, readJsonFile } from '@nx/devkit';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { MavenAnalysisData, MavenPluginOptions } from './types';
+import { MavenAnalysisData, MavenPluginOptions } from './types.js';
 
 /**
  * Detect Maven executable: mvnd > mvnw > mvn

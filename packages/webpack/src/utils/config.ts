@@ -7,7 +7,7 @@ import {
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { readNxJson } from 'nx/src/config/configuration';
 import { Configuration } from 'webpack';
-import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
+import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema.js';
 
 export const nxWebpackComposablePlugin = 'nxWebpackComposablePlugin';
 

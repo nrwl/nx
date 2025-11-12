@@ -1,5 +1,5 @@
-import { output } from '../../utils/output';
-import { startServer } from './server';
+import { output } from '../../utils/output.js';
+import { startServer } from './server.js';
 import * as process from 'process';
 
 (async () => {

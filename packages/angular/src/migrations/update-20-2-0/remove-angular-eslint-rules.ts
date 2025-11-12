@@ -5,7 +5,7 @@ import {
   lintConfigHasOverride,
   updateOverrideInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import { getProjectsFilteredByDependencies } from '../utils/projects';
+import { getProjectsFilteredByDependencies } from '../utils/projects.js';
 
 export const rulesToRemove = [
   '@angular-eslint/no-host-metadata-property',

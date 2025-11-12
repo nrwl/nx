@@ -1,4 +1,4 @@
-import { output } from './output';
+import { output } from './output.js';
 
 export function printSocialInformation() {
   output.success({

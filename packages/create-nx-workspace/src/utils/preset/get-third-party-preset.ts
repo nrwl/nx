@@ -1,5 +1,5 @@
-import { validateNpmPackage } from '../validate-npm-package';
-import { isKnownPreset } from './preset';
+import { validateNpmPackage } from '../validate-npm-package.js';
+import { isKnownPreset } from './preset.js';
 
 /**
  * This function is used to check if a preset is a third party preset.

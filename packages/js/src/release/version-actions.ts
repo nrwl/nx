@@ -12,10 +12,10 @@ import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { AfterAllProjectsVersioned, VersionActions } from 'nx/release';
 import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
-import { parseRegistryOptions } from '../utils/npm-config';
-import { updateLockFile } from './utils/update-lock-file';
+import { parseRegistryOptions } from '../utils/npm-config.js';
+import { updateLockFile } from './utils/update-lock-file.js';
 import chalk = require('chalk');
-import { isMatchingDependencyRange, isValidRange } from './utils/semver';
+import { isMatchingDependencyRange, isValidRange } from './utils/semver.js';
 
 export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
   cwd: string,

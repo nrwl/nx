@@ -10,13 +10,13 @@ import {
   getAllDependencies,
   getPackageJson,
   getProductionDependencies,
-} from '../utils/package-json-utils';
-import { readProjectGraph } from '../utils/project-graph-utils';
+} from '../utils/package-json-utils.js';
+import { readProjectGraph } from '../utils/project-graph-utils.js';
 import {
   findProject,
   getParserServices,
   getSourceFilePath,
-} from '../utils/runtime-lint-utils';
+} from '../utils/runtime-lint-utils.js';
 
 export type Options = [
   {

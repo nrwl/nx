@@ -9,8 +9,8 @@
 
 import { resolve } from 'path';
 import * as ts from 'typescript';
-import { loadEsmModule } from './module-loader';
-import { getNgPackagrVersionInfo } from './ng-packagr/ng-packagr-version';
+import { loadEsmModule } from './module-loader.js';
+import { getNgPackagrVersionInfo } from './ng-packagr/ng-packagr-version.js';
 
 async function readDefaultTsConfig(fileName: string) {
   const ngPackagrVersion = getNgPackagrVersionInfo();

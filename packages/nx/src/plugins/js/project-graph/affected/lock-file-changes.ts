@@ -1,13 +1,13 @@
-import { readNxJson } from '../../../../config/configuration';
-import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
+import { readNxJson } from '../../../../config/configuration.js';
+import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models.js';
 import {
   FileChange,
   WholeFileChange,
-} from '../../../../project-graph/file-utils';
-import { isJsonChange, JsonChange } from '../../../../utils/json-diff';
-import { jsPluginConfig as readJsPluginConfig } from '../../utils/config';
-import { findMatchingProjects } from '../../../../utils/find-matching-projects';
-import { ProjectGraphProjectNode } from '../../../../config/project-graph';
+} from '../../../../project-graph/file-utils.js';
+import { isJsonChange, JsonChange } from '../../../../utils/json-diff.js';
+import { jsPluginConfig as readJsPluginConfig } from '../../utils/config.js';
+import { findMatchingProjects } from '../../../../utils/find-matching-projects.js';
+import { ProjectGraphProjectNode } from '../../../../config/project-graph.js';
 
 export const PNPM_LOCK_FILES = ['pnpm-lock.yaml', 'pnpm-lock.yml'];
 

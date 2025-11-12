@@ -11,7 +11,7 @@ import {
 import { getRootTsConfigPathInTree } from '@nx/js';
 import { basename } from 'path';
 import type { Logger, ProjectMigrationInfo } from '../../utilities';
-import { BuilderMigrator } from './builder.migrator';
+import { BuilderMigrator } from './builder.migrator.js';
 
 export class AngularDevkitKarmaMigrator extends BuilderMigrator {
   constructor(

@@ -1,28 +1,28 @@
 import { env as appendLocalEnv } from 'npm-run-path';
-import { combineOptionsForExecutor, Schema } from '../../utils/params';
-import { handleErrors } from '../../utils/handle-errors';
-import { printHelp } from '../../utils/print-help';
-import { NxJsonConfiguration } from '../../config/nx-json';
+import { combineOptionsForExecutor, Schema } from '../../utils/params.js';
+import { handleErrors } from '../../utils/handle-errors.js';
+import { printHelp } from '../../utils/print-help.js';
+import { NxJsonConfiguration } from '../../config/nx-json.js';
 import { relative } from 'path';
-import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
-import { Executor, ExecutorContext } from '../../config/misc-interfaces';
-import { TaskGraph } from '../../config/task-graph';
-import { serializeOverridesIntoCommandLine } from '../../utils/serialize-overrides-into-command-line';
+import { ProjectsConfigurations } from '../../config/workspace-json-project-json.js';
+import { Executor, ExecutorContext } from '../../config/misc-interfaces.js';
+import { TaskGraph } from '../../config/task-graph.js';
+import { serializeOverridesIntoCommandLine } from '../../utils/serialize-overrides-into-command-line.js';
 import {
   readCachedProjectGraph,
   readProjectsConfigurationFromProjectGraph,
-} from '../../project-graph/project-graph';
-import { ProjectGraph } from '../../config/project-graph';
-import { readNxJson } from '../../config/configuration';
+} from '../../project-graph/project-graph.js';
+import { ProjectGraph } from '../../config/project-graph.js';
+import { readNxJson } from '../../config/configuration.js';
 import {
   getLastValueFromAsyncIterableIterator,
   isAsyncIterator,
-} from '../../utils/async-iterator';
-import { getExecutorInformation, parseExecutor } from './executor-utils';
+} from '../../utils/async-iterator.js';
+import { getExecutorInformation, parseExecutor } from './executor-utils.js';
 import {
   createPseudoTerminal,
   PseudoTerminal,
-} from '../../tasks-runner/pseudo-terminal';
+} from '../../tasks-runner/pseudo-terminal.js';
 import { exec } from 'child_process';
 
 export interface Target {
@@ -210,7 +210,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   } else {
     require('../../adapter/compat');
     const observable = await (
-      await import('../../adapter/ngcli-adapter')
+      await import('../../adapter/ngcli-adapter.js')
     ).scheduleTarget(
       root,
       {
@@ -222,7 +222,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
       },
       isVerbose
     );
-    const { eachValueFrom } = await import('../../adapter/rxjs-for-await');
+    const { eachValueFrom } = await import('../../adapter/rxjs-for-await.js');
     return eachValueFrom(observable as any);
   }
 }

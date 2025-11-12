@@ -6,8 +6,8 @@ import {
   addProviderToAppConfig,
   addProviderToBootstrapApplication,
   addProviderToModule,
-} from '../../../utils/nx-devkit/ast-utils';
-import { addProviderToRoute } from '../../../utils/nx-devkit/route-utils';
+} from '../../../utils/nx-devkit/ast-utils.js';
+import { addProviderToRoute } from '../../../utils/nx-devkit/route-utils.js';
 import type { NormalizedNgRxFeatureStoreGeneratorOptions } from './normalize-options';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { insertImport } from '@nx/js';

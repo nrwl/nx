@@ -1,1 +1,1 @@
-export * from './update-ssr-setup';
+export * from './update-ssr-setup.js';

@@ -7,23 +7,23 @@ import {
 } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { Tree } from '../../generators/tree';
-import { readJson, updateJson, writeJson } from '../../generators/utils/json';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
+import { Tree } from '../../generators/tree.js';
+import { readJson, updateJson, writeJson } from '../../generators/utils/json.js';
 import {
   canInstallNxConsoleForEditor,
   installNxConsoleForEditor,
   isEditorInstalled,
   SupportedEditor,
-} from '../../native';
+} from '../../native/index.js';
 import {
   CLIErrorMessageConfig,
   CLINoteMessageConfig,
-} from '../../utils/output';
-import { installPackageToTmp } from '../../utils/package-json';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
-import { agentsMdPath, codexConfigTomlPath, geminiMdPath } from '../constants';
-import { Agent, supportedAgents } from '../utils';
+} from '../../utils/output.js';
+import { installPackageToTmp } from '../../utils/package-json.js';
+import { ensurePackageHasProvenance } from '../../utils/provenance.js';
+import { agentsMdPath, codexConfigTomlPath, geminiMdPath } from '../constants.js';
+import { Agent, supportedAgents } from '../utils.js';
 import {
   getAgentRulesWrapped,
   nxMcpTomlConfig,
@@ -32,11 +32,11 @@ import {
   nxRulesMarkerCommentEnd,
   nxRulesMarkerCommentStart,
   rulesRegex,
-} from '../constants';
+} from '../constants.js';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
   SetupAiAgentsGeneratorSchema,
-} from './schema';
+} from './schema.js';
 
 export type ModificationResults = {
   messages: CLINoteMessageConfig[];

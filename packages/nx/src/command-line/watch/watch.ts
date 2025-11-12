@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
-import { ChangedFile, daemonClient } from '../../daemon/client/client';
-import { output } from '../../utils/output';
+import { ChangedFile, daemonClient } from '../../daemon/client/client.js';
+import { output } from '../../utils/output.js';
 
 export interface WatchArguments {
   projects?: string[];

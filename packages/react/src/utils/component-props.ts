@@ -1,6 +1,6 @@
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import type * as ts from 'typescript';
-import { parseComponentPropsInfo } from './ast-utils';
+import { parseComponentPropsInfo } from './ast-utils.js';
 
 let tsModule: typeof import('typescript');
 

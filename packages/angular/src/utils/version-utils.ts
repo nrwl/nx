@@ -4,9 +4,9 @@ import type {
   PackageLatestVersions,
   PackageVersionNames,
 } from './backward-compatible-versions';
-import { backwardCompatibleVersions } from './backward-compatible-versions';
+import { backwardCompatibleVersions } from './backward-compatible-versions.js';
 import * as versions from './versions';
-import { angularVersion } from './versions';
+import { angularVersion } from './versions.js';
 
 export function getPkgVersionForAngularMajorVersion(
   pkgVersionName: PackageVersionNames,

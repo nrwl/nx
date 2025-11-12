@@ -4,7 +4,7 @@ import {
   pleaseUpgrade,
   storybookConfigExistsCheck,
   storybookMajorVersion,
-} from '../../utils/utilities';
+} from '../../utils/utilities.js';
 import type { CLIOptions } from 'storybook/internal/types';
 import { gte } from 'semver';
 

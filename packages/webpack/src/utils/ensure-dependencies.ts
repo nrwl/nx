@@ -11,7 +11,7 @@ import {
   svgrWebpackVersion,
   swcLoaderVersion,
   tsLibVersion,
-} from './versions';
+} from './versions.js';
 
 export type EnsureDependenciesOptions = {
   compiler?: 'swc' | 'tsc';

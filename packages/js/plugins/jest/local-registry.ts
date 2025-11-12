@@ -1,1 +1,1 @@
-export * from '../../src/plugins/jest/start-local-registry';
+export * from '../../src/plugins/jest/start-local-registry.js';

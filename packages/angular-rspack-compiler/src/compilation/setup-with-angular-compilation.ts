@@ -3,13 +3,13 @@ import {
   createAngularCompilation,
   AngularCompilation,
   SourceFileCache,
-} from '../models';
+} from '../models/index.js';
 import {
   setupCompilation,
   styleTransform,
   SetupCompilationOptions,
   StylesheetTransformResult,
-} from './setup-compilation';
+} from './setup-compilation.js';
 
 export async function setupCompilationWithAngularCompilation(
   config: Pick<RsbuildConfig, 'source'>,

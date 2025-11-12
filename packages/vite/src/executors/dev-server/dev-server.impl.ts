@@ -7,15 +7,15 @@ import {
   getNxTargetOptions,
   getViteServerOptions,
   normalizeViteConfigFilePath,
-} from '../../utils/options-utils';
-import { ViteDevServerExecutorOptions } from './schema';
-import { ViteBuildExecutorOptions } from '../build/schema';
+} from '../../utils/options-utils.js';
+import { ViteDevServerExecutorOptions } from './schema.js';
+import { ViteBuildExecutorOptions } from '../build/schema.js';
 import {
   createBuildableTsConfig,
   loadViteDynamicImport,
-} from '../../utils/executor-utils';
+} from '../../utils/executor-utils.js';
 import { relative } from 'path';
-import { getBuildExtraArgs } from '../build/build.impl';
+import { getBuildExtraArgs } from '../build/build.impl.js';
 
 export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,

@@ -3,9 +3,9 @@ import type {
   NormalizedNxAppRspackPluginOptions,
   NxAppRspackPluginOptions,
 } from '../utils/models';
-import { normalizeOptions } from '../utils/plugins/normalize-options';
-import { applyBaseConfig } from '../utils/apply-base-config';
-import { applyWebConfig } from '../utils/apply-web-config';
+import { normalizeOptions } from '../utils/plugins/normalize-options.js';
+import { applyBaseConfig } from '../utils/apply-base-config.js';
+import { applyWebConfig } from '../utils/apply-web-config.js';
 
 /**
  * This plugin provides features to build Node and Web applications.

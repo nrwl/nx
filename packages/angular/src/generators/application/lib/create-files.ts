@@ -4,14 +4,14 @@ import {
   createNxCloudOnboardingURLForWelcomeApp,
   getNxCloudAppOnBoardingUrl,
 } from 'nx/src/nx-cloud/utilities/onboarding';
-import { UnitTestRunner } from '../../../utils/test-runners';
+import { UnitTestRunner } from '../../../utils/test-runners.js';
 import {
   getComponentType,
   getModuleTypeSeparator,
-} from '../../utils/artifact-types';
-import { validateHtmlSelector } from '../../utils/selector';
-import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+} from '../../utils/artifact-types.js';
+import { validateHtmlSelector } from '../../utils/selector.js';
+import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig.js';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { NormalizedSchema } from './normalized-schema';
 
 export async function createFiles(

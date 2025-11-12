@@ -3,7 +3,7 @@ import { resolve } from 'path';
 import {
   normalizeAssets,
   normalizeFileReplacements,
-} from '../../../plugins/nx-webpack-plugin/lib/normalize-options';
+} from '../../../plugins/nx-webpack-plugin/lib/normalize-options.js';
 import type {
   NormalizedWebpackExecutorOptions,
   WebpackExecutorOptions,

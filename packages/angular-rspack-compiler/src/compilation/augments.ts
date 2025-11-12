@@ -27,7 +27,7 @@ import * as ts from 'typescript';
 import { type CompilerHost as AngularCompilerHost } from '@angular/compiler-cli';
 import { normalize } from 'path';
 import { createHash } from 'node:crypto';
-import { InlineStyleLanguage } from '../models';
+import { InlineStyleLanguage } from '../models/index.js';
 
 /**
  *

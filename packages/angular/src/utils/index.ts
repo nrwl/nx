@@ -15,6 +15,6 @@ export {
   addProviderToComponent,
   addProviderToModule,
   addViewProviderToComponent,
-} from './nx-devkit/ast-utils';
+} from './nx-devkit/ast-utils.js';
 
-export { addRoute, addProviderToRoute } from './nx-devkit/route-utils';
+export { addRoute, addProviderToRoute } from './nx-devkit/route-utils.js';

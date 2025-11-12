@@ -1,8 +1,8 @@
 import { performance } from 'perf_hooks';
-import { serializeResult } from '../socket-utils';
-import { serverLogger } from './logger';
-import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
-import { HandlerResult } from './server';
+import { serializeResult } from '../socket-utils.js';
+import { serverLogger } from './logger.js';
+import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation.js';
+import { HandlerResult } from './server.js';
 
 export async function handleRequestProjectGraph(): Promise<HandlerResult> {
   try {

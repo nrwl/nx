@@ -1,2 +1,2 @@
-export * from './add-v2-error-boundary';
-export * from './normalize-options';
+export * from './add-v2-error-boundary.js';
+export * from './normalize-options.js';

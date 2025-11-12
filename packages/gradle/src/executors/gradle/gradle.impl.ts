@@ -1,12 +1,12 @@
 import { ExecutorContext, workspaceRoot } from '@nx/devkit';
-import { GradleExecutorSchema } from './schema';
+import { GradleExecutorSchema } from './schema.js';
 import {
   findGradlewFile,
   getCustomGradleExecutableDirectoryFromPlugin,
-} from '../../utils/exec-gradle';
+} from '../../utils/exec-gradle.js';
 import { dirname, join } from 'node:path';
 import runCommandsImpl from 'nx/src/executors/run-commands/run-commands.impl';
-import { getExcludeTasks } from './get-exclude-task';
+import { getExcludeTasks } from './get-exclude-task.js';
 
 export default async function gradleExecutor(
   options: GradleExecutorSchema,

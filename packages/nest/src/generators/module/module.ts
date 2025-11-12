@@ -3,7 +3,7 @@ import type {
   NestGeneratorWithLanguageOption,
   NormalizedOptions,
 } from '../utils';
-import { normalizeOptions, runNestSchematic } from '../utils';
+import { normalizeOptions, runNestSchematic } from '../utils/index.js';
 
 export type ModuleGeneratorOptions = NestGeneratorWithLanguageOption & {
   module?: string;

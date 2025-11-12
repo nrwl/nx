@@ -2,17 +2,17 @@ import { prompt } from 'enquirer';
 import { readdirSync, readFileSync, statSync } from 'fs';
 import ignore = require('ignore');
 import { join, relative } from 'path';
-import { InitArgs } from '../init-v1';
-import { readJsonFile } from '../../../utils/fileutils';
-import { output } from '../../../utils/output';
+import { InitArgs } from '../init-v1.js';
+import { readJsonFile } from '../../../utils/fileutils.js';
+import { output } from '../../../utils/output.js';
 import {
   addDepsToPackageJson,
   createNxJsonFile,
   initCloud,
   runInstall,
   updateGitIgnore,
-} from './utils';
-import { connectExistingRepoToNxCloudPrompt } from '../../nx-cloud/connect/connect-to-nx-cloud';
+} from './utils.js';
+import { connectExistingRepoToNxCloudPrompt } from '../../nx-cloud/connect/connect-to-nx-cloud.js';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'> & {
   legacy?: boolean;

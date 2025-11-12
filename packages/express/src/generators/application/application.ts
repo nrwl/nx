@@ -15,8 +15,8 @@ import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 import { tslibVersion } from '@nx/node/src/utils/versions';
 import { join } from 'path';
-import { nxVersion } from '../../utils/versions';
-import { initGenerator } from '../init/init';
+import { nxVersion } from '../../utils/versions.js';
+import { initGenerator } from '../init/init.js';
 import type { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {

@@ -3,7 +3,7 @@ import { versions } from '@nx/jest/src/utils/versions';
 import {
   configPluginsDetoxVersion,
   testingLibraryJestDom,
-} from '../../../utils/versions';
+} from '../../../utils/versions.js';
 import type { NormalizedSchema } from './normalize-options';
 
 export function ensureDependencies(tree: Tree, options: NormalizedSchema) {

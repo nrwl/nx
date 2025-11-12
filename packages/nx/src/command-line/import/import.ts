@@ -1,15 +1,15 @@
 import { isAbsolute, join, relative, resolve } from 'path';
 import { existsSync, promises as fsp } from 'node:fs';
 import * as chalk from 'chalk';
-import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
+import { cloneFromUpstream, GitRepository } from '../../utils/git-utils.js';
 import { stat, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
 import { prompt } from 'enquirer';
-import { output } from '../../utils/output';
+import { output } from '../../utils/output.js';
 const createSpinner = require('ora');
-import { detectPlugins } from '../init/init-v2';
-import { readNxJson } from '../../config/nx-json';
-import { workspaceRoot } from '../../utils/workspace-root';
+import { detectPlugins } from '../init/init-v2.js';
+import { readNxJson } from '../../config/nx-json.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 import {
   addPackagePathToWorkspaces,
   detectPackageManager,
@@ -18,21 +18,21 @@ import {
   isWorkspacesEnabled,
   PackageManager,
   PackageManagerCommands,
-} from '../../utils/package-manager';
-import { resetWorkspaceContext } from '../../utils/workspace-context';
-import { runInstall } from '../init/implementation/utils';
-import { getBaseRef } from '../../utils/command-line-utils';
-import { prepareSourceRepo } from './utils/prepare-source-repo';
-import { mergeRemoteSource } from './utils/merge-remote-source';
+} from '../../utils/package-manager.js';
+import { resetWorkspaceContext } from '../../utils/workspace-context.js';
+import { runInstall } from '../init/implementation/utils.js';
+import { getBaseRef } from '../../utils/command-line-utils.js';
+import { prepareSourceRepo } from './utils/prepare-source-repo.js';
+import { mergeRemoteSource } from './utils/merge-remote-source.js';
 import { minimatch } from 'minimatch';
 import {
   configurePlugins,
   installPluginPackages,
-} from '../init/configure-plugins';
+} from '../init/configure-plugins.js';
 import {
   checkCompatibleWithPlugins,
   updatePluginsInNxJson,
-} from '../init/implementation/check-compatible-with-plugins';
+} from '../init/implementation/check-compatible-with-plugins.js';
 
 const importRemoteName = '__tmp_nx_import__';
 

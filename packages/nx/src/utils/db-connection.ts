@@ -1,5 +1,5 @@
-import { closeDbConnection, connectToNxDb, ExternalObject } from '../native';
-import { workspaceDataDirectory } from './cache-directory';
+import { closeDbConnection, connectToNxDb, ExternalObject } from '../native/index.js';
+import { workspaceDataDirectory } from './cache-directory.js';
 import { version as NX_VERSION } from '../../package.json';
 
 const dbConnectionMap = new Map<string, ExternalObject<any>>();

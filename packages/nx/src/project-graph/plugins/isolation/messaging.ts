@@ -10,7 +10,7 @@ import type {
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type { Serializable } from 'child_process';
 import type { Socket } from 'net';
-import { MESSAGE_END_SEQ } from '../../../utils/consume-messages-from-socket';
+import { MESSAGE_END_SEQ } from '../../../utils/consume-messages-from-socket.js';
 
 export interface PluginWorkerLoadMessage {
   type: 'load';

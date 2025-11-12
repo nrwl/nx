@@ -13,8 +13,8 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { ConvertToFlatConfigGeneratorSchema } from './schema';
-import { findEslintFile } from '../utils/eslint-file';
+import { ConvertToFlatConfigGeneratorSchema } from './schema.js';
+import { findEslintFile } from '../utils/eslint-file.js';
 import { join } from 'path';
 import {
   eslint9__eslintVersion,
@@ -22,9 +22,9 @@ import {
   eslintConfigPrettierVersion,
   eslintrcVersion,
   eslintVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 import { ESLint } from 'eslint';
-import { convertEslintJsonToFlatConfig } from './converters/json-converter';
+import { convertEslintJsonToFlatConfig } from './converters/json-converter.js';
 
 export async function convertToFlatConfigGenerator(
   tree: Tree,

@@ -8,9 +8,9 @@ import {
 import { rmSync } from 'fs';
 import type { BatchExecutorTaskResult } from 'nx/src/config/misc-interfaces';
 import { getLastValueFromAsyncIterableIterator } from 'nx/src/utils/async-iterator';
-import { updatePackageJson } from '../../utils/package-json/update-package-json';
+import { updatePackageJson } from '../../utils/package-json/update-package-json.js';
 import type { ExecutorOptions } from '../../utils/schema';
-import { determineModuleFormatFromTsConfig } from './tsc.impl';
+import { determineModuleFormatFromTsConfig } from './tsc.impl.js';
 import {
   compileTypescriptSolution,
   getProcessedTaskTsConfigs,
@@ -18,15 +18,15 @@ import {
   TypescriptCompilationResult,
   TypescriptInMemoryTsConfig,
   TypescriptProjectContext,
-} from './lib';
+} from './lib/index.js';
 import {
   createTaskInfoPerTsConfigMap,
   normalizeTasksOptions,
   TaskInfo,
   watchTaskProjectsFileChangesForAssets,
   watchTaskProjectsPackageJsonFileChanges,
-} from './lib/batch';
-import { createEntryPoints } from '../../utils/package-json/create-entry-points';
+} from './lib/batch/index.js';
+import { createEntryPoints } from '../../utils/package-json/create-entry-points.js';
 
 export async function* tscBatchExecutor(
   taskGraph: TaskGraph,

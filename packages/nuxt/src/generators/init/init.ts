@@ -1,9 +1,9 @@
 import { createProjectGraphAsync, GeneratorCallback, Tree } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 
-import { createNodesV2 } from '../../plugins/plugin';
-import { InitSchema } from './schema';
-import { updateDependencies } from './lib/utils';
+import { createNodesV2 } from '../../plugins/plugin.js';
+import { InitSchema } from './schema.js';
+import { updateDependencies } from './lib/utils.js';
 
 export async function nuxtInitGenerator(host: Tree, schema: InitSchema) {
   await addPlugin(

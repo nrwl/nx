@@ -1,6 +1,6 @@
 import { GeneratorCallback, joinPathFragments, Tree } from '@nx/devkit';
 import { lintProjectGenerator } from '@nx/eslint';
-import { NormalizedSchema } from './normalized-schema';
+import { NormalizedSchema } from './normalized-schema.js';
 
 export async function addLintingToApplication(
   tree: Tree,

@@ -1,8 +1,8 @@
 import { formatFiles, Tree } from '@nx/devkit';
-import { insertImport } from '../../utils/insert-import';
-import { insertStatementAfterImports } from '../../utils/insert-statement-after-imports';
-import { insertStatementInDefaultFunction } from '../../utils/insert-statement-in-default-function';
-import { LoaderSchema } from './schema';
+import { insertImport } from '../../utils/insert-import.js';
+import { insertStatementAfterImports } from '../../utils/insert-statement-after-imports.js';
+import { insertStatementInDefaultFunction } from '../../utils/insert-statement-in-default-function.js';
+import { LoaderSchema } from './schema.js';
 
 export default async function (tree: Tree, schema: LoaderSchema) {
   const routeFilePath = schema.path;

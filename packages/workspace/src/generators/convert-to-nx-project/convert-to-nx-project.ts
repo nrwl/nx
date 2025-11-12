@@ -7,9 +7,9 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { join } from 'path';
-import { Schema } from './schema';
+import { Schema } from './schema.js';
 import { toNewFormat, toOldFormat } from 'nx/src/adapter/angular-json';
-import { output } from '../../utils/output';
+import { output } from '../../utils/output.js';
 
 export async function validateSchema(schema: Schema, configName: string) {
   if (schema.project && schema.all) {

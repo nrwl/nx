@@ -1,9 +1,9 @@
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { findMatchingProjects } from './find-matching-projects';
-import { output } from './output';
-import { ProjectGraphProjectNode } from '../config/project-graph';
-import { WorkspaceValidityError } from '../devkit-internals';
+import { ProjectConfiguration } from '../config/workspace-json-project-json.js';
+import { NxJsonConfiguration } from '../config/nx-json.js';
+import { findMatchingProjects } from './find-matching-projects.js';
+import { output } from './output.js';
+import { ProjectGraphProjectNode } from '../config/project-graph.js';
+import { WorkspaceValidityError } from '../devkit-internals.js';
 
 export function assertWorkspaceValidity(
   projects: Record<string, ProjectConfiguration>,

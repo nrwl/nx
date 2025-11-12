@@ -4,8 +4,8 @@ import {
   joinPathFragments,
   type Tree,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
-import { versions } from './version-utils';
+import { nxVersion } from '../../utils/versions.js';
+import { versions } from './version-utils.js';
 
 export type AddJestOptions = {
   name: string;

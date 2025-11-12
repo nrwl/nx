@@ -11,16 +11,16 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { relative } from 'path';
-import { nxVersion } from '../../utils/versions';
-import { componentTestGenerator } from '../component-test/component-test';
+import { nxVersion } from '../../utils/versions.js';
+import { componentTestGenerator } from '../component-test/component-test.js';
 import {
   getComponentsInfo,
   getStandaloneComponentsInfo,
-} from '../utils/storybook-ast/component-info';
-import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
-import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
-import { updateAppEditorTsConfigExcludedFiles } from '../utils/update-app-editor-tsconfig-excluded-files';
-import { CypressComponentConfigSchema } from './schema';
+} from '../utils/storybook-ast/component-info.js';
+import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point.js';
+import { getModuleFilePaths } from '../utils/storybook-ast/module-info.js';
+import { updateAppEditorTsConfigExcludedFiles } from '../utils/update-app-editor-tsconfig-excluded-files.js';
+import { CypressComponentConfigSchema } from './schema.js';
 
 /**
  * This is for cypress built in component testing, if you want to test with

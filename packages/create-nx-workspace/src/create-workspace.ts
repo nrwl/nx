@@ -1,22 +1,22 @@
-import { createEmptyWorkspace } from './create-empty-workspace';
-import { createPreset } from './create-preset';
-import { createSandbox } from './create-sandbox';
-import { CreateWorkspaceOptions } from './create-workspace-options';
-import { setupCI } from './utils/ci/setup-ci';
-import { mapErrorToBodyLines } from './utils/error-utils';
+import { createEmptyWorkspace } from './create-empty-workspace.js';
+import { createPreset } from './create-preset.js';
+import { createSandbox } from './create-sandbox.js';
+import { CreateWorkspaceOptions } from './create-workspace-options.js';
+import { setupCI } from './utils/ci/setup-ci.js';
+import { mapErrorToBodyLines } from './utils/error-utils.js';
 import {
   initializeGitRepo,
   pushToGitHub,
   VcsPushStatus,
-} from './utils/git/git';
+} from './utils/git/git.js';
 import {
   createNxCloudOnboardingUrl,
   getNxCloudInfo,
   readNxCloudToken,
-} from './utils/nx/nx-cloud';
-import { output } from './utils/output';
-import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
-import { Preset } from './utils/preset/preset';
+} from './utils/nx/nx-cloud.js';
+import { output } from './utils/output.js';
+import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset.js';
+import { Preset } from './utils/preset/preset.js';
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
   preset: string,

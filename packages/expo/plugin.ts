@@ -2,4 +2,4 @@ export {
   createNodes,
   createNodesV2,
   ExpoPluginOptions,
-} from './plugins/plugin';
+} from './plugins/plugin.js';

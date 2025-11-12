@@ -1,6 +1,6 @@
 import { workspaceRoot } from '@nx/devkit';
 import { Configuration } from '@rspack/core';
-import { isNxRspackComposablePlugin } from './config';
+import { isNxRspackComposablePlugin } from './config.js';
 import { readNxJsonFromDisk } from 'nx/src/devkit-internals';
 
 /**

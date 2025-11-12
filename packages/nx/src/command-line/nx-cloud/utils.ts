@@ -1,7 +1,7 @@
-import { verifyOrUpdateNxCloudClient } from '../../nx-cloud/update-manager';
-import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options';
-import { handleErrors } from '../../utils/handle-errors';
-import { findAncestorNodeModules } from '../../nx-cloud/resolution-helpers';
+import { verifyOrUpdateNxCloudClient } from '../../nx-cloud/update-manager.js';
+import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options.js';
+import { handleErrors } from '../../utils/handle-errors.js';
+import { findAncestorNodeModules } from '../../nx-cloud/resolution-helpers.js';
 
 export async function executeNxCloudCommand(
   commandName: string,

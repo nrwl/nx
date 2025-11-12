@@ -9,10 +9,10 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { deduceDefaultBase } from '../../utilities/default-base';
+import { deduceDefaultBase } from '../../utilities/default-base.js';
 import { join } from 'path';
 import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
-import { isUsingTsSolutionSetup } from '../../utilities/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '../../utilities/typescript/ts-solution-setup.js';
 
 function getNxCloudRecordCommand(
   ci: Schema['ci'],

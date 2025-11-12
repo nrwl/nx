@@ -1,6 +1,6 @@
 import * as pc from 'picocolors';
 import { logger, Tree } from '@nx/devkit';
-import { NormalizedSchema, Schema } from '../schema';
+import { NormalizedSchema, Schema } from '../schema.js';
 
 export function showPossibleWarnings(
   tree: Tree,

@@ -1,9 +1,9 @@
-import { ProjectGraphProjectNode } from '../../../../config/project-graph';
-import { CreateDependenciesContext } from '../../../../project-graph/plugins';
-import { RawProjectGraphDependency } from '../../../../project-graph/project-graph-builder';
-import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
-import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
-import { TargetProjectLocator } from './target-project-locator';
+import { ProjectGraphProjectNode } from '../../../../config/project-graph.js';
+import { CreateDependenciesContext } from '../../../../project-graph/plugins/index.js';
+import { RawProjectGraphDependency } from '../../../../project-graph/project-graph-builder.js';
+import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies.js';
+import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies.js';
+import { TargetProjectLocator } from './target-project-locator.js';
 
 export function buildExplicitDependencies(
   jsPluginConfig: {

@@ -1,5 +1,5 @@
-import { CreateNodesContextV2, CreateNodesResult } from './public-api';
-import { AggregateCreateNodesError } from '../error-types';
+import { CreateNodesContextV2, CreateNodesResult } from './public-api.js';
+import { AggregateCreateNodesError } from '../error-types.js';
 export async function createNodesFromFiles<T = unknown>(
   createNodes: (
     projectConfigurationFile: string,

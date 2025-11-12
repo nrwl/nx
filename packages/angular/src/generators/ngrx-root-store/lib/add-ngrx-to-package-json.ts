@@ -1,8 +1,8 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { addDependenciesToPackageJson } from '@nx/devkit';
 import { gte } from 'semver';
-import { versions } from '../../utils/version-utils';
-import { NormalizedNgRxRootStoreGeneratorOptions } from './normalize-options';
+import { versions } from '../../utils/version-utils.js';
+import { NormalizedNgRxRootStoreGeneratorOptions } from './normalize-options.js';
 
 export function addNgRxToPackageJson(
   tree: Tree,

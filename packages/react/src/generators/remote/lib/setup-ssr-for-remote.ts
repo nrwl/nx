@@ -8,7 +8,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 
-import { NormalizedSchema } from '../../application/schema';
+import { NormalizedSchema } from '../../application/schema.js';
 import type { Schema } from '../schema';
 import {
   corsVersion,
@@ -16,11 +16,11 @@ import {
   isbotVersion,
   moduleFederationNodeVersion,
   typesExpressVersion,
-} from '../../../utils/versions';
+} from '../../../utils/versions.js';
 import {
   createNxRspackPluginOptions,
   getDefaultTemplateVariables,
-} from '../../application/lib/create-application-files';
+} from '../../application/lib/create-application-files.js';
 
 export async function setupSsrForRemote(
   tree: Tree,

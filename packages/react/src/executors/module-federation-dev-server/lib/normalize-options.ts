@@ -6,7 +6,7 @@ import {
 import {
   ModuleFederationDevServerOptions,
   NormalizedModuleFederationDevServerOptions,
-} from '../schema';
+} from '../schema.js';
 
 export function getBuildOptions(buildTarget: string, context: ExecutorContext) {
   const target = parseTargetString(buildTarget, context);

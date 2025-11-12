@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, offsetFromRoot } from '@nx/devkit';
 import type { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { processGenericOptions } from './process-generic-options';
+import { processGenericOptions } from './process-generic-options.js';
 
 export function processExportOptions(
   tree: Tree,

@@ -17,7 +17,7 @@ import {
   analyzeKarmaConfig,
   type KarmaConfigAnalysis,
   type KarmaConfigValue,
-} from './karma-config-analyzer';
+} from './karma-config-analyzer.js';
 
 /**
  * Represents the difference between two Karma configurations.

@@ -1,2 +1,2 @@
-export * from './normalize-options';
-export * from './start-dev-remotes';
+export * from './normalize-options.js';
+export * from './start-dev-remotes.js';

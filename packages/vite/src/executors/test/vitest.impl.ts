@@ -1,7 +1,7 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import { ensurePackage } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
-import { VitestExecutorOptions } from './schema';
+import { nxVersion } from '../../utils/versions.js';
+import { VitestExecutorOptions } from './schema.js';
 
 /**
  * @deprecated Use `@nx/vitest:test` instead. This executor will be removed in Nx 23.

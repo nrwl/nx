@@ -1,1 +1,1 @@
-export { createNodesV2, DockerPluginOptions } from './src/plugins/plugin';
+export { createNodesV2, DockerPluginOptions } from './src/plugins/plugin.js';

@@ -1,6 +1,6 @@
 import { formatFiles, readJson, type Tree, updateJson } from '@nx/devkit';
-import { allProjectTargets, allTargetOptions } from '../../utils/targets';
-import { getProjectsFilteredByDependencies } from '../utils/projects';
+import { allProjectTargets, allTargetOptions } from '../../utils/targets.js';
+import { getProjectsFilteredByDependencies } from '../utils/projects.js';
 
 type TsConfig = {
   compilerOptions?: {

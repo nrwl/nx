@@ -8,7 +8,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import type { Options } from 'prettier';
-import { prettierVersion } from './versions';
+import { prettierVersion } from './versions.js';
 
 export interface ExistingPrettierConfig {
   sourceFilepath: string;

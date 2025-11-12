@@ -7,7 +7,7 @@ import {
   generateNgrxFilesFromTemplates,
   normalizeOptions,
   validateOptions,
-} from './lib';
+} from './lib/index.js';
 import type { NgRxGeneratorOptions } from './schema';
 
 /**

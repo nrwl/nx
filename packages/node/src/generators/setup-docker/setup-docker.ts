@@ -13,7 +13,7 @@ import {
   joinPathFragments,
 } from '@nx/devkit';
 import { initGenerator as dockerInitGenerator } from '@nx/docker/generators';
-import { SetUpDockerOptions } from './schema';
+import { SetUpDockerOptions } from './schema.js';
 import { join } from 'path';
 import { existsSync } from 'fs';
 

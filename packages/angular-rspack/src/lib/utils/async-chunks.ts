@@ -7,7 +7,7 @@
  */
 
 import { StatsChunk, StatsCompilation } from '@rspack/core';
-import { NormalizedEntryPoint } from '../models/angular-rspack-plugin-options';
+import { NormalizedEntryPoint } from '../models/angular-rspack-plugin-options.js';
 
 /**
  * Webpack stats may incorrectly mark extra entry points `initial` chunks, when

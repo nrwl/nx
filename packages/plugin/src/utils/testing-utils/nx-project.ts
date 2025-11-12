@@ -7,8 +7,8 @@ import {
 import { execSync } from 'child_process';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'path';
-import { tmpProjPath } from './paths';
-import { cleanup } from './utils';
+import { tmpProjPath } from './paths.js';
+import { cleanup } from './utils.js';
 
 function runNxNewCommand(args?: string, silent?: boolean) {
   const localTmpDir = dirname(tmpProjPath());

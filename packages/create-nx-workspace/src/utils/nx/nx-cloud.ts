@@ -1,6 +1,6 @@
-import { VcsPushStatus } from '../git/git';
-import { CLIOutput } from '../output';
-import { getMessageFactory } from './messages';
+import { VcsPushStatus } from '../git/git.js';
+import { CLIOutput } from '../output.js';
+import { getMessageFactory } from './messages.js';
 import * as ora from 'ora';
 
 export type NxCloud =

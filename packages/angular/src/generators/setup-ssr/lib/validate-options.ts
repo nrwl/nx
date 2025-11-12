@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { readProjectConfiguration } from '@nx/devkit';
-import { validateProject as validateExistingProject } from '../../utils/validations';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import { validateProject as validateExistingProject } from '../../utils/validations.js';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { Schema } from '../schema';
 
 export function validateOptions(tree: Tree, options: Schema): void {

@@ -9,7 +9,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodesV2 } from '../../../plugins/plugin';
+import { createNodesV2 } from '../../../plugins/plugin.js';
 import {
   expoCliVersion,
   expoVersion,
@@ -18,10 +18,10 @@ import {
   reactDomVersion,
   reactNativeVersion,
   reactVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 
-import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
-import { Schema } from './schema';
+import { addGitIgnoreEntry } from './lib/add-git-ignore-entry.js';
+import { Schema } from './schema.js';
 
 export function expoInitGenerator(tree: Tree, schema: Schema) {
   return expoInitGeneratorInternal(tree, { addPlugin: false, ...schema });

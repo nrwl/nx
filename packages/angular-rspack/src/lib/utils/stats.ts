@@ -23,11 +23,11 @@ import {
   NormalizedAngularRspackPluginOptions,
   NormalizedEntryPoint,
   ScriptOrStyleEntry,
-} from '../models/angular-rspack-plugin-options';
-import { normalizeOptimization } from '../models/normalize-options';
-import { colors as ansiColors } from './color';
-import { markAsyncChunksNonInitial } from './async-chunks';
-import { getStatsOptions } from '../config/config-utils/get-stats-options';
+} from '../models/angular-rspack-plugin-options.js';
+import { normalizeOptimization } from '../models/normalize-options.js';
+import { colors as ansiColors } from './color.js';
+import { markAsyncChunksNonInitial } from './async-chunks.js';
+import { getStatsOptions } from '../config/config-utils/get-stats-options.js';
 
 export interface RspackLoggingCallback {
   (stats: Stats, config: Configuration): void;

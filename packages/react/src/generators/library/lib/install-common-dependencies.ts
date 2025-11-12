@@ -5,7 +5,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
-import { getReactDependenciesVersionsToInstall } from '../../../utils/version-utils';
+import { getReactDependenciesVersionsToInstall } from '../../../utils/version-utils.js';
 import {
   babelCoreVersion,
   babelPresetReactVersion,
@@ -15,8 +15,8 @@ import {
   testingLibraryReactVersion,
   tsLibVersion,
   typesNodeVersion,
-} from '../../../utils/versions';
-import { NormalizedSchema } from '../schema';
+} from '../../../utils/versions.js';
+import { NormalizedSchema } from '../schema.js';
 
 export async function installCommonDependencies(
   host: Tree,

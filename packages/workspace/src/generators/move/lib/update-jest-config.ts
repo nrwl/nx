@@ -1,9 +1,9 @@
 import { ProjectConfiguration, Tree } from '@nx/devkit';
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 import {
   findRootJestConfig,
   findProjectJestConfig,
-} from '../../utils/jest-config';
+} from '../../utils/jest-config.js';
 
 /**
  * Updates the project name and coverage folder in the jest.config.js if it exists

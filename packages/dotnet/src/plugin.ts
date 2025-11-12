@@ -2,4 +2,4 @@ export {
   createNodesV2,
   createNodes,
   createDependencies,
-} from './plugins/plugin';
+} from './plugins/plugin.js';

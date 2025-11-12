@@ -1,8 +1,8 @@
 import { names, Tree } from '@nx/devkit';
 import { insertImport } from '@nx/js';
-import { addImportToModule } from '../../../utils/nx-devkit/ast-utils';
-import { NormalizedSchema } from './normalized-schema';
-import { addRoute } from '../../../utils/nx-devkit/route-utils';
+import { addImportToModule } from '../../../utils/nx-devkit/ast-utils.js';
+import { NormalizedSchema } from './normalized-schema.js';
+import { addRoute } from '../../../utils/nx-devkit/route-utils.js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');

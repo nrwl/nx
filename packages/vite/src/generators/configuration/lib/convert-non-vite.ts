@@ -7,15 +7,15 @@ import {
 import {
   findViteConfig,
   findWebpackConfig,
-} from '../../../utils/find-vite-config';
-import { ViteConfigurationGeneratorSchema } from '../schema';
+} from '../../../utils/find-vite-config.js';
+import { ViteConfigurationGeneratorSchema } from '../schema.js';
 import {
   deleteWebpackConfig,
   editTsConfig,
   findExistingJsBuildTargetInProject,
   handleUnknownConfiguration,
   moveAndEditIndexHtml,
-} from '../../../utils/generator-utils';
+} from '../../../utils/generator-utils.js';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function convertNonVite(

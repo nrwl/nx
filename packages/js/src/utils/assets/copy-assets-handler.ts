@@ -11,7 +11,7 @@ import * as pathPosix from 'node:path/posix';
 import * as path from 'node:path';
 import ignore from 'ignore';
 import { globSync } from 'tinyglobby';
-import { AssetGlob } from './assets';
+import { AssetGlob } from './assets.js';
 import { logger, workspaceRoot } from '@nx/devkit';
 import { ChangedFile, daemonClient } from 'nx/src/daemon/client/client';
 import { dim } from 'picocolors';

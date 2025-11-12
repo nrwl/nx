@@ -1,7 +1,7 @@
 import { Tree, logger } from '@nx/devkit';
 import { ensurePackage } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
-import { VitestGeneratorSchema } from './schema';
+import { nxVersion } from '../../utils/versions.js';
+import { VitestGeneratorSchema } from './schema.js';
 
 /**
  * @deprecated Use `@nx/vitest:configuration` instead. This generator will be removed in Nx 23.

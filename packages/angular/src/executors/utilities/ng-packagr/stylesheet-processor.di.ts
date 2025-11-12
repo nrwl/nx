@@ -1,6 +1,6 @@
 import type { FactoryProvider } from 'injection-js';
-import { getNgPackagrVersionInfo } from './ng-packagr-version';
-import { importNgPackagrPath } from './package-imports';
+import { getNgPackagrVersionInfo } from './ng-packagr-version.js';
+import { importNgPackagrPath } from './package-imports.js';
 
 export function getStylesheetProcessorFactoryProvider(): FactoryProvider {
   const { major: ngPackagrMajorVersion } = getNgPackagrVersionInfo();

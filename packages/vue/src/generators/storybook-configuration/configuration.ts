@@ -1,4 +1,4 @@
-import { StorybookConfigureSchema } from './schema';
+import { StorybookConfigureSchema } from './schema.js';
 import storiesGenerator from '../stories/stories';
 import {
   ensurePackage,
@@ -6,7 +6,7 @@ import {
   GeneratorCallback,
   Tree,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions.js';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
   await storiesGenerator(host, {

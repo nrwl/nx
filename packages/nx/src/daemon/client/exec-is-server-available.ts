@@ -1,4 +1,4 @@
-import { daemonClient } from './client';
+import { daemonClient } from './client.js';
 
 (async () => {
   try {

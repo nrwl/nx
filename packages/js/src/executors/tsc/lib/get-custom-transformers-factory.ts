@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { loadTsTransformers } from '../../../utils/typescript/load-ts-transformers';
+import { loadTsTransformers } from '../../../utils/typescript/load-ts-transformers.js';
 import type { TransformerEntry } from '../../../utils/typescript/types';
 
 export function getCustomTrasformersFactory(

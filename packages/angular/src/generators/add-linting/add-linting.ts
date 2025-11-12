@@ -18,8 +18,8 @@ import {
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import { addAngularEsLintDependencies } from './lib/add-angular-eslint-dependencies';
-import { isBuildableLibraryProject } from './lib/buildable-project';
+import { addAngularEsLintDependencies } from './lib/add-angular-eslint-dependencies.js';
+import { isBuildableLibraryProject } from './lib/buildable-project.js';
 import type { AddLintingGeneratorSchema } from './schema';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 

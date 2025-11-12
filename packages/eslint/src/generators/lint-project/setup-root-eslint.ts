@@ -4,19 +4,19 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { useFlatConfig } from '../../utils/flat-config';
+import { useFlatConfig } from '../../utils/flat-config.js';
 import {
   eslint9__eslintVersion,
   eslint9__typescriptESLintVersion,
   eslintConfigPrettierVersion,
   nxVersion,
   typescriptESLintVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 import {
   getGlobalEsLintConfiguration,
   getGlobalFlatEslintConfiguration,
-} from '../init/global-eslint-config';
-import { findEslintFile } from '../utils/eslint-file';
+} from '../init/global-eslint-config.js';
+import { findEslintFile } from '../utils/eslint-file.js';
 
 export type SetupRootEsLintOptions = {
   unitTestRunner?: string;

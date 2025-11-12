@@ -3,4 +3,4 @@ export {
   createNodesV2,
   StorybookPluginOptions,
   createDependencies,
-} from './src/plugins/plugin';
+} from './src/plugins/plugin.js';

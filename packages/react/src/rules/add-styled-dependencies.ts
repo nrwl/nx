@@ -2,7 +2,7 @@ import { addDependenciesToPackageJson, Tree } from '@nx/devkit';
 import {
   cssInJsDependenciesBabel,
   cssInJsDependenciesSwc,
-} from '../utils/styled';
+} from '../utils/styled.js';
 
 export function addStyledModuleDependencies(
   host: Tree,

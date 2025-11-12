@@ -10,8 +10,8 @@ import type { AngularRspackPluginOptions } from '../../models';
 import {
   createProjectRootMappings,
   findProjectForPath,
-} from '../../utils/find-project-for-path';
-import { retrieveOrCreateProjectGraph } from '../../utils/graph';
+} from '../../utils/find-project-for-path.js';
+import { retrieveOrCreateProjectGraph } from '../../utils/graph.js';
 
 /**
  * The base module location used to search for locale specific data.

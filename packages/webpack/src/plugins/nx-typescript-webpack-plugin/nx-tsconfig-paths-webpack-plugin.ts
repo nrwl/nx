@@ -10,8 +10,8 @@ import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
 } from '@nx/js/src/utils/buildable-libs-utils';
-import { NormalizedNxAppWebpackPluginOptions } from '../nx-webpack-plugin/nx-app-webpack-plugin-options';
-import { WebpackNxBuildCoordinationPlugin } from '../webpack-nx-build-coordination-plugin';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-webpack-plugin/nx-app-webpack-plugin-options.js';
+import { WebpackNxBuildCoordinationPlugin } from '../webpack-nx-build-coordination-plugin.js';
 
 export class NxTsconfigPathsWebpackPlugin {
   constructor(private options: NormalizedNxAppWebpackPluginOptions) {

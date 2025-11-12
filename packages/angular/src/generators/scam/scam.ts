@@ -1,8 +1,8 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles } from '@nx/devkit';
-import { componentGenerator } from '../component/component';
-import { exportScam } from '../utils/export-scam';
-import { convertComponentToScam, normalizeOptions } from './lib';
+import { componentGenerator } from '../component/component.js';
+import { exportScam } from '../utils/export-scam.js';
+import { convertComponentToScam, normalizeOptions } from './lib/index.js';
 import type { Schema } from './schema';
 
 export async function scamGenerator(tree: Tree, rawOptions: Schema) {

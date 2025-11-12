@@ -1,12 +1,12 @@
 import { execSync } from 'child_process';
 import { join } from 'path';
 import { promisify } from 'util';
-import { readJsonFile } from './fileutils';
+import { readJsonFile } from './fileutils.js';
 import {
   detectPackageManager,
   getPackageManagerCommand,
   packageRegistryView,
-} from './package-manager';
+} from './package-manager.js';
 
 /*
  * Verifies that the given npm package has provenance attestations

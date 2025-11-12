@@ -9,9 +9,9 @@ import {
   generatePluginExtendsElement,
   generateSpreadElement,
   stringifyNodeList,
-} from '../../utils/flat-config/ast-utils';
-import { getPluginImport } from '../../utils/eslint-file';
-import { mapFilePath } from '../../utils/flat-config/path-utils';
+} from '../../utils/flat-config/ast-utils.js';
+import { getPluginImport } from '../../utils/eslint-file.js';
+import { mapFilePath } from '../../utils/flat-config/path-utils.js';
 
 /**
  * Converts an ESLint JSON config to a flat config.

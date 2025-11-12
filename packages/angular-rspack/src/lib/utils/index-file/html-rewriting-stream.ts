@@ -9,7 +9,7 @@
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import type { RewritingStream } from 'parse5-html-rewriting-stream';
-import { loadEsmModule } from '../misc-helpers';
+import { loadEsmModule } from '../misc-helpers.js';
 
 // Export helper types for the rewriter
 export type StartTag = Parameters<RewritingStream['emitStartTag']>[0];

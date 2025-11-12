@@ -1,4 +1,4 @@
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 
 export function getAppTests(options: NormalizedSchema) {
   return `it('should render successfully', () => {

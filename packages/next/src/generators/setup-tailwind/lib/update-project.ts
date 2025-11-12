@@ -1,7 +1,7 @@
 import type { ProjectConfiguration, Tree } from '@nx/devkit';
 import { joinPathFragments, updateProjectConfiguration } from '@nx/devkit';
 
-import { SetupTailwindOptions } from '../schema';
+import { SetupTailwindOptions } from '../schema.js';
 
 export function updateProject(
   tree: Tree,

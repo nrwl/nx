@@ -3,7 +3,7 @@ import { signalToCode } from '@nx/devkit/internal';
 import { dirname, join, resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
-import { ReactNativeBundleOptions } from './schema';
+import { ReactNativeBundleOptions } from './schema.js';
 import { mkdirSync } from 'fs';
 
 export interface ReactNativeBundleOutput {

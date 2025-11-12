@@ -1,15 +1,15 @@
 import * as ora from 'ora';
 import { join } from 'path';
-import { CreateWorkspaceOptions } from './create-workspace-options';
-import { execAndWait } from './utils/child-process-utils';
-import { mapErrorToBodyLines } from './utils/error-utils';
-import { output } from './utils/output';
+import { CreateWorkspaceOptions } from './create-workspace-options.js';
+import { execAndWait } from './utils/child-process-utils.js';
+import { mapErrorToBodyLines } from './utils/error-utils.js';
+import { output } from './utils/output.js';
 import {
   getPackageManagerCommand,
   getPackageManagerVersion,
   PackageManager,
-} from './utils/package-manager';
-import { unparse } from './utils/unparse';
+} from './utils/package-manager.js';
+import { unparse } from './utils/unparse.js';
 
 /**
  * Create a new Nx workspace

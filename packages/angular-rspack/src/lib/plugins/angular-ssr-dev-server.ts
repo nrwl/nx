@@ -5,12 +5,12 @@ import {
   sources,
 } from '@rspack/core';
 import { ChildProcess, fork } from 'child_process';
-import { SsrReloadServer } from './server/ssr-reload-server';
-import { NormalizedAngularRspackPluginOptions } from '../models';
+import { SsrReloadServer } from './server/ssr-reload-server.js';
+import { NormalizedAngularRspackPluginOptions } from '../models/index.js';
 import { join } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
-import { getIndexOutputFile } from '../utils/index-file/get-index-output-file';
-import { addBodyScript } from '../utils/index-file/add-body-script';
+import { getIndexOutputFile } from '../utils/index-file/get-index-output-file.js';
+import { addBodyScript } from '../utils/index-file/add-body-script.js';
 
 const PLUGIN_NAME = 'AngularSsrDevServer';
 

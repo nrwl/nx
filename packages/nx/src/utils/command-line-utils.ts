@@ -1,12 +1,12 @@
 import * as yargsParser from 'yargs-parser';
 import type { Arguments } from 'yargs';
-import { TEN_MEGABYTES } from '../project-graph/file-utils';
-import { output } from './output';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { TEN_MEGABYTES } from '../project-graph/file-utils.js';
+import { output } from './output.js';
+import { NxJsonConfiguration } from '../config/nx-json.js';
 import { execSync } from 'child_process';
-import { ProjectGraph } from '../config/project-graph';
-import { workspaceRoot } from './workspace-root';
-import { readParallelFromArgsAndEnv } from '../command-line/yargs-utils/shared-options';
+import { ProjectGraph } from '../config/project-graph.js';
+import { workspaceRoot } from './workspace-root.js';
+import { readParallelFromArgsAndEnv } from '../command-line/yargs-utils/shared-options.js';
 
 export interface RawNxArgs extends NxArgs {
   prod?: boolean;

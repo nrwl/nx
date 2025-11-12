@@ -5,31 +5,31 @@ import { performance } from 'perf_hooks';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
-} from '../../config/project-graph';
-import { hashArray } from '../../hasher/file-hasher';
+} from '../../config/project-graph.js';
+import { hashArray } from '../../hasher/file-hasher.js';
 import {
   CreateDependencies,
   CreateDependenciesContext,
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
-} from '../../project-graph/plugins';
-import { RawProjectGraphDependency } from '../../project-graph/project-graph-builder';
-import { workspaceDataDirectory } from '../../utils/cache-directory';
-import { combineGlobPatterns } from '../../utils/globs';
-import { detectPackageManager } from '../../utils/package-manager';
-import { nxVersion } from '../../utils/versions';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { readBunLockFile } from './lock-file/bun-parser';
+} from '../../project-graph/plugins/index.js';
+import { RawProjectGraphDependency } from '../../project-graph/project-graph-builder.js';
+import { workspaceDataDirectory } from '../../utils/cache-directory.js';
+import { combineGlobPatterns } from '../../utils/globs.js';
+import { detectPackageManager } from '../../utils/package-manager.js';
+import { nxVersion } from '../../utils/versions.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { readBunLockFile } from './lock-file/bun-parser.js';
 import {
   getLockFileDependencies,
   getLockFileName,
   getLockFileNodes,
   lockFileExists,
   LOCKFILES,
-} from './lock-file/lock-file';
-import { buildExplicitDependencies } from './project-graph/build-dependencies/build-dependencies';
-import { jsPluginConfig } from './utils/config';
+} from './lock-file/lock-file.js';
+import { buildExplicitDependencies } from './project-graph/build-dependencies/build-dependencies.js';
+import { jsPluginConfig } from './utils/config.js';
 
 export const name = 'nx/js/dependencies-and-lockfile';
 

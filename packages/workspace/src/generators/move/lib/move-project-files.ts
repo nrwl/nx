@@ -1,6 +1,6 @@
 import { ProjectConfiguration, Tree, visitNotIgnoredFiles } from '@nx/devkit';
 import { dirname, join, relative, sep } from 'path';
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 
 /**
  * Moves a project to the given destination path

@@ -3,25 +3,25 @@ import { bold } from 'chalk';
 import {
   getPackageManagerCommand,
   PackageManagerCommands,
-} from '../../utils/package-manager';
-import { output } from '../../utils/output';
-import { GeneratorsJsonEntry } from '../../config/misc-interfaces';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { addDepsToPackageJson, runInstall } from './implementation/utils';
-import { isAngularPluginInstalled } from '../../adapter/angular-json';
+} from '../../utils/package-manager.js';
+import { output } from '../../utils/output.js';
+import { GeneratorsJsonEntry } from '../../config/misc-interfaces.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { addDepsToPackageJson, runInstall } from './implementation/utils.js';
+import { isAngularPluginInstalled } from '../../adapter/angular-json.js';
 import {
   isAggregateCreateNodesError,
   isProjectConfigurationsError,
   isProjectsWithNoNameError,
-} from '../../project-graph/error-types';
-import { getGeneratorInformation } from '../generate/generator-utils';
+} from '../../project-graph/error-types.js';
+import { getGeneratorInformation } from '../generate/generator-utils.js';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { readNxJson } from '../../config/configuration';
-import { nxVersion } from '../../utils/versions';
-import { runNxSync } from '../../utils/child-process';
-import { writeJsonFile } from '../../utils/fileutils';
-import { globalSpinner } from '../../utils/spinner';
+import { readNxJson } from '../../config/configuration.js';
+import { nxVersion } from '../../utils/versions.js';
+import { runNxSync } from '../../utils/child-process.js';
+import { writeJsonFile } from '../../utils/fileutils.js';
+import { globalSpinner } from '../../utils/spinner.js';
 
 export function installPluginPackages(
   repoRoot: string,

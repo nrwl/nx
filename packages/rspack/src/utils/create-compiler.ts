@@ -6,8 +6,8 @@ import {
   rspack,
 } from '@rspack/core';
 
-import { NormalizedRspackExecutorSchema } from '../executors/rspack/schema';
-import { getRspackConfigs } from '../executors/rspack/lib/config';
+import { NormalizedRspackExecutorSchema } from '../executors/rspack/schema.js';
+import { getRspackConfigs } from '../executors/rspack/lib/config.js';
 
 export async function createCompiler(
   options: NormalizedRspackExecutorSchema & {

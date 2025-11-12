@@ -1,7 +1,7 @@
-import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { NxArgs } from '../utils/command-line-utils';
-import { CommandGraph } from './command-graph';
-import { createCommandGraph } from './create-command-graph';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph.js';
+import { NxArgs } from '../utils/command-line-utils.js';
+import { CommandGraph } from './command-graph.js';
+import { createCommandGraph } from './create-command-graph.js';
 
 export function getCommandProjects(
   projectGraph: ProjectGraph,

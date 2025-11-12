@@ -24,13 +24,13 @@ import { existsSync } from 'node:fs';
 import { dirname, join, parse } from 'node:path';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as rollup from 'rollup';
-import { analyze } from '../analyze';
-import { deleteOutput } from '../delete-output';
-import { generatePackageJson } from '../package-json/generate-package-json';
-import { swc } from '../swc';
-import { getProjectNode } from './get-project-node';
-import { normalizeOptions } from './normalize-options';
-import { AssetGlobPattern, RollupWithNxPluginOptions } from './with-nx-options';
+import { analyze } from '../analyze.js';
+import { deleteOutput } from '../delete-output.js';
+import { generatePackageJson } from '../package-json/generate-package-json.js';
+import { swc } from '../swc.js';
+import { getProjectNode } from './get-project-node.js';
+import { normalizeOptions } from './normalize-options.js';
+import { AssetGlobPattern, RollupWithNxPluginOptions } from './with-nx-options.js';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');

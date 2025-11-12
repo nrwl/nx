@@ -1,19 +1,19 @@
-import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph.js';
 import {
   getDependencyConfigs,
   getOutputs,
   interpolate,
   createTaskId,
-} from './utils';
+} from './utils.js';
 import {
   projectHasTarget,
   projectHasTargetAndConfiguration,
-} from '../utils/project-graph-utils';
-import { Task, TaskGraph } from '../config/task-graph';
-import { TargetDefaults, TargetDependencies } from '../config/nx-json';
-import { output } from '../utils/output';
-import { TargetDependencyConfig } from '../config/workspace-json-project-json';
-import { findCycles } from './task-graph-utils';
+} from '../utils/project-graph-utils.js';
+import { Task, TaskGraph } from '../config/task-graph.js';
+import { TargetDefaults, TargetDependencies } from '../config/nx-json.js';
+import { output } from '../utils/output.js';
+import { TargetDependencyConfig } from '../config/workspace-json-project-json.js';
+import { findCycles } from './task-graph-utils.js';
 
 const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 

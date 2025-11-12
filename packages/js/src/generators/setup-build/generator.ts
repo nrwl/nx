@@ -17,23 +17,23 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-default
 import { basename, dirname, join } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { getImportPath } from '../../utils/get-import-path';
+import { getImportPath } from '../../utils/get-import-path.js';
 import {
   getUpdatedPackageJsonContent,
   type SupportedFormat,
-} from '../../utils/package-json/update-package-json';
-import { addSwcConfig } from '../../utils/swc/add-swc-config';
-import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
-import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
-import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
-import { readTsConfig } from '../../utils/typescript/ts-config';
+} from '../../utils/package-json/update-package-json.js';
+import { addSwcConfig } from '../../utils/swc/add-swc-config.js';
+import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies.js';
+import { ensureTypescript } from '../../utils/typescript/ensure-typescript.js';
+import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin.js';
+import { readTsConfig } from '../../utils/typescript/ts-config.js';
 import {
   getDefinedCustomConditionName,
   getProjectSourceRoot,
   isUsingTsSolutionSetup,
-} from '../../utils/typescript/ts-solution-setup';
-import { nxVersion } from '../../utils/versions';
-import { SetupBuildGeneratorSchema } from './schema';
+} from '../../utils/typescript/ts-solution-setup.js';
+import { nxVersion } from '../../utils/versions.js';
+import { SetupBuildGeneratorSchema } from './schema.js';
 
 let ts: typeof import('typescript');
 

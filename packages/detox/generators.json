@@ -1,24 +1,28 @@
 {
   "name": "Nx Detox",
   "version": "0.1",
-  "extends": ["@nx/workspace"],
+  "extends": [
+    "@nx/workspace"
+  ],
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#detoxInitGeneratorInternal",
-      "schema": "./src/generators/init/schema.json",
+      "factory": "./dist/src/generators/init/init#detoxInitGeneratorInternal",
+      "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/detox` plugin.",
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#detoxApplicationGeneratorInternal",
-      "schema": "./src/generators/application/schema.json",
-      "aliases": ["app"],
+      "factory": "./dist/src/generators/application/application#detoxApplicationGeneratorInternal",
+      "schema": "./dist/src/generators/application/schema.json",
+      "aliases": [
+        "app"
+      ],
       "x-type": "application",
       "description": "Create a Detox application."
     },
     "convert-to-inferred": {
-      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
-      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "factory": "./dist/src/generators/convert-to-inferred/convert-to-inferred",
+      "schema": "./dist/src/generators/convert-to-inferred/schema.json",
       "description": "Convert existing Detox project(s) using `@nx/detox:*` executors to use `@nx/detox/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target."
     }
   }

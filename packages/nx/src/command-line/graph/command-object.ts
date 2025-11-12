@@ -1,10 +1,10 @@
 import { Argv, CommandModule } from 'yargs';
-import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
+import { linkToNxDevAndExamples } from '../yargs-utils/documentation.js';
 import {
   parseCSV,
   withAffectedOptions,
   withVerbose,
-} from '../yargs-utils/shared-options';
+} from '../yargs-utils/shared-options.js';
 
 export const yargsGraphCommand: CommandModule = {
   command: 'graph',
@@ -25,7 +25,7 @@ export const yargsGraphCommand: CommandModule = {
       .implies('base', 'affected')
       .implies('head', 'affected'),
   handler: async (args) =>
-    await (await import('./graph')).generateGraph(args as any, []),
+    await (await import('./graph.js')).generateGraph(args as any, []),
 };
 
 export function withGraphOptions(yargs: Argv) {

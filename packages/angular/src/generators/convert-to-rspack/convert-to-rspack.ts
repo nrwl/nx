@@ -22,12 +22,12 @@ import type { RspackPluginOptions } from '@nx/rspack/plugin';
 import { prompt } from 'enquirer';
 import { relative, resolve } from 'path';
 import { join } from 'path/posix';
-import { nxVersion } from '../../utils/versions';
-import { getAngularRspackVersion, versions } from '../utils/version-utils';
-import { createConfig } from './lib/create-config';
-import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
-import { updateTsconfig } from './lib/update-tsconfig';
-import { validateSupportedBuildExecutor } from './lib/validate-supported-executor';
+import { nxVersion } from '../../utils/versions.js';
+import { getAngularRspackVersion, versions } from '../utils/version-utils.js';
+import { createConfig } from './lib/create-config.js';
+import { getCustomWebpackConfig } from './lib/get-custom-webpack-config.js';
+import { updateTsconfig } from './lib/update-tsconfig.js';
+import { validateSupportedBuildExecutor } from './lib/validate-supported-executor.js';
 import type { ConvertToRspackSchema } from './schema';
 
 const SUPPORTED_EXECUTORS = [

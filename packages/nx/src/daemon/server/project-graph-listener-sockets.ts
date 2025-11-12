@@ -1,8 +1,8 @@
 import { Socket } from 'net';
-import { ProjectGraph } from '../../config/project-graph';
-import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
-import { handleResult } from './server';
-import { isV8SerializerEnabled } from '../is-v8-serializer-enabled';
+import { ProjectGraph } from '../../config/project-graph.js';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils.js';
+import { handleResult } from './server.js';
+import { isV8SerializerEnabled } from '../is-v8-serializer-enabled.js';
 
 export let registeredProjectGraphListenerSockets: Socket[] = [];
 

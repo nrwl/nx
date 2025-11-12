@@ -1,7 +1,7 @@
 import { joinPathFragments, type Tree } from '@nx/devkit';
 import { parse } from 'path';
 import type { Node, SourceFile } from 'typescript';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 
 export function convertScamToStandalone(
   componentAST: SourceFile,

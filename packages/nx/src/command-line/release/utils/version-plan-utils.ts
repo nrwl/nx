@@ -1,5 +1,5 @@
-import { GroupVersionPlan, ProjectsVersionPlan } from '../config/version-plans';
-import { ReleaseGroupWithName } from '../config/filter-release-groups';
+import { GroupVersionPlan, ProjectsVersionPlan } from '../config/version-plans.js';
+import { ReleaseGroupWithName } from '../config/filter-release-groups.js';
 
 /**
  * Validates that all projects in resolved version plans are included in the filtered projects.

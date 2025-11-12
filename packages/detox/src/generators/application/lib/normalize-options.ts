@@ -1,6 +1,6 @@
 import { names, readNxJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Schema } from '../schema';
+import { Schema } from '../schema.js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export interface NormalizedSchema extends Omit<Schema, 'e2eName'> {

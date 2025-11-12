@@ -12,8 +12,8 @@ import {
   corsVersion,
   moduleFederationNodeVersion,
   typesCorsVersion,
-} from '../../../utils/versions';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+} from '../../../utils/versions.js';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { Schema } from '../schema';
 
 export async function updateSsrSetup(

@@ -1,45 +1,45 @@
 import { performance } from 'perf_hooks';
 
-import { readNxJson } from '../config/nx-json';
-import { ProjectGraph } from '../config/project-graph';
+import { readNxJson } from '../config/nx-json.js';
+import { ProjectGraph } from '../config/project-graph.js';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
-} from '../config/workspace-json-project-json';
-import { daemonClient } from '../daemon/client/client';
-import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
-import { fileExists } from '../utils/fileutils';
-import { output } from '../utils/output';
-import { stripIndents } from '../utils/strip-indents';
-import { workspaceRoot } from '../utils/workspace-root';
+} from '../config/workspace-json-project-json.js';
+import { daemonClient } from '../daemon/client/client.js';
+import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir.js';
+import { fileExists } from '../utils/fileutils.js';
+import { output } from '../utils/output.js';
+import { stripIndents } from '../utils/strip-indents.js';
+import { workspaceRoot } from '../utils/workspace-root.js';
 import {
   buildProjectGraphUsingProjectFileMap,
   hydrateFileMap,
-} from './build-project-graph';
+} from './build-project-graph.js';
 import {
   AggregateProjectGraphError,
   isAggregateProjectGraphError,
   ProjectConfigurationsError,
   ProjectGraphError,
   StaleProjectGraphCacheError,
-} from './error-types';
+} from './error-types.js';
 import {
   readFileMapCache,
   readProjectGraphCache,
   readSourceMapsCache,
   writeCache,
-} from './nx-deps-cache';
-import { ConfigurationResult } from './utils/project-configuration-utils';
+} from './nx-deps-cache.js';
+import { ConfigurationResult } from './utils/project-configuration-utils.js';
 import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
-} from './utils/retrieve-workspace-files';
-import { getPlugins } from './plugins/get-plugins';
-import { logger } from '../utils/logger';
-import { FileLock, IS_WASM } from '../native';
+} from './utils/retrieve-workspace-files.js';
+import { getPlugins } from './plugins/get-plugins.js';
+import { logger } from '../utils/logger.js';
+import { FileLock, IS_WASM } from '../native/index.js';
 import { join } from 'path';
-import { workspaceDataDirectory } from '../utils/cache-directory';
-import { DelayedSpinner } from '../utils/delayed-spinner';
+import { workspaceDataDirectory } from '../utils/cache-directory.js';
+import { DelayedSpinner } from '../utils/delayed-spinner.js';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.

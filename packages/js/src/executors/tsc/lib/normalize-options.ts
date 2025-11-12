@@ -6,7 +6,7 @@ import type {
 import {
   FileInputOutput,
   assetGlobsToFiles,
-} from '../../../utils/assets/assets';
+} from '../../../utils/assets/assets.js';
 
 export function normalizeOptions(
   options: ExecutorOptions,

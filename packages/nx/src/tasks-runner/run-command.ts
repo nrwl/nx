@@ -7,28 +7,28 @@ import {
   NxJsonConfiguration,
   readNxJson,
   TargetDependencies,
-} from '../config/nx-json';
-import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
-import { TargetDependencyConfig } from '../config/workspace-json-project-json';
-import { daemonClient } from '../daemon/client/client';
-import { createTaskHasher } from '../hasher/create-task-hasher';
+} from '../config/nx-json.js';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph.js';
+import { Task, TaskGraph } from '../config/task-graph.js';
+import { TargetDependencyConfig } from '../config/workspace-json-project-json.js';
+import { daemonClient } from '../daemon/client/client.js';
+import { createTaskHasher } from '../hasher/create-task-hasher.js';
 import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
-} from '../hasher/hash-task';
-import { hashArray, logDebug, RunMode } from '../native';
+} from '../hasher/hash-task.js';
+import { hashArray, logDebug, RunMode } from '../native/index.js';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
-} from '../project-graph/plugins/tasks-execution-hooks';
-import { createProjectGraphAsync } from '../project-graph/project-graph';
-import { NxArgs } from '../utils/command-line-utils';
-import { handleErrors } from '../utils/handle-errors';
-import { isCI } from '../utils/is-ci';
-import { isNxCloudUsed } from '../utils/nx-cloud-utils';
-import { printNxKey } from '../utils/nx-key';
-import { output } from '../utils/output';
+} from '../project-graph/plugins/tasks-execution-hooks.js';
+import { createProjectGraphAsync } from '../project-graph/project-graph.js';
+import { NxArgs } from '../utils/command-line-utils.js';
+import { handleErrors } from '../utils/handle-errors.js';
+import { isCI } from '../utils/is-ci.js';
+import { isNxCloudUsed } from '../utils/nx-cloud-utils.js';
+import { printNxKey } from '../utils/nx-key.js';
+import { output } from '../utils/output.js';
 import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
   flushSyncGeneratorChanges,
@@ -37,36 +37,36 @@ import {
   getSyncGeneratorChanges,
   getSyncGeneratorSuccessResultsMessageLines,
   processSyncGeneratorResultErrors,
-} from '../utils/sync-generators';
-import { workspaceRoot } from '../utils/workspace-root';
-import { createTaskGraph } from './create-task-graph';
-import { isTuiEnabled } from './is-tui-enabled';
+} from '../utils/sync-generators.js';
+import { workspaceRoot } from '../utils/workspace-root.js';
+import { createTaskGraph } from './create-task-graph.js';
+import { isTuiEnabled } from './is-tui-enabled.js';
 import {
   CompositeLifeCycle,
   LifeCycle,
   TaskResult,
   TaskResults,
-} from './life-cycle';
-import { createRunManyDynamicOutputRenderer } from './life-cycles/dynamic-run-many-terminal-output-life-cycle';
-import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle';
-import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
-import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
-import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
-import { getTasksHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
-import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
-import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
-import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
-import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-cycle';
+} from './life-cycle.js';
+import { createRunManyDynamicOutputRenderer } from './life-cycles/dynamic-run-many-terminal-output-life-cycle.js';
+import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle.js';
+import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle.js';
+import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle.js';
+import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle.js';
+import { getTasksHistoryLifeCycle } from './life-cycles/task-history-life-cycle.js';
+import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle.js';
+import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle.js';
+import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle.js';
+import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-cycle.js';
 import {
   assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
   getLeafTasks,
   makeAcyclic,
   validateNoAtomizedTasks,
-} from './task-graph-utils';
-import { TasksRunner, TaskStatus } from './tasks-runner';
-import { shouldStreamOutput } from './utils';
-import { signalToCode } from '../utils/exit-codes';
+} from './task-graph-utils.js';
+import { TasksRunner, TaskStatus } from './tasks-runner.js';
+import { shouldStreamOutput } from './utils.js';
+import { signalToCode } from '../utils/exit-codes.js';
 import chalk = require('chalk');
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -131,7 +131,7 @@ async function getTerminalOutputLifeCycle(
     process.stdout.write = patchedWrite as any;
     process.stderr.write = patchedWrite as any;
 
-    const { AppLifeCycle, restoreTerminal } = await import('../native');
+    const { AppLifeCycle, restoreTerminal } = await import('../native/index.js');
     let appLifeCycle;
 
     const isRunOne = initiatingProject != null;

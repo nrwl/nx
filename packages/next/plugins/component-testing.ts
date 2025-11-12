@@ -26,7 +26,7 @@ import {
 } from '@nx/webpack';
 import { readNxJson } from 'nx/src/config/configuration';
 import { join } from 'path';
-import { NextBuildBuilderOptions } from '../src/utils/types';
+import { NextBuildBuilderOptions } from '../src/utils/types.js';
 
 export function nxComponentTestingPreset(
   pathToConfig: string,

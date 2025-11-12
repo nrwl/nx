@@ -1,20 +1,20 @@
 import { dirname, join } from 'path';
 
-import { readPluginPackageJson } from '../../project-graph/plugins';
+import { readPluginPackageJson } from '../../project-graph/plugins/index.js';
 import {
   CustomHasher,
   Executor,
   ExecutorConfig,
   ExecutorsJson,
   TaskGraphExecutor,
-} from '../../config/misc-interfaces';
-import { readJsonFile } from '../../utils/fileutils';
+} from '../../config/misc-interfaces.js';
+import { readJsonFile } from '../../utils/fileutils.js';
 import {
   getImplementationFactory,
   resolveSchema,
-} from '../../config/schema-utils';
-import { getNxRequirePaths } from '../../utils/installation-directory';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+} from '../../config/schema-utils.js';
+import { getNxRequirePaths } from '../../utils/installation-directory.js';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json.js';
 
 export function normalizeExecutorSchema(
   schema: Partial<ExecutorConfig['schema']>

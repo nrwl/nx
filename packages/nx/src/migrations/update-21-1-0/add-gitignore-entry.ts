@@ -1,4 +1,4 @@
-import { Tree } from '../../generators/tree';
+import { Tree } from '../../generators/tree.js';
 import ignore = require('ignore');
 
 export default async function addGitignoreEntry(tree: Tree) {

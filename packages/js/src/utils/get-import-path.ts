@@ -1,5 +1,5 @@
 import { Tree } from '@nx/devkit';
-import { getNpmScope } from './package-json/get-npm-scope';
+import { getNpmScope } from './package-json/get-npm-scope.js';
 
 /**
  * Prefixes project name with npm scope

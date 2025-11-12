@@ -1,16 +1,16 @@
-import { TasksRunner, TaskStatus } from './tasks-runner';
-import { getThreadCount, TaskOrchestrator } from './task-orchestrator';
-import { TaskHasher } from '../hasher/task-hasher';
-import { LifeCycle } from './life-cycle';
-import { ProjectGraph } from '../config/project-graph';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { Task, TaskGraph } from '../config/task-graph';
-import { NxArgs } from '../utils/command-line-utils';
-import { DaemonClient } from '../daemon/client/client';
-import { cacheDir } from '../utils/cache-directory';
+import { TasksRunner, TaskStatus } from './tasks-runner.js';
+import { getThreadCount, TaskOrchestrator } from './task-orchestrator.js';
+import { TaskHasher } from '../hasher/task-hasher.js';
+import { LifeCycle } from './life-cycle.js';
+import { ProjectGraph } from '../config/project-graph.js';
+import { NxJsonConfiguration } from '../config/nx-json.js';
+import { Task, TaskGraph } from '../config/task-graph.js';
+import { NxArgs } from '../utils/command-line-utils.js';
+import { DaemonClient } from '../daemon/client/client.js';
+import { cacheDir } from '../utils/cache-directory.js';
 import { readFile, writeFile, mkdir, rename, readdir } from 'fs/promises';
 import { join } from 'path';
-import { CachedResult } from '../native';
+import { CachedResult } from '../native/index.js';
 
 export interface RemoteCache {
   retrieve: (hash: string, cacheDirectory: string) => Promise<boolean>;

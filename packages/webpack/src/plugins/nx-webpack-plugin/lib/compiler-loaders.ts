@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { readTsConfig } from '@nx/js';
 
-import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options.js';
 
 export function createLoaderFromCompiler(
   options: NormalizedNxAppWebpackPluginOptions

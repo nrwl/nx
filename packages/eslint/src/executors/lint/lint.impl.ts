@@ -3,9 +3,9 @@ import type { ESLint } from 'eslint';
 import { mkdirSync, writeFileSync } from 'fs';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { dirname, posix, relative, resolve } from 'path';
-import { findFlatConfigFile, findOldConfigFile } from '../../utils/config-file';
+import { findFlatConfigFile, findOldConfigFile } from '../../utils/config-file.js';
 import type { Schema } from './schema';
-import { resolveAndInstantiateESLint } from './utility/eslint-utils';
+import { resolveAndInstantiateESLint } from './utility/eslint-utils.js';
 
 export default async function run(
   options: Schema,

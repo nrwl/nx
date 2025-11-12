@@ -1,9 +1,9 @@
-export * from './src/utils/versions';
-export * from './src/utils/generator-utils';
-export * from './src/utils/e2e-web-server-info-utils';
-export { type ViteConfigurationGeneratorSchema } from './src/generators/configuration/schema';
-export { viteConfigurationGenerator } from './src/generators/configuration/configuration';
-export { type VitestGeneratorSchema } from './src/generators/vitest/schema';
-export { vitestGenerator } from './src/generators/vitest/vitest-generator';
-export { type InitGeneratorSchema } from './src/generators/init/schema';
-export { initGenerator } from './src/generators/init/init';
+export * from './src/utils/versions.js';
+export * from './src/utils/generator-utils.js';
+export * from './src/utils/e2e-web-server-info-utils.js';
+export { type ViteConfigurationGeneratorSchema } from './src/generators/configuration/schema.js';
+export { viteConfigurationGenerator } from './src/generators/configuration/configuration.js';
+export { type VitestGeneratorSchema } from './src/generators/vitest/schema.js';
+export { vitestGenerator } from './src/generators/vitest/vitest-generator.js';
+export { type InitGeneratorSchema } from './src/generators/init/schema.js';
+export { initGenerator } from './src/generators/init/init.js';

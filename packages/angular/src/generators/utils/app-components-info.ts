@@ -6,7 +6,7 @@ import {
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { basename } from 'node:path';
-import { getInstalledAngularVersionInfo } from './version-utils';
+import { getInstalledAngularVersionInfo } from './version-utils.js';
 
 export type ComponentMetadata = {
   fileName: string;

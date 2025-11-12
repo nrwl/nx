@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
-import { addChildren } from './add-children';
-import { addLoadChildren } from './add-load-children';
-import { NormalizedSchema } from './normalized-schema';
+import { addChildren } from './add-children.js';
+import { addLoadChildren } from './add-load-children.js';
+import { NormalizedSchema } from './normalized-schema.js';
 
 export function addModule(
   host: Tree,

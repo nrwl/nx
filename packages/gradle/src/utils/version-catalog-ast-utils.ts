@@ -1,6 +1,6 @@
 import { globAsync, Tree } from '@nx/devkit';
 import { parseTOML } from 'toml-eslint-parser';
-import { gradleProjectGraphPluginName } from './versions';
+import { gradleProjectGraphPluginName } from './versions.js';
 
 export async function findVersionCatalogFiles(tree: Tree): Promise<string[]> {
   const versionCatalogPaths: string[] = [];

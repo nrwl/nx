@@ -2,9 +2,9 @@ import type { Tree } from '@nx/devkit';
 import { names, readProjectConfiguration } from '@nx/devkit';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import type { AngularProjectConfiguration } from '../../../utils/types';
-import { buildSelector, validateHtmlSelector } from '../../utils/selector';
-import { validateClassName } from '../../utils/validations';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import { buildSelector, validateHtmlSelector } from '../../utils/selector.js';
+import { validateClassName } from '../../utils/validations.js';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(

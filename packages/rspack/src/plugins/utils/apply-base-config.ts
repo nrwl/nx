@@ -12,15 +12,15 @@ import {
 } from '@rspack/core';
 import { getRootTsConfigPath } from '@nx/js';
 
-import { StatsJsonPlugin } from './plugins/stats-json-plugin';
-import { GeneratePackageJsonPlugin } from './plugins/generate-package-json-plugin';
-import { getOutputHashFormat } from './hash-format';
-import { NxTsconfigPathsRspackPlugin } from './plugins/nx-tsconfig-paths-rspack-plugin';
-import { getTerserEcmaVersion } from './get-terser-ecma-version';
+import { StatsJsonPlugin } from './plugins/stats-json-plugin.js';
+import { GeneratePackageJsonPlugin } from './plugins/generate-package-json-plugin.js';
+import { getOutputHashFormat } from './hash-format.js';
+import { NxTsconfigPathsRspackPlugin } from './plugins/nx-tsconfig-paths-rspack-plugin.js';
+import { getTerserEcmaVersion } from './get-terser-ecma-version.js';
 import nodeExternals = require('webpack-node-externals');
-import { NormalizedNxAppRspackPluginOptions } from './models';
+import { NormalizedNxAppRspackPluginOptions } from './models.js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getNonBuildableLibs } from './get-non-buildable-libs';
+import { getNonBuildableLibs } from './get-non-buildable-libs.js';
 
 const IGNORED_RSPACK_WARNINGS = [
   /The comment file/i,

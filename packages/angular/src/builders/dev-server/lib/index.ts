@@ -1,2 +1,2 @@
-export * from './normalize-options';
-export * from './validate-options';
+export * from './normalize-options.js';
+export * from './validate-options.js';

@@ -5,10 +5,10 @@ import {
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { NgPackagr } from 'ng-packagr';
 import { join, resolve } from 'path';
-import { createLibraryExecutor } from '../package/package.impl';
+import { createLibraryExecutor } from '../package/package.impl.js';
 import type { BuildAngularLibraryExecutorOptions } from '../package/schema';
-import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
-import { getNgPackagrInstance } from './ng-packagr-adjustments/ng-packagr';
+import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript.js';
+import { getNgPackagrInstance } from './ng-packagr-adjustments/ng-packagr.js';
 
 async function initializeNgPackgrLite(
   options: BuildAngularLibraryExecutorOptions,

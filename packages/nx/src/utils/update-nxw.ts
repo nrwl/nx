@@ -3,9 +3,9 @@ import {
   nxWrapperPath,
   getShellScriptContents,
   getBatchScriptContents,
-} from '../command-line/init/implementation/dot-nx/add-nx-scripts';
+} from '../command-line/init/implementation/dot-nx/add-nx-scripts.js';
 import type { Tree } from '../generators/tree';
-import { normalizePath } from '../utils/path';
+import { normalizePath } from '../utils/path.js';
 import { constants as FsConstants } from 'fs';
 
 export function updateNxw(tree: Tree) {

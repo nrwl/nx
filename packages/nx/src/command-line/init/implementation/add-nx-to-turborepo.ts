@@ -1,15 +1,15 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
-import { output } from '../../../utils/output';
-import { getPackageManagerCommand } from '../../../utils/package-manager';
-import { InitArgs } from '../init-v1';
+import { readJsonFile, writeJsonFile } from '../../../utils/fileutils.js';
+import { output } from '../../../utils/output.js';
+import { getPackageManagerCommand } from '../../../utils/package-manager.js';
+import { InitArgs } from '../init-v1.js';
 import {
   addDepsToPackageJson,
   createNxJsonFromTurboJson,
   runInstall,
   updateGitIgnore,
-} from './utils';
+} from './utils.js';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive'>;
 

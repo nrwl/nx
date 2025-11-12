@@ -2,15 +2,15 @@ import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { formatFiles, runTasksInSerial } from '@nx/devkit';
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 
-import { initGenerator } from '../init/init';
+import { initGenerator } from '../init/init.js';
 import {
   createFiles,
   normalizeOptions,
   toNodeApplicationGeneratorOptions,
   updateTsConfig,
-} from './lib';
+} from './lib/index.js';
 import type { ApplicationGeneratorOptions } from './schema';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { ensureDependencies } from '../../utils/ensure-dependencies.js';
 
 export async function applicationGenerator(
   tree: Tree,

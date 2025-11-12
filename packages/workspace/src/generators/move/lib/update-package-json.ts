@@ -1,6 +1,6 @@
 import { readJson, Tree } from '@nx/devkit';
 import * as path from 'path';
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 
 interface PartialPackageJson {
   name: string;

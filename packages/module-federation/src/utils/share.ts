@@ -3,14 +3,14 @@ import type {
   SharedWorkspaceLibraryConfig,
   WorkspaceLibrary,
 } from './models';
-import { AdditionalSharedConfig, SharedFunction } from './models';
+import { AdditionalSharedConfig, SharedFunction } from './models/index.js';
 import { dirname, join, normalize } from 'path';
-import { readRootPackageJson } from './package-json';
-import { readTsPathMappings, getRootTsConfigPath } from './typescript';
+import { readRootPackageJson } from './package-json.js';
+import { readTsPathMappings, getRootTsConfigPath } from './typescript.js';
 import {
   collectPackageSecondaryEntryPoints,
   collectWorkspaceLibrarySecondaryEntryPoints,
-} from './secondary-entry-points';
+} from './secondary-entry-points.js';
 import {
   type ProjectGraph,
   workspaceRoot,

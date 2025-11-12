@@ -4,7 +4,7 @@ import {
   getDependencyVersionFromPackageJson,
   type Tree,
 } from '@nx/devkit';
-import { getInstalledPackageVersionInfo } from '../../generators/utils/version-utils';
+import { getInstalledPackageVersionInfo } from '../../generators/utils/version-utils.js';
 
 export const typescriptEslintUtilsVersion = '^7.16.0';
 

@@ -1,8 +1,8 @@
 {
   "executors": {
     "cypress": {
-      "implementation": "./src/executors/cypress/cypress.impl",
-      "schema": "./src/executors/cypress/schema.json",
+      "implementation": "./dist/src/executors/cypress/cypress.impl",
+      "schema": "./dist/src/executors/cypress/schema.json",
       "description": "Run Cypress E2E tests."
     }
   }

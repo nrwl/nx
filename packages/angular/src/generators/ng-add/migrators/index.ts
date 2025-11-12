@@ -1,2 +1,2 @@
-export * from './builders';
-export * from './projects';
+export * from './builders/index.js';
+export * from './projects/index.js';

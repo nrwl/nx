@@ -15,11 +15,11 @@ import {
   isbotVersion,
   moduleFederationNodeVersion,
   typesExpressVersion,
-} from '../../../utils/versions';
+} from '../../../utils/versions.js';
 import {
   createNxRspackPluginOptions,
   getDefaultTemplateVariables,
-} from '../../application/lib/create-application-files';
+} from '../../application/lib/create-application-files.js';
 
 export async function setupSsrForHost(
   tree: Tree,

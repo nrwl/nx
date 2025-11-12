@@ -1,7 +1,7 @@
-import { Task } from '../config/task-graph';
-import { ExternalObject, TaskStatus as NativeTaskStatus } from '../native';
-import { RunningTask } from './running-tasks/running-task';
-import { TaskStatus } from './tasks-runner';
+import { Task } from '../config/task-graph.js';
+import { ExternalObject, TaskStatus as NativeTaskStatus } from '../native/index.js';
+import { RunningTask } from './running-tasks/running-task.js';
+import { TaskStatus } from './tasks-runner.js';
 
 /**
  * The result of a completed {@link Task}

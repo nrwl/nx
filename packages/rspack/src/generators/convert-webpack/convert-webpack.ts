@@ -8,14 +8,14 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { Schema } from './schema';
+import { Schema } from './schema.js';
 import {
   rspackCoreVersion,
   rspackDevServerVersion,
-} from '../../utils/versions';
-import { transformEsmConfigFile } from './lib/transform-esm';
-import { transformCjsConfigFile } from './lib/transform-cjs';
-import { transformPluginConfig } from './lib/transform-plugin-config';
+} from '../../utils/versions.js';
+import { transformEsmConfigFile } from './lib/transform-esm.js';
+import { transformCjsConfigFile } from './lib/transform-cjs.js';
+import { transformPluginConfig } from './lib/transform-plugin-config.js';
 
 export default async function (tree: Tree, options: Schema) {
   const projects = getProjects(tree);

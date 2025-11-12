@@ -5,7 +5,7 @@ import * as detectPort from 'detect-port';
 import { existsSync, rmSync } from 'node:fs';
 import { join, resolve } from 'path';
 
-import { VerdaccioExecutorSchema } from './schema';
+import { VerdaccioExecutorSchema } from './schema.js';
 import { major } from 'semver';
 
 let childProcess: ChildProcess;

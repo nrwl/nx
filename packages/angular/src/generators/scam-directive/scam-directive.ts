@@ -1,8 +1,8 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles } from '@nx/devkit';
-import { directiveGenerator } from '../directive/directive';
-import { exportScam } from '../utils/export-scam';
-import { convertDirectiveToScam, normalizeOptions } from './lib';
+import { directiveGenerator } from '../directive/directive.js';
+import { exportScam } from '../utils/export-scam.js';
+import { convertDirectiveToScam, normalizeOptions } from './lib/index.js';
 import type { Schema } from './schema';
 
 export async function scamDirectiveGenerator(tree: Tree, rawOptions: Schema) {

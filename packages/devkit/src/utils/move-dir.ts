@@ -1,5 +1,5 @@
 import { relative } from 'path';
-import { visitNotIgnoredFiles } from '../generators/visit-not-ignored-files';
+import { visitNotIgnoredFiles } from '../generators/visit-not-ignored-files.js';
 
 import { normalizePath, Tree } from 'nx/src/devkit-exports';
 

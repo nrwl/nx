@@ -1,5 +1,5 @@
 import { output, ProjectConfiguration, Tree } from '@nx/devkit';
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 
 /**
  * Update the .eslintrc file of the project if it exists.

@@ -6,8 +6,8 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
-import { Schema } from './schema';
+import { nxVersion } from '../../utils/versions.js';
+import { Schema } from './schema.js';
 
 function updateDependencies(tree: Tree, options: Schema) {
   const tasks: GeneratorCallback[] = [];

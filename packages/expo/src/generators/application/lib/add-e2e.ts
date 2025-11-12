@@ -9,9 +9,9 @@ import {
 } from '@nx/devkit';
 import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
-import { nxVersion } from '../../../utils/versions';
-import { NormalizedSchema } from './normalize-options';
+import { hasExpoPlugin } from '../../../utils/has-expo-plugin.js';
+import { nxVersion } from '../../../utils/versions.js';
+import { NormalizedSchema } from './normalize-options.js';
 
 export async function addE2e(
   tree: Tree,

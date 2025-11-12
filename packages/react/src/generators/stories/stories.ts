@@ -16,8 +16,8 @@ import { basename, join } from 'path';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
-} from '../../utils/ast-utils';
-import { getUiFramework } from '../../utils/framework';
+} from '../../utils/ast-utils.js';
+import { getUiFramework } from '../../utils/framework.js';
 import componentStoryGenerator from '../component-story/component-story';
 
 let tsModule: typeof import('typescript');

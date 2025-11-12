@@ -7,8 +7,8 @@ import {
   stripIndents,
 } from '@nx/devkit';
 import * as pc from 'picocolors';
-import { babelLoaderVersion, nxVersion } from '../../../../utils/versions';
-import { NormalizedSchema, Schema } from '../../schema';
+import { babelLoaderVersion, nxVersion } from '../../../../utils/versions.js';
+import { NormalizedSchema, Schema } from '../../schema.js';
 
 export async function initRspack(
   tree: Tree,

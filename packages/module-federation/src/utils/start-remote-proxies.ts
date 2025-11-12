@@ -1,6 +1,6 @@
 import type { Express } from 'express';
 import { logger } from '@nx/devkit';
-import { StaticRemotesConfig } from './parse-static-remotes-config';
+import { StaticRemotesConfig } from './parse-static-remotes-config.js';
 import { existsSync, readFileSync } from 'fs';
 
 export function startRemoteProxies(

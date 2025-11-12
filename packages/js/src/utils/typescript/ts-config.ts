@@ -2,7 +2,7 @@ import { offsetFromRoot, Tree, updateJson, workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';
-import { ensureTypescript } from './ensure-typescript';
+import { ensureTypescript } from './ensure-typescript.js';
 
 let tsModule: typeof import('typescript');
 

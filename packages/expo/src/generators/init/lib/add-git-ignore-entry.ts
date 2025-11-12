@@ -1,5 +1,5 @@
 import { logger, Tree } from '@nx/devkit';
-import { gitIgnoreEntriesForExpo } from './gitignore-entries';
+import { gitIgnoreEntriesForExpo } from './gitignore-entries.js';
 
 export function addGitIgnoreEntry(host: Tree) {
   if (!host.exists('.gitignore')) {

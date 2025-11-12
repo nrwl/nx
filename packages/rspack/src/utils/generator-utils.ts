@@ -10,10 +10,10 @@ import {
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { type RspackExecutorSchema } from '../executors/rspack/schema';
-import { type ConfigurationSchema } from '../generators/configuration/schema';
-import { type Framework } from '../generators/init/schema';
-import { hasPlugin } from './has-plugin';
+import { type RspackExecutorSchema } from '../executors/rspack/schema.js';
+import { type ConfigurationSchema } from '../generators/configuration/schema.js';
+import { type Framework } from '../generators/init/schema.js';
+import { hasPlugin } from './has-plugin.js';
 
 export type Target = 'build' | 'serve';
 export type TargetFlags = Partial<Record<Target, boolean>>;

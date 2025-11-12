@@ -1,11 +1,11 @@
-import { FileData, ProjectGraph } from '../../../config/project-graph';
-import { getTouchedProjects } from '../../../project-graph/affected/locators/workspace-projects';
-import { calculateFileChanges } from '../../../project-graph/file-utils';
-import { NxArgs } from '../../../utils/command-line-utils';
-import { getIgnoreObject } from '../../../utils/ignore';
-import { output } from '../../../utils/output';
-import { IMPLICIT_DEFAULT_RELEASE_GROUP } from '../config/config';
-import { ReleaseGroupWithName } from '../config/filter-release-groups';
+import { FileData, ProjectGraph } from '../../../config/project-graph.js';
+import { getTouchedProjects } from '../../../project-graph/affected/locators/workspace-projects.js';
+import { calculateFileChanges } from '../../../project-graph/file-utils.js';
+import { NxArgs } from '../../../utils/command-line-utils.js';
+import { getIgnoreObject } from '../../../utils/ignore.js';
+import { output } from '../../../utils/output.js';
+import { IMPLICIT_DEFAULT_RELEASE_GROUP } from '../config/config.js';
+import { ReleaseGroupWithName } from '../config/filter-release-groups.js';
 
 /**
  * Create a function that returns the touched projects for a given release group. Only relevant when version plans are enabled.

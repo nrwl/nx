@@ -1,9 +1,9 @@
 import type { Tree } from '../../generators/tree';
-import { NxCloudOnBoardingStatus } from '../models/onboarding-status';
-import { isWorkspaceClaimed } from './is-workspace-claimed';
-import { createNxCloudOnboardingURL } from './url-shorten';
-import { getRunnerOptions } from '../../tasks-runner/run-command';
-import { readNxJson } from '../../generators/utils/nx-json';
+import { NxCloudOnBoardingStatus } from '../models/onboarding-status.js';
+import { isWorkspaceClaimed } from './is-workspace-claimed.js';
+import { createNxCloudOnboardingURL } from './url-shorten.js';
+import { getRunnerOptions } from '../../tasks-runner/run-command.js';
+import { readNxJson } from '../../generators/utils/nx-json.js';
 
 export async function createNxCloudOnboardingURLForWelcomeApp(
   tree: Tree,

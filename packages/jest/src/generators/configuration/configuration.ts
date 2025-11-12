@@ -10,20 +10,20 @@ import {
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { JestPluginOptions } from '../../plugins/plugin';
+import { JestPluginOptions } from '../../plugins/plugin.js';
 import {
   findRootJestPreset,
   getPresetExt,
-} from '../../utils/config/config-file';
-import { jestInitGenerator } from '../init/init';
-import { checkForTestTarget } from './lib/check-for-test-target';
-import { createFiles } from './lib/create-files';
-import { createJestConfig } from './lib/create-jest-config';
-import { ensureDependencies } from './lib/ensure-dependencies';
-import { updateTsConfig } from './lib/update-tsconfig';
-import { updateVsCodeRecommendedExtensions } from './lib/update-vscode-recommended-extensions';
-import { updateWorkspace } from './lib/update-workspace';
-import { JestProjectSchema, NormalizedJestProjectSchema } from './schema';
+} from '../../utils/config/config-file.js';
+import { jestInitGenerator } from '../init/init.js';
+import { checkForTestTarget } from './lib/check-for-test-target.js';
+import { createFiles } from './lib/create-files.js';
+import { createJestConfig } from './lib/create-jest-config.js';
+import { ensureDependencies } from './lib/ensure-dependencies.js';
+import { updateTsConfig } from './lib/update-tsconfig.js';
+import { updateVsCodeRecommendedExtensions } from './lib/update-vscode-recommended-extensions.js';
+import { updateWorkspace } from './lib/update-workspace.js';
+import { JestProjectSchema, NormalizedJestProjectSchema } from './schema.js';
 
 const schemaDefaults = {
   setupFile: 'none',

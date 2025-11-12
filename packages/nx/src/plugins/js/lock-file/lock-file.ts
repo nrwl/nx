@@ -10,43 +10,43 @@ import { gte } from 'semver';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
-} from '../../../config/project-graph';
+} from '../../../config/project-graph.js';
 import {
   CreateDependenciesContext,
   CreateNodesContextV2,
-} from '../../../project-graph/plugins';
-import { RawProjectGraphDependency } from '../../../project-graph/project-graph-builder';
-import { readJsonFile } from '../../../utils/fileutils';
-import { output } from '../../../utils/output';
-import { PackageJson } from '../../../utils/package-json';
+} from '../../../project-graph/plugins/index.js';
+import { RawProjectGraphDependency } from '../../../project-graph/project-graph-builder.js';
+import { readJsonFile } from '../../../utils/fileutils.js';
+import { output } from '../../../utils/output.js';
+import { PackageJson } from '../../../utils/package-json.js';
 import {
   detectPackageManager,
   PackageManager,
-} from '../../../utils/package-manager';
-import { workspaceRoot } from '../../../utils/workspace-root';
+} from '../../../utils/package-manager.js';
+import { workspaceRoot } from '../../../utils/workspace-root.js';
 import {
   BUN_LOCK_FILE,
   BUN_TEXT_LOCK_FILE,
   getBunTextLockfileDependencies,
   getBunTextLockfileNodes,
-} from './bun-parser';
+} from './bun-parser.js';
 import {
   getNpmLockfileDependencies,
   getNpmLockfileNodes,
   stringifyNpmLockfile,
-} from './npm-parser';
+} from './npm-parser.js';
 import {
   getPnpmLockfileDependencies,
   getPnpmLockfileNodes,
   stringifyPnpmLockfile,
-} from './pnpm-parser';
-import { pruneProjectGraph } from './project-graph-pruning';
-import { normalizePackageJson } from './utils/package-json';
+} from './pnpm-parser.js';
+import { pruneProjectGraph } from './project-graph-pruning.js';
+import { normalizePackageJson } from './utils/package-json.js';
 import {
   getYarnLockfileDependencies,
   getYarnLockfileNodes,
   stringifyYarnLockfile,
-} from './yarn-parser';
+} from './yarn-parser.js';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';

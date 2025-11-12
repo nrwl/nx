@@ -1,24 +1,24 @@
 import { prompt } from 'enquirer';
 import { join } from 'path';
-import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils';
-import { nxVersion } from '../../../../utils/versions';
-import { sortObjectByKeys } from '../../../../utils/object-sort';
-import { output } from '../../../../utils/output';
+import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils.js';
+import { nxVersion } from '../../../../utils/versions.js';
+import { sortObjectByKeys } from '../../../../utils/object-sort.js';
+import { output } from '../../../../utils/output.js';
 import {
   getDependencyVersionFromPackageJson,
   type PackageJson,
-} from '../../../../utils/package-json';
+} from '../../../../utils/package-json.js';
 import {
   addDepsToPackageJson,
   initCloud,
   runInstall,
   updateGitIgnore,
-} from '../utils';
-import { setupIntegratedWorkspace } from './integrated-workspace';
-import { getLegacyMigrationFunctionIfApplicable } from './legacy-angular-versions';
-import { setupStandaloneWorkspace } from './standalone-workspace';
+} from '../utils.js';
+import { setupIntegratedWorkspace } from './integrated-workspace.js';
+import { getLegacyMigrationFunctionIfApplicable } from './legacy-angular-versions.js';
+import { setupStandaloneWorkspace } from './standalone-workspace.js';
 import type { AngularJsonConfig, Options } from './types';
-import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
+import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud.js';
 
 const defaultCacheableOperations: string[] = [
   'build',

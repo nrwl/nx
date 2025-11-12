@@ -1,5 +1,5 @@
 import { Tree, ensurePackage, offsetFromRoot } from '@nx/devkit';
-import { nxVersion } from './versions';
+import { nxVersion } from './versions.js';
 
 export async function addJest(
   host: Tree,

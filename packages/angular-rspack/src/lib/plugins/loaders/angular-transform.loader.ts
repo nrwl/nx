@@ -1,6 +1,6 @@
 import type { LoaderContext } from '@rspack/core';
 import { normalize } from 'path';
-import { NG_RSPACK_SYMBOL_NAME, NgRspackCompilation } from '../../models';
+import { NG_RSPACK_SYMBOL_NAME, NgRspackCompilation } from '../../models/index.js';
 import {
   StyleUrlsResolver,
   TemplateUrlsResolver,

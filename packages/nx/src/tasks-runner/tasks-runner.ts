@@ -1,9 +1,9 @@
-import { NxJsonConfiguration } from '../config/nx-json';
-import { ProjectGraph } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
-import { NxArgs } from '../utils/command-line-utils';
-import { TaskHasher } from '../hasher/task-hasher';
-import { DaemonClient } from '../daemon/client/client';
+import { NxJsonConfiguration } from '../config/nx-json.js';
+import { ProjectGraph } from '../config/project-graph.js';
+import { Task, TaskGraph } from '../config/task-graph.js';
+import { NxArgs } from '../utils/command-line-utils.js';
+import { TaskHasher } from '../hasher/task-hasher.js';
+import { DaemonClient } from '../daemon/client/client.js';
 
 export type TaskStatus =
   | 'success'

@@ -5,8 +5,8 @@ import {
   ModuleFederationConfig,
   normalizeProjectName,
   NxModuleFederationConfigOverride,
-} from '../../utils';
-import { getModuleFederationConfig } from './utils';
+} from '../../utils/index.js';
+import { getModuleFederationConfig } from './utils.js';
 
 const isVarOrWindow = (libType?: string) =>
   libType === 'var' || libType === 'window';

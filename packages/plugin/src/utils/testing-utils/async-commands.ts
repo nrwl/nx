@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
-import { tmpProjPath } from './paths';
+import { tmpProjPath } from './paths.js';
 import { detectPackageManager, getPackageManagerCommand } from '@nx/devkit';
-import { fileExists } from './utils';
+import { fileExists } from './utils.js';
 
 /**
  * Run a command asynchronously inside the e2e directory.

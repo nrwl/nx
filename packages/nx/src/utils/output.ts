@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
 import { EOL } from 'os';
 import * as readline from 'readline';
-import { isCI } from './is-ci';
+import { isCI } from './is-ci.js';
 import type { TaskStatus } from '../tasks-runner/tasks-runner';
 
 const GH_GROUP_PREFIX = '::group::';

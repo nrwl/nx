@@ -23,7 +23,7 @@ import { dirname, join, parse, posix, relative, resolve } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
-import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
+import { getReporterOutputs, type ReporterOutput } from '../utils/reporters.js';
 
 const pmc = getPackageManagerCommand();
 

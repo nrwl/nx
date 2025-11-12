@@ -1,10 +1,10 @@
 import * as path from 'path';
 import { WebpackPluginInstance } from 'webpack';
 
-import { getOutputHashFormat } from '../../../utils/hash-format';
-import { ScriptsWebpackPlugin } from '../../../utils/webpack/plugins/scripts-webpack-plugin';
-import { normalizeExtraEntryPoints } from '../../../utils/webpack/normalize-entry';
-import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
+import { getOutputHashFormat } from '../../../utils/hash-format.js';
+import { ScriptsWebpackPlugin } from '../../../utils/webpack/plugins/scripts-webpack-plugin.js';
+import { normalizeExtraEntryPoints } from '../../../utils/webpack/normalize-entry.js';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options.js';
 
 export function instantiateScriptPlugins(
   options: NormalizedNxAppWebpackPluginOptions

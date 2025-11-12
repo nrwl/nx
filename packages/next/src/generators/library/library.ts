@@ -14,11 +14,11 @@ import {
   testingLibraryReactVersion,
 } from '@nx/react/src/utils/versions';
 
-import { nextInitGenerator } from '../init/init';
-import { Schema } from './schema';
-import { normalizeOptions } from './lib/normalize-options';
-import { updateViteConfigForServerEntry } from './lib/update-vite-config';
-import { eslintConfigNextVersion, tsLibVersion } from '../../utils/versions';
+import { nextInitGenerator } from '../init/init.js';
+import { Schema } from './schema.js';
+import { normalizeOptions } from './lib/normalize-options.js';
+import { updateViteConfigForServerEntry } from './lib/update-vite-config.js';
+import { eslintConfigNextVersion, tsLibVersion } from '../../utils/versions.js';
 import {
   isUsingTsSolutionSetup,
   addProjectToTsSolutionWorkspace,
@@ -110,7 +110,7 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
       `server.${options.js ? 'js' : 'ts'}`
     ),
     `// Use this file to export React server components
-    export * from './lib/hello-server';`
+    export * from './lib/hello-server.js';`
   );
   host.write(
     joinPathFragments(

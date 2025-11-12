@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { generateFiles, joinPathFragments, names } from '@nx/devkit';
 import { lt } from 'semver';
-import { NormalizedNgRxGeneratorOptions } from './normalize-options';
+import { NormalizedNgRxGeneratorOptions } from './normalize-options.js';
 
 /**
  * Generate 'feature' scaffolding: actions, reducer, effects, interfaces, selectors, facade

@@ -1,6 +1,6 @@
-import { logger } from '../../utils/logger';
-import { Tree } from '../../generators/tree';
-import { getProjects } from '../../generators/utils/project-configuration';
+import { logger } from '../../utils/logger.js';
+import { Tree } from '../../generators/tree.js';
+import { getProjects } from '../../generators/utils/project-configuration.js';
 
 /**
  * This function escapes dollar sign in env variables

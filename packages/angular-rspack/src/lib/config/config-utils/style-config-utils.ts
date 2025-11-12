@@ -21,9 +21,9 @@ import {
   generateSearchDirectories,
   loadPostcssConfiguration,
   type SearchDirectory,
-} from '../../utils/postcss-configuration';
-import { AnyComponentStyleBudgetChecker } from '../../plugins/any-component-style-budget-checker-plugin';
-import { SuppressJsForCssOnlyEntryPlugin } from '../../plugins/suppress-js-for-css-chunks-plugin';
+} from '../../utils/postcss-configuration.js';
+import { AnyComponentStyleBudgetChecker } from '../../plugins/any-component-style-budget-checker-plugin.js';
+import { SuppressJsForCssOnlyEntryPlugin } from '../../plugins/suppress-js-for-css-chunks-plugin.js';
 
 export async function getStylesConfig(
   buildOptions: NormalizedAngularRspackPluginOptions,

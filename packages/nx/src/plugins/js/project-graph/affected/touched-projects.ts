@@ -1,7 +1,7 @@
-import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
-import { getTouchedProjectsFromLockFile } from './lock-file-changes';
-import { getTouchedNpmPackages } from './npm-packages';
-import { getTouchedProjectsFromTsConfig } from './tsconfig-json-changes';
+import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models.js';
+import { getTouchedProjectsFromLockFile } from './lock-file-changes.js';
+import { getTouchedNpmPackages } from './npm-packages.js';
+import { getTouchedProjectsFromTsConfig } from './tsconfig-json-changes.js';
 
 export const getTouchedProjects: TouchedProjectLocator = (
   touchedFiles,

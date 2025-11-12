@@ -1,4 +1,4 @@
-import { NxReleaseConfig } from './config';
+import { NxReleaseConfig } from './config.js';
 
 export const DEFAULT_CONVENTIONAL_COMMITS_CONFIG: NxReleaseConfig['conventionalCommits'] =
   {

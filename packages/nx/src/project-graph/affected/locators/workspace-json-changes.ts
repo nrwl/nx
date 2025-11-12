@@ -1,10 +1,10 @@
-import { isWholeFileChange, WholeFileChange } from '../../file-utils';
+import { isWholeFileChange, WholeFileChange } from '../../file-utils.js';
 import {
   JsonDiffType,
   isJsonChange,
   JsonChange,
-} from '../../../utils/json-diff';
-import { TouchedProjectLocator } from '../affected-project-graph-models';
+} from '../../../utils/json-diff.js';
+import { TouchedProjectLocator } from '../affected-project-graph-models.js';
 
 export const getTouchedProjectsInWorkspaceJson: TouchedProjectLocator<
   WholeFileChange | JsonChange

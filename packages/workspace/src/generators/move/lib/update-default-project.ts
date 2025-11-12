@@ -1,5 +1,5 @@
 import { readNxJson, Tree, updateNxJson } from '@nx/devkit';
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 
 /**
  * Updates the project in the workspace file

@@ -13,14 +13,14 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { swcHelpersVersion } from '@nx/js/src/utils/versions';
-import { E2eTestRunner } from '../../utils/test-runners';
-import { applicationGenerator } from '../application/application';
+import { E2eTestRunner } from '../../utils/test-runners.js';
+import { applicationGenerator } from '../application/application.js';
 import convertToRspack from '../convert-to-rspack/convert-to-rspack';
-import { setupMf } from '../setup-mf/setup-mf';
-import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
-import { assertRspackIsCSR } from '../utils/assert-mf-utils';
-import { assertNotUsingTsSolutionSetup } from '../utils/validations';
-import { findNextAvailablePort, updateSsrSetup } from './lib';
+import { setupMf } from '../setup-mf/setup-mf.js';
+import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs.js';
+import { assertRspackIsCSR } from '../utils/assert-mf-utils.js';
+import { assertNotUsingTsSolutionSetup } from '../utils/validations.js';
+import { findNextAvailablePort, updateSsrSetup } from './lib/index.js';
 import type { Schema } from './schema';
 
 export async function remote(tree: Tree, schema: Schema) {

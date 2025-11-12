@@ -3,8 +3,8 @@ import {
   logger,
   readProjectsConfigurationFromProjectGraph,
 } from '@nx/devkit';
-import { type Schema } from './schema';
-import { normalizeOptions, startRemotes } from './lib';
+import { type Schema } from './schema.js';
+import { normalizeOptions, startRemotes } from './lib/index.js';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import {
   combineAsyncIterables,
@@ -15,11 +15,11 @@ import { startRemoteIterators } from '@nx/module-federation/src/executors/utils'
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
-import { executeDevServerBuilder } from '../../builders/dev-server/dev-server.impl';
+import { executeDevServerBuilder } from '../../builders/dev-server/dev-server.impl.js';
 import {
   getDynamicMfManifestFile,
   validateDevRemotes,
-} from '../../builders/utilities/module-federation';
+} from '../../builders/utilities/module-federation.js';
 import { extname, join } from 'path';
 import { existsSync } from 'fs';
 

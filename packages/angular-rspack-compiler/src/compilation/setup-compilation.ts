@@ -1,9 +1,9 @@
 import { RsbuildConfig } from '@rsbuild/core';
 import * as ts from 'typescript';
-import { InlineStyleLanguage, FileReplacement, type Sass } from '../models';
-import { loadCompilerCli } from '../utils';
+import { InlineStyleLanguage, FileReplacement, type Sass } from '../models/index.js';
+import { loadCompilerCli } from '../utils/index.js';
 import { ComponentStylesheetBundler } from '@angular/build/private';
-import { transformSupportedBrowsersToTargets } from '../utils/targets-from-browsers';
+import { transformSupportedBrowsersToTargets } from '../utils/targets-from-browsers.js';
 import { getSupportedBrowsers } from '@angular/build/private';
 
 export interface StylesheetTransformResult {

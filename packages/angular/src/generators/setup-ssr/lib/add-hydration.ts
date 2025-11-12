@@ -10,8 +10,8 @@ import type { CallExpression, SourceFile } from 'typescript';
 import {
   addProviderToAppConfig,
   addProviderToModule,
-} from '../../../utils/nx-devkit/ast-utils';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+} from '../../../utils/nx-devkit/ast-utils.js';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { NormalizedGeneratorOptions } from '../schema';
 
 let tsModule: typeof import('typescript');

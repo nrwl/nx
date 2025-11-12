@@ -9,19 +9,19 @@ import type {
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
 import type { Tree } from '../../../generators/tree';
-import { writeJson } from '../../../generators/utils/json';
-import { createProjectFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
+import { writeJson } from '../../../generators/utils/json.js';
+import { createProjectFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils.js';
 import {
   createNxReleaseConfig,
   DEFAULT_VERSION_ACTIONS_PATH,
   NxReleaseConfig,
-} from '../config/config';
+} from '../config/config.js';
 import {
   createReleaseGraph,
   type FinalConfigForProject,
-} from '../utils/release-graph';
-import { ReleaseGroupProcessor } from './release-group-processor';
-import { VersionActions } from './version-actions';
+} from '../utils/release-graph.js';
+import { ReleaseGroupProcessor } from './release-group-processor.js';
+import { VersionActions } from './version-actions.js';
 
 export async function createNxReleaseConfigAndPopulateWorkspace(
   tree: Tree,

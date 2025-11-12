@@ -1,4 +1,4 @@
-import { NormalizedSchema } from './normalize-options';
+import { NormalizedSchema } from './normalize-options.js';
 import {
   addProjectConfiguration,
   joinPathFragments,
@@ -9,7 +9,7 @@ import {
 } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { nextVersion } from '../../../utils/versions';
+import { nextVersion } from '../../../utils/versions.js';
 import { reactDomVersion, reactVersion } from '@nx/react';
 import type { PackageJson } from 'nx/src/utils/package-json';
 

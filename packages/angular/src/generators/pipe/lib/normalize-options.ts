@@ -1,8 +1,8 @@
 import type { Tree } from '@nx/devkit';
 import { names } from '@nx/devkit';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-import { validateClassName } from '../../utils/validations';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import { validateClassName } from '../../utils/validations.js';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(

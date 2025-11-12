@@ -8,9 +8,9 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodesV2 } from '../../plugins/plugin';
-import { nxVersion, remixVersion } from '../../utils/versions';
-import { type Schema } from './schema';
+import { createNodesV2 } from '../../plugins/plugin.js';
+import { nxVersion, remixVersion } from '../../utils/versions.js';
+import { type Schema } from './schema.js';
 
 export function remixInitGenerator(tree: Tree, options: Schema) {
   return remixInitGeneratorInternal(tree, { addPlugin: false, ...options });

@@ -4,10 +4,10 @@ import {
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { createNodesV2 } from '../../../plugins/plugin';
-import { postTargetTransformer } from './lib/post-target-transformer';
-import { processStartOptions } from './lib/process-start-options';
-import { createProcessOptions } from './lib/create-process-options';
+import { createNodesV2 } from '../../../plugins/plugin.js';
+import { postTargetTransformer } from './lib/post-target-transformer.js';
+import { processStartOptions } from './lib/process-start-options.js';
+import { createProcessOptions } from './lib/create-process-options.js';
 
 interface Schema {
   project?: string;

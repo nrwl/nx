@@ -1,4 +1,4 @@
-import { workspaceRootInner } from './workspace-root';
+import { workspaceRootInner } from './workspace-root.js';
 
 /**
  * Recursive function that walks back up the directory

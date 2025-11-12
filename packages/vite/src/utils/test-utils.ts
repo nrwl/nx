@@ -331,7 +331,7 @@ export function mockReactMixedAppGenerator(tree: Tree): Tree {
 export function mockWebAppGenerator(tree: Tree): Tree {
   const appName = 'my-test-web-app';
 
-  tree.write(`apps/${appName}/src/main.ts`, `import './app/app.element.ts';`);
+  tree.write(`apps/${appName}/src/main.ts`, `import './app/app.element.ts.js';`);
 
   tree.write(
     `apps/${appName}/tsconfig.json`,

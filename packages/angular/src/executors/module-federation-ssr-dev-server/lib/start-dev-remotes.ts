@@ -1,4 +1,4 @@
-import { type Schema } from '../schema';
+import { type Schema } from '../schema.js';
 import {
   type ExecutorContext,
   type ProjectConfiguration,

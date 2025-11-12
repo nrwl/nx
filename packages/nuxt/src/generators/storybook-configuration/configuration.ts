@@ -7,7 +7,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { storybookConfigurationGenerator as vueStorybookConfigurationGenerator } from '@nx/vue';
-import { Schema } from './schema';
+import { Schema } from './schema.js';
 
 /*
  * This generator is basically the Vue one, but for Nuxt we
@@ -31,7 +31,7 @@ export async function storybookConfigurationGenerator(
       '.storybook',
       'preview.' + (options.tsConfiguration ? 'ts' : 'js')
     ),
-    `import '../src/assets/css/styles.css';`
+    `import '../src/assets/css/styles.css.js';`
   );
 
   updateJson(tree, `${root}/tsconfig.storybook.json`, (json) => {

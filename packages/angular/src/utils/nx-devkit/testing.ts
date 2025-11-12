@@ -40,7 +40,7 @@ export function createApp(
     `import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 ${routing ? "import { RouterModule } from '@angular/router'" : ''};
-import { App } from './app';
+import { App } from './app.js';
 @NgModule({
   imports: [BrowserModule, ${routing ? 'RouterModule.forRoot([])' : ''}],
   declarations: [App],
@@ -53,7 +53,7 @@ export class AppModule {}
     `${appName}/src/main.ts`,
     `import { platformBrowser } from '@angular/platform-browser';
 
-import { AppModule } from './app/app-module';
+import { AppModule } from './app/app-module.js';
 
 platformBrowser()
   .bootstrapModule(AppModule)
@@ -113,7 +113,7 @@ export class ${className}Module { }
   );
   tree.write(
     libConfig.barrel,
-    `export * from './lib/${fileName}-module';
+    `export * from './lib/${fileName}-module.js';
 `
   );
 }

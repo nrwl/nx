@@ -23,8 +23,8 @@ import type {
   ObjectLiteralExpression,
   PropertyAssignment,
 } from 'typescript';
-import { FileChangeRecorder } from '../../../../utils/file-change-recorder';
-import { nxVersion } from '../../../../utils/versions';
+import { FileChangeRecorder } from '../../../../utils/file-change-recorder.js';
+import { nxVersion } from '../../../../utils/versions.js';
 import type { GeneratorOptions } from '../../schema';
 import type {
   Logger,
@@ -32,7 +32,7 @@ import type {
   Target,
   ValidationResult,
 } from '../../utilities';
-import { ProjectMigrator } from './project.migrator';
+import { ProjectMigrator } from './project.migrator.js';
 
 type SupportedTargets = 'e2e';
 const supportedTargets: Record<SupportedTargets, Target> = {

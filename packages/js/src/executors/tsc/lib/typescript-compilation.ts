@@ -1,11 +1,11 @@
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import * as ts from 'typescript';
 import type { TransformerEntry } from '../../../utils/typescript/types';
-import { getCustomTrasformersFactory } from './get-custom-transformers-factory';
+import { getCustomTrasformersFactory } from './get-custom-transformers-factory.js';
 import {
   formatDiagnosticReport,
   formatSolutionBuilderStatusReport,
-} from './typescript-diagnostic-reporters';
+} from './typescript-diagnostic-reporters.js';
 
 export interface TypescriptInMemoryTsConfig {
   content: string;

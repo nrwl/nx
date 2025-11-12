@@ -1,13 +1,13 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, joinPathFragments } from '@nx/devkit';
-import { addToNgModule } from '../utils';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
+import { addToNgModule } from '../utils/index.js';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils.js';
 import {
   exportComponentInEntryPoint,
   findModuleFromOptions,
   normalizeOptions,
   setGeneratorDefaults,
-} from './lib';
+} from './lib/index.js';
 import type { Schema } from './schema';
 
 export async function componentGenerator(tree: Tree, rawOptions: Schema) {

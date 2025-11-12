@@ -1,8 +1,8 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
-import { IS_WASM, isAiAgent } from '../native';
-import { NxArgs } from '../utils/command-line-utils';
-import { isCI } from '../utils/is-ci';
-import { logger } from '../utils/logger';
+import { IS_WASM, isAiAgent } from '../native/index.js';
+import { NxArgs } from '../utils/command-line-utils.js';
+import { isCI } from '../utils/is-ci.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * @returns If tui is enabled

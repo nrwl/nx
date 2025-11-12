@@ -1,13 +1,13 @@
-import { getPackageManagerCommand } from '../../../utils/package-manager';
+import { getPackageManagerCommand } from '../../../utils/package-manager.js';
 import { execSync } from 'child_process';
-import { isNxCloudUsed } from '../../../utils/nx-cloud-utils';
-import { output } from '../../../utils/output';
-import { readNxJson } from '../../../config/nx-json';
+import { isNxCloudUsed } from '../../../utils/nx-cloud-utils.js';
+import { output } from '../../../utils/output.js';
+import { readNxJson } from '../../../config/nx-json.js';
 import {
   connectExistingRepoToNxCloudPrompt,
   connectWorkspaceToCloud,
-} from './connect-to-nx-cloud';
-import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
+} from './connect-to-nx-cloud.js';
+import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud.js';
 
 export async function viewLogs(): Promise<number> {
   const cloudUsed = isNxCloudUsed(readNxJson());

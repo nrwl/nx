@@ -11,7 +11,7 @@
 /**
  * @category Generators
  */
-export { formatFiles } from './src/generators/format-files';
+export { formatFiles } from './src/generators/format-files.js';
 
 /**
  * @category Generators
@@ -19,37 +19,37 @@ export { formatFiles } from './src/generators/format-files';
 export {
   generateFiles,
   OverwriteStrategy,
-} from './src/generators/generate-files';
+} from './src/generators/generate-files.js';
 
 /**
  * @category Generators
  */
-export { toJS, ToJSOptions } from './src/generators/to-js';
+export { toJS, ToJSOptions } from './src/generators/to-js.js';
 
 /**
  * @category Generators
  */
-export { updateTsConfigsToJs } from './src/generators/update-ts-configs-to-js';
+export { updateTsConfigsToJs } from './src/generators/update-ts-configs-to-js.js';
 
 /**
  * @category Generators
  */
-export { runTasksInSerial } from './src/generators/run-tasks-in-serial';
+export { runTasksInSerial } from './src/generators/run-tasks-in-serial.js';
 
 /**
  * @category Generators
  */
-export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files';
+export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files.js';
 
 export {
   parseTargetString,
   targetToTargetString,
-} from './src/executors/parse-target-string';
+} from './src/executors/parse-target-string.js';
 
 /**
  * @category Executors
  */
-export { readTargetOptions } from './src/executors/read-target-options';
+export { readTargetOptions } from './src/executors/read-target-options.js';
 
 /**
  * @category Utils
@@ -60,17 +60,17 @@ export {
   ensurePackage,
   getDependencyVersionFromPackageJson,
   NX_VERSION,
-} from './src/utils/package-json';
+} from './src/utils/package-json.js';
 
 /**
  * @category Utils
  */
-export { installPackagesTask } from './src/tasks/install-packages-task';
+export { installPackagesTask } from './src/tasks/install-packages-task.js';
 
 /**
  * @category Utils
  */
-export { names } from './src/utils/names';
+export { names } from './src/utils/names.js';
 
 /**
  * @category Utils
@@ -78,7 +78,7 @@ export { names } from './src/utils/names';
 export {
   getWorkspaceLayout,
   extractLayoutDirectory,
-} from './src/utils/get-workspace-layout';
+} from './src/utils/get-workspace-layout.js';
 
 /**
  * @category Utils
@@ -92,24 +92,24 @@ export type {
 /**
  * @category Utils
  */
-export { applyChangesToString, ChangeType } from './src/utils/string-change';
+export { applyChangesToString, ChangeType } from './src/utils/string-change.js';
 
 /**
  * @category Utils
  */
-export { offsetFromRoot } from './src/utils/offset-from-root';
+export { offsetFromRoot } from './src/utils/offset-from-root.js';
 
 /**
  * @category Utils
  */
-export { convertNxGenerator } from './src/utils/invoke-nx-generator';
+export { convertNxGenerator } from './src/utils/invoke-nx-generator.js';
 
 /**
  * @category Utils
  */
-export { convertNxExecutor } from './src/utils/convert-nx-executor';
+export { convertNxExecutor } from './src/utils/convert-nx-executor.js';
 
 /**
  * @category Utils
  */
-export { moveFilesToNewDirectory } from './src/utils/move-dir';
+export { moveFilesToNewDirectory } from './src/utils/move-dir.js';

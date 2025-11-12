@@ -1,4 +1,4 @@
-import { mapAsyncIterable } from './map-async-iteratable';
+import { mapAsyncIterable } from './map-async-iteratable.js';
 
 export async function* tapAsyncIterable<T = any, I = any, O = any>(
   data: AsyncIterable<T> | AsyncIterableIterator<T>,

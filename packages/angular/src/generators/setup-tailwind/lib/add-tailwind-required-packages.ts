@@ -3,7 +3,7 @@ import {
   GeneratorCallback,
   Tree,
 } from '@nx/devkit';
-import { versions } from '../../utils/version-utils';
+import { versions } from '../../utils/version-utils.js';
 
 export function addTailwindRequiredPackages(tree: Tree): GeneratorCallback {
   const pkgVersions = versions(tree);

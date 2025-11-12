@@ -8,7 +8,7 @@ import type {
   PnpmWorkspaceYaml,
 } from 'nx/src/utils/pnpm-workspace';
 import type { CatalogManager } from './manager';
-import { type CatalogReference } from './types';
+import { type CatalogReference } from './types.js';
 
 /**
  * PNPM-specific catalog manager implementation

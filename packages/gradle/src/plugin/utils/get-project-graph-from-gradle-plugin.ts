@@ -12,10 +12,10 @@ import {
 } from '@nx/devkit';
 
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
-import { gradleConfigAndTestGlob } from '../../utils/split-config-files';
+import { gradleConfigAndTestGlob } from '../../utils/split-config-files.js';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { getNxProjectGraphLines } from './get-project-graph-lines';
-import { GradlePluginOptions } from './gradle-plugin-options';
+import { getNxProjectGraphLines } from './get-project-graph-lines.js';
+import { GradlePluginOptions } from './gradle-plugin-options.js';
 import { hashObject } from 'nx/src/devkit-internals';
 
 // the output json file from the gradle plugin

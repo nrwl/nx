@@ -6,7 +6,7 @@ import { insertImport } from '@nx/js';
 import {
   insertNgModuleProperty,
   ngModuleDecoratorProperty,
-} from './insert-ngmodule-import';
+} from './insert-ngmodule-import.js';
 
 let tsModule: typeof import('typescript');
 

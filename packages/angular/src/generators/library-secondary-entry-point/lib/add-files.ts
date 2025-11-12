@@ -1,5 +1,5 @@
 import { generateFiles, joinPathFragments, names, Tree } from '@nx/devkit';
-import { NormalizedGeneratorOptions } from '../schema';
+import { NormalizedGeneratorOptions } from '../schema.js';
 
 export function addFiles(
   tree: Tree,

@@ -10,8 +10,8 @@ import { workspaceRoot } from '@nx/devkit';
 import browserslist from 'browserslist';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
-import { getNgPackagrVersionInfo } from '../ng-packagr-version';
-import { importNgPackagrPath } from '../package-imports';
+import { getNgPackagrVersionInfo } from '../ng-packagr-version.js';
+import { importNgPackagrPath } from '../package-imports.js';
 
 const maxWorkersVariable = process.env['NG_BUILD_MAX_WORKERS'];
 const maxThreads =

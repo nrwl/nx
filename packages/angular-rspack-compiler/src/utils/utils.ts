@@ -1,6 +1,6 @@
 import { availableParallelism, platform } from 'node:os';
 import { ArrayLiteralExpression, PropertyAssignment } from 'ts-morph';
-import { ENV_NG_BUILD_MAX_WORKERS } from './constants';
+import { ENV_NG_BUILD_MAX_WORKERS } from './constants.js';
 
 export const isUsingWindows = () => platform() === 'win32';
 

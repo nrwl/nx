@@ -1,4 +1,4 @@
-import { FsTree, Tree } from '../generators/tree';
+import { FsTree, Tree } from '../generators/tree.js';
 import { join } from 'path';
 
 export function assertRunsAgainstNxRepo(

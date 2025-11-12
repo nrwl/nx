@@ -11,13 +11,13 @@ import {
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 
-import { NormalizedSchema } from './normalize-options';
+import { NormalizedSchema } from './normalize-options.js';
 import {
   createAppJsx,
   createStyleRules,
-} from './create-application-files.helpers';
+} from './create-application-files.helpers.js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { isNext16 } from '../../../utils/version-utils';
+import { isNext16 } from '../../../utils/version-utils.js';
 
 export async function createApplicationFiles(
   host: Tree,

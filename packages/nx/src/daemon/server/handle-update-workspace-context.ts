@@ -1,4 +1,4 @@
-import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
+import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation.js';
 import type { HandlerResult } from './server';
 
 export async function handleUpdateWorkspaceContext(

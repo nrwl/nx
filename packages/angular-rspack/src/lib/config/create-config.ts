@@ -1,18 +1,18 @@
 import { type Configuration } from '@rspack/core';
 import { merge as rspackMerge } from 'webpack-merge';
-import { type AngularRspackPluginOptions } from '../models';
+import { type AngularRspackPluginOptions } from '../models/index.js';
 import {
   deleteOutputDir,
   getOutputHashFormat,
   normalizeOptionWithI18n,
-} from './config-utils/helpers';
-import { getCommonConfig } from './config-utils/common-config';
-import { getServerConfig } from './config-utils/server-config';
-import { getBrowserConfig } from './config-utils/browser-config';
+} from './config-utils/helpers.js';
+import { getCommonConfig } from './config-utils/common-config.js';
+import { getServerConfig } from './config-utils/server-config.js';
+import { getBrowserConfig } from './config-utils/browser-config.js';
 import {
   handleConfigurations,
   parseConfigurationMode,
-} from './config-utils/user-defined-config-helpers';
+} from './config-utils/user-defined-config-helpers.js';
 
 export async function createConfig(
   defaultOptions: {

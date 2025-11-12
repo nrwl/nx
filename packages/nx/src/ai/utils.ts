@@ -1,15 +1,15 @@
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
-import { readNxJson } from '../config/configuration';
-import { flushChanges, FsTree } from '../generators/tree';
+import { readNxJson } from '../config/configuration.js';
+import { flushChanges, FsTree } from '../generators/tree.js';
 import {
   canInstallNxConsoleForEditor,
   isEditorInstalled,
   SupportedEditor,
-} from '../native';
-import { readJsonFile } from '../utils/fileutils';
-import { isNxCloudUsed } from '../utils/nx-cloud-utils';
-import { output } from '../utils/output';
+} from '../native/index.js';
+import { readJsonFile } from '../utils/fileutils.js';
+import { isNxCloudUsed } from '../utils/nx-cloud-utils.js';
+import { output } from '../utils/output.js';
 import {
   agentsMdPath,
   claudeMcpPath,
@@ -19,7 +19,7 @@ import {
   geminiSettingsPath,
   nxMcpTomlHeader,
   parseGeminiSettings,
-} from './constants';
+} from './constants.js';
 import setupAiAgentsGenerator from './set-up-ai-agents/set-up-ai-agents';
 
 // when adding new agents, be sure to also update the list in

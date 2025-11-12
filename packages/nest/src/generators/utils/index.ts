@@ -1,3 +1,3 @@
-export * from './normalize-options';
-export * from './run-nest-schematic';
-export * from './types';
+export * from './normalize-options.js';
+export * from './run-nest-schematic.js';
+export * from './types.js';

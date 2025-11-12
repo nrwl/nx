@@ -9,9 +9,9 @@ import { getRootTsConfigFileName } from '@nx/js';
 import { getNeededCompilerOptionOverrides } from '@nx/js/src/utils/typescript/configuration';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { gte, lt } from 'semver';
-import { updateAppEditorTsConfigExcludedFiles } from '../../utils/update-app-editor-tsconfig-excluded-files';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
-import { enableStrictTypeChecking } from './enable-strict-type-checking';
+import { updateAppEditorTsConfigExcludedFiles } from '../../utils/update-app-editor-tsconfig-excluded-files.js';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
+import { enableStrictTypeChecking } from './enable-strict-type-checking.js';
 import type { NormalizedSchema } from './normalized-schema';
 
 interface TsConfig {

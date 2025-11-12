@@ -19,10 +19,10 @@ import {
 import { basename, dirname, join } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import { PackageJson } from 'nx/src/utils/package-json';
-import { getOutExtension } from '../../executors/esbuild/lib/build-esbuild-options';
-import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
-import { esbuildInitGenerator } from '../init/init';
-import { EsBuildProjectSchema } from './schema';
+import { getOutExtension } from '../../executors/esbuild/lib/build-esbuild-options.js';
+import { EsBuildExecutorOptions } from '../../executors/esbuild/schema.js';
+import { esbuildInitGenerator } from '../init/init.js';
+import { EsBuildProjectSchema } from './schema.js';
 
 export async function configurationGenerator(
   tree: Tree,

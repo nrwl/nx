@@ -1,5 +1,5 @@
-import { isCI } from './is-ci';
-import { globalSpinner, SHOULD_SHOW_SPINNERS } from './spinner';
+import { isCI } from './is-ci.js';
+import { globalSpinner, SHOULD_SHOW_SPINNERS } from './spinner.js';
 
 export type DelayedSpinnerOptions = {
   delay?: number;

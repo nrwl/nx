@@ -6,7 +6,7 @@ import {
   updateJson,
   workspaceRoot,
 } from '@nx/devkit';
-import { loadNuxtKitDynamicImport } from '../../utils/executor-utils';
+import { loadNuxtKitDynamicImport } from '../../utils/executor-utils.js';
 import { basename } from 'path';
 
 export default async function (tree: Tree) {

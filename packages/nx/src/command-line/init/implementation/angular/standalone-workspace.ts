@@ -1,16 +1,16 @@
 import { unlinkSync } from 'fs';
 import { dirname, join, posix, relative, resolve } from 'node:path';
-import { toNewFormat } from '../../../../adapter/angular-json';
+import { toNewFormat } from '../../../../adapter/angular-json.js';
 import type { NxJsonConfiguration } from '../../../../config/nx-json';
 import type { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
 import {
   fileExists,
   readJsonFile,
   writeJsonFile,
-} from '../../../../utils/fileutils';
+} from '../../../../utils/fileutils.js';
 import type { PackageJson } from '../../../../utils/package-json';
-import { normalizePath } from '../../../../utils/path';
-import { addVsCodeRecommendedExtensions, createNxJsonFile } from '../utils';
+import { normalizePath } from '../../../../utils/path.js';
+import { addVsCodeRecommendedExtensions, createNxJsonFile } from '../utils.js';
 import type {
   AngularJsonConfig,
   AngularJsonProjectConfiguration,

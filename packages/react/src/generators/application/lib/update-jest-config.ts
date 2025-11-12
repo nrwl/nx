@@ -1,8 +1,8 @@
 import {
   updateJestConfigContent,
   findProjectJestConfig,
-} from '../../../utils/jest-utils';
-import { NormalizedSchema } from '../schema';
+} from '../../../utils/jest-utils.js';
+import { NormalizedSchema } from '../schema.js';
 import { Tree, updateJson } from '@nx/devkit';
 
 export function updateSpecConfig(host: Tree, options: NormalizedSchema) {

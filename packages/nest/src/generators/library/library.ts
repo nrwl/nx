@@ -9,7 +9,7 @@ import {
 } from '@nx/devkit';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { ensureDependencies } from '../../utils/ensure-dependencies.js';
 import initGenerator from '../init/init';
 import {
   addExportsToBarrelFile,
@@ -19,7 +19,7 @@ import {
   normalizeOptions,
   toJsLibraryGeneratorOptions,
   updateTsConfig,
-} from './lib';
+} from './lib/index.js';
 import type { LibraryGeneratorOptions, NormalizedOptions } from './schema';
 
 export async function libraryGenerator(

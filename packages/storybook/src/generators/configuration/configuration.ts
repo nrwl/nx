@@ -10,8 +10,8 @@ import {
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
-import { StorybookConfigureSchema } from './schema';
-import { initGenerator } from '../init/init';
+import { StorybookConfigureSchema } from './schema.js';
+import { initGenerator } from '../init/init.js';
 
 import {
   addAngularStorybookTarget,
@@ -30,23 +30,23 @@ import {
   isUsingReactNative,
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
-} from './lib/util-functions';
+} from './lib/util-functions.js';
 import type { LinterType } from '@nx/eslint';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   getStorybookVersionToInstall,
   pleaseUpgrade,
   storybookMajorVersion,
-} from '../../utils/utilities';
+} from '../../utils/utilities.js';
 import {
   coreJsVersion,
   nxVersion,
   storybookVersion,
   tsLibVersion,
   tsNodeVersion,
-} from '../../utils/versions';
-import { ensureDependencies } from './lib/ensure-dependencies';
-import { editRootTsConfig } from './lib/edit-root-tsconfig';
+} from '../../utils/versions.js';
+import { ensureDependencies } from './lib/ensure-dependencies.js';
+import { editRootTsConfig } from './lib/edit-root-tsconfig.js';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function configurationGenerator(

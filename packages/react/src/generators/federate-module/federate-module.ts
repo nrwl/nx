@@ -9,10 +9,10 @@ import {
   offsetFromRoot,
   joinPathFragments,
 } from '@nx/devkit';
-import { Schema } from './schema';
+import { Schema } from './schema.js';
 
-import { remoteGenerator } from '../remote/remote';
-import { addPathToExposes, checkRemoteExists } from './lib/utils';
+import { remoteGenerator } from '../remote/remote.js';
+import { addPathToExposes, checkRemoteExists } from './lib/utils.js';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { addTsConfigPath, getRootTsConfigPathInTree } from '@nx/js';
 

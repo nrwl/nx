@@ -1,5 +1,5 @@
-import { NxCloud } from './utils/nx/nx-cloud';
-import { PackageManager } from './utils/package-manager';
+import { NxCloud } from './utils/nx/nx-cloud.js';
+import { PackageManager } from './utils/package-manager.js';
 
 export interface CreateWorkspaceOptions {
   name: string; // Workspace name (e.g. org name)

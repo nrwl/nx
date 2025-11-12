@@ -3,7 +3,7 @@ import {
   determineArtifactNameAndDirectoryOptions,
   type FileExtensionType,
 } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-import { Schema } from '../schema';
+import { Schema } from '../schema.js';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export interface NormalizedSchema extends Omit<Schema, 'js'> {

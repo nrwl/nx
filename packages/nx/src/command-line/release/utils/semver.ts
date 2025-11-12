@@ -4,8 +4,8 @@
  */
 
 import { RELEASE_TYPES, ReleaseType, inc, valid } from 'semver';
-import { NxReleaseConfig } from '../config/config';
-import { GitCommit } from './git';
+import { NxReleaseConfig } from '../config/config.js';
+import { GitCommit } from './git.js';
 
 export const enum SemverSpecifier {
   MAJOR = 3,

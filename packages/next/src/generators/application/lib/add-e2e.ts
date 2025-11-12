@@ -10,9 +10,9 @@ import {
 import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import { webStaticServeGenerator } from '@nx/web';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { nxVersion } from '../../../utils/versions';
-import { isNext16 } from '../../../utils/version-utils';
-import { NormalizedSchema } from './normalize-options';
+import { nxVersion } from '../../../utils/versions.js';
+import { isNext16 } from '../../../utils/version-utils.js';
+import { NormalizedSchema } from './normalize-options.js';
 
 export async function addE2e(
   host: Tree,

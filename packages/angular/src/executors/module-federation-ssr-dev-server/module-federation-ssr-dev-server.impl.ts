@@ -14,10 +14,10 @@ import { extname, join } from 'path';
 import {
   getDynamicMfManifestFile,
   validateDevRemotes,
-} from '../../builders/utilities/module-federation';
-import { assertBuilderPackageIsInstalled } from '../utilities/builder-package';
-import { normalizeOptions } from './lib/normalize-options';
-import { startRemotes } from './lib/start-dev-remotes';
+} from '../../builders/utilities/module-federation.js';
+import { assertBuilderPackageIsInstalled } from '../utilities/builder-package.js';
+import { normalizeOptions } from './lib/normalize-options.js';
+import { startRemotes } from './lib/start-dev-remotes.js';
 import type { Schema } from './schema';
 
 // This is required to ensure that the webpack version used by the Module Federation is the same as the one used by the builders.

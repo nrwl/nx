@@ -1,9 +1,9 @@
 import * as enquirer from 'enquirer';
 import { join } from 'path';
-import { InitArgs } from '../init-v1';
-import { readJsonFile } from '../../../utils/fileutils';
-import { output } from '../../../utils/output';
-import { getPackageManagerCommand } from '../../../utils/package-manager';
+import { InitArgs } from '../init-v1.js';
+import { readJsonFile } from '../../../utils/fileutils.js';
+import { output } from '../../../utils/output.js';
+import { getPackageManagerCommand } from '../../../utils/package-manager.js';
 import {
   addDepsToPackageJson,
   createNxJsonFile,
@@ -12,8 +12,8 @@ import {
   markRootPackageJsonAsNxProjectLegacy,
   runInstall,
   updateGitIgnore,
-} from './utils';
-import { connectExistingRepoToNxCloudPrompt } from '../../nx-cloud/connect/connect-to-nx-cloud';
+} from './utils.js';
+import { connectExistingRepoToNxCloudPrompt } from '../../nx-cloud/connect/connect-to-nx-cloud.js';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'> & {
   legacy?: boolean;

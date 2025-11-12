@@ -16,13 +16,13 @@ import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { satisfies, valid } from 'semver';
-import { createNodesV2 } from '../../plugins/typescript/plugin';
-import { generatePrettierSetup } from '../../utils/prettier';
-import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
+import { createNodesV2 } from '../../plugins/typescript/plugin.js';
+import { generatePrettierSetup } from '../../utils/prettier.js';
+import { getRootTsConfigFileName } from '../../utils/typescript/ts-config.js';
 import {
   getCustomConditionName,
   isUsingTsSolutionSetup,
-} from '../../utils/typescript/ts-solution-setup';
+} from '../../utils/typescript/ts-solution-setup.js';
 import {
   nxVersion,
   prettierVersion,
@@ -32,8 +32,8 @@ import {
   swcNodeVersion,
   tsLibVersion,
   typescriptVersion,
-} from '../../utils/versions';
-import { InitSchema } from './schema';
+} from '../../utils/versions.js';
+import { InitSchema } from './schema.js';
 
 async function getInstalledTypescriptVersion(
   tree: Tree

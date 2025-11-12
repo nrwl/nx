@@ -6,10 +6,10 @@ import {
   readNxJson,
   Tree,
 } from '@nx/devkit';
-import { nxVersion, rollupVersion } from '../../utils/versions';
-import { Schema } from './schema';
+import { nxVersion, rollupVersion } from '../../utils/versions.js';
+import { Schema } from './schema.js';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodesV2 } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin.js';
 
 export async function rollupInitGenerator(tree: Tree, schema: Schema) {
   let task: GeneratorCallback = () => {};

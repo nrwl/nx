@@ -5,8 +5,8 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { NormalizedSchema } from '../schema';
-import { getProjectSourceRoot } from '../../utils/project-config';
+import { NormalizedSchema } from '../schema.js';
+import { getProjectSourceRoot } from '../../utils/project-config.js';
 
 export function createProjectConfigurationInNewDestination(
   tree: Tree,

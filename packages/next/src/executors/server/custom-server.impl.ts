@@ -1,7 +1,7 @@
 import { ExecutorContext, parseTargetString, runExecutor } from '@nx/devkit';
 import { join } from 'path';
 
-import { NextServeBuilderOptions } from '../../utils/types';
+import { NextServeBuilderOptions } from '../../utils/types.js';
 
 export default async function* serveExecutor(
   options: NextServeBuilderOptions,

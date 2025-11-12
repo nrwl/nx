@@ -1,6 +1,6 @@
 import type { Configuration } from 'webpack';
 import type { NxWebpackExecutionContext, WithWebOptions } from '@nx/webpack';
-import { applyReactConfig } from './nx-react-webpack-plugin/lib/apply-react-config';
+import { applyReactConfig } from './nx-react-webpack-plugin/lib/apply-react-config.js';
 
 const processed = new Set();
 

@@ -1,20 +1,20 @@
 import {
   isWholeFileChange,
   WholeFileChange,
-} from '../../../../project-graph/file-utils';
+} from '../../../../project-graph/file-utils.js';
 import {
   JsonDiffType,
   isJsonChange,
   JsonChange,
-} from '../../../../utils/json-diff';
-import { logger } from '../../../../utils/logger';
-import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
+} from '../../../../utils/json-diff.js';
+import { logger } from '../../../../utils/logger.js';
+import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models.js';
 import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
-} from '../../../../config/project-graph';
-import { NxJsonConfiguration } from '../../../../config/nx-json';
-import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
+} from '../../../../config/project-graph.js';
+import { NxJsonConfiguration } from '../../../../config/nx-json.js';
+import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path.js';
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange

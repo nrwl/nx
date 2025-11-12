@@ -8,8 +8,8 @@ import {
   updateNxJson,
   writeJson,
 } from '@nx/devkit';
-import { moveGenerator } from '../move/move';
-import { getProjectType } from '../../utils/ts-solution-setup';
+import { moveGenerator } from '../move/move.js';
+import { getProjectType } from '../../utils/ts-solution-setup.js';
 
 export async function monorepoGenerator(tree: Tree, options: {}) {
   const projects = getProjects(tree);

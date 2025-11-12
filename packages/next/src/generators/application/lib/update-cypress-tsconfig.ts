@@ -1,5 +1,5 @@
 import { Tree, updateJson } from '@nx/devkit';
-import { NormalizedSchema } from './normalize-options';
+import { NormalizedSchema } from './normalize-options.js';
 
 export function updateCypressTsConfig(host: Tree, options: NormalizedSchema) {
   if (options.e2eTestRunner !== 'cypress' || !options.rootProject) {

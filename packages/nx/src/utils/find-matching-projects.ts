@@ -1,6 +1,6 @@
 import { minimatch } from 'minimatch';
 import type { ProjectGraphProjectNode } from '../config/project-graph';
-import { isGlobPattern } from './globs';
+import { isGlobPattern } from './globs.js';
 
 const validPatternTypes = [
   'name', // Pattern is based on the project's name

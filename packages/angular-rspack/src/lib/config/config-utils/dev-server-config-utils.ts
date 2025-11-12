@@ -4,8 +4,8 @@ import { existsSync, promises as fsPromises } from 'node:fs';
 import { extname, posix, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { NormalizedAngularRspackPluginOptions } from '../../models';
-import { getIndexOutputFile } from '../../utils/index-file/get-index-output-file';
-import { loadEsmModule } from '../../utils/misc-helpers';
+import { getIndexOutputFile } from '../../utils/index-file/get-index-output-file.js';
+import { loadEsmModule } from '../../utils/misc-helpers.js';
 
 export async function getDevServerConfig(
   options: NormalizedAngularRspackPluginOptions,

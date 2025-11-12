@@ -1,7 +1,7 @@
 import {
   type ProjectGraph,
   ProjectGraphProjectNode,
-} from '../../../config/project-graph';
+} from '../../../config/project-graph.js';
 
 export function getWorkspacePackagesFromGraph(graph: ProjectGraph) {
   const workspacePackages: Map<string, ProjectGraphProjectNode> = new Map();

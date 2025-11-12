@@ -1,7 +1,7 @@
-import { readNxJson } from '../../config/nx-json';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { output } from '../../utils/output';
-import { handleErrors } from '../../utils/handle-errors';
+import { readNxJson } from '../../config/nx-json.js';
+import { createProjectGraphAsync } from '../../project-graph/project-graph.js';
+import { output } from '../../utils/output.js';
+import { handleErrors } from '../../utils/handle-errors.js';
 import {
   collectAllRegisteredSyncGenerators,
   flushSyncGeneratorChanges,
@@ -10,10 +10,10 @@ import {
   getSyncGeneratorChanges,
   getSyncGeneratorSuccessResultsMessageLines,
   processSyncGeneratorResultErrors,
-} from '../../utils/sync-generators';
+} from '../../utils/sync-generators.js';
 import type { SyncArgs } from './command-object';
 import chalk = require('chalk');
-import { globalSpinner } from '../../utils/spinner';
+import { globalSpinner } from '../../utils/spinner.js';
 
 interface SyncOptions extends SyncArgs {
   check?: boolean;

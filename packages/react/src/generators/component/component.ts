@@ -12,13 +12,13 @@ import {
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { dirname, join, parse, relative } from 'path';
 
-import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
-import { addImport } from '../../utils/ast-utils';
-import { getInSourceVitestTestsTemplate } from '../../utils/get-in-source-vitest-tests-template';
-import { reactRouterDomVersion } from '../../utils/versions';
-import { getComponentTests } from './lib/get-component-tests';
-import { NormalizedSchema, Schema } from './schema';
-import { normalizeOptions } from './lib/normalize-options';
+import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies.js';
+import { addImport } from '../../utils/ast-utils.js';
+import { getInSourceVitestTestsTemplate } from '../../utils/get-in-source-vitest-tests-template.js';
+import { reactRouterDomVersion } from '../../utils/versions.js';
+import { getComponentTests } from './lib/get-component-tests.js';
+import { NormalizedSchema, Schema } from './schema.js';
+import { normalizeOptions } from './lib/normalize-options.js';
 
 export async function componentGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);

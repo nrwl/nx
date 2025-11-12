@@ -16,19 +16,19 @@ import {
   TypeCheckOptions,
 } from '@nx/js';
 import * as esbuild from 'esbuild';
-import { normalizeOptions } from './lib/normalize';
+import { normalizeOptions } from './lib/normalize.js';
 
 import {
   EsBuildExecutorOptions,
   NormalizedEsBuildExecutorOptions,
-} from './schema';
+} from './schema.js';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import {
   buildEsbuildOptions,
   getOutExtension,
   getOutfile,
-} from './lib/build-esbuild-options';
-import { getExtraDependencies } from './lib/get-extra-dependencies';
+} from './lib/build-esbuild-options.js';
+import { getExtraDependencies } from './lib/get-extra-dependencies.js';
 import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { rmSync } from 'node:fs';
 import { join, relative } from 'path';

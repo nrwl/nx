@@ -11,20 +11,20 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { Schema } from './schema';
+import { Schema } from './schema.js';
 import nuxtInitGenerator from '../init/init';
-import { normalizeOptions } from './lib/normalize-options';
-import { createTsConfig } from '../../utils/create-ts-config';
+import { normalizeOptions } from './lib/normalize-options.js';
+import { createTsConfig } from '../../utils/create-ts-config.js';
 import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { updateGitIgnore } from '../../utils/update-gitignore';
-import { addE2e } from './lib/add-e2e';
-import { addLinting } from '../../utils/add-linting';
-import { addVitest } from './lib/add-vitest';
+import { updateGitIgnore } from '../../utils/update-gitignore.js';
+import { addE2e } from './lib/add-e2e.js';
+import { addLinting } from '../../utils/add-linting.js';
+import { addVitest } from './lib/add-vitest.js';
 import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
-import { ensureDependencies } from './lib/ensure-dependencies';
+import { ensureDependencies } from './lib/ensure-dependencies.js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';

@@ -1,2 +1,2 @@
-export * from './convert-directive-to-scam';
-export * from './normalize-options';
+export * from './convert-directive-to-scam.js';
+export * from './normalize-options.js';

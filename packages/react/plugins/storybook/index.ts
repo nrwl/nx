@@ -16,8 +16,8 @@ import {
   ResolvePluginInstance,
   WebpackPluginInstance,
 } from 'webpack';
-import { withReact } from '../with-react';
-import { mergePlugins } from './merge-plugins';
+import { withReact } from '../with-react.js';
+import { mergePlugins } from './merge-plugins.js';
 
 // This is shamelessly taken from CRA and modified for NX use
 // https://github.com/facebook/create-react-app/blob/4784997f0682e75eb32a897b4ffe34d735912e6c/packages/react-scripts/config/env.js#L71

@@ -1,42 +1,42 @@
 import { prompt } from 'enquirer';
 import { rmSync } from 'node:fs';
-import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
-import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { handleErrors } from '../../utils/handle-errors';
-import { output } from '../../utils/output';
-import { createAPI as createReleaseChangelogAPI } from './changelog';
-import { ReleaseOptions, VersionOptions } from './command-object';
+import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json.js';
+import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils.js';
+import { createProjectGraphAsync } from '../../project-graph/project-graph.js';
+import { handleErrors } from '../../utils/handle-errors.js';
+import { output } from '../../utils/output.js';
+import { createAPI as createReleaseChangelogAPI } from './changelog.js';
+import { ReleaseOptions, VersionOptions } from './command-object.js';
 import {
   IMPLICIT_DEFAULT_RELEASE_GROUP,
   NxReleaseConfig,
   ResolvedCreateRemoteReleaseProvider,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
-} from './config/config';
-import { deepMergeJson } from './config/deep-merge-json';
+} from './config/config.js';
+import { deepMergeJson } from './config/deep-merge-json.js';
 import {
   readRawVersionPlans,
   setResolvedVersionPlansOnGroups,
-} from './config/version-plans';
-import { createAPI as createReleasePublishAPI } from './publish';
-import { getCommitHash, gitAdd, gitCommit, gitPush, gitTag } from './utils/git';
-import { printConfigAndExit } from './utils/print-config';
-import { createRemoteReleaseClient } from './utils/remote-release-clients/remote-release-client';
-import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
+} from './config/version-plans.js';
+import { createAPI as createReleasePublishAPI } from './publish.js';
+import { getCommitHash, gitAdd, gitCommit, gitPush, gitTag } from './utils/git.js';
+import { printConfigAndExit } from './utils/print-config.js';
+import { createRemoteReleaseClient } from './utils/remote-release-clients/remote-release-client.js';
+import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message.js';
 import {
   createCommitMessageValues,
   createGitTagValues,
   handleDuplicateGitTags,
-} from './utils/shared';
+} from './utils/shared.js';
 import {
   areAllVersionPlanProjectsFiltered,
   validateResolvedVersionPlansAgainstFilter,
-} from './utils/version-plan-utils';
+} from './utils/version-plan-utils.js';
 import {
   NxReleaseVersionResult,
   createAPI as createReleaseVersionAPI,
-} from './version';
+} from './version.js';
 
 export const releaseCLIHandler = (args: VersionOptions) =>
   handleErrors(args.verbose, () => createAPI({}, false)(args));

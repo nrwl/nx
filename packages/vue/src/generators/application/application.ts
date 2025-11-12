@@ -10,16 +10,16 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { Schema } from './schema';
-import { normalizeOptions } from './lib/normalize-options';
-import { vueInitGenerator } from '../init/init';
-import { addLinting } from '../../utils/add-linting';
-import { addE2e } from './lib/add-e2e';
-import { createApplicationFiles } from './lib/create-application-files';
-import { addVite, addVitest } from './lib/add-vite';
-import { addRsbuild } from './lib/add-rsbuild';
-import { extractTsConfigBase } from '../../utils/create-ts-config';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { Schema } from './schema.js';
+import { normalizeOptions } from './lib/normalize-options.js';
+import { vueInitGenerator } from '../init/init.js';
+import { addLinting } from '../../utils/add-linting.js';
+import { addE2e } from './lib/add-e2e.js';
+import { createApplicationFiles } from './lib/create-application-files.js';
+import { addVite, addVitest } from './lib/add-vite.js';
+import { addRsbuild } from './lib/add-rsbuild.js';
+import { extractTsConfigBase } from '../../utils/create-ts-config.js';
+import { ensureDependencies } from '../../utils/ensure-dependencies.js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,

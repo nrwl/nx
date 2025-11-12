@@ -6,8 +6,8 @@ import {
   readProjectConfiguration,
   stripIndents,
 } from '@nx/devkit';
-import { locateLibraryEntryPointFromDirectory } from './entry-point';
-import { getRelativeImportToFile } from './path';
+import { locateLibraryEntryPointFromDirectory } from './entry-point.js';
+import { getRelativeImportToFile } from './path.js';
 
 export type GenerationOptions = {
   directory: string;

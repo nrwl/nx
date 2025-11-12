@@ -5,7 +5,7 @@ import {
   CompilerPluginHooks,
   TransformerEntry,
   TransformerPlugin,
-} from './types';
+} from './types.js';
 
 enum TransformerFormat {
   STANDARD, // Standard TypeScript transformer API: { before, after, afterDeclarations }

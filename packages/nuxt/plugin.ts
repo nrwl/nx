@@ -2,4 +2,4 @@ export {
   createNodes,
   createNodesV2,
   NuxtPluginOptions,
-} from './src/plugins/plugin';
+} from './src/plugins/plugin.js';

@@ -1,4 +1,4 @@
-import { Tree } from '../../../generators/tree';
+import { Tree } from '../../../generators/tree.js';
 
 export type ReleaseVersionGeneratorResult = {
   data: VersionData;

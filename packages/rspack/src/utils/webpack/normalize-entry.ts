@@ -1,4 +1,4 @@
-import { ExtraEntryPoint, NormalizedEntryPoint } from '../model';
+import { ExtraEntryPoint, NormalizedEntryPoint } from '../model.js';
 
 export function normalizeExtraEntryPoints(
   extraEntryPoints: ExtraEntryPoint[],

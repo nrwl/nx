@@ -1,25 +1,25 @@
-import { readJsonFile } from '../../../utils/fileutils';
-import { sortObjectByKeys } from '../../../utils/object-sort';
+import { readJsonFile } from '../../../utils/fileutils.js';
+import { sortObjectByKeys } from '../../../utils/object-sort.js';
 import {
   fileDataDepTarget,
   ProjectFileMap,
   ProjectGraph,
   ProjectGraphProjectNode,
-} from '../../../config/project-graph';
+} from '../../../config/project-graph.js';
 import {
   getDependencyVersionFromPackageJson,
   PackageJson,
-} from '../../../utils/package-json';
+} from '../../../utils/package-json.js';
 import { existsSync } from 'fs';
-import { workspaceRoot } from '../../../utils/workspace-root';
-import { readNxJson } from '../../../config/configuration';
-import { readFileMapCache } from '../../../project-graph/nx-deps-cache';
+import { workspaceRoot } from '../../../utils/workspace-root.js';
+import { readNxJson } from '../../../config/configuration.js';
+import { readFileMapCache } from '../../../project-graph/nx-deps-cache.js';
 import { join } from 'path';
 import {
   filterUsingGlobPatterns,
   getTargetInputs,
-} from '../../../hasher/task-hasher';
-import { output } from '../../../utils/output';
+} from '../../../hasher/task-hasher.js';
+import { output } from '../../../utils/output.js';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;

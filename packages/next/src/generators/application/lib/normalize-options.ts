@@ -4,7 +4,7 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertValidStyle } from '@nx/react/src/utils/assertion';
-import { Schema } from '../schema';
+import { Schema } from '../schema.js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export interface NormalizedSchema

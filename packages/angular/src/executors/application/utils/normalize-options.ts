@@ -1,4 +1,4 @@
-import { getInstalledAngularVersionInfo } from '../../utilities/angular-version-utils';
+import { getInstalledAngularVersionInfo } from '../../utilities/angular-version-utils.js';
 import type { ApplicationExecutorOptions } from '../schema';
 
 export function normalizeOptions(

@@ -4,7 +4,7 @@ import {
   addDependenciesToPackageJson,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions.js';
 
 export default async function ensureMfPackage(tree: Tree) {
   const projects = new Set<string>();

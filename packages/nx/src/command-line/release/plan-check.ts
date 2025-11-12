@@ -1,27 +1,27 @@
-import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
-import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { allFileData } from '../../utils/all-file-data';
+import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json.js';
+import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils.js';
+import { createProjectGraphAsync } from '../../project-graph/project-graph.js';
+import { allFileData } from '../../utils/all-file-data.js';
 import {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
-} from '../../utils/command-line-utils';
-import { handleErrors } from '../../utils/handle-errors';
-import { output } from '../../utils/output';
-import { PlanCheckOptions, PlanOptions } from './command-object';
+} from '../../utils/command-line-utils.js';
+import { handleErrors } from '../../utils/handle-errors.js';
+import { output } from '../../utils/output.js';
+import { PlanCheckOptions, PlanOptions } from './command-object.js';
 import {
   createNxReleaseConfig,
   handleNxReleaseConfigError,
   IMPLICIT_DEFAULT_RELEASE_GROUP,
-} from './config/config';
-import { deepMergeJson } from './config/deep-merge-json';
-import { filterReleaseGroups } from './config/filter-release-groups';
+} from './config/config.js';
+import { deepMergeJson } from './config/deep-merge-json.js';
+import { filterReleaseGroups } from './config/filter-release-groups.js';
 import {
   readRawVersionPlans,
   setResolvedVersionPlansOnGroups,
-} from './config/version-plans';
-import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-for-group';
-import { printConfigAndExit } from './utils/print-config';
+} from './config/version-plans.js';
+import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-for-group.js';
+import { printConfigAndExit } from './utils/print-config.js';
 
 export const releasePlanCheckCLIHandler = (args: PlanCheckOptions) =>
   handleErrors(args.verbose, () => createAPI({})(args));

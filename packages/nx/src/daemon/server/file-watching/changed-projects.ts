@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks';
-import { fileMapWithFiles } from '../project-graph-incremental-recomputation';
+import { fileMapWithFiles } from '../project-graph-incremental-recomputation.js';
 
 export type ChangedFile = {
   path: string;

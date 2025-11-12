@@ -1,7 +1,7 @@
-import { GitCommit } from '../utils/git';
-import { FileData, ProjectFileMap } from '../../../config/project-graph';
-import { NxReleaseConfig } from '../config/config';
-import { ChangelogChange } from './version-plan-utils';
+import { GitCommit } from '../utils/git.js';
+import { FileData, ProjectFileMap } from '../../../config/project-graph.js';
+import { NxReleaseConfig } from '../config/config.js';
+import { ChangelogChange } from './version-plan-utils.js';
 
 export function mapCommitToChange(
   commit: GitCommit,

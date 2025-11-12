@@ -1,8 +1,8 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import { existsSync, readdirSync, unlinkSync } from 'fs';
 import { basename, dirname } from 'path';
-import { getTempTailwindPath } from '../../utils/ct-helpers';
-import { startDevServer } from '../../utils/start-dev-server';
+import { getTempTailwindPath } from '../../utils/ct-helpers.js';
+import { startDevServer } from '../../utils/start-dev-server.js';
 
 const Cypress = require('cypress'); // @NOTE: Importing via ES6 messes the whole test dependencies.
 

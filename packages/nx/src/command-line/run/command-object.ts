@@ -1,11 +1,11 @@
 import { CommandModule, showHelp } from 'yargs';
-import { handleErrors } from '../../utils/handle-errors';
+import { handleErrors } from '../../utils/handle-errors.js';
 import {
   withBatch,
   withOverrides,
   withRunOneOptions,
   withTuiOptions,
-} from '../yargs-utils/shared-options';
+} from '../yargs-utils/shared-options.js';
 
 export const yargsRunCommand: CommandModule = {
   command: 'run [project][:target][:configuration] [_..]',
@@ -21,7 +21,7 @@ export const yargsRunCommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        await import('./run-one').then((m) =>
+        await import('./run-one.js').then((m) =>
           m.runOne(process.cwd(), withOverrides(args))
         );
       }
@@ -46,7 +46,7 @@ export const yargsNxInfixCommand: CommandModule = {
           showHelp();
           process.exit(1);
         }
-        return (await import('./run-one')).runOne(
+        return (await import('./run-one.js')).runOne(
           process.cwd(),
           withOverrides(args, 0)
         );

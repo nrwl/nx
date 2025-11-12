@@ -7,7 +7,7 @@
  */
 
 import { ProgressPlugin as RspackProgressPlugin } from '@rspack/core';
-import { Spinner } from '../utils/spinner';
+import { Spinner } from '../utils/spinner.js';
 
 export class ProgressPlugin extends RspackProgressPlugin {
   constructor(platform: 'server' | 'browser') {

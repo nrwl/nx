@@ -1,5 +1,5 @@
 import type { Tree } from '../tree';
-import { parseJson, serializeJson } from '../../utils/json';
+import { parseJson, serializeJson } from '../../utils/json.js';
 import type { JsonParseOptions, JsonSerializeOptions } from '../../utils/json';
 
 /**

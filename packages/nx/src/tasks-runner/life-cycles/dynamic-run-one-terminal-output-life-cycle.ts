@@ -2,12 +2,12 @@ import * as cliCursor from 'cli-cursor';
 import { dots } from 'cli-spinners';
 import { EOL } from 'os';
 import * as readline from 'readline';
-import { output } from '../../utils/output';
+import { output } from '../../utils/output.js';
 import type { LifeCycle } from '../life-cycle';
-import { prettyTime } from './pretty-time';
-import { Task } from '../../config/task-graph';
-import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
-import { viewLogsFooterRows } from './view-logs-utils';
+import { prettyTime } from './pretty-time.js';
+import { Task } from '../../config/task-graph.js';
+import { formatFlags, formatTargetsAndProjects } from './formatting-utils.js';
+import { viewLogsFooterRows } from './view-logs-utils.js';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;

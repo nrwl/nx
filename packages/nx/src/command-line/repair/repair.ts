@@ -1,7 +1,7 @@
-import { handleErrors } from '../../utils/handle-errors';
+import { handleErrors } from '../../utils/handle-errors.js';
 import * as migrationsJson from '../../../migrations.json';
-import { executeMigrations } from '../migrate/migrate';
-import { output } from '../../utils/output';
+import { executeMigrations } from '../migrate/migrate.js';
+import { output } from '../../utils/output.js';
 
 export async function repair(
   args: { verbose: boolean },

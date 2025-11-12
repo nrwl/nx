@@ -8,7 +8,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { join } from 'path';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { NormalizedGeneratorOptions } from '../schema';
 
 export function setServerTsConfigOptionsForApplicationBuilder(

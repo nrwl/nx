@@ -1,7 +1,7 @@
 import { type ProjectGraph, readJsonFile } from '@nx/devkit';
 import { join } from 'path';
-import { getAllTransitiveDeps } from './get-transitive-deps';
-import { isBuildableLibrary } from './is-lib-buildable';
+import { getAllTransitiveDeps } from './get-transitive-deps.js';
+import { isBuildableLibrary } from './is-lib-buildable.js';
 
 function escapePackageName(packageName: string): string {
   return packageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

@@ -4,11 +4,11 @@ import { ExecutorContext, logger, readJsonFile } from '@nx/devkit';
 import * as pc from 'picocolors';
 import { globSync } from 'tinyglobby';
 
-import { ReactNativeStorybookOptions } from './schema';
+import { ReactNativeStorybookOptions } from './schema.js';
 import {
   displayNewlyAddedDepsMessage,
   syncDeps,
-} from '../sync-deps/sync-deps.impl';
+} from '../sync-deps/sync-deps.impl.js';
 import { PackageJson } from 'nx/src/utils/package-json';
 
 /**

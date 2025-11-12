@@ -10,9 +10,9 @@ import {
   updateJson,
 } from '@nx/devkit';
 import * as path from 'path';
-import { SetupVerdaccioGeneratorSchema } from './schema';
-import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
-import { verdaccioVersion } from '../../utils/versions';
+import { SetupVerdaccioGeneratorSchema } from './schema.js';
+import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup.js';
+import { verdaccioVersion } from '../../utils/versions.js';
 import { execSync } from 'child_process';
 
 export async function setupVerdaccio(

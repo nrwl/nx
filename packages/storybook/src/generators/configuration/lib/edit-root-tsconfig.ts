@@ -1,6 +1,6 @@
 import { readJson, updateJson, type Tree } from '@nx/devkit';
 import { getRootTsConfigFileName } from '@nx/js';
-import { storybookMajorVersion } from '../../../utils/utilities';
+import { storybookMajorVersion } from '../../../utils/utilities.js';
 
 /**
  * This is a temporary fix for Storybook to support TypeScript configuration files.

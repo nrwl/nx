@@ -1,3 +1,3 @@
-export * from './plugin';
+export * from './plugin.js';
 
-export { DotNetPluginOptions } from './plugins/create-nodes';
+export { DotNetPluginOptions } from './plugins/create-nodes.js';

@@ -37,7 +37,7 @@ export function addExportsToBarrelFile(
     tree,
     sourceFile,
     indexPath,
-    `export * from './lib/${options.fileName}.module';`
+    `export * from './lib/${options.fileName}.module.js';`
   );
 
   if (options.service) {
@@ -45,7 +45,7 @@ export function addExportsToBarrelFile(
       tree,
       sourceFile,
       indexPath,
-      `export * from './lib/${options.fileName}.service';`
+      `export * from './lib/${options.fileName}.service.js';`
     );
   }
   if (options.controller) {
@@ -53,7 +53,7 @@ export function addExportsToBarrelFile(
       tree,
       sourceFile,
       indexPath,
-      `export * from './lib/${options.fileName}.controller';`
+      `export * from './lib/${options.fileName}.controller.js';`
     );
   }
 }

@@ -9,17 +9,17 @@ import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import { map, tap } from 'rxjs/operators';
 import * as WebpackDevServer from 'webpack-dev-server';
 
-import { getDevServerOptions } from './lib/get-dev-server-config';
+import { getDevServerOptions } from './lib/get-dev-server-config.js';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
 } from '@nx/js/src/utils/buildable-libs-utils';
-import { runWebpackDevServer } from '../../utils/run-webpack';
-import { resolveUserDefinedWebpackConfig } from '../../utils/webpack/resolve-user-defined-webpack-config';
-import { normalizeOptions } from '../webpack/lib/normalize-options';
-import { WebpackExecutorOptions } from '../webpack/schema';
-import { WebDevServerOptions } from './schema';
-import { isNxWebpackComposablePlugin } from '../../utils/config';
+import { runWebpackDevServer } from '../../utils/run-webpack.js';
+import { resolveUserDefinedWebpackConfig } from '../../utils/webpack/resolve-user-defined-webpack-config.js';
+import { normalizeOptions } from '../webpack/lib/normalize-options.js';
+import { WebpackExecutorOptions } from '../webpack/schema.js';
+import { WebDevServerOptions } from './schema.js';
+import { isNxWebpackComposablePlugin } from '../../utils/config.js';
 import { getRootTsConfigPath } from '@nx/js';
 
 export async function* devServerExecutor(

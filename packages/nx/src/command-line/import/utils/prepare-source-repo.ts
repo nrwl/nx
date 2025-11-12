@@ -1,6 +1,6 @@
 const createSpinner = require('ora');
 import { join, relative } from 'path';
-import { GitRepository } from '../../../utils/git-utils';
+import { GitRepository } from '../../../utils/git-utils.js';
 
 export async function prepareSourceRepo(
   gitClient: GitRepository,

@@ -1,4 +1,4 @@
-import { FileData, ProjectFileMap } from '../../config/project-graph';
+import { FileData, ProjectFileMap } from '../../config/project-graph.js';
 import { performance } from 'perf_hooks';
 
 export function buildAllWorkspaceFiles(

@@ -1,8 +1,8 @@
 import type { NextConfig } from 'next';
 import { resolve } from 'path';
 import { Configuration, RuleSetRule } from 'webpack';
-import { FileReplacement } from './types';
-import { createCopyPlugin } from './create-copy-plugin';
+import { FileReplacement } from './types.js';
+import { createCopyPlugin } from './create-copy-plugin.js';
 
 export interface NextConfigFn {
   (phase: string, context?: any): Promise<NextConfig> | NextConfig;

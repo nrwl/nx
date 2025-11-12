@@ -5,11 +5,11 @@ import {
   type ProjectGraphExternalNode,
   readJsonFile,
 } from '@nx/devkit';
-import { DependentBuildableProjectNode } from './buildable-libs-utils';
+import { DependentBuildableProjectNode } from './buildable-libs-utils.js';
 import { join } from 'path';
-import { readTsConfig } from './typescript/ts-config';
-import { ExecutorOptions, SwcExecutorOptions } from './schema';
-import { getSwcrcPath } from './swc/get-swcrc-path';
+import { readTsConfig } from './typescript/ts-config.js';
+import { ExecutorOptions, SwcExecutorOptions } from './schema.js';
+import { getSwcrcPath } from './swc/get-swcrc-path.js';
 
 export enum HelperDependency {
   tsc = 'npm:tslib',

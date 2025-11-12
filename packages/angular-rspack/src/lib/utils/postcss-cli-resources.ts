@@ -9,7 +9,7 @@
 import { interpolateName } from 'loader-utils';
 import * as path from 'node:path';
 import type { Declaration, Plugin } from 'postcss';
-import { assertIsError } from './misc-helpers';
+import { assertIsError } from './misc-helpers.js';
 
 function wrapUrl(url: string): string {
   let wrappedUrl;

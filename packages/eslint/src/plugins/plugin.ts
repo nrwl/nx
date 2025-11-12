@@ -24,8 +24,8 @@ import {
   baseEsLintConfigFile,
   ESLINT_CONFIG_FILENAMES,
   isFlatConfig,
-} from '../utils/config-file';
-import { resolveESLintClass } from '../utils/resolve-eslint-class';
+} from '../utils/config-file.js';
+import { resolveESLintClass } from '../utils/resolve-eslint-class.js';
 
 const pmc = getPackageManagerCommand();
 

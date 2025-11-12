@@ -1,8 +1,8 @@
 import { tmpdir, userInfo } from 'os';
 import { join } from 'path';
 import { createHash } from 'crypto';
-import { workspaceRoot } from '../utils/workspace-root';
-import { nxVersion } from '../utils/versions';
+import { workspaceRoot } from '../utils/workspace-root.js';
+import { nxVersion } from '../utils/versions.js';
 
 export function getNativeFileCacheLocation() {
   if (process.env.NX_NATIVE_FILE_CACHE_DIRECTORY) {

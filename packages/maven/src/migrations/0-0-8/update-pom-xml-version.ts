@@ -1,5 +1,5 @@
 import { Tree } from '@nx/devkit';
-import { updateNxMavenPluginVersion } from '../../utils/pom-xml-updater';
+import { updateNxMavenPluginVersion } from '../../utils/pom-xml-updater.js';
 
 /**
  * Migration for @nx/maven v0.0.8

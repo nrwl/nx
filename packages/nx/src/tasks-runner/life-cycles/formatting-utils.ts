@@ -1,5 +1,5 @@
-import { Task } from '../../config/task-graph';
-import { output } from '../../utils/output';
+import { Task } from '../../config/task-graph.js';
+import { output } from '../../utils/output.js';
 
 export function formatFlags(
   leftPadding: string,

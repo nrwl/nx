@@ -5,7 +5,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { WebpackExecutorOptions } from '../../executors/webpack/schema';
+import { WebpackExecutorOptions } from '../../executors/webpack/schema.js';
 
 export default async function (tree: Tree) {
   forEachExecutorOptions<WebpackExecutorOptions>(

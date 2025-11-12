@@ -10,17 +10,17 @@ import {
 } from 'webpack';
 import { getRootTsConfigPath } from '@nx/js';
 
-import { StatsJsonPlugin } from '../../stats-json-plugin';
-import { GeneratePackageJsonPlugin } from '../../generate-package-json-plugin';
-import { getOutputHashFormat } from '../../../utils/hash-format';
-import { NxTsconfigPathsWebpackPlugin } from '../../nx-typescript-webpack-plugin/nx-tsconfig-paths-webpack-plugin';
-import { getTerserEcmaVersion } from './get-terser-ecma-version';
-import { createLoaderFromCompiler } from './compiler-loaders';
-import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
+import { StatsJsonPlugin } from '../../stats-json-plugin.js';
+import { GeneratePackageJsonPlugin } from '../../generate-package-json-plugin.js';
+import { getOutputHashFormat } from '../../../utils/hash-format.js';
+import { NxTsconfigPathsWebpackPlugin } from '../../nx-typescript-webpack-plugin/nx-tsconfig-paths-webpack-plugin.js';
+import { getTerserEcmaVersion } from './get-terser-ecma-version.js';
+import { createLoaderFromCompiler } from './compiler-loaders.js';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options.js';
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getNonBuildableLibs } from './utils';
+import { getNonBuildableLibs } from './utils.js';
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,

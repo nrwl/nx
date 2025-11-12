@@ -1,5 +1,5 @@
-import { ExtraEntryPoint } from '../model';
-import { normalizeExtraEntryPoints } from './normalize-entry';
+import { ExtraEntryPoint } from '../model.js';
+import { normalizeExtraEntryPoints } from './normalize-entry.js';
 
 export function generateEntryPoints(appConfig: {
   styles: ExtraEntryPoint[];

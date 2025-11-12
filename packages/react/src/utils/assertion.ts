@@ -1,4 +1,4 @@
-import { type Schema } from '../generators/application/schema';
+import { type Schema } from '../generators/application/schema.js';
 
 const VALID_STYLES = [
   'css',

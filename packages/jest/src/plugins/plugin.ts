@@ -35,7 +35,7 @@ import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { major } from 'semver';
-import { getInstalledJestMajorVersion } from '../utils/versions';
+import { getInstalledJestMajorVersion } from '../utils/versions.js';
 
 const pmc = getPackageManagerCommand();
 

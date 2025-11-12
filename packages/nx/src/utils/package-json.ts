@@ -2,18 +2,18 @@ import { execSync } from 'child_process';
 import { existsSync, writeFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { dirSync } from 'tmp';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json.js';
 import {
   ProjectConfiguration,
   ProjectMetadata,
   TargetConfiguration,
-} from '../config/workspace-json-project-json';
+} from '../config/workspace-json-project-json.js';
 import type { Tree } from '../generators/tree';
-import { readJson } from '../generators/utils/json';
-import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration-utils';
-import { getCatalogManager } from './catalog';
-import { readJsonFile } from './fileutils';
-import { getNxRequirePaths } from './installation-directory';
+import { readJson } from '../generators/utils/json.js';
+import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration-utils.js';
+import { getCatalogManager } from './catalog/index.js';
+import { readJsonFile } from './fileutils.js';
+import { getNxRequirePaths } from './installation-directory.js';
 import {
   createTempNpmDirectory,
   detectPackageManager,
@@ -21,8 +21,8 @@ import {
   getPackageManagerVersion,
   PackageManager,
   PackageManagerCommands,
-} from './package-manager';
-import { workspaceRoot } from './workspace-root';
+} from './package-manager.js';
+import { workspaceRoot } from './workspace-root.js';
 
 export interface NxProjectPackageJsonConfiguration
   extends Partial<ProjectConfiguration> {

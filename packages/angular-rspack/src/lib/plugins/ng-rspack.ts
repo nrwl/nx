@@ -5,18 +5,18 @@ import {
   RspackPluginInstance,
 } from '@rspack/core';
 import { posix, relative, resolve } from 'node:path';
-import { getEntryPoints } from '../config/config-utils/entry-points';
+import { getEntryPoints } from '../config/config-utils/entry-points.js';
 import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
 } from '../models';
-import { AngularRspackPlugin } from './angular-rspack-plugin';
-import { AngularSsrDevServer } from './angular-ssr-dev-server';
-import { I18nInlinePlugin } from './i18n-inline-plugin';
-import { IndexHtmlPlugin } from './index-html-plugin';
-import { RxjsEsmResolutionPlugin } from './rxjs-esm-resolution';
-import { ProgressPlugin } from './progress-plugin';
-import { loadEsmModule } from '../utils/misc-helpers';
+import { AngularRspackPlugin } from './angular-rspack-plugin.js';
+import { AngularSsrDevServer } from './angular-ssr-dev-server.js';
+import { I18nInlinePlugin } from './i18n-inline-plugin.js';
+import { IndexHtmlPlugin } from './index-html-plugin.js';
+import { RxjsEsmResolutionPlugin } from './rxjs-esm-resolution.js';
+import { ProgressPlugin } from './progress-plugin.js';
+import { loadEsmModule } from '../utils/misc-helpers.js';
 
 export class NgRspackPlugin implements RspackPluginInstance {
   readonly pluginOptions: NormalizedAngularRspackPluginOptions;

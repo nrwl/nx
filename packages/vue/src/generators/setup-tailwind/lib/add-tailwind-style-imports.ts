@@ -1,6 +1,6 @@
 import { joinPathFragments, ProjectConfiguration, Tree } from '@nx/devkit';
 
-import { SetupTailwindOptions } from '../schema';
+import { SetupTailwindOptions } from '../schema.js';
 
 const knownStylesheetLocations = [
   // What we generate by default

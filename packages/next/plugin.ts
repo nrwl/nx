@@ -2,4 +2,4 @@ export {
   createNodes,
   createNodesV2,
   NextPluginOptions,
-} from './src/plugins/plugin';
+} from './src/plugins/plugin.js';

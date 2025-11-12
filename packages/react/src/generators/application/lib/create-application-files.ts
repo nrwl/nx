@@ -10,18 +10,18 @@ import {
 import { WithNxOptions } from '@nx/webpack';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { join } from 'path';
-import { createTsConfig } from '../../../utils/create-ts-config';
-import { getInSourceVitestTestsTemplate } from '../../../utils/get-in-source-vitest-tests-template';
-import { maybeJs } from '../../../utils/maybe-js';
-import { WithReactOptions } from '../../../../plugins/with-react';
-import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
-import { NormalizedSchema } from '../schema';
-import { getAppTests } from './get-app-tests';
+import { createTsConfig } from '../../../utils/create-ts-config.js';
+import { getInSourceVitestTestsTemplate } from '../../../utils/get-in-source-vitest-tests-template.js';
+import { maybeJs } from '../../../utils/maybe-js.js';
+import { WithReactOptions } from '../../../../plugins/with-react.js';
+import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin.js';
+import { NormalizedSchema } from '../schema.js';
+import { getAppTests } from './get-app-tests.js';
 import {
   createNxCloudOnboardingURLForWelcomeApp,
   getNxCloudAppOnBoardingUrl,
 } from 'nx/src/nx-cloud/utilities/onboarding';
-import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
+import { hasRspackPlugin } from '../../../utils/has-rspack-plugin.js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import {
   reactDomVersion,
@@ -31,7 +31,7 @@ import {
   typesReactDomVersion,
   typesNodeVersion,
   typesReactVersion,
-} from '../../../utils/versions';
+} from '../../../utils/versions.js';
 
 export function getDefaultTemplateVariables(
   host: Tree,

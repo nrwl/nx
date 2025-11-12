@@ -3,8 +3,8 @@ import { formatFiles, GeneratorCallback, readNxJson, Tree } from '@nx/devkit';
 import { runTasksInSerial } from '@nx/devkit';
 import applicationGenerator from '../application/application.impl';
 import setupGenerator from '../setup/setup.impl';
-import { normalizeOptions } from './lib/normalize-options';
-import { RemixGeneratorSchema } from './schema';
+import { normalizeOptions } from './lib/normalize-options.js';
+import { RemixGeneratorSchema } from './schema.js';
 
 export default async function (tree: Tree, _options: RemixGeneratorSchema) {
   const options = normalizeOptions(tree, _options);

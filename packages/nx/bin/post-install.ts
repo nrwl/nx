@@ -1,15 +1,15 @@
-import { buildProjectGraphAndSourceMapsWithoutDaemon } from '../src/project-graph/project-graph';
-import { workspaceRoot } from '../src/utils/workspace-root';
-import { fileExists } from '../src/utils/fileutils';
+import { buildProjectGraphAndSourceMapsWithoutDaemon } from '../src/project-graph/project-graph.js';
+import { workspaceRoot } from '../src/utils/workspace-root.js';
+import { fileExists } from '../src/utils/fileutils.js';
 import { join } from 'path';
-import { daemonClient } from '../src/daemon/client/client';
-import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
-import { verifyOrUpdateNxCloudClient } from '../src/nx-cloud/update-manager';
-import { getCloudOptions } from '../src/nx-cloud/utilities/get-cloud-options';
-import { isNxCloudUsed } from '../src/utils/nx-cloud-utils';
-import { readNxJson } from '../src/config/nx-json';
-import { logger } from '../src/utils/logger';
-import { setupWorkspaceContext } from '../src/utils/workspace-context';
+import { daemonClient } from '../src/daemon/client/client.js';
+import { assertSupportedPlatform } from '../src/native/assert-supported-platform.js';
+import { verifyOrUpdateNxCloudClient } from '../src/nx-cloud/update-manager.js';
+import { getCloudOptions } from '../src/nx-cloud/utilities/get-cloud-options.js';
+import { isNxCloudUsed } from '../src/utils/nx-cloud-utils.js';
+import { readNxJson } from '../src/config/nx-json.js';
+import { logger } from '../src/utils/logger.js';
+import { setupWorkspaceContext } from '../src/utils/workspace-context.js';
 
 // The post install is not critical, to avoid any chance that it may hang
 // we will kill this process after 30 seconds.

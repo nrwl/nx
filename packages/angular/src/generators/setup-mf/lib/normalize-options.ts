@@ -2,12 +2,12 @@ import { names, readProjectConfiguration, type Tree } from '@nx/devkit';
 import {
   getAppComponentInfo,
   getNxWelcomeComponentInfo,
-} from '../../utils/app-components-info';
+} from '../../utils/app-components-info.js';
 import {
   getComponentType,
   getModuleTypeSeparator,
-} from '../../utils/artifact-types';
-import { getProjectPrefix } from '../../utils/project';
+} from '../../utils/artifact-types.js';
+import { getProjectPrefix } from '../../utils/project.js';
 import type { NormalizedOptions, Schema } from '../schema';
 
 export function normalizeOptions(

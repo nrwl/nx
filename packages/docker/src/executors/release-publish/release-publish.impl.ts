@@ -8,7 +8,7 @@ import { signalToCode } from '@nx/devkit/internal';
 import { exec } from 'child_process';
 import type { DockerReleasePublishSchema } from './schema';
 import { existsSync, readFileSync } from 'fs';
-import { getDockerVersionPath } from '../../release/version-utils';
+import { getDockerVersionPath } from '../../release/version-utils.js';
 
 export interface NormalizedDockerReleasePublishSchema {
   quiet: boolean;

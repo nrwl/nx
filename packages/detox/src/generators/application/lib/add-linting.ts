@@ -7,7 +7,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { extraEslintDependencies } from '@nx/react';
-import { NormalizedSchema } from './normalize-options';
+import { NormalizedSchema } from './normalize-options.js';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,

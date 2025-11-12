@@ -26,8 +26,8 @@ import { cpSync, existsSync, readFileSync, rmSync } from 'fs';
 import * as process from 'node:process';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { basename, extname, join } from 'path';
-import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
-import { ModuleFederationStaticServerSchema } from './schema';
+import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema.js';
+import { ModuleFederationStaticServerSchema } from './schema.js';
 
 function getBuildAndServeOptionsFromServeTarget(
   serveTarget: string,

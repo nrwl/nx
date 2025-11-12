@@ -1,9 +1,9 @@
 import { gt, inc, ReleaseType } from 'semver';
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
-import { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { GroupVersionPlan, ProjectsVersionPlan } from '../config/version-plans';
-import { SemverBumpType } from './version-actions';
-import { ProjectLogger } from './project-logger';
+import { ReleaseGroupWithName } from '../config/filter-release-groups.js';
+import { GroupVersionPlan, ProjectsVersionPlan } from '../config/version-plans.js';
+import { SemverBumpType } from './version-actions.js';
+import { ProjectLogger } from './project-logger.js';
 
 export async function deriveSpecifierFromVersionPlan(
   projectLogger: ProjectLogger,

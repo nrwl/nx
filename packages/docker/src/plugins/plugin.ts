@@ -15,7 +15,7 @@ import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLatestCommitSha } from 'nx/src/utils/git-utils';
-import { interpolateObject } from '../utils/interpolate-pattern';
+import { interpolateObject } from '../utils/interpolate-pattern.js';
 
 export interface DockerTargetOptions {
   name: string;

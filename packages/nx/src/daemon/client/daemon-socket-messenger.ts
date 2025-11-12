@@ -3,8 +3,8 @@ import { performance } from 'perf_hooks';
 import {
   consumeMessagesFromSocket,
   MESSAGE_END_SEQ,
-} from '../../utils/consume-messages-from-socket';
-import { serialize } from '../socket-utils';
+} from '../../utils/consume-messages-from-socket.js';
+import { serialize } from '../socket-utils.js';
 
 export interface Message extends Record<string, any> {
   type: string;

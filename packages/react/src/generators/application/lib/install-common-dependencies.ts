@@ -11,9 +11,9 @@ import {
   typesNodeVersion,
   reactRouterVersion,
   reactRouterIsBotVersion,
-} from '../../../utils/versions';
-import { NormalizedSchema } from '../schema';
-import { getReactDependenciesVersionsToInstall } from '../../../utils/version-utils';
+} from '../../../utils/versions.js';
+import { NormalizedSchema } from '../schema.js';
+import { getReactDependenciesVersionsToInstall } from '../../../utils/version-utils.js';
 
 export async function installCommonDependencies(
   host: Tree,

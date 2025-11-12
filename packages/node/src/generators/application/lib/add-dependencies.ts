@@ -18,8 +18,8 @@ import {
   nxVersion,
   tslibVersion,
   typesNodeVersion,
-} from '../../../utils/versions';
-import { NormalizedSchema } from './normalized-schema';
+} from '../../../utils/versions.js';
+import { NormalizedSchema } from './normalized-schema.js';
 
 export function addProjectDependencies(
   tree: Tree,

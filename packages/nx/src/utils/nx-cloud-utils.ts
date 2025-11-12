@@ -1,4 +1,4 @@
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json.js';
 
 export function isNxCloudUsed(nxJson: NxJsonConfiguration): boolean {
   if (process.env.NX_NO_CLOUD === 'true' || nxJson.neverConnectToCloud) {

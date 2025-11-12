@@ -4,8 +4,8 @@ import {
   ensurePackage,
   runTasksInSerial,
 } from '@nx/devkit';
-import { NormalizedSchema } from '../schema';
-import { nxVersion } from '../../../utils/versions';
+import { NormalizedSchema } from '../schema.js';
+import { nxVersion } from '../../../utils/versions.js';
 
 export async function addVite(
   tree: Tree,

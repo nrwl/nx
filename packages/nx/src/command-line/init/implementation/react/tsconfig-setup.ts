@@ -3,7 +3,7 @@ import {
   fileExists,
   readJsonFile,
   writeJsonFile,
-} from '../../../../utils/fileutils';
+} from '../../../../utils/fileutils.js';
 
 const defaultTsConfig = (relativePathToRoot: string) => ({
   extends: relativePathToRoot

@@ -8,7 +8,7 @@ import {
   normalizeOptions,
   runNestSchematic,
   unitTestRunnerToSpec,
-} from '../utils';
+} from '../utils/index.js';
 
 export type GatewayGeneratorOptions = NestGeneratorWithLanguageOption &
   NestGeneratorWithTestOption;

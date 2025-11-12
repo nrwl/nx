@@ -5,7 +5,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import type { AppConfig } from '@remix-run/dev';
-import { loadViteDynamicImport } from './executor-utils';
+import { loadViteDynamicImport } from './executor-utils.js';
 
 export function getRemixConfigPathDetails(tree: Tree, projectName: string) {
   const project = readProjectConfiguration(tree, projectName);

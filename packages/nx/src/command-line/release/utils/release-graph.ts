@@ -10,19 +10,19 @@ import type { Tree } from '../../../generators/tree';
 import {
   IMPLICIT_DEFAULT_RELEASE_GROUP,
   type NxReleaseConfig,
-} from '../config/config';
+} from '../config/config.js';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { ProjectLogger } from '../version/project-logger';
-import { resolveCurrentVersion } from '../version/resolve-current-version';
-import { topologicalSort } from '../version/topological-sort';
+import { ProjectLogger } from '../version/project-logger.js';
+import { resolveCurrentVersion } from '../version/resolve-current-version.js';
+import { topologicalSort } from '../version/topological-sort.js';
 import {
   NOOP_VERSION_ACTIONS,
   resolveVersionActionsForProject,
   type AfterAllProjectsVersioned,
   type VersionActions,
-} from '../version/version-actions';
-import { getLatestGitTagForPattern } from './git';
-import { shouldSkipVersionActions, type VersionDataEntry } from './shared';
+} from '../version/version-actions.js';
+import { getLatestGitTagForPattern } from './git.js';
+import { shouldSkipVersionActions, type VersionDataEntry } from './shared.js';
 
 /**
  * Final configuration for a project after applying release group and project level overrides

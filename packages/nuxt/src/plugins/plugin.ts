@@ -18,7 +18,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { dirname, isAbsolute, join, relative } from 'path';
 import { existsSync, readdirSync } from 'fs';
-import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
+import { loadNuxtKitDynamicImport } from '../utils/executor-utils.js';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 const cachePath = join(workspaceDataDirectory, 'nuxt.hash');

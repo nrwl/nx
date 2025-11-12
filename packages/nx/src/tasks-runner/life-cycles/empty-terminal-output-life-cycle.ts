@@ -1,7 +1,7 @@
-import { output } from '../../utils/output';
-import { getPrintableCommandArgsForTask } from '../utils';
+import { output } from '../../utils/output.js';
+import { getPrintableCommandArgsForTask } from '../utils.js';
 import type { LifeCycle } from '../life-cycle';
-import { TaskStatus } from '../tasks-runner';
+import { TaskStatus } from '../tasks-runner.js';
 
 export class EmptyTerminalOutputLifeCycle implements LifeCycle {
   printTaskTerminalOutput(

@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
-import { deduceDefaultBase } from './default-base';
-import { output } from '../output';
-import { execAndWait, spawnAndWait } from '../child-process-utils';
+import { deduceDefaultBase } from './default-base.js';
+import { output } from '../output.js';
+import { execAndWait, spawnAndWait } from '../child-process-utils.js';
 import * as enquirer from 'enquirer';
 
 export enum VcsPushStatus {

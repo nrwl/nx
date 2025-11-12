@@ -7,9 +7,9 @@ import {
 import * as pc from 'picocolors';
 import { combineAsyncIterables } from '@nx/devkit/src/utils/async-iterable';
 
-import { WebpackExecutorOptions } from '../webpack/schema';
-import { TargetOptions, WebSsrDevServerOptions } from './schema';
-import { waitUntilServerIsListening } from './lib/wait-until-server-is-listening';
+import { WebpackExecutorOptions } from '../webpack/schema.js';
+import { TargetOptions, WebSsrDevServerOptions } from './schema.js';
+import { waitUntilServerIsListening } from './lib/wait-until-server-is-listening.js';
 
 export async function* ssrDevServerExecutor(
   options: WebSsrDevServerOptions,

@@ -1,14 +1,14 @@
 import chalk = require('chalk');
 import { prompt } from 'enquirer';
-import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
+import { NxReleaseVersionConfiguration } from '../../../config/nx-json.js';
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import type { Tree } from '../../../generators/tree';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { getLatestGitTagForPattern } from '../utils/git';
-import { ProjectLogger } from './project-logger';
+import { getLatestGitTagForPattern } from '../utils/git.js';
+import { ProjectLogger } from './project-logger.js';
 import type { FinalConfigForProject } from '../utils/release-graph';
-import { VersionActions } from './version-actions';
-import { globalSpinner } from '../../../utils/spinner';
+import { VersionActions } from './version-actions.js';
+import { globalSpinner } from '../../../utils/spinner.js';
 
 export async function resolveCurrentVersion(
   tree: Tree,

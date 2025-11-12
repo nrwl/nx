@@ -2,15 +2,15 @@ import * as rollup from 'rollup';
 import { parse, resolve } from 'path';
 import { type ExecutorContext, logger } from '@nx/devkit';
 
-import { RollupExecutorOptions } from './schema';
+import { RollupExecutorOptions } from './schema.js';
 import {
   NormalizedRollupExecutorOptions,
   normalizeRollupExecutorOptions,
-} from './lib/normalize';
+} from './lib/normalize.js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
-import { withNx } from '../../plugins/with-nx/with-nx';
-import { pluginName as generatePackageJsonPluginName } from '../../plugins/package-json/generate-package-json';
+import { withNx } from '../../plugins/with-nx/with-nx.js';
+import { pluginName as generatePackageJsonPluginName } from '../../plugins/package-json/generate-package-json.js';
 import { calculateProjectBuildableDependencies } from '@nx/js/src/utils/buildable-libs-utils';
 
 export async function* rollupExecutor(

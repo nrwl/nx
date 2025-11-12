@@ -2,22 +2,22 @@ import { ChildProcess, spawn } from 'child_process';
 import path = require('path');
 import { Socket, connect } from 'net';
 
-import { PluginConfiguration } from '../../../config/nx-json';
+import { PluginConfiguration } from '../../../config/nx-json.js';
 
 // TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
-// import { logger } from '../../utils/logger';
+// import { logger } from '../../utils/logger.js';
 
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
-import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
-import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import { getPluginOsSocketPath } from '../../../daemon/socket-utils.js';
+import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket.js';
 
 import {
   consumeMessage,
   isPluginWorkerResult,
   sendMessageOverSocket,
-} from './messaging';
-import { getNxRequirePaths } from '../../../utils/installation-directory';
-import { resolveNxPlugin } from '../resolve-plugin';
+} from './messaging.js';
+import { getNxRequirePaths } from '../../../utils/installation-directory.js';
+import { resolveNxPlugin } from '../resolve-plugin.js';
 
 const cleanupFunctions = new Set<() => void>();
 
@@ -73,7 +73,7 @@ export async function loadRemoteNxPlugin(
   // This allows metrics collection when the daemon is not used
   if (worker.pid) {
     try {
-      const { isOnDaemon } = await import('../../../daemon/is-on-daemon');
+      const { isOnDaemon } = await import('../../../daemon/is-on-daemon.js');
       /**
        * We can only register the plugin worker as a subprocess of the main CLI
        * when the daemon is not used. Additionally, we can't explcitly register
@@ -81,9 +81,7 @@ export async function loadRemoteNxPlugin(
        * daemon, we'd get a different instance of the process metrics service.
        */
       if (!isOnDaemon()) {
-        const { getProcessMetricsService } = await import(
-          '../../../tasks-runner/process-metrics-service'
-        );
+        const { getProcessMetricsService } = await import('../../../tasks-runner/process-metrics-service.js');
 
         getProcessMetricsService().registerMainCliSubprocess(
           worker.pid,

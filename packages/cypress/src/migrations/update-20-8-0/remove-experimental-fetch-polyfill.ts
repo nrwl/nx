@@ -2,8 +2,8 @@ import { formatFiles, type Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import type { Printer } from 'typescript';
-import { resolveCypressConfigObject } from '../../utils/config';
-import { cypressProjectConfigs } from '../../utils/migrations';
+import { resolveCypressConfigObject } from '../../utils/config.js';
+import { cypressProjectConfigs } from '../../utils/migrations.js';
 
 let printer: Printer;
 let ts: typeof import('typescript');

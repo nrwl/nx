@@ -4,8 +4,8 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { nuxtVersion, nxVersion } from '../../../utils/versions';
-import { InitSchema } from '../schema';
+import { nuxtVersion, nxVersion } from '../../../utils/versions.js';
+import { InitSchema } from '../schema.js';
 
 export function updateDependencies(host: Tree, schema: InitSchema) {
   return addDependenciesToPackageJson(

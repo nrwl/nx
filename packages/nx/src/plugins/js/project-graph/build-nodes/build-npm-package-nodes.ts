@@ -1,11 +1,11 @@
 import { existsSync } from 'fs';
-import { hashArray } from '../../../../hasher/file-hasher';
+import { hashArray } from '../../../../hasher/file-hasher.js';
 import { join } from 'path';
 
-import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
-import { readJsonFile } from '../../../../utils/fileutils';
-import { PackageJson } from '../../../../utils/package-json';
-import { workspaceRoot } from '../../../../utils/workspace-root';
+import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder.js';
+import { readJsonFile } from '../../../../utils/fileutils.js';
+import { PackageJson } from '../../../../utils/package-json.js';
+import { workspaceRoot } from '../../../../utils/workspace-root.js';
 
 export function buildNpmPackageNodes(builder: ProjectGraphBuilder) {
   const packageJsonPath = join(workspaceRoot, 'package.json');

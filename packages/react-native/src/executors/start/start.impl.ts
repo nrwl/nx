@@ -2,8 +2,8 @@ import { ExecutorContext, logger } from '@nx/devkit';
 import { signalToCode } from '@nx/devkit/internal';
 import { ChildProcess, fork } from 'child_process';
 import { resolve as pathResolve } from 'path';
-import { isPackagerRunning } from './lib/is-packager-running';
-import { ReactNativeStartOptions } from './schema';
+import { isPackagerRunning } from './lib/is-packager-running.js';
+import { ReactNativeStartOptions } from './schema.js';
 
 export interface ReactNativeStartOutput {
   port?: number;

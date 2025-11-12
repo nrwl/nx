@@ -9,7 +9,7 @@ import {
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { initGenerator } from '@nx/js';
-import { createNodesV2 } from '../../../plugin';
+import { createNodesV2 } from '../../../plugin.js';
 import {
   lessLoaderVersion,
   reactRefreshVersion,
@@ -18,8 +18,8 @@ import {
   rspackPluginReactRefreshVersion,
   sassEmbeddedVersion,
   sassLoaderVersion,
-} from '../../utils/versions';
-import { InitGeneratorSchema } from './schema';
+} from '../../utils/versions.js';
+import { InitGeneratorSchema } from './schema.js';
 
 export async function rspackInitGenerator(
   tree: Tree,

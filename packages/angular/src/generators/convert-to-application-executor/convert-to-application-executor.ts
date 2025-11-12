@@ -11,10 +11,10 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { dirname, join } from 'node:path/posix';
-import { allTargetOptions } from '../../utils/targets';
-import { setupSsr } from '../setup-ssr/setup-ssr';
-import { validateProject } from '../utils/validations';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
+import { allTargetOptions } from '../../utils/targets.js';
+import { setupSsr } from '../setup-ssr/setup-ssr.js';
+import { validateProject } from '../utils/validations.js';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils.js';
 import type { GeneratorOptions } from './schema';
 
 const executorsToConvert = new Set([

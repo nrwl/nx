@@ -13,14 +13,14 @@ import { mkdir } from 'node:fs/promises';
 import { gte } from 'semver';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 
-import { updatePackageJson } from './lib/update-package-json';
-import { createNextConfigFile } from './lib/create-next-config-file';
-import { checkPublicDirectory } from './lib/check-project';
-import { NextBuildBuilderOptions } from '../../utils/types';
+import { updatePackageJson } from './lib/update-package-json.js';
+import { createNextConfigFile } from './lib/create-next-config-file.js';
+import { checkPublicDirectory } from './lib/check-project.js';
+import { NextBuildBuilderOptions } from '../../utils/types.js';
 import { ChildProcess, fork } from 'child_process';
-import { createCliOptions } from '../../utils/create-cli-options';
+import { createCliOptions } from '../../utils/create-cli-options.js';
 import { signalToCode } from '@nx/devkit/internal';
-import { getInstalledNextVersionRuntime } from '../../utils/runtime-version-utils';
+import { getInstalledNextVersionRuntime } from '../../utils/runtime-version-utils.js';
 
 let childProcess: ChildProcess;
 

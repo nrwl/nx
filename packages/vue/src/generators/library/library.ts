@@ -28,16 +28,16 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { relative } from 'path';
-import { addLinting } from '../../utils/add-linting';
-import { extractTsConfigBase } from '../../utils/create-ts-config';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { addLinting } from '../../utils/add-linting.js';
+import { extractTsConfigBase } from '../../utils/create-ts-config.js';
+import { ensureDependencies } from '../../utils/ensure-dependencies.js';
 import componentGenerator from '../component/component';
-import { vueInitGenerator } from '../init/init';
-import { addVite } from './lib/add-vite';
-import { createLibraryFiles } from './lib/create-library-files';
-import { determineEntryFields } from './lib/determine-entry-fields';
-import { normalizeOptions } from './lib/normalize-options';
-import { Schema } from './schema';
+import { vueInitGenerator } from '../init/init.js';
+import { addVite } from './lib/add-vite.js';
+import { createLibraryFiles } from './lib/create-library-files.js';
+import { determineEntryFields } from './lib/determine-entry-fields.js';
+import { normalizeOptions } from './lib/normalize-options.js';
+import { Schema } from './schema.js';
 
 export function libraryGenerator(tree: Tree, schema: Schema) {
   return libraryGeneratorInternal(tree, {

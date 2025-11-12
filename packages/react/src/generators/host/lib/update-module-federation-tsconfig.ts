@@ -1,5 +1,5 @@
 import { joinPathFragments, type Tree, updateJson } from '@nx/devkit';
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function updateModuleFederationTsconfig(

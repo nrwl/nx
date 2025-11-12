@@ -7,7 +7,7 @@ import {
 import {
   analyzeProjects,
   isAnalysisErrorResult,
-} from '../analyzer/analyzer-client';
+} from '../analyzer/analyzer-client.js';
 import { mergeTargetConfigurations } from 'nx/src/project-graph/utils/project-configuration-utils';
 
 export type TargetConfigurationWithName = Partial<TargetConfiguration> & {

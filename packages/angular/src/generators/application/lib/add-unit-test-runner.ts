@@ -1,7 +1,7 @@
 import { Tree } from '@nx/devkit';
-import { UnitTestRunner } from '../../../utils/test-runners';
-import { addJest } from '../../utils/add-jest';
-import { addVitest } from '../../utils/add-vitest';
+import { UnitTestRunner } from '../../../utils/test-runners.js';
+import { addJest } from '../../utils/add-jest.js';
+import { addVitest } from '../../utils/add-vitest.js';
 import type { NormalizedSchema } from './normalized-schema';
 
 export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {

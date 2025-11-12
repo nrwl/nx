@@ -17,14 +17,14 @@ import type * as ts from 'typescript';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
-import { addStaticRouter } from '../../utils/ast-utils';
+import { addStaticRouter } from '../../utils/ast-utils.js';
 import {
   corsVersion,
   expressVersion,
   isbotVersion,
   typesCorsVersion,
   typesExpressVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 import type { Schema } from './schema';
 
 let tsModule: typeof import('typescript');

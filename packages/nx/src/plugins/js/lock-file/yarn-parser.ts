@@ -1,22 +1,22 @@
 import {
   getHoistedPackageVersion,
   NormalizedPackageJson,
-} from './utils/package-json';
+} from './utils/package-json.js';
 import {
   RawProjectGraphDependency,
   validateDependency,
-} from '../../../project-graph/project-graph-builder';
+} from '../../../project-graph/project-graph-builder.js';
 import { gt, Range, satisfies } from 'semver';
 import {
   DependencyType,
   ProjectGraph,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
-} from '../../../config/project-graph';
-import { hashArray } from '../../../hasher/file-hasher';
-import { sortObjectByKeys } from '../../../utils/object-sort';
-import { CreateDependenciesContext } from '../../../project-graph/plugins';
-import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+} from '../../../config/project-graph.js';
+import { hashArray } from '../../../hasher/file-hasher.js';
+import { sortObjectByKeys } from '../../../utils/object-sort.js';
+import { CreateDependenciesContext } from '../../../project-graph/plugins/index.js';
+import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph.js';
 
 /**
  * Yarn

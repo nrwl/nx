@@ -16,15 +16,15 @@ import { randomUUID } from 'crypto';
 import * as path from 'path';
 import { join } from 'path';
 
-import { InspectType, NodeExecutorOptions } from './schema';
-import { calculateProjectBuildableDependencies } from '../../utils/buildable-libs-utils';
-import { killTree } from './lib/kill-tree';
-import { LineAwareWriter } from './lib/line-aware-writer';
-import { createCoalescingDebounce } from './lib/coalescing-debounce';
+import { InspectType, NodeExecutorOptions } from './schema.js';
+import { calculateProjectBuildableDependencies } from '../../utils/buildable-libs-utils.js';
+import { killTree } from './lib/kill-tree.js';
+import { LineAwareWriter } from './lib/line-aware-writer.js';
+import { createCoalescingDebounce } from './lib/coalescing-debounce.js';
 import { fileExists } from 'nx/src/utils/fileutils';
-import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
+import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir.js';
 import { interpolate } from 'nx/src/tasks-runner/utils';
-import { detectModuleFormat } from './lib/detect-module-format';
+import { detectModuleFormat } from './lib/detect-module-format.js';
 
 interface ActiveTask {
   id: string;

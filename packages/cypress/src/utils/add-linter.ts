@@ -21,7 +21,7 @@ import {
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
-import { versions } from './versions';
+import { versions } from './versions.js';
 
 export interface CyLinterOptions {
   project: string;

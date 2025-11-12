@@ -2,4 +2,4 @@ export {
   createNodes,
   createNodesV2,
   RollupPluginOptions,
-} from './src/plugins/plugin';
+} from './src/plugins/plugin.js';

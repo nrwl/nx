@@ -1,5 +1,5 @@
 import { logger, Tree } from '@nx/devkit';
-import { NormalizedSchema } from './normalize-options';
+import { NormalizedSchema } from './normalize-options.js';
 
 export function showPossibleWarnings(tree: Tree, options: NormalizedSchema) {
   if (options.style === '@emotion/styled' && options.appDir) {

@@ -16,11 +16,11 @@ import type {
 } from 'nx/src/utils/package-json';
 import { join, resolve } from 'path';
 import { clean, coerce, gt } from 'semver';
-import { installPackagesTask } from '../tasks/install-packages-task';
+import { installPackagesTask } from '../tasks/install-packages-task.js';
 import {
   getCatalogDependenciesFromPackageJson,
   getCatalogManager,
-} from './catalog';
+} from './catalog/index.js';
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {

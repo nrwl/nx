@@ -12,12 +12,12 @@ import {
 } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { ViteBuildExecutorOptions } from '../executors/build/schema';
-import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
-import { VitestExecutorOptions } from '../executors/test/schema';
-import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
-import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
-import { VitestGeneratorSchema } from '../generators/vitest/schema';
+import { ViteBuildExecutorOptions } from '../executors/build/schema.js';
+import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema.js';
+import { VitestExecutorOptions } from '../executors/test/schema.js';
+import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema.js';
+import { ensureViteConfigIsCorrect } from './vite-config-edit-utils.js';
+import { VitestGeneratorSchema } from '../generators/vitest/schema.js';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;

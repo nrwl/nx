@@ -1,4 +1,4 @@
-import { Schema } from '../schema';
+import { Schema } from '../schema.js';
 
 export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
   appProjectRoot: string;

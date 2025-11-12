@@ -1,6 +1,6 @@
 import { readFileSync, renameSync } from 'node:fs';
-import { globWithWorkspaceContext } from '../../../../utils/workspace-context';
-import { fileExists } from '../../../../utils/fileutils';
+import { globWithWorkspaceContext } from '../../../../utils/workspace-context.js';
+import { fileExists } from '../../../../utils/fileutils.js';
 
 // Vite cannot process JSX like <div> or <Header> unless the file is named .jsx or .tsx
 export async function renameJsToJsx(appName: string, isStandalone: boolean) {

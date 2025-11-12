@@ -15,9 +15,9 @@ import {
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
-import { extraEslintDependencies } from '../../../utils/lint';
-import { NormalizedSchema } from '../schema';
-import { nxVersion } from '../../../utils/versions';
+import { extraEslintDependencies } from '../../../utils/lint.js';
+import { NormalizedSchema } from '../schema.js';
+import { nxVersion } from '../../../utils/versions.js';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];

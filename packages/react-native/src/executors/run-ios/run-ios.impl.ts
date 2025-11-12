@@ -4,10 +4,10 @@ import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 import { platform } from 'os';
 
-import { runCliStart } from '../start/start.impl';
-import { getCliOptions } from '../../utils/get-cli-options';
+import { runCliStart } from '../start/start.impl.js';
+import { getCliOptions } from '../../utils/get-cli-options.js';
 
-import { ReactNativeRunIosOptions } from './schema';
+import { ReactNativeRunIosOptions } from './schema.js';
 export interface ReactNativeRunIosOutput {
   success: boolean;
 }

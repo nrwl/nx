@@ -1,4 +1,4 @@
-import { IS_WASM } from '../../../native';
+import { IS_WASM } from '../../../native/index.js';
 
 export function isIsolationEnabled() {
   // Explicitly enabled, regardless of further conditions

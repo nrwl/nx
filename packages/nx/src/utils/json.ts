@@ -1,7 +1,7 @@
 import { parse, printParseErrorCode, stripComments } from 'jsonc-parser';
 import type { ParseError, ParseOptions } from 'jsonc-parser';
 import { LinesAndColumns } from 'lines-and-columns';
-import { codeFrameColumns } from './code-frames';
+import { codeFrameColumns } from './code-frames.js';
 
 export { stripComments as stripJsonComments };
 

@@ -17,30 +17,30 @@ import {
   writeJson,
 } from '@nx/devkit';
 
-import { Linter as LinterEnum, LinterType } from '../utils/linter';
+import { Linter as LinterEnum, LinterType } from '../utils/linter.js';
 import {
   determineEslintConfigFormat,
   findEslintFile,
-} from '../utils/eslint-file';
+} from '../utils/eslint-file.js';
 import { extname, join } from 'path';
-import { lintInitGenerator } from '../init/init';
+import { lintInitGenerator } from '../init/init.js';
 import type { Linter } from 'eslint';
-import { migrateConfigToMonorepoStyle } from '../init/init-migration';
+import { migrateConfigToMonorepoStyle } from '../init/init-migration.js';
 import { getProjects } from 'nx/src/generators/utils/project-configuration';
-import { useFlatConfig } from '../../utils/flat-config';
+import { useFlatConfig } from '../../utils/flat-config.js';
 import {
   createNodeList,
   generateFlatOverride,
   generateSpreadElement,
   stringifyNodeList,
-} from '../utils/flat-config/ast-utils';
+} from '../utils/flat-config/ast-utils.js';
 import {
   baseEsLintConfigFile,
   BASE_ESLINT_CONFIG_FILENAMES,
-} from '../../utils/config-file';
-import { hasEslintPlugin } from '../utils/plugin';
-import { jsoncEslintParserVersion } from '../../utils/versions';
-import { setupRootEsLint } from './setup-root-eslint';
+} from '../../utils/config-file.js';
+import { hasEslintPlugin } from '../utils/plugin.js';
+import { jsoncEslintParserVersion } from '../../utils/versions.js';
+import { setupRootEsLint } from './setup-root-eslint.js';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 interface LintProjectOptions {

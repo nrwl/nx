@@ -1,10 +1,10 @@
 import { Serializable } from 'child_process';
 import * as os from 'os';
-import { getForkedProcessOsSocketPath } from '../daemon/socket-utils';
-import { ChildProcess, IS_WASM, RustPseudoTerminal } from '../native';
-import { PseudoIPCServer } from './pseudo-ipc';
-import { RunningTask } from './running-tasks/running-task';
-import { codeToSignal } from '../utils/exit-codes';
+import { getForkedProcessOsSocketPath } from '../daemon/socket-utils.js';
+import { ChildProcess, IS_WASM, RustPseudoTerminal } from '../native/index.js';
+import { PseudoIPCServer } from './pseudo-ipc.js';
+import { RunningTask } from './running-tasks/running-task.js';
+import { codeToSignal } from '../utils/exit-codes.js';
 
 // Register single event listeners for all pseudo-terminal instances
 const pseudoTerminalShutdownCallbacks: Array<(s: number) => void> = [];

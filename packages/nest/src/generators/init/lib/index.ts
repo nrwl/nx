@@ -1,1 +1,1 @@
-export * from './add-dependencies';
+export * from './add-dependencies.js';

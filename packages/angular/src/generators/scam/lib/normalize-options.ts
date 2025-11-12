@@ -1,9 +1,9 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, names } from '@nx/devkit';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-import { getModuleTypeSeparator } from '../../utils/artifact-types';
-import { validateClassName } from '../../utils/validations';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import { getModuleTypeSeparator } from '../../utils/artifact-types.js';
+import { validateClassName } from '../../utils/validations.js';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils.js';
 import type { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(

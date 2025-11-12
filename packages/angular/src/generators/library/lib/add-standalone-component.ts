@@ -1,7 +1,7 @@
 import { joinPathFragments, names, type Tree } from '@nx/devkit';
-import { componentGenerator } from '../../component/component';
-import { addChildren } from './add-children';
-import { addLoadChildren } from './add-load-children';
+import { componentGenerator } from '../../component/component.js';
+import { addChildren } from './add-children.js';
+import { addLoadChildren } from './add-load-children.js';
 import type { NormalizedSchema } from './normalized-schema';
 
 export async function addStandaloneComponent(

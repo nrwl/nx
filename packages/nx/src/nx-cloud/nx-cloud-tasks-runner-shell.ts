@@ -1,16 +1,16 @@
-import { Task } from '../config/task-graph';
+import { Task } from '../config/task-graph.js';
 import {
   defaultTasksRunner,
   DefaultTasksRunnerOptions,
-} from '../tasks-runner/default-tasks-runner';
-import { TasksRunner } from '../tasks-runner/tasks-runner';
-import { output } from '../utils/output';
-import { findAncestorNodeModules } from './resolution-helpers';
+} from '../tasks-runner/default-tasks-runner.js';
+import { TasksRunner } from '../tasks-runner/tasks-runner.js';
+import { output } from '../utils/output.js';
+import { findAncestorNodeModules } from './resolution-helpers.js';
 import {
   NxCloudClientUnavailableError,
   NxCloudEnterpriseOutdatedError,
   verifyOrUpdateNxCloudClient,
-} from './update-manager';
+} from './update-manager.js';
 
 export interface CloudTaskRunnerOptions extends DefaultTasksRunnerOptions {
   accessToken?: string;

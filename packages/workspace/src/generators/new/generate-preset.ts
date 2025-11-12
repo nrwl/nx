@@ -3,14 +3,14 @@ import {
   getPackageManagerCommand,
   Tree,
 } from '@nx/devkit';
-import { Preset } from '../utils/presets';
+import { Preset } from '../utils/presets.js';
 import {
   angularCliVersion,
   nxVersion,
   typescriptVersion,
-} from '../../utils/versions';
-import { getNpmPackageVersion } from '../utils/get-npm-package-version';
-import { NormalizedSchema } from './new';
+} from '../../utils/versions.js';
+import { getNpmPackageVersion } from '../utils/get-npm-package-version.js';
+import { NormalizedSchema } from './new.js';
 import { join } from 'path';
 import * as yargsParser from 'yargs-parser';
 import { fork, ForkOptions } from 'child_process';

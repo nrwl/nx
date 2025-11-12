@@ -21,14 +21,14 @@ import {
   MigrationsJsonEntry,
   PackageJsonUpdateForPackage as PackageUpdate,
   PackageJsonUpdates,
-} from '../../config/misc-interfaces';
-import { NxJsonConfiguration } from '../../config/nx-json';
+} from '../../config/misc-interfaces.js';
+import { NxJsonConfiguration } from '../../config/nx-json.js';
 import {
   FileChange,
   flushChanges,
   FsTree,
   printChanges,
-} from '../../generators/tree';
+} from '../../generators/tree.js';
 import {
   extractFileFromTarball,
   fileExists,
@@ -36,9 +36,9 @@ import {
   JsonWriteOptions,
   readJsonFile,
   writeJsonFile,
-} from '../../utils/fileutils';
-import { logger } from '../../utils/logger';
-import { commitChanges } from '../../utils/git-utils';
+} from '../../utils/fileutils.js';
+import { logger } from '../../utils/logger.js';
+import { commitChanges } from '../../utils/git-utils.js';
 import {
   ArrayPackageGroup,
   getDependencyVersionFromPackageJson,
@@ -46,7 +46,7 @@ import {
   PackageJson,
   readModulePackageJson,
   readNxMigrateConfig,
-} from '../../utils/package-json';
+} from '../../utils/package-json.js';
 import {
   copyPackageManagerConfigurationFiles,
   createTempNpmDirectory,
@@ -57,34 +57,34 @@ import {
   packageRegistryPack,
   packageRegistryView,
   resolvePackageVersionUsingRegistry,
-} from '../../utils/package-manager';
-import { handleErrors } from '../../utils/handle-errors';
+} from '../../utils/package-manager.js';
+import { handleErrors } from '../../utils/handle-errors.js';
 import {
   connectToNxCloudWithPrompt,
   onlyDefaultRunnerIsUsed,
-} from '../nx-cloud/connect/connect-to-nx-cloud';
-import { output } from '../../utils/output';
+} from '../nx-cloud/connect/connect-to-nx-cloud.js';
+import { output } from '../../utils/output.js';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { isCI } from '../../utils/is-ci';
+import { workspaceRoot } from '../../utils/workspace-root.js';
+import { isCI } from '../../utils/is-ci.js';
 import {
   getNxInstallationPath,
   getNxRequirePaths,
-} from '../../utils/installation-directory';
-import { readNxJson } from '../../config/configuration';
-import { runNxSync } from '../../utils/child-process';
-import { daemonClient } from '../../daemon/client/client';
-import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+} from '../../utils/installation-directory.js';
+import { readNxJson } from '../../config/configuration.js';
+import { runNxSync } from '../../utils/child-process.js';
+import { daemonClient } from '../../daemon/client/client.js';
+import { isNxCloudUsed } from '../../utils/nx-cloud-utils.js';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
-} from '../../project-graph/project-graph';
-import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+} from '../../project-graph/project-graph.js';
+import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
 import {
   ensurePackageHasProvenance,
   getNxPackageGroup,
-} from '../../utils/provenance';
-import { type CatalogManager, getCatalogManager } from '../../utils/catalog';
+} from '../../utils/provenance.js';
+import { type CatalogManager, getCatalogManager } from '../../utils/catalog/index.js';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -2030,10 +2030,10 @@ function isAngularMigration(collection: MigrationsJson, name: string) {
 }
 
 const getNgCompatLayer = (() => {
-  let _ngCliAdapter: typeof import('../../adapter/ngcli-adapter');
+  let _ngCliAdapter: typeof import('../../adapter/ngcli-adapter.js');
   return async function getNgCompatLayer() {
     if (!_ngCliAdapter) {
-      _ngCliAdapter = await import('../../adapter/ngcli-adapter');
+      _ngCliAdapter = await import('../../adapter/ngcli-adapter.js');
       require('../../adapter/compat');
     }
     return _ngCliAdapter;

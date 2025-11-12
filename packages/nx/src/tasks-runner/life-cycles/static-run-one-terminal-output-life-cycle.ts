@@ -1,9 +1,9 @@
-import { output } from '../../utils/output';
-import { TaskStatus } from '../tasks-runner';
-import { getPrintableCommandArgsForTask } from '../utils';
+import { output } from '../../utils/output.js';
+import { TaskStatus } from '../tasks-runner.js';
+import { getPrintableCommandArgsForTask } from '../utils.js';
 import type { LifeCycle, TaskResult } from '../life-cycle';
-import { Task } from '../../config/task-graph';
-import { formatTargetsAndProjects } from './formatting-utils';
+import { Task } from '../../config/task-graph.js';
+import { formatTargetsAndProjects } from './formatting-utils.js';
 
 /**
  * The following life cycle's outputs are static, meaning no previous content

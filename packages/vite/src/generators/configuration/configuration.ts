@@ -22,18 +22,18 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'node:path/posix';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { ensureDependencies } from '../../utils/ensure-dependencies.js';
 import {
   addBuildTarget,
   addPreviewTarget,
   addServeTarget,
   createOrEditViteConfig,
   TargetFlags,
-} from '../../utils/generator-utils';
+} from '../../utils/generator-utils.js';
 import initGenerator from '../init/init';
 import vitestGenerator from '../vitest/vitest-generator';
-import { convertNonVite } from './lib/convert-non-vite';
-import { ViteConfigurationGeneratorSchema } from './schema';
+import { convertNonVite } from './lib/convert-non-vite.js';
+import { ViteConfigurationGeneratorSchema } from './schema.js';
 
 export function viteConfigurationGenerator(
   host: Tree,

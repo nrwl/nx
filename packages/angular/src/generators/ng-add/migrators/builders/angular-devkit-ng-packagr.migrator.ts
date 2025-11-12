@@ -11,9 +11,9 @@ import {
 } from '@nx/devkit';
 import { getRootTsConfigPathInTree } from '@nx/js';
 import { basename } from 'path';
-import { addBuildableLibrariesPostCssDependencies } from '../../../utils/dependencies';
+import { addBuildableLibrariesPostCssDependencies } from '../../../utils/dependencies.js';
 import type { Logger, ProjectMigrationInfo } from '../../utilities';
-import { BuilderMigrator } from './builder.migrator';
+import { BuilderMigrator } from './builder.migrator.js';
 
 export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
   constructor(

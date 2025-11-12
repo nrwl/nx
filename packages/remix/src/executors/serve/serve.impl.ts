@@ -3,7 +3,7 @@ import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { fork } from 'node:child_process';
 import { join } from 'node:path';
-import { type RemixServeSchema } from './schema';
+import { type RemixServeSchema } from './schema.js';
 
 function normalizeOptions(schema: RemixServeSchema) {
   return {

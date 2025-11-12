@@ -1,12 +1,12 @@
-import { NxJsonConfiguration } from '../config/nx-json';
-import { ProjectGraph } from '../config/project-graph';
-import { daemonClient } from '../daemon/client/client';
-import { getFileMap } from '../project-graph/build-project-graph';
+import { NxJsonConfiguration } from '../config/nx-json.js';
+import { ProjectGraph } from '../config/project-graph.js';
+import { daemonClient } from '../daemon/client/client.js';
+import { getFileMap } from '../project-graph/build-project-graph.js';
 import {
   DaemonBasedTaskHasher,
   InProcessTaskHasher,
   TaskHasher,
-} from './task-hasher';
+} from './task-hasher.js';
 
 export function createTaskHasher(
   projectGraph: ProjectGraph,

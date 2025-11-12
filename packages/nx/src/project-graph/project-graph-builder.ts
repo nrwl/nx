@@ -13,10 +13,10 @@ import {
   ProjectGraphDependency,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
-} from '../config/project-graph';
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { CreateDependenciesContext } from './plugins';
-import { getFileMap } from './build-project-graph';
+} from '../config/project-graph.js';
+import { ProjectConfiguration } from '../config/workspace-json-project-json.js';
+import { CreateDependenciesContext } from './plugins/index.js';
+import { getFileMap } from './build-project-graph.js';
 
 /**
  * A class which builds up a project graph

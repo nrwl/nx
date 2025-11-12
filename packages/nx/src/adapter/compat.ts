@@ -1,14 +1,14 @@
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
-} from '../project-graph/project-graph';
+} from '../project-graph/project-graph.js';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
-} from '../config/workspace-json-project-json';
-import { readNxJson } from '../config/configuration';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { toOldFormat } from './angular-json';
+} from '../config/workspace-json-project-json.js';
+import { readNxJson } from '../config/configuration.js';
+import { NxJsonConfiguration } from '../config/nx-json.js';
+import { toOldFormat } from './angular-json.js';
 
 /* eslint-disable */
 const Module = require('module');

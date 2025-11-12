@@ -1,8 +1,8 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, readProjectConfiguration } from '@nx/devkit';
 import { addTsConfigPath } from '@nx/js';
-import { maybeJs } from '../../../utils/maybe-js';
-import { NormalizedSchema } from '../../application/schema';
+import { maybeJs } from '../../../utils/maybe-js.js';
+import { NormalizedSchema } from '../../application/schema.js';
 import { normalizeProjectName } from '@nx/module-federation';
 
 export function setupTspathForRemote(tree: Tree, options: NormalizedSchema) {

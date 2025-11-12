@@ -1,19 +1,25 @@
 {
   "name": "Nx Express",
   "version": "0.1",
-  "extends": ["@nx/workspace"],
+  "extends": [
+    "@nx/workspace"
+  ],
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#initGenerator",
-      "schema": "./src/generators/init/schema.json",
+      "factory": "./dist/src/generators/init/init#initGenerator",
+      "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/express` plugin.",
-      "aliases": ["ng-add"],
+      "aliases": [
+        "ng-add"
+      ],
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#applicationGeneratorInternal",
-      "schema": "./src/generators/application/schema.json",
-      "aliases": ["app"],
+      "factory": "./dist/src/generators/application/application#applicationGeneratorInternal",
+      "schema": "./dist/src/generators/application/schema.json",
+      "aliases": [
+        "app"
+      ],
       "x-type": "application",
       "description": "Create an Express application."
     }

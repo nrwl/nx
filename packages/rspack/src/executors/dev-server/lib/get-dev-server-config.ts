@@ -2,9 +2,9 @@ import { logger } from '@nx/devkit';
 import type { Configuration as RspackDevServerConfiguration } from '@rspack/dev-server';
 import { readFileSync } from 'fs';
 import * as path from 'path';
-import { RspackExecutorSchema } from '../../rspack/schema';
-import { DevServerExecutorSchema } from '../schema';
-import { buildServePath } from './serve-path';
+import { RspackExecutorSchema } from '../../rspack/schema.js';
+import { DevServerExecutorSchema } from '../schema.js';
+import { buildServePath } from './serve-path.js';
 
 export function getDevServerOptions(
   root: string,

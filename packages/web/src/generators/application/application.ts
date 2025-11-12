@@ -34,11 +34,11 @@ import {
   swcLoaderVersion,
   tsLibVersion,
   typesNodeVersion,
-} from '../../utils/versions';
-import { webInitGenerator } from '../init/init';
-import { Schema } from './schema';
+} from '../../utils/versions.js';
+import { webInitGenerator } from '../init/init.js';
+import { Schema } from './schema.js';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
-import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
+import { hasWebpackPlugin } from '../../utils/has-webpack-plugin.js';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import staticServeConfiguration from '../static-serve/static-serve-configuration';

@@ -8,20 +8,20 @@ import type {
 import {
   createProjectRootMappings,
   findProjectForPath,
-} from '../../../../project-graph/utils/find-project-for-path';
-import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
-import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
+} from '../../../../project-graph/utils/find-project-for-path.js';
+import { isRelativePath, readJsonFile } from '../../../../utils/fileutils.js';
+import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path.js';
 import type { PackageJson } from '../../../../utils/package-json';
-import { workspaceRoot } from '../../../../utils/workspace-root';
+import { workspaceRoot } from '../../../../utils/workspace-root.js';
 import {
   getWorkspacePackagesMetadata,
   matchImportToWildcardEntryPointsToProjectMap,
-} from '../../utils/packages';
-import { resolveRelativeToDir } from '../../utils/resolve-relative-to-dir';
+} from '../../utils/packages.js';
+import { resolveRelativeToDir } from '../../utils/resolve-relative-to-dir.js';
 import {
   getRootTsConfigFileName,
   resolveModuleByImport,
-} from '../../utils/typescript';
+} from '../../utils/typescript.js';
 
 /**
  * The key is a combination of the package name and the workspace relative directory

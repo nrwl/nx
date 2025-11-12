@@ -18,8 +18,8 @@ import type {
 } from '@pnpm/lockfile-types';
 import { existsSync, readFileSync } from 'node:fs';
 import { valid } from 'semver';
-import { workspaceRoot } from '../../../../utils/workspace-root';
-import { hashObject } from '../../../../hasher/file-hasher';
+import { workspaceRoot } from '../../../../utils/workspace-root.js';
+import { hashObject } from '../../../../hasher/file-hasher.js';
 
 export function isV5Syntax(data: {
   lockfileVersion: number | string;

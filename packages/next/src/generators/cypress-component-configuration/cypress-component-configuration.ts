@@ -14,8 +14,8 @@ import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-se
 import { componentTestGenerator } from '@nx/react';
 import { isComponent } from '@nx/react/src/utils/ct-utils';
 import { relative } from 'path';
-import { nxVersion } from '../../utils/versions';
-import { CypressComponentConfigurationGeneratorSchema } from './schema';
+import { nxVersion } from '../../utils/versions.js';
+import { CypressComponentConfigurationGeneratorSchema } from './schema.js';
 
 export function cypressComponentConfiguration(
   tree: Tree,
@@ -111,7 +111,7 @@ async function addFiles(
     installedCypressMajorVersion >= 14 ? 'cypress/react' : 'cypress/react18';
   tree.write(
     ctFile,
-    `import { mount } from '${moduleSpecifier}';\nimport './styles.ct.css';\n${updatedCommandFile}`
+    `import { mount } from '${moduleSpecifier}';\nimport './styles.ct.css.js';\n${updatedCommandFile}`
   );
 
   const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');

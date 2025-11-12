@@ -8,9 +8,9 @@ import {
   updateProjectConfiguration,
 } from 'nx/src/devkit-exports';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { visitNotIgnoredFiles } from '../generators/visit-not-ignored-files';
+import { visitNotIgnoredFiles } from '../generators/visit-not-ignored-files.js';
 import { basename } from 'path';
-import { isBinaryPath } from './binary-extensions';
+import { isBinaryPath } from './binary-extensions.js';
 
 export function replaceNrwlPackageWithNxPackage(
   tree: Tree,

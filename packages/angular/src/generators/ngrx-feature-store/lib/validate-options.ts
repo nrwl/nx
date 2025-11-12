@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { Schema } from '../schema';
+import { Schema } from '../schema.js';
 
 export function validateOptions(tree: Tree, options: Schema): void {
   if (!options.parent) {

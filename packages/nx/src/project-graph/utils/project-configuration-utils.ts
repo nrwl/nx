@@ -1,21 +1,21 @@
-import { NxJsonConfiguration, TargetDefaults } from '../../config/nx-json';
-import { ProjectGraphExternalNode } from '../../config/project-graph';
+import { NxJsonConfiguration, TargetDefaults } from '../../config/nx-json.js';
+import { ProjectGraphExternalNode } from '../../config/project-graph.js';
 import {
   ProjectConfiguration,
   ProjectMetadata,
   TargetConfiguration,
   TargetMetadata,
-} from '../../config/workspace-json-project-json';
-import { NX_PREFIX } from '../../utils/logger';
-import { readJsonFile } from '../../utils/fileutils';
-import { workspaceRoot } from '../../utils/workspace-root';
+} from '../../config/workspace-json-project-json.js';
+import { NX_PREFIX } from '../../utils/logger.js';
+import { readJsonFile } from '../../utils/fileutils.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 
 import { minimatch } from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { existsSync } from 'node:fs';
 
-import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
+import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin.js';
 import {
   AggregateCreateNodesError,
   formatAggregateCreateNodesError,
@@ -30,15 +30,15 @@ import {
   ProjectsWithNoNameError,
   ProjectWithExistingNameError,
   ProjectWithNoNameError,
-} from '../error-types';
-import { CreateNodesResult } from '../plugins/public-api';
-import { isGlobPattern } from '../../utils/globs';
-import { DelayedSpinner } from '../../utils/delayed-spinner';
+} from '../error-types.js';
+import { CreateNodesResult } from '../plugins/public-api.js';
+import { isGlobPattern } from '../../utils/globs.js';
+import { DelayedSpinner } from '../../utils/delayed-spinner.js';
 import {
   getExecutorInformation,
   parseExecutor,
-} from '../../command-line/run/executor-utils';
-import { toProjectName } from '../../config/to-project-name';
+} from '../../command-line/run/executor-utils.js';
+import { toProjectName } from '../../config/to-project-name.js';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<

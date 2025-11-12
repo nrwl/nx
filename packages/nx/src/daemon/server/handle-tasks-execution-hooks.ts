@@ -5,7 +5,7 @@ import type {
 import {
   runPostTasksExecution,
   runPreTasksExecution,
-} from '../../project-graph/plugins/tasks-execution-hooks';
+} from '../../project-graph/plugins/tasks-execution-hooks.js';
 
 export async function handleRunPreTasksExecution(
   context: PreTasksExecutionContext

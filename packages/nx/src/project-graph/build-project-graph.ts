@@ -1,37 +1,37 @@
-import { workspaceRoot } from '../utils/workspace-root';
+import { workspaceRoot } from '../utils/workspace-root.js';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
-import { FileData } from './file-utils';
+import { assertWorkspaceValidity } from '../utils/assert-workspace-validity.js';
+import { FileData } from './file-utils.js';
 import {
   CachedFileData,
   createProjectFileMapCache,
   extractCachedFileData,
   FileMapCache,
   shouldRecomputeWholeGraph,
-} from './nx-deps-cache';
-import { applyImplicitDependencies } from './utils/implicit-project-dependencies';
-import { normalizeProjectNodes } from './utils/normalize-project-nodes';
+} from './nx-deps-cache.js';
+import { applyImplicitDependencies } from './utils/implicit-project-dependencies.js';
+import { normalizeProjectNodes } from './utils/normalize-project-nodes.js';
 import type { LoadedNxPlugin } from './plugins/loaded-nx-plugin';
 import {
   CreateDependenciesContext,
   CreateMetadataContext,
   ProjectsMetadata,
-} from './plugins';
-import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
+} from './plugins/index.js';
+import { getRootTsConfigPath } from '../plugins/js/utils/typescript.js';
 import {
   FileMap,
   ProjectGraph,
   ProjectGraphExternalNode,
-} from '../config/project-graph';
-import { readJsonFile } from '../utils/fileutils';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { ProjectGraphBuilder } from './project-graph-builder';
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { readNxJson } from '../config/configuration';
+} from '../config/project-graph.js';
+import { readJsonFile } from '../utils/fileutils.js';
+import { NxJsonConfiguration } from '../config/nx-json.js';
+import { ProjectGraphBuilder } from './project-graph-builder.js';
+import { ProjectConfiguration } from '../config/workspace-json-project-json.js';
+import { readNxJson } from '../config/configuration.js';
 import { existsSync } from 'fs';
-import { PackageJson } from '../utils/package-json';
-import { NxWorkspaceFilesExternals } from '../native';
+import { PackageJson } from '../utils/package-json.js';
+import { NxWorkspaceFilesExternals } from '../native/index.js';
 import {
   AggregateProjectGraphError,
   CreateMetadataError,
@@ -39,13 +39,13 @@ import {
   isWorkspaceValidityError,
   ProcessDependenciesError,
   WorkspaceValidityError,
-} from './error-types';
+} from './error-types.js';
 import {
   ConfigurationSourceMaps,
   mergeMetadata,
-} from './utils/project-configuration-utils';
-import { DelayedSpinner } from '../utils/delayed-spinner';
-import { hashObject } from '../hasher/file-hasher';
+} from './utils/project-configuration-utils.js';
+import { DelayedSpinner } from '../utils/delayed-spinner.js';
+import { hashObject } from '../hasher/file-hasher.js';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;

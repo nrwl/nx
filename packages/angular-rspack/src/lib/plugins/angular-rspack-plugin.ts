@@ -26,12 +26,12 @@ import {
   NG_RSPACK_SYMBOL_NAME,
   type NgRspackCompilation,
   type NormalizedAngularRspackPluginOptions,
-} from '../models';
-import { getLocaleBaseHref } from '../utils/get-locale-base-href';
-import { addError, addWarning } from '../utils/rspack-diagnostics';
-import { assertNever } from '../utils/misc-helpers';
-import { rspackStatsLogger, statsErrorsToString } from '../utils/stats';
-import { getStatsOptions } from '../config/config-utils/get-stats-options';
+} from '../models/index.js';
+import { getLocaleBaseHref } from '../utils/get-locale-base-href.js';
+import { addError, addWarning } from '../utils/rspack-diagnostics.js';
+import { assertNever } from '../utils/misc-helpers.js';
+import { rspackStatsLogger, statsErrorsToString } from '../utils/stats.js';
+import { getStatsOptions } from '../config/config-utils/get-stats-options.js';
 
 const PLUGIN_NAME = 'AngularRspackPlugin';
 type ResolvedJavascriptTransformer = Parameters<typeof buildAndAnalyze>[2];

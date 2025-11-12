@@ -1,11 +1,11 @@
-import { TouchedProjectLocator } from '../affected-project-graph-models';
+import { TouchedProjectLocator } from '../affected-project-graph-models.js';
 import { minimatch } from 'minimatch';
-import { workspaceRoot } from '../../../utils/workspace-root';
+import { workspaceRoot } from '../../../utils/workspace-root.js';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { getGlobPatternsOfPlugins } from '../../utils/retrieve-workspace-files';
-import { combineGlobPatterns } from '../../../utils/globs';
-import { getPlugins } from '../../plugins/get-plugins';
+import { getGlobPatternsOfPlugins } from '../../utils/retrieve-workspace-files.js';
+import { combineGlobPatterns } from '../../../utils/globs.js';
+import { getPlugins } from '../../plugins/get-plugins.js';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
   async (touchedFiles, projectGraphNodes): Promise<string[]> => {

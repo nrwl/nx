@@ -1,4 +1,4 @@
-import { parseJson, serializeJson } from './json';
+import { parseJson, serializeJson } from './json.js';
 import type { JsonParseOptions, JsonSerializeOptions } from './json';
 import {
   createReadStream,

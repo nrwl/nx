@@ -9,7 +9,7 @@ import {
   SharedWorkspaceLibraryConfig,
   WorkspaceLibrary,
   WorkspaceLibrarySecondaryEntryPoint,
-} from './models';
+} from './models/index.js';
 
 import {
   applyAdditionalShared,
@@ -17,15 +17,15 @@ import {
   getNpmPackageSharedConfig,
   sharePackages,
   shareWorkspaceLibraries,
-} from './share';
+} from './share.js';
 
-import { normalizeProjectName } from './normalize-project-name';
+import { normalizeProjectName } from './normalize-project-name.js';
 
-import { mapRemotes, mapRemotesForSSR } from './remotes';
+import { mapRemotes, mapRemotesForSSR } from './remotes.js';
 
-import { getDependentPackagesForProject } from './dependencies';
+import { getDependentPackagesForProject } from './dependencies.js';
 
-import { readRootPackageJson } from './package-json';
+import { readRootPackageJson } from './package-json.js';
 
 export {
   ModuleFederationConfig,

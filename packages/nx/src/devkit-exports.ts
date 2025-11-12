@@ -40,7 +40,7 @@ export type {
   HasherContext,
 } from './config/misc-interfaces';
 
-export { workspaceLayout } from './config/configuration';
+export { workspaceLayout } from './config/configuration.js';
 
 export type {
   NxPlugin,
@@ -64,9 +64,9 @@ export type {
 export {
   AggregateCreateNodesError,
   StaleProjectGraphCacheError,
-} from './project-graph/error-types';
+} from './project-graph/error-types.js';
 
-export { createNodesFromFiles } from './project-graph/plugins';
+export { createNodesFromFiles } from './project-graph/plugins/index.js';
 
 /**
  * @category Tasks
@@ -94,12 +94,12 @@ export type {
 /**
  * @category Logger
  */
-export { logger } from './utils/logger';
+export { logger } from './utils/logger.js';
 
 /**
  * @category Utils
  */
-export { output } from './utils/output';
+export { output } from './utils/output.js';
 
 /**
  * @category Package Manager
@@ -114,7 +114,7 @@ export {
   detectPackageManager,
   getPackageManagerVersion,
   isWorkspacesEnabled,
-} from './utils/package-manager';
+} from './utils/package-manager.js';
 
 /**
  * @category Commands
@@ -123,7 +123,7 @@ export type { Target } from './command-line/run/run';
 /**
  * @category Commands
  */
-export { runExecutor } from './command-line/run/run';
+export { runExecutor } from './command-line/run/run.js';
 
 /**
  * @category Generators
@@ -134,12 +134,12 @@ export {
   removeProjectConfiguration,
   updateProjectConfiguration,
   getProjects,
-} from './generators/utils/project-configuration';
+} from './generators/utils/project-configuration.js';
 
 /**
  * @category Generators
  */
-export { glob, globAsync } from './generators/utils/glob';
+export { glob, globAsync } from './generators/utils/glob.js';
 
 /**
  * @category Generators
@@ -147,7 +147,7 @@ export { glob, globAsync } from './generators/utils/glob';
 export {
   readNxJson,
   updateNxJson,
-} from './generators/utils/project-configuration';
+} from './generators/utils/project-configuration.js';
 
 /**
  * @category Project Graph
@@ -167,7 +167,7 @@ export type { GraphJson } from './command-line/graph/graph';
 /**
  * @category Project Graph
  */
-export { DependencyType } from './config/project-graph';
+export { DependencyType } from './config/project-graph.js';
 
 /**
  * @category Project Graph
@@ -178,17 +178,17 @@ export {
   ImplicitDependency,
   StaticDependency,
   validateDependency,
-} from './project-graph/project-graph-builder';
+} from './project-graph/project-graph-builder.js';
 
 /**
  * @category Generators
  */
-export { readJson, writeJson, updateJson } from './generators/utils/json';
+export { readJson, writeJson, updateJson } from './generators/utils/json.js';
 
 /**
  * @category Utils
  */
-export { parseJson, serializeJson, stripJsonComments } from './utils/json';
+export { parseJson, serializeJson, stripJsonComments } from './utils/json.js';
 
 /**
  * @category Utils
@@ -198,27 +198,27 @@ export type { JsonParseOptions, JsonSerializeOptions } from './utils/json';
 /**
  * @category Utils
  */
-export { readJsonFile, writeJsonFile } from './utils/fileutils';
+export { readJsonFile, writeJsonFile } from './utils/fileutils.js';
 
 /**
  * @category Utils
  */
-export { stripIndents } from './utils/strip-indents';
+export { stripIndents } from './utils/strip-indents.js';
 
 /**
  * @category Utils
  */
-export { joinPathFragments, normalizePath } from './utils/path';
+export { joinPathFragments, normalizePath } from './utils/path.js';
 
 /**
  * @category Utils
  */
-export { workspaceRoot } from './utils/workspace-root';
+export { workspaceRoot } from './utils/workspace-root.js';
 
 /**
  * @category Utils
  */
-export { reverse } from './project-graph/operators';
+export { reverse } from './project-graph/operators.js';
 /**
  * @category Utils
  */
@@ -226,12 +226,12 @@ export {
   createProjectGraphAsync,
   readCachedProjectGraph,
   readProjectsConfigurationFromProjectGraph,
-} from './project-graph/project-graph';
+} from './project-graph/project-graph.js';
 
 /**
  * @category Utils
  */
-export { getOutputsForTargetAndConfiguration } from './tasks-runner/utils';
+export { getOutputsForTargetAndConfiguration } from './tasks-runner/utils.js';
 
 /**
  * @category Utils
@@ -240,22 +240,22 @@ export {
   defaultTasksRunner,
   DefaultTasksRunnerOptions,
   RemoteCache,
-} from './tasks-runner/default-tasks-runner';
+} from './tasks-runner/default-tasks-runner.js';
 
 /**
  * @category Utils
  */
-export { Hash, TaskHasher, Hasher } from './hasher/task-hasher';
-export { hashArray } from './hasher/file-hasher';
+export { Hash, TaskHasher, Hasher } from './hasher/task-hasher.js';
+export { hashArray } from './hasher/file-hasher.js';
 
 /**
  * @category Utils
  */
-export { cacheDir } from './utils/cache-directory';
+export { cacheDir } from './utils/cache-directory.js';
 
 /**
  * @category Utils
  */
-export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils';
+export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils.js';
 
-export { isDaemonEnabled } from './daemon/client/client';
+export { isDaemonEnabled } from './daemon/client/client.js';

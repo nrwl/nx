@@ -21,8 +21,8 @@ import {
   typeScriptOverride,
 } from '@nx/eslint/src/generators/init/global-eslint-config';
 import * as path from 'path';
-import { axiosVersion } from '../../utils/versions';
-import { Schema } from './schema';
+import { axiosVersion } from '../../utils/versions.js';
+import { Schema } from './schema.js';
 import {
   addPluginsToLintConfig,
   isEslintConfigSupported,

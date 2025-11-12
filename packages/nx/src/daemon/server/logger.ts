@@ -8,7 +8,7 @@
  * logical hierarchy/grouping.
  */
 
-import { nxVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions.js';
 
 class ServerLogger {
   log(...s: unknown[]) {

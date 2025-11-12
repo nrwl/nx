@@ -30,35 +30,35 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
-import { normalizeLinterOption } from '../../utils/generator-prompts';
-import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
-import { getUpdatedPackageJsonContent } from '../../utils/package-json/update-package-json';
-import { addSwcConfig } from '../../utils/swc/add-swc-config';
-import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
-import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration';
-import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
-import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
-import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
+import { normalizeLinterOption } from '../../utils/generator-prompts.js';
+import { sortPackageJsonFields } from '../../utils/package-json/sort-fields.js';
+import { getUpdatedPackageJsonContent } from '../../utils/package-json/update-package-json.js';
+import { addSwcConfig } from '../../utils/swc/add-swc-config.js';
+import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies.js';
+import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration.js';
+import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config.js';
+import { ensureTypescript } from '../../utils/typescript/ensure-typescript.js';
+import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin.js';
 import {
   addTsConfigPath,
   getRelativePathToRootTsConfig,
   getRootTsConfigFileName,
   readTsConfigFromTree,
-} from '../../utils/typescript/ts-config';
+} from '../../utils/typescript/ts-config.js';
 import {
   addProjectToTsSolutionWorkspace,
   getDefinedCustomConditionName,
   isUsingTsSolutionSetup,
   isUsingTypeScriptPlugin,
   shouldConfigureTsSolutionSetup,
-} from '../../utils/typescript/ts-solution-setup';
+} from '../../utils/typescript/ts-solution-setup.js';
 import {
   esbuildVersion,
   nxVersion,
   swcHelpersVersion,
   tsLibVersion,
   typesNodeVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 import jsInitGenerator from '../init/init';
 import type {
   Bundler,
@@ -69,7 +69,7 @@ import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,
   releaseTasks,
-} from './utils/add-release-config';
+} from './utils/add-release-config.js';
 
 const defaultOutputDirectory = 'dist';
 

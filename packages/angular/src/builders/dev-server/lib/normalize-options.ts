@@ -1,4 +1,4 @@
-import { getInstalledAngularVersionInfo } from '../../../executors/utilities/angular-version-utils';
+import { getInstalledAngularVersionInfo } from '../../../executors/utilities/angular-version-utils.js';
 import type { NormalizedSchema, Schema } from '../schema';
 
 export function normalizeOptions(schema: Schema): NormalizedSchema {

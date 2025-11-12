@@ -1,5 +1,5 @@
 import { ensurePackage, readJson, stripIndents, type Tree } from '@nx/devkit';
-import { nxVersion } from '../../../utils/versions';
+import { nxVersion } from '../../../utils/versions.js';
 
 export async function ignoreViteTempFiles(
   tree: Tree,

@@ -5,9 +5,9 @@ import {
   joinPathFragments,
   names,
 } from '@nx/devkit';
-import { addToNgModule, findModule } from '../utils';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
-import { normalizeOptions } from './lib';
+import { addToNgModule, findModule } from '../utils/index.js';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils.js';
+import { normalizeOptions } from './lib/index.js';
 import type { Schema } from './schema';
 
 export async function pipeGenerator(tree: Tree, rawOptions: Schema) {

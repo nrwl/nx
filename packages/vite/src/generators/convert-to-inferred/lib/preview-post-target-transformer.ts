@@ -1,5 +1,5 @@
 import { type TargetConfiguration, type Tree } from '@nx/devkit';
-import { getViteConfigPath } from './utils';
+import { getViteConfigPath } from './utils.js';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 
 export function previewPostTargetTransformer(migrationLogs: AggregatedLog) {

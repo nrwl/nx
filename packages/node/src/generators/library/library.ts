@@ -25,9 +25,9 @@ import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import { join } from 'path';
-import { tslibVersion, typesNodeVersion } from '../../utils/versions';
-import { initGenerator } from '../init/init';
-import { Schema } from './schema';
+import { tslibVersion, typesNodeVersion } from '../../utils/versions.js';
+import { initGenerator } from '../init/init.js';
+import { Schema } from './schema.js';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import {
   addProjectToTsSolutionWorkspace,

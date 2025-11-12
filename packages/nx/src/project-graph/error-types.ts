@@ -1,10 +1,10 @@
 import {
   ConfigurationResult,
   ConfigurationSourceMaps,
-} from './utils/project-configuration-utils';
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { ProjectGraph } from '../config/project-graph';
-import { CreateNodesFunctionV2 } from './plugins/public-api';
+} from './utils/project-configuration-utils.js';
+import { ProjectConfiguration } from '../config/workspace-json-project-json.js';
+import { ProjectGraph } from '../config/project-graph.js';
+import { CreateNodesFunctionV2 } from './plugins/public-api.js';
 
 export type ProjectGraphErrorTypes =
   | AggregateCreateNodesError

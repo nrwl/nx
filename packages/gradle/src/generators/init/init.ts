@@ -7,10 +7,10 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
-import { InitGeneratorSchema } from './schema';
-import { hasGradlePlugin } from '../../utils/has-gradle-plugin';
-import { addNxProjectGraphPlugin } from './gradle-project-graph-plugin-utils';
+import { nxVersion } from '../../utils/versions.js';
+import { InitGeneratorSchema } from './schema.js';
+import { hasGradlePlugin } from '../../utils/has-gradle-plugin.js';
+import { addNxProjectGraphPlugin } from './gradle-project-graph-plugin-utils.js';
 
 export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   const tasks: GeneratorCallback[] = [];

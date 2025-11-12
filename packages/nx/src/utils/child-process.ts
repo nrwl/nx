@@ -10,9 +10,9 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   PackageManagerCommands,
-} from './package-manager';
-import { workspaceRoot, workspaceRootInner } from './workspace-root';
-import { ChildProcess } from '../native';
+} from './package-manager.js';
+import { workspaceRoot, workspaceRootInner } from './workspace-root.js';
+import { ChildProcess } from '../native/index.js';
 
 export function getRunNxBaseCommand(
   packageManagerCommand?: PackageManagerCommands,

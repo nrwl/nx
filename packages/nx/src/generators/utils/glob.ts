@@ -1,10 +1,10 @@
 import { minimatch } from 'minimatch';
-import { Tree } from '../tree';
-import { combineGlobPatterns } from '../../utils/globs';
+import { Tree } from '../tree.js';
+import { combineGlobPatterns } from '../../utils/globs.js';
 import {
   globWithWorkspaceContext,
   globWithWorkspaceContextSync,
-} from '../../utils/workspace-context';
+} from '../../utils/workspace-context.js';
 
 /**
  * Performs a tree-aware glob search on the files in a workspace. Able to find newly

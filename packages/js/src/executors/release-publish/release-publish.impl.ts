@@ -7,11 +7,11 @@ import {
 import { execSync } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { join } from 'path';
-import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';
-import { parseRegistryOptions } from '../../utils/npm-config';
-import { extractNpmPublishJsonData } from './extract-npm-publish-json-data';
-import { logTar } from './log-tar';
-import { PublishExecutorSchema } from './schema';
+import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version.js';
+import { parseRegistryOptions } from '../../utils/npm-config.js';
+import { extractNpmPublishJsonData } from './extract-npm-publish-json-data.js';
+import { logTar } from './log-tar.js';
+import { PublishExecutorSchema } from './schema.js';
 import chalk = require('chalk');
 
 const LARGE_BUFFER = 1024 * 1000000;

@@ -15,8 +15,8 @@ import {
 } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { join } from 'path';
-import { addImport } from '../../utils/ast-utils';
-import { Schema } from './schema';
+import { addImport } from '../../utils/ast-utils.js';
+import { Schema } from './schema.js';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 interface NormalizedSchema extends Omit<Schema, 'js'> {
@@ -90,7 +90,7 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
       indexSource,
       addImport(
         indexSourceFile,
-        `export * from './${options.directory}/${options.fileName}';`
+        `export * from './${options.directory}/${options.fileName}.js';`
       )
     );
     host.write(indexFilePath, changes);

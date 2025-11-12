@@ -1,6 +1,6 @@
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { StaticRemoteConfig } from '../../utils';
-import { DevRemoteFindOptions } from '../models';
+import { StaticRemoteConfig } from '../../utils/index.js';
+import { DevRemoteFindOptions } from '../models/index.js';
 
 export async function getStaticRemotes(
   remotesConfig: Record<string, StaticRemoteConfig>,

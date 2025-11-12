@@ -1,9 +1,9 @@
 import * as path from 'path';
 import type { RspackPluginInstance } from '@rspack/core';
 
-import { getOutputHashFormat } from './hash-format';
-import { ScriptsRspackPlugin } from './plugins/scripts-rspack-plugin';
-import { normalizeExtraEntryPoints } from './normalize-entry';
+import { getOutputHashFormat } from './hash-format.js';
+import { ScriptsRspackPlugin } from './plugins/scripts-rspack-plugin.js';
+import { normalizeExtraEntryPoints } from './normalize-entry.js';
 
 export function instantiateScriptPlugins(options: any): RspackPluginInstance[] {
   // process global scripts

@@ -11,16 +11,16 @@ import {
   RspackOptionsNormalized,
 } from '@rspack/core';
 import { join, resolve } from 'path';
-import { WriteIndexHtmlPlugin } from '../write-index-html-plugin';
-import { getOutputHashFormat } from './hash-format';
-import { instantiateScriptPlugins } from './instantiate-script-plugins';
+import { WriteIndexHtmlPlugin } from '../write-index-html-plugin.js';
+import { getOutputHashFormat } from './hash-format.js';
+import { instantiateScriptPlugins } from './instantiate-script-plugins.js';
 import {
   getCommonLoadersForCssModules,
   getCommonLoadersForGlobalCss,
   getCommonLoadersForGlobalStyle,
-} from './loaders/stylesheet-loaders';
-import { NormalizedNxAppRspackPluginOptions } from './models';
-import { normalizeExtraEntryPoints } from './normalize-entry';
+} from './loaders/stylesheet-loaders.js';
+import { NormalizedNxAppRspackPluginOptions } from './models.js';
+import { normalizeExtraEntryPoints } from './normalize-entry.js';
 
 export function applyWebConfig(
   options: NormalizedNxAppRspackPluginOptions,

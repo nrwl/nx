@@ -2,9 +2,9 @@ import { performance } from 'node:perf_hooks';
 
 performance.mark(`plugin worker ${process.pid} code loading -- start`);
 
-import { consumeMessage, isPluginWorkerMessage } from './messaging';
-import { createSerializableError } from '../../../utils/serializable-error';
-import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import { consumeMessage, isPluginWorkerMessage } from './messaging.js';
+import { createSerializableError } from '../../../utils/serializable-error.js';
+import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket.js';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 
 import { createServer } from 'net';
@@ -57,15 +57,13 @@ const server = createServer((socket) => {
           if (loadTimeout) clearTimeout(loadTimeout);
           process.chdir(root);
           try {
-            const { loadResolvedNxPluginAsync } = await import(
-              '../load-resolved-plugin'
-            );
+            const { loadResolvedNxPluginAsync } = await import('../load-resolved-plugin.js');
 
             // Register the ts-transpiler if we are pointing to a
             // plain ts file that's not part of a plugin project
             if (shouldRegisterTSTranspiler) {
               (
-                require('../transpiler') as typeof import('../transpiler')
+                require('../transpiler') as typeof import('../transpiler.js')
               ).registerPluginTSTranspiler();
             }
             plugin = await loadResolvedNxPluginAsync(

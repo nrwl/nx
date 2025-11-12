@@ -1,26 +1,26 @@
 import { execSync } from 'child_process';
 import { join } from 'path';
 
-import { NxJsonConfiguration } from '../../../config/nx-json';
+import { NxJsonConfiguration } from '../../../config/nx-json.js';
 import {
   directoryExists,
   fileExists,
   readJsonFile,
   writeJsonFile,
-} from '../../../utils/fileutils';
-import { output } from '../../../utils/output';
-import { PackageJson } from '../../../utils/package-json';
+} from '../../../utils/fileutils.js';
+import { output } from '../../../utils/output.js';
+import { PackageJson } from '../../../utils/package-json.js';
 import {
   getPackageManagerCommand,
   PackageManagerCommands,
-} from '../../../utils/package-manager';
-import { joinPathFragments } from '../../../utils/path';
-import { nxVersion } from '../../../utils/versions';
+} from '../../../utils/package-manager.js';
+import { joinPathFragments } from '../../../utils/path.js';
+import { nxVersion } from '../../../utils/versions.js';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
-import { connectWorkspaceToCloud } from '../../nx-cloud/connect/connect-to-nx-cloud';
-import { deduceDefaultBase } from './deduce-default-base';
-import { getRunNxBaseCommand } from '../../../utils/child-process';
+import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud.js';
+import { connectWorkspaceToCloud } from '../../nx-cloud/connect/connect-to-nx-cloud.js';
+import { deduceDefaultBase } from './deduce-default-base.js';
+import { getRunNxBaseCommand } from '../../../utils/child-process.js';
 
 export function createNxJsonFile(
   repoRoot: string,

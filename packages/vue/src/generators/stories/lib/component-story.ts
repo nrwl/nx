@@ -7,12 +7,12 @@ import {
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { StorybookStoriesSchema } from '../stories';
+import { StorybookStoriesSchema } from '../stories.js';
 import {
   camelCase,
   createDefautPropsObject,
   getDefinePropsObject,
-} from './utils';
+} from './utils.js';
 import { join } from 'path';
 
 let tsModule: typeof import('typescript');

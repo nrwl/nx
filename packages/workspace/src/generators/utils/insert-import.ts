@@ -1,7 +1,7 @@
-import { insertStatement } from './insert-statement';
+import { insertStatement } from './insert-statement.js';
 import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
 import type { NamedImports } from 'typescript';
-import { ensureTypescript } from '../../utilities/typescript';
+import { ensureTypescript } from '../../utilities/typescript.js';
 
 let tsModule: typeof import('typescript');
 

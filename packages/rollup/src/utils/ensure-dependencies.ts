@@ -4,7 +4,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { swcCoreVersion, swcHelpersVersion } from '@nx/js/src/utils/versions';
-import { coreJsVersion, swcLoaderVersion, tsLibVersion } from './versions';
+import { coreJsVersion, swcLoaderVersion, tsLibVersion } from './versions.js';
 
 export type EnsureDependenciesOptions = {
   compiler?: 'babel' | 'swc' | 'tsc';

@@ -3,8 +3,8 @@ import { signalToCode } from '@nx/devkit/internal';
 import { ChildProcess, fork } from 'child_process';
 import { join } from 'path';
 
-import { podInstall } from '../../utils/pod-install-task';
-import { ExpoPrebuildOptions } from './schema';
+import { podInstall } from '../../utils/pod-install-task.js';
+import { ExpoPrebuildOptions } from './schema.js';
 
 export interface ExpoPrebuildOutput {
   success: boolean;

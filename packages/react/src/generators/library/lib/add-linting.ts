@@ -7,8 +7,8 @@ import {
   runTasksInSerial,
 } from '@nx/devkit';
 
-import { NormalizedSchema } from '../schema';
-import { extraEslintDependencies } from '../../../utils/lint';
+import { NormalizedSchema } from '../schema.js';
+import { extraEslintDependencies } from '../../../utils/lint.js';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,

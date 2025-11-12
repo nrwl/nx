@@ -1,10 +1,10 @@
 import {
   NxJsonConfiguration,
   NxReleaseChangelogConfiguration,
-} from '../../config/nx-json';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { Tree } from '../../generators/tree';
-import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
+} from '../../config/nx-json.js';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
+import { Tree } from '../../generators/tree.js';
+import { readNxJson, updateNxJson } from '../../generators/utils/nx-json.js';
 
 export default async function update(tree: Tree) {
   const nxJson = readNxJson(tree) as NxJsonConfiguration;

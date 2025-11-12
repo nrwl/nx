@@ -9,16 +9,16 @@ import {
   Tree,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodesV2 } from '../../../plugins/plugin';
+import { createNodesV2 } from '../../../plugins/plugin.js';
 import {
   metroVersion,
   nxVersion,
   reactDomVersion,
   reactNativeVersion,
   reactVersion,
-} from '../../utils/versions';
-import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
-import { Schema } from './schema';
+} from '../../utils/versions.js';
+import { addGitIgnoreEntry } from './lib/add-git-ignore-entry.js';
+import { Schema } from './schema.js';
 
 export function reactNativeInitGenerator(host: Tree, schema: Schema) {
   return reactNativeInitGeneratorInternal(host, {

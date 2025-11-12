@@ -10,8 +10,8 @@ import {
   ensureViteConfigPathIsRelative,
   getConfigFilePath,
   STORYBOOK_PROP_MAPPINGS,
-} from './utils';
-import { getInstalledPackageVersionInfo } from './utils';
+} from './utils.js';
+import { getInstalledPackageVersionInfo } from './utils.js';
 
 type StorybookConfigValues = { docsMode?: boolean; staticDir?: string };
 

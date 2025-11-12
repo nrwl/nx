@@ -9,10 +9,10 @@ import { existsSync } from 'fs';
 import { relative } from 'path';
 import { Observable, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package';
-import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
-import { mergeCustomWebpackConfig } from '../utilities/webpack';
-import { Schema } from './schema';
+import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package.js';
+import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs.js';
+import { mergeCustomWebpackConfig } from '../utilities/webpack.js';
+import { Schema } from './schema.js';
 // This is required to ensure that the webpack version used by the Module Federation is the same as the one used by the builders.
 const Module = require('module');
 

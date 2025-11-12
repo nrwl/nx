@@ -4,9 +4,9 @@ import {
   backwardCompatibleVersions,
   type PackageCompatVersions,
   type PackageLatestVersions,
-} from '../../utils/backward-compatible-versions';
+} from '../../utils/backward-compatible-versions.js';
 import * as latestVersions from '../../utils/versions';
-import { angularVersion } from '../../utils/versions';
+import { angularVersion } from '../../utils/versions.js';
 
 export function getInstalledAngularDevkitVersion(tree: Tree): string | null {
   return (

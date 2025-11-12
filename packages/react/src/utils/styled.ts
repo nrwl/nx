@@ -11,8 +11,8 @@ import {
   swcPluginStyledJsxVersion,
   typesReactIsVersion,
   typesStyledComponentsVersion,
-} from './versions';
-import { PackageDependencies } from './dependencies';
+} from './versions.js';
+import { PackageDependencies } from './dependencies.js';
 
 export const cssInJsDependenciesBabel: Record<string, PackageDependencies> = {
   'styled-components': {

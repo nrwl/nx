@@ -7,11 +7,11 @@ import {
   generatePackageManagerFiles,
   getPackageManagerCommand,
   PackageManager,
-} from './utils/package-manager';
-import { execAndWait } from './utils/child-process-utils';
-import { output } from './utils/output';
-import { nxVersion } from './utils/nx/nx-version';
-import { mapErrorToBodyLines } from './utils/error-utils';
+} from './utils/package-manager.js';
+import { execAndWait } from './utils/child-process-utils.js';
+import { output } from './utils/output.js';
+import { nxVersion } from './utils/nx/nx-version.js';
+import { mapErrorToBodyLines } from './utils/error-utils.js';
 
 /**
  * Creates a temporary directory and installs Nx in it.

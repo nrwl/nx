@@ -4,7 +4,7 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { NormalizedSchema } from '../schema';
+import { NormalizedSchema } from '../schema.js';
 
 /**
  * Update other references to the source project's targets

@@ -1,2 +1,2 @@
-export * from './insert-ngmodule-import';
-export * from './find-module';
+export * from './insert-ngmodule-import.js';
+export * from './find-module.js';

@@ -1,10 +1,10 @@
 import { ensurePackage, workspaceRoot } from '@nx/devkit';
 import { dirname } from 'path';
 import type * as ts from 'typescript';
-import { typescriptVersion } from '../utils/versions';
-export { compileTypeScript } from './typescript/compilation';
+import { typescriptVersion } from '../utils/versions.js';
+export { compileTypeScript } from './typescript/compilation.js';
 export type { TypeScriptCompilationOptions } from './typescript/compilation';
-export { getSourceNodes } from './typescript/get-source-nodes';
+export { getSourceNodes } from './typescript/get-source-nodes.js';
 
 const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 
@@ -90,4 +90,4 @@ export function ensureTypescript() {
 import {
   getRelativePathToRootTsConfig as _getRelativePathToRootTsConfig,
   getRootTsConfigPathInTree as _getRootTsConfigPathInTree,
-} from './ts-config';
+} from './ts-config.js';

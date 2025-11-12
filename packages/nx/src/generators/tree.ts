@@ -8,8 +8,8 @@ import {
   writeFileSync,
 } from 'node:fs';
 import type { Mode } from 'node:fs';
-import { logger } from '../utils/logger';
-import { output } from '../utils/output';
+import { logger } from '../utils/logger.js';
+import { output } from '../utils/output.js';
 import { dirname, join, relative, sep } from 'path';
 import * as chalk from 'chalk';
 

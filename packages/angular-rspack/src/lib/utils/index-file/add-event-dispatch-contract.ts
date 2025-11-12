@@ -7,7 +7,7 @@
  */
 
 import { readFile } from 'node:fs/promises';
-import { htmlRewritingStream } from './html-rewriting-stream';
+import { htmlRewritingStream } from './html-rewriting-stream.js';
 
 let jsActionContractScript: string;
 

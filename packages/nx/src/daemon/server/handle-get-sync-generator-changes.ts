@@ -1,5 +1,5 @@
 import type { HandlerResult } from './server';
-import { getCachedSyncGeneratorChanges } from './sync-generators';
+import { getCachedSyncGeneratorChanges } from './sync-generators.js';
 
 export async function handleGetSyncGeneratorChanges(
   generators: string[]

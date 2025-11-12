@@ -1,14 +1,14 @@
 import type { NxWorkspaceFilesExternals, WorkspaceContext } from '../native';
 import { performance } from 'perf_hooks';
-import { workspaceDataDirectoryForWorkspace } from './cache-directory';
-import { isOnDaemon } from '../daemon/is-on-daemon';
-import { daemonClient } from '../daemon/client/client';
+import { workspaceDataDirectoryForWorkspace } from './cache-directory.js';
+import { isOnDaemon } from '../daemon/is-on-daemon.js';
+import { daemonClient } from '../daemon/client/client.js';
 
 let workspaceContext: WorkspaceContext | undefined;
 
 export function setupWorkspaceContext(workspaceRoot: string) {
   const { WorkspaceContext } =
-    require('../native') as typeof import('../native');
+    require('../native') as typeof import('../native/index.js');
   performance.mark('workspace-context');
   workspaceContext = new WorkspaceContext(
     workspaceRoot,
@@ -112,9 +112,7 @@ export async function updateContextWithChangedFiles(
     );
   } else if (isOnDaemon()) {
     // make sure to only import this when running on the daemon
-    const { addUpdatedAndDeletedFiles } = await import(
-      '../daemon/server/project-graph-incremental-recomputation'
-    );
+    const { addUpdatedAndDeletedFiles } = await import('../daemon/server/project-graph-incremental-recomputation.js');
     // update files for the incremental graph recomputation on the daemon
     addUpdatedAndDeletedFiles(createdFiles, updatedFiles, deletedFiles);
   } else {

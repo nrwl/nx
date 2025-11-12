@@ -3,10 +3,10 @@ import { existsSync, readFileSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
 import type { FileData } from '../config/project-graph';
 import type { NxArgs } from '../utils/command-line-utils';
-import { readJsonFile } from '../utils/fileutils';
-import { getIgnoreObject } from '../utils/ignore';
-import { jsonDiff } from '../utils/json-diff';
-import { workspaceRoot } from '../utils/workspace-root';
+import { readJsonFile } from '../utils/fileutils.js';
+import { getIgnoreObject } from '../utils/ignore.js';
+import { jsonDiff } from '../utils/json-diff.js';
+import { workspaceRoot } from '../utils/workspace-root.js';
 
 export interface Change {
   type: string;

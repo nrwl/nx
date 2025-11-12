@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { isCI } from '../../utils/is-ci';
-import { workspaceRoot } from '../../utils/workspace-root';
+import { isCI } from '../../utils/is-ci.js';
+import { workspaceRoot } from '../../utils/workspace-root.js';
 
 // Set once
 export const UNLIMITED_TIMEOUT = 9999999;

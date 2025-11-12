@@ -2,8 +2,8 @@ import { joinPathFragments, logger } from '@nx/devkit';
 import { rmSync } from 'fs';
 import type * as ts from 'typescript';
 import type { CustomTransformers, Diagnostic, Program } from 'typescript';
-import { readTsConfig } from '../ts-config';
-import { ensureTypescript } from '../typescript';
+import { readTsConfig } from '../ts-config.js';
+import { ensureTypescript } from '../typescript.js';
 
 let tsModule: typeof import('typescript');
 

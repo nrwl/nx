@@ -1,5 +1,5 @@
 import { Compiler } from 'webpack';
-import { applyReactConfig } from './lib/apply-react-config';
+import { applyReactConfig } from './lib/apply-react-config.js';
 
 export class NxReactWebpackPlugin {
   constructor(private options: Record<string, any> = {}) {}

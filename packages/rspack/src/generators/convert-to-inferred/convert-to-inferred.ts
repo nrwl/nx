@@ -13,13 +13,13 @@ import {
 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
-import { createNodesV2, type RspackPluginOptions } from '../../plugins/plugin';
-import { rspackCoreVersion } from '../../utils/versions';
+import { createNodesV2, type RspackPluginOptions } from '../../plugins/plugin.js';
+import { rspackCoreVersion } from '../../utils/versions.js';
 import {
   buildPostTargetTransformerFactory,
   servePostTargetTransformerFactory,
   type MigrationContext,
-} from './utils';
+} from './utils/index.js';
 import { logger as devkitLogger } from 'nx/src/devkit-exports';
 
 interface Schema {

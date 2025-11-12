@@ -5,7 +5,7 @@ import {
   readJson,
   type Tree,
 } from '@nx/devkit';
-import { getModuleTypeSeparator } from '../../utils/artifact-types';
+import { getModuleTypeSeparator } from '../../utils/artifact-types.js';
 import type { GeneratorOptions, NormalizedGeneratorOptions } from '../schema';
 
 export function normalizeOptions(

@@ -4,7 +4,7 @@ import type {
   StylePreprocessorOptions,
 } from '@nx/angular-rspack-compiler';
 import type { BudgetEntry } from '@angular/build/private';
-import { I18nProjectMetadata } from './i18n';
+import { I18nProjectMetadata } from './i18n.js';
 
 export interface DevServerOptions {
   /**

@@ -9,11 +9,11 @@ import {
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 
-import { setupPathsPlugin } from '../setup-paths-plugin/setup-paths-plugin';
-import { createNodesV2 } from '../../plugins/plugin';
-import { InitGeneratorSchema } from './schema';
-import { checkDependenciesInstalled, moveToDevDependencies } from './lib/utils';
-import { ignoreViteTempFiles } from '../../utils/ignore-vite-temp-files';
+import { setupPathsPlugin } from '../setup-paths-plugin/setup-paths-plugin.js';
+import { createNodesV2 } from '../../plugins/plugin.js';
+import { InitGeneratorSchema } from './schema.js';
+import { checkDependenciesInstalled, moveToDevDependencies } from './lib/utils.js';
+import { ignoreViteTempFiles } from '../../utils/ignore-vite-temp-files.js';
 
 export function updateNxJsonSettings(tree: Tree) {
   const nxJson = readNxJson(tree);

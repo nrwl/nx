@@ -2,7 +2,7 @@ import { names, readJson, Tree } from '@nx/devkit';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { dirname } from 'path';
 import { major } from 'semver';
-import { rxjsVersion as defaultRxjsVersion } from '../../../utils/versions';
+import { rxjsVersion as defaultRxjsVersion } from '../../../utils/versions.js';
 import type { NgRxGeneratorOptions } from '../schema';
 
 export type NormalizedNgRxGeneratorOptions = NgRxGeneratorOptions & {

@@ -9,12 +9,12 @@ import {
 import {
   moduleFederationEnhancedVersion,
   nxVersion,
-} from '../../utils/versions';
+} from '../../utils/versions.js';
 import {
   getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
   versions,
-} from '../utils/version-utils';
+} from '../utils/version-utils.js';
 import {
   addCypressOnErrorWorkaround,
   addRemoteEntry,
@@ -31,7 +31,7 @@ import {
   setupTspathForRemote,
   updateHostAppRoutes,
   updateTsConfig,
-} from './lib';
+} from './lib/index.js';
 import type { Schema } from './schema';
 
 export async function setupMf(tree: Tree, rawOptions: Schema) {

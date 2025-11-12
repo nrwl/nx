@@ -1,7 +1,7 @@
 import { formatFiles, getProjects, Tree } from '@nx/devkit';
 import { join } from 'path';
-import { updateTsConfigFiles } from '../../utils/update-tsconfig-files';
-import { isExpoProject } from '../../utils/expo-project-detection';
+import { updateTsConfigFiles } from '../../utils/update-tsconfig-files.js';
+import { isExpoProject } from '../../utils/expo-project-detection.js';
 
 export default async function addJestResolver(tree: Tree) {
   const projects = getProjects(tree);

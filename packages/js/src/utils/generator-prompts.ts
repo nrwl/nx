@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
-import { isUsingTsSolutionSetup } from './typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from './typescript/ts-solution-setup.js';
 
 export async function normalizeLinterOption(
   tree: Tree,

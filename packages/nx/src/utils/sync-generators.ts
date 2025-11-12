@@ -1,25 +1,25 @@
 import { performance } from 'perf_hooks';
-import { parseGeneratorString } from '../command-line/generate/generate';
-import { getGeneratorInformation } from '../command-line/generate/generator-utils';
+import { parseGeneratorString } from '../command-line/generate/generate.js';
+import { getGeneratorInformation } from '../command-line/generate/generator-utils.js';
 import type { GeneratorCallback } from '../config/misc-interfaces';
-import { readNxJson, type NxJsonConfiguration } from '../config/nx-json';
+import { readNxJson, type NxJsonConfiguration } from '../config/nx-json.js';
 import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 import type { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { daemonClient } from '../daemon/client/client';
-import { isOnDaemon } from '../daemon/is-on-daemon';
+import { daemonClient } from '../daemon/client/client.js';
+import { isOnDaemon } from '../daemon/is-on-daemon.js';
 import {
   flushChanges,
   FsTree,
   type FileChange,
   type Tree,
-} from '../generators/tree';
+} from '../generators/tree.js';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
-} from '../project-graph/project-graph';
-import { updateContextWithChangedFiles } from './workspace-context';
-import { workspaceRoot } from './workspace-root';
+} from '../project-graph/project-graph.js';
+import { updateContextWithChangedFiles } from './workspace-context.js';
+import { workspaceRoot } from './workspace-root.js';
 import chalk = require('chalk');
 
 export type SyncGeneratorResult = void | {

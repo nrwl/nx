@@ -9,8 +9,8 @@ import {
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 
-import { NormalizedSchema } from '../schema';
-import { createTsConfig } from '../../../utils/create-ts-config';
+import { NormalizedSchema } from '../schema.js';
+import { createTsConfig } from '../../../utils/create-ts-config.js';
 import { join } from 'path';
 
 export function createFiles(host: Tree, options: NormalizedSchema) {

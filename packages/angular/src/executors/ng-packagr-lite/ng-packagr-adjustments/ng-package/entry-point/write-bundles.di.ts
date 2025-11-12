@@ -1,7 +1,7 @@
 import type { TransformProvider } from 'ng-packagr/src/lib/graph/transform.di';
-import { getNgPackagrVersionInfo } from '../../../../utilities/ng-packagr/ng-packagr-version';
-import { importNgPackagrPath } from '../../../../utilities/ng-packagr/package-imports';
-import { writeBundlesTransform } from './write-bundles.transform';
+import { getNgPackagrVersionInfo } from '../../../../utilities/ng-packagr/ng-packagr-version.js';
+import { importNgPackagrPath } from '../../../../utilities/ng-packagr/package-imports.js';
+import { writeBundlesTransform } from './write-bundles.transform.js';
 
 export function getWriteBundlesTransformProvider(): TransformProvider {
   const { major: ngPackagrMajorVersion } = getNgPackagrVersionInfo();

@@ -1,8 +1,8 @@
 import { join, sep } from 'path';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
-import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
-import { readTsConfigWithoutFiles } from './typescript';
+import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger.js';
+import { readTsConfigWithoutFiles } from './typescript.js';
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');

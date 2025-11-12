@@ -1,10 +1,10 @@
 import type { Tree } from '@nx/devkit';
 import type * as ts from 'typescript';
-import { ensureTypescript } from './ensure-typescript';
+import { ensureTypescript } from './ensure-typescript.js';
 import { Node, SyntaxKind } from 'typescript';
 import { workspaceRoot } from '@nx/devkit';
 import { dirname } from 'path';
-import { getSourceNodes } from './get-source-nodes';
+import { getSourceNodes } from './get-source-nodes.js';
 
 const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 

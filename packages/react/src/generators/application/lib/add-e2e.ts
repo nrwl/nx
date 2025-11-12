@@ -9,12 +9,12 @@ import {
 } from '@nx/devkit';
 import { webStaticServeGenerator } from '@nx/web';
 
-import { nxVersion } from '../../../utils/versions';
-import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
-import { hasVitePlugin } from '../../../utils/has-vite-plugin';
-import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
-import { hasRsbuildPlugin } from '../../../utils/has-rsbuild-plugin';
-import { NormalizedSchema } from '../schema';
+import { nxVersion } from '../../../utils/versions.js';
+import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin.js';
+import { hasVitePlugin } from '../../../utils/has-vite-plugin.js';
+import { hasRspackPlugin } from '../../../utils/has-rspack-plugin.js';
+import { hasRsbuildPlugin } from '../../../utils/has-rsbuild-plugin.js';
+import { NormalizedSchema } from '../schema.js';
 import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 

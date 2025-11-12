@@ -19,10 +19,10 @@ import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-so
 import {
   getInstalledCypressMajorVersion,
   versions,
-} from '../../utils/versions';
-import { addBaseCypressSetup } from '../base-setup/base-setup';
+} from '../../utils/versions.js';
+import { addBaseCypressSetup } from '../base-setup/base-setup.js';
 import init from '../init/init';
-import { CypressComponentConfigurationSchema } from './schema';
+import { CypressComponentConfigurationSchema } from './schema.js';
 
 type NormalizeCTOptions = ReturnType<typeof normalizeOptions>;
 

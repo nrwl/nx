@@ -11,15 +11,15 @@ import {
 } from 'fs';
 import { createGunzip } from 'zlib';
 import { join } from 'path';
-import { createApiAxiosInstance } from './utilities/axios';
-import { debugLog } from './debug-logger';
+import { createApiAxiosInstance } from './utilities/axios.js';
+import { debugLog } from './debug-logger.js';
 import type { CloudTaskRunnerOptions } from './nx-cloud-tasks-runner-shell';
 import * as tar from 'tar-stream';
-import { cacheDir } from '../utils/cache-directory';
+import { cacheDir } from '../utils/cache-directory.js';
 import { createHash } from 'crypto';
-import { TasksRunner } from '../tasks-runner/tasks-runner';
-import { RemoteCacheV2 } from '../tasks-runner/default-tasks-runner';
-import { workspaceRoot } from '../utils/workspace-root';
+import { TasksRunner } from '../tasks-runner/tasks-runner.js';
+import { RemoteCacheV2 } from '../tasks-runner/default-tasks-runner.js';
+import { workspaceRoot } from '../utils/workspace-root.js';
 
 interface CloudBundleInstall {
   version: string;

@@ -8,7 +8,7 @@ import type { PlaywrightTestConfig } from '@playwright/test';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { getReporterOutputs } from '../../utils/reporters';
+import { getReporterOutputs } from '../../utils/reporters.js';
 import type { Schema } from './schema';
 
 export async function mergeReportsExecutor(

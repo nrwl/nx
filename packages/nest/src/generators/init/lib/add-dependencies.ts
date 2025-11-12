@@ -1,7 +1,7 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { addDependenciesToPackageJson } from '@nx/devkit';
-import { nestJsSchematicsVersion, nxVersion } from '../../../utils/versions';
-import { InitGeneratorOptions } from '../schema';
+import { nestJsSchematicsVersion, nxVersion } from '../../../utils/versions.js';
+import { InitGeneratorOptions } from '../schema.js';
 
 export function addDependencies(
   tree: Tree,

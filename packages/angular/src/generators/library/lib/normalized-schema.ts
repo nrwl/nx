@@ -1,4 +1,4 @@
-import { UnitTestRunner } from '../../../utils/test-runners';
+import { UnitTestRunner } from '../../../utils/test-runners.js';
 import type { Linter, LinterType } from '@nx/eslint';
 
 export interface NormalizedSchema {

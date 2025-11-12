@@ -4,8 +4,8 @@ import type {
 } from 'ng-packagr/src/lib/ng-package/entry-point/entry-point';
 import type { NgPackageConfig } from 'ng-packagr/src/ng-package.schema';
 import { dirname, join, relative } from 'node:path';
-import { getNgPackagrVersionInfo } from '../../../../utilities/ng-packagr/ng-packagr-version';
-import { importNgPackagrPath } from '../../../../utilities/ng-packagr/package-imports';
+import { getNgPackagrVersionInfo } from '../../../../utilities/ng-packagr/ng-packagr-version.js';
+import { importNgPackagrPath } from '../../../../utilities/ng-packagr/package-imports.js';
 
 export type NgEntryPointType = NgEntryPointBase & {
   primaryDestinationPath?: string;

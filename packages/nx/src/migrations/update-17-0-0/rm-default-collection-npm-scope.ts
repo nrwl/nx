@@ -1,10 +1,10 @@
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { Tree } from '../../generators/tree';
-import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
-import { readJson } from '../../generators/utils/json';
-import { output } from '../../utils/output';
-import { NxJsonConfiguration } from '../../config/nx-json';
-import { joinPathFragments } from '../../utils/path';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
+import { Tree } from '../../generators/tree.js';
+import { readNxJson, updateNxJson } from '../../generators/utils/nx-json.js';
+import { readJson } from '../../generators/utils/json.js';
+import { output } from '../../utils/output.js';
+import { NxJsonConfiguration } from '../../config/nx-json.js';
+import { joinPathFragments } from '../../utils/path.js';
 
 export default async function update(tree: Tree) {
   if (!tree.exists('nx.json')) {

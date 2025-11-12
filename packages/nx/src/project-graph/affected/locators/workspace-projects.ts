@@ -1,10 +1,10 @@
 import { minimatch } from 'minimatch';
-import { TouchedProjectLocator } from '../affected-project-graph-models';
+import { TouchedProjectLocator } from '../affected-project-graph-models.js';
 import {
   createProjectRootMappings,
   findProjectForPath,
-} from '../../utils/find-project-for-path';
-import { InputDefinition } from '../../../config/workspace-json-project-json';
+} from '../../utils/find-project-for-path.js';
+import { InputDefinition } from '../../../config/workspace-json-project-json.js';
 
 export const getTouchedProjects: TouchedProjectLocator = (
   touchedFiles,

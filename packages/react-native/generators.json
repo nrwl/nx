@@ -1,42 +1,50 @@
 {
   "name": "Nx React Native",
   "version": "0.1",
-  "extends": ["@nx/workspace"],
+  "extends": [
+    "@nx/workspace"
+  ],
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#reactNativeInitGeneratorInternal",
-      "schema": "./src/generators/init/schema.json",
+      "factory": "./dist/src/generators/init/init#reactNativeInitGeneratorInternal",
+      "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/react-native` plugin.",
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#reactNativeApplicationGeneratorInternal",
-      "schema": "./src/generators/application/schema.json",
-      "aliases": ["app"],
+      "factory": "./dist/src/generators/application/application#reactNativeApplicationGeneratorInternal",
+      "schema": "./dist/src/generators/application/schema.json",
+      "aliases": [
+        "app"
+      ],
       "x-type": "application",
       "description": "Create a React Native application."
     },
     "library": {
-      "factory": "./src/generators/library/library#reactNativeLibraryGeneratorInternal",
-      "schema": "./src/generators/library/schema.json",
-      "aliases": ["lib"],
+      "factory": "./dist/src/generators/library/library#reactNativeLibraryGeneratorInternal",
+      "schema": "./dist/src/generators/library/schema.json",
+      "aliases": [
+        "lib"
+      ],
       "x-type": "library",
       "description": "Create a React Native library."
     },
     "component": {
-      "factory": "./src/generators/component/component",
-      "schema": "./src/generators/component/schema.json",
+      "factory": "./dist/src/generators/component/component",
+      "schema": "./dist/src/generators/component/schema.json",
       "description": "Create a React Native component.",
-      "aliases": ["c"]
+      "aliases": [
+        "c"
+      ]
     },
     "web-configuration": {
-      "factory": "./src/generators/web-configuration/web-configuration#webConfigurationGenerator",
-      "schema": "./src/generators/web-configuration/schema.json",
+      "factory": "./dist/src/generators/web-configuration/web-configuration#webConfigurationGenerator",
+      "schema": "./dist/src/generators/web-configuration/schema.json",
       "description": "Set up web configuration for a React Native app"
     },
     "convert-to-inferred": {
-      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
-      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "factory": "./dist/src/generators/convert-to-inferred/convert-to-inferred",
+      "schema": "./dist/src/generators/convert-to-inferred/schema.json",
       "description": "Convert existing React Native project(s) using `@nx/react-native:*` executors to use `@nx/react-native/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target."
     }
   }

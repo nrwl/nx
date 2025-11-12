@@ -7,13 +7,13 @@ import {
 import {
   updateJestTestSetup,
   updateVitestTestSetup,
-} from '../../../utils/testing-config-utils';
+} from '../../../utils/testing-config-utils.js';
 import {
   getRemixVersion,
   testingLibraryJestDomVersion,
   testingLibraryReactVersion,
   testingLibraryUserEventsVersion,
-} from '../../../utils/versions';
+} from '../../../utils/versions.js';
 import type { RemixLibraryOptions } from './normalize-options';
 
 export function addUnitTestingSetup(tree: Tree, options: RemixLibraryOptions) {

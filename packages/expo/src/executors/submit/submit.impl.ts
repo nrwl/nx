@@ -3,9 +3,9 @@ import { signalToCode } from '@nx/devkit/internal';
 import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
-import { resolveEas } from '../../utils/resolve-eas';
+import { resolveEas } from '../../utils/resolve-eas.js';
 
-import { SubmitExecutorSchema } from './schema';
+import { SubmitExecutorSchema } from './schema.js';
 
 export interface ReactNativeSubmitOutput {
   success: boolean;

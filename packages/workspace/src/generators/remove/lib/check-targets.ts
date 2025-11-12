@@ -5,7 +5,7 @@ import {
   TargetConfiguration,
   Tree,
 } from '@nx/devkit';
-import { Schema } from '../schema';
+import { Schema } from '../schema.js';
 
 /**
  * Check whether the project to be removed has builders targetted by another project

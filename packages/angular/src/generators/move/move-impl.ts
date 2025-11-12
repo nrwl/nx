@@ -3,7 +3,7 @@ import {
   updateModuleName,
   updateNgPackage,
   updateSecondaryEntryPoints,
-} from './lib';
+} from './lib/index.js';
 import type { MoveImplOptions } from './lib/types';
 
 /**

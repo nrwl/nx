@@ -1,4 +1,4 @@
-import { readNxJson } from './nx-json';
+import { readNxJson } from './nx-json.js';
 
 /**
  * Returns information about where apps and libs will be created.
@@ -11,4 +11,4 @@ export function workspaceLayout(): { appsDir: string; libsDir: string } {
   };
 }
 
-export { readNxJson } from './nx-json';
+export { readNxJson } from './nx-json.js';

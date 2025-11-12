@@ -1,6 +1,6 @@
 import { Argv, CommandModule } from 'yargs';
-import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
-import { withVerbose } from '../yargs-utils/shared-options';
+import { linkToNxDevAndExamples } from '../yargs-utils/documentation.js';
+import { withVerbose } from '../yargs-utils/shared-options.js';
 
 export const yargsMigrateCommand: CommandModule = {
   command: 'migrate [packageAndVersion]',
@@ -10,7 +10,7 @@ export const yargsMigrateCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(withMigrationOptions(yargs), 'migrate'),
   handler: async () => {
-    await (await import('./migrate')).runMigration();
+    await (await import('./migrate.js')).runMigration();
     process.exit(0);
   },
 };
@@ -22,7 +22,7 @@ export const yargsInternalMigrateCommand: CommandModule = {
   handler: async (args) =>
     process.exit(
       await (
-        await import('./migrate')
+        await import('./migrate.js')
       ).migrate(process.cwd(), args, process.argv.slice(3))
     ),
 };

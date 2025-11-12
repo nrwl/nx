@@ -5,7 +5,7 @@ import {
   ProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-import { Schema } from '../schema';
+import { Schema } from '../schema.js';
 import { relative } from 'path';
 
 export function checkProjectIsSafeToRemove(

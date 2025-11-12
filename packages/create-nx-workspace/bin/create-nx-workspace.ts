@@ -5,21 +5,21 @@ import * as chalk from 'chalk';
 import {
   supportedAgents,
   CreateWorkspaceOptions,
-} from '../src/create-workspace-options';
-import { createWorkspace } from '../src/create-workspace';
-import { isKnownPreset, Preset } from '../src/utils/preset/preset';
-import { CLIErrorMessageConfig, output } from '../src/utils/output';
-import { nxVersion } from '../src/utils/nx/nx-version';
+} from '../src/create-workspace-options.js';
+import { createWorkspace } from '../src/create-workspace.js';
+import { isKnownPreset, Preset } from '../src/utils/preset/preset.js';
+import { CLIErrorMessageConfig, output } from '../src/utils/output.js';
+import { nxVersion } from '../src/utils/nx/nx-version.js';
 
-import { yargsDecorator } from './decorator';
-import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
+import { yargsDecorator } from './decorator.js';
+import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-third-party-preset.js';
 import {
   determineAiAgents,
   determineDefaultBase,
   determineIfGitHubWillBeUsed,
   determineNxCloud,
   determinePackageManager,
-} from '../src/internal-utils/prompts';
+} from '../src/internal-utils/prompts.js';
 import {
   withAllPrompts,
   withGitOptions,
@@ -27,12 +27,12 @@ import {
   withNxCloud,
   withOptions,
   withPackageManager,
-} from '../src/internal-utils/yargs-options';
-import { messages, recordStat } from '../src/utils/nx/ab-testing';
-import { mapErrorToBodyLines } from '../src/utils/error-utils';
+} from '../src/internal-utils/yargs-options.js';
+import { messages, recordStat } from '../src/utils/nx/ab-testing.js';
+import { mapErrorToBodyLines } from '../src/utils/error-utils.js';
 import { existsSync } from 'fs';
-import { isCI } from '../src/utils/ci/is-ci';
-import { printSocialInformation } from '../src/utils/social-information';
+import { isCI } from '../src/utils/ci/is-ci.js';
+import { printSocialInformation } from '../src/utils/social-information.js';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;

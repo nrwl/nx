@@ -1,4 +1,4 @@
-import { ModuleFederationDevServerOptions } from '../schema';
+import { ModuleFederationDevServerOptions } from '../schema.js';
 import { ProjectConfiguration, ExecutorContext, runExecutor } from '@nx/devkit';
 
 export async function startRemotes(

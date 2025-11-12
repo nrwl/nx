@@ -1,6 +1,6 @@
 import { JavaScriptTransformer } from '@angular/build/private';
 import { normalize } from 'path';
-import { AngularCompilation } from '../models';
+import { AngularCompilation } from '../models/index.js';
 
 const JS_TS_FILE_PATTERN = /\.[cm]?[jt]sx?$/;
 
