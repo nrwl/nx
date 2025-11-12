@@ -88,11 +88,11 @@ nx {
 **Groovy (build.gradle):**
 
 ```groovy
-import static dev.nx.gradle.NxProjectExtensionKt.nx
+import static dev.nx.gradle.Groovy.nx
 
-nx {
-  set 'name', 'my-custom-name'
-  array 'tags', 'api', 'backend'
+nx(project) {
+  it.set 'name', 'my-custom-name'
+  it.array 'tags', 'api', 'backend'
 }
 ```
 
@@ -116,12 +116,12 @@ tasks.named("integrationTest") {
 **Groovy (build.gradle):**
 
 ```groovy
-import static dev.nx.gradle.NxTaskExtensionKt.nx
+import static dev.nx.gradle.Groovy.nx
 
 tasks.named('integrationTest') {
-  nx {
-    mergedDependsOn('^build', 'app:lint')
-    set 'cache', true
+  nx(it) {
+    it.mergedDependsOn('^build', 'app:lint')
+    it.set 'cache', true
   }
 }
 ```

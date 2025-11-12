@@ -26,7 +26,7 @@ describe('Gradle DSL - nx {} configuration', () => {
         const importStatement =
           type === 'kotlin'
             ? `import dev.nx.gradle.nx\n\n`
-            : `import static dev.nx.gradle.NxProjectExtensionKt.nx\nimport static dev.nx.gradle.NxTaskExtensionKt.nx\n\n`;
+            : `import static dev.nx.gradle.Groovy.nx\n\n`;
         updateFile(
           `app/build.gradle${buildFileExt}`,
           (content) => importStatement + content
@@ -48,7 +48,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\nnx {\n  set("type", "custom-app-name")\n}`
-              : `\nnx {\n  set 'type', 'custom-app-name'\n}`;
+              : `\nnx(project) {\n  it.set 'type', 'custom-app-name'\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -65,7 +65,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\nnx {\n  set("priority", 10)\n}`
-              : `\nnx {\n  set 'priority', 10\n}`;
+              : `\nnx(project) {\n  it.set 'priority', 10\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -82,7 +82,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\nnx {\n  set("isPublic", true)\n}`
-              : `\nnx {\n  set 'isPublic', true\n}`;
+              : `\nnx(project) {\n  it.set 'isPublic', true\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -99,7 +99,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\nnx {\n  array("tags", "api", "backend", "tier:1")\n}`
-              : `\nnx {\n  array 'tags', 'api', 'backend', 'tier:1'\n}`;
+              : `\nnx(project) {\n  it.array 'tags', 'api', 'backend', 'tier:1'\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -116,7 +116,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\nnx {\n  set("generators") {\n    set("@nx/react:component", "components")\n    set("@nx/node:service", "services")\n  }\n}`
-              : `\nnx {\n  set 'generators', {\n    set '@nx/react:component', 'components'\n    set '@nx/node:service', 'services'\n  }\n}`;
+              : `\nnx(project) {\n  it.set 'generators', {\n    it.set '@nx/react:component', 'components'\n    it.set '@nx/node:service', 'services'\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -134,7 +134,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\nnx {\n  set("type", "my-custom-app")\n  array("tags", "api", "service")\n  set("generators") {\n    set("owner", "platform-team")\n    array("environments", "dev", "staging", "prod")\n    set("tier", 1)\n  }\n}`
-              : `\nnx {\n  set 'type', 'my-custom-app'\n  array 'tags', 'api', 'service'\n  set 'generators', {\n    set 'owner', 'platform-team'\n    array 'environments', 'dev', 'staging', 'prod'\n    set 'tier', 1\n  }\n}`;
+              : `\nnx(project) {\n  it.set 'type', 'my-custom-app'\n  it.array 'tags', 'api', 'service'\n  it.set 'generators', {\n    it.set 'owner', 'platform-team'\n    it.array 'environments', 'dev', 'staging', 'prod'\n    it.set 'tier', 1\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -159,7 +159,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\nnx {\n  set("config") {\n    set("level1") {\n      set("level2") {\n        set("value", "deep")\n      }\n    }\n  }\n}`
-              : `\nnx {\n  set 'config', {\n    set 'level1', {\n      set 'level2', {\n        set 'value', 'deep'\n      }\n    }\n  }\n}`;
+              : `\nnx(project) {\n  it.set 'config', {\n    it.set 'level1', {\n      it.set 'level2', {\n        set 'value', 'deep'\n      }\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -176,7 +176,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\nnx {\n  set("generators") {\n    array("frameworks", "react", "angular", "vue")\n    set("enabled", true)\n  }\n}`
-              : `\nnx {\n  set 'generators', {\n    array 'frameworks', 'react', 'angular', 'vue'\n    set 'enabled', true\n  }\n}`;
+              : `\nnx(project) {\n  it.set 'generators', {\n    it.array 'frameworks', 'react', 'angular', 'vue'\n    it.set 'enabled', true\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -205,7 +205,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `tasks.register<DefaultTask>("customTask") {\n  nx {\n    mergedDependsOn("^build", "app:test")\n  }\n}`
-              : `tasks.register('customTask') {\n  nx {\n    mergedDependsOn('^build', 'app:test')\n  }\n}`;
+              : `tasks.register('customTask') {\n  nx(it) {\n    mergedDependsOn('^build', 'app:test')\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -225,7 +225,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `tasks.register<DefaultTask>("customTask2") {\n  nx {\n    mergedDependsOn.add("^build")\n    mergedDependsOn.add("app:test")\n  }\n}`
-              : `tasks.register('customTask2') {\n  nx {\n    mergedDependsOn.add('^build')\n    mergedDependsOn.add('app:test')\n  }\n}`;
+              : `tasks.register('customTask2') {\n  nx(it) {\n    mergedDependsOn.add('^build')\n    mergedDependsOn.add('app:test')\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -243,7 +243,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\ntasks.register<DefaultTask>("myBuild") {\n  nx {\n    set("cache", false)\n  }\n}`
-              : `\ntasks.register('myBuild') {\n  nx {\n    set 'cache', false\n  }\n}`;
+              : `\ntasks.register('myBuild') {\n  nx(it) {\n    it.set 'cache', false\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -262,7 +262,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\ntasks.register<DefaultTask>("myTest") {\n  nx {\n    array("inputs", "src/**/*", "config/**/*")\n  }\n}`
-              : `\ntasks.register('myTest') {\n  nx {\n    array 'inputs', 'src/**/*', 'config/**/*'\n  }\n}`;
+              : `\ntasks.register('myTest') {\n  nx(it) {\n    it.array 'inputs', 'src/**/*', 'config/**/*'\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -282,7 +282,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\ntasks.register<DefaultTask>("deploy") {\n  nx {\n    set("configurations") {\n      set("production", true)\n      set("environment", "prod")\n    }\n  }\n}`
-              : `\ntasks.register('deploy') {\n  nx {\n    set 'configurations', {\n      set 'production', true\n      set 'environment', 'prod'\n    }\n  }\n}`;
+              : `\ntasks.register('deploy') {\n  nx(it) {\n    it.set 'configurations', {\n      it.set 'production', true\n      it.set 'environment', 'prod'\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -300,7 +300,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\ntasks.register<DefaultTask>("e2e") {\n  nx {\n    mergedDependsOn.add("^build")\n    set("cache", false)\n    array("outputs", "coverage/**/*", "reports/**/*")\n    set("configurations") {\n      set("timeout", 3600)\n    }\n  }\n}`
-              : `\ntasks.register('e2e') {\n  nx {\n    mergedDependsOn.add('^build')\n    set 'cache', false\n    array 'outputs', 'coverage/**/*', 'reports/**/*'\n    set 'configurations', {\n      set 'timeout', 3600\n    }\n  }\n}`;
+              : `\ntasks.register('e2e') {\n  nx(it) {\n    mergedDependsOn.add('^build')\n    it.set 'cache', false\n    it.array 'outputs', 'coverage/**/*', 'reports/**/*'\n    it.set 'configurations', {\n      it.set 'timeout', 3600\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -321,7 +321,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\ntasks.register<DefaultTask>("customBuild") {\n  nx {\n    set("cache", true)\n  }\n}\n\ntasks.register<DefaultTask>("verify") {\n  nx {\n    set("cache", false)\n    array("inputs", "src/**/*", "test/**/*")\n  }\n}`
-              : `\ntasks.register('customBuild') {\n  nx {\n    set 'cache', true\n  }\n}\n\ntasks.register('verify') {\n  nx {\n    set 'cache', false\n    array 'inputs', 'src/**/*', 'test/**/*'\n  }\n}`;
+              : `\ntasks.register('customBuild') {\n  nx(it) {\n    it.set 'cache', true\n  }\n}\n\ntasks.register('verify') {\n  nx(it) {\n    it.set 'cache', false\n    it.array 'inputs', 'src/**/*', 'test/**/*'\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -343,7 +343,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\nnx {\n  set("type", "integrated-app")\n  array("tags", "api", "backend")\n}\n\ntasks.register<DefaultTask>("package") {\n  nx {\n    set("cache", false)\n    set("configurations") {\n      set("profile", "production")\n    }\n  }\n}`
-              : `\nnx {\n  set 'type', 'integrated-app'\n  array 'tags', 'api', 'backend'\n}\n\ntasks.register('package') {\n  nx {\n    set 'cache', false\n    set 'configurations', {\n      set 'profile', 'production'\n    }\n  }\n}`;
+              : `\nnx(project) {\n  it.set 'type', 'integrated-app'\n  it.array 'tags', 'api', 'backend'\n}\n\ntasks.register('package') {\n  nx(it) {\n    it.set 'cache', false\n    it.set 'configurations', {\n      it.set 'profile', 'production'\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -368,7 +368,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\nnx {\n  set("type", "complex-app")\n  array("tags", "monorepo", "service")\n  set("generators") {\n    set("owner", "platform")\n    set("tier", 1)\n  }\n}\n\ntasks.register<DefaultTask>("compile") {\n  nx {\n    mergedDependsOn.add("^build")\n    mergedDependsOn.add("app:test")\n    set("cache", true)\n  }\n}\n\ntasks.register<DefaultTask>("validate") {\n  nx {\n    set("cache", false)\n    array("inputs", "src/**/*", "test/**/*")\n    set("configurations") {\n      set("parallel", true)\n    }\n  }\n}`
-              : `\nnx {\n  set 'type', 'complex-app'\n  array 'tags', 'monorepo', 'service'\n  set 'generators', {\n    set 'owner', 'platform'\n    set 'tier', 1\n  }\n}\n\ntasks.register('compile') {\n  nx {\n    mergedDependsOn.add('^build')\n    mergedDependsOn.add('app:test')\n    set 'cache', true\n  }\n}\n\ntasks.register('validate') {\n  nx {\n    set 'cache', false\n    array 'inputs', 'src/**/*', 'test/**/*'\n    set 'configurations', {\n      set 'parallel', true\n    }\n  }\n}`;
+              : `\nnx(project) {\n  it.set 'type', 'complex-app'\n  it.array 'tags', 'monorepo', 'service'\n  it.set 'generators', {\n    it.set 'owner', 'platform'\n    it.set 'tier', 1\n  }\n}\n\ntasks.register('compile') {\n  nx(it) {\n    mergedDependsOn.add('^build')\n    mergedDependsOn.add('app:test')\n    it.set 'cache', true\n  }\n}\n\ntasks.register('validate') {\n  nx(it) {\n    it.set 'cache', false\n    it.array 'inputs', 'src/**/*', 'test/**/*'\n    it.set 'configurations', {\n      it.set 'parallel', true\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -401,7 +401,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const appDslContent =
             type === 'kotlin'
               ? `\nnx {\n  set("type", "app-project")\n  array("tags", "app")\n}`
-              : `\nnx {\n  set 'type', 'app-project'\n  array 'tags', 'app'\n}`;
+              : `\nnx(project) {\n  it.set 'type', 'app-project'\n  it.array 'tags', 'app'\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -411,13 +411,13 @@ describe('Gradle DSL - nx {} configuration', () => {
           const importStatement =
             type === 'kotlin'
               ? `import dev.nx.gradle.nx\n\n`
-              : `import static dev.nx.gradle.NxProjectExtensionKt.nx\nimport static dev.nx.gradle.NxTaskExtensionKt.nx\n\n`;
+              : `import static dev.nx.gradle.Groovy.nx\n\n`;
 
           // Configure list project
           const listDslContent =
             type === 'kotlin'
               ? `\nnx {\n  set("type", "list-project")\n  array("tags", "lib")\n}`
-              : `\nnx {\n  set 'type', 'list-project'\n  array 'tags', 'lib'\n}`;
+              : `\nnx(project) {\n  it.set 'type', 'list-project'\n  it.array 'tags', 'lib'\n}`;
 
           updateFile(
             `list/build.gradle${buildFileExt}`,

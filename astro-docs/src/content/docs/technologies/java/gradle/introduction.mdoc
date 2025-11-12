@@ -341,19 +341,19 @@ nx {
 
 ```groovy
 // build.gradle
-import static dev.nx.gradle.NxProjectExtensionKt.nx
+import static dev.nx.gradle.Groovy.nx
 
-nx {
+nx(project) {
   // Set project name
-  set 'name', 'my-custom-project-name'
+  it.set 'name', 'my-custom-project-name'
 
   // Add tags for organization
-  array 'tags', 'api', 'backend', 'tier:1'
+  it.array 'tags', 'api', 'backend', 'tier:1'
 
   // Add nested metadata
-  set 'metadata', {
-    set 'owner', 'team-payments'
-    set 'criticality', 'high'
+  it.set 'metadata', {
+    it.set 'owner', 'team-payments'
+    it.set 'criticality', 'high'
   }
 }
 ```
@@ -405,22 +405,22 @@ tasks {
 
 ```groovy
 // build.gradle
-import static dev.nx.gradle.NxTaskExtensionKt.nx
+import static dev.nx.gradle.Groovy.nx
 
 tasks.named('integrationTest') {
-  nx {
+  nx(it) {
     // Add Nx-specific dependencies (merges with Gradle dependencies)
-    mergedDependsOn('^build', 'app:lint')
+    it.mergedDependsOn('^build', 'app:lint')
 
     // Configure caching
-    set 'cache', true
+    it.set 'cache', true
 
     // Add target tags
-    array 'tags', 'integration', 'slow'
+    it.array 'tags', 'integration', 'slow'
 
     // Add any custom configuration
-    set 'options', {
-      set 'timeout', 300
+    it.set 'options', {
+      it.set 'timeout', 300
     }
   }
 }
