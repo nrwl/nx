@@ -18,7 +18,9 @@ import {
   determineDefaultBase,
   determineIfGitHubWillBeUsed,
   determineNxCloud,
+  determineNxCloudSimple,
   determinePackageManager,
+  determineTemplate,
 } from '../src/internal-utils/prompts';
 import {
   withAllPrompts,
@@ -35,6 +37,7 @@ import { isCI } from '../src/utils/ci/is-ci';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
+  template?: string;
   linter?: 'none' | 'eslint';
   formatter?: 'none' | 'prettier';
   workspaces?: boolean;
@@ -224,6 +227,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`List of AI agents to configure.`,
             type: 'array',
             choices: [...supportedAgents],
+          })
+          .option('template', {
+            describe: chalk.dim`GitHub template (e.g., nrwl/react-template)`,
+            type: 'string',
           }),
         withNxCloud,
         withUseGitHub,
@@ -328,44 +335,90 @@ async function normalizeArgsMiddleware(
   argv.workspaces ??= true;
   argv.useProjectJson ??= !argv.workspaces;
 
+  // Check for template + preset conflict
+  if (argv.template && argv.preset) {
+    output.error({
+      title: 'Invalid arguments',
+      bodyLines: [
+        'Cannot use both --template and --preset options together.',
+        'Please choose one:',
+        '  --template: Use a GitHub template repository',
+        '  --preset: Use an Nx preset for workspace generation',
+      ],
+    });
+    process.exit(1);
+  }
+
+  // Validate and expand template if provided
+  if (argv.template) {
+    argv.template = validateAndExpandTemplate(argv.template);
+  }
+
   try {
     argv.name = await determineFolder(argv);
-    if (!argv.preset || isKnownPreset(argv.preset)) {
-      argv.stack = await determineStack(argv);
-      const presetOptions = await determinePresetOptions(argv);
-      Object.assign(argv, presetOptions);
-    } else {
-      try {
-        getPackageNameFromThirdPartyPreset(argv.preset);
-      } catch (e) {
-        if (e instanceof Error) {
-          output.error({
-            title: `Could not find preset "${argv.preset}"`,
-            bodyLines: mapErrorToBodyLines(e),
-          });
-        } else {
-          console.error(e);
-        }
-        process.exit(1);
-      }
-    }
 
-    const packageManager = await determinePackageManager(argv);
-    const aiAgents = await determineAiAgents(argv);
-    const defaultBase = await determineDefaultBase(argv);
-    const nxCloud =
-      argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
-    const useGitHub =
-      nxCloud === 'skip'
-        ? undefined
-        : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
-    Object.assign(argv, {
-      nxCloud,
-      useGitHub,
-      packageManager,
-      defaultBase,
-      aiAgents,
-    });
+    const template = await determineTemplate(argv);
+
+    if (template !== 'skip') {
+      // Template flow - skip preset prompts
+      argv.template = template;
+      // Still ask: package manager, git branch, AI agents
+      const packageManager = await determinePackageManager(argv);
+      const aiAgents = await determineAiAgents(argv);
+      const defaultBase = await determineDefaultBase(argv);
+      // Use simplified Cloud prompt for templates (yes/no only, no CI selection)
+      const nxCloud =
+        argv.skipGit === true ? 'skip' : await determineNxCloudSimple(argv);
+      const useGitHub =
+        nxCloud === 'skip'
+          ? undefined
+          : await determineIfGitHubWillBeUsed(argv);
+      Object.assign(argv, {
+        nxCloud,
+        useGitHub,
+        packageManager,
+        defaultBase,
+        aiAgents,
+      });
+    } else {
+      // Preset flow - existing behavior
+      if (!argv.preset || isKnownPreset(argv.preset)) {
+        argv.stack = await determineStack(argv);
+        const presetOptions = await determinePresetOptions(argv);
+        Object.assign(argv, presetOptions);
+      } else {
+        try {
+          getPackageNameFromThirdPartyPreset(argv.preset);
+        } catch (e) {
+          if (e instanceof Error) {
+            output.error({
+              title: `Could not find preset "${argv.preset}"`,
+              bodyLines: mapErrorToBodyLines(e),
+            });
+          } else {
+            console.error(e);
+          }
+          process.exit(1);
+        }
+      }
+
+      const packageManager = await determinePackageManager(argv);
+      const aiAgents = await determineAiAgents(argv);
+      const defaultBase = await determineDefaultBase(argv);
+      const nxCloud =
+        argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
+      const useGitHub =
+        nxCloud === 'skip'
+          ? undefined
+          : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
+      Object.assign(argv, {
+        nxCloud,
+        useGitHub,
+        packageManager,
+        defaultBase,
+        aiAgents,
+      });
+    }
   } catch (e) {
     console.error(e);
     process.exit(1);
@@ -395,6 +448,45 @@ export function validateWorkspaceName(name: string): void {
     });
     process.exit(1);
   }
+}
+
+function validateAndExpandTemplate(template: string): string {
+  // Strip .git suffix if present
+  const cleanTemplate = template.endsWith('.git')
+    ? template.slice(0, -4)
+    : template;
+
+  // If it's already a full URL, reject it
+  if (
+    cleanTemplate.startsWith('http://') ||
+    cleanTemplate.startsWith('https://')
+  ) {
+    output.error({
+      title: 'Invalid template format',
+      bodyLines: [
+        `Template should be in the format: nrwl/repo-name`,
+        `Example: nrwl/react-template`,
+        `Do not provide the full GitHub URL.`,
+      ],
+    });
+    process.exit(1);
+  }
+
+  // Pattern: nrwl/repo-name
+  const pattern = /^nrwl\/[a-zA-Z0-9-]+$/;
+
+  if (!pattern.test(cleanTemplate)) {
+    output.error({
+      title: 'Invalid template',
+      bodyLines: [
+        `Template must be in format: nrwl/repo-name (e.g., nrwl/react-template)`,
+        `Only templates from the nrwl organization are supported.`,
+      ],
+    });
+    process.exit(1);
+  }
+
+  return `https://github.com/${cleanTemplate}`;
 }
 
 async function determineFolder(

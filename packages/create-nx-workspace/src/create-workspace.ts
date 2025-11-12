@@ -17,6 +17,12 @@ import {
 import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { Preset } from './utils/preset/preset';
+import {
+  cleanupLockfiles,
+  cloneTemplate,
+} from './utils/template/clone-template';
+import { execAndWait } from './utils/child-process-utils';
+import { getPackageManagerCommand } from './utils/package-manager';
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
   preset: string,
@@ -40,37 +46,54 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     output.setCliName(cliName ?? 'NX');
   }
 
-  const tmpDir = await createSandbox(packageManager);
+  let directory: string;
 
-  const workspaceGlobs = getWorkspaceGlobsFromPreset(preset);
+  if (options.template) {
+    // Template flow - clone and setup
+    const templateUrl = options.template;
+    directory = name;
 
-  // nx new requires a preset currently. We should probably make it optional.
-  const directory = await createEmptyWorkspace<T>(
-    tmpDir,
-    name,
-    packageManager,
-    { ...options, preset, workspaceGlobs }
-  );
+    await cloneTemplate(templateUrl, directory, name);
+    await cleanupLockfiles(directory, packageManager);
 
-  // If the preset is a third-party preset, we need to call createPreset to install it
-  // For first-party presets, it will be created by createEmptyWorkspace instead.
-  // In createEmptyWorkspace, it will call `nx new` -> `@nx/workspace newGenerator` -> `@nx/workspace generatePreset`.
-  const thirdPartyPackageName = getPackageNameFromThirdPartyPreset(preset);
-  if (thirdPartyPackageName) {
-    await createPreset(
-      thirdPartyPackageName,
-      options,
-      packageManager,
-      directory
-    );
+    // Install dependencies
+    const pmc = getPackageManagerCommand(packageManager);
+    await execAndWait(pmc.install, directory);
+  } else {
+    // Preset flow - existing behavior
+    const tmpDir = await createSandbox(packageManager);
+    const workspaceGlobs = getWorkspaceGlobsFromPreset(preset);
+
+    // nx new requires a preset currently. We should probably make it optional.
+    directory = await createEmptyWorkspace<T>(tmpDir, name, packageManager, {
+      ...options,
+      preset,
+      workspaceGlobs,
+    });
+
+    // If the preset is a third-party preset, we need to call createPreset to install it
+    // For first-party presets, it will be created by createEmptyWorkspace instead.
+    // In createEmptyWorkspace, it will call `nx new` -> `@nx/workspace newGenerator` -> `@nx/workspace generatePreset`.
+    const thirdPartyPackageName = getPackageNameFromThirdPartyPreset(preset);
+    if (thirdPartyPackageName) {
+      await createPreset(
+        thirdPartyPackageName,
+        options,
+        packageManager,
+        directory
+      );
+    }
   }
+
+  const isTemplate = !!options.template;
 
   let connectUrl: string | undefined;
   let nxCloudInfo: string | undefined;
   if (nxCloud !== 'skip') {
     const token = readNxCloudToken(directory) as string;
 
-    if (nxCloud !== 'yes') {
+    // Only generate CI for preset flow (not template)
+    if (!isTemplate && nxCloud !== 'yes') {
       await setupCI(directory, nxCloud, packageManager);
     }
 
@@ -78,7 +101,8 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       nxCloud,
       token,
       directory,
-      useGitHub
+      useGitHub,
+      isTemplate
     );
   }
 
@@ -114,7 +138,8 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       nxCloud,
       connectUrl,
       pushedToVcs,
-      rawArgs?.nxCloud
+      rawArgs?.nxCloud,
+      isTemplate
     );
   }
 

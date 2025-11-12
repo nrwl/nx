@@ -55,6 +55,50 @@ const messageOptions: Record<string, MessageData[]> = {
       fallback: undefined,
     },
   ],
+  /**
+   * Simplified Cloud prompt for template flow (no CI provider selection)
+   */
+  setupNxCloudSimple: [
+    {
+      code: 'simple-cloud-v1',
+      message: 'Get to green PRs faster with Nx Cloud?',
+      initial: 0,
+      choices: [
+        { value: 'yes', name: 'Yes, set up Nx Cloud' },
+        { value: 'skip', name: 'Skip' },
+      ],
+      footer:
+        '\nAutomated validation, self-healing tests, and 70% faster CI: https://nx.dev/docs/guides/nx-cloud/optimize-your-ttg',
+      hint: `\n(free for open source)`,
+      fallback: undefined,
+    },
+    {
+      code: 'simple-cloud-v2',
+      message: 'Would you like to enable remote caching with Nx Cloud?',
+      initial: 0,
+      choices: [
+        { value: 'yes', name: 'Yes, enable caching' },
+        { value: 'skip', name: 'No, configure it later' },
+      ],
+      footer:
+        '\nRemote caching makes your builds faster: https://nx.dev/ci/features/remote-cache',
+      hint: `\n(can be enabled any time)`,
+      fallback: undefined,
+    },
+    {
+      code: 'simple-cloud-v3',
+      message: 'Speed up CI and reduce compute costs with Nx Cloud?',
+      initial: 0,
+      choices: [
+        { value: 'yes', name: 'Yes' },
+        { value: 'skip', name: 'Skip' },
+      ],
+      footer:
+        '\n70% faster CI, 60% less compute, automated test healing: https://nx.dev/ci/features/remote-cache',
+      hint: `\n(can be enabled later)`,
+      fallback: undefined,
+    },
+  ],
 };
 
 export type MessageKey = keyof typeof messageOptions;
