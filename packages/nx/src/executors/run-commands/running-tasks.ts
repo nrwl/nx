@@ -541,6 +541,7 @@ export async function runSingleCommandWithPseudoTerminal(
   taskId: string
 ): Promise<PseudoTtyProcess> {
   const pseudoTerminal = createPseudoTerminal();
+
   const pseudoTtyProcess = await createProcessWithPseudoTty(
     pseudoTerminal,
     normalized.commands[0],
