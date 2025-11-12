@@ -66,10 +66,23 @@ describe('remove-redundant-ts-project-references migration', () => {
       plugins: ['@nx/js/typescript'],
     });
 
-    writeJson(tree, 'tsconfig.json', {
+    // Setup TS solution: package manager workspaces + tsconfig.base.json + tsconfig.json
+    writeJson(tree, 'package.json', {
+      name: 'test-workspace',
+      workspaces: ['packages/*'],
+    });
+
+    writeJson(tree, 'tsconfig.base.json', {
       compilerOptions: {
         composite: true,
       },
+    });
+
+    writeJson(tree, 'tsconfig.json', {
+      extends: './tsconfig.base.json',
+      compileOnSave: false,
+      files: [],
+      references: [],
     });
   });
 
@@ -292,5 +305,44 @@ describe('remove-redundant-ts-project-references migration', () => {
       { path: './tsconfig.lib.json' },
       { path: './tsconfig.spec.json' },
     ]);
+  });
+
+  describe('skip migration when not using TS solution setup', () => {
+    it('should skip when no tsconfig.json exists', async () => {
+      tree.delete('tsconfig.json');
+      addProject('lib1', [], ['tsconfig.lib.json']);
+
+      await expect(migration(tree)).resolves.not.toThrow();
+    });
+
+    it('should skip when no tsconfig.base.json exists', async () => {
+      tree.delete('tsconfig.base.json');
+      writeJson(tree, 'tsconfig.json', {
+        compilerOptions: {
+          composite: true,
+        },
+      });
+      addProject('lib1', [], ['tsconfig.lib.json']);
+
+      await expect(migration(tree)).resolves.not.toThrow();
+
+      // Verify no changes were made
+      const tsconfig = readJson(tree, 'packages/lib1/tsconfig.json');
+      expect(tsconfig).toEqual({
+        compilerOptions: {
+          composite: true,
+        },
+      });
+    });
+
+    it('should skip when not using package manager workspaces', async () => {
+      // Remove package.json workspaces
+      writeJson(tree, 'package.json', {
+        name: 'test-workspace',
+      });
+      addProject('lib1', [], ['tsconfig.lib.json']);
+
+      await expect(migration(tree)).resolves.not.toThrow();
+    });
   });
 });
