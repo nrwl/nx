@@ -113,19 +113,13 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
               }
 
               // Mark skipped tasks (those removed due to failed dependencies)
+              // Skipped tasks are omitted from results, not marked as failed
               val oldTasks = currentGraph.tasks.keys
               val newTasks = newGraph.tasks.keys
               val skippedTasks = oldTasks - newTasks - processedTasks.keys - successfulTasks.keys - failedTasks.keys
               skippedTasks.forEach { skippedTaskId ->
-                results[skippedTaskId] = TaskResult(
-                  taskId = skippedTaskId,
-                  success = false,
-                  terminalOutput = "SKIPPED: Task was skipped due to a failed dependency",
-                  startTime = 0,
-                  endTime = 0
-                )
+                log.debug("Task $skippedTaskId was skipped due to a failed dependency")
                 processedTasks[skippedTaskId] = true
-                failedTasks[skippedTaskId] = true
                 // IMPORTANT: Count down skipped tasks too, or latch will never reach zero
                 completionLatch.countDown()
               }
