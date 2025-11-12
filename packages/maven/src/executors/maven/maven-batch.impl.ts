@@ -109,8 +109,6 @@ export default async function mavenBatchExecutor(
     }
 
     // Prepare batch runner arguments - JSON output to stdout like Gradle
-    const tasksJson = JSON.stringify(tasks).replaceAll("'", '"');
-    const argsJson = args.join(' ').replaceAll("'", '"');
     const workspaceDataDir = join(workspaceRoot, '.nx');
 
     // Add debug logging flags if verbose mode is enabled
@@ -120,11 +118,19 @@ export default async function mavenBatchExecutor(
         '-Dorg.slf4j.simpleLogger.defaultLogLevel=debug -Dorg.slf4j.simpleLogger.log.org.apache.maven=debug ';
     }
 
-    const command = `java ${debugFlags}-jar "${batchRunnerJar}" --workspaceRoot="${workspaceRoot}" --workspaceDataDirectory="${workspaceDataDir}" --tasks='${tasksJson}' --args='${argsJson}'`;
+    const command = `java ${debugFlags}-jar "${batchRunnerJar}" --workspaceRoot="${workspaceRoot}" --workspaceDataDirectory="${workspaceDataDir}"`;
 
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.log(`[Maven Batch] Executing: ${command}`);
     }
+
+    // Create combined payload for stdin with taskGraph, tasks, and args
+    // This avoids command line argument size limits (E2BIG errors)
+    const stdinPayload = {
+      taskGraph,
+      tasks,
+      args,
+    };
 
     let batchResults: string;
     try {
@@ -132,7 +138,7 @@ export default async function mavenBatchExecutor(
       // We capture the result but the user sees Maven output on their terminal
       const buffer = execSync(command, {
         cwd: workspaceRoot,
-        input: JSON.stringify(taskGraph),
+        input: JSON.stringify(stdinPayload),
         windowsHide: true,
         env: process.env,
         maxBuffer: LARGE_BUFFER,

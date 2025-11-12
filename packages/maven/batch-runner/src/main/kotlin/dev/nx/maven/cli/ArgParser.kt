@@ -11,8 +11,6 @@ object ArgParser {
 
     fun parseArgs(args: Array<String>): MavenBatchOptions {
         var workspaceRoot = ""
-        var tasksJson = ""
-        var argsJson = "[]"
         var resultsFile = ""
         var verbose = false
 
@@ -24,18 +22,6 @@ object ArgParser {
                 }
                 args[i].startsWith("--workspaceRoot=") -> {
                     workspaceRoot = args[i].substringAfter("=")
-                }
-                args[i] == "--tasks" && i + 1 < args.size -> {
-                    tasksJson = args[++i]
-                }
-                args[i].startsWith("--tasks=") -> {
-                    tasksJson = args[i].substringAfter("=")
-                }
-                args[i] == "--args" && i + 1 < args.size -> {
-                    argsJson = args[++i]
-                }
-                args[i].startsWith("--args=") -> {
-                    argsJson = args[i].substringAfter("=")
                 }
                 args[i] == "--resultsFile" && i + 1 < args.size -> {
                     resultsFile = args[++i]
@@ -50,25 +36,48 @@ object ArgParser {
             i++
         }
 
-        // Read task graph from stdin
-        val taskGraphJson = System.`in`.bufferedReader().readText()
+        // Trim quotes from arguments if present
+        val cleanWorkspaceRoot = workspaceRoot.trim().trim('"')
+        val cleanResultsFile = resultsFile.trim().trim('"')
 
-        // Parse task graph JSON
-        val taskGraph = if (taskGraphJson.isNotEmpty() && taskGraphJson != "{}") {
+        if (cleanWorkspaceRoot.isBlank()) {
+            throw IllegalArgumentException("workspaceRoot is required")
+        }
+
+        // Read combined payload from stdin (taskGraph, tasks, and args)
+        val stdinJson = System.`in`.bufferedReader().readText()
+
+        // Parse the combined payload
+        val payload = if (stdinJson.isNotEmpty() && stdinJson != "{}") {
             try {
+                val type = object : TypeToken<Map<String, Any>>() {}.type
+                gson.fromJson<Map<String, Any>>(stdinJson, type)
+            } catch (e: Exception) {
+                throw IllegalArgumentException("Failed to parse stdin payload JSON", e)
+            }
+        } else {
+            emptyMap()
+        }
+
+        // Extract and parse taskGraph from payload
+        val taskGraph = if (payload.containsKey("taskGraph")) {
+            try {
+                val taskGraphData = payload["taskGraph"] as? Map<String, Any>
+                    ?: throw IllegalArgumentException("taskGraph is not a map")
+                val taskGraphJson = gson.toJson(taskGraphData)
                 gson.fromJson(taskGraphJson, TaskGraph::class.java)
             } catch (e: Exception) {
-                throw IllegalArgumentException("Failed to parse task graph JSON", e)
+                throw IllegalArgumentException("Failed to parse taskGraph from payload", e)
             }
         } else {
             null
         }
 
-        // Parse tasks JSON
-        val tasksMap = if (tasksJson.isNotEmpty()) {
+        // Extract and parse tasks from payload
+        val tasksMap = if (payload.containsKey("tasks")) {
             try {
-                val type = object : TypeToken<Map<String, Map<String, Any>>>() {}.type
-                val rawTasks: Map<String, Map<String, Any>> = gson.fromJson(tasksJson, type)
+                val rawTasks = payload["tasks"] as? Map<String, Map<String, Any>>
+                    ?: throw IllegalArgumentException("tasks is not a map")
 
                 rawTasks.mapValues { (taskId, taskData) ->
                     MavenBatchTask(
@@ -80,30 +89,25 @@ object ArgParser {
                     )
                 }
             } catch (e: Exception) {
-                throw IllegalArgumentException("Failed to parse tasks JSON: $tasksJson", e)
+                throw IllegalArgumentException("Failed to parse tasks from payload", e)
             }
         } else {
             emptyMap()
         }
 
-        // Parse args JSON
-        val argsList = if (argsJson.isNotEmpty() && argsJson != "[]") {
+        // Extract and parse args from payload
+        val argsList = if (payload.containsKey("args")) {
             try {
+                payload["args"] as? List<*>
+                    ?: throw IllegalArgumentException("args is not a list")
+                val argsJson = gson.toJson(payload["args"])
                 val type = object : TypeToken<List<String>>() {}.type
                 gson.fromJson<List<String>>(argsJson, type)
             } catch (e: Exception) {
-                throw IllegalArgumentException("Failed to parse args JSON: $argsJson", e)
+                throw IllegalArgumentException("Failed to parse args from payload", e)
             }
         } else {
             emptyList()
-        }
-
-        // Trim quotes from arguments if present
-        val cleanWorkspaceRoot = workspaceRoot.trim().trim('"')
-        val cleanResultsFile = resultsFile.trim().trim('"')
-
-        if (cleanWorkspaceRoot.isBlank()) {
-            throw IllegalArgumentException("workspaceRoot is required")
         }
 
         return MavenBatchOptions(
