@@ -241,6 +241,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       collectedDependencies
     );
 
+    let foundRuntimeTsConfig = false;
     for (const runtimeTsConfigFileName of runtimeTsConfigFileNames) {
       const runtimeTsConfigPath = joinPathFragments(
         sourceProjectNode.data.root,
@@ -249,6 +250,8 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       if (!tsconfigExists(tree, tsconfigInfoCaches, runtimeTsConfigPath)) {
         continue;
       }
+
+      foundRuntimeTsConfig = true;
 
       // Update project references for the runtime tsconfig
       updateTsConfigReferences(
@@ -265,13 +268,15 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       );
     }
 
-    // Update project references for the tsconfig.json file
     updateTsConfigReferences(
       tree,
       tsSysFromTree,
       tsconfigInfoCaches,
       sourceProjectTsconfigPath,
-      dependencies,
+      // If we find a runtime tsconfig file, we make sure the external
+      // dependencies are emptied from the tsconfig.json file instead,
+      // otherwise we update the project references for the tsconfig.json file
+      foundRuntimeTsConfig ? [] : dependencies,
       sourceProjectNode.data.root,
       projectRoots,
       changedFiles

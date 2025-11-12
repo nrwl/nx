@@ -127,16 +127,6 @@ describe('syncGenerator()', () => {
         composite: true,
       },
     });
-    // unformatted tsconfig.json to test that it doesn't get picked up as a change
-    tree.write(
-      'packages/b/tsconfig.json',
-      `{
-      "compilerOptions": {
-        "composite": true,
-      },
-            "references": [     { "path": "../a" }
-]}`
-    );
     // unformatted tsconfig.lib.json to test that it doesn't get picked up as a change
     tree.write(
       'packages/b/tsconfig.lib.json',
@@ -147,20 +137,12 @@ describe('syncGenerator()', () => {
             "references": [     { "path": "../a/tsconfig.lib.json" }
 ]}`
     );
-    updateJson(tree, 'packages/c/tsconfig.json', (json) => ({
-      ...json,
-      references: [{ path: '../b' }],
-    }));
     writeJson(tree, 'packages/c/tsconfig.lib.json', {
       compilerOptions: {
         composite: true,
       },
       references: [{ path: '../b/tsconfig.lib.json' }],
     });
-    updateJson(tree, 'packages/d/tsconfig.json', (json) => ({
-      ...json,
-      references: [{ path: '../b' }, { path: '../a' }],
-    }));
     writeJson(tree, 'packages/d/tsconfig.lib.json', {
       compilerOptions: {
         composite: true,
@@ -170,10 +152,6 @@ describe('syncGenerator()', () => {
         { path: '../a/tsconfig.lib.json' },
       ],
     });
-    updateJson(tree, 'packages/e/tsconfig.json', (json) => ({
-      ...json,
-      references: [{ path: '../d' }],
-    }));
     writeJson(tree, 'packages/e/tsconfig.lib.json', {
       compilerOptions: {
         composite: true,
@@ -219,13 +197,12 @@ describe('syncGenerator()', () => {
     );
     expect((result as any).outOfSyncDetails).toStrictEqual([
       'tsconfig.json:',
-      '  - Missing references: packages/a/tsconfig.json, packages/b/tsconfig.json',
+      '  - Missing references: packages/a/tsconfig.json, packages/b/tsconfig.json', // there's no runtime tsconfig file, so there should be external references
       '  - Stale references: packages/c/tsconfig.json',
       'packages/b/tsconfig.lib.json:',
       '  - Missing references: packages/a/tsconfig.json',
       'packages/b/tsconfig.json:',
-      '  - Missing references: packages/a/tsconfig.json',
-      '  - Stale references: packages/c/tsconfig.json',
+      '  - Stale references: packages/c/tsconfig.json', // there's a runtime tsconfig file, so there shouldn't be any external references
     ]);
   });
 
@@ -810,8 +787,6 @@ describe('syncGenerator()', () => {
         '  - Missing references: packages/a/tsconfig.json, packages/b/tsconfig.json',
         'packages/b/tsconfig.lib.json:',
         '  - Duplicate references: packages/a/tsconfig.lib.json',
-        'packages/b/tsconfig.json:',
-        '  - Missing references: packages/a/tsconfig.json',
       ]);
       const { references } = readJson(tree, 'packages/b/tsconfig.lib.json');
       expect(references).toStrictEqual([{ path: '../a/tsconfig.lib.json' }]);
@@ -900,14 +875,6 @@ describe('syncGenerator()', () => {
 
           await syncGenerator(tree);
 
-          expect(readJson(tree, 'packages/b/tsconfig.json').references)
-            .toMatchInlineSnapshot(`
-                    [
-                      {
-                        "path": "../a",
-                      },
-                    ]
-                `);
           expect(
             readJson(tree, `packages/b/${runtimeTsConfigFileName}`).references
           ).toMatchInlineSnapshot(`
@@ -939,14 +906,6 @@ describe('syncGenerator()', () => {
 
         await syncGenerator(tree);
 
-        expect(readJson(tree, 'packages/b/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a",
-            },
-          ]
-        `);
         expect(readJson(tree, 'packages/b/tsconfig.cjs.json').references)
           .toMatchInlineSnapshot(`
           [
@@ -984,14 +943,9 @@ describe('syncGenerator()', () => {
         await syncGenerator(tree);
 
         // b
-        expect(readJson(tree, 'packages/b/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/b/tsconfig.json').references
+        ).toBeUndefined();
         expect(readJson(tree, 'packages/b/tsconfig.build.json').references)
           .toMatchInlineSnapshot(`
           [
@@ -1001,14 +955,9 @@ describe('syncGenerator()', () => {
           ]
         `);
         // c
-        expect(readJson(tree, 'packages/c/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../b",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/c/tsconfig.json').references
+        ).toBeUndefined();
         expect(readJson(tree, 'packages/c/tsconfig.cjs.json').references)
           .toMatchInlineSnapshot(`
           [
@@ -1026,17 +975,9 @@ describe('syncGenerator()', () => {
           ]
         `);
         // d
-        expect(readJson(tree, 'packages/d/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a",
-            },
-            {
-              "path": "../b",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/d/tsconfig.json').references
+        ).toBeUndefined();
         expect(readJson(tree, 'packages/d/tsconfig.runtime.json').references)
           .toMatchInlineSnapshot(`
           [
@@ -1049,14 +990,9 @@ describe('syncGenerator()', () => {
           ]
         `);
         // e
-        expect(readJson(tree, 'packages/e/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../c",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/e/tsconfig.json').references
+        ).toBeUndefined();
         expect(readJson(tree, 'packages/e/tsconfig.cjs.json').references)
           .toMatchInlineSnapshot(`
           [
@@ -1074,14 +1010,9 @@ describe('syncGenerator()', () => {
           ]
         `);
         // f
-        expect(readJson(tree, 'packages/f/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../c",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/f/tsconfig.json').references
+        ).toBeUndefined();
         // in the case of "c", it will reference the first runtime tsconfig file it finds because there's no `packages/c/tsconfig.runtime.json`
         expect(readJson(tree, 'packages/f/tsconfig.runtime.json').references)
           .toMatchInlineSnapshot(`
@@ -1131,14 +1062,9 @@ describe('syncGenerator()', () => {
           expect(
             readJson(tree, `packages/a/${runtimeTsConfigFileName}`).references
           ).toBeUndefined();
-          expect(readJson(tree, 'packages/b/tsconfig.json').references)
-            .toMatchInlineSnapshot(`
-                      [
-                        {
-                          "path": "../a",
-                        },
-                      ]
-                  `);
+          expect(
+            readJson(tree, 'packages/b/tsconfig.json').references
+          ).toBeUndefined();
           expect(
             readJson(tree, `packages/b/${runtimeTsConfigFileName}`).references
           ).toMatchInlineSnapshot(`
@@ -1148,17 +1074,9 @@ describe('syncGenerator()', () => {
                         },
                       ]
                   `);
-          expect(readJson(tree, 'packages/c/tsconfig.json').references)
-            .toMatchInlineSnapshot(`
-                      [
-                        {
-                          "path": "../a",
-                        },
-                        {
-                          "path": "../b",
-                        },
-                      ]
-                  `);
+          expect(
+            readJson(tree, 'packages/c/tsconfig.json').references
+          ).toBeUndefined();
           expect(
             readJson(tree, `packages/c/${runtimeTsConfigFileName}`).references
           ).toMatchInlineSnapshot(`
@@ -1171,17 +1089,9 @@ describe('syncGenerator()', () => {
                         },
                       ]
                   `);
-          expect(readJson(tree, 'packages/d/tsconfig.json').references)
-            .toMatchInlineSnapshot(`
-                      [
-                        {
-                          "path": "../a",
-                        },
-                        {
-                          "path": "../b",
-                        },
-                      ]
-                  `);
+          expect(
+            readJson(tree, 'packages/d/tsconfig.json').references
+          ).toBeUndefined();
           expect(
             readJson(tree, `packages/d/${runtimeTsConfigFileName}`).references
           ).toMatchInlineSnapshot(`
@@ -1194,20 +1104,9 @@ describe('syncGenerator()', () => {
                         },
                       ]
                   `);
-          expect(readJson(tree, 'packages/e/tsconfig.json').references)
-            .toMatchInlineSnapshot(`
-                      [
-                        {
-                          "path": "../a",
-                        },
-                        {
-                          "path": "../b",
-                        },
-                        {
-                          "path": "../d",
-                        },
-                      ]
-                  `);
+          expect(
+            readJson(tree, 'packages/e/tsconfig.json').references
+          ).toBeUndefined();
           expect(
             readJson(tree, `packages/e/${runtimeTsConfigFileName}`).references
           ).toMatchInlineSnapshot(`
@@ -1263,15 +1162,10 @@ describe('syncGenerator()', () => {
 
         await syncGenerator(tree);
 
-        // assert that tsconfig.json and tsconfig.lib.json files have been updated
-        expect(readJson(tree, 'packages/b/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a",
-            },
-          ]
-        `);
+        // assert that tsconfig.json is untouched and tsconfig.lib.json was updated
+        expect(
+          readJson(tree, 'packages/b/tsconfig.json').references
+        ).toBeUndefined();
         expect(readJson(tree, 'packages/b/tsconfig.lib.json').references)
           .toMatchInlineSnapshot(`
           [
@@ -1320,14 +1214,9 @@ describe('syncGenerator()', () => {
 
         await syncGenerator(tree);
 
-        expect(readJson(tree, 'packages/b/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-                  [
-                    {
-                      "path": "../a",
-                    },
-                  ]
-              `);
+        expect(
+          readJson(tree, 'packages/b/tsconfig.json').references
+        ).toBeUndefined();
         expect(readJson(tree, 'packages/b/tsconfig.custom.json').references)
           .toMatchInlineSnapshot(`
                   [
@@ -1370,14 +1259,9 @@ describe('syncGenerator()', () => {
 
         await syncGenerator(tree);
 
-        expect(readJson(tree, 'packages/b/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/b/tsconfig.json').references
+        ).toBeUndefined();
         expect(readJson(tree, 'packages/b/tsconfig.custom-cjs.json').references)
           .toMatchInlineSnapshot(`
           [
@@ -1438,14 +1322,9 @@ describe('syncGenerator()', () => {
         await syncGenerator(tree);
 
         // b
-        expect(readJson(tree, 'packages/b/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/b/tsconfig.json').references
+        ).toBeUndefined();
         expect(
           readJson(tree, 'packages/b/tsconfig.custom-build.json').references
         ).toMatchInlineSnapshot(`
@@ -1456,14 +1335,9 @@ describe('syncGenerator()', () => {
           ]
         `);
         // c
-        expect(readJson(tree, 'packages/c/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../b",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/c/tsconfig.json').references
+        ).toBeUndefined();
         expect(readJson(tree, 'packages/c/tsconfig.custom-cjs.json').references)
           .toMatchInlineSnapshot(`
           [
@@ -1481,17 +1355,9 @@ describe('syncGenerator()', () => {
           ]
         `);
         // d
-        expect(readJson(tree, 'packages/d/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a",
-            },
-            {
-              "path": "../b",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/d/tsconfig.json').references
+        ).toBeUndefined();
         expect(
           readJson(tree, 'packages/d/tsconfig.custom-runtime.json').references
         ).toMatchInlineSnapshot(`
@@ -1505,14 +1371,9 @@ describe('syncGenerator()', () => {
           ]
         `);
         // e
-        expect(readJson(tree, 'packages/e/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../c",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/e/tsconfig.json').references
+        ).toBeUndefined();
         expect(readJson(tree, 'packages/e/tsconfig.custom-cjs.json').references)
           .toMatchInlineSnapshot(`
           [
@@ -1530,14 +1391,9 @@ describe('syncGenerator()', () => {
           ]
         `);
         // f
-        expect(readJson(tree, 'packages/f/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../c",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/f/tsconfig.json').references
+        ).toBeUndefined();
         // in the case of "c", it will reference the first runtime tsconfig file it finds because there's no `packages/c/tsconfig.runtime.json`
         expect(
           readJson(tree, 'packages/f/tsconfig.custom-runtime.json').references
@@ -1586,14 +1442,9 @@ describe('syncGenerator()', () => {
         expect(
           readJson(tree, 'packages/a/tsconfig.custom.json').references
         ).toBeUndefined();
-        expect(readJson(tree, 'packages/b/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/b/tsconfig.json').references
+        ).toBeUndefined();
         expect(readJson(tree, 'packages/b/tsconfig.custom.json').references)
           .toMatchInlineSnapshot(`
           [
@@ -1602,14 +1453,9 @@ describe('syncGenerator()', () => {
             },
           ]
         `);
-        expect(readJson(tree, 'packages/c/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../b",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/c/tsconfig.json').references
+        ).toBeUndefined();
         expect(readJson(tree, 'packages/c/tsconfig.custom.json').references)
           .toMatchInlineSnapshot(`
           [
@@ -1618,17 +1464,9 @@ describe('syncGenerator()', () => {
             },
           ]
         `);
-        expect(readJson(tree, 'packages/d/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a",
-            },
-            {
-              "path": "../b",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/d/tsconfig.json').references
+        ).toBeUndefined();
         expect(readJson(tree, 'packages/d/tsconfig.custom.json').references)
           .toMatchInlineSnapshot(`
           [
@@ -1640,14 +1478,9 @@ describe('syncGenerator()', () => {
             },
           ]
         `);
-        expect(readJson(tree, 'packages/e/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../d",
-            },
-          ]
-        `);
+        expect(
+          readJson(tree, 'packages/e/tsconfig.json').references
+        ).toBeUndefined();
         expect(readJson(tree, 'packages/e/tsconfig.custom.json').references)
           .toMatchInlineSnapshot(`
           [
@@ -1703,15 +1536,10 @@ describe('syncGenerator()', () => {
 
         await syncGenerator(tree);
 
-        // assert that tsconfig.json and tsconfig.custom.json files have been updated
-        expect(readJson(tree, 'packages/b/tsconfig.json').references)
-          .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a",
-            },
-          ]
-        `);
+        // assert that tsconfig.json is untouched and tsconfig.custom.json was updated
+        expect(
+          readJson(tree, 'packages/b/tsconfig.json').references
+        ).toBeUndefined();
         expect(readJson(tree, 'packages/b/tsconfig.custom.json').references)
           .toMatchInlineSnapshot(`
           [
