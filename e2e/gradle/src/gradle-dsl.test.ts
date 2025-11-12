@@ -159,7 +159,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\nnx {\n  set("config") {\n    set("level1") {\n      set("level2") {\n        set("value", "deep")\n      }\n    }\n  }\n}`
-              : `\nnx(project) {\n  it.set 'config', {\n    it.set 'level1', {\n      it.set 'level2', {\n        set 'value', 'deep'\n      }\n    }\n  }\n}`;
+              : `\nnx(project) {\n  it.set 'config', {\n    it.set 'level1', {\n      it.set 'level2', {\n        it.set 'value', 'deep'\n      }\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -281,8 +281,8 @@ describe('Gradle DSL - nx {} configuration', () => {
         it('should handle nested objects in target config', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\ntasks.register<DefaultTask>("deploy") {\n  nx {\n    set("configurations") {\n      set("production", true)\n      set("environment", "prod")\n    }\n  }\n}`
-              : `\ntasks.register('deploy') {\n  nx(it) {\n    it.set 'configurations', {\n      it.set 'production', true\n      it.set 'environment', 'prod'\n    }\n  }\n}`;
+              ? `\ntasks.register<DefaultTask>("deploy") {\n  nx {\n    set("configurations") {\n      set("production") {\n        set("environment", true)\n      }\n    }\n  }\n}`
+              : `\ntasks.register('deploy') {\n  nx(it) {\n    it.set 'configurations', {\n      it.set 'production', {\n        it.set 'environment', true\n      }\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -292,15 +292,16 @@ describe('Gradle DSL - nx {} configuration', () => {
           runCLI('reset');
           const config = JSON.parse(runCLI('show project app --json'));
 
-          expect(config.targets.deploy.configurations.production).toBe(true);
-          expect(config.targets.deploy.configurations.environment).toBe('prod');
+          expect(
+            config.targets.deploy.configurations.production.environment
+          ).toBe(true);
         });
 
         it('should handle multiple properties on target', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\ntasks.register<DefaultTask>("e2e") {\n  nx {\n    mergedDependsOn.add("^build")\n    set("cache", false)\n    array("outputs", "coverage/**/*", "reports/**/*")\n    set("configurations") {\n      set("timeout", 3600)\n    }\n  }\n}`
-              : `\ntasks.register('e2e') {\n  nx(it) {\n    mergedDependsOn.add('^build')\n    it.set 'cache', false\n    it.array 'outputs', 'coverage/**/*', 'reports/**/*'\n    it.set 'configurations', {\n      it.set 'timeout', 3600\n    }\n  }\n}`;
+              ? `\ntasks.register<DefaultTask>("e2e") {\n  nx {\n    mergedDependsOn.add("^build")\n    set("cache", false)\n    array("outputs", "coverage/**/*", "reports/**/*")\n    set("configurations") {\n      set("debug") {\n        set("timeout", 3600)\n      }\n    }\n  }\n}`
+              : `\ntasks.register('e2e') {\n  nx(it) {\n    mergedDependsOn.add('^build')\n    it.set 'cache', false\n    it.array 'outputs', 'coverage/**/*', 'reports/**/*'\n    it.set 'configurations', {\n      it.set 'debug', {\n        it.set 'timeout', 3600\n      }\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -314,7 +315,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           expect(config.targets.e2e.cache).toBe(false);
           expect(config.targets.e2e.outputs).toContain('coverage/**/*');
           expect(config.targets.e2e.outputs).toContain('reports/**/*');
-          expect(config.targets.e2e.configurations.timeout).toBe(3600);
+          expect(config.targets.e2e.configurations.debug.timeout).toBe(3600);
         });
 
         it('should configure multiple tasks', () => {
@@ -342,8 +343,8 @@ describe('Gradle DSL - nx {} configuration', () => {
         it('should handle both project and task-level config', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\nnx {\n  set("type", "integrated-app")\n  array("tags", "api", "backend")\n}\n\ntasks.register<DefaultTask>("package") {\n  nx {\n    set("cache", false)\n    set("configurations") {\n      set("profile", "production")\n    }\n  }\n}`
-              : `\nnx(project) {\n  it.set 'type', 'integrated-app'\n  it.array 'tags', 'api', 'backend'\n}\n\ntasks.register('package') {\n  nx(it) {\n    it.set 'cache', false\n    it.set 'configurations', {\n      it.set 'profile', 'production'\n    }\n  }\n}`;
+              ? `\nnx {\n  set("type", "integrated-app")\n  array("tags", "api", "backend")\n}\n\ntasks.register<DefaultTask>("package") {\n  nx {\n    set("cache", false)\n    array("inputs", "default")\n  }\n}`
+              : `\nnx(project) {\n  it.set 'type', 'integrated-app'\n  it.array 'tags', 'api', 'backend'\n}\n\ntasks.register('package') {\n  nx(it) {\n    it.set 'cache', false\n    it.array 'inputs', 'default'\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -359,16 +360,14 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           // Task-level config
           expect(config.targets.package.cache).toBe(false);
-          expect(config.targets.package.configurations.profile).toBe(
-            'production'
-          );
+          expect(config.targets.package.inputs).toContain('default');
         });
 
         it('should handle complex project with multiple configured tasks', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\nnx {\n  set("type", "complex-app")\n  array("tags", "monorepo", "service")\n  set("generators") {\n    set("owner", "platform")\n    set("tier", 1)\n  }\n}\n\ntasks.register<DefaultTask>("compile") {\n  nx {\n    mergedDependsOn.add("^build")\n    mergedDependsOn.add("app:test")\n    set("cache", true)\n  }\n}\n\ntasks.register<DefaultTask>("validate") {\n  nx {\n    set("cache", false)\n    array("inputs", "src/**/*", "test/**/*")\n    set("configurations") {\n      set("parallel", true)\n    }\n  }\n}`
-              : `\nnx(project) {\n  it.set 'type', 'complex-app'\n  it.array 'tags', 'monorepo', 'service'\n  it.set 'generators', {\n    it.set 'owner', 'platform'\n    it.set 'tier', 1\n  }\n}\n\ntasks.register('compile') {\n  nx(it) {\n    mergedDependsOn.add('^build')\n    mergedDependsOn.add('app:test')\n    it.set 'cache', true\n  }\n}\n\ntasks.register('validate') {\n  nx(it) {\n    it.set 'cache', false\n    it.array 'inputs', 'src/**/*', 'test/**/*'\n    it.set 'configurations', {\n      it.set 'parallel', true\n    }\n  }\n}`;
+              ? `\nnx {\n  set("type", "complex-app")\n  array("tags", "monorepo", "service")\n  set("generators") {\n    set("owner", "platform")\n    set("tier", 1)\n  }\n}\n\ntasks.register<DefaultTask>("compile") {\n  nx {\n    mergedDependsOn.add("^build")\n    mergedDependsOn.add("app:test")\n    set("cache", true)\n  }\n}\n\ntasks.register<DefaultTask>("validate") {\n  nx {\n    set("cache", false)\n    array("inputs", "src/**/*", "test/**/*")\n    set("configurations") {\n      set("debug") {\n        set("parallel", true)\n      }\n    }\n  }\n}`
+              : `\nnx(project) {\n  it.set 'type', 'complex-app'\n  it.array 'tags', 'monorepo', 'service'\n  it.set 'generators', {\n    it.set 'owner', 'platform'\n    it.set 'tier', 1\n  }\n}\n\ntasks.register('compile') {\n  nx(it) {\n    mergedDependsOn.add('^build')\n    mergedDependsOn.add('app:test')\n    it.set 'cache', true\n  }\n}\n\ntasks.register('validate') {\n  nx(it) {\n    it.set 'cache', false\n    it.array 'inputs', 'src/**/*', 'test/**/*'\n    it.set 'configurations', {\n      it.set 'debug', {\n        it.set 'parallel', true\n      }\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -393,7 +392,9 @@ describe('Gradle DSL - nx {} configuration', () => {
           expect(config.targets.validate.cache).toBe(false);
           expect(config.targets.validate.inputs).toContain('src/**/*');
           expect(config.targets.validate.inputs).toContain('test/**/*');
-          expect(config.targets.validate.configurations.parallel).toBe(true);
+          expect(config.targets.validate.configurations.debug.parallel).toBe(
+            true
+          );
         });
 
         it('should configure multiple projects independently', () => {
