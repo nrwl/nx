@@ -18,19 +18,6 @@ impl Default for CollectorConfig {
     }
 }
 
-/// Error types specific to metrics collection
-#[derive(Debug, thiserror::Error)]
-pub enum MetricsError {
-    #[error("Collection not started")]
-    CollectionNotStarted,
-    #[error("Collection already started")]
-    CollectionAlreadyStarted,
-    #[error("System information error: {0}")]
-    SystemError(String),
-    #[error("Configuration error: {0}")]
-    ConfigError(String),
-}
-
 /// Registration data for individual tasks with multiple processes
 #[derive(Debug, Clone)]
 pub struct IndividualTaskRegistration {
@@ -77,17 +64,6 @@ pub struct ProcessMetadata {
     pub alias: Option<String>,
 }
 
-/// System metrics (dynamic, changes every collection)
-#[napi(object)]
-#[derive(Debug, Clone)]
-pub struct SystemMetrics {
-    pub cpu: f64,
-    pub memory: i64,
-    pub available_memory: i64,
-    pub swap_used: i64,
-    pub swap_total: i64,
-}
-
 /// Process metrics (dynamic, changes every collection)
 #[napi(object)]
 #[derive(Debug, Clone, Copy)]
@@ -119,7 +95,6 @@ pub struct BatchMetricsSnapshot {
 #[derive(Debug, Clone)]
 pub struct ProcessMetricsSnapshot {
     pub timestamp: i64,
-    pub system: SystemMetrics,
     pub main_cli: Option<ProcessTreeMetrics>,
     pub daemon: Option<ProcessTreeMetrics>,
     pub tasks: HashMap<String, Vec<ProcessMetrics>>,
