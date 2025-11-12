@@ -29,6 +29,10 @@
       "types": "./index.d.ts",
       "default": "./index.js"
     },
+    "./executors/*/schema.json": "./src/executors/*/schema.json",
+    "./executors/*/schema": "./src/executors/*/schema.d.ts",
+    "./generators/*/schema.json": "./src/generators/*/schema.json",
+    "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./generators": {
       "types": "./generators.d.ts",
       "default": "./generators.js"
