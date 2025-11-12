@@ -1867,7 +1867,10 @@ export async function runMigration() {
       stdio: ['inherit', 'inherit', 'inherit'],
     });
   };
-  if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
+  if (
+    process.env.NX_USE_LOCAL !== 'true' &&
+    process.env.NX_MIGRATE_USE_LOCAL === undefined
+  ) {
     const p = await nxCliPath();
     if (p === null) {
       runLocalMigrate();
