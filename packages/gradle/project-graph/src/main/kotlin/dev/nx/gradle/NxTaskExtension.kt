@@ -100,15 +100,6 @@ open class NxTaskExtension @Inject constructor(objects: ObjectFactory) {
 
 /**
  * Type-safe accessor for the nx extension in Kotlin DSL.
- *
- * Example:
- * ```
- * tasks.named("test") {
- *   nx {
- *     dependsOn.add("^build")
- *   }
- * }
- * ```
  */
 fun Task.nx(configure: NxTaskExtension.() -> Unit) {
   val extension =

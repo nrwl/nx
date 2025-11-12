@@ -1,6 +1,7 @@
 import {
   cleanupProject,
   newProject,
+  readFile,
   runCLI,
   uniq,
   updateFile,
@@ -13,12 +14,21 @@ describe('Gradle DSL - nx {} configuration', () => {
     ({ type }: { type: 'kotlin' | 'groovy' }) => {
       let gradleProjectName: string;
       const buildFileExt = type === 'kotlin' ? '.kts' : '';
+      let cleanFileContent = '';
 
       beforeAll(() => {
         gradleProjectName = uniq('gradle-dsl-test');
         newProject({ packages: [] });
         createGradleProject(gradleProjectName, type);
         runCLI(`add @nx/gradle`);
+      });
+
+      beforeEach(() => {
+        cleanFileContent = readFile(`app/build.gradle${buildFileExt}`);
+      });
+
+      afterEach(() => {
+        updateFile(`app/build.gradle${buildFileExt}`, cleanFileContent);
       });
 
       afterAll(() => cleanupProject());
@@ -32,7 +42,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -49,7 +59,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -66,7 +76,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -83,7 +93,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -118,7 +128,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -143,7 +153,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -160,7 +170,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -177,6 +187,11 @@ describe('Gradle DSL - nx {} configuration', () => {
 
       describe('Task-level DSL', () => {
         it('should handle dependsOn property', () => {
+          console.log(
+            'task-level buildfile content',
+            readFile(`app/build.gradle${buildFileExt}`)
+          );
+
           const dslContent =
             type === 'kotlin'
               ? `\ntasks.register<DefaultTask>("customTask") {\n  nx {\n    dependsOn.add("^build")\n    dependsOn.add("app:test")\n  }\n}`
@@ -184,7 +199,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -204,7 +219,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -223,7 +238,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -243,7 +258,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -282,7 +297,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -304,7 +319,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -329,7 +344,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -362,7 +377,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + appDslContent
+            (content) => cleanFileContent + appDslContent
           );
 
           // Configure list project
