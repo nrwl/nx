@@ -45,6 +45,9 @@ export function updateTsconfigFiles(tree: Tree, options: NormalizedSchema) {
       compilerOptions.emitDecoratorMetadata = false;
     }
   }
+  if (angularMajorVersion >= 21) {
+    compilerOptions.moduleResolution = 'bundler';
+  }
   if (angularMajorVersion >= 20) {
     compilerOptions.module = 'preserve';
   } else {

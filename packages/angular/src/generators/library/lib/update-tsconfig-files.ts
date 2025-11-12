@@ -44,6 +44,9 @@ export function updateTsConfigFiles(
   };
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  if (angularMajorVersion >= 21) {
+    compilerOptions.moduleResolution = 'bundler';
+  }
   if (angularMajorVersion >= 20) {
     compilerOptions.module = 'preserve';
   } else {
