@@ -33,7 +33,7 @@
     "@rspack/dev-server": "catalog:rspack",
     "@rspack/plugin-react-refresh": "catalog:rspack",
     "autoprefixer": "^10.4.9",
-    "browserslist": "^4.21.4",
+    "browserslist": "^4.26.0",
     "css-loader": "^6.4.0",
     "enquirer": "catalog:",
     "express": "^4.21.2",
