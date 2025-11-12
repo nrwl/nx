@@ -82,8 +82,6 @@ open class NxProjectExtension @Inject constructor(objects: ObjectFactory) {
 fun Project.nx(configure: NxProjectExtension.() -> Unit) {
   val extension =
       extensions.findByType(NxProjectExtension::class.java)
-          ?: throw IllegalStateException(
-              "NxProjectExtension not found on project '${this.name}'. " +
-                  "Make sure the dev.nx.gradle.project-graph plugin is applied.")
+          ?: extensions.create("nx", NxProjectExtension::class.java, objects)
   configure(extension)
 }

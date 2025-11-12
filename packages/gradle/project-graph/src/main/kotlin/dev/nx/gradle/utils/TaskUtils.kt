@@ -48,9 +48,11 @@ fun processTask(
   // process dependsOn
   val gradleDependsOn = getDependsOnForTask(dependsOnTasks, task, dependencies, targetNameOverrides)
 
-  // Check for nx extension and merge nx.dependsOn with Gradle dependencies
+  // Check for nx extension and merge nx.mergedDependsOn with Gradle dependencies
   val nxExtension = task.extensions.findByType(NxTaskExtension::class.java)
-  val nxDependsOn = nxExtension?.dependsOn?.getOrNull()
+  val nxDependsOn = nxExtension?.mergedDependsOn?.getOrNull()
+
+  logger.info("processing nxDependsOn ${nxDependsOn}")
 
   val combinedDependsOn =
       when {

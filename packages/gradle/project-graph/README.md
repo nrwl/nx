@@ -77,6 +77,8 @@ Configure project metadata such as name, tags, and custom properties:
 **Kotlin (build.gradle.kts):**
 
 ```kotlin
+import dev.nx.gradle.nx
+
 nx {
   set("name", "my-custom-name")
   array("tags", "api", "backend")
@@ -86,6 +88,8 @@ nx {
 **Groovy (build.gradle):**
 
 ```groovy
+import static dev.nx.gradle.NxProjectExtensionKt.nx
+
 nx {
   set 'name', 'my-custom-name'
   array 'tags', 'api', 'backend'
@@ -99,9 +103,11 @@ Configure Nx target-specific behavior on individual tasks:
 **Kotlin (build.gradle.kts):**
 
 ```kotlin
+import dev.nx.gradle.nx
+
 tasks.named("integrationTest") {
   nx {
-    dependsOn.addAll("^build", "app:lint")  // Merges with Gradle dependencies
+    mergedDependsOn("^build", "app:lint")
     set("cache", true)
   }
 }
@@ -110,9 +116,11 @@ tasks.named("integrationTest") {
 **Groovy (build.gradle):**
 
 ```groovy
+import static dev.nx.gradle.NxTaskExtensionKt.nx
+
 tasks.named('integrationTest') {
   nx {
-    dependsOn.addAll('^build', 'app:lint')  // Merges with Gradle dependencies
+    mergedDependsOn('^build', 'app:lint')
     set 'cache', true
   }
 }

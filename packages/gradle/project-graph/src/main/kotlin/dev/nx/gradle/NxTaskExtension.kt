@@ -15,14 +15,14 @@ import org.gradle.api.provider.MapProperty
  * Extension for Gradle tasks to declare Nx-specific task configuration.
  *
  * This extension allows Gradle tasks to specify additional Nx metadata including:
- * - Task dependencies (via dependsOn property)
+ * - Task dependencies (via mergedDependsOn property)
  * - Any Nx target properties (via JSON DSL)
  *
  * Example usage in Kotlin DSL:
  * ```
  * tasks.named("integrationTest") {
  *   nx {
- *     dependsOn.addAll("^build", "app:lint")
+ *     mergedDependsOn("^build", "app:lint")
  *     set("cache", false)
  *     array("tags", "integration", "slow")
  *     set("metadata") {
@@ -37,7 +37,7 @@ import org.gradle.api.provider.MapProperty
  * ```
  * tasks.named('integrationTest') {
  *   nx {
- *     dependsOn.addAll('^build', 'app:lint')
+ *     mergedDependsOn('^build', 'app:lint')
  *     set 'cache', false
  *     array 'tags', 'integration', 'slow'
  *   }
@@ -48,9 +48,9 @@ open class NxTaskExtension @Inject constructor(objects: ObjectFactory) {
   /**
    * List of Nx task dependencies for this Gradle task.
    *
-   * **IMPORTANT: This property merges with Gradle-detected dependencies.** Using this ListProperty
-   * will ADD to dependencies that Gradle already detected, whereas using `set("dependsOn", ...)` in
-   * the JSON DSL will REPLACE all dependencies.
+   * **IMPORTANT: This property merges with Gradle-detected dependencies.** Using this property will
+   * ADD to dependencies that Gradle already detected, whereas using `set("dependsOn", ...)` in the
+   * JSON DSL will REPLACE all dependencies.
    *
    * Supports Nx dependency patterns such as:
    * - "^build" - depends on the 'build' target of all upstream projects
@@ -61,15 +61,31 @@ open class NxTaskExtension @Inject constructor(objects: ObjectFactory) {
    * ```kotlin
    * tasks.named("integrationTest") {
    *   nx {
-   *     dependsOn.addAll("^build", "app:lint")  // Adds to Gradle dependencies
+   *     mergedDependsOn("^build", "app:lint")
    *   }
    * }
    * ```
    */
-  val dependsOn: ListProperty<String> = objects.listProperty(String::class.java)
+  val mergedDependsOn: ListProperty<String> = objects.listProperty(String::class.java)
 
   /** JSON root for task-level Nx config */
   val json: MapProperty<String, Any?> = objects.mapProperty(String::class.java, Any::class.java)
+
+  // DSL methods for mergedDependsOn
+
+  /**
+   * Add Nx task dependencies using method syntax (no import needed).
+   *
+   * @param values Nx dependency patterns (e.g., "^build", "app:lint")
+   */
+  fun mergedDependsOn(vararg values: String) = mergedDependsOn.addAll(*values)
+
+  /**
+   * Add Nx task dependencies from an iterable.
+   *
+   * @param values Collection of Nx dependency patterns
+   */
+  fun mergedDependsOn(values: Iterable<String>) = mergedDependsOn.addAll(values)
 
   // DSL methods for building JSON config
 
@@ -102,8 +118,6 @@ open class NxTaskExtension @Inject constructor(objects: ObjectFactory) {
 fun Task.nx(configure: NxTaskExtension.() -> Unit) {
   val extension =
       extensions.findByType(NxTaskExtension::class.java)
-          ?: throw IllegalStateException(
-              "NxTaskExtension not found on task '${this.name}'. " +
-                  "Make sure the dev.nx.gradle.project-graph plugin is applied.")
+          ?: extensions.create("nx", NxTaskExtension::class.java, project.objects)
   configure(extension)
 }

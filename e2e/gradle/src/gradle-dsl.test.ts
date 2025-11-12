@@ -21,6 +21,16 @@ describe('Gradle DSL - nx {} configuration', () => {
         newProject({ packages: [] });
         createGradleProject(gradleProjectName, type);
         runCLI(`add @nx/gradle`);
+
+        // Add import statement to the build file once
+        const importStatement =
+          type === 'kotlin'
+            ? `import dev.nx.gradle.nx\n\n`
+            : `import static dev.nx.gradle.NxProjectExtensionKt.nx\nimport static dev.nx.gradle.NxTaskExtensionKt.nx\n\n`;
+        updateFile(
+          `app/build.gradle${buildFileExt}`,
+          (content) => importStatement + content
+        );
       });
 
       beforeEach(() => {
@@ -186,7 +196,7 @@ describe('Gradle DSL - nx {} configuration', () => {
       });
 
       describe('Task-level DSL', () => {
-        it('should handle dependsOn property', () => {
+        it('should handle mergedDependsOn with method syntax', () => {
           console.log(
             'task-level buildfile content',
             readFile(`app/build.gradle${buildFileExt}`)
@@ -194,8 +204,8 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           const dslContent =
             type === 'kotlin'
-              ? `\ntasks.register<DefaultTask>("customTask") {\n  nx {\n    dependsOn.add("^build")\n    dependsOn.add("app:test")\n  }\n}`
-              : `\ntasks.register('customTask') {\n  nx {\n    dependsOn.add('^build')\n    dependsOn.add('app:test')\n  }\n}`;
+              ? `tasks.register<DefaultTask>("customTask") {\n  nx {\n    mergedDependsOn("^build", "app:test")\n  }\n}`
+              : `tasks.register('customTask') {\n  nx {\n    mergedDependsOn('^build', 'app:test')\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -209,6 +219,24 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           expect(config.targets.customTask.dependsOn).toContain('^build');
           expect(config.targets.customTask.dependsOn).toContain('app:test');
+        });
+
+        it('should handle mergedDependsOn with property syntax', () => {
+          const dslContent =
+            type === 'kotlin'
+              ? `tasks.register<DefaultTask>("customTask2") {\n  nx {\n    mergedDependsOn.add("^build")\n    mergedDependsOn.add("app:test")\n  }\n}`
+              : `tasks.register('customTask2') {\n  nx {\n    mergedDependsOn.add('^build')\n    mergedDependsOn.add('app:test')\n  }\n}`;
+
+          updateFile(
+            `app/build.gradle${buildFileExt}`,
+            (content) => cleanFileContent + dslContent
+          );
+
+          runCLI('reset');
+          const config = JSON.parse(runCLI('show project app --json'));
+
+          expect(config.targets.customTask2.dependsOn).toContain('^build');
+          expect(config.targets.customTask2.dependsOn).toContain('app:test');
         });
 
         it('should handle scalar values on targets', () => {
@@ -271,12 +299,12 @@ describe('Gradle DSL - nx {} configuration', () => {
         it('should handle multiple properties on target', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\ntasks.register<DefaultTask>("e2e") {\n  nx {\n    dependsOn.add("^build")\n    set("cache", false)\n    array("outputs", "coverage/**/*", "reports/**/*")\n    set("configurations") {\n      set("timeout", 3600)\n    }\n  }\n}`
-              : `\ntasks.register('e2e') {\n  nx {\n    dependsOn.add('^build')\n    set 'cache', false\n    array 'outputs', 'coverage/**/*', 'reports/**/*'\n    set 'configurations', {\n      set 'timeout', 3600\n    }\n  }\n}`;
+              ? `\ntasks.register<DefaultTask>("e2e") {\n  nx {\n    mergedDependsOn.add("^build")\n    set("cache", false)\n    array("outputs", "coverage/**/*", "reports/**/*")\n    set("configurations") {\n      set("timeout", 3600)\n    }\n  }\n}`
+              : `\ntasks.register('e2e') {\n  nx {\n    mergedDependsOn.add('^build')\n    set 'cache', false\n    array 'outputs', 'coverage/**/*', 'reports/**/*'\n    set 'configurations', {\n      set 'timeout', 3600\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
-            (content) => content + dslContent
+            (content) => cleanFileContent + dslContent
           );
 
           runCLI('reset');
@@ -339,8 +367,8 @@ describe('Gradle DSL - nx {} configuration', () => {
         it('should handle complex project with multiple configured tasks', () => {
           const dslContent =
             type === 'kotlin'
-              ? `\nnx {\n  set("type", "complex-app")\n  array("tags", "monorepo", "service")\n  set("generators") {\n    set("owner", "platform")\n    set("tier", 1)\n  }\n}\n\ntasks.register<DefaultTask>("compile") {\n  nx {\n    dependsOn.add("^build")\n    dependsOn.add("app:test")\n    set("cache", true)\n  }\n}\n\ntasks.register<DefaultTask>("validate") {\n  nx {\n    set("cache", false)\n    array("inputs", "src/**/*", "test/**/*")\n    set("configurations") {\n      set("parallel", true)\n    }\n  }\n}`
-              : `\nnx {\n  set 'type', 'complex-app'\n  array 'tags', 'monorepo', 'service'\n  set 'generators', {\n    set 'owner', 'platform'\n    set 'tier', 1\n  }\n}\n\ntasks.register('compile') {\n  nx {\n    dependsOn.add('^build')\n    dependsOn.add('app:test')\n    set 'cache', true\n  }\n}\n\ntasks.register('validate') {\n  nx {\n    set 'cache', false\n    array 'inputs', 'src/**/*', 'test/**/*'\n    set 'configurations', {\n      set 'parallel', true\n    }\n  }\n}`;
+              ? `\nnx {\n  set("type", "complex-app")\n  array("tags", "monorepo", "service")\n  set("generators") {\n    set("owner", "platform")\n    set("tier", 1)\n  }\n}\n\ntasks.register<DefaultTask>("compile") {\n  nx {\n    mergedDependsOn.add("^build")\n    mergedDependsOn.add("app:test")\n    set("cache", true)\n  }\n}\n\ntasks.register<DefaultTask>("validate") {\n  nx {\n    set("cache", false)\n    array("inputs", "src/**/*", "test/**/*")\n    set("configurations") {\n      set("parallel", true)\n    }\n  }\n}`
+              : `\nnx {\n  set 'type', 'complex-app'\n  array 'tags', 'monorepo', 'service'\n  set 'generators', {\n    set 'owner', 'platform'\n    set 'tier', 1\n  }\n}\n\ntasks.register('compile') {\n  nx {\n    mergedDependsOn.add('^build')\n    mergedDependsOn.add('app:test')\n    set 'cache', true\n  }\n}\n\ntasks.register('validate') {\n  nx {\n    set 'cache', false\n    array 'inputs', 'src/**/*', 'test/**/*'\n    set 'configurations', {\n      set 'parallel', true\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -380,6 +408,11 @@ describe('Gradle DSL - nx {} configuration', () => {
             (content) => cleanFileContent + appDslContent
           );
 
+          const importStatement =
+            type === 'kotlin'
+              ? `import dev.nx.gradle.nx\n\n`
+              : `import static dev.nx.gradle.NxProjectExtensionKt.nx\nimport static dev.nx.gradle.NxTaskExtensionKt.nx\n\n`;
+
           // Configure list project
           const listDslContent =
             type === 'kotlin'
@@ -388,7 +421,7 @@ describe('Gradle DSL - nx {} configuration', () => {
 
           updateFile(
             `list/build.gradle${buildFileExt}`,
-            (content) => content + listDslContent
+            (content) => importStatement + content + listDslContent
           );
 
           runCLI('reset');
