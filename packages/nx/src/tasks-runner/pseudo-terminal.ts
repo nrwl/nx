@@ -16,7 +16,7 @@ export function createPseudoTerminal(skipSupportCheck: boolean = false) {
   if (!skipSupportCheck && !PseudoTerminal.isSupported()) {
     throw new Error('Pseudo terminal is not supported on this platform.');
   }
-  const pseudoTerminal = new PseudoTerminal(new RustPseudoTerminal());
+  const pseudoTerminal = new PseudoTerminal(new RustPseudoTerminal(), false);
   pseudoTerminalShutdownCallbacks.push(
     pseudoTerminal.shutdown.bind(pseudoTerminal)
   );
@@ -38,7 +38,10 @@ export class PseudoTerminal {
     return process.stdout.isTTY && supportedPtyPlatform();
   }
 
-  constructor(private rustPseudoTerminal: RustPseudoTerminal) {}
+  constructor(
+    private rustPseudoTerminal: RustPseudoTerminal,
+    private useInlineTui: boolean = false
+  ) {}
 
   async init() {
     if (this.initialized) {
@@ -110,18 +113,22 @@ export class PseudoTerminal {
     if (!this.initialized) {
       throw new Error('Call init() before forking processes');
     }
+
+    // Use regular fork
+    const childProcess = this.rustPseudoTerminal.fork(
+      id,
+      script,
+      this.pseudoIPCPath,
+      cwd,
+      jsEnv,
+      execArgv,
+      quiet,
+      commandLabel
+    );
+
     const cp = new PseudoTtyProcessWithSend(
       this.rustPseudoTerminal,
-      this.rustPseudoTerminal.fork(
-        id,
-        script,
-        this.pseudoIPCPath,
-        cwd,
-        jsEnv,
-        execArgv,
-        quiet,
-        commandLabel
-      ),
+      childProcess,
       id,
       this.pseudoIPC
     );
