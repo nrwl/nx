@@ -27,7 +27,7 @@ r = r.replace(
   fs.readFileSync('scripts/readme-fragments/resources.md')
 );
 
-const outputPath = possibleOutputPath ?? `dist/packages/${p}/README.md`;
+const outputPath = possibleOutputPath ?? `packages/${p}/dist/README.md`;
 
 console.log('WRITING', outputPath);
 

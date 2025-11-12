@@ -1,11 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/nx",
-    "tsBuildInfoFile": "../../dist/packages/nx/tsconfig.tsbuildinfo",
+    "module": "nodenext",
+    "outDir": "./dist",
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "composite": true
+    "composite": true,
+    "moduleResolution": "nodenext"
   },
   "exclude": [
     "**/*.spec.ts",

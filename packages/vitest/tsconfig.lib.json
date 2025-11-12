@@ -1,8 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/vitest",
-    "types": ["node"]
+    "outDir": "./dist",
+    "types": ["node"],
+    "moduleResolution": "nodenext"
   },
   "include": ["**/*.ts", "**/*.json"],
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],

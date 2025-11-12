@@ -77,7 +77,7 @@
       "currentVersionResolver": "registry",
       "preserveLocalDependencyProtocols": false,
       "preserveMatchingDependencyRanges": false,
-      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
+      "manifestRootsToUpdate": ["{projectRoot}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true
       }
@@ -87,12 +87,12 @@
     "cleanup-tsconfig": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node ./scripts/cleanup-tsconfig-files.js dist/packages/{projectName}"
+        "command": "node ./scripts/cleanup-tsconfig-files.js {projectRoot}/dist"
       }
     },
     "nx-release-publish": {
       "options": {
-        "packageRoot": "dist/packages/{projectName}"
+        "packageRoot": "{projectRoot}"
       }
     },
     "build": {
@@ -200,7 +200,7 @@
       "dependsOn": ["build-base"],
       "cache": true,
       "inputs": ["production", "^production"],
-      "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]
+      "outputs": ["{projectRoot}/dist"]
     }
   },
   "plugins": [

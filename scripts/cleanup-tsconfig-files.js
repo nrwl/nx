@@ -9,7 +9,7 @@ const glob = require('glob');
  */
 
 function cleanupTsConfigFiles() {
-  const outputPath = 'dist/packages';
+  const outputPath = process.argv[2] || 'dist/packages';
 
   if (!fs.existsSync(outputPath)) {
     console.log(`Output path does not exist: ${outputPath}`);
@@ -17,10 +17,10 @@ function cleanupTsConfigFiles() {
   }
 
   const tsConfigPattern = path
-    .join(outputPath, '*/tsconfig*.json')
+    .join(outputPath, 'tsconfig*.json')
     .replace(/\\/g, '/');
   const tsBuildInfoPattern = path
-    .join(outputPath, '*/*.tsbuildinfo')
+    .join(outputPath, '*.tsbuildinfo')
     .replace(/\\/g, '/');
 
   const tsConfigFiles = glob.sync(tsConfigPattern);

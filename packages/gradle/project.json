@@ -8,11 +8,11 @@
       "dependsOn": ["^nx-release-publish"],
       "executor": "@nx/js:release-publish",
       "options": {
-        "packageRoot": "dist/packages/gradle"
+        "packageRoot": "packages/gradle"
       }
     },
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/gradle/README.md"],
+      "outputs": ["{projectRoot}/dist/README.md"],
       "command": "node ./scripts/copy-readme.js gradle",
       "dependsOn": ["^build", "build-native", "build-base", "legacy-post-build"]
     },

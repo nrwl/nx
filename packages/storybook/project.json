@@ -5,13 +5,13 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/storybook/README.md"],
+      "outputs": ["{projectRoot}/dist/README.md"],
       "command": "node ./scripts/copy-readme.js storybook"
     },
     "nx-release-publish": {
       "executor": "@nx/js:release-publish",
       "options": {
-        "packageRoot": "dist/packages/storybook"
+        "packageRoot": "packages/storybook"
       },
       "dependsOn": ["^nx-release-publish"]
     },

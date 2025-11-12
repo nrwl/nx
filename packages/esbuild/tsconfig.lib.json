@@ -1,9 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/esbuild",
+    "outDir": "./dist",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/esbuild/tsconfig.tsbuildinfo"
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
+    "moduleResolution": "nodenext"
   },
   "include": ["**/*.ts", "**/*.json"],
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],

@@ -7,19 +7,19 @@
     "build": {
       "executor": "nx:run-commands",
       "outputs": [
-        "{workspaceRoot}/dist/packages/create-nx-workspace/bin/create-nx-workspace.js",
-        "{workspaceRoot}/dist/packages/create-nx-workspace/README.md"
+        "{projectRoot}/dist/bin/create-nx-workspace.js",
+        "{projectRoot}/dist/README.md"
       ],
       "options": {
         "commands": [
           {
-            "command": "node ./scripts/chmod dist/packages/create-nx-workspace/bin/create-nx-workspace.js"
+            "command": "node ./scripts/chmod packages/create-nx-workspace/dist/bin/create-nx-workspace.js"
           },
           {
             "command": "node ./scripts/copy-readme.js create-nx-workspace"
           },
           {
-            "command": "node ./scripts/replace-versions.js dist/packages/create-nx-workspace/bin/create-nx-workspace.js"
+            "command": "node ./scripts/replace-versions.js packages/create-nx-workspace/dist/bin/create-nx-workspace.js"
           }
         ],
         "parallel": false

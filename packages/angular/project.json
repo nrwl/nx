@@ -11,7 +11,7 @@
         "project": "packages/angular/ng-package.json",
         "tsConfig": "packages/angular/tsconfig.lib.runtime.json"
       },
-      "outputs": ["{workspaceRoot}/dist/packages/angular"]
+      "outputs": ["{projectRoot}/dist"]
     },
 
     "legacy-post-build": {
@@ -68,7 +68,7 @@
         "typecheck",
         "build-base"
       ],
-      "outputs": ["{workspaceRoot}/dist/packages/angular/README.md"],
+      "outputs": ["{projectRoot}/dist/README.md"],
       "command": "node ./scripts/copy-readme.js angular"
     }
   },

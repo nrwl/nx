@@ -5,7 +5,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/webpack/README.md"],
+      "outputs": ["{projectRoot}/dist/README.md"],
       "command": "node ./scripts/copy-readme.js webpack"
     },
     "legacy-post-build": {

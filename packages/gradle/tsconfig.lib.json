@@ -1,9 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/gradle",
+    "outDir": "./dist",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/gradle/tsconfig.tsbuildinfo"
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
+    "moduleResolution": "nodenext"
   },
   "include": ["**/*.ts"],
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],

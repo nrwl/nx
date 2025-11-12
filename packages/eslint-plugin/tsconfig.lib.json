@@ -1,12 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/eslint-plugin",
+    "outDir": "./dist",
     "types": ["node"],
-    "moduleResolution": "node16",
+    "moduleResolution": "nodenext",
     "module": "node16",
     "esModuleInterop": true,
-    "tsBuildInfoFile": "../../dist/packages/eslint-plugin/tsconfig.tsbuildinfo"
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
   },
   "exclude": [
     "**/*.spec.ts",

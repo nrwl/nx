@@ -1,11 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/remix",
+    "module": "nodenext",
+    "outDir": "./dist",
     "types": ["node"],
     "resolveJsonModule": true,
-    "tsBuildInfoFile": "../../dist/packages/remix/tsconfig.tsbuildinfo"
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
+    "moduleResolution": "nodenext"
   },
   "exclude": [
     "**/*.spec.ts",

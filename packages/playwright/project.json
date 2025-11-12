@@ -5,7 +5,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/playwright/README.md"],
+      "outputs": ["{projectRoot}/dist/README.md"],
       "commands": ["node ./scripts/copy-readme.js playwright"]
     },
     "legacy-post-build": {

@@ -8,8 +8,8 @@
     "emitDeclarationOnly": false,
     "declaration": true,
     "types": ["node"],
-    "module": "commonjs",
-    "moduleResolution": "node"
+    "module": "nodenext",
+    "moduleResolution": "nodenext"
   },
   "include": ["src/**/*.ts", "plugin.ts"],
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "dist/**/*"],

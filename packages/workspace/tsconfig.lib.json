@@ -1,10 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/workspace",
+    "module": "nodenext",
+    "outDir": "./dist",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/workspace/tsconfig.tsbuildinfo"
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
+    "moduleResolution": "nodenext"
   },
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
   "include": ["**/*.ts", "*.json"],

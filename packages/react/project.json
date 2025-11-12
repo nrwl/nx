@@ -6,7 +6,7 @@
   "targets": {
     "build": {
       "command": "node ./scripts/copy-readme.js react",
-      "outputs": ["{workspaceRoot}/dist/packages/react/README.md"]
+      "outputs": ["{projectRoot}/dist/README.md"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",

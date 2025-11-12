@@ -55,7 +55,7 @@
       }
     },
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/js/README.md"],
+      "outputs": ["{projectRoot}/dist/README.md"],
       "command": "node ./scripts/copy-readme.js js"
     }
   },

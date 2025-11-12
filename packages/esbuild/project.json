@@ -5,7 +5,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/esbuild/README.md"],
+      "outputs": ["{projectRoot}/dist/README.md"],
       "commands": ["node ./scripts/copy-readme.js esbuild"]
     },
     "legacy-post-build": {

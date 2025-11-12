@@ -7,19 +7,19 @@
     "build": {
       "executor": "nx:run-commands",
       "outputs": [
-        "{workspaceRoot}/dist/packages/create-nx-plugin/bin/create-nx-plugin.js",
-        "{workspaceRoot}/dist/packages/create-nx-plugin/README.md"
+        "{projectRoot}/dist/bin/create-nx-plugin.js",
+        "{projectRoot}/dist/README.md"
       ],
       "options": {
         "commands": [
           {
-            "command": "node ./scripts/chmod dist/packages/create-nx-plugin/bin/create-nx-plugin.js"
+            "command": "node ./scripts/chmod packages/create-nx-plugin/dist/bin/create-nx-plugin.js"
           },
           {
             "command": "node ./scripts/copy-readme.js create-nx-plugin"
           },
           {
-            "command": "node ./scripts/replace-versions.js dist/packages/create-nx-plugin/bin/create-nx-plugin.js"
+            "command": "node ./scripts/replace-versions.js packages/create-nx-plugin/dist/bin/create-nx-plugin.js"
           }
         ],
         "parallel": false
