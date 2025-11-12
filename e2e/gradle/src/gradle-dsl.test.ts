@@ -205,7 +205,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `tasks.register<DefaultTask>("customTask") {\n  nx {\n    mergedDependsOn("^build", "app:test")\n  }\n}`
-              : `tasks.register('customTask') {\n  nx(it) {\n    mergedDependsOn('^build', 'app:test')\n  }\n}`;
+              : `tasks.register('customTask') {\n  nx(it) {\n    it.mergedDependsOn('^build', 'app:test')\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -225,7 +225,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `tasks.register<DefaultTask>("customTask2") {\n  nx {\n    mergedDependsOn.add("^build")\n    mergedDependsOn.add("app:test")\n  }\n}`
-              : `tasks.register('customTask2') {\n  nx(it) {\n    mergedDependsOn.add('^build')\n    mergedDependsOn.add('app:test')\n  }\n}`;
+              : `tasks.register('customTask2') {\n  nx(it) {\n    it.mergedDependsOn.add('^build')\n    it.mergedDependsOn.add('app:test')\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -301,7 +301,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\ntasks.register<DefaultTask>("e2e") {\n  nx {\n    mergedDependsOn.add("^build")\n    set("cache", false)\n    array("outputs", "coverage/**/*", "reports/**/*")\n    set("configurations") {\n      set("debug") {\n        set("timeout", 3600)\n      }\n    }\n  }\n}`
-              : `\ntasks.register('e2e') {\n  nx(it) {\n    mergedDependsOn.add('^build')\n    it.set 'cache', false\n    it.array 'outputs', 'coverage/**/*', 'reports/**/*'\n    it.set 'configurations', {\n      it.set 'debug', {\n        it.set 'timeout', 3600\n      }\n    }\n  }\n}`;
+              : `\ntasks.register('e2e') {\n  nx(it) {\n    it.mergedDependsOn.add('^build')\n    it.set 'cache', false\n    it.array 'outputs', 'coverage/**/*', 'reports/**/*'\n    it.set 'configurations', {\n      it.set 'debug', {\n        it.set 'timeout', 3600\n      }\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
@@ -367,7 +367,7 @@ describe('Gradle DSL - nx {} configuration', () => {
           const dslContent =
             type === 'kotlin'
               ? `\nnx {\n  set("type", "complex-app")\n  array("tags", "monorepo", "service")\n  set("generators") {\n    set("owner", "platform")\n    set("tier", 1)\n  }\n}\n\ntasks.register<DefaultTask>("compile") {\n  nx {\n    mergedDependsOn.add("^build")\n    mergedDependsOn.add("app:test")\n    set("cache", true)\n  }\n}\n\ntasks.register<DefaultTask>("validate") {\n  nx {\n    set("cache", false)\n    array("inputs", "src/**/*", "test/**/*")\n    set("configurations") {\n      set("debug") {\n        set("parallel", true)\n      }\n    }\n  }\n}`
-              : `\nnx(project) {\n  it.set 'type', 'complex-app'\n  it.array 'tags', 'monorepo', 'service'\n  it.set 'generators', {\n    it.set 'owner', 'platform'\n    it.set 'tier', 1\n  }\n}\n\ntasks.register('compile') {\n  nx(it) {\n    mergedDependsOn.add('^build')\n    mergedDependsOn.add('app:test')\n    it.set 'cache', true\n  }\n}\n\ntasks.register('validate') {\n  nx(it) {\n    it.set 'cache', false\n    it.array 'inputs', 'src/**/*', 'test/**/*'\n    it.set 'configurations', {\n      it.set 'debug', {\n        it.set 'parallel', true\n      }\n    }\n  }\n}`;
+              : `\nnx(project) {\n  it.set 'type', 'complex-app'\n  it.array 'tags', 'monorepo', 'service'\n  it.set 'generators', {\n    it.set 'owner', 'platform'\n    it.set 'tier', 1\n  }\n}\n\ntasks.register('compile') {\n  nx(it) {\n    it.mergedDependsOn.add('^build')\n    it.mergedDependsOn.add('app:test')\n    it.set 'cache', true\n  }\n}\n\ntasks.register('validate') {\n  nx(it) {\n    it.set 'cache', false\n    it.array 'inputs', 'src/**/*', 'test/**/*'\n    it.set 'configurations', {\n      it.set 'debug', {\n        it.set 'parallel', true\n      }\n    }\n  }\n}`;
 
           updateFile(
             `app/build.gradle${buildFileExt}`,
