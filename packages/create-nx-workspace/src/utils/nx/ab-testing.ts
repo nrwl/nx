@@ -61,6 +61,7 @@ const messageOptions: Record<string, MessageData[]> = {
   setupNxCloudSimple: [
     {
       code: 'simple-cloud-v1',
+      metaCode: 'green-prs',
       message: 'Get to green PRs faster with Nx Cloud?',
       initial: 0,
       choices: [
@@ -74,6 +75,7 @@ const messageOptions: Record<string, MessageData[]> = {
     },
     {
       code: 'simple-cloud-v2',
+      metaCode: 'remote-cache',
       message: 'Would you like to enable remote caching with Nx Cloud?',
       initial: 0,
       choices: [
@@ -87,6 +89,7 @@ const messageOptions: Record<string, MessageData[]> = {
     },
     {
       code: 'simple-cloud-v3',
+      metaCode: 'fast-ci',
       message: 'Speed up CI and reduce compute costs with Nx Cloud?',
       initial: 0,
       choices: [
@@ -104,6 +107,7 @@ const messageOptions: Record<string, MessageData[]> = {
 export type MessageKey = keyof typeof messageOptions;
 interface MessageData {
   code: string;
+  metaCode?: string; // Optional short code for URL meta tracking
   message: string;
   initial: number;
   choices: Array<{ value: string; name: string }>;
@@ -134,6 +138,16 @@ export class PromptMessages {
       return '';
     } else {
       return messageOptions[key][selected].code;
+    }
+  }
+
+  metaCodeOfSelectedPromptMessage(key: MessageKey): string {
+    const selected = this.selectedMessages[key];
+    if (selected === undefined) {
+      return '';
+    } else {
+      const message = messageOptions[key][selected];
+      return message.metaCode || message.code;
     }
   }
 }

@@ -47,7 +47,8 @@ export async function createNxCloudOnboardingUrl(
   token: string,
   directory: string,
   useGitHub?: boolean,
-  isTemplate?: boolean
+  isTemplate?: boolean,
+  promptCode?: string
 ) {
   // nx-ignore-next-line
   const { createNxCloudOnboardingURL } = require(require.resolve(
@@ -59,11 +60,18 @@ export async function createNxCloudOnboardingUrl(
   )) as any;
 
   const source = getCloudMessageSource(!!isTemplate, nxCloud);
-  const { code } = getMessageFactory(source);
+  const { code: successMessageCode } = getMessageFactory(source);
+
+  // Combine prompt code with success message code
+  // Format: "prompt-code:success-code" or just "success-code" if no prompt
+  const meta = promptCode
+    ? `${promptCode}:${successMessageCode}`
+    : successMessageCode;
+
   return await createNxCloudOnboardingURL(
     source,
     token,
-    code,
+    meta,
     false,
     useGitHub ??
       (nxCloud === 'yes' || nxCloud === 'github' || nxCloud === 'circleci')
@@ -75,7 +83,8 @@ export async function getNxCloudInfo(
   connectCloudUrl: string,
   pushedToVcs: VcsPushStatus,
   rawNxCloud?: NxCloud,
-  isTemplate?: boolean
+  isTemplate?: boolean,
+  promptCode?: string
 ) {
   const source = getCloudMessageSource(!!isTemplate, nxCloud);
   const { createMessage } = getMessageFactory(source);
