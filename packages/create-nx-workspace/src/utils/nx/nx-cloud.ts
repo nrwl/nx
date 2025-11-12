@@ -12,6 +12,20 @@ export type NxCloud =
   | 'circleci'
   | 'skip';
 
+function getCloudMessageSource(
+  isTemplate: boolean,
+  nxCloud: NxCloud
+):
+  | 'create-nx-workspace-template-cloud'
+  | 'create-nx-workspace-success-cache-setup'
+  | 'create-nx-workspace-success-ci-setup' {
+  return isTemplate
+    ? 'create-nx-workspace-template-cloud'
+    : nxCloud === 'yes'
+    ? 'create-nx-workspace-success-cache-setup'
+    : 'create-nx-workspace-success-ci-setup';
+}
+
 export function readNxCloudToken(directory: string) {
   const nxCloudSpinner = ora(`Checking Nx Cloud setup`).start();
   // nx-ignore-next-line
@@ -32,7 +46,8 @@ export async function createNxCloudOnboardingUrl(
   nxCloud: NxCloud,
   token: string,
   directory: string,
-  useGitHub?: boolean
+  useGitHub?: boolean,
+  isTemplate?: boolean
 ) {
   // nx-ignore-next-line
   const { createNxCloudOnboardingURL } = require(require.resolve(
@@ -43,10 +58,7 @@ export async function createNxCloudOnboardingUrl(
     // nx-ignore-next-line
   )) as any;
 
-  const source =
-    nxCloud === 'yes'
-      ? 'create-nx-workspace-success-cache-setup'
-      : 'create-nx-workspace-success-ci-setup';
+  const source = getCloudMessageSource(!!isTemplate, nxCloud);
   const { code } = getMessageFactory(source);
   return await createNxCloudOnboardingURL(
     source,
@@ -62,12 +74,10 @@ export async function getNxCloudInfo(
   nxCloud: NxCloud,
   connectCloudUrl: string,
   pushedToVcs: VcsPushStatus,
-  rawNxCloud?: NxCloud
+  rawNxCloud?: NxCloud,
+  isTemplate?: boolean
 ) {
-  const source =
-    nxCloud === 'yes'
-      ? 'create-nx-workspace-success-cache-setup'
-      : 'create-nx-workspace-success-ci-setup';
+  const source = getCloudMessageSource(!!isTemplate, nxCloud);
   const { createMessage } = getMessageFactory(source);
   const out = new CLIOutput(false);
   const message = createMessage(

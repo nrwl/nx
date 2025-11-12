@@ -31,6 +31,43 @@ export async function determineNxCloud(
   }
 }
 
+export async function determineNxCloudSimple(
+  parsedArgs: yargs.Arguments<{ nxCloud?: string; interactive?: boolean }>
+): Promise<'yes' | 'skip'> {
+  // Provided via flag
+  if (parsedArgs.nxCloud) {
+    return parsedArgs.nxCloud === 'skip' ? 'skip' : 'yes';
+  }
+
+  // Non-interactive mode
+  if (!parsedArgs.interactive || isCI()) {
+    return 'skip';
+  }
+
+  // Show simplified prompt
+  const { message, choices, initial, footer, hint } =
+    messages.getPrompt('setupNxCloudSimple');
+
+  const promptConfig = {
+    name: 'nxCloud',
+    message,
+    type: 'autocomplete',
+    choices,
+    initial,
+  } as any; // types in enquirer are not up to date
+  if (footer) {
+    promptConfig.footer = () => footer;
+  }
+  if (hint) {
+    promptConfig.hint = () => hint;
+  }
+
+  const result = await enquirer.prompt<{ nxCloud: 'yes' | 'skip' }>([
+    promptConfig,
+  ]);
+  return result.nxCloud;
+}
+
 export async function determineIfGitHubWillBeUsed(
   parsedArgs: yargs.Arguments<{ nxCloud: NxCloud; useGitHub?: boolean }>
 ): Promise<boolean> {
@@ -74,6 +111,55 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
     }
     return a.NxCloud;
   });
+}
+
+export async function determineTemplate(
+  parsedArgs: yargs.Arguments<{
+    template?: string;
+    preset?: string;
+    interactive?: boolean;
+  }>
+): Promise<string | 'skip'> {
+  // Already provided via flag
+  if (parsedArgs.template) return parsedArgs.template;
+
+  // Using preset flow instead
+  if (parsedArgs.preset) return 'skip';
+
+  // Non-interactive mode - default to preset flow
+  if (!parsedArgs.interactive || isCI()) {
+    return 'skip';
+  }
+
+  // Show template selection prompt
+  const { template } = await enquirer.prompt<{ template: string }>([
+    {
+      name: 'template',
+      message: 'Which stack do you want to use?',
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'https://github.com/nrwl/empty-template',
+          message: 'Empty                  (minimal Nx workspace)',
+        },
+        {
+          name: 'https://github.com/nrwl/typescript-template',
+          message: 'TypeScript             (Node.js with TypeScript)',
+        },
+        {
+          name: 'https://github.com/nrwl/react-template',
+          message: 'React                  (React app with Vite)',
+        },
+        {
+          name: 'https://github.com/nrwl/angular-template',
+          message: 'Angular                (Angular app)',
+        },
+      ],
+      initial: 0,
+    },
+  ]);
+
+  return template;
 }
 
 export async function determineAiAgents(
