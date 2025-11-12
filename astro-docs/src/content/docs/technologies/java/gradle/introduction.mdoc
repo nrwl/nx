@@ -306,13 +306,13 @@ In a `project.json`, you can specify the target configuration like so:
 {% /tabitem %}
 {% /tabs %}
 
-## Configuring Projects and Tasks with the Gradle DSL
+### Configuring Projects and Tasks with the Gradle DSL
 
 The `dev.nx.gradle.project-graph` plugin provides a type-safe `nx {}` DSL for configuring Nx-specific metadata on your Gradle projects and tasks. This allows you to customize project metadata, configure task dependencies, and control caching behavior directly in your Gradle build files.
 
-### Project-Level Configuration
+#### Project-Level Configuration
 
-Use the `nx {}` block at the project level to configure Nx project metadata such as name, tags, and custom properties:
+Use the `nx {}` block at the project level to configure Nx in any way you would in `project.json`:
 
 {% tabs syncKey="java-lang" %}
 {% tabitem label="build.gradle.kts" %}
@@ -364,29 +364,31 @@ nx {
 - `set(key) { ... }` - Create nested objects
 - `merge(map)` - Merge a map of properties
 
-### Task-Level Configuration
+#### Task-Level Configuration
 
-Use the `nx {}` block on individual Gradle tasks to configure Nx target-specific behavior:
+Use the `nx {}` block on individual Gradle tasks to configure target-specific behavior:
 
 {% tabs syncKey="java-lang" %}
 {% tabitem label="build.gradle.kts" %}
 
 ```kotlin
 // build.gradle.kts
-tasks.named("integrationTest") {
-  nx {
-    // Add Nx-specific dependencies (merges with Gradle dependencies)
-    dependsOn.addAll("^build", "app:lint")
+tasks {
+  build {
+    nx {
+      // Add Nx-specific dependencies (merges with Gradle dependencies)
+      dependsOn.addAll("^build", "app:lint")
 
-    // Configure caching
-    set("cache", true)
+      // Configure caching
+      set("cache", true)
 
-    // Add target tags
-    array("tags", "integration", "slow")
+      // Add target tags
+      array("tags", "integration", "slow")
 
-    // Add custom metadata
-    set("options") {
-      set("timeout", 300)
+      // Add any custom configuration
+      set("options") {
+        set("timeout", 300)
+      }
     }
   }
 }
@@ -408,7 +410,7 @@ tasks.named('integrationTest') {
     // Add target tags
     array 'tags', 'integration', 'slow'
 
-    // Add custom metadata
+    // Add any custom configuration
     set 'options', {
       set 'timeout', 300
     }
@@ -430,125 +432,15 @@ tasks.named('integrationTest') {
 {% aside type="note" title="Important: dependsOn Merge Behavior" %}
 The `dependsOn` property behaves differently from other configuration options:
 
-- **Using `dependsOn.addAll(...)`** (recommended): **Merges** with Gradle-detected dependencies. This adds to the existing dependencies that Gradle automatically discovers.
+**Using `dependsOn.addAll(...)`** merges your dependencies with Gradle-detected dependencies. This adds to the existing dependencies that Gradle automatically discovers.
 
-  ```kotlin
-  nx {
-    dependsOn.addAll("^build", "app:lint")  // Adds to Gradle dependencies
-  }
-  ```
+```kotlin
+nx {
+  dependsOn.addAll("^build", "app:lint")  // Adds to Gradle dependencies
+}
+```
 
-- **Using `set("dependsOn", ...)`**: **Replaces** all dependencies, including those detected by Gradle. Use with caution as this will override automatic dependency detection.
+Specifying dependencies in any other way (for example in `project.json` or by using `array("dependsOn", ...)`) will replace all target dependencies instead.
+The `dependsOn` property supports all of [Nx's task dependency patterns](/docs/guides/tasks--caching/defining-task-pipeline).
 
-  ```kotlin
-  nx {
-    set("dependsOn", listOf("^build"))  // Replaces all Gradle dependencies
-  }
-  ```
-
-In most cases, use `dependsOn.addAll(...)` to ensure your Gradle task dependencies are preserved.
 {% /aside %}
-
-### Nx Dependency Patterns
-
-The `dependsOn` property supports Nx's task dependency patterns:
-
-- `"^build"` - Depends on the 'build' target of all upstream projects
-- `"project:target"` - Depends on a specific target of a specific project
-- `"target"` - Depends on a target of the same project
-
-### Examples
-
-#### Configure Multiple Tasks
-
-{% tabs syncKey="java-lang" %}
-{% tabitem label="build.gradle.kts" %}
-
-```kotlin
-// build.gradle.kts
-// Configure test tasks
-tasks.withType<Test>().configureEach {
-  nx {
-    dependsOn.add("^build")
-    set("cache", true)
-  }
-}
-
-// Configure a specific task
-tasks.named("bootRun") {
-  nx {
-    dependsOn.addAll("^build", "app:processResources")
-  }
-}
-```
-
-{% /tabitem %}
-{% tabitem label="build.gradle" %}
-
-```groovy
-// build.gradle
-// Configure test tasks
-tasks.withType(Test).configureEach {
-  nx {
-    dependsOn.add('^build')
-    set 'cache', true
-  }
-}
-
-// Configure a specific task
-tasks.named('bootRun') {
-  nx {
-    dependsOn.addAll('^build', 'app:processResources')
-  }
-}
-```
-
-{% /tabitem %}
-{% /tabs %}
-
-#### Project and Task Configuration Together
-
-{% tabs syncKey="java-lang" %}
-{% tabitem label="build.gradle.kts" %}
-
-```kotlin
-// build.gradle.kts
-// Project-level metadata
-nx {
-  set("name", "payment-service")
-  array("tags", "service:payments", "tier:2")
-  set("description", "Payment processing service")
-}
-
-// Task-level configuration
-tasks.named("test") {
-  nx {
-    dependsOn.add("^build")
-    array("tags", "unit-test")
-  }
-}
-```
-
-{% /tabitem %}
-{% tabitem label="build.gradle" %}
-
-```groovy
-// build.gradle
-// Project-level metadata
-nx {
-  set 'name', 'payment-service'
-  array 'tags', 'service:payments', 'tier:2'
-  set 'description', 'Payment processing service'
-}
-
-// Task-level configuration
-tasks.named('test') {
-  nx {
-    dependsOn.add('^build')
-    array 'tags', 'unit-test'
-  }
-}
-```
-
-{% /tabitem %}
-{% /tabs %}
