@@ -11,7 +11,7 @@
       "factory": "./src/migrations/update-22-0-0/remove-external-options-from-js-executors"
     },
     "remove-redundant-ts-project-references": {
-      "version": "22.1.0-beta.8",
+      "version": "22.1.0-rc.1",
       "description": "Removes redundant TypeScript project references from project's tsconfig.json files when runtime tsconfig files (e.g., tsconfig.lib.json, tsconfig.app.json) exist.",
       "factory": "./src/migrations/update-22-1-0/remove-redundant-ts-project-references"
     }
