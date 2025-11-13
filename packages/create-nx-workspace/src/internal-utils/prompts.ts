@@ -31,7 +31,7 @@ export async function determineNxCloud(
   }
 }
 
-export async function determineNxCloudSimple(
+export async function determineNxCloudV2(
   parsedArgs: yargs.Arguments<{ nxCloud?: string; interactive?: boolean }>
 ): Promise<'yes' | 'skip'> {
   // Provided via flag

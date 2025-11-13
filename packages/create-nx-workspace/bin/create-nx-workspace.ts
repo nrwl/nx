@@ -18,7 +18,7 @@ import {
   determineDefaultBase,
   determineIfGitHubWillBeUsed,
   determineNxCloud,
-  determineNxCloudSimple,
+  determineNxCloudV2,
   determinePackageManager,
   determineTemplate,
 } from '../src/internal-utils/prompts';
@@ -369,7 +369,7 @@ async function normalizeArgsMiddleware(
       const defaultBase = await determineDefaultBase(argv);
       // Use simplified Cloud prompt for templates (yes/no only, no CI selection)
       const nxCloud =
-        argv.skipGit === true ? 'skip' : await determineNxCloudSimple(argv);
+        argv.skipGit === true ? 'skip' : await determineNxCloudV2(argv);
       // Capture prompt variant code for tracking
       const nxCloudPromptCode =
         nxCloud === 'skip'
