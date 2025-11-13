@@ -161,8 +161,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       connectUrl,
       pushedToVcs,
       rawArgs?.nxCloud,
-      isTemplate,
-      options.nxCloudPromptCode
+      isTemplate
     );
   }
 
