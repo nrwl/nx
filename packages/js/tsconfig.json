@@ -4,15 +4,6 @@
   "include": [],
   "references": [
     {
-      "path": "../nx"
-    },
-    {
-      "path": "../workspace"
-    },
-    {
-      "path": "../devkit"
-    },
-    {
       "path": "./tsconfig.lib.json"
     },
     {
