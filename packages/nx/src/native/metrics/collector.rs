@@ -12,9 +12,8 @@ use sysinfo::{Pid, ProcessRefreshKind, System, UpdateKind};
 use tracing::error;
 
 use crate::native::metrics::types::{
-    BatchMetricsSnapshot, BatchRegistration, CollectorConfig, IndividualTaskRegistration,
-    MetricsUpdate, ProcessMetadata, ProcessMetrics, ProcessMetricsSnapshot, ProcessTreeMetrics,
-    SystemInfo,
+    BatchRegistration, CollectorConfig, GroupInfo, GroupType, IndividualTaskRegistration, Metadata,
+    MetricsUpdate, ProcessMetadata, ProcessMetrics, SystemInfo,
 };
 use crate::native::utils::time::current_timestamp_millis;
 use napi::threadsafe_function::{
@@ -23,12 +22,20 @@ use napi::threadsafe_function::{
 
 type ParentToChildrenMap = std::collections::HashMap<i32, Vec<i32>>;
 
+// Group ID constants
+const MAIN_CLI_GROUP_ID: &str = "main_cli";
+const DAEMON_GROUP_ID: &str = "daemon";
+
 /// Result from metrics collection containing all data needed for cleanup and notification
 struct MetricsCollectionResult {
-    /// The collected metrics snapshot
-    metrics_snapshot: ProcessMetricsSnapshot,
-    /// New metadata discovered during collection
-    new_metadata: HashMap<i32, ProcessMetadata>,
+    /// Timestamp for the collection
+    timestamp: i64,
+    /// Combined metadata for groups and processes
+    metadata: Metadata,
+    /// Process metrics
+    processes: Vec<ProcessMetrics>,
+    /// Process metadata keyed by i32 PID for internal store updates (avoids string parsing)
+    process_metadata: HashMap<i32, ProcessMetadata>,
 }
 
 /// Metadata store for process metadata
@@ -132,65 +139,47 @@ impl CollectionRunner {
 
     /// Notify all subscribers with the collected metrics
     fn notify_subscribers(&self, result: MetricsCollectionResult, live_pids: &HashSet<i32>) {
-        let snapshot = result.metrics_snapshot;
-        let new_metadata_map = result.new_metadata;
+        let timestamp = result.timestamp;
+        let processes = result.processes;
+        let metadata = result.metadata;
+        let process_metadata = result.process_metadata;
 
         // Update metadata store with new processes
-        for (pid, metadata) in &new_metadata_map {
-            self.metadata_store.insert_metadata(*pid, metadata.clone());
+        for (pid, proc_metadata) in &process_metadata {
+            self.metadata_store
+                .insert_metadata(*pid, proc_metadata.clone());
         }
 
         // Clean up dead metadata and task registrations
         self.metadata_store.cleanup_dead_metadata(live_pids);
 
-        // Wrap data in Arc for efficient sharing across subscribers
-        let snapshot = Arc::new(snapshot);
-
         // Build notifications inside lock, then release before calling JS
         let notifications = {
             let mut subscribers = self.subscribers.lock();
 
-            // Pre-compute metadata variants
-            let needs_full = subscribers.iter().any(|s| s.needs_full_metadata);
-
-            let full_metadata = if needs_full {
-                Some(
-                    self.metadata_store
-                        .metadata_store
-                        .iter()
-                        .map(|entry| (entry.key().to_string(), entry.value().clone()))
-                        .collect::<std::collections::HashMap<_, _>>(),
-                )
-            } else {
-                None
-            };
-            let full_metadata = full_metadata.map(Arc::new);
-
-            let new_metadata = if !new_metadata_map.is_empty() {
-                Some(Arc::new(
-                    new_metadata_map
-                        .into_iter()
-                        .map(|(pid, meta)| (pid.to_string(), meta))
-                        .collect::<HashMap<_, _>>(),
-                ))
-            } else {
-                None
-            };
-
-            // Build notification list with Arc clones (cheap - just pointer copies)
+            // Build notification list
             subscribers
                 .iter_mut()
                 .map(|state| {
-                    let metadata = if state.needs_full_metadata {
+                    // Use full metadata if needed, otherwise use collected metadata
+                    let processes_metadata = if state.needs_full_metadata {
                         state.needs_full_metadata = false;
-                        full_metadata.clone()
+                        self.metadata_store
+                            .metadata_store
+                            .iter()
+                            .map(|entry| (entry.key().to_string(), entry.value().clone()))
+                            .collect::<HashMap<_, _>>()
                     } else {
-                        new_metadata.clone()
+                        metadata.processes.clone()
                     };
 
                     let update = MetricsUpdate {
-                        metrics: Arc::clone(&snapshot),
-                        metadata,
+                        timestamp,
+                        processes: processes.clone(),
+                        metadata: Metadata {
+                            groups: metadata.groups.clone(),
+                            processes: processes_metadata,
+                        },
                     };
 
                     // Clone ThreadsafeFunction (cheap - internally Arc-based)
@@ -262,16 +251,18 @@ impl CollectionRunner {
         all_pids
     }
 
-    /// Collect process metrics and conditionally populate metadata if not cached
+    /// Collect process metrics and metadata if not cached
     /// Single-pass collection that checks metadata cache to avoid unnecessary string allocations
+    /// Returns (metrics, Some(metadata)) if process is new, (metrics, None) if cached
     /// Returns None if process no longer exists
     fn collect_process_info(
+        &self,
         sys: &System,
         pid: i32,
-        metadata_store: &MetadataStore,
-        new_metadata: &mut HashMap<i32, ProcessMetadata>,
         alias: Option<String>,
-    ) -> Option<ProcessMetrics> {
+        group_id: &str,
+        is_root: bool,
+    ) -> Option<(ProcessMetrics, Option<ProcessMetadata>)> {
         let process = sys.process(Pid::from(pid as usize))?;
 
         // Always collect metrics
@@ -282,8 +273,8 @@ impl CollectionRunner {
         };
 
         // Conditionally collect metadata only if not cached
-        if !metadata_store.has_metadata(pid) {
-            let metadata = ProcessMetadata {
+        let metadata = if !self.metadata_store.has_metadata(pid) {
+            Some(ProcessMetadata {
                 ppid: process.parent().map(|p| p.as_u32() as i32).unwrap_or(0),
                 name: process.name().to_string_lossy().into_owned(),
                 command: process
@@ -301,46 +292,61 @@ impl CollectionRunner {
                     .map(|p| p.to_string_lossy().into_owned())
                     .unwrap_or_default(),
                 alias,
-            };
-            new_metadata.insert(pid, metadata);
-        }
+                group_id: group_id.to_string(),
+                is_root,
+            })
+        } else {
+            None
+        };
 
-        Some(metrics)
+        Some((metrics, metadata))
     }
 
     /// Collect metrics for the main CLI process and its registered subprocesses
     fn collect_main_cli_metrics(
         &self,
         sys: &System,
-        new_metadata: &mut HashMap<i32, ProcessMetadata>,
         live_pids: &mut HashSet<i32>,
-    ) -> Option<ProcessTreeMetrics> {
-        let pid_opt = *self.main_cli_pid.lock();
-        let pid = pid_opt?;
+    ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
+        let mut new_metadata = HashMap::new();
+        let mut processes = Vec::new();
 
-        let main = Self::collect_process_info(sys, pid, &self.metadata_store, new_metadata, None)?;
-        live_pids.insert(main.pid);
-
-        let subprocesses: Vec<ProcessMetrics> = self
-            .main_cli_subprocess_pids
-            .iter()
-            .filter_map(|entry| {
-                let subprocess_pid = *entry.key();
-                let metrics = Self::collect_process_info(
-                    sys,
-                    subprocess_pid,
-                    &self.metadata_store,
-                    new_metadata,
-                    entry.value().clone(),
-                );
-                if let Some(ref m) = metrics {
-                    live_pids.insert(m.pid);
+        if let Some(pid) = *self.main_cli_pid.lock() {
+            if let Some((main, metadata)) =
+                self.collect_process_info(sys, pid, None, MAIN_CLI_GROUP_ID, true)
+            {
+                live_pids.insert(main.pid);
+                processes.push(main);
+                if let Some(meta) = metadata {
+                    new_metadata.insert(pid, meta);
                 }
-                metrics
-            })
-            .collect();
 
-        Some(ProcessTreeMetrics { main, subprocesses })
+                let subprocesses: Vec<(ProcessMetrics, Option<ProcessMetadata>)> = self
+                    .main_cli_subprocess_pids
+                    .iter()
+                    .filter_map(|entry| {
+                        let subprocess_pid = *entry.key();
+                        self.collect_process_info(
+                            sys,
+                            subprocess_pid,
+                            entry.value().clone(),
+                            MAIN_CLI_GROUP_ID,
+                            false,
+                        )
+                    })
+                    .collect();
+
+                for (metrics, metadata) in subprocesses {
+                    live_pids.insert(metrics.pid);
+                    processes.push(metrics);
+                    if let Some(meta) = metadata {
+                        new_metadata.insert(metrics.pid, meta);
+                    }
+                }
+            }
+        }
+
+        (processes, new_metadata)
     }
 
     /// Collect metrics for the daemon process and its entire process tree
@@ -348,31 +354,39 @@ impl CollectionRunner {
         &self,
         sys: &System,
         children_map: &ParentToChildrenMap,
-        new_metadata: &mut HashMap<i32, ProcessMetadata>,
         live_pids: &mut HashSet<i32>,
-    ) -> Option<ProcessTreeMetrics> {
-        let pid_opt = *self.daemon_pid.lock();
-        let pid = pid_opt?;
+    ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
+        let mut new_metadata = HashMap::new();
+        let mut processes = Vec::new();
 
-        let discovered_pids = Self::collect_tree_pids_from_map(children_map, pid);
-        let daemon_process_metrics: Vec<ProcessMetrics> = discovered_pids
-            .into_iter()
-            .filter_map(|p| {
-                let metrics =
-                    Self::collect_process_info(sys, p, &self.metadata_store, new_metadata, None);
-                if let Some(ref m) = metrics {
-                    live_pids.insert(m.pid);
-                }
-                metrics
-            })
-            .collect();
+        if let Some(pid) = *self.daemon_pid.lock() {
+            let discovered_pids = Self::collect_tree_pids_from_map(children_map, pid);
+            let daemon_process_metrics: Vec<ProcessMetrics> = discovered_pids
+                .into_iter()
+                .enumerate()
+                .filter_map(|(idx, p)| {
+                    if let Some((metrics, metadata)) = self.collect_process_info(
+                        sys,
+                        p,
+                        None,
+                        DAEMON_GROUP_ID,
+                        idx == 0, // First process is root
+                    ) {
+                        live_pids.insert(metrics.pid);
+                        if let Some(meta) = metadata {
+                            new_metadata.insert(p, meta);
+                        }
+                        Some(metrics)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
 
-        if let Some(main) = daemon_process_metrics.first().copied() {
-            let subprocesses = daemon_process_metrics.into_iter().skip(1).collect();
-            Some(ProcessTreeMetrics { main, subprocesses })
-        } else {
-            None
+            processes.extend(daemon_process_metrics);
         }
+
+        (processes, new_metadata)
     }
 
     /// Collect metrics for all registered individual tasks
@@ -381,13 +395,14 @@ impl CollectionRunner {
         &self,
         sys: &System,
         children_map: &ParentToChildrenMap,
-        new_metadata: &mut HashMap<i32, ProcessMetadata>,
         live_pids: &mut HashSet<i32>,
-    ) -> HashMap<String, Vec<ProcessMetrics>> {
-        let mut tasks = HashMap::new();
+    ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
+        let mut tasks = Vec::new();
+        let mut new_metadata = HashMap::new();
 
         for entry in self.individual_tasks.iter() {
             let task_reg = entry.value();
+            let group_id = &task_reg.task_id;
 
             // Collect from ALL anchor PIDs for this task
             let mut all_pids = HashSet::new();
@@ -397,27 +412,23 @@ impl CollectionRunner {
             }
 
             // Convert PIDs to metrics
-            let task_metrics: Vec<ProcessMetrics> = all_pids
-                .into_iter()
-                .filter_map(|pid| {
-                    let metrics = Self::collect_process_info(
-                        sys,
-                        pid,
-                        &self.metadata_store,
-                        new_metadata,
-                        None,
-                    );
-                    if let Some(ref m) = metrics {
-                        live_pids.insert(m.pid);
+            // The first anchor PID is the root
+            let anchor_pids_vec: Vec<i32> = task_reg.anchor_pids.iter().copied().collect();
+            for pid in all_pids {
+                let is_anchor = anchor_pids_vec.contains(&pid);
+                if let Some((metrics, metadata)) =
+                    self.collect_process_info(sys, pid, None, group_id, is_anchor)
+                {
+                    live_pids.insert(metrics.pid);
+                    if let Some(meta) = metadata {
+                        new_metadata.insert(pid, meta);
                     }
-                    metrics
-                })
-                .collect();
-
-            tasks.insert(task_reg.task_id.clone(), task_metrics);
+                    tasks.push(metrics);
+                }
+            }
         }
 
-        tasks
+        (tasks, new_metadata)
     }
 
     /// Collect metrics for all registered batches
@@ -426,44 +437,99 @@ impl CollectionRunner {
         &self,
         sys: &System,
         children_map: &ParentToChildrenMap,
-        new_metadata: &mut HashMap<i32, ProcessMetadata>,
         live_pids: &mut HashSet<i32>,
-    ) -> HashMap<String, BatchMetricsSnapshot> {
-        let mut batches_metrics = HashMap::new();
+    ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
+        let mut batches_metrics = Vec::new();
+        let mut new_metadata = HashMap::new();
 
         for entry in self.batches.iter() {
             let batch_reg = entry.value();
+            let group_id = &batch_reg.batch_id;
 
             let discovered_pids =
                 Self::collect_tree_pids_from_map(children_map, batch_reg.anchor_pid);
-            let batch_processes: Vec<ProcessMetrics> = discovered_pids
-                .into_iter()
-                .filter_map(|pid| {
-                    let metrics = Self::collect_process_info(
-                        sys,
-                        pid,
-                        &self.metadata_store,
-                        new_metadata,
-                        None,
-                    );
-                    if let Some(ref m) = metrics {
-                        live_pids.insert(m.pid);
-                    }
-                    metrics
-                })
-                .collect();
+            let batch_anchor_pid = batch_reg.anchor_pid;
 
-            batches_metrics.insert(
-                batch_reg.batch_id.clone(),
-                BatchMetricsSnapshot {
-                    batch_id: batch_reg.batch_id.clone(),
-                    task_ids: Arc::clone(&batch_reg.task_ids),
-                    processes: batch_processes,
+            for pid in discovered_pids {
+                if let Some((metrics, metadata)) = self.collect_process_info(
+                    sys,
+                    pid,
+                    None,
+                    group_id,
+                    pid == batch_anchor_pid, // Anchor PID is root
+                ) {
+                    live_pids.insert(metrics.pid);
+                    if let Some(meta) = metadata {
+                        new_metadata.insert(pid, meta);
+                    }
+                    batches_metrics.push(metrics);
+                }
+            }
+        }
+
+        (batches_metrics, new_metadata)
+    }
+
+    /// Create all groups based on current registrations
+    fn create_groups(&self) -> HashMap<String, GroupInfo> {
+        let mut groups = HashMap::new();
+
+        // Add main_cli group if registered
+        if self.main_cli_pid.lock().is_some() {
+            groups.insert(
+                MAIN_CLI_GROUP_ID.to_string(),
+                GroupInfo {
+                    group_type: GroupType::MainCLI,
+                    display_name: "Nx CLI".to_string(),
+                    id: MAIN_CLI_GROUP_ID.to_string(),
+                    task_ids: None,
                 },
             );
         }
 
-        batches_metrics
+        // Add daemon group if registered
+        if self.daemon_pid.lock().is_some() {
+            groups.insert(
+                DAEMON_GROUP_ID.to_string(),
+                GroupInfo {
+                    group_type: GroupType::Daemon,
+                    display_name: "Nx Daemon".to_string(),
+                    id: DAEMON_GROUP_ID.to_string(),
+                    task_ids: None,
+                },
+            );
+        }
+
+        // Add groups for all registered tasks
+        for entry in self.individual_tasks.iter() {
+            let task_id = entry.key().clone();
+            groups.insert(
+                task_id.clone(),
+                GroupInfo {
+                    group_type: GroupType::Task,
+                    display_name: task_id.clone(),
+                    id: task_id,
+                    task_ids: None,
+                },
+            );
+        }
+
+        // Add groups for all registered batches
+        for entry in self.batches.iter() {
+            let batch_id = entry.key().clone();
+            let batch_reg = entry.value();
+            groups.insert(
+                batch_id.clone(),
+                GroupInfo {
+                    group_type: GroupType::Batch,
+                    display_name: batch_id.clone(),
+                    id: batch_id,
+                    task_ids: Some(batch_reg.task_ids.as_ref().to_vec()),
+                },
+            );
+        }
+
+        groups
     }
 
     /// Discover all current processes and collect their metrics
@@ -511,29 +577,49 @@ impl CollectionRunner {
         // Clear live PIDs from previous collection cycle (keeps allocated capacity)
         live_pids.clear();
 
-        // Track new metadata discovered during collection (conditionally populated)
-        let mut new_metadata = HashMap::new();
+        // Create all groups upfront (we know all registrations before collection)
+        let groups = self.create_groups();
 
         // Collect metrics for all the processes
-        let main_cli_metrics = self.collect_main_cli_metrics(&sys, &mut new_metadata, live_pids);
-        let daemon_metrics =
-            self.collect_daemon_metrics(&sys, &children_map, &mut new_metadata, live_pids);
-        let tasks_metrics =
-            self.collect_all_task_metrics(&sys, &children_map, &mut new_metadata, live_pids);
-        let batches_metrics =
-            self.collect_all_batch_metrics(&sys, &children_map, &mut new_metadata, live_pids);
+        let (main_cli_processes, main_cli_metadata) =
+            self.collect_main_cli_metrics(&sys, live_pids);
+        let (daemon_processes, daemon_metadata) =
+            self.collect_daemon_metrics(&sys, &children_map, live_pids);
+        let (tasks_metrics, tasks_metadata) =
+            self.collect_all_task_metrics(&sys, &children_map, live_pids);
+        let (batches_metrics, batches_metadata) =
+            self.collect_all_batch_metrics(&sys, &children_map, live_pids);
 
-        let metrics_snapshot = ProcessMetricsSnapshot {
-            timestamp,
-            main_cli: main_cli_metrics,
-            daemon: daemon_metrics,
-            tasks: tasks_metrics,
-            batches: batches_metrics,
-        };
+        // Accumulate metadata from all collection sources
+        let mut all_metadata = main_cli_metadata;
+        all_metadata.extend(daemon_metadata);
+        all_metadata.extend(tasks_metadata);
+        all_metadata.extend(batches_metadata);
+
+        // Flatten processes from all sources
+        let mut processes = Vec::new();
+        processes.extend(main_cli_processes);
+        processes.extend(daemon_processes);
+        processes.extend(tasks_metrics);
+        processes.extend(batches_metrics);
+
+        // Keep a copy of metadata with i32 keys for internal use
+        let process_metadata = all_metadata.clone();
+
+        // Convert i32 keys to strings for NAPI serialization
+        let process_metadata_str: HashMap<String, ProcessMetadata> = all_metadata
+            .into_iter()
+            .map(|(pid, meta)| (pid.to_string(), meta))
+            .collect();
 
         Ok(MetricsCollectionResult {
-            metrics_snapshot,
-            new_metadata,
+            timestamp,
+            processes,
+            metadata: Metadata {
+                groups,
+                processes: process_metadata_str,
+            },
+            process_metadata,
         })
     }
 }

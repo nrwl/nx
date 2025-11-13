@@ -390,6 +390,7 @@ module.exports.getBinaryTarget = nativeBinding.getBinaryTarget
 module.exports.getDefaultMaxCacheSize = nativeBinding.getDefaultMaxCacheSize
 module.exports.getFilesForOutputs = nativeBinding.getFilesForOutputs
 module.exports.getTransformableOutputs = nativeBinding.getTransformableOutputs
+module.exports.GroupType = nativeBinding.GroupType
 module.exports.hashArray = nativeBinding.hashArray
 module.exports.hashFile = nativeBinding.hashFile
 module.exports.installNxConsole = nativeBinding.installNxConsole

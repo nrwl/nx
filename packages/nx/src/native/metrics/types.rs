@@ -62,6 +62,8 @@ pub struct ProcessMetadata {
     pub exe_path: String,
     pub cwd: String,
     pub alias: Option<String>,
+    pub group_id: String,
+    pub is_root: bool,
 }
 
 /// Process metrics (dynamic, changes every collection)
@@ -73,40 +75,48 @@ pub struct ProcessMetrics {
     pub memory: i64,
 }
 
-/// Metrics for a process and its subprocesses (used for both CLI and daemon)
-#[napi(object)]
-#[derive(Debug, Clone)]
-pub struct ProcessTreeMetrics {
-    pub main: ProcessMetrics,
-    pub subprocesses: Vec<ProcessMetrics>,
+/// Group type discriminator
+#[napi(string_enum)]
+#[derive(Debug, PartialEq, Eq)]
+pub enum GroupType {
+    MainCLI,
+    Daemon,
+    Task,
+    Batch,
 }
 
-/// Batch metrics snapshot
+/// Group information - union of different process group types
+/// Use group_type to discriminate which optional fields are present
 #[napi(object)]
 #[derive(Debug, Clone)]
-pub struct BatchMetricsSnapshot {
-    pub batch_id: String,
-    pub task_ids: Arc<Vec<String>>,
-    pub processes: Vec<ProcessMetrics>,
+pub struct GroupInfo {
+    /// Type discriminator: MainCLI, Daemon, Task, or Batch
+    pub group_type: GroupType,
+    /// Display name for the group
+    pub display_name: String,
+    /// Unique ID for this group
+    pub id: String,
+    /// Task IDs in this batch (present for Batch groups)
+    pub task_ids: Option<Vec<String>>,
 }
 
-/// Organized collection of process metrics with timestamp
+/// Combined metadata for groups and processes
 #[napi(object)]
 #[derive(Debug, Clone)]
-pub struct ProcessMetricsSnapshot {
-    pub timestamp: i64,
-    pub main_cli: Option<ProcessTreeMetrics>,
-    pub daemon: Option<ProcessTreeMetrics>,
-    pub tasks: HashMap<String, Vec<ProcessMetrics>>,
-    pub batches: HashMap<String, BatchMetricsSnapshot>,
+pub struct Metadata {
+    /// Group-level metadata
+    pub groups: HashMap<String, GroupInfo>,
+    /// Process-level metadata (keyed by PID as string for NAPI compatibility)
+    pub processes: HashMap<String, ProcessMetadata>,
 }
 
 /// Metrics update sent every collection cycle
 #[napi(object)]
 #[derive(Debug, Clone)]
 pub struct MetricsUpdate {
-    pub metrics: Arc<ProcessMetricsSnapshot>,
-    pub metadata: Option<Arc<HashMap<String, ProcessMetadata>>>,
+    pub timestamp: i64,
+    pub processes: Vec<ProcessMetrics>,
+    pub metadata: Metadata,
 }
 
 /// System information (static system-level data)
