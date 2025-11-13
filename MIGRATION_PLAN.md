@@ -11,6 +11,7 @@ This document tracks the progress of migrating all packages from building to cen
 #### 1.1 tsconfig.base.json
 
 - ✅ Added `customConditions: ["@nx/nx-source"]` to compilerOptions
+- ✅ Updated `moduleResolution: "nodenext"` (required for customConditions to work)
 - This enables TypeScript to recognize our custom export condition for source imports during development
 
 #### 1.2 nx.json Global Targets
@@ -58,6 +59,14 @@ Migration script: `scripts/migrate-tsconfig-json.js`
 - ✅ Special handling for @nx/nx native-packages copy commands
 
 Migration script: `scripts/migrate-project-json.js`
+
+#### 2.4 TypeScript Build Exclude & Type Fixes
+
+- ✅ Added "dist" to exclude arrays in 38+ tsconfig.lib.json files to prevent TypeScript from trying to compile output files
+- ✅ Added Jest types to nx/tsconfig.lib.json to enable compilation of internal-testing-utils
+- ✅ Removed internal-testing-utils exclusion from nx/tsconfig.lib.json
+
+Migration script: `scripts/fix-tsconfig-exclude-dist.js`
 
 ---
 
@@ -245,6 +254,7 @@ Each of the remaining 28 packages needs analysis for deep imports:
    - Wildcard patterns for deep imports (./src/utils/_, ./src/generators/_, etc.)
 3. ✅ Merged with existing exports in 10 packages that already had exports configured
 4. ✅ All exports now include the `@nx/nx-source` custom condition for development
+5. ✅ Added `./src/internal-testing-utils/*` export to nx package.json (enables devkit to import testing utilities)
 
 **Actual effort**: ~3 hours
 
@@ -293,10 +303,12 @@ Updated paths in all generators.json, executors.json, and migrations.json files 
 **Status**: ✅ COMPLETE
 
 **Implementation**: Created automated scripts:
+
 - `scripts/add-js-extensions.js` - Handles static imports/exports and dynamic `import()` expressions
 - `scripts/fix-directory-imports.js` - Fixes directory imports to use explicit `index.js`
 
 **Results**:
+
 - ✅ Modified 1466 files across 39 packages (static and dynamic imports)
 - ✅ Modified 174 files to fix directory imports (from `./native.js` to `./native/index.js`)
 - ✅ Build now succeeds with only 8 CJS/ESM interop errors (external packages like axios, tree-kill)
@@ -305,13 +317,28 @@ Updated paths in all generators.json, executors.json, and migrations.json files 
 
 ### 4.2 Validate Import Resolution
 
-**Status**: ⚠️ MOSTLY COMPLETE
+**Status**: ✅ COMPLETE
 
-Build now works with only **8 remaining type errors**, all related to CommonJS/ESM interoperability with external packages:
-- 1 error: Missing @angular-devkit/architect/node (external dependency)
-- 7 errors: CJS module default export issues (axios, tree-kill, ora, cli-spinners)
+All CJS/ESM interoperability issues have been resolved. Build now succeeds for core packages.
 
-These are edge cases that need special handling for ESM/CJS interop with `module: "nodenext"`
+**Fixes Applied**:
+
+1. ✅ Fixed tree-kill import (2 files in nx package) - Changed from namespace to default import
+2. ✅ Fixed ora import (nx/src/utils/spinner.ts) - Changed from namespace to default import
+3. ✅ Fixed string-width import (nx/src/utils/print-help.ts) - Changed from namespace to default import
+4. ✅ Fixed open import (nx/src/command-line/graph/graph.ts) - Changed from namespace to default import
+5. ✅ Fixed axios import (nx/src/command-line/release/utils/remote-release-clients/github.ts) - Simplified to default import
+6. ✅ Fixed @angular-devkit/architect/node import (nx/src/adapter/ngcli-adapter.ts) - Added explicit /index.js path
+7. ✅ Fixed detect-port import (js/src/executors/verdaccio/verdaccio.impl.ts) - Changed from namespace to default import
+8. ✅ Fixed JSON import (jest/src/executors/jest/jest.impl.ts) - Access schema.default for ESM JSON imports
+
+**Build Status**: ✅ Core packages building successfully: nx, devkit, workspace, js, jest, eslint, linter
+
+**Commits**:
+
+- `3e52778f62` - chore(core): fix internal-testing-utils exports for ESM
+- `d60ad393df` - fix(js): fix detect-port import for ESM
+- `ee1f79f701` - fix(testing): access default property of JSON import for ESM
 
 ---
 
@@ -509,16 +536,16 @@ If critical issues found:
 ## Success Criteria
 
 - ✅ All packages build to local `{projectRoot}/dist`
-- ⬜ All packages have correct `exports` field with `@nx/nx-source` condition
-- ⬜ All relative imports use `.js` extensions
+- ✅ All packages have correct `exports` field with `@nx/nx-source` condition
+- ✅ All relative imports use `.js` extensions
 - ✅ All packages use `moduleResolution: nodenext`
-- ⬜ All metadata JSON files point to `dist/` paths
+- ✅ All metadata JSON files point to `dist/` paths
 - ⬜ All 40 packages publish successfully from package root
 - ⬜ All unit tests pass
 - ⬜ All e2e tests pass
 - ⬜ Local publishing works correctly
 - ⬜ Deep imports resolve correctly
-- ⬜ TypeScript compilation has no errors
+- ✅ TypeScript compilation has no errors (for core packages: nx, devkit, workspace, js, jest, eslint, linter)
 - ⬜ No runtime errors when importing packages
 
 ---
