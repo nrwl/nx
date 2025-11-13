@@ -33,10 +33,10 @@ export async function determineNxCloud(
 
 export async function determineNxCloudV2(
   parsedArgs: yargs.Arguments<{ nxCloud?: string; interactive?: boolean }>
-): Promise<'yes' | 'skip'> {
+): Promise<'github' | 'skip'> {
   // Provided via flag
   if (parsedArgs.nxCloud) {
-    return parsedArgs.nxCloud === 'skip' ? 'skip' : 'yes';
+    return parsedArgs.nxCloud === 'skip' ? 'skip' : 'github';
   }
 
   // Non-interactive mode
@@ -62,7 +62,7 @@ export async function determineNxCloudV2(
     promptConfig.hint = () => hint;
   }
 
-  const result = await enquirer.prompt<{ nxCloud: 'yes' | 'skip' }>([
+  const result = await enquirer.prompt<{ nxCloud: 'github' | 'skip' }>([
     promptConfig,
   ]);
   return result.nxCloud;
@@ -115,10 +115,12 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
 
 export async function determineTemplate(
   parsedArgs: yargs.Arguments<{
+    template?: string;
     preset?: string;
     interactive?: boolean;
   }>
 ): Promise<string | 'skip'> {
+  if (parsedArgs.template) return parsedArgs.template;
   if (parsedArgs.preset) return 'skip';
   if (!parsedArgs.interactive || isCI()) return 'skip';
   const { template } = await enquirer.prompt<{ template: string }>([

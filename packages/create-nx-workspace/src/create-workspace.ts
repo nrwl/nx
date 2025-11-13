@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
 import { createSandbox } from './create-sandbox';
@@ -10,6 +11,7 @@ import {
   VcsPushStatus,
 } from './utils/git/git';
 import {
+  connectToNxCloudForTemplate,
   createNxCloudOnboardingUrl,
   getNxCloudInfo,
   readNxCloudToken,
@@ -49,15 +51,29 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let directory: string;
 
   if (options.template) {
+    if (!options.template.startsWith('nrwl/'))
+      throw new Error(
+        `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
+      );
     const templateUrl = `https://github.com/${options.template}`;
-    directory = name;
+    const workingDir = process.cwd().replace(/\\/g, '/');
+    directory = join(workingDir, name);
 
-    await cloneTemplate(templateUrl, directory);
+    await cloneTemplate(templateUrl, name);
     await cleanupLockfiles(directory, packageManager);
 
     // Install dependencies
     const pmc = getPackageManagerCommand(packageManager);
     await execAndWait(pmc.install, directory);
+
+    // Connect to Nx Cloud for template flow
+    if (nxCloud !== 'skip') {
+      await connectToNxCloudForTemplate(
+        directory,
+        'create-nx-workspace',
+        useGitHub
+      );
+    }
   } else {
     // Preset flow - existing behavior
     const tmpDir = await createSandbox(packageManager);
@@ -112,8 +128,14 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     try {
       await initializeGitRepo(directory, { defaultBase, commit, connectUrl });
 
-      // Push to GitHub if commit was made, GitHub push is not skipped, and CI provider is GitHub
-      if (commit && !skipGitHubPush && nxCloud === 'github') {
+      // Push to GitHub if commit was made, GitHub push is not skipped, and:
+      // - CI provider is GitHub (preset flow), OR
+      // - Using template flow with Nx Cloud enabled (yes)
+      if (
+        commit &&
+        !skipGitHubPush &&
+        (nxCloud === 'github' || (isTemplate && nxCloud === 'yes'))
+      ) {
         pushedToVcs = await pushToGitHub(directory, {
           skipGitHubPush,
           name,
