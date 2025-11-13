@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 
 use anyhow::Result;
-use dashmap::DashMap;
+use dashmap::{DashMap, DashSet};
 use napi::{Env, JsFunction};
 use napi_derive::napi;
 use parking_lot::Mutex;
@@ -94,6 +94,8 @@ struct CollectionRunner {
     config: CollectorConfig,
     subscribers: Arc<Mutex<Vec<SubscriberState>>>,
     metadata_store: Arc<MetadataStore>,
+    /// Track which group IDs have been sent (for incremental updates)
+    sent_group_ids: Arc<DashSet<String>>,
 }
 
 impl CollectionRunner {
@@ -110,6 +112,7 @@ impl CollectionRunner {
             config: collector.config.clone(),
             subscribers: Arc::clone(&collector.subscribers),
             metadata_store: Arc::clone(&collector.metadata_store),
+            sent_group_ids: Arc::new(DashSet::new()),
         }
     }
 
@@ -142,6 +145,11 @@ impl CollectionRunner {
         for (pid, proc_metadata) in &process_metadata {
             self.metadata_store
                 .insert_metadata(*pid, proc_metadata.clone());
+        }
+
+        // Track sent group IDs (for incremental updates)
+        for group_id in metadata.groups.keys() {
+            self.sent_group_ids.insert(group_id.clone());
         }
 
         // Derive live PIDs from the collected processes for cleanup
@@ -458,13 +466,14 @@ impl CollectionRunner {
         (batches_metrics, new_metadata)
     }
 
-    /// Create all groups based on current registrations
+    /// Create only NEW groups based on current registrations
+    /// Returns only groups that haven't been sent before
     fn create_groups(&self) -> HashMap<String, GroupInfo> {
-        let mut groups = HashMap::new();
+        let mut new_groups = HashMap::new();
 
-        // Add main_cli group if registered
-        if self.main_cli_pid.lock().is_some() {
-            groups.insert(
+        // Add main_cli group if registered and new
+        if self.main_cli_pid.lock().is_some() && !self.sent_group_ids.contains(MAIN_CLI_GROUP_ID) {
+            new_groups.insert(
                 MAIN_CLI_GROUP_ID.to_string(),
                 GroupInfo {
                     group_type: GroupType::MainCLI,
@@ -475,9 +484,9 @@ impl CollectionRunner {
             );
         }
 
-        // Add daemon group if registered
-        if self.daemon_pid.lock().is_some() {
-            groups.insert(
+        // Add daemon group if registered and new
+        if self.daemon_pid.lock().is_some() && !self.sent_group_ids.contains(DAEMON_GROUP_ID) {
+            new_groups.insert(
                 DAEMON_GROUP_ID.to_string(),
                 GroupInfo {
                     group_type: GroupType::Daemon,
@@ -488,36 +497,40 @@ impl CollectionRunner {
             );
         }
 
-        // Add groups for all registered tasks
+        // Add groups for all NEW registered tasks
         for entry in self.individual_tasks.iter() {
             let task_id = entry.key().clone();
-            groups.insert(
-                task_id.clone(),
-                GroupInfo {
-                    group_type: GroupType::Task,
-                    display_name: task_id.clone(),
-                    id: task_id,
-                    task_ids: None,
-                },
-            );
+            if !self.sent_group_ids.contains(task_id.as_str()) {
+                new_groups.insert(
+                    task_id.clone(),
+                    GroupInfo {
+                        group_type: GroupType::Task,
+                        display_name: task_id.clone(),
+                        id: task_id,
+                        task_ids: None,
+                    },
+                );
+            }
         }
 
-        // Add groups for all registered batches
+        // Add groups for all NEW registered batches
         for entry in self.batches.iter() {
             let batch_id = entry.key().clone();
-            let batch_reg = entry.value();
-            groups.insert(
-                batch_id.clone(),
-                GroupInfo {
-                    group_type: GroupType::Batch,
-                    display_name: batch_id.clone(),
-                    id: batch_id,
-                    task_ids: Some(batch_reg.task_ids.as_ref().to_vec()),
-                },
-            );
+            if !self.sent_group_ids.contains(batch_id.as_str()) {
+                let batch_reg = entry.value();
+                new_groups.insert(
+                    batch_id.clone(),
+                    GroupInfo {
+                        group_type: GroupType::Batch,
+                        display_name: batch_id.clone(),
+                        id: batch_id,
+                        task_ids: Some(batch_reg.task_ids.as_ref().to_vec()),
+                    },
+                );
+            }
         }
 
-        groups
+        new_groups
     }
 
     /// Discover all current processes and collect their metrics
@@ -559,7 +572,24 @@ impl CollectionRunner {
             }
         }
 
-        // Create all groups upfront (we know all registrations before collection)
+        // Clean up groups for completed tasks/batches
+        let mut live_group_ids = std::collections::HashSet::new();
+        if self.main_cli_pid.lock().is_some() {
+            live_group_ids.insert(MAIN_CLI_GROUP_ID.to_string());
+        }
+        if self.daemon_pid.lock().is_some() {
+            live_group_ids.insert(DAEMON_GROUP_ID.to_string());
+        }
+        for entry in self.individual_tasks.iter() {
+            live_group_ids.insert(entry.key().clone());
+        }
+        for entry in self.batches.iter() {
+            live_group_ids.insert(entry.key().clone());
+        }
+        self.sent_group_ids
+            .retain(|group_id| live_group_ids.contains(group_id.as_str()));
+
+        // Create only NEW groups upfront
         let groups = self.create_groups();
 
         // Collect metrics for all the processes
