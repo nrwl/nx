@@ -14,12 +14,6 @@
   "include": [],
   "references": [
     {
-      "path": "../../../../packages/angular-rspack"
-    },
-    {
-      "path": "../../../../packages/module-federation"
-    },
-    {
       "path": "./tsconfig.editor.json"
     },
     {

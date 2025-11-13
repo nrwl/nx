@@ -7,18 +7,6 @@
   "files": [],
   "references": [
     {
-      "path": "../vitest"
-    },
-    {
-      "path": "../js"
-    },
-    {
-      "path": "../devkit"
-    },
-    {
-      "path": "../nx"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],
