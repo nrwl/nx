@@ -89,15 +89,12 @@ export function GetStarted(): ReactElement {
               </div>
               <div className="text-center lg:text-left">
                 <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
-                  Buy an Nx Powerpack license
+                  Receive an Nx Powerpack license
                 </h4>
                 <p className="mt-2">
-                  Select between monthly payments or a one-time annual fee for
-                  your license.
+                  Talk to your Developer Productivity Engineer to get a license
+                  key for your workspaces.
                 </p>
-                <div className="mx-auto mt-4 max-w-md">
-                  <PowerpackPricing />
-                </div>
               </div>
             </div>
 
