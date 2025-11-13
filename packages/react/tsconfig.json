@@ -7,45 +7,6 @@
   "files": [],
   "references": [
     {
-      "path": "../vitest"
-    },
-    {
-      "path": "../rollup"
-    },
-    {
-      "path": "../module-federation"
-    },
-    {
-      "path": "../web"
-    },
-    {
-      "path": "../eslint"
-    },
-    {
-      "path": "../js"
-    },
-    {
-      "path": "../devkit"
-    },
-    {
-      "path": "../nx"
-    },
-    {
-      "path": "../webpack"
-    },
-    {
-      "path": "../rsbuild"
-    },
-    {
-      "path": "../playwright"
-    },
-    {
-      "path": "../cypress"
-    },
-    {
-      "path": "../vite"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],
