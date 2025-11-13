@@ -572,7 +572,10 @@ impl CollectionRunner {
             }
         }
 
-        // Build set of currently live groups and clean up dead ones
+        // Create only NEW groups that haven't been sent before
+        let groups = self.create_groups();
+
+        // Clean up group IDs for tasks/batches that no longer exist
         let mut live_group_ids = std::collections::HashSet::new();
         if self.main_cli_pid.lock().is_some() {
             live_group_ids.insert(MAIN_CLI_GROUP_ID.to_string());
@@ -586,13 +589,8 @@ impl CollectionRunner {
         for entry in self.batches.iter() {
             live_group_ids.insert(entry.key().clone());
         }
-
-        // Remove groups that are no longer live (tasks/batches that completed)
         self.sent_group_ids
             .retain(|group_id| live_group_ids.contains(group_id.as_str()));
-
-        // Create only NEW live groups that haven't been sent before
-        let groups = self.create_groups();
 
         // Collect metrics for all the processes
         let (main_cli_processes, main_cli_metadata) = self.collect_main_cli_metrics(&sys);
