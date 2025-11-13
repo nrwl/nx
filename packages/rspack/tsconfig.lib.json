@@ -4,12 +4,24 @@
     "resolveJsonModule": true,
     "outDir": "./dist",
     "esModuleInterop": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
-    "moduleResolution": "nodenext"
+    "moduleResolution": "nodenext",
+    "module": "nodenext",
+    "rootDir": "./src"
   },
-  "include": ["**/*.ts", "**/*.json"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
+  "include": [
+    "**/*.ts",
+    "**/*.json"
+  ],
+  "exclude": [
+    "jest.config.ts",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "dist"
+  ],
   "references": [
     {
       "path": "../module-federation/tsconfig.lib.json"

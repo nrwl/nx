@@ -3,18 +3,25 @@
   "compilerOptions": {
     "module": "nodenext",
     "outDir": "./dist",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "resolveJsonModule": true,
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
-    "moduleResolution": "nodenext"
+    "moduleResolution": "nodenext",
+    "rootDir": "./src"
   },
   "exclude": [
     "**/*.spec.ts",
     "**/*.test.ts",
     "jest.config.ts",
-    "jest.config.cts"
+    "jest.config.cts",
+    "dist"
   ],
-  "include": ["**/*.ts", "**/*.json"],
+  "include": [
+    "**/*.ts",
+    "**/*.json"
+  ],
   "references": [
     {
       "path": "../vitest/tsconfig.lib.json"

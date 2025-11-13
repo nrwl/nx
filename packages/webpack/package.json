@@ -109,5 +109,6 @@
       "@nx/nx-source": "./src/executors/*/lib/*.ts"
     },
     "./src/executors/*/schema.json": "./src/executors/*/schema.json"
-  }
+  },
+  "type": "commonjs"
 }

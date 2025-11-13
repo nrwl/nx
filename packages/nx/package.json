@@ -206,6 +206,11 @@
       "import": "./plugins/*.js",
       "types": "./plugins/*.d.ts",
       "@nx/nx-source": "./plugins/*.ts"
+    },
+    "./src/devkit-exports": {
+      "import": "./dist/src/devkit-exports.js",
+      "types": "./dist/src/devkit-exports.d.ts",
+      "@nx/nx-source": "./src/devkit-exports.ts"
     }
   }
 }

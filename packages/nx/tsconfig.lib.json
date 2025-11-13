@@ -4,7 +4,10 @@
     "module": "nodenext",
     "outDir": "./dist",
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
-    "types": ["node", "jest"],
+    "types": [
+      "node",
+      "jest"
+    ],
     "composite": true,
     "moduleResolution": "nodenext"
   },
@@ -15,5 +18,9 @@
     "**/__fixtures__/**/*.*",
     "dist"
   ],
-  "include": ["**/*.ts", "**/*.json", "migrations.json"]
+  "include": [
+    "**/*.ts",
+    "**/*.json",
+    "migrations.json"
+  ]
 }

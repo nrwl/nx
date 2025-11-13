@@ -1,4 +1,4 @@
-import * as ora from 'ora';
+import ora from 'ora';
 import { isCI } from './is-ci.js';
 
 export const SHOULD_SHOW_SPINNERS = process.stdout.isTTY && !isCI();

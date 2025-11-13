@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import * as stringWidth from 'string-width';
+import stringWidth from 'string-width';
 import { logger } from './logger.js';
 import { output } from './output.js';
 import { Schema } from './params.js';

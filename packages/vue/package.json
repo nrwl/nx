@@ -61,5 +61,6 @@
       "types": "./dist/utils/*.d.ts",
       "@nx/nx-source": "./src/utils/*.ts"
     }
-  }
+  },
+  "type": "commonjs"
 }

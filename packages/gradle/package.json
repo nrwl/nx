@@ -69,5 +69,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "executors": "./executors.json"
+  "executors": "./executors.json",
+  "type": "commonjs"
 }

@@ -11,7 +11,7 @@
 /**
  * @category Generators
  */
-export { formatFiles } from './src/generators/format-files.js';
+export { formatFiles } from './generators/format-files.js';
 
 /**
  * @category Generators
@@ -19,37 +19,37 @@ export { formatFiles } from './src/generators/format-files.js';
 export {
   generateFiles,
   OverwriteStrategy,
-} from './src/generators/generate-files.js';
+} from './generators/generate-files.js';
 
 /**
  * @category Generators
  */
-export { toJS, ToJSOptions } from './src/generators/to-js.js';
+export { toJS, ToJSOptions } from './generators/to-js.js';
 
 /**
  * @category Generators
  */
-export { updateTsConfigsToJs } from './src/generators/update-ts-configs-to-js.js';
+export { updateTsConfigsToJs } from './generators/update-ts-configs-to-js.js';
 
 /**
  * @category Generators
  */
-export { runTasksInSerial } from './src/generators/run-tasks-in-serial.js';
+export { runTasksInSerial } from './generators/run-tasks-in-serial.js';
 
 /**
  * @category Generators
  */
-export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files.js';
+export { visitNotIgnoredFiles } from './generators/visit-not-ignored-files.js';
 
 export {
   parseTargetString,
   targetToTargetString,
-} from './src/executors/parse-target-string.js';
+} from './executors/parse-target-string.js';
 
 /**
  * @category Executors
  */
-export { readTargetOptions } from './src/executors/read-target-options.js';
+export { readTargetOptions } from './executors/read-target-options.js';
 
 /**
  * @category Utils
@@ -60,17 +60,17 @@ export {
   ensurePackage,
   getDependencyVersionFromPackageJson,
   NX_VERSION,
-} from './src/utils/package-json.js';
+} from './utils/package-json.js';
 
 /**
  * @category Utils
  */
-export { installPackagesTask } from './src/tasks/install-packages-task.js';
+export { installPackagesTask } from './tasks/install-packages-task.js';
 
 /**
  * @category Utils
  */
-export { names } from './src/utils/names.js';
+export { names } from './utils/names.js';
 
 /**
  * @category Utils
@@ -78,7 +78,7 @@ export { names } from './src/utils/names.js';
 export {
   getWorkspaceLayout,
   extractLayoutDirectory,
-} from './src/utils/get-workspace-layout.js';
+} from './utils/get-workspace-layout.js';
 
 /**
  * @category Utils
@@ -87,29 +87,29 @@ export type {
   StringChange,
   StringDeletion,
   StringInsertion,
-} from './src/utils/string-change';
+} from './utils/string-change';
 
 /**
  * @category Utils
  */
-export { applyChangesToString, ChangeType } from './src/utils/string-change.js';
+export { applyChangesToString, ChangeType } from './utils/string-change.js';
 
 /**
  * @category Utils
  */
-export { offsetFromRoot } from './src/utils/offset-from-root.js';
+export { offsetFromRoot } from './utils/offset-from-root.js';
 
 /**
  * @category Utils
  */
-export { convertNxGenerator } from './src/utils/invoke-nx-generator.js';
+export { convertNxGenerator } from './utils/invoke-nx-generator.js';
 
 /**
  * @category Utils
  */
-export { convertNxExecutor } from './src/utils/convert-nx-executor.js';
+export { convertNxExecutor } from './utils/convert-nx-executor.js';
 
 /**
  * @category Utils
  */
-export { moveFilesToNewDirectory } from './src/utils/move-dir.js';
+export { moveFilesToNewDirectory } from './utils/move-dir.js';

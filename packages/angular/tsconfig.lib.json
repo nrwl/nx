@@ -3,10 +3,13 @@
   "compilerOptions": {
     "module": "nodenext",
     "outDir": "./dist",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "esModuleInterop": true,
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
-    "moduleResolution": "nodenext"
+    "moduleResolution": "nodenext",
+    "rootDir": "./src"
   },
   "exclude": [
     "**/*.spec.ts",
@@ -16,9 +19,13 @@
     "jest.config.ts",
     "test-setup.ts",
     "index.ts",
-    "mf/**/*"
+    "mf/**/*",
+    "dist"
   ],
-  "include": ["**/*.ts", "**/*.json"],
+  "include": [
+    "**/*.ts",
+    "**/*.json"
+  ],
   "references": [
     {
       "path": "../vitest/tsconfig.lib.json"

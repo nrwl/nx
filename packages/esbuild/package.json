@@ -72,5 +72,6 @@
       "types": "./plugins/*.d.ts",
       "@nx/nx-source": "./plugins/*.ts"
     }
-  }
+  },
+  "type": "commonjs"
 }

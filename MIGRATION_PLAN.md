@@ -342,11 +342,101 @@ All CJS/ESM interoperability issues have been resolved. Build now succeeds for c
 
 ---
 
-## 🚧 Phase 5: Special Package Handling (REMAINING)
+## ✅ Phase 4.3: Additional Module Configuration Fixes (COMPLETE)
+
+**Status**: ✅ COMPLETE
+
+### 4.3.1 Add module: "nodenext" to Packages Missing It
+
+**Issue**: TypeScript requires `module: "nodenext"` when `moduleResolution: "nodenext"` is set.
+
+**Packages Fixed** (14 packages):
+
+- docker, esbuild, eslint-plugin, gradle, module-federation
+- nuxt, playwright, rollup, rsbuild, rspack
+- vite, vitest, vue, webpack
+
+**Changes**:
+
+- Added `"module": "nodenext"` to each package's tsconfig.lib.json
+- Added `"type": "commonjs"` to package.json where needed (8 packages)
+
+### 4.3.2 Fix detect-port Import for ESM
+
+**File**: packages/cypress/src/utils/start-dev-server.ts:14
+
+**Change**: Changed from namespace import to default import
+
+```typescript
+// Before
+import * as detectPort from 'detect-port';
+
+// After
+import detectPort from 'detect-port';
+```
+
+### 4.3.3 Move Root-Level TypeScript Files to src/
+
+**Issue**: With `rootDir: "./src"`, TypeScript expects all source files in src/
+
+**Files Moved**: 93 TypeScript files across 36 packages
+
+**Examples**:
+
+- packages/angular/{index,plugin,executors,generators,tailwind,test-setup}.ts → packages/angular/src/
+- packages/devkit/public-api.ts → packages/devkit/src/
+- packages/react/{index,babel,module-federation,tailwind,...}.ts → packages/react/src/
+- etc.
+
+**Script**: Manual move operation
+
+### 4.3.4 Add rootDir: "./src" to All Package tsconfig.lib.json
+
+**Status**: ✅ COMPLETE (36 packages)
+
+**Exception**: packages/nx/tsconfig.lib.json does NOT have rootDir because it has files outside src/ (bin/, release/, tasks-runners/)
+
+**Changes**:
+
+- Added `"rootDir": "./src"` to compilerOptions in 36 packages
+- This ensures TypeScript outputs to dist/ without preserving the src/ directory structure
+
+### 4.3.5 Fix Import Paths After Moving Files
+
+**Files Fixed**:
+
+- packages/devkit/src/index.ts: Changed `'../public-api.js'` → `'./public-api.js'`
+- packages/devkit/src/public-api.ts: Changed `'./src/utils/*'` → `'./utils/*'` (multiple imports)
+
+### 4.3.6 Add Missing Export to nx Package
+
+**File**: packages/nx/package.json
+
+**Change**: Added export for `./src/devkit-exports`
+
+```json
+{
+  "exports": {
+    "./src/devkit-exports": {
+      "import": "./dist/src/devkit-exports.js",
+      "types": "./dist/src/devkit-exports.d.ts",
+      "@nx/nx-source": "./src/devkit-exports.ts"
+    }
+  }
+}
+```
+
+**Commits**:
+
+- (pending) - chore(repo): complete TypeScript module configuration and file structure migration
+
+---
+
+## 🚧 Phase 5: Special Package Handling (PARTIALLY COMPLETE)
 
 ### 5.1 @nx/nx Package
 
-**Status**: Partially Complete
+**Status**: ⚠️ Build Order Issue Identified
 
 **Special requirements**:
 
@@ -355,28 +445,36 @@ All CJS/ESM interoperability issues have been resolved. Build now succeeds for c
 - ⚠️ Native-packages subdirectories (left unchanged per decision - verify they work)
 - ✅ Graph-client build embedded
 
-**Remaining**:
+**Known Issue**: Circular build dependency between nx and devkit
 
+- nx's legacy-post-build task depends on devkit being available
+- devkit needs to import from 'nx/src/devkit-exports'
+- This creates a circular dependency during the build process
+
+**Next Steps**:
+
+- Investigate build order resolution
+- May need to update legacy-post-build target or split it differently
 - Verify native build outputs (`src/native/*.node`, `src/native/*.wasm`) are included in npm package
 - Test that `copy-native-package-directories` target works correctly
 - Ensure .npmignore includes native artifacts correctly
 
 ### 5.2 @nx/angular Package
 
-**Status**: Not Started
+**Status**: ✅ COMPLETE
 
 **Uses ng-packagr**:
 
-Update `ng-package.json`:
+Updated `ng-package.json`:
 
 ```json
 {
-  "dest": "./dist", // was: ../../dist/packages/angular
+  "dest": "./dist",
   "deleteDestPath": false
 }
 ```
 
-Update `project.json` `build-ng` target if needed to output to local dist
+**Change**: Changed from `"../../dist/packages/angular"` to `"./dist"`
 
 **Verify**: ng-packagr respects new dest path and creates proper package structure
 

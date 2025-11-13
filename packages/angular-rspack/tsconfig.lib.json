@@ -6,7 +6,9 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": false,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "noImplicitAny": false,
@@ -20,7 +22,12 @@
     "src/lib/plugins/loaders/hmr-accept-loader.ts",
     "src/lib/plugins/tools/*.ts"
   ],
-  "exclude": ["vitest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
+  "exclude": [
+    "vitest.config.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "dist"
+  ],
   "references": [
     {
       "path": "../devkit/tsconfig.lib.json"
