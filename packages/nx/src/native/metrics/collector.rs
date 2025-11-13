@@ -306,7 +306,6 @@ impl CollectionRunner {
     fn collect_main_cli_metrics(
         &self,
         sys: &System,
-        live_pids: &mut HashSet<i32>,
     ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
         let mut new_metadata = HashMap::new();
         let mut processes = Vec::new();
@@ -315,7 +314,6 @@ impl CollectionRunner {
             if let Some((main, metadata)) =
                 self.collect_process_info(sys, pid, None, MAIN_CLI_GROUP_ID, true)
             {
-                live_pids.insert(main.pid);
                 processes.push(main);
                 if let Some(meta) = metadata {
                     new_metadata.insert(pid, meta);
@@ -337,7 +335,6 @@ impl CollectionRunner {
                     .collect();
 
                 for (metrics, metadata) in subprocesses {
-                    live_pids.insert(metrics.pid);
                     processes.push(metrics);
                     if let Some(meta) = metadata {
                         new_metadata.insert(metrics.pid, meta);
@@ -354,7 +351,6 @@ impl CollectionRunner {
         &self,
         sys: &System,
         children_map: &ParentToChildrenMap,
-        live_pids: &mut HashSet<i32>,
     ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
         let mut new_metadata = HashMap::new();
         let mut processes = Vec::new();
@@ -372,7 +368,6 @@ impl CollectionRunner {
                         DAEMON_GROUP_ID,
                         idx == 0, // First process is root
                     ) {
-                        live_pids.insert(metrics.pid);
                         if let Some(meta) = metadata {
                             new_metadata.insert(p, meta);
                         }
@@ -395,7 +390,6 @@ impl CollectionRunner {
         &self,
         sys: &System,
         children_map: &ParentToChildrenMap,
-        live_pids: &mut HashSet<i32>,
     ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
         let mut tasks = Vec::new();
         let mut new_metadata = HashMap::new();
@@ -419,7 +413,6 @@ impl CollectionRunner {
                 if let Some((metrics, metadata)) =
                     self.collect_process_info(sys, pid, None, group_id, is_anchor)
                 {
-                    live_pids.insert(metrics.pid);
                     if let Some(meta) = metadata {
                         new_metadata.insert(pid, meta);
                     }
@@ -437,7 +430,6 @@ impl CollectionRunner {
         &self,
         sys: &System,
         children_map: &ParentToChildrenMap,
-        live_pids: &mut HashSet<i32>,
     ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
         let mut batches_metrics = Vec::new();
         let mut new_metadata = HashMap::new();
@@ -458,7 +450,6 @@ impl CollectionRunner {
                     group_id,
                     pid == batch_anchor_pid, // Anchor PID is root
                 ) {
-                    live_pids.insert(metrics.pid);
                     if let Some(meta) = metadata {
                         new_metadata.insert(pid, meta);
                     }
@@ -574,21 +565,15 @@ impl CollectionRunner {
             }
         }
 
-        // Clear live PIDs from previous collection cycle (keeps allocated capacity)
-        live_pids.clear();
-
         // Create all groups upfront (we know all registrations before collection)
         let groups = self.create_groups();
 
         // Collect metrics for all the processes
-        let (main_cli_processes, main_cli_metadata) =
-            self.collect_main_cli_metrics(&sys, live_pids);
-        let (daemon_processes, daemon_metadata) =
-            self.collect_daemon_metrics(&sys, &children_map, live_pids);
-        let (tasks_metrics, tasks_metadata) =
-            self.collect_all_task_metrics(&sys, &children_map, live_pids);
+        let (main_cli_processes, main_cli_metadata) = self.collect_main_cli_metrics(&sys);
+        let (daemon_processes, daemon_metadata) = self.collect_daemon_metrics(&sys, &children_map);
+        let (tasks_metrics, tasks_metadata) = self.collect_all_task_metrics(&sys, &children_map);
         let (batches_metrics, batches_metadata) =
-            self.collect_all_batch_metrics(&sys, &children_map, live_pids);
+            self.collect_all_batch_metrics(&sys, &children_map);
 
         // Accumulate metadata from all collection sources
         let mut all_metadata = main_cli_metadata;
@@ -602,6 +587,12 @@ impl CollectionRunner {
         processes.extend(daemon_processes);
         processes.extend(tasks_metrics);
         processes.extend(batches_metrics);
+
+        // Derive live PIDs from collected processes
+        live_pids.clear();
+        for proc in &processes {
+            live_pids.insert(proc.pid);
+        }
 
         // Keep a copy of metadata with i32 keys for internal use
         let process_metadata = all_metadata.clone();
