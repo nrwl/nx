@@ -118,15 +118,13 @@ impl CollectionRunner {
         let interval = std::time::Duration::from_millis(self.config.collection_interval_ms);
 
         while self.should_collect.load(Ordering::Acquire) {
-            // Collect current metrics
-            match self.collect_metrics() {
-                Ok(result) => {
+            // Collect current metrics and notify subscribers
+            self.collect_metrics()
+                .inspect_err(|e| tracing::debug!("Metrics collection error: {}", e))
+                .and_then(|result| {
                     self.notify_subscribers(result);
-                }
-                Err(e) => {
-                    tracing::debug!("Metrics collection error: {}", e);
-                }
-            }
+                    Ok(())
+                });
 
             // Sleep in small chunks so thread can exit quickly on shutdown
             self.sleep_with_early_exit(interval);
