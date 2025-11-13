@@ -115,23 +115,12 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
 
 export async function determineTemplate(
   parsedArgs: yargs.Arguments<{
-    template?: string;
     preset?: string;
     interactive?: boolean;
   }>
 ): Promise<string | 'skip'> {
-  // Already provided via flag
-  if (parsedArgs.template) return parsedArgs.template;
-
-  // Using preset flow instead
   if (parsedArgs.preset) return 'skip';
-
-  // Non-interactive mode - default to preset flow
-  if (!parsedArgs.interactive || isCI()) {
-    return 'skip';
-  }
-
-  // Show template selection prompt
+  if (!parsedArgs.interactive || isCI()) return 'skip';
   const { template } = await enquirer.prompt<{ template: string }>([
     {
       name: 'template',
@@ -139,20 +128,20 @@ export async function determineTemplate(
       type: 'autocomplete',
       choices: [
         {
-          name: 'https://github.com/nrwl/empty-template',
+          name: 'nrwl/empty-template',
           message: 'Empty             (minimal monorepo without projects)',
         },
         {
-          name: 'https://github.com/nrwl/typescript-template',
+          name: 'nrwl/typescript-template',
           message: 'TypeScript        (monorepo with TypeScript packages)',
         },
         {
-          name: 'https://github.com/nrwl/react-template',
+          name: 'nrwl/react-template',
           message:
             'React             (fullstack monorepo with React and Express)',
         },
         {
-          name: 'https://github.com/nrwl/angular-template',
+          name: 'nrwl/angular-template',
           message:
             'Angular           (fullstack monorepo with Angular and Express)',
         },
