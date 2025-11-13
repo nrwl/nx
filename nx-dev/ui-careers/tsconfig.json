@@ -10,12 +10,6 @@
   "include": [],
   "references": [
     {
-      "path": "../ui-common"
-    },
-    {
-      "path": "../data-access-careers"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],

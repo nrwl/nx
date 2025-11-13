@@ -14,21 +14,6 @@
   "include": [],
   "references": [
     {
-      "path": "../feature-analytics"
-    },
-    {
-      "path": "../ui-primitives"
-    },
-    {
-      "path": "../ui-animations"
-    },
-    {
-      "path": "../ui-icons"
-    },
-    {
-      "path": "../ui-common"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ]

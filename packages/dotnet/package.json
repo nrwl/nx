@@ -33,6 +33,8 @@
       "default": "./dist/plugin.js",
       "types": "./dist/plugin.d.ts"
     },
+    "./generators/*/schema.json": "./dist/generators/*/schema.json",
+    "./generators/*/schema": "./dist/generators/*/schema.d.ts",
     "./generators.json": "./generators.json",
     "./migrations.json": "./migrations.json",
     "./package.json": "./package.json"

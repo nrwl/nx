@@ -22,7 +22,11 @@ export async function configureAiAgentsHandler(
   inner = false
 ): Promise<void> {
   // Use environment variable to force local execution
-  if (process.env.NX_AI_FILES_USE_LOCAL === 'true' || inner) {
+  if (
+    process.env.NX_USE_LOCAL === 'true' ||
+    process.env.NX_AI_FILES_USE_LOCAL === 'true' ||
+    inner
+  ) {
     return await configureAiAgentsHandlerImpl(args);
   }
 

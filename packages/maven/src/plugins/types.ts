@@ -3,6 +3,7 @@ import type { RawProjectGraphDependency } from 'nx/src/project-graph/project-gra
 
 export interface MavenPluginOptions {
   verbose?: boolean;
+  targetNamePrefix?: string;
 }
 
 export const DEFAULT_OPTIONS: MavenPluginOptions = {};

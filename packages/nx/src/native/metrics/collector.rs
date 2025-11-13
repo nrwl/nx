@@ -8,15 +8,13 @@ use dashmap::DashMap;
 use napi::{Env, JsFunction};
 use napi_derive::napi;
 use parking_lot::Mutex;
-use sysinfo::{
-    CpuRefreshKind, MemoryRefreshKind, Pid, ProcessRefreshKind, RefreshKind, System, UpdateKind,
-};
+use sysinfo::{Pid, ProcessRefreshKind, System, UpdateKind};
 use tracing::error;
 
 use crate::native::metrics::types::{
     BatchMetricsSnapshot, BatchRegistration, CollectorConfig, IndividualTaskRegistration,
     MetricsUpdate, ProcessMetadata, ProcessMetrics, ProcessMetricsSnapshot, ProcessTreeMetrics,
-    SystemInfo, SystemMetrics,
+    SystemInfo,
 };
 use crate::native::utils::time::current_timestamp_millis;
 use napi::threadsafe_function::{
@@ -476,29 +474,18 @@ impl CollectionRunner {
         // Capture timestamp FIRST for accuracy
         let timestamp = current_timestamp_millis();
 
-        // Single system refresh for ALL processes (one scan, all data)
+        // Refresh all processes
         let mut sys = self.system.lock();
-        sys.refresh_specifics(
-            RefreshKind::nothing()
-                .with_processes(
-                    ProcessRefreshKind::nothing()
-                        .with_memory()
-                        .with_cpu()
-                        .with_exe(UpdateKind::OnlyIfNotSet)
-                        .with_cmd(UpdateKind::OnlyIfNotSet)
-                        .with_cwd(UpdateKind::OnlyIfNotSet),
-                )
-                .with_cpu(CpuRefreshKind::nothing().with_cpu_usage())
-                .with_memory(MemoryRefreshKind::nothing().with_ram()),
+        sys.refresh_processes_specifics(
+            sysinfo::ProcessesToUpdate::All,
+            true, // remove_dead_processes
+            ProcessRefreshKind::nothing()
+                .with_memory()
+                .with_cpu()
+                .with_exe(UpdateKind::OnlyIfNotSet)
+                .with_cmd(UpdateKind::OnlyIfNotSet)
+                .with_cwd(UpdateKind::OnlyIfNotSet),
         );
-
-        let system_metrics = SystemMetrics {
-            cpu: sys.global_cpu_usage() as f64,
-            memory: sys.used_memory() as i64,
-            available_memory: sys.available_memory() as i64,
-            swap_used: sys.used_swap() as i64,
-            swap_total: sys.total_swap() as i64,
-        };
 
         let children_map = Self::build_parent_child_map(&sys);
 
@@ -515,6 +502,11 @@ impl CollectionRunner {
         });
         self.main_cli_subprocess_pids
             .retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
+        if let Some(pid) = *self.daemon_pid.lock() {
+            if sys.process(Pid::from(pid as usize)).is_none() {
+                *self.daemon_pid.lock() = None;
+            }
+        }
 
         // Clear live PIDs from previous collection cycle (keeps allocated capacity)
         live_pids.clear();
@@ -533,7 +525,6 @@ impl CollectionRunner {
 
         let metrics_snapshot = ProcessMetricsSnapshot {
             timestamp,
-            system: system_metrics,
             main_cli: main_cli_metrics,
             daemon: daemon_metrics,
             tasks: tasks_metrics,

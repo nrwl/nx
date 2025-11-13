@@ -4,24 +4,6 @@
   "include": [],
   "references": [
     {
-      "path": "../nx"
-    },
-    {
-      "path": "../react"
-    },
-    {
-      "path": "../eslint"
-    },
-    {
-      "path": "../js"
-    },
-    {
-      "path": "../jest"
-    },
-    {
-      "path": "../devkit"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],

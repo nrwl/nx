@@ -7,24 +7,6 @@
   "include": [],
   "references": [
     {
-      "path": "../module-federation"
-    },
-    {
-      "path": "../web"
-    },
-    {
-      "path": "../devkit"
-    },
-    {
-      "path": "../js"
-    },
-    {
-      "path": "../nest"
-    },
-    {
-      "path": "../nx"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],

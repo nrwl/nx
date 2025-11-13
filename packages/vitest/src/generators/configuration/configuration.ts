@@ -419,6 +419,11 @@ function isAngularV20(tree: Tree) {
   const cleanedAngularVersion =
     clean(angularVersion) ?? coerce(angularVersion).version;
 
+  if (typeof cleanedAngularVersion !== 'string') {
+    // assume the latest version will be installed,
+    return true;
+  }
+
   return major(cleanedAngularVersion) >= 20;
 }
 

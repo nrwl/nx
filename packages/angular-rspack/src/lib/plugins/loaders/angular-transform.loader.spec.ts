@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { default as angularTransformLoader } from './angular-transform.loader';
 import { NG_RSPACK_SYMBOL_NAME, type NgRspackCompilation } from '../../models';
 import type { LoaderContext } from '@rspack/core';

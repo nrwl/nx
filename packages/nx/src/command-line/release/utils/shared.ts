@@ -1,11 +1,10 @@
 import * as chalk from 'chalk';
 import { prerelease } from 'semver';
-import { extname } from 'path';
 import { ProjectGraph } from '../../../config/project-graph';
-import { interpolate } from '../../../tasks-runner/utils';
-import { output } from '../../../utils/output';
 import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
 import { WholeFileChange } from '../../../project-graph/file-utils';
+import { interpolate } from '../../../tasks-runner/utils';
+import { output } from '../../../utils/output';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { GitCommit, gitAdd, gitCommit } from './git';
 

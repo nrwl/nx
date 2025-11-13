@@ -13,15 +13,6 @@
   "include": [],
   "references": [
     {
-      "path": "../../packages/workspace"
-    },
-    {
-      "path": "../../packages/devkit"
-    },
-    {
-      "path": "../../packages/nx"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],

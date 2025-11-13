@@ -2,7 +2,10 @@ import { execSync } from 'child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { performance } from 'perf_hooks';
-import { ProjectGraph } from '../../config/project-graph';
+import {
+  ProjectGraph,
+  ProjectGraphExternalNode,
+} from '../../config/project-graph';
 import { hashArray } from '../../hasher/file-hasher';
 import {
   CreateDependencies,
@@ -32,6 +35,7 @@ export const name = 'nx/js/dependencies-and-lockfile';
 
 // Separate in-memory caches
 let cachedExternalNodes: ProjectGraph['externalNodes'] | undefined;
+let cachedKeyMap: Map<string, any> | undefined;
 
 export const createNodesV2: CreateNodesV2 = [
   combineGlobPatterns(LOCKFILES),
@@ -65,23 +69,25 @@ function internalCreateNodes(
   const lockFileHash = getLockFileHash(lockFileContents);
 
   if (!lockFileNeedsReprocessing(lockFileHash, externalNodesHashFile)) {
-    const nodes = readCachedExternalNodes();
+    const { nodes, keyMap } = readCachedExternalNodes();
     cachedExternalNodes = nodes;
+    cachedKeyMap = keyMap;
 
     return {
       externalNodes: nodes,
     };
   }
 
-  const externalNodes = getLockFileNodes(
+  const { nodes: externalNodes, keyMap } = getLockFileNodes(
     packageManager,
     lockFileContents,
     lockFileHash,
     context
   );
   cachedExternalNodes = externalNodes;
+  cachedKeyMap = keyMap;
 
-  writeExternalNodesCache(lockFileHash, externalNodes);
+  writeExternalNodesCache(lockFileHash, externalNodes, keyMap);
 
   return {
     externalNodes,
@@ -117,7 +123,8 @@ export const createDependencies: CreateDependencies = (
         packageManager,
         lockFileContents,
         lockFileHash,
-        ctx
+        ctx,
+        cachedKeyMap
       );
 
       writeDependenciesCache(lockFileHash, lockfileDependencies);
@@ -142,6 +149,49 @@ function getLockFileHash(lockFileContents: string) {
   return hashArray([nxVersion, lockFileContents]);
 }
 
+// Serialize keyMap to JSON-friendly format
+function serializeKeyMap(keyMap: Map<string, any>): Record<string, any> {
+  const serialized: Record<string, any> = {};
+  for (const [key, value] of keyMap.entries()) {
+    if (value instanceof Set) {
+      // pnpm: Map<string, Set<ProjectGraphExternalNode>>
+      serialized[key] = Array.from(value).map((node) => node.name);
+    } else if (value && typeof value === 'object' && 'name' in value) {
+      // npm/yarn: Map<string, ProjectGraphExternalNode>
+      serialized[key] = value.name;
+    } else {
+      serialized[key] = value;
+    }
+  }
+  return serialized;
+}
+
+// Deserialize keyMap from JSON format using ctx.externalNodes
+function deserializeKeyMap(
+  serialized: Record<string, any>,
+  externalNodes: Record<string, ProjectGraphExternalNode>
+): Map<string, any> {
+  const keyMap = new Map<string, any>();
+  for (const [key, value] of Object.entries(serialized)) {
+    if (Array.isArray(value)) {
+      // pnpm: reconstruct Set<ProjectGraphExternalNode>
+      const nodes = value
+        .map((nodeName) => externalNodes[nodeName])
+        .filter(Boolean);
+      keyMap.set(key, new Set(nodes));
+    } else if (typeof value === 'string') {
+      // npm/yarn: reconstruct ProjectGraphExternalNode
+      const node = externalNodes[value];
+      if (node) {
+        keyMap.set(key, node);
+      }
+    } else {
+      keyMap.set(key, value);
+    }
+  }
+  return keyMap;
+}
+
 function lockFileNeedsReprocessing(lockHash: string, hashFilePath: string) {
   try {
     return readFileSync(hashFilePath).toString() !== lockHash;
@@ -153,15 +203,24 @@ function lockFileNeedsReprocessing(lockHash: string, hashFilePath: string) {
 // External nodes cache functions
 function writeExternalNodesCache(
   hash: string,
-  nodes: ProjectGraph['externalNodes']
+  nodes: ProjectGraph['externalNodes'],
+  keyMap: Map<string, any>
 ) {
   mkdirSync(dirname(externalNodesHashFile), { recursive: true });
-  writeFileSync(externalNodesCache, JSON.stringify(nodes, null, 2));
+  const serializedKeyMap = serializeKeyMap(keyMap);
+  const cacheData = { nodes, keyMap: serializedKeyMap };
+  writeFileSync(externalNodesCache, JSON.stringify(cacheData, null, 2));
   writeFileSync(externalNodesHashFile, hash);
 }
 
-function readCachedExternalNodes(): ProjectGraph['externalNodes'] {
-  return JSON.parse(readFileSync(externalNodesCache).toString());
+function readCachedExternalNodes(): {
+  nodes: ProjectGraph['externalNodes'];
+  keyMap: Map<string, any>;
+} {
+  const { nodes, keyMap } = JSON.parse(
+    readFileSync(externalNodesCache, 'utf-8')
+  );
+  return { nodes, keyMap: deserializeKeyMap(keyMap, nodes) };
 }
 
 // Dependencies cache functions

@@ -44,6 +44,7 @@ class NxTargetFactory(
   private val mojoAnalyzer: MojoAnalyzer,
   private val pathFormatter: PathFormatter,
   private val gitIgnoreClassifier: GitIgnoreClassifier,
+  private val targetNamePrefix: String
 ) {
   private val log: Logger = LoggerFactory.getLogger(NxTargetFactory::class.java)
 
@@ -97,7 +98,7 @@ class NxTargetFactory(
         project,
         mavenCommand,
         nxTargets,
-        ciPhaseTargets["test-ci"]!!,
+        ciPhaseTargets["${applyPrefix("test-ci")}"]!!,
         phaseGoals["test"]!!
       )
 
@@ -290,7 +291,7 @@ class NxTargetFactory(
 
     if (hasInstall) {
       val dependsOnNode = objectMapper.createObjectNode()
-      dependsOnNode.put("target", "install")
+      dependsOnNode.put("target", applyPrefix("install"))
       dependsOnNode.put("dependencies", true)
       dependsOnNode.put("params", "forward")
       target.dependsOn?.add(dependsOnNode)
@@ -300,17 +301,17 @@ class NxTargetFactory(
     val previousPhase = phases.getOrNull(index - 1)
     if (previousPhase != null) {
       val dependsOnNode = objectMapper.createObjectNode()
-      dependsOnNode.put("target", previousPhase)
+      dependsOnNode.put("target", applyPrefix(previousPhase))
       dependsOnNode.put("params", "forward")
       target.dependsOn?.add(dependsOnNode)
     }
 
-    phaseTargets[phase] = target
+    phaseTargets[applyPrefix(phase)] = target
 
     if (hasGoals) {
-      log.info("Created phase target '$phase' with ${goalsForPhase?.size ?: 0} goals")
+      log.info("Created phase target '${applyPrefix(phase)}' with ${goalsForPhase?.size ?: 0} goals")
     } else {
-      log.info("Created noop phase target '$phase' (no goals)")
+      log.info("Created noop phase target '${applyPrefix(phase)}' (no goals)")
     }
   }
 
@@ -327,7 +328,7 @@ class NxTargetFactory(
   ) {
     val goalsForPhase = phaseGoals[phase]
     val hasGoals = goalsForPhase?.isNotEmpty() == true
-    val ciPhaseName = "$phase-ci"
+    val ciPhaseName = "${applyPrefix(phase)}-ci"
 
     // Test and later phases get a CI counterpart - but only if they have goals
     if (!shouldCreateCiPhase(hasGoals, phase)) {
@@ -351,14 +352,14 @@ class NxTargetFactory(
     if (previousCiPhase != null) {
       log.info("CI phase '$phase' depends on previous CI phase: '$previousCiPhase'")
       val dependsOnNode = objectMapper.createObjectNode()
-      dependsOnNode.put("target", "$previousCiPhase-ci")
+      dependsOnNode.put("target", "${applyPrefix(previousCiPhase)}-ci")
       dependsOnNode.put("params", "forward")
       ciTarget.dependsOn?.add(dependsOnNode)
     }
 
     if (hasInstall) {
       val dependsOnNode = objectMapper.createObjectNode()
-      dependsOnNode.put("target", "install-ci")
+      dependsOnNode.put("target", "${applyPrefix("install")}-ci")
       dependsOnNode.put("dependencies", true)
       dependsOnNode.put("params", "forward")
       ciTarget.dependsOn?.add(dependsOnNode)
@@ -437,7 +438,7 @@ class NxTargetFactory(
         execution.goals.forEach { goal ->
           boundGoals.add(goal)
 
-          val goalTargetName = "$goalPrefix:$goal@${execution.id}"
+          val goalTargetName = applyPrefix("$goalPrefix:$goal@${execution.id}")
           val goalTarget = createSimpleGoalTarget(
             mavenCommand,
             project,
@@ -456,7 +457,7 @@ class NxTargetFactory(
       pluginDescriptor.mojos?.forEach { mojoDescriptor ->
         val goal = mojoDescriptor.goal
         if (!boundGoals.contains(goal)) {
-          val goalTargetName = "$goalPrefix:$goal"
+          val goalTargetName = applyPrefix("$goalPrefix:$goal")
           val goalTarget = createSimpleGoalTarget(
             mavenCommand,
             project,
@@ -577,7 +578,7 @@ class NxTargetFactory(
       ?: return emptyMap()
 
     testClasses.forEach { testClass ->
-      val targetName = "${goalDescriptor.goalSpecifier}--${testClass.packagePath}.${testClass.className}"
+      val targetName = applyPrefix("${goalDescriptor.goalSpecifier}--${testClass.packagePath}.${testClass.className}")
 
       log.info("Generating target for test class: $targetName'")
 
@@ -593,7 +594,7 @@ class NxTargetFactory(
         analysis.isCacheable,
         analysis.isContinuous,
         analysis.isThreadSafe,
-        nxTargets["test-ci"].get("dependsOn").deepCopy() as ArrayNode,
+        nxTargets["${applyPrefix("test")}-ci"].get("dependsOn").deepCopy() as ArrayNode,
         objectMapper.createArrayNode(),
         objectMapper.createArrayNode()
       )
@@ -674,6 +675,17 @@ class NxTargetFactory(
       "pre-integration-test" -> "before:integration-test"
       "post-integration-test" -> "after:integration-test"
       else -> phase
+    }
+  }
+
+  /**
+   * Applies the targetNamePrefix to a target name if the prefix is non-empty.
+   */
+  private fun applyPrefix(targetName: String): String {
+    return if (targetNamePrefix.isNotEmpty()) {
+      "$targetNamePrefix$targetName"
+    } else {
+      targetName
     }
   }
 }

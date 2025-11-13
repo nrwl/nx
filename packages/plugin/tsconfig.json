@@ -7,21 +7,6 @@
   "files": [],
   "references": [
     {
-      "path": "../eslint"
-    },
-    {
-      "path": "../js"
-    },
-    {
-      "path": "../jest"
-    },
-    {
-      "path": "../nx"
-    },
-    {
-      "path": "../devkit"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],

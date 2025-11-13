@@ -34,7 +34,8 @@ describe('nx init (React)', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive`
+      } nx@${getPublishedVersion()} init --no-interactive`,
+      { env: { NX_USE_LOCAL: 'true' } }
     );
 
     expect(craToNxOutput).toContain('Done!');
@@ -90,7 +91,8 @@ describe('nx init (React)', () => {
     runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive`
+      } nx@${getPublishedVersion()} init --no-interactive`,
+      { env: { NX_USE_LOCAL: 'true' } }
     );
 
     expect(() => runCLI(`build ${appName}`)).not.toThrow();

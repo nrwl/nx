@@ -68,6 +68,7 @@ export type ChangelogOptions = NxReleaseArgs &
     from?: string;
     interactive?: string;
     createRelease?: false | 'github' | 'gitlab';
+    resolveVersionPlans?: 'all' | 'using-from-and-to';
     replaceExistingContents?: boolean;
     // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
     releaseGraph?: ReleaseGraph;
@@ -324,6 +325,13 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
             description:
               'Whether to overwrite the existing changelog contents instead of prepending to them.',
             default: false,
+          })
+          .option('resolve-version-plans', {
+            type: 'string',
+            description:
+              'How to resolve version plans for changelog generation, defaults to resolving all version plan files available on disk.',
+            choices: ['all', 'using-from-and-to'],
+            default: 'all',
           })
           .check((argv) => {
             if (!argv.version) {

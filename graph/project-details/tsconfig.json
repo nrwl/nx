@@ -10,18 +10,6 @@
   "include": [],
   "references": [
     {
-      "path": "../ui-project-details"
-    },
-    {
-      "path": "../shared"
-    },
-    {
-      "path": "../ui-common"
-    },
-    {
-      "path": "../ui-render-config"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],

@@ -14,27 +14,6 @@
   "include": [],
   "references": [
     {
-      "path": "../ui-theme"
-    },
-    {
-      "path": "../ui-primitives"
-    },
-    {
-      "path": "../ui-common"
-    },
-    {
-      "path": "../data-access-packages"
-    },
-    {
-      "path": "../ui-markdoc"
-    },
-    {
-      "path": "../models-package"
-    },
-    {
-      "path": "../models-document"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ]

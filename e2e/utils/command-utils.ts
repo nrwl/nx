@@ -66,7 +66,11 @@ export function runCommand(
   command: string,
   options?: Partial<ExecSyncOptions> & { failOnError?: boolean }
 ): string {
-  const { failOnError, ...childProcessOptions } = options ?? {};
+  const {
+    failOnError,
+    env: optionsEnv,
+    ...childProcessOptions
+  } = options ?? {};
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
@@ -75,7 +79,7 @@ export function runCommand(
         // Use new versioning by default in e2e tests
         NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
         ...getStrippedEnvironmentVariables(),
-        ...childProcessOptions?.env,
+        ...optionsEnv,
         FORCE_COLOR: 'false',
       },
       encoding: 'utf-8',

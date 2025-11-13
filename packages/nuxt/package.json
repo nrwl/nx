@@ -30,6 +30,8 @@
       "default": "./index.js",
       "types": "./index.d.ts"
     },
+    "./generators/*/schema.json": "./src/generators/*/schema.json",
+    "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",

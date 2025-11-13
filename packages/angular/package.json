@@ -31,8 +31,12 @@
     "./src/generators/move/move-impl": "./src/generators/move/move-impl.js",
     "./src/builders/*/schema.json": "./src/builders/*/schema.json",
     "./src/builders/*.impl": "./src/builders/*.impl.js",
+    "./src/builders/*/schema": "./src/builders/*/schema.d.ts",
     "./src/executors/*/schema.json": "./src/executors/*/schema.json",
-    "./src/executors/*.impl": "./src/executors/*.impl.js"
+    "./src/executors/*.impl": "./src/executors/*.impl.js",
+    "./src/executors/*/schema": "./src/executors/*/schema.d.ts",
+    "./src/generators/*/schema.json": "./src/generators/*/schema.json",
+    "./src/generators/*/schema": "./src/generators/*/schema.d.ts"
   },
   "author": "Victor Savkin",
   "license": "MIT",

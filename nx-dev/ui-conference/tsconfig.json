@@ -14,15 +14,6 @@
   "include": [],
   "references": [
     {
-      "path": "../ui-common"
-    },
-    {
-      "path": "../ui-member-card"
-    },
-    {
-      "path": "../ui-sponsor-card"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ]
