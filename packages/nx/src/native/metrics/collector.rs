@@ -121,10 +121,8 @@ impl CollectionRunner {
             // Collect current metrics and notify subscribers
             self.collect_metrics()
                 .inspect_err(|e| tracing::debug!("Metrics collection error: {}", e))
-                .and_then(|result| {
-                    self.notify_subscribers(result);
-                    Ok(())
-                });
+                .map(|result| self.notify_subscribers(result))
+                .ok();
 
             // Sleep in small chunks so thread can exit quickly on shutdown
             self.sleep_with_early_exit(interval);
