@@ -13,6 +13,7 @@ import type { NxArgs } from '../../../utils/command-line-utils';
 import { output } from '../../../utils/output';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { GitCommit, gitAdd, gitCommit } from './git';
+import { NxReleaseConfig } from '../config/config';
 
 export const noDiffInChangelogMessage = chalk.yellow(
   `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
@@ -387,10 +388,38 @@ export function handleDuplicateGitTags(gitTagValues: string[]): void {
   }
 }
 
+function isAutomatedReleaseCommit(
+  message: string,
+  nxReleaseConfig: NxReleaseConfig
+) {
+  // All possible commit message patterns based on config
+  const commitMessagePatterns = [
+    nxReleaseConfig.git.commitMessage,
+    nxReleaseConfig.version.git.commitMessage,
+    nxReleaseConfig.changelog.git.commitMessage,
+  ];
+  // Check if message matches any pattern
+  for (const pattern of commitMessagePatterns) {
+    if (!pattern) continue;
+    // Split on {version}, escape each part for regex, then join with version pattern
+    const parts = pattern.split('{version}');
+    const escapedParts = parts.map((part) =>
+      part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    );
+    const regexPattern = escapedParts.join('\\S+');
+    const regex = new RegExp(`^${regexPattern}$`);
+    if (regex.test(message)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function getCommitsRelevantToProjects(
   projectGraph: ProjectGraph,
   commits: GitCommit[],
-  projects: string[]
+  projects: string[],
+  nxReleaseConfig: NxReleaseConfig
 ): // Map of projectName to GitCommit[]
 Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
   const projectSet = new Set(projects);
@@ -400,6 +429,11 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
   > = new Map();
 
   for (const commit of commits) {
+    // Filter out automated release commits
+    if (isAutomatedReleaseCommit(commit.message, nxReleaseConfig)) {
+      continue;
+    }
+
     // Convert affectedFiles to FileChange[] format with proper diff computation
     const touchedFiles = calculateFileChanges(commit.affectedFiles, {
       base: `${commit.shortHash}^`,
