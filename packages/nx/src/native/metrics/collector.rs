@@ -468,11 +468,33 @@ impl CollectionRunner {
 
     /// Create only NEW groups based on current registrations
     /// Returns only groups that haven't been sent before
-    fn create_groups(&self) -> HashMap<String, GroupInfo> {
+    /// Also cleans up group IDs for tasks/batches that no longer exist
+    fn create_new_groups(&self) -> HashMap<String, GroupInfo> {
+        // Build set of currently live groups
+        let mut live_group_ids = std::collections::HashSet::new();
+        if self.main_cli_pid.lock().is_some() {
+            live_group_ids.insert(MAIN_CLI_GROUP_ID.to_string());
+        }
+        if self.daemon_pid.lock().is_some() {
+            live_group_ids.insert(DAEMON_GROUP_ID.to_string());
+        }
+        for entry in self.individual_tasks.iter() {
+            live_group_ids.insert(entry.key().clone());
+        }
+        for entry in self.batches.iter() {
+            live_group_ids.insert(entry.key().clone());
+        }
+
+        // Clean up group IDs for tasks/batches that no longer exist
+        self.sent_group_ids
+            .retain(|group_id| live_group_ids.contains(group_id.as_str()));
+
         let mut new_groups = HashMap::new();
 
         // Add main_cli group if registered and new
-        if self.main_cli_pid.lock().is_some() && !self.sent_group_ids.contains(MAIN_CLI_GROUP_ID) {
+        if live_group_ids.contains(MAIN_CLI_GROUP_ID)
+            && !self.sent_group_ids.contains(MAIN_CLI_GROUP_ID)
+        {
             new_groups.insert(
                 MAIN_CLI_GROUP_ID.to_string(),
                 GroupInfo {
@@ -485,7 +507,9 @@ impl CollectionRunner {
         }
 
         // Add daemon group if registered and new
-        if self.daemon_pid.lock().is_some() && !self.sent_group_ids.contains(DAEMON_GROUP_ID) {
+        if live_group_ids.contains(DAEMON_GROUP_ID)
+            && !self.sent_group_ids.contains(DAEMON_GROUP_ID)
+        {
             new_groups.insert(
                 DAEMON_GROUP_ID.to_string(),
                 GroupInfo {
@@ -573,24 +597,7 @@ impl CollectionRunner {
         }
 
         // Create only NEW groups that haven't been sent before
-        let groups = self.create_groups();
-
-        // Clean up group IDs for tasks/batches that no longer exist
-        let mut live_group_ids = std::collections::HashSet::new();
-        if self.main_cli_pid.lock().is_some() {
-            live_group_ids.insert(MAIN_CLI_GROUP_ID.to_string());
-        }
-        if self.daemon_pid.lock().is_some() {
-            live_group_ids.insert(DAEMON_GROUP_ID.to_string());
-        }
-        for entry in self.individual_tasks.iter() {
-            live_group_ids.insert(entry.key().clone());
-        }
-        for entry in self.batches.iter() {
-            live_group_ids.insert(entry.key().clone());
-        }
-        self.sent_group_ids
-            .retain(|group_id| live_group_ids.contains(group_id.as_str()));
+        let groups = self.create_new_groups();
 
         // Collect metrics for all the processes
         let (main_cli_processes, main_cli_metadata) = self.collect_main_cli_metrics(&sys);
