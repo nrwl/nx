@@ -119,8 +119,7 @@ export async function getNxCloudInfo(
   connectCloudUrl: string,
   pushedToVcs: VcsPushStatus,
   rawNxCloud?: NxCloud,
-  isTemplate?: boolean,
-  promptCode?: string
+  isTemplate?: boolean
 ) {
   const source = getCloudMessageSource(!!isTemplate, nxCloud);
   const { createMessage } = getMessageFactory(source);
