@@ -49,11 +49,10 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let directory: string;
 
   if (options.template) {
-    // Template flow - clone and setup
-    const templateUrl = options.template;
+    const templateUrl = `https://github.com/${options.template}`;
     directory = name;
 
-    await cloneTemplate(templateUrl, directory, name);
+    await cloneTemplate(templateUrl, directory);
     await cleanupLockfiles(directory, packageManager);
 
     // Install dependencies
