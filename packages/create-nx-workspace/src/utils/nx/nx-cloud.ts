@@ -26,6 +26,42 @@ function getCloudMessageSource(
     : 'create-nx-workspace-success-ci-setup';
 }
 
+export async function connectToNxCloudForTemplate(
+  directory: string,
+  installationSource: string,
+  useGitHub?: boolean
+): Promise<string | null> {
+  // nx-ignore-next-line
+  const { connectToNxCloud } = require(require.resolve(
+    'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud',
+    {
+      paths: [directory],
+    }
+    // nx-ignore-next-line
+  )) as typeof import('nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud');
+
+  // nx-ignore-next-line
+  const { FsTree, flushChanges } = require(require.resolve(
+    'nx/src/generators/tree',
+    {
+      paths: [directory],
+      // nx-ignore-next-line
+    }
+  )) as typeof import('nx/src/generators/tree');
+
+  const tree = new FsTree(directory, false);
+  const result = await connectToNxCloud(tree, {
+    installationSource,
+    directory: '',
+    github: useGitHub,
+  });
+
+  // Flush the tree changes to disk
+  flushChanges(directory, tree.listChanges());
+
+  return result;
+}
+
 export function readNxCloudToken(directory: string) {
   const nxCloudSpinner = ora(`Checking Nx Cloud setup`).start();
   // nx-ignore-next-line

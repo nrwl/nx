@@ -349,6 +349,7 @@ async function normalizeArgsMiddleware(
           : messages.metaCodeOfSelectedPromptMessage('setupNxCloudV2');
       Object.assign(argv, {
         nxCloud,
+        useGitHub: nxCloud !== 'skip',
         nxCloudPromptCode,
         packageManager,
         defaultBase,
