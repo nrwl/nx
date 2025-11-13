@@ -95,7 +95,7 @@ struct CollectionRunner {
     subscribers: Arc<Mutex<Vec<SubscriberState>>>,
     metadata_store: Arc<MetadataStore>,
     /// Track which group IDs have been sent (for incremental updates)
-    sent_group_ids: Arc<DashSet<String>>,
+    sent_group_ids: DashSet<String>,
 }
 
 impl CollectionRunner {
@@ -112,7 +112,7 @@ impl CollectionRunner {
             config: collector.config.clone(),
             subscribers: Arc::clone(&collector.subscribers),
             metadata_store: Arc::clone(&collector.metadata_store),
-            sent_group_ids: Arc::new(DashSet::new()),
+            sent_group_ids: DashSet::new(),
         }
     }
 
