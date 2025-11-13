@@ -116,14 +116,12 @@ impl CollectionRunner {
     /// Run the collection loop
     fn run(self) {
         let interval = std::time::Duration::from_millis(self.config.collection_interval_ms);
-        // Reuse HashSet across collection cycles to avoid repeated allocations
-        let mut live_pids = HashSet::with_capacity(128);
 
         while self.should_collect.load(Ordering::Acquire) {
             // Collect current metrics
-            match self.collect_metrics(&mut live_pids) {
+            match self.collect_metrics() {
                 Ok(result) => {
-                    self.notify_subscribers(result, &live_pids);
+                    self.notify_subscribers(result);
                 }
                 Err(e) => {
                     tracing::debug!("Metrics collection error: {}", e);
@@ -138,7 +136,7 @@ impl CollectionRunner {
     }
 
     /// Notify all subscribers with the collected metrics
-    fn notify_subscribers(&self, result: MetricsCollectionResult, live_pids: &HashSet<i32>) {
+    fn notify_subscribers(&self, result: MetricsCollectionResult) {
         let timestamp = result.timestamp;
         let processes = result.processes;
         let metadata = result.metadata;
@@ -150,8 +148,11 @@ impl CollectionRunner {
                 .insert_metadata(*pid, proc_metadata.clone());
         }
 
+        // Derive live PIDs from the collected processes for cleanup
+        let live_pids: HashSet<i32> = processes.iter().map(|p| p.pid).collect();
+
         // Clean up dead metadata and task registrations
-        self.metadata_store.cleanup_dead_metadata(live_pids);
+        self.metadata_store.cleanup_dead_metadata(&live_pids);
 
         // Build notifications inside lock, then release before calling JS
         let notifications = {
@@ -524,10 +525,7 @@ impl CollectionRunner {
     }
 
     /// Discover all current processes and collect their metrics
-    fn collect_metrics(
-        &self,
-        live_pids: &mut HashSet<i32>,
-    ) -> Result<MetricsCollectionResult, Box<dyn std::error::Error>> {
+    fn collect_metrics(&self) -> Result<MetricsCollectionResult, Box<dyn std::error::Error>> {
         // Capture timestamp FIRST for accuracy
         let timestamp = current_timestamp_millis();
 
@@ -587,12 +585,6 @@ impl CollectionRunner {
         processes.extend(daemon_processes);
         processes.extend(tasks_metrics);
         processes.extend(batches_metrics);
-
-        // Derive live PIDs from collected processes
-        live_pids.clear();
-        for proc in &processes {
-            live_pids.insert(proc.pid);
-        }
 
         // Keep a copy of metadata with i32 keys for internal use
         let process_metadata = all_metadata.clone();
