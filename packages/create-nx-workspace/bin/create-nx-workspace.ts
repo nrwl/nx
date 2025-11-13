@@ -290,7 +290,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     meta: [
       messages.codeOfSelectedPromptMessage('setupCI'),
       messages.codeOfSelectedPromptMessage('setupNxCloud'),
-      messages.codeOfSelectedPromptMessage('setupNxCloudSimple'),
+      messages.codeOfSelectedPromptMessage('setupNxCloudV2'),
       parsedArgs.nxCloud,
       rawArgs.nxCloud,
       workspaceInfo.pushedToVcs,
@@ -374,7 +374,7 @@ async function normalizeArgsMiddleware(
       const nxCloudPromptCode =
         nxCloud === 'skip'
           ? undefined
-          : messages.metaCodeOfSelectedPromptMessage('setupNxCloudSimple');
+          : messages.metaCodeOfSelectedPromptMessage('setupNxCloudV2');
       const useGitHub =
         nxCloud === 'skip'
           ? undefined

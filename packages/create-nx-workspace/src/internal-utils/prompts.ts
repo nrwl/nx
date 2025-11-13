@@ -46,7 +46,7 @@ export async function determineNxCloudSimple(
 
   // Show simplified prompt
   const { message, choices, initial, footer, hint } =
-    messages.getPrompt('setupNxCloudSimple');
+    messages.getPrompt('setupNxCloudV2');
 
   const promptConfig = {
     name: 'nxCloud',
@@ -135,24 +135,26 @@ export async function determineTemplate(
   const { template } = await enquirer.prompt<{ template: string }>([
     {
       name: 'template',
-      message: 'Which stack do you want to use?',
+      message: 'Which starter do you want to use?',
       type: 'autocomplete',
       choices: [
         {
           name: 'https://github.com/nrwl/empty-template',
-          message: 'Empty                  (minimal Nx workspace)',
+          message: 'Empty             (minimal monorepo without projects)',
         },
         {
           name: 'https://github.com/nrwl/typescript-template',
-          message: 'TypeScript             (Node.js with TypeScript)',
+          message: 'TypeScript        (monorepo with TypeScript packages)',
         },
         {
           name: 'https://github.com/nrwl/react-template',
-          message: 'React                  (React app with Vite)',
+          message:
+            'React             (fullstack monorepo with React and Express)',
         },
         {
           name: 'https://github.com/nrwl/angular-template',
-          message: 'Angular                (Angular app)',
+          message:
+            'Angular           (fullstack monorepo with Angular and Express)',
         },
       ],
       initial: 0,
