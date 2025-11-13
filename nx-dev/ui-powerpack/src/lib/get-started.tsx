@@ -92,7 +92,7 @@ export function GetStarted(): ReactElement {
                   Receive an Nx Powerpack license
                 </h4>
                 <p className="mt-2">
-                  Talk to your Developer Productivity Expert to get a license
+                  Talk to your Developer Productivity Engineer to get a license
                   key for your workspaces.
                 </p>
               </div>
