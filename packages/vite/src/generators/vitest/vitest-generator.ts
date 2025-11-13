@@ -9,11 +9,14 @@ import { VitestGeneratorSchema } from './schema';
 export async function vitestGenerator(
   tree: Tree,
   schema: VitestGeneratorSchema,
-  hasPlugin = false
+  hasPlugin = false,
+  suppressDeprecationWarning = false
 ) {
-  logger.warn(
-    `The '@nx/vite:vitest' generator is deprecated. Please use '@nx/vitest:configuration' instead. This generator will be removed in Nx 23.`
-  );
+  if (!suppressDeprecationWarning) {
+    logger.warn(
+      `The '@nx/vite:vitest' generator is deprecated. Please use '@nx/vitest:configuration' instead. This generator will be removed in Nx 23.`
+    );
+  }
 
   ensurePackage('@nx/vitest', nxVersion);
   const { configurationGenerator } = await import('@nx/vitest/generators');
