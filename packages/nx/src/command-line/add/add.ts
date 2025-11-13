@@ -61,11 +61,14 @@ async function installPackage(
         {
           windowsHide: false,
         },
-        (error, stdout) => {
+        (error, stdout, stderr) => {
           if (error) {
             spinner.fail();
             output.addNewline();
-            logger.error(stdout);
+            const errorOutput = [stdout.trim(), stderr.trim()]
+              .filter(Boolean)
+              .join('\n');
+            logger.error(errorOutput);
             output.error({
               title: `Failed to install ${pkgName}. Please check the error above for more details.`,
             });
