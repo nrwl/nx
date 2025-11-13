@@ -1835,11 +1835,6 @@
               "file": "shared/features/powerpack/index",
               "itemList": [
                 {
-                  "name": "Free Licenses & Trials",
-                  "id": "licenses-and-trials",
-                  "file": "shared/features/powerpack/licenses-and-trials"
-                },
-                {
                   "name": "Run Language-Agnostic Conformance Rules",
                   "description": "Write and apply rules for your Nx workspace",
                   "id": "conformance",

@@ -1202,6 +1202,7 @@ const powerpackRedirects = {
     '/recipes/running-tasks/self-hosted-caching',
   '/nx-enterprise/powerpack/free-licenses-and-trials':
     '/nx-enterprise/powerpack/licenses-and-trials',
+  '/nx-enterprise/powerpack/licenses-and-trials': '/nx-enterprise/powerpack',
 
   // Redirects for renamed powerpack packages
   '/nx-api/powerpack-owners': '/nx-api/owners',
