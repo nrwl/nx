@@ -56,11 +56,11 @@ const messageOptions: Record<string, MessageData[]> = {
     },
   ],
   /**
-   * Simplified Cloud prompt for template flow (no CI provider selection)
+   * Simplified Cloud prompt for template flow
    */
-  setupNxCloudSimple: [
+  setupNxCloudV2: [
     {
-      code: 'simple-cloud-v1',
+      code: 'cloud-v2-green-prs',
       metaCode: 'green-prs',
       message: 'Get to green PRs faster with Nx Cloud?',
       initial: 0,
@@ -74,7 +74,7 @@ const messageOptions: Record<string, MessageData[]> = {
       fallback: undefined,
     },
     {
-      code: 'simple-cloud-v2',
+      code: 'cloud-v2-remote-cache',
       metaCode: 'remote-cache',
       message: 'Would you like to enable remote caching with Nx Cloud?',
       initial: 0,
@@ -88,7 +88,7 @@ const messageOptions: Record<string, MessageData[]> = {
       fallback: undefined,
     },
     {
-      code: 'simple-cloud-v3',
+      code: 'cloud-v2-fast-ci',
       metaCode: 'fast-ci',
       message: 'Speed up CI and reduce compute costs with Nx Cloud?',
       initial: 0,
