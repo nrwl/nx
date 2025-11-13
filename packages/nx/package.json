@@ -197,6 +197,11 @@
       "types": "./dist/executors/*.d.ts",
       "@nx/nx-source": "./src/executors/*.ts"
     },
+    "./src/internal-testing-utils/*": {
+      "import": "./src/internal-testing-utils/*.js",
+      "types": "./src/internal-testing-utils/*.d.ts",
+      "@nx/nx-source": "./src/internal-testing-utils/*.ts"
+    },
     "./plugins/*": {
       "import": "./plugins/*.js",
       "types": "./plugins/*.d.ts",
