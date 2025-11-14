@@ -1,13 +1,13 @@
+use anyhow::Result;
+use dashmap::DashMap;
+use napi::{Env, JsFunction};
+use napi_derive::napi;
+use parking_lot::Mutex;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
-
-use anyhow::Result;
-use dashmap::{DashMap, DashSet};
-use napi::{Env, JsFunction};
-use napi_derive::napi;
-use parking_lot::Mutex;
+use std::time::Duration;
 use sysinfo::{Pid, ProcessRefreshKind, System, UpdateKind};
 use tracing::error;
 
@@ -20,7 +20,7 @@ use napi::threadsafe_function::{
     ErrorStrategy::CalleeHandled, ThreadsafeFunction, ThreadsafeFunctionCallMode,
 };
 
-type ParentToChildrenMap = std::collections::HashMap<i32, Vec<i32>>;
+type ParentToChildrenMap = HashMap<i32, Vec<i32>>;
 
 // Group ID constants
 const MAIN_CLI_GROUP_ID: &str = "main_cli";
@@ -36,37 +36,6 @@ struct MetricsCollectionResult {
     processes: Vec<ProcessMetrics>,
     /// Process metadata keyed by i32 PID for internal store updates (avoids string parsing)
     process_metadata: HashMap<i32, ProcessMetadata>,
-}
-
-/// Metadata store for process metadata
-/// Stores latest metadata for each known process
-pub struct MetadataStore {
-    /// Metadata store: latest metadata for each known process
-    pub(crate) metadata_store: DashMap<i32, ProcessMetadata>,
-}
-
-impl MetadataStore {
-    /// Create a new metadata store
-    pub fn new() -> Self {
-        Self {
-            metadata_store: DashMap::new(),
-        }
-    }
-
-    /// Check if we already have metadata for a PID
-    pub fn has_metadata(&self, pid: i32) -> bool {
-        self.metadata_store.contains_key(&pid)
-    }
-
-    /// Insert metadata for a process
-    pub fn insert_metadata(&self, pid: i32, metadata: ProcessMetadata) {
-        self.metadata_store.insert(pid, metadata);
-    }
-
-    /// Clean up metadata for dead processes
-    pub fn cleanup_dead_metadata(&self, live_pids: &HashSet<i32>) {
-        self.metadata_store.retain(|pid, _| live_pids.contains(pid));
-    }
 }
 
 /// Subscriber state for tracking metadata delivery
@@ -93,9 +62,9 @@ struct CollectionRunner {
     system: Arc<Mutex<System>>,
     config: CollectorConfig,
     subscribers: Arc<Mutex<Vec<SubscriberState>>>,
-    metadata_store: Arc<MetadataStore>,
+    process_metadata_map: DashMap<String, ProcessMetadata>,
     /// Track which group IDs have been sent (for incremental updates)
-    sent_group_ids: DashSet<String>,
+    group_metadata_map: DashMap<String, GroupInfo>,
 }
 
 impl CollectionRunner {
@@ -111,14 +80,14 @@ impl CollectionRunner {
             system: Arc::clone(&collector.system),
             config: collector.config.clone(),
             subscribers: Arc::clone(&collector.subscribers),
-            metadata_store: Arc::clone(&collector.metadata_store),
-            sent_group_ids: DashSet::new(),
+            process_metadata_map: DashMap::new(),
+            group_metadata_map: DashMap::new(),
         }
     }
 
     /// Run the collection loop
     fn run(self) {
-        let interval = std::time::Duration::from_millis(self.config.collection_interval_ms);
+        let interval = Duration::from_millis(self.config.collection_interval_ms);
 
         while self.should_collect.load(Ordering::Acquire) {
             // Collect current metrics and notify subscribers
@@ -138,25 +107,6 @@ impl CollectionRunner {
     fn notify_subscribers(&self, result: MetricsCollectionResult) {
         let timestamp = result.timestamp;
         let processes = result.processes;
-        let metadata = result.metadata;
-        let process_metadata = result.process_metadata;
-
-        // Update metadata store with new processes
-        for (pid, proc_metadata) in &process_metadata {
-            self.metadata_store
-                .insert_metadata(*pid, proc_metadata.clone());
-        }
-
-        // Track sent group IDs (for incremental updates)
-        for group_id in metadata.groups.keys() {
-            self.sent_group_ids.insert(group_id.clone());
-        }
-
-        // Derive live PIDs from the collected processes for cleanup
-        let live_pids: HashSet<i32> = processes.iter().map(|p| p.pid).collect();
-
-        // Clean up dead metadata and task registrations
-        self.metadata_store.cleanup_dead_metadata(&live_pids);
 
         // Build notifications inside lock, then release before calling JS
         let notifications = {
@@ -165,26 +115,30 @@ impl CollectionRunner {
             // Build notification list
             subscribers
                 .iter_mut()
-                .map(|state| {
+                .map(move |state| {
                     // Use full metadata if needed, otherwise use collected metadata
-                    let processes_metadata = if state.needs_full_metadata {
+                    let metadata = if state.needs_full_metadata {
                         state.needs_full_metadata = false;
-                        self.metadata_store
-                            .metadata_store
-                            .iter()
-                            .map(|entry| (entry.key().to_string(), entry.value().clone()))
-                            .collect::<HashMap<_, _>>()
+                        Metadata {
+                            groups: self
+                                .group_metadata_map
+                                .iter()
+                                .map(|entry| (entry.key().to_string(), entry.value().clone()))
+                                .collect::<HashMap<_, _>>(),
+                            processes: self
+                                .process_metadata_map
+                                .iter()
+                                .map(|entry| (entry.key().to_string(), entry.value().clone()))
+                                .collect::<HashMap<_, _>>(),
+                        }
                     } else {
-                        metadata.processes.clone()
+                        result.metadata.clone()
                     };
 
                     let update = MetricsUpdate {
                         timestamp,
                         processes: processes.clone(),
-                        metadata: Metadata {
-                            groups: metadata.groups.clone(),
-                            processes: processes_metadata,
-                        },
+                        metadata,
                     };
 
                     // Clone ThreadsafeFunction (cheap - internally Arc-based)
@@ -205,8 +159,8 @@ impl CollectionRunner {
     /// Sleep in small chunks for responsive shutdown
     /// This allows the thread to respond to shutdown signals within 50ms
     /// instead of waiting for the full collection interval
-    fn sleep_with_early_exit(&self, interval: std::time::Duration) {
-        let wake_interval = std::time::Duration::from_millis(50);
+    fn sleep_with_early_exit(&self, interval: Duration) {
+        let wake_interval = Duration::from_millis(50);
         let sleep_iterations = (interval.as_millis() / 50).max(1) as usize;
 
         for _ in 0..sleep_iterations {
@@ -278,7 +232,7 @@ impl CollectionRunner {
         };
 
         // Conditionally collect metadata only if not cached
-        let metadata = if !self.metadata_store.has_metadata(pid) {
+        let metadata = if !self.process_metadata_map.contains_key(&pid.to_string()) {
             Some(ProcessMetadata {
                 ppid: process.parent().map(|p| p.as_u32() as i32).unwrap_or(0),
                 name: process.name().to_string_lossy().into_owned(),
@@ -469,9 +423,9 @@ impl CollectionRunner {
     /// Create only NEW groups based on current registrations
     /// Returns only groups that haven't been sent before
     /// Also cleans up group IDs for tasks/batches that no longer exist
-    fn create_new_groups(&self) -> HashMap<String, GroupInfo> {
+    fn create_new_group_info(&self) -> HashMap<String, GroupInfo> {
         // Build set of currently live groups
-        let mut live_group_ids = std::collections::HashSet::new();
+        let mut live_group_ids = HashSet::new();
         if self.main_cli_pid.lock().is_some() {
             live_group_ids.insert(MAIN_CLI_GROUP_ID.to_string());
         }
@@ -486,14 +440,14 @@ impl CollectionRunner {
         }
 
         // Clean up group IDs for tasks/batches that no longer exist
-        self.sent_group_ids
-            .retain(|group_id| live_group_ids.contains(group_id.as_str()));
+        self.group_metadata_map
+            .retain(|group_id, _| live_group_ids.contains(group_id));
 
         let mut new_groups = HashMap::new();
 
         // Add main_cli group if registered and new
         if live_group_ids.contains(MAIN_CLI_GROUP_ID)
-            && !self.sent_group_ids.contains(MAIN_CLI_GROUP_ID)
+            && !self.group_metadata_map.contains_key(MAIN_CLI_GROUP_ID)
         {
             new_groups.insert(
                 MAIN_CLI_GROUP_ID.to_string(),
@@ -508,7 +462,7 @@ impl CollectionRunner {
 
         // Add daemon group if registered and new
         if live_group_ids.contains(DAEMON_GROUP_ID)
-            && !self.sent_group_ids.contains(DAEMON_GROUP_ID)
+            && !self.group_metadata_map.contains_key(DAEMON_GROUP_ID)
         {
             new_groups.insert(
                 DAEMON_GROUP_ID.to_string(),
@@ -524,7 +478,7 @@ impl CollectionRunner {
         // Add groups for all NEW registered tasks
         for entry in self.individual_tasks.iter() {
             let task_id = entry.key().clone();
-            if !self.sent_group_ids.contains(task_id.as_str()) {
+            if !self.group_metadata_map.contains_key(&task_id) {
                 new_groups.insert(
                     task_id.clone(),
                     GroupInfo {
@@ -540,7 +494,7 @@ impl CollectionRunner {
         // Add groups for all NEW registered batches
         for entry in self.batches.iter() {
             let batch_id = entry.key().clone();
-            if !self.sent_group_ids.contains(batch_id.as_str()) {
+            if !self.group_metadata_map.contains_key(&batch_id) {
                 let batch_reg = entry.value();
                 new_groups.insert(
                     batch_id.clone(),
@@ -596,9 +550,6 @@ impl CollectionRunner {
             }
         }
 
-        // Create only NEW groups that haven't been sent before
-        let groups = self.create_new_groups();
-
         // Collect metrics for all the processes
         let (main_cli_processes, main_cli_metadata) = self.collect_main_cli_metrics(&sys);
         let (daemon_processes, daemon_metadata) = self.collect_daemon_metrics(&sys, &children_map);
@@ -607,10 +558,10 @@ impl CollectionRunner {
             self.collect_all_batch_metrics(&sys, &children_map);
 
         // Accumulate metadata from all collection sources
-        let mut all_metadata = main_cli_metadata;
-        all_metadata.extend(daemon_metadata);
-        all_metadata.extend(tasks_metadata);
-        all_metadata.extend(batches_metadata);
+        let mut new_metadata = main_cli_metadata;
+        new_metadata.extend(daemon_metadata);
+        new_metadata.extend(tasks_metadata);
+        new_metadata.extend(batches_metadata);
 
         // Flatten processes from all sources
         let mut processes = Vec::new();
@@ -619,22 +570,42 @@ impl CollectionRunner {
         processes.extend(tasks_metrics);
         processes.extend(batches_metrics);
 
+        // Derive live PIDs from the collected processes for cleanup
+        let live_pids: HashSet<String> = processes.iter().map(|p| p.pid.to_string()).collect();
+
+        // Clean up dead process which are no longer alive
+        self.process_metadata_map
+            .retain(|pid, _| live_pids.contains(pid));
+
         // Keep a copy of metadata with i32 keys for internal use
-        let process_metadata = all_metadata.clone();
+        let process_metadata = new_metadata.clone();
 
         // Convert i32 keys to strings for NAPI serialization
-        let process_metadata_str: HashMap<String, ProcessMetadata> = all_metadata
+        let process_metadata_str: HashMap<String, ProcessMetadata> = new_metadata
             .into_iter()
             .map(|(pid, meta)| (pid.to_string(), meta))
             .collect();
 
+        let metadata = Metadata {
+            // Create only NEW groups that haven't been sent before
+            groups: self.create_new_group_info(),
+            processes: process_metadata_str,
+        };
+
+        // Update metadata store with new processes
+        for (pid, value) in metadata.processes.clone() {
+            self.process_metadata_map.insert(pid, value);
+        }
+
+        // Track sent group IDs (for incremental updates)
+        for (group_id, group_info) in metadata.groups.clone() {
+            self.group_metadata_map.insert(group_id, group_info);
+        }
+
         Ok(MetricsCollectionResult {
             timestamp,
             processes,
-            metadata: Metadata {
-                groups,
-                processes: process_metadata_str,
-            },
+            metadata,
             process_metadata,
         })
     }
@@ -664,8 +635,6 @@ pub struct ProcessMetricsCollector {
     system: Arc<Mutex<System>>,
     /// Subscribers for metrics events (thread-safe)
     subscribers: Arc<Mutex<Vec<SubscriberState>>>,
-    /// Metadata store for process metadata
-    pub(crate) metadata_store: Arc<MetadataStore>,
     /// Collection thread state
     collection_thread: Mutex<Option<JoinHandle<()>>>,
     /// Atomic flag to control collection thread
@@ -699,7 +668,6 @@ impl ProcessMetricsCollector {
             total_memory,
             system: Arc::new(Mutex::new(sys)),
             subscribers: Arc::new(Mutex::new(Vec::new())),
-            metadata_store: Arc::new(MetadataStore::new()),
             collection_thread: Mutex::new(None),
             should_collect: Arc::new(AtomicBool::new(false)),
             is_collecting: Arc::new(AtomicBool::new(false)),
