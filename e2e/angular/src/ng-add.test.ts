@@ -184,7 +184,6 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       options: {
         outputPath: `dist/${project}`,
         browser: `apps/${project}/src/main.ts`,
-        polyfills: [`zone.js`],
         tsConfig: `apps/${project}/tsconfig.app.json`,
         assets: [{ glob: '**/*', input: `apps/${project}/public` }],
         styles: [`apps/${project}/src/styles.css`],
