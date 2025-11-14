@@ -1,4 +1,6 @@
-export const MESSAGE_END_SEQ = 'NX_MSG_END' + String.fromCharCode(4);
+const VERY_END_CODE = 4;
+export const MESSAGE_END_SEQ =
+  'NX_MSG_END' + String.fromCharCode(VERY_END_CODE);
 
 export function consumeMessagesFromSocket(callback: (message: string) => void) {
   let message = '';
@@ -8,7 +10,10 @@ export function consumeMessagesFromSocket(callback: (message: string) => void) {
 
     // Check if accumulated message ends with MESSAGE_END_SEQ (not just the chunk)
     // This handles TCP packet fragmentation where MESSAGE_END_SEQ may be split across packets
-    if (message.endsWith(MESSAGE_END_SEQ)) {
+    if (
+      chunk.codePointAt(chunk.length - 1) === VERY_END_CODE &&
+      message.endsWith(MESSAGE_END_SEQ)
+    ) {
       // Remove the trailing MESSAGE_END_SEQ
       const fullMessage = message.substring(
         0,
