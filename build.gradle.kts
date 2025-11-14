@@ -1,6 +1,5 @@
 plugins {
     id("dev.nx.gradle.project-graph") version("0.1.9")
-    alias(libs.plugins.nx.project.graph)
     alias(libs.plugins.ktfmt)
 }
 
