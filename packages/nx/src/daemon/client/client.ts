@@ -675,7 +675,7 @@ export class DaemonClient {
 
     try {
       const { getProcessMetricsService } = await import(
-        '../../tasks-runner/process-metrics-service'
+        '../../tasks-runner/process-metrics-service.js'
       );
       getProcessMetricsService().registerDaemonProcess(daemonPid);
     } catch {

@@ -47,11 +47,11 @@
       }
     },
     "copy-native-package-directories": {
-      "command": "node scripts/copy.js dist/packages/nx/native-packages/* dist/packages"
+      "command": "node scripts/copy.js packages/nx/dist/native-packages/* dist/packages"
     },
     "artifacts": {
       "dependsOn": ["copy-native-package-directories"],
-      "command": "pnpm napi artifacts --package-json-path dist/packages/nx/package.json -d ./artifacts --npm-dir dist/packages"
+      "command": "pnpm napi artifacts --package-json-path packages/nx/package.json -d ./artifacts --npm-dir dist/packages"
     },
     "echo": {
       "command": "echo hi"
@@ -73,14 +73,15 @@
         "{workspaceRoot}/scripts/copy-local-native.js",
         "{workspaceRoot}/scripts/copy-graph-client.js",
         "{workspaceRoot}/scripts/chmod.js",
-        "{workspaceRoot}/scripts/copy-readme.js"
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
       ],
       "executor": "nx:run-commands",
       "outputs": [
-        "{workspaceRoot}/dist/packages/nx/**/*.{node,wasm,js,mjs,cjs}",
-        "{workspaceRoot}/dist/packages/nx/src/core/graph",
-        "{workspaceRoot}/dist/packages/nx/bin/nx.js",
-        "{workspaceRoot}/dist/packages/nx/README.md"
+        "{projectRoot}/packages/nx/dist/**/*.{node,wasm,js,mjs,cjs}",
+        "{projectRoot}/packages/nx/dist/core/graph",
+        "{projectRoot}/packages/nx/bin/nx.js",
+        "{projectRoot}/packages/nx/README.md"
       ],
       "options": {
         "commands": [
@@ -91,10 +92,10 @@
             "command": "node ./scripts/copy-graph-client.js"
           },
           {
-            "command": "node ./scripts/chmod dist/packages/nx/bin/nx.js"
+            "command": "node ./scripts/chmod packages/nx/dist/bin/nx.js"
           },
           {
-            "command": "node ./scripts/copy-readme.js nx"
+            "command": "node ./scripts/copy-readme.js nx packages/nx/readme-template.md packages/nx/README.md"
           }
         ],
         "parallel": false
@@ -135,12 +136,10 @@
         "main": "./bin/nx.js",
         "types": "./bin/nx.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
+        "replaceSrcRoot": true,
         "assets": [
-          {
-            "input": "packages/nx",
-            "glob": ".npmignore",
-            "output": "/"
-          },
           {
             "input": "packages/nx",
             "glob": "**/files/**",
@@ -157,7 +156,11 @@
             "ignore": [
               "**/tsconfig*.json",
               "**/project.json",
-              "**/__fixtures__/**"
+              "**/__fixtures__/**",
+              "executors.json",
+              "generators.json",
+              "migrations.json",
+              "package.json"
             ],
             "output": "/"
           },
@@ -165,16 +168,6 @@
             "input": "packages/nx",
             "glob": "**/*.{mjs,cjs,js,css,html,svg,wasm}",
             "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/nx",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
             "output": "/"
           }
         ]

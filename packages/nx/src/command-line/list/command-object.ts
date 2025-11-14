@@ -10,7 +10,7 @@ export const yargsListCommand: CommandModule = {
       description: 'The name of an installed plugin to query.',
     }),
   handler: async (args: any) => {
-    await (await import('./list')).listHandler(args);
+    await (await import('./list.js')).listHandler(args);
     process.exit(0);
   },
 };

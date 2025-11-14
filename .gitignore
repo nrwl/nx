@@ -132,6 +132,7 @@ test-results
 
 # Generated .d.ts files from build/typecheck
 packages/**/*.d.ts
+packages/**/*.d.ts.map
 !schema.d.ts
 !astro-docs/**/*.d.ts
 !packages/expo/src/executors/build-list/build-fragment.d.ts

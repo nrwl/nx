@@ -249,6 +249,7 @@ function createFileEventHandler(
       }
       if (event.type === 'create' || event.type === 'update') {
         if (lstatSync(event.src).isFile()) {
+          console.log(`Copying "${event.src}" \nTo: "${event.dest}"`);
           copyFileSync(event.src, event.dest);
         }
       } else if (event.type === 'delete') {
