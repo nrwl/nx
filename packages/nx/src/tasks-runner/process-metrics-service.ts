@@ -2,22 +2,22 @@ import {
   ProcessMetricsCollector,
   ProcessMetadata,
   ProcessMetrics,
-  ProcessTreeMetrics,
-  ProcessMetricsSnapshot,
-  BatchMetricsSnapshot,
   MetricsUpdate,
   SystemInfo,
+  Metadata,
+  GroupInfo,
+  GroupType,
 } from '../native';
 import { getDaemonProcessIdSync } from '../daemon/cache';
 
 export type {
   ProcessMetadata,
   ProcessMetrics,
-  ProcessTreeMetrics,
-  ProcessMetricsSnapshot,
-  BatchMetricsSnapshot,
   MetricsUpdate,
   SystemInfo,
+  Metadata,
+  GroupInfo,
+  GroupType,
 };
 
 export type MetricsCallback = (event: MetricsUpdate) => void;

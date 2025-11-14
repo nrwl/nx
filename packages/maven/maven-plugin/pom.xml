@@ -5,7 +5,7 @@
   <parent>
     <groupId>dev.nx</groupId>
     <artifactId>nx-parent</artifactId>
-    <version>0.0.9</version>
+    <version>0.0.10</version>
     <relativePath>../../../pom.xml</relativePath>
   </parent>
 

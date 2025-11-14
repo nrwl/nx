@@ -7,33 +7,6 @@
   "files": [],
   "references": [
     {
-      "path": "../webpack"
-    },
-    {
-      "path": "../web"
-    },
-    {
-      "path": "../react"
-    },
-    {
-      "path": "../eslint"
-    },
-    {
-      "path": "../js"
-    },
-    {
-      "path": "../devkit"
-    },
-    {
-      "path": "../playwright"
-    },
-    {
-      "path": "../cypress"
-    },
-    {
-      "path": "../nx"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],

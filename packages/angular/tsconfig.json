@@ -8,39 +8,6 @@
   "files": [],
   "references": [
     {
-      "path": "../vitest"
-    },
-    {
-      "path": "../workspace"
-    },
-    {
-      "path": "../webpack"
-    },
-    {
-      "path": "../web"
-    },
-    {
-      "path": "../rspack"
-    },
-    {
-      "path": "../module-federation"
-    },
-    {
-      "path": "../js"
-    },
-    {
-      "path": "../eslint"
-    },
-    {
-      "path": "../devkit"
-    },
-    {
-      "path": "../nx"
-    },
-    {
-      "path": "../cypress"
-    },
-    {
       "path": "./tsconfig.lib.json"
     },
     {

@@ -2,7 +2,7 @@ use crate::native::ide::detection::{SupportedEditor, get_current_editor};
 use crate::native::logger::enable_logger;
 use napi::Error;
 use std::process::Command;
-use tracing::{debug, info, trace};
+use tracing::{debug, trace};
 
 const NX_CONSOLE_EXTENSION_ID: &str = "nrwl.angular-console";
 

@@ -164,18 +164,23 @@ export async function viteConfigurationGeneratorInternal(
   }
 
   if (schema.includeVitest) {
-    const vitestTask = await vitestGenerator(tree, {
-      project: schema.project,
-      uiFramework: schema.uiFramework,
-      inSourceTests: schema.inSourceTests,
-      coverageProvider: 'v8',
-      skipViteConfig: true,
-      testTarget: 'test',
-      skipFormat: true,
-      addPlugin: schema.addPlugin,
-      compiler: schema.compiler,
-      projectType,
-    });
+    const vitestTask = await vitestGenerator(
+      tree,
+      {
+        project: schema.project,
+        uiFramework: schema.uiFramework,
+        inSourceTests: schema.inSourceTests,
+        coverageProvider: 'v8',
+        skipViteConfig: true,
+        testTarget: 'test',
+        skipFormat: true,
+        addPlugin: schema.addPlugin,
+        compiler: schema.compiler,
+        projectType,
+      },
+      false,
+      true
+    );
     tasks.push(vitestTask);
   }
 

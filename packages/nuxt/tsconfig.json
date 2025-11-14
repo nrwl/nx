@@ -7,27 +7,6 @@
   "include": [],
   "references": [
     {
-      "path": "../vitest"
-    },
-    {
-      "path": "../vite"
-    },
-    {
-      "path": "../vue"
-    },
-    {
-      "path": "../eslint"
-    },
-    {
-      "path": "../js"
-    },
-    {
-      "path": "../devkit"
-    },
-    {
-      "path": "../nx"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],

@@ -14,9 +14,6 @@
   "include": [],
   "references": [
     {
-      "path": "../feature-analytics"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],

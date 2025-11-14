@@ -8,11 +8,11 @@ exports[`@nx/vite:init dependencies for package.json should add required package
   "devDependencies": {
     "@nx/vite": "0.0.1",
     "@nx/web": "0.0.1",
-    "@vitest/ui": "^3.0.0",
+    "@vitest/ui": "^4.0.0",
     "existing": "1.0.0",
     "jiti": "2.4.2",
     "vite": "^7.0.0",
-    "vitest": "^3.0.0",
+    "vitest": "^4.0.0",
   },
   "name": "@proj/source",
 }
