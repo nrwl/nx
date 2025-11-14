@@ -5,34 +5,51 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/react-native/README.md"],
-      "command": "node ./scripts/copy-readme.js react-native"
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "command": "node ./scripts/copy-readme.js react-native packages/react-native/readme-template.md packages/react-native/README.md"
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./index.js",
+        "types": "./index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
         "assets": [
           "packages/react-native/*.md",
+          {
+            "input": "packages/react-native",
+            "glob": "**/files/**",
+            "output": "/"
+          },
           {
             "input": "packages/react-native",
             "glob": "**/files/**/.babelrc.template",
             "output": "/"
           },
           {
-            "input": "packages/react-native/src",
-            "glob": "**/!(*.ts)",
-            "output": "/src"
-          },
-          {
             "input": "packages/react-native",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/react-native",
-            "glob": "**/*.d.ts",
+            "ignore": [
+              "**/tsconfig*.json",
+              "project.json",
+              ".eslintrc.json",
+              "package.json",
+              "generators.json",
+              "executors.json",
+              "migrations.json"
+            ],
             "output": "/"
           },
           {

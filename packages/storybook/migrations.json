@@ -4,13 +4,13 @@
       "cli": "nx",
       "version": "21.2.0-beta.3",
       "description": "Update workspace to use Storybook v9",
-      "implementation": "./src/migrations/update-21-1-0/update-sb-9"
+      "implementation": "./dist/src/migrations/update-21-1-0/update-sb-9"
     },
     "update-21-2-0-remove-addon-dependencies": {
       "cli": "nx",
       "version": "21.2.0-beta.3",
       "description": "Remove deprecated Storybook addon dependencies",
-      "implementation": "./src/migrations/update-21-2-0/remove-addon-dependencies"
+      "implementation": "./dist/src/migrations/update-21-2-0/remove-addon-dependencies"
     },
     "update-22-1-0-migrate-storybook-v10": {
       "cli": "nx",
@@ -19,7 +19,7 @@
         "storybook": ">=10.0.0"
       },
       "description": "Update workspace to use Storybook v10",
-      "implementation": "./src/migrations/update-22-1-0/migrate-to-storybook-10"
+      "implementation": "./dist/src/migrations/update-22-1-0/migrate-to-storybook-10"
     }
   },
   "packageJsonUpdates": {

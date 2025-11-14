@@ -2,8 +2,8 @@
   "compilerOptions": {
     "target": "ES2021",
     "importHelpers": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
@@ -15,6 +15,7 @@
     "baseUrl": ".",
     "allowJs": true,
     "composite": true,
-    "declarationMap": true
+    "declarationMap": false,
+    "customConditions": ["@nx/nx-source"]
   }
 }

@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/schema",
   "executors": {
     "test": {
-      "implementation": "./src/executors/test/vitest.impl",
-      "schema": "./src/executors/test/schema.json",
+      "implementation": "./dist/src/executors/test/vitest.impl",
+      "schema": "./dist/src/executors/test/schema.json",
       "description": "Test using Vitest"
     }
   }

@@ -5,13 +5,28 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "command": "node ./scripts/copy-readme.js plugin",
-      "outputs": ["{workspaceRoot}/dist/packages/plugin/README.md"]
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "command": "node ./scripts/copy-readme.js plugin packages/plugin/readme-template.md packages/plugin/README.md",
+      "dependsOn": ["^build", "build-base", "legacy-post-build"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./index.js",
+        "types": "./index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
         "assets": [
           {
             "input": "packages/plugin",

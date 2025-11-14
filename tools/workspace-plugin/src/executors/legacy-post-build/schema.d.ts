@@ -14,4 +14,6 @@ export interface LegacyPostBuildExecutorSchema {
   addPackageJsonFields?: boolean;
   main?: string;
   types?: string;
+  replaceSrcRoot?: boolean;
+  sourceRoot?: string;
 }

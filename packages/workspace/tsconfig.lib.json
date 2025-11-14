@@ -1,13 +1,37 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/workspace",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/workspace/tsconfig.tsbuildinfo"
+    "composite": true
   },
-  "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
-  "include": ["**/*.ts", "*.json"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*_spec.ts",
+    "**/*.test.ts",
+    "jest.config.ts",
+    "jest.config.cts",
+    "**/__fixtures__/**/*.*",
+    "**/__snapshots__/**/*.*"
+  ],
+  "include": [
+    "index.ts",
+    "generators.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "presets/**/*.ts",
+    "tasks-runners/**/*.ts",
+    "package.json",
+    "migrations.json",
+    "generators.json",
+    "executors.json"
+  ],
   "references": [
     {
       "path": "../nx/tsconfig.lib.json"

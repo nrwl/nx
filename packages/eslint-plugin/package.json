@@ -2,6 +2,7 @@
   "name": "@nx/eslint-plugin",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
   "repository": {
     "type": "git",
@@ -16,8 +17,47 @@
     "CLI",
     "Testing"
   ],
-  "main": "./src/index.js",
+  "main": "./dist/src/index.js",
   "typings": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "types": "./src/index.d.ts",
+      "@nx/nx-source": "./src/index.ts"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./angular": {
+      "import": "./dist/angular.js",
+      "types": "./angular.d.ts",
+      "@nx/nx-source": "./angular.ts"
+    },
+    "./nx": {
+      "import": "./dist/nx.js",
+      "types": "./nx.d.ts",
+      "@nx/nx-source": "./nx.ts"
+    },
+    "./react": {
+      "import": "./dist/react.js",
+      "types": "./react.d.ts",
+      "@nx/nx-source": "./react.ts"
+    },
+    "./typescript": {
+      "import": "./dist/typescript.js",
+      "types": "./typescript.d.ts",
+      "@nx/nx-source": "./typescript.ts"
+    },
+    "./src/*": {
+      "import": "./dist/src/*.js",
+      "types": "./src/*.d.ts",
+      "@nx/nx-source": "./src/*.ts"
+    },
+    "./src/**/*": {
+      "import": "./dist/src/**/*.js",
+      "types": "./src/**/*.d.ts",
+      "@nx/nx-source": "./src/**/*.ts"
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {

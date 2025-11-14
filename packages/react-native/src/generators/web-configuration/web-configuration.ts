@@ -139,7 +139,7 @@ async function addBundlerConfiguration(
     tasks.push(webpackInitTask);
     if (!normalizedSchema.skipPackageJson) {
       const { ensureDependencies } = await import(
-        '@nx/webpack/src/utils/ensure-dependencies'
+        '@nx/webpack/src/utils/ensure-dependencies.js'
       );
       tasks.push(ensureDependencies(tree, { uiFramework: 'react' }));
     }

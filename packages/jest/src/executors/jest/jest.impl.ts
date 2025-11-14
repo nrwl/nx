@@ -15,6 +15,7 @@ import {
 import { getSummary } from './summary';
 import { readFileSync } from 'fs';
 import type { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
+
 process.env.NODE_ENV ??= 'test';
 
 export async function jestExecutor(
@@ -67,8 +68,10 @@ export async function parseJestConfig(
 
   // support passing extra args to jest cli supporting 3rd party plugins
   // like 'jest-runner-groups' --group arg
-  const schema = await import('./schema.json');
-  const extraArgs = getExtraArgs(options, schema);
+  const schema = (await import('./schema.json')) as
+    | Record<string, any>
+    | { default: Record<string, any> };
+  const extraArgs = getExtraArgs(options, schema.default ?? schema);
 
   const config: Config.Argv = {
     ...extraArgs,

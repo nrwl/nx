@@ -1,4 +1,4 @@
-import * as webpack from 'webpack';
+import webpack from 'webpack';
 import { Compiler } from 'webpack';
 import { createHash } from 'crypto';
 import { readFileSync } from 'fs';

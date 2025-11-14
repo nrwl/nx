@@ -2,6 +2,7 @@
   "name": "@nx/detox",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Plugin for Detox contains executors and generators for allowing your workspace to use the powerful Detox integration testing capabilities.",
   "keywords": [
     "Monorepo",
@@ -24,8 +25,24 @@
   },
   "license": "MIT",
   "author": "Victor Savkin",
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json",
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./plugin.d.ts",
+      "@nx/nx-source": "./plugin.ts"
+    }
+  },
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/jest": "workspace:*",

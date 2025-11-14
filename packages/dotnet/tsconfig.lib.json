@@ -7,9 +7,7 @@
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": false,
     "declaration": true,
-    "types": ["node"],
-    "module": "commonjs",
-    "moduleResolution": "node"
+    "types": ["node"]
   },
   "include": ["src/**/*.ts", "plugin.ts"],
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "dist/**/*"],

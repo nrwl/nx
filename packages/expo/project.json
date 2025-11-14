@@ -1,29 +1,33 @@
 {
   "name": "expo",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/expo/src",
+  "sourceRoot": "./src",
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/expo/README.md"],
-      "command": "node ./scripts/copy-readme.js expo"
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "command": "node ./scripts/copy-readme.js expo packages/expo/readme-template.md packages/expo/README.md"
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./index.js",
+        "types": "./index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
         "assets": [
           "packages/expo/*.md",
-          {
-            "input": "packages/expo",
-            "glob": "**/!(*.ts)",
-            "output": "/"
-          },
-          {
-            "input": "packages/expo",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
           {
             "input": "packages/expo",
             "glob": "**/files/**",
@@ -31,21 +35,28 @@
           },
           {
             "input": "packages/expo",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/expo",
-            "glob": "**/files/**/.babelrc.js.template",
+            "glob": "**/files/**/.babelrc.template",
             "output": "/"
           },
           {
             "input": "packages/expo",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "**/project.json"],
+            "ignore": [
+              "**/tsconfig*.json",
+              "project.json",
+              ".eslintrc.json",
+              "package.json",
+              "generators.json",
+              "executors.json",
+              "migrations.json"
+            ],
             "output": "/"
           },
-          "LICENSE"
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
         ]
       }
     }

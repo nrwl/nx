@@ -20,7 +20,79 @@
   "author": "Jack Hsu",
   "license": "MIT",
   "homepage": "https://nx.dev",
-  "main": "src/index.js",
+  "main": "./dist/src/index.js",
+  "typings": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "types": "./src/index.d.ts",
+      "@nx/nx-source": "./src/index.ts"
+    },
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./plugin.d.ts",
+      "@nx/nx-source": "./plugin.ts"
+    },
+    "./module-federation": {
+      "import": "./dist/module-federation.js",
+      "types": "./module-federation.d.ts",
+      "@nx/nx-source": "./module-federation.ts"
+    },
+    "./react-plugin": {
+      "import": "./dist/react-plugin.js",
+      "types": "./react-plugin.d.ts",
+      "@nx/nx-source": "./react-plugin.ts"
+    },
+    "./app-plugin": {
+      "import": "./dist/app-plugin.js",
+      "types": "./app-plugin.d.ts",
+      "@nx/nx-source": "./app-plugin.ts"
+    },
+    "./package.json": "./package.json",
+    "./executors.json": "./executors.json",
+    "./generators.json": "./generators.json",
+    "./migrations.json": "./migrations.json",
+    "./src/executors/*": {
+      "import": "./dist/src/executors/*.js",
+      "types": "./src/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts"
+    },
+    "./src/executors/**/*": {
+      "import": "./dist/src/executors/**/*.js",
+      "types": "./src/executors/**/*.d.ts",
+      "@nx/nx-source": "./src/executors/**/*.ts"
+    },
+    "./src/generators/*": {
+      "import": "./dist/src/generators/*.js",
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/generators/**/*": {
+      "import": "./dist/src/generators/**/*.js",
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts"
+    },
+    "./src/plugins/*": {
+      "import": "./dist/src/plugins/*.js",
+      "types": "./src/plugins/*.d.ts",
+      "@nx/nx-source": "./src/plugins/*.ts"
+    },
+    "./src/plugins/**/*": {
+      "import": "./dist/src/plugins/**/*.js",
+      "types": "./src/plugins/**/*.d.ts",
+      "@nx/nx-source": "./src/plugins/**/*.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/src/utils/*.js",
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/utils/**/*": {
+      "import": "./dist/src/utils/**/*.js",
+      "types": "./src/utils/**/*.d.ts",
+      "@nx/nx-source": "./src/utils/**/*.ts"
+    }
+  },
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {

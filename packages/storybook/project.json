@@ -5,20 +5,35 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/storybook/README.md"],
-      "command": "node ./scripts/copy-readme.js storybook"
+      "dependsOn": ["^build"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "command": "node ./scripts/copy-readme.js storybook packages/storybook/readme-template.md packages/storybook/README.md"
     },
     "nx-release-publish": {
       "executor": "@nx/js:release-publish",
       "options": {
-        "packageRoot": "dist/packages/storybook"
+        "packageRoot": "packages/storybook"
       },
       "dependsOn": ["^nx-release-publish"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./index.js",
+        "types": "./index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
         "assets": [
           {
             "input": "packages/storybook",
@@ -42,7 +57,11 @@
               "**/tsconfig*.json",
               "project.json",
               ".eslintrc.json",
-              "**/test-configs/**"
+              "**/test-configs/**",
+              "executors.json",
+              "generators.json",
+              "migrations.json",
+              "package.json"
             ],
             "output": "/"
           },
@@ -50,11 +69,6 @@
             "input": "packages/storybook",
             "glob": "**/*.js",
             "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/storybook",
-            "glob": "**/*.d.ts",
             "output": "/"
           },
           {

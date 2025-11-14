@@ -64,7 +64,8 @@ export async function getStylesConfig(
   );
   if (postcssConfiguration) {
     for (const [pluginName, pluginOptions] of postcssConfiguration.plugins) {
-      const { default: plugin } = await import(pluginName);
+      const pluginPath = require.resolve(pluginName);
+      const { default: plugin } = await import(pluginPath);
       if (typeof plugin !== 'function' || plugin.postcss !== true) {
         throw new Error(
           `Attempted to load invalid Postcss plugin: "${pluginName}"`

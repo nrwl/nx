@@ -43,7 +43,8 @@ export async function setupCompilation(
   config: Pick<RsbuildConfig, 'mode' | 'source'>,
   options: SetupCompilationOptions
 ) {
-  const { readConfiguration } = await loadCompilerCli();
+  // Cast is needed. The `readConfiguration` definitely does exist
+  const { readConfiguration } = (await loadCompilerCli()) as any;
   const { options: tsCompilerOptions, rootNames } = readConfiguration(
     config.source?.tsconfigPath ?? options.tsConfig,
     {

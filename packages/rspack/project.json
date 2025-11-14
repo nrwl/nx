@@ -5,13 +5,27 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/rspack/README.md"],
-      "command": "node ./scripts/copy-readme.js rspack"
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "command": "node ./scripts/copy-readme.js rspack packages/rspack/readme-template.md packages/rspack/README.md"
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./src/index.js",
+        "types": "./src/index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
         "assets": [
           "packages/rspack/*.md",
           {
@@ -20,15 +34,18 @@
             "output": "./src"
           },
           {
-            "input": "./packages/rspack/src",
-            "glob": "**/*.d.ts",
-            "output": "./src"
-          },
-          {
             "input": "./packages/rspack",
             "glob": "**.json",
             "output": ".",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
+            "ignore": [
+              "**/tsconfig*.json",
+              "project.json",
+              ".eslintrc.json",
+              "executors.json",
+              "generators.json",
+              "migrations.json",
+              "package.json"
+            ]
           },
           "LICENSE"
         ]

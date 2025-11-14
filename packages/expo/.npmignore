@@ -1,0 +1,29 @@
+# Source files
+src
+plugins
+typings
+
+# Config files
+tsconfig*.json
+.eslintrc.json
+jest.config.*
+project.json
+
+# Test files
+**/*.spec.ts
+**/*.spec.js
+**/*.test.ts
+**/*.test.js
+**/__tests__
+**/__mocks__
+**/__fixtures__
+**/__snapshots__
+
+# Build artifacts
+*.tsbuildinfo
+.nx
+
+# Misc
+*.md
+!README.md
+readme-template.md

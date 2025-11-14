@@ -23,6 +23,28 @@ catalog:
   'yargs-parser': 21.1.1
 
 catalogs:
+  nx:
+    'nx': 22.2.0-beta.3
+    '@nx/angular': 22.2.0-beta.3
+    '@nx/cypress': 22.2.0-beta.3
+    '@nx/devkit': 22.2.0-beta.3
+    '@nx/esbuild': 22.2.0-beta.3
+    '@nx/eslint': 22.2.0-beta.3
+    '@nx/eslint-plugin': 22.2.0-beta.3
+    '@nx/gradle': 22.2.0-beta.3
+    '@nx/jest': 22.2.0-beta.3
+    '@nx/js': 22.2.0-beta.3
+    '@nx/next': 22.2.0-beta.3
+    '@nx/playwright': 22.2.0-beta.3
+    '@nx/plugin': 22.2.0-beta.3
+    '@nx/react': 22.2.0-beta.3
+    '@nx/rsbuild': 22.2.0-beta.3
+    '@nx/rspack': 22.2.0-beta.3
+    '@nx/storybook': 22.2.0-beta.3
+    '@nx/vite': 22.2.0-beta.3
+    '@nx/web': 22.2.0-beta.3
+    '@nx/webpack': 22.2.0-beta.3
+
   angular:
     '@angular-devkit/architect': ~0.2003.0
     '@angular-devkit/build-angular': ~20.3.0

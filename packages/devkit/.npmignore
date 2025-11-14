@@ -1,0 +1,30 @@
+# Build artifacts to exclude
+dist/package.json
+dist/migrations.json
+dist/tsconfig.tsbuildinfo
+dist/.eslintrc.json
+
+# Source files (exclude TS, but keep declarations)
+**/*.ts
+**/*.d.ts.map
+!**/*.d.ts
+
+# Test files and fixtures
+src/generators/test-files/**
+**/*.spec.ts
+**/*.test.ts
+**/*_spec.ts
+**/*_test.ts
+
+# Development utilities (not for external use)
+internal-testing-utils.ts
+internal-testing-utils.d.ts
+internal-testing-utils.js
+
+# Configuration files
+.eslintrc.json
+jest.config.ts
+jest.config.cts
+tsconfig.json
+tsconfig.*.json
+project.json

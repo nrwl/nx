@@ -1,4 +1,4 @@
-import type { moduleFederationPlugin } from '@module-federation/sdk';
+import type { moduleFederationPlugin } from '@module-federation/sdk/dist/src/types/plugins';
 import { NormalModuleReplacementPlugin as RspackNormalModuleReplacementPlugin } from '@rspack/core';
 
 export type ModuleFederationLibrary = { type: string; name: string };

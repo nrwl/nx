@@ -112,9 +112,10 @@ function withNx(
   context: WithNxContext = getWithNxContext()
 ): NextConfigFn {
   return async (phase: string) => {
-    const { PHASE_PRODUCTION_SERVER, PHASE_DEVELOPMENT_SERVER } = await import(
-      'next/constants'
-    );
+    // next is a peer dependency, types available at runtime
+    const { PHASE_PRODUCTION_SERVER, PHASE_DEVELOPMENT_SERVER } = (await import(
+      'next/constants' as any
+    )) as any;
     // Three scenarios where we want to skip graph creation:
     // 1. Running production server means the build is already done so we just need to start the Next.js server.
     // 2. During graph creation (i.e. create nodes), we won't have a graph to read, and it is not needed anyway since it's a build-time concern.

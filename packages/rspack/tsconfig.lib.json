@@ -2,13 +2,38 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "resolveJsonModule": true,
-    "outDir": "../../dist/packages/rspack",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
     "esModuleInterop": true,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/rspack/tsconfig.tsbuildinfo"
+    "composite": true
   },
-  "include": ["**/*.ts", "**/*.json"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
+  "include": [
+    "plugin.ts",
+    "module-federation.ts",
+    "react-plugin.ts",
+    "app-plugin.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "package.json",
+    "executors.json",
+    "generators.json",
+    "migrations.json"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*_spec.ts",
+    "**/*.test.ts",
+    "jest.config.ts",
+    "jest.config.cts",
+    "**/__fixtures__/**/*.*",
+    "**/__snapshots__/**/*.*"
+  ],
   "references": [
     {
       "path": "../module-federation/tsconfig.lib.json"

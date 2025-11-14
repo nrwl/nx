@@ -2,6 +2,7 @@
   "name": "@nx/web",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Playwright, Cypress, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
   "repository": {
     "type": "git",
@@ -16,7 +17,7 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -26,6 +27,31 @@
   "homepage": "https://nx.dev",
   "generators": "./generators.json",
   "executors": "./executors.json",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
+    },
+    "./babel": {
+      "import": "./dist/babel.js",
+      "types": "./babel.d.ts",
+      "@nx/nx-source": "./babel.ts"
+    },
+    "./src/*": {
+      "import": "./dist/src/*.js",
+      "types": "./src/*.d.ts",
+      "@nx/nx-source": "./src/*.ts"
+    },
+    "./src/**/*": {
+      "import": "./dist/src/**/*.js",
+      "types": "./src/**/*.d.ts",
+      "@nx/nx-source": "./src/**/*.ts"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json"
+  },
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"

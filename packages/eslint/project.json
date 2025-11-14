@@ -5,13 +5,25 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/eslint/README.md"],
-      "command": "node ./scripts/copy-readme.js eslint"
+      "inputs": [
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "command": "node ./scripts/copy-readme.js eslint packages/eslint/readme-template.md packages/eslint/README.md",
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./index.js",
+        "types": "./index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
         "assets": [
           {
             "input": "packages/eslint",
@@ -33,11 +45,6 @@
             "input": "packages/eslint",
             "glob": "**/*.js",
             "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/eslint",
-            "glob": "**/*.d.ts",
             "output": "/"
           },
           {

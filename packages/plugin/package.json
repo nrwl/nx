@@ -2,6 +2,7 @@
   "name": "@nx/plugin",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
   "repository": {
     "type": "git",
@@ -13,8 +14,48 @@
     "Nx",
     "CLI"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
+    },
+    "./generators": {
+      "import": "./dist/generators.js",
+      "types": "./generators.d.ts",
+      "@nx/nx-source": "./generators.ts"
+    },
+    "./testing": {
+      "import": "./dist/testing.js",
+      "types": "./testing.d.ts",
+      "@nx/nx-source": "./testing.ts"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./migrations.json": "./migrations.json",
+    "./src/generators/*": {
+      "import": "./dist/src/generators/*.js",
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/generators/**/*": {
+      "import": "./dist/src/generators/**/*.js",
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/src/utils/*.js",
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/utils/**/*": {
+      "import": "./dist/src/utils/**/*.js",
+      "types": "./src/utils/**/*.d.ts",
+      "@nx/nx-source": "./src/utils/**/*.ts"
+    }
+  },
   "author": "Nrwl",
   "license": "MIT",
   "bugs": {

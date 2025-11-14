@@ -1,6 +1,6 @@
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
-import * as webpack from 'webpack';
+import webpack from 'webpack';
 
 const Chunk = require('webpack/lib/Chunk');
 const EntryPoint = require('webpack/lib/Entrypoint');

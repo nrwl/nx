@@ -1,20 +1,38 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/storybook",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/storybook/tsconfig.tsbuildinfo"
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+    "composite": true
   },
   "exclude": [
+    "node_modules",
+    "dist",
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/*_spec.ts",
     "**/*_test.ts",
     "jest.config.ts",
-    "src/**/test-configs"
+    "jest.config.cts",
+    "src/**/test-configs",
+    "**/__fixtures__/**/*.*",
+    "**/__snapshots__/**/*.*"
   ],
-  "include": ["**/*.ts", "**/*.json"],
+  "include": [
+    "index.ts",
+    "plugin.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "presets/**/*.ts",
+    "package.json",
+    "migrations.json",
+    "generators.json",
+    "executors.json"
+  ],
   "references": [
     {
       "path": "../eslint/tsconfig.lib.json"

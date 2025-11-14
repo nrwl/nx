@@ -22,23 +22,47 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "homepage": "https://nx.dev",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "typings": "./index.d.ts",
   "exports": {
     ".": {
+      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "default": "./index.js"
+      "@nx/nx-source": "./index.ts"
     },
     "./release/version-utils": {
+      "import": "./dist/src/release/version-utils.js",
       "types": "./src/release/version-utils.d.ts",
-      "default": "./src/release/version-utils.js"
+      "@nx/nx-source": "./src/release/version-utils.ts"
     },
     "./generators": {
+      "import": "./dist/generators.js",
       "types": "./generators.d.ts",
-      "default": "./generators.js"
+      "@nx/nx-source": "./generators.ts"
     },
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
+    "./src/release/*": {
+      "import": "./dist/src/release/*.js",
+      "types": "./src/release/*.d.ts",
+      "@nx/nx-source": "./src/release/*.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/src/utils/*.js",
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/plugins/*": {
+      "import": "./dist/src/plugins/*.js",
+      "types": "./src/plugins/*.d.ts",
+      "@nx/nx-source": "./src/plugins/*.ts"
+    },
+    "./src/plugins/**/*": {
+      "import": "./dist/src/plugins/**/*.js",
+      "types": "./src/plugins/**/*.d.ts",
+      "@nx/nx-source": "./src/plugins/**/*.ts"
+    },
+    "./executors/*/schema.json": "./dist/src/executors/*/schema.json",
     "./executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
+    "./generators/*/schema.json": "./dist/src/generators/*/schema.json",
     "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",

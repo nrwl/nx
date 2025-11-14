@@ -1,6 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "outDir": "../dist/out-tsc",
     "types": ["node"]
   },

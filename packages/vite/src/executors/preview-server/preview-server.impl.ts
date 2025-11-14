@@ -215,7 +215,9 @@ async function getExtraArgs(
   otherOptions: Record<string, any>;
 }> {
   // support passing extra args to vite cli
-  const schema = await import('./schema.json');
+  const resolvedSchema = await import('./schema.json');
+  const schema =
+    'default' in resolvedSchema ? resolvedSchema.default : resolvedSchema;
   const extraArgs = {};
   for (const key of Object.keys(options)) {
     if (!schema.properties[key]) {

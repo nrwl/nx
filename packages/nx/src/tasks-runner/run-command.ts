@@ -1,6 +1,7 @@
 import { prompt } from 'enquirer';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
+
 const ora = require('ora');
 import type { Observable } from 'rxjs';
 import {
@@ -131,7 +132,9 @@ async function getTerminalOutputLifeCycle(
     process.stdout.write = patchedWrite as any;
     process.stderr.write = patchedWrite as any;
 
-    const { AppLifeCycle, restoreTerminal } = await import('../native');
+    const { AppLifeCycle, restoreTerminal } = await import(
+      '../native/index.js'
+    );
     let appLifeCycle;
 
     const isRunOne = initiatingProject != null;

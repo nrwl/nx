@@ -1,24 +1,45 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/react",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/react/tsconfig.tsbuildinfo"
+    "composite": true
   },
   "exclude": [
+    "node_modules",
+    "dist",
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/*_spec.ts",
     "**/*_test.ts",
     "jest.config.ts",
-    "jest.config.cts"
+    "jest.config.cts",
+    "**/__fixtures__/**/*.*",
+    "**/__snapshots__/**/*.*"
   ],
-  "include": ["**/*.ts", "**/*.json"],
+  "include": [
+    "index.ts",
+    "ast-utils.ts",
+    "babel.ts",
+    "module-federation.ts",
+    "router-plugin.ts",
+    "tailwind.ts",
+    "webpack-plugin.ts",
+    "mf/**/*.ts",
+    "plugins/**/*.ts",
+    "typings/**/*.d.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "package.json",
+    "generators.json",
+    "executors.json",
+    "migrations.json"
+  ],
   "references": [
-    {
-      "path": "../vitest/tsconfig.lib.json"
-    },
     {
       "path": "../rollup/tsconfig.lib.json"
     },
@@ -42,6 +63,12 @@
     },
     {
       "path": "../webpack/tsconfig.lib.json"
+    },
+    {
+      "path": "../vitest/tsconfig.lib.json"
+    },
+    {
+      "path": "../storybook/tsconfig.lib.json"
     },
     {
       "path": "../rsbuild/tsconfig.lib.json"

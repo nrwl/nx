@@ -15,13 +15,13 @@ export default async function (tree: Tree) {
 
   ensurePackage('@nx/eslint', nxVersion);
   const { addIgnoresToLintConfig, isEslintConfigSupported } = await import(
-    '@nx/eslint/src/generators/utils/eslint-file'
+    '@nx/eslint/src/generators/utils/eslint-file.js'
   );
   if (!isEslintConfigSupported(tree)) {
     return;
   }
 
-  const { useFlatConfig } = await import('@nx/eslint/src/utils/flat-config');
+  const { useFlatConfig } = await import('@nx/eslint/src/utils/flat-config.js');
   const isUsingFlatConfig = useFlatConfig(tree);
 
   if (isUsingFlatConfig) {

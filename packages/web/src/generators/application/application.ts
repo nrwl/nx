@@ -344,7 +344,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     // Add out-tsc ignore pattern when using TS solution setup
     if (options.isUsingTsSolutionConfig) {
       const { addIgnoresToLintConfig } = await import(
-        '@nx/eslint/src/generators/utils/eslint-file'
+        '@nx/eslint/src/generators/utils/eslint-file.js'
       );
       addIgnoresToLintConfig(host, options.appProjectRoot, ['**/out-tsc']);
     }

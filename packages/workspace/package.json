@@ -2,6 +2,7 @@
   "name": "@nx/workspace",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.",
   "repository": {
     "type": "git",
@@ -19,7 +20,7 @@
     "Cypress",
     "CLI"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -52,5 +53,56 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./generators": {
+      "import": "./dist/src/generators.js",
+      "types": "./generators.d.ts",
+      "@nx/nx-source": "./generators.ts"
+    },
+    "./presets/*": {
+      "import": "./dist/presets/*.js",
+      "types": "./presets/*.d.ts",
+      "@nx/nx-source": "./presets/*.ts"
+    },
+    "./tasks-runners/*": {
+      "import": "./dist/tasks-runners/*.js",
+      "types": "./tasks-runners/*.d.ts",
+      "@nx/nx-source": "./tasks-runners/*.ts"
+    },
+    "./src/generators/*": {
+      "import": "./dist/src/generators/*.js",
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/executors/*": {
+      "import": "./dist/src/executors/*.js",
+      "types": "./src/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts"
+    },
+    "./src/utilities/*": {
+      "import": "./dist/src/utilities/*.js",
+      "types": "./src/src/utilities/*.d.ts",
+      "@nx/nx-source": "./src/utilities/*.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/src/utils/*.js",
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/tasks-runner/*": {
+      "import": "./dist/tasks-runner/*.js",
+      "types": "./src/tasks-runner/*.d.ts",
+      "@nx/nx-source": "./src/tasks-runner/*.ts"
+    }
   }
 }

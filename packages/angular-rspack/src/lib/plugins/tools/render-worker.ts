@@ -73,14 +73,21 @@ async function render({
   const browserIndexOutputPath = path.join(outputPath, indexFile);
   const outputFolderPath = path.join(outputPath, route);
   const outputIndexPath = path.join(outputFolderPath, 'index.html');
-
+  const normalizedServerBundlePath = require.resolve(serverBundlePath);
+  const resolvedServerBundle = await import(normalizedServerBundlePath);
+  const serverBundle = (
+    'default' in resolvedServerBundle &&
+    'default' in resolvedServerBundle.default
+      ? resolvedServerBundle.default
+      : resolvedServerBundle
+  ) as ServerBundleExports;
   const {
     ɵSERVER_CONTEXT,
     AppServerModule,
     renderModule,
     renderApplication,
     default: bootstrapAppFn,
-  } = (await import(serverBundlePath)) as ServerBundleExports;
+  } = serverBundle;
 
   assert(
     ɵSERVER_CONTEXT,

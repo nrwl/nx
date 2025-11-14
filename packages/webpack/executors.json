@@ -1,18 +1,18 @@
 {
   "executors": {
     "webpack": {
-      "implementation": "./src/executors/webpack/webpack.impl",
-      "schema": "./src/executors/webpack/schema.json",
+      "implementation": "./dist/src/executors/webpack/webpack.impl",
+      "schema": "./dist/src/executors/webpack/schema.json",
       "description": "Run webpack build."
     },
     "dev-server": {
-      "implementation": "./src/executors/dev-server/dev-server.impl",
-      "schema": "./src/executors/dev-server/schema.json",
+      "implementation": "./dist/src/executors/dev-server/dev-server.impl",
+      "schema": "./dist/src/executors/dev-server/schema.json",
       "description": "Serve a web application."
     },
     "ssr-dev-server": {
-      "implementation": "./src/executors/ssr-dev-server/ssr-dev-server.impl",
-      "schema": "./src/executors/ssr-dev-server/schema.json",
+      "implementation": "./dist/src/executors/ssr-dev-server/ssr-dev-server.impl",
+      "schema": "./dist/src/executors/ssr-dev-server/schema.json",
       "description": "Serve a SSR application."
     }
   }

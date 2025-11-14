@@ -1,58 +1,58 @@
 {
   "executors": {
     "run-android": {
-      "implementation": "./src/executors/run-android/run-android.impl",
-      "schema": "./src/executors/run-android/schema.json",
+      "implementation": "./dist/src/executors/run-android/run-android.impl",
+      "schema": "./dist/src/executors/run-android/schema.json",
       "description": "Runs Android application."
     },
     "run-ios": {
-      "implementation": "./src/executors/run-ios/run-ios.impl",
-      "schema": "./src/executors/run-ios/schema.json",
+      "implementation": "./dist/src/executors/run-ios/run-ios.impl",
+      "schema": "./dist/src/executors/run-ios/schema.json",
       "description": "Runs iOS application."
     },
     "bundle": {
-      "implementation": "./src/executors/bundle/bundle.impl",
-      "schema": "./src/executors/bundle/schema.json",
+      "implementation": "./dist/src/executors/bundle/bundle.impl",
+      "schema": "./dist/src/executors/bundle/schema.json",
       "description": "Builds the JavaScript bundle for offline use."
     },
     "build-android": {
-      "implementation": "./src/executors/build-android/build-android.impl",
-      "schema": "./src/executors/build-android/schema.json",
+      "implementation": "./dist/src/executors/build-android/build-android.impl",
+      "schema": "./dist/src/executors/build-android/schema.json",
       "description": "Release Build for Android."
     },
     "build-ios": {
-      "implementation": "./src/executors/build-ios/build-ios.impl",
-      "schema": "./src/executors/build-ios/schema.json",
+      "implementation": "./dist/src/executors/build-ios/build-ios.impl",
+      "schema": "./dist/src/executors/build-ios/schema.json",
       "description": "Build iOS app"
     },
     "start": {
-      "implementation": "./src/executors/start/start.impl",
-      "schema": "./src/executors/start/schema.json",
+      "implementation": "./dist/src/executors/start/start.impl",
+      "schema": "./dist/src/executors/start/schema.json",
       "description": "Starts the Javascript server that communicates with connected devices."
     },
     "sync-deps": {
-      "implementation": "./src/executors/sync-deps/sync-deps.impl",
-      "schema": "./src/executors/sync-deps/schema.json",
+      "implementation": "./dist/src/executors/sync-deps/sync-deps.impl",
+      "schema": "./dist/src/executors/sync-deps/schema.json",
       "description": "Syncs dependencies to `package.json` (required for autolinking)."
     },
     "ensure-symlink": {
-      "implementation": "./src/executors/ensure-symlink/ensure-symlink.impl",
-      "schema": "./src/executors/ensure-symlink//schema.json",
+      "implementation": "./dist/src/executors/ensure-symlink/ensure-symlink.impl",
+      "schema": "./dist/src/executors/ensure-symlink//schema.json",
       "description": "Ensure workspace `node_modules` is symlink under app's `node_modules` folder."
     },
     "storybook": {
-      "implementation": "./src/executors/storybook/storybook.impl",
-      "schema": "./src/executors/storybook/schema.json",
+      "implementation": "./dist/src/executors/storybook/storybook.impl",
+      "schema": "./dist/src/executors/storybook/schema.json",
       "description": "Serve React Native Storybook."
     },
     "pod-install": {
-      "implementation": "./src/executors/pod-install/pod-install.impl",
-      "schema": "./src/executors/pod-install/schema.json",
+      "implementation": "./dist/src/executors/pod-install/pod-install.impl",
+      "schema": "./dist/src/executors/pod-install/schema.json",
       "description": "Run `pod install` in the `ios` directory."
     },
     "upgrade": {
-      "implementation": "./src/executors/upgrade/upgrade.impl",
-      "schema": "./src/executors/upgrade/schema.json",
+      "implementation": "./dist/src/executors/upgrade/upgrade.impl",
+      "schema": "./dist/src/executors/upgrade/schema.json",
       "description": "upgrade executor"
     }
   }

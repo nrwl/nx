@@ -21,8 +21,78 @@
   "author": "Colum Ferry",
   "license": "MIT",
   "homepage": "https://nx.dev",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "typings": "./index.d.ts",
   "executors": "./executors.json",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
+    },
+    "./angular": {
+      "import": "./dist/angular.js",
+      "types": "./angular.d.ts",
+      "@nx/nx-source": "./angular.ts"
+    },
+    "./webpack": {
+      "import": "./dist/webpack.js",
+      "types": "./webpack.d.ts",
+      "@nx/nx-source": "./webpack.ts"
+    },
+    "./rspack": {
+      "import": "./dist/rspack.js",
+      "types": "./rspack.d.ts",
+      "@nx/nx-source": "./rspack.ts"
+    },
+    "./url-helpers": {
+      "import": "./dist/url-helpers.js",
+      "types": "./url-helpers.d.ts",
+      "@nx/nx-source": "./url-helpers.ts"
+    },
+    "./src/*": {
+      "import": "./dist/src/*.js",
+      "types": "./src/*.d.ts",
+      "@nx/nx-source": "./src/*.ts"
+    },
+    "./src/executors/utils": {
+      "import": "./dist/src/executors/utils/index.js",
+      "types": "./src/executors/utils/index.d.ts",
+      "@nx/nx-source": "./src/executors/utils/index.ts"
+    },
+    "./src/executors/utils/*": {
+      "import": "./dist/src/executors/utils/*.js",
+      "types": "./src/executors/utils/*.d.ts",
+      "@nx/nx-source": "./src/executors/utils/*.ts"
+    },
+    "./src/utils": {
+      "import": "./dist/src/utils/index.js",
+      "types": "./src/utils/index.d.ts",
+      "@nx/nx-source": "./src/utils/index.ts"
+    },
+    "./src/executors/utils/models": {
+      "import": "./dist/src/executors/utils/models/index.js",
+      "types": "./src/executors/utils/models/index.d.ts",
+      "@nx/nx-source": "./src/executors/utils/models/index.ts"
+    },
+    "./src/utils/plugins/runtime-library-control.plugin": {
+      "import": "./dist/src/plugins/runtime-library-control.plugin.js",
+      "types": "./src/plugins/runtime-library-control.plugin.d.ts",
+      "@nx/nx-source": "./src/plugins/runtime-library-control.plugin.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/src/utils/*.js",
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/**/*": {
+      "import": "./dist/src/**/*.js",
+      "types": "./src/**/*.d.ts",
+      "@nx/nx-source": "./src/**/*.ts"
+    },
+    "./package.json": "./package.json",
+    "./executors.json": "./executors.json"
+  },
   "dependencies": {
     "@module-federation/enhanced": "^0.21.2",
     "@module-federation/node": "^2.7.21",
