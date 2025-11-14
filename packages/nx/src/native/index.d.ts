@@ -193,13 +193,6 @@ export declare class WorkspaceContext {
   getFilesInDirectory(directory: string): Array<string>
 }
 
-/** Batch metrics snapshot */
-export interface BatchMetricsSnapshot {
-  batchId: string
-  taskIds: Array<string>
-  processes: Array<ProcessMetrics>
-}
-
 export interface CachedResult {
   code: number
   terminalOutput?: string
@@ -272,6 +265,30 @@ export declare export declare function getFilesForOutputs(directory: string, ent
 
 export declare export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
+/**
+ * Group information - union of different process group types
+ * Use group_type to discriminate which optional fields are present
+ */
+export interface GroupInfo {
+  /** Type discriminator: MainCLI, Daemon, Task, or Batch */
+  groupType: GroupType
+  /** Display name for the group */
+  displayName: string
+  /** Unique ID for this group */
+  id: string
+  /** Task IDs in this batch (present for Batch groups) */
+  taskIds?: Array<string>
+}
+
+/** Group type discriminator */
+export declare const enum GroupType {
+  MainCLI = 'MainCLI',
+  MainCliSubprocesses = 'MainCliSubprocesses',
+  Daemon = 'Daemon',
+  Task = 'Task',
+  Batch = 'Batch'
+}
+
 export declare export declare function hashArray(input: Array<string | undefined | null>): string
 
 export interface HashDetails {
@@ -311,10 +328,19 @@ export declare export declare function isEditorInstalled(editor: SupportedEditor
 
 export declare export declare function logDebug(message: string): void
 
+/** Combined metadata for groups and processes */
+export interface Metadata {
+  /** Group-level metadata */
+  groups: Record<string, GroupInfo>
+  /** Process-level metadata (keyed by PID as string for NAPI compatibility) */
+  processes: Record<string, ProcessMetadata>
+}
+
 /** Metrics update sent every collection cycle */
 export interface MetricsUpdate {
-  metrics: ProcessMetricsSnapshot
-  metadata?: Record<string, ProcessMetadata>
+  timestamp: number
+  processes: Array<ProcessMetrics>
+  metadata: Metadata
 }
 
 /** Stripped version of the NxJson interface for use in rust */
@@ -344,6 +370,8 @@ export interface ProcessMetadata {
   exePath: string
   cwd: string
   alias?: string
+  groupId: string
+  isRoot: boolean
 }
 
 /** Process metrics (dynamic, changes every collection) */
@@ -351,21 +379,6 @@ export interface ProcessMetrics {
   pid: number
   cpu: number
   memory: number
-}
-
-/** Organized collection of process metrics with timestamp */
-export interface ProcessMetricsSnapshot {
-  timestamp: number
-  mainCli?: ProcessTreeMetrics
-  daemon?: ProcessTreeMetrics
-  tasks: Record<string, Array<ProcessMetrics>>
-  batches: Record<string, BatchMetricsSnapshot>
-}
-
-/** Metrics for a process and its subprocesses (used for both CLI and daemon) */
-export interface ProcessTreeMetrics {
-  main: ProcessMetrics
-  subprocesses: Array<ProcessMetrics>
 }
 
 export interface Project {
