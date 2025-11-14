@@ -1,0 +1,47 @@
+name: Docker Bench (Registry Cache)
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      cache_ref:
+        description: Registry image to pull cache layers from
+        required: false
+        default: volkeron/docker-cache-bench:cache
+      filler_mb:
+        description: Megabytes for filler artifact
+        required: false
+        default: '6144'
+
+permissions:
+  contents: read
+
+jobs:
+  build-with-remote-cache:
+    runs-on: ubuntu-latest
+    env:
+      CACHE_REF: ${{ inputs.cache_ref }}
+      FILLER_MB: ${{ inputs.filler_mb }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build using registry cache (read-only)
+        run: |
+          SHORT_SHA=${GITHUB_SHA::7}
+          START=$(date +%s)
+          docker buildx build \
+            --builder default \
+            --progress=plain \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            --cache-from=type=registry,ref=${CACHE_REF} \
+            --load \
+            -f docker/benchmarks/cache-stress.Dockerfile \
+            --build-arg FILLER_MB=${FILLER_MB} \
+            -t cachebench:remote-cache-${SHORT_SHA} \
+            docker/benchmarks
+          END=$(date +%s)
+          echo "build_seconds=$((END-START))"

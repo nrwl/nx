@@ -1,0 +1,64 @@
+name: Docker Bench (Local Cache)
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      filler_mb:
+        description: Megabytes for filler artifact
+        required: false
+        default: '6144'
+
+permissions:
+  contents: read
+
+jobs:
+  build-with-local-cache:
+    runs-on: ubuntu-latest
+    env:
+      FILLER_MB: ${{ inputs.filler_mb }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore build cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /tmp/.buildx-cache
+          key: buildx-${{ runner.os }}-${{ github.ref }}-${{ github.sha }}
+          restore-keys: |
+            buildx-${{ runner.os }}-${{ github.ref }}-
+            buildx-${{ runner.os }}-
+
+      - name: Prepare cache directories
+        run: |
+          mkdir -p /tmp/.buildx-cache
+          rm -rf /tmp/.buildx-cache-new
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build leveraging cached layers (no push)
+        run: |
+          SHORT_SHA=${GITHUB_SHA::7}
+          START=$(date +%s)
+          docker buildx build \
+            --builder default \
+            --progress=plain \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            --load \
+            -f docker/benchmarks/cache-stress.Dockerfile \
+            --build-arg FILLER_MB=${FILLER_MB} \
+            -t cachebench:local-cache-${SHORT_SHA} \
+            docker/benchmarks
+          END=$(date +%s)
+          echo "build_seconds=$((END-START))"
+
+      - name: Move updated cache
+        if: success()
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache

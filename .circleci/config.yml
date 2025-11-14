@@ -1,37 +1,99 @@
 version: 2.1
 
-# -------------------------
-#        EXECUTORS
-# -------------------------
-
-defaults: &defaults
-  working_directory: ~/repo
-
 executors:
-  linux:
-    <<: *defaults
+  docker-bench:
     docker:
-      - image: cimg/rust:1.84.0-browsers
-    resource_class: small
+      - image: cimg/base:stable
+    resource_class: large
+    working_directory: ~/repo
 
-# -------------------------
-#          JOBS
-# -------------------------
 jobs:
-  # -------------------------
-  #     JOBS: Main Linux
-  # -------------------------
-  main-linux:
-    executor: linux
+  docker-bench-no-cache:
+    executor: docker-bench
+    parameters:
+      filler_mb:
+        type: integer
+        default: 4096
     steps:
-      - run: echo "We are in the process of transitioning from Circle CI to GitHub Actions. For details about your build results, consult github actions build logs."
+      - checkout
+      - setup_remote_docker:
+          version: 24.0.5
+      - run:
+          name: Build image (no cache, no push)
+          command: |
+            START=$(date +%s)
+            docker buildx build \
+              --builder default \
+              --progress=plain \
+              --load \
+              -f docker/benchmarks/cache-stress.Dockerfile \
+              --build-arg FILLER_MB=<< parameters.filler_mb >> \
+              -t cachebench:no-cache-${CIRCLE_SHA1} \
+              docker/benchmarks
+            END=$(date +%s)
+            echo "build_seconds=$((END-START))"
 
-# -------------------------
-#        WORKFLOWS(JOBS)
-# -------------------------
+  docker-bench-cache-from:
+    executor: docker-bench
+    parameters:
+      filler_mb:
+        type: integer
+        default: 4096
+      cache_ref:
+        type: string
+        default: "volkeron/docker-cache-bench:cache"
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 24.0.5
+      - run:
+          name: Build using registry cache (read-only)
+          command: |
+            START=$(date +%s)
+            docker buildx build \
+              --builder default \
+              --progress=plain \
+              --build-arg BUILDKIT_INLINE_CACHE=1 \
+              --cache-from=type=registry,ref=<< parameters.cache_ref >> \
+              --load \
+              -f docker/benchmarks/cache-stress.Dockerfile \
+              --build-arg FILLER_MB=<< parameters.filler_mb >> \
+              -t cachebench:remote-cache-${CIRCLE_SHA1} \
+              docker/benchmarks
+            END=$(date +%s)
+            echo "build_seconds=$((END-START))"
+
+  docker-bench-dlc:
+    executor: docker-bench
+    parameters:
+      filler_mb:
+        type: integer
+        default: 4096
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 24.0.5
+          docker_layer_caching: true
+      - run:
+          name: Build leveraging DLC (no push)
+          command: |
+            START=$(date +%s)
+            docker buildx build \
+              --builder default \
+              --progress=plain \
+              --load \
+              -f docker/benchmarks/cache-stress.Dockerfile \
+              --build-arg FILLER_MB=<< parameters.filler_mb >> \
+              -t cachebench:dlc-${CIRCLE_SHA1} \
+              docker/benchmarks
+            END=$(date +%s)
+            echo "build_seconds=$((END-START))"
+
 workflows:
   version: 2
 
-  build:
+  docker-benchmarks:
     jobs:
-      - main-linux
+      - docker-bench-no-cache
+      - docker-bench-cache-from
+      - docker-bench-dlc

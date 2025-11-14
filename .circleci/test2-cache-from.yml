@@ -1,0 +1,45 @@
+version: 2.1
+
+executors:
+  docker-builder:
+    docker:
+      - image: cimg/base:stable
+    resource_class: large
+
+jobs:
+  build_with_remote_cache:
+    executor: docker-builder
+    environment:
+      CACHE_REF: << pipeline.parameters.cache-ref >>
+      FILLER_MB: << pipeline.parameters.filler-mb >>
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 24.0.5
+      - run:
+          name: Build using registry cache (read-only)
+          command: |
+            START=$(date +%s)
+            docker buildx build \
+              --builder default \
+              --progress=plain \
+              --build-arg BUILDKIT_INLINE_CACHE=1 \
+              --cache-from=type=registry,ref=${CACHE_REF} \
+              -f docker/benchmarks/cache-stress.Dockerfile \
+              --build-arg FILLER_MB=${FILLER_MB} \
+              -t cachebench:remote-cache-${CIRCLE_SHA1} \
+              docker/benchmarks
+            END=$(date +%s)
+            echo "build_seconds=$((END-START))"
+
+workflows:
+  build-with-remote-cache:
+    parameters:
+      cache-ref:
+        type: string
+        default: volkeron/docker-cache-bench:cache
+      filler-mb:
+        type: integer
+        default: 6144
+    jobs:
+      - build_with_remote_cache

@@ -1,0 +1,39 @@
+version: 2.1
+
+executors:
+  docker-builder:
+    docker:
+      - image: cimg/base:stable
+    resource_class: large
+
+jobs:
+  build_no_cache:
+    executor: docker-builder
+    environment:
+      FILLER_MB: << pipeline.parameters.filler-mb >>
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 24.0.5
+      - run:
+          name: Build image (no cache, no push)
+          command: |
+            START=$(date +%s)
+            docker buildx build \
+              --builder default \
+              --progress=plain \
+              -f docker/benchmarks/cache-stress.Dockerfile \
+              --build-arg FILLER_MB=${FILLER_MB} \
+              -t cachebench:no-cache-${CIRCLE_SHA1} \
+              docker/benchmarks
+            END=$(date +%s)
+            echo "build_seconds=$((END-START))"
+
+workflows:
+  build-no-cache:
+    parameters:
+      filler-mb:
+        type: integer
+        default: 6144
+    jobs:
+      - build_no_cache
