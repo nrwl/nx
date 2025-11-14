@@ -111,7 +111,13 @@ impl CollectionRunner {
     /// Send collected metrics to the main collector thread via channel
     fn send_metrics(&self, result: MetricsCollectionResult) {
         if let Err(e) = self.metrics_tx.send(result) {
-            error!("Failed to send metrics to collector: {}", e);
+            error!(
+                "Failed to send metrics to collector (listener disconnected): {}",
+                e
+            );
+            // Stop collection since listener is dead/gone
+            // This prevents infinite error logging
+            self.should_collect.store(false, Ordering::Release);
         }
     }
 
@@ -503,9 +509,12 @@ impl CollectionRunner {
         });
         self.main_cli_subprocess_pids
             .retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
-        if let Some(pid) = *self.daemon_pid.lock() {
+
+        // Clean up daemon PID if process no longer exists (acquire lock once)
+        let mut daemon_pid = self.daemon_pid.lock();
+        if let Some(pid) = *daemon_pid {
             if sys.process(Pid::from(pid as usize)).is_none() {
-                *self.daemon_pid.lock() = None;
+                *daemon_pid = None;
             }
         }
 
@@ -773,7 +782,7 @@ impl ProcessMetricsCollector {
 
                     let update = MetricsUpdate {
                         timestamp,
-                        processes: processes.clone(), // ProcessMetrics is Copy, so this is cheap
+                        processes: processes.clone(), // Clone Vec - ProcessMetrics is Copy so relatively efficient
                         metadata,
                     };
 
@@ -855,8 +864,17 @@ impl ProcessMetricsCollector {
     /// Register the main CLI process for metrics collection
     #[napi]
     pub fn register_main_cli_process(&self, pid: i32) {
-        let mut cli_pid = self.main_cli_pid.lock();
-        *cli_pid = Some(pid);
+        *self.main_cli_pid.lock() = Some(pid);
+
+        // Establish baseline immediately for the main CLI process
+        // This ensures accurate CPU data from the first collection cycle
+        let mut sys = self.system.lock();
+        let target_pid = Pid::from(pid as usize);
+        sys.refresh_processes_specifics(
+            sysinfo::ProcessesToUpdate::Some(&[target_pid]),
+            false, // don't remove dead processes
+            ProcessRefreshKind::nothing().with_cpu(),
+        );
     }
 
     /// Register a subprocess of the main CLI for metrics collection
