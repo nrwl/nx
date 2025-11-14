@@ -34,8 +34,6 @@ struct MetricsCollectionResult {
     metadata: Metadata,
     /// Process metrics
     processes: Vec<ProcessMetrics>,
-    /// Process metadata keyed by i32 PID for internal store updates (avoids string parsing)
-    process_metadata: HashMap<i32, ProcessMetadata>,
 }
 
 /// Subscriber state for tracking metadata delivery
@@ -62,9 +60,9 @@ struct CollectionRunner {
     system: Arc<Mutex<System>>,
     config: CollectorConfig,
     subscribers: Arc<Mutex<Vec<SubscriberState>>>,
-    process_metadata_map: DashMap<String, ProcessMetadata>,
+    process_metadata_map: Arc<DashMap<String, ProcessMetadata>>,
     /// Track which group IDs have been sent (for incremental updates)
-    group_metadata_map: DashMap<String, GroupInfo>,
+    group_metadata_map: Arc<DashMap<String, GroupInfo>>,
 }
 
 impl CollectionRunner {
@@ -80,8 +78,8 @@ impl CollectionRunner {
             system: Arc::clone(&collector.system),
             config: collector.config.clone(),
             subscribers: Arc::clone(&collector.subscribers),
-            process_metadata_map: DashMap::new(),
-            group_metadata_map: DashMap::new(),
+            process_metadata_map: Arc::clone(&collector.process_metadata_map),
+            group_metadata_map: Arc::clone(&collector.group_metadata_map),
         }
     }
 
@@ -564,7 +562,12 @@ impl CollectionRunner {
         new_metadata.extend(batches_metadata);
 
         // Flatten processes from all sources
-        let mut processes = Vec::new();
+        let mut processes = Vec::with_capacity(
+            main_cli_processes.len()
+                + daemon_processes.len()
+                + tasks_metrics.len()
+                + batches_metrics.len(),
+        );
         processes.extend(main_cli_processes);
         processes.extend(daemon_processes);
         processes.extend(tasks_metrics);
@@ -577,36 +580,33 @@ impl CollectionRunner {
         self.process_metadata_map
             .retain(|pid, _| live_pids.contains(pid));
 
-        // Keep a copy of metadata with i32 keys for internal use
-        let process_metadata = new_metadata.clone();
-
-        // Convert i32 keys to strings for NAPI serialization
+        // Convert i32 keys to strings and insert into DashMap in one pass
         let process_metadata_str: HashMap<String, ProcessMetadata> = new_metadata
             .into_iter()
-            .map(|(pid, meta)| (pid.to_string(), meta))
+            .map(|(pid, meta)| {
+                let str_pid = pid.to_string();
+                self.process_metadata_map
+                    .insert(str_pid.clone(), meta.clone());
+                (str_pid, meta)
+            })
             .collect();
 
+        // Create only NEW groups and insert into DashMap
+        let new_groups = self.create_new_group_info();
+        for (group_id, group_info) in &new_groups {
+            self.group_metadata_map
+                .insert(group_id.clone(), group_info.clone());
+        }
+
         let metadata = Metadata {
-            // Create only NEW groups that haven't been sent before
-            groups: self.create_new_group_info(),
+            groups: new_groups,
             processes: process_metadata_str,
         };
-
-        // Update metadata store with new processes
-        for (pid, value) in metadata.processes.clone() {
-            self.process_metadata_map.insert(pid, value);
-        }
-
-        // Track sent group IDs (for incremental updates)
-        for (group_id, group_info) in metadata.groups.clone() {
-            self.group_metadata_map.insert(group_id, group_info);
-        }
 
         Ok(MetricsCollectionResult {
             timestamp,
             processes,
             metadata,
-            process_metadata,
         })
     }
 }
@@ -635,6 +635,10 @@ pub struct ProcessMetricsCollector {
     system: Arc<Mutex<System>>,
     /// Subscribers for metrics events (thread-safe)
     subscribers: Arc<Mutex<Vec<SubscriberState>>>,
+    /// Metadata for all discovered processes (shared with collection thread)
+    process_metadata_map: Arc<DashMap<String, ProcessMetadata>>,
+    /// Track which group IDs have been sent (for incremental updates, shared with collection thread)
+    group_metadata_map: Arc<DashMap<String, GroupInfo>>,
     /// Collection thread state
     collection_thread: Mutex<Option<JoinHandle<()>>>,
     /// Atomic flag to control collection thread
@@ -668,6 +672,8 @@ impl ProcessMetricsCollector {
             total_memory,
             system: Arc::new(Mutex::new(sys)),
             subscribers: Arc::new(Mutex::new(Vec::new())),
+            process_metadata_map: Arc::new(DashMap::new()),
+            group_metadata_map: Arc::new(DashMap::new()),
             collection_thread: Mutex::new(None),
             should_collect: Arc::new(AtomicBool::new(false)),
             is_collecting: Arc::new(AtomicBool::new(false)),
