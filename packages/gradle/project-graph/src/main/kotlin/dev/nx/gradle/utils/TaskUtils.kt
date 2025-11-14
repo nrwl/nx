@@ -46,39 +46,15 @@ fun processTask(
   }
 
   // process dependsOn
-  val gradleDependsOn = getDependsOnForTask(dependsOnTasks, task, dependencies, targetNameOverrides)
+  val dependsOn = getDependsOnForTask(dependsOnTasks, task, dependencies, targetNameOverrides)
 
-  // Check for nx extension and merge nx.mergedDependsOn with Gradle dependencies
-  val nxExtension = task.extensions.findByType(NxTaskExtension::class.java)
-  val nxDependsOn = nxExtension?.mergedDependsOn?.getOrNull()
-
-  logger.info("processing nxDependsOn ${nxDependsOn}")
-
-  val combinedDependsOn =
-      when {
-        gradleDependsOn != null && nxDependsOn != null && nxDependsOn.isNotEmpty() -> {
-          // Both Gradle and Nx dependencies exist, merge them
-          logger.info(
-              "${task}: merging ${gradleDependsOn.size} Gradle dependencies with ${nxDependsOn.size} Nx dependencies")
-          gradleDependsOn + nxDependsOn
-        }
-
-        nxDependsOn != null && nxDependsOn.isNotEmpty() -> {
-          // Only Nx dependencies exist
-          logger.info("${task}: using ${nxDependsOn.size} Nx dependencies")
-          nxDependsOn
-        }
-
-        else -> {
-          // Only Gradle dependencies or no dependencies
-          gradleDependsOn
-        }
-      }
-
-  if (!combinedDependsOn.isNullOrEmpty()) {
-    logger.info("${task}: processed ${combinedDependsOn.size} total dependsOn")
-    target["dependsOn"] = combinedDependsOn
+  if (!dependsOn.isNullOrEmpty()) {
+    logger.info("${task}: processed ${dependsOn.size} total dependsOn")
+    target["dependsOn"] = dependsOn
   }
+
+  // Check for nx extension to get additional config
+  val nxExtension = task.extensions.findByType(NxTaskExtension::class.java)
 
   // Merge nx.json config into target (this allows users to set any Nx target properties)
   nxExtension?.json?.getOrNull()?.let { nxJson -> target["nxConfig"] = nxJson }

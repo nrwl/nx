@@ -25,7 +25,6 @@ import org.gradle.api.Task
  * // Task-level configuration
  * tasks.named('test') {
  *     nx(it) {
- *         it.mergedDependsOn('^build')
  *         it.set('cache', false)
  *     }
  * }

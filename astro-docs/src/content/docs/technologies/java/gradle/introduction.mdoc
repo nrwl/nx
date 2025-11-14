@@ -382,9 +382,6 @@ import dev.nx.gradle.nx
 tasks {
   build {
     nx {
-      // Add Nx-specific dependencies (merges with Gradle dependencies)
-      mergedDependsOn("^build", "app:lint")
-
       // Configure caching
       set("cache", true)
 
@@ -409,9 +406,6 @@ import static dev.nx.gradle.Groovy.nx
 
 tasks.named('integrationTest') {
   nx(it) {
-    // Add Nx-specific dependencies (merges with Gradle dependencies)
-    it.mergedDependsOn('^build', 'app:lint')
-
     // Configure caching
     it.set 'cache', true
 
@@ -431,24 +425,7 @@ tasks.named('integrationTest') {
 
 **Available DSL methods for task-level configuration:**
 
-- `mergedDependsOn` - ListProperty for adding Nx task dependencies
 - `set(key, value)` - Set string, number, or boolean values
 - `array(key, ...values)` - Set array values
 - `set(key) { ... }` - Create nested objects
 - `merge(map)` - Merge a map of properties
-
-{% aside type="note" title="Important: mergedDependsOn  Behavior" %}
-The `mergedDependsOn` property behaves differently from other configuration options:
-
-**Using `mergedDependsOn.addAll(...)`** merges your dependencies with Gradle-detected dependencies. This adds to the existing dependencies that Gradle automatically discovers.
-
-```kotlin
-nx {
-  mergedDependsOn.addAll("^build", "app:lint")  // Merges with Gradle dependencies
-}
-```
-
-Specifying dependencies in any other way (for example in `project.json` or by using `array("dependsOn", ...)`) will replace all target dependencies instead.
-The `mergedDependsOn` property supports all of [Nx's task dependency patterns](/docs/guides/tasks--caching/defining-task-pipeline).
-
-{% /aside %}

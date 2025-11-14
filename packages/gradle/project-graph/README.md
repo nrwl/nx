@@ -107,7 +107,6 @@ import dev.nx.gradle.nx
 
 tasks.named("integrationTest") {
   nx {
-    mergedDependsOn("^build", "app:lint")
     set("cache", true)
   }
 }
@@ -120,7 +119,6 @@ import static dev.nx.gradle.Groovy.nx
 
 tasks.named('integrationTest') {
   nx(it) {
-    it.mergedDependsOn('^build', 'app:lint')
     it.set 'cache', true
   }
 }
