@@ -1,46 +1,46 @@
-import { homedir } from 'os';
-import {
-  canInstallNxConsole,
-  installNxConsole,
-  NxConsolePreferences,
-} from '../../native';
 import type {
   NxConsoleStatusResponse,
   SetNxConsolePreferenceAndInstallResponse,
 } from '../message-types/nx-console';
 import type { HandlerResult } from './server';
+import {
+  getNxConsoleStatus,
+  handleNxConsolePreferenceAndInstall,
+} from './nx-console-operations';
+
+// Module-level state for caching
+let cachedShouldPrompt: boolean | null = null;
+let isComputing = false;
 
 export async function handleGetNxConsoleStatus(): Promise<HandlerResult> {
-  const preferences = new NxConsolePreferences(homedir());
-  const setting = preferences.getAutoInstallPreference();
-  const canInstallConsole = canInstallNxConsole();
-
-  // If user previously opted in but extension is not installed,
-  // they must have manually uninstalled it - respect that choice
-  if (setting === true && canInstallConsole) {
-    // User had auto-install enabled but extension is missing
-    // This means they manually uninstalled it
-    preferences.setAutoInstallPreference(false);
-
+  // Return cached result if available
+  if (cachedShouldPrompt !== null) {
     const response: NxConsoleStatusResponse = {
-      shouldPrompt: false,
-      canInstall: canInstallConsole,
-      currentPreference: false, // Updated preference
+      shouldPrompt: cachedShouldPrompt,
     };
-
     return {
       response,
       description: 'handleGetNxConsoleStatus',
     };
   }
 
-  // Determine if we should prompt
-  const shouldPrompt = canInstallConsole && typeof setting !== 'boolean';
+  // Kick off background computation if not already running
+  if (!isComputing) {
+    isComputing = true;
+    getNxConsoleStatus()
+      .then((result) => {
+        cachedShouldPrompt = result;
+        isComputing = false;
+      })
+      .catch(() => {
+        cachedShouldPrompt = null;
+        isComputing = false;
+      });
+  }
 
+  // Return false for shouldPrompt if cache not ready (main process will noop)
   const response: NxConsoleStatusResponse = {
-    shouldPrompt,
-    canInstall: canInstallConsole,
-    currentPreference: typeof setting === 'boolean' ? setting : null,
+    shouldPrompt: false,
   };
 
   return {
@@ -52,16 +52,14 @@ export async function handleGetNxConsoleStatus(): Promise<HandlerResult> {
 export async function handleSetNxConsolePreferenceAndInstall(
   preference: boolean
 ): Promise<HandlerResult> {
-  const preferences = new NxConsolePreferences(homedir());
-  preferences.setAutoInstallPreference(preference);
+  // Immediately update cache - we know the answer now!
+  // User answered the prompt, so we won't prompt again
+  cachedShouldPrompt = false;
 
-  let installed = false;
-  if (preference) {
-    installed = installNxConsole();
-  }
+  const result = await handleNxConsolePreferenceAndInstall({ preference });
 
   const response: SetNxConsolePreferenceAndInstallResponse = {
-    installed,
+    installed: result.installed,
   };
 
   return {

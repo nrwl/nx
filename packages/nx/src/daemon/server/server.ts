@@ -727,6 +727,11 @@ export async function startServer(): Promise<Server> {
           // trigger an initial project graph recomputation
           addUpdatedAndDeletedFiles([], [], []);
 
+          // Kick off Nx Console check in background to prime the cache
+          handleGetNxConsoleStatus().catch(() => {
+            // Ignore errors, this is a background operation
+          });
+
           return resolve(server);
         } catch (err) {
           await handleWorkspaceChanges(err, []);

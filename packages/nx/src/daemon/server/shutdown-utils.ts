@@ -11,6 +11,7 @@ import {
 import { removeDbConnections } from '../../utils/db-connection';
 import { cleanupPlugins } from '../../project-graph/plugins/get-plugins';
 import { MESSAGE_END_SEQ } from '../../utils/consume-messages-from-socket';
+import { cleanupLatestNxInstallation } from './nx-console-operations';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 
@@ -74,6 +75,9 @@ export async function handleServerProcessTermination({
     cleanupPlugins();
 
     removeDbConnections();
+
+    // Clean up Nx Console latest installation
+    cleanupLatestNxInstallation();
 
     serverLogger.log(`Server stopped because: "${reason}"`);
   } finally {

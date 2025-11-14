@@ -8,8 +8,6 @@ export type HandleGetNxConsoleStatusMessage = {
 
 export type NxConsoleStatusResponse = {
   shouldPrompt: boolean;
-  canInstall: boolean;
-  currentPreference: boolean | null;
 };
 
 export type HandleSetNxConsolePreferenceAndInstallMessage = {
