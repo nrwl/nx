@@ -71,6 +71,8 @@ export default ESLintUtils.RuleCreator(
           peerDepsVersionStrategy: {
             type: 'string',
             enum: ['installed', 'workspace'],
+            description:
+              'Strategy for peer dependency versions. "installed" uses versions from root package.json (default). "workspace" uses workspace:* for all peer dependencies to ensure version synchronization in integrated monorepos.',
           },
         },
         additionalProperties: false,
@@ -173,12 +175,6 @@ export default ESLintUtils.RuleCreator(
 
     const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
 
-    function isWorkspacePackage(packageName: string): boolean {
-      return Object.values(projectGraph.nodes).some(
-        (node) => node.data.name === packageName
-      );
-    }
-
     function getDependencySection(node: AST.JSONProperty): string | undefined {
       // Check if this node is a dependency section itself
       const directSection = (node.key as JSONLiteral)?.value as string;
@@ -220,8 +216,7 @@ export default ESLintUtils.RuleCreator(
             missingDeps.forEach((d) => {
               if (
                 dependencySection === 'peerDependencies' &&
-                peerDepsVersionStrategy === 'workspace' &&
-                isWorkspacePackage(d)
+                peerDepsVersionStrategy === 'workspace'
               ) {
                 projPackageJsonDeps[d] = WORKSPACE_VERSION_WILDCARD;
               } else {
@@ -295,7 +290,6 @@ export default ESLintUtils.RuleCreator(
       if (
         dependencySection === 'peerDependencies' &&
         peerDepsVersionStrategy === 'workspace' &&
-        isWorkspacePackage(packageName) &&
         packageRange !== WORKSPACE_VERSION_WILDCARD
       ) {
         context.report({
