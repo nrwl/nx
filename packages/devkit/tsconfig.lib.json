@@ -4,9 +4,7 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "outDir": "./dist",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "rootDir": "./src"
   },
@@ -19,11 +17,7 @@
     "jest.config.ts",
     "dist"
   ],
-  "include": [
-    "**/*.ts",
-    "*.json",
-    "migrations.json"
-  ],
+  "include": ["**/*.ts", "*.json", "migrations.json"],
   "references": [
     {
       "path": "../nx/tsconfig.lib.json"

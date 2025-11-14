@@ -6,15 +6,11 @@
       "factory": "./dist/src/generators/init/init#webpackInitGeneratorInternal",
       "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/webpack` plugin.",
-      "aliases": [
-        "ng-add"
-      ],
+      "aliases": ["ng-add"],
       "hidden": true
     },
     "configuration": {
-      "aliases": [
-        "webpack-project"
-      ],
+      "aliases": ["webpack-project"],
       "factory": "./dist/src/generators/configuration/configuration#configurationGeneratorInternal",
       "schema": "./dist/src/generators/configuration/schema.json",
       "description": "Add webpack configuration to a project.",

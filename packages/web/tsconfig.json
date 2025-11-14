@@ -7,9 +7,6 @@
   "files": [],
   "references": [
     {
-      "path": "../vitest"
-    },
-    {
       "path": "../js"
     },
     {
@@ -17,6 +14,12 @@
     },
     {
       "path": "../nx"
+    },
+    {
+      "path": "../eslint"
+    },
+    {
+      "path": "../vitest"
     },
     {
       "path": "./tsconfig.lib.json"

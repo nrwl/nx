@@ -20,7 +20,13 @@ import {
   setResolvedVersionPlansOnGroups,
 } from './config/version-plans.js';
 import { createAPI as createReleasePublishAPI } from './publish.js';
-import { getCommitHash, gitAdd, gitCommit, gitPush, gitTag } from './utils/git.js';
+import {
+  getCommitHash,
+  gitAdd,
+  gitCommit,
+  gitPush,
+  gitTag,
+} from './utils/git.js';
 import { printConfigAndExit } from './utils/print-config.js';
 import { createRemoteReleaseClient } from './utils/remote-release-clients/remote-release-client.js';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message.js';

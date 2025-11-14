@@ -1,25 +1,19 @@
 {
   "name": "Nx Nuxt",
   "version": "0.1",
-  "extends": [
-    "@nx/vue"
-  ],
+  "extends": ["@nx/vue"],
   "generators": {
     "init": {
       "factory": "./dist/src/generators/init/init",
       "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/nuxt` plugin.",
-      "aliases": [
-        "ng-add"
-      ],
+      "aliases": ["ng-add"],
       "hidden": true
     },
     "application": {
       "factory": "./dist/src/generators/application/application#applicationGeneratorInternal",
       "schema": "./dist/src/generators/application/schema.json",
-      "aliases": [
-        "app"
-      ],
+      "aliases": ["app"],
       "description": "Create a Nuxt application."
     },
     "storybook-configuration": {

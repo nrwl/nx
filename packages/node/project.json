@@ -12,6 +12,9 @@
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
+        "replaceSrcRoot": true,
         "assets": [
           {
             "input": "packages/node",

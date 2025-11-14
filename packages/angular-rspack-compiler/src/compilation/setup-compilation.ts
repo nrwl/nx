@@ -1,6 +1,10 @@
 import { RsbuildConfig } from '@rsbuild/core';
 import * as ts from 'typescript';
-import { InlineStyleLanguage, FileReplacement, type Sass } from '../models/index.js';
+import {
+  InlineStyleLanguage,
+  FileReplacement,
+  type Sass,
+} from '../models/index.js';
 import { loadCompilerCli } from '../utils/index.js';
 import { ComponentStylesheetBundler } from '@angular/build/private';
 import { transformSupportedBrowsersToTargets } from '../utils/targets-from-browsers.js';

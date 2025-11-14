@@ -1,9 +1,7 @@
 {
   "name": "Nx Detox",
   "version": "0.1",
-  "extends": [
-    "@nx/workspace"
-  ],
+  "extends": ["@nx/workspace"],
   "generators": {
     "init": {
       "factory": "./dist/src/generators/init/init#detoxInitGeneratorInternal",
@@ -14,9 +12,7 @@
     "application": {
       "factory": "./dist/src/generators/application/application#detoxApplicationGeneratorInternal",
       "schema": "./dist/src/generators/application/schema.json",
-      "aliases": [
-        "app"
-      ],
+      "aliases": ["app"],
       "x-type": "application",
       "description": "Create a Detox application."
     },

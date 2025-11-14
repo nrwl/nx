@@ -6,7 +6,13 @@
  * When '../native' is a directory with an index.js file
  */
 
-const { readdirSync, readFileSync, writeFileSync, existsSync, statSync } = require('fs');
+const {
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  statSync,
+} = require('fs');
 const { join, dirname, basename } = require('path');
 
 const PACKAGES_DIR = join(__dirname, '..', 'packages');
@@ -34,22 +40,26 @@ function fixDirectoryImports(content, filePath) {
   const fileDir = dirname(filePath);
 
   // Match imports ending in .js (both static and dynamic)
-  const staticImportRegex = /((?:import|export)(?:\s+\*)?(?:\s+\{[^}]*\})?\s+from\s+|import\s+)(['"])(\.\.?[^'"]+?)\.js\2/g;
+  const staticImportRegex =
+    /((?:import|export)(?:\s+\*)?(?:\s+\{[^}]*\})?\s+from\s+|import\s+)(['"])(\.\.?[^'"]+?)\.js\2/g;
   const dynamicImportRegex = /\bimport\s*\(\s*(['"])(\.\.?[^'"]+?)\.js\1\s*\)/g;
 
   // Fix static imports
-  modified = modified.replace(staticImportRegex, (match, prefix, quote, path) => {
-    // Resolve the path relative to the file
-    const resolvedPath = join(fileDir, path);
+  modified = modified.replace(
+    staticImportRegex,
+    (match, prefix, quote, path) => {
+      // Resolve the path relative to the file
+      const resolvedPath = join(fileDir, path);
 
-    // Check if this is a directory with an index file
-    if (isDirectory(resolvedPath) && hasIndexFile(resolvedPath)) {
-      hasChanges = true;
-      return `${prefix}${quote}${path}/index.js${quote}`;
+      // Check if this is a directory with an index file
+      if (isDirectory(resolvedPath) && hasIndexFile(resolvedPath)) {
+        hasChanges = true;
+        return `${prefix}${quote}${path}/index.js${quote}`;
+      }
+
+      return match;
     }
-
-    return match;
-  });
+  );
 
   // Fix dynamic imports
   modified = modified.replace(dynamicImportRegex, (match, quote, path) => {
@@ -125,8 +135,8 @@ function main() {
   console.log('🔄 Fixing directory imports to use explicit index.js\n');
 
   const packages = readdirSync(PACKAGES_DIR, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name);
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 
   let totalFilesModified = 0;
 

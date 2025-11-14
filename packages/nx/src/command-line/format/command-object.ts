@@ -1,6 +1,9 @@
 import { CommandModule, Argv } from 'yargs';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation.js';
-import { parseCSV, withAffectedOptions } from '../yargs-utils/shared-options.js';
+import {
+  parseCSV,
+  withAffectedOptions,
+} from '../yargs-utils/shared-options.js';
 
 export const yargsFormatCheckCommand: CommandModule = {
   command: 'format:check',

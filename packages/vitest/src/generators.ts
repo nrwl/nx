@@ -1,3 +1,3 @@
-export * from './src/generators/init/init.js';
-export { configurationGenerator } from './src/generators/configuration/configuration.js';
-export { VitestGeneratorSchema } from './src/generators/configuration/schema.js';
+export * from './generators/init/init.js';
+export { configurationGenerator } from './generators/configuration/configuration.js';
+export { VitestGeneratorSchema } from './generators/configuration/schema.js';

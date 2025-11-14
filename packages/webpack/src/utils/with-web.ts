@@ -1,6 +1,9 @@
 import { Configuration } from 'webpack';
 
-import { NxComposableWebpackPlugin, NxWebpackExecutionContext } from './config.js';
+import {
+  NxComposableWebpackPlugin,
+  NxWebpackExecutionContext,
+} from './config.js';
 import {
   ExtraEntryPointClass,
   NormalizedWebpackExecutorOptions,

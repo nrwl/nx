@@ -14,8 +14,8 @@
     "Web",
     "CLI"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -72,6 +72,16 @@
       "import": "./dist/plugins/*.js",
       "types": "./dist/plugins/*.d.ts",
       "@nx/nx-source": "./src/plugins/*.ts"
+    },
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./dist/plugin.d.ts",
+      "@nx/nx-source": "./src/plugin.ts"
+    },
+    "./with-nx": {
+      "import": "./dist/with-nx.js",
+      "types": "./dist/with-nx.d.ts",
+      "@nx/nx-source": "./src/with-nx.ts"
     }
   },
   "type": "commonjs"

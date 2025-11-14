@@ -30,7 +30,10 @@ import { generatePackageJson } from '../package-json/generate-package-json.js';
 import { swc } from '../swc.js';
 import { getProjectNode } from './get-project-node.js';
 import { normalizeOptions } from './normalize-options.js';
-import { AssetGlobPattern, RollupWithNxPluginOptions } from './with-nx-options.js';
+import {
+  AssetGlobPattern,
+  RollupWithNxPluginOptions,
+} from './with-nx-options.js';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');

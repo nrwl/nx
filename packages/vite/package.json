@@ -15,8 +15,8 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -31,10 +31,11 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "@phenomnomnominal/tsquery": "catalog:typescript",
-    "enquirer": "catalog:",
+    "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/vitest": "workspace:*",
+    "@phenomnomnominal/tsquery": "catalog:typescript",
+    "enquirer": "catalog:",
     "picomatch": "catalog:",
     "tsconfig-paths": "catalog:typescript",
     "semver": "catalog:",
@@ -76,14 +77,41 @@
       "types": "./dist/executors/*.d.ts",
       "@nx/nx-source": "./src/executors/*.ts"
     },
-    "./plugin": "./plugin.js",
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./dist/plugin.d.ts",
+      "@nx/nx-source": "./src/plugin.ts"
+    },
     "./executors": "./executors.js",
-    "./src/executors/*/schema.json": "./src/executors/*/schema.json",
-    "./src/executors/*.impl": "./src/executors/*.impl.js",
-    "./src/executors/*/compat": "./src/executors/*/compat.js",
-    "./plugins/nx-copy-assets.plugin": "./plugins/nx-copy-assets.plugin.js",
-    "./plugins/nx-tsconfig-paths.plugin": "./plugins/nx-tsconfig-paths.plugin.js",
-    "./plugins/rollup-replace-files.plugin": "./plugins/rollup-replace-files.plugin.js"
+    "./src/executors/*/schema.json": {
+      "import": "./dist/executors/*/schema.json",
+      "@nx/nx-source": "./src/executors/*/schema.json"
+    },
+    "./src/executors/*/*.impl": {
+      "import": "./dist/executors/*/*.impl.js",
+      "types": "./dist/executors/*/*.impl.d.ts",
+      "@nx/nx-source": "./src/executors/*/*.impl.ts"
+    },
+    "./src/executors/*/compat": {
+      "import": "./dist/executors/*/compat.js",
+      "types": "./dist/executors/*/compat.d.ts",
+      "@nx/nx-source": "./src/executors/*/compat.ts"
+    },
+    "./plugins/nx-copy-assets.plugin": {
+      "import": "./dist/plugins/nx-copy-assets.plugin.js",
+      "type": "./dist/plugins/nx-copy-assets.plugin.d.ts",
+      "@nx/nx-source": "./src/plugins/nx-copy-assets.plugin.d.ts"
+    },
+    "./plugins/nx-tsconfig-paths.plugin": {
+      "import": "./dist/plugins/nx-tsconfig-paths.plugin.js",
+      "type": "./dist/plugins/nx-tsconfig-paths.plugin.d.ts",
+      "@nx/nx-source": "./src/plugins/nx-tsconfig-paths.plugin.d.ts"
+    },
+    "./plugins/rollup-replace-files.plugin": {
+      "import": "./dist/plugins/rollup-replace-files.plugin.js",
+      "type": "./dist/plugins/rollup-replace-files.plugin.d.ts",
+      "@nx/nx-source": "./src/plugins/rollup-replace-files.plugin.d.ts"
+    }
   },
   "type": "commonjs"
 }

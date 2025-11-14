@@ -6,7 +6,10 @@ import {
   parseExecutor,
 } from '../command-line/run/executor-utils.js';
 import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces.js';
-import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph.js';
+import {
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../config/project-graph.js';
 import { Task, TaskGraph } from '../config/task-graph.js';
 import {
   TargetConfiguration,

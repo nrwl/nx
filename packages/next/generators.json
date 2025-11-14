@@ -1,9 +1,7 @@
 {
   "name": "nx/next",
   "version": "0.1",
-  "extends": [
-    "@nx/react"
-  ],
+  "extends": ["@nx/react"],
   "generators": {
     "init": {
       "factory": "./dist/src/generators/init/init#nextInitGeneratorInternal",
@@ -14,9 +12,7 @@
     "application": {
       "factory": "./dist/src/generators/application/application#applicationGeneratorInternal",
       "schema": "./dist/src/generators/application/schema.json",
-      "aliases": [
-        "app"
-      ],
+      "aliases": ["app"],
       "x-type": "application",
       "description": "Create an application."
     },
@@ -33,9 +29,7 @@
     "library": {
       "factory": "./dist/src/generators/library/library#libraryGeneratorInternal",
       "schema": "./dist/src/generators/library/schema.json",
-      "aliases": [
-        "lib"
-      ],
+      "aliases": ["lib"],
       "x-type": "library",
       "description": "Create a library."
     },

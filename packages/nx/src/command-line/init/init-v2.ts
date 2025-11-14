@@ -11,7 +11,10 @@ import { getPackageManagerCommand } from '../../utils/package-manager.js';
 import { nxVersion } from '../../utils/versions.js';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context.js';
 import { connectExistingRepoToNxCloudPrompt } from '../nx-cloud/connect/connect-to-nx-cloud.js';
-import { configurePlugins, installPluginPackages } from './configure-plugins.js';
+import {
+  configurePlugins,
+  installPluginPackages,
+} from './configure-plugins.js';
 import { determineAiAgents } from './ai-agent-prompts.js';
 import { setupAiAgentsGenerator } from '../../ai/set-up-ai-agents/set-up-ai-agents.js';
 import { FsTree, flushChanges } from '../../generators/tree.js';

@@ -2,4 +2,4 @@ export {
   createNodes,
   createNodesV2,
   DetoxPluginOptions,
-} from './src/plugins/plugin.js';
+} from './plugins/plugin.js';

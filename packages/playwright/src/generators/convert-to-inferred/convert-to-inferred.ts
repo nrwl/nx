@@ -5,7 +5,10 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { createNodesV2, PlaywrightPluginOptions } from '../../plugins/plugin.js';
+import {
+  createNodesV2,
+  PlaywrightPluginOptions,
+} from '../../plugins/plugin.js';
 import {
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,

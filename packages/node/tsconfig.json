@@ -7,16 +7,19 @@
   "files": [],
   "references": [
     {
-      "path": "../docker"
-    },
-    {
-      "path": "../eslint"
+      "path": "../webpack"
     },
     {
       "path": "../js"
     },
     {
       "path": "../jest"
+    },
+    {
+      "path": "../eslint"
+    },
+    {
+      "path": "../docker"
     },
     {
       "path": "../devkit"

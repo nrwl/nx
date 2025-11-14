@@ -19,8 +19,8 @@
     "Cypress",
     "CLI"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -72,6 +72,15 @@
       "import": "./dist/utilities/typescript/*.js",
       "types": "./dist/utilities/typescript/*.d.ts",
       "@nx/nx-source": "./src/utilities/typescript/*.ts"
+    },
+    "./presets/*": {
+      "import": "./dist/presets/*.json",
+      "@nx/nx-source": "./dist/presets/*.json"
+    },
+    "./tasks-runners/*": {
+      "import": "./dist/tasks-runners/*.js",
+      "types": "./dist/tasks-runners/*.d.ts",
+      "@nx/nx-source": "./src/tasks-runners/*.ts"
     }
   }
 }

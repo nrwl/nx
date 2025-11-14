@@ -21,8 +21,8 @@
     "Testing",
     "Front-end"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -66,16 +66,26 @@
     "./plugin": {
       "import": "./dist/plugin.js",
       "types": "./dist/plugin.d.ts",
-      "@nx/nx-source": "./plugin.ts"
+      "@nx/nx-source": "./src/plugin.ts"
     },
     "./src/utils/*": {
       "import": "./dist/utils/*.js",
       "types": "./dist/utils/*.d.ts",
       "@nx/nx-source": "./src/utils/*.ts"
     },
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./preset": "./src/utils/preset.js"
+    "./generators/*/schema.json": {
+      "import": "./dist/generators/*/schema.json",
+      "@nx/nx-source": "./src/generators/*/schema.json"
+    },
+    "./executors/*/schema.json": {
+      "import": "./dist/executors/*/schema.json",
+      "@nx/nx-source": "./src/executors/*/schema.json"
+    },
+    "./preset": {
+      "import": "./dist/utils/preset.js",
+      "types": "./dist/utils/preset.d.ts",
+      "@nx/nx-source": "./src/utils/preset.ts"
+    }
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

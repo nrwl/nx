@@ -75,10 +75,25 @@
       "types": "./dist/executors/*.d.ts",
       "@nx/nx-source": "./src/executors/*.ts"
     },
-    "./plugins/*": {
-      "import": "./plugins/*.js",
-      "types": "./plugins/*.d.ts",
-      "@nx/nx-source": "./plugins/*.ts"
+    "./nx": {
+      "import": "./dist/nx.js",
+      "types": "./dist/nx.d.ts",
+      "@nx/nx-source": "./src/nx.ts"
+    },
+    "./angular": {
+      "import": "./dist/angular.js",
+      "types": "./dist/angular.d.ts",
+      "@nx/nx-source": "./src/angular.ts"
+    },
+    "./react": {
+      "import": "./dist/react.js",
+      "types": "./dist/react.d.ts",
+      "@nx/nx-source": "./src/react.ts"
+    },
+    "./typescript": {
+      "import": "./dist/typescript.js",
+      "types": "./dist/typescript.d.ts",
+      "@nx/nx-source": "./src/typescript.ts"
     }
   },
   "type": "commonjs"

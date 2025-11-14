@@ -5,7 +5,10 @@ import { join } from 'node:path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { NormalizedSwcExecutorOptions } from '../schema.js';
 import { printDiagnostics } from '../typescript/print-diagnostics.js';
-import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check.js';
+import {
+  runTypeCheck,
+  TypeCheckOptions,
+} from '../typescript/run-type-check.js';
 import { relative } from 'path';
 
 function getSwcCmd(

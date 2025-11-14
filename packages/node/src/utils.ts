@@ -1,2 +1,2 @@
-export { waitForPortOpen } from './src/utils/wait-for-port-open.js';
-export { killPort } from './src/utils/kill-port.js';
+export { waitForPortOpen } from './utils/wait-for-port-open.js';
+export { killPort } from './utils/kill-port.js';

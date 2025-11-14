@@ -1,6 +1,6 @@
 import type { ConfigArray } from 'typescript-eslint';
-import angular from './src/flat-configs/angular';
-import angularTemplate from './src/flat-configs/angular-template';
+import angular from './flat-configs/angular';
+import angularTemplate from './flat-configs/angular-template';
 
 const plugin = {
   configs: {

@@ -1,1 +1,1 @@
-export * from './src/utils/preset.js';
+export * from './utils/preset.js';

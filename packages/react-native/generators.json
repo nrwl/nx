@@ -1,9 +1,7 @@
 {
   "name": "Nx React Native",
   "version": "0.1",
-  "extends": [
-    "@nx/workspace"
-  ],
+  "extends": ["@nx/workspace"],
   "generators": {
     "init": {
       "factory": "./dist/src/generators/init/init#reactNativeInitGeneratorInternal",
@@ -14,18 +12,14 @@
     "application": {
       "factory": "./dist/src/generators/application/application#reactNativeApplicationGeneratorInternal",
       "schema": "./dist/src/generators/application/schema.json",
-      "aliases": [
-        "app"
-      ],
+      "aliases": ["app"],
       "x-type": "application",
       "description": "Create a React Native application."
     },
     "library": {
       "factory": "./dist/src/generators/library/library#reactNativeLibraryGeneratorInternal",
       "schema": "./dist/src/generators/library/schema.json",
-      "aliases": [
-        "lib"
-      ],
+      "aliases": ["lib"],
       "x-type": "library",
       "description": "Create a React Native library."
     },
@@ -33,9 +27,7 @@
       "factory": "./dist/src/generators/component/component",
       "schema": "./dist/src/generators/component/schema.json",
       "description": "Create a React Native component.",
-      "aliases": [
-        "c"
-      ]
+      "aliases": ["c"]
     },
     "web-configuration": {
       "factory": "./dist/src/generators/web-configuration/web-configuration#webConfigurationGenerator",

@@ -2,6 +2,7 @@
   "name": "nx",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
   "repository": {
     "type": "git",
@@ -198,8 +199,8 @@
       "@nx/nx-source": "./src/executors/*.ts"
     },
     "./src/internal-testing-utils/*": {
-      "import": "./src/internal-testing-utils/*.js",
-      "types": "./src/internal-testing-utils/*.d.ts",
+      "import": "./dist/internal-testing-utils/*.js",
+      "types": "./dist/internal-testing-utils/*.d.ts",
       "@nx/nx-source": "./src/internal-testing-utils/*.ts"
     },
     "./plugins/*": {
@@ -208,9 +209,39 @@
       "@nx/nx-source": "./plugins/*.ts"
     },
     "./src/devkit-exports": {
-      "import": "./dist/src/devkit-exports.js",
-      "types": "./dist/src/devkit-exports.d.ts",
+      "import": "./dist/devkit-exports.js",
+      "types": "./dist/devkit-exports.d.ts",
       "@nx/nx-source": "./src/devkit-exports.ts"
+    },
+    "./src/devkit-internals": {
+      "import": "./dist/devkit-internals.js",
+      "types": "./dist/devkit-internals.d.ts",
+      "@nx/nx-source": "./src/devkit-internals.ts"
+    },
+    "./src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud": {
+      "import": "./dist/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud.js",
+      "types": "./dist/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud.d.ts",
+      "@nx/nx-source": "./src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud.ts"
+    },
+    "./src/config/configuration": {
+      "import": "./dist/config/configuration.js",
+      "types": "./dist/config/configuration.d.ts",
+      "@nx/nx-source": "./src/config/configuration.ts"
+    },
+    "./src/config/nx-json": {
+      "import": "./dist/config/nx-json.js",
+      "types": "./dist/config/nx-json.d.ts",
+      "@nx/nx-source": "./src/config/nx-json.ts"
+    },
+    "./src/config/project-graph": {
+      "import": "./dist/config/project-graph.js",
+      "types": "./dist/config/project-graph.d.ts",
+      "@nx/nx-source": "./src/config/project-graph.ts"
+    },
+    "./src/hasher/task-hasher": {
+      "import": "./dist/hasher/task-hasher.js",
+      "types": "./dist/hasher/task-hasher.d.ts",
+      "@nx/nx-source": "./src/hasher/task-hasher.ts"
     }
   }
 }

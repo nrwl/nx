@@ -287,7 +287,10 @@ export async function getReportData(): Promise<ReportData> {
     });
   }
 
-  const outOfSyncPackageGroup = findMisalignedPackagesForPackage(nxPackageJson);
+  // TODO(Colum): There is something incorrect with the PackageJson Types that forces this cast
+  const outOfSyncPackageGroup = findMisalignedPackagesForPackage(
+    nxPackageJson as PackageJson
+  );
 
   const native = isNativeAvailable();
 

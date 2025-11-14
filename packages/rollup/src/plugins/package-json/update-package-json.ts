@@ -99,7 +99,7 @@ export function updatePackageJson(
             export * from './${relativeFile}.js';
             export { _default as default } from './${relativeFile.replace(
               /\.cjs\.js$/,
-              .js'.cjs.default.js'
+              '.cjs.default.js'
             )}';
             `
           );

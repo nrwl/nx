@@ -4,13 +4,18 @@ import {
   workspaceRoot,
   readJsonFile,
 } from '@nx/devkit';
-import { CopyAssetsHandler } from '@nx/js/src/utils/assets/copy-assets-handler';
+import {
+  CopyAssetsHandler,
+  FileEvent,
+} from '@nx/js/src/utils/assets/copy-assets-handler';
 import * as path from 'path';
 import * as fs from 'fs';
 import {
   readJsonFile as readJson,
   writeJsonFile,
 } from 'nx/src/utils/fileutils';
+import { copyFileSync, lstatSync, mkdirSync, rmSync } from 'node:fs';
+import { dim } from 'picocolors';
 
 export interface LegacyPostBuildExecutorOptions {
   // Asset copying options
@@ -31,6 +36,8 @@ export interface LegacyPostBuildExecutorOptions {
   addPackageJsonFields?: boolean;
   main?: string;
   types?: string;
+  replaceSrcRoot?: boolean;
+  sourceRoot?: string;
 }
 
 /**
@@ -185,11 +192,19 @@ Or with TypeScript config:
     // Copy the assets using Nx's CopyAssetsHandler
     const projectDir = path.join(workspaceRoot, projectRoot);
 
+    const destWithSourceRoot = options.sourceRoot
+      ? path.join(outputPath, options.sourceRoot)
+      : '';
     const assetHandler = new CopyAssetsHandler({
       projectDir: projectDir,
       rootDir: workspaceRoot,
       outputDir: outputPath,
       assets: options.assets,
+      callback: createFileEventHandler(
+        options.replaceSrcRoot,
+        destWithSourceRoot,
+        outputPath
+      ),
     });
 
     try {
@@ -217,6 +232,35 @@ Or with TypeScript config:
 
   logger.info(`✓ Legacy post-build completed for ${projectName}`);
   return { success: true };
+}
+
+function createFileEventHandler(
+  replaceSrcRoot: boolean,
+  destWithSourceRoot: string,
+  outputPath: string
+) {
+  return (events: FileEvent[]) => {
+    const dirs = new Set(events.map((event) => path.dirname(event.dest)));
+    dirs.forEach((d) => mkdirSync(d, { recursive: true }));
+    events.forEach((event) => {
+      if (replaceSrcRoot && event.dest) {
+        event.dest = event.dest.replace(destWithSourceRoot, outputPath);
+        mkdirSync(path.dirname(event.dest), { recursive: true });
+      }
+      if (event.type === 'create' || event.type === 'update') {
+        if (lstatSync(event.src).isFile()) {
+          copyFileSync(event.src, event.dest);
+        }
+      } else if (event.type === 'delete') {
+        rmSync(event.dest, { recursive: true, force: true });
+      } else {
+        logger.error(`Unknown file event: ${event.type}`);
+      }
+      const eventDir = path.dirname(event.src);
+      const relativeDest = path.relative(eventDir, event.dest);
+      logger.log(`\n${dim(relativeDest)}`);
+    });
+  };
 }
 
 export default legacyPostBuildExecutor;

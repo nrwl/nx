@@ -1,1 +1,1 @@
-export { createNodesV2, RsbuildPluginOptions } from './src/plugins/plugin.js';
+export { createNodesV2, RsbuildPluginOptions } from './plugins/plugin.js';

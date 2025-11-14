@@ -2,7 +2,10 @@ import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { daemonClient } from '../../daemon/client/client.js';
-import { cacheDir, workspaceDataDirectory } from '../../utils/cache-directory.js';
+import {
+  cacheDir,
+  workspaceDataDirectory,
+} from '../../utils/cache-directory.js';
 import { output } from '../../utils/output.js';
 import { getNativeFileCacheLocation } from '../../native/native-file-cache-location.js';
 import { ResetCommandOptions } from './command-object.js';

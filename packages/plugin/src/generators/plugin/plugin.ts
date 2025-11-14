@@ -22,7 +22,10 @@ import * as path from 'path';
 import { e2eProjectGenerator } from '../e2e-project/e2e.js';
 import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
-import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema.js';
+import {
+  NormalizedSchema,
+  normalizeOptions,
+} from './utils/normalize-schema.js';
 
 const nxVersion = require('../../../package.json').version;
 

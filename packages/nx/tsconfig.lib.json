@@ -3,24 +3,19 @@
   "compilerOptions": {
     "module": "nodenext",
     "outDir": "./dist",
+    "rootDir": ".",
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
-    "types": [
-      "node",
-      "jest"
-    ],
+    "types": ["node", "jest"],
     "composite": true,
     "moduleResolution": "nodenext"
   },
   "exclude": [
+    "node_modules",
     "**/*.spec.ts",
     "**/*_spec.ts",
     "jest.config.ts",
     "**/__fixtures__/**/*.*",
     "dist"
   ],
-  "include": [
-    "**/*.ts",
-    "**/*.json",
-    "migrations.json"
-  ]
+  "include": ["**/*.ts", "**/*.json", "migrations.json"]
 }

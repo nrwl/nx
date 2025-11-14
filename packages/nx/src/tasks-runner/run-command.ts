@@ -8,7 +8,10 @@ import {
   readNxJson,
   TargetDependencies,
 } from '../config/nx-json.js';
-import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph.js';
+import {
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../config/project-graph.js';
 import { Task, TaskGraph } from '../config/task-graph.js';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json.js';
 import { daemonClient } from '../daemon/client/client.js';
@@ -131,7 +134,9 @@ async function getTerminalOutputLifeCycle(
     process.stdout.write = patchedWrite as any;
     process.stderr.write = patchedWrite as any;
 
-    const { AppLifeCycle, restoreTerminal } = await import('../native/index.js');
+    const { AppLifeCycle, restoreTerminal } = await import(
+      '../native/index.js'
+    );
     let appLifeCycle;
 
     const isRunOne = initiatingProject != null;

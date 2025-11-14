@@ -12,7 +12,10 @@ import {
 import { processTargetOutputs } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 import { basename, dirname, relative } from 'node:path/posix';
 import { interpolate } from 'nx/src/tasks-runner/utils';
-import { createNodesV2, type EslintPluginOptions } from '../../plugins/plugin.js';
+import {
+  createNodesV2,
+  type EslintPluginOptions,
+} from '../../plugins/plugin.js';
 import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file.js';
 import { targetOptionsToCliMap } from './lib/target-options-map.js';
 

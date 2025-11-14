@@ -3,9 +3,7 @@
   "compilerOptions": {
     "module": "nodenext",
     "outDir": "./dist",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "esModuleInterop": true,
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "moduleResolution": "nodenext",
@@ -22,10 +20,7 @@
     "mf/**/*",
     "dist"
   ],
-  "include": [
-    "**/*.ts",
-    "**/*.json"
-  ],
+  "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
       "path": "../vitest/tsconfig.lib.json"

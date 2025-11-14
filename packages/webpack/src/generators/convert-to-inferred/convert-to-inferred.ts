@@ -13,7 +13,10 @@ import {
 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
-import { createNodesV2, type WebpackPluginOptions } from '../../plugins/plugin.js';
+import {
+  createNodesV2,
+  type WebpackPluginOptions,
+} from '../../plugins/plugin.js';
 import { webpackCliVersion } from '../../utils/versions.js';
 import {
   buildPostTargetTransformerFactory,

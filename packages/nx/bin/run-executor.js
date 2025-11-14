@@ -1,13 +1,16 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = require("fs");
-const run_js_1 = require("../src/command-line/run/run.js");
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
+const fs_1 = require('fs');
+const run_js_1 = require('../src/command-line/run/run.js');
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
-    setUpOutputWatching(process.env.NX_TERMINAL_CAPTURE_STDERR === 'true', process.env.NX_STREAM_OUTPUT === 'true');
+  setUpOutputWatching(
+    process.env.NX_TERMINAL_CAPTURE_STDERR === 'true',
+    process.env.NX_STREAM_OUTPUT === 'true'
+  );
 }
 if (!process.env.NX_WORKSPACE_ROOT) {
-    console.error('Invalid Nx command invocation');
-    process.exit(1);
+  console.error('Invalid Nx command invocation');
+  process.exit(1);
 }
 process.env.NX_CLI_SET = 'true';
 /**
@@ -21,46 +24,50 @@ process.env.NX_CLI_SET = 'true';
  * C-binary to write to stdout.
  */
 function setUpOutputWatching(captureStderr, streamOutput) {
-    const stdoutWrite = process.stdout._write;
-    const stderrWrite = process.stderr._write;
-    // The terminal output file gets out and err
-    const outputPath = process.env.NX_TERMINAL_OUTPUT_PATH;
-    const stdoutAndStderrLogFileHandle = (0, fs_1.openSync)(outputPath, 'w');
-    const onlyStdout = [];
-    process.stdout._write = (chunk, encoding, callback) => {
-        onlyStdout.push(chunk);
-        (0, fs_1.appendFileSync)(stdoutAndStderrLogFileHandle, chunk);
-        if (streamOutput) {
-            stdoutWrite.apply(process.stdout, [chunk, encoding, callback]);
-        }
-        else {
-            callback();
-        }
-    };
-    process.stderr._write = (chunk, encoding, callback) => {
-        (0, fs_1.appendFileSync)(stdoutAndStderrLogFileHandle, chunk);
-        if (streamOutput) {
-            stderrWrite.apply(process.stderr, [chunk, encoding, callback]);
-        }
-        else {
-            callback();
-        }
-    };
-    process.on('exit', (code) => {
-        // when the process exits successfully, and we are not asked to capture stderr
-        // override the file with only stdout
-        if (code === 0 && !captureStderr) {
-            (0, fs_1.writeFileSync)(outputPath, onlyStdout.join(''));
-        }
-    });
+  const stdoutWrite = process.stdout._write;
+  const stderrWrite = process.stderr._write;
+  // The terminal output file gets out and err
+  const outputPath = process.env.NX_TERMINAL_OUTPUT_PATH;
+  const stdoutAndStderrLogFileHandle = (0, fs_1.openSync)(outputPath, 'w');
+  const onlyStdout = [];
+  process.stdout._write = (chunk, encoding, callback) => {
+    onlyStdout.push(chunk);
+    (0, fs_1.appendFileSync)(stdoutAndStderrLogFileHandle, chunk);
+    if (streamOutput) {
+      stdoutWrite.apply(process.stdout, [chunk, encoding, callback]);
+    } else {
+      callback();
+    }
+  };
+  process.stderr._write = (chunk, encoding, callback) => {
+    (0, fs_1.appendFileSync)(stdoutAndStderrLogFileHandle, chunk);
+    if (streamOutput) {
+      stderrWrite.apply(process.stderr, [chunk, encoding, callback]);
+    } else {
+      callback();
+    }
+  };
+  process.on('exit', (code) => {
+    // when the process exits successfully, and we are not asked to capture stderr
+    // override the file with only stdout
+    if (code === 0 && !captureStderr) {
+      (0, fs_1.writeFileSync)(outputPath, onlyStdout.join(''));
+    }
+  });
 }
 process.on('message', async (message) => {
-    try {
-        const statusCode = await (0, run_js_1.run)(process.cwd(), process.env.NX_WORKSPACE_ROOT, message.targetDescription, message.overrides, message.isVerbose, message.taskGraph);
-        process.exit(statusCode);
-    }
-    catch (e) {
-        console.error(e);
-        process.exit(1);
-    }
+  try {
+    const statusCode = await (0, run_js_1.run)(
+      process.cwd(),
+      process.env.NX_WORKSPACE_ROOT,
+      message.targetDescription,
+      message.overrides,
+      message.isVerbose,
+      message.taskGraph
+    );
+    process.exit(statusCode);
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
+  }
 });

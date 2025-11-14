@@ -1,0 +1,1 @@
+{"version":3,"file":"nx-react-webpack-plugin.d.ts","sourceRoot":"","sources":["nx-react-webpack-plugin.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AAGnC,qBAAa,oBAAoB;IACnB,OAAO,CAAC,OAAO;gBAAP,OAAO,GAAE,MAAM,CAAC,MAAM,EAAE,GAAG,CAAM;IAErD,KAAK,CAAC,QAAQ,EAAE,QAAQ,GAAG,IAAI;CAGhC"}

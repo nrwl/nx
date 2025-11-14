@@ -3,9 +3,7 @@
   "compilerOptions": {
     "module": "nodenext",
     "outDir": "./dist",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "moduleResolution": "nodenext",
     "rootDir": "./src"
@@ -19,22 +17,22 @@
     "jest.config.cts",
     "dist"
   ],
-  "include": [
-    "**/*.ts",
-    "**/*.json"
-  ],
+  "include": ["**/*.ts", "**/*.json", "**/schema.d.ts"],
   "references": [
     {
-      "path": "../docker/tsconfig.lib.json"
-    },
-    {
-      "path": "../eslint/tsconfig.lib.json"
+      "path": "../webpack/tsconfig.lib.json"
     },
     {
       "path": "../js/tsconfig.lib.json"
     },
     {
       "path": "../jest/tsconfig.lib.json"
+    },
+    {
+      "path": "../eslint/tsconfig.lib.json"
+    },
+    {
+      "path": "../docker/tsconfig.lib.json"
     },
     {
       "path": "../devkit/tsconfig.lib.json"

@@ -24,8 +24,8 @@
   },
   "license": "MIT",
   "author": "Victor Savkin",
-  "main": "./index.js",
-  "types": "index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/jest": "workspace:*",
@@ -59,6 +59,11 @@
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
+    "./plugin": {
+      "import": "./plugin.js",
+      "types": "./plugin.d.ts",
+      "@nx/nx-source": "./plugin.ts"
+    },
     "./plugins/*": {
       "import": "./plugins/*.js",
       "types": "./plugins/*.d.ts",

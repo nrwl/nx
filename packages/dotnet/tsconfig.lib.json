@@ -7,22 +7,12 @@
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": false,
     "declaration": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "module": "nodenext",
     "moduleResolution": "nodenext"
   },
-  "include": [
-    "src/**/*.ts",
-    "plugin.ts"
-  ],
-  "exclude": [
-    "**/*.spec.ts",
-    "**/*.test.ts",
-    "dist/**/*",
-    "dist"
-  ],
+  "include": ["src/**/*.ts", "plugin.ts"],
+  "exclude": ["**/*.spec.ts", "**/*.test.ts", "dist/**/*", "dist"],
   "references": [
     {
       "path": "../devkit/tsconfig.lib.json"

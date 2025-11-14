@@ -1,6 +1,9 @@
 import { existsSync } from 'node:fs';
 import { posix } from 'node:path';
-import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph.js';
+import {
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../config/project-graph.js';
 import type { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { readCachedProjectGraph } from '../project-graph/project-graph.js';
 

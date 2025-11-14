@@ -1,13 +1,13 @@
-import { workspaceRules } from './src/resolve-workspace-rules.js';
+import { workspaceRules } from './resolve-workspace-rules.js';
 import dependencyChecks, {
   RULE_NAME as dependencyChecksRuleName,
-} from './src/rules/dependency-checks';
+} from './rules/dependency-checks';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
-} from './src/rules/enforce-module-boundaries';
+} from './rules/enforce-module-boundaries';
 import nxPluginChecksRule, {
   RULE_NAME as nxPluginChecksRuleName,
-} from './src/rules/nx-plugin-checks';
+} from './rules/nx-plugin-checks';
 
 const plugin = {
   configs: {},

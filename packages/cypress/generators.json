@@ -6,25 +6,17 @@
       "factory": "./dist/src/generators/init/init#cypressInitGeneratorInternal",
       "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/cypress` plugin.",
-      "aliases": [
-        "ng-add"
-      ],
+      "aliases": ["ng-add"],
       "hidden": true
     },
     "configuration": {
-      "aliases": [
-        "cypress-e2e-configuration",
-        "e2e",
-        "e2e-config"
-      ],
+      "aliases": ["cypress-e2e-configuration", "e2e", "e2e-config"],
       "factory": "./dist/src/generators/configuration/configuration#configurationGeneratorInternal",
       "schema": "./dist/src/generators/configuration/schema.json",
       "description": "Add a Cypress E2E Configuration to an existing project."
     },
     "component-configuration": {
-      "aliases": [
-        "cypress-component-configuration"
-      ],
+      "aliases": ["cypress-component-configuration"],
       "factory": "./dist/src/generators/component-configuration/component-configuration#componentConfigurationGeneratorInternal",
       "schema": "./dist/src/generators/component-configuration/schema.json",
       "description": "Set up Cypress Component Test for a project",

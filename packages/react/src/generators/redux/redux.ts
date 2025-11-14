@@ -22,7 +22,10 @@ import {
   addReduxStoreToMain,
   updateReduxStore,
 } from '../../utils/ast-utils.js';
-import { reactReduxVersion, reduxjsToolkitVersion } from '../../utils/versions.js';
+import {
+  reactReduxVersion,
+  reduxjsToolkitVersion,
+} from '../../utils/versions.js';
 import { NormalizedSchema, Schema } from './schema.js';
 
 let tsModule: typeof import('typescript');

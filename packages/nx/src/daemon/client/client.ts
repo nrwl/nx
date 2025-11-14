@@ -36,7 +36,12 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types.js';
-import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native/index.js';
+import {
+  IS_WASM,
+  NxWorkspaceFiles,
+  TaskRun,
+  TaskTarget,
+} from '../../native/index.js';
 import {
   HandleGlobMessage,
   HandleMultiGlobMessage,
@@ -674,7 +679,9 @@ export class DaemonClient {
     }
 
     try {
-      const { getProcessMetricsService } = await import('../../tasks-runner/process-metrics-service.js');
+      const { getProcessMetricsService } = await import(
+        '../../tasks-runner/process-metrics-service.js'
+      );
       getProcessMetricsService().registerDaemonProcess(daemonPid);
     } catch {
       // don't error, this is a secondary concern that should not break task execution

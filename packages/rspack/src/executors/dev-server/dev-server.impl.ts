@@ -8,7 +8,10 @@ import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Configuration } from '@rspack/core';
 import { RspackDevServer } from '@rspack/dev-server';
-import { createCompiler, isMultiCompiler } from '../../utils/create-compiler.js';
+import {
+  createCompiler,
+  isMultiCompiler,
+} from '../../utils/create-compiler.js';
 import { isMode } from '../../utils/mode-utils.js';
 import { normalizeOptions } from '../rspack/lib/normalize-options.js';
 import { getDevServerOptions } from './lib/get-dev-server-config.js';

@@ -2,7 +2,6 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/packages/maven/spec",
-    "module": "commonjs",
     "types": ["jest", "node"],
     "composite": true
   },
@@ -19,6 +18,7 @@
     "jest.config.ts",
     "*.json"
   ],
+  "exclude": ["node_modules", "dist"],
   "references": [
     {
       "path": "./tsconfig.lib.json"

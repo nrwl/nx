@@ -13,7 +13,10 @@ import {
   HelperDependency,
 } from '../../utils/compiler-helper-dependency.js';
 import { updatePackageJson } from '../../utils/package-json/update-package-json.js';
-import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema.js';
+import {
+  ExecutorOptions,
+  NormalizedExecutorOptions,
+} from '../../utils/schema.js';
 import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files.js';
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes.js';
 import { getCustomTrasformersFactory, normalizeOptions } from './lib/index.js';

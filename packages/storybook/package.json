@@ -18,9 +18,9 @@
     "Front-end",
     "Testing"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
-  "author": "Isaac Mann",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
+  "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
@@ -62,9 +62,14 @@
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
     "./plugins/*": {
-      "import": "./plugins/*.js",
-      "types": "./plugins/*.d.ts",
-      "@nx/nx-source": "./plugins/*.ts"
+      "import": "./dist/plugins/*.js",
+      "types": "./dist/plugins/*.d.ts",
+      "@nx/nx-source": "./src/plugins/*.ts"
+    },
+    "./presets/*": {
+      "import": "./dist/presets/*.js",
+      "types": "./dist/presets/*.d.ts",
+      "@nx/nx-source": "./src/presets/*.ts"
     },
     "./src/utils/*": {
       "import": "./dist/utils/*.js",

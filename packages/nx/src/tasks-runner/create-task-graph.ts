@@ -1,4 +1,7 @@
-import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph.js';
+import {
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../config/project-graph.js';
 import {
   getDependencyConfigs,
   getOutputs,

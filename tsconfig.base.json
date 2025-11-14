@@ -2,8 +2,8 @@
   "compilerOptions": {
     "target": "ES2021",
     "importHelpers": true,
-    "module": "commonjs",
-    "moduleResolution": "nodenext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,

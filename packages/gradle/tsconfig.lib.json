@@ -2,22 +2,20 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "moduleResolution": "nodenext",
     "module": "nodenext",
     "rootDir": "./src"
   },
-  "include": [
-    "**/*.ts"
-  ],
+  "include": ["**/*.ts"],
   "exclude": [
     "jest.config.ts",
     "**/*.spec.ts",
     "**/*.test.ts",
-    "dist"
+    "dist",
+    "batch-runner",
+    "project-graph"
   ],
   "references": [
     {

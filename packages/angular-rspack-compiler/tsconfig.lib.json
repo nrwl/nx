@@ -6,9 +6,7 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": false,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "module": "nodenext",
     "target": "ES2020",
     "moduleResolution": "nodenext",
@@ -19,10 +17,7 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true
   },
-  "include": [
-    "src/**/*.ts",
-    "src/lib/patch/patch-angular-build.ts"
-  ],
+  "include": ["src/**/*.ts", "src/lib/patch/patch-angular-build.ts"],
   "references": [],
   "exclude": [
     "vite.config.ts",

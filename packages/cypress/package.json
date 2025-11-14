@@ -21,8 +21,8 @@
     "Front-end",
     "Testing"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -69,10 +69,15 @@
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./dist/plugin.d.ts",
+      "@nx/nx-source": "./src/plugin.ts"
+    },
     "./plugins/*": {
-      "import": "./plugins/*.js",
-      "types": "./plugins/*.d.ts",
-      "@nx/nx-source": "./plugins/*.ts"
+      "import": "./dist/plugins/*.js",
+      "types": "./dist/plugins/*.d.ts",
+      "@nx/nx-source": "./src/plugins/*.ts"
     },
     "./src/utils/*": {
       "import": "./dist/utils/*.js",

@@ -16,8 +16,8 @@
     "CLI",
     "Testing"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -76,6 +76,16 @@
       "import": "./dist/utils/*.js",
       "types": "./dist/utils/*.d.ts",
       "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/utils/**/*": {
+      "import": "./dist/utils/**/*.js",
+      "types": "./dist/utils/**/*.d.ts",
+      "@nx/nx-source": "./src/utils/**/*.ts"
+    },
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./dist/plugin.d.ts",
+      "@nx/nx-source": "./src/plugin.ts"
     }
   }
 }

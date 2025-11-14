@@ -1,0 +1,1 @@
+{"version":3,"file":"with-react.d.ts","sourceRoot":"","sources":["with-react.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,aAAa,EAAE,MAAM,SAAS,CAAC;AAC7C,OAAO,KAAK,EAAE,yBAAyB,EAAE,cAAc,EAAE,MAAM,aAAa,CAAC;AAK7E,MAAM,WAAW,gBAAiB,SAAQ,cAAc;CAAG;AAE3D;;;GAGG;AACH,wBAAgB,SAAS,CAAC,aAAa,GAAE,gBAAqB,IAE1D,QAAQ,aAAa,EACrB,SAAS,yBAAyB,KACjC,aAAa,CAajB"}

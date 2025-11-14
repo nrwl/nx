@@ -84,7 +84,10 @@ import {
   ensurePackageHasProvenance,
   getNxPackageGroup,
 } from '../../utils/provenance.js';
-import { type CatalogManager, getCatalogManager } from '../../utils/catalog/index.js';
+import {
+  type CatalogManager,
+  getCatalogManager,
+} from '../../utils/catalog/index.js';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;

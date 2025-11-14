@@ -1,5 +1,8 @@
 import { Task } from '../config/task-graph.js';
-import { ExternalObject, TaskStatus as NativeTaskStatus } from '../native/index.js';
+import {
+  ExternalObject,
+  TaskStatus as NativeTaskStatus,
+} from '../native/index.js';
 import { RunningTask } from './running-tasks/running-task.js';
 import { TaskStatus } from './tasks-runner.js';
 

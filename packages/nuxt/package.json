@@ -15,8 +15,8 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -37,7 +37,7 @@
     "./plugin": {
       "import": "./dist/plugin.js",
       "types": "./dist/plugin.d.ts",
-      "@nx/nx-source": "./plugin.ts"
+      "@nx/nx-source": "./src/plugin.ts"
     },
     "./executors.json": "./executors.json"
   },

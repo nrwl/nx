@@ -41,28 +41,41 @@ function addJsExtensions(content) {
   let hasChanges = false;
 
   // Match all import/export statements with relative paths
-  const staticImportRegex = /((?:import|export)(?:\s+\*)?(?:\s+\{[^}]*\})?\s+from\s+|import\s+)(['"])(\.[^'"]+?)(?<!\.js|\.json|\.mjs|\.cjs|\.d\.ts)\2/g;
+  const staticImportRegex =
+    /((?:import|export)(?:\s+\*)?(?:\s+\{[^}]*\})?\s+from\s+|import\s+)(['"])(\.[^'"]+?)(?<!\.js|\.json|\.mjs|\.cjs|\.d\.ts)\2/g;
 
-  modified = modified.replace(staticImportRegex, (match, prefix, quote, path) => {
-    // Don't modify if already has extension
-    if (path.endsWith('.js') || path.endsWith('.json') ||
-        path.endsWith('.mjs') || path.endsWith('.cjs') ||
-        path.endsWith('.d.ts')) {
-      return match;
+  modified = modified.replace(
+    staticImportRegex,
+    (match, prefix, quote, path) => {
+      // Don't modify if already has extension
+      if (
+        path.endsWith('.js') ||
+        path.endsWith('.json') ||
+        path.endsWith('.mjs') ||
+        path.endsWith('.cjs') ||
+        path.endsWith('.d.ts')
+      ) {
+        return match;
+      }
+
+      hasChanges = true;
+      return `${prefix}${quote}${path}.js${quote}`;
     }
-
-    hasChanges = true;
-    return `${prefix}${quote}${path}.js${quote}`;
-  });
+  );
 
   // Match dynamic imports: import('./path') or import("./path")
-  const dynamicImportRegex = /\bimport\s*\(\s*(['"])(\.[^'"]+?)(?<!\.js|\.json|\.mjs|\.cjs|\.d\.ts)\1\s*\)/g;
+  const dynamicImportRegex =
+    /\bimport\s*\(\s*(['"])(\.[^'"]+?)(?<!\.js|\.json|\.mjs|\.cjs|\.d\.ts)\1\s*\)/g;
 
   modified = modified.replace(dynamicImportRegex, (match, quote, path) => {
     // Don't modify if already has extension
-    if (path.endsWith('.js') || path.endsWith('.json') ||
-        path.endsWith('.mjs') || path.endsWith('.cjs') ||
-        path.endsWith('.d.ts')) {
+    if (
+      path.endsWith('.js') ||
+      path.endsWith('.json') ||
+      path.endsWith('.mjs') ||
+      path.endsWith('.cjs') ||
+      path.endsWith('.d.ts')
+    ) {
       return match;
     }
 
@@ -146,8 +159,8 @@ function main() {
   console.log('This may take a few minutes...\n');
 
   const packages = readdirSync(PACKAGES_DIR, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name);
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 
   let totalFilesModified = 0;
   let packagesWithChanges = 0;
@@ -161,7 +174,9 @@ function main() {
   }
 
   console.log(`\n✅ Complete!`);
-  console.log(`   ${totalFilesModified} files modified across ${packagesWithChanges} packages`);
+  console.log(
+    `   ${totalFilesModified} files modified across ${packagesWithChanges} packages`
+  );
   console.log('\n⚠️  Important: Run tests and build to verify the changes!');
 }
 

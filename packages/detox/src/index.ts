@@ -1,2 +1,2 @@
-export { detoxInitGenerator } from './src/generators/init/init.js';
-export { detoxApplicationGenerator } from './src/generators/application/application.js';
+export { detoxInitGenerator } from './generators/init/init.js';
+export { detoxApplicationGenerator } from './generators/application/application.js';

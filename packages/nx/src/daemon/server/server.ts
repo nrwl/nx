@@ -13,7 +13,10 @@ import { PackageJson } from '../../utils/package-json.js';
 import { nxVersion } from '../../utils/versions.js';
 import { setupWorkspaceContext } from '../../utils/workspace-context.js';
 import { workspaceRoot } from '../../utils/workspace-root.js';
-import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache.js';
+import {
+  getDaemonProcessIdSync,
+  writeDaemonJsonProcessCache,
+} from '../cache.js';
 import {
   getFullOsSocketPath,
   isWindows,

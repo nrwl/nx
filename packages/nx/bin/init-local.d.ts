@@ -4,6 +4,8 @@ import { WorkspaceTypeAndRoot } from '../src/utils/find-workspace-root.js';
  *
  * @param workspace Relevant local workspace properties
  */
-export declare function initLocal(workspace: WorkspaceTypeAndRoot): Promise<void>;
+export declare function initLocal(
+  workspace: WorkspaceTypeAndRoot
+): Promise<void>;
 export declare function rewriteTargetsAndProjects(args: string[]): string[];
 //# sourceMappingURL=init-local.d.ts.map

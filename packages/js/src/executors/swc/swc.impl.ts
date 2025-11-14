@@ -3,7 +3,10 @@ import { rmSync } from 'node:fs';
 import { dirname, join, normalize, relative, resolve } from 'path';
 import { globSync } from 'tinyglobby';
 import { copyAssets } from '../../utils/assets/index.js';
-import { assetGlobsToFiles, FileInputOutput } from '../../utils/assets/assets.js';
+import {
+  assetGlobsToFiles,
+  FileInputOutput,
+} from '../../utils/assets/assets.js';
 import type { DependentBuildableProjectNode } from '../../utils/buildable-libs-utils';
 import { checkDependencies } from '../../utils/check-dependencies.js';
 import {

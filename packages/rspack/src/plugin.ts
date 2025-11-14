@@ -1,2 +1,2 @@
-export { createDependencies, createNodesV2 } from './src/plugins/plugin.js';
-export type { RspackPluginOptions } from './src/plugins/plugin';
+export { createDependencies, createNodesV2 } from './plugins/plugin.js';
+export type { RspackPluginOptions } from './plugins/plugin';

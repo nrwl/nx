@@ -1,9 +1,7 @@
 {
   "name": "Nx Expo",
   "version": "0.1",
-  "extends": [
-    "@nx/workspace"
-  ],
+  "extends": ["@nx/workspace"],
   "generators": {
     "init": {
       "factory": "./dist/src/generators/init/init#expoInitGeneratorInternal",
@@ -14,18 +12,14 @@
     "application": {
       "factory": "./dist/src/generators/application/application#expoApplicationGeneratorInternal",
       "schema": "./dist/src/generators/application/schema.json",
-      "aliases": [
-        "app"
-      ],
+      "aliases": ["app"],
       "x-type": "application",
       "description": "Create an application"
     },
     "library": {
       "factory": "./dist/src/generators/library/library#expoLibraryGeneratorInternal",
       "schema": "./dist/src/generators/library/schema.json",
-      "aliases": [
-        "lib"
-      ],
+      "aliases": ["lib"],
       "x-type": "library",
       "description": "Create a library"
     },
@@ -33,9 +27,7 @@
       "factory": "./dist/src/generators/component/component",
       "schema": "./dist/src/generators/component/schema.json",
       "description": "Create a component",
-      "aliases": [
-        "c"
-      ]
+      "aliases": ["c"]
     },
     "convert-to-inferred": {
       "factory": "./dist/src/generators/convert-to-inferred/convert-to-inferred",

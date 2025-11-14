@@ -1,16 +1,12 @@
 {
   "name": "nx/nest",
   "version": "0.1",
-  "extends": [
-    "@nx/workspace"
-  ],
+  "extends": ["@nx/workspace"],
   "generators": {
     "application": {
       "factory": "./dist/src/generators/application/application#applicationGeneratorInternal",
       "schema": "./dist/src/generators/application/schema.json",
-      "aliases": [
-        "app"
-      ],
+      "aliases": ["app"],
       "x-type": "application",
       "description": "Create a NestJS application."
     },
@@ -18,17 +14,13 @@
       "factory": "./dist/src/generators/init/init",
       "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/nest` plugin.",
-      "aliases": [
-        "ng-add"
-      ],
+      "aliases": ["ng-add"],
       "hidden": true
     },
     "library": {
       "factory": "./dist/src/generators/library/library#libraryGeneratorInternal",
       "schema": "./dist/src/generators/library/schema.json",
-      "aliases": [
-        "lib"
-      ],
+      "aliases": ["lib"],
       "x-type": "library",
       "description": "Create a new NestJS library."
     },

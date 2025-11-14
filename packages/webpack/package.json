@@ -15,8 +15,8 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -86,7 +86,17 @@
     "./app-plugin": {
       "import": "./dist/app-plugin.js",
       "types": "./dist/app-plugin.d.ts",
-      "@nx/nx-source": "./app-plugin.ts"
+      "@nx/nx-source": "./src/app-plugin.ts"
+    },
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./dist/plugin.d.ts",
+      "@nx/nx-source": "./src/plugin.ts"
+    },
+    "./tsconfig-paths-plugin": {
+      "import": "./dist/tsconfig-paths-plugin.js",
+      "types": "./dist/tsconfig-paths-plugin.d.ts",
+      "@nx/nx-source": "./src/tsconfig-paths-plugin.ts"
     },
     "./src/plugins/*": {
       "import": "./dist/plugins/*.js",

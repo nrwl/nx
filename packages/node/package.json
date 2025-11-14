@@ -17,8 +17,8 @@
     "CLI",
     "Backend"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -33,10 +33,11 @@
   "dependencies": {
     "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",
+    "@nx/docker": "workspace:*",
+    "@nx/eslint": "workspace:*",
     "@nx/jest": "workspace:*",
     "@nx/js": "workspace:*",
-    "@nx/eslint": "workspace:*",
-    "@nx/docker": "workspace:*",
+    "@nx/webpack": "workspace:*",
     "tcp-port-used": "^1.0.2",
     "kill-port": "^1.6.1"
   },
@@ -59,6 +60,16 @@
       "import": "./dist/utils/*.js",
       "types": "./dist/utils/*.d.ts",
       "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./utils": {
+      "import": "./dist/utils.js",
+      "types": "./dist/utils.d.ts",
+      "@nx/nx-source": "./src/utils.ts"
+    },
+    "./src/generators/*/schema": {
+      "import": "./dist/generators/*/schema.d.ts",
+      "types": "./dist/generators/*/schema.d.ts",
+      "@nx/nx-source": "./dist/generators/*/schema.d.ts"
     },
     "./src/generators/*": {
       "import": "./dist/generators/*.js",

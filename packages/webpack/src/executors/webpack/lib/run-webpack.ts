@@ -9,7 +9,7 @@ export function runWebpack(
     // Passing `watch` option here will result in a warning due to missing callback.
     // We manually call `.watch` or `.run` later so this option isn't needed here.
     const { watch, ...normalizedConfig } = config;
-    const webpackCompiler = webpack(normalizedConfig);
+    const webpackCompiler = webpack.webpack(normalizedConfig);
 
     const callback = (err: Error, stats: webpack.Stats) => {
       if (err) {

@@ -1,4 +1,7 @@
-import { createNodesFromFiles, NxPluginV2 } from '../src/project-graph/plugins/index.js';
+import {
+  createNodesFromFiles,
+  NxPluginV2,
+} from '../src/project-graph/plugins/index.js';
 import { workspaceRoot } from '../src/utils/workspace-root.js';
 import {
   buildPackageJsonWorkspacesMatcher,

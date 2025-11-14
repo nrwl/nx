@@ -2,24 +2,14 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "moduleResolution": "nodenext",
     "module": "nodenext",
     "rootDir": "./src"
   },
-  "include": [
-    "**/*.ts",
-    "**/*.json"
-  ],
-  "exclude": [
-    "jest.config.ts",
-    "**/*.spec.ts",
-    "**/*.test.ts",
-    "dist"
-  ],
+  "include": ["**/*.ts", "**/*.json"],
+  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts", "dist"],
   "references": [
     {
       "path": "../js/tsconfig.lib.json"

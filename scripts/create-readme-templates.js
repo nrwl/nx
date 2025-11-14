@@ -11,7 +11,12 @@ const { join } = require('path');
 const PACKAGES_DIR = join(__dirname, '..', 'packages');
 
 // Packages that already have readme-template.md and should be skipped
-const SKIP_PACKAGES = new Set(['maven', 'dotnet', 'angular-rspack', 'angular-rspack-compiler']);
+const SKIP_PACKAGES = new Set([
+  'maven',
+  'dotnet',
+  'angular-rspack',
+  'angular-rspack-compiler',
+]);
 
 // Template based on maven pattern
 function getReadmeTemplate(packageName) {
@@ -44,9 +49,9 @@ function main() {
   console.log('📝 Creating readme-template.md files\n');
 
   const packages = readdirSync(PACKAGES_DIR, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name)
-    .filter(name => !SKIP_PACKAGES.has(name));
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name)
+    .filter((name) => !SKIP_PACKAGES.has(name));
 
   let created = 0;
 

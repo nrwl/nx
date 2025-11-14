@@ -2,7 +2,10 @@ import { type Configuration } from '@rspack/core';
 import { normalizeAssets } from './normalize-assets.js';
 import { NxAppRspackPluginOptions } from '../plugins/utils/models.js';
 import { applyBaseConfig } from '../plugins/utils/apply-base-config.js';
-import { NxRspackExecutionContext, NxComposableRspackPlugin } from './config.js';
+import {
+  NxRspackExecutionContext,
+  NxComposableRspackPlugin,
+} from './config.js';
 
 const processed = new Set();
 

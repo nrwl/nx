@@ -6,9 +6,7 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": false,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "noImplicitAny": false,
@@ -16,10 +14,9 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": [
-    "src/**/*.ts"
-  ],
+  "include": ["src/**/*.ts"],
   "exclude": [
+    "node_modules",
     "jest.config.ts",
     "src/test-setup.ts",
     "src/**/*.spec.ts",

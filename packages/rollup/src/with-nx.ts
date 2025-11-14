@@ -1,2 +1,2 @@
-export { withNx } from './src/plugins/with-nx/with-nx.js';
-export type { RollupWithNxPluginOptions } from './src/plugins/with-nx/with-nx-options';
+export { withNx } from './plugins/with-nx/with-nx.js';
+export type { RollupWithNxPluginOptions } from './plugins/with-nx/with-nx-options';

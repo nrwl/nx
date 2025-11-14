@@ -11,6 +11,8 @@ export const yargsStartAgentCommand: CommandModule = {
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
-    process.exit(await (await import('./start-agent.js')).startAgentHandler(args));
+    process.exit(
+      await (await import('./start-agent.js')).startAgentHandler(args)
+    );
   },
 };

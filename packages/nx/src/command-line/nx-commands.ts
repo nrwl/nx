@@ -50,7 +50,10 @@ import {
   yargsPrintAffectedCommand,
   yargsAffectedGraphCommand,
 } from './deprecated/command-objects.js';
-import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object.js';
+import {
+  yargsSyncCheckCommand,
+  yargsSyncCommand,
+} from './sync/command-object.js';
 import { output } from '../utils/output.js';
 import { yargsMcpCommand } from './mcp/command-object.js';
 

@@ -30,9 +30,9 @@ function updateMetadataFile(filePath) {
         // Update factory, implementation, batchImplementation, and schema paths
         if (
           (key === 'factory' ||
-           key === 'implementation' ||
-           key === 'batchImplementation' ||
-           key === 'schema') &&
+            key === 'implementation' ||
+            key === 'batchImplementation' ||
+            key === 'schema') &&
           value.startsWith('./src/')
         ) {
           obj[key] = value.replace('./src/', './dist/src/');
@@ -77,8 +77,8 @@ function main() {
   console.log('🔄 Updating metadata JSON paths from ./src/ to ./dist/src/\n');
 
   const packages = readdirSync(PACKAGES_DIR, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name);
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 
   let totalUpdated = 0;
   let packagesWithUpdates = 0;
@@ -92,7 +92,9 @@ function main() {
   }
 
   console.log(`\n✅ Complete!`);
-  console.log(`   ${totalUpdated} files updated across ${packagesWithUpdates} packages`);
+  console.log(
+    `   ${totalUpdated} files updated across ${packagesWithUpdates} packages`
+  );
 }
 
 main();

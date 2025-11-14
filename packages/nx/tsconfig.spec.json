@@ -2,7 +2,6 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/packages/nx/spec",
-    "module": "commonjs",
     "types": ["jest", "node"],
     "composite": true
   },
@@ -12,13 +11,14 @@
     "**/*.spec.tsx",
     "**/*.spec.js",
     "**/*.spec.jsx",
-    "**/*.fixture.js",
     "**/*.fixture.ts",
     "**/*.d.ts",
+    "**/__fixtures__/**/*.ts",
     "./src/internal-testing-utils/**/*.ts",
     "jest.config.ts",
     "*.json"
   ],
+  "exclude": ["node_modules", "dist", ""],
   "references": [
     {
       "path": "./tsconfig.lib.json"

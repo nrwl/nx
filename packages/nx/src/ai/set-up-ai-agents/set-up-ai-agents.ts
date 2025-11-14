@@ -9,7 +9,11 @@ import { homedir } from 'os';
 import { join } from 'path';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available.js';
 import { Tree } from '../../generators/tree.js';
-import { readJson, updateJson, writeJson } from '../../generators/utils/json.js';
+import {
+  readJson,
+  updateJson,
+  writeJson,
+} from '../../generators/utils/json.js';
 import {
   canInstallNxConsoleForEditor,
   installNxConsoleForEditor,
@@ -22,7 +26,11 @@ import {
 } from '../../utils/output.js';
 import { installPackageToTmp } from '../../utils/package-json.js';
 import { ensurePackageHasProvenance } from '../../utils/provenance.js';
-import { agentsMdPath, codexConfigTomlPath, geminiMdPath } from '../constants.js';
+import {
+  agentsMdPath,
+  codexConfigTomlPath,
+  geminiMdPath,
+} from '../constants.js';
 import { Agent, supportedAgents } from '../utils.js';
 import {
   getAgentRulesWrapped,

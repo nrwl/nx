@@ -14,8 +14,13 @@ const PACKAGES_DIR = path.join(WORKSPACE_ROOT, 'packages');
 
 // Known package-specific export patterns based on analysis
 const PACKAGE_EXPORT_PATTERNS = {
-  'devkit': {
-    rootEntries: ['testing', 'internal', 'internal-testing-utils', 'ngcli-adapter'],
+  devkit: {
+    rootEntries: [
+      'testing',
+      'internal',
+      'internal-testing-utils',
+      'ngcli-adapter',
+    ],
     wildcards: [
       './src/generators/*',
       './src/generators/plugin-migrations/*',
@@ -24,7 +29,7 @@ const PACKAGE_EXPORT_PATTERNS = {
       './src/utils/catalog/*',
     ],
   },
-  'js': {
+  js: {
     rootEntries: ['internal', 'babel', 'typescript'],
     wildcards: [
       './src/utils/*',
@@ -42,27 +47,17 @@ const PACKAGE_EXPORT_PATTERNS = {
       './plugins/jest/*',
     ],
   },
-  'cypress': {
-    wildcards: [
-      './plugins/*',
-      './src/utils/*',
-    ],
+  cypress: {
+    wildcards: ['./plugins/*', './src/utils/*'],
   },
-  'vite': {
-    wildcards: [
-      './plugins/*',
-      './src/utils/*',
-      './src/executors/*',
-    ],
+  vite: {
+    wildcards: ['./plugins/*', './src/utils/*', './src/executors/*'],
   },
   'module-federation': {
     rootEntries: ['webpack', 'angular', 'rspack', 'rspack.js', 'url-helpers'],
-    wildcards: [
-      './src/executors/*',
-      './src/utils/*',
-    ],
+    wildcards: ['./src/executors/*', './src/utils/*'],
   },
-  'webpack': {
+  webpack: {
     rootEntries: ['app-plugin'],
     wildcards: [
       './src/plugins/*',
@@ -72,7 +67,7 @@ const PACKAGE_EXPORT_PATTERNS = {
       './src/executors/*/schema.json',
     ],
   },
-  'angular': {
+  angular: {
     rootEntries: ['mf', 'module-federation'],
     wildcards: [
       './plugins/*',
@@ -81,7 +76,7 @@ const PACKAGE_EXPORT_PATTERNS = {
       './src/executors/*',
     ],
   },
-  'react': {
+  react: {
     rootEntries: ['mf'],
     wildcards: [
       './plugins/*',
@@ -95,115 +90,68 @@ const PACKAGE_EXPORT_PATTERNS = {
       './src/module-federation/*',
     ],
   },
-  'eslint': {
+  eslint: {
     wildcards: [
       './src/generators/*',
       './src/generators/utils/*',
       './src/utils/*',
     ],
   },
-  'workspace': {
-    wildcards: [
-      './src/utilities/*',
-      './src/utilities/typescript/*',
-    ],
+  workspace: {
+    wildcards: ['./src/utilities/*', './src/utilities/typescript/*'],
   },
-  'rspack': {
+  rspack: {
     rootEntries: ['module-federation'],
-    wildcards: [
-      './src/utils/*',
-      './src/executors/*',
-      './src/plugins/*',
-    ],
+    wildcards: ['./src/utils/*', './src/executors/*', './src/plugins/*'],
   },
-  'web': {
-    wildcards: [
-      './src/utils/*',
-      './plugins/*',
-    ],
+  web: {
+    wildcards: ['./src/utils/*', './plugins/*'],
   },
-  'node': {
-    wildcards: [
-      './src/utils/*',
-      './src/generators/*',
-    ],
+  node: {
+    wildcards: ['./src/utils/*', './src/generators/*'],
   },
-  'jest': {
-    wildcards: [
-      './plugins/*',
-      './src/utils/*',
-    ],
+  jest: {
+    wildcards: ['./plugins/*', './src/utils/*'],
   },
-  'playwright': {
+  playwright: {
     rootEntries: ['plugin'],
-    wildcards: [
-      './src/utils/*',
-    ],
+    wildcards: ['./src/utils/*'],
   },
-  'next': {
-    wildcards: [
-      './plugins/*',
-      './src/utils/*',
-    ],
+  next: {
+    wildcards: ['./plugins/*', './src/utils/*'],
   },
-  'storybook': {
-    wildcards: [
-      './plugins/*',
-      './src/utils/*',
-    ],
+  storybook: {
+    wildcards: ['./plugins/*', './src/utils/*'],
   },
-  'nuxt': {
+  nuxt: {
     rootEntries: ['plugin'],
   },
-  'nest': {
-    wildcards: [
-      './src/utils/*',
-    ],
+  nest: {
+    wildcards: ['./src/utils/*'],
   },
-  'express': {
-    wildcards: [
-      './src/utils/*',
-    ],
+  express: {
+    wildcards: ['./src/utils/*'],
   },
-  'vue': {
-    wildcards: [
-      './src/utils/*',
-    ],
+  vue: {
+    wildcards: ['./src/utils/*'],
   },
-  'detox': {
-    wildcards: [
-      './plugins/*',
-    ],
+  detox: {
+    wildcards: ['./plugins/*'],
   },
-  'expo': {
-    wildcards: [
-      './plugins/*',
-      './src/utils/*',
-    ],
+  expo: {
+    wildcards: ['./plugins/*', './src/utils/*'],
   },
   'react-native': {
-    wildcards: [
-      './plugins/*',
-      './src/utils/*',
-    ],
+    wildcards: ['./plugins/*', './src/utils/*'],
   },
-  'remix': {
-    wildcards: [
-      './plugins/*',
-      './src/utils/*',
-    ],
+  remix: {
+    wildcards: ['./plugins/*', './src/utils/*'],
   },
-  'rollup': {
-    wildcards: [
-      './src/utils/*',
-      './src/plugins/*',
-    ],
+  rollup: {
+    wildcards: ['./src/utils/*', './src/plugins/*'],
   },
-  'esbuild': {
-    wildcards: [
-      './src/utils/*',
-      './plugins/*',
-    ],
+  esbuild: {
+    wildcards: ['./src/utils/*', './plugins/*'],
   },
 };
 
@@ -234,7 +182,8 @@ function createCodeExport(distPath, srcPath) {
  */
 function generateExports(packageName, packagePath) {
   const exports = {};
-  const packagePattern = PACKAGE_EXPORT_PATTERNS[packageName] || DEFAULT_PATTERN;
+  const packagePattern =
+    PACKAGE_EXPORT_PATTERNS[packageName] || DEFAULT_PATTERN;
 
   // 1. Root export
   exports['.'] = createCodeExport('./dist/index.js', './src/index.ts');
@@ -259,11 +208,20 @@ function generateExports(packageName, packagePath) {
       const srcPath = path.join(packagePath, 'src', `${entry}.ts`);
 
       if (fs.existsSync(tsPath)) {
-        exports[`./${entry}`] = createCodeExport(`./dist/${entry}.js`, `./${entry}.ts`);
+        exports[`./${entry}`] = createCodeExport(
+          `./dist/${entry}.js`,
+          `./${entry}.ts`
+        );
       } else if (fs.existsSync(jsPath)) {
-        exports[`./${entry}`] = createCodeExport(`./dist/${entry}.js`, `./${entry}.js`);
+        exports[`./${entry}`] = createCodeExport(
+          `./dist/${entry}.js`,
+          `./${entry}.js`
+        );
       } else if (fs.existsSync(srcPath)) {
-        exports[`./${entry}`] = createCodeExport(`./dist/${entry}.js`, `./src/${entry}.ts`);
+        exports[`./${entry}`] = createCodeExport(
+          `./dist/${entry}.js`,
+          `./src/${entry}.ts`
+        );
       }
     });
   }
@@ -288,7 +246,9 @@ function generateExports(packageName, packagePath) {
           };
         } else {
           // For specific paths, convert to dist and src paths
-          const distPattern = pattern.replace('./src/', './dist/').replace('.ts', '.js');
+          const distPattern = pattern
+            .replace('./src/', './dist/')
+            .replace('.ts', '.js');
           const srcPattern = pattern.endsWith('.js') ? pattern : pattern;
 
           exports[pattern] = createCodeExport(distPattern, srcPattern);
@@ -339,7 +299,9 @@ function updatePackageJson(packagePath, exports, dryRun = false) {
       else if (typeof existing === 'object' && existing.import) {
         // Try to infer source path
         const importPath = existing.import;
-        const srcPath = importPath.replace('./dist/', './src/').replace('.js', '.ts');
+        const srcPath = importPath
+          .replace('./dist/', './src/')
+          .replace('.js', '.ts');
 
         mergedExports[key] = {
           ...existing,
@@ -357,7 +319,10 @@ function updatePackageJson(packagePath, exports, dryRun = false) {
     return true;
   }
 
-  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
+  fs.writeFileSync(
+    packageJsonPath,
+    JSON.stringify(packageJson, null, 2) + '\n'
+  );
   console.log(`✅ Updated ${packageName}`);
   return true;
 }

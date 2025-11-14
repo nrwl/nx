@@ -81,7 +81,9 @@ export async function loadRemoteNxPlugin(
        * daemon, we'd get a different instance of the process metrics service.
        */
       if (!isOnDaemon()) {
-        const { getProcessMetricsService } = await import('../../../tasks-runner/process-metrics-service.js');
+        const { getProcessMetricsService } = await import(
+          '../../../tasks-runner/process-metrics-service.js'
+        );
 
         getProcessMetricsService().registerMainCliSubprocess(
           worker.pid,

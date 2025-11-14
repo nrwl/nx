@@ -6,15 +6,11 @@
       "factory": "./dist/src/generators/init/init#esbuildInitGenerator",
       "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/esbuild` plugin.",
-      "aliases": [
-        "ng-add"
-      ],
+      "aliases": ["ng-add"],
       "hidden": true
     },
     "configuration": {
-      "aliases": [
-        "esbuild-project"
-      ],
+      "aliases": ["esbuild-project"],
       "factory": "./dist/src/generators/configuration/configuration",
       "schema": "./dist/src/generators/configuration/schema.json",
       "description": "Add esbuild configuration to a project."

@@ -16,8 +16,8 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -39,8 +39,9 @@
     "@nx/js": "workspace:*"
   },
   "devDependencies": {
-    "nx": "workspace:*",
-    "@nx/vitest": "workspace:*"
+    "@nx/vitest": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
@@ -60,10 +61,10 @@
       "types": "./dist/utils/*.d.ts",
       "@nx/nx-source": "./src/utils/*.ts"
     },
-    "./plugins/*": {
-      "import": "./plugins/*.js",
-      "types": "./plugins/*.d.ts",
-      "@nx/nx-source": "./plugins/*.ts"
+    "./babel": {
+      "import": "./babel.js",
+      "types": "./babel.d.ts",
+      "@nx/nx-source": "./babel.ts"
     }
   }
 }

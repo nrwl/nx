@@ -1,4 +1,3 @@
-import * as webpack from 'webpack';
 import {
   ExecutorContext,
   parseTargetString,
@@ -7,7 +6,6 @@ import {
 
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import { map, tap } from 'rxjs/operators';
-import * as WebpackDevServer from 'webpack-dev-server';
 
 import { getDevServerOptions } from './lib/get-dev-server-config.js';
 import {
@@ -110,9 +108,16 @@ export async function* devServerExecutor(
       config.devServer ??= devServer;
     }
   }
-
+  const resolvedWebpack = await import('webpack');
+  const webpack =
+    'default' in resolvedWebpack ? resolvedWebpack.default : resolvedWebpack;
+  const resolvedWebpackDevServer = await import('webpack-dev-server');
+  const webpackDevServer =
+    'default' in resolvedWebpackDevServer
+      ? resolvedWebpackDevServer.default
+      : resolvedWebpackDevServer;
   return yield* eachValueFrom(
-    runWebpackDevServer(config, webpack, WebpackDevServer).pipe(
+    runWebpackDevServer(config, webpack, webpackDevServer).pipe(
       tap(({ stats }) => {
         console.info(stats.toString((config as any).stats));
       }),

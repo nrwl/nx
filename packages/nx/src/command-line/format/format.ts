@@ -1,14 +1,21 @@
 import { exec, execSync } from 'node:child_process';
 import * as path from 'node:path';
 import * as yargs from 'yargs';
-import { calculateFileChanges, FileData } from '../../project-graph/file-utils.js';
+import {
+  calculateFileChanges,
+  FileData,
+} from '../../project-graph/file-utils.js';
 import {
   getProjectRoots,
   NxArgs,
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils.js';
-import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils.js';
+import {
+  fileExists,
+  readJsonFile,
+  writeJsonFile,
+} from '../../utils/fileutils.js';
 import { getIgnoreObject } from '../../utils/ignore.js';
 
 import type { SupportInfo } from 'prettier';

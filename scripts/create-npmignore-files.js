@@ -11,7 +11,11 @@ const { join } = require('path');
 const PACKAGES_DIR = join(__dirname, '..', 'packages');
 
 // Packages that already have .npmignore and should be skipped
-const SKIP_PACKAGES = new Set(['nx', 'angular-rspack', 'angular-rspack-compiler']);
+const SKIP_PACKAGES = new Set([
+  'nx',
+  'angular-rspack',
+  'angular-rspack-compiler',
+]);
 
 // Template based on angular-rspack pattern
 const NPMIGNORE_TEMPLATE = `!dist
@@ -50,9 +54,9 @@ function main() {
   console.log('📝 Creating .npmignore files\n');
 
   const packages = readdirSync(PACKAGES_DIR, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name)
-    .filter(name => !SKIP_PACKAGES.has(name));
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name)
+    .filter((name) => !SKIP_PACKAGES.has(name));
 
   let created = 0;
 

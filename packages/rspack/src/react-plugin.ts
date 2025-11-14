@@ -1,1 +1,1 @@
-export { NxReactRspackPlugin } from './src/plugins/nx-react-rspack-plugin/nx-react-rspack-plugin.js';
+export { NxReactRspackPlugin } from './plugins/nx-react-rspack-plugin/nx-react-rspack-plugin.js';

@@ -1,8 +1,8 @@
 import type { ConfigArray } from 'typescript-eslint';
-import reactBase from './src/flat-configs/react-base';
-import reactJsx from './src/flat-configs/react-jsx';
-import reactTmp from './src/flat-configs/react-tmp';
-import reactTypescript from './src/flat-configs/react-typescript';
+import reactBase from './flat-configs/react-base';
+import reactJsx from './flat-configs/react-jsx';
+import reactTmp from './flat-configs/react-tmp';
+import reactTypescript from './flat-configs/react-typescript';
 
 const plugin = {
   configs: {

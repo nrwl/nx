@@ -12,17 +12,13 @@
     "move": {
       "factory": "./dist/src/generators/move/move",
       "schema": "./dist/src/generators/move/schema.json",
-      "aliases": [
-        "mv"
-      ],
+      "aliases": ["mv"],
       "description": "Move an application or library to another folder."
     },
     "remove": {
       "factory": "./dist/src/generators/remove/remove#removeGenerator",
       "schema": "./dist/src/generators/remove/schema.json",
-      "aliases": [
-        "rm"
-      ],
+      "aliases": ["rm"],
       "description": "Remove an application or library."
     },
     "convert-to-monorepo": {
@@ -39,18 +35,13 @@
     "run-commands": {
       "factory": "./dist/src/generators/run-commands/run-commands#runCommandsGenerator",
       "schema": "./dist/src/generators/run-commands/schema.json",
-      "aliases": [
-        "run-command",
-        "target"
-      ],
+      "aliases": ["run-command", "target"],
       "description": "Generates a target to run any command in the terminal."
     },
     "fix-configuration": {
       "factory": "./dist/src/generators/convert-to-nx-project/convert-to-nx-project#convertToNxProjectGenerator",
       "schema": "./dist/src/generators/convert-to-nx-project/schema.json",
-      "aliases": [
-        "convert-to-nx-project"
-      ],
+      "aliases": ["convert-to-nx-project"],
       "description": "Fixes projects configuration"
     },
     "npm-package": {

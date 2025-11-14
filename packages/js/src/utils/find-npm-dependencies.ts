@@ -10,7 +10,10 @@ import {
 } from '@nx/devkit';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { fileDataDepTarget } from 'nx/src/config/project-graph';
-import { getRootTsConfigFileName, readTsConfig } from './typescript/ts-config.js';
+import {
+  getRootTsConfigFileName,
+  readTsConfig,
+} from './typescript/ts-config.js';
 import {
   filterUsingGlobPatterns,
   getTargetInputs,

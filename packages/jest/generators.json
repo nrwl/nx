@@ -6,9 +6,7 @@
       "factory": "./dist/src/generators/init/init#jestInitGeneratorInternal",
       "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/jest` plugin.",
-      "aliases": [
-        "ng-add"
-      ],
+      "aliases": ["ng-add"],
       "hidden": true
     },
     "configuration": {

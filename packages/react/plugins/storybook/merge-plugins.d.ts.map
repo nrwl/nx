@@ -1,0 +1,1 @@
+{"version":3,"file":"merge-plugins.d.ts","sourceRoot":"","sources":["merge-plugins.ts"],"names":[],"mappings":"AAAA,OAAO,EACL,qBAAqB,EACrB,WAAW,EACX,qBAAqB,EACtB,MAAM,SAAS,CAAC;AAEjB,eAAO,MAAM,UAAU,GAAI,GAAG,MAAM,WAAW,EAAE,4CAWd,CAAC;AAEpC,eAAO,MAAM,YAAY,GACvB,GAAG,MAAM,CAAC,qBAAqB,GAAG,qBAAqB,CAAC,EAAE,KACzD,CAAC,qBAAqB,GAAG,qBAAqB,CAAC,EAWW,CAAC"}

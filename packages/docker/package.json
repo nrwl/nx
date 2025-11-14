@@ -22,7 +22,7 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "homepage": "https://nx.dev",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -43,15 +43,25 @@
       "types": "./dist/generators/*.d.ts",
       "@nx/nx-source": "./src/generators/*.ts"
     },
+    "./generators": {
+      "import": "./dist/generators.js",
+      "types": "./dist/generators.d.ts",
+      "@nx/nx-source": "./src/generators.ts"
+    },
+    "./generators/*": {
+      "import": "./dist/generators/*.js",
+      "types": "./dist/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
     "./src/executors/*": {
       "import": "./dist/executors/*.js",
       "types": "./dist/executors/*.d.ts",
       "@nx/nx-source": "./src/executors/*.ts"
     },
-    "./plugins/*": {
-      "import": "./plugins/*.js",
-      "types": "./plugins/*.d.ts",
-      "@nx/nx-source": "./plugins/*.ts"
+    "./executors/*": {
+      "import": "./dist/executors/*.js",
+      "types": "./dist/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts"
     }
   },
   "nx-migrations": {

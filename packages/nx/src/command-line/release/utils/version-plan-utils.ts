@@ -1,4 +1,7 @@
-import { GroupVersionPlan, ProjectsVersionPlan } from '../config/version-plans.js';
+import {
+  GroupVersionPlan,
+  ProjectsVersionPlan,
+} from '../config/version-plans.js';
 import { ReleaseGroupWithName } from '../config/filter-release-groups.js';
 
 /**

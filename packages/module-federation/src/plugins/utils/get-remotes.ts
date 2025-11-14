@@ -1,5 +1,8 @@
 import { logger, ProjectGraph, workspaceRoot } from '@nx/devkit';
-import { getModuleFederationConfig, ModuleFederationConfig } from '../../utils/index.js';
+import {
+  getModuleFederationConfig,
+  ModuleFederationConfig,
+} from '../../utils/index.js';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 

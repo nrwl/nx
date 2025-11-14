@@ -58,22 +58,22 @@
     "./webpack": {
       "import": "./dist/webpack.js",
       "types": "./dist/webpack.d.ts",
-      "@nx/nx-source": "./webpack.ts"
+      "@nx/nx-source": "./src/webpack.ts"
     },
     "./angular": {
       "import": "./dist/angular.js",
       "types": "./dist/angular.d.ts",
-      "@nx/nx-source": "./angular.ts"
+      "@nx/nx-source": "./src/angular.ts"
     },
     "./rspack": {
       "import": "./dist/rspack.js",
       "types": "./dist/rspack.d.ts",
-      "@nx/nx-source": "./rspack.ts"
+      "@nx/nx-source": "./src/rspack.ts"
     },
     "./url-helpers": {
       "import": "./dist/url-helpers.js",
       "types": "./dist/url-helpers.d.ts",
-      "@nx/nx-source": "./url-helpers.ts"
+      "@nx/nx-source": "./src/url-helpers.ts"
     },
     "./src/executors/*": {
       "import": "./dist/executors/*.js",
@@ -81,6 +81,11 @@
       "@nx/nx-source": "./src/executors/*.ts"
     },
     "./src/utils/*": {
+      "import": "./dist/utils/*.js",
+      "types": "./dist/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./utils/*": {
       "import": "./dist/utils/*.js",
       "types": "./dist/utils/*.d.ts",
       "@nx/nx-source": "./src/utils/*.ts"

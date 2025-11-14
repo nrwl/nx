@@ -15,7 +15,7 @@ import type {
 import type {
   NxComponentTestingOptions,
   NxCypressE2EPresetOptions,
-} from '../../plugins/cypress-preset';
+} from '../plugins/cypress-preset';
 
 export const CYPRESS_CONFIG_FILE_NAME_PATTERN =
   'cypress.config.{js,ts,mjs,cjs}';

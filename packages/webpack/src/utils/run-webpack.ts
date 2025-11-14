@@ -1,4 +1,3 @@
-import * as webpack from 'webpack';
 import type { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 import { Observable } from 'rxjs';
 

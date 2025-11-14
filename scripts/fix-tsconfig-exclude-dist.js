@@ -31,8 +31,8 @@ function main() {
   console.log('🔧 Adding "dist" to tsconfig.lib.json exclude arrays\n');
 
   const packages = readdirSync(PACKAGES_DIR, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name);
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 
   let updated = 0;
 

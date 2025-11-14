@@ -3,9 +3,7 @@
   "compilerOptions": {
     "module": "nodenext",
     "outDir": "./dist",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "moduleResolution": "nodenext",
     "rootDir": "./src"
@@ -18,9 +16,7 @@
     "jest.config.cts",
     "dist"
   ],
-  "include": [
-    "**/*.ts"
-  ],
+  "include": ["**/*.ts"],
   "references": [
     {
       "path": "../nx/tsconfig.lib.json"

@@ -1,20 +1,20 @@
 import { vol } from 'memfs';
 import type { CreateDependenciesContext } from '../../../project-graph/plugins';
-import { aliasDependenciesBunLock } from './__fixtures__/bun/alias-dependencies.bun.lock';
-import { auxiliaryPackagesBunLock } from './__fixtures__/bun/auxiliary-packages.bun.lock';
-import { basicDependenciesBunLock } from './__fixtures__/bun/basic-dependencies.bun.lock';
-import { complexScenariosLockFile } from './__fixtures__/bun/complex-scenarios.bun.lock';
-import { enhancedFeaturesBunLock } from './__fixtures__/bun/enhanced-features.bun.lock';
-import { fileDependenciesLockFile } from './__fixtures__/bun/file-dependencies.bun.lock';
-import { gitDependenciesLockFile } from './__fixtures__/bun/git-dependencies.bun.lock';
-import { hoistedAndNestedBunLock } from './__fixtures__/bun/hoisted-and-nested.bun.lock';
-import { largeProjectBunLock } from './__fixtures__/bun/large-project.bun.lock';
-import { nextjsAppBunLock } from './__fixtures__/bun/nextjs-app.bun.lock';
-import { peerDependenciesMetaLockFile } from './__fixtures__/bun/peer-dependencies-meta.bun.lock';
-import { scopedPackagesBunLock } from './__fixtures__/bun/scoped-packages.bun.lock';
-import { tarballDependenciesLockFile } from './__fixtures__/bun/tarball-dependencies.bun.lock';
-import { versionResolutionLockFile } from './__fixtures__/bun/version-resolution.bun.lock';
-import { workspaceDependenciesBunLock } from './__fixtures__/bun/workspace-dependencies.bun.lock';
+import { aliasDependenciesBunLock } from './__fixtures__/bun/alias-dependencies.bun.lock.js';
+import { auxiliaryPackagesBunLock } from './__fixtures__/bun/auxiliary-packages.bun.lock.js';
+import { basicDependenciesBunLock } from './__fixtures__/bun/basic-dependencies.bun.lock.js';
+import { complexScenariosLockFile } from './__fixtures__/bun/complex-scenarios.bun.lock.js';
+import { enhancedFeaturesBunLock } from './__fixtures__/bun/enhanced-features.bun.lock.js';
+import { fileDependenciesLockFile } from './__fixtures__/bun/file-dependencies.bun.lock.js';
+import { gitDependenciesLockFile } from './__fixtures__/bun/git-dependencies.bun.lock.js';
+import { hoistedAndNestedBunLock } from './__fixtures__/bun/hoisted-and-nested.bun.lock.js';
+import { largeProjectBunLock } from './__fixtures__/bun/large-project.bun.lock.js';
+import { nextjsAppBunLock } from './__fixtures__/bun/nextjs-app.bun.lock.js';
+import { peerDependenciesMetaLockFile } from './__fixtures__/bun/peer-dependencies-meta.bun.lock.js';
+import { scopedPackagesBunLock } from './__fixtures__/bun/scoped-packages.bun.lock.js';
+import { tarballDependenciesLockFile } from './__fixtures__/bun/tarball-dependencies.bun.lock.js';
+import { versionResolutionLockFile } from './__fixtures__/bun/version-resolution.bun.lock.js';
+import { workspaceDependenciesBunLock } from './__fixtures__/bun/workspace-dependencies.bun.lock.js';
 import {
   clearCache,
   getBunTextLockfileDependencies,

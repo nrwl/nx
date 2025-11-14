@@ -1,4 +1,8 @@
-import { closeDbConnection, connectToNxDb, ExternalObject } from '../native/index.js';
+import {
+  closeDbConnection,
+  connectToNxDb,
+  ExternalObject,
+} from '../native/index.js';
 import { workspaceDataDirectory } from './cache-directory.js';
 import { version as NX_VERSION } from '../../package.json';
 

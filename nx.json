@@ -96,13 +96,7 @@
       }
     },
     "build": {
-      "dependsOn": [
-        "^build",
-        "typecheck",
-        "legacy-post-build",
-        "build-base",
-        "build-native"
-      ],
+      "dependsOn": ["^build", "typecheck", "build-base", "build-native"],
       "inputs": ["production", "^production"],
       "cache": true
     },
@@ -111,7 +105,7 @@
       "cache": true
     },
     "build-base": {
-      "dependsOn": ["^build-base", "build-native"],
+      "dependsOn": ["^build-base", "build-native", "^legacy-post-build"],
       "inputs": ["production", "^production"],
       "cache": true
     },

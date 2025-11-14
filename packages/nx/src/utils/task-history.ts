@@ -1,6 +1,11 @@
 import { daemonClient } from '../daemon/client/client.js';
 import { isOnDaemon } from '../daemon/is-on-daemon.js';
-import { IS_WASM, NxTaskHistory, TaskRun, TaskTarget } from '../native/index.js';
+import {
+  IS_WASM,
+  NxTaskHistory,
+  TaskRun,
+  TaskTarget,
+} from '../native/index.js';
 import { getDbConnection } from './db-connection.js';
 
 export class TaskHistory {

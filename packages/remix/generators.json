@@ -2,9 +2,7 @@
   "$schema": "https://json-schema.org/schema",
   "name": "NxRemix",
   "version": "0.0.1",
-  "extends": [
-    "@nx/react"
-  ],
+  "extends": ["@nx/react"],
   "generators": {
     "preset": {
       "implementation": "./dist/src/generators/preset/preset.impl",
@@ -22,9 +20,7 @@
       "implementation": "./dist/src/generators/application/application.impl#remixApplicationGeneratorInternal",
       "schema": "./dist/src/generators/application/schema.json",
       "description": "Generate a new Remix application",
-      "aliases": [
-        "app"
-      ],
+      "aliases": ["app"],
       "x-type": "application"
     },
     "cypress-component-configuration": {
@@ -36,9 +32,7 @@
       "implementation": "./dist/src/generators/library/library.impl#remixLibraryGeneratorInternal",
       "schema": "./dist/src/generators/library/schema.json",
       "description": "Generate a new library",
-      "aliases": [
-        "lib"
-      ],
+      "aliases": ["lib"],
       "x-type": "library"
     },
     "init": {
