@@ -46,7 +46,7 @@ Like many open source projects, one of the bigger challenges to sustainability i
 
 Open Source projects can:
 
-- Get all Powerpack features as well as fully managed remote caching (and more) via the free Nx Cloud OSS plan. [Learn more here](/docs/enterprise/powerpack/licenses-and-trials#powerpack-for-oss-projects).
+- Get fully managed remote caching (and more) via the free Nx Cloud OSS plan.
 - Get self-hosted remote caches via the according Nx plugins. [Learn more in the docs](/docs/guides/tasks--caching/self-hosted-caching).
 
 ## How to Get Nx Powerpack

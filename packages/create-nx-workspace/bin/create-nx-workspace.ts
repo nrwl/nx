@@ -3,8 +3,8 @@ import * as yargs from 'yargs';
 import * as chalk from 'chalk';
 
 import {
-  supportedAgents,
   CreateWorkspaceOptions,
+  supportedAgents,
 } from '../src/create-workspace-options';
 import { createWorkspace } from '../src/create-workspace';
 import { isKnownPreset, Preset } from '../src/utils/preset/preset';
@@ -23,16 +23,15 @@ import {
 import {
   withAllPrompts,
   withGitOptions,
-  withUseGitHub,
   withNxCloud,
   withOptions,
   withPackageManager,
+  withUseGitHub,
 } from '../src/internal-utils/yargs-options';
 import { messages, recordStat } from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 import { isCI } from '../src/utils/ci/is-ci';
-import { printSocialInformation } from '../src/utils/social-information';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -252,6 +251,19 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     nxVersion
   ) as yargs.Argv<Arguments>;
 
+// Node 24 has stricter readline behavior, and enquirer is not checking for closed state
+// when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
+process.on('uncaughtException', (error: unknown) => {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    error['code'] === 'ERR_USE_AFTER_CLOSE'
+  )
+    return;
+  throw error;
+});
+
 let rawArgs: Arguments;
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   output.log({
@@ -303,6 +315,14 @@ async function normalizeArgsMiddleware(
   output.log({
     title:
       "Let's create a new workspace [https://nx.dev/getting-started/intro]",
+  });
+
+  // Record stat for initial invocation before any prompts
+  await recordStat({
+    nxVersion,
+    command: 'create-nx-workspace',
+    meta: ['start'],
+    useCloud: argv.nxCloud !== 'skip',
   });
 
   argv.workspaces ??= true;
@@ -670,7 +690,7 @@ async function determineReactOptions(
       appName = await determineAppName(parsedArgs);
     }
 
-    if (framework === 'nextjs') {
+    if (framework === 'next') {
       if (isStandalone) {
         preset = Preset.NextJsStandalone;
       } else {
@@ -1243,9 +1263,17 @@ async function determineAppName(
 
 async function determineReactFramework(
   parsedArgs: yargs.Arguments<ReactArguments>
-): Promise<'none' | 'nextjs' | 'expo' | 'react-native'> {
+): Promise<'none' | 'next' | 'expo' | 'react-native'> {
+  if (parsedArgs.framework) {
+    return parsedArgs.framework;
+  }
+
+  if (!parsedArgs.interactive) {
+    return 'none';
+  }
+
   const reply = await enquirer.prompt<{
-    framework: 'none' | 'nextjs' | 'expo' | 'react-native';
+    framework: 'none' | 'next' | 'expo' | 'react-native';
   }>([
     {
       name: 'framework',
@@ -1258,7 +1286,7 @@ async function determineReactFramework(
           hint: '         I only want react, react-dom or react-router',
         },
         {
-          name: 'nextjs',
+          name: 'next',
           message: 'Next.js       [ https://nextjs.org/       ]',
         },
         {
