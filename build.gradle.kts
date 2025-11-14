@@ -1,4 +1,5 @@
 plugins {
+    id("dev.nx.gradle.project-graph") version("0.1.9")
     alias(libs.plugins.nx.project.graph)
     alias(libs.plugins.ktfmt)
 }
@@ -20,5 +21,11 @@ tasks {
         doLast {
             println("Compiled test classes for ${gradle.includedBuilds.size} included builds")
         }
+    }
+}
+
+allprojects {
+    apply {
+        plugin("dev.nx.gradle.project-graph")
     }
 }
