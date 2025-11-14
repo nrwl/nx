@@ -2,6 +2,7 @@
   "name": "@nx/gradle",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Plugin for Gradle allows Gradle tasks to be run through Nx",
   "repository": {
     "type": "git",

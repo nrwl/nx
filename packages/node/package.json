@@ -2,6 +2,7 @@
   "name": "@nx/node",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Node Plugin for Nx contains generators to manage Node applications within an Nx workspace.",
   "repository": {
     "type": "git",

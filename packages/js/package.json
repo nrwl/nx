@@ -2,6 +2,7 @@
   "name": "@nx/js",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",
   "repository": {
     "type": "git",

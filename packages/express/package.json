@@ -2,6 +2,7 @@
   "name": "@nx/express",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Plugin for Express contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.",
   "repository": {
     "type": "git",

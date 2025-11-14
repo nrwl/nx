@@ -2,6 +2,7 @@
   "name": "create-nx-workspace",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "Smart Repos · Fast Builds",
   "repository": {
     "type": "git",

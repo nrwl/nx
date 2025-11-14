@@ -130,6 +130,21 @@ test-results
 # TypeScript build info files
 *.tsbuildinfo
 
+# Generated .d.ts files from build/typecheck
+packages/**/*.d.ts
+!schema.d.ts
+!astro-docs/**/*.d.ts
+!packages/expo/src/executors/build-list/build-fragment.d.ts
+!packages/expo/typings/*.d.ts
+!packages/next/typings/*.d.ts
+!packages/react/typings/*.d.ts
+!packages/react-native/typings/*.d.ts
+!packages/nx/src/native/*.d.ts
+!graph/client/src/globals.d.ts
+!graph/client-e2e/src/globals.d.ts
+!graph/shared/src/globals.d.ts
+!nx-dev/nx-dev/*.d.ts
+
 # .NET build output
 /packages/dotnet/analyzer/bin
 /packages/dotnet/analyzer/obj

@@ -2,6 +2,7 @@
   "name": "@nx/vite",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Plugin for building and testing applications using Vite",
   "repository": {
     "type": "git",

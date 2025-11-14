@@ -4,6 +4,7 @@
   "type": "commonjs",
   "homepage": "https://nx.dev",
   "private": false,
+  "type": "commonjs",
   "publishConfig": {
     "access": "public"
   },

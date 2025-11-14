@@ -2,7 +2,7 @@
   "compileOnSave": false,
   "include": [],
   "files": [],
-  "exclude": ["node_modules", "tmp"],
+  "exclude": ["node_modules", "tmp", "dist"],
   "references": [
     {
       "path": "./packages/angular"

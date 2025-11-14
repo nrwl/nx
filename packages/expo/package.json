@@ -2,6 +2,7 @@
   "name": "@nx/expo",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
   "keywords": [
     "Monorepo",

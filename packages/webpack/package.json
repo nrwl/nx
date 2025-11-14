@@ -2,6 +2,7 @@
   "name": "@nx/webpack",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
   "repository": {
     "type": "git",
