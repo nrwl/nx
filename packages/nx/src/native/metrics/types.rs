@@ -80,6 +80,7 @@ pub struct ProcessMetrics {
 #[derive(Debug, PartialEq, Eq)]
 pub enum GroupType {
     MainCLI,
+    MainCliSubprocesses,
     Daemon,
     Task,
     Batch,

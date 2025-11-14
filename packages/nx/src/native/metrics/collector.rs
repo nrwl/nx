@@ -27,6 +27,7 @@ type ParentToChildrenMap = HashMap<i32, Vec<i32>>;
 
 // Group ID constants
 const MAIN_CLI_GROUP_ID: &str = "main_cli";
+const MAIN_CLI_SUBPROCESSES_GROUP_ID: &str = "main_cli_subprocesses";
 const DAEMON_GROUP_ID: &str = "daemon";
 
 /// Result from metrics collection containing all data needed for cleanup and notification
@@ -226,7 +227,7 @@ impl CollectionRunner {
         Some((metrics, metadata))
     }
 
-    /// Collect metrics for the main CLI process and its registered subprocesses
+    /// Collect metrics for the main CLI process only
     fn collect_main_cli_metrics(
         &self,
         sys: &System,
@@ -242,26 +243,47 @@ impl CollectionRunner {
                 if let Some(meta) = metadata {
                     new_metadata.insert(pid, meta);
                 }
+            }
+        }
 
-                let subprocesses: Vec<(ProcessMetrics, Option<ProcessMetadata>)> = self
-                    .main_cli_subprocess_pids
-                    .iter()
-                    .filter_map(|entry| {
-                        let subprocess_pid = *entry.key();
-                        self.collect_process_info(
-                            sys,
-                            subprocess_pid,
-                            entry.value().clone(),
-                            MAIN_CLI_GROUP_ID,
-                            false,
-                        )
-                    })
-                    .collect();
+        (processes, new_metadata)
+    }
 
-                for (metrics, metadata) in subprocesses {
-                    processes.push(metrics);
-                    if let Some(meta) = metadata {
-                        new_metadata.insert(metrics.pid, meta);
+    /// Collect metrics for main CLI subprocesses and their process trees
+    fn collect_main_cli_subprocess_metrics(
+        &self,
+        sys: &System,
+        children_map: &ParentToChildrenMap,
+    ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
+        let mut new_metadata = HashMap::new();
+        let mut processes = Vec::new();
+
+        // Only collect subprocesses if the main CLI is registered and subprocesses exist
+        if self.main_cli_pid.lock().is_some() && !self.main_cli_subprocess_pids.is_empty() {
+            for entry in self.main_cli_subprocess_pids.iter() {
+                let subprocess_pid = *entry.key();
+                let alias = entry.value().clone();
+
+                // Collect the subprocess and its entire process tree
+                let discovered_pids =
+                    Self::collect_tree_pids_from_map(children_map, subprocess_pid);
+
+                for pid in discovered_pids.into_iter() {
+                    if let Some((metrics, metadata)) = self.collect_process_info(
+                        sys,
+                        pid,
+                        if pid == subprocess_pid {
+                            alias.clone()
+                        } else {
+                            None
+                        },
+                        MAIN_CLI_SUBPROCESSES_GROUP_ID,
+                        pid == subprocess_pid, // First process is root
+                    ) {
+                        if let Some(meta) = metadata {
+                            new_metadata.insert(pid, meta);
+                        }
+                        processes.push(metrics);
                     }
                 }
             }
@@ -394,6 +416,10 @@ impl CollectionRunner {
         if self.main_cli_pid.lock().is_some() {
             live_group_ids.insert(MAIN_CLI_GROUP_ID.to_string());
         }
+        // Add main_cli_subprocesses group if subprocesses exist and main CLI is registered
+        if self.main_cli_pid.lock().is_some() && !self.main_cli_subprocess_pids.is_empty() {
+            live_group_ids.insert(MAIN_CLI_SUBPROCESSES_GROUP_ID.to_string());
+        }
         if self.daemon_pid.lock().is_some() {
             live_group_ids.insert(DAEMON_GROUP_ID.to_string());
         }
@@ -420,6 +446,23 @@ impl CollectionRunner {
                     group_type: GroupType::MainCLI,
                     display_name: "Nx CLI".to_string(),
                     id: MAIN_CLI_GROUP_ID.to_string(),
+                    task_ids: None,
+                },
+            );
+        }
+
+        // Add main_cli_subprocesses group if subprocesses exist and new
+        if live_group_ids.contains(MAIN_CLI_SUBPROCESSES_GROUP_ID)
+            && !self
+                .group_metadata_map
+                .contains_key(MAIN_CLI_SUBPROCESSES_GROUP_ID)
+        {
+            new_groups.insert(
+                MAIN_CLI_SUBPROCESSES_GROUP_ID.to_string(),
+                GroupInfo {
+                    group_type: GroupType::MainCliSubprocesses,
+                    display_name: "Nx CLI Subprocesses".to_string(),
+                    id: MAIN_CLI_SUBPROCESSES_GROUP_ID.to_string(),
                     task_ids: None,
                 },
             );
@@ -520,6 +563,8 @@ impl CollectionRunner {
 
         // Collect metrics for all the processes
         let (main_cli_processes, main_cli_metadata) = self.collect_main_cli_metrics(&sys);
+        let (main_cli_subprocess_processes, main_cli_subprocess_metadata) =
+            self.collect_main_cli_subprocess_metrics(&sys, &children_map);
         let (daemon_processes, daemon_metadata) = self.collect_daemon_metrics(&sys, &children_map);
         let (tasks_metrics, tasks_metadata) = self.collect_all_task_metrics(&sys, &children_map);
         let (batches_metrics, batches_metadata) =
@@ -527,6 +572,7 @@ impl CollectionRunner {
 
         // Accumulate metadata from all collection sources
         let mut new_metadata = main_cli_metadata;
+        new_metadata.extend(main_cli_subprocess_metadata);
         new_metadata.extend(daemon_metadata);
         new_metadata.extend(tasks_metadata);
         new_metadata.extend(batches_metadata);
@@ -534,11 +580,13 @@ impl CollectionRunner {
         // Flatten processes from all sources
         let mut processes = Vec::with_capacity(
             main_cli_processes.len()
+                + main_cli_subprocess_processes.len()
                 + daemon_processes.len()
                 + tasks_metrics.len()
                 + batches_metrics.len(),
         );
         processes.extend(main_cli_processes);
+        processes.extend(main_cli_subprocess_processes);
         processes.extend(daemon_processes);
         processes.extend(tasks_metrics);
         processes.extend(batches_metrics);
@@ -1130,5 +1178,79 @@ mod tests {
 
         // Verify group was removed
         assert!(!runner.group_metadata_map.contains_key(&task_id));
+    }
+
+    #[test]
+    fn test_create_new_group_info_with_main_cli_subprocesses() {
+        let (runner, _rx) = create_test_runner();
+
+        // Register main CLI process
+        *runner.main_cli_pid.lock() = Some(12345);
+
+        // Register a subprocess
+        runner
+            .main_cli_subprocess_pids
+            .insert(54321, Some("plugin-worker".to_string()));
+
+        let groups = runner.create_new_group_info();
+
+        // Should have 2 groups: main_cli and main_cli_subprocesses
+        assert_eq!(groups.len(), 2);
+        assert!(groups.contains_key(MAIN_CLI_GROUP_ID));
+        assert!(groups.contains_key(MAIN_CLI_SUBPROCESSES_GROUP_ID));
+        assert_eq!(groups[MAIN_CLI_GROUP_ID].group_type, GroupType::MainCLI);
+        assert_eq!(
+            groups[MAIN_CLI_SUBPROCESSES_GROUP_ID].group_type,
+            GroupType::MainCliSubprocesses
+        );
+    }
+
+    #[test]
+    fn test_main_cli_subprocesses_only_with_main_cli() {
+        let (runner, _rx) = create_test_runner();
+
+        // Register subprocess without main CLI should NOT create subprocess group
+        runner
+            .main_cli_subprocess_pids
+            .insert(54321, Some("plugin-worker".to_string()));
+
+        let groups = runner.create_new_group_info();
+
+        // No groups should be created since main CLI is not registered
+        assert_eq!(groups.len(), 0);
+    }
+
+    #[test]
+    fn test_main_cli_subprocesses_cleanup() {
+        let (runner, _rx) = create_test_runner();
+
+        // Register main CLI and subprocess, create groups
+        *runner.main_cli_pid.lock() = Some(12345);
+        runner
+            .main_cli_subprocess_pids
+            .insert(54321, Some("plugin-worker".to_string()));
+
+        let groups = runner.create_new_group_info();
+        assert_eq!(groups.len(), 2);
+
+        // Mark as sent
+        for (id, info) in groups {
+            runner.group_metadata_map.insert(id, info);
+        }
+
+        // Remove subprocess
+        runner.main_cli_subprocess_pids.clear();
+
+        // Should clean up subprocess group but keep main CLI
+        let groups2 = runner.create_new_group_info();
+        assert_eq!(groups2.len(), 0); // No new groups (already sent)
+
+        // Verify groups state after cleanup
+        assert!(runner.group_metadata_map.contains_key(MAIN_CLI_GROUP_ID));
+        assert!(
+            !runner
+                .group_metadata_map
+                .contains_key(MAIN_CLI_SUBPROCESSES_GROUP_ID)
+        );
     }
 }

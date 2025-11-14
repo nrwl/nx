@@ -283,6 +283,7 @@ export interface GroupInfo {
 /** Group type discriminator */
 export declare const enum GroupType {
   MainCLI = 'MainCLI',
+  MainCliSubprocesses = 'MainCliSubprocesses',
   Daemon = 'Daemon',
   Task = 'Task',
   Batch = 'Batch'
