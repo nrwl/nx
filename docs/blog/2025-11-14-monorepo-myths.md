@@ -36,7 +36,7 @@ Before diving into specific myths, it's worth understanding how these misconcept
 
 This is perhaps the most fundamental misconception. While both terms start with "mono," they represent completely different concepts.
 
-**The Reality**: **Monoliths** are an architectural pattern where all code is tightly coupled into a single deployable unit. **Monorepos** are a [source control strategy](/concepts/decisions/why-monorepos) that can contain monoliths, microservices, micro frontends, or any combination thereof.
+**The Reality**: **Monoliths** are an architectural pattern where all code is tightly coupled into a single deployable unit. **Monorepos** are a [source control strategy](/concepts/decisions/monorepos) that can contain monoliths, microservices, micro frontends, or any combination thereof.
 
 In fact, monorepos actually encourage [modular architecture](/blog/virtuous-cycle-of-workspace-structure) and loose coupling. If you think of a monolith as a headache, consider a monorepo as the pain killer that helps relieve it.
 
@@ -46,7 +46,7 @@ In fact, monorepos actually encourage [modular architecture](/blog/virtuous-cycl
 
 This myth stems from traditional systems that lack dependency awareness. Without understanding what's affected by a change, you're forced to rebuild and retest everything, leading to multi-hour pipelines and nightly tests.
 
-**The Reality**: Modern monorepo tools provide [dependency graphs](/features/explore-graph) that expose exactly what's been affected by your changes. You can [filter work to only the subset of projects](/ci/features/affected) that actually need attention.
+**The Reality**: Modern monorepo tools provide [dependency graphs](/features/explore-your-workspace) that expose exactly what's been affected by your changes. You can [filter work to only the subset of projects](/ci/features/run-only-tasks-affected-by-a-pr) that actually need attention.
 
 CI cost and performance depend primarily on pipeline design, not repository topology. With proper dependency handling and features like [caching](/concepts/how-caching-works), monorepos can actually be faster and cheaper than polyrepos, especially when you're only running the subset of work that's truly necessary.
 
@@ -56,12 +56,12 @@ CI cost and performance depend primarily on pipeline design, not repository topo
 
 This concern often comes with assumptions about synchronized deployments and impossible rollbacks. However, deployments and development are orthogonal concepts.
 
-**The Reality**: The size of your monorepo doesn't dictate how or when you deploy applications. You can easily have [deployment pipelines per project](/features/manage-releases) while treating each project as if it were in a separate repository, or take advantage of monorepo features. The choice is yours.
+**The Reality**: The size of your monorepo doesn't dictate how or when you deploy applications. You can easily have [deployment pipelines per project](/features/nx-release) while treating each project as if it were in a separate repository, or take advantage of monorepo features. The choice is yours.
 
 Scaling limitations are always a matter of tooling:
 
 - Checkout too slow? Use partial checkout
-- Type checking too slow? Implement [project references](/concepts/typescript-project-linking#typescript-project-references-performance-benefits)
+- Type checking too slow? Implement [project references](/concepts/typescript-project-linking)
 - Graph too convoluted? [Your architecture needs attention](/blog/improve-architecture-and-ci-times-with-projects)
 
 ## Myth #4: Monorepos don't work for polyglot or microservices
@@ -78,9 +78,9 @@ For example, the Nx codebase contains TypeScript, Rust, Go, Kotlin, and Python. 
 
 "We'd love to adopt a monorepo, but we just don't have time to block weeks or months of development for a full migration."
 
-This assumption comes from painful memories of technology migrations (anyone remember AngularJS to Angular 2?).
+This assumption comes from painful memories of technology migrations.
 
-**The Reality**: Migrating to monorepos doesn't have to be a big bang. Start with a single repo, turn on monorepo tooling, then [import another repository while preserving the full Git history](/recipes/adopting-nx/import-project). Initially, treat them as separate repositories that happen to be collocated in the same Git repository.
+**The Reality**: Migrating to monorepos doesn't have to be a big bang. Start with a single repo, turn on monorepo tooling, then [import another repository while preserving the full Git history](/recipes/adopting-nx/adding-to-monorepo). Initially, treat them as separate repositories that happen to be collocated in the same Git repository.
 
 As you add more pieces (shared libraries, services, etc.), you can gradually think about standardization, alignment, and creating joint pipelines. You don't have to place everything in the same monorepo immediately. Features like [Polygraph](/blog/nx-cloud-introducing-polygraph) allow you to see dependencies beyond single monorepo borders and run checks across several repositories as if they were one.
 
@@ -92,8 +92,8 @@ Lockstep versioning means deploying everything simultaneously with aligned versi
 
 Workspace-aware package managers and monorepo tools often include release tooling that enables you to:
 
-- [Publish package versions independently](/recipes/nx-release/release-projects-independently)
-- [Handle changelogs per project](/recipes/nx-release/configure-changelog-format)
+- [Publish package versions independently](/recipes/nx-release/publishing-packages-to-npm)
+- [Handle changelogs per project](/recipes/nx-release/automatically-generate-a-changelog)
 
 You can implement continuous deployment where you deploy on every change, or decide when to deploy on a per-project, per-application basis.
 
@@ -105,12 +105,12 @@ In a huge repository with hundreds of projects and hundreds of people, it's unde
 
 **The Reality**: Monorepo tools can provide better [code boundaries](/features/enforce-module-boundaries) and source control than traditional multi-repo setups. You can use:
 
-- Path-based ownership and review rules (like [CODEOWNERS files](/nx-enterprise/powerpack/owners))
+- Path-based ownership and review rules (like [CODEOWNERS files](/nx-enterprise/powerpack/codeowners))
 - Granular write controls enforced by branch protection or server-side policies
 - Automated checks for code requiring approvals from owners
 - [Cross-boundary change validation](/blog/mastering-the-project-boundaries-in-nx)
 
-In polyrepos, while you might have security per repository, you can't know how published projects are used across the company. In a monorepo, you can absolutely restrict those usages and [enforce architectural boundaries](/technologies/eslint/eslint-plugin/recipes/enforce-module-boundaries). [Conformance rules](/blog/nx-cloud-conformance-automate-consistency) help automate consistency across your organization.
+In polyrepos, while you might have security per repository, you can't know how published projects are used across the company. In a monorepo, you can absolutely restrict those usages and [enforce architectural boundaries](/nx-api/eslint-plugin/documents/overview). [Conformance rules](/blog/nx-cloud-conformance-automate-consistency) help automate consistency across your organization.
 
 ## Myth #8: Cognitive load is high & onboarding is painful
 
@@ -136,7 +136,7 @@ With everything centralized, each project bringing its own dependencies seems to
 - Apply security patches organization-wide
 - Spot incompatibilities between libraries
 - Maintain allowed versions in a single place
-- [Run automated dependency updates](/features/automate-updating-dependencies)
+- [Run automated dependency updates](/features/automate-dependency-updates)
 - Perform vulnerability scans for the entire organization
 
 You can still make overrides when needed. If a legacy application needs to use a different version of React or Java, you can override it per project without affecting the rest of your monorepo.
@@ -147,14 +147,14 @@ AI shines with single-file changes and simple prompts. But as projects grow and 
 
 **The Reality**: This isn't a limitation of large codebases. It's a consequence of how you're using AI. Giving AI the full context of a monorepo actually [creates better results](/blog/nx-and-ai-why-they-work-together) than polyrepos or single repositories.
 
-Monorepo tools [share valuable context with AI](/getting-started/ai-integration):
+Monorepo tools [share valuable context with AI](/getting-started/ai-setup):
 
 - How to use monorepo tooling
 - In-depth insights about architecture, the graph, and connections
 - Conventions for the codebase
 - How to run tasks to validate changes
 
-Learn more about [making your AI assistant smarter with Nx](/features/enhance-AI) and watch our [webinar on AI-assisted development in monorepos](https://go.nx.dev/april2025-webinar).
+Learn more about how [AI works better in monorepos](https://monorepo.tools/ai), [make your AI assistant smarter with Nx](/features/integrate-with-ai-agents) and watch our [webinar on AI-assisted development in monorepos](https://go.nx.dev/april2025-webinar).
 
 ## The Path Forward
 
@@ -173,7 +173,7 @@ Monorepo myths stem from misunderstanding how modern tooling solves traditional 
 Want to explore how monorepos can transform your development workflow? Here are some helpful resources:
 
 - 📄 [Making the Case for Smarter Monorepos webinar recording](/blog/making-the-case-for-smarter-monorepos-and-how-to-not-get-fooled-by-myths)
-- 📄 [Polygraph Documentation](/ci/recipes/enterprise/polygraph)
+- 📄 [Polygraph Documentation](/nx-enterprise/polygraph)
 - 🌩️ [Nx Cloud](/nx-cloud)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
