@@ -735,6 +735,25 @@ impl ProcessMetricsCollector {
         let timestamp = result.timestamp;
         let processes = result.processes;
 
+        // Check if any subscriber needs full metadata (before taking lock for long time)
+        let any_needs_full = subscribers.lock().iter().any(|s| s.needs_full_metadata);
+
+        // Build full metadata outside lock to avoid blocking subscription additions
+        let full_metadata = if any_needs_full {
+            Some(Metadata {
+                groups: group_metadata_map
+                    .iter()
+                    .map(|entry| (entry.key().to_string(), entry.value().clone()))
+                    .collect::<HashMap<_, _>>(),
+                processes: process_metadata_map
+                    .iter()
+                    .map(|entry| (entry.key().to_string(), entry.value().clone()))
+                    .collect::<HashMap<_, _>>(),
+            })
+        } else {
+            None
+        };
+
         // Build notifications inside lock, then release before calling JS
         let notifications = {
             let mut subscribers = subscribers.lock();
@@ -742,41 +761,48 @@ impl ProcessMetricsCollector {
             // Build notification list
             subscribers
                 .iter_mut()
-                .map(move |state| {
+                .enumerate()
+                .map(|(idx, state)| {
                     // Use full metadata if needed, otherwise use collected metadata
                     let metadata = if state.needs_full_metadata {
                         state.needs_full_metadata = false;
-                        Metadata {
-                            groups: group_metadata_map
-                                .iter()
-                                .map(|entry| (entry.key().to_string(), entry.value().clone()))
-                                .collect::<HashMap<_, _>>(),
-                            processes: process_metadata_map
-                                .iter()
-                                .map(|entry| (entry.key().to_string(), entry.value().clone()))
-                                .collect::<HashMap<_, _>>(),
-                        }
+                        full_metadata.clone().unwrap()
                     } else {
                         result.metadata.clone()
                     };
 
                     let update = MetricsUpdate {
                         timestamp,
-                        processes: processes.clone(),
+                        processes: processes.clone(), // ProcessMetrics is Copy, so this is cheap
                         metadata,
                     };
 
                     // Clone ThreadsafeFunction (cheap - internally Arc-based)
-                    (state.callback.clone(), update)
+                    (idx, state.callback.clone(), update)
                 })
                 .collect::<Vec<_>>()
         }; // Lock released here!
 
-        // Notify subscribers
-        for (callback, update) in notifications {
+        // Notify subscribers and track which ones failed
+        let mut failed_indices = Vec::new();
+        for (idx, callback, update) in notifications {
             let status = callback.call(Ok(update), ThreadsafeFunctionCallMode::NonBlocking);
             if !matches!(status, napi::Status::Ok) {
-                tracing::debug!("Failed to notify subscriber: {:?}", status);
+                tracing::debug!("Failed to notify subscriber at index {}: {:?}", idx, status);
+                failed_indices.push(idx);
+            }
+        }
+
+        // Clean up failed subscribers (they're dead/closed)
+        if !failed_indices.is_empty() {
+            let mut subscribers = subscribers.lock();
+            // Remove in reverse order to maintain valid indices
+            failed_indices.sort_unstable();
+            for &idx in failed_indices.iter().rev() {
+                if idx < subscribers.len() {
+                    subscribers.remove(idx);
+                    tracing::info!("Removed dead subscriber at index {}", idx);
+                }
             }
         }
     }
