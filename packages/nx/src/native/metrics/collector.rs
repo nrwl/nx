@@ -1,4 +1,7 @@
 use anyhow::Result;
+#[cfg(test)]
+use crossbeam_channel::Receiver;
+use crossbeam_channel::{Sender, bounded};
 use dashmap::DashMap;
 use napi::{Env, JsFunction};
 use napi_derive::napi;
@@ -59,14 +62,18 @@ struct CollectionRunner {
     // Collection infrastructure
     system: Arc<Mutex<System>>,
     config: CollectorConfig,
-    subscribers: Arc<Mutex<Vec<SubscriberState>>>,
     process_metadata_map: Arc<DashMap<String, ProcessMetadata>>,
     /// Track which group IDs have been sent (for incremental updates)
     group_metadata_map: Arc<DashMap<String, GroupInfo>>,
+    /// Channel to send collected metrics to the main collector thread
+    metrics_tx: Sender<MetricsCollectionResult>,
 }
 
 impl CollectionRunner {
-    fn new(collector: &ProcessMetricsCollector) -> Self {
+    fn new(
+        collector: &ProcessMetricsCollector,
+        metrics_tx: Sender<MetricsCollectionResult>,
+    ) -> Self {
         Self {
             should_collect: Arc::clone(&collector.should_collect),
             is_collecting: Arc::clone(&collector.is_collecting),
@@ -77,9 +84,9 @@ impl CollectionRunner {
             daemon_pid: Arc::clone(&collector.daemon_pid),
             system: Arc::clone(&collector.system),
             config: collector.config.clone(),
-            subscribers: Arc::clone(&collector.subscribers),
             process_metadata_map: Arc::clone(&collector.process_metadata_map),
             group_metadata_map: Arc::clone(&collector.group_metadata_map),
+            metrics_tx,
         }
     }
 
@@ -88,10 +95,10 @@ impl CollectionRunner {
         let interval = Duration::from_millis(self.config.collection_interval_ms);
 
         while self.should_collect.load(Ordering::Acquire) {
-            // Collect current metrics and notify subscribers
+            // Collect current metrics and send to main collector thread
             self.collect_metrics()
                 .inspect_err(|e| tracing::debug!("Metrics collection error: {}", e))
-                .map(|result| self.notify_subscribers(result))
+                .map(|result| self.send_metrics(result))
                 .ok();
 
             // Sleep in small chunks so thread can exit quickly on shutdown
@@ -101,56 +108,10 @@ impl CollectionRunner {
         self.is_collecting.store(false, Ordering::Release);
     }
 
-    /// Notify all subscribers with the collected metrics
-    fn notify_subscribers(&self, result: MetricsCollectionResult) {
-        let timestamp = result.timestamp;
-        let processes = result.processes;
-
-        // Build notifications inside lock, then release before calling JS
-        let notifications = {
-            let mut subscribers = self.subscribers.lock();
-
-            // Build notification list
-            subscribers
-                .iter_mut()
-                .map(move |state| {
-                    // Use full metadata if needed, otherwise use collected metadata
-                    let metadata = if state.needs_full_metadata {
-                        state.needs_full_metadata = false;
-                        Metadata {
-                            groups: self
-                                .group_metadata_map
-                                .iter()
-                                .map(|entry| (entry.key().to_string(), entry.value().clone()))
-                                .collect::<HashMap<_, _>>(),
-                            processes: self
-                                .process_metadata_map
-                                .iter()
-                                .map(|entry| (entry.key().to_string(), entry.value().clone()))
-                                .collect::<HashMap<_, _>>(),
-                        }
-                    } else {
-                        result.metadata.clone()
-                    };
-
-                    let update = MetricsUpdate {
-                        timestamp,
-                        processes: processes.clone(),
-                        metadata,
-                    };
-
-                    // Clone ThreadsafeFunction (cheap - internally Arc-based)
-                    (state.callback.clone(), update)
-                })
-                .collect::<Vec<_>>()
-        }; // Lock released here!
-
-        // Notify subscribers
-        for (callback, update) in notifications {
-            let status = callback.call(Ok(update), ThreadsafeFunctionCallMode::NonBlocking);
-            if !matches!(status, napi::Status::Ok) {
-                tracing::debug!("Failed to notify subscriber: {:?}", status);
-            }
+    /// Send collected metrics to the main collector thread via channel
+    fn send_metrics(&self, result: MetricsCollectionResult) {
+        if let Err(e) = self.metrics_tx.send(result) {
+            error!("Failed to send metrics to collector: {}", e);
         }
     }
 
@@ -641,6 +602,8 @@ pub struct ProcessMetricsCollector {
     group_metadata_map: Arc<DashMap<String, GroupInfo>>,
     /// Collection thread state
     collection_thread: Mutex<Option<JoinHandle<()>>>,
+    /// Listener thread that receives metrics and notifies subscribers
+    listener_thread: Mutex<Option<JoinHandle<()>>>,
     /// Atomic flag to control collection thread
     should_collect: Arc<AtomicBool>,
     /// Atomic flag to indicate if collection is running
@@ -675,6 +638,7 @@ impl ProcessMetricsCollector {
             process_metadata_map: Arc::new(DashMap::new()),
             group_metadata_map: Arc::new(DashMap::new()),
             collection_thread: Mutex::new(None),
+            listener_thread: Mutex::new(None),
             should_collect: Arc::new(AtomicBool::new(false)),
             is_collecting: Arc::new(AtomicBool::new(false)),
         }
@@ -697,8 +661,12 @@ impl ProcessMetricsCollector {
 
         self.should_collect.store(true, Ordering::Release);
 
-        // Create the collection runner
-        let runner = CollectionRunner::new(self);
+        // Create channel for metrics communication
+        // Buffer size of 10 allows collection to continue even if listener is temporarily slow
+        let (tx, rx) = bounded::<MetricsCollectionResult>(10);
+
+        // Create the collection runner with channel sender
+        let runner = CollectionRunner::new(self, tx);
 
         // Spawn the collection thread
         let collection_thread = std::thread::Builder::new()
@@ -712,9 +680,93 @@ impl ProcessMetricsCollector {
                 anyhow::anyhow!("Failed to start collection: {}", e)
             })?;
 
+        // Spawn listener thread to receive metrics and notify subscribers
+        let subscribers = Arc::clone(&self.subscribers);
+        let process_metadata_map = Arc::clone(&self.process_metadata_map);
+        let group_metadata_map = Arc::clone(&self.group_metadata_map);
+
+        let listener_thread = std::thread::Builder::new()
+            .name("nx-metrics-listener".to_string())
+            .spawn(move || {
+                // Receive metrics and notify subscribers
+                while let Ok(result) = rx.recv() {
+                    Self::notify_subscribers(
+                        &subscribers,
+                        &process_metadata_map,
+                        &group_metadata_map,
+                        result,
+                    );
+                }
+            })
+            .map_err(|e| {
+                // Failed to spawn listener - clean up
+                self.is_collecting.store(false, Ordering::Release);
+                self.should_collect.store(false, Ordering::Release);
+                error!("Failed to start metrics listener: {}", e);
+                anyhow::anyhow!("Failed to start listener: {}", e)
+            })?;
+
         *self.collection_thread.lock() = Some(collection_thread);
+        *self.listener_thread.lock() = Some(listener_thread);
 
         Ok(())
+    }
+
+    /// Notify all subscribers with the collected metrics
+    /// This is called by the listener thread
+    fn notify_subscribers(
+        subscribers: &Arc<Mutex<Vec<SubscriberState>>>,
+        process_metadata_map: &Arc<DashMap<String, ProcessMetadata>>,
+        group_metadata_map: &Arc<DashMap<String, GroupInfo>>,
+        result: MetricsCollectionResult,
+    ) {
+        let timestamp = result.timestamp;
+        let processes = result.processes;
+
+        // Build notifications inside lock, then release before calling JS
+        let notifications = {
+            let mut subscribers = subscribers.lock();
+
+            // Build notification list
+            subscribers
+                .iter_mut()
+                .map(move |state| {
+                    // Use full metadata if needed, otherwise use collected metadata
+                    let metadata = if state.needs_full_metadata {
+                        state.needs_full_metadata = false;
+                        Metadata {
+                            groups: group_metadata_map
+                                .iter()
+                                .map(|entry| (entry.key().to_string(), entry.value().clone()))
+                                .collect::<HashMap<_, _>>(),
+                            processes: process_metadata_map
+                                .iter()
+                                .map(|entry| (entry.key().to_string(), entry.value().clone()))
+                                .collect::<HashMap<_, _>>(),
+                        }
+                    } else {
+                        result.metadata.clone()
+                    };
+
+                    let update = MetricsUpdate {
+                        timestamp,
+                        processes: processes.clone(),
+                        metadata,
+                    };
+
+                    // Clone ThreadsafeFunction (cheap - internally Arc-based)
+                    (state.callback.clone(), update)
+                })
+                .collect::<Vec<_>>()
+        }; // Lock released here!
+
+        // Notify subscribers
+        for (callback, update) in notifications {
+            let status = callback.call(Ok(update), ThreadsafeFunctionCallMode::NonBlocking);
+            if !matches!(status, napi::Status::Ok) {
+                tracing::debug!("Failed to notify subscriber: {:?}", status);
+            }
+        }
     }
 
     /// Stop metrics collection
@@ -729,9 +781,17 @@ impl ProcessMetricsCollector {
         self.should_collect.store(false, Ordering::Release);
 
         // Wait for the collection thread to finish
+        // When it drops, the channel sender is dropped, signaling the listener to stop
         if let Some(thread) = self.collection_thread.lock().take() {
             if let Err(e) = thread.join() {
                 error!("Collection thread panicked: {:?}", e);
+            }
+        }
+
+        // Wait for the listener thread to finish
+        if let Some(thread) = self.listener_thread.lock().take() {
+            if let Err(e) = thread.join() {
+                error!("Listener thread panicked: {:?}", e);
             }
         }
 
@@ -854,5 +914,165 @@ impl Drop for ProcessMetricsCollector {
                 );
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Helper to create a test CollectionRunner without NAPI dependencies
+    fn create_test_runner() -> (CollectionRunner, Receiver<MetricsCollectionResult>) {
+        let (tx, rx) = bounded::<MetricsCollectionResult>(10);
+
+        let runner = CollectionRunner {
+            should_collect: Arc::new(AtomicBool::new(false)),
+            is_collecting: Arc::new(AtomicBool::new(false)),
+            individual_tasks: Arc::new(DashMap::new()),
+            batches: Arc::new(DashMap::new()),
+            main_cli_pid: Arc::new(Mutex::new(None)),
+            main_cli_subprocess_pids: Arc::new(DashMap::new()),
+            daemon_pid: Arc::new(Mutex::new(None)),
+            system: Arc::new(Mutex::new(System::new())),
+            config: CollectorConfig::default(),
+            process_metadata_map: Arc::new(DashMap::new()),
+            group_metadata_map: Arc::new(DashMap::new()),
+            metrics_tx: tx,
+        };
+
+        (runner, rx)
+    }
+
+    #[test]
+    fn test_create_new_group_info_with_no_registrations() {
+        let (runner, _rx) = create_test_runner();
+        let groups = runner.create_new_group_info();
+
+        // No registrations should mean no groups
+        assert_eq!(groups.len(), 0);
+    }
+
+    #[test]
+    fn test_create_new_group_info_with_main_cli() {
+        let (runner, _rx) = create_test_runner();
+        *runner.main_cli_pid.lock() = Some(12345);
+
+        let groups = runner.create_new_group_info();
+
+        assert_eq!(groups.len(), 1);
+        assert!(groups.contains_key(MAIN_CLI_GROUP_ID));
+        assert_eq!(groups[MAIN_CLI_GROUP_ID].group_type, GroupType::MainCLI);
+    }
+
+    #[test]
+    fn test_create_new_group_info_with_daemon() {
+        let (runner, _rx) = create_test_runner();
+        *runner.daemon_pid.lock() = Some(67890);
+
+        let groups = runner.create_new_group_info();
+
+        assert_eq!(groups.len(), 1);
+        assert!(groups.contains_key(DAEMON_GROUP_ID));
+        assert_eq!(groups[DAEMON_GROUP_ID].group_type, GroupType::Daemon);
+    }
+
+    #[test]
+    fn test_create_new_group_info_with_task() {
+        let (runner, _rx) = create_test_runner();
+        let task_id = "my-app:build".to_string();
+        runner.individual_tasks.insert(
+            task_id.clone(),
+            IndividualTaskRegistration {
+                task_id: task_id.clone(),
+                anchor_pids: HashSet::from([11111]),
+            },
+        );
+
+        let groups = runner.create_new_group_info();
+
+        assert_eq!(groups.len(), 1);
+        assert!(groups.contains_key(&task_id));
+        assert_eq!(groups[&task_id].group_type, GroupType::Task);
+    }
+
+    #[test]
+    fn test_create_new_group_info_with_batch() {
+        let (runner, _rx) = create_test_runner();
+        let batch_id = "batch-1".to_string();
+        let task_ids = vec!["task-1".to_string(), "task-2".to_string()];
+        runner.batches.insert(
+            batch_id.clone(),
+            BatchRegistration {
+                batch_id: batch_id.clone(),
+                task_ids: Arc::new(task_ids.clone()),
+                anchor_pid: 22222,
+            },
+        );
+
+        let groups = runner.create_new_group_info();
+
+        assert_eq!(groups.len(), 1);
+        assert!(groups.contains_key(&batch_id));
+        assert_eq!(groups[&batch_id].group_type, GroupType::Batch);
+        assert_eq!(groups[&batch_id].task_ids, Some(task_ids));
+    }
+
+    #[test]
+    fn test_incremental_group_creation() {
+        let (runner, _rx) = create_test_runner();
+
+        // First call with main_cli
+        *runner.main_cli_pid.lock() = Some(12345);
+        let groups1 = runner.create_new_group_info();
+        assert_eq!(groups1.len(), 1);
+        assert!(groups1.contains_key(MAIN_CLI_GROUP_ID));
+
+        // Mark main_cli as sent
+        for (id, info) in groups1 {
+            runner.group_metadata_map.insert(id, info);
+        }
+
+        // Second call should return empty (main_cli already sent)
+        let groups2 = runner.create_new_group_info();
+        assert_eq!(groups2.len(), 0);
+
+        // Add daemon
+        *runner.daemon_pid.lock() = Some(67890);
+        let groups3 = runner.create_new_group_info();
+        assert_eq!(groups3.len(), 1);
+        assert!(groups3.contains_key(DAEMON_GROUP_ID));
+        assert!(!groups3.contains_key(MAIN_CLI_GROUP_ID));
+    }
+
+    #[test]
+    fn test_dead_group_cleanup() {
+        let (runner, _rx) = create_test_runner();
+        let task_id = "task-1".to_string();
+
+        // Register and create group
+        runner.individual_tasks.insert(
+            task_id.clone(),
+            IndividualTaskRegistration {
+                task_id: task_id.clone(),
+                anchor_pids: HashSet::from([11111]),
+            },
+        );
+
+        let groups = runner.create_new_group_info();
+        for (id, info) in groups {
+            runner.group_metadata_map.insert(id, info);
+        }
+
+        // Verify group exists
+        assert!(runner.group_metadata_map.contains_key(&task_id));
+
+        // Remove task (simulating task completion)
+        runner.individual_tasks.remove(&task_id);
+
+        // Call create_new_group_info which should clean up
+        let _ = runner.create_new_group_info();
+
+        // Verify group was removed
+        assert!(!runner.group_metadata_map.contains_key(&task_id));
     }
 }
