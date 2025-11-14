@@ -1,4 +1,5 @@
 let load;
+
 export function loadCompilerCli(): Promise<
   typeof import('@angular/compiler-cli')
 > {

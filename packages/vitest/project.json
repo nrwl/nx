@@ -5,13 +5,21 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "command": "node ./scripts/copy-readme.js vitest",
-      "outputs": ["{workspaceRoot}/dist/packages/vitest/README.md"]
+      "command": "node ./scripts/copy-readme.js vitest packages/vitest/readme-template.md packages/vitest/README.md",
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./index.js",
+        "types": "./index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
         "assets": [
           {
             "input": "packages/vitest",
@@ -33,11 +41,6 @@
             "input": "packages/vitest",
             "glob": "**/*.js",
             "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/vitest",
-            "glob": "**/*.d.ts",
             "output": "/"
           },
           {

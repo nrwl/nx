@@ -4,23 +4,23 @@
       "cli": "nx",
       "version": "20.0.0-beta.5",
       "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
-      "implementation": "./src/migrations/update-20-0-0/replace-getJestProjects-with-getJestProjectsAsync"
+      "implementation": "./dist/src/migrations/update-20-0-0/replace-getJestProjects-with-getJestProjectsAsync"
     },
     "replace-getJestProjects-with-getJestProjectsAsync-v21": {
       "cli": "nx",
       "version": "21.0.0-beta.9",
       "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
-      "implementation": "./src/migrations/update-21-0-0/replace-getJestProjects-with-getJestProjectsAsync"
+      "implementation": "./dist/src/migrations/update-21-0-0/replace-getJestProjects-with-getJestProjectsAsync"
     },
     "remove-tsconfig-option-from-jest-executor": {
       "version": "21.0.0-beta.10",
       "description": "Remove the previously deprecated and unused `tsConfig` option from the `@nx/jest:jest` executor.",
-      "implementation": "./src/migrations/update-21-0-0/remove-tsconfig-option-from-jest-executor"
+      "implementation": "./dist/src/migrations/update-21-0-0/remove-tsconfig-option-from-jest-executor"
     },
     "rename-test-path-pattern": {
       "version": "21.3.0-beta.3",
       "description": "Rename the CLI option `testPathPattern` to `testPathPatterns`.",
-      "implementation": "./src/migrations/update-21-3-0/rename-test-path-pattern"
+      "implementation": "./dist/src/migrations/update-21-3-0/rename-test-path-pattern"
     },
     "replace-removed-matcher-aliases": {
       "version": "21.3.0-beta.3",
@@ -28,7 +28,7 @@
         "jest": ">=30.0.0"
       },
       "description": "Replace removed matcher aliases in Jest v30 with their corresponding matcher",
-      "implementation": "./src/migrations/update-21-3-0/replace-removed-matcher-aliases"
+      "implementation": "./dist/src/migrations/update-21-3-0/replace-removed-matcher-aliases"
     }
   },
   "packageJsonUpdates": {

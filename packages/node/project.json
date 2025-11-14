@@ -5,13 +5,27 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/node/README.md"],
-      "command": "node ./scripts/copy-readme.js node"
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "command": "node ./scripts/copy-readme.js node packages/node/readme-template.md packages/node/README.md"
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./index.js",
+        "types": "./index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
         "assets": [
           {
             "input": "packages/node",
@@ -26,18 +40,20 @@
           {
             "input": "packages/node",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "ignore": [
+              "**/tsconfig*.json",
+              "project.json",
+              ".eslintrc.json",
+              "generators.json",
+              "migrations.json",
+              "package.json"
+            ],
             "output": "/"
           },
           {
             "input": "packages/node",
             "glob": "**/*.js",
             "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/node",
-            "glob": "**/*.d.ts",
             "output": "/"
           },
           {

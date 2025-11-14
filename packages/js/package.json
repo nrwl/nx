@@ -2,6 +2,7 @@
   "name": "@nx/js",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",
   "repository": {
     "type": "git",
@@ -18,9 +19,85 @@
     "Front-end",
     "Backend"
   ],
-  "main": "src/index.js",
-  "typings": "src/index.d.ts",
+  "main": "./dist/src/index.js",
+  "typings": "./src/index.d.ts",
   "license": "MIT",
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "types": "./src/index.d.ts",
+      "@nx/nx-source": "./src/index.ts"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./babel": {
+      "import": "./dist/babel.js",
+      "types": "./babel.d.ts",
+      "@nx/nx-source": "./babel.ts"
+    },
+    "./typescript": {
+      "import": "./dist/typescript.js",
+      "types": "./typescript.d.ts",
+      "@nx/nx-source": "./typescript.ts"
+    },
+    "./src/internal": {
+      "import": "./dist/src/internal.js",
+      "types": "./src/internal.d.ts",
+      "@nx/nx-source": "./src/internal.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/src/utils/*.js",
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/utils/**/*": {
+      "import": "./dist/src/utils/**/*.js",
+      "types": "./src/utils/**/*.d.ts",
+      "@nx/nx-source": "./src/utils/**/*.ts"
+    },
+    "./src/generators/*": {
+      "import": "./dist/src/generators/*.js",
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/generators/**/*": {
+      "import": "./dist/src/generators/**/*.js",
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts"
+    },
+    "./src/executors/*": {
+      "import": "./dist/src/executors/*.js",
+      "types": "./src/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts"
+    },
+    "./src/executors/**/*": {
+      "import": "./dist/src/executors/**/*.js",
+      "types": "./src/executors/**/*.d.ts",
+      "@nx/nx-source": "./src/executors/**/*.ts"
+    },
+    "./src/plugins/*": {
+      "import": "./dist/src/plugins/*.js",
+      "types": "./src/plugins/*.d.ts",
+      "@nx/nx-source": "./src/plugins/*.ts"
+    },
+    "./src/plugins/**/*": {
+      "import": "./dist/src/plugins/**/*.js",
+      "types": "./src/plugins/**/*.d.ts",
+      "@nx/nx-source": "./src/plugins/**/*.ts"
+    },
+    "./plugins/*": {
+      "import": "./dist/plugins/*.js",
+      "types": "./plugins/*.d.ts",
+      "@nx/nx-source": "./plugins/*.ts"
+    },
+    "./plugins/**/*": {
+      "import": "./dist/plugins/**/*.js",
+      "types": "./plugins/**/*.d.ts",
+      "@nx/nx-source": "./plugins/**/*.ts"
+    }
+  },
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
   },

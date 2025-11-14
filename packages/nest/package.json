@@ -2,6 +2,7 @@
   "name": "@nx/nest",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
   "repository": {
     "type": "git",
@@ -17,8 +18,38 @@
     "CLI",
     "Backend"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "typings": "./index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./migrations.json": "./migrations.json",
+    "./src/generators/*": {
+      "import": "./dist/src/generators/*.js",
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/generators/**/*": {
+      "import": "./dist/src/generators/**/*.js",
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/src/utils/*.js",
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/utils/**/*": {
+      "import": "./dist/src/utils/**/*.js",
+      "types": "./src/utils/**/*.d.ts",
+      "@nx/nx-source": "./src/utils/**/*.ts"
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {

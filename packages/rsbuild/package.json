@@ -25,7 +25,8 @@
   "author": "Colum Ferry",
   "license": "MIT",
   "homepage": "https://nx.dev",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "typings": "./index.d.ts",
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
@@ -45,23 +46,39 @@
   },
   "exports": {
     ".": {
+      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "default": "./index.js"
+      "@nx/nx-source": "./index.ts"
     },
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./src/generators/*/schema.d.ts",
-    "./package.json": {
-      "default": "./package.json"
-    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
     "./generators": {
+      "import": "./dist/generators.js",
       "types": "./generators.d.ts",
-      "default": "./generators.js"
+      "@nx/nx-source": "./generators.ts"
     },
     "./config-utils": {
+      "import": "./dist/config-utils.js",
       "types": "./config-utils.d.ts",
-      "default": "./config-utils.js"
-    }
+      "@nx/nx-source": "./config-utils.ts"
+    },
+    "./src/generators/*": {
+      "import": "./dist/src/generators/*.js",
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/generators/**/*": {
+      "import": "./dist/src/generators/**/*.js",
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/src/utils/*.js",
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./generators/*/schema.json": "./dist/src/generators/*/schema.json",
+    "./generators/*/schema": "./src/generators/*/schema.d.ts"
   }
 }

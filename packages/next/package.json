@@ -2,6 +2,7 @@
   "name": "@nx/next",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Next.js plugin for Nx contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides:\n\n\n- Scaffolding for creating, building, serving, linting, and testing Next.js applications.\n\n- Integration with building, serving, and exporting a Next.js application.\n\n- Integration with React libraries within the workspace. \n\nWhen using Next.js in Nx, you get the out-of-the-box support for TypeScript, Playwright, Cypress, and Jest. No need to configure anything: watch mode, source maps, and typings just work.",
   "repository": {
     "type": "git",
@@ -17,8 +18,64 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "typings": "./index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json",
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./plugin.d.ts",
+      "@nx/nx-source": "./plugin.ts"
+    },
+    "./babel": {
+      "import": "./dist/babel.js",
+      "types": "./babel.d.ts",
+      "@nx/nx-source": "./babel.ts"
+    },
+    "./tailwind": {
+      "import": "./dist/tailwind.js",
+      "types": "./tailwind.d.ts",
+      "@nx/nx-source": "./tailwind.ts"
+    },
+    "./plugins/component-testing": {
+      "import": "./dist/plugins/component-testing.js",
+      "types": "./plugins/component-testing.d.ts",
+      "@nx/nx-source": "./plugins/component-testing.ts"
+    },
+    "./plugins/with-nx": {
+      "import": "./dist/plugins/with-nx.js",
+      "types": "./plugins/with-nx.d.ts",
+      "@nx/nx-source": "./plugins/with-nx.ts"
+    },
+    "./plugins/with-less": {
+      "import": "./dist/plugins/with-less.js",
+      "types": "./plugins/with-less.d.ts",
+      "@nx/nx-source": "./plugins/with-less.ts"
+    },
+    "./src/utils/types": {
+      "import": "./dist/src/utils/types.js",
+      "types": "./src/utils/types.d.ts",
+      "@nx/nx-source": "./src/utils/types.ts"
+    },
+    "./src/utils/generate-globs": {
+      "import": "./dist/src/utils/generate-globs.js",
+      "types": "./src/utils/generate-globs.d.ts",
+      "@nx/nx-source": "./src/utils/generate-globs.ts"
+    },
+    "./src/utils/compose-plugins": {
+      "import": "./dist/src/utils/compose-plugins.js",
+      "types": "./src/utils/compose-plugins.d.ts",
+      "@nx/nx-source": "./src/utils/compose-plugins.ts"
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {

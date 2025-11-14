@@ -2,6 +2,7 @@
   "name": "@nx/node",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Node Plugin for Nx contains generators to manage Node applications within an Nx workspace.",
   "repository": {
     "type": "git",
@@ -17,8 +18,43 @@
     "CLI",
     "Backend"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "typings": "./index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
+    },
+    "./utils": {
+      "import": "./dist/utils.js",
+      "types": "./utils.d.ts",
+      "@nx/nx-source": "./utils.ts"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./migrations.json": "./migrations.json",
+    "./src/generators/*": {
+      "import": "./dist/src/generators/*.js",
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/generators/**/*": {
+      "import": "./dist/src/generators/**/*.js",
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/src/utils/*.js",
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/utils/**/*": {
+      "import": "./dist/src/utils/**/*.js",
+      "types": "./src/utils/**/*.d.ts",
+      "@nx/nx-source": "./src/utils/**/*.ts"
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -41,6 +77,7 @@
     "kill-port": "^1.6.1"
   },
   "devDependencies": {
+    "@nx/webpack": "workspace:*",
     "nx": "workspace:*"
   },
   "publishConfig": {

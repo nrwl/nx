@@ -1,6 +1,7 @@
 {
   "name": "@nx/remix",
   "version": "0.0.1",
+  "type": "commonjs",
   "description": "The Remix plugin for Nx contains executors and generators for managing Remix applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Jest, Playwright, Cypress, and Storybook.\n\n- Generators for applications, libraries, routes, loaders, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
   "repository": {
     "type": "git",
@@ -21,7 +22,7 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "typings": "./index.d.ts",
   "generators": "./generators.json",
   "executors": "./executors.json",
@@ -48,19 +49,36 @@
   },
   "exports": {
     ".": {
-      "default": "./index.js",
-      "types": "./index.d.ts"
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
     },
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./src/generators/*/schema.d.ts",
+    "./executors/*/schema.json": "./dist/src/executors/*/schema.json",
+    "./executors/*/schema": {
+      "types": "./src/executors/*/schema.d.ts"
+    },
+    "./generators/*/schema.json": "./dist/src/generators/*/schema.json",
+    "./generators/*/schema": {
+      "types": "./src/generators/*/schema.d.ts"
+    },
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
     "./migrations.json": "./migrations.json",
-    "./generators": "./generators.js",
-    "./plugin": "./plugin.js",
-    "./plugins/component-testing": "./plugins/component-testing/index.js"
+    "./generators": {
+      "import": "./dist/generators.js",
+      "types": "./generators.d.ts",
+      "@nx/nx-source": "./generators.ts"
+    },
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./plugin.d.ts",
+      "@nx/nx-source": "./plugin.ts"
+    },
+    "./plugins/component-testing": {
+      "import": "./dist/plugins/component-testing/index.js",
+      "types": "./plugins/component-testing/index.d.ts",
+      "@nx/nx-source": "./plugins/component-testing/index.ts"
+    }
   }
 }

@@ -2,6 +2,7 @@
   "name": "@nx/nuxt",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nuxt plugin for Nx contains executors and generators for managing Nuxt applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Playwright, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
   "repository": {
     "type": "git",
@@ -15,7 +16,7 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -24,19 +25,22 @@
   },
   "homepage": "https://nx.dev",
   "generators": "./generators.json",
-  "executors": "./executors.json",
   "exports": {
     ".": {
-      "default": "./index.js",
-      "types": "./index.d.ts"
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
     },
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
-    "./executors.json": "./executors.json",
     "./migrations.json": "./migrations.json",
-    "./plugin": "./plugin.js"
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./plugin.d.ts",
+      "@nx/nx-source": "./plugin.ts"
+    },
+    "./generators/*/schema.json": "./dist/src/generators/*/schema.json",
+    "./generators/*/schema": "./src/generators/*/schema.d.ts"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

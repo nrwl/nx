@@ -2,6 +2,7 @@
   "name": "@nx/react-native",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides: \n\n-Integration with libraries such as Jest, Detox, and Storybook.\n-Scaffolding for creating buildable libraries that can be published to npm.\n-Utilities for automatic workspace refactoring.",
   "keywords": [
     "Monorepo",
@@ -23,8 +24,68 @@
   },
   "license": "MIT",
   "author": "Victor Savkin",
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json",
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./plugin.d.ts",
+      "@nx/nx-source": "./plugins.ts"
+    },
+    "./plugins/*": {
+      "import": "./dist/plugins/*.js",
+      "types": "./plugins/*.d.ts",
+      "@nx/nx-source": "./plugins/*.ts"
+    },
+    "./typings/*": {
+      "types": "./typings/*.d.ts",
+      "@nx/nx-source": "./typings/*.ts"
+    },
+    "./plugins/**/*": {
+      "import": "./dist/plugins/**/*.js",
+      "types": "./plugins/**/*.d.ts",
+      "@nx/nx-source": "./plugins/**/*.ts"
+    },
+    "./src/generators/*": {
+      "import": "./dist/src/generators/*.js",
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/generators/**/*": {
+      "import": "./dist/src/generators/**/*.js",
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts"
+    },
+    "./src/executors/*": {
+      "import": "./dist/src/executors/*.js",
+      "types": "./src/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts"
+    },
+    "./src/executors/**/*": {
+      "types": "./src/executors/**/*.d.ts",
+      "import": "./dist/src/executors/**/*.js",
+      "@nx/nx-source": "./src/executors/**/*.ts"
+    },
+    "./src/utils/*": {
+      "types": "./src/utils/*.d.ts",
+      "import": "./dist/src/utils/*.js",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/utils/**/*": {
+      "types": "./src/utils/**/*.d.ts",
+      "import": "./dist/src/utils/**/*.js",
+      "@nx/nx-source": "./src/utils/**/*.ts"
+    }
+  },
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",

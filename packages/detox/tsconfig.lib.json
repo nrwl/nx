@@ -1,13 +1,31 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/detox",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/detox/tsconfig.tsbuildinfo"
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+    "composite": true
   },
-  "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
-  "include": ["**/*.ts", "**/*.json"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "jest.config.ts"
+  ],
+  "include": [
+    "index.ts",
+    "plugin.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "package.json",
+    "generators.json",
+    "executors.json",
+    "migrations.json"
+  ],
   "references": [
     {
       "path": "../nx/tsconfig.lib.json"

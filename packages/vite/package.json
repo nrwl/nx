@@ -2,6 +2,7 @@
   "name": "@nx/vite",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Plugin for building and testing applications using Vite",
   "repository": {
     "type": "git",
@@ -15,7 +16,7 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -52,21 +53,99 @@
     "access": "public"
   },
   "exports": {
-    ".": "./index.js",
-    "./plugin": "./plugin.js",
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
+    },
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./plugin.d.ts",
+      "@nx/nx-source": "./plugin.ts"
+    },
+    "./executors": {
+      "import": "./dist/executors.js",
+      "types": "./executors.d.ts",
+      "@nx/nx-source": "./executors.ts"
+    },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
-    "./executors": "./executors.js",
-    "./src/executors/*/schema.json": "./src/executors/*/schema.json",
-    "./src/executors/*.impl": "./src/executors/*.impl.js",
-    "./src/executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./src/executors/*/compat": "./src/executors/*/compat.js",
-    "./src/generators/*/schema.json": "./src/generators/*/schema.json",
-    "./src/generators/*/schema": "./src/generators/*/schema.d.ts",
-    "./plugins/nx-copy-assets.plugin": "./plugins/nx-copy-assets.plugin.js",
-    "./plugins/nx-tsconfig-paths.plugin": "./plugins/nx-tsconfig-paths.plugin.js",
-    "./plugins/rollup-replace-files.plugin": "./plugins/rollup-replace-files.plugin.js"
+    "./plugins/nx-copy-assets.plugin": {
+      "import": "./dist/plugins/nx-copy-assets.plugin.js",
+      "types": "./plugins/nx-copy-assets.plugin.d.ts",
+      "@nx/nx-source": "./plugins/nx-copy-assets.plugin.ts"
+    },
+    "./plugins/nx-tsconfig-paths.plugin": {
+      "import": "./dist/plugins/nx-tsconfig-paths.plugin.js",
+      "types": "./plugins/nx-tsconfig-paths.plugin.d.ts",
+      "@nx/nx-source": "./plugins/nx-tsconfig-paths.plugin.ts"
+    },
+    "./plugins/rollup-replace-files.plugin": {
+      "import": "./dist/plugins/rollup-replace-files.plugin.js",
+      "types": "./plugins/rollup-replace-files.plugin.d.ts",
+      "@nx/nx-source": "./plugins/rollup-replace-files.plugin.ts"
+    },
+    "./src/executors/*/schema.json": "./dist/src/executors/*/schema.json",
+    "./src/executors/*.impl": {
+      "import": "./dist/src/executors/*.impl.js",
+      "types": "./src/executors/*.impl.d.ts",
+      "@nx/nx-source": "./src/executors/*.impl.ts"
+    },
+    "./src/executors/*/schema": {
+      "types": "./src/executors/*/schema.d.ts",
+      "@nx/nx-source": "./src/executors/*/schema.ts"
+    },
+    "./src/executors/*/compat": {
+      "import": "./dist/src/executors/*/compat.js",
+      "types": "./src/executors/*/compat.d.ts",
+      "@nx/nx-source": "./src/executors/*/compat.ts"
+    },
+    "./src/executors/*": {
+      "import": "./dist/src/executors/*.js",
+      "types": "./src/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts"
+    },
+    "./src/executors/**/*": {
+      "import": "./dist/src/executors/**/*.js",
+      "types": "./src/executors/**/*.d.ts",
+      "@nx/nx-source": "./src/executors/**/*.ts"
+    },
+    "./src/generators/*/schema.json": "./dist/src/generators/*/schema.json",
+    "./src/generators/*/schema": {
+      "types": "./src/generators/*/schema.d.ts",
+      "@nx/nx-source": "./src/generators/*/schema.ts"
+    },
+    "./src/generators/*": {
+      "import": "./dist/src/generators/*.js",
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/generators/**/*": {
+      "import": "./dist/src/generators/**/*.js",
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/src/utils/*.js",
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/utils/**/*": {
+      "import": "./dist/src/utils/**/*.js",
+      "types": "./src/utils/**/*.d.ts",
+      "@nx/nx-source": "./src/utils/**/*.ts"
+    },
+    "./src/plugins/*": {
+      "import": "./dist/src/plugins/*.js",
+      "types": "./src/plugins/*.d.ts",
+      "@nx/nx-source": "./src/plugins/*.ts"
+    },
+    "./src/plugins/**/*": {
+      "import": "./dist/src/plugins/**/*.js",
+      "types": "./src/plugins/**/*.d.ts",
+      "@nx/nx-source": "./src/plugins/**/*.ts"
+    }
   }
 }

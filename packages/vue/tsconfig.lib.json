@@ -1,12 +1,32 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/vue",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/vue/tsconfig.tsbuildinfo"
+    "composite": true
   },
-  "include": ["**/*.ts", "**/*.json"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
+  "include": [
+    "index.ts",
+    "tailwind.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "package.json",
+    "generators.json",
+    "executors.json"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "jest.config.ts",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/__fixtures__/**/*.*",
+    "**/__snapshots__/**/*.*"
+  ],
   "references": [
     {
       "path": "../vitest/tsconfig.lib.json"

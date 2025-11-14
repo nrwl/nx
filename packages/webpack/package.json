@@ -2,6 +2,7 @@
   "name": "@nx/webpack",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
   "repository": {
     "type": "git",
@@ -15,7 +16,7 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -25,6 +26,72 @@
   "homepage": "https://nx.dev",
   "generators": "./generators.json",
   "executors": "./executors.json",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
+    },
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./plugin.d.ts",
+      "@nx/nx-source": "./plugin.ts"
+    },
+    "./app-plugin": {
+      "import": "./dist/app-plugin.js",
+      "types": "./app-plugin.d.ts",
+      "@nx/nx-source": "./app-plugin.ts"
+    },
+    "./tsconfig-paths-plugin": {
+      "import": "./dist/tsconfig-paths-plugin.js",
+      "types": "./tsconfig-paths-plugin.d.ts",
+      "@nx/nx-source": "./tsconfig-paths-plugin.ts"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./src/generators/*": {
+      "import": "./dist/src/generators/*.js",
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/generators/**/*": {
+      "import": "./dist/src/generators/**/*.js",
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts"
+    },
+    "./src/executors/*": {
+      "import": "./dist/src/executors/*.js",
+      "types": "./src/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts"
+    },
+    "./src/executors/**/*": {
+      "import": "./dist/src/executors/**/*.js",
+      "types": "./src/executors/**/*.d.ts",
+      "@nx/nx-source": "./src/executors/**/*.ts"
+    },
+    "./src/plugins/*": {
+      "import": "./dist/src/plugins/*.js",
+      "types": "./src/plugins/*.d.ts",
+      "@nx/nx-source": "./src/plugins/*.ts"
+    },
+    "./src/plugins/**/*": {
+      "import": "./dist/src/plugins/**/*.js",
+      "types": "./src/plugins/**/*.d.ts",
+      "@nx/nx-source": "./src/plugins/**/*.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/src/utils/*.js",
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/utils/**/*": {
+      "import": "./dist/src/utils/**/*.js",
+      "types": "./src/utils/**/*.d.ts",
+      "@nx/nx-source": "./src/utils/**/*.ts"
+    }
+  },
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"

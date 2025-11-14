@@ -4,11 +4,29 @@
   "sourceRoot": "packages/vue",
   "projectType": "library",
   "targets": {
-    "build": {},
+    "build": {
+      "dependsOn": ["^build", "build-base"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "command": "node ./scripts/copy-readme.js vue packages/vue/readme-template.md packages/vue/README.md"
+    },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./index.js",
+        "types": "./index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
         "assets": [
           {
             "input": "packages/vue",
@@ -23,18 +41,20 @@
           {
             "input": "packages/vue",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "ignore": [
+              "**/tsconfig*.json",
+              "project.json",
+              ".eslintrc.json",
+              "executors.json",
+              "generators.json",
+              "package.json"
+            ],
             "output": "/"
           },
           {
             "input": "packages/vue",
             "glob": "**/*.js",
             "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/vue",
-            "glob": "**/*.d.ts",
             "output": "/"
           },
           {

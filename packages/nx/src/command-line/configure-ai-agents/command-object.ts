@@ -66,7 +66,7 @@ export const yargsConfigureAiAgentsCommand: CommandModule<
       ) as any, // because of the coerce function
   handler: async (args) => {
     await (
-      await import('./configure-ai-agents')
+      await import('./configure-ai-agents.js')
     ).configureAiAgentsHandler(args);
   },
 };

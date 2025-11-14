@@ -287,7 +287,9 @@ export async function getReportData(): Promise<ReportData> {
     });
   }
 
-  const outOfSyncPackageGroup = findMisalignedPackagesForPackage(nxPackageJson);
+  const outOfSyncPackageGroup = findMisalignedPackagesForPackage(
+    nxPackageJson as PackageJson
+  );
 
   const native = isNativeAvailable();
 

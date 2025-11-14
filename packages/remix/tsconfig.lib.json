@@ -1,19 +1,37 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/remix",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
     "resolveJsonModule": true,
-    "tsBuildInfoFile": "../../dist/packages/remix/tsconfig.tsbuildinfo"
+    "composite": true
   },
   "exclude": [
+    "node_modules",
+    "dist",
     "**/*.spec.ts",
     "**/*.test.ts",
     "jest.config.ts",
-    "jest.config.cts"
+    "jest.config.cts",
+    "**/__fixtures__/**/*.*",
+    "**/__snapshots__/**/*.*"
   ],
-  "include": ["**/*.ts", "**/*.json"],
+  "include": [
+    "index.ts",
+    "generators.ts",
+    "plugin.ts",
+    "plugins/**/*.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "package.json",
+    "generators.json",
+    "executors.json",
+    "migrations.json"
+  ],
   "references": [
     {
       "path": "../vitest/tsconfig.lib.json"

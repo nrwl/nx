@@ -1,7 +1,7 @@
 import { VcsPushStatus } from '../git/git';
 import { CLIOutput } from '../output';
 import { getMessageFactory } from './messages';
-import * as ora from 'ora';
+import ora from 'ora';
 
 export type NxCloud =
   | 'yes'

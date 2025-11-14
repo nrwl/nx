@@ -23,23 +23,26 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "homepage": "https://nx.dev",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "exports": {
     ".": {
+      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "default": "./index.js"
+      "@nx/nx-source": "./index.ts"
     },
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
+    "./executors/*/schema.json": "./dist/src/executors/*/schema.json",
     "./executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
+    "./generators/*/schema.json": "./dist/src/generators/*/schema.json",
     "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./generators": {
+      "import": "./dist/generators.js",
       "types": "./generators.d.ts",
-      "default": "./generators.js"
+      "@nx/nx-source": "./generators.ts"
     },
     "./executors": {
+      "import": "./dist/executors.js",
       "types": "./executors.d.ts",
-      "default": "./executors.js"
+      "@nx/nx-source": "./executors.ts"
     },
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",

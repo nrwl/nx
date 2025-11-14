@@ -5,12 +5,12 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
-    "@nx/devkit": "workspace:*",
-    "@nx/eslint": "workspace:*",
-    "@nx/plugin": "workspace:*",
-    "@nx/js": "workspace:*",
+    "@nx/devkit": "catalog:nx",
+    "@nx/eslint": "catalog:nx",
+    "@nx/plugin": "catalog:nx",
+    "@nx/js": "catalog:nx",
     "@xmldom/xmldom": "^0.8.10",
-    "nx": "workspace:*",
+    "nx": "catalog:nx",
     "tslib": "catalog:typescript"
   },
   "type": "commonjs",

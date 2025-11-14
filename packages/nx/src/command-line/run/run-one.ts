@@ -57,7 +57,7 @@ export async function runOne(
   );
 
   if (nxArgs.help) {
-    await (await import('./run')).printTargetRunHelp(opts, workspaceRoot);
+    await (await import('./run.js')).printTargetRunHelp(opts, workspaceRoot);
     process.exit(0);
   }
 

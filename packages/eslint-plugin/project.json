@@ -5,13 +5,26 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/eslint-plugin/README.md"],
-      "command": "node ./scripts/copy-readme.js eslint-plugin"
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "command": "node ./scripts/copy-readme.js eslint-plugin packages/eslint-plugin/readme-template.md packages/eslint-plugin/README.md"
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./src/index.js",
+        "types": "./src/index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
         "assets": [
           {
             "input": "packages/eslint-plugin",
@@ -26,18 +39,13 @@
           {
             "input": "packages/eslint-plugin",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/eslint-plugin",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/eslint-plugin",
-            "glob": "**/*.d.ts",
+            "ignore": [
+              "**/tsconfig*.json",
+              "project.json",
+              ".eslintrc.json",
+              "package.json",
+              "migrations.json"
+            ],
             "output": "/"
           },
           {

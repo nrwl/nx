@@ -5,13 +5,27 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/module-federation/README.md"],
-      "command": "node ./scripts/copy-readme.js module-federation"
+      "dependsOn": ["^build"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "command": "node ./scripts/copy-readme.js module-federation packages/module-federation/readme-template.md packages/module-federation/README.md"
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./index.js",
+        "types": "./index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
         "assets": [
           {
             "input": "packages/module-federation",
@@ -26,18 +40,19 @@
           {
             "input": "packages/module-federation",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "ignore": [
+              "**/tsconfig*.json",
+              "project.json",
+              ".eslintrc.json",
+              "executors.json",
+              "package.json"
+            ],
             "output": "/"
           },
           {
             "input": "packages/module-federation",
             "glob": "**/*.js",
             "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/module-federation",
-            "glob": "**/*.d.ts",
             "output": "/"
           },
           {

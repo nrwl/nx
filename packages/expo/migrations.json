@@ -4,19 +4,19 @@
       "version": "21.4.0-beta.0",
       "cli": "nx",
       "description": "Remove deprecated dependencies from package.json",
-      "factory": "./src/migrations/update-21-4-0/remove-deprecated-deps"
+      "factory": "./dist/src/migrations/update-21-4-0/remove-deprecated-deps"
     },
     "update-21-4-0-update-splash-screen-config": {
       "version": "21.4.0-beta.0",
       "cli": "nx",
       "description": "Update Expo splash screen configuration to use the new format",
-      "factory": "./src/migrations/update-21-4-0/update-splash-screen-config"
+      "factory": "./dist/src/migrations/update-21-4-0/update-splash-screen-config"
     },
     "update-21-4-0-add-jest-resolver": {
       "version": "21.4.0-beta.0",
       "cli": "nx",
       "description": "Add custom Jest resolver to handle Expo winter runtime issues",
-      "factory": "./src/migrations/update-21-4-0/add-jest-resolver"
+      "factory": "./dist/src/migrations/update-21-4-0/add-jest-resolver"
     }
   },
   "packageJsonUpdates": {

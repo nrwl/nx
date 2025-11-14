@@ -1,19 +1,37 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/js",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/js/tsconfig.tsbuildinfo"
+    "composite": true
   },
   "exclude": [
+    "node_modules",
+    "dist",
     "**/*.spec.ts",
+    "**/*_spec.ts",
     "**/*.test.ts",
-    "./src/**/test-fixtures/**/*",
     "jest.config.ts",
-    "jest.config.cts"
+    "jest.config.cts",
+    "**/__fixtures__/**/*.*",
+    "**/__snapshots__/**/*.*",
+    "./src/**/test-fixtures/**/*"
   ],
-  "include": ["**/*.ts"],
+  "include": [
+    "babel.ts",
+    "typescript.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "plugins/**/*.ts",
+    "package.json",
+    "migrations.json",
+    "generators.json",
+    "executors.json"
+  ],
   "references": [
     {
       "path": "../nx/tsconfig.lib.json"

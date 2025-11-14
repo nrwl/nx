@@ -12,7 +12,7 @@ export function convertConfigToWebpackPluginGenerator(
     typeof import('./src/generators/convert-config-to-webpack-plugin/convert-config-to-webpack-plugin').convertConfigToWebpackPluginGenerator
   >
 ) {
-  return require('./src/generators/convert-config-to-webpack-plugin/convert-config-to-webpack-plugin').convertConfigToWebpackPluginGenerator(
+  return require('./src/generators/convert-config-to-webpack-plugin/convert-config-to-webpack-plugin.js').convertConfigToWebpackPluginGenerator(
     ...args
   );
 }

@@ -5,14 +5,28 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/cypress/README.md"],
-      "command": "node ./scripts/copy-readme.js cypress",
-      "dependsOn": ["^build", "build-base", "legacy-post-build"]
+      "dependsOn": ["^build", "build-base", "legacy-post-build"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "command": "node ./scripts/copy-readme.js cypress packages/cypress/readme-template.md packages/cypress/README.md"
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./index.js",
+        "types": "./index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
         "assets": [
           {
             "input": "packages/cypress",
@@ -27,18 +41,21 @@
           {
             "input": "packages/cypress",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "ignore": [
+              "**/tsconfig*.json",
+              "project.json",
+              ".eslintrc.json",
+              "executors.json",
+              "generators.json",
+              "migrations.json",
+              "package.json"
+            ],
             "output": "/"
           },
           {
             "input": "packages/cypress",
             "glob": "**/*.js",
             "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/cypress",
-            "glob": "**/*.d.ts",
             "output": "/"
           },
           {

@@ -1,11 +1,32 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/docker",
-    "types": ["node"]
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+    "types": ["node"],
+    "composite": true
   },
-  "include": ["**/*.ts", "**/*.json"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
+  "include": [
+    "index.ts",
+    "generators.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "package.json",
+    "generators.json",
+    "executors.json"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "jest.config.ts",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/__fixtures__/**/*.*",
+    "**/__snapshots__/**/*.*"
+  ],
   "references": [
     {
       "path": "../devkit/tsconfig.lib.json"

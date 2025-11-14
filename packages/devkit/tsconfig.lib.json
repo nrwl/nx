@@ -1,20 +1,37 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/devkit",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/devkit/tsconfig.tsbuildinfo"
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+    "composite": true
   },
   "exclude": [
+    "node_modules",
+    "dist",
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/*_spec.ts",
     "**/*_test.ts",
     "internal-testing-utils.ts",
-    "jest.config.ts"
+    "jest.config.ts",
+    "src/generators/test-files/**"
   ],
-  "include": ["**/*.ts", "*.json", "migrations.json"],
+  "include": [
+    "index.ts",
+    "public-api.ts",
+    "internal.ts",
+    "testing.ts",
+    "ngcli-adapter.ts",
+    "internal-testing-utils.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "package.json",
+    "migrations.json"
+  ],
   "references": [
     {
       "path": "../nx/tsconfig.lib.json"

@@ -1,11 +1,36 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/vitest",
-    "types": ["node"]
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+    "types": ["node"],
+    "composite": true
   },
-  "include": ["**/*.ts", "**/*.json"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
+  "include": [
+    "index.ts",
+    "generators.ts",
+    "executors.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "package.json",
+    "migrations.json",
+    "generators.json",
+    "executors.json"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*_spec.ts",
+    "**/*.test.ts",
+    "jest.config.ts",
+    "jest.config.cts",
+    "**/__fixtures__/**/*.*",
+    "**/__snapshots__/**/*.*"
+  ],
   "references": [
     {
       "path": "../js/tsconfig.lib.json"

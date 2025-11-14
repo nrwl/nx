@@ -1,19 +1,36 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/eslint",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/eslint/tsconfig.tsbuildinfo"
+    "composite": true
   },
+  "include": [
+    "index.ts",
+    "plugin.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "package.json",
+    "migrations.json",
+    "generators.json",
+    "executors.json"
+  ],
   "exclude": [
+    "node_modules",
+    "dist",
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/*_spec.ts",
     "**/*_test.ts",
-    "jest.config.ts"
+    "jest.config.ts",
+    "jest.config.cts",
+    "**/__fixtures__/**/*.*",
+    "**/__snapshots__/**/*.*"
   ],
-  "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
       "path": "../nx/tsconfig.lib.json"

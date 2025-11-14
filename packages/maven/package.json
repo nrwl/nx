@@ -2,6 +2,7 @@
   "name": "@nx/maven",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "Nx plugin for Maven integration",
   "repository": {
     "type": "git",

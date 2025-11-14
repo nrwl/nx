@@ -2,6 +2,7 @@
   "name": "create-nx-workspace",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "Smart Repos · Fast Builds",
   "repository": {
     "type": "git",
@@ -20,8 +21,33 @@
     "Playwright",
     "CLI"
   ],
+  "main": "./dist/index.js",
+  "typings": "./index.d.ts",
   "bin": {
-    "create-nx-workspace": "./bin/index.js"
+    "create-nx-workspace": "./dist/bin/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
+    },
+    "./bin/create-nx-workspace": {
+      "import": "./dist/bin/create-nx-workspace.js",
+      "types": "./bin/create-nx-workspace.d.ts",
+      "@nx/nx-source": "./bin/create-nx-workspace.ts"
+    },
+    "./src/*": {
+      "import": "./dist/src/*.js",
+      "types": "./src/*.d.ts",
+      "@nx/nx-source": "./src/*.ts"
+    },
+    "./src/**/*": {
+      "import": "./dist/src/**/*.js",
+      "types": "./src/**/*.d.ts",
+      "@nx/nx-source": "./src/**/*.ts"
+    },
+    "./package.json": "./package.json"
   },
   "author": "Victor Savkin",
   "license": "MIT",

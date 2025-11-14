@@ -73,7 +73,7 @@ export async function loadRemoteNxPlugin(
   // This allows metrics collection when the daemon is not used
   if (worker.pid) {
     try {
-      const { isOnDaemon } = await import('../../../daemon/is-on-daemon');
+      const { isOnDaemon } = await import('../../../daemon/is-on-daemon.js');
       /**
        * We can only register the plugin worker as a subprocess of the main CLI
        * when the daemon is not used. Additionally, we can't explcitly register
@@ -82,7 +82,7 @@ export async function loadRemoteNxPlugin(
        */
       if (!isOnDaemon()) {
         const { getProcessMetricsService } = await import(
-          '../../../tasks-runner/process-metrics-service'
+          '../../../tasks-runner/process-metrics-service.js'
         );
 
         getProcessMetricsService().registerMainCliSubprocess(

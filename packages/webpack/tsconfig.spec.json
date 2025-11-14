@@ -4,7 +4,8 @@
     "outDir": "../../dist/packages/webpack/spec",
     "module": "commonjs",
     "types": ["jest", "node"],
-    "composite": true
+    "composite": true,
+    "esModuleInterop": true
   },
   "include": [
     "**/*.spec.ts",

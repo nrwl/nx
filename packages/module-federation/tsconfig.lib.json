@@ -1,11 +1,24 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/module-federation",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/module-federation/tsconfig.tsbuildinfo"
+    "composite": true
   },
-  "include": ["**/*.ts", "**/*.json"],
+  "include": [
+    "index.ts",
+    "angular.ts",
+    "webpack.ts",
+    "rspack.ts",
+    "url-helpers.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "package.json"
+  ],
   "references": [
     {
       "path": "../web/tsconfig.lib.json"
@@ -20,5 +33,15 @@
       "path": "../devkit/tsconfig.lib.json"
     }
   ],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*_spec.ts",
+    "**/*.test.ts",
+    "jest.config.ts",
+    "jest.config.cts",
+    "**/__fixtures__/**/*.*",
+    "**/__snapshots__/**/*.*"
+  ]
 }

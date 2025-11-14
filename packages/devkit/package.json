@@ -2,6 +2,7 @@
   "name": "@nx/devkit",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more. Learn more about [extending Nx by leveraging the Nx Devkit](https://nx.dev/extending-nx/intro/getting-started) on our docs.",
   "repository": {
     "type": "git",
@@ -19,8 +20,62 @@
     "Cypress",
     "CLI"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "typings": "./index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
+    },
+    "./public-api": {
+      "import": "./dist/public-api.js",
+      "types": "./public-api.d.ts",
+      "@nx/nx-source": "./public-api.ts"
+    },
+    "./internal": {
+      "import": "./dist/internal.js",
+      "types": "./internal.d.ts",
+      "@nx/nx-source": "./internal.ts"
+    },
+    "./testing": {
+      "import": "./dist/testing.js",
+      "types": "./testing.d.ts",
+      "@nx/nx-source": "./testing.ts"
+    },
+    "./ngcli-adapter": {
+      "import": "./dist/ngcli-adapter.js",
+      "types": "./ngcli-adapter.d.ts",
+      "@nx/nx-source": "./ngcli-adapter.ts"
+    },
+    "./src/executors/*": {
+      "import": "./dist/src/executors/*.js",
+      "types": "./src/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts"
+    },
+    "./src/generators/*": {
+      "import": "./dist/src/generators/*.js",
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/generators/**/*": {
+      "import": "./dist/src/generators/**/*.js",
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts"
+    },
+    "./src/tasks/*": {
+      "import": "./dist/src/tasks/*.js",
+      "types": "./src/tasks/*.d.ts",
+      "@nx/nx-source": "./src/tasks/*.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/src/utils/*.js",
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json"
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {

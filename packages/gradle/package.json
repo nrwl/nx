@@ -2,6 +2,7 @@
   "name": "@nx/gradle",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Plugin for Gradle allows Gradle tasks to be run through Nx",
   "repository": {
     "type": "git",
@@ -15,7 +16,7 @@
     "CLI",
     "Backend"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -25,15 +26,60 @@
   "homepage": "https://nx.dev",
   "generators": "./generators.json",
   "exports": {
-    ".": "./index.js",
-    "./plugin-v1": "./plugin-v1.js",
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./src/generators/*/schema.d.ts",
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts"
+    },
+    "./plugin-v1": {
+      "import": "./dist/plugin-v1.js",
+      "types": "./plugin-v1.d.ts",
+      "@nx/nx-source": "./plugin-v1.ts"
+    },
+    "./src/executors/*": {
+      "import": "./dist/src/executors/*.js",
+      "types": "./src/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts"
+    },
+    "./src/executors/**/*": {
+      "import": "./dist/src/executors/**/*.js",
+      "types": "./src/executors/**/*.d.ts",
+      "@nx/nx-source": "./src/executors/**/*.ts"
+    },
+    "./src/generators/*": {
+      "import": "./dist/src/generators/*.js",
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts"
+    },
+    "./src/generators/**/*": {
+      "import": "./dist/src/generators/**/*.js",
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts"
+    },
+    "./src/migrations/*": {
+      "import": "./dist/src/migrations/*.js",
+      "types": "./src/migrations/*.d.ts",
+      "@nx/nx-source": "./src/migrations/*.ts"
+    },
+    "./src/migrations/**/*": {
+      "import": "./dist/src/migrations/**/*.js",
+      "types": "./src/migrations/**/*.d.ts",
+      "@nx/nx-source": "./src/migrations/**/*.ts"
+    },
+    "./src/utils/*": {
+      "import": "./dist/src/utils/*.js",
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts"
+    },
+    "./src/utils/**/*": {
+      "import": "./dist/src/utils/**/*.js",
+      "types": "./src/utils/**/*.d.ts",
+      "@nx/nx-source": "./src/utils/**/*.ts"
+    },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
-    "./generators.json": "./generators.json"
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"
