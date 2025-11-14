@@ -141,6 +141,16 @@ import {
   isRegisterProjectGraphListenerMessage,
   REGISTER_PROJECT_GRAPH_LISTENER,
 } from '../message-types/register-project-graph-listener';
+import {
+  GET_NX_CONSOLE_STATUS,
+  isHandleGetNxConsoleStatusMessage,
+  isHandleSetNxConsolePreferenceAndInstallMessage,
+  SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
+} from '../message-types/nx-console';
+import {
+  handleGetNxConsoleStatus,
+  handleSetNxConsolePreferenceAndInstall,
+} from './handle-nx-console';
 import { deserialize, serialize } from 'v8';
 
 let performanceObserver: PerformanceObserver | undefined;
@@ -412,6 +422,20 @@ async function handleMessage(socket: Socket, data: string) {
       socket,
       POST_TASKS_EXECUTION,
       () => handleRunPostTasksExecution(payload.context),
+      mode
+    );
+  } else if (isHandleGetNxConsoleStatusMessage(payload)) {
+    await handleResult(
+      socket,
+      GET_NX_CONSOLE_STATUS,
+      () => handleGetNxConsoleStatus(),
+      mode
+    );
+  } else if (isHandleSetNxConsolePreferenceAndInstallMessage(payload)) {
+    await handleResult(
+      socket,
+      SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
+      () => handleSetNxConsolePreferenceAndInstall(payload.preference),
       mode
     );
   } else {
