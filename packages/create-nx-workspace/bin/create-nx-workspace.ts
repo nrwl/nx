@@ -251,6 +251,19 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     nxVersion
   ) as yargs.Argv<Arguments>;
 
+// Node 24 has stricter readline behavior, and enquirer is not checking for closed state
+// when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
+process.on('uncaughtException', (error: unknown) => {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    error['code'] === 'ERR_USE_AFTER_CLOSE'
+  )
+    return;
+  throw error;
+});
+
 let rawArgs: Arguments;
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   output.log({
