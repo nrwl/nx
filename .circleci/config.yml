@@ -41,7 +41,7 @@ jobs:
         default: 4096
       cache_ref:
         type: string
-        default: "volkeron/docker-cache-bench:cache"
+        default: 'volkeron/docker-cache-bench:cache'
     steps:
       - checkout
       - setup_remote_docker:
