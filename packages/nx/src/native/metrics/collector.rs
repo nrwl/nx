@@ -1,7 +1,7 @@
 use anyhow::Result;
 #[cfg(test)]
 use crossbeam_channel::Receiver;
-use crossbeam_channel::{Sender, bounded};
+use crossbeam_channel::{Sender, unbounded};
 use dashmap::DashMap;
 use napi::{Env, JsFunction};
 use napi_derive::napi;
@@ -661,9 +661,11 @@ impl ProcessMetricsCollector {
 
         self.should_collect.store(true, Ordering::Release);
 
-        // Create channel for metrics communication
-        // Buffer size of 10 allows collection to continue even if listener is temporarily slow
-        let (tx, rx) = bounded::<MetricsCollectionResult>(10);
+        // Create unbounded channel for metrics communication
+        // Unbounded ensures collection never blocks on sending metrics
+        // Memory growth is self-limiting: if listener falls behind for many seconds,
+        // the system likely has bigger problems than buffered metrics
+        let (tx, rx) = unbounded::<MetricsCollectionResult>();
 
         // Create the collection runner with channel sender
         let runner = CollectionRunner::new(self, tx);
@@ -679,6 +681,9 @@ impl ProcessMetricsCollector {
                 error!("Failed to start metrics collection: {}", e);
                 anyhow::anyhow!("Failed to start collection: {}", e)
             })?;
+
+        // Store collection thread immediately so we can clean up if listener spawn fails
+        *self.collection_thread.lock() = Some(collection_thread);
 
         // Spawn listener thread to receive metrics and notify subscribers
         let subscribers = Arc::clone(&self.subscribers);
@@ -699,14 +704,21 @@ impl ProcessMetricsCollector {
                 }
             })
             .map_err(|e| {
-                // Failed to spawn listener - clean up
-                self.is_collecting.store(false, Ordering::Release);
+                // Failed to spawn listener - clean up collection thread
                 self.should_collect.store(false, Ordering::Release);
+
+                // Wait for collection thread to stop gracefully
+                if let Some(thread) = self.collection_thread.lock().take() {
+                    if let Err(join_err) = thread.join() {
+                        error!("Collection thread panicked during cleanup: {:?}", join_err);
+                    }
+                }
+
+                self.is_collecting.store(false, Ordering::Release);
                 error!("Failed to start metrics listener: {}", e);
                 anyhow::anyhow!("Failed to start listener: {}", e)
             })?;
 
-        *self.collection_thread.lock() = Some(collection_thread);
         *self.listener_thread.lock() = Some(listener_thread);
 
         Ok(())
@@ -923,7 +935,7 @@ mod tests {
 
     // Helper to create a test CollectionRunner without NAPI dependencies
     fn create_test_runner() -> (CollectionRunner, Receiver<MetricsCollectionResult>) {
-        let (tx, rx) = bounded::<MetricsCollectionResult>(10);
+        let (tx, rx) = unbounded::<MetricsCollectionResult>();
 
         let runner = CollectionRunner {
             should_collect: Arc::new(AtomicBool::new(false)),
