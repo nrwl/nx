@@ -314,6 +314,7 @@ describe('lib', () => {
         compilerOptions: {
           experimentalDecorators: true,
           importHelpers: true,
+          isolatedModules: true,
           module: 'preserve',
           moduleResolution: 'bundler',
           skipLibCheck: true,

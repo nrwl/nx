@@ -92,10 +92,13 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     // update angular.json
     const angularJson = readJson('angular.json');
-    angularJson.projects[project].architect.build.options.scripts =
-      angularJson.projects[project].architect.test.options.scripts = [
-        'src/scripts.js',
-      ];
+    angularJson.projects[project].architect.build.options.scripts = [
+      'src/scripts.js',
+    ];
+    angularJson.projects[project].architect.test.options ??= {};
+    angularJson.projects[project].architect.test.options.scripts = [
+      'src/scripts.js',
+    ];
     angularJson.projects[project].architect.test.options.styles = [
       'src/styles.css',
     ];
