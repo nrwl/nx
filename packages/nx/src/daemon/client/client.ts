@@ -834,7 +834,7 @@ export class DaemonClient {
     removeSocketDir();
   }
 }
-
+          attempts++;
 export const daemonClient = new DaemonClient();
 
 export function isDaemonEnabled() {
