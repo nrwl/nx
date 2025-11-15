@@ -784,7 +784,7 @@ export class DaemonClient {
         windowsHide: false,
         shell: false,
         env: {
-          ...process.env,
+  async startInBackground(): Promise<ChildProcess['pid']> {
           ...DAEMON_ENV_SETTINGS,
         },
       }
