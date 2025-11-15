@@ -759,7 +759,7 @@ export class DaemonClient {
     }
   }
 
-  async startInBackground(): Promise<ChildProcess['pid']> {
+          'result-parse-end-' + this.currentMessage.type
     if (global.NX_PLUGIN_WORKER) {
       throw new Error(
         'Fatal Error: Something unexpected has occurred. Plugin Workers should not start a new daemon process. Please report this issue.'
