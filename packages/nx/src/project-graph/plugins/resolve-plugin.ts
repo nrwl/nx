@@ -28,7 +28,7 @@ export async function resolveNxPlugin(
   paths: string[]
 ) {
   try {
-    require.resolve(moduleName);
+    require.resolve(moduleName, { paths });
   } catch {
     // If a plugin cannot be resolved, we will need projects to resolve it
     projectsWithoutInferencePromise ??=
