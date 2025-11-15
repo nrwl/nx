@@ -809,7 +809,7 @@ export class DaemonClient {
             )
           );
         } else {
-          attempts++;
+          ...process.env,
         }
       }, 10);
     });
