@@ -538,11 +538,12 @@ impl CollectionRunner {
         new_groups: &mut HashMap<String, GroupInfo>,
         group_metadata_map: &DashMap<String, GroupInfo>,
         live_group_ids: &HashSet<String>,
-        group_id: &str,
         group_info: GroupInfo,
     ) {
-        if live_group_ids.contains(group_id) && !group_metadata_map.contains_key(group_id) {
-            new_groups.insert(group_id.to_string(), group_info);
+        if live_group_ids.contains(&group_info.id)
+            && !group_metadata_map.contains_key(&group_info.id)
+        {
+            new_groups.insert(group_info.id.clone(), group_info);
         }
     }
 
@@ -587,7 +588,6 @@ impl CollectionRunner {
             &mut new_groups,
             &self.group_metadata_map,
             &live_group_ids,
-            MAIN_CLI_GROUP_ID,
             GroupInfo {
                 group_type: GroupType::MainCLI,
                 display_name: "Nx CLI".to_string(),
@@ -600,7 +600,6 @@ impl CollectionRunner {
             &mut new_groups,
             &self.group_metadata_map,
             &live_group_ids,
-            MAIN_CLI_SUBPROCESSES_GROUP_ID,
             GroupInfo {
                 group_type: GroupType::MainCliSubprocesses,
                 display_name: "Nx CLI Subprocesses".to_string(),
@@ -613,7 +612,6 @@ impl CollectionRunner {
             &mut new_groups,
             &self.group_metadata_map,
             &live_group_ids,
-            DAEMON_GROUP_ID,
             GroupInfo {
                 group_type: GroupType::Daemon,
                 display_name: "Nx Daemon".to_string(),
@@ -626,7 +624,6 @@ impl CollectionRunner {
             &mut new_groups,
             &self.group_metadata_map,
             &live_group_ids,
-            DAEMON_SUBPROCESSES_GROUP_ID,
             GroupInfo {
                 group_type: GroupType::DaemonSubprocesses,
                 display_name: "Nx Daemon Subprocesses".to_string(),
@@ -642,7 +639,6 @@ impl CollectionRunner {
                 &mut new_groups,
                 &self.group_metadata_map,
                 &live_group_ids,
-                &task_id,
                 GroupInfo {
                     group_type: GroupType::Task,
                     display_name: task_id.clone(),
@@ -660,7 +656,6 @@ impl CollectionRunner {
                 &mut new_groups,
                 &self.group_metadata_map,
                 &live_group_ids,
-                &batch_id,
                 GroupInfo {
                     group_type: GroupType::Batch,
                     display_name: batch_id.clone(),
@@ -1236,7 +1231,10 @@ mod tests {
         assert!(groups.contains_key(DAEMON_GROUP_ID));
         assert_eq!(groups[DAEMON_GROUP_ID].group_type, GroupType::Daemon);
         assert!(groups.contains_key(DAEMON_SUBPROCESSES_GROUP_ID));
-        assert_eq!(groups[DAEMON_SUBPROCESSES_GROUP_ID].group_type, GroupType::DaemonSubprocesses);
+        assert_eq!(
+            groups[DAEMON_SUBPROCESSES_GROUP_ID].group_type,
+            GroupType::DaemonSubprocesses
+        );
     }
 
     #[test]
