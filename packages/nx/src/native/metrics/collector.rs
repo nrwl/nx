@@ -285,7 +285,9 @@ impl CollectionRunner {
 
     /// Collect all metrics while holding system lock
     /// This centralizes all operations that require the system lock to be minimal
-    fn collect_locked_metrics(&self, sys: &mut System) -> LockedMetricsCollection {
+    fn refresh_and_collect_metrics(&self) -> LockedMetricsCollection {
+        trace!("Acquiring system lock for process refresh");
+        let mut sys = self.system.lock();
         trace!("System lock acquired, refreshing all processes");
 
         sys.refresh_processes_specifics(
@@ -645,8 +647,6 @@ impl CollectionRunner {
         let timestamp = current_timestamp_millis();
 
         // Refresh all processes and collect metrics in minimal lock scope
-        trace!("Acquiring system lock for process refresh");
-        let mut sys = self.system.lock();
         let LockedMetricsCollection {
             main_cli_processes,
             main_cli_metadata,
@@ -659,8 +659,7 @@ impl CollectionRunner {
             batch_processes,
             batch_metadata,
             daemon_pid_to_clear,
-        } = self.collect_locked_metrics(&mut sys);
-        drop(sys); // system lock is released here
+        } = self.refresh_and_collect_metrics(); // system lock is released after this call
 
         // Now that system lock is released, clear daemon PID if needed
         // This avoids holding system lock while acquiring daemon_pid lock
