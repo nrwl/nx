@@ -362,17 +362,15 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/tsconfig.server.json', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
-        /* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
-        {
+        "{
           "extends": "./tsconfig.app.json",
           "compilerOptions": {
             "outDir": "../out-tsc/server",
-            "module": "commonjs",
-            "moduleResolution": "node10",
             "types": [
               "node"
-            ]
+            ],
+            "module": "preserve",
+            "moduleResolution": "bundler"
           },
           "files": [
             "src/main.server.ts",
@@ -455,17 +453,15 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/tsconfig.server.json', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
-        /* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
-        {
+        "{
           "extends": "./tsconfig.app.json",
           "compilerOptions": {
             "outDir": "../out-tsc/server",
-            "module": "commonjs",
-            "moduleResolution": "node10",
             "types": [
               "node"
-            ]
+            ],
+            "module": "preserve",
+            "moduleResolution": "bundler"
           },
           "files": [
             "src/main.server.ts",

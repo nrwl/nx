@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`app --minimal should generate a correct setup when --bundler=rspack and ssr 1`] = `
 "
@@ -941,7 +941,7 @@ exports[`app nested should create project configs 1`] = `
     "test": {
       "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "my-dir/my-app/jest.config.ts",
+        "jestConfig": "my-dir/my-app/jest.config.cts",
         "tsConfig": "my-dir/my-app/tsconfig.spec.json",
       },
       "outputs": [
@@ -1058,7 +1058,7 @@ exports[`app not nested should create project configs 1`] = `
     "test": {
       "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "my-app/jest.config.ts",
+        "jestConfig": "my-app/jest.config.cts",
         "tsConfig": "my-app/tsconfig.spec.json",
       },
       "outputs": [

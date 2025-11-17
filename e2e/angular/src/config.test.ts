@@ -124,7 +124,7 @@ const angularV1Json = (appName: string) => `{
           "builder": "@nx/jest:jest",
           "outputs": ["{workspaceRoot}/coverage${appName}"],
           "options": {
-            "jestConfig": "${appName}/jest.config.ts",
+            "jestConfig": "${appName}/jest.config.cts",
             "passWithNoTests": true
           }
         }

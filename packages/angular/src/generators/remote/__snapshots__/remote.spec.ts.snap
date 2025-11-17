@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`MF Remote App Generator --ssr should generate the correct files 1`] = `
 "import { NgModule } from '@angular/core';
@@ -52,8 +52,8 @@ exports[`MF Remote App Generator --ssr should generate the correct files 4`] = `
 
 import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
-import * as cors from 'cors';
+import express from 'express';
+import cors from 'cors';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { AppServerModule } from './bootstrap.server';
@@ -281,8 +281,8 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 
 import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
-import * as cors from 'cors';
+import express from 'express';
+import cors from 'cors';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { AppServerModule } from './bootstrap.server';
