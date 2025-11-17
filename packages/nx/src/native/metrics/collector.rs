@@ -563,7 +563,6 @@ impl CollectionRunner {
         // Refresh all processes and collect metrics in minimal lock scope
         trace!("Acquiring system lock for process refresh");
         let (
-            children_map,
             main_cli_processes,
             main_cli_metadata,
             main_cli_subprocess_processes,
@@ -574,6 +573,7 @@ impl CollectionRunner {
             tasks_metadata,
             batches_metrics,
             batches_metadata,
+            daemon_pid_to_clear,
         ) = {
             let mut sys = self.system.lock();
             trace!("System lock acquired, refreshing all processes");
@@ -608,20 +608,20 @@ impl CollectionRunner {
                 .retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
             trace!("Dead process cleanup complete");
 
-            // Clean up daemon PID if process no longer exists
-            trace!("Checking daemon process");
-            {
-                let mut daemon_pid = self.daemon_pid.lock();
+            // Check if daemon process still exists (capture PID while holding system lock)
+            trace!("Checking daemon process existence");
+            let daemon_pid_to_clear = {
+                let daemon_pid = self.daemon_pid.lock();
                 if let Some(pid) = *daemon_pid {
                     if sys.process(Pid::from(pid as usize)).is_none() {
-                        trace!(
-                            "Daemon process {} no longer exists, clearing registration",
-                            pid
-                        );
-                        *daemon_pid = None;
+                        Some(pid)
+                    } else {
+                        None
                     }
+                } else {
+                    None
                 }
-            }
+            };
 
             // Collect metrics for all the processes while holding system lock
             trace!("Collecting metrics for all registered processes");
@@ -633,7 +633,6 @@ impl CollectionRunner {
             trace!("Metrics collection complete, releasing system lock");
 
             (
-                children_map,
                 main_cli.0,
                 main_cli.1,
                 main_cli_subproc.0,
@@ -644,8 +643,22 @@ impl CollectionRunner {
                 tasks.1,
                 batches.0,
                 batches.1,
+                daemon_pid_to_clear,
             )
         }; // system lock is released here
+
+        // Now that system lock is released, clear daemon PID if needed
+        // This avoids holding system lock while acquiring daemon_pid lock
+        if let Some(_pid) = daemon_pid_to_clear {
+            trace!("Clearing stale daemon PID after system lock release");
+            let mut daemon_pid = self.daemon_pid.lock();
+            // Double-check in case something changed while we waited for the lock
+            if let Some(current_pid) = *daemon_pid {
+                if current_pid == _pid {
+                    *daemon_pid = None;
+                }
+            }
+        }
 
         // Accumulate metadata from all collection sources
         let mut new_metadata = main_cli_metadata;
