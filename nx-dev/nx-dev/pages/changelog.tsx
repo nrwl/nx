@@ -87,7 +87,6 @@ async function fetchGithubRelease(
 }
 
 export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
-  console.log('=== getStaticProps START ===');
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
   let githubReleases: GithubReleaseData[] = [];
@@ -168,12 +167,7 @@ export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
   groupedReleases.sort((a, b) => compare(b.version, a.version));
 
   // Fetch the star count using your existing function
-   console.log('Before fetchGithubStarCount call');
   const starCount = await fetchGithubStarCount();
-  console.log('After fetchGithubStarCount, starCount:', starCount);
-
-  console.log('=== getStaticProps END ===');
-
   return {
     props: {
       changelog: groupedReleases,
