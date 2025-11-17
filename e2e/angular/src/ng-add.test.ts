@@ -96,12 +96,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       'src/scripts.js',
     ];
     angularJson.projects[project].architect.test.options ??= {};
-    angularJson.projects[project].architect.test.options.scripts = [
-      'src/scripts.js',
-    ];
-    angularJson.projects[project].architect.test.options.styles = [
-      'src/styles.css',
-    ];
+    angularJson.projects[project].architect.test.options.tsconfig =
+      'tsconfig.spec.json';
     updateFile('angular.json', JSON.stringify(angularJson, null, 2));
 
     // confirm that @nx dependencies do not exist yet
@@ -222,13 +218,9 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       defaultConfiguration: 'development',
     });
     expect(projectConfig.targets.test).toStrictEqual({
-      executor: '@angular/build:karma',
+      executor: '@angular/build:unit-test',
       options: {
-        polyfills: [`zone.js`, `zone.js/testing`],
-        tsConfig: `apps/${project}/tsconfig.spec.json`,
-        assets: [{ glob: '**/*', input: `apps/${project}/public` }],
-        styles: [`apps/${project}/src/styles.css`],
-        scripts: [`apps/${project}/src/scripts.js`],
+        tsconfig: `apps/${project}/tsconfig.spec.json`,
       },
     });
     expect(projectConfig.targets.e2e).toBeUndefined();
