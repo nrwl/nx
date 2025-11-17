@@ -413,16 +413,22 @@ impl CollectionRunner {
     fn create_new_group_info(&self) -> HashMap<String, GroupInfo> {
         // Build set of currently live groups
         let mut live_group_ids = HashSet::new();
-        if self.main_cli_pid.lock().is_some() {
+        // Acquire locks once to minimize contention
+        let main_cli_pid = self.main_cli_pid.lock();
+        let daemon_pid = self.daemon_pid.lock();
+
+        if main_cli_pid.is_some() {
             live_group_ids.insert(MAIN_CLI_GROUP_ID.to_string());
         }
         // Add main_cli_subprocesses group if subprocesses exist and main CLI is registered
-        if self.main_cli_pid.lock().is_some() && !self.main_cli_subprocess_pids.is_empty() {
+        if main_cli_pid.is_some() && !self.main_cli_subprocess_pids.is_empty() {
             live_group_ids.insert(MAIN_CLI_SUBPROCESSES_GROUP_ID.to_string());
         }
-        if self.daemon_pid.lock().is_some() {
+        if daemon_pid.is_some() {
             live_group_ids.insert(DAEMON_GROUP_ID.to_string());
         }
+        drop(main_cli_pid);
+        drop(daemon_pid);
         for entry in self.individual_tasks.iter() {
             live_group_ids.insert(entry.key().clone());
         }
@@ -554,12 +560,15 @@ impl CollectionRunner {
             .retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
 
         // Clean up daemon PID if process no longer exists (acquire lock once)
-        let mut daemon_pid = self.daemon_pid.lock();
-        if let Some(pid) = *daemon_pid {
-            if sys.process(Pid::from(pid as usize)).is_none() {
-                *daemon_pid = None;
+        // Must release this lock before any other operations to avoid deadlock with registration threads
+        {
+            let mut daemon_pid = self.daemon_pid.lock();
+            if let Some(pid) = *daemon_pid {
+                if sys.process(Pid::from(pid as usize)).is_none() {
+                    *daemon_pid = None;
+                }
             }
-        }
+        } // daemon_pid lock is released here
 
         // Collect metrics for all the processes
         let (main_cli_processes, main_cli_metadata) = self.collect_main_cli_metrics(&sys);
@@ -912,10 +921,9 @@ impl ProcessMetricsCollector {
     /// Register the main CLI process for metrics collection
     #[napi]
     pub fn register_main_cli_process(&self, pid: i32) {
-        *self.main_cli_pid.lock() = Some(pid);
-
         // Establish baseline immediately for the main CLI process
         // This ensures accurate CPU data from the first collection cycle
+        // Acquire system lock FIRST to avoid deadlock with collection thread
         let mut sys = self.system.lock();
         let target_pid = Pid::from(pid as usize);
         sys.refresh_processes_specifics(
@@ -923,15 +931,18 @@ impl ProcessMetricsCollector {
             false, // don't remove dead processes
             ProcessRefreshKind::nothing().with_cpu(),
         );
+        drop(sys); // Explicitly release system lock
+
+        // Now register the PID (after releasing system lock)
+        *self.main_cli_pid.lock() = Some(pid);
     }
 
     /// Register a subprocess of the main CLI for metrics collection
     #[napi]
     pub fn register_main_cli_subprocess(&self, pid: i32, alias: Option<String>) {
-        self.main_cli_subprocess_pids.insert(pid, alias);
-
         // Establish baseline immediately for this subprocess
         // This ensures accurate CPU data from the first collection cycle after spawn
+        // Acquire system lock FIRST to avoid deadlock with collection thread
         let mut sys = self.system.lock();
         let target_pid = Pid::from(pid as usize);
         sys.refresh_processes_specifics(
@@ -939,6 +950,10 @@ impl ProcessMetricsCollector {
             false, // don't remove dead processes
             ProcessRefreshKind::nothing().with_cpu(),
         );
+        drop(sys); // Explicitly release system lock
+
+        // Now register in map (after releasing system lock)
+        self.main_cli_subprocess_pids.insert(pid, alias);
     }
 
     /// Register the daemon process for metrics collection
@@ -952,38 +967,44 @@ impl ProcessMetricsCollector {
     /// Automatically creates the task if it doesn't exist
     #[napi]
     pub fn register_task_process(&self, task_id: String, pid: i32) {
+        // Establish baseline immediately for this task process
+        // This ensures accurate CPU data from the first collection cycle after spawn
+        // Acquire system lock FIRST to avoid deadlock with collection thread
+        let mut sys = self.system.lock();
+        let target_pid = Pid::from(pid as usize);
+        sys.refresh_processes_specifics(
+            sysinfo::ProcessesToUpdate::Some(&[target_pid]),
+            false, // don't remove dead processes
+            ProcessRefreshKind::nothing().with_cpu(),
+        );
+        drop(sys); // Explicitly release system lock
+
+        // Now register the task (after releasing system lock)
         self.individual_tasks
             .entry(task_id.clone())
             .or_insert_with(|| IndividualTaskRegistration::new(task_id))
             .anchor_pids
             .insert(pid);
-
-        // Establish baseline immediately for this task process
-        // This ensures accurate CPU data from the first collection cycle after spawn
-        let mut sys = self.system.lock();
-        let target_pid = Pid::from(pid as usize);
-        sys.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::Some(&[target_pid]),
-            false, // don't remove dead processes
-            ProcessRefreshKind::nothing().with_cpu(),
-        );
     }
 
     /// Register a batch with multiple tasks sharing a worker
     #[napi]
     pub fn register_batch(&self, batch_id: String, task_ids: Vec<String>, pid: i32) {
-        self.batches.insert(
-            batch_id.clone(),
-            BatchRegistration::new(batch_id, task_ids, pid),
-        );
-
         // Establish baseline immediately for the batch worker
+        // Acquire system lock FIRST to avoid deadlock with collection thread
         let mut sys = self.system.lock();
         let target_pid = Pid::from(pid as usize);
         sys.refresh_processes_specifics(
             sysinfo::ProcessesToUpdate::Some(&[target_pid]),
             false, // don't remove dead processes
             ProcessRefreshKind::nothing().with_cpu(),
+        );
+        drop(sys); // Explicitly release system lock
+
+        // Now register the batch (after releasing system lock)
+        self.batches.insert(
+            batch_id.clone(),
+            BatchRegistration::new(batch_id, task_ids, pid),
         );
     }
 
@@ -1253,4 +1274,62 @@ mod tests {
                 .contains_key(MAIN_CLI_SUBPROCESSES_GROUP_ID)
         );
     }
+
+    #[test]
+    fn test_concurrent_group_creation_with_subprocess_updates() {
+        // This test verifies that create_new_group_info works correctly when
+        // subprocesses are being registered concurrently. The fix ensures
+        // lock ordering prevents deadlocks: system lock is released before
+        // accessing registration maps
+        use std::sync::Arc;
+        use std::thread;
+        use std::time::Duration;
+
+        let (runner, _rx) = create_test_runner();
+        let runner = Arc::new(runner);
+
+        // Register an initial main CLI process
+        *runner.main_cli_pid.lock() = Some(1234);
+
+        // Spawn a thread that continuously calls create_new_group_info
+        // (simulating the collection thread)
+        let runner_collector = Arc::clone(&runner);
+        let collector_handle = thread::spawn(move || {
+            for _ in 0..10 {
+                let _ = runner_collector.create_new_group_info();
+                thread::sleep(Duration::from_millis(5));
+            }
+        });
+
+        // Spawn threads that register subprocesses concurrently
+        // (simulating registration threads)
+        let handles: Vec<_> = (0..3)
+            .map(|i| {
+                let runner = Arc::clone(&runner);
+                thread::spawn(move || {
+                    for j in 0..5 {
+                        let pid = 10000 + i * 100 + j;
+                        runner.main_cli_subprocess_pids
+                            .insert(pid as i32, Some(format!("worker-{}", j)));
+                        thread::sleep(Duration::from_millis(2));
+                    }
+                })
+            })
+            .collect();
+
+        // Wait for all threads to complete
+        for handle in handles {
+            handle.join().unwrap();
+        }
+        collector_handle.join().unwrap();
+
+        // Verify all subprocesses were registered
+        assert_eq!(runner.main_cli_subprocess_pids.len(), 15);
+
+        // Verify that create_new_group_info completes successfully
+        // (If there was a deadlock, this would have hung during the test)
+        let groups = runner.create_new_group_info();
+        assert!(groups.contains_key(MAIN_CLI_SUBPROCESSES_GROUP_ID));
+    }
+
 }
