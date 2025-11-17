@@ -34,7 +34,7 @@ const DAEMON_GROUP_ID: &str = "daemon";
 const SHUTDOWN_CHECK_INTERVAL_MS: u64 = 50;
 
 /// Result from collecting metrics while holding the system lock
-struct LockedMetricsCollection {
+struct MetricsCollectionResults {
     main_cli_processes: Vec<ProcessMetrics>,
     main_cli_metadata: HashMap<i32, ProcessMetadata>,
     main_cli_subproc_processes: Vec<ProcessMetrics>,
@@ -285,7 +285,7 @@ impl CollectionRunner {
 
     /// Collect all metrics while holding system lock
     /// This centralizes all operations that require the system lock to be minimal
-    fn refresh_and_collect_metrics(&self) -> LockedMetricsCollection {
+    fn refresh_and_collect_metrics(&self) -> MetricsCollectionResults {
         trace!("Acquiring system lock for process refresh");
         let mut sys = self.system.lock();
         trace!("System lock acquired, refreshing all processes");
@@ -332,15 +332,12 @@ impl CollectionRunner {
         let (main_cli_processes, main_cli_metadata) = self.collect_main_cli_metrics(&sys);
         let (main_cli_subproc_processes, main_cli_subproc_metadata) =
             self.collect_main_cli_subprocess_metrics(&sys, &children_map);
-        let (daemon_processes, daemon_metadata) =
-            self.collect_daemon_metrics(&sys, &children_map);
-        let (task_processes, task_metadata) =
-            self.collect_all_task_metrics(&sys, &children_map);
-        let (batch_processes, batch_metadata) =
-            self.collect_all_batch_metrics(&sys, &children_map);
+        let (daemon_processes, daemon_metadata) = self.collect_daemon_metrics(&sys, &children_map);
+        let (task_processes, task_metadata) = self.collect_all_task_metrics(&sys, &children_map);
+        let (batch_processes, batch_metadata) = self.collect_all_batch_metrics(&sys, &children_map);
         trace!("Metrics collection complete, releasing system lock");
 
-        LockedMetricsCollection {
+        MetricsCollectionResults {
             main_cli_processes,
             main_cli_metadata,
             main_cli_subproc_processes,
@@ -646,8 +643,7 @@ impl CollectionRunner {
         // Capture timestamp FIRST for accuracy
         let timestamp = current_timestamp_millis();
 
-        // Refresh all processes and collect metrics in minimal lock scope
-        let LockedMetricsCollection {
+        let MetricsCollectionResults {
             main_cli_processes,
             main_cli_metadata,
             main_cli_subproc_processes,
@@ -659,7 +655,7 @@ impl CollectionRunner {
             batch_processes,
             batch_metadata,
             daemon_pid_to_clear,
-        } = self.refresh_and_collect_metrics(); // system lock is released after this call
+        } = self.refresh_and_collect_metrics();
 
         // Now that system lock is released, clear daemon PID if needed
         // This avoids holding system lock while acquiring daemon_pid lock
