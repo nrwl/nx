@@ -240,10 +240,7 @@ impl CollectionRunner {
         let mut processes = Vec::new();
 
         // Read the PID while we have the system lock (caller holds it)
-        // This avoids acquiring main_cli_pid lock while holding system lock
-        let main_cli_pid = self.get_main_cli_pid();
-
-        if let Some(pid) = main_cli_pid
+        if let Some(pid) = self.get_main_cli_pid()
             && let Some((main, metadata)) =
                 self.collect_process_info(sys, pid, None, MAIN_CLI_GROUP_ID, true)
         {
@@ -310,19 +307,20 @@ impl CollectionRunner {
         sys: &System,
         children_map: &ParentToChildrenMap,
     ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
-        let mut all_processes = Vec::new();
-        let mut all_metadata = HashMap::new();
-
         // Only collect subprocesses if the main CLI is registered and subprocesses exist
-        let main_cli_registered = self.is_main_cli_registered();
+        if !self.is_main_cli_registered() || self.main_cli_subprocess_pids.is_empty() {
+            return (Vec::new(), HashMap::new());
+        }
 
-        if main_cli_registered && !self.main_cli_subprocess_pids.is_empty() {
-            for entry in self.main_cli_subprocess_pids.iter() {
+        // Collect metrics from all subprocesses using iterator and fold
+        self.main_cli_subprocess_pids.iter().fold(
+            (Vec::new(), HashMap::new()),
+            |(mut processes, mut metadata), entry| {
                 let subprocess_pid = *entry.key();
                 let alias = entry.value().clone();
 
                 // Collect the subprocess and its entire process tree
-                let (processes, metadata) = self.collect_tree_metrics(
+                let (tree_processes, tree_metadata) = self.collect_tree_metrics(
                     sys,
                     children_map,
                     subprocess_pid,
@@ -336,12 +334,11 @@ impl CollectionRunner {
                     },
                 );
 
-                all_processes.extend(processes);
-                all_metadata.extend(metadata);
-            }
-        }
-
-        (all_processes, all_metadata)
+                processes.extend(tree_processes);
+                metadata.extend(tree_metadata);
+                (processes, metadata)
+            },
+        )
     }
 
     /// Collect metrics for the daemon process and its entire process tree
@@ -351,9 +348,7 @@ impl CollectionRunner {
         children_map: &ParentToChildrenMap,
     ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
         // Read daemon PID early to avoid holding system lock while acquiring daemon_pid lock
-        let daemon_pid = self.get_daemon_pid();
-
-        if let Some(pid) = daemon_pid {
+        if let Some(pid) = self.get_daemon_pid() {
             self.collect_tree_metrics(sys, children_map, pid, DAEMON_GROUP_ID, |_| None)
         } else {
             (Vec::new(), HashMap::new())
