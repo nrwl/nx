@@ -131,11 +131,13 @@ export async function determineTemplate(
       choices: [
         {
           name: 'nrwl/empty-template',
-          message: 'Empty             (minimal monorepo without projects)',
+          message:
+            'TypeScript        (minimal TypeScript monorepo without projects)',
         },
         {
           name: 'nrwl/typescript-template',
-          message: 'TypeScript        (monorepo with TypeScript packages)',
+          message:
+            'NPM Packages      (monorepo with TypeScript packages ready to publish)',
         },
         {
           name: 'nrwl/react-template',
@@ -146,6 +148,11 @@ export async function determineTemplate(
           name: 'nrwl/angular-template',
           message:
             'Angular           (fullstack monorepo with Angular and Express)',
+        },
+        {
+          name: 'skip',
+          message:
+            'Custom            (more options for frameworks, test runners, etc.)',
         },
       ],
       initial: 0,
