@@ -29,6 +29,7 @@ type ParentToChildrenMap = HashMap<i32, Vec<i32>>;
 const MAIN_CLI_GROUP_ID: &str = "main_cli";
 const MAIN_CLI_SUBPROCESSES_GROUP_ID: &str = "main_cli_subprocesses";
 const DAEMON_GROUP_ID: &str = "daemon";
+const DAEMON_SUBPROCESSES_GROUP_ID: &str = "daemon_subprocesses";
 
 // Shutdown check interval for the collection thread
 const SHUTDOWN_CHECK_INTERVAL_MS: u64 = 50;
@@ -430,6 +431,7 @@ impl CollectionRunner {
     }
 
     /// Collect metrics for the daemon process and its entire process tree
+    /// Separates daemon root from subprocesses using distinct group IDs
     fn collect_daemon_metrics(
         &self,
         sys: &System,
@@ -437,7 +439,15 @@ impl CollectionRunner {
     ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
         // Read daemon PID early to avoid holding system lock while acquiring daemon_pid lock
         if let Some(pid) = self.get_daemon_pid() {
-            self.collect_tree_metrics(sys, children_map, pid, DAEMON_GROUP_ID, None, |_| None)
+            // Collect with daemon as root and subprocesses in a separate group
+            self.collect_tree_metrics(
+                sys,
+                children_map,
+                pid,
+                DAEMON_GROUP_ID,
+                Some(DAEMON_SUBPROCESSES_GROUP_ID),
+                |_| None,
+            )
         } else {
             (Vec::new(), HashMap::new())
         }
@@ -563,6 +573,8 @@ impl CollectionRunner {
         }
         if daemon_pid.is_some() {
             live_group_ids.insert(DAEMON_GROUP_ID.to_string());
+            // Also add daemon subprocesses group if daemon is registered
+            live_group_ids.insert(DAEMON_SUBPROCESSES_GROUP_ID.to_string());
         }
         drop(main_cli_pid);
         drop(daemon_pid);
@@ -608,6 +620,16 @@ impl CollectionRunner {
             DAEMON_GROUP_ID,
             GroupType::Daemon,
             "Nx Daemon",
+            None,
+        );
+
+        Self::maybe_add_group(
+            &mut new_groups,
+            &self.group_metadata_map,
+            &live_group_ids,
+            DAEMON_SUBPROCESSES_GROUP_ID,
+            GroupType::DaemonSubprocesses,
+            "Nx Daemon Subprocesses",
             None,
         );
 
@@ -1202,9 +1224,11 @@ mod tests {
 
         let groups = runner.create_new_group_info();
 
-        assert_eq!(groups.len(), 1);
+        assert_eq!(groups.len(), 2);
         assert!(groups.contains_key(DAEMON_GROUP_ID));
         assert_eq!(groups[DAEMON_GROUP_ID].group_type, GroupType::Daemon);
+        assert!(groups.contains_key(DAEMON_SUBPROCESSES_GROUP_ID));
+        assert_eq!(groups[DAEMON_SUBPROCESSES_GROUP_ID].group_type, GroupType::DaemonSubprocesses);
     }
 
     #[test]
@@ -1270,8 +1294,9 @@ mod tests {
         // Add daemon
         *runner.daemon_pid.lock() = Some(67890);
         let groups3 = runner.create_new_group_info();
-        assert_eq!(groups3.len(), 1);
+        assert_eq!(groups3.len(), 2);
         assert!(groups3.contains_key(DAEMON_GROUP_ID));
+        assert!(groups3.contains_key(DAEMON_SUBPROCESSES_GROUP_ID));
         assert!(!groups3.contains_key(MAIN_CLI_GROUP_ID));
     }
 
