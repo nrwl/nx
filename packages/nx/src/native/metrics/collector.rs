@@ -307,20 +307,17 @@ impl CollectionRunner {
         sys: &System,
         children_map: &ParentToChildrenMap,
     ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
-        // Only collect subprocesses if the main CLI is registered and subprocesses exist
-        if !self.is_main_cli_registered() || self.main_cli_subprocess_pids.is_empty() {
-            return (Vec::new(), HashMap::new());
-        }
+        let mut all_processes = Vec::new();
+        let mut all_metadata = HashMap::new();
 
-        // Collect metrics from all subprocesses using iterator and fold
-        self.main_cli_subprocess_pids.iter().fold(
-            (Vec::new(), HashMap::new()),
-            |(mut processes, mut metadata), entry| {
+        // Only collect subprocesses if the main CLI is registered and subprocesses exist
+        if self.is_main_cli_registered() && !self.main_cli_subprocess_pids.is_empty() {
+            for entry in self.main_cli_subprocess_pids.iter() {
                 let subprocess_pid = *entry.key();
                 let alias = entry.value().clone();
 
                 // Collect the subprocess and its entire process tree
-                let (tree_processes, tree_metadata) = self.collect_tree_metrics(
+                let (processes, metadata) = self.collect_tree_metrics(
                     sys,
                     children_map,
                     subprocess_pid,
@@ -334,11 +331,12 @@ impl CollectionRunner {
                     },
                 );
 
-                processes.extend(tree_processes);
-                metadata.extend(tree_metadata);
-                (processes, metadata)
-            },
-        )
+                all_processes.extend(processes);
+                all_metadata.extend(metadata);
+            }
+        }
+
+        (all_processes, all_metadata)
     }
 
     /// Collect metrics for the daemon process and its entire process tree
