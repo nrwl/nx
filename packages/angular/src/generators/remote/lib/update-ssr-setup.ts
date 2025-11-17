@@ -58,6 +58,7 @@ export async function updateSsrSetup(
     browserBundleOutput,
     serverBundleOutput,
     standalone,
+    useDefaultImport: angularMajorVersion >= 21,
     tmpl: '',
   });
 
