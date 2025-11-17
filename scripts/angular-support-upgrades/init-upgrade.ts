@@ -13,7 +13,7 @@ import { execSync } from 'child_process';
 import { prerelease } from 'semver';
 import { buildMigrations } from './build-migrations';
 import { fetchVersionsFromRegistry } from './fetch-versions-from-registry';
-import { updatePackageJsonForAngular } from './update-package-jsons';
+import { updatePackageDependencies } from './update-package-jsons';
 import { updateVersionUtils } from './update-version-utils';
 
 const yargs = require('yargs/yargs');
@@ -37,7 +37,7 @@ async function run() {
 
   const isPrerelease =
     prerelease(packageVersionMap.get('@angular/cli')!) !== null;
-  await updatePackageJsonForAngular(packageVersionMap, isPrerelease);
+  await updatePackageDependencies(packageVersionMap, isPrerelease);
   await buildMigrations(
     packageVersionMap,
     argv.targetNxVersion,

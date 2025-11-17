@@ -14,6 +14,7 @@ import {
   typesCorsVersion,
 } from '../../../utils/versions';
 import type { Schema } from '../schema';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export async function updateSsrSetup(
   tree: Tree,
@@ -31,10 +32,12 @@ export async function updateSsrSetup(
   const pathToServerEntry = joinPathFragments(sourceRoot, 'server.ts');
   tree.write(pathToServerEntry, `import('./main.server');`);
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   generateFiles(tree, join(__dirname, '../files/common'), project.root, {
     appName,
     browserBundleOutput: project.targets.build.options.outputPath,
     standalone: options.standalone,
+    useDefaultImport: angularMajorVersion >= 21,
     tmpl: '',
   });
 

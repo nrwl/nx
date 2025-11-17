@@ -1,12 +1,11 @@
 export const nxVersion = require('../../package.json').version;
 
-export const angularVersion = '~20.3.0';
-export const angularDevkitVersion = '~20.3.0';
-export const ngPackagrVersion = '~20.3.0';
+export const angularVersion = '21.0.0-rc.2';
+export const angularDevkitVersion = '21.0.0-rc.4';
+export const ngPackagrVersion = '21.0.0-rc.1';
 export const ngrxVersion = '^20.0.0';
 export const rxjsVersion = '~7.8.0';
 export const zoneJsVersion = '~0.15.0';
-export const angularJsVersion = '1.7.9';
 export const tsLibVersion = '^2.3.0';
 
 export const corsVersion = '~2.8.5';
@@ -27,7 +26,7 @@ export const autoprefixerVersion = '^10.4.0';
 export const tsNodeVersion = '10.9.1';
 export const lessVersion = '^4.3.0';
 
-export const jestPresetAngularVersion = '~14.6.1';
+export const jestPresetAngularVersion = '~15.0.0';
 export const typesNodeVersion = '20.19.9';
 export const jasmineMarblesVersion = '^0.9.2';
 

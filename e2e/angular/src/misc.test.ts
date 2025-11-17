@@ -35,7 +35,7 @@ describe('Move Angular Project', () => {
 
     // just check the output
     expect(moveOutput).toContain(`DELETE ${app1}`);
-    expect(moveOutput).toContain(`CREATE ${newPath}/jest.config.ts`);
+    expect(moveOutput).toContain(`CREATE ${newPath}/jest.config.cts`);
     expect(moveOutput).toContain(`CREATE ${newPath}/tsconfig.app.json`);
     expect(moveOutput).toContain(`CREATE ${newPath}/tsconfig.json`);
     expect(moveOutput).toContain(`CREATE ${newPath}/tsconfig.spec.json`);

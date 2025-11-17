@@ -383,6 +383,15 @@
       },
       "description": "Update the @angular/cli package version to ~20.3.0.",
       "factory": "./src/migrations/update-21-6-1/update-angular-cli"
+    },
+    "update-angular-cli-version-21-0-0-rc-4": {
+      "cli": "nx",
+      "version": "22.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=21.0.0-rc.2"
+      },
+      "description": "Update the @angular/cli package version to 21.0.0-rc.4.",
+      "factory": "./src/migrations/update-22-2-0/update-angular-cli"
     }
   },
   "packageJsonUpdates": {
@@ -2233,21 +2242,65 @@
     },
     "22.2.0": {
       "version": "22.2.0-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v21?",
+      "requires": {
+        "@angular/core": ">=20.3.0 <21.0.0-rc.2"
+      },
       "packages": {
-        "@module-federation/enhanced": {
-          "version": "^0.21.2",
+        "@angular-devkit/build-angular": {
+          "version": "21.0.0-rc.4",
           "alwaysAddToPackageJson": false
         },
-        "@module-federation/runtime": {
-          "version": "^0.21.2",
+        "@angular-devkit/core": {
+          "version": "21.0.0-rc.4",
           "alwaysAddToPackageJson": false
         },
-        "@module-federation/sdk": {
-          "version": "^0.21.2",
+        "@angular-devkit/schematics": {
+          "version": "21.0.0-rc.4",
           "alwaysAddToPackageJson": false
         },
-        "@module-federation/node": {
-          "version": "^2.7.21",
+        "@angular/build": {
+          "version": "21.0.0-rc.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "21.0.0-rc.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "21.0.0-rc.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "21.0.0-rc.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "0.2100.0-rc.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "0.2100.0-rc.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "21.0.0-rc.2",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "21.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "21.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/google-maps": {
+          "version": "21.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "21.0.0-rc.1",
           "alwaysAddToPackageJson": false
         }
       }
