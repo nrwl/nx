@@ -1370,6 +1370,24 @@ describe('app', () => {
       ).toBeDefined();
     });
 
+    it('should add "extract-i18n" target for Angular v20 (removed in v21+)', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~20.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
+
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets['extract-i18n']).toBeDefined();
+      expect(project.targets['extract-i18n'].executor).toBe(
+        '@angular/build:extract-i18n'
+      );
+    });
+
     it('should not set provideBrowserGlobalErrorListeners in app.module.ts for versions lower than v20', async () => {
       updateJson(appTree, 'package.json', (json) => ({
         ...json,
@@ -1423,6 +1441,29 @@ describe('app', () => {
           "strictInjectionParameters": true,
           "strictInputAccessModifiers": true,
           "strictTemplates": true,
+        }
+      `);
+    });
+
+    it('should set "typeCheckHostBindings" to true when strict is enabled for Angular v20 only', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~20.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { strict: true });
+
+      const appTsConfig = readJson(appTree, 'my-app/tsconfig.json');
+      expect(appTsConfig.angularCompilerOptions).toMatchInlineSnapshot(`
+        {
+          "enableI18nLegacyMessageIdFormat": false,
+          "strictInjectionParameters": true,
+          "strictInputAccessModifiers": true,
+          "strictTemplates": true,
+          "typeCheckHostBindings": true,
         }
       `);
     });
