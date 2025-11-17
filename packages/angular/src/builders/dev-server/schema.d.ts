@@ -12,6 +12,7 @@ interface Schema {
   liveReload?: boolean;
   publicHost?: string;
   allowedHosts?: string[];
+  define?: Record<string, string>;
   servePath?: string;
   disableHostCheck?: boolean;
   hmr?: boolean;
