@@ -42,6 +42,7 @@ export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
   generateFiles(tree, pathToFiles, sourceRoot, {
     ...options,
     browserDistDirectory,
+    useDefaultImport: angularMajorVersion >= 21,
     tpl: '',
   });
 }
