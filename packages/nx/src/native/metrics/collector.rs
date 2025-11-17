@@ -30,6 +30,9 @@ const MAIN_CLI_GROUP_ID: &str = "main_cli";
 const MAIN_CLI_SUBPROCESSES_GROUP_ID: &str = "main_cli_subprocesses";
 const DAEMON_GROUP_ID: &str = "daemon";
 
+// Shutdown check interval for the collection thread
+const SHUTDOWN_CHECK_INTERVAL_MS: u64 = 50;
+
 /// Result from metrics collection containing all data needed for cleanup and notification
 struct MetricsCollectionResult {
     /// Timestamp for the collection
@@ -123,11 +126,12 @@ impl CollectionRunner {
     }
 
     /// Sleep in small chunks for responsive shutdown
-    /// This allows the thread to respond to shutdown signals within 50ms
+    /// This allows the thread to respond to shutdown signals within SHUTDOWN_CHECK_INTERVAL_MS
     /// instead of waiting for the full collection interval
     fn sleep_with_early_exit(&self, interval: Duration) {
-        let wake_interval = Duration::from_millis(50);
-        let sleep_iterations = (interval.as_millis() / 50).max(1) as usize;
+        let wake_interval = Duration::from_millis(SHUTDOWN_CHECK_INTERVAL_MS);
+        let sleep_iterations =
+            (interval.as_millis() / SHUTDOWN_CHECK_INTERVAL_MS as u128).max(1) as usize;
 
         for _ in 0..sleep_iterations {
             if !self.should_collect.load(Ordering::Acquire) {
@@ -323,7 +327,13 @@ impl CollectionRunner {
                     children_map,
                     subprocess_pid,
                     MAIN_CLI_SUBPROCESSES_GROUP_ID,
-                    |pid| if pid == subprocess_pid { alias.clone() } else { None },
+                    |pid| {
+                        if pid == subprocess_pid {
+                            alias.clone()
+                        } else {
+                            None
+                        }
+                    },
                 );
 
                 all_processes.extend(processes);
