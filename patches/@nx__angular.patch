@@ -1,0 +1,25 @@
+diff --git a/src/executors/utilities/ng-packagr/v19+/stylesheet-processor.js b/src/executors/utilities/ng-packagr/v19+/stylesheet-processor.js
+index 50a892ae7aa496613aac3b179126118d39355164..b254bfd98563a43afdc22291521ca67ff711c862 100644
+--- a/src/executors/utilities/ng-packagr/v19+/stylesheet-processor.js
++++ b/src/executors/utilities/ng-packagr/v19+/stylesheet-processor.js
+@@ -24,16 +24,14 @@ function getStylesheetProcessor() {
+     const { generateSearchDirectories, getTailwindConfig, loadPostcssConfiguration, } = (0, package_imports_1.importNgPackagrPath)('ng-packagr/src/lib/styles/postcss-configuration', ngPackagrMajorVersion);
+     class StylesheetProcessor extends ComponentStylesheetBundler {
+         constructor(projectBasePath, basePath, cssUrl, includePaths, sass, cacheDirectory, watch) {
+-            // By default, browserslist defaults are too inclusive
+-            // https://github.com/browserslist/browserslist/blob/83764ea81ffaa39111c204b02c371afa44a4ff07/index.js#L516-L522
+-            // We change the default query to browsers that Angular support.
+-            // https://angular.dev/reference/versions#browser-support
+-            if (ngPackagrMajorVersion >= 20) {
++            if (ngPackagrMajorVersion === 21) {
++                browserslist_1.default.defaults = ['baseline widely available on 2025-10-20'];
++            } else if (ngPackagrMajorVersion === 20) {
+                 browserslist_1.default.defaults = (0, browserslist_1.default)(undefined, {
+                     path: require.resolve('ng-packagr/.browserslistrc'),
+                 });
+             }
+-            else {
++            else if (ngPackagrMajorVersion < 20) {
+                 browserslist_1.default.defaults = [
+                     'last 2 Chrome versions',
+                     'last 1 Firefox version',

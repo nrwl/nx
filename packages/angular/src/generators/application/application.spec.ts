@@ -189,7 +189,7 @@ describe('app', () => {
     it('should generate files', async () => {
       await generateApp(appTree);
 
-      expect(appTree.exists('my-app/jest.config.ts')).toBeTruthy();
+      expect(appTree.exists('my-app/jest.config.cts')).toBeTruthy();
       expect(appTree.exists('my-app/src/main.ts')).toBeTruthy();
       expect(appTree.exists('my-app/src/app/app-module.ts')).toBeTruthy();
       expect(appTree.exists('my-app/src/app/app.ts')).toBeTruthy();
@@ -260,13 +260,14 @@ describe('app', () => {
     it('should setup jest with serializers', async () => {
       await generateApp(appTree);
 
-      expect(appTree.read('my-app/jest.config.ts', 'utf-8')).toContain(
+      const jestConfig = appTree.read('my-app/jest.config.cts', 'utf-8');
+      expect(jestConfig).toContain(
         `'jest-preset-angular/build/serializers/no-ng-attributes'`
       );
-      expect(appTree.read('my-app/jest.config.ts', 'utf-8')).toContain(
+      expect(jestConfig).toContain(
         `'jest-preset-angular/build/serializers/ng-snapshot'`
       );
-      expect(appTree.read('my-app/jest.config.ts', 'utf-8')).toContain(
+      expect(jestConfig).toContain(
         `'jest-preset-angular/build/serializers/html-comment'`
       );
     });
@@ -338,7 +339,7 @@ describe('app', () => {
 
       // Make sure these exist
       [
-        `my-dir/my-app/jest.config.ts`,
+        `my-dir/my-app/jest.config.cts`,
         'my-dir/my-app/src/main.ts',
         'my-dir/my-app/src/app/app-module.ts',
         'my-dir/my-app/src/app/app.ts',
@@ -428,7 +429,7 @@ describe('app', () => {
 
       // Make sure these exist
       [
-        'my-dir/my-app/jest.config.ts',
+        'my-dir/my-app/jest.config.cts',
         'my-dir/my-app/src/main.ts',
         'my-dir/my-app/src/app/app-module.ts',
         'my-dir/my-app/src/app/app.ts',
@@ -721,7 +722,7 @@ describe('app', () => {
       it('should generate jest.config.ts with serializers', async () => {
         await generateApp(appTree);
 
-        const jestConfig = appTree.read('my-app/jest.config.ts', 'utf-8');
+        const jestConfig = appTree.read('my-app/jest.config.cts', 'utf-8');
 
         expect(jestConfig).toContain(
           `'jest-preset-angular/build/serializers/no-ng-attributes'`
