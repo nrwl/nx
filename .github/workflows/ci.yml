@@ -92,11 +92,6 @@ jobs:
         run: 
           pnpm nx report
 
-      - name: Show project graph
-        run: npx nx show project nx-maven-plugin | jq .targets.test
-      - name: Show source maps graph
-        run: cat .nx/workspace-data/source-maps.json | jq .\"packages/maven/maven-plugin\"
-
       - name: Run Checks/Lint/Test/Build
         run: |
           pids=()
