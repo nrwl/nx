@@ -23,6 +23,17 @@ export interface DockerTargetOptions {
   env?: Record<string, string>;
   envFile?: string;
   cwd?: string;
+  /**
+   * Skip adding the default `--tag` argument to the Docker build command.
+   * When set to `true`, you must provide your own tag via the `args` property.
+   *
+   * **Important:** Setting this to `true` opts out of Nx Release support for this project.
+   * The automatic versioning and publishing features of `nx release` will not work
+   * with Docker projects that have `skipDefaultTag` enabled.
+   *
+   * @default false
+   */
+  skipDefaultTag?: boolean;
   configurations?: Record<
     string,
     Omit<DockerTargetOptions, 'configurations' | 'name'>
@@ -188,8 +199,12 @@ function buildTargetOptions(
       options.args = interpolatedTarget.args;
     }
   } else {
-    // Build target always includes --tag default
-    options.args = [`--tag ${imageRef}`, ...(interpolatedTarget.args ?? [])];
+    // Build target includes --tag default unless skipDefaultTag is true
+    if (interpolatedTarget.skipDefaultTag) {
+      options.args = interpolatedTarget.args ?? [];
+    } else {
+      options.args = [`--tag ${imageRef}`, ...(interpolatedTarget.args ?? [])];
+    }
   }
 
   if (interpolatedTarget.env) {
@@ -219,8 +234,14 @@ function buildTargetConfigurations(
     interpolatedTarget.configurations
   )) {
     // Each configuration gets the full treatment with defaults
+    // Inherit skipDefaultTag from parent if not explicitly set in config
     configurations[configName] = buildTargetOptions(
-      { ...configOptions, name: interpolatedTarget.name },
+      {
+        ...configOptions,
+        name: interpolatedTarget.name,
+        skipDefaultTag:
+          configOptions.skipDefaultTag ?? interpolatedTarget.skipDefaultTag,
+      },
       projectRoot,
       imageRef,
       isRunTarget
