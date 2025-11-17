@@ -454,7 +454,7 @@ We'll start by creating this file. Add a `module-federation.manifest.json` file 
 ```json
 // apps/dashboard/public/module-federation.manifest.json
 {
-  "login": "http://localhost:4201"
+  "login": "http://localhost:4201/mf-manifest.json"
 }
 ```
 
@@ -462,15 +462,18 @@ Next, open the `main.ts` file and replace it with the following:
 
 ```ts
 // apps/dashboard/src/main.ts
-import { setRemoteDefinitions } from '@nx/angular/mf';
+import { registerRemotes } from '@module-federation/enhanced/runtime';
 
 fetch('/module-federation.manifest.json')
   .then((res) => res.json())
-  .then((definitions) => setRemoteDefinitions(definitions))
+  .then((remotes: Record<string, string>) =>
+    Object.entries(remotes).map(([name, entry]) => ({ name, entry }))
+  )
+  .then((remotes) => registerRemotes(remotes))
   .then(() => import('./bootstrap').catch((err) => console.error(err)));
 ```
 
-You'll notice that we fetch the JSON file and provide its contents to the `setRemoteDefinitions` function we invoke next. This tells webpack where each of our remote applications has been deployed to!
+You'll notice that we fetch the JSON file, transform it into the format expected by `registerRemotes`, and register the remotes with the Module Federation runtime. This tells webpack where each of our remote applications has been deployed to!
 
 ### Change how Remotes are loaded
 
@@ -495,14 +498,16 @@ Next, we need to change how our application attempts to load the Remote when it 
 ```ts {% meta="{3,9-10}" %}
 // apps/dashboard/src/app/app.routes.ts
 import { Route } from '@angular/router';
-import { loadRemoteModule } from '@nx/angular/mf';
+import { loadRemote } from '@module-federation/enhanced/runtime';
 import { App } from './app';
 
 export const appRoutes: Route[] = [
   {
     path: 'login',
     loadChildren: () =>
-      loadRemoteModule('login', './Routes').then((m) => m.remoteRoutes),
+      loadRemote<typeof import('login/Routes')>('login/Routes').then(
+        (m) => m!.remoteRoutes
+      ),
   },
   {
     path: '',
@@ -511,7 +516,7 @@ export const appRoutes: Route[] = [
 ];
 ```
 
-The `loadRemoteModule` helper method simply hides some logic that will check if the Remote application has been loaded, and if not, load it, and then requests the correct exposed routes from it.
+The `loadRemote` helper method simply hides some logic that will check if the Remote application has been loaded, and if not, load it, and then requests the correct exposed routes from it.
 
 ### Summary
 
