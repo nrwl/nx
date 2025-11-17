@@ -309,7 +309,6 @@ describe('lib', () => {
           strictInjectionParameters: true,
           strictInputAccessModifiers: true,
           strictTemplates: true,
-          typeCheckHostBindings: true,
         },
         compilerOptions: {
           experimentalDecorators: true,
@@ -1875,6 +1874,29 @@ describe('lib', () => {
           "strictInjectionParameters": true,
           "strictInputAccessModifiers": true,
           "strictTemplates": true,
+        }
+      `);
+    });
+
+    it('should set "typeCheckHostBindings" to true when strict is enabled for Angular v20 only', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~20.0.0',
+        },
+      }));
+
+      await runLibraryGeneratorWithOpts();
+
+      expect(readJson(tree, 'my-lib/tsconfig.json').angularCompilerOptions)
+        .toMatchInlineSnapshot(`
+        {
+          "enableI18nLegacyMessageIdFormat": false,
+          "strictInjectionParameters": true,
+          "strictInputAccessModifiers": true,
+          "strictTemplates": true,
+          "typeCheckHostBindings": true,
         }
       `);
     });
