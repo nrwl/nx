@@ -237,10 +237,7 @@ impl CollectionRunner {
 
         // Read the PID while we have the system lock (caller holds it)
         // This avoids acquiring main_cli_pid lock while holding system lock
-        let main_cli_pid = {
-            trace!("Reading main_cli_pid in collect_main_cli_metrics");
-            *self.main_cli_pid.lock()
-        };
+        let main_cli_pid = self.get_main_cli_pid();
 
         if let Some(pid) = main_cli_pid
             && let Some((main, metadata)) =
@@ -255,10 +252,22 @@ impl CollectionRunner {
         (processes, new_metadata)
     }
 
+    /// Get the main CLI process ID
+    fn get_main_cli_pid(&self) -> Option<i32> {
+        trace!("Reading main_cli_pid in collect_main_cli_metrics");
+        *self.main_cli_pid.lock()
+    }
+
     /// Check if the main CLI process is registered
     fn is_main_cli_registered(&self) -> bool {
         trace!("Reading main_cli_pid in collect_main_cli_subprocess_metrics");
         self.main_cli_pid.lock().is_some()
+    }
+
+    /// Get the daemon process ID
+    fn get_daemon_pid(&self) -> Option<i32> {
+        trace!("Reading daemon_pid in collect_daemon_metrics");
+        *self.daemon_pid.lock()
     }
 
     /// Collect metrics for main CLI subprocesses and their process trees
@@ -316,10 +325,7 @@ impl CollectionRunner {
         let mut processes = Vec::new();
 
         // Read daemon PID early to avoid holding system lock while acquiring daemon_pid lock
-        let daemon_pid = {
-            trace!("Reading daemon_pid in collect_daemon_metrics");
-            *self.daemon_pid.lock()
-        };
+        let daemon_pid = self.get_daemon_pid();
 
         if let Some(pid) = daemon_pid {
             let discovered_pids = Self::collect_tree_pids_from_map(children_map, pid);
