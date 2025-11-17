@@ -3,6 +3,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   isTheFileAStory,
+  getStorybookVersionToInstall,
 } from './utilities';
 import * as targetVariations from './test-configs/different-target-variations.json';
 
@@ -200,6 +201,83 @@ describe('testing utilities', () => {
   });
 
   describe('Test pure utility functions', () => {
+    describe('getStorybookVersionToInstall', () => {
+      it('should handle version ranges like ^10.0.0', () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        tree.write(
+          'package.json',
+          JSON.stringify({
+            devDependencies: {
+              storybook: '^10.0.0',
+            },
+          })
+        );
+        const version = getStorybookVersionToInstall(tree);
+        // Should return the range as-is since version 10 >= 7
+        expect(version).toBe('^10.0.0');
+      });
+
+      it('should handle version ranges like ~8.5.3', () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        tree.write(
+          'package.json',
+          JSON.stringify({
+            devDependencies: {
+              storybook: '~8.5.3',
+            },
+          })
+        );
+        const version = getStorybookVersionToInstall(tree);
+        // Should return the range as-is since version 8 >= 7
+        expect(version).toBe('~8.5.3');
+      });
+
+      it('should handle exact versions like 7.0.0', () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        tree.write(
+          'package.json',
+          JSON.stringify({
+            devDependencies: {
+              storybook: '7.0.0',
+            },
+          })
+        );
+        const version = getStorybookVersionToInstall(tree);
+        // Should return the version as-is since version 7 >= 7
+        expect(version).toBe('7.0.0');
+      });
+
+      it('should not use installed version if major version is less than 7', () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        tree.write(
+          'package.json',
+          JSON.stringify({
+            devDependencies: {
+              storybook: '^6.5.0',
+            },
+          })
+        );
+        const version = getStorybookVersionToInstall(tree);
+        // Should return default storybookVersion from versions.ts, not the installed version
+        expect(version).not.toBe('^6.5.0');
+      });
+
+      it('should handle dependencies in addition to devDependencies', () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        tree.write(
+          'package.json',
+          JSON.stringify({
+            dependencies: {
+              storybook: '^9.0.0',
+            },
+          })
+        );
+        const version = getStorybookVersionToInstall(tree);
+        // Should return the range as-is since version 9 >= 7
+        expect(version).toBe('^9.0.0');
+      });
+    });
+
     describe('findStorybookAndBuildTargetsAndCompiler', () => {
       it('should find correct targets and compiler for the provided next app config', () => {
         const result = findStorybookAndBuildTargetsAndCompiler(

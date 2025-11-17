@@ -1044,6 +1044,187 @@ describe('@nx/docker', () => {
     });
   });
 
+  describe('skipDefaultTag', () => {
+    it('should skip default tag when skipDefaultTag is true', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            skipDefaultTag: true,
+            args: ['--tag', 'custom:latest'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toEqual(['--tag', 'custom:latest']);
+      expect(targets['build'].options.args).not.toContain('--tag proj');
+    });
+
+    it('should add default tag when skipDefaultTag is false', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            skipDefaultTag: false,
+            args: ['--platform', 'linux/amd64'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args[0]).toBe('--tag proj');
+      expect(targets['build'].options.args).toContain('--platform');
+      expect(targets['build'].options.args).toContain('linux/amd64');
+    });
+
+    it('should add default tag when skipDefaultTag is undefined', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            args: ['--no-cache'],
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args[0]).toBe('--tag proj');
+      expect(targets['build'].options.args).toContain('--no-cache');
+    });
+
+    it('should use empty args array when skipDefaultTag is true and no args provided', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            skipDefaultTag: true,
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toEqual([]);
+    });
+
+    it('should respect skipDefaultTag in configurations', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            skipDefaultTag: true,
+            configurations: {
+              publish: {
+                args: [
+                  '--platform',
+                  'linux/amd64,linux/arm64',
+                  '--tag',
+                  'ghcr.io/org/proj:latest',
+                  '--push',
+                ],
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['build'].options.args).toEqual([]);
+      expect(targets['build'].configurations.publish.args).toEqual([
+        '--platform',
+        'linux/amd64,linux/arm64',
+        '--tag',
+        'ghcr.io/org/proj:latest',
+        '--push',
+      ]);
+      expect(targets['build'].configurations.publish.args).not.toContain(
+        '--tag proj'
+      );
+    });
+
+    it('should support multi-platform builds with skipDefaultTag', async () => {
+      await tempFs.createFiles({
+        'apps/api/Dockerfile': 'FROM node:18',
+        'apps/api/project.json': JSON.stringify({ name: 'my-api' }),
+      });
+
+      const results = await createNodesFunction(
+        ['apps/api/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'docker:build',
+            args: ['--tag', '{projectName}:latest'],
+            skipDefaultTag: true,
+            configurations: {
+              publish: {
+                args: [
+                  '--platform',
+                  'linux/amd64,linux/arm64',
+                  '--tag',
+                  'ghcr.io/{projectName}:latest',
+                  '--tag',
+                  'ghcr.io/{projectName}:{commitSha}',
+                  '--push',
+                ],
+              },
+            },
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['apps/api'].targets;
+      expect(targets['docker:build'].options.args).toEqual([
+        '--tag',
+        'my-api:latest',
+      ]);
+      expect(targets['docker:build'].configurations.publish.args).toContain(
+        'ghcr.io/my-api:latest'
+      );
+      expect(targets['docker:build'].configurations.publish.args).toContain(
+        'ghcr.io/my-api:abc123456789def0123456789abcdef012345678'
+      );
+      expect(targets['docker:build'].configurations.publish.args).not.toContain(
+        '--tag apps-api'
+      );
+    });
+  });
+
   describe('target configurations', () => {
     it('should create configurations with interpolated args', async () => {
       await tempFs.createFiles({

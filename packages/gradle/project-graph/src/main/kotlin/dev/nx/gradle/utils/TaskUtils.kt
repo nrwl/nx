@@ -1,5 +1,6 @@
 package dev.nx.gradle.utils
 
+import dev.nx.gradle.NxTaskExtension
 import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
@@ -46,10 +47,17 @@ fun processTask(
 
   // process dependsOn
   val dependsOn = getDependsOnForTask(dependsOnTasks, task, dependencies, targetNameOverrides)
+
   if (!dependsOn.isNullOrEmpty()) {
-    logger.info("${task}: processed ${dependsOn.size} dependsOn")
+    logger.info("${task}: processed ${dependsOn.size} total dependsOn")
     target["dependsOn"] = dependsOn
   }
+
+  // Check for nx extension to get additional config
+  val nxExtension = task.extensions.findByType(NxTaskExtension::class.java)
+
+  // Merge nx.json config into target (this allows users to set any Nx target properties)
+  nxExtension?.json?.getOrNull()?.let { nxJson -> target["nxConfig"] = nxJson }
 
   // process inputs
   val inputs =
@@ -435,6 +443,7 @@ fun replaceRootInPath(path: String, projectRoot: String, workspaceRoot: String):
     path == projectRoot -> "{projectRoot}"
     path.startsWith(workspaceRoot + File.separator) ->
         path.replaceFirst(workspaceRoot, "{workspaceRoot}")
+
     path == workspaceRoot -> "{workspaceRoot}"
     else -> null
   }

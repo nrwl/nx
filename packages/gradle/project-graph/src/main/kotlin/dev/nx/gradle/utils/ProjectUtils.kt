@@ -1,5 +1,6 @@
 package dev.nx.gradle.utils
 
+import dev.nx.gradle.NxProjectExtension
 import dev.nx.gradle.data.*
 import java.io.File
 import java.util.*
@@ -36,14 +37,24 @@ fun createNodeForProject(
         processTargetsForProject(
             project, dependencies, targetNameOverrides, workspaceRoot, atomized)
     val projectRoot = project.projectDir.path
+
+    // Read project-level nx config if it exists
+    val nxProjectExtension = project.extensions.findByType(NxProjectExtension::class.java)
+    val nxConfig = nxProjectExtension?.json?.getOrNull()?.takeIf { it.isNotEmpty() }
+
+    // Use Gradle defaults for project metadata (TypeScript side will merge nxConfig)
+    val projectName =
+        if (project.buildTreePath.isEmpty() || project.buildTreePath == ":") project.name
+        else project.buildTreePath
+    val projectDescription = project.description
+
     val projectNode =
         ProjectNode(
             targets = gradleTargets.targets,
             metadata =
-                NodeMetadata(gradleTargets.targetGroups, listOf("gradle"), project.description),
-            name =
-                if (project.buildTreePath.isEmpty() || project.buildTreePath == ":") project.name
-                else project.buildTreePath)
+                NodeMetadata(gradleTargets.targetGroups, listOf("gradle"), projectDescription),
+            name = projectName,
+            nxConfig = nxConfig)
     nodes = mapOf(projectRoot to projectNode)
     externalNodes = gradleTargets.externalNodes
     logger.info(

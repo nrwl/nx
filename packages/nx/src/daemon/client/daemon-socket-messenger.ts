@@ -15,7 +15,18 @@ export class DaemonSocketMessenger {
   constructor(private socket: Socket) {}
 
   async sendMessage(messageToDaemon: Message, force?: 'v8' | 'json') {
+    performance.mark(
+      'daemon-message-serialization-start-' + messageToDaemon.type
+    );
     const serialized = serialize(messageToDaemon, force);
+    performance.mark(
+      'daemon-message-serialization-end-' + messageToDaemon.type
+    );
+    performance.measure(
+      'daemon-message-serialization-' + messageToDaemon.type,
+      'daemon-message-serialization-start-' + messageToDaemon.type,
+      'daemon-message-serialization-end-' + messageToDaemon.type
+    );
     this.socket.write(serialized);
     // send EOT to indicate that the message has been fully written
     this.socket.write(MESSAGE_END_SEQ);
