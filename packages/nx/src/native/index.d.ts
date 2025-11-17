@@ -285,6 +285,7 @@ export declare const enum GroupType {
   MainCLI = 'MainCLI',
   MainCliSubprocesses = 'MainCliSubprocesses',
   Daemon = 'Daemon',
+  DaemonSubprocesses = 'DaemonSubprocesses',
   Task = 'Task',
   Batch = 'Batch'
 }
