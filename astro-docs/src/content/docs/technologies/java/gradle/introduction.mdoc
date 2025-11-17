@@ -305,3 +305,127 @@ In a `project.json`, you can specify the target configuration like so:
 
 {% /tabitem %}
 {% /tabs %}
+
+### Configuring Projects and Tasks with the Gradle DSL
+
+The `dev.nx.gradle.project-graph` plugin provides a type-safe `nx {}` DSL for configuring Nx-specific metadata on your Gradle projects and tasks. This allows you to customize project metadata, configure task dependencies, and control caching behavior directly in your Gradle build files.
+
+#### Project-Level Configuration
+
+Use the `nx {}` block at the project level to configure Nx in any way you would in `project.json`:
+
+{% tabs syncKey="java-lang" %}
+{% tabitem label="build.gradle.kts" %}
+
+```kotlin
+// build.gradle.kts
+import dev.nx.gradle.nx
+
+nx {
+  // Set project name
+  set("name", "my-custom-project-name")
+
+  // Add tags for organization
+  array("tags", "api", "backend", "tier:1")
+
+  // Add nested metadata
+  set("metadata") {
+    set("owner", "team-payments")
+    set("criticality", "high")
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="build.gradle" %}
+
+```groovy
+// build.gradle
+import static dev.nx.gradle.Groovy.nx
+
+nx(project) {
+  // Set project name
+  it.set 'name', 'my-custom-project-name'
+
+  // Add tags for organization
+  it.array 'tags', 'api', 'backend', 'tier:1'
+
+  // Add nested metadata
+  it.set 'metadata', {
+    it.set 'owner', 'team-payments'
+    it.set 'criticality', 'high'
+  }
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+**Available DSL methods for project-level configuration:**
+
+- `set(key, value)` - Set string, number, or boolean values
+- `array(key, ...values)` - Set array values
+- `set(key) { ... }` - Create nested objects
+- `merge(map)` - Merge a map of properties
+
+#### Task-Level Configuration
+
+Use the `nx {}` block on individual Gradle tasks to configure target-specific behavior:
+
+{% tabs syncKey="java-lang" %}
+{% tabitem label="build.gradle.kts" %}
+
+```kotlin
+// build.gradle.kts
+import dev.nx.gradle.nx
+
+tasks {
+  build {
+    nx {
+      // Configure caching
+      set("cache", true)
+
+      // Add target tags
+      array("tags", "integration", "slow")
+
+      // Add any custom configuration
+      set("options") {
+        set("timeout", 300)
+      }
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="build.gradle" %}
+
+```groovy
+// build.gradle
+import static dev.nx.gradle.Groovy.nx
+
+tasks.named('integrationTest') {
+  nx(it) {
+    // Configure caching
+    it.set 'cache', true
+
+    // Add target tags
+    it.array 'tags', 'integration', 'slow'
+
+    // Add any custom configuration
+    it.set 'options', {
+      it.set 'timeout', 300
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+**Available DSL methods for task-level configuration:**
+
+- `set(key, value)` - Set string, number, or boolean values
+- `array(key, ...values)` - Set array values
+- `set(key) { ... }` - Create nested objects
+- `merge(map)` - Merge a map of properties
