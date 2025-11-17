@@ -117,15 +117,18 @@ function createProjectForEsbuild(tree: Tree, options: NormalizedSchema) {
         },
         defaultConfiguration: 'development',
       },
-      'extract-i18n': {
-        executor:
-          angularMajorVersion >= 20
-            ? '@angular/build:extract-i18n'
-            : '@angular-devkit/build-angular:extract-i18n',
-        options: {
-          buildTarget: `${options.name}:build`,
-        },
-      },
+      'extract-i18n':
+        angularMajorVersion < 21
+          ? {
+              executor:
+                angularMajorVersion >= 20
+                  ? '@angular/build:extract-i18n'
+                  : '@angular-devkit/build-angular:extract-i18n',
+              options: {
+                buildTarget: `${options.name}:build`,
+              },
+            }
+          : undefined,
     },
   };
 
