@@ -353,13 +353,16 @@ impl CollectionRunner {
     }
 
     /// Collect metrics for a process tree rooted at root_pid
-    /// Returns (processes, metadata) where processes is ordered with root first
+    /// Returns (processes, metadata) where processes are ordered with root first
+    /// root_group_id: group ID for the root process
+    /// children_group_id: group ID for child processes (None means use root_group_id)
     fn collect_tree_metrics(
         &self,
         sys: &System,
         children_map: &ParentToChildrenMap,
         root_pid: i32,
-        group_id: &str,
+        root_group_id: &str,
+        children_group_id: Option<&str>,
         get_alias: impl Fn(i32) -> Option<String>,
     ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
         let mut new_metadata = HashMap::new();
@@ -367,14 +370,16 @@ impl CollectionRunner {
 
         let discovered_pids = Self::collect_tree_pids_from_map(children_map, root_pid);
 
-        for (idx, pid) in discovered_pids.into_iter().enumerate() {
-            if let Some((metrics, metadata)) = self.collect_process_info(
-                sys,
-                pid,
-                get_alias(pid),
-                group_id,
-                idx == 0, // First process is root
-            ) {
+        for pid in discovered_pids.into_iter() {
+            let gid = if pid == root_pid {
+                root_group_id
+            } else {
+                children_group_id.unwrap_or(root_group_id)
+            };
+
+            if let Some((metrics, metadata)) =
+                self.collect_process_info(sys, pid, get_alias(pid), gid, pid == root_pid)
+            {
                 if let Some(meta) = metadata {
                     new_metadata.insert(pid, meta);
                 }
@@ -406,6 +411,7 @@ impl CollectionRunner {
                     children_map,
                     subprocess_pid,
                     MAIN_CLI_SUBPROCESSES_GROUP_ID,
+                    None,
                     |pid| {
                         if pid == subprocess_pid {
                             alias.clone()
@@ -431,7 +437,7 @@ impl CollectionRunner {
     ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
         // Read daemon PID early to avoid holding system lock while acquiring daemon_pid lock
         if let Some(pid) = self.get_daemon_pid() {
-            self.collect_tree_metrics(sys, children_map, pid, DAEMON_GROUP_ID, |_| None)
+            self.collect_tree_metrics(sys, children_map, pid, DAEMON_GROUP_ID, None, |_| None)
         } else {
             (Vec::new(), HashMap::new())
         }
