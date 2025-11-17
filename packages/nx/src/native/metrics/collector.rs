@@ -539,20 +539,10 @@ impl CollectionRunner {
         group_metadata_map: &DashMap<String, GroupInfo>,
         live_group_ids: &HashSet<String>,
         group_id: &str,
-        group_type: GroupType,
-        display_name: &str,
-        task_ids: Option<Vec<String>>,
+        group_info: GroupInfo,
     ) {
         if live_group_ids.contains(group_id) && !group_metadata_map.contains_key(group_id) {
-            new_groups.insert(
-                group_id.to_string(),
-                GroupInfo {
-                    group_type,
-                    display_name: display_name.to_string(),
-                    id: group_id.to_string(),
-                    task_ids,
-                },
-            );
+            new_groups.insert(group_id.to_string(), group_info);
         }
     }
 
@@ -598,9 +588,12 @@ impl CollectionRunner {
             &self.group_metadata_map,
             &live_group_ids,
             MAIN_CLI_GROUP_ID,
-            GroupType::MainCLI,
-            "Nx CLI",
-            None,
+            GroupInfo {
+                group_type: GroupType::MainCLI,
+                display_name: "Nx CLI".to_string(),
+                id: MAIN_CLI_GROUP_ID.to_string(),
+                task_ids: None,
+            },
         );
 
         Self::maybe_add_group(
@@ -608,9 +601,12 @@ impl CollectionRunner {
             &self.group_metadata_map,
             &live_group_ids,
             MAIN_CLI_SUBPROCESSES_GROUP_ID,
-            GroupType::MainCliSubprocesses,
-            "Nx CLI Subprocesses",
-            None,
+            GroupInfo {
+                group_type: GroupType::MainCliSubprocesses,
+                display_name: "Nx CLI Subprocesses".to_string(),
+                id: MAIN_CLI_SUBPROCESSES_GROUP_ID.to_string(),
+                task_ids: None,
+            },
         );
 
         Self::maybe_add_group(
@@ -618,9 +614,12 @@ impl CollectionRunner {
             &self.group_metadata_map,
             &live_group_ids,
             DAEMON_GROUP_ID,
-            GroupType::Daemon,
-            "Nx Daemon",
-            None,
+            GroupInfo {
+                group_type: GroupType::Daemon,
+                display_name: "Nx Daemon".to_string(),
+                id: DAEMON_GROUP_ID.to_string(),
+                task_ids: None,
+            },
         );
 
         Self::maybe_add_group(
@@ -628,9 +627,12 @@ impl CollectionRunner {
             &self.group_metadata_map,
             &live_group_ids,
             DAEMON_SUBPROCESSES_GROUP_ID,
-            GroupType::DaemonSubprocesses,
-            "Nx Daemon Subprocesses",
-            None,
+            GroupInfo {
+                group_type: GroupType::DaemonSubprocesses,
+                display_name: "Nx Daemon Subprocesses".to_string(),
+                id: DAEMON_SUBPROCESSES_GROUP_ID.to_string(),
+                task_ids: None,
+            },
         );
 
         // Add groups for all NEW registered tasks
@@ -641,9 +643,12 @@ impl CollectionRunner {
                 &self.group_metadata_map,
                 &live_group_ids,
                 &task_id,
-                GroupType::Task,
-                &task_id,
-                None,
+                GroupInfo {
+                    group_type: GroupType::Task,
+                    display_name: task_id.clone(),
+                    id: task_id.clone(),
+                    task_ids: None,
+                },
             );
         }
 
@@ -656,9 +661,12 @@ impl CollectionRunner {
                 &self.group_metadata_map,
                 &live_group_ids,
                 &batch_id,
-                GroupType::Batch,
-                &batch_id,
-                Some(batch_reg.task_ids.as_ref().to_vec()),
+                GroupInfo {
+                    group_type: GroupType::Batch,
+                    display_name: batch_id.clone(),
+                    id: batch_id.clone(),
+                    task_ids: Some(batch_reg.task_ids.as_ref().to_vec()),
+                },
             );
         }
 
