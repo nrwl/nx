@@ -3,7 +3,7 @@ import { CompilerOptions } from 'typescript';
 import { statSync } from 'fs';
 import { findNodes } from '@nx/js';
 import ts = require('typescript');
-import { gte, major } from 'semver';
+import { gte, major, coerce } from 'semver';
 import { join } from 'path';
 import { storybookVersion } from './versions';
 
@@ -40,12 +40,13 @@ export function getStorybookVersionToInstall(tree: Tree) {
   let storybookVersionToInstall = storybookVersion;
   const installedStorybookMajorVersion = storybookMajorVersion(tree);
   const installedStorybookVersion = getInstalledStorybookVersion(tree);
-  if (
-    installedStorybookMajorVersion >= 7 &&
-    installedStorybookVersion &&
-    gte(installedStorybookVersion, '7.0.0')
-  ) {
-    storybookVersionToInstall = installedStorybookVersion;
+  if (installedStorybookMajorVersion >= 7 && installedStorybookVersion) {
+    // Normalize the version by removing range operators (^, ~, etc.)
+    // coerce handles ranges like ^10.0.0 and returns a valid SemVer object
+    const coercedVersion = coerce(installedStorybookVersion);
+    if (coercedVersion && gte(coercedVersion.version, '7.0.0')) {
+      storybookVersionToInstall = installedStorybookVersion;
+    }
   }
   return storybookVersionToInstall;
 }
