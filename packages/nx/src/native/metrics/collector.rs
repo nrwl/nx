@@ -560,66 +560,92 @@ impl CollectionRunner {
         // Capture timestamp FIRST for accuracy
         let timestamp = current_timestamp_millis();
 
-        // Refresh all processes
+        // Refresh all processes and collect metrics in minimal lock scope
         trace!("Acquiring system lock for process refresh");
-        let mut sys = self.system.lock();
-        trace!("System lock acquired, refreshing all processes");
+        let (
+            children_map,
+            main_cli_processes,
+            main_cli_metadata,
+            main_cli_subprocess_processes,
+            main_cli_subprocess_metadata,
+            daemon_processes,
+            daemon_metadata,
+            tasks_metrics,
+            tasks_metadata,
+            batches_metrics,
+            batches_metadata,
+        ) = {
+            let mut sys = self.system.lock();
+            trace!("System lock acquired, refreshing all processes");
 
-        sys.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::All,
-            true, // remove_dead_processes
-            ProcessRefreshKind::nothing()
-                .with_memory()
-                .with_cpu()
-                .with_exe(UpdateKind::OnlyIfNotSet)
-                .with_cmd(UpdateKind::OnlyIfNotSet)
-                .with_cwd(UpdateKind::OnlyIfNotSet),
-        );
-        trace!("Process refresh complete, building parent-child map");
+            sys.refresh_processes_specifics(
+                sysinfo::ProcessesToUpdate::All,
+                true, // remove_dead_processes
+                ProcessRefreshKind::nothing()
+                    .with_memory()
+                    .with_cpu()
+                    .with_exe(UpdateKind::OnlyIfNotSet)
+                    .with_cmd(UpdateKind::OnlyIfNotSet)
+                    .with_cwd(UpdateKind::OnlyIfNotSet),
+            );
+            trace!("Process refresh complete, building parent-child map");
 
-        let children_map = Self::build_parent_child_map(&sys);
+            let children_map = Self::build_parent_child_map(&sys);
 
-        // Remove dead processes to prevent stale metrics from terminated processes
-        trace!("Cleaning up dead processes from registration maps");
-        self.individual_tasks.retain(|_, task_reg| {
-            task_reg
-                .anchor_pids
-                .iter()
-                .any(|pid| sys.process(Pid::from(*pid as usize)).is_some())
-        });
-        self.batches.retain(|_, batch_reg| {
-            sys.process(Pid::from(batch_reg.anchor_pid as usize))
-                .is_some()
-        });
-        self.main_cli_subprocess_pids
-            .retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
-        trace!("Dead process cleanup complete");
+            // Remove dead processes to prevent stale metrics from terminated processes
+            trace!("Cleaning up dead processes from registration maps");
+            self.individual_tasks.retain(|_, task_reg| {
+                task_reg
+                    .anchor_pids
+                    .iter()
+                    .any(|pid| sys.process(Pid::from(*pid as usize)).is_some())
+            });
+            self.batches.retain(|_, batch_reg| {
+                sys.process(Pid::from(batch_reg.anchor_pid as usize))
+                    .is_some()
+            });
+            self.main_cli_subprocess_pids
+                .retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
+            trace!("Dead process cleanup complete");
 
-        // Clean up daemon PID if process no longer exists (acquire lock once)
-        // Must release this lock before any other operations to avoid deadlock with registration threads
-        trace!("Acquiring daemon_pid lock for cleanup check");
-        {
-            let mut daemon_pid = self.daemon_pid.lock();
-            if let Some(pid) = *daemon_pid {
-                if sys.process(Pid::from(pid as usize)).is_none() {
-                    trace!(
-                        "Daemon process {} no longer exists, clearing registration",
-                        pid
-                    );
-                    *daemon_pid = None;
+            // Clean up daemon PID if process no longer exists
+            trace!("Checking daemon process");
+            {
+                let mut daemon_pid = self.daemon_pid.lock();
+                if let Some(pid) = *daemon_pid {
+                    if sys.process(Pid::from(pid as usize)).is_none() {
+                        trace!(
+                            "Daemon process {} no longer exists, clearing registration",
+                            pid
+                        );
+                        *daemon_pid = None;
+                    }
                 }
             }
-        } // daemon_pid lock is released here
-        trace!("Daemon lock released");
 
-        // Collect metrics for all the processes
-        let (main_cli_processes, main_cli_metadata) = self.collect_main_cli_metrics(&sys);
-        let (main_cli_subprocess_processes, main_cli_subprocess_metadata) =
-            self.collect_main_cli_subprocess_metrics(&sys, &children_map);
-        let (daemon_processes, daemon_metadata) = self.collect_daemon_metrics(&sys, &children_map);
-        let (tasks_metrics, tasks_metadata) = self.collect_all_task_metrics(&sys, &children_map);
-        let (batches_metrics, batches_metadata) =
-            self.collect_all_batch_metrics(&sys, &children_map);
+            // Collect metrics for all the processes while holding system lock
+            trace!("Collecting metrics for all registered processes");
+            let main_cli = self.collect_main_cli_metrics(&sys);
+            let main_cli_subproc = self.collect_main_cli_subprocess_metrics(&sys, &children_map);
+            let daemon = self.collect_daemon_metrics(&sys, &children_map);
+            let tasks = self.collect_all_task_metrics(&sys, &children_map);
+            let batches = self.collect_all_batch_metrics(&sys, &children_map);
+            trace!("Metrics collection complete, releasing system lock");
+
+            (
+                children_map,
+                main_cli.0,
+                main_cli.1,
+                main_cli_subproc.0,
+                main_cli_subproc.1,
+                daemon.0,
+                daemon.1,
+                tasks.0,
+                tasks.1,
+                batches.0,
+                batches.1,
+            )
+        }; // system lock is released here
 
         // Accumulate metadata from all collection sources
         let mut new_metadata = main_cli_metadata;
