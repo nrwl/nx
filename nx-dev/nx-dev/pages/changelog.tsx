@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { LinkIcon, TagIcon } from '@heroicons/react/24/outline';
 import { Breadcrumbs, Header, Footer } from '@nx/nx-dev-ui-common';
 import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
@@ -45,7 +47,7 @@ function formatDate(dateStr: string): string {
   return monthDayYear.replace(day.toString(), day + daySuffix);
 
   // Function to get the day suffix (st, nd, rd, or th)
-  function getDaySuffix(day) {
+  function getDaySuffix(day: number) {
     if (day > 3 && day < 21) return 'th';
     switch (day % 10) {
       case 1:
@@ -84,7 +86,9 @@ async function fetchGithubRelease(
   }));
 }
 
-export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
+export async function getStaticProps(): Promise<{
+  props: ChangeLogProps & { headerProps?: { starCount?: number } };
+}> {
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
   let githubReleases: GithubReleaseData[] = [];
@@ -96,10 +100,10 @@ export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
       ...(await fetchGithubRelease(octokit, 2)),
     ];
   } catch (error: unknown) {
-    if (!error || typeof error !== 'object' || !('status' in error))
-      throw error;
+    if (!error || typeof error !== 'object' || !('status' in error)) throw error;
 
-    if (error.status === 401) {
+    // @ts-expect-error - narrowing above
+    if ((error as any).status === 401) {
       throw new Error(
         'The GitHub token is invalid or has expired. Please provide a new Personal Access Token (PAT) via the GITHUB_TOKEN environment variable.'
       );
@@ -164,15 +168,43 @@ export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
   // sort it by version desc
   groupedReleases.sort((a, b) => compare(b.version, a.version));
 
+  // Read precomputed quality indicators to extract star count for Header
+  const qiPath = path.join(
+    process.cwd(),
+    'nx-dev',
+    'nx-dev',
+    'pages',
+    'quality-indicators.json'
+  );
+
+  let indicators: any = {};
+  try {
+    const raw = fs.readFileSync(qiPath, 'utf8');
+    indicators = JSON.parse(raw);
+  } catch (e) {
+    // If the file is missing or unreadable, we still return the page (starCount will be undefined)
+    // You may want to check build logs to ensure the generator ran successfully.
+    console.warn('Could not read quality-indicators.json at build time:', e);
+  }
+
+  const starCount =
+    indicators?.['nx']?.githubStars ??
+    indicators?.['nrwl/nx']?.githubStars ??
+    undefined;
+
   return {
     props: {
       changelog: groupedReleases,
+      headerProps: { starCount },
     },
   };
 }
 
-export default function Changelog(props: ChangeLogProps): JSX.Element {
+export default function Changelog(
+  props: ChangeLogProps & { headerProps?: { starCount?: number } }
+): JSX.Element {
   const router = useRouter();
+  const headerStarCount = props.headerProps?.starCount;
 
   const renderedChangelog = props.changelog.map((entry) => {
     if (entry.content) {
@@ -190,7 +222,8 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
 
     return entry;
   });
-  const convertToDate = (invalidDate) =>
+
+  const convertToDate = (invalidDate: string) =>
     new Date(invalidDate.replace(/(nd|th|rd|st)/g, ''));
 
   return (
@@ -216,7 +249,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
         }}
       />
       <div className="mb-12">
-        <Header />
+        <Header starCount={headerStarCount} />
       </div>
 
       <main id="main" role="main">
@@ -277,11 +310,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                     </Link>
                   </p>
                   <p className="py-0.5 text-xs leading-5 text-slate-400 dark:text-slate-500">
-                    <time
-                      dateTime={convertToDate(
-                        changelog.date
-                      ).toLocaleDateString()}
-                    >
+                    <time dateTime={convertToDate(changelog.date).toLocaleDateString()}>
                       {changelog.date}
                     </time>
                   </p>
