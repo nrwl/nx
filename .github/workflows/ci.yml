@@ -92,6 +92,9 @@ jobs:
         run: 
           pnpm nx report
 
+      - name: Show project graph
+        run: npx nx show project nx-maven-plugin | jq .targets.test
+
       - name: Run Checks/Lint/Test/Build
         run: |
           pids=()
