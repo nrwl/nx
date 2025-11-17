@@ -436,35 +436,50 @@ impl CollectionRunner {
     /// Create only NEW groups based on current registrations
     /// Returns only groups that haven't been sent before
     /// Also cleans up group IDs for tasks/batches that no longer exist
+    /// Add a group to the new groups map if it's live and new
+    fn maybe_add_group(
+        new_groups: &mut HashMap<String, GroupInfo>,
+        group_metadata_map: &DashMap<String, GroupInfo>,
+        live_group_ids: &HashSet<String>,
+        group_id: &str,
+        group_type: GroupType,
+        display_name: &str,
+        task_ids: Option<Vec<String>>,
+    ) {
+        if live_group_ids.contains(group_id) && !group_metadata_map.contains_key(group_id) {
+            new_groups.insert(
+                group_id.to_string(),
+                GroupInfo {
+                    group_type,
+                    display_name: display_name.to_string(),
+                    id: group_id.to_string(),
+                    task_ids,
+                },
+            );
+        }
+    }
+
     fn create_new_group_info(&self) -> HashMap<String, GroupInfo> {
-        trace!("Building live group IDs");
         // Build set of currently live groups
         let mut live_group_ids = HashSet::new();
+
         // Acquire locks once to minimize contention
-        trace!("Acquiring main_cli_pid and daemon_pid locks");
         let main_cli_pid = self.main_cli_pid.lock();
         let daemon_pid = self.daemon_pid.lock();
-        trace!("Locks acquired, checking registered processes");
 
         if main_cli_pid.is_some() {
-            trace!("Main CLI registered");
             live_group_ids.insert(MAIN_CLI_GROUP_ID.to_string());
         }
         // Add main_cli_subprocesses group if subprocesses exist and main CLI is registered
         if main_cli_pid.is_some() && !self.main_cli_subprocess_pids.is_empty() {
-            trace!(
-                "Main CLI subprocesses registered: count={}",
-                self.main_cli_subprocess_pids.len()
-            );
             live_group_ids.insert(MAIN_CLI_SUBPROCESSES_GROUP_ID.to_string());
         }
         if daemon_pid.is_some() {
-            trace!("Daemon registered");
             live_group_ids.insert(DAEMON_GROUP_ID.to_string());
         }
         drop(main_cli_pid);
         drop(daemon_pid);
-        trace!("Locks released");
+
         for entry in self.individual_tasks.iter() {
             live_group_ids.insert(entry.key().clone());
         }
@@ -478,84 +493,64 @@ impl CollectionRunner {
 
         let mut new_groups = HashMap::new();
 
-        // Add main_cli group if registered and new
-        if live_group_ids.contains(MAIN_CLI_GROUP_ID)
-            && !self.group_metadata_map.contains_key(MAIN_CLI_GROUP_ID)
-        {
-            new_groups.insert(
-                MAIN_CLI_GROUP_ID.to_string(),
-                GroupInfo {
-                    group_type: GroupType::MainCLI,
-                    display_name: "Nx CLI".to_string(),
-                    id: MAIN_CLI_GROUP_ID.to_string(),
-                    task_ids: None,
-                },
-            );
-        }
+        // Add standard groups if registered and new
+        Self::maybe_add_group(
+            &mut new_groups,
+            &self.group_metadata_map,
+            &live_group_ids,
+            MAIN_CLI_GROUP_ID,
+            GroupType::MainCLI,
+            "Nx CLI",
+            None,
+        );
 
-        // Add main_cli_subprocesses group if subprocesses exist and new
-        if live_group_ids.contains(MAIN_CLI_SUBPROCESSES_GROUP_ID)
-            && !self
-                .group_metadata_map
-                .contains_key(MAIN_CLI_SUBPROCESSES_GROUP_ID)
-        {
-            new_groups.insert(
-                MAIN_CLI_SUBPROCESSES_GROUP_ID.to_string(),
-                GroupInfo {
-                    group_type: GroupType::MainCliSubprocesses,
-                    display_name: "Nx CLI Subprocesses".to_string(),
-                    id: MAIN_CLI_SUBPROCESSES_GROUP_ID.to_string(),
-                    task_ids: None,
-                },
-            );
-        }
+        Self::maybe_add_group(
+            &mut new_groups,
+            &self.group_metadata_map,
+            &live_group_ids,
+            MAIN_CLI_SUBPROCESSES_GROUP_ID,
+            GroupType::MainCliSubprocesses,
+            "Nx CLI Subprocesses",
+            None,
+        );
 
-        // Add daemon group if registered and new
-        if live_group_ids.contains(DAEMON_GROUP_ID)
-            && !self.group_metadata_map.contains_key(DAEMON_GROUP_ID)
-        {
-            new_groups.insert(
-                DAEMON_GROUP_ID.to_string(),
-                GroupInfo {
-                    group_type: GroupType::Daemon,
-                    display_name: "Nx Daemon".to_string(),
-                    id: DAEMON_GROUP_ID.to_string(),
-                    task_ids: None,
-                },
-            );
-        }
+        Self::maybe_add_group(
+            &mut new_groups,
+            &self.group_metadata_map,
+            &live_group_ids,
+            DAEMON_GROUP_ID,
+            GroupType::Daemon,
+            "Nx Daemon",
+            None,
+        );
 
         // Add groups for all NEW registered tasks
         for entry in self.individual_tasks.iter() {
             let task_id = entry.key().clone();
-            if !self.group_metadata_map.contains_key(&task_id) {
-                new_groups.insert(
-                    task_id.clone(),
-                    GroupInfo {
-                        group_type: GroupType::Task,
-                        display_name: task_id.clone(),
-                        id: task_id,
-                        task_ids: None,
-                    },
-                );
-            }
+            Self::maybe_add_group(
+                &mut new_groups,
+                &self.group_metadata_map,
+                &live_group_ids,
+                &task_id,
+                GroupType::Task,
+                &task_id,
+                None,
+            );
         }
 
         // Add groups for all NEW registered batches
         for entry in self.batches.iter() {
             let batch_id = entry.key().clone();
-            if !self.group_metadata_map.contains_key(&batch_id) {
-                let batch_reg = entry.value();
-                new_groups.insert(
-                    batch_id.clone(),
-                    GroupInfo {
-                        group_type: GroupType::Batch,
-                        display_name: batch_id.clone(),
-                        id: batch_id,
-                        task_ids: Some(batch_reg.task_ids.as_ref().to_vec()),
-                    },
-                );
-            }
+            let batch_reg = entry.value();
+            Self::maybe_add_group(
+                &mut new_groups,
+                &self.group_metadata_map,
+                &live_group_ids,
+                &batch_id,
+                GroupType::Batch,
+                &batch_id,
+                Some(batch_reg.task_ids.as_ref().to_vec()),
+            );
         }
 
         new_groups
