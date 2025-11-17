@@ -12,7 +12,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::Duration;
 use sysinfo::{Pid, ProcessRefreshKind, System, UpdateKind};
-use tracing::error;
+use tracing::{trace, error};
 
 use crate::native::metrics::types::{
     BatchRegistration, CollectorConfig, GroupInfo, GroupType, IndividualTaskRegistration, Metadata,
@@ -411,24 +411,31 @@ impl CollectionRunner {
     /// Returns only groups that haven't been sent before
     /// Also cleans up group IDs for tasks/batches that no longer exist
     fn create_new_group_info(&self) -> HashMap<String, GroupInfo> {
+        trace!("Building live group IDs");
         // Build set of currently live groups
         let mut live_group_ids = HashSet::new();
         // Acquire locks once to minimize contention
+        trace!("Acquiring main_cli_pid and daemon_pid locks");
         let main_cli_pid = self.main_cli_pid.lock();
         let daemon_pid = self.daemon_pid.lock();
+        trace!("Locks acquired, checking registered processes");
 
         if main_cli_pid.is_some() {
+            trace!("Main CLI registered");
             live_group_ids.insert(MAIN_CLI_GROUP_ID.to_string());
         }
         // Add main_cli_subprocesses group if subprocesses exist and main CLI is registered
         if main_cli_pid.is_some() && !self.main_cli_subprocess_pids.is_empty() {
+            trace!("Main CLI subprocesses registered: count={}", self.main_cli_subprocess_pids.len());
             live_group_ids.insert(MAIN_CLI_SUBPROCESSES_GROUP_ID.to_string());
         }
         if daemon_pid.is_some() {
+            trace!("Daemon registered");
             live_group_ids.insert(DAEMON_GROUP_ID.to_string());
         }
         drop(main_cli_pid);
         drop(daemon_pid);
+        trace!("Locks released");
         for entry in self.individual_tasks.iter() {
             live_group_ids.insert(entry.key().clone());
         }
@@ -527,11 +534,15 @@ impl CollectionRunner {
 
     /// Discover all current processes and collect their metrics
     fn collect_metrics(&self) -> Result<MetricsCollectionResult, Box<dyn std::error::Error>> {
+        trace!("Starting metrics collection cycle");
         // Capture timestamp FIRST for accuracy
         let timestamp = current_timestamp_millis();
 
         // Refresh all processes
+        trace!("Acquiring system lock for process refresh");
         let mut sys = self.system.lock();
+        trace!("System lock acquired, refreshing all processes");
+
         sys.refresh_processes_specifics(
             sysinfo::ProcessesToUpdate::All,
             true, // remove_dead_processes
@@ -542,10 +553,12 @@ impl CollectionRunner {
                 .with_cmd(UpdateKind::OnlyIfNotSet)
                 .with_cwd(UpdateKind::OnlyIfNotSet),
         );
+        trace!("Process refresh complete, building parent-child map");
 
         let children_map = Self::build_parent_child_map(&sys);
 
         // Remove dead processes to prevent stale metrics from terminated processes
+        trace!("Cleaning up dead processes from registration maps");
         self.individual_tasks.retain(|_, task_reg| {
             task_reg
                 .anchor_pids
@@ -558,17 +571,21 @@ impl CollectionRunner {
         });
         self.main_cli_subprocess_pids
             .retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
+        trace!("Dead process cleanup complete");
 
         // Clean up daemon PID if process no longer exists (acquire lock once)
         // Must release this lock before any other operations to avoid deadlock with registration threads
+        trace!("Acquiring daemon_pid lock for cleanup check");
         {
             let mut daemon_pid = self.daemon_pid.lock();
             if let Some(pid) = *daemon_pid {
                 if sys.process(Pid::from(pid as usize)).is_none() {
+                    trace!("Daemon process {} no longer exists, clearing registration", pid);
                     *daemon_pid = None;
                 }
             }
         } // daemon_pid lock is released here
+        trace!("Daemon lock released");
 
         // Collect metrics for all the processes
         let (main_cli_processes, main_cli_metadata) = self.collect_main_cli_metrics(&sys);
@@ -619,17 +636,22 @@ impl CollectionRunner {
             .collect();
 
         // Create only NEW groups and insert into DashMap
+        trace!("Creating new group info");
         let new_groups = self.create_new_group_info();
+        trace!("Created {} new groups", new_groups.len());
+
         for (group_id, group_info) in &new_groups {
             self.group_metadata_map
                 .insert(group_id.clone(), group_info.clone());
         }
+        trace!("Inserted groups into metadata map");
 
         let metadata = Metadata {
             groups: new_groups,
             processes: process_metadata_str,
         };
 
+        trace!("Metrics collection complete: {} processes collected", processes.len());
         Ok(MetricsCollectionResult {
             timestamp,
             processes,
@@ -921,10 +943,15 @@ impl ProcessMetricsCollector {
     /// Register the main CLI process for metrics collection
     #[napi]
     pub fn register_main_cli_process(&self, pid: i32) {
+        trace!("Registering main CLI process: pid={}", pid);
+
         // Establish baseline immediately for the main CLI process
         // This ensures accurate CPU data from the first collection cycle
         // Acquire system lock FIRST to avoid deadlock with collection thread
+        trace!("Acquiring system lock for main CLI baseline refresh");
         let mut sys = self.system.lock();
+        trace!("System lock acquired, refreshing process: pid={}", pid);
+
         let target_pid = Pid::from(pid as usize);
         sys.refresh_processes_specifics(
             sysinfo::ProcessesToUpdate::Some(&[target_pid]),
@@ -932,18 +959,26 @@ impl ProcessMetricsCollector {
             ProcessRefreshKind::nothing().with_cpu(),
         );
         drop(sys); // Explicitly release system lock
+        trace!("System lock released after refresh");
 
         // Now register the PID (after releasing system lock)
+        trace!("Acquiring main_cli_pid lock to register: pid={}", pid);
         *self.main_cli_pid.lock() = Some(pid);
+        trace!("Main CLI process registered: pid={}", pid);
     }
 
     /// Register a subprocess of the main CLI for metrics collection
     #[napi]
     pub fn register_main_cli_subprocess(&self, pid: i32, alias: Option<String>) {
+        trace!("Registering main CLI subprocess: pid={}, alias={:?}", pid, alias);
+
         // Establish baseline immediately for this subprocess
         // This ensures accurate CPU data from the first collection cycle after spawn
         // Acquire system lock FIRST to avoid deadlock with collection thread
+        trace!("Acquiring system lock for subprocess baseline refresh");
         let mut sys = self.system.lock();
+        trace!("System lock acquired, refreshing subprocess: pid={}", pid);
+
         let target_pid = Pid::from(pid as usize);
         sys.refresh_processes_specifics(
             sysinfo::ProcessesToUpdate::Some(&[target_pid]),
@@ -951,9 +986,12 @@ impl ProcessMetricsCollector {
             ProcessRefreshKind::nothing().with_cpu(),
         );
         drop(sys); // Explicitly release system lock
+        trace!("System lock released after subprocess refresh");
 
         // Now register in map (after releasing system lock)
+        trace!("Inserting subprocess into map: pid={}", pid);
         self.main_cli_subprocess_pids.insert(pid, alias);
+        trace!("Main CLI subprocess registered: pid={}", pid);
     }
 
     /// Register the daemon process for metrics collection
@@ -967,10 +1005,15 @@ impl ProcessMetricsCollector {
     /// Automatically creates the task if it doesn't exist
     #[napi]
     pub fn register_task_process(&self, task_id: String, pid: i32) {
+        trace!("Registering task process: task_id={}, pid={}", task_id, pid);
+
         // Establish baseline immediately for this task process
         // This ensures accurate CPU data from the first collection cycle after spawn
         // Acquire system lock FIRST to avoid deadlock with collection thread
+        trace!("Acquiring system lock for task baseline refresh");
         let mut sys = self.system.lock();
+        trace!("System lock acquired, refreshing task process: task_id={}, pid={}", task_id, pid);
+
         let target_pid = Pid::from(pid as usize);
         sys.refresh_processes_specifics(
             sysinfo::ProcessesToUpdate::Some(&[target_pid]),
@@ -978,21 +1021,29 @@ impl ProcessMetricsCollector {
             ProcessRefreshKind::nothing().with_cpu(),
         );
         drop(sys); // Explicitly release system lock
+        trace!("System lock released after task refresh");
 
         // Now register the task (after releasing system lock)
+        trace!("Inserting task into map: task_id={}, pid={}", task_id, pid);
         self.individual_tasks
             .entry(task_id.clone())
-            .or_insert_with(|| IndividualTaskRegistration::new(task_id))
+            .or_insert_with(|| IndividualTaskRegistration::new(task_id.clone()))
             .anchor_pids
             .insert(pid);
+        trace!("Task process registered: task_id={}, pid={}", task_id, pid);
     }
 
     /// Register a batch with multiple tasks sharing a worker
     #[napi]
     pub fn register_batch(&self, batch_id: String, task_ids: Vec<String>, pid: i32) {
+        trace!("Registering batch: batch_id={}, task_count={}, pid={}", batch_id, task_ids.len(), pid);
+
         // Establish baseline immediately for the batch worker
         // Acquire system lock FIRST to avoid deadlock with collection thread
+        trace!("Acquiring system lock for batch baseline refresh");
         let mut sys = self.system.lock();
+        trace!("System lock acquired, refreshing batch process: batch_id={}, pid={}", batch_id, pid);
+
         let target_pid = Pid::from(pid as usize);
         sys.refresh_processes_specifics(
             sysinfo::ProcessesToUpdate::Some(&[target_pid]),
@@ -1000,12 +1051,15 @@ impl ProcessMetricsCollector {
             ProcessRefreshKind::nothing().with_cpu(),
         );
         drop(sys); // Explicitly release system lock
+        trace!("System lock released after batch refresh");
 
         // Now register the batch (after releasing system lock)
+        trace!("Inserting batch into map: batch_id={}", batch_id);
         self.batches.insert(
             batch_id.clone(),
-            BatchRegistration::new(batch_id, task_ids, pid),
+            BatchRegistration::new(batch_id.clone(), task_ids, pid),
         );
+        trace!("Batch registered: batch_id={}, pid={}", batch_id, pid);
     }
 
     /// Subscribe to push-based metrics notifications from TypeScript
