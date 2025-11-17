@@ -577,7 +577,6 @@ exports[`app --strict should enable strict type checking: app tsconfig.json 1`] 
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true,
-    "typeCheckHostBindings": true,
   },
   "compilerOptions": {
     "experimentalDecorators": true,
@@ -906,12 +905,6 @@ exports[`app nested should create project configs 1`] = `
         "{options.outputPath}",
       ],
     },
-    "extract-i18n": {
-      "executor": "@angular/build:extract-i18n",
-      "options": {
-        "buildTarget": "my-app:build",
-      },
-    },
     "lint": {
       "executor": "@nx/eslint:lint",
     },
@@ -1022,12 +1015,6 @@ exports[`app not nested should create project configs 1`] = `
       "outputs": [
         "{options.outputPath}",
       ],
-    },
-    "extract-i18n": {
-      "executor": "@angular/build:extract-i18n",
-      "options": {
-        "buildTarget": "my-app:build",
-      },
     },
     "lint": {
       "executor": "@nx/eslint:lint",
@@ -1140,7 +1127,6 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true,
-    "typeCheckHostBindings": true,
   },
   "compilerOptions": {
     "experimentalDecorators": true,
