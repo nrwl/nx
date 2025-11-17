@@ -267,14 +267,47 @@ impl CollectionRunner {
         *self.daemon_pid.lock()
     }
 
+    /// Collect metrics for a process tree rooted at root_pid
+    /// Returns (processes, metadata) where processes is ordered with root first
+    fn collect_tree_metrics(
+        &self,
+        sys: &System,
+        children_map: &ParentToChildrenMap,
+        root_pid: i32,
+        group_id: &str,
+        get_alias: impl Fn(i32) -> Option<String>,
+    ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
+        let mut new_metadata = HashMap::new();
+        let mut processes = Vec::new();
+
+        let discovered_pids = Self::collect_tree_pids_from_map(children_map, root_pid);
+
+        for (idx, pid) in discovered_pids.into_iter().enumerate() {
+            if let Some((metrics, metadata)) = self.collect_process_info(
+                sys,
+                pid,
+                get_alias(pid),
+                group_id,
+                idx == 0, // First process is root
+            ) {
+                if let Some(meta) = metadata {
+                    new_metadata.insert(pid, meta);
+                }
+                processes.push(metrics);
+            }
+        }
+
+        (processes, new_metadata)
+    }
+
     /// Collect metrics for main CLI subprocesses and their process trees
     fn collect_main_cli_subprocess_metrics(
         &self,
         sys: &System,
         children_map: &ParentToChildrenMap,
     ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
-        let mut new_metadata = HashMap::new();
-        let mut processes = Vec::new();
+        let mut all_processes = Vec::new();
+        let mut all_metadata = HashMap::new();
 
         // Only collect subprocesses if the main CLI is registered and subprocesses exist
         let main_cli_registered = self.is_main_cli_registered();
@@ -285,31 +318,20 @@ impl CollectionRunner {
                 let alias = entry.value().clone();
 
                 // Collect the subprocess and its entire process tree
-                let discovered_pids =
-                    Self::collect_tree_pids_from_map(children_map, subprocess_pid);
+                let (processes, metadata) = self.collect_tree_metrics(
+                    sys,
+                    children_map,
+                    subprocess_pid,
+                    MAIN_CLI_SUBPROCESSES_GROUP_ID,
+                    |pid| if pid == subprocess_pid { alias.clone() } else { None },
+                );
 
-                for pid in discovered_pids.into_iter() {
-                    if let Some((metrics, metadata)) = self.collect_process_info(
-                        sys,
-                        pid,
-                        if pid == subprocess_pid {
-                            alias.clone()
-                        } else {
-                            None
-                        },
-                        MAIN_CLI_SUBPROCESSES_GROUP_ID,
-                        pid == subprocess_pid, // First process is root
-                    ) {
-                        if let Some(meta) = metadata {
-                            new_metadata.insert(pid, meta);
-                        }
-                        processes.push(metrics);
-                    }
-                }
+                all_processes.extend(processes);
+                all_metadata.extend(metadata);
             }
         }
 
-        (processes, new_metadata)
+        (all_processes, all_metadata)
     }
 
     /// Collect metrics for the daemon process and its entire process tree
@@ -318,39 +340,14 @@ impl CollectionRunner {
         sys: &System,
         children_map: &ParentToChildrenMap,
     ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
-        let mut new_metadata = HashMap::new();
-        let mut processes = Vec::new();
-
         // Read daemon PID early to avoid holding system lock while acquiring daemon_pid lock
         let daemon_pid = self.get_daemon_pid();
 
         if let Some(pid) = daemon_pid {
-            let discovered_pids = Self::collect_tree_pids_from_map(children_map, pid);
-            let daemon_process_metrics: Vec<ProcessMetrics> = discovered_pids
-                .into_iter()
-                .enumerate()
-                .filter_map(|(idx, p)| {
-                    if let Some((metrics, metadata)) = self.collect_process_info(
-                        sys,
-                        p,
-                        None,
-                        DAEMON_GROUP_ID,
-                        idx == 0, // First process is root
-                    ) {
-                        if let Some(meta) = metadata {
-                            new_metadata.insert(p, meta);
-                        }
-                        Some(metrics)
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-            processes.extend(daemon_process_metrics);
+            self.collect_tree_metrics(sys, children_map, pid, DAEMON_GROUP_ID, |_| None)
+        } else {
+            (Vec::new(), HashMap::new())
         }
-
-        (processes, new_metadata)
     }
 
     /// Collect metrics for all registered individual tasks
