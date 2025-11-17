@@ -314,6 +314,7 @@ describe('lib', () => {
         compilerOptions: {
           experimentalDecorators: true,
           importHelpers: true,
+          isolatedModules: true,
           module: 'preserve',
           moduleResolution: 'bundler',
           skipLibCheck: true,
@@ -438,7 +439,7 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts({ directory: 'my-lib2' });
 
       // ASSERT
-      expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('my-lib/src/lib/my-lib-module.ts')).toBeTruthy();
 
@@ -447,7 +448,7 @@ describe('lib', () => {
       expect(tree.exists('my-lib/src/lib/my-lib.service.ts')).toBeFalsy();
       expect(tree.exists('my-lib/src/lib/my-lib.service.spec.ts')).toBeFalsy();
 
-      expect(tree.exists(`my-lib2/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-lib2/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-lib2/src/index.ts')).toBeTruthy();
       expect(tree.exists('my-lib2/src/lib/my-lib2-module.ts')).toBeTruthy();
 
@@ -528,7 +529,7 @@ describe('lib', () => {
       });
 
       // ASSERT
-      expect(tree.exists(`my-dir/my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-dir/my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
         tree.exists('my-dir/my-lib/src/lib/my-lib-module.ts')
@@ -543,7 +544,7 @@ describe('lib', () => {
         tree.exists('my-dir/my-lib/src/lib/my-lib.service.spec.ts')
       ).toBeFalsy();
 
-      expect(tree.exists(`my-dir/my-lib2/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-dir/my-lib2/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-dir/my-lib2/src/index.ts')).toBeTruthy();
       expect(
         tree.exists('my-dir/my-lib2/src/lib/my-lib2-module.ts')
@@ -654,7 +655,7 @@ describe('lib', () => {
 
       // Make sure these exist
       [
-        'my-dir/my-lib/jest.config.ts',
+        'my-dir/my-lib/jest.config.cts',
         'my-dir/my-lib/ng-package.json',
         'my-dir/my-lib/project.json',
         'my-dir/my-lib/tsconfig.lib.prod.json',

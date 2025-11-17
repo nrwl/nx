@@ -47,8 +47,8 @@ exports[`Host App Generator --ssr should generate the correct files 4`] = `
 
 import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
-import * as cors from 'cors';
+import express from 'express';
+import cors from 'cors';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { AppServerModule } from './bootstrap.server';
@@ -242,8 +242,8 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 
 import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
-import * as cors from 'cors';
+import express from 'express';
+import cors from 'cors';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import bootstrap from './bootstrap.server';
@@ -474,8 +474,8 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 
 import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
-import * as cors from 'cors';
+import express from 'express';
+import cors from 'cors';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import bootstrap from './bootstrap.server';
@@ -725,8 +725,8 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 
 import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
-import * as cors from 'cors';
+import express from 'express';
+import cors from 'cors';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { AppServerModule } from './bootstrap.server';

@@ -2,7 +2,11 @@ import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
+<%_ if (useDefaultImport) { _%>
+import express from 'express';
+<%_ } else { _%>
 import * as express from 'express';
+<%_ } _%>
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import <% if (standalone) { %>bootstrap<% } else { %><%= rootModuleClassName %><% } %> from './<%= main.slice(0, -3) %>';
