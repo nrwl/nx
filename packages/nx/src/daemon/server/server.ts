@@ -221,6 +221,9 @@ async function handleMessage(socket: Socket, data: string) {
   const unparsedPayload = data;
   let payload;
   let mode: 'json' | 'v8' = 'json';
+
+  serverLogger.log(`Received raw message of length ${unparsedPayload.length}`);
+
   try {
     // JSON Message
     if (isJsonMessage(unparsedPayload)) {
@@ -237,6 +240,8 @@ async function handleMessage(socket: Socket, data: string) {
       new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
     );
   }
+  serverLogger.log(`Received ${mode} message of type ${payload.type}`);
+
   if (payload.type === 'PING') {
     await handleResult(
       socket,
@@ -440,10 +445,14 @@ export async function handleResult(
   if (hr.error) {
     await respondWithErrorAndExit(socket, hr.description, hr.error);
   } else {
+    serverLogger.log(
+      `Serializing response for ${type} message in ${mode} mode`
+    );
     const response =
       typeof hr.response === 'string'
         ? hr.response
         : serializeUnserializedResult(hr.response, mode);
+    serverLogger.log(`Responding to ${type} message`);
     await respondToClient(socket, response, hr.description);
   }
   const endMark = new Date();

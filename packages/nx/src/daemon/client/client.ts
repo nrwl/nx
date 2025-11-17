@@ -687,15 +687,15 @@ export class DaemonClient {
 
   private handleMessage(serializedResult: string) {
     try {
-      performance.mark('result-parse-start');
+      performance.mark('result-parse-start-' + this.currentMessage.type);
       const parsedResult = isJsonMessage(serializedResult)
         ? JSON.parse(serializedResult)
         : deserialize(Buffer.from(serializedResult, 'binary'));
-      performance.mark('result-parse-end');
+      performance.mark('result-parse-end-' + this.currentMessage.type);
       performance.measure(
-        'deserialize daemon response',
-        'result-parse-start',
-        'result-parse-end'
+        'deserialize daemon response - ' + this.currentMessage.type,
+        'result-parse-start-' + this.currentMessage.type,
+        'result-parse-end-' + this.currentMessage.type
       );
       if (parsedResult.error) {
         if (
@@ -709,10 +709,11 @@ export class DaemonClient {
         }
       } else {
         performance.measure(
-          'total for sendMessageToDaemon()',
+          `${this.currentMessage.type} round trip`,
           'sendMessageToDaemon-start',
-          'result-parse-end'
+          'result-parse-end-' + this.currentMessage.type
         );
+
         return this.currentResolve(parsedResult);
       }
     } catch (e) {
