@@ -616,24 +616,28 @@ impl CollectionRunner {
 
             // Collect metrics for all the processes while holding system lock
             trace!("Collecting metrics for all registered processes");
-            let main_cli = self.collect_main_cli_metrics(&sys);
-            let main_cli_subproc = self.collect_main_cli_subprocess_metrics(&sys, &children_map);
-            let daemon = self.collect_daemon_metrics(&sys, &children_map);
-            let tasks = self.collect_all_task_metrics(&sys, &children_map);
-            let batches = self.collect_all_batch_metrics(&sys, &children_map);
+            let (main_cli_processes, main_cli_metadata) = self.collect_main_cli_metrics(&sys);
+            let (main_cli_subproc_processes, main_cli_subproc_metadata) =
+                self.collect_main_cli_subprocess_metrics(&sys, &children_map);
+            let (daemon_processes, daemon_metadata) =
+                self.collect_daemon_metrics(&sys, &children_map);
+            let (task_processes, task_metadata) =
+                self.collect_all_task_metrics(&sys, &children_map);
+            let (batch_processes, batch_metadata) =
+                self.collect_all_batch_metrics(&sys, &children_map);
             trace!("Metrics collection complete, releasing system lock");
 
             (
-                main_cli.0,
-                main_cli.1,
-                main_cli_subproc.0,
-                main_cli_subproc.1,
-                daemon.0,
-                daemon.1,
-                tasks.0,
-                tasks.1,
-                batches.0,
-                batches.1,
+                main_cli_processes,
+                main_cli_metadata,
+                main_cli_subproc_processes,
+                main_cli_subproc_metadata,
+                daemon_processes,
+                daemon_metadata,
+                task_processes,
+                task_metadata,
+                batch_processes,
+                batch_metadata,
                 daemon_pid_to_clear,
             )
         }; // system lock is released here
