@@ -242,14 +242,13 @@ impl CollectionRunner {
             *self.main_cli_pid.lock()
         };
 
-        if let Some(pid) = main_cli_pid {
-            if let Some((main, metadata)) =
+        if let Some(pid) = main_cli_pid
+            && let Some((main, metadata)) =
                 self.collect_process_info(sys, pid, None, MAIN_CLI_GROUP_ID, true)
-            {
-                processes.push(main);
-                if let Some(meta) = metadata {
-                    new_metadata.insert(pid, meta);
-                }
+        {
+            processes.push(main);
+            if let Some(meta) = metadata {
+                new_metadata.insert(pid, meta);
             }
         }
 
@@ -612,15 +611,7 @@ impl CollectionRunner {
             trace!("Checking daemon process existence");
             let daemon_pid_to_clear = {
                 let daemon_pid = self.daemon_pid.lock();
-                if let Some(pid) = *daemon_pid {
-                    if sys.process(Pid::from(pid as usize)).is_none() {
-                        Some(pid)
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
+                (*daemon_pid).filter(|&pid| sys.process(Pid::from(pid as usize)).is_none())
             };
 
             // Collect metrics for all the processes while holding system lock
@@ -653,10 +644,10 @@ impl CollectionRunner {
             trace!("Clearing stale daemon PID after system lock release");
             let mut daemon_pid = self.daemon_pid.lock();
             // Double-check in case something changed while we waited for the lock
-            if let Some(current_pid) = *daemon_pid {
-                if current_pid == _pid {
-                    *daemon_pid = None;
-                }
+            if let Some(current_pid) = *daemon_pid
+                && current_pid == _pid
+            {
+                *daemon_pid = None;
             }
         }
 
@@ -863,10 +854,10 @@ impl ProcessMetricsCollector {
                 self.should_collect.store(false, Ordering::Release);
 
                 // Wait for collection thread to stop gracefully
-                if let Some(thread) = self.collection_thread.lock().take() {
-                    if let Err(join_err) = thread.join() {
-                        error!("Collection thread panicked during cleanup: {:?}", join_err);
-                    }
+                if let Some(thread) = self.collection_thread.lock().take()
+                    && let Err(join_err) = thread.join()
+                {
+                    error!("Collection thread panicked during cleanup: {:?}", join_err);
                 }
 
                 self.is_collecting.store(false, Ordering::Release);
@@ -975,17 +966,17 @@ impl ProcessMetricsCollector {
 
         // Wait for the collection thread to finish
         // When it drops, the channel sender is dropped, signaling the listener to stop
-        if let Some(thread) = self.collection_thread.lock().take() {
-            if let Err(e) = thread.join() {
-                error!("Collection thread panicked: {:?}", e);
-            }
+        if let Some(thread) = self.collection_thread.lock().take()
+            && let Err(e) = thread.join()
+        {
+            error!("Collection thread panicked: {:?}", e);
         }
 
         // Wait for the listener thread to finish
-        if let Some(thread) = self.listener_thread.lock().take() {
-            if let Err(e) = thread.join() {
-                error!("Listener thread panicked: {:?}", e);
-            }
+        if let Some(thread) = self.listener_thread.lock().take()
+            && let Err(e) = thread.join()
+        {
+            error!("Listener thread panicked: {:?}", e);
         }
 
         self.is_collecting.store(false, Ordering::Release);
@@ -1166,13 +1157,13 @@ impl ProcessMetricsCollector {
 impl Drop for ProcessMetricsCollector {
     fn drop(&mut self) {
         // Ensure collection is stopped when dropping (RAII pattern)
-        if self.is_collecting.load(Ordering::Acquire) {
-            if let Err(e) = self.stop_collection() {
-                error!(
-                    "Failed to stop collection during ProcessMetricsCollector drop: {}",
-                    e
-                );
-            }
+        if self.is_collecting.load(Ordering::Acquire)
+            && let Err(e) = self.stop_collection()
+        {
+            error!(
+                "Failed to stop collection during ProcessMetricsCollector drop: {}",
+                e
+            );
         }
     }
 }
