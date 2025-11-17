@@ -12,7 +12,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::Duration;
 use sysinfo::{Pid, ProcessRefreshKind, System, UpdateKind};
-use tracing::{trace, error};
+use tracing::{error, trace};
 
 use crate::native::metrics::types::{
     BatchRegistration, CollectorConfig, GroupInfo, GroupType, IndividualTaskRegistration, Metadata,
@@ -235,7 +235,14 @@ impl CollectionRunner {
         let mut new_metadata = HashMap::new();
         let mut processes = Vec::new();
 
-        if let Some(pid) = *self.main_cli_pid.lock() {
+        // Read the PID while we have the system lock (caller holds it)
+        // This avoids acquiring main_cli_pid lock while holding system lock
+        let main_cli_pid = {
+            trace!("Reading main_cli_pid in collect_main_cli_metrics");
+            *self.main_cli_pid.lock()
+        };
+
+        if let Some(pid) = main_cli_pid {
             if let Some((main, metadata)) =
                 self.collect_process_info(sys, pid, None, MAIN_CLI_GROUP_ID, true)
             {
@@ -259,7 +266,13 @@ impl CollectionRunner {
         let mut processes = Vec::new();
 
         // Only collect subprocesses if the main CLI is registered and subprocesses exist
-        if self.main_cli_pid.lock().is_some() && !self.main_cli_subprocess_pids.is_empty() {
+        // Read main_cli_pid once without holding system lock afterwards
+        let main_cli_registered = {
+            trace!("Reading main_cli_pid in collect_main_cli_subprocess_metrics");
+            self.main_cli_pid.lock().is_some()
+        };
+
+        if main_cli_registered && !self.main_cli_subprocess_pids.is_empty() {
             for entry in self.main_cli_subprocess_pids.iter() {
                 let subprocess_pid = *entry.key();
                 let alias = entry.value().clone();
@@ -301,7 +314,13 @@ impl CollectionRunner {
         let mut new_metadata = HashMap::new();
         let mut processes = Vec::new();
 
-        if let Some(pid) = *self.daemon_pid.lock() {
+        // Read daemon PID early to avoid holding system lock while acquiring daemon_pid lock
+        let daemon_pid = {
+            trace!("Reading daemon_pid in collect_daemon_metrics");
+            *self.daemon_pid.lock()
+        };
+
+        if let Some(pid) = daemon_pid {
             let discovered_pids = Self::collect_tree_pids_from_map(children_map, pid);
             let daemon_process_metrics: Vec<ProcessMetrics> = discovered_pids
                 .into_iter()
@@ -426,7 +445,10 @@ impl CollectionRunner {
         }
         // Add main_cli_subprocesses group if subprocesses exist and main CLI is registered
         if main_cli_pid.is_some() && !self.main_cli_subprocess_pids.is_empty() {
-            trace!("Main CLI subprocesses registered: count={}", self.main_cli_subprocess_pids.len());
+            trace!(
+                "Main CLI subprocesses registered: count={}",
+                self.main_cli_subprocess_pids.len()
+            );
             live_group_ids.insert(MAIN_CLI_SUBPROCESSES_GROUP_ID.to_string());
         }
         if daemon_pid.is_some() {
@@ -580,7 +602,10 @@ impl CollectionRunner {
             let mut daemon_pid = self.daemon_pid.lock();
             if let Some(pid) = *daemon_pid {
                 if sys.process(Pid::from(pid as usize)).is_none() {
-                    trace!("Daemon process {} no longer exists, clearing registration", pid);
+                    trace!(
+                        "Daemon process {} no longer exists, clearing registration",
+                        pid
+                    );
                     *daemon_pid = None;
                 }
             }
@@ -651,7 +676,10 @@ impl CollectionRunner {
             processes: process_metadata_str,
         };
 
-        trace!("Metrics collection complete: {} processes collected", processes.len());
+        trace!(
+            "Metrics collection complete: {} processes collected",
+            processes.len()
+        );
         Ok(MetricsCollectionResult {
             timestamp,
             processes,
@@ -970,7 +998,10 @@ impl ProcessMetricsCollector {
     /// Register a subprocess of the main CLI for metrics collection
     #[napi]
     pub fn register_main_cli_subprocess(&self, pid: i32, alias: Option<String>) {
-        trace!("Registering main CLI subprocess: pid={}, alias={:?}", pid, alias);
+        trace!(
+            "Registering main CLI subprocess: pid={}, alias={:?}",
+            pid, alias
+        );
 
         // Establish baseline immediately for this subprocess
         // This ensures accurate CPU data from the first collection cycle after spawn
@@ -1012,7 +1043,10 @@ impl ProcessMetricsCollector {
         // Acquire system lock FIRST to avoid deadlock with collection thread
         trace!("Acquiring system lock for task baseline refresh");
         let mut sys = self.system.lock();
-        trace!("System lock acquired, refreshing task process: task_id={}, pid={}", task_id, pid);
+        trace!(
+            "System lock acquired, refreshing task process: task_id={}, pid={}",
+            task_id, pid
+        );
 
         let target_pid = Pid::from(pid as usize);
         sys.refresh_processes_specifics(
@@ -1036,13 +1070,21 @@ impl ProcessMetricsCollector {
     /// Register a batch with multiple tasks sharing a worker
     #[napi]
     pub fn register_batch(&self, batch_id: String, task_ids: Vec<String>, pid: i32) {
-        trace!("Registering batch: batch_id={}, task_count={}, pid={}", batch_id, task_ids.len(), pid);
+        trace!(
+            "Registering batch: batch_id={}, task_count={}, pid={}",
+            batch_id,
+            task_ids.len(),
+            pid
+        );
 
         // Establish baseline immediately for the batch worker
         // Acquire system lock FIRST to avoid deadlock with collection thread
         trace!("Acquiring system lock for batch baseline refresh");
         let mut sys = self.system.lock();
-        trace!("System lock acquired, refreshing batch process: batch_id={}, pid={}", batch_id, pid);
+        trace!(
+            "System lock acquired, refreshing batch process: batch_id={}, pid={}",
+            batch_id, pid
+        );
 
         let target_pid = Pid::from(pid as usize);
         sys.refresh_processes_specifics(
@@ -1363,7 +1405,8 @@ mod tests {
                 thread::spawn(move || {
                     for j in 0..5 {
                         let pid = 10000 + i * 100 + j;
-                        runner.main_cli_subprocess_pids
+                        runner
+                            .main_cli_subprocess_pids
                             .insert(pid as i32, Some(format!("worker-{}", j)));
                         thread::sleep(Duration::from_millis(2));
                     }
@@ -1385,5 +1428,4 @@ mod tests {
         let groups = runner.create_new_group_info();
         assert!(groups.contains_key(MAIN_CLI_SUBPROCESSES_GROUP_ID));
     }
-
 }
