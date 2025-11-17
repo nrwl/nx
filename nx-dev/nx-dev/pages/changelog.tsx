@@ -8,6 +8,7 @@ import { Octokit } from 'octokit';
 import { compare, parse } from 'semver';
 import { changeLogApi } from '../lib/changelog.api';
 import Link from 'next/link';
+import { fetchGithubStarCount } from '../lib/githubStars.api';
 
 interface ChangelogEntry {
   version: string;
@@ -20,6 +21,7 @@ interface ChangelogEntry {
 
 interface ChangeLogProps {
   changelog: ChangelogEntry[];
+  starCount: number;
 }
 
 interface GithubReleaseData {
@@ -85,6 +87,7 @@ async function fetchGithubRelease(
 }
 
 export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
+  console.log('=== getStaticProps START ===');
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
   let githubReleases: GithubReleaseData[] = [];
@@ -164,17 +167,25 @@ export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
   // sort it by version desc
   groupedReleases.sort((a, b) => compare(b.version, a.version));
 
+  // Fetch the star count using your existing function
+   console.log('Before fetchGithubStarCount call');
+  const starCount = await fetchGithubStarCount();
+  console.log('After fetchGithubStarCount, starCount:', starCount);
+
+  console.log('=== getStaticProps END ===');
+
   return {
     props: {
       changelog: groupedReleases,
+      starCount, // Add starCount to props
     },
   };
 }
 
-export default function Changelog(props: ChangeLogProps): JSX.Element {
+export default function Changelog({ changelog, starCount }: ChangeLogProps): JSX.Element {
   const router = useRouter();
 
-  const renderedChangelog = props.changelog.map((entry) => {
+  const renderedChangelog = changelog.map((entry) => {
     if (entry.content) {
       const { node } = renderMarkdown(entry.content, {
         filePath: entry.filePath ?? '',
@@ -216,7 +227,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
         }}
       />
       <div className="mb-12">
-        <Header />
+        <Header starCount={starCount} /> {/* Pass starCount here */}
       </div>
 
       <main id="main" role="main">
