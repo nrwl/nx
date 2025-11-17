@@ -13,8 +13,17 @@ import type * as ts from 'typescript';
 export function getDefinedCompilerOption(
   tree: Tree,
   tsConfigPath: string,
-  optionName: string
+  optionName: keyof ts.CompilerOptions
 ): any | undefined {
+  const compilerOptions = readCompilerOptionsFromTsConfig(tree, tsConfigPath);
+
+  return compilerOptions[optionName];
+}
+
+export function readCompilerOptionsFromTsConfig(
+  tree: Tree,
+  tsConfigPath: string
+): ts.CompilerOptions {
   const ts = ensureTypescript();
   const tsSysFromTree: ts.System = {
     ...ts.sys,
@@ -29,5 +38,5 @@ export function getDefinedCompilerOption(
     tree.root
   );
 
-  return parsed.options[optionName];
+  return parsed.options;
 }
