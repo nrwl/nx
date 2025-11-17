@@ -8,7 +8,7 @@
     <parent>
         <groupId>dev.nx.maven</groupId>
         <artifactId>nx-maven-parent</artifactId>
-        <version>0.0.10-SNAPSHOT</version>
+        <version>0.0.11-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -17,6 +17,13 @@
 
     <name>Nx Maven Batch Runner</name>
     <description>Batch runner for Nx Maven plugin using Maven Embedder API</description>
+
+    <properties>
+        <!-- Skip deployment for this module - it's an internal tool, not published to Maven Central -->
+        <maven.install.skip>true</maven.install.skip>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.gpg.skip>true</maven.gpg.skip>
+    </properties>
 
     <repositories>
         <!-- Apache Snapshots for Maven 4.x beta artifacts -->

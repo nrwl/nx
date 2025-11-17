@@ -4,7 +4,7 @@
 
   <groupId>dev.nx.maven</groupId>
   <artifactId>nx-parent</artifactId>
-  <version>0.0.10-SNAPSHOT</version>
+  <version>0.0.11-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Nx Parent</name>
@@ -33,7 +33,6 @@
     <developerConnection>scm:git:ssh://github.com:nrwl/nx.git</developerConnection>
     <url>https://github.com/nrwl/nx/tree/master</url>
   </scm>
-
 
   <modules>
     <module>packages/maven</module>
@@ -288,6 +287,17 @@
         <artifactId>nx-maven-plugin</artifactId>
         <version>{project.version}</version>
       </plugin>
+
+      <!-- Central Publishing Plugin for snapshots and releases -->
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
+        <version>0.9.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <publishingServerId>central</publishingServerId>
+        </configuration>
+      </plugin>
     </plugins>
     </pluginManagement>
 
@@ -296,6 +306,12 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>flatten-maven-plugin</artifactId>
+      </plugin>
+
+      <!-- Activate central publishing plugin -->
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>
@@ -320,15 +336,6 @@
                   </goals>
                 </execution>
               </executions>
-            </plugin>
-            <plugin>
-              <groupId>org.sonatype.central</groupId>
-              <artifactId>central-publishing-maven-plugin</artifactId>
-              <version>0.9.0</version>
-              <extensions>true</extensions>
-              <configuration>
-                <publishingServerId>central</publishingServerId>
-              </configuration>
             </plugin>
           </plugins>
         </pluginManagement>
