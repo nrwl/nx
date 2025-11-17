@@ -63,8 +63,16 @@ export async function getStylesConfig(
     searchDirectories
   );
   if (postcssConfiguration) {
-    for (const [pluginName, pluginOptions] of postcssConfiguration.plugins) {
-      const { default: plugin } = await import(pluginName);
+    const postCssPluginRequire = createRequire(
+      dirname(postcssConfiguration.configPath) + '/'
+    );
+
+    for (const [pluginName, pluginOptions] of postcssConfiguration.config
+      .plugins) {
+      const pluginModule = postCssPluginRequire(pluginName);
+      const plugin = pluginModule.__esModule
+        ? pluginModule['default']
+        : pluginModule;
       if (typeof plugin !== 'function' || plugin.postcss !== true) {
         throw new Error(
           `Attempted to load invalid Postcss plugin: "${pluginName}"`
