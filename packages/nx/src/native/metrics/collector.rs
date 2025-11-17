@@ -1006,6 +1006,19 @@ impl ProcessMetricsCollector {
         }
     }
 
+    /// Establish baseline process metrics by acquiring system lock and refreshing
+    /// Must be called BEFORE any registration to avoid deadlock with collection thread
+    fn establish_process_baseline(&self, pid: i32) {
+        let target_pid = Pid::from(pid as usize);
+        let mut sys = self.system.lock();
+        sys.refresh_processes_specifics(
+            sysinfo::ProcessesToUpdate::Some(&[target_pid]),
+            false, // don't remove dead processes
+            ProcessRefreshKind::nothing().with_cpu(),
+        );
+        drop(sys); // Explicitly release system lock
+    }
+
     /// Register the main CLI process for metrics collection
     #[napi]
     pub fn register_main_cli_process(&self, pid: i32) {
@@ -1013,22 +1026,9 @@ impl ProcessMetricsCollector {
 
         // Establish baseline immediately for the main CLI process
         // This ensures accurate CPU data from the first collection cycle
-        // Acquire system lock FIRST to avoid deadlock with collection thread
-        trace!("Acquiring system lock for main CLI baseline refresh");
-        let mut sys = self.system.lock();
-        trace!("System lock acquired, refreshing process: pid={}", pid);
-
-        let target_pid = Pid::from(pid as usize);
-        sys.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::Some(&[target_pid]),
-            false, // don't remove dead processes
-            ProcessRefreshKind::nothing().with_cpu(),
-        );
-        drop(sys); // Explicitly release system lock
-        trace!("System lock released after refresh");
+        self.establish_process_baseline(pid);
 
         // Now register the PID (after releasing system lock)
-        trace!("Acquiring main_cli_pid lock to register: pid={}", pid);
         *self.main_cli_pid.lock() = Some(pid);
         trace!("Main CLI process registered: pid={}", pid);
     }
@@ -1043,22 +1043,9 @@ impl ProcessMetricsCollector {
 
         // Establish baseline immediately for this subprocess
         // This ensures accurate CPU data from the first collection cycle after spawn
-        // Acquire system lock FIRST to avoid deadlock with collection thread
-        trace!("Acquiring system lock for subprocess baseline refresh");
-        let mut sys = self.system.lock();
-        trace!("System lock acquired, refreshing subprocess: pid={}", pid);
-
-        let target_pid = Pid::from(pid as usize);
-        sys.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::Some(&[target_pid]),
-            false, // don't remove dead processes
-            ProcessRefreshKind::nothing().with_cpu(),
-        );
-        drop(sys); // Explicitly release system lock
-        trace!("System lock released after subprocess refresh");
+        self.establish_process_baseline(pid);
 
         // Now register in map (after releasing system lock)
-        trace!("Inserting subprocess into map: pid={}", pid);
         self.main_cli_subprocess_pids.insert(pid, alias);
         trace!("Main CLI subprocess registered: pid={}", pid);
     }
@@ -1078,25 +1065,9 @@ impl ProcessMetricsCollector {
 
         // Establish baseline immediately for this task process
         // This ensures accurate CPU data from the first collection cycle after spawn
-        // Acquire system lock FIRST to avoid deadlock with collection thread
-        trace!("Acquiring system lock for task baseline refresh");
-        let mut sys = self.system.lock();
-        trace!(
-            "System lock acquired, refreshing task process: task_id={}, pid={}",
-            task_id, pid
-        );
-
-        let target_pid = Pid::from(pid as usize);
-        sys.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::Some(&[target_pid]),
-            false, // don't remove dead processes
-            ProcessRefreshKind::nothing().with_cpu(),
-        );
-        drop(sys); // Explicitly release system lock
-        trace!("System lock released after task refresh");
+        self.establish_process_baseline(pid);
 
         // Now register the task (after releasing system lock)
-        trace!("Inserting task into map: task_id={}, pid={}", task_id, pid);
         self.individual_tasks
             .entry(task_id.clone())
             .or_insert_with(|| IndividualTaskRegistration::new(task_id.clone()))
@@ -1116,25 +1087,9 @@ impl ProcessMetricsCollector {
         );
 
         // Establish baseline immediately for the batch worker
-        // Acquire system lock FIRST to avoid deadlock with collection thread
-        trace!("Acquiring system lock for batch baseline refresh");
-        let mut sys = self.system.lock();
-        trace!(
-            "System lock acquired, refreshing batch process: batch_id={}, pid={}",
-            batch_id, pid
-        );
-
-        let target_pid = Pid::from(pid as usize);
-        sys.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::Some(&[target_pid]),
-            false, // don't remove dead processes
-            ProcessRefreshKind::nothing().with_cpu(),
-        );
-        drop(sys); // Explicitly release system lock
-        trace!("System lock released after batch refresh");
+        self.establish_process_baseline(pid);
 
         // Now register the batch (after releasing system lock)
-        trace!("Inserting batch into map: batch_id={}", batch_id);
         self.batches.insert(
             batch_id.clone(),
             BatchRegistration::new(batch_id.clone(), task_ids, pid),
