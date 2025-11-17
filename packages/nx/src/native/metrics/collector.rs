@@ -255,6 +255,12 @@ impl CollectionRunner {
         (processes, new_metadata)
     }
 
+    /// Check if the main CLI process is registered
+    fn is_main_cli_registered(&self) -> bool {
+        trace!("Reading main_cli_pid in collect_main_cli_subprocess_metrics");
+        self.main_cli_pid.lock().is_some()
+    }
+
     /// Collect metrics for main CLI subprocesses and their process trees
     fn collect_main_cli_subprocess_metrics(
         &self,
@@ -265,11 +271,7 @@ impl CollectionRunner {
         let mut processes = Vec::new();
 
         // Only collect subprocesses if the main CLI is registered and subprocesses exist
-        // Read main_cli_pid once without holding system lock afterwards
-        let main_cli_registered = {
-            trace!("Reading main_cli_pid in collect_main_cli_subprocess_metrics");
-            self.main_cli_pid.lock().is_some()
-        };
+        let main_cli_registered = self.is_main_cli_registered();
 
         if main_cli_registered && !self.main_cli_subprocess_pids.is_empty() {
             for entry in self.main_cli_subprocess_pids.iter() {
