@@ -33,6 +33,21 @@ const DAEMON_GROUP_ID: &str = "daemon";
 // Shutdown check interval for the collection thread
 const SHUTDOWN_CHECK_INTERVAL_MS: u64 = 50;
 
+/// Result from collecting metrics while holding the system lock
+struct LockedMetricsCollection {
+    main_cli_processes: Vec<ProcessMetrics>,
+    main_cli_metadata: HashMap<i32, ProcessMetadata>,
+    main_cli_subproc_processes: Vec<ProcessMetrics>,
+    main_cli_subproc_metadata: HashMap<i32, ProcessMetadata>,
+    daemon_processes: Vec<ProcessMetrics>,
+    daemon_metadata: HashMap<i32, ProcessMetadata>,
+    task_processes: Vec<ProcessMetrics>,
+    task_metadata: HashMap<i32, ProcessMetadata>,
+    batch_processes: Vec<ProcessMetrics>,
+    batch_metadata: HashMap<i32, ProcessMetadata>,
+    daemon_pid_to_clear: Option<i32>,
+}
+
 /// Result from metrics collection containing all data needed for cleanup and notification
 struct MetricsCollectionResult {
     /// Timestamp for the collection
@@ -266,6 +281,76 @@ impl CollectionRunner {
     /// Get the daemon process ID
     fn get_daemon_pid(&self) -> Option<i32> {
         *self.daemon_pid.lock()
+    }
+
+    /// Collect all metrics while holding system lock
+    /// This centralizes all operations that require the system lock to be minimal
+    fn collect_locked_metrics(&self, sys: &mut System) -> LockedMetricsCollection {
+        trace!("System lock acquired, refreshing all processes");
+
+        sys.refresh_processes_specifics(
+            sysinfo::ProcessesToUpdate::All,
+            true, // remove_dead_processes
+            ProcessRefreshKind::nothing()
+                .with_memory()
+                .with_cpu()
+                .with_exe(UpdateKind::OnlyIfNotSet)
+                .with_cmd(UpdateKind::OnlyIfNotSet)
+                .with_cwd(UpdateKind::OnlyIfNotSet),
+        );
+        trace!("Process refresh complete, building parent-child map");
+
+        let children_map = Self::build_parent_child_map(&sys);
+
+        // Remove dead processes to prevent stale metrics from terminated processes
+        trace!("Cleaning up dead processes from registration maps");
+        self.individual_tasks.retain(|_, task_reg| {
+            task_reg
+                .anchor_pids
+                .iter()
+                .any(|pid| sys.process(Pid::from(*pid as usize)).is_some())
+        });
+        self.batches.retain(|_, batch_reg| {
+            sys.process(Pid::from(batch_reg.anchor_pid as usize))
+                .is_some()
+        });
+        self.main_cli_subprocess_pids
+            .retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
+        trace!("Dead process cleanup complete");
+
+        // Check if daemon process still exists (capture PID while holding system lock)
+        trace!("Checking daemon process existence");
+        let daemon_pid_to_clear = {
+            let daemon_pid = self.daemon_pid.lock();
+            (*daemon_pid).filter(|&pid| sys.process(Pid::from(pid as usize)).is_none())
+        };
+
+        // Collect metrics for all the processes while holding system lock
+        trace!("Collecting metrics for all registered processes");
+        let (main_cli_processes, main_cli_metadata) = self.collect_main_cli_metrics(&sys);
+        let (main_cli_subproc_processes, main_cli_subproc_metadata) =
+            self.collect_main_cli_subprocess_metrics(&sys, &children_map);
+        let (daemon_processes, daemon_metadata) =
+            self.collect_daemon_metrics(&sys, &children_map);
+        let (task_processes, task_metadata) =
+            self.collect_all_task_metrics(&sys, &children_map);
+        let (batch_processes, batch_metadata) =
+            self.collect_all_batch_metrics(&sys, &children_map);
+        trace!("Metrics collection complete, releasing system lock");
+
+        LockedMetricsCollection {
+            main_cli_processes,
+            main_cli_metadata,
+            main_cli_subproc_processes,
+            main_cli_subproc_metadata,
+            daemon_processes,
+            daemon_metadata,
+            task_processes,
+            task_metadata,
+            batch_processes,
+            batch_metadata,
+            daemon_pid_to_clear,
+        }
     }
 
     /// Collect metrics for a process tree rooted at root_pid
@@ -561,86 +646,21 @@ impl CollectionRunner {
 
         // Refresh all processes and collect metrics in minimal lock scope
         trace!("Acquiring system lock for process refresh");
-        let (
+        let mut sys = self.system.lock();
+        let LockedMetricsCollection {
             main_cli_processes,
             main_cli_metadata,
-            main_cli_subprocess_processes,
-            main_cli_subprocess_metadata,
+            main_cli_subproc_processes,
+            main_cli_subproc_metadata,
             daemon_processes,
             daemon_metadata,
-            tasks_metrics,
-            tasks_metadata,
-            batches_metrics,
-            batches_metadata,
+            task_processes,
+            task_metadata,
+            batch_processes,
+            batch_metadata,
             daemon_pid_to_clear,
-        ) = {
-            let mut sys = self.system.lock();
-            trace!("System lock acquired, refreshing all processes");
-
-            sys.refresh_processes_specifics(
-                sysinfo::ProcessesToUpdate::All,
-                true, // remove_dead_processes
-                ProcessRefreshKind::nothing()
-                    .with_memory()
-                    .with_cpu()
-                    .with_exe(UpdateKind::OnlyIfNotSet)
-                    .with_cmd(UpdateKind::OnlyIfNotSet)
-                    .with_cwd(UpdateKind::OnlyIfNotSet),
-            );
-            trace!("Process refresh complete, building parent-child map");
-
-            let children_map = Self::build_parent_child_map(&sys);
-
-            // Remove dead processes to prevent stale metrics from terminated processes
-            trace!("Cleaning up dead processes from registration maps");
-            self.individual_tasks.retain(|_, task_reg| {
-                task_reg
-                    .anchor_pids
-                    .iter()
-                    .any(|pid| sys.process(Pid::from(*pid as usize)).is_some())
-            });
-            self.batches.retain(|_, batch_reg| {
-                sys.process(Pid::from(batch_reg.anchor_pid as usize))
-                    .is_some()
-            });
-            self.main_cli_subprocess_pids
-                .retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
-            trace!("Dead process cleanup complete");
-
-            // Check if daemon process still exists (capture PID while holding system lock)
-            trace!("Checking daemon process existence");
-            let daemon_pid_to_clear = {
-                let daemon_pid = self.daemon_pid.lock();
-                (*daemon_pid).filter(|&pid| sys.process(Pid::from(pid as usize)).is_none())
-            };
-
-            // Collect metrics for all the processes while holding system lock
-            trace!("Collecting metrics for all registered processes");
-            let (main_cli_processes, main_cli_metadata) = self.collect_main_cli_metrics(&sys);
-            let (main_cli_subproc_processes, main_cli_subproc_metadata) =
-                self.collect_main_cli_subprocess_metrics(&sys, &children_map);
-            let (daemon_processes, daemon_metadata) =
-                self.collect_daemon_metrics(&sys, &children_map);
-            let (task_processes, task_metadata) =
-                self.collect_all_task_metrics(&sys, &children_map);
-            let (batch_processes, batch_metadata) =
-                self.collect_all_batch_metrics(&sys, &children_map);
-            trace!("Metrics collection complete, releasing system lock");
-
-            (
-                main_cli_processes,
-                main_cli_metadata,
-                main_cli_subproc_processes,
-                main_cli_subproc_metadata,
-                daemon_processes,
-                daemon_metadata,
-                task_processes,
-                task_metadata,
-                batch_processes,
-                batch_metadata,
-                daemon_pid_to_clear,
-            )
-        }; // system lock is released here
+        } = self.collect_locked_metrics(&mut sys);
+        drop(sys); // system lock is released here
 
         // Now that system lock is released, clear daemon PID if needed
         // This avoids holding system lock while acquiring daemon_pid lock
@@ -657,24 +677,24 @@ impl CollectionRunner {
 
         // Accumulate metadata from all collection sources
         let mut new_metadata = main_cli_metadata;
-        new_metadata.extend(main_cli_subprocess_metadata);
+        new_metadata.extend(main_cli_subproc_metadata);
         new_metadata.extend(daemon_metadata);
-        new_metadata.extend(tasks_metadata);
-        new_metadata.extend(batches_metadata);
+        new_metadata.extend(task_metadata);
+        new_metadata.extend(batch_metadata);
 
         // Flatten processes from all sources
         let mut processes = Vec::with_capacity(
             main_cli_processes.len()
-                + main_cli_subprocess_processes.len()
+                + main_cli_subproc_processes.len()
                 + daemon_processes.len()
-                + tasks_metrics.len()
-                + batches_metrics.len(),
+                + task_processes.len()
+                + batch_processes.len(),
         );
         processes.extend(main_cli_processes);
-        processes.extend(main_cli_subprocess_processes);
+        processes.extend(main_cli_subproc_processes);
         processes.extend(daemon_processes);
-        processes.extend(tasks_metrics);
-        processes.extend(batches_metrics);
+        processes.extend(task_processes);
+        processes.extend(batch_processes);
 
         // Derive live PIDs from the collected processes for cleanup
         let live_pids: HashSet<String> = processes.iter().map(|p| p.pid.to_string()).collect();
