@@ -254,19 +254,16 @@ impl CollectionRunner {
 
     /// Get the main CLI process ID
     fn get_main_cli_pid(&self) -> Option<i32> {
-        trace!("Reading main_cli_pid in collect_main_cli_metrics");
         *self.main_cli_pid.lock()
     }
 
     /// Check if the main CLI process is registered
     fn is_main_cli_registered(&self) -> bool {
-        trace!("Reading main_cli_pid in collect_main_cli_subprocess_metrics");
         self.main_cli_pid.lock().is_some()
     }
 
     /// Get the daemon process ID
     fn get_daemon_pid(&self) -> Option<i32> {
-        trace!("Reading daemon_pid in collect_daemon_metrics");
         *self.daemon_pid.lock()
     }
 
