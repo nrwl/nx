@@ -42,7 +42,10 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
       testEnvironment: 'jsdom',
       imports: [`import vue from '@vitejs/plugin-vue'`],
       plugins: ['vue()'],
-      useEsmExtension: true,
+      // NOTE: Set to false to generate .ts instead of .mts because @nuxt/eslint-config
+      // does not handle .mts files in its parser configuration.
+      // See: https://github.com/nuxt/eslint/blob/v0.5.6/packages/eslint-config/src/legacy.ts#L6-L11
+      useEsmExtension: false,
     },
     true,
     undefined,

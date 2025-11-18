@@ -131,7 +131,7 @@ describe('preset', () => {
       import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
       export default defineConfig(() => ({
-        root: __dirname,
+        root: import.meta.dirname,
         cacheDir: '../../node_modules/.vite/apps/vue-preset-monorepo',
         server: {
           port: 4200,
@@ -286,7 +286,7 @@ describe('preset', () => {
       import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
       export default defineConfig(() => ({
-        root: __dirname,
+        root: import.meta.dirname,
         cacheDir: './node_modules/.vite/react-standalone-preset-vite',
         server: {
           port: 4200,
@@ -343,7 +343,7 @@ describe('preset', () => {
       import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
       export default defineConfig(() => ({
-        root: __dirname,
+        root: import.meta.dirname,
         cacheDir: './node_modules/.vite/vue-standalone-preset',
         server: {
           port: 4200,

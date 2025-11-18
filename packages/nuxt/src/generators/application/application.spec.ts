@@ -109,7 +109,7 @@ describe('app', () => {
           });
 
           expect(
-            tree.read(`${name}/vitest.config.mts`, 'utf-8')
+            tree.read(`${name}/vitest.config.ts`, 'utf-8')
           ).toMatchSnapshot();
           expect(
             tree.read(`${name}/tsconfig.spec.json`, 'utf-8')
