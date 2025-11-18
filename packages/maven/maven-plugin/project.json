@@ -2,5 +2,10 @@
   "name": "nx-maven-plugin",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/maven/maven-plugin",
-  "projectType": "library"
+  "projectType": "library",
+  "targets": {
+    "mvn-install-with-retries": {
+      "command": "for i in {1..5}; do npx nx run nx-maven-plugin:mvn-install && break || sleep 10; done"
+    }
+  }
 }

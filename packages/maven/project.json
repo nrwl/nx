@@ -7,11 +7,7 @@
     "nx-release-publish": {
       "dependsOn": [
         "^nx-release-publish",
-        {
-          "projects": ["nx-maven-plugin"],
-          "target": "mvn-install",
-          "params": "ignore"
-        }
+        "nx-maven-plugin:mvn-install-with-retries"
       ],
       "executor": "@nx/js:release-publish",
       "options": {
@@ -60,15 +56,8 @@
     },
     "mvn-process-resources": {
       "dependsOn": [
-        {
-          "target": "mvn-install",
-          "dependencies": true,
-          "params": "ignore"
-        },
-        {
-          "target": "mvn-generate-resources",
-          "params": "ignore"
-        }
+        "nx-maven-plugin:mvn-install-with-retries",
+        "nx-maven-plugin:mvn-generate-resources"
       ]
     }
   },
