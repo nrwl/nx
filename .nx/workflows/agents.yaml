@@ -20,6 +20,8 @@ common-init-steps: &common-init-steps
       paths: .pnpm-store
       base-branch: 'master'
 
+  - script: sleep 600
+
   # reads mise.toml and installs toolchains needed for repo
   - name: Setup toolchains
     uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-mise/main.yaml'
