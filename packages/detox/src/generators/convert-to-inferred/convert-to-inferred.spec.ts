@@ -287,6 +287,7 @@ describe('convert-to-inferred', () => {
   let tree: Tree;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     fs = new TempFs('detox');
     tree = createTreeWithEmptyWorkspace();
     tree.root = fs.tempDir;

@@ -7,4 +7,5 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/packages/playwright',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 };

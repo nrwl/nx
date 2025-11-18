@@ -1,29 +1,41 @@
-import { logger, Tree } from '@nx/devkit';
+const mockLoggerWarn = jest.fn();
+const mockLoggerDebug = jest.fn();
+
+// nested code imports graph from the repo, which might have innacurate graph version
+jest.mock('@nx/devkit', () => {
+  const actual = jest.requireActual<any>('@nx/devkit');
+  return {
+    ...actual,
+    createProjectGraphAsync: jest
+      .fn()
+      .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
+    logger: {
+      ...actual.logger,
+      warn: mockLoggerWarn,
+      debug: mockLoggerDebug,
+    },
+  };
+});
+
+import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from '../application/application';
 import componentGenerator from '../component/component';
 import libraryGenerator from '../library/library';
 import storybookConfigurationGenerator from './configuration';
 
-// nested code imports graph from the repo, which might have innacurate graph version
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest
-    .fn()
-    .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
-}));
-
 describe('react:storybook-configuration', () => {
   let appTree;
 
   beforeEach(async () => {
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'debug').mockImplementation(() => {});
+    mockLoggerWarn.mockReset();
+    mockLoggerDebug.mockReset();
+    mockLoggerWarn.mockImplementation(() => {});
+    mockLoggerDebug.mockImplementation(() => {});
   });
 
   afterEach(() => {
     jest.resetModules();
-    jest.restoreAllMocks();
   });
 
   it('should configure everything and install correct dependencies', async () => {

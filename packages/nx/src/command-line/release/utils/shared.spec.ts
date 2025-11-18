@@ -1,3 +1,8 @@
+jest.mock('../../../config/nx-json', () => ({
+  ...jest.requireActual('../../../config/nx-json'),
+  readNxJson: jest.fn(),
+}));
+
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
 import {
   createCommitMessageValues,
@@ -7,11 +12,6 @@ import {
 import { ProjectGraph } from '../../../config/project-graph';
 import { GitCommit } from './git';
 import { readNxJson } from '../../../config/nx-json';
-
-jest.mock('../../../config/nx-json', () => ({
-  ...jest.requireActual('../../../config/nx-json'),
-  readNxJson: jest.fn(),
-}));
 import { createVersionConfig } from './test/test-utils';
 import { createNxReleaseConfig, NxReleaseConfig } from '../config/config';
 import { createProjectFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';

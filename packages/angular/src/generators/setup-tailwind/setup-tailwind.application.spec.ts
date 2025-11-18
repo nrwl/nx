@@ -1,4 +1,11 @@
-import * as devkit from '@nx/devkit';
+let mockFormatFiles = jest
+  .fn()
+  .mockImplementation(jest.requireActual('@nx/devkit').formatFiles);
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  formatFiles: mockFormatFiles,
+}));
+
 import {
   addProjectConfiguration,
   readJson,
@@ -427,17 +434,15 @@ describe('setupTailwind generator', () => {
     it('should format files', async () => {
       const stylesEntryPoint = `apps/${project}/src/styles.scss`;
       tree.write(stylesEntryPoint, 'p { margin: 0; }');
-      jest.spyOn(devkit, 'formatFiles');
 
       await setupTailwindGenerator(tree, { project, stylesEntryPoint });
 
-      expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(mockFormatFiles).toHaveBeenCalled();
     });
 
     it('should not format files when "skipFormat: true"', async () => {
       const stylesEntryPoint = `apps/${project}/src/styles.scss`;
       tree.write(stylesEntryPoint, 'p { margin: 0; }');
-      jest.spyOn(devkit, 'formatFiles');
 
       await setupTailwindGenerator(tree, {
         project,
@@ -445,7 +450,7 @@ describe('setupTailwind generator', () => {
         skipFormat: true,
       });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+      expect(mockFormatFiles).not.toHaveBeenCalled();
     });
   });
 });

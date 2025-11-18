@@ -39,7 +39,8 @@
               // Type imports only
               "eslint",
               "rollup",
-              "vite"
+              "vite",
+              "jest-environment-node"
             ]
           }
         ]

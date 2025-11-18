@@ -1,8 +1,8 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import type { ChildProcess, Serializable } from 'child_process';
 import { readFileSync } from 'fs';
 import { Transform } from 'stream';
-import * as treeKill from 'tree-kill';
+import treeKill from 'tree-kill';
 import { signalToCode } from '../../utils/exit-codes';
 import type { RunningTask } from './running-task';
 

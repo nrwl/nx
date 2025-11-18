@@ -16,6 +16,7 @@
     "dist",
     "jest.config.ts",
     "jest.config.cts",
+    "jest.setup.ts",
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/__fixtures__/**/*.*",

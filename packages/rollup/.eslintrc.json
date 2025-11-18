@@ -46,7 +46,8 @@
               "typescript",
               "@swc/core", // Installed to workspace and only used in swc() plugin
               "postcss",
-              "@rollup/plugin-typescript"
+              "@rollup/plugin-typescript",
+              "jest-environment-node"
             ]
           }
         ]

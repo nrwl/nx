@@ -75,7 +75,7 @@
       "aliases": ["producer"]
     },
     "cypress-component-configuration": {
-      "factory": "./dist/src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",
+      "factory": "./dist/src/generators/cypress-component-configuration/cypress-component-configuration",
       "schema": "./dist/src/generators/cypress-component-configuration/schema.json",
       "description": "Setup Cypress component testing for a React project",
       "hidden": false

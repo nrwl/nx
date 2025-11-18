@@ -1,6 +1,6 @@
 import { isAbsolute, join, relative, resolve } from 'path';
 import { existsSync, promises as fsp } from 'node:fs';
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
 import { stat, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';

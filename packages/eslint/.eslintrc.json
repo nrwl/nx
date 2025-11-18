@@ -39,7 +39,8 @@
               "typescript",
               "eslint",
               "@angular-devkit/core",
-              "@typescript-eslint/eslint-plugin"
+              "@typescript-eslint/eslint-plugin",
+              "jest-environment-node"
             ]
           }
         ]

@@ -7,4 +7,5 @@ module.exports = {
   globals: {},
   displayName: 'rollup',
   preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 };

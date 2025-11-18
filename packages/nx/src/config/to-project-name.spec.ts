@@ -59,7 +59,10 @@ describe('Workspaces', () => {
             "description": "my-package description",
             "js": {
               "isInPackageManagerWorkspaces": true,
+              "packageExports": undefined,
+              "packageMain": undefined,
               "packageName": "my-package",
+              "packageVersion": undefined,
             },
             "targetGroups": {},
           },

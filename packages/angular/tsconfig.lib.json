@@ -6,6 +6,7 @@
     "declarationDir": ".",
     "types": ["node"],
     "esModuleInterop": true,
+    "declarationMap": false,
     "composite": true,
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },

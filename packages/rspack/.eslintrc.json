@@ -55,7 +55,8 @@
               "webpack",
               "sass-embedded",
               "sass",
-              "ts-checker-rspack-plugin"
+              "ts-checker-rspack-plugin",
+              "jest-environment-node"
             ]
           }
         ]

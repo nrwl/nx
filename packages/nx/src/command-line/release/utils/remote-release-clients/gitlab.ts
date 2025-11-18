@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { execSync } from 'node:child_process';
 import { output } from '../../../../utils/output';

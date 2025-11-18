@@ -26,16 +26,11 @@
         "tsConfig": "./tsconfig.lib.json",
         "outputPath": "./dist",
         "assets": [
-          "packages/remix/*.md",
           {
             "input": "./packages/remix/src",
             "glob": "**/!(*.ts)",
-            "output": "./src"
-          },
-          {
-            "input": "./packages/remix/src",
-            "glob": "**/*.d.ts",
-            "output": "./src"
+            "output": "./src",
+            "ignore": ["**/*.d.ts", "**/__snapshots__/*.snap"]
           },
           {
             "input": "./packages/remix",

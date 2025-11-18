@@ -12,6 +12,6 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageReporters: ['html'],
   maxWorkers: 1,
-  testEnvironment: 'node',
+  testEnvironment: require.resolve('./jest-environment.js'),
   setupFiles: ['../../scripts/unit-test-setup.js'],
 };

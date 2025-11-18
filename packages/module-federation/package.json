@@ -26,69 +26,82 @@
   "executors": "./executors.json",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "@nx/nx-source": "./index.ts"
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./angular": {
-      "import": "./dist/angular.js",
       "types": "./angular.d.ts",
-      "@nx/nx-source": "./angular.ts"
+      "@nx/nx-source": "./angular.ts",
+      "import": "./dist/angular.js",
+      "default": "./dist/angular.js"
     },
     "./webpack": {
-      "import": "./dist/webpack.js",
       "types": "./webpack.d.ts",
-      "@nx/nx-source": "./webpack.ts"
+      "@nx/nx-source": "./webpack.ts",
+      "import": "./dist/webpack.js",
+      "default": "./dist/webpack.js"
     },
     "./rspack": {
-      "import": "./dist/rspack.js",
       "types": "./rspack.d.ts",
-      "@nx/nx-source": "./rspack.ts"
+      "@nx/nx-source": "./rspack.ts",
+      "import": "./dist/rspack.js",
+      "default": "./dist/rspack.js"
     },
     "./url-helpers": {
-      "import": "./dist/url-helpers.js",
       "types": "./url-helpers.d.ts",
-      "@nx/nx-source": "./url-helpers.ts"
+      "@nx/nx-source": "./url-helpers.ts",
+      "import": "./dist/url-helpers.js",
+      "default": "./dist/url-helpers.js"
     },
     "./src/*": {
-      "import": "./dist/src/*.js",
       "types": "./src/*.d.ts",
-      "@nx/nx-source": "./src/*.ts"
+      "@nx/nx-source": "./src/*.ts",
+      "import": "./dist/src/*.js",
+      "default": "./dist/src/*.js"
     },
     "./src/executors/utils": {
-      "import": "./dist/src/executors/utils/index.js",
       "types": "./src/executors/utils/index.d.ts",
-      "@nx/nx-source": "./src/executors/utils/index.ts"
+      "@nx/nx-source": "./src/executors/utils/index.ts",
+      "import": "./dist/src/executors/utils/index.js",
+      "default": "./dist/src/executors/utils/index.js"
     },
     "./src/executors/utils/*": {
-      "import": "./dist/src/executors/utils/*.js",
       "types": "./src/executors/utils/*.d.ts",
-      "@nx/nx-source": "./src/executors/utils/*.ts"
+      "@nx/nx-source": "./src/executors/utils/*.ts",
+      "import": "./dist/src/executors/utils/*.js",
+      "default": "./dist/src/executors/utils/*.js"
     },
     "./src/utils": {
-      "import": "./dist/src/utils/index.js",
       "types": "./src/utils/index.d.ts",
-      "@nx/nx-source": "./src/utils/index.ts"
+      "@nx/nx-source": "./src/utils/index.ts",
+      "import": "./dist/src/utils/index.js",
+      "default": "./dist/src/utils/index.js"
     },
     "./src/executors/utils/models": {
-      "import": "./dist/src/executors/utils/models/index.js",
       "types": "./src/executors/utils/models/index.d.ts",
-      "@nx/nx-source": "./src/executors/utils/models/index.ts"
+      "@nx/nx-source": "./src/executors/utils/models/index.ts",
+      "import": "./dist/src/executors/utils/models/index.js",
+      "default": "./dist/src/executors/utils/models/index.js"
     },
     "./src/utils/plugins/runtime-library-control.plugin": {
-      "import": "./dist/src/plugins/runtime-library-control.plugin.js",
       "types": "./src/plugins/runtime-library-control.plugin.d.ts",
-      "@nx/nx-source": "./src/plugins/runtime-library-control.plugin.ts"
+      "@nx/nx-source": "./src/plugins/runtime-library-control.plugin.ts",
+      "import": "./dist/src/plugins/runtime-library-control.plugin.js",
+      "default": "./dist/src/plugins/runtime-library-control.plugin.js"
     },
     "./src/utils/*": {
-      "import": "./dist/src/utils/*.js",
       "types": "./src/utils/*.d.ts",
-      "@nx/nx-source": "./src/utils/*.ts"
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
     },
     "./src/**/*": {
-      "import": "./dist/src/**/*.js",
       "types": "./src/**/*.d.ts",
-      "@nx/nx-source": "./src/**/*.ts"
+      "@nx/nx-source": "./src/**/*.ts",
+      "import": "./dist/src/**/*.js",
+      "default": "./dist/src/**/*.js"
     },
     "./package.json": "./package.json",
     "./executors.json": "./executors.json"
@@ -108,7 +121,8 @@
     "webpack": "^5.101.3"
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "jest-environment-node": "catalog:jest"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

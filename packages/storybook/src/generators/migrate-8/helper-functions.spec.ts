@@ -1,12 +1,23 @@
+const mockOutputLog = jest.fn();
+jest.mock('@nx/devkit', () => {
+  const actual = jest.requireActual('@nx/devkit');
+  return {
+    ...actual,
+    output: {
+      ...actual.output,
+      log: mockOutputLog,
+    },
+  };
+});
+
 import {
   addProjectConfiguration,
   getPackageManagerCommand,
-  output,
   ProjectConfiguration,
   Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as allProjects from './test-configs/all-projects.json';
+import allProjects from './test-configs/all-projects.json';
 import {
   getAllStorybookInfo,
   logResult,
@@ -19,6 +30,7 @@ describe('Helper functions for the Storybook 8 migration generator', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addAllProjectsToWorkspace(tree);
+    mockOutputLog.mockReset();
   });
 
   describe('getAllStorybookInfo and onlyShowGuide', () => {
@@ -31,10 +43,10 @@ describe('Helper functions for the Storybook 8 migration generator', () => {
     });
 
     it('should onlyShowGuide and the correct instructions', () => {
-      const outputSpy = jest.spyOn(output, 'log').mockImplementation();
+      mockOutputLog.mockImplementation();
       onlyShowGuide(allStorybookInfo);
       const pm = getPackageManagerCommand();
-      expect(outputSpy).toHaveBeenCalledWith(
+      expect(mockOutputLog).toHaveBeenCalledWith(
         expect.objectContaining({
           bodyLines: [
             'You can run the following commands manually to upgrade your Storybook projects to Storybook 8:',

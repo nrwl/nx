@@ -1,13 +1,19 @@
+// Define mock FIRST
+const mockLoggerWarn = jest.fn();
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  logger: {
+    warn: mockLoggerWarn,
+  },
+}));
+
+// NOW import
 import { logger } from '@nx/devkit';
 import { createAllowlistFromExports } from './get-non-buildable-libs';
 
 describe('createAllowlistFromExports', () => {
   beforeEach(() => {
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
+    mockLoggerWarn.mockReset();
   });
 
   it('should handle undefined exports', () => {

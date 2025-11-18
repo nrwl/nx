@@ -1,3 +1,8 @@
+let mockExistsSync = jest.fn(() => true);
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  existsSync: mockExistsSync,
+}));
 import {
   calculateFileChanges,
   DeletedFileChange,
@@ -9,7 +14,7 @@ import ignore = require('ignore');
 
 describe('calculateFileChanges', () => {
   it('should return a whole file change by default for files that exist', () => {
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    mockExistsSync.mockReturnValue(true);
     const changes = calculateFileChanges(
       ['proj/index.ts'],
       undefined,
@@ -72,7 +77,7 @@ describe('calculateFileChanges', () => {
   });
 
   it('should pick up deleted changes for deleted files', () => {
-    jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+    mockExistsSync.mockReturnValue(false);
     const changes = calculateFileChanges(
       ['i-dont-exist.json'],
       {

@@ -13,4 +13,8 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/packages/module-federation',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  moduleNameMapper: {
+    '^@rspack/core$': '<rootDir>/__mocks__/@rspack/core.js',
+  },
 };

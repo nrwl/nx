@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import stringWidth from 'string-width';
 import { logger } from './logger';
 import { output } from './output';

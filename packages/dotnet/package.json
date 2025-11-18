@@ -26,12 +26,14 @@
   "type": "commonjs",
   "exports": {
     ".": {
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./plugin": {
-      "default": "./dist/plugin.js",
-      "types": "./dist/plugin.d.ts"
+      "types": "./dist/plugin.d.ts",
+      "import": "./dist/plugin.js",
+      "default": "./dist/plugin.js"
     },
     "./generators/*/schema.json": "./dist/generators/*/schema.json",
     "./generators/*/schema": "./dist/generators/*/schema.d.ts",

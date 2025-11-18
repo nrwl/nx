@@ -23,6 +23,7 @@
     "node_modules",
     "dist",
     "jest.config.ts",
+    "jest.setup.ts",
     "**/*.spec.ts",
     "**/*.test.ts"
   ],

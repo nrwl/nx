@@ -8,4 +8,8 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/packages/rsbuild',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  moduleNameMapper: {
+    '^@rsbuild/core$': '<rootDir>/__mocks__/@rsbuild-core.js',
+  },
 };

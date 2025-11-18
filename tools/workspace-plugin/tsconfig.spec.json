@@ -1,16 +1,59 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/workspace-plugin/spec",
+    "outDir": "../../dist/tools/workspace-plugin/spec",
     "module": "commonjs",
     "types": ["jest", "node"],
-    "composite": true
+    "composite": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": false,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@nx/devkit": ["../../packages/devkit/index.ts"],
+      "@nx/devkit/testing": ["../../packages/devkit/testing.ts"],
+      "@nx/devkit/internal-testing-utils": [
+        "../../packages/devkit/internal-testing-utils.ts"
+      ],
+      "@nx/devkit/src/*": ["../../packages/devkit/src/*"],
+      "nx/src/devkit-exports": ["../../packages/nx/src/devkit-exports.ts"],
+      "nx/src/devkit-internals": ["../../packages/nx/src/devkit-internals.ts"],
+      "nx/src/devkit-testing-exports": [
+        "../../packages/nx/src/devkit-testing-exports.ts"
+      ],
+      "@nx/eslint/src/*": ["../../packages/eslint/src/*"],
+      "nx/src/internal-testing-utils/*": [
+        "../../packages/nx/src/internal-testing-utils/*"
+      ],
+      "nx/src/generators/*": ["../../packages/nx/src/generators/*"],
+      "nx/src/plugins/*": ["../../packages/nx/src/plugins/*"],
+      "nx/src/utils/*": ["../../packages/nx/src/utils/*"],
+      "nx/src/config/*": ["../../packages/nx/src/config/*"],
+      "nx/src/command-line/*": ["../../packages/nx/src/command-line/*"],
+      "nx/src/project-graph/*": ["../../packages/nx/src/project-graph/*"],
+      "nx/src/daemon/*": ["../../packages/nx/src/daemon/*"],
+      "nx/src/hasher/*": ["../../packages/nx/src/hasher/*"],
+      "nx/src/tasks-runner/*": ["../../packages/nx/src/tasks-runner/*"],
+      "nx/src/adapter/*": ["../../packages/nx/src/adapter/*"],
+      "nx/package.json": ["../../packages/nx/package.json"],
+      "@nx/js/src/*": ["../../packages/js/src/*"],
+      "@nx/plugin": ["../../packages/plugin/index.ts"],
+      "@nx/plugin/src/*": ["../../packages/plugin/src/*"]
+    }
   },
   "include": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx",
+    "**/*.spec.js",
+    "**/*.test.js",
+    "**/*.spec.jsx",
+    "**/*.test.jsx",
+    "**/*.d.ts",
     "jest.config.ts",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-    "src/**/*.d.ts"
+    "jest.setup.ts",
+    "*.json"
   ],
   "references": [
     {

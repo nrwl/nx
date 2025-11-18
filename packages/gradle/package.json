@@ -27,54 +27,64 @@
   "generators": "./generators.json",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "@nx/nx-source": "./index.ts"
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./plugin-v1": {
-      "import": "./dist/plugin-v1.js",
       "types": "./plugin-v1.d.ts",
-      "@nx/nx-source": "./plugin-v1.ts"
+      "@nx/nx-source": "./plugin-v1.ts",
+      "import": "./dist/plugin-v1.js",
+      "default": "./dist/plugin-v1.js"
     },
     "./src/executors/*": {
-      "import": "./dist/src/executors/*.js",
       "types": "./src/executors/*.d.ts",
-      "@nx/nx-source": "./src/executors/*.ts"
+      "@nx/nx-source": "./src/executors/*.ts",
+      "import": "./dist/src/executors/*.js",
+      "default": "./dist/src/executors/*.js"
     },
     "./src/executors/**/*": {
-      "import": "./dist/src/executors/**/*.js",
       "types": "./src/executors/**/*.d.ts",
-      "@nx/nx-source": "./src/executors/**/*.ts"
+      "@nx/nx-source": "./src/executors/**/*.ts",
+      "import": "./dist/src/executors/**/*.js",
+      "default": "./dist/src/executors/**/*.js"
     },
     "./src/generators/*": {
-      "import": "./dist/src/generators/*.js",
       "types": "./src/generators/*.d.ts",
-      "@nx/nx-source": "./src/generators/*.ts"
+      "@nx/nx-source": "./src/generators/*.ts",
+      "import": "./dist/src/generators/*.js",
+      "default": "./dist/src/generators/*.js"
     },
     "./src/generators/**/*": {
-      "import": "./dist/src/generators/**/*.js",
       "types": "./src/generators/**/*.d.ts",
-      "@nx/nx-source": "./src/generators/**/*.ts"
+      "@nx/nx-source": "./src/generators/**/*.ts",
+      "import": "./dist/src/generators/**/*.js",
+      "default": "./dist/src/generators/**/*.js"
     },
     "./src/migrations/*": {
-      "import": "./dist/src/migrations/*.js",
       "types": "./src/migrations/*.d.ts",
-      "@nx/nx-source": "./src/migrations/*.ts"
+      "@nx/nx-source": "./src/migrations/*.ts",
+      "import": "./dist/src/migrations/*.js",
+      "default": "./dist/src/migrations/*.js"
     },
     "./src/migrations/**/*": {
-      "import": "./dist/src/migrations/**/*.js",
       "types": "./src/migrations/**/*.d.ts",
-      "@nx/nx-source": "./src/migrations/**/*.ts"
+      "@nx/nx-source": "./src/migrations/**/*.ts",
+      "import": "./dist/src/migrations/**/*.js",
+      "default": "./dist/src/migrations/**/*.js"
     },
     "./src/utils/*": {
-      "import": "./dist/src/utils/*.js",
       "types": "./src/utils/*.d.ts",
-      "@nx/nx-source": "./src/utils/*.ts"
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
     },
     "./src/utils/**/*": {
-      "import": "./dist/src/utils/**/*.js",
       "types": "./src/utils/**/*.d.ts",
-      "@nx/nx-source": "./src/utils/**/*.ts"
+      "@nx/nx-source": "./src/utils/**/*.ts",
+      "import": "./dist/src/utils/**/*.js",
+      "default": "./dist/src/utils/**/*.js"
     },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",

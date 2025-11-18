@@ -1,6 +1,6 @@
-import * as enquirer from 'enquirer';
+import enquirer from 'enquirer';
 import * as yargs from 'yargs';
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 
 import {
   CreateWorkspaceOptions,

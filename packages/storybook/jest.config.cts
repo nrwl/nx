@@ -7,4 +7,5 @@ module.exports = {
   globals: {},
   displayName: 'storybook',
   preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 };

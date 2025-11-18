@@ -7,4 +7,5 @@ module.exports = {
   displayName: 'nuxt',
   preset: '../../jest.preset.js',
   coverageDirectory: '../../coverage/packages/nuxt',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 };

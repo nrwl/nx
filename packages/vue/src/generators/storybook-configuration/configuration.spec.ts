@@ -1,9 +1,16 @@
-import { logger, Tree } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import applicationGenerator from '../application/application';
-import componentGenerator from '../component/component';
-import libraryGenerator from '../library/library';
-import storybookConfigurationGenerator from './configuration';
+const mockLoggerWarn = jest.fn();
+const mockLoggerDebug = jest.fn();
+jest.mock('@nx/devkit', () => {
+  const actual = jest.requireActual('@nx/devkit');
+  return {
+    ...actual,
+    logger: {
+      ...actual.logger,
+      warn: mockLoggerWarn,
+      debug: mockLoggerDebug,
+    },
+  };
+});
 
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
@@ -12,6 +19,14 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
     .fn()
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
+
+import { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import applicationGenerator from '../application/application';
+import componentGenerator from '../component/component';
+import libraryGenerator from '../library/library';
+import storybookConfigurationGenerator from './configuration';
+
 const componentContent = `<script setup lang="ts">
 defineProps<{
   name: string;
@@ -31,13 +46,11 @@ defineProps<{
 describe('vue:storybook-configuration', () => {
   let appTree;
   beforeEach(async () => {
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'debug').mockImplementation(() => {});
+    mockLoggerWarn.mockReset();
+    mockLoggerDebug.mockReset();
+    mockLoggerWarn.mockImplementation(() => {});
+    mockLoggerDebug.mockImplementation(() => {});
     jest.resetModules();
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
   });
 
   it('should configure everything and install correct dependencies', async () => {

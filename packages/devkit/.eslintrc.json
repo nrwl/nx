@@ -74,7 +74,8 @@
               "@angular-devkit/core",
               "@angular-devkit/architect",
               "@angular-devkit/schematics",
-              "webpack"
+              "webpack",
+              "jest-environment-node"
             ]
           }
         ]

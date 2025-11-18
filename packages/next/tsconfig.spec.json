@@ -4,7 +4,10 @@
     "outDir": "../../dist/packages/next/spec",
     "module": "commonjs",
     "types": ["jest", "node"],
-    "composite": true
+    "composite": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": false,
+    "moduleResolution": "node"
   },
   "include": [
     "**/*.spec.ts",

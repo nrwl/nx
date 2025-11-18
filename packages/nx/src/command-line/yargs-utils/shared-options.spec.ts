@@ -1,4 +1,12 @@
-import * as yargs from 'yargs';
+// Define mock FIRST - BEFORE any imports
+const mockIsAiAgent = jest.fn();
+jest.mock('../../native', () => ({
+  ...jest.requireActual('../../native'),
+  isAiAgent: mockIsAiAgent,
+}));
+
+// NOW import - mocks are already in place
+import yargs from 'yargs';
 
 import {
   readParallelFromArgsAndEnv,
@@ -12,6 +20,10 @@ import { withEnvironmentVariables } from '../../internal-testing-utils/with-envi
 const argv = yargs.default([]);
 
 describe('shared-options', () => {
+  beforeEach(() => {
+    mockIsAiAgent.mockReturnValue(false);
+  });
+
   describe('withAffectedOptions', () => {
     const command = withAffectedOptions(argv);
 

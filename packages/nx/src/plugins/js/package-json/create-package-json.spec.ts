@@ -1,6 +1,32 @@
-import * as fs from 'fs';
+const mockExistsSync = jest.fn();
+const mockReadJsonFile = jest.fn();
+const mockReadNxJson = jest.fn();
+const mockHashExternalFile = jest.fn();
+const mockFilterUsingGlobPatterns = jest.fn();
+const mockGetTargetInputs = jest.fn();
 
-import * as configModule from '../../../config/configuration';
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  existsSync: mockExistsSync,
+}));
+
+jest.mock('../../../utils/fileutils', () => ({
+  ...jest.requireActual('../../../utils/fileutils'),
+  readJsonFile: mockReadJsonFile,
+}));
+
+jest.mock('../../../config/configuration', () => ({
+  ...jest.requireActual('../../../config/configuration'),
+  readNxJson: mockReadNxJson,
+}));
+
+jest.mock('../../../hasher/task-hasher', () => ({
+  ...jest.requireActual('../../../hasher/task-hasher'),
+  hashExternalFile: mockHashExternalFile,
+  filterUsingGlobPatterns: mockFilterUsingGlobPatterns,
+  getTargetInputs: mockGetTargetInputs,
+}));
+
 import {
   DependencyType,
   FileData,
@@ -8,14 +34,39 @@ import {
   ProjectFileMap,
   ProjectGraph,
 } from '../../../config/project-graph';
-import * as hashModule from '../../../hasher/task-hasher';
+import {
+  filterUsingGlobPatterns,
+  getTargetInputs,
+} from '../../../hasher/task-hasher';
 import { createPackageJson } from './create-package-json';
-import * as fileutilsModule from '../../../utils/fileutils';
 
 describe('createPackageJson', () => {
+  beforeEach(() => {
+    mockExistsSync.mockRestore();
+    mockReadJsonFile.mockRestore();
+    mockReadNxJson.mockRestore();
+    mockHashExternalFile.mockRestore();
+    mockFilterUsingGlobPatterns.mockRestore();
+    mockGetTargetInputs.mockRestore();
+
+    mockExistsSync.mockImplementation(jest.requireActual('fs').existsSync);
+    mockReadJsonFile.mockImplementation(
+      jest.requireActual('../../../utils/fileutils').readJsonFile
+    );
+    mockReadNxJson.mockImplementation(
+      jest.requireActual('../../../config/configuration').readNxJson
+    );
+    const actualTaskHasher = jest.requireActual('../../../hasher/task-hasher');
+    mockHashExternalFile.mockImplementation(actualTaskHasher.hashExternalFile);
+    mockFilterUsingGlobPatterns.mockImplementation(
+      actualTaskHasher.filterUsingGlobPatterns
+    );
+    mockGetTargetInputs.mockImplementation(actualTaskHasher.getTargetInputs);
+  });
+
   it('should add additional dependencies', () => {
-    jest.spyOn(fs, 'existsSync').mockReturnValue(false);
-    jest.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({
+    mockExistsSync.mockReturnValue(false);
+    mockReadJsonFile.mockReturnValue({
       dependencies: {
         typescript: '4.8.4',
         tslib: '2.4.0',
@@ -54,7 +105,7 @@ describe('createPackageJson', () => {
   });
 
   it('should only add file dependencies if target is specified', () => {
-    jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
+    mockReadNxJson.mockReturnValueOnce({
       namedInputs: {
         default: ['{projectRoot}/**/*'],
         production: ['!{projectRoot}/**/*.spec.ts'],
@@ -66,8 +117,8 @@ describe('createPackageJson', () => {
       },
     });
 
-    jest.spyOn(fs, 'existsSync').mockReturnValue(false);
-    jest.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({
+    mockExistsSync.mockReturnValue(false);
+    mockReadJsonFile.mockReturnValue({
       dependencies: {
         axios: '1.0.0',
         tslib: '2.4.0',
@@ -143,8 +194,8 @@ describe('createPackageJson', () => {
   });
 
   it('should only add all dependencies if target is not specified', () => {
-    jest.spyOn(fs, 'existsSync').mockReturnValue(false);
-    jest.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({
+    mockExistsSync.mockReturnValue(false);
+    mockReadJsonFile.mockReturnValue({
       dependencies: {
         axios: '1.0.0',
         tslib: '2.4.0',
@@ -215,8 +266,8 @@ describe('createPackageJson', () => {
   });
 
   it('should cache filterUsingGlobPatterns', () => {
-    jest.spyOn(fs, 'existsSync').mockReturnValue(false);
-    jest.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({
+    mockExistsSync.mockReturnValue(false);
+    mockReadJsonFile.mockReturnValue({
       dependencies: {
         axios: '1.0.0',
         tslib: '2.4.0',
@@ -224,10 +275,6 @@ describe('createPackageJson', () => {
         typescript: '4.8.4',
       },
     });
-    const filterUsingGlobPatternsSpy = jest.spyOn(
-      hashModule,
-      'filterUsingGlobPatterns'
-    );
 
     expect(
       createPackageJson(
@@ -291,18 +338,18 @@ describe('createPackageJson', () => {
       version: '0.0.1',
     });
 
-    expect(filterUsingGlobPatternsSpy).toHaveBeenNthCalledWith(
+    expect(mockFilterUsingGlobPatterns).toHaveBeenNthCalledWith(
       1,
       'libs/lib1',
       expect.anything(),
       expect.anything()
     );
 
-    expect(filterUsingGlobPatternsSpy).toHaveBeenCalledTimes(1);
+    expect(mockFilterUsingGlobPatterns).toHaveBeenCalledTimes(1);
   });
 
   it('should exclude devDependencies from production build when local package.json is imported', () => {
-    jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
+    mockReadNxJson.mockReturnValueOnce({
       namedInputs: {
         default: ['{projectRoot}/**/*'],
         production: ['!{projectRoot}/**/*.spec.ts'],
@@ -314,8 +361,8 @@ describe('createPackageJson', () => {
       },
     });
 
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-    jest.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({
+    mockExistsSync.mockReturnValue(true);
+    mockReadJsonFile.mockReturnValue({
       name: 'project1',
       version: '1.0.0',
       dependencies: {
@@ -495,15 +542,13 @@ describe('createPackageJson', () => {
 
     beforeAll(() => {
       spies.push(
-        jest
-          .spyOn(hashModule, 'filterUsingGlobPatterns')
-          .mockImplementation((root) => {
-            if (root === 'libs/lib1') {
-              return fileMap['lib1'];
-            } else {
-              return fileMap['app1'];
-            }
-          })
+        mockFilterUsingGlobPatterns.mockImplementation((root) => {
+          if (root === 'libs/lib1') {
+            return fileMap['lib1'];
+          } else {
+            return fileMap['app1'];
+          }
+        })
       );
     });
 
@@ -515,22 +560,20 @@ describe('createPackageJson', () => {
     });
 
     it('should use fixed versions when creating package json for apps', () => {
-      spies.push(jest.spyOn(configModule, 'readNxJson').mockReturnValue({}));
+      spies.push(mockReadNxJson.mockReturnValue({}));
       spies.push(
-        jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
+        mockExistsSync.mockImplementation((path) => {
           if (path === 'apps/app1/package.json') {
             return false;
           }
         })
       );
       spies.push(
-        jest
-          .spyOn(fileutilsModule, 'readJsonFile')
-          .mockImplementation((path) => {
-            if (path === 'package.json') {
-              return rootPackageJson();
-            }
-          })
+        mockReadJsonFile.mockImplementation((path) => {
+          if (path === 'package.json') {
+            return rootPackageJson();
+          }
+        })
       );
 
       expect(createPackageJson('app1', graph, { root: '' }, fileMap)).toEqual({
@@ -544,25 +587,23 @@ describe('createPackageJson', () => {
     });
 
     it('should override fixed versions with local ranges when creating package json for apps', () => {
-      spies.push(jest.spyOn(configModule, 'readNxJson').mockReturnValue({}));
+      spies.push(mockReadNxJson.mockReturnValue({}));
       spies.push(
-        jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
+        mockExistsSync.mockImplementation((path) => {
           if (path === 'apps/app1/package.json') {
             return true;
           }
         })
       );
       spies.push(
-        jest
-          .spyOn(fileutilsModule, 'readJsonFile')
-          .mockImplementation((path) => {
-            if (path === 'package.json') {
-              return rootPackageJson();
-            }
-            if (path === 'apps/app1/package.json') {
-              return projectPackageJson();
-            }
-          })
+        mockReadJsonFile.mockImplementation((path) => {
+          if (path === 'package.json') {
+            return rootPackageJson();
+          }
+          if (path === 'apps/app1/package.json') {
+            return projectPackageJson();
+          }
+        })
       );
 
       expect(
@@ -587,15 +628,13 @@ describe('createPackageJson', () => {
     });
 
     it('should use range versions when creating package json for libs', () => {
-      spies.push(jest.spyOn(configModule, 'readNxJson').mockReturnValue({}));
+      spies.push(mockReadNxJson.mockReturnValue({}));
       spies.push(
-        jest
-          .spyOn(fileutilsModule, 'readJsonFile')
-          .mockImplementation((path) => {
-            if (path === 'package.json') {
-              return rootPackageJson();
-            }
-          })
+        mockReadJsonFile.mockImplementation((path) => {
+          if (path === 'package.json') {
+            return rootPackageJson();
+          }
+        })
       );
 
       expect(
@@ -619,28 +658,24 @@ describe('createPackageJson', () => {
 
     it('should override range versions with local ranges when creating package json for libs', () => {
       spies.push(
-        jest
-          .spyOn(configModule, 'readNxJson')
-          .mockReturnValue({ cli: { packageManager: 'pnpm' } })
+        mockReadNxJson.mockReturnValue({ cli: { packageManager: 'pnpm' } })
       );
       spies.push(
-        jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
+        mockExistsSync.mockImplementation((path) => {
           if (path === 'libs/lib1/package.json') {
             return true;
           }
         })
       );
       spies.push(
-        jest
-          .spyOn(fileutilsModule, 'readJsonFile')
-          .mockImplementation((path) => {
-            if (path === 'package.json') {
-              return rootPackageJson();
-            }
-            if (path === 'libs/lib1/package.json') {
-              return projectPackageJson();
-            }
-          })
+        mockReadJsonFile.mockImplementation((path) => {
+          if (path === 'package.json') {
+            return rootPackageJson();
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+        })
       );
 
       expect(
@@ -666,7 +701,7 @@ describe('createPackageJson', () => {
 
     it('should add packageManager if missing', () => {
       spies.push(
-        jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
+        mockExistsSync.mockImplementation((path) => {
           if (path === 'libs/lib1/package.json') {
             return true;
           }
@@ -676,19 +711,17 @@ describe('createPackageJson', () => {
         })
       );
       spies.push(
-        jest
-          .spyOn(fileutilsModule, 'readJsonFile')
-          .mockImplementation((path) => {
-            if (path === 'package.json') {
-              return {
-                ...rootPackageJson(),
-                packageManager: 'yarn',
-              };
-            }
-            if (path === 'libs/lib1/package.json') {
-              return projectPackageJson();
-            }
-          })
+        mockReadJsonFile.mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              packageManager: 'yarn',
+            };
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+        })
       );
 
       expect(
@@ -708,27 +741,22 @@ describe('createPackageJson', () => {
 
     it('should support skipping packageManager entry', () => {
       spies.push(
-        jest
-          .spyOn(fs, 'existsSync')
-          .mockImplementation(
-            (path) =>
-              path === 'libs/lib1/package.json' || path === 'package.json'
-          )
+        mockExistsSync.mockImplementation(
+          (path) => path === 'libs/lib1/package.json' || path === 'package.json'
+        )
       );
       spies.push(
-        jest
-          .spyOn(fileutilsModule, 'readJsonFile')
-          .mockImplementation((path) => {
-            if (path === 'package.json') {
-              return {
-                ...rootPackageJson(),
-                packageManager: 'yarn',
-              };
-            }
-            if (path === 'libs/lib1/package.json') {
-              return projectPackageJson();
-            }
-          })
+        mockReadJsonFile.mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              packageManager: 'yarn',
+            };
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+        })
       );
 
       expect(
@@ -741,7 +769,7 @@ describe('createPackageJson', () => {
 
     it('should replace packageManager if not in sync with root and show warning', () => {
       spies.push(
-        jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
+        mockExistsSync.mockImplementation((path) => {
           if (path === 'libs/lib1/package.json') {
             return true;
           }
@@ -753,22 +781,20 @@ describe('createPackageJson', () => {
       const consoleWarnSpy = jest.spyOn(process.stdout, 'write');
       spies.push(consoleWarnSpy);
       spies.push(
-        jest
-          .spyOn(fileutilsModule, 'readJsonFile')
-          .mockImplementation((path) => {
-            if (path === 'package.json') {
-              return {
-                ...rootPackageJson(),
-                packageManager: 'yarn@1.2',
-              };
-            }
-            if (path === 'libs/lib1/package.json') {
-              return {
-                ...projectPackageJson(),
-                packageManager: 'yarn@4.3',
-              };
-            }
-          })
+        mockReadJsonFile.mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              packageManager: 'yarn@1.2',
+            };
+          }
+          if (path === 'libs/lib1/package.json') {
+            return {
+              ...projectPackageJson(),
+              packageManager: 'yarn@4.3',
+            };
+          }
+        })
       );
 
       expect(
@@ -791,44 +817,40 @@ describe('createPackageJson', () => {
 
     it('should add overrides (pnpm)', () => {
       spies.push(
-        jest
-          .spyOn(fs, 'existsSync')
-          .mockImplementation(
-            (path) =>
-              path === 'libs/lib1/package.json' ||
-              path === 'apps/app1/package.json' ||
-              path === 'package.json'
-          )
+        mockExistsSync.mockImplementation(
+          (path) =>
+            path === 'libs/lib1/package.json' ||
+            path === 'apps/app1/package.json' ||
+            path === 'package.json'
+        )
       );
       spies.push(
-        jest
-          .spyOn(fileutilsModule, 'readJsonFile')
-          .mockImplementation((path) => {
-            if (path === 'package.json') {
-              return {
-                ...rootPackageJson(),
-                pnpm: {
-                  overrides: {
-                    foo: '1.0.0',
-                  },
+        mockReadJsonFile.mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              pnpm: {
+                overrides: {
+                  foo: '1.0.0',
                 },
-              };
-            }
-            if (path === 'libs/lib1/package.json') {
-              return projectPackageJson();
-            }
-            if (path === 'apps/app1/package.json') {
-              return {
-                ...projectPackageJson(),
-                pnpm: {
-                  overrides: {
-                    foo: '2.0.0',
-                    bar: '1.0.0',
-                  },
+              },
+            };
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+          if (path === 'apps/app1/package.json') {
+            return {
+              ...projectPackageJson(),
+              pnpm: {
+                overrides: {
+                  foo: '2.0.0',
+                  bar: '1.0.0',
                 },
-              };
-            }
-          })
+              },
+            };
+          }
+        })
       );
 
       expect(
@@ -870,40 +892,36 @@ describe('createPackageJson', () => {
 
     it('should add overrides (npm)', () => {
       spies.push(
-        jest
-          .spyOn(fs, 'existsSync')
-          .mockImplementation(
-            (path) =>
-              path === 'libs/lib1/package.json' ||
-              path === 'apps/app1/package.json' ||
-              path === 'package.json'
-          )
+        mockExistsSync.mockImplementation(
+          (path) =>
+            path === 'libs/lib1/package.json' ||
+            path === 'apps/app1/package.json' ||
+            path === 'package.json'
+        )
       );
       spies.push(
-        jest
-          .spyOn(fileutilsModule, 'readJsonFile')
-          .mockImplementation((path) => {
-            if (path === 'package.json') {
-              return {
-                ...rootPackageJson(),
-                overrides: {
-                  foo: '1.0.0',
-                },
-              };
-            }
-            if (path === 'libs/lib1/package.json') {
-              return projectPackageJson();
-            }
-            if (path === 'apps/app1/package.json') {
-              return {
-                ...projectPackageJson(),
-                overrides: {
-                  foo: '2.0.0',
-                  bar: '1.0.0',
-                },
-              };
-            }
-          })
+        mockReadJsonFile.mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              overrides: {
+                foo: '1.0.0',
+              },
+            };
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+          if (path === 'apps/app1/package.json') {
+            return {
+              ...projectPackageJson(),
+              overrides: {
+                foo: '2.0.0',
+                bar: '1.0.0',
+              },
+            };
+          }
+        })
       );
 
       expect(
@@ -941,40 +959,36 @@ describe('createPackageJson', () => {
 
     it('should add resolutions (yarn)', () => {
       spies.push(
-        jest
-          .spyOn(fs, 'existsSync')
-          .mockImplementation(
-            (path) =>
-              path === 'libs/lib1/package.json' ||
-              path === 'apps/app1/package.json' ||
-              path === 'package.json'
-          )
+        mockExistsSync.mockImplementation(
+          (path) =>
+            path === 'libs/lib1/package.json' ||
+            path === 'apps/app1/package.json' ||
+            path === 'package.json'
+        )
       );
       spies.push(
-        jest
-          .spyOn(fileutilsModule, 'readJsonFile')
-          .mockImplementation((path) => {
-            if (path === 'package.json') {
-              return {
-                ...rootPackageJson(),
-                resolutions: {
-                  foo: '1.0.0',
-                },
-              };
-            }
-            if (path === 'libs/lib1/package.json') {
-              return projectPackageJson();
-            }
-            if (path === 'apps/app1/package.json') {
-              return {
-                ...projectPackageJson(),
-                resolutions: {
-                  foo: '2.0.0',
-                  bar: '1.0.0',
-                },
-              };
-            }
-          })
+        mockReadJsonFile.mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              resolutions: {
+                foo: '1.0.0',
+              },
+            };
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+          if (path === 'apps/app1/package.json') {
+            return {
+              ...projectPackageJson(),
+              resolutions: {
+                foo: '2.0.0',
+                bar: '1.0.0',
+              },
+            };
+          }
+        })
       );
 
       expect(
@@ -1013,13 +1027,6 @@ describe('createPackageJson', () => {
 
   describe('nested library dependencies', () => {
     it('should include dependencies from nested libraries (App -> lib1 -> lib2)', () => {
-      const mockFilterUsingGlobPatterns = jest.spyOn(
-        hashModule,
-        'filterUsingGlobPatterns'
-      );
-      const mockGetTargetInputs = jest.spyOn(hashModule, 'getTargetInputs');
-      const mockReadNxJson = jest.spyOn(configModule, 'readNxJson');
-
       // Mock restrictive patterns that would miss nested dependencies
       mockGetTargetInputs.mockReturnValue({
         selfInputs: ['production'],
@@ -1131,8 +1138,8 @@ describe('createPackageJson', () => {
         ],
       };
 
-      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
-      jest.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({
+      mockExistsSync.mockReturnValue(false);
+      mockReadJsonFile.mockReturnValue({
         name: 'root-package',
         dependencies: {},
       });

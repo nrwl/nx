@@ -17,6 +17,7 @@
     "**/*.test.ts",
     "jest.config.ts",
     "jest.config.cts",
+    "jest.setup.ts",
     "**/__fixtures__/**/*.*",
     "**/__snapshots__/**/*.*",
     "./src/**/test-fixtures/**/*"

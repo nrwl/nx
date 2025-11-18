@@ -5,7 +5,10 @@
     "module": "commonjs",
     "types": ["jest", "node"],
     "resolveJsonModule": true,
-    "composite": true
+    "composite": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": false,
+    "moduleResolution": "node"
   },
   "include": [
     "**/*.test.ts",
@@ -18,14 +21,15 @@
     "**/*.spec.jsx",
     "**/*.d.ts",
     "jest.config.cts",
+    "jest.setup.ts",
     "*.json"
   ],
   "references": [
     {
-      "path": "../nx"
+      "path": "./tsconfig.lib.json"
     },
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../nx"
     }
   ]
 }

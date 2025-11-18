@@ -5,7 +5,10 @@
     "module": "commonjs",
     "composite": true,
     "isolatedModules": true,
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": false,
+    "moduleResolution": "node"
   },
   "include": [
     "**/*.spec.ts",
@@ -20,6 +23,7 @@
     "**/*.test.jsx",
     "**/*.d.ts",
     "jest.config.ts",
+    "jest.setup.ts",
     "*.json"
   ],
   "references": [

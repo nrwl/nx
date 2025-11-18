@@ -1,7 +1,21 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
+const mockLoggerWarn = jest.fn();
+const mockLoggerDebug = jest.fn();
+jest.mock('@nx/devkit', () => {
+  const actual = jest.requireActual('@nx/devkit');
+  return {
+    ...actual,
+    logger: {
+      ...actual.logger,
+      warn: mockLoggerWarn,
+      debug: mockLoggerDebug,
+    },
+  };
+});
+
 import { createApp, createLib } from '../../utils/testing-generators';
-import { logger, Tree } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { hookGenerator } from './hook';
 
@@ -14,12 +28,10 @@ describe('hook', () => {
     appTree = createTreeWithEmptyWorkspace();
     await createApp(appTree, 'my-app');
     await createLib(appTree, projectName);
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'debug').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
+    mockLoggerWarn.mockReset();
+    mockLoggerDebug.mockReset();
+    mockLoggerWarn.mockImplementation(() => {});
+    mockLoggerDebug.mockImplementation(() => {});
   });
 
   it('should generate files', async () => {

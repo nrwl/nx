@@ -72,7 +72,7 @@
       "description": "Generates a TailwindCSS configuration for the Remix application"
     },
     "storybook-configuration": {
-      "implementation": "./dist/src/generators/storybook-configuration/storybook-configuration.impl#remixStorybookConfiguration",
+      "implementation": "./dist/src/generators/storybook-configuration/storybook-configuration.impl",
       "schema": "./dist/src/generators/storybook-configuration/schema.json",
       "description": "Generates a Storybook configuration for a Remix application"
     },

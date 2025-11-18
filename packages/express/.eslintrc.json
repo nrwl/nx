@@ -48,7 +48,8 @@
               "@nx/eslint",
               "typescript",
               "eslint",
-              "express"
+              "express",
+              "jest-environment-node"
             ]
           }
         ]

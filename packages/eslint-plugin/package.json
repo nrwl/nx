@@ -21,41 +21,48 @@
   "typings": "./src/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/src/index.js",
       "types": "./src/index.d.ts",
-      "@nx/nx-source": "./src/index.ts"
+      "@nx/nx-source": "./src/index.ts",
+      "import": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
     },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./angular": {
-      "import": "./dist/angular.js",
       "types": "./angular.d.ts",
-      "@nx/nx-source": "./angular.ts"
+      "@nx/nx-source": "./angular.ts",
+      "import": "./dist/angular.js",
+      "default": "./dist/angular.js"
     },
     "./nx": {
-      "import": "./dist/nx.js",
       "types": "./nx.d.ts",
-      "@nx/nx-source": "./nx.ts"
+      "@nx/nx-source": "./nx.ts",
+      "import": "./dist/nx.js",
+      "default": "./dist/nx.js"
     },
     "./react": {
-      "import": "./dist/react.js",
       "types": "./react.d.ts",
-      "@nx/nx-source": "./react.ts"
+      "@nx/nx-source": "./react.ts",
+      "import": "./dist/react.js",
+      "default": "./dist/react.js"
     },
     "./typescript": {
-      "import": "./dist/typescript.js",
       "types": "./typescript.d.ts",
-      "@nx/nx-source": "./typescript.ts"
+      "@nx/nx-source": "./typescript.ts",
+      "import": "./dist/typescript.js",
+      "default": "./dist/typescript.js"
     },
     "./src/*": {
-      "import": "./dist/src/*.js",
       "types": "./src/*.d.ts",
-      "@nx/nx-source": "./src/*.ts"
+      "@nx/nx-source": "./src/*.ts",
+      "import": "./dist/src/*.js",
+      "default": "./dist/src/*.js"
     },
     "./src/**/*": {
-      "import": "./dist/src/**/*.js",
       "types": "./src/**/*.d.ts",
-      "@nx/nx-source": "./src/**/*.ts"
+      "@nx/nx-source": "./src/**/*.ts",
+      "import": "./dist/src/**/*.js",
+      "default": "./dist/src/**/*.js"
     }
   },
   "author": "Victor Savkin",

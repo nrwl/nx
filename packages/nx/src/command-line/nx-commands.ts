@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import * as yargs from 'yargs';
 
 import { yargsRegisterCommand } from './register/command-object';

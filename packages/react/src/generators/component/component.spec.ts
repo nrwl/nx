@@ -1,8 +1,30 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
+// Define mocks FIRST - BEFORE any imports
+const mockLoggerWarn = jest.fn();
+const mockLoggerDebug = jest.fn();
+jest.mock('@nx/devkit', () => {
+  const actual = jest.requireActual('@nx/devkit');
+  return {
+    ...actual,
+    logger: {
+      ...actual.logger,
+      warn: mockLoggerWarn,
+      debug: mockLoggerDebug,
+    },
+  };
+});
+
+// need to mock cypress otherwise it'll use the nx installed version from package.json
+//  which is v9 while we are testing for the new v10 version
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
+
+// NOW import - mocks are already in place
 import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import {
-  logger,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -11,13 +33,6 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { createApp, createLib } from '../../utils/testing-generators';
 import { componentGenerator } from './component';
-
-// need to mock cypress otherwise it'll use the nx installed version from package.json
-//  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual('@nx/cypress/src/utils/versions'),
-  getInstalledCypressMajorVersion: jest.fn(),
-}));
 
 describe('component', () => {
   let appTree: Tree;
@@ -32,12 +47,10 @@ describe('component', () => {
     appTree = createTreeWithEmptyWorkspace();
     await createApp(appTree, 'my-app');
     await createLib(appTree, projectName);
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'debug').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
+    mockLoggerWarn.mockReset();
+    mockLoggerDebug.mockReset();
+    mockLoggerWarn.mockImplementation(() => {});
+    mockLoggerDebug.mockImplementation(() => {});
   });
 
   it('should generate files', async () => {

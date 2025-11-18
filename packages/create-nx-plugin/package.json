@@ -25,9 +25,10 @@
   },
   "exports": {
     "./bin/create-nx-plugin": {
-      "import": "./dist/bin/create-nx-plugin.js",
       "types": "./bin/create-nx-plugin.d.ts",
-      "@nx/nx-source": "./bin/create-nx-plugin.ts"
+      "@nx/nx-source": "./bin/create-nx-plugin.ts",
+      "import": "./dist/bin/create-nx-plugin.js",
+      "default": "./dist/bin/create-nx-plugin.js"
     },
     "./package.json": "./package.json"
   },

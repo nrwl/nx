@@ -81,7 +81,8 @@
               "webpack",
               "webpack-merge",
               // used via the CT react plugin installed via vite plugin
-              "vite"
+              "vite",
+              "jest-environment-node"
             ]
           }
         ]

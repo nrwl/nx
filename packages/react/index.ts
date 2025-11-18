@@ -25,4 +25,5 @@ export { cypressComponentConfigGenerator } from './src/generators/cypress-compon
 export { componentTestGenerator } from './src/generators/component-test/component-test';
 export { setupTailwindGenerator } from './src/generators/setup-tailwind/setup-tailwind';
 export type { SupportedStyles } from './typings/style';
+export type { WithReactOptions } from './plugins/with-react';
 export * from './plugins/with-react';

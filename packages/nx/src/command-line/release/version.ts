@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import {

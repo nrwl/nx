@@ -8,7 +8,7 @@ import {
 } from '@nx/devkit';
 import picomatch = require('picomatch');
 import { join } from 'node:path/posix';
-import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
+import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json/index';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { lt } from 'semver';
 

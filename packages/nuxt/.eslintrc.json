@@ -36,7 +36,8 @@
               "@nx/cypress",
               "@nx/playwright",
               "@nx/vite",
-              "@nx/vitest"
+              "@nx/vitest",
+              "jest-environment-node"
             ]
           }
         ]

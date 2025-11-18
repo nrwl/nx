@@ -100,7 +100,103 @@ module.exports = {
         );
 
         // ASSERT
-        expect(nodes).toMatchSnapshot();
+        expect(nodes).toMatchInlineSnapshot(`
+          [
+            [
+              "remix.config.cjs",
+              {
+                "projects": {
+                  ".": {
+                    "metadata": {},
+                    "root": ".",
+                    "targets": {
+                      "build": {
+                        "cache": true,
+                        "command": "remix build",
+                        "dependsOn": [
+                          "^build",
+                        ],
+                        "inputs": [
+                          "production",
+                          "^production",
+                          {
+                            "externalDependencies": [
+                              "@remix-run/dev",
+                            ],
+                          },
+                        ],
+                        "options": {
+                          "cwd": ".",
+                        },
+                        "outputs": [
+                          "{workspaceRoot}/build",
+                          "{workspaceRoot}/public/build",
+                        ],
+                      },
+                      "dev": {
+                        "command": "remix dev --manual",
+                        "continuous": true,
+                        "options": {
+                          "cwd": ".",
+                        },
+                      },
+                      "serve-static": {
+                        "command": "remix-serve build/index.js",
+                        "continuous": true,
+                        "dependsOn": [
+                          "build",
+                        ],
+                        "options": {
+                          "cwd": ".",
+                        },
+                      },
+                      "start": {
+                        "command": "remix-serve build/index.js",
+                        "continuous": true,
+                        "dependsOn": [
+                          "build",
+                        ],
+                        "options": {
+                          "cwd": ".",
+                        },
+                      },
+                      "typecheck": {
+                        "cache": true,
+                        "command": "tsc --noEmit",
+                        "inputs": [
+                          "production",
+                          "^production",
+                          {
+                            "externalDependencies": [
+                              "typescript",
+                            ],
+                          },
+                        ],
+                        "metadata": {
+                          "description": "Runs type-checking for the project.",
+                          "help": {
+                            "command": "npx tsc --help",
+                            "example": {
+                              "options": {
+                                "noEmit": true,
+                              },
+                            },
+                          },
+                          "technologies": [
+                            "typescript",
+                          ],
+                        },
+                        "options": {
+                          "cwd": ".",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          ]
+        `);
       });
     });
 
@@ -162,7 +258,115 @@ module.exports = {
         );
 
         // ASSERT
-        expect(nodes).toMatchSnapshot();
+        expect(nodes).toMatchInlineSnapshot(`
+          [
+            [
+              "my-app/remix.config.cjs",
+              {
+                "projects": {
+                  "my-app": {
+                    "metadata": {},
+                    "root": "my-app",
+                    "targets": {
+                      "build": {
+                        "cache": true,
+                        "command": "remix build",
+                        "dependsOn": [
+                          "^build",
+                        ],
+                        "inputs": [
+                          "production",
+                          "^production",
+                          {
+                            "externalDependencies": [
+                              "@remix-run/dev",
+                            ],
+                          },
+                        ],
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                        "outputs": [
+                          "{workspaceRoot}/my-app/build",
+                          "{workspaceRoot}/my-app/public/build",
+                        ],
+                      },
+                      "build-deps": {
+                        "dependsOn": [
+                          "^build",
+                        ],
+                      },
+                      "dev": {
+                        "command": "remix dev --manual",
+                        "continuous": true,
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                      },
+                      "serve-static": {
+                        "command": "remix-serve build/index.js",
+                        "continuous": true,
+                        "dependsOn": [
+                          "build",
+                        ],
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                      },
+                      "start": {
+                        "command": "remix-serve build/index.js",
+                        "continuous": true,
+                        "dependsOn": [
+                          "build",
+                        ],
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                      },
+                      "tsc": {
+                        "cache": true,
+                        "command": "tsc --noEmit",
+                        "inputs": [
+                          "production",
+                          "^production",
+                          {
+                            "externalDependencies": [
+                              "typescript",
+                            ],
+                          },
+                        ],
+                        "metadata": {
+                          "description": "Runs type-checking for the project.",
+                          "help": {
+                            "command": "npx tsc --help",
+                            "example": {
+                              "options": {
+                                "noEmit": true,
+                              },
+                            },
+                          },
+                          "technologies": [
+                            "typescript",
+                          ],
+                        },
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                      },
+                      "watch-deps": {
+                        "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                        "continuous": true,
+                        "dependsOn": [
+                          "build-deps",
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          ]
+        `);
       });
 
       it('should infer watch-deps target', async () => {
@@ -182,7 +386,115 @@ module.exports = {
           context
         );
 
-        expect(nodes).toMatchSnapshot();
+        expect(nodes).toMatchInlineSnapshot(`
+          [
+            [
+              "my-app/remix.config.cjs",
+              {
+                "projects": {
+                  "my-app": {
+                    "metadata": {},
+                    "root": "my-app",
+                    "targets": {
+                      "build": {
+                        "cache": true,
+                        "command": "remix build",
+                        "dependsOn": [
+                          "^build",
+                        ],
+                        "inputs": [
+                          "production",
+                          "^production",
+                          {
+                            "externalDependencies": [
+                              "@remix-run/dev",
+                            ],
+                          },
+                        ],
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                        "outputs": [
+                          "{workspaceRoot}/my-app/build",
+                          "{workspaceRoot}/my-app/public/build",
+                        ],
+                      },
+                      "build-deps": {
+                        "dependsOn": [
+                          "^build",
+                        ],
+                      },
+                      "dev": {
+                        "command": "remix dev --manual",
+                        "continuous": true,
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                      },
+                      "serve-static": {
+                        "command": "remix-serve build/index.js",
+                        "continuous": true,
+                        "dependsOn": [
+                          "build",
+                        ],
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                      },
+                      "start": {
+                        "command": "remix-serve build/index.js",
+                        "continuous": true,
+                        "dependsOn": [
+                          "build",
+                        ],
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                      },
+                      "tsc": {
+                        "cache": true,
+                        "command": "tsc --noEmit",
+                        "inputs": [
+                          "production",
+                          "^production",
+                          {
+                            "externalDependencies": [
+                              "typescript",
+                            ],
+                          },
+                        ],
+                        "metadata": {
+                          "description": "Runs type-checking for the project.",
+                          "help": {
+                            "command": "npx tsc --help",
+                            "example": {
+                              "options": {
+                                "noEmit": true,
+                              },
+                            },
+                          },
+                          "technologies": [
+                            "typescript",
+                          ],
+                        },
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                      },
+                      "watch-deps": {
+                        "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                        "continuous": true,
+                        "dependsOn": [
+                          "build-deps",
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          ]
+        `);
       });
 
       it('should infer typecheck without --build flag when not using TS solution setup', async () => {
@@ -346,7 +658,102 @@ module.exports = {
         );
 
         // ASSERT
-        expect(nodes).toMatchSnapshot();
+        expect(nodes).toMatchInlineSnapshot(`
+          [
+            [
+              "vite.config.js",
+              {
+                "projects": {
+                  ".": {
+                    "metadata": {},
+                    "root": ".",
+                    "targets": {
+                      "build": {
+                        "cache": true,
+                        "command": "remix vite:build",
+                        "dependsOn": [
+                          "^build",
+                        ],
+                        "inputs": [
+                          "production",
+                          "^production",
+                          {
+                            "externalDependencies": [
+                              "@remix-run/dev",
+                            ],
+                          },
+                        ],
+                        "options": {
+                          "cwd": ".",
+                        },
+                        "outputs": [
+                          "{workspaceRoot}/build",
+                        ],
+                      },
+                      "dev": {
+                        "command": "remix vite:dev",
+                        "continuous": true,
+                        "options": {
+                          "cwd": ".",
+                        },
+                      },
+                      "serve-static": {
+                        "command": "remix-serve build/server/index.js",
+                        "continuous": true,
+                        "dependsOn": [
+                          "build",
+                        ],
+                        "options": {
+                          "cwd": ".",
+                        },
+                      },
+                      "start": {
+                        "command": "remix-serve build/server/index.js",
+                        "continuous": true,
+                        "dependsOn": [
+                          "build",
+                        ],
+                        "options": {
+                          "cwd": ".",
+                        },
+                      },
+                      "typecheck": {
+                        "cache": true,
+                        "command": "tsc --noEmit",
+                        "inputs": [
+                          "production",
+                          "^production",
+                          {
+                            "externalDependencies": [
+                              "typescript",
+                            ],
+                          },
+                        ],
+                        "metadata": {
+                          "description": "Runs type-checking for the project.",
+                          "help": {
+                            "command": "npx tsc --help",
+                            "example": {
+                              "options": {
+                                "noEmit": true,
+                              },
+                            },
+                          },
+                          "technologies": [
+                            "typescript",
+                          ],
+                        },
+                        "options": {
+                          "cwd": ".",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          ]
+        `);
       });
     });
 
@@ -416,7 +823,114 @@ module.exports = {
         );
 
         // ASSERT
-        expect(nodes).toMatchSnapshot();
+        expect(nodes).toMatchInlineSnapshot(`
+          [
+            [
+              "my-app/vite.config.js",
+              {
+                "projects": {
+                  "my-app": {
+                    "metadata": {},
+                    "root": "my-app",
+                    "targets": {
+                      "build": {
+                        "cache": true,
+                        "command": "remix vite:build",
+                        "dependsOn": [
+                          "^build",
+                        ],
+                        "inputs": [
+                          "production",
+                          "^production",
+                          {
+                            "externalDependencies": [
+                              "@remix-run/dev",
+                            ],
+                          },
+                        ],
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                        "outputs": [
+                          "{workspaceRoot}/my-app/build",
+                        ],
+                      },
+                      "build-deps": {
+                        "dependsOn": [
+                          "^build",
+                        ],
+                      },
+                      "dev": {
+                        "command": "remix vite:dev",
+                        "continuous": true,
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                      },
+                      "serve-static": {
+                        "command": "remix-serve build/server/index.js",
+                        "continuous": true,
+                        "dependsOn": [
+                          "build",
+                        ],
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                      },
+                      "start": {
+                        "command": "remix-serve build/server/index.js",
+                        "continuous": true,
+                        "dependsOn": [
+                          "build",
+                        ],
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                      },
+                      "tsc": {
+                        "cache": true,
+                        "command": "tsc --noEmit",
+                        "inputs": [
+                          "production",
+                          "^production",
+                          {
+                            "externalDependencies": [
+                              "typescript",
+                            ],
+                          },
+                        ],
+                        "metadata": {
+                          "description": "Runs type-checking for the project.",
+                          "help": {
+                            "command": "npx tsc --help",
+                            "example": {
+                              "options": {
+                                "noEmit": true,
+                              },
+                            },
+                          },
+                          "technologies": [
+                            "typescript",
+                          ],
+                        },
+                        "options": {
+                          "cwd": "my-app",
+                        },
+                      },
+                      "watch-deps": {
+                        "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                        "continuous": true,
+                        "dependsOn": [
+                          "build-deps",
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          ]
+        `);
       });
     });
   });

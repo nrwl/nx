@@ -4,7 +4,10 @@
     "outDir": "../../dist/packages/module-federation/spec",
     "module": "commonjs",
     "types": ["jest", "node"],
-    "composite": true
+    "composite": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": false,
+    "moduleResolution": "node"
   },
   "include": [
     "**/*.spec.ts",
@@ -16,10 +19,14 @@
     "**/*.spec.jsx",
     "**/*.test.jsx",
     "**/*.d.ts",
-    "jest.config.ts",
+    "jest.config.cts",
+    "jest.setup.ts",
     "*.json"
   ],
   "references": [
+    {
+      "path": "../nx"
+    },
     {
       "path": "./tsconfig.lib.json"
     }

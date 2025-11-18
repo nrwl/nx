@@ -1,34 +1,22 @@
-import * as enquirer from 'enquirer';
-import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
-import type { ProjectGraph } from '../../../config/project-graph';
-import { createTreeWithEmptyWorkspace } from '../../../generators/testing-utils/create-tree-with-empty-workspace';
-import { Tree } from '../../../generators/tree';
-import {
-  readJson,
-  updateJson,
-  writeJson,
-} from '../../../generators/utils/json';
-import { output } from '../../../utils/output';
-import type { NxReleaseConfig } from '../config/config';
-import { VersionData } from '../utils/shared';
-import {
-  createNxReleaseConfigAndPopulateWorkspace,
-  createTestReleaseGroupProcessor,
-  mockResolveVersionActionsForProjectImplementation,
-} from './test-utils';
-import { SemverBumpType } from './version-actions';
-
+// Define all mocks BEFORE imports
 const originalExit = process.exit;
 let stubProcessExit = false;
 
-const processExitSpy = jest
-  .spyOn(process, 'exit')
-  .mockImplementation((...args) => {
-    if (stubProcessExit) {
-      return undefined as never;
-    }
-    return originalExit(...args);
-  });
+const mockProcessExit = jest.fn((...args) => {
+  if (stubProcessExit) {
+    return undefined as never;
+  }
+  return originalExit(...args);
+});
+
+const mockOutputError = jest.fn();
+
+// Mock process.exit before any imports
+Object.defineProperty(process, 'exit', {
+  value: mockProcessExit,
+  configurable: true,
+  writable: true,
+});
 
 const mockDetectPackageManager = jest.fn();
 jest.doMock('nx/src/devkit-exports', () => {
@@ -39,7 +27,10 @@ jest.doMock('nx/src/devkit-exports', () => {
   };
 });
 
-jest.mock('enquirer');
+let mockEnquirerPrompt = jest.fn();
+jest.mock('enquirer', () => ({
+  prompt: mockEnquirerPrompt,
+}));
 
 let mockDeriveSpecifierFromConventionalCommits = jest.fn();
 let mockDeriveSpecifierFromVersionPlan = jest.fn();
@@ -54,6 +45,7 @@ jest.doMock('./version-actions', () => ({
   ...jest.requireActual('./version-actions'),
   deriveSpecifierFromVersionPlan: mockDeriveSpecifierFromVersionPlan,
   resolveVersionActionsForProject: mockResolveVersionActionsForProject,
+  NOOP_VERSION_ACTIONS: class NOOP_VERSION_ACTIONS {},
 }));
 
 jest.mock('./project-logger', () => ({
@@ -68,6 +60,25 @@ jest.mock('./project-logger', () => ({
 
 // Using the daemon in unit tests would cause jest to never exit
 process.env.NX_DAEMON = 'false';
+
+import { createTreeWithEmptyWorkspace } from '../../../generators/testing-utils/create-tree-with-empty-workspace';
+import type { Tree } from '../../../generators/tree';
+import {
+  readJson,
+  updateJson,
+  writeJson,
+} from '../../../generators/utils/json';
+import type { ProjectGraph } from '../../../config/project-graph';
+import type { NxReleaseConfig } from '../config/config';
+import type { NxReleaseVersionConfiguration } from '../../../config/nx-json';
+import { output } from '../../../utils/output';
+import { NOOP_VERSION_ACTIONS, SemverBumpType } from './version-actions';
+import {
+  createNxReleaseConfigAndPopulateWorkspace,
+  createTestReleaseGroupProcessor,
+  mockResolveVersionActionsForProjectImplementation,
+} from './test-utils';
+import type { VersionData } from '../utils/shared';
 
 type ReleaseVersionGeneratorResult = {
   data: VersionData;
@@ -158,8 +169,8 @@ describe('releaseVersionGenerator (ported tests)', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    // @ts-expect-error read-only property
-    process.exit = processExitSpy;
+    stubProcessExit = true; // Stub process.exit by default to prevent tests from exiting
+    process.exit = mockProcessExit;
 
     tree = createTreeWithEmptyWorkspace();
     updateJson(tree, 'nx.json', (json) => {
@@ -167,6 +178,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
       return json;
     });
 
+    mockEnquirerPrompt.mockRestore();
     mockResolveVersionActionsForProject.mockImplementation(
       mockResolveVersionActionsForProjectImplementation
     );
@@ -287,7 +299,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
       });
 
       outputSpy.mockRestore();
-      expect(processExitSpy).toHaveBeenCalledWith(1);
+      expect(mockProcessExit).toHaveBeenCalledWith(1);
 
       stubProcessExit = false;
     });
@@ -450,9 +462,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
   describe('independent release group', () => {
     describe('specifierSource: prompt', () => {
       it(`should appropriately prompt for each project independently and apply the version updates across all manifest files`, async () => {
-        // @ts-ignore
-        enquirer.prompt = jest
-          .fn()
+        mockEnquirerPrompt
           // First project will be minor
           .mockReturnValueOnce(Promise.resolve({ specifier: 'minor' }))
           // Next project will be patch
@@ -1305,7 +1315,7 @@ Valid values are: "auto", "", "~", "^", "="`,
       });
 
       outputSpy.mockRestore();
-      expect(processExitSpy).toHaveBeenCalledWith(1);
+      expect(mockProcessExit).toHaveBeenCalledWith(1);
 
       stubProcessExit = false;
     });

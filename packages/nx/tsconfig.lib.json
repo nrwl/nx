@@ -7,7 +7,9 @@
     "declarationMap": false,
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "composite": true
+    "composite": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext"
   },
   "exclude": [
     "node_modules",

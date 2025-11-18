@@ -18,7 +18,7 @@ import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import type { Architect, Target } from '@angular-devkit/architect';
 import type { NodeModulesBuilderInfo } from '@angular-devkit/architect/node/node-modules-architect-host';
 
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { Stats } from 'fs';
 import { dirname, extname, join, resolve } from 'path';
 

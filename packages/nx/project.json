@@ -56,6 +56,13 @@
     "echo": {
       "command": "echo hi"
     },
+    "test": {
+      "options": {
+        "env": {
+          "NX_ISOLATE_PLUGINS": "false"
+        }
+      }
+    },
     "build": {
       "dependsOn": [
         "^build-client",
@@ -156,6 +163,7 @@
               "**/tsconfig*.json",
               "**/project.json",
               "**/__fixtures__/**",
+              ".eslintrc.json",
               "executors.json",
               "generators.json",
               "migrations.json",

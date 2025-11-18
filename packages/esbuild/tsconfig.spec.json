@@ -3,8 +3,11 @@
   "compilerOptions": {
     "outDir": "../../dist/packages/esbuild/spec",
     "module": "commonjs",
-    "types": ["jest", "node", "@jest/expect"],
-    "composite": true
+    "types": ["jest", "node"],
+    "composite": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": false,
+    "moduleResolution": "node"
   },
   "include": [
     "**/*.spec.ts",
@@ -17,6 +20,7 @@
     "**/*.test.jsx",
     "**/*.d.ts",
     "jest.config.ts",
+    "jest.setup.ts",
     "*.json"
   ],
   "references": [

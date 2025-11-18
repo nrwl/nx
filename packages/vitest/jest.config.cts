@@ -2,6 +2,7 @@
 module.exports = {
   displayName: 'vitest',
   preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   globals: {},
   transform: {
     '^.+\\.[tj]s$': [

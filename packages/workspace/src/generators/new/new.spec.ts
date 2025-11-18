@@ -1,5 +1,22 @@
+import { getNpmPackageVersion } from '../utils/get-npm-package-version';
+
+const mockInstallPackages = jest.fn();
+const mockGeneratePreset = jest.fn();
+const mockGetNpmPackageVersion = jest.fn();
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  installPackagesTask: mockInstallPackages,
+}));
+jest.mock('../utils/get-npm-package-version', () => ({
+  ...jest.requireActual('../utils/get-npm-package-version'),
+  getNpmPackageVersion: mockGetNpmPackageVersion,
+}));
+jest.mock('./generate-preset', () => ({
+  ...jest.requireActual('./generate-preset'),
+  generatePreset: mockGeneratePreset,
+}));
+
 import { readJson, Tree, writeJson } from '@nx/devkit';
-import * as devkit from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
 import {
   angularCliVersion,
@@ -8,8 +25,6 @@ import {
 } from '../../utils/versions';
 import { Preset } from '../utils/presets';
 import { newGenerator, NormalizedSchema } from './new';
-import * as getNpmPackageVersion from './../utils/get-npm-package-version';
-import * as generatePreset from './generate-preset';
 
 const DEFAULT_PACKAGE_VERSION = '1.0.0';
 
@@ -27,30 +42,27 @@ describe('new', () => {
   let tree: Tree;
   let installPackagesTaskSpy: jest.SpyInstance;
   let generatePresetSpy: jest.SpyInstance;
-  let getNpmPackageVersionSpy: jest.SpyInstance;
 
   beforeEach(() => {
+    mockInstallPackages.mockReset();
+    mockGeneratePreset.mockReset();
+    mockGetNpmPackageVersion.mockReset();
+
     tree = createTree();
     // we need an actual path for the package manager version check
     tree.root = process.cwd();
 
-    installPackagesTaskSpy = jest
-      .spyOn(devkit, 'installPackagesTask')
-      .mockImplementation(() => undefined);
+    installPackagesTaskSpy = mockInstallPackages.mockImplementation(
+      () => undefined
+    );
 
-    generatePresetSpy = jest
-      .spyOn(generatePreset, 'generatePreset')
-      .mockImplementation(async () => undefined);
+    generatePresetSpy = mockGeneratePreset.mockImplementation(
+      async () => undefined
+    );
 
-    getNpmPackageVersionSpy = jest
-      .spyOn(getNpmPackageVersion, 'getNpmPackageVersion')
-      .mockImplementation(
-        (name, version) => version ?? DEFAULT_PACKAGE_VERSION
-      );
-  });
-
-  afterEach(() => {
-    jest.resetAllMocks();
+    mockGetNpmPackageVersion.mockImplementation(
+      (name, version) => version ?? DEFAULT_PACKAGE_VERSION
+    );
   });
 
   it('should generate an empty nx.json', async () => {

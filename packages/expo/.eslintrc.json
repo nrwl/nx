@@ -38,7 +38,8 @@
               "react",
               "@expo/cli",
               "eas-cli",
-              "util" // This is coming from @storybook/builder-manager since it uses the browser polyfill
+              "util", // This is coming from @storybook/builder-manager since it uses the browser polyfill
+              "jest-environment-node"
             ]
           }
         ]

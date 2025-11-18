@@ -1,4 +1,3 @@
-import * as devkit from '@nx/devkit';
 import { CreateNodesContextV2 } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 

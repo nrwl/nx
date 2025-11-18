@@ -1,6 +1,6 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { EOL } from 'os';
-import * as readline from 'readline';
+import readline from 'readline';
 import { isCI } from './is-ci';
 import type { TaskStatus } from '../tasks-runner/tasks-runner';
 

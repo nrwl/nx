@@ -1,6 +1,28 @@
+// need to mock cypress otherwise it'll use installed version in this repo's package.json
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
+jest.mock('enquirer');
+let mockFormatFiles = jest
+  .fn()
+  .mockImplementation(jest.requireActual('@nx/devkit').formatFiles);
+jest.mock('@nx/devkit', () => {
+  const original = jest.requireActual('@nx/devkit');
+  return {
+    ...original,
+    ensurePackage: (pkg: string) => jest.requireActual(pkg),
+    createProjectGraphAsync: jest.fn().mockResolvedValue({
+      nodes: {},
+      dependencies: {},
+    }),
+    formatFiles: mockFormatFiles,
+  };
+});
+
 import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
-import * as devkit from '@nx/devkit';
 import {
+  getProjects,
   NxJsonConfiguration,
   parseJson,
   readJson,
@@ -23,24 +45,6 @@ import {
 } from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';
 import type { Schema } from './schema';
-
-// need to mock cypress otherwise it'll use installed version in this repo's package.json
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual('@nx/cypress/src/utils/versions'),
-  getInstalledCypressMajorVersion: jest.fn(),
-}));
-jest.mock('enquirer');
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
-  return {
-    ...original,
-    ensurePackage: (pkg: string) => jest.requireActual(pkg),
-    createProjectGraphAsync: jest.fn().mockResolvedValue({
-      nodes: {},
-      dependencies: {},
-    }),
-  };
-});
 
 describe('app', () => {
   let appTree: Tree;
@@ -170,7 +174,7 @@ describe('app', () => {
       await generateApp(appTree, 'my-app', { tags: 'one,two,my-app' });
 
       // ASSERT
-      const projects = devkit.getProjects(appTree);
+      const projects = getProjects(appTree);
       expect(projects).toEqual(
         new Map(
           Object.entries({
@@ -287,7 +291,7 @@ describe('app', () => {
       // ARRANGE
       const nxJson = readNxJson(appTree);
       nxJson.defaultProject = 'some-awesome-project';
-      devkit.updateNxJson(appTree, nxJson);
+      updateNxJson(appTree, nxJson);
 
       // ACT
       await generateApp(appTree);
@@ -309,7 +313,7 @@ describe('app', () => {
       await generateApp(appTree, 'my-dir/my-app', {
         tags: 'one,two,my-app',
       });
-      const projects = devkit.getProjects(appTree);
+      const projects = getProjects(appTree);
       expect(projects).toEqual(
         new Map(
           Object.entries({
@@ -584,11 +588,9 @@ describe('app', () => {
 
   describe('format files', () => {
     it('should format files', async () => {
-      const formatFilesSpy = jest.spyOn(devkit, 'formatFiles');
-
       await generateApp(appTree, 'my-app', { skipFormat: false });
 
-      expect(formatFilesSpy).toHaveBeenCalled();
+      expect(mockFormatFiles).toHaveBeenCalled();
       expect(
         appTree.read('my-app/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();

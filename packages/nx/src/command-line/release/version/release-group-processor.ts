@@ -18,11 +18,10 @@ import { deriveSpecifierFromConventionalCommits } from './derive-specifier-from-
 import { deriveSpecifierFromVersionPlan } from './deriver-specifier-from-version-plans';
 import { ProjectLogger } from './project-logger';
 import {
-  NOOP_VERSION_ACTIONS,
   SemverBumpType,
   VersionActions,
+  NOOP_VERSION_ACTIONS,
 } from './version-actions';
-
 // Any semver version string such as "1.2.3" or "1.2.3-beta.1"
 type SemverVersion = string;
 

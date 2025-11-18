@@ -48,7 +48,8 @@
               "typescript",
               "eslint",
               "nest",
-              "@nestjs/schematics"
+              "@nestjs/schematics",
+              "jest-environment-node"
             ]
           }
         ]

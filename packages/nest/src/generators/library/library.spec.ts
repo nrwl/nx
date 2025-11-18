@@ -1,6 +1,19 @@
+const mockFormatFiles = jest
+  .fn()
+  .mockImplementation(jest.requireActual('@nx/devkit').formatFiles);
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  formatFiles: mockFormatFiles,
+  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+    return {
+      nodes: {},
+      dependencies: {},
+    };
+  }),
+}));
 import type { Tree } from '@nx/devkit';
-import * as devkit from '@nx/devkit';
 import {
+  getProjects,
   readJson,
   readProjectConfiguration,
   updateJson,
@@ -99,7 +112,7 @@ describe('lib', () => {
         tags: 'one,two',
       });
 
-      const projects = Object.fromEntries(devkit.getProjects(tree));
+      const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toEqual({
         ['my-lib']: expect.objectContaining({
           tags: ['one', 'two'],
@@ -170,7 +183,7 @@ describe('lib', () => {
         tags: 'one,two',
       });
 
-      const projects = Object.fromEntries(devkit.getProjects(tree));
+      const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toEqual({
         [`my-lib`]: expect.objectContaining({
           tags: ['one', 'two'],
@@ -289,24 +302,20 @@ describe('lib', () => {
 
   describe('--skipFormat', () => {
     it('should format files by default', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
       await libraryGenerator(tree, {
         directory: 'my-lib',
       });
 
-      expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(mockFormatFiles).toHaveBeenCalled();
     });
 
     it('should not format files when --skipFormat=true', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
       await libraryGenerator(tree, {
         directory: 'my-lib',
         skipFormat: true,
       });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+      expect(mockFormatFiles).not.toHaveBeenCalled();
     });
   });
 
@@ -332,7 +341,7 @@ describe('lib', () => {
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();
-      devkit.updateJson(tree, 'package.json', (json) => {
+      updateJson(tree, 'package.json', (json) => {
         json.workspaces = ['packages/*', 'apps/*'];
         return json;
       });

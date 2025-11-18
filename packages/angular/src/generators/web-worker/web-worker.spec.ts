@@ -1,7 +1,18 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+let mockFormatFiles = jest
+  .fn()
+  .mockImplementation(jest.requireActual('@nx/devkit').formatFiles);
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  formatFiles: mockFormatFiles,
+  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+    return {
+      nodes: {},
+      dependencies: {},
+    };
+  }),
+}));
 
 import type { Tree } from '@nx/devkit';
-import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestApplication } from '../utils/testing';
 import { webWorkerGenerator } from './web-worker';
@@ -57,23 +68,19 @@ describe('webWorker generator', () => {
   });
 
   it('should format files', async () => {
-    jest.spyOn(devkit, 'formatFiles');
-
     await webWorkerGenerator(tree, { name: 'test-worker', project: appName });
 
-    expect(devkit.formatFiles).toHaveBeenCalled();
+    expect(mockFormatFiles).toHaveBeenCalled();
   });
 
   it('should not format files when --skipFormat=true', async () => {
-    jest.spyOn(devkit, 'formatFiles');
-
     await webWorkerGenerator(tree, {
       name: 'test-worker',
       project: appName,
       skipFormat: true,
     });
 
-    expect(devkit.formatFiles).not.toHaveBeenCalled();
+    expect(mockFormatFiles).not.toHaveBeenCalled();
   });
 
   it('should add the snippet correctly', async () => {

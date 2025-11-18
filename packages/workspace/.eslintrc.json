@@ -50,7 +50,9 @@
               "typescript",
               "@angular-devkit/schematics",
               "@angular-devkit/core",
-              "@angular-devkit/architect"
+              "@angular-devkit/architect",
+              // Included in dev deps
+              "jest-environment-node"
             ]
           }
         ]

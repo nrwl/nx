@@ -5,8 +5,9 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   globals: {},
-  displayName: 'cli',
+  displayName: 'devkit',
   preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     // Map Angular schematics to node_modules
     '^@schematics/angular/collection.json$':

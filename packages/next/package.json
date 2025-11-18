@@ -22,58 +22,68 @@
   "typings": "./index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "@nx/nx-source": "./index.ts"
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
     "./migrations.json": "./migrations.json",
     "./plugin": {
-      "import": "./dist/plugin.js",
       "types": "./plugin.d.ts",
-      "@nx/nx-source": "./plugin.ts"
+      "@nx/nx-source": "./plugin.ts",
+      "import": "./dist/plugin.js",
+      "default": "./dist/plugin.js"
     },
     "./babel": {
-      "import": "./dist/babel.js",
       "types": "./babel.d.ts",
-      "@nx/nx-source": "./babel.ts"
+      "@nx/nx-source": "./babel.ts",
+      "import": "./dist/babel.js",
+      "default": "./dist/babel.js"
     },
     "./tailwind": {
-      "import": "./dist/tailwind.js",
       "types": "./tailwind.d.ts",
-      "@nx/nx-source": "./tailwind.ts"
+      "@nx/nx-source": "./tailwind.ts",
+      "import": "./dist/tailwind.js",
+      "default": "./dist/tailwind.js"
     },
     "./plugins/component-testing": {
-      "import": "./dist/plugins/component-testing.js",
       "types": "./plugins/component-testing.d.ts",
-      "@nx/nx-source": "./plugins/component-testing.ts"
+      "@nx/nx-source": "./plugins/component-testing.ts",
+      "import": "./dist/plugins/component-testing.js",
+      "default": "./dist/plugins/component-testing.js"
     },
     "./plugins/with-nx": {
-      "import": "./dist/plugins/with-nx.js",
       "types": "./plugins/with-nx.d.ts",
-      "@nx/nx-source": "./plugins/with-nx.ts"
+      "@nx/nx-source": "./plugins/with-nx.ts",
+      "import": "./dist/plugins/with-nx.js",
+      "default": "./dist/plugins/with-nx.js"
     },
     "./plugins/with-less": {
-      "import": "./dist/plugins/with-less.js",
       "types": "./plugins/with-less.d.ts",
-      "@nx/nx-source": "./plugins/with-less.ts"
+      "@nx/nx-source": "./plugins/with-less.ts",
+      "import": "./dist/plugins/with-less.js",
+      "default": "./dist/plugins/with-less.js"
     },
     "./src/utils/types": {
-      "import": "./dist/src/utils/types.js",
       "types": "./src/utils/types.d.ts",
-      "@nx/nx-source": "./src/utils/types.ts"
+      "@nx/nx-source": "./src/utils/types.ts",
+      "import": "./dist/src/utils/types.js",
+      "default": "./dist/src/utils/types.js"
     },
     "./src/utils/generate-globs": {
-      "import": "./dist/src/utils/generate-globs.js",
       "types": "./src/utils/generate-globs.d.ts",
-      "@nx/nx-source": "./src/utils/generate-globs.ts"
+      "@nx/nx-source": "./src/utils/generate-globs.ts",
+      "import": "./dist/src/utils/generate-globs.js",
+      "default": "./dist/src/utils/generate-globs.js"
     },
     "./src/utils/compose-plugins": {
-      "import": "./dist/src/utils/compose-plugins.js",
       "types": "./src/utils/compose-plugins.d.ts",
-      "@nx/nx-source": "./src/utils/compose-plugins.ts"
+      "@nx/nx-source": "./src/utils/compose-plugins.ts",
+      "import": "./dist/src/utils/compose-plugins.js",
+      "default": "./dist/src/utils/compose-plugins.js"
     }
   },
   "author": "Victor Savkin",

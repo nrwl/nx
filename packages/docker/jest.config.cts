@@ -13,4 +13,5 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/packages/docker',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 };

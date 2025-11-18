@@ -55,7 +55,8 @@
               "swc-loader",
               "@swc/core",
               "ts-loader",
-              "ajv"
+              "ajv",
+              "jest-environment-node"
             ]
           }
         ]

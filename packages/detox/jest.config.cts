@@ -8,4 +8,5 @@ module.exports = {
   displayName: 'react-native',
   verbose: true,
   preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 };
