@@ -268,15 +268,24 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       );
     }
 
+    // We keep the project references in the tsconfig.json file if it has files
+    // or if we don't find a runtime tsconfig file, otherwise we don't need to
+    // duplicate the project references in the tsconfig.json file
+    let keepReferencesInTsconfigJson = true;
+    if (foundRuntimeTsConfig) {
+      const sourceProjectTsconfig = parseTsconfig(
+        sourceProjectTsconfigPath,
+        tsSysFromTree
+      );
+      keepReferencesInTsconfigJson = sourceProjectTsconfig.fileNames.length > 0;
+    }
+
     updateTsConfigReferences(
       tree,
       tsSysFromTree,
       tsconfigInfoCaches,
       sourceProjectTsconfigPath,
-      // If we find a runtime tsconfig file, we make sure the external
-      // dependencies are emptied from the tsconfig.json file instead,
-      // otherwise we update the project references for the tsconfig.json file
-      foundRuntimeTsConfig ? [] : dependencies,
+      keepReferencesInTsconfigJson ? dependencies : [],
       sourceProjectNode.data.root,
       projectRoots,
       changedFiles
@@ -335,6 +344,17 @@ function readRawTsconfigContents(
   }
 
   return tsconfigInfoCaches.content.get(tsconfigPath);
+}
+
+function parseTsconfig(
+  tsconfigPath: string,
+  sys: ts.System
+): ts.ParsedCommandLine {
+  return ts.parseJsonConfigFileContent(
+    ts.readConfigFile(tsconfigPath, sys.readFile).config,
+    sys,
+    dirname(tsconfigPath)
+  );
 }
 
 /**
@@ -708,11 +728,7 @@ function hasCompositeEnabled(
   tsconfigPath: string
 ): boolean {
   if (!tsconfigInfoCaches.composite.has(tsconfigPath)) {
-    const parsed = ts.parseJsonConfigFileContent(
-      ts.readConfigFile(tsconfigPath, tsSysFromTree.readFile).config,
-      tsSysFromTree,
-      dirname(tsconfigPath)
-    );
+    const parsed = parseTsconfig(tsconfigPath, tsSysFromTree);
     tsconfigInfoCaches.composite.set(
       tsconfigPath,
       parsed.options.composite === true

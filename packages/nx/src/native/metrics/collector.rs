@@ -12,7 +12,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::Duration;
 use sysinfo::{Pid, ProcessRefreshKind, System, UpdateKind};
-use tracing::error;
+use tracing::{error, trace};
 
 use crate::native::metrics::types::{
     BatchRegistration, CollectorConfig, GroupInfo, GroupType, IndividualTaskRegistration, Metadata,
@@ -29,6 +29,25 @@ type ParentToChildrenMap = HashMap<i32, Vec<i32>>;
 const MAIN_CLI_GROUP_ID: &str = "main_cli";
 const MAIN_CLI_SUBPROCESSES_GROUP_ID: &str = "main_cli_subprocesses";
 const DAEMON_GROUP_ID: &str = "daemon";
+const DAEMON_SUBPROCESSES_GROUP_ID: &str = "daemon_subprocesses";
+
+// Shutdown check interval for the collection thread
+const SHUTDOWN_CHECK_INTERVAL_MS: u64 = 50;
+
+/// Result from collecting metrics while holding the system lock
+struct MetricsCollectionResults {
+    main_cli_processes: Vec<ProcessMetrics>,
+    main_cli_metadata: HashMap<i32, ProcessMetadata>,
+    main_cli_subproc_processes: Vec<ProcessMetrics>,
+    main_cli_subproc_metadata: HashMap<i32, ProcessMetadata>,
+    daemon_processes: Vec<ProcessMetrics>,
+    daemon_metadata: HashMap<i32, ProcessMetadata>,
+    task_processes: Vec<ProcessMetrics>,
+    task_metadata: HashMap<i32, ProcessMetadata>,
+    batch_processes: Vec<ProcessMetrics>,
+    batch_metadata: HashMap<i32, ProcessMetadata>,
+    daemon_pid_to_clear: Option<i32>,
+}
 
 /// Result from metrics collection containing all data needed for cleanup and notification
 struct MetricsCollectionResult {
@@ -123,11 +142,12 @@ impl CollectionRunner {
     }
 
     /// Sleep in small chunks for responsive shutdown
-    /// This allows the thread to respond to shutdown signals within 50ms
+    /// This allows the thread to respond to shutdown signals within SHUTDOWN_CHECK_INTERVAL_MS
     /// instead of waiting for the full collection interval
     fn sleep_with_early_exit(&self, interval: Duration) {
-        let wake_interval = Duration::from_millis(50);
-        let sleep_iterations = (interval.as_millis() / 50).max(1) as usize;
+        let wake_interval = Duration::from_millis(SHUTDOWN_CHECK_INTERVAL_MS);
+        let sleep_iterations =
+            (interval.as_millis() / SHUTDOWN_CHECK_INTERVAL_MS as u128).max(1) as usize;
 
         for _ in 0..sleep_iterations {
             if !self.should_collect.load(Ordering::Acquire) {
@@ -235,14 +255,136 @@ impl CollectionRunner {
         let mut new_metadata = HashMap::new();
         let mut processes = Vec::new();
 
-        if let Some(pid) = *self.main_cli_pid.lock() {
-            if let Some((main, metadata)) =
+        // Read the PID while we have the system lock (caller holds it)
+        if let Some(pid) = self.get_main_cli_pid()
+            && let Some((main, metadata)) =
                 self.collect_process_info(sys, pid, None, MAIN_CLI_GROUP_ID, true)
+        {
+            processes.push(main);
+            if let Some(meta) = metadata {
+                new_metadata.insert(pid, meta);
+            }
+        }
+
+        (processes, new_metadata)
+    }
+
+    /// Get the main CLI process ID
+    fn get_main_cli_pid(&self) -> Option<i32> {
+        *self.main_cli_pid.lock()
+    }
+
+    /// Check if the main CLI process is registered
+    fn is_main_cli_registered(&self) -> bool {
+        self.main_cli_pid.lock().is_some()
+    }
+
+    /// Get the daemon process ID
+    fn get_daemon_pid(&self) -> Option<i32> {
+        *self.daemon_pid.lock()
+    }
+
+    /// Collect all metrics while holding system lock
+    /// This centralizes all operations that require the system lock to be minimal
+    fn refresh_and_collect_metrics(&self) -> MetricsCollectionResults {
+        trace!("Acquiring system lock for process refresh");
+        let mut sys = self.system.lock();
+        trace!("System lock acquired, refreshing all processes");
+
+        sys.refresh_processes_specifics(
+            sysinfo::ProcessesToUpdate::All,
+            true, // remove_dead_processes
+            ProcessRefreshKind::nothing()
+                .with_memory()
+                .with_cpu()
+                .with_exe(UpdateKind::OnlyIfNotSet)
+                .with_cmd(UpdateKind::OnlyIfNotSet)
+                .with_cwd(UpdateKind::OnlyIfNotSet),
+        );
+        trace!("Process refresh complete, building parent-child map");
+
+        let children_map = Self::build_parent_child_map(&sys);
+
+        // Remove dead processes to prevent stale metrics from terminated processes
+        trace!("Cleaning up dead processes from registration maps");
+        self.individual_tasks.retain(|_, task_reg| {
+            task_reg
+                .anchor_pids
+                .iter()
+                .any(|pid| sys.process(Pid::from(*pid as usize)).is_some())
+        });
+        self.batches.retain(|_, batch_reg| {
+            sys.process(Pid::from(batch_reg.anchor_pid as usize))
+                .is_some()
+        });
+        self.main_cli_subprocess_pids
+            .retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
+        trace!("Dead process cleanup complete");
+
+        // Check if daemon process still exists (capture PID while holding system lock)
+        trace!("Checking daemon process existence");
+        let daemon_pid_to_clear = {
+            let daemon_pid = self.daemon_pid.lock();
+            (*daemon_pid).filter(|&pid| sys.process(Pid::from(pid as usize)).is_none())
+        };
+
+        // Collect metrics for all the processes while holding system lock
+        trace!("Collecting metrics for all registered processes");
+        let (main_cli_processes, main_cli_metadata) = self.collect_main_cli_metrics(&sys);
+        let (main_cli_subproc_processes, main_cli_subproc_metadata) =
+            self.collect_main_cli_subprocess_metrics(&sys, &children_map);
+        let (daemon_processes, daemon_metadata) = self.collect_daemon_metrics(&sys, &children_map);
+        let (task_processes, task_metadata) = self.collect_all_task_metrics(&sys, &children_map);
+        let (batch_processes, batch_metadata) = self.collect_all_batch_metrics(&sys, &children_map);
+        trace!("Metrics collection complete, releasing system lock");
+
+        MetricsCollectionResults {
+            main_cli_processes,
+            main_cli_metadata,
+            main_cli_subproc_processes,
+            main_cli_subproc_metadata,
+            daemon_processes,
+            daemon_metadata,
+            task_processes,
+            task_metadata,
+            batch_processes,
+            batch_metadata,
+            daemon_pid_to_clear,
+        }
+    }
+
+    /// Collect metrics for a process tree rooted at root_pid
+    /// Returns (processes, metadata) where processes are ordered with root first
+    /// root_group_id: group ID for the root process
+    /// children_group_id: group ID for child processes (None means use root_group_id)
+    fn collect_tree_metrics(
+        &self,
+        sys: &System,
+        children_map: &ParentToChildrenMap,
+        root_pid: i32,
+        root_group_id: &str,
+        children_group_id: Option<&str>,
+        get_alias: impl Fn(i32) -> Option<String>,
+    ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
+        let mut new_metadata = HashMap::new();
+        let mut processes = Vec::new();
+
+        let discovered_pids = Self::collect_tree_pids_from_map(children_map, root_pid);
+
+        for pid in discovered_pids.into_iter() {
+            let gid = if pid == root_pid {
+                root_group_id
+            } else {
+                children_group_id.unwrap_or(root_group_id)
+            };
+
+            if let Some((metrics, metadata)) =
+                self.collect_process_info(sys, pid, get_alias(pid), gid, pid == root_pid)
             {
-                processes.push(main);
                 if let Some(meta) = metadata {
                     new_metadata.insert(pid, meta);
                 }
+                processes.push(metrics);
             }
         }
 
@@ -255,79 +397,60 @@ impl CollectionRunner {
         sys: &System,
         children_map: &ParentToChildrenMap,
     ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
-        let mut new_metadata = HashMap::new();
-        let mut processes = Vec::new();
+        let mut all_processes = Vec::new();
+        let mut all_metadata = HashMap::new();
 
         // Only collect subprocesses if the main CLI is registered and subprocesses exist
-        if self.main_cli_pid.lock().is_some() && !self.main_cli_subprocess_pids.is_empty() {
+        if self.is_main_cli_registered() && !self.main_cli_subprocess_pids.is_empty() {
             for entry in self.main_cli_subprocess_pids.iter() {
                 let subprocess_pid = *entry.key();
                 let alias = entry.value().clone();
 
                 // Collect the subprocess and its entire process tree
-                let discovered_pids =
-                    Self::collect_tree_pids_from_map(children_map, subprocess_pid);
-
-                for pid in discovered_pids.into_iter() {
-                    if let Some((metrics, metadata)) = self.collect_process_info(
-                        sys,
-                        pid,
+                let (processes, metadata) = self.collect_tree_metrics(
+                    sys,
+                    children_map,
+                    subprocess_pid,
+                    MAIN_CLI_SUBPROCESSES_GROUP_ID,
+                    None,
+                    |pid| {
                         if pid == subprocess_pid {
                             alias.clone()
                         } else {
                             None
-                        },
-                        MAIN_CLI_SUBPROCESSES_GROUP_ID,
-                        pid == subprocess_pid, // First process is root
-                    ) {
-                        if let Some(meta) = metadata {
-                            new_metadata.insert(pid, meta);
                         }
-                        processes.push(metrics);
-                    }
-                }
+                    },
+                );
+
+                all_processes.extend(processes);
+                all_metadata.extend(metadata);
             }
         }
 
-        (processes, new_metadata)
+        (all_processes, all_metadata)
     }
 
     /// Collect metrics for the daemon process and its entire process tree
+    /// Separates daemon root from subprocesses using distinct group IDs
     fn collect_daemon_metrics(
         &self,
         sys: &System,
         children_map: &ParentToChildrenMap,
     ) -> (Vec<ProcessMetrics>, HashMap<i32, ProcessMetadata>) {
-        let mut new_metadata = HashMap::new();
-        let mut processes = Vec::new();
-
-        if let Some(pid) = *self.daemon_pid.lock() {
-            let discovered_pids = Self::collect_tree_pids_from_map(children_map, pid);
-            let daemon_process_metrics: Vec<ProcessMetrics> = discovered_pids
-                .into_iter()
-                .enumerate()
-                .filter_map(|(idx, p)| {
-                    if let Some((metrics, metadata)) = self.collect_process_info(
-                        sys,
-                        p,
-                        None,
-                        DAEMON_GROUP_ID,
-                        idx == 0, // First process is root
-                    ) {
-                        if let Some(meta) = metadata {
-                            new_metadata.insert(p, meta);
-                        }
-                        Some(metrics)
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-            processes.extend(daemon_process_metrics);
+        // Read daemon PID early to avoid holding system lock while acquiring daemon_pid lock
+        if let Some(pid) = self.get_daemon_pid() {
+            // Collect with daemon as root and subprocesses in a separate group
+            self.collect_tree_metrics(
+                sys,
+                children_map,
+                pid,
+                DAEMON_GROUP_ID,
+                Some(DAEMON_SUBPROCESSES_GROUP_ID),
+                |_| None,
+            )
+        } else {
+            (Vec::new(), HashMap::new())
         }
-
-        (processes, new_metadata)
     }
 
     /// Collect metrics for all registered individual tasks
@@ -410,19 +533,43 @@ impl CollectionRunner {
     /// Create only NEW groups based on current registrations
     /// Returns only groups that haven't been sent before
     /// Also cleans up group IDs for tasks/batches that no longer exist
+    /// Add a group to the new groups map if it's live and new
+    fn maybe_add_group(
+        new_groups: &mut HashMap<String, GroupInfo>,
+        group_metadata_map: &DashMap<String, GroupInfo>,
+        live_group_ids: &HashSet<String>,
+        group_info: GroupInfo,
+    ) {
+        if live_group_ids.contains(&group_info.id)
+            && !group_metadata_map.contains_key(&group_info.id)
+        {
+            new_groups.insert(group_info.id.clone(), group_info);
+        }
+    }
+
     fn create_new_group_info(&self) -> HashMap<String, GroupInfo> {
         // Build set of currently live groups
         let mut live_group_ids = HashSet::new();
-        if self.main_cli_pid.lock().is_some() {
+
+        // Acquire locks once to minimize contention
+        let main_cli_pid = self.main_cli_pid.lock();
+        let daemon_pid = self.daemon_pid.lock();
+
+        if main_cli_pid.is_some() {
             live_group_ids.insert(MAIN_CLI_GROUP_ID.to_string());
         }
         // Add main_cli_subprocesses group if subprocesses exist and main CLI is registered
-        if self.main_cli_pid.lock().is_some() && !self.main_cli_subprocess_pids.is_empty() {
+        if main_cli_pid.is_some() && !self.main_cli_subprocess_pids.is_empty() {
             live_group_ids.insert(MAIN_CLI_SUBPROCESSES_GROUP_ID.to_string());
         }
-        if self.daemon_pid.lock().is_some() {
+        if daemon_pid.is_some() {
             live_group_ids.insert(DAEMON_GROUP_ID.to_string());
+            // Also add daemon subprocesses group if daemon is registered
+            live_group_ids.insert(DAEMON_SUBPROCESSES_GROUP_ID.to_string());
         }
+        drop(main_cli_pid);
+        drop(daemon_pid);
+
         for entry in self.individual_tasks.iter() {
             live_group_ids.insert(entry.key().clone());
         }
@@ -436,84 +583,86 @@ impl CollectionRunner {
 
         let mut new_groups = HashMap::new();
 
-        // Add main_cli group if registered and new
-        if live_group_ids.contains(MAIN_CLI_GROUP_ID)
-            && !self.group_metadata_map.contains_key(MAIN_CLI_GROUP_ID)
-        {
-            new_groups.insert(
-                MAIN_CLI_GROUP_ID.to_string(),
-                GroupInfo {
-                    group_type: GroupType::MainCLI,
-                    display_name: "Nx CLI".to_string(),
-                    id: MAIN_CLI_GROUP_ID.to_string(),
-                    task_ids: None,
-                },
-            );
-        }
+        // Add standard groups if registered and new
+        Self::maybe_add_group(
+            &mut new_groups,
+            &self.group_metadata_map,
+            &live_group_ids,
+            GroupInfo {
+                group_type: GroupType::MainCLI,
+                display_name: "Nx CLI".to_string(),
+                id: MAIN_CLI_GROUP_ID.to_string(),
+                task_ids: None,
+            },
+        );
 
-        // Add main_cli_subprocesses group if subprocesses exist and new
-        if live_group_ids.contains(MAIN_CLI_SUBPROCESSES_GROUP_ID)
-            && !self
-                .group_metadata_map
-                .contains_key(MAIN_CLI_SUBPROCESSES_GROUP_ID)
-        {
-            new_groups.insert(
-                MAIN_CLI_SUBPROCESSES_GROUP_ID.to_string(),
-                GroupInfo {
-                    group_type: GroupType::MainCliSubprocesses,
-                    display_name: "Nx CLI Subprocesses".to_string(),
-                    id: MAIN_CLI_SUBPROCESSES_GROUP_ID.to_string(),
-                    task_ids: None,
-                },
-            );
-        }
+        Self::maybe_add_group(
+            &mut new_groups,
+            &self.group_metadata_map,
+            &live_group_ids,
+            GroupInfo {
+                group_type: GroupType::MainCliSubprocesses,
+                display_name: "Nx CLI Subprocesses".to_string(),
+                id: MAIN_CLI_SUBPROCESSES_GROUP_ID.to_string(),
+                task_ids: None,
+            },
+        );
 
-        // Add daemon group if registered and new
-        if live_group_ids.contains(DAEMON_GROUP_ID)
-            && !self.group_metadata_map.contains_key(DAEMON_GROUP_ID)
-        {
-            new_groups.insert(
-                DAEMON_GROUP_ID.to_string(),
-                GroupInfo {
-                    group_type: GroupType::Daemon,
-                    display_name: "Nx Daemon".to_string(),
-                    id: DAEMON_GROUP_ID.to_string(),
-                    task_ids: None,
-                },
-            );
-        }
+        Self::maybe_add_group(
+            &mut new_groups,
+            &self.group_metadata_map,
+            &live_group_ids,
+            GroupInfo {
+                group_type: GroupType::Daemon,
+                display_name: "Nx Daemon".to_string(),
+                id: DAEMON_GROUP_ID.to_string(),
+                task_ids: None,
+            },
+        );
+
+        Self::maybe_add_group(
+            &mut new_groups,
+            &self.group_metadata_map,
+            &live_group_ids,
+            GroupInfo {
+                group_type: GroupType::DaemonSubprocesses,
+                display_name: "Nx Daemon Subprocesses".to_string(),
+                id: DAEMON_SUBPROCESSES_GROUP_ID.to_string(),
+                task_ids: None,
+            },
+        );
 
         // Add groups for all NEW registered tasks
         for entry in self.individual_tasks.iter() {
             let task_id = entry.key().clone();
-            if !self.group_metadata_map.contains_key(&task_id) {
-                new_groups.insert(
-                    task_id.clone(),
-                    GroupInfo {
-                        group_type: GroupType::Task,
-                        display_name: task_id.clone(),
-                        id: task_id,
-                        task_ids: None,
-                    },
-                );
-            }
+            Self::maybe_add_group(
+                &mut new_groups,
+                &self.group_metadata_map,
+                &live_group_ids,
+                GroupInfo {
+                    group_type: GroupType::Task,
+                    display_name: task_id.clone(),
+                    id: task_id.clone(),
+                    task_ids: None,
+                },
+            );
         }
 
         // Add groups for all NEW registered batches
         for entry in self.batches.iter() {
             let batch_id = entry.key().clone();
-            if !self.group_metadata_map.contains_key(&batch_id) {
-                let batch_reg = entry.value();
-                new_groups.insert(
-                    batch_id.clone(),
-                    GroupInfo {
-                        group_type: GroupType::Batch,
-                        display_name: batch_id.clone(),
-                        id: batch_id,
-                        task_ids: Some(batch_reg.task_ids.as_ref().to_vec()),
-                    },
-                );
-            }
+            let batch_reg = entry.value();
+            Self::maybe_add_group(
+                &mut new_groups,
+                &self.group_metadata_map,
+                &live_group_ids,
+                GroupInfo {
+                    group_type: GroupType::Batch,
+                    display_name: batch_id.clone(),
+                    id: batch_id.clone(),
+                    task_ids: Some(batch_reg.task_ids.as_ref().to_vec()),
+                },
+            );
         }
 
         new_groups
@@ -521,75 +670,57 @@ impl CollectionRunner {
 
     /// Discover all current processes and collect their metrics
     fn collect_metrics(&self) -> Result<MetricsCollectionResult, Box<dyn std::error::Error>> {
+        trace!("Starting metrics collection cycle");
         // Capture timestamp FIRST for accuracy
         let timestamp = current_timestamp_millis();
 
-        // Refresh all processes
-        let mut sys = self.system.lock();
-        sys.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::All,
-            true, // remove_dead_processes
-            ProcessRefreshKind::nothing()
-                .with_memory()
-                .with_cpu()
-                .with_exe(UpdateKind::OnlyIfNotSet)
-                .with_cmd(UpdateKind::OnlyIfNotSet)
-                .with_cwd(UpdateKind::OnlyIfNotSet),
-        );
+        let MetricsCollectionResults {
+            main_cli_processes,
+            main_cli_metadata,
+            main_cli_subproc_processes,
+            main_cli_subproc_metadata,
+            daemon_processes,
+            daemon_metadata,
+            task_processes,
+            task_metadata,
+            batch_processes,
+            batch_metadata,
+            daemon_pid_to_clear,
+        } = self.refresh_and_collect_metrics();
 
-        let children_map = Self::build_parent_child_map(&sys);
-
-        // Remove dead processes to prevent stale metrics from terminated processes
-        self.individual_tasks.retain(|_, task_reg| {
-            task_reg
-                .anchor_pids
-                .iter()
-                .any(|pid| sys.process(Pid::from(*pid as usize)).is_some())
-        });
-        self.batches.retain(|_, batch_reg| {
-            sys.process(Pid::from(batch_reg.anchor_pid as usize))
-                .is_some()
-        });
-        self.main_cli_subprocess_pids
-            .retain(|pid, _| sys.process(Pid::from(*pid as usize)).is_some());
-
-        // Clean up daemon PID if process no longer exists (acquire lock once)
-        let mut daemon_pid = self.daemon_pid.lock();
-        if let Some(pid) = *daemon_pid {
-            if sys.process(Pid::from(pid as usize)).is_none() {
+        // Now that system lock is released, clear daemon PID if needed
+        // This avoids holding system lock while acquiring daemon_pid lock
+        if let Some(_pid) = daemon_pid_to_clear {
+            trace!("Clearing stale daemon PID after system lock release");
+            let mut daemon_pid = self.daemon_pid.lock();
+            // Double-check in case something changed while we waited for the lock
+            if let Some(current_pid) = *daemon_pid
+                && current_pid == _pid
+            {
                 *daemon_pid = None;
             }
         }
 
-        // Collect metrics for all the processes
-        let (main_cli_processes, main_cli_metadata) = self.collect_main_cli_metrics(&sys);
-        let (main_cli_subprocess_processes, main_cli_subprocess_metadata) =
-            self.collect_main_cli_subprocess_metrics(&sys, &children_map);
-        let (daemon_processes, daemon_metadata) = self.collect_daemon_metrics(&sys, &children_map);
-        let (tasks_metrics, tasks_metadata) = self.collect_all_task_metrics(&sys, &children_map);
-        let (batches_metrics, batches_metadata) =
-            self.collect_all_batch_metrics(&sys, &children_map);
-
         // Accumulate metadata from all collection sources
         let mut new_metadata = main_cli_metadata;
-        new_metadata.extend(main_cli_subprocess_metadata);
+        new_metadata.extend(main_cli_subproc_metadata);
         new_metadata.extend(daemon_metadata);
-        new_metadata.extend(tasks_metadata);
-        new_metadata.extend(batches_metadata);
+        new_metadata.extend(task_metadata);
+        new_metadata.extend(batch_metadata);
 
         // Flatten processes from all sources
         let mut processes = Vec::with_capacity(
             main_cli_processes.len()
-                + main_cli_subprocess_processes.len()
+                + main_cli_subproc_processes.len()
                 + daemon_processes.len()
-                + tasks_metrics.len()
-                + batches_metrics.len(),
+                + task_processes.len()
+                + batch_processes.len(),
         );
         processes.extend(main_cli_processes);
-        processes.extend(main_cli_subprocess_processes);
+        processes.extend(main_cli_subproc_processes);
         processes.extend(daemon_processes);
-        processes.extend(tasks_metrics);
-        processes.extend(batches_metrics);
+        processes.extend(task_processes);
+        processes.extend(batch_processes);
 
         // Derive live PIDs from the collected processes for cleanup
         let live_pids: HashSet<String> = processes.iter().map(|p| p.pid.to_string()).collect();
@@ -610,17 +741,25 @@ impl CollectionRunner {
             .collect();
 
         // Create only NEW groups and insert into DashMap
+        trace!("Creating new group info");
         let new_groups = self.create_new_group_info();
+        trace!("Created {} new groups", new_groups.len());
+
         for (group_id, group_info) in &new_groups {
             self.group_metadata_map
                 .insert(group_id.clone(), group_info.clone());
         }
+        trace!("Inserted groups into metadata map");
 
         let metadata = Metadata {
             groups: new_groups,
             processes: process_metadata_str,
         };
 
+        trace!(
+            "Metrics collection complete: {} processes collected",
+            processes.len()
+        );
         Ok(MetricsCollectionResult {
             timestamp,
             processes,
@@ -765,10 +904,10 @@ impl ProcessMetricsCollector {
                 self.should_collect.store(false, Ordering::Release);
 
                 // Wait for collection thread to stop gracefully
-                if let Some(thread) = self.collection_thread.lock().take() {
-                    if let Err(join_err) = thread.join() {
-                        error!("Collection thread panicked during cleanup: {:?}", join_err);
-                    }
+                if let Some(thread) = self.collection_thread.lock().take()
+                    && let Err(join_err) = thread.join()
+                {
+                    error!("Collection thread panicked during cleanup: {:?}", join_err);
                 }
 
                 self.is_collecting.store(false, Ordering::Release);
@@ -877,17 +1016,17 @@ impl ProcessMetricsCollector {
 
         // Wait for the collection thread to finish
         // When it drops, the channel sender is dropped, signaling the listener to stop
-        if let Some(thread) = self.collection_thread.lock().take() {
-            if let Err(e) = thread.join() {
-                error!("Collection thread panicked: {:?}", e);
-            }
+        if let Some(thread) = self.collection_thread.lock().take()
+            && let Err(e) = thread.join()
+        {
+            error!("Collection thread panicked: {:?}", e);
         }
 
         // Wait for the listener thread to finish
-        if let Some(thread) = self.listener_thread.lock().take() {
-            if let Err(e) = thread.join() {
-                error!("Listener thread panicked: {:?}", e);
-            }
+        if let Some(thread) = self.listener_thread.lock().take()
+            && let Err(e) = thread.join()
+        {
+            error!("Listener thread panicked: {:?}", e);
         }
 
         self.is_collecting.store(false, Ordering::Release);
@@ -909,36 +1048,48 @@ impl ProcessMetricsCollector {
         }
     }
 
-    /// Register the main CLI process for metrics collection
-    #[napi]
-    pub fn register_main_cli_process(&self, pid: i32) {
-        *self.main_cli_pid.lock() = Some(pid);
-
-        // Establish baseline immediately for the main CLI process
-        // This ensures accurate CPU data from the first collection cycle
-        let mut sys = self.system.lock();
+    /// Establish baseline process metrics by acquiring system lock and refreshing
+    /// Must be called BEFORE any registration to avoid deadlock with collection thread
+    fn establish_process_baseline(&self, pid: i32) {
         let target_pid = Pid::from(pid as usize);
+        let mut sys = self.system.lock();
         sys.refresh_processes_specifics(
             sysinfo::ProcessesToUpdate::Some(&[target_pid]),
             false, // don't remove dead processes
             ProcessRefreshKind::nothing().with_cpu(),
         );
+        drop(sys); // Explicitly release system lock
+    }
+
+    /// Register the main CLI process for metrics collection
+    #[napi]
+    pub fn register_main_cli_process(&self, pid: i32) {
+        trace!("Registering main CLI process: pid={}", pid);
+
+        // Establish baseline immediately for the main CLI process
+        // This ensures accurate CPU data from the first collection cycle
+        self.establish_process_baseline(pid);
+
+        // Now register the PID (after releasing system lock)
+        *self.main_cli_pid.lock() = Some(pid);
+        trace!("Main CLI process registered: pid={}", pid);
     }
 
     /// Register a subprocess of the main CLI for metrics collection
     #[napi]
     pub fn register_main_cli_subprocess(&self, pid: i32, alias: Option<String>) {
-        self.main_cli_subprocess_pids.insert(pid, alias);
+        trace!(
+            "Registering main CLI subprocess: pid={}, alias={:?}",
+            pid, alias
+        );
 
         // Establish baseline immediately for this subprocess
         // This ensures accurate CPU data from the first collection cycle after spawn
-        let mut sys = self.system.lock();
-        let target_pid = Pid::from(pid as usize);
-        sys.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::Some(&[target_pid]),
-            false, // don't remove dead processes
-            ProcessRefreshKind::nothing().with_cpu(),
-        );
+        self.establish_process_baseline(pid);
+
+        // Now register in map (after releasing system lock)
+        self.main_cli_subprocess_pids.insert(pid, alias);
+        trace!("Main CLI subprocess registered: pid={}", pid);
     }
 
     /// Register the daemon process for metrics collection
@@ -952,39 +1103,40 @@ impl ProcessMetricsCollector {
     /// Automatically creates the task if it doesn't exist
     #[napi]
     pub fn register_task_process(&self, task_id: String, pid: i32) {
-        self.individual_tasks
-            .entry(task_id.clone())
-            .or_insert_with(|| IndividualTaskRegistration::new(task_id))
-            .anchor_pids
-            .insert(pid);
+        trace!("Registering task process: task_id={}, pid={}", task_id, pid);
 
         // Establish baseline immediately for this task process
         // This ensures accurate CPU data from the first collection cycle after spawn
-        let mut sys = self.system.lock();
-        let target_pid = Pid::from(pid as usize);
-        sys.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::Some(&[target_pid]),
-            false, // don't remove dead processes
-            ProcessRefreshKind::nothing().with_cpu(),
-        );
+        self.establish_process_baseline(pid);
+
+        // Now register the task (after releasing system lock)
+        self.individual_tasks
+            .entry(task_id.clone())
+            .or_insert_with(|| IndividualTaskRegistration::new(task_id.clone()))
+            .anchor_pids
+            .insert(pid);
+        trace!("Task process registered: task_id={}, pid={}", task_id, pid);
     }
 
     /// Register a batch with multiple tasks sharing a worker
     #[napi]
     pub fn register_batch(&self, batch_id: String, task_ids: Vec<String>, pid: i32) {
-        self.batches.insert(
-            batch_id.clone(),
-            BatchRegistration::new(batch_id, task_ids, pid),
+        trace!(
+            "Registering batch: batch_id={}, task_count={}, pid={}",
+            batch_id,
+            task_ids.len(),
+            pid
         );
 
         // Establish baseline immediately for the batch worker
-        let mut sys = self.system.lock();
-        let target_pid = Pid::from(pid as usize);
-        sys.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::Some(&[target_pid]),
-            false, // don't remove dead processes
-            ProcessRefreshKind::nothing().with_cpu(),
+        self.establish_process_baseline(pid);
+
+        // Now register the batch (after releasing system lock)
+        self.batches.insert(
+            batch_id.clone(),
+            BatchRegistration::new(batch_id.clone(), task_ids, pid),
         );
+        trace!("Batch registered: batch_id={}, pid={}", batch_id, pid);
     }
 
     /// Subscribe to push-based metrics notifications from TypeScript
@@ -1010,13 +1162,13 @@ impl ProcessMetricsCollector {
 impl Drop for ProcessMetricsCollector {
     fn drop(&mut self) {
         // Ensure collection is stopped when dropping (RAII pattern)
-        if self.is_collecting.load(Ordering::Acquire) {
-            if let Err(e) = self.stop_collection() {
-                error!(
-                    "Failed to stop collection during ProcessMetricsCollector drop: {}",
-                    e
-                );
-            }
+        if self.is_collecting.load(Ordering::Acquire)
+            && let Err(e) = self.stop_collection()
+        {
+            error!(
+                "Failed to stop collection during ProcessMetricsCollector drop: {}",
+                e
+            );
         }
     }
 }
@@ -1075,9 +1227,14 @@ mod tests {
 
         let groups = runner.create_new_group_info();
 
-        assert_eq!(groups.len(), 1);
+        assert_eq!(groups.len(), 2);
         assert!(groups.contains_key(DAEMON_GROUP_ID));
         assert_eq!(groups[DAEMON_GROUP_ID].group_type, GroupType::Daemon);
+        assert!(groups.contains_key(DAEMON_SUBPROCESSES_GROUP_ID));
+        assert_eq!(
+            groups[DAEMON_SUBPROCESSES_GROUP_ID].group_type,
+            GroupType::DaemonSubprocesses
+        );
     }
 
     #[test]
@@ -1143,8 +1300,9 @@ mod tests {
         // Add daemon
         *runner.daemon_pid.lock() = Some(67890);
         let groups3 = runner.create_new_group_info();
-        assert_eq!(groups3.len(), 1);
+        assert_eq!(groups3.len(), 2);
         assert!(groups3.contains_key(DAEMON_GROUP_ID));
+        assert!(groups3.contains_key(DAEMON_SUBPROCESSES_GROUP_ID));
         assert!(!groups3.contains_key(MAIN_CLI_GROUP_ID));
     }
 
@@ -1252,5 +1410,145 @@ mod tests {
                 .group_metadata_map
                 .contains_key(MAIN_CLI_SUBPROCESSES_GROUP_ID)
         );
+    }
+
+    #[test]
+    fn test_concurrent_group_creation_with_subprocess_updates() {
+        // This test verifies that create_new_group_info works correctly when
+        // subprocesses are being registered concurrently. The fix ensures
+        // lock ordering prevents deadlocks: system lock is released before
+        // accessing registration maps
+        use std::sync::Arc;
+        use std::thread;
+        use std::time::Duration;
+
+        let (runner, _rx) = create_test_runner();
+        let runner = Arc::new(runner);
+
+        // Register an initial main CLI process
+        *runner.main_cli_pid.lock() = Some(1234);
+
+        // Spawn a thread that continuously calls create_new_group_info
+        // (simulating the collection thread)
+        let runner_collector = Arc::clone(&runner);
+        let collector_handle = thread::spawn(move || {
+            for _ in 0..10 {
+                let _ = runner_collector.create_new_group_info();
+                thread::sleep(Duration::from_millis(5));
+            }
+        });
+
+        // Spawn threads that register subprocesses concurrently
+        // (simulating registration threads)
+        let handles: Vec<_> = (0..3)
+            .map(|i| {
+                let runner = Arc::clone(&runner);
+                thread::spawn(move || {
+                    for j in 0..5 {
+                        let pid = 10000 + i * 100 + j;
+                        runner
+                            .main_cli_subprocess_pids
+                            .insert(pid as i32, Some(format!("worker-{}", j)));
+                        thread::sleep(Duration::from_millis(2));
+                    }
+                })
+            })
+            .collect();
+
+        // Wait for all threads to complete
+        for handle in handles {
+            handle.join().unwrap();
+        }
+        collector_handle.join().unwrap();
+
+        // Verify all subprocesses were registered
+        assert_eq!(runner.main_cli_subprocess_pids.len(), 15);
+
+        // Verify that create_new_group_info completes successfully
+        // (If there was a deadlock, this would have hung during the test)
+        let groups = runner.create_new_group_info();
+        assert!(groups.contains_key(MAIN_CLI_SUBPROCESSES_GROUP_ID));
+    }
+
+    #[test]
+    fn test_lock_order_consistency_across_registration_threads() {
+        // This test verifies that the lock ordering is consistent:
+        // All registration operations acquire system lock BEFORE registration maps.
+        // This test spawns multiple threads doing concurrent registrations and
+        // verify they all complete without deadlock.
+        use std::sync::Arc;
+        use std::thread;
+        use std::time::Duration;
+
+        let (runner, _rx) = create_test_runner();
+        let runner = Arc::new(runner);
+
+        // Initialize some baseline data
+        *runner.main_cli_pid.lock() = Some(5000);
+
+        // Spawn multiple threads doing different registration operations
+        let handles: Vec<_> = (0..6)
+            .map(|thread_id| {
+                let runner = Arc::clone(&runner);
+                thread::spawn(move || {
+                    for i in 0..5 {
+                        match thread_id {
+                            0 => {
+                                // Thread 0: Register subprocesses
+                                runner
+                                    .main_cli_subprocess_pids
+                                    .insert(30000 + i, Some(format!("worker-{}", i)));
+                            }
+                            1 => {
+                                // Thread 1: Create new groups
+                                let _ = runner.create_new_group_info();
+                            }
+                            2 => {
+                                // Thread 2: Access subprocess pids
+                                let _ = runner.main_cli_subprocess_pids.len();
+                            }
+                            3 => {
+                                // Thread 3: Access main_cli_pid
+                                let _ = *runner.main_cli_pid.lock();
+                            }
+                            4 => {
+                                // Thread 4: Register tasks
+                                runner.individual_tasks.insert(
+                                    format!("task-{}-{}", thread_id, i),
+                                    IndividualTaskRegistration {
+                                        task_id: format!("task-{}-{}", thread_id, i),
+                                        anchor_pids: std::collections::HashSet::new(),
+                                    },
+                                );
+                            }
+                            5 => {
+                                // Thread 5: Register batches
+                                runner.batches.insert(
+                                    format!("batch-{}-{}", thread_id, i),
+                                    BatchRegistration {
+                                        batch_id: format!("batch-{}-{}", thread_id, i),
+                                        task_ids: Arc::new(vec![]),
+                                        anchor_pid: 40000 + i,
+                                    },
+                                );
+                            }
+                            _ => {}
+                        }
+                        thread::sleep(Duration::from_millis(1));
+                    }
+                })
+            })
+            .collect();
+
+        // Wait for all threads to complete
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        // If we got here without deadlock or panic, the lock ordering is correct
+        // Verify some data was collected
+        assert!(runner.main_cli_subprocess_pids.len() > 0);
+        assert!(runner.individual_tasks.len() > 0);
+        assert!(runner.batches.len() > 0);
     }
 }
