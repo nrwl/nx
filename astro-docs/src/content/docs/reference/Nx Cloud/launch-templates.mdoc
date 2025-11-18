@@ -471,8 +471,8 @@ launch-templates:
           # we recommend add to the 'user' level npmrc file
           # create .npmrc with @myorg scoped packages pointing to GH npm registry
           # or yarn config set -l user if you use yarn
-          npm config set -l user "@myorg:registry" "https://npm.pkg.github.com"
-          npm config set -l user "//npm.pkg.github.com/:_authToken" "${SOME_AUTH_TOKEN}"
+          npm config set -L user "@myorg:registry" "https://npm.pkg.github.com"
+          npm config set -L user "//npm.pkg.github.com/:_authToken" "${SOME_AUTH_TOKEN}"
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
 ```
