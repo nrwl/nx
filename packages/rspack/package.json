@@ -24,73 +24,86 @@
   "typings": "./src/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/src/index.js",
       "types": "./src/index.d.ts",
-      "@nx/nx-source": "./src/index.ts"
+      "@nx/nx-source": "./src/index.ts",
+      "import": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
     },
     "./plugin": {
-      "import": "./dist/plugin.js",
       "types": "./plugin.d.ts",
-      "@nx/nx-source": "./plugin.ts"
+      "@nx/nx-source": "./plugin.ts",
+      "import": "./dist/plugin.js",
+      "default": "./dist/plugin.js"
     },
     "./module-federation": {
-      "import": "./dist/module-federation.js",
       "types": "./module-federation.d.ts",
-      "@nx/nx-source": "./module-federation.ts"
+      "@nx/nx-source": "./module-federation.ts",
+      "import": "./dist/module-federation.js",
+      "default": "./dist/module-federation.js"
     },
     "./react-plugin": {
-      "import": "./dist/react-plugin.js",
       "types": "./react-plugin.d.ts",
-      "@nx/nx-source": "./react-plugin.ts"
+      "@nx/nx-source": "./react-plugin.ts",
+      "import": "./dist/react-plugin.js",
+      "default": "./dist/react-plugin.js"
     },
     "./app-plugin": {
-      "import": "./dist/app-plugin.js",
       "types": "./app-plugin.d.ts",
-      "@nx/nx-source": "./app-plugin.ts"
+      "@nx/nx-source": "./app-plugin.ts",
+      "import": "./dist/app-plugin.js",
+      "default": "./dist/app-plugin.js"
     },
     "./package.json": "./package.json",
     "./executors.json": "./executors.json",
     "./generators.json": "./generators.json",
     "./migrations.json": "./migrations.json",
     "./src/executors/*": {
-      "import": "./dist/src/executors/*.js",
       "types": "./src/executors/*.d.ts",
-      "@nx/nx-source": "./src/executors/*.ts"
+      "@nx/nx-source": "./src/executors/*.ts",
+      "import": "./dist/src/executors/*.js",
+      "default": "./dist/src/executors/*.js"
     },
     "./src/executors/**/*": {
-      "import": "./dist/src/executors/**/*.js",
       "types": "./src/executors/**/*.d.ts",
-      "@nx/nx-source": "./src/executors/**/*.ts"
+      "@nx/nx-source": "./src/executors/**/*.ts",
+      "import": "./dist/src/executors/**/*.js",
+      "default": "./dist/src/executors/**/*.js"
     },
     "./src/generators/*": {
-      "import": "./dist/src/generators/*.js",
       "types": "./src/generators/*.d.ts",
-      "@nx/nx-source": "./src/generators/*.ts"
+      "@nx/nx-source": "./src/generators/*.ts",
+      "import": "./dist/src/generators/*.js",
+      "default": "./dist/src/generators/*.js"
     },
     "./src/generators/**/*": {
-      "import": "./dist/src/generators/**/*.js",
       "types": "./src/generators/**/*.d.ts",
-      "@nx/nx-source": "./src/generators/**/*.ts"
+      "@nx/nx-source": "./src/generators/**/*.ts",
+      "import": "./dist/src/generators/**/*.js",
+      "default": "./dist/src/generators/**/*.js"
     },
     "./src/plugins/*": {
-      "import": "./dist/src/plugins/*.js",
       "types": "./src/plugins/*.d.ts",
-      "@nx/nx-source": "./src/plugins/*.ts"
+      "@nx/nx-source": "./src/plugins/*.ts",
+      "import": "./dist/src/plugins/*.js",
+      "default": "./dist/src/plugins/*.js"
     },
     "./src/plugins/**/*": {
-      "import": "./dist/src/plugins/**/*.js",
       "types": "./src/plugins/**/*.d.ts",
-      "@nx/nx-source": "./src/plugins/**/*.ts"
+      "@nx/nx-source": "./src/plugins/**/*.ts",
+      "import": "./dist/src/plugins/**/*.js",
+      "default": "./dist/src/plugins/**/*.js"
     },
     "./src/utils/*": {
-      "import": "./dist/src/utils/*.js",
       "types": "./src/utils/*.d.ts",
-      "@nx/nx-source": "./src/utils/*.ts"
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
     },
     "./src/utils/**/*": {
-      "import": "./dist/src/utils/**/*.js",
       "types": "./src/utils/**/*.d.ts",
-      "@nx/nx-source": "./src/utils/**/*.ts"
+      "@nx/nx-source": "./src/utils/**/*.ts",
+      "import": "./dist/src/utils/**/*.js",
+      "default": "./dist/src/utils/**/*.js"
     }
   },
   "generators": "./generators.json",

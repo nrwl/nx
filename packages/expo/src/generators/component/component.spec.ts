@@ -1,5 +1,17 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
+// Define mocks BEFORE imports
+const mockLoggerWarn = jest.fn();
+const mockLoggerDebug = jest.fn();
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  logger: {
+    ...jest.requireActual('@nx/devkit').logger,
+    warn: mockLoggerWarn,
+    debug: mockLoggerDebug,
+  },
+}));
+
 import { logger, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import expoApplicationGenerator from '../application/application';
@@ -14,6 +26,10 @@ describe('component', () => {
   let defaultSchema: Schema;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+    mockLoggerWarn.mockImplementation(() => {});
+    mockLoggerDebug.mockImplementation(() => {});
+
     projectName = 'my-lib';
     appTree = createTreeWithEmptyWorkspace();
     appTree.write('.gitignore', '');
@@ -43,12 +59,6 @@ describe('component', () => {
       strict: true,
       js: false,
     });
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'debug').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
   });
 
   it('should generate files', async () => {

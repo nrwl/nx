@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { relative } from 'path';
 

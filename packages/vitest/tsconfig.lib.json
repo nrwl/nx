@@ -23,11 +23,13 @@
   "exclude": [
     "node_modules",
     "dist",
+    ".eslintrc.json",
     "**/*.spec.ts",
     "**/*_spec.ts",
     "**/*.test.ts",
     "jest.config.ts",
     "jest.config.cts",
+    "jest.setup.ts",
     "**/__fixtures__/**/*.*",
     "**/__snapshots__/**/*.*"
   ],

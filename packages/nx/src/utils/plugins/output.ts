@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { output } from '../output';
 import { getPackageManagerCommand } from '../package-manager';

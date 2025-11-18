@@ -12,6 +12,7 @@
   "exclude": [
     "node_modules",
     "dist",
+    ".eslintrc.json",
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/*_spec.ts",

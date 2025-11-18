@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { diff } from 'jest-diff';
 import { readFileSync } from 'node:fs';
 import { Tree, flushChanges } from '../../../generators/tree';

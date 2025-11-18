@@ -1,9 +1,19 @@
+let existsSyncMock = jest.fn();
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  existsSync: existsSyncMock,
+}));
 import * as fs from 'fs';
 import { getDynamicMfManifestFile } from './get-dynamic-manifest-file';
 
 describe('getDynamicMfManifestFile', () => {
+  afterAll(() => {
+    existsSyncMock.mockRestore();
+    jest.restoreAllMocks();
+  });
+
   it('should return the correct manifest file', () => {
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    existsSyncMock.mockReturnValue(true);
 
     const manifestFile = getDynamicMfManifestFile(
       { root: 'myapp', sourceRoot: 'myapp/src' },
@@ -16,7 +26,7 @@ describe('getDynamicMfManifestFile', () => {
   });
 
   it('should return undefined if the manifest file does not exist', () => {
-    jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+    existsSyncMock.mockReturnValue(false);
 
     const manifestFile = getDynamicMfManifestFile(
       { root: 'myapp', sourceRoot: 'myapp/src' },

@@ -26,23 +26,26 @@
   "main": "./dist/index.js",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "@nx/nx-source": "./index.ts"
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./executors/*/schema.json": "./dist/src/executors/*/schema.json",
     "./executors/*/schema": "./src/executors/*/schema.d.ts",
     "./generators/*/schema.json": "./dist/src/generators/*/schema.json",
     "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./generators": {
-      "import": "./dist/generators.js",
       "types": "./generators.d.ts",
-      "@nx/nx-source": "./generators.ts"
+      "@nx/nx-source": "./generators.ts",
+      "import": "./dist/generators.js",
+      "default": "./dist/generators.js"
     },
     "./executors": {
-      "import": "./dist/executors.js",
       "types": "./executors.d.ts",
-      "@nx/nx-source": "./executors.ts"
+      "@nx/nx-source": "./executors.ts",
+      "import": "./dist/executors.js",
+      "default": "./dist/executors.js"
     },
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
@@ -74,6 +77,7 @@
     }
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "jest-environment-node": "catalog:jest"
   }
 }

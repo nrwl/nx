@@ -36,9 +36,9 @@
       "default": "./dist/index.js"
     },
     "./src/models/style-preprocessor-options": {
-      "import": "./dist/models/style-preprocessor-options.js",
       "types": "./dist/models/style-preprocessor-options.d.ts",
-      "@nx/nx-source": "./src/models/style-preprocessor-options.ts"
+      "@nx/nx-source": "./src/models/style-preprocessor-options.ts",
+      "import": "./dist/models/style-preprocessor-options.js"
     }
   },
   "dependencies": {

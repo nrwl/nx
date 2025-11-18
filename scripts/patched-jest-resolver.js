@@ -12,7 +12,7 @@ const fs = require('fs');
  * - Without this resolver, Jest will fail to resolve these imports correctly
  */
 const enhancedResolver = require('enhanced-resolve').create.sync({
-  conditionNames: ['require', 'node', 'default'],
+  conditionNames: ['@nx/nx-source', 'require', 'node', 'default'],
   extensions: ['.js', '.json', '.node', '.ts', '.tsx'],
 });
 
@@ -90,6 +90,16 @@ module.exports = function (modulePath, options) {
       return options.defaultResolver(modulePath, options);
     }
 
+    // Handle .js imports that should resolve to .ts files (TypeScript ESM pattern)
+    if (modulePath.endsWith('.js')) {
+      const tsPath = modulePath.slice(0, -3) + '.ts';
+      try {
+        return enhancedResolver(path.resolve(options.basedir), tsPath);
+      } catch (e) {
+        // If .ts doesn't exist, fall through to try .js
+      }
+    }
+
     return enhancedResolver(path.resolve(options.basedir), modulePath);
   }
 
@@ -156,7 +166,12 @@ module.exports = function (modulePath, options) {
     const nxSubpathMatch = modulePath.match(/^@nx\/([^/]+)\/src\/(.+)$/);
     if (nxSubpathMatch) {
       const packageName = nxSubpathMatch[1];
-      const subpath = nxSubpathMatch[2];
+      let subpath = nxSubpathMatch[2];
+
+      // Handle .js imports that should resolve to .ts files (TypeScript ESM pattern)
+      if (subpath.endsWith('.js')) {
+        subpath = subpath.slice(0, -3);
+      }
 
       // Try different patterns for subpath resolution
       const possiblePaths = [

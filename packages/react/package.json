@@ -19,7 +19,7 @@
     "Front-end"
   ],
   "main": "./dist/index.js",
-  "typings": "./index.d.ts",
+  "types": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -67,155 +67,184 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "@nx/nx-source": "./index.ts"
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
     "./mf": {
-      "import": "./dist/mf/index.js",
       "types": "./mf/index.d.ts",
-      "@nx/nx-source": "./mf/index.ts"
+      "@nx/nx-source": "./mf/index.ts",
+      "import": "./dist/mf/index.js",
+      "default": "./dist/mf/index.js"
     },
     "./babel": {
-      "import": "./dist/babel.js",
       "types": "./babel.d.ts",
-      "@nx/nx-source": "./babel.ts"
+      "@nx/nx-source": "./babel.ts",
+      "import": "./dist/babel.js",
+      "default": "./dist/babel.js"
     },
     "./tailwind": {
-      "import": "./dist/tailwind.js",
       "types": "./tailwind.d.ts",
-      "@nx/nx-source": "./tailwind.ts"
+      "@nx/nx-source": "./tailwind.ts",
+      "import": "./dist/tailwind.js",
+      "default": "./dist/tailwind.js"
     },
     "./module-federation": {
-      "import": "./dist/module-federation.js",
       "types": "./module-federation.d.ts",
-      "@nx/nx-source": "./module-federation.ts"
+      "@nx/nx-source": "./module-federation.ts",
+      "import": "./dist/module-federation.js",
+      "default": "./dist/module-federation.js"
     },
     "./webpack-plugin": {
-      "import": "./dist/webpack-plugin.js",
       "types": "./webpack-plugin.d.ts",
-      "@nx/nx-source": "./webpack-plugin.ts"
+      "@nx/nx-source": "./webpack-plugin.ts",
+      "import": "./dist/webpack-plugin.js",
+      "default": "./dist/webpack-plugin.js"
     },
     "./router-plugin": {
-      "import": "./dist/router-plugin.js",
       "types": "./router-plugin.d.ts",
-      "@nx/nx-source": "./router-plugin.ts"
+      "@nx/nx-source": "./router-plugin.ts",
+      "import": "./dist/router-plugin.js",
+      "default": "./dist/router-plugin.js"
     },
     "./ast-utils": {
-      "import": "./dist/ast-utils.js",
       "types": "./ast-utils.d.ts",
-      "@nx/nx-source": "./ast-utils.ts"
+      "@nx/nx-source": "./ast-utils.ts",
+      "import": "./dist/ast-utils.js",
+      "default": "./dist/ast-utils.js"
     },
     "./plugins/storybook": {
-      "import": "./dist/plugins/storybook/index.js",
       "types": "./plugins/storybook/index.d.ts",
-      "@nx/nx-source": "./plugins/storybook/index.ts"
+      "@nx/nx-source": "./plugins/storybook/index.ts",
+      "import": "./dist/plugins/storybook/index.js",
+      "default": "./dist/plugins/storybook/index.js"
     },
     "./plugins/component-testing": {
-      "import": "./dist/plugins/component-testing/index.js",
       "types": "./plugins/component-testing/index.d.ts",
-      "@nx/nx-source": "./plugins/component-testing/index.ts"
+      "@nx/nx-source": "./plugins/component-testing/index.ts",
+      "import": "./dist/plugins/component-testing/index.js",
+      "default": "./dist/plugins/component-testing/index.js"
     },
     "./plugins/webpack": {
-      "import": "./dist/plugins/webpack.js",
       "types": "./plugins/webpack.d.ts",
-      "@nx/nx-source": "./plugins/webpack.ts"
+      "@nx/nx-source": "./plugins/webpack.ts",
+      "import": "./dist/plugins/webpack.js",
+      "default": "./dist/plugins/webpack.js"
     },
     "./plugins/bundle-rollup": {
-      "import": "./dist/plugins/bundle-rollup.js",
       "types": "./plugins/bundle-rollup.d.ts",
-      "@nx/nx-source": "./plugins/bundle-rollup.ts"
+      "@nx/nx-source": "./plugins/bundle-rollup.ts",
+      "import": "./dist/plugins/bundle-rollup.js",
+      "default": "./dist/plugins/bundle-rollup.js"
     },
     "./plugins/jest": {
-      "import": "./dist/plugins/jest.js",
       "types": "./plugins/jest.d.ts",
-      "@nx/nx-source": "./plugins/jest.ts"
+      "@nx/nx-source": "./plugins/jest.ts",
+      "import": "./dist/plugins/jest.js",
+      "default": "./dist/plugins/jest.js"
     },
     "./plugins/with-react": {
-      "import": "./dist/plugins/with-react.js",
       "types": "./plugins/with-react.d.ts",
-      "@nx/nx-source": "./plugins/with-react.ts"
+      "@nx/nx-source": "./plugins/with-react.ts",
+      "import": "./dist/plugins/with-react.js",
+      "default": "./dist/plugins/with-react.js"
     },
     "./src/utils": {
-      "import": "./dist/src/utils/index.js",
       "types": "./src/utils/index.d.ts",
-      "@nx/nx-source": "./src/utils/index.ts"
+      "@nx/nx-source": "./src/utils/index.ts",
+      "import": "./dist/src/utils/index.js",
+      "default": "./dist/src/utils/index.js"
     },
     "./src/utils/*": {
-      "import": "./dist/src/utils/*.js",
       "types": "./src/utils/*.d.ts",
-      "@nx/nx-source": "./src/utils/*.ts"
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
     },
     "./src/generators/utils": {
-      "import": "./dist/src/generators/utils/index.js",
       "types": "./src/generators/utils/index.d.ts",
-      "@nx/nx-source": "./src/generators/utils/index.ts"
+      "@nx/nx-source": "./src/generators/utils/index.ts",
+      "import": "./dist/src/generators/utils/index.js",
+      "default": "./dist/src/generators/utils/index.js"
     },
     "./src/generators/*": {
-      "import": "./dist/src/generators/*.js",
       "types": "./src/generators/*.d.ts",
-      "@nx/nx-source": "./src/generators/*.ts"
+      "@nx/nx-source": "./src/generators/*.ts",
+      "import": "./dist/src/generators/*.js",
+      "default": "./dist/src/generators/*.js"
     },
     "./src/generators/*/lib/*": {
-      "import": "./dist/src/generators/*/lib/*.js",
       "types": "./src/generators/*/lib/*.d.ts",
-      "@nx/nx-source": "./src/generators/*/lib/*.ts"
+      "@nx/nx-source": "./src/generators/*/lib/*.ts",
+      "import": "./dist/src/generators/*/lib/*.js",
+      "default": "./dist/src/generators/*/lib/*.js"
     },
     "./src/generators/*/*": {
-      "import": "./dist/src/generators/*/*.js",
       "types": "./src/generators/*/*.d.ts",
-      "@nx/nx-source": "./src/generators/*/*.ts"
+      "@nx/nx-source": "./src/generators/*/*.ts",
+      "import": "./dist/src/generators/*/*.js",
+      "default": "./dist/src/generators/*/*.js"
     },
     "./src/generators/*/schema.json": "./dist/src/generators/*/schema.json",
     "./src/executors/*/schema.json": "./dist/src/executors/*/schema.json",
     "./src/executors/*.impl": {
-      "import": "./dist/src/executors/*.impl.js",
       "types": "./src/executors/*.impl.d.ts",
-      "@nx/nx-source": "./src/executors/*.impl.ts"
+      "@nx/nx-source": "./src/executors/*.impl.ts",
+      "import": "./dist/src/executors/*.impl.js",
+      "default": "./dist/src/executors/*.impl.js"
     },
     "./src/executors/*": {
-      "import": "./dist/src/executors/*.js",
       "types": "./src/executors/*.d.ts",
-      "@nx/nx-source": "./src/executors/*.ts"
+      "@nx/nx-source": "./src/executors/*.ts",
+      "import": "./dist/src/executors/*.js",
+      "default": "./dist/src/executors/*.js"
     },
     "./src/executors/*/lib/*": {
-      "import": "./dist/src/executors/*/lib/*.js",
       "types": "./src/executors/*/lib/*.d.ts",
-      "@nx/nx-source": "./src/executors/*/lib/*.ts"
+      "@nx/nx-source": "./src/executors/*/lib/*.ts",
+      "import": "./dist/src/executors/*/lib/*.js",
+      "default": "./dist/src/executors/*/lib/*.js"
     },
     "./src/module-federation/*": {
-      "import": "./dist/src/module-federation/*.js",
       "types": "./src/module-federation/*.d.ts",
-      "@nx/nx-source": "./src/module-federation/*.ts"
+      "@nx/nx-source": "./src/module-federation/*.ts",
+      "import": "./dist/src/module-federation/*.js",
+      "default": "./dist/src/module-federation/*.js"
     },
     "./src/plugins/*": {
-      "import": "./dist/src/plugins/*.js",
       "types": "./src/plugins/*.d.ts",
-      "@nx/nx-source": "./src/plugins/*.ts"
+      "@nx/nx-source": "./src/plugins/*.ts",
+      "import": "./dist/src/plugins/*.js",
+      "default": "./dist/src/plugins/*.js"
     },
     "./src/rules/*": {
-      "import": "./dist/src/rules/*.js",
       "types": "./src/rules/*.d.ts",
-      "@nx/nx-source": "./src/rules/*.ts"
+      "@nx/nx-source": "./src/rules/*.ts",
+      "import": "./dist/src/rules/*.js",
+      "default": "./dist/src/rules/*.js"
     },
     "./src/*": {
-      "import": "./dist/src/*.js",
       "types": "./src/*.d.ts",
-      "@nx/nx-source": "./src/*.ts"
+      "@nx/nx-source": "./src/*.ts",
+      "import": "./dist/src/*.js",
+      "default": "./dist/src/*.js"
     },
     "./plugins/*": {
-      "import": "./dist/plugins/*.js",
       "types": "./plugins/*.d.ts",
-      "@nx/nx-source": "./plugins/*.ts"
+      "@nx/nx-source": "./plugins/*.ts",
+      "import": "./dist/plugins/*.js",
+      "default": "./dist/plugins/*.js"
     },
     "./mf/*": {
-      "import": "./dist/mf/*.js",
       "types": "./mf/*.d.ts",
-      "@nx/nx-source": "./mf/*.ts"
+      "@nx/nx-source": "./mf/*.ts",
+      "import": "./dist/mf/*.js",
+      "default": "./dist/mf/*.js"
     },
     "./typings/*.d.ts": "./typings/*.d.ts"
   }

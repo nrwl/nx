@@ -21,38 +21,44 @@
   "typings": "./index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "@nx/nx-source": "./index.ts"
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json",
     "./executors.json": "./executors.json",
     "./generators.json": "./generators.json",
     "./migrations.json": "./migrations.json",
     "./src/executors/*": {
-      "import": "./dist/src/executors/*.js",
       "types": "./src/executors/*.d.ts",
-      "@nx/nx-source": "./src/executors/*.ts"
+      "@nx/nx-source": "./src/executors/*.ts",
+      "import": "./dist/src/executors/*.js",
+      "default": "./dist/src/executors/*.js"
     },
     "./src/executors/**/*": {
-      "import": "./dist/src/executors/**/*.js",
       "types": "./src/executors/**/*.d.ts",
-      "@nx/nx-source": "./src/executors/**/*.ts"
+      "@nx/nx-source": "./src/executors/**/*.ts",
+      "import": "./dist/src/executors/**/*.js",
+      "default": "./dist/src/executors/**/*.js"
     },
     "./src/generators/*": {
-      "import": "./dist/src/generators/*.js",
       "types": "./src/generators/*.d.ts",
-      "@nx/nx-source": "./src/generators/*.ts"
+      "@nx/nx-source": "./src/generators/*.ts",
+      "import": "./dist/src/generators/*.js",
+      "default": "./dist/src/generators/*.js"
     },
     "./src/generators/**/*": {
-      "import": "./dist/src/generators/**/*.js",
       "types": "./src/generators/**/*.d.ts",
-      "@nx/nx-source": "./src/generators/**/*.ts"
+      "@nx/nx-source": "./src/generators/**/*.ts",
+      "import": "./dist/src/generators/**/*.js",
+      "default": "./dist/src/generators/**/*.js"
     },
     "./src/utils/*": {
-      "import": "./dist/src/utils/*.js",
       "types": "./src/utils/*.d.ts",
-      "@nx/nx-source": "./src/utils/*.ts"
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
     }
   },
   "author": "Victor Savkin",

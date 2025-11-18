@@ -1,18 +1,3 @@
-import * as devkit from '@nx/devkit';
-import {
-  formatFiles,
-  readJson,
-  type NxJsonConfiguration,
-  type Tree,
-} from '@nx/devkit';
-import { createTree } from '@nx/devkit/testing';
-import Ajv from 'ajv';
-import { mkdirSync, writeFileSync } from 'fs';
-import * as nxSchema from 'nx/schemas/nx-schema.json';
-import { join } from 'path';
-import { Preset } from '../utils/presets';
-import { generateWorkspaceFiles } from './generate-workspace-files';
-
 jest.mock(
   'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud',
   () => ({
@@ -30,6 +15,25 @@ jest.mock('nx/src/nx-cloud/utilities/url-shorten', () => ({
     return `https://test.nx.app/connect?source=${source}&token=${token}`;
   },
 }));
+let mockGetPackageManagerVersion = jest.fn().mockReturnValue('10.0.0');
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  getPackageManagerVersion: mockGetPackageManagerVersion,
+}));
+
+import {
+  formatFiles,
+  readJson,
+  type NxJsonConfiguration,
+  type Tree,
+} from '@nx/devkit';
+import { createTree } from '@nx/devkit/testing';
+import Ajv from 'ajv';
+import { mkdirSync, writeFileSync } from 'fs';
+import * as nxSchema from 'nx/schemas/nx-schema.json';
+import { join } from 'path';
+import { Preset } from '../utils/presets';
+import { generateWorkspaceFiles } from './generate-workspace-files';
 
 describe('@nx/workspace:generateWorkspaceFiles', () => {
   let tree: Tree;
@@ -326,7 +330,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   it('should configure the pnpm settings in pnpm-workspace.yaml and not create an .npmrc file for pnpm <7', async () => {
     tree.write('proj/package.json', JSON.stringify({}));
-    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('6.1.0');
+    const spy = mockGetPackageManagerVersion.mockReturnValue('6.1.0');
 
     await generateWorkspaceFiles(tree, {
       name: 'proj',
@@ -346,11 +350,12 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       "
     `);
     expect(tree.exists('proj/.npmrc')).toBeFalsy();
+    spy.mockRestore();
   });
 
   it('should configure the pnpm settings in pnpm-workspace.yaml and .npmrc for pnpm >7 <10.6.0', async () => {
     tree.write('proj/package.json', JSON.stringify({}));
-    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('9.1.0');
+    const spy = mockGetPackageManagerVersion.mockReturnValue('9.1.0');
 
     await generateWorkspaceFiles(tree, {
       name: 'proj',
@@ -375,11 +380,12 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       auto-install-peers=true
       "
     `);
+    spy.mockRestore();
   });
 
   it('should configure the pnpm settings in pnpm-workspace.yaml and not create an .npmrc file for pnpm 10.6.0+', async () => {
     tree.write('proj/package.json', JSON.stringify({}));
-    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.6.0');
+    const spy = mockGetPackageManagerVersion.mockReturnValue('10.6.0');
 
     await generateWorkspaceFiles(tree, {
       name: 'proj',
@@ -401,5 +407,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       "
     `);
     expect(tree.exists('proj/.npmrc')).toBeFalsy();
+    spy.mockRestore();
   });
 });

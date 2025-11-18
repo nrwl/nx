@@ -28,24 +28,28 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "@nx/nx-source": "./index.ts"
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./bin/create-nx-workspace": {
-      "import": "./dist/bin/create-nx-workspace.js",
       "types": "./bin/create-nx-workspace.d.ts",
-      "@nx/nx-source": "./bin/create-nx-workspace.ts"
+      "@nx/nx-source": "./bin/create-nx-workspace.ts",
+      "import": "./dist/bin/create-nx-workspace.js",
+      "default": "./dist/bin/create-nx-workspace.js"
     },
     "./src/*": {
-      "import": "./dist/src/*.js",
       "types": "./src/*.d.ts",
-      "@nx/nx-source": "./src/*.ts"
+      "@nx/nx-source": "./src/*.ts",
+      "import": "./dist/src/*.js",
+      "default": "./dist/src/*.js"
     },
     "./src/**/*": {
-      "import": "./dist/src/**/*.js",
       "types": "./src/**/*.d.ts",
-      "@nx/nx-source": "./src/**/*.ts"
+      "@nx/nx-source": "./src/**/*.ts",
+      "import": "./dist/src/**/*.js",
+      "default": "./dist/src/**/*.js"
     },
     "./package.json": "./package.json"
   },

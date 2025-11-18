@@ -16,8 +16,7 @@
   },
   "module": {
     "type": "commonjs",
-    "strict": true,
-    "noInterop": true
+    "strict": true
   },
   "sourceMaps": true,
   "exclude": [

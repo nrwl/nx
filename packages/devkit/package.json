@@ -24,54 +24,76 @@
   "typings": "./index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "@nx/nx-source": "./index.ts"
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./public-api": {
-      "import": "./dist/public-api.js",
       "types": "./public-api.d.ts",
-      "@nx/nx-source": "./public-api.ts"
+      "@nx/nx-source": "./public-api.ts",
+      "import": "./dist/public-api.js",
+      "default": "./dist/public-api.js"
     },
     "./internal": {
-      "import": "./dist/internal.js",
       "types": "./internal.d.ts",
-      "@nx/nx-source": "./internal.ts"
+      "@nx/nx-source": "./internal.ts",
+      "import": "./dist/internal.js",
+      "default": "./dist/internal.js"
     },
     "./testing": {
-      "import": "./dist/testing.js",
       "types": "./testing.d.ts",
-      "@nx/nx-source": "./testing.ts"
+      "@nx/nx-source": "./testing.ts",
+      "import": "./dist/testing.js",
+      "default": "./dist/testing.js"
     },
     "./ngcli-adapter": {
-      "import": "./dist/ngcli-adapter.js",
       "types": "./ngcli-adapter.d.ts",
-      "@nx/nx-source": "./ngcli-adapter.ts"
+      "@nx/nx-source": "./ngcli-adapter.ts",
+      "import": "./dist/ngcli-adapter.js",
+      "default": "./dist/ngcli-adapter.js"
     },
     "./src/executors/*": {
-      "import": "./dist/src/executors/*.js",
       "types": "./src/executors/*.d.ts",
-      "@nx/nx-source": "./src/executors/*.ts"
+      "@nx/nx-source": "./src/executors/*.ts",
+      "import": "./dist/src/executors/*.js",
+      "default": "./dist/src/executors/*.js"
     },
     "./src/generators/*": {
-      "import": "./dist/src/generators/*.js",
       "types": "./src/generators/*.d.ts",
-      "@nx/nx-source": "./src/generators/*.ts"
+      "@nx/nx-source": "./src/generators/*.ts",
+      "import": "./dist/src/generators/*.js",
+      "default": "./dist/src/generators/*.js"
     },
     "./src/generators/**/*": {
-      "import": "./dist/src/generators/**/*.js",
       "types": "./src/generators/**/*.d.ts",
-      "@nx/nx-source": "./src/generators/**/*.ts"
+      "@nx/nx-source": "./src/generators/**/*.ts",
+      "import": "./dist/src/generators/**/*.js",
+      "default": "./dist/src/generators/**/*.js"
     },
     "./src/tasks/*": {
-      "import": "./dist/src/tasks/*.js",
       "types": "./src/tasks/*.d.ts",
-      "@nx/nx-source": "./src/tasks/*.ts"
+      "@nx/nx-source": "./src/tasks/*.ts",
+      "import": "./dist/src/tasks/*.js",
+      "default": "./dist/src/tasks/*.js"
     },
     "./src/utils/*": {
-      "import": "./dist/src/utils/*.js",
       "types": "./src/utils/*.d.ts",
-      "@nx/nx-source": "./src/utils/*.ts"
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
+    },
+    "./src/utils/catalog": {
+      "types": "./src/utils/catalog/index.d.ts",
+      "@nx/nx-source": "./src/utils/catalog/index.ts",
+      "import": "./dist/src/utils/catalog/index.js",
+      "default": "./dist/src/utils/catalog/index.js"
+    },
+    "./src/utils/**/*": {
+      "types": "./src/utils/**/*.d.ts",
+      "@nx/nx-source": "./src/utils/**/*.ts",
+      "import": "./dist/src/utils/**/*.js",
+      "default": "./dist/src/utils/**/*.js"
     },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json"
@@ -93,6 +115,7 @@
   },
   "devDependencies": {
     "jest": "catalog:jest",
+    "jest-environment-node": "catalog:jest",
     "nx": "workspace:*"
   },
   "peerDependencies": {

@@ -29,24 +29,28 @@
   "executors": "./executors.json",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "@nx/nx-source": "./index.ts"
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./babel": {
-      "import": "./dist/babel.js",
       "types": "./babel.d.ts",
-      "@nx/nx-source": "./babel.ts"
+      "@nx/nx-source": "./babel.ts",
+      "import": "./dist/babel.js",
+      "default": "./dist/babel.js"
     },
     "./src/*": {
-      "import": "./dist/src/*.js",
       "types": "./src/*.d.ts",
-      "@nx/nx-source": "./src/*.ts"
+      "@nx/nx-source": "./src/*.ts",
+      "import": "./dist/src/*.js",
+      "default": "./dist/src/*.js"
     },
     "./src/**/*": {
-      "import": "./dist/src/**/*.js",
       "types": "./src/**/*.d.ts",
-      "@nx/nx-source": "./src/**/*.ts"
+      "@nx/nx-source": "./src/**/*.ts",
+      "import": "./dist/src/**/*.js",
+      "default": "./dist/src/**/*.js"
     },
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",

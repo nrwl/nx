@@ -4,13 +4,17 @@
     "outDir": "../../dist/packages/docker/spec",
     "module": "commonjs",
     "types": ["jest", "node"],
-    "composite": true
+    "composite": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": false,
+    "moduleResolution": "node"
   },
   "include": [
     "jest.config.ts",
     "**/*.test.ts",
     "**/*.spec.ts",
     "**/*.d.ts",
+    "jest.setup.ts",
     "*.json"
   ],
   "references": [

@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { output } from '../../utils/output';
 import { join } from 'path';
 import {

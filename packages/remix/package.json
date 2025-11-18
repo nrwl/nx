@@ -49,9 +49,10 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "@nx/nx-source": "./index.ts"
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./executors/*/schema.json": "./dist/src/executors/*/schema.json",
     "./executors/*/schema": {
@@ -66,19 +67,22 @@
     "./executors.json": "./executors.json",
     "./migrations.json": "./migrations.json",
     "./generators": {
-      "import": "./dist/generators.js",
       "types": "./generators.d.ts",
-      "@nx/nx-source": "./generators.ts"
+      "@nx/nx-source": "./generators.ts",
+      "import": "./dist/generators.js",
+      "default": "./dist/generators.js"
     },
     "./plugin": {
-      "import": "./dist/plugin.js",
       "types": "./plugin.d.ts",
-      "@nx/nx-source": "./plugin.ts"
+      "@nx/nx-source": "./plugin.ts",
+      "import": "./dist/plugin.js",
+      "default": "./dist/plugin.js"
     },
     "./plugins/component-testing": {
-      "import": "./dist/plugins/component-testing/index.js",
       "types": "./plugins/component-testing/index.d.ts",
-      "@nx/nx-source": "./plugins/component-testing/index.ts"
+      "@nx/nx-source": "./plugins/component-testing/index.ts",
+      "import": "./dist/plugins/component-testing/index.js",
+      "default": "./dist/plugins/component-testing/index.js"
     }
   }
 }

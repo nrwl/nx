@@ -3,7 +3,11 @@
   "compilerOptions": {
     "outDir": "../../dist/packages/nx/spec",
     "types": ["jest", "node"],
-    "composite": true
+    "composite": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": false,
+    "module": "commonjs",
+    "moduleResolution": "node"
   },
   "include": [
     "**/*.spec.ts",
@@ -16,6 +20,7 @@
     "**/*.d.ts",
     "./src/internal-testing-utils/**/*.ts",
     "jest.config.ts",
+    "jest.setup.ts",
     "*.json"
   ],
   "exclude": ["node_modules", "dist"],

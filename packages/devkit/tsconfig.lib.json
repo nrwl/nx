@@ -18,6 +18,7 @@
     "**/*_test.ts",
     "internal-testing-utils.ts",
     "jest.config.ts",
+    "jest.setup.ts",
     "src/generators/test-files/**"
   ],
   "include": [

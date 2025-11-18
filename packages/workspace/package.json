@@ -49,60 +49,70 @@
     "yargs-parser": "catalog:"
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "jest-environment-node": "catalog:jest"
   },
   "publishConfig": {
     "access": "public"
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "@nx/nx-source": "./index.ts"
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
     "./generators": {
-      "import": "./dist/src/generators.js",
       "types": "./generators.d.ts",
-      "@nx/nx-source": "./generators.ts"
+      "@nx/nx-source": "./generators.ts",
+      "import": "./dist/src/generators.js",
+      "default": "./dist/src/generators.js"
     },
     "./presets/*": {
-      "import": "./dist/presets/*.js",
       "types": "./presets/*.d.ts",
-      "@nx/nx-source": "./presets/*.ts"
+      "@nx/nx-source": "./presets/*.ts",
+      "import": "./dist/presets/*.js",
+      "default": "./dist/presets/*.js"
     },
     "./tasks-runners/*": {
-      "import": "./dist/tasks-runners/*.js",
       "types": "./tasks-runners/*.d.ts",
-      "@nx/nx-source": "./tasks-runners/*.ts"
+      "@nx/nx-source": "./tasks-runners/*.ts",
+      "import": "./dist/tasks-runners/*.js",
+      "default": "./dist/tasks-runners/*.js"
     },
     "./src/generators/*": {
-      "import": "./dist/src/generators/*.js",
       "types": "./src/generators/*.d.ts",
-      "@nx/nx-source": "./src/generators/*.ts"
+      "@nx/nx-source": "./src/generators/*.ts",
+      "import": "./dist/src/generators/*.js",
+      "default": "./dist/src/generators/*.js"
     },
     "./src/executors/*": {
-      "import": "./dist/src/executors/*.js",
       "types": "./src/executors/*.d.ts",
-      "@nx/nx-source": "./src/executors/*.ts"
+      "@nx/nx-source": "./src/executors/*.ts",
+      "import": "./dist/src/executors/*.js",
+      "default": "./dist/src/executors/*.js"
     },
     "./src/utilities/*": {
-      "import": "./dist/src/utilities/*.js",
       "types": "./src/src/utilities/*.d.ts",
-      "@nx/nx-source": "./src/utilities/*.ts"
+      "@nx/nx-source": "./src/utilities/*.ts",
+      "import": "./dist/src/utilities/*.js",
+      "default": "./dist/src/utilities/*.js"
     },
     "./src/utils/*": {
-      "import": "./dist/src/utils/*.js",
       "types": "./src/utils/*.d.ts",
-      "@nx/nx-source": "./src/utils/*.ts"
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
     },
     "./src/tasks-runner/*": {
-      "import": "./dist/tasks-runner/*.js",
       "types": "./src/tasks-runner/*.d.ts",
-      "@nx/nx-source": "./src/tasks-runner/*.ts"
+      "@nx/nx-source": "./src/tasks-runner/*.ts",
+      "import": "./dist/tasks-runner/*.js",
+      "default": "./dist/tasks-runner/*.js"
     }
   }
 }

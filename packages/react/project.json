@@ -54,11 +54,6 @@
           },
           {
             "input": "packages/react",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "packages/react",
             "glob": "**/*.js",
             "ignore": ["**/jest.config.js"],
             "output": "/"

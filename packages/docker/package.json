@@ -26,39 +26,46 @@
   "typings": "./index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "types": "./index.d.ts",
-      "@nx/nx-source": "./index.ts"
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./release/version-utils": {
-      "import": "./dist/src/release/version-utils.js",
       "types": "./src/release/version-utils.d.ts",
-      "@nx/nx-source": "./src/release/version-utils.ts"
+      "@nx/nx-source": "./src/release/version-utils.ts",
+      "import": "./dist/src/release/version-utils.js",
+      "default": "./dist/src/release/version-utils.js"
     },
     "./generators": {
-      "import": "./dist/generators.js",
       "types": "./generators.d.ts",
-      "@nx/nx-source": "./generators.ts"
+      "@nx/nx-source": "./generators.ts",
+      "import": "./dist/generators.js",
+      "default": "./dist/generators.js"
     },
     "./src/release/*": {
-      "import": "./dist/src/release/*.js",
       "types": "./src/release/*.d.ts",
-      "@nx/nx-source": "./src/release/*.ts"
+      "@nx/nx-source": "./src/release/*.ts",
+      "import": "./dist/src/release/*.js",
+      "default": "./dist/src/release/*.js"
     },
     "./src/utils/*": {
-      "import": "./dist/src/utils/*.js",
       "types": "./src/utils/*.d.ts",
-      "@nx/nx-source": "./src/utils/*.ts"
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
     },
     "./src/plugins/*": {
-      "import": "./dist/src/plugins/*.js",
       "types": "./src/plugins/*.d.ts",
-      "@nx/nx-source": "./src/plugins/*.ts"
+      "@nx/nx-source": "./src/plugins/*.ts",
+      "import": "./dist/src/plugins/*.js",
+      "default": "./dist/src/plugins/*.js"
     },
     "./src/plugins/**/*": {
-      "import": "./dist/src/plugins/**/*.js",
       "types": "./src/plugins/**/*.d.ts",
-      "@nx/nx-source": "./src/plugins/**/*.ts"
+      "@nx/nx-source": "./src/plugins/**/*.ts",
+      "import": "./dist/src/plugins/**/*.js",
+      "default": "./dist/src/plugins/**/*.js"
     },
     "./executors/*/schema.json": "./dist/src/executors/*/schema.json",
     "./executors/*/schema": "./src/executors/*/schema.d.ts",
