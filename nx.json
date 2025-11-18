@@ -95,6 +95,11 @@
         "packageRoot": "dist/packages/{projectName}"
       }
     },
+    "mvn-*": {
+      "options": {
+        "forwardAllArgs": false
+      }
+    },
     "build": {
       "dependsOn": [
         "^build",
