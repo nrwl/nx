@@ -458,7 +458,7 @@ export function createOrEditViteConfig(
 
   if (!onlyVitest && options.includeLib) {
     plugins.push(
-      `dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json')${
+      `dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json')${
         !isTsSolutionSetup ? ', pathsToAliases: false' : ''
       } })`
     );
@@ -560,7 +560,7 @@ import { defineConfig } from 'vite';
 ${imports.join(';\n')}${imports.length ? ';' : ''}
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   ${printOptions(
     cacheDir,
     devServerOption,

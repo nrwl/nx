@@ -207,41 +207,41 @@ describe('lib', () => {
 
     const eslintJson = readJson(tree, 'my-lib/.eslintrc.json');
     expect(eslintJson).toMatchInlineSnapshot(`
-        {
-          "extends": [
-            "plugin:@nx/react",
-            "../.eslintrc.json",
-          ],
-          "ignorePatterns": [
-            "!**/*",
-          ],
-          "overrides": [
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-          ],
-        }
-      `);
+      {
+        "extends": [
+          "plugin:@nx/react",
+          "../.eslintrc.json",
+        ],
+        "ignorePatterns": [
+          "!**/*",
+        ],
+        "overrides": [
+          {
+            "files": [
+              "*.ts",
+              "*.tsx",
+              "*.js",
+              "*.jsx",
+            ],
+            "rules": {},
+          },
+          {
+            "files": [
+              "*.ts",
+              "*.tsx",
+            ],
+            "rules": {},
+          },
+          {
+            "files": [
+              "*.js",
+              "*.jsx",
+            ],
+            "rules": {},
+          },
+        ],
+      }
+    `);
   });
   it('should update jest.config.cts for babel', async () => {
     await libraryGenerator(tree, {
@@ -994,9 +994,9 @@ module.exports = withNx(
         import * as path from 'path';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../../node_modules/.vite/libs/mylib',
-          plugins: [react(), dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
+          plugins: [react(), dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json') })],
           // Uncomment this if you are using workers.
           // worker: {
           //  plugins: [],

@@ -1089,7 +1089,7 @@ describe('app', () => {
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/my-app',
           server: {
             port: 4200,
@@ -1891,7 +1891,7 @@ describe('app', () => {
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/my-app',
           server:{
             port: 9000,
@@ -2033,7 +2033,7 @@ describe('app', () => {
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/my-app',
           server:{
             port: 4200,

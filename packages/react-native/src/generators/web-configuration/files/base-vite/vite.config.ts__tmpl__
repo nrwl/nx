@@ -29,7 +29,7 @@ const rollupPlugin = (matchers: RegExp[]) => ({
 });
 
 export default defineConfig({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '<%= offsetFromRoot %>node_modules/.vite/<%= projectRoot %>',
   define: {
     global: 'window',
