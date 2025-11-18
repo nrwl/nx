@@ -5,7 +5,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 
-export const angularCliVersion = '21.0.0-rc.4';
+export const angularCliVersion = '21.0.0-rc.5';
 
 export default async function (tree: Tree) {
   const { devDependencies, dependencies } = readJson(tree, 'package.json');
