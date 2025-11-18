@@ -104,6 +104,21 @@ export function readProjectsConfigurationFromProjectGraph(
 }
 
 export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
+  const stackframes = getStackFrames();
+  if (
+    stackframes.some(
+      (f) =>
+        f.getFunctionName() === buildProjectGraphAndSourceMapsWithoutDaemon.name
+    )
+  ) {
+    throw new Error(
+      `Project graph construction cannot be performed due to a loop detected in the call stack. This can happen if 'createProjectGraphAsync' is called directly or indirectly during project graph construction.\n` +
+        'To avoid this, you can add a check against "global.NX_GRAPH_CREATION" before calling "createProjectGraphAsync".\n' +
+        'Call stack:\n' +
+        stackframes.join('\n')
+    );
+  }
+
   global.NX_GRAPH_CREATION = true;
   const nxJson = readNxJson();
 
@@ -411,4 +426,18 @@ export async function createProjectGraphAndSourceMapsAsync(
       }
     }
   }
+}
+
+function getStackFrames() {
+  const prepareStackTraceBackup = Error.prepareStackTrace;
+  Error.prepareStackTrace = (_, stackTraces: NodeJS.CallSite[]) => {
+    return stackTraces;
+  };
+
+  const trace = new Error().stack as any as NodeJS.CallSite[];
+  Error.prepareStackTrace = prepareStackTraceBackup;
+  trace.reverse();
+  trace.pop(); // remove getStackFrames
+  trace.pop(); // remove caller of getStackFrames
+  return trace; // return stack up to what called getStackFrames
 }
