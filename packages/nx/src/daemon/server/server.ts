@@ -694,21 +694,21 @@ export async function startServer(): Promise<Server> {
     killSocketOrPath();
   }
 
+  setInterval(() => {
+    if (getDaemonProcessIdSync() !== process.pid) {
+      return handleServerProcessTermination({
+        server,
+        reason: 'this process is no longer the current daemon (native)',
+        sockets: openSockets,
+      });
+    }
+  }, 20).unref();
+
   return new Promise(async (resolve, reject) => {
     try {
       server.listen(getFullOsSocketPath(), async () => {
         try {
           serverLogger.log(`Started listening on: ${getFullOsSocketPath()}`);
-
-          setInterval(() => {
-            if (getDaemonProcessIdSync() !== process.pid) {
-              return handleServerProcessTermination({
-                server,
-                reason: 'this process is no longer the current daemon (native)',
-                sockets: openSockets,
-              });
-            }
-          }, 20).unref();
 
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
