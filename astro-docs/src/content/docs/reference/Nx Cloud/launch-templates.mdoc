@@ -208,7 +208,7 @@ launch-templates:
           paths: |
             ~/.npm
             # or ~/.cache/yarn
-            # or .pnpm-store
+            # or ~/.local/share/pnpm/store
           base-branch: 'main'
 ```
 
@@ -322,7 +322,7 @@ common-js-init-steps: &common-js-init-steps
       paths: |
         ~/.npm
         # or ~/.cache/yarn
-        # or .pnpm-store
+        # or ~/.local/share/pnpm/store
       base-branch: 'main'
   - name: Restore Browser Binary Cache
     uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
