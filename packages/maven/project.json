@@ -5,10 +5,7 @@
   "projectType": "library",
   "targets": {
     "nx-release-publish": {
-      "dependsOn": [
-        "^nx-release-publish",
-        "nx-maven-plugin:mvn-install-with-retries"
-      ],
+      "dependsOn": ["^nx-release-publish", "nx-maven-plugin:mvn-install"],
       "executor": "@nx/js:release-publish",
       "options": {
         "packageRoot": "packages/maven"
@@ -53,12 +50,6 @@
           }
         ]
       }
-    },
-    "mvn-process-resources": {
-      "dependsOn": [
-        "nx-maven-plugin:mvn-install-with-retries",
-        "nx-maven-plugin:mvn-generate-resources"
-      ]
     }
   },
   "release": {
