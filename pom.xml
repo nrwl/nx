@@ -34,7 +34,6 @@
     <url>https://github.com/nrwl/nx/tree/master</url>
   </scm>
 
-
   <properties>
     <!-- Skip deploying parent POM -->
     <maven.deploy.skip>true</maven.deploy.skip>
@@ -279,11 +278,6 @@
           </executions>
         </plugin>
     
-      <plugin>
-        <groupId>dev.nx.maven</groupId>
-        <artifactId>nx-maven-plugin</artifactId>
-        <version>0.0.10</version>
-      </plugin>
     </plugins>
     </pluginManagement>
 
