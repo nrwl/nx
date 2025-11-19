@@ -576,7 +576,7 @@ export function isCacheableTask(
     cacheableTargets?: string[] | null;
   }
 ): boolean {
-  if (task.cache !== undefined && !longRunningTask(task)) {
+  if (task.cache !== undefined) {
     return task.cache;
   }
 
@@ -591,6 +591,7 @@ export function isCacheableTask(
 function longRunningTask(task: Task) {
   const t = task.target.target;
   return (
+    task.continuous ||
     (!!task.overrides['watch'] && task.overrides['watch'] !== 'false') ||
     t.endsWith(':watch') ||
     t.endsWith('-watch') ||

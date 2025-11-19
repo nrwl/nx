@@ -1928,6 +1928,63 @@ describe('project-configuration-utils', () => {
       }
     });
 
+    it('should provide helpful error if project has task containing cache and continuous', async () => {
+      const invalidCachePlugin: NxPluginV2 = {
+        name: 'invalid-cache-plugin',
+        createNodesV2: [
+          'libs/*/project.json',
+          (projectJsonPaths) => {
+            const results = [];
+            for (const projectJsonPath of projectJsonPaths) {
+              const root = dirname(projectJsonPath);
+              const name = root.split('/')[1];
+              results.push([
+                projectJsonPath,
+                {
+                  projects: {
+                    [root]: {
+                      name,
+                      root,
+                      targets: {
+                        build: {
+                          executor: 'nx:run-commands',
+                          options: {
+                            command: 'echo foo',
+                          },
+                          cache: true,
+                          continuous: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              ] as const);
+            }
+            return results;
+          },
+        ],
+      };
+
+      const error = await createProjectConfigurationsWithPlugins(
+        undefined,
+        {},
+        [['libs/my-lib/project.json']],
+        [new LoadedNxPlugin(invalidCachePlugin, 'invalid-cache-plugin')]
+      ).catch((e) => e);
+
+      const isErrorType = isProjectConfigurationsError(error);
+      expect(isErrorType).toBe(true);
+      if (isErrorType) {
+        expect(error.errors.map((m) => m.toString())).toMatchInlineSnapshot(`
+          [
+            "[Configuration Error]:
+          Errors detected in targets of project "my-lib":
+          - "build" has both "cache" and "continuous" set to true. Continuous targets cannot be cached. Please remove the "cache" property.",
+          ]
+        `);
+      }
+    });
+
     it('should correctly set source maps', async () => {
       const { sourceMaps } = await createProjectConfigurationsWithPlugins(
         undefined,

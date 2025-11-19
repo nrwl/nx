@@ -24,12 +24,14 @@ import {
   isProjectsWithNoNameError,
   isProjectWithExistingNameError,
   isProjectWithNoNameError,
+  isWorkspaceValidityError,
   MergeNodesError,
   MultipleProjectsWithSameNameError,
   ProjectConfigurationsError,
   ProjectsWithNoNameError,
   ProjectWithExistingNameError,
   ProjectWithNoNameError,
+  WorkspaceValidityError,
 } from '../error-types';
 import { CreateNodesResult } from '../plugins/public-api';
 import { isGlobPattern } from '../../utils/globs';
@@ -397,6 +399,7 @@ export async function createProjectConfigurationsWithPlugins(
     | MergeNodesError
     | ProjectsWithNoNameError
     | MultipleProjectsWithSameNameError
+    | WorkspaceValidityError
   > = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
@@ -496,6 +499,7 @@ function mergeCreateNodesResults(
     | MergeNodesError
     | ProjectsWithNoNameError
     | MultipleProjectsWithSameNameError
+    | WorkspaceValidityError
   )[]
 ) {
   performance.mark('createNodes:merge - start');
@@ -551,14 +555,19 @@ function mergeCreateNodesResults(
       nxJsonConfiguration,
       configurationSourceMaps
     );
-  } catch (e) {
-    if (
-      isProjectsWithNoNameError(e) ||
-      isMultipleProjectsWithSameNameError(e)
-    ) {
-      errors.push(e);
-    } else {
-      throw e;
+  } catch (error) {
+    const unknownErrors: Error[] = [];
+    let _errors = error instanceof AggregateError ? error.errors : [error];
+    for (const e of _errors) {
+      if (
+        isProjectsWithNoNameError(e) ||
+        isMultipleProjectsWithSameNameError(e) ||
+        isWorkspaceValidityError(e)
+      ) {
+        errors.push(e);
+      } else {
+        throw e;
+      }
     }
   }
 
@@ -663,6 +672,7 @@ function validateAndNormalizeProjectRootMap(
   // to provide better error messaging.
   const conflicts = new Map<string, string[]>();
   const projectRootsWithNoName: string[] = [];
+  const validityErrors: WorkspaceValidityError[] = [];
 
   for (const root in projectRootMap) {
     const project = projectRootMap[root];
@@ -700,20 +710,36 @@ function validateAndNormalizeProjectRootMap(
 
   for (const root in projectRootMap) {
     const project = projectRootMap[root];
-    normalizeTargets(
-      project,
-      sourceMaps,
-      nxJsonConfiguration,
-      workspaceRoot,
-      projects
-    );
+    try {
+      normalizeTargets(
+        project,
+        sourceMaps,
+        nxJsonConfiguration,
+        workspaceRoot,
+        projects
+      );
+    } catch (e) {
+      if (e instanceof WorkspaceValidityError) {
+        validityErrors.push(e);
+      } else {
+        throw e;
+      }
+    }
   }
 
+  const errors: Error[] = [];
+
   if (conflicts.size > 0) {
-    throw new MultipleProjectsWithSameNameError(conflicts, projects);
+    errors.push(new MultipleProjectsWithSameNameError(conflicts, projects));
   }
   if (projectRootsWithNoName.length > 0) {
-    throw new ProjectsWithNoNameError(projectRootsWithNoName, projects);
+    errors.push(new ProjectsWithNoNameError(projectRootsWithNoName, projects));
+  }
+  if (validityErrors.length > 0) {
+    errors.push(...validityErrors);
+  }
+  if (errors.length > 0) {
+    throw new AggregateError(errors);
   }
   return projectRootMap;
 }
@@ -728,6 +754,8 @@ function normalizeTargets(
    */
   projects: Record<string, ProjectConfiguration>
 ) {
+  const targetErrorMessage: string[] = [];
+
   for (const targetName in project.targets) {
     project.targets[targetName] = normalizeTarget(
       project.targets[targetName],
@@ -764,23 +792,34 @@ function normalizeTargets(
       );
     }
 
+    const target = project.targets[targetName];
+
     if (
       // If the target has no executor or command, it doesn't do anything
-      !project.targets[targetName].executor &&
-      !project.targets[targetName].command
+      !target.executor &&
+      !target.command
     ) {
       // But it may have dependencies that do something
-      if (
-        project.targets[targetName].dependsOn &&
-        project.targets[targetName].dependsOn.length > 0
-      ) {
-        project.targets[targetName].executor = 'nx:noop';
+      if (target.dependsOn && target.dependsOn.length > 0) {
+        target.executor = 'nx:noop';
       } else {
         // If it does nothing, and has no depenencies,
         // we can remove it.
         delete project.targets[targetName];
       }
     }
+
+    if (target.cache && target.continuous) {
+      targetErrorMessage.push(
+        `- "${targetName}" has both "cache" and "continuous" set to true. Continuous targets cannot be cached. Please remove the "cache" property.`
+      );
+    }
+  }
+  if (targetErrorMessage.length > 0) {
+    targetErrorMessage.unshift(
+      `Errors detected in targets of project "${project.name}":`
+    );
+    throw new WorkspaceValidityError(targetErrorMessage.join('\n'));
   }
 }
 
