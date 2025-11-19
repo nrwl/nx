@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`ngrx NgModule Syntax generated unit tests should generate specs for the ngrx effects 1`] = `
 "import { TestBed } from '@angular/core/testing';
@@ -756,7 +756,7 @@ bootstrapApplication(App, appConfig).catch((err) =>
 `;
 
 exports[`ngrx Standalone APIs should add a root module with feature module when minimal is set to false 2`] = `
-"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
@@ -767,7 +767,6 @@ import { UsersEffects } from './+state/users.effects';
 export const appConfig: ApplicationConfig = {
   providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes)
   ]
 };
@@ -786,7 +785,7 @@ bootstrapApplication(App, appConfig).catch((err) =>
 `;
 
 exports[`ngrx Standalone APIs should add an empty provideStore when minimal and root are set to true 2`] = `
-"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
@@ -795,7 +794,6 @@ import { provideEffects } from '@ngrx/effects';
 export const appConfig: ApplicationConfig = {
   providers: [provideEffects(),provideStore(),
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes)
   ]
 };
@@ -814,7 +812,7 @@ bootstrapApplication(App, appConfig).catch((err) =>
 `;
 
 exports[`ngrx Standalone APIs should add facade provider when facade is true 2`] = `
-"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
@@ -826,7 +824,6 @@ import { UsersFacade } from './+state/users.facade';
 export const appConfig: ApplicationConfig = {
   providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),UsersFacade,
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes)
   ]
 };

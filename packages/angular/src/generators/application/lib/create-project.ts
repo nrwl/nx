@@ -73,7 +73,7 @@ function createProjectForEsbuild(tree: Tree, options: NormalizedSchema) {
               ? undefined
               : `${options.appProjectSourceRoot}/index.html`,
           browser: `${options.appProjectSourceRoot}/main.ts`,
-          polyfills: ['zone.js'],
+          polyfills: options.zoneless ? undefined : ['zone.js'],
           tsConfig: joinPathFragments(
             options.appProjectRoot,
             'tsconfig.app.json'
@@ -179,7 +179,7 @@ function createProjectForWebpack(tree: Tree, options: NormalizedSchema) {
           outputPath: options.outputPath,
           index: `${options.appProjectSourceRoot}/index.html`,
           main: `${options.appProjectSourceRoot}/main.ts`,
-          polyfills: ['zone.js'],
+          polyfills: options.zoneless ? undefined : ['zone.js'],
           tsConfig: joinPathFragments(
             options.appProjectRoot,
             'tsconfig.app.json'

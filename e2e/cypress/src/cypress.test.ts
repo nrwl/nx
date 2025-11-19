@@ -179,7 +179,7 @@ export default defineConfig({
     async () => {
       let appName = uniq(`angular-cy-app`);
       runCLI(
-        `generate @nx/angular:app apps/${appName} --e2eTestRunner=none --no-interactive --bundler=webpack`
+        `generate @nx/angular:app apps/${appName} --e2eTestRunner=none --no-interactive --bundler=webpack --no-zoneless`
       );
       runCLI(
         `generate @nx/angular:component apps/${appName}/src/app/btn/btn --no-interactive`
