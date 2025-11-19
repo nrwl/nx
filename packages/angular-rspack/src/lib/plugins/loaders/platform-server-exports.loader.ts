@@ -4,11 +4,14 @@ import {
 } from '@rspack/core';
 
 export default function loader(
-  this: LoaderContext<{ angularSSRInstalled: boolean }>,
+  this: LoaderContext<{
+    angularSSRInstalled: boolean;
+    isZoneJsInstalled: boolean;
+  }>,
   content: string,
   map: Parameters<LoaderDefinitionFunction>[1]
 ) {
-  const { angularSSRInstalled } = this.getOptions();
+  const { angularSSRInstalled, isZoneJsInstalled } = this.getOptions();
 
   let source = `${content}
 
@@ -20,6 +23,11 @@ export default function loader(
     source += `
       export { ɵgetRoutesFromAngularRouterConfig } from '@angular/ssr';
     `;
+  }
+
+  if (isZoneJsInstalled) {
+    source = `import 'zone.js/node';
+    ${source}`;
   }
 
   this.callback(null, source, map);

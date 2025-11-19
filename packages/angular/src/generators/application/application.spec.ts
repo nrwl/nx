@@ -71,14 +71,12 @@ describe('app', () => {
     expect(dependencies['@angular/router']).toBe(angularVersion);
     expect(dependencies['rxjs']).toBeDefined();
     expect(dependencies['tslib']).toBeDefined();
-    expect(dependencies['zone.js']).toBeDefined();
     expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
     expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
     expect(devDependencies['@angular/language-service']).toBe(angularVersion);
     expect(devDependencies['@angular/build']).toBe(angularDevkitVersion);
-
-    // codelyzer should no longer be there by default
-    expect(devDependencies['codelyzer']).toBeUndefined();
+    // applications are zoneless by default
+    expect(dependencies['zone.js']).toBeUndefined();
   });
 
   it('should add both packages for builders when using rspack bundler', async () => {
@@ -236,9 +234,7 @@ describe('app', () => {
         import { AppModule } from './app/app.module';
 
         platformBrowser()
-          .bootstrapModule(AppModule, {
-            ngZoneEventCoalescing: true
-          })
+          .bootstrapModule(AppModule)
           .catch((err) => console.error(err));
         "
       `);
@@ -1059,9 +1055,7 @@ describe('app', () => {
       import { AppModule } from './app/app-module';
 
       platformBrowser()
-        .bootstrapModule(AppModule, {
-          ngZoneEventCoalescing: true
-        })
+        .bootstrapModule(AppModule)
         .catch((err) => console.error(err));
       "
     `);
@@ -1484,9 +1478,7 @@ describe('app', () => {
         import { AppModule } from './app/app.module';
 
         platformBrowserDynamic()
-          .bootstrapModule(AppModule, {
-            ngZoneEventCoalescing: true
-          })
+          .bootstrapModule(AppModule, { ngZoneEventCoalescing: true })
           .catch((err) => console.error(err));
         "
       `);
@@ -1542,9 +1534,7 @@ describe('app', () => {
         import { AppModule } from './app/app.module';
 
         platformBrowserDynamic()
-          .bootstrapModule(AppModule, {
-            ngZoneEventCoalescing: true
-          })
+          .bootstrapModule(AppModule, { ngZoneEventCoalescing: true })
           .catch((err) => console.error(err));
         "
       `);
@@ -1698,6 +1688,68 @@ describe('app', () => {
             expect(app.title).toEqual('my-app');
           });
         });
+        "
+      `);
+    });
+
+    it('should setup zone.js correctly by default for a standalone application in versions lower than v21', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~20.3.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', {
+        standalone: true,
+        skipFormat: true,
+      });
+
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets.build.options.polyfills).toStrictEqual([
+        'zone.js',
+      ]);
+      expect(appTree.read('my-app/src/app/app.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+        import { provideRouter } from '@angular/router';
+        import { appRoutes } from './app.routes';
+
+        export const appConfig: ApplicationConfig = {
+          providers: [
+            provideBrowserGlobalErrorListeners(),
+            provideZoneChangeDetection({ eventCoalescing: true }),
+            provideRouter(appRoutes)
+          ]
+        };
+        "
+      `);
+    });
+
+    it('should setup zone.js correctly by default for a non-standalone application in versions lower than v21', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~20.3.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { skipFormat: true });
+
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets.build.options.polyfills).toStrictEqual([
+        'zone.js',
+      ]);
+      expect(appTree.read('my-app/src/main.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { platformBrowser } from '@angular/platform-browser';
+        import { AppModule } from './app/app-module';
+
+        platformBrowser()
+          .bootstrapModule(AppModule, { ngZoneEventCoalescing: true })
+          .catch((err) => console.error(err));
         "
       `);
     });
