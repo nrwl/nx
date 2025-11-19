@@ -17,12 +17,50 @@ describe('addJest', () => {
     });
   });
 
-  it('generate the test setup file', async () => {
+  it('generate the test setup file for a Zoneless project', async () => {
     await addJest(tree, {
       name: 'app1',
       projectRoot: 'app1',
       skipPackageJson: false,
       strict: false,
+      zoneless: true,
+    });
+
+    expect(tree.read('app1/src/test-setup.ts', 'utf-8')).toMatchInlineSnapshot(`
+      "import { setupZonelessTestEnv } from 'jest-preset-angular/setup-env/zoneless';
+
+      setupZonelessTestEnv();
+      "
+    `);
+  });
+
+  it('generate the test setup file with strict options for a Zoneless project', async () => {
+    await addJest(tree, {
+      name: 'app1',
+      projectRoot: 'app1',
+      skipPackageJson: false,
+      strict: true,
+      zoneless: true,
+    });
+
+    expect(tree.read('app1/src/test-setup.ts', 'utf-8')).toMatchInlineSnapshot(`
+      "import { setupZonelessTestEnv } from 'jest-preset-angular/setup-env/zoneless';
+
+      setupZonelessTestEnv({
+        errorOnUnknownElements: true,
+        errorOnUnknownProperties: true
+      });
+      "
+    `);
+  });
+
+  it('generate the test setup file for a Zone-based project', async () => {
+    await addJest(tree, {
+      name: 'app1',
+      projectRoot: 'app1',
+      skipPackageJson: false,
+      strict: false,
+      zoneless: false,
     });
 
     expect(tree.read('app1/src/test-setup.ts', 'utf-8')).toMatchInlineSnapshot(`
@@ -33,12 +71,13 @@ describe('addJest', () => {
     `);
   });
 
-  it('generate the test setup file with strict', async () => {
+  it('generate the test setup file with strict options for a Zone-based project', async () => {
     await addJest(tree, {
       name: 'app1',
       projectRoot: 'app1',
       skipPackageJson: false,
       strict: true,
+      zoneless: false,
     });
 
     expect(tree.read('app1/src/test-setup.ts', 'utf-8')).toMatchInlineSnapshot(`

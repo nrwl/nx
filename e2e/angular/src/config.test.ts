@@ -66,7 +66,6 @@ const angularV1Json = (appName: string) => `{
             "outputPath": "dist${appName}",
             "index": "${appName}/src/index.html",
             "main": "${appName}/src/main.ts",
-            "polyfills": ["zone.js"],
             "tsConfig": "${appName}/tsconfig.app.json",
             "assets": ["${appName}/src/favicon.ico", "${appName}/src/assets"],
             "styles": ["${appName}/src/styles.css"],

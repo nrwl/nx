@@ -25,12 +25,14 @@ export async function updateSsrSetup(
     port,
     standalone,
     typescriptConfiguration,
+    zoneless,
     skipPackageJson,
   }: {
     appName: string;
     port: number;
     standalone: boolean;
     typescriptConfiguration: boolean;
+    zoneless: boolean;
     skipPackageJson?: boolean;
   }
 ) {
@@ -58,7 +60,9 @@ export async function updateSsrSetup(
     browserBundleOutput,
     serverBundleOutput,
     standalone,
+    zoneless,
     useDefaultImport: angularMajorVersion >= 21,
+    angularMajorVersion,
     tmpl: '',
   });
 

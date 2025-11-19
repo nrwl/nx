@@ -37,7 +37,9 @@ export async function updateSsrSetup(
     appName,
     browserBundleOutput: project.targets.build.options.outputPath,
     standalone: options.standalone,
+    zoneless: options.zoneless,
     useDefaultImport: angularMajorVersion >= 21,
+    angularMajorVersion,
     tmpl: '',
   });
 

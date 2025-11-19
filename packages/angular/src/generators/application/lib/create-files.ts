@@ -58,6 +58,7 @@ export async function createFiles(
     componentType: componentType ? names(componentType).className : '',
     componentFileSuffix,
     moduleTypeSeparator,
+    zoneless: options.zoneless,
     connectCloudUrl,
     tutorialUrl: options.standalone
       ? 'https://nx.dev/getting-started/tutorials/angular-standalone-tutorial?utm_source=nx-project'

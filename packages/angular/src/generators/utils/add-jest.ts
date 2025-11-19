@@ -12,6 +12,7 @@ export type AddJestOptions = {
   projectRoot: string;
   skipPackageJson: boolean;
   strict: boolean;
+  zoneless: boolean;
   addPlugin?: boolean;
 };
 
@@ -63,17 +64,29 @@ export async function addJest(
     'src',
     'test-setup.ts'
   );
-  if (options.strict && tree.exists(setupFile)) {
-    const contents = tree.read(setupFile, 'utf-8');
-    tree.write(
-      setupFile,
-      contents.replace(
-        'setupZoneTestEnv();',
-        `setupZoneTestEnv({
+
+  if (options.zoneless) {
+    tree.write(setupFile, getZonelessSetupFile(options.strict));
+  } else {
+    tree.write(setupFile, getZoneSetupFile(options.strict));
+  }
+}
+
+const strictTestEnvOptions = `{
   errorOnUnknownElements: true,
   errorOnUnknownProperties: true
-});`
-      )
-    );
-  }
+}`;
+
+function getZonelessSetupFile(strict: boolean): string {
+  return `import { setupZonelessTestEnv } from 'jest-preset-angular/setup-env/zoneless';
+
+setupZonelessTestEnv(${strict ? strictTestEnvOptions : ''});
+`;
+}
+
+function getZoneSetupFile(strict: boolean): string {
+  return `import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
+
+setupZoneTestEnv(${strict ? strictTestEnvOptions : ''});
+`;
 }

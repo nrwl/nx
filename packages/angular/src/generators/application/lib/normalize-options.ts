@@ -4,6 +4,7 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 
@@ -49,6 +50,9 @@ export async function normalizeOptions(
   const addPlugin =
     options.addPlugin ?? (!arePluginsExplicitlyDisabled(host) && isRspack);
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
+  const zonelessDefaultValue = angularMajorVersion >= 21 ? true : false;
+
   // Set defaults and then overwrite with user options
   return {
     addPlugin,
@@ -78,5 +82,6 @@ export async function normalizeOptions(
     ),
     ssr: options.ssr ?? false,
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
+    zoneless: options.zoneless ?? zonelessDefaultValue,
   };
 }
