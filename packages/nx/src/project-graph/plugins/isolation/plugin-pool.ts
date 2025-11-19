@@ -67,7 +67,7 @@ export async function loadRemoteNxPlugin(
   const { name, pluginPath, shouldRegisterTSTranspiler } =
     await resolveNxPlugin(moduleName, root, getNxRequirePaths(root));
 
-  const { worker, socket } = await startPluginWorker();
+  const { worker, socket } = await startPluginWorker(name);
 
   // Register plugin worker as a subprocess of the main CLI
   // This allows metrics collection when the daemon is not used
@@ -411,7 +411,7 @@ function registerPendingPromise(
 
 global.nxPluginWorkerCount ??= 0;
 
-async function startPluginWorker() {
+async function startPluginWorker(name: string) {
   // this should only really be true when running unit tests within
   // the Nx repo. We still need to start the worker in this case,
   // but its typescript.
@@ -441,6 +441,7 @@ async function startPluginWorker() {
       ...(isWorkerTypescript ? ['--require', 'ts-node/register'] : []),
       workerPath,
       ipcPath,
+      name,
     ],
     {
       stdio: 'inherit',
