@@ -53,6 +53,7 @@ import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
 import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+import { findMatchingProjects } from '../../utils/find-matching-projects';
 
 import { createTaskHasher } from '../../hasher/create-task-hasher';
 import { ProjectGraphError } from '../../project-graph/error-types';
@@ -351,19 +352,29 @@ export async function generateGraph(
     affectedProjects = [];
   }
 
-  if (args.exclude) {
-    const invalidExcludes: string[] = [];
+  let excludePatterns: string[] = [];
+  if (args.exclude && args.exclude.length > 0) {
+    try {
+      // Convert projects array to the format expected by findMatchingProjects
+      const projectsMap = projects.reduce((acc, project) => {
+        acc[project.name] = project;
+        return acc;
+      }, {} as Record<string, ProjectGraphProjectNode>);
 
-    args.exclude.forEach((project) => {
-      if (!projectExists(projects, project)) {
-        invalidExcludes.push(project);
+      // Use findMatchingProjects to expand patterns (supports globs, tags, directories, etc.)
+      excludePatterns = findMatchingProjects(args.exclude, projectsMap);
+
+      // If no projects matched any of the exclude patterns, show a warning
+      if (excludePatterns.length === 0) {
+        output.warn({
+          title: `No projects matched the following exclude patterns:`,
+          bodyLines: args.exclude,
+        });
       }
-    });
-
-    if (invalidExcludes.length > 0) {
+    } catch (e) {
       output.error({
-        title: `The following projects provided to --exclude do not exist:`,
-        bodyLines: invalidExcludes,
+        title: `Invalid exclude pattern:`,
+        bodyLines: [e.message],
       });
       process.exit(1);
     }
@@ -374,11 +385,7 @@ export async function generateGraph(
     'utf-8'
   );
 
-  prunedGraph = filterGraph(
-    prunedGraph,
-    args.focus || null,
-    args.exclude || []
-  );
+  prunedGraph = filterGraph(prunedGraph, args.focus || null, excludePatterns);
 
   if (args.print || args.file === 'stdout') {
     console.log(
@@ -435,7 +442,7 @@ export async function generateGraph(
       );
 
       const environmentJs = buildEnvironmentJs(
-        args.exclude || [],
+        excludePatterns,
         args.watch,
         !!args.file && args.file.endsWith('html') ? 'build' : 'serve',
         projectGraphClientResponse,
@@ -481,7 +488,7 @@ export async function generateGraph(
     process.exit(0);
   } else {
     const environmentJs = buildEnvironmentJs(
-      args.exclude || [],
+      excludePatterns,
       args.watch,
       !!args.file && args.file.endsWith('html') ? 'build' : 'serve'
     );
@@ -498,7 +505,7 @@ export async function generateGraph(
         affectedProjects,
         args.focus,
         args.groupByFolder,
-        args.exclude
+        excludePatterns
       );
       app = result.app;
       url = result.url;
@@ -624,7 +631,11 @@ async function startServer(
   }
 
   const { projectGraphClientResponse, sourceMapResponse } =
-    await createProjectGraphAndSourceMapClientResponse(affected);
+    await createProjectGraphAndSourceMapClientResponse(
+      affected,
+      focus,
+      exclude
+    );
 
   currentProjectGraphClientResponse = projectGraphClientResponse;
   currentProjectGraphClientResponse.focus = focus;
@@ -824,7 +835,11 @@ function createFileWatcher() {
         output.note({ title: 'Recalculating project graph...' });
 
         const { projectGraphClientResponse, sourceMapResponse } =
-          await createProjectGraphAndSourceMapClientResponse();
+          await createProjectGraphAndSourceMapClientResponse(
+            [],
+            currentProjectGraphClientResponse.focus,
+            currentProjectGraphClientResponse.exclude
+          );
 
         if (
           projectGraphClientResponse.hash !==
@@ -861,7 +876,9 @@ function createFileWatcher() {
 }
 
 async function createProjectGraphAndSourceMapClientResponse(
-  affected: string[] = []
+  affected: string[] = [],
+  focus: string = null,
+  exclude: string[] = []
 ): Promise<{
   projectGraphClientResponse: ProjectGraphClientResponse;
   sourceMapResponse: ConfigurationSourceMaps;
@@ -905,6 +922,10 @@ async function createProjectGraphAndSourceMapClientResponse(
   }
 
   let graph = pruneExternalNodes(projectGraph);
+
+  // Apply focus and exclude filters
+  graph = filterGraph(graph, focus, exclude);
+
   const fileMap: ProjectFileMap =
     readFileMapCache()?.fileMap.projectFileMap || {};
   performance.mark('project graph watch calculation:end');
