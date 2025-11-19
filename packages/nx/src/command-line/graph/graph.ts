@@ -355,14 +355,8 @@ export async function generateGraph(
   let excludePatterns: string[] = [];
   if (args.exclude && args.exclude.length > 0) {
     try {
-      // Convert projects array to the format expected by findMatchingProjects
-      const projectsMap = projects.reduce((acc, project) => {
-        acc[project.name] = project;
-        return acc;
-      }, {} as Record<string, ProjectGraphProjectNode>);
-
       // Use findMatchingProjects to expand patterns (supports globs, tags, directories, etc.)
-      excludePatterns = findMatchingProjects(args.exclude, projectsMap);
+      excludePatterns = findMatchingProjects(args.exclude, prunedGraph.nodes);
 
       // If no projects matched any of the exclude patterns, show a warning
       if (excludePatterns.length === 0) {
