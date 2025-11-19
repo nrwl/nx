@@ -43,7 +43,7 @@ describe('Remix Application', () => {
       expect(
         tree.read('tests/routes/_index.spec.tsx', 'utf-8')
       ).toMatchSnapshot();
-      expect(tree.read('vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('vite.config.mts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
     });
 
