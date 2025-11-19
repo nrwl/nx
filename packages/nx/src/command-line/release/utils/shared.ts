@@ -2,8 +2,14 @@ import * as chalk from 'chalk';
 import { prerelease } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
 import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
-import { WholeFileChange } from '../../../project-graph/file-utils';
+import {
+  calculateFileChanges,
+  Change,
+  DeletedFileChange,
+  WholeFileChange,
+} from '../../../project-graph/file-utils';
 import { interpolate } from '../../../tasks-runner/utils';
+import type { NxArgs } from '../../../utils/command-line-utils';
 import { output } from '../../../utils/output';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { GitCommit, gitAdd, gitCommit } from './git';
@@ -394,11 +400,11 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
   > = new Map();
 
   for (const commit of commits) {
-    // Convert affectedFiles to FileChange[] format
-    const touchedFiles = commit.affectedFiles.map((f) => ({
-      file: f,
-      getChanges: () => [new WholeFileChange()],
-    }));
+    // Convert affectedFiles to FileChange[] format with proper diff computation
+    const touchedFiles = calculateFileChanges(commit.affectedFiles, {
+      base: `${commit.shortHash}^`,
+      head: commit.shortHash,
+    } as NxArgs);
 
     // Use the same affected detection logic as `nx affected`
     const affectedGraph = await filterAffected(projectGraph, touchedFiles);
