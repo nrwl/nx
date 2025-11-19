@@ -1,8 +1,14 @@
+<%_ if (!zoneless && angularMajorVersion < 21) { _%>
 import 'zone.js/node';
 
+<%_ } _%>
 import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
+<%_ if (useDefaultImport) { _%>
+import express from 'express';
+<%_ } else { _%>
 import * as express from 'express';
+<%_ } _%>
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import bootstrap from './main.server';
