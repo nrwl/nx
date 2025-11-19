@@ -2,6 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { generateFiles, readProjectConfiguration } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
+import { isZonelessApp } from '../../../utils/zoneless';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 import { DEFAULT_BROWSER_DIR } from './constants';
@@ -38,11 +39,14 @@ export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
   }
 
   const sourceRoot = getProjectSourceRoot(project, tree);
+  const zoneless = isZonelessApp(project);
 
   generateFiles(tree, pathToFiles, sourceRoot, {
     ...options,
     browserDistDirectory,
+    zoneless,
     useDefaultImport: angularMajorVersion >= 21,
+    angularMajorVersion,
     tpl: '',
   });
 }

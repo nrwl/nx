@@ -48,9 +48,7 @@ describe('setupSSR', () => {
         import { AppModule } from './app/app-module';
 
         platformBrowser()
-          .bootstrapModule(AppModule, {
-            ngZoneEventCoalescing: true,
-          })
+          .bootstrapModule(AppModule)
           .catch((err) => console.error(err));
         "
       `);
@@ -354,9 +352,7 @@ describe('setupSSR', () => {
         import { AppModule } from './app/app-module';
 
         platformBrowser()
-          .bootstrapModule(AppModule, {
-            ngZoneEventCoalescing: true
-          })
+          .bootstrapModule(AppModule)
           .catch((err) => console.error(err));
         "
       `);
@@ -420,6 +416,23 @@ describe('setupSSR', () => {
       `);
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(nxJson.targetDefaults.server.cache).toBe(true);
+    });
+
+    it('should not import from `zone.js/node` in the server file even when the app is not zoneless', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        standalone: false,
+        bundler: 'webpack',
+        zoneless: false,
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1' });
+
+      expect(tree.read('app1/src/server.ts', 'utf-8')).not.toContain(
+        "import 'zone.js/node';"
+      );
     });
 
     it('should create the files correctly for ssr when app is standalone', async () => {
@@ -616,7 +629,7 @@ describe('setupSSR', () => {
     // ASSERT
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+      "import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
       import { provideRouter } from '@angular/router';
       import { appRoutes } from './app.routes';
       import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
@@ -624,7 +637,6 @@ describe('setupSSR', () => {
       export const appConfig: ApplicationConfig = {
         providers: [provideClientHydration(withEventReplay()),
           provideBrowserGlobalErrorListeners(),
-          provideZoneChangeDetection({ eventCoalescing: true }),
           provideRouter(appRoutes)
         ]
       };
@@ -702,14 +714,13 @@ describe('setupSSR', () => {
 
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+      "import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
       import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
       import { appRoutes } from './app.routes';
 
       export const appConfig: ApplicationConfig = {
         providers: [
           provideBrowserGlobalErrorListeners(),
-          provideZoneChangeDetection({ eventCoalescing: true }),
           provideRouter(appRoutes, withEnabledBlockingInitialNavigation())
         ]
       };
@@ -1070,6 +1081,25 @@ describe('setupSSR', () => {
         export default bootstrap;
         "
         `);
+    });
+
+    it('should import from `zone.js/node` in the server file for the browser builder in angular versions lower than v21', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { '@angular/core': '~20.3.0' },
+      }));
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      expect(tree.read('app1/src/server.ts', 'utf-8')).toContain(
+        "import 'zone.js/node';"
+      );
     });
   });
 });

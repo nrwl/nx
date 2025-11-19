@@ -83,7 +83,6 @@ describe('lib', () => {
     expect(dependencies['@angular/router']).toBe(angularVersion);
     expect(dependencies['rxjs']).toBeDefined();
     expect(dependencies['tslib']).toBeDefined();
-    expect(dependencies['zone.js']).toBeDefined();
     expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
     expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
     expect(devDependencies['@angular/language-service']).toBe(angularVersion);
@@ -93,6 +92,8 @@ describe('lib', () => {
     expect(devDependencies['@angular/build']).toBeUndefined();
     // codelyzer should no longer be there by default
     expect(devDependencies['codelyzer']).toBeUndefined();
+    // zone.js should not be installed by default
+    expect(dependencies['zone.js']).toBeUndefined();
   });
 
   it('should add @angular/build when using vitest', async () => {
@@ -1543,7 +1544,7 @@ describe('lib', () => {
 
             fixture = TestBed.createComponent(MyLibComponent);
             component = fixture.componentInstance;
-            fixture.detectChanges();
+            await fixture.whenStable();
           });
 
           it('should create', () => {
@@ -1965,7 +1966,7 @@ describe('lib', () => {
 
             fixture = TestBed.createComponent(MyLibComponent);
             component = fixture.componentInstance;
-            fixture.detectChanges();
+            await fixture.whenStable();
           });
 
           it('should create', () => {

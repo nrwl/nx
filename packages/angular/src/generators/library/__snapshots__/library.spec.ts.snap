@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`lib --standalone should generate a library with a standalone component and have it flat 1`] = `"export * from './lib/my-lib';"`;
 
@@ -30,7 +30,7 @@ describe('MyLib', () => {
 
     fixture = TestBed.createComponent(MyLib);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {
@@ -74,7 +74,7 @@ describe('MyLib', () => {
 
     fixture = TestBed.createComponent(MyLib);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {
@@ -124,7 +124,7 @@ describe('MyLib', () => {
 
     fixture = TestBed.createComponent(MyLib);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {
@@ -196,7 +196,7 @@ describe('MyLib', () => {
 
     fixture = TestBed.createComponent(MyLib);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {
@@ -250,7 +250,7 @@ describe('MyLib', () => {
 
     fixture = TestBed.createComponent(MyLib);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {
@@ -362,7 +362,7 @@ describe('MyLib', () => {
 
     fixture = TestBed.createComponent(MyLib);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {
@@ -402,7 +402,7 @@ describe('MyLib', () => {
 
     fixture = TestBed.createComponent(MyLib);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {

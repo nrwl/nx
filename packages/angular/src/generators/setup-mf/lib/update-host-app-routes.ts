@@ -5,15 +5,17 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
+import { isZonelessApp } from '../../../utils/zoneless';
 import type { NormalizedOptions } from '../schema';
 
 export function updateHostAppRoutes(tree: Tree, options: NormalizedOptions) {
-  const { sourceRoot } = readProjectConfiguration(tree, options.appName);
+  const project = readProjectConfiguration(tree, options.appName);
   const { appComponentInfo, nxWelcomeComponentInfo } = options;
+  const zoneless = isZonelessApp(project);
 
   tree.write(
     joinPathFragments(
-      sourceRoot,
+      project.sourceRoot,
       'app',
       `${appComponentInfo.extensionlessFileName}.html`
     ),
@@ -25,18 +27,18 @@ export function updateHostAppRoutes(tree: Tree, options: NormalizedOptions) {
   );
 
   let pathToHostRootRoutingFile = joinPathFragments(
-    sourceRoot,
+    project.sourceRoot,
     'app/app.routes.ts'
   );
   if (!tree.exists(pathToHostRootRoutingFile)) {
     pathToHostRootRoutingFile = joinPathFragments(
-      sourceRoot,
+      project.sourceRoot,
       'app/app-routing.module.ts'
     );
   }
   if (!tree.exists(pathToHostRootRoutingFile)) {
     pathToHostRootRoutingFile = joinPathFragments(
-      sourceRoot,
+      project.sourceRoot,
       'app/app-routing-module.ts'
     );
   }
@@ -61,7 +63,7 @@ ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
   generateFiles(
     tree,
     joinPathFragments(__dirname, '../files/host-files'),
-    joinPathFragments(sourceRoot, 'app'),
+    joinPathFragments(project.sourceRoot, 'app'),
     {
       appName: options.appName,
       standalone: options.standalone,
@@ -69,6 +71,7 @@ ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
       appSymbolName: appComponentInfo.symbolName,
       nxWelcomeFileName: nxWelcomeComponentInfo.extensionlessFileName,
       nxWelcomeSymbolName: nxWelcomeComponentInfo.symbolName,
+      zoneless,
       tmpl: '',
     }
   );
