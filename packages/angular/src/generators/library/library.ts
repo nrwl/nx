@@ -69,7 +69,7 @@ export async function libraryGenerator(
   if (!libraryOptions.skipPackageJson) {
     // if zone.js is not installed, we'll never install it as a dependency
     // from the library generator
-    ensureAngularDependencies(tree, /*zoneless*/ false);
+    ensureAngularDependencies(tree, /*zoneless*/ true);
   }
 
   const project = await addProject(tree, libraryOptions);
