@@ -40,6 +40,7 @@ import { FileLock, IS_WASM } from '../native';
 import { join } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { DelayedSpinner } from '../utils/delayed-spinner';
+import { getCallSites } from '../utils/call-sites';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -104,20 +105,7 @@ export function readProjectsConfigurationFromProjectGraph(
 }
 
 export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
-  const stackframes = getStackFrames();
-  if (
-    stackframes.some(
-      (f) =>
-        f.getFunctionName() === buildProjectGraphAndSourceMapsWithoutDaemon.name
-    )
-  ) {
-    throw new Error(
-      `Project graph construction cannot be performed due to a loop detected in the call stack. This can happen if 'createProjectGraphAsync' is called directly or indirectly during project graph construction.\n` +
-        'To avoid this, you can add a check against "global.NX_GRAPH_CREATION" before calling "createProjectGraphAsync".\n' +
-        'Call stack:\n' +
-        stackframes.join('\n')
-    );
-  }
+  preventRecursionInGraphConstruction();
 
   global.NX_GRAPH_CREATION = true;
   const nxJson = readNxJson();
@@ -428,16 +416,30 @@ export async function createProjectGraphAndSourceMapsAsync(
   }
 }
 
-function getStackFrames() {
-  const prepareStackTraceBackup = Error.prepareStackTrace;
-  Error.prepareStackTrace = (_, stackTraces: NodeJS.CallSite[]) => {
-    return stackTraces;
-  };
+export function preventRecursionInGraphConstruction() {
+  // preventRecursionInGraphConstruction -> callee -> ...
+  // slice removes preventRecursionInGraphConstruction and its caller,
+  // which is useful when using this function to detect recursion in buildProjectGraphAndSourceMapsWithoutDaemon
+  const stackframes = getCallSites().slice(2);
 
-  const trace = new Error().stack as any as NodeJS.CallSite[];
-  Error.prepareStackTrace = prepareStackTraceBackup;
-  trace.reverse();
-  trace.pop(); // remove getStackFrames
-  trace.pop(); // remove caller of getStackFrames
-  return trace; // return stack up to what called getStackFrames
+  if (
+    stackframes.some((f) => {
+      const functionName = f.getFunctionName();
+      const fileName = f.getFileName() || '';
+      return (
+        functionName === buildProjectGraphAndSourceMapsWithoutDaemon.name ||
+        (['createNodes', 'createDependencies', 'createMetadata'].includes(
+          functionName || ''
+        ) &&
+          fileName.endsWith('plugin-worker.js'))
+      );
+    })
+  ) {
+    throw new Error(
+      `Project graph construction cannot be performed due to a loop detected in the call stack. This can happen if 'createProjectGraphAsync' is called directly or indirectly during project graph construction.\n` +
+        'To avoid this, you can add a check against "global.NX_GRAPH_CREATION" before calling "createProjectGraphAsync".\n' +
+        'Call stack:\n' +
+        stackframes.join('\n')
+    );
+  }
 }

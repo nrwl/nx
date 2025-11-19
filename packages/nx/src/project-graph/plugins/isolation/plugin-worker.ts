@@ -104,7 +104,7 @@ const server = createServer((socket) => {
             };
           }
         },
-        createNodes: async ({ configFiles, context, tx }) => {
+        createNodes: async function createNodes({ configFiles, context, tx }) {
           try {
             const result = await plugin.createNodes[1](configFiles, context);
             return {
@@ -122,7 +122,7 @@ const server = createServer((socket) => {
             };
           }
         },
-        createDependencies: async ({ context, tx }) => {
+        createDependencies: async function createDependencies({ context, tx }) {
           try {
             const result = await plugin.createDependencies(context);
             return {
@@ -140,7 +140,7 @@ const server = createServer((socket) => {
             };
           }
         },
-        createMetadata: async ({ graph, context, tx }) => {
+        createMetadata: async function createMetadata({ graph, context, tx }) {
           try {
             const result = await plugin.createMetadata(graph, context);
             return {
