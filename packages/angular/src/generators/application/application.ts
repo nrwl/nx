@@ -119,6 +119,8 @@ export async function applicationGenerator(
     });
 
     if (options.ssr) {
+      const { major: angularMajorVersion } =
+        getInstalledAngularVersionInfo(tree);
       generateFiles(
         tree,
         joinPathFragments(__dirname, './files/rspack-ssr'),
@@ -129,6 +131,9 @@ export async function applicationGenerator(
             options.outputPath,
             'browser'
           ),
+          zoneless: options.zoneless,
+          useDefaultImport: angularMajorVersion >= 21,
+          angularMajorVersion,
           tmpl: '',
         }
       );

@@ -1,5 +1,7 @@
+<%_ if (!zoneless && angularMajorVersion < 21) { _%>
 import 'zone.js/node';
 
+<%_ } _%>
 import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
 <%_ if (useDefaultImport) { _%>

@@ -82,11 +82,9 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack and
 `;
 
 exports[`app --minimal should generate a correct setup when --bundler=rspack and ssr 2`] = `
-"import 'zone.js/node';
-
-import { APP_BASE_HREF } from '@angular/common';
+"import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
+import express from 'express';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import bootstrap from './main.server';

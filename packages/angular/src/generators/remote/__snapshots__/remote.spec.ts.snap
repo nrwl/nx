@@ -46,9 +46,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 3`] = `
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 4`] = `
-"import 'zone.js/node';
-
-import { APP_BASE_HREF } from '@angular/common';
+"import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
 import express from 'express';
 import cors from 'cors';
@@ -273,9 +271,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 4`] = `
-"import 'zone.js/node';
-
-import { APP_BASE_HREF } from '@angular/common';
+"import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
 import express from 'express';
 import cors from 'cors';

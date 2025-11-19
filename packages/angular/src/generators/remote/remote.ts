@@ -20,11 +20,13 @@ import { setupMf } from '../setup-mf/setup-mf';
 import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 import { assertRspackIsCSR } from '../utils/assert-mf-utils';
 import { assertNotUsingTsSolutionSetup } from '../utils/validations';
-import { findNextAvailablePort, updateSsrSetup } from './lib';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
+import { findNextAvailablePort, updateSsrSetup, validateOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function remote(tree: Tree, schema: Schema) {
   assertNotUsingTsSolutionSetup(tree, 'remote');
+  validateOptions(tree, schema);
   // TODO: Replace with Rspack when confidence is high enough
   schema.bundler ??= 'webpack';
   const isRspack = schema.bundler === 'rspack';
@@ -33,6 +35,8 @@ export async function remote(tree: Tree, schema: Schema) {
     schema.ssr ?? false,
     schema.serverRouting ?? false
   );
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  schema.zoneless ??= angularMajorVersion >= 21 ? true : false;
 
   const { typescriptConfiguration = true, ...options }: Schema = schema;
   options.standalone = options.standalone ?? true;
@@ -111,6 +115,7 @@ export async function remote(tree: Tree, schema: Schema) {
       typescriptConfiguration,
       standalone: options.standalone,
       skipPackageJson: options.skipPackageJson,
+      zoneless: options.zoneless,
     });
     installTasks.push(ssrInstallTask);
   }

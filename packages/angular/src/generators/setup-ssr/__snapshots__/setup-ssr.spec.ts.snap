@@ -270,9 +270,7 @@ exports[`setupSSR with browser builder should create the files correctly for ssr
 `;
 
 exports[`setupSSR with browser builder should create the files correctly for ssr 2`] = `
-"import 'zone.js/node';
-
-import { APP_BASE_HREF } from '@angular/common';
+"import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
 import express from 'express';
 import { existsSync } from 'node:fs';
@@ -370,9 +368,7 @@ exports[`setupSSR with browser builder should create the files correctly for ssr
 `;
 
 exports[`setupSSR with browser builder should create the files correctly for ssr when app is standalone 2`] = `
-"import 'zone.js/node';
-
-import { APP_BASE_HREF } from '@angular/common';
+"import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
 import express from 'express';
 import { existsSync } from 'node:fs';

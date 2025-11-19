@@ -27,5 +27,6 @@ export interface Schema {
   standalone?: boolean;
   ssr?: boolean;
   serverRouting?: boolean;
+  zoneless?: boolean;
   typescriptConfiguration?: boolean;
 }
