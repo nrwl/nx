@@ -30,7 +30,7 @@ describe('create-nx-workspace --preset=react', () => {
 
     checkFilesExist('package.json');
     checkFilesExist('project.json');
-    checkFilesExist('vite.config.ts');
+    checkFilesExist('vite.config.mts');
     checkFilesDoNotExist('tsconfig.base.json');
     expectCodeIsFormatted();
   });

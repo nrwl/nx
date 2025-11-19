@@ -35,6 +35,7 @@ export async function addVite(
       inSourceTests: options.inSourceTests,
       imports: [`import vue from '@vitejs/plugin-vue'`],
       plugins: ['vue()'],
+      useEsmExtension: true,
     },
     false
   );
@@ -76,6 +77,7 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
       inSourceTests: options.inSourceTests,
       imports: [`import vue from '@vitejs/plugin-vue'`],
       plugins: ['vue()'],
+      useEsmExtension: true,
     },
     true
   );

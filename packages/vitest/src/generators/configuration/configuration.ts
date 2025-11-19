@@ -166,6 +166,7 @@ getTestBed().initTestEnvironment(
           ],
           plugins: ['react()'],
           coverageProvider: schema.coverageProvider,
+          useEsmExtension: true,
         },
         true
       );
@@ -176,6 +177,7 @@ getTestBed().initTestEnvironment(
           ...schema,
           includeVitest: true,
           includeLib: getProjectType(tree, root, projectType) === 'library',
+          useEsmExtension: true,
         },
         true
       );

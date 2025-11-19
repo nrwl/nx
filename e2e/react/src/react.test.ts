@@ -39,7 +39,7 @@ describe('React Applications', () => {
       );
 
       // Library generated with Vite
-      checkFilesExist(`libs/${libName}/vite.config.ts`);
+      checkFilesExist(`libs/${libName}/vite.config.mts`);
 
       const mainPath = `apps/${appName}/src/main.tsx`;
       updateFile(

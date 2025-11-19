@@ -94,7 +94,7 @@ describe('@nx/vite/plugin', () => {
         );
 
         updateFile(
-          `apps/${myApp}/vite.config.ts`,
+          `apps/${myApp}/vite.config.mts`,
           `/// <reference types='vitest' />
           import { defineConfig } from 'vite';
           import react from '@vitejs/plugin-react';

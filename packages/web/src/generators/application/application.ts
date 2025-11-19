@@ -380,6 +380,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         includeLib: false,
         includeVitest: options.unitTestRunner === 'vitest',
         inSourceTests: options.inSourceTests,
+        useEsmExtension: true,
       },
       false
     );
@@ -409,6 +410,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         includeLib: false,
         includeVitest: true,
         inSourceTests: options.inSourceTests,
+        useEsmExtension: true,
       },
       true
     );

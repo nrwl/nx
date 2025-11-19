@@ -71,9 +71,9 @@ describe('@nx/vite:configuration', () => {
     });
 
     it('should create vite.config file at the root of the app', () => {
-      expect(tree.exists('apps/my-test-react-app/vite.config.ts')).toBe(true);
+      expect(tree.exists('apps/my-test-react-app/vite.config.mts')).toBe(true);
       expect(
-        tree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
+        tree.read('apps/my-test-react-app/vite.config.mts', 'utf-8')
       ).toMatchSnapshot();
     });
   });
@@ -116,9 +116,9 @@ describe('@nx/vite:configuration', () => {
     });
 
     it('should create vite.config file at the root of the app', () => {
-      expect(tree.exists('apps/my-test-web-app/vite.config.ts')).toBe(true);
+      expect(tree.exists('apps/my-test-web-app/vite.config.mts')).toBe(true);
       expect(
-        tree.read('apps/my-test-web-app/vite.config.ts', 'utf-8')
+        tree.read('apps/my-test-web-app/vite.config.mts', 'utf-8')
       ).toMatchSnapshot();
     });
   });
@@ -194,11 +194,11 @@ describe('@nx/vite:configuration', () => {
     });
     it('should create a vitest configuration if "includeVitest" is true', () => {
       const viteConfig = tree
-        .read('apps/my-test-react-app/vite.config.ts')
+        .read('apps/my-test-react-app/vite.config.mts')
         .toString();
       expect(viteConfig).toContain('test');
       expect(
-        tree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
+        tree.read('apps/my-test-react-app/vite.config.mts', 'utf-8')
       ).toMatchSnapshot();
     });
   });
@@ -217,7 +217,7 @@ describe('@nx/vite:configuration', () => {
         project: 'react-lib-nonb-jest',
       });
       const viteConfig = tree.read(
-        'libs/react-lib-nonb-jest/vite.config.ts',
+        'libs/react-lib-nonb-jest/vite.config.mts',
         'utf-8'
       );
       expect(viteConfig).toMatchSnapshot();
@@ -232,11 +232,11 @@ describe('@nx/vite:configuration', () => {
         includeVitest: true,
       });
       expect(
-        tree.read('libs/react-lib-nonb-jest/vite.config.ts', 'utf-8')
+        tree.read('libs/react-lib-nonb-jest/vite.config.mts', 'utf-8')
       ).toMatchSnapshot();
     });
 
-    it('should set up non buildable library which already has vite.config.ts correctly', async () => {
+    it('should set up non buildable library which already has vite.config.mts correctly', async () => {
       const { Confirm } = require('enquirer');
       const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
       confirmSpy.mockResolvedValue(true);
@@ -251,7 +251,7 @@ describe('@nx/vite:configuration', () => {
           includeVitest: true,
         });
         expect(
-          tree.read('libs/react-lib-nonb-vitest/vite.config.ts', 'utf-8')
+          tree.read('libs/react-lib-nonb-vitest/vite.config.mts', 'utf-8')
         ).toMatchSnapshot();
       } catch (e) {
         throw new Error('Should not throw error');
@@ -284,8 +284,8 @@ describe('@nx/vite:configuration', () => {
         unitTestRunner: 'vitest',
       });
 
-      expect(tree.exists('my-lib/vite.config.ts')).toBeTruthy();
-      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.exists('my-lib/vite.config.mts')).toBeTruthy();
+      expect(tree.read('my-lib/vite.config.mts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
       expect(tree.read('my-lib/tsconfig.lib.json', 'utf-8')).toMatchSnapshot();
       expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
