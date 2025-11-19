@@ -13,6 +13,7 @@ export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
         skipPackageJson: options.skipPackageJson,
         strict: options.strict,
         addPlugin: options.addPlugin,
+        zoneless: options.zoneless,
       });
       break;
     case UnitTestRunner.Vitest:

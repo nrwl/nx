@@ -14,9 +14,6 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack and
   },
   "index": "./src/index.html",
   "browser": "./src/main.ts",
-  "polyfills": [
-    "zone.js"
-  ],
   "tsConfig": "./tsconfig.app.json",
   "assets": [
     {
@@ -174,9 +171,6 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack inc
   },
   "index": "./src/index.html",
   "browser": "./src/main.ts",
-  "polyfills": [
-    "zone.js"
-  ],
   "tsConfig": "./tsconfig.app.json",
   "assets": [
     {
@@ -272,9 +266,9 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome plain'
@@ -332,9 +326,9 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome plain'
@@ -374,9 +368,9 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome plain'
@@ -416,9 +410,9 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome plain'
@@ -445,14 +439,13 @@ bootstrapApplication(App, appConfig).catch((err) =>
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 2`] = `
-"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes)
   ]
 };
@@ -495,9 +488,9 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome standalone'
@@ -519,12 +512,11 @@ bootstrapApplication(App, appConfig).catch((err) =>
 `;
 
 exports[`app --standalone should generate a standalone app correctly without routing 2`] = `
-"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true })
   ]
 };
 "
@@ -558,9 +550,9 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome standalone'
@@ -830,9 +822,9 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome my-app'
@@ -893,9 +885,6 @@ exports[`app nested should create project configs 1`] = `
         ],
         "browser": "my-dir/my-app/src/main.ts",
         "outputPath": "dist/my-dir/my-app",
-        "polyfills": [
-          "zone.js",
-        ],
         "styles": [
           "my-dir/my-app/src/styles.css",
         ],
@@ -1004,9 +993,6 @@ exports[`app not nested should create project configs 1`] = `
         ],
         "browser": "my-app/src/main.ts",
         "outputPath": "dist/my-app",
-        "polyfills": [
-          "zone.js",
-        ],
         "styles": [
           "my-app/src/styles.css",
         ],
@@ -1191,9 +1177,9 @@ describe('AppComponent', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome myapp'

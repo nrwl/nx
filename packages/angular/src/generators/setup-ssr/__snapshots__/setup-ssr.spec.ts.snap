@@ -36,9 +36,6 @@ exports[`setupSSR with application builder should create the files correctly for
     "browser": "app1/src/main.ts",
     "outputMode": "server",
     "outputPath": "dist/app1",
-    "polyfills": [
-      "zone.js",
-    ],
     "server": "app1/src/main.server.ts",
     "ssr": {
       "entry": "app1/src/server.ts",
@@ -160,9 +157,6 @@ exports[`setupSSR with application builder should create the files correctly for
     "browser": "app1/src/main.ts",
     "outputMode": "server",
     "outputPath": "dist/app1",
-    "polyfills": [
-      "zone.js",
-    ],
     "server": "app1/src/main.server.ts",
     "ssr": {
       "entry": "app1/src/server.ts",

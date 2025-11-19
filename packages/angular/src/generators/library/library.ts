@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   installPackagesTask,
   runTasksInSerial,
   Tree,
@@ -66,7 +67,9 @@ export async function libraryGenerator(
   await init(tree, { ...libraryOptions, skipFormat: true });
 
   if (!libraryOptions.skipPackageJson) {
-    ensureAngularDependencies(tree);
+    // if zone.js is not installed, we'll never install it as a dependency
+    // from the library generator
+    ensureAngularDependencies(tree, /*zoneless*/ false);
   }
 
   const project = await addProject(tree, libraryOptions);
@@ -126,6 +129,9 @@ async function addUnitTestRunner(
   host: Tree,
   options: NormalizedSchema['libraryOptions']
 ) {
+  const zoneless =
+    getDependencyVersionFromPackageJson(host, 'zone.js') === null;
+
   switch (options.unitTestRunner) {
     case UnitTestRunner.Jest:
       await addJest(host, {
@@ -133,6 +139,7 @@ async function addUnitTestRunner(
         projectRoot: options.projectRoot,
         skipPackageJson: options.skipPackageJson,
         strict: options.strict,
+        zoneless,
       });
       break;
     case UnitTestRunner.Vitest:

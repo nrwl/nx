@@ -30,9 +30,7 @@ exports[`Host App Generator --ssr should generate the correct files 2`] = `
 import { AppModule } from './app/app-module';
 
 platformBrowser()
-  .bootstrapModule(AppModule, {
-    ngZoneEventCoalescing: true,
-  })
+  .bootstrapModule(AppModule)
   .catch((err) => console.error(err));
 "
 `;
@@ -365,7 +363,6 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 "import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
-  provideZoneChangeDetection,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
@@ -378,7 +375,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideClientHydration(withEventReplay()),
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes),
   ],
 };
@@ -598,7 +594,6 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 "import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
-  provideZoneChangeDetection,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
@@ -611,7 +606,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideClientHydration(withEventReplay()),
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes),
   ],
 };
@@ -708,9 +702,7 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 import { AppModule } from './app/app-module';
 
 platformBrowser()
-  .bootstrapModule(AppModule, {
-    ngZoneEventCoalescing: true,
-  })
+  .bootstrapModule(AppModule)
   .catch((err) => console.error(err));
 "
 `;
@@ -999,7 +991,7 @@ export class App {
 `;
 
 exports[`Host App Generator should generate the correct app component spec file 1`] = `
-"import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+"import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { NxWelcome } from './nx-welcome';
 import { Router, RouterModule } from '@angular/router';
@@ -1029,23 +1021,22 @@ describe('App', () => {
     expect(app.title).toEqual('host');
   });
 
-  it('should render title', fakeAsync(() => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
     const router = TestBed.inject(Router);
-    fixture.ngZone?.run(() => router.navigate(['']));
-    tick();
-    fixture.detectChanges();
+    await router.navigate(['']);
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome host'
     );
-  }));
+  });
 });
 "
 `;
 
 exports[`Host App Generator should generate the correct app component spec file with a directory 1`] = `
-"import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+"import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { NxWelcome } from './nx-welcome';
 import { Router, RouterModule } from '@angular/router';
@@ -1075,17 +1066,16 @@ describe('App', () => {
     expect(app.title).toEqual('dashboard');
   });
 
-  it('should render title', fakeAsync(() => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
     const router = TestBed.inject(Router);
-    fixture.ngZone?.run(() => router.navigate(['']));
-    tick();
-    fixture.detectChanges();
+    await router.navigate(['']);
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome dashboard'
     );
-  }));
+  });
 });
 "
 `;

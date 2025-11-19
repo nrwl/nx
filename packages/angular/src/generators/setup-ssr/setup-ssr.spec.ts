@@ -48,9 +48,7 @@ describe('setupSSR', () => {
         import { AppModule } from './app/app-module';
 
         platformBrowser()
-          .bootstrapModule(AppModule, {
-            ngZoneEventCoalescing: true,
-          })
+          .bootstrapModule(AppModule)
           .catch((err) => console.error(err));
         "
       `);
@@ -354,9 +352,7 @@ describe('setupSSR', () => {
         import { AppModule } from './app/app-module';
 
         platformBrowser()
-          .bootstrapModule(AppModule, {
-            ngZoneEventCoalescing: true
-          })
+          .bootstrapModule(AppModule)
           .catch((err) => console.error(err));
         "
       `);
@@ -616,7 +612,7 @@ describe('setupSSR', () => {
     // ASSERT
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+      "import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
       import { provideRouter } from '@angular/router';
       import { appRoutes } from './app.routes';
       import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
@@ -624,7 +620,6 @@ describe('setupSSR', () => {
       export const appConfig: ApplicationConfig = {
         providers: [provideClientHydration(withEventReplay()),
           provideBrowserGlobalErrorListeners(),
-          provideZoneChangeDetection({ eventCoalescing: true }),
           provideRouter(appRoutes)
         ]
       };
@@ -702,14 +697,13 @@ describe('setupSSR', () => {
 
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+      "import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
       import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
       import { appRoutes } from './app.routes';
 
       export const appConfig: ApplicationConfig = {
         providers: [
           provideBrowserGlobalErrorListeners(),
-          provideZoneChangeDetection({ eventCoalescing: true }),
           provideRouter(appRoutes, withEnabledBlockingInitialNavigation())
         ]
       };
