@@ -1827,4 +1827,160 @@ snapshots:
       ).not.toThrow();
     });
   });
+
+  describe('patched dependencies', () => {
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/.modules.yaml': `hoistedDependencies: {}`,
+        'node_modules/vitest/package.json': '{"version": "3.2.4"}',
+        'node_modules/lodash/package.json': '{"version": "4.17.21"}',
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should include patch hash in external node hash (v9)', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+patchedDependencies:
+  vitest:
+    hash: dde3c7a634692aefe0877c763192102a73d3451e6d12dae61df88fd1e6e9368e
+    path: patches/vitest.patch
+
+importers:
+
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+  vitest@3.2.4:
+    resolution: {integrity: sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==}
+    engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
+    hasBin: true
+
+snapshots:
+
+  lodash@4.17.21: {}
+
+  vitest@3.2.4: {}`;
+
+      const lockFileHash = 'test-lockfile-hash';
+
+      const { nodes: externalNodes } = getPnpmLockfileNodes(
+        lockFile,
+        lockFileHash
+      );
+
+      // Lodash should have only the integrity hash
+      expect(externalNodes['npm:lodash']).toMatchObject({
+        type: 'npm',
+        name: 'npm:lodash',
+        data: {
+          version: '4.17.21',
+          packageName: 'lodash',
+          hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+        },
+      });
+
+      // Vitest should have integrity + patch hash combined
+      expect(externalNodes['npm:vitest']).toMatchObject({
+        type: 'npm',
+        name: 'npm:vitest',
+        data: {
+          version: '3.2.4',
+          packageName: 'vitest',
+          // This is hashArray([integrity, patchHash])
+          hash: 'sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==|dde3c7a634692aefe0877c763192102a73d3451e6d12dae61df88fd1e6e9368e',
+        },
+      });
+    });
+
+    it('should detect patch hash changes', () => {
+      const lockFileWithPatch = `lockfileVersion: '9.0'
+
+patchedDependencies:
+  vitest:
+    hash: patch123
+    path: patches/vitest.patch
+
+importers:
+
+  .:
+    dependencies:
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4
+
+packages:
+
+  vitest@3.2.4:
+    resolution: {integrity: sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==}
+
+snapshots:
+
+  vitest@3.2.4: {}`;
+
+      const lockFileWithModifiedPatch = `lockfileVersion: '9.0'
+
+patchedDependencies:
+  vitest:
+    hash: patch456
+    path: patches/vitest.patch
+
+importers:
+
+  .:
+    dependencies:
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4
+
+packages:
+
+  vitest@3.2.4:
+    resolution: {integrity: sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==}
+
+snapshots:
+
+  vitest@3.2.4: {}`;
+
+      const { nodes: externalNodes1 } = getPnpmLockfileNodes(
+        lockFileWithPatch,
+        'test-lockfile-hash-1'
+      );
+
+      const { nodes: externalNodes2 } = getPnpmLockfileNodes(
+        lockFileWithModifiedPatch,
+        'test-lockfile-hash-2'
+      );
+
+      // Hashes should be different when patch changes
+      expect(externalNodes1['npm:vitest'].data.hash).not.toBe(
+        externalNodes2['npm:vitest'].data.hash
+      );
+
+      // First has integrity + patch123
+      expect(externalNodes1['npm:vitest'].data.hash).toBe(
+        'sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==|patch123'
+      );
+
+      // Second has integrity + patch456
+      expect(externalNodes2['npm:vitest'].data.hash).toBe(
+        'sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==|patch456'
+      );
+    });
+  });
 });
