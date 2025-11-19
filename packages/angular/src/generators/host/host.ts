@@ -30,11 +30,7 @@ export async function host(tree: Tree, schema: Schema) {
   // TODO: Replace with Rspack when confidence is high enough
   schema.bundler ??= 'webpack';
   const isRspack = schema.bundler === 'rspack';
-  assertRspackIsCSR(
-    schema.bundler,
-    schema.ssr ?? false,
-    schema.serverRouting ?? false
-  );
+  assertRspackIsCSR(schema.bundler, schema.ssr ?? false);
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   schema.zoneless ??= angularMajorVersion >= 21 ? true : false;
 
