@@ -5,7 +5,10 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "outputs": ["{projectRoot}/dist", "{projectRoot}/*.d.ts"]
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,cjs,mjs}",
+        "{projectRoot}/**/*.d.ts"
+      ]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
@@ -71,7 +74,19 @@
         "{projectRoot}/dist/**/*.{js,mjs,cjs}",
         "{projectRoot}/README.md"
       ],
-      "command": "node ./scripts/copy-readme.js js packages/js/readme-template.md packages/js/README.md"
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js js packages/js/readme-template.md packages/js/README.md"
+          },
+          {
+            "command": "node ./scripts/cleanup-json-in-dist packages/js/dist"
+          }
+        ],
+        "parallel": false
+      },
+      "dependsOn": ["^build", "build-base", "legacy-post-build"]
     }
   },
   "tags": []

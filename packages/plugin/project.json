@@ -4,6 +4,12 @@
   "sourceRoot": "packages/plugin/src",
   "projectType": "library",
   "targets": {
+    "build-base": {
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,cjs,mjs}",
+        "{projectRoot}/**/*.d.ts"
+      ]
+    },
     "build": {
       "inputs": [
         "production",
@@ -15,7 +21,18 @@
         "{projectRoot}/dist/**/*.{js,mjs,cjs}",
         "{projectRoot}/README.md"
       ],
-      "command": "node ./scripts/copy-readme.js plugin packages/plugin/readme-template.md packages/plugin/README.md",
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js plugin packages/plugin/readme-template.md packages/plugin/README.md"
+          },
+          {
+            "command": "node ./scripts/cleanup-json-in-dist packages/plugin/dist"
+          }
+        ],
+        "parallel": false
+      },
       "dependsOn": ["^build", "build-base", "legacy-post-build"]
     },
     "legacy-post-build": {
