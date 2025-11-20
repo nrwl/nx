@@ -1,6 +1,6 @@
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { PluginConfiguration } from '../../../config/nx-json';
-import { LoadedNxPlugin } from '../loaded-nx-plugin';
+import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { loadRemoteNxPlugin } from './plugin-pool';
 
 export async function loadNxPluginInIsolation(

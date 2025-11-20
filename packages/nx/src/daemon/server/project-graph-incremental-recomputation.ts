@@ -34,7 +34,7 @@ import {
   ConfigurationResult,
   ConfigurationSourceMaps,
 } from '../../project-graph/utils/project-configuration-utils';
-import { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
+import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 import {
   DaemonProjectGraphError,
   ProjectConfigurationsError,

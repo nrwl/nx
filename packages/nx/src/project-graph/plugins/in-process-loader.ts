@@ -10,10 +10,9 @@ import {
 import { readJsonFile } from '../../utils/fileutils';
 
 import type { PluginConfiguration } from '../../config/nx-json';
-import { LoadedNxPlugin } from './loaded-nx-plugin';
+import type { LoadedNxPlugin } from './loaded-nx-plugin';
 import { LoadPluginError } from '../error-types';
 import path = require('node:path/posix');
-import { loadResolvedNxPluginAsync } from './load-resolved-plugin';
 import { resolveLocalNxPlugin, resolveNxPlugin } from './resolve-plugin';
 import {
   pluginTranspilerIsRegistered,
@@ -78,6 +77,9 @@ export async function loadNxPluginAsync(
     if (shouldRegisterTSTranspiler) {
       registerPluginTSTranspiler();
     }
+    const { loadResolvedNxPluginAsync } = await import(
+      './load-resolved-plugin'
+    );
     return loadResolvedNxPluginAsync(pluginConfiguration, pluginPath, name);
   } catch (e) {
     throw new LoadPluginError(moduleName, e);

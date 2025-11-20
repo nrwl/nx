@@ -7,7 +7,7 @@ import { PluginConfiguration } from '../../../config/nx-json';
 // TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
 // import { logger } from '../../utils/logger';
 
-import { LoadedNxPlugin } from '../loaded-nx-plugin';
+import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
 

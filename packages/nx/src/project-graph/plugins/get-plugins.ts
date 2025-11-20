@@ -8,7 +8,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { loadNxPluginInIsolation } from './isolation';
 import { loadNxPlugin } from './in-process-loader';
 
-import { LoadedNxPlugin } from './loaded-nx-plugin';
+import type { LoadedNxPlugin } from './loaded-nx-plugin';
 import {
   cleanupPluginTSTranspiler,
   pluginTranspilerIsRegistered,
