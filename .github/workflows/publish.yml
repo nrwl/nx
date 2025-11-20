@@ -533,6 +533,9 @@ jobs:
       - name: Use npm 11.5.2
         run: npm install -g npm@11.5.2
 
+      - name: Remove deprecated pnpm config
+        run: pnpm config delete auto-install-peers
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
