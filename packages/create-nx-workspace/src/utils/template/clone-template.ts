@@ -9,6 +9,12 @@ export async function cloneTemplate(
   templateUrl: string,
   targetDirectory: string
 ): Promise<void> {
+  if (existsSync(targetDirectory)) {
+    throw new Error(
+      `The directory '${targetDirectory}' already exists and is not empty. Choose a different name or remove the existing directory.`
+    );
+  }
+
   try {
     await execAndWait(
       `git clone --depth 1 "${templateUrl}" "${targetDirectory}"`,
@@ -23,7 +29,7 @@ export async function cloneTemplate(
   } catch (e) {
     if (e instanceof Error) {
       output.error({
-        title: 'Failed to clone template',
+        title: 'Failed to create starter workspace',
         bodyLines: mapErrorToBodyLines(e),
       });
     } else {

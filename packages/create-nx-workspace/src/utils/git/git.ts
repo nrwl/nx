@@ -249,7 +249,7 @@ export async function pushToGitHub(
     const errorMessage = e instanceof Error ? e.message : String(e);
 
     // Error code 127 means gh wasn't installed
-    const title = 'Push your repo to complete setup.';
+    const title = 'Could not push. Push repo to complete setup.';
 
     const createRepoUrl = `https://github.com/new?name=${encodeURIComponent(
       options.name
@@ -258,11 +258,11 @@ export async function pushToGitHub(
       title,
       bodyLines: isVerbose
         ? [
-            `Please create a repo at ${createRepoUrl} and push this workspace.`,
+            `Go to ${createRepoUrl} and push this workspace.`,
             'Error details:',
             errorMessage,
           ]
-        : [`Please create a repo at ${createRepoUrl} and push this workspace.`],
+        : [`Go to ${createRepoUrl} and push this workspace.`],
     });
     return VcsPushStatus.FailedToPushToVcs;
   }
