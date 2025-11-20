@@ -24,7 +24,11 @@ import { isCI } from '../../utils/is-ci';
 import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
-import { DaemonSocketMessenger, Message } from './daemon-socket-messenger';
+import {
+  DaemonSocketMessenger,
+  Message,
+  VersionMismatchError,
+} from './daemon-socket-messenger';
 import {
   getDaemonProcessIdSync,
   waitForDaemonToExitAndCleanupProcessJson,
@@ -133,6 +137,13 @@ enum DaemonStatus {
   CONNECTED,
 }
 
+const RECONNECT_CONFIG = {
+  initialDelayMs: 10,
+  maxDelayMs: 5000,
+  backoffMultiplier: 1.5,
+  maxAttempts: 30,
+};
+
 export class DaemonClient {
   private readonly nxJson: NxJsonConfiguration | null;
 
@@ -158,6 +169,43 @@ export class DaemonClient {
   private _daemonReady: () => void | null = null;
   private _out: FileHandle = null;
   private _err: FileHandle = null;
+
+  // Shared file watcher connection state
+  private fileWatcherMessenger: DaemonSocketMessenger | undefined;
+  private fileWatcherReconnecting: boolean = false;
+  private fileWatcherCallbacks: Map<
+    string,
+    (
+      error: Error | null | 'reconnecting' | 'reconnected' | 'closed',
+      data: {
+        changedProjects: string[];
+        changedFiles: ChangedFile[];
+      } | null
+    ) => void
+  > = new Map();
+  private fileWatcherConfigs: Map<
+    string,
+    {
+      watchProjects: string[] | 'all';
+      includeGlobalWorkspaceFiles?: boolean;
+      includeDependentProjects?: boolean;
+      allowPartialGraph?: boolean;
+    }
+  > = new Map();
+
+  // Shared project graph listener connection state
+  private projectGraphListenerMessenger: DaemonSocketMessenger | undefined;
+  private projectGraphListenerReconnecting: boolean = false;
+  private projectGraphListenerCallbacks: Map<
+    string,
+    (
+      error: Error | null | 'reconnecting' | 'reconnected' | 'closed',
+      data: {
+        projectGraph: ProjectGraph;
+        sourceMaps: ConfigurationSourceMaps;
+      } | null
+    ) => void
+  > = new Map();
 
   enabled() {
     if (this._enabled === undefined) {
@@ -217,6 +265,12 @@ export class DaemonClient {
     this._err?.close();
     this._out = null;
     this._err = null;
+
+    // Clean up file watcher and project graph listener connections
+    this.fileWatcherMessenger?.close();
+    this.fileWatcherMessenger = undefined;
+    this.projectGraphListenerMessenger?.close();
+    this.projectGraphListenerMessenger = undefined;
 
     this._daemonStatus = DaemonStatus.DISCONNECTED;
     this._waitForDaemonReady = new Promise<void>(
@@ -290,7 +344,7 @@ export class DaemonClient {
       allowPartialGraph?: boolean;
     },
     callback: (
-      error: Error | null | 'closed',
+      error: Error | null | 'reconnecting' | 'reconnected' | 'closed',
       data: {
         changedProjects: string[];
         changedFiles: ChangedFile[];
@@ -306,73 +360,362 @@ export class DaemonClient {
         throw e;
       }
     }
-    let messenger: DaemonSocketMessenger | undefined;
 
-    await this.queue.sendToQueue(() => {
-      messenger = new DaemonSocketMessenger(
-        connect(getFullOsSocketPath())
-      ).listen(
-        (message) => {
-          try {
-            const parsedMessage = isJsonMessage(message)
-              ? JSON.parse(message)
-              : deserialize(Buffer.from(message, 'binary'));
-            callback(null, parsedMessage);
-          } catch (e) {
-            callback(e, null);
+    // Generate unique ID for this callback
+    const callbackId = Math.random().toString(36).substring(2, 11);
+
+    await this.queue.sendToQueue(async () => {
+      // Store callback and config
+      this.fileWatcherCallbacks.set(callbackId, callback);
+      this.fileWatcherConfigs.set(callbackId, config);
+
+      // If this is the first registration, create the shared connection
+      if (!this.fileWatcherMessenger) {
+        this.fileWatcherMessenger = new DaemonSocketMessenger();
+
+        // Listen and wait for connection to be ready
+        try {
+          await this.fileWatcherMessenger.listen(
+            (message) => {
+              // Broadcast message to all registered callbacks
+              try {
+                const parsedMessage = isJsonMessage(message)
+                  ? JSON.parse(message)
+                  : deserialize(Buffer.from(message, 'binary'));
+                for (const cb of this.fileWatcherCallbacks.values()) {
+                  cb(null, parsedMessage);
+                }
+              } catch (e) {
+                for (const cb of this.fileWatcherCallbacks.values()) {
+                  cb(e, null);
+                }
+              }
+            },
+            () => {
+              // Connection closed - notify callbacks and start background reconnection
+              console.log(
+                '[Client] File watcher connection closed, reconnecting...'
+              );
+              for (const cb of this.fileWatcherCallbacks.values()) {
+                cb('reconnecting', null);
+              }
+              this.fileWatcherMessenger = undefined;
+              // Start reconnection in background (don't await)
+              this.reconnectFileWatcher();
+            },
+            (err) => {
+              if (err instanceof VersionMismatchError) {
+                // Version mismatch - error already shown, just exit
+                this.fileWatcherMessenger = undefined;
+                process.exit(1);
+              } else {
+                for (const cb of this.fileWatcherCallbacks.values()) {
+                  cb(err, null);
+                }
+              }
+            }
+          );
+        } catch (err) {
+          // Handle version mismatch or other errors during listen setup
+          if (err instanceof VersionMismatchError) {
+            // Error message already shown by daemon-socket-messenger, just exit
+            this.fileWatcherMessenger = undefined;
+            process.exit(1);
           }
-        },
-        () => {
-          callback('closed', null);
-        },
-        (err) => callback(err, null)
-      );
-      return messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', config });
+          throw err;
+        }
+
+        // Send initial registration for all configs
+        for (const cfg of this.fileWatcherConfigs.values()) {
+          await this.fileWatcherMessenger.sendMessage({
+            type: 'REGISTER_FILE_WATCHER',
+            config: cfg,
+          });
+        }
+      } else {
+        // Connection already exists, just register this new config
+        await this.fileWatcherMessenger.sendMessage({
+          type: 'REGISTER_FILE_WATCHER',
+          config,
+        });
+      }
     });
 
+    // Return unregister function
     return () => {
-      messenger?.close();
+      this.fileWatcherCallbacks.delete(callbackId);
+      this.fileWatcherConfigs.delete(callbackId);
+
+      // If no more callbacks, close the connection
+      if (this.fileWatcherCallbacks.size === 0) {
+        this.fileWatcherMessenger?.close();
+        this.fileWatcherMessenger = undefined;
+      }
     };
+  }
+
+  private async reconnectFileWatcher() {
+    // Guard against concurrent reconnection attempts
+    if (this.fileWatcherReconnecting) {
+      return;
+    }
+
+    if (this.fileWatcherCallbacks.size === 0) {
+      return; // No callbacks to reconnect
+    }
+
+    this.fileWatcherReconnecting = true;
+
+    // Wait for daemon server to be available before trying to reconnect
+    const serverAvailable = await this.waitForServerWithExponentialBackoff();
+
+    if (!serverAvailable) {
+      // Failed to reconnect after all attempts - notify as closed
+      this.fileWatcherReconnecting = false;
+      for (const cb of this.fileWatcherCallbacks.values()) {
+        cb('closed', null);
+      }
+      return;
+    }
+
+    try {
+      // Try to reconnect
+      this.fileWatcherMessenger = new DaemonSocketMessenger();
+
+      try {
+        await this.fileWatcherMessenger.listen(
+          (message) => {
+            try {
+              const parsedMessage = isJsonMessage(message)
+                ? JSON.parse(message)
+                : deserialize(Buffer.from(message, 'binary'));
+              for (const cb of this.fileWatcherCallbacks.values()) {
+                cb(null, parsedMessage);
+              }
+            } catch (e) {
+              for (const cb of this.fileWatcherCallbacks.values()) {
+                cb(e, null);
+              }
+            }
+          },
+          () => {
+            // Connection closed during reconnection - don't start new loop
+            // The current loop will retry automatically
+            this.fileWatcherMessenger = undefined;
+          },
+          (err) => {
+            // Silent during reconnection - errors are handled by the retry loop
+            // Only notify after all attempts exhausted
+          }
+        );
+      } catch (err) {
+        if (err instanceof VersionMismatchError) {
+          // Version mismatch - daemon has upgraded, client needs to restart
+          // Error message already shown by daemon-socket-messenger, just exit
+          this.fileWatcherReconnecting = false;
+          this.fileWatcherMessenger = undefined;
+          process.exit(1);
+          return;
+        }
+        throw err;
+      }
+
+      // Re-register all stored configs
+      for (const cfg of this.fileWatcherConfigs.values()) {
+        await this.fileWatcherMessenger.sendMessage({
+          type: 'REGISTER_FILE_WATCHER',
+          config: cfg,
+        });
+      }
+
+      // Successfully reconnected - notify callbacks
+      for (const cb of this.fileWatcherCallbacks.values()) {
+        cb('reconnected', null);
+      }
+      this.fileWatcherReconnecting = false;
+    } catch (e) {
+      // Failed to reconnect - notify as closed
+      this.fileWatcherReconnecting = false;
+      for (const cb of this.fileWatcherCallbacks.values()) {
+        cb('closed', null);
+      }
+    }
   }
 
   async registerProjectGraphRecomputationListener(
     callback: (
-      error: Error | null | 'closed',
+      error: Error | null | 'reconnecting' | 'reconnected' | 'closed',
       data: {
         projectGraph: ProjectGraph;
         sourceMaps: ConfigurationSourceMaps;
       } | null
     ) => void
   ): Promise<UnregisterCallback> {
-    let messenger: DaemonSocketMessenger | undefined;
+    // Generate unique ID for this callback
+    const callbackId = Math.random().toString(36).substring(2, 11);
 
-    await this.queue.sendToQueue(() => {
-      messenger = new DaemonSocketMessenger(
-        connect(getFullOsSocketPath())
-      ).listen(
-        (message) => {
-          try {
-            const parsedMessage = isJsonMessage(message)
-              ? JSON.parse(message)
-              : deserialize(Buffer.from(message, 'binary'));
-            callback(null, parsedMessage);
-          } catch (e) {
-            callback(e, null);
+    await this.queue.sendToQueue(async () => {
+      // Store callback
+      this.projectGraphListenerCallbacks.set(callbackId, callback);
+
+      // If this is the first registration, create the shared connection
+      if (!this.projectGraphListenerMessenger) {
+        this.projectGraphListenerMessenger = new DaemonSocketMessenger();
+
+        // Listen and wait for connection to be ready
+        try {
+          await this.projectGraphListenerMessenger.listen(
+            (message) => {
+              // Broadcast message to all registered callbacks
+              try {
+                const parsedMessage = isJsonMessage(message)
+                  ? JSON.parse(message)
+                  : deserialize(Buffer.from(message, 'binary'));
+                for (const cb of this.projectGraphListenerCallbacks.values()) {
+                  cb(null, parsedMessage);
+                }
+              } catch (e) {
+                for (const cb of this.projectGraphListenerCallbacks.values()) {
+                  cb(e, null);
+                }
+              }
+            },
+            () => {
+              // Connection closed - notify callbacks and start background reconnection
+              console.log(
+                '[Client] Project graph listener connection closed, reconnecting...'
+              );
+              for (const cb of this.projectGraphListenerCallbacks.values()) {
+                cb('reconnecting', null);
+              }
+              this.projectGraphListenerMessenger = undefined;
+              // Start reconnection in background (don't await)
+              this.reconnectProjectGraphListener();
+            },
+            (err) => {
+              if (err instanceof VersionMismatchError) {
+                // Version mismatch - error already shown, just exit
+                this.projectGraphListenerMessenger = undefined;
+                process.exit(1);
+              } else {
+                for (const cb of this.projectGraphListenerCallbacks.values()) {
+                  cb(err, null);
+                }
+              }
+            }
+          );
+        } catch (err) {
+          // Handle version mismatch or other errors during listen setup
+          if (err instanceof VersionMismatchError) {
+            // Error message already shown by daemon-socket-messenger, just exit
+            this.projectGraphListenerMessenger = undefined;
+            process.exit(1);
           }
-        },
-        () => {
-          callback('closed', null);
-        },
-        (err) => callback(err, null)
-      );
-      return messenger.sendMessage({
-        type: REGISTER_PROJECT_GRAPH_LISTENER,
-      });
+          throw err;
+        }
+
+        // Send initial registration
+        await this.projectGraphListenerMessenger.sendMessage({
+          type: REGISTER_PROJECT_GRAPH_LISTENER,
+        });
+      }
     });
 
+    // Return unregister function
     return () => {
-      messenger?.close();
+      this.projectGraphListenerCallbacks.delete(callbackId);
+
+      // If no more callbacks, close the connection
+      if (this.projectGraphListenerCallbacks.size === 0) {
+        this.projectGraphListenerMessenger?.close();
+        this.projectGraphListenerMessenger = undefined;
+      }
     };
+  }
+
+  private async reconnectProjectGraphListener() {
+    // Guard against concurrent reconnection attempts
+    if (this.projectGraphListenerReconnecting) {
+      return;
+    }
+
+    if (this.projectGraphListenerCallbacks.size === 0) {
+      return; // No callbacks to reconnect
+    }
+
+    this.projectGraphListenerReconnecting = true;
+
+    // Wait for daemon server to be available before trying to reconnect
+    const serverAvailable = await this.waitForServerWithExponentialBackoff();
+
+    if (!serverAvailable) {
+      // Failed to reconnect after all attempts - notify as closed
+      this.projectGraphListenerReconnecting = false;
+      for (const cb of this.projectGraphListenerCallbacks.values()) {
+        cb('closed', null);
+      }
+      return;
+    }
+
+    try {
+      // Try to reconnect
+      this.projectGraphListenerMessenger = new DaemonSocketMessenger();
+
+      try {
+        await this.projectGraphListenerMessenger.listen(
+          (message) => {
+            try {
+              const parsedMessage = isJsonMessage(message)
+                ? JSON.parse(message)
+                : deserialize(Buffer.from(message, 'binary'));
+              for (const cb of this.projectGraphListenerCallbacks.values()) {
+                cb(null, parsedMessage);
+              }
+            } catch (e) {
+              for (const cb of this.projectGraphListenerCallbacks.values()) {
+                cb(e, null);
+              }
+            }
+          },
+          () => {
+            // Connection closed during reconnection - don't start new loop
+            // The current loop will retry automatically
+            this.projectGraphListenerMessenger = undefined;
+          },
+          (err) => {
+            // Silent during reconnection - errors are handled by the retry loop
+            // Only notify after all attempts exhausted
+          }
+        );
+      } catch (err) {
+        if (err instanceof VersionMismatchError) {
+          // Version mismatch - daemon has upgraded, client needs to restart
+          // Error message already shown by daemon-socket-messenger, just exit
+          this.projectGraphListenerReconnecting = false;
+          this.projectGraphListenerMessenger = undefined;
+          process.exit(1);
+          return;
+        }
+        throw err;
+      }
+
+      // Re-register
+      await this.projectGraphListenerMessenger.sendMessage({
+        type: REGISTER_PROJECT_GRAPH_LISTENER,
+      });
+
+      // Successfully reconnected - notify callbacks
+      for (const cb of this.projectGraphListenerCallbacks.values()) {
+        cb('reconnected', null);
+      }
+      this.projectGraphListenerReconnecting = false;
+    } catch (e) {
+      // Failed to reconnect - notify as closed
+      this.projectGraphListenerReconnecting = false;
+      for (const cb of this.projectGraphListenerCallbacks.values()) {
+        cb('closed', null);
+      }
+    }
   }
 
   processInBackground(requirePath: string, data: any): Promise<any> {
@@ -602,56 +945,127 @@ export class DaemonClient {
     );
   }
 
-  private setUpConnection() {
-    this.socketMessenger = new DaemonSocketMessenger(
-      connect(getFullOsSocketPath())
-    ).listen(
-      (message) => this.handleMessage(message),
-      () => {
-        // it's ok for the daemon to terminate if the client doesn't wait on
-        // any messages from the daemon
-        if (this.queue.isEmpty()) {
-          this.reset();
-        } else {
-          output.error({
-            title: 'Daemon process terminated and closed the connection',
-            bodyLines: [
-              'Please rerun the command, which will restart the daemon.',
-              `If you get this error again, check for any errors in the daemon process logs found in: ${DAEMON_OUTPUT_LOG_FILE}`,
-            ],
-          });
-          this._daemonStatus = DaemonStatus.DISCONNECTED;
-          this.currentReject?.(
-            daemonProcessException(
-              'Daemon process terminated and closed the connection'
-            )
-          );
-          process.exit(1);
-        }
-      },
-      (err) => {
-        if (!err.message) {
-          return this.currentReject(daemonProcessException(err.toString()));
-        }
+  private async setUpConnection() {
+    this.socketMessenger = new DaemonSocketMessenger();
 
-        let error: any;
-        if (err.message.startsWith('connect ENOENT')) {
-          error = daemonProcessException('The Daemon Server is not running');
-        } else if (err.message.startsWith('connect ECONNREFUSED')) {
-          error = daemonProcessException(
-            `A server instance had not been fully shut down. Please try running the command again.`
-          );
-          killSocketOrPath();
-        } else if (err.message.startsWith('read ECONNRESET')) {
-          error = daemonProcessException(
-            `Unable to connect to the daemon process.`
-          );
-        } else {
-          error = daemonProcessException(err.toString());
+    try {
+      await this.socketMessenger.listen(
+        (message) => this.handleMessage(message),
+        () => {
+          // it's ok for the daemon to terminate if the client doesn't wait on
+          // any messages from the daemon
+          if (this.queue.isEmpty()) {
+            this.reset();
+          } else {
+            // Connection closed unexpectedly, try to reconnect with exponential backoff
+            this._daemonStatus = DaemonStatus.DISCONNECTED;
+            this.handleConnectionError(
+              daemonProcessException(
+                'Daemon process terminated and closed the connection'
+              )
+            );
+          }
+        },
+        (err) => {
+          if (!err.message) {
+            return this.handleConnectionError(
+              daemonProcessException(err.toString())
+            );
+          }
+
+          let error: any;
+          if (err.message.startsWith('connect ENOENT')) {
+            error = daemonProcessException('The Daemon Server is not running');
+          } else if (err.message.startsWith('connect ECONNREFUSED')) {
+            error = daemonProcessException(
+              `A server instance had not been fully shut down. Please try running the command again.`
+            );
+            killSocketOrPath();
+          } else if (err.message.startsWith('read ECONNRESET')) {
+            error = daemonProcessException(
+              `Unable to connect to the daemon process.`
+            );
+          } else {
+            error = daemonProcessException(err.toString());
+          }
+          return this.handleConnectionError(error);
         }
-        return this.currentReject(error);
+      );
+    } catch (err) {
+      if (err instanceof VersionMismatchError) {
+        // Version mismatch - daemon has upgraded, client needs to restart
+        // Error message already shown by daemon-socket-messenger, just exit
+        process.exit(1);
+      } else {
+        throw err;
       }
+    }
+  }
+
+  private async handleConnectionError(error: Error) {
+    // Create a new ready promise for new requests to wait on
+    this._waitForDaemonReady = new Promise<void>(
+      (resolve) => (this._daemonReady = resolve)
     );
+
+    // Set status to CONNECTING so new requests will wait for reconnection
+    this._daemonStatus = DaemonStatus.CONNECTING;
+
+    const serverAvailable = await this.waitForServerWithExponentialBackoff();
+
+    if (serverAvailable) {
+      // Server is back up, establish connection and signal ready
+      this.establishConnection();
+
+      // Resend the pending message if one exists
+      if (this.currentMessage && this.currentResolve && this.currentReject) {
+        // Decrement the queue counter that was incremented when the error occurred
+        this.queue.decrementQueueCounter();
+        // Retry the message through the normal queue
+        const msg = this.currentMessage;
+        const res = this.currentResolve;
+        const rej = this.currentReject;
+        this.sendToDaemonViaQueue(msg).then(res, rej);
+      }
+    } else {
+      // Failed to reconnect after all attempts, reject the pending request
+      if (this.currentReject) {
+        this.currentReject(error);
+      }
+    }
+  }
+
+  private establishConnection() {
+    this._daemonStatus = DaemonStatus.DISCONNECTED;
+    this.setUpConnection()
+      .then(() => {
+        this._daemonStatus = DaemonStatus.CONNECTED;
+        this._daemonReady();
+      })
+      .catch((err) => {
+        // Error handling is already done in setUpConnection via onError callback
+        // This catch is just to prevent unhandled promise rejection
+      });
+  }
+
+  private async waitForServerWithExponentialBackoff(
+    config = RECONNECT_CONFIG
+  ): Promise<boolean> {
+    let delayMs = config.initialDelayMs;
+    let attempts = 0;
+
+    while (attempts < config.maxAttempts) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      attempts++;
+
+      if (await this.isServerAvailable()) {
+        return true;
+      }
+
+      delayMs = Math.min(delayMs * config.backoffMultiplier, config.maxDelayMs);
+    }
+
+    return false;
   }
 
   private async sendMessageToDaemon(
@@ -665,12 +1079,17 @@ export class DaemonClient {
       if (!(await this.isServerAvailable())) {
         daemonPid = await this.startInBackground();
       }
-      this.setUpConnection();
-      this._daemonStatus = DaemonStatus.CONNECTED;
-      this._daemonReady();
-
+      // Server should start quickly since we just spawned it, use shorter timeout
+      await this.waitForServerWithExponentialBackoff({
+        initialDelayMs: 10,
+        maxDelayMs: 500,
+        backoffMultiplier: 1.5,
+        maxAttempts: 10,
+      });
       daemonPid ??= getDaemonProcessIdSync();
       await this.registerDaemonProcessWithMetricsService(daemonPid);
+      this.establishConnection();
+      await this._waitForDaemonReady;
     } else if (this._daemonStatus == DaemonStatus.CONNECTING) {
       await this._waitForDaemonReady;
       const daemonPid = getDaemonProcessIdSync();
@@ -710,32 +1129,11 @@ export class DaemonClient {
     }
   }
 
-  private retryMessageAfterNewDaemonStarts() {
-    const [msg, res, rej] = [
-      this.currentMessage,
-      this.currentResolve,
-      this.currentReject,
-    ];
-    // If we get to this point the daemon is about to close, and we don't
-    // want to halt on our daemon terminated unexpectedly condition,
-    // so we decrement the promise queue to make it look empty.
-    this.queue.decrementQueueCounter();
-    if (msg) {
-      setTimeout(() => {
-        // We wait a bit to allow the server to finish shutting down before
-        // retrying the message, which will start a new daemon. Part of
-        // the process of starting up the daemon clears this.currentMessage etc
-        // so we need to store them before waiting.
-        this.sendToDaemonViaQueue(msg).then(res, rej);
-      }, 50);
-    } else {
-      throw new Error(
-        'Daemon client attempted to retry a message without a current message'
-      );
-    }
-  }
-
   private handleMessage(serializedResult: string) {
+    console.log(
+      '[Client] handleMessage called, currentMessage type:',
+      this.currentMessage?.type
+    );
     try {
       performance.mark('result-parse-start-' + this.currentMessage.type);
       const parsedResult = isJsonMessage(serializedResult)
@@ -748,15 +1146,7 @@ export class DaemonClient {
         'result-parse-end-' + this.currentMessage.type
       );
       if (parsedResult.error) {
-        if (
-          'message' in parsedResult.error &&
-          (parsedResult.error.message === 'NX_VERSION_CHANGED' ||
-            parsedResult.error.message === 'LOCK_FILES_CHANGED')
-        ) {
-          this.retryMessageAfterNewDaemonStarts();
-        } else {
-          this.currentReject(parsedResult.error);
-        }
+        this.currentReject(parsedResult.error);
       } else {
         performance.measure(
           `${this.currentMessage.type} round trip`,
