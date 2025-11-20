@@ -60,36 +60,19 @@ const messageOptions: Record<string, MessageData[]> = {
    */
   setupNxCloudV2: [
     {
-      code: 'cloud-v2-green-prs',
-      metaCode: 'green-prs',
-      message: 'Get to green PRs faster with Nx Cloud?',
+      code: 'cloud-v2-remote-cache',
+      message: 'Enable remote caching with Nx Cloud?',
       initial: 0,
       choices: [
-        { value: 'yes', name: 'Yes, set up Nx Cloud' },
+        { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip' },
       ],
       footer:
-        '\nAutomated validation, self-healing tests, and 70% faster CI: https://nx.dev/docs/guides/nx-cloud/optimize-your-ttg',
-      hint: `\n(free for open source)`,
-      fallback: undefined,
-    },
-    {
-      code: 'cloud-v2-remote-cache',
-      metaCode: 'remote-cache',
-      message: 'Would you like to enable remote caching with Nx Cloud?',
-      initial: 0,
-      choices: [
-        { value: 'yes', name: 'Yes, enable caching' },
-        { value: 'skip', name: 'No, configure it later' },
-      ],
-      footer:
-        '\nRemote caching makes your builds faster: https://nx.dev/ci/features/remote-cache',
-      hint: `\n(can be enabled any time)`,
+        '\nRemote caching makes your builds faster for development and in CI: https://nx.dev/ci/features/remote-cache',
       fallback: undefined,
     },
     {
       code: 'cloud-v2-fast-ci',
-      metaCode: 'fast-ci',
       message: 'Speed up CI and reduce compute costs with Nx Cloud?',
       initial: 0,
       choices: [
@@ -97,8 +80,31 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'skip', name: 'Skip' },
       ],
       footer:
-        '\n70% faster CI, 60% less compute, automated test healing: https://nx.dev/ci/features/remote-cache',
-      hint: `\n(can be enabled later)`,
+        '\n70% faster CI, 60% less compute, Automatically fix broken PRs: https://nx.dev/nx-cloud',
+      fallback: undefined,
+    },
+    {
+      code: 'cloud-v2-green-prs',
+      message: 'Get to green PRs faster with Nx Cloud?',
+      initial: 0,
+      choices: [
+        { value: 'yes', name: 'Yes' },
+        { value: 'skip', name: 'Skip' },
+      ],
+      footer:
+        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
+      fallback: undefined,
+    },
+    {
+      code: 'cloud-v2-full-platform',
+      message: 'Try the full Nx platform?',
+      initial: 0,
+      choices: [
+        { value: 'yes', name: 'Yes' },
+        { value: 'skip', name: 'Skip' },
+      ],
+      footer:
+        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
       fallback: undefined,
     },
   ],
@@ -107,7 +113,6 @@ const messageOptions: Record<string, MessageData[]> = {
 export type MessageKey = keyof typeof messageOptions;
 interface MessageData {
   code: string;
-  metaCode?: string; // Optional short code for URL meta tracking
   message: string;
   initial: number;
   choices: Array<{ value: string; name: string }>;
@@ -140,16 +145,6 @@ export class PromptMessages {
       return messageOptions[key][selected].code;
     }
   }
-
-  metaCodeOfSelectedPromptMessage(key: MessageKey): string {
-    const selected = this.selectedMessages[key];
-    if (selected === undefined) {
-      return '';
-    } else {
-      const message = messageOptions[key][selected];
-      return message.metaCode || message.code;
-    }
-  }
 }
 
 export const messages = new PromptMessages();
@@ -170,11 +165,22 @@ export async function recordStat(opts: {
   nxVersion: string;
   useCloud: boolean;
   meta: string[];
+  directory: string;
 }) {
   try {
     if (!shouldRecordStats()) {
       return;
     }
+
+    // nx-ignore-next-line
+    const { getCloudUrl } = require(require.resolve(
+      'nx/src/nx-cloud/utilities/get-cloud-options',
+      {
+        paths: [opts.directory],
+      }
+      // nx-ignore-next-line
+    )) as typeof import('nx/src/nx-cloud/utilities/get-cloud-options');
+
     const axios = require('axios');
     await (axios['default'] ?? axios)
       .create({

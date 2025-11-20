@@ -290,6 +290,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       rawArgs.nxCloud,
       workspaceInfo.pushedToVcs,
     ],
+    directory: workspaceInfo.directory,
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
@@ -320,19 +321,21 @@ async function normalizeArgsMiddleware(
       "Let's create a new workspace [https://nx.dev/getting-started/intro]",
   });
 
-  // Record stat for initial invocation before any prompts
-  await recordStat({
-    nxVersion,
-    command: 'create-nx-workspace',
-    meta: ['start'],
-    useCloud: argv.nxCloud !== 'skip',
-  });
-
   argv.workspaces ??= true;
   argv.useProjectJson ??= !argv.workspaces;
 
   try {
     argv.name = await determineFolder(argv);
+
+    const workingDir = process.cwd().replace(/\\/g, '/');
+    const directory = require('path').join(workingDir, argv.name);
+    await recordStat({
+      nxVersion,
+      command: 'create-nx-workspace',
+      meta: ['start'],
+      useCloud: argv.nxCloud !== 'skip',
+      directory,
+    });
 
     const template = await determineTemplate(argv);
 
@@ -346,7 +349,7 @@ async function normalizeArgsMiddleware(
       const nxCloudPromptCode =
         nxCloud === 'skip'
           ? undefined
-          : messages.metaCodeOfSelectedPromptMessage('setupNxCloudV2');
+          : messages.codeOfSelectedPromptMessage('setupNxCloudV2');
       Object.assign(argv, {
         nxCloud,
         useGitHub: nxCloud !== 'skip',
