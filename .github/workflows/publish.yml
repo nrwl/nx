@@ -530,8 +530,8 @@ jobs:
           check-latest: true
           cache: 'pnpm'
      
-      - name: Use npm 11.5.2
-        run: npm install -g npm@11.5.2
+      - name: Use npm 10
+        run: npm install -g npm@10
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
