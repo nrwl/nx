@@ -392,6 +392,15 @@
       },
       "description": "Update the @angular/cli package version to ~21.0.0.",
       "factory": "./src/migrations/update-22-2-0/update-angular-cli"
+    },
+    "update-ssr-webpack-config-22-2-0": {
+      "cli": "nx",
+      "version": "22.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=21.0.0"
+      },
+      "description": "Updates webpack-based SSR configuration to use preserve module format and bundler module resolution.",
+      "factory": "./src/migrations/update-22-2-0/update-ssr-webpack-config"
     }
   },
   "packageJsonUpdates": {
