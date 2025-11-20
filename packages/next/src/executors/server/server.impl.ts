@@ -2,6 +2,7 @@ import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
+  logger,
 } from '@nx/devkit';
 import { resolve } from 'path';
 
@@ -14,6 +15,7 @@ import customServer from './custom-server.impl';
 import { createCliOptions } from '../../utils/create-cli-options';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+import { getInstalledNextVersionRuntime } from '../../utils/runtime-version-utils';
 
 export default async function* serveExecutor(
   options: NextServeBuilderOptions,
@@ -54,14 +56,54 @@ export default async function* serveExecutor(
   }
 
   const mode = options.dev ? 'dev' : 'start';
-  const turbo = options.turbo && options.dev ? '--turbo' : '';
+
+  // Determine bundler flag based on Next.js version and options
+  let bundlerFlag = '';
+  if (options.dev) {
+    // Check for conflicting flags
+    if (options.turbo && options.webpack) {
+      throw new Error(
+        'Cannot specify both --turbo and --webpack flags. Please use only one bundler option.'
+      );
+    }
+
+    const nextJsVersion = getInstalledNextVersionRuntime();
+    const isNext16Plus = nextJsVersion !== null && nextJsVersion >= 16;
+
+    if (isNext16Plus) {
+      // Next.js 16+: Turbopack is default, use --webpack to opt-in to webpack
+      if (options.webpack) {
+        bundlerFlag = '--webpack';
+        logger.info('Using webpack bundler (Next.js 16+ detected)');
+      } else if (options.turbo) {
+        logger.warn(
+          'The --turbo flag is redundant in Next.js 16+ as Turbopack is now the default bundler. You can remove this flag.'
+        );
+      }
+    } else {
+      // Next.js 15 and below: webpack is default, use --turbo to opt-in to turbopack
+      if (options.turbo) {
+        bundlerFlag = '--turbo';
+      } else if (options.webpack) {
+        logger.warn(
+          'The --webpack flag is only applicable in Next.js 16 and above. It will be ignored.'
+        );
+      }
+    }
+  }
+
   const nextBin = require.resolve('next/dist/bin/next');
 
   yield* createAsyncIterable<{ success: boolean; baseUrl: string }>(
     async ({ done, next, error }) => {
       const server = fork(
         nextBin,
-        [mode, ...args, turbo, ...getExperimentalHttpsFlags(options)],
+        [
+          mode,
+          ...args,
+          bundlerFlag,
+          ...getExperimentalHttpsFlags(options),
+        ].filter((arg) => arg !== ''),
         {
           cwd: options.dev ? projectRoot : nextDir,
           stdio: 'inherit',

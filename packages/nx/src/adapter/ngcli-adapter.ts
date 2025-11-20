@@ -74,6 +74,7 @@ import {
   resolveImplementation,
   resolveSchema,
 } from '../config/schema-utils';
+import { resolveNxTokensInOptions } from '../project-graph/utils/project-configuration-utils';
 
 export async function createBuilderContext(
   builderInfo: {
@@ -432,7 +433,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       isAngularPluginInstalled()
     ) {
       return this.readMergedWorkspaceConfiguration().pipe(
-        map((r) => Buffer.from(JSON.stringify(toOldFormat(r))))
+        map((r) => stringToArrayBuffer(JSON.stringify(toOldFormat(r))))
       );
     } else {
       return super.read(path);
@@ -505,9 +506,50 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           const projects = configV2.projects;
           const allObservables = [];
           Object.keys(projects).forEach((projectName) => {
-            if (projectsInAngularJson.includes(projectName)) {
-              // ignore updates to angular.json
-            } else {
+            if (!projectsInAngularJson.includes(projectName)) {
+              // Restore tokens in options if they were present before
+              const previousProject = existingConfig.projects[projectName];
+              const newProject = projects[projectName];
+              if (
+                previousProject &&
+                newProject.targets &&
+                previousProject.targets
+              ) {
+                for (const [targetName, target] of Object.entries(
+                  newProject.targets
+                )) {
+                  const previousTarget = previousProject.targets[targetName];
+                  if (
+                    target.options &&
+                    previousTarget &&
+                    previousTarget.options
+                  ) {
+                    target.options = restoreNxTokensInOptions(
+                      target.options,
+                      previousTarget.options,
+                      newProject
+                    );
+                  }
+                  if (
+                    target.configurations &&
+                    previousTarget &&
+                    previousTarget.configurations
+                  ) {
+                    for (const [configName, config] of Object.entries(
+                      target.configurations
+                    )) {
+                      if (previousTarget.configurations[configName]) {
+                        target.configurations[configName] =
+                          restoreNxTokensInOptions(
+                            config,
+                            previousTarget.configurations[configName],
+                            newProject
+                          );
+                      }
+                    }
+                  }
+                }
+              }
               updateProjectConfiguration(
                 {
                   root,
@@ -524,13 +566,15 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
                         allObservables.push(
                           super.write(
                             path as any,
-                            Buffer.from(JSON.stringify(updatedContent, null, 2))
+                            stringToArrayBuffer(
+                              JSON.stringify(updatedContent, null, 2)
+                            )
                           )
                         );
                       }
                     } else {
                       allObservables.push(
-                        super.write(path as any, Buffer.from(content))
+                        super.write(path as any, stringToArrayBuffer(content))
                       );
                     }
                   },
@@ -684,13 +728,37 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
       (path === 'angular.json' || path === '/angular.json') &&
       isAngularPluginInstalled()
     ) {
-      const projectJsonConfig = toOldFormat({
-        projects: Object.fromEntries(getProjects(this.host)),
-      });
+      // Replace the Nx-specific tokens in all target options
+      const projects = Object.fromEntries(getProjects(this.host));
+      for (const [projectName, project] of Object.entries(projects)) {
+        if (project.targets) {
+          for (const [targetName, target] of Object.entries(project.targets)) {
+            if (target.options) {
+              target.options = resolveNxTokensInOptions(
+                target.options,
+                { ...project, name: projectName },
+                `${projectName}:${targetName}`
+              );
+            }
+            if (target.configurations) {
+              for (const [configName, config] of Object.entries(
+                target.configurations
+              )) {
+                target.configurations[configName] = resolveNxTokensInOptions(
+                  config,
+                  { ...project, name: projectName },
+                  `${projectName}:${targetName}:${configName}`
+                );
+              }
+            }
+          }
+        }
+      }
+      const projectJsonConfig = toOldFormat({ projects });
       return super.readExistingAngularJson().pipe(
         map((angularJson) => {
           if (angularJson) {
-            return Buffer.from(
+            return stringToArrayBuffer(
               JSON.stringify({
                 version: 1,
                 projects: {
@@ -700,14 +768,14 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
               })
             );
           } else {
-            return Buffer.from(JSON.stringify(projectJsonConfig));
+            return stringToArrayBuffer(JSON.stringify(projectJsonConfig));
           }
         })
       );
     } else {
       const match = findMatchingFileChange(this.host, path);
       if (match) {
-        return of(Buffer.from(match.content));
+        return of(bufferToArrayBuffer(Buffer.from(match.content)));
       } else {
         return super.read(path);
       }
@@ -1009,10 +1077,10 @@ export function wrapAngularDevkitSchematic(
             event.content.toString()
           );
         } else {
-          host.write(eventPath, event.content);
+          host.write(eventPath, toBufferOrString(event.content));
         }
       } else if (event.kind === 'create') {
-        host.write(eventPath, event.content);
+        host.write(eventPath, toBufferOrString(event.content));
       } else if (event.kind === 'delete') {
         host.delete(eventPath);
       } else if (event.kind === 'rename') {
@@ -1305,4 +1373,92 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
     root,
     projects
   );
+}
+
+/**
+ * Restores Nx tokens in options when possible by comparing new and previous
+ * options.
+ * The function preserves tokens in the following cases:
+ * 1. When the resolved previous value matches the new value exactly
+ * 2. When the previous value used {workspaceRoot}
+ * 3. When the previous value used {projectRoot} and the new value starts with
+ *    the project root path
+ * Those are the only safe cases, for all other cases, the new value is used as-is.
+ */
+export function restoreNxTokensInOptions<T extends Object | Array<unknown>>(
+  newOptions: T,
+  previousOptions: T,
+  project: ProjectConfiguration
+): T {
+  if (!newOptions || !previousOptions) {
+    return newOptions;
+  }
+
+  const result: T = Array.isArray(newOptions)
+    ? ([...newOptions] as T)
+    : { ...newOptions };
+
+  const resolvedPreviousOptions = resolveNxTokensInOptions(
+    previousOptions,
+    project,
+    ''
+  );
+  for (const key of Object.keys(newOptions)) {
+    const newValue = newOptions[key];
+    const previousValue = previousOptions[key];
+    if (typeof newValue === 'string' && typeof previousValue === 'string') {
+      if (resolvedPreviousOptions[key] === newValue) {
+        // If the resolved previous value matches the new value, use the previous
+        // value (potentially with tokens)
+        result[key] = previousValue;
+      } else if (previousValue.startsWith('{workspaceRoot}/')) {
+        // If the previous value started with {workspaceRoot}, prefix the new
+        // value with {workspaceRoot}
+        result[key] = `{workspaceRoot}/${newValue.replace(/^\//, '')}`;
+      } else if (
+        previousValue.startsWith('{projectRoot}/') &&
+        newValue.startsWith(`${project.root}/`)
+      ) {
+        // If the previous value started with {projectRoot} and the new value
+        // starts with the project root, replace the project root with the
+        // {projectRoot} token
+        result[key] = newValue.replace(`${project.root}/`, '{projectRoot}/');
+      } else {
+        // Otherwise, use the new value as-is
+        result[key] = newValue;
+      }
+    } else if (
+      typeof newValue === 'object' &&
+      typeof previousValue === 'object' &&
+      newValue &&
+      previousValue
+    ) {
+      result[key] = restoreNxTokensInOptions(newValue, previousValue, project);
+    } else {
+      result[key] = newValue;
+    }
+  }
+  return result;
+}
+
+function toBufferOrString(
+  content: ArrayBufferLike | Buffer | string
+): Buffer | string {
+  if (Buffer.isBuffer(content) || typeof content === 'string') {
+    return content;
+  }
+
+  // it's an ArrayBuffer
+  return Buffer.from(content);
+}
+
+function stringToArrayBuffer(str: string): ArrayBuffer {
+  return new TextEncoder().encode(str).buffer as ArrayBuffer;
+}
+
+function bufferToArrayBuffer(buffer: Buffer): ArrayBuffer {
+  return buffer.buffer.slice(
+    buffer.byteOffset,
+    buffer.byteOffset + buffer.byteLength
+  ) as ArrayBuffer;
 }

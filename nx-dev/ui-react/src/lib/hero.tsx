@@ -4,8 +4,8 @@ import {
   SectionHeading,
   Strong,
   SectionDescription,
-} from '@nx/nx-dev/ui-common';
-import { ReactIcon } from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-common';
+import { ReactIcon } from '@nx/nx-dev-ui-icons';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { ReactElement } from 'react';
 
@@ -39,7 +39,7 @@ export function Hero(): ReactElement {
 
         <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
           <ButtonLink
-            href="/getting-started/tutorials/react-monorepo-tutorial"
+            href={'/docs/getting-started/tutorials/react-monorepo-tutorial'}
             variant="primary"
             size="default"
             title="Get Started"

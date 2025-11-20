@@ -1,0 +1,8 @@
+---
+import { type PersonaProps, Persona as Default } from '@nx/nx-dev-ui-markdoc/src/lib/tags/personas.component';
+type Props = PersonaProps;
+---
+
+<Default {...Astro.props}>
+  <slot />
+</Default>

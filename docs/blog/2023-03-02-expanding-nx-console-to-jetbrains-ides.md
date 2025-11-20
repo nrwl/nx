@@ -197,13 +197,13 @@ callbacks on the host side.
 One of the unique aspects of the Nx Console for IntelliJ is that it combines different technologies in a polyglot
 monorepo. While Nx is often used for Typescript- or Javascript-based repos, it's actually technology-agnostic and can
 host apps and libraries in any language. With the newly released [**_Encapsulated Nx_
-**](/recipes/installation/install-non-javascript) setting, this is even taken a step further! Now you don't need a
+**](/docs/guides/installation/install-non-javascript) setting, this is even taken a step further! Now you don't need a
 `package.json` or `node_modules` to run Nx.
 
 The codebase contains both Typescript code for the VSCode extension and Kotlin code for the IntelliJ plugin. Currently,
 all the Kotlin code resides in a single app. Targets defined in `project.json` are available that wrap different gradle
 tasks like running a development instance, building or formatting the plugin using the
-[`nx:run-commands`](/reference/core-api/nx/executors/run-commands) executor.  
+[`nx:run-commands`](/docs/reference/nx/executors) executor.  
 Since the plugin depends on artifacts provided by other Nx apps (namely the `nxls` and `generate-ui`), we have also
 created gradle tasks that call Nx to build these dependencies under the hood. This roundabout way of calling one tool
 from the other (and back again) could definitely be improved and we might look into having a more straightforward
@@ -229,7 +229,7 @@ between the TypeScript and Kotlin codebases.
 - 🎮 [Nx Console GitHub](https://github.com/nrwl/nx-console)
 - 🚀 [Nx Console JetBrains plugin](https://plugins.jetbrains.com/plugin/21060-nx-console)
 - 🤖 [Nx Console VSCode extension](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

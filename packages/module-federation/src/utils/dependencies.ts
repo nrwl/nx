@@ -1,10 +1,11 @@
 import type { ProjectGraph } from '@nx/devkit';
-import type { WorkspaceLibrary } from './models';
-import { readTsPathMappings } from './typescript';
 import {
   getOutputsForTargetAndConfiguration,
   parseTargetString,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import type { WorkspaceLibrary } from './models';
+import { readTsPathMappings } from './typescript';
 
 export function getDependentPackagesForProject(
   projectGraph: ProjectGraph,
@@ -45,12 +46,19 @@ function collectDependencies(
     if (dependency.target.startsWith('npm:')) {
       dependencies.npmPackages.add(dependency.target.replace('npm:', ''));
     } else {
-      dependencies.workspaceLibraries.set(dependency.target, {
-        name: dependency.target,
-        root: projectGraph.nodes[dependency.target].data.root,
-        importKey: getLibraryImportPath(dependency.target, projectGraph),
-      });
-      collectDependencies(projectGraph, dependency.target, dependencies, seen);
+      if (projectGraph.nodes[dependency.target]) {
+        dependencies.workspaceLibraries.set(dependency.target, {
+          name: dependency.target,
+          root: projectGraph.nodes[dependency.target].data.root,
+          importKey: getLibraryImportPath(dependency.target, projectGraph),
+        });
+        collectDependencies(
+          projectGraph,
+          dependency.target,
+          dependencies,
+          seen
+        );
+      }
     }
   });
 
@@ -66,7 +74,7 @@ function getLibraryImportPath(
     buildLibsFromSource = process.env.NX_BUILD_LIBS_FROM_SOURCE === 'true';
   }
   const libraryNode = projectGraph.nodes[library];
-  let sourceRoots = [libraryNode.data.sourceRoot];
+  let sourceRoots = [getProjectSourceRoot(libraryNode.data)];
 
   if (!buildLibsFromSource && process.env.NX_BUILD_TARGET) {
     const buildTarget = parseTargetString(
@@ -90,5 +98,7 @@ function getLibraryImportPath(
     }
   }
 
-  return undefined;
+  // Return library name if not found in TS path mappings
+  // This supports TS Solution + PM Workspaces where libs use package.json instead
+  return library;
 }

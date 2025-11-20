@@ -1,0 +1,50 @@
+---
+title: Using Tailwind CSS with Angular
+description: Learn how to set up and configure Tailwind CSS in Angular applications and libraries within an Nx workspace, including dependency management and Module Federation support.
+sidebar:
+  label: Using Tailwind CSS with Angular
+filter: 'type:Guides'
+---
+
+This guide shows how to set up and configure [Tailwind CSS](https://tailwindcss.com/) with [Angular](https://angular.dev/) projects in an Nx workspace.
+
+## Installation
+
+For the most up-to-date installation instructions, refer to the official Tailwind CSS documentation:
+
+- **Angular projects**: [Tailwind CSS with Angular](https://tailwindcss.com/docs/installation/framework-guides/angular)
+- **Other setups**: [Tailwind CSS installation guide](https://tailwindcss.com/docs/installation)
+
+## Configuring sources for monorepos
+
+### Tailwind CSS v4
+
+For Tailwind CSS v4, classes are [automatically detected from source files](https://tailwindcss.com/docs/detecting-classes-in-source-files). To register workspace libraries, add the following configuration to your stylesheet where you configure TailwindCSS.
+
+```css
+// apps/myapp/src/styles.css
+@import 'tailwindcss';
+@source "../../../libs";
+```
+
+### Tailwind CSS v3
+
+For Tailwind CSS v3, the [`content`](https://v3.tailwindcss.com/docs/content-configuration) property should be configured to include glob patterns that cover your project and its dependencies:
+
+```javascript
+// apps/my-app/tailwind.config.js
+const { join } = require('path');
+
+module.exports = {
+  content: [
+    join(__dirname, 'src/**/*.{ts,html}'),
+    join(__dirname, '../../libs/**/*.{ts,html}'),
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+```
+
+You can adjust the glob patterns based on your workspace structure. For example, you can be more selective by targeting individual libraries such as `libs/my-lib` rather than all libraries (`libs`). To learn how to automatically sync library dependencies with Tailwind sources, watch our video [Never Update Tailwind Glob Patterns Manually Again](https://www.youtube.com/watch?v=huTmV-F8c0A).

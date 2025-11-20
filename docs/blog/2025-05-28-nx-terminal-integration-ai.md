@@ -52,7 +52,7 @@ As a side note, for convenience, we also added a shortcut directly to our Nx ter
 
 This integration leverages several components working together:
 
-- **Nx Console as the MCP Host**: [Nx Console](/getting-started/editor-setup) acts as the Model Context Protocol (MCP) host, providing the communication bridge between your AI assistant and the Nx ecosystem.
+- **Nx Console as the MCP Host**: [Nx Console](/docs/getting-started/editor-setup) acts as the Model Context Protocol (MCP) host, providing the communication bridge between your AI assistant and the Nx ecosystem.
 
 - **JSON RPC Communication**: When you launch the new Nx terminal UI, Nx Console establishes a JSON RPC server that creates a communication channel between the terminal running your tasks, the Nx Console instance in your editor, and your AI assistant through the MCP.
 
@@ -81,8 +81,8 @@ This terminal integration gives your AI assistant **complete visibility into the
 
 To use this feature, you'll need:
 
-1. **[Nx Console](/getting-started/editor-setup)** installed in your editor
-2. **The [Nx MCP server configured](/features/enhance-AI)** for your AI assistant
+1. **[Nx Console](/docs/getting-started/editor-setup)** installed in your editor
+2. **The [Nx MCP server configured](/docs/features/enhance-ai)** for your AI assistant
 3. **The new Nx terminal UI** (available in the latest version of Nx)
 
 Once set up, simply run your development tasks through Nx and start asking your AI assistant for help when issues arise.
@@ -107,7 +107,7 @@ We're already working on even more "agentic" features that will further enhance 
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 🛠️ [Nx Terminal UI](/blog/nx-21-terminal-ui)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)

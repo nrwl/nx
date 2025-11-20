@@ -119,8 +119,14 @@ describe('MF Share Utils', () => {
       ]);
 
       // ASSERT
+      // With TS solution + PM workspaces support, workspace libs not in TS path mappings are still included
       expect(sharedLibraries.getAliases()).toEqual({});
-      expect(sharedLibraries.getLibraries('libs/shared')).toEqual({});
+      expect(sharedLibraries.getLibraries('libs/shared')).toEqual({
+        '@myorg/shared': {
+          requiredVersion: false,
+          eager: undefined,
+        },
+      });
     });
   });
 

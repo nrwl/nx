@@ -1,4 +1,9 @@
-<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600" alt="Nx - Smart Repos · Fast Builds"></p>
+<p style="text-align: center;">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-dark.svg">
+    <img alt="Nx - Smart Repos · Fast Builds" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
+  </picture>
+</p>
 
 {{links}}
 
@@ -6,7 +11,7 @@
 
 # Nx: Smart Repos · Fast Builds
 
-An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.
+Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.
 
 This package is a [Remix plugin for Nx](https://nx.dev/nx-api/remix).
 

@@ -6,8 +6,8 @@ import {
   Transition,
 } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { SectionHeading, Strong } from '@nx/nx-dev/ui-common';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { SectionHeading, Strong } from '@nx/nx-dev-ui-common';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { FAQPageJsonLd } from 'next-seo';
 import Link from 'next/link';
 import { ReactElement } from 'react';
@@ -67,7 +67,9 @@ export function Faq(): ReactElement {
           thus giving you the flexibility to adapt it to your custom
           authentication requirements.{' '}
           <Link
-            href="/recipes/running-tasks/self-hosted-caching#build-your-own-caching-server"
+            href={
+              '/docs/guides/tasks--caching/self-hosted-caching#build-your-own-caching-server'
+            }
             title="Learn more"
             prefetch={false}
             className="font-semibold"

@@ -4,7 +4,10 @@ import {
   offsetFromRoot,
   readProjectConfiguration,
   Tree,
+  workspaceRoot,
+  writeJson,
 } from '@nx/devkit';
+import { relative } from 'path';
 import {
   addOrChangeBuildTarget,
   addOrChangeServeTarget,
@@ -17,10 +20,62 @@ import {
   UserProvidedTargetName,
   writeRspackConfigFile,
 } from '../../utils/generator-utils';
-import { editTsConfig } from '../application/lib/create-ts-config';
 import rspackInitGenerator from '../init/init';
 import { ConfigurationSchema } from './schema';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { Framework } from '../init/schema';
+
+function projectIsRootProjectInStandaloneWorkspace(projectRoot: string) {
+  return relative(workspaceRoot, projectRoot).length === 0;
+}
+
+function editTsConfig(
+  tree: Tree,
+  projectRoot: string,
+  framework: Framework,
+  relativePathToRootTsConfig: string
+) {
+  // Nx 15.8 moved util to @nx/js, but it is in @nx/workspace in 15.7
+  let shared: any;
+  try {
+    shared = require('@nx/js/src/utils/typescript/create-ts-config');
+  } catch {
+    shared = require('@nx/workspace/src/utils/create-ts-config');
+  }
+
+  if (framework === 'react') {
+    const json = {
+      compilerOptions: {
+        jsx: 'react-jsx',
+        allowJs: false,
+        esModuleInterop: false,
+        allowSyntheticDefaultImports: true,
+        strict: true,
+      },
+      files: [],
+      include: [],
+      references: [
+        {
+          path: './tsconfig.app.json',
+        },
+      ],
+    } as any;
+
+    // inline tsconfig.base.json into the project
+    if (projectIsRootProjectInStandaloneWorkspace(projectRoot)) {
+      json.compileOnSave = false;
+      json.compilerOptions = {
+        ...shared.tsConfigBaseOptions,
+        ...json.compilerOptions,
+      };
+      json.exclude = ['node_modules', 'tmp'];
+    } else {
+      json.extends = relativePathToRootTsConfig;
+    }
+
+    writeJson(tree, `${projectRoot}/tsconfig.json`, json);
+  }
+}
 
 export async function configurationGenerator(
   tree: Tree,

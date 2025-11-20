@@ -25,16 +25,8 @@ export function ensureDependencies(
   tree: Tree,
   options: EnsureDependenciesOptions
 ) {
-  let storybookVersionToInstall = storybookVersion;
-  const installedStorybookMajorVersion = storybookMajorVersion();
-  if (
-    installedStorybookMajorVersion >= 7 &&
-    getInstalledStorybookVersion() &&
-    gte(getInstalledStorybookVersion(), '7.0.0')
-  ) {
-    storybookVersionToInstall = getInstalledStorybookVersion();
-  }
-
+  const storybookVersionToInstall = getInstalledStorybookVersion(tree);
+  const installedStorybookMajorVersion = storybookMajorVersion(tree);
   const dependencies: Record<string, string> = {};
   const devDependencies: Record<string, string> =
     installedStorybookMajorVersion < 9
@@ -71,9 +63,16 @@ export function ensureDependencies(
     if (isPnpm) {
       // If it's pnpm, it needs the framework without the builder
       // as a dependency too (eg. @storybook/react)
-      const matchResult = options.uiFramework?.match(/^@storybook\/(\w+)/);
-      const uiFrameworkWithoutBuilder = matchResult ? matchResult[0] : null;
-      if (uiFrameworkWithoutBuilder) {
+      const matchResult = options.uiFramework?.match(
+        /^@storybook\/([\w-]+?)(?:-(?:vite|webpack5|webpack))?$/
+      );
+      const uiFrameworkWithoutBuilder = matchResult
+        ? `@storybook/${matchResult[1]}`
+        : null;
+      if (
+        uiFrameworkWithoutBuilder &&
+        uiFrameworkWithoutBuilder !== options.uiFramework
+      ) {
         devDependencies[uiFrameworkWithoutBuilder] = storybookVersionToInstall;
       }
     }

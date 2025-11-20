@@ -1,4 +1,4 @@
-import { ButtonLink } from '@nx/nx-dev/ui-common';
+import { ButtonLink } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 
 export interface DownloadCaseStudyProps {

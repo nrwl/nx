@@ -229,11 +229,10 @@ impl PseudoTerminal {
             trace!("Enabling raw mode");
             enable_raw_mode().expect("Failed to enter raw terminal mode");
         }
-        let process_killer = ProcessKiller::new(
-            child
-                .process_id()
-                .expect("unable to determine child process id") as i32,
-        );
+        let pid = child
+            .process_id()
+            .expect("unable to determine child process id") as i32;
+        let process_killer = ProcessKiller::new(pid);
 
         trace!("Getting running clone");
         let running_clone = self.running.clone();
@@ -277,6 +276,7 @@ impl PseudoTerminal {
         Ok(ChildProcess::new(
             self.parser.clone(),
             self.writer.clone(),
+            pid,
             process_killer,
             self.stdout_rx.clone(),
             exit_to_process_rx,

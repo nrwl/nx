@@ -1,4 +1,4 @@
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import {
   type FormEvent,
   type JSX,
@@ -11,9 +11,9 @@ import { ErrorMessage } from './error-message';
 import { Feed } from './feed/feed';
 import { LoadingState } from './loading-state';
 import { Prompt } from './prompt';
-import { getQueryFromUid, storeQueryForUid } from '@nx/nx-dev/util-ai';
+import { getQueryFromUid, storeQueryForUid } from '@nx/nx-dev-util-ai';
 import { Message, useChat } from 'ai/react';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 const assistantWelcome: Message = {
   id: 'first-custom-message',
@@ -116,7 +116,7 @@ export function FeedContainer(): JSX.Element {
         data-testid="wrapper"
         className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
       >
-        <div className="mx-auto w-full grow items-stretch px-4 sm:px-8 lg:max-w-4xl">
+        <div className="mx-auto w-full max-w-4xl grow items-stretch px-4 sm:px-8 ">
           <div
             id="content-wrapper"
             className="w-full flex-auto flex-grow flex-col"

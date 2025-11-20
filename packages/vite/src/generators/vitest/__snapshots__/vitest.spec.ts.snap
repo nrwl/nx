@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`vitest generator angular should generate src/test-setup.ts 1`] = `
 "import '@angular/compiler';
@@ -33,6 +33,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   test: {
+    name: 'my-test-angular-app',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -48,39 +49,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`vitest generator insourceTests should add the insourceSource option in the vite config 1`] = `
-"/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-
-export default defineConfig(() => ({
-  root: __dirname,
-  cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-  define: {
-    'import.meta.vitest': undefined,
-  },
-  test: {
-    watch: false,
-    globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../../coverage/apps/my-test-react-app',
-      provider: 'v8' as const,
-    },
-  },
-}));
-"
-`;
+exports[`vitest generator insourceTests should add the insourceSource option in the vite config 1`] = `null`;
 
 exports[`vitest generator tsconfig should add vitest.workspace.ts at the root 1`] = `
 "export default [
@@ -90,62 +59,6 @@ exports[`vitest generator tsconfig should add vitest.workspace.ts at the root 1`
 "
 `;
 
-exports[`vitest generator vite.config for libs should create correct vite.config.ts file for non buildable libs 1`] = `
-"/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+exports[`vitest generator vite.config for libs should create correct vite.config.ts file for non buildable libs 1`] = `null`;
 
-export default defineConfig(() => ({
-  root: __dirname,
-  cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-  test: {
-    watch: false,
-    globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../../coverage/libs/react-lib-nonb-jest',
-      provider: 'v8' as const,
-    },
-  },
-}));
-"
-`;
-
-exports[`vitest generator vite.config should create correct vite.config.ts file for apps 1`] = `
-"/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-
-export default defineConfig(() => ({
-  root: __dirname,
-  cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-  test: {
-    watch: false,
-    globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../../coverage/apps/my-test-react-app',
-      provider: 'v8' as const,
-    },
-  },
-}));
-"
-`;
+exports[`vitest generator vite.config should create correct vite.config.ts file for apps 1`] = `null`;

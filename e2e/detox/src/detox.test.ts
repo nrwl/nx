@@ -5,7 +5,7 @@ import {
   uniq,
   readJson,
   updateJson,
-} from 'e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('@nx/detox', () => {
   let project: string;
@@ -13,7 +13,7 @@ describe('@nx/detox', () => {
   let expoAppName: string;
 
   beforeAll(() => {
-    project = newProject();
+    project = newProject({ packages: ['@nx/expo', '@nx/react-native'] });
     reactNativeAppName = uniq('appTest');
     expoAppName = uniq('expoAppTest');
     runCLI(

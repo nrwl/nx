@@ -100,14 +100,14 @@ While `@source` directives solve the technical problem, they introduce a mainten
 - **hard-to-debug issues** since missing styles don't break builds (just cause visual problems), and
 - **team coordination** since every developer needs to remember to update these paths.
 
-This is where automation becomes crucial and where Nx can help. [Nx Sync Generators](/concepts/sync-generators) provide a powerful solution for **automating configuration that needs to stay in sync with your project structure**.
+This is where automation becomes crucial and where Nx can help. [Nx Sync Generators](/docs/concepts/sync-generators) provide a powerful solution for **automating configuration that needs to stay in sync with your project structure**.
 
 For our specific use case we can automate the generation of the `@source` directives by
 
-- analyzing and traversing all of the `shop` application's dependencies (leveraging the [Nx project graph](/features/explore-graph))
+- analyzing and traversing all of the `shop` application's dependencies (leveraging the [Nx project graph](/docs/features/explore-graph))
 - generating the `@source` entries into the correct `styles.css` file
 
-You can follow [the guide on the Nx docs](/extending-nx/recipes/create-sync-generator) for all the details on how to implement your own Nx sync generator. At a high level these are the steps you'll need:
+You can follow [the guide on the Nx docs](/docs/extending-nx/create-sync-generator) for all the details on how to implement your own Nx sync generator. At a high level these are the steps you'll need:
 
 **Step 1: Add Nx Plugin development support**
 
@@ -230,9 +230,9 @@ This approach transforms configuration maintenance into a completely automated p
 
 ## Learn more
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Tailwind v4 Vite NPM Workspace Demo](https://github.com/juristr/tailwind4-vite-npm-workspaces)
-- 📖 [Nx Sync Generators Documentation](/extending-nx/recipes/create-sync-generator)
+- 📖 [Nx Sync Generators Documentation](/docs/extending-nx/create-sync-generator)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 🐦 [Follow me on Twitter/X](https://twitter.com/juristr)

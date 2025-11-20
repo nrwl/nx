@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-// nx-ignore-next-line
 import { assign } from '@xstate/immer';
+// nx-ignore-next-line
 import type {
   GeneratedMigrationDetails,
   MigrationDetailsWithId,

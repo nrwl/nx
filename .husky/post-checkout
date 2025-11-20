@@ -1,2 +1,12 @@
+# Skip if this is a worktree creation (previous ref is null)
+if [ "$1" = "0000000000000000000000000000000000000000" ]; then
+  exit 0
+fi
+
+# Skip if this is a file checkout (not branch switch) - $3 would be 0
+if [ "$3" = "0" ]; then
+  exit 0
+fi
+
 changedFiles="$(git diff-tree -r --name-only --no-commit-id $1 $2)"
 node ./scripts/notify-lockfile-changes.js $changedFiles

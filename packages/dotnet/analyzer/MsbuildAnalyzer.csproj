@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- Allow running on newer .NET versions if net8.0 isn't available -->
+    <RollForward>LatestMajor</RollForward>
+    <RootNamespace>MsbuildAnalyzer</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Microsoft.Build packages provide ProjectGraph and evaluation APIs -->
+    <!-- Using 17.* versions that support .NET Core/Standard -->
+    <!-- ExcludeAssets="runtime" prevents copying MSBuild assemblies; MSBuildLocator will load them -->
+    <PackageReference Include="Microsoft.Build" Version="17.0.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="17.0.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.8.1" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    
+  </PropertyGroup>
+
+</Project>

@@ -9,7 +9,7 @@ description: Track your Nx Cloud CI pipelines directly in your IDE with the new 
 
 ## Your CI Pipelines, Now At-A-Glance In Your IDE
 
-We're in the process of adding a new integration between [Nx Cloud](/nx-cloud), our CI product, and [Nx Console](/getting-started/editor-setup) our official plugin for the VSCode and JetBrains IDEs!
+We're in the process of adding a new integration between [Nx Cloud](/nx-cloud), our CI product, and [Nx Console](/docs/getting-started/editor-setup) our official plugin for the VSCode and JetBrains IDEs!
 
 Now, once you've [connected your Nx Console to Nx Cloud](/blog/nx-console-meets-nx-cloud), you will have access to a new panel in the console that shows all of your recent CI Pipelines, including those in progress now.
 

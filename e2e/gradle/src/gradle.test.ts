@@ -7,7 +7,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 import { createGradleProject } from './utils/create-gradle-project';
 
@@ -17,7 +17,7 @@ describe('Gradle', () => {
     ({ type }: { type: 'kotlin' | 'groovy' }) => {
       let gradleProjectName = uniq('my-gradle-project');
       beforeAll(() => {
-        newProject();
+        newProject({ packages: [] });
         createGradleProject(gradleProjectName, type);
         runCLI(`add @nx/gradle`);
       });
@@ -43,6 +43,9 @@ describe('Gradle', () => {
         buildOutput = runCLI('build app --batch', { verbose: true });
         expect(buildOutput).toContain(':list:classes');
         expect(buildOutput).toContain(':utilities:classes');
+
+        const bootJarOutput = runCLI('bootJar app', { verbose: true });
+        expect(bootJarOutput).toContain(':app:bootJar');
       });
 
       it('should track dependencies for new app', () => {

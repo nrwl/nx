@@ -1,0 +1,71 @@
+---
+title: Enable AI Features
+description: Learn how to enable and configure AI-powered features in Nx Cloud
+filter: 'type:Guides'
+---
+
+This guide walks you through enabling AI features in Nx Cloud for both cloud-hosted and on-prem installations.
+
+## Nx Cloud Hosted Setup
+
+To enable AI features for your organization, go to [your organization's settings](https://cloud.nx.app/go/organization/edit) on Nx Cloud and select the organization where you want to enable AI.
+
+In the **settings** menu, find the "AI Features" section and toggle it to "On".
+
+![enable ai features](../../../../assets/features/ci-features/ai-features.avif)
+
+Ensure that you **accept the AI terms** to start using the AI features.
+
+{% aside type="note" title="AI Features Availability" %}
+
+AI features are available on Hobby, Team and Enterprise [Nx Cloud plans](https://nx.dev/pricing).
+
+{% /aside %}
+
+## Self-Healing CI for Enterprise On-Prem Installations
+
+To enable Self-Healing CI for enterprise on-prem installations, follow these steps:
+
+### Setup
+
+Add the following configuration to your `helm-values.yaml` file:
+
+```yaml
+nxApi
+  deployment:
+    env:
+      - name: NX_CLOUD_AI_ENABLED
+        value: 'true'
+      - name: NX_CLOUD_AI_TOKEN_PROVIDER_TYPE
+        value: 'fixed'
+      - name: NX_CLOUD_ANTHROPIC_API_KEY
+        value: 'sk-ant-...'
+
+frontend
+  deployment:
+    env:
+      - name: NX_CLOUD_AI_ENABLED
+        value: 'true'
+```
+
+Then, enable AI features in the [organization settings](https://cloud.nx.app/go/organization/edit) and enable Self-Healing CI in the [workspace settings](https://cloud.nx.app/go/workspace/settings).
+
+### Running Self-Healing CI On-Prem
+
+#### Automatic DTE Agents
+
+If using DTE agents, the self-healing CI step will be automatically added when the setting is enabled in the workspace settings.
+
+#### Manual DTE
+
+For manual DTE configurations, the `nx fix-ci` command must be included in the agent configuration after running nx tasks.
+
+**Important:** This command must run **always**, meaning that even when previous nx tasks fail, the `fix-ci` command should still execute.
+
+#### Non-DTE
+
+For non-DTE setups, refer to the [Self-Healing CI documentation](/docs/features/ci-features/self-healing-ci) for detailed configuration instructions.
+
+## Regional Availability
+
+AI features are not available for the EU cluster in public cloud installations due to regional restrictions. However, on-prem customers in the EU can still use these features by providing their own Anthropic API key (for Self-Healing CI) and enabling the required environment variables.

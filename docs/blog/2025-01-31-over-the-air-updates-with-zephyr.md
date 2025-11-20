@@ -7,7 +7,7 @@ cover_image: /blog/images/2025-01-31/cover-image.jpg
 description: 'Deploy React Native app updates instantly with Module Federation and Zephyr Cloud, skipping app store review processes.'
 ---
 
-Module Federation is an exciting and continually evolving technology. The use cases for Module Federation have expanded from [Micro Frontends](/technologies/module-federation/concepts/micro-frontend-architecture) and [Faster Builds](/technologies/module-federation/concepts/faster-builds-with-module-federation) to also include something that should be extremely interesting for React Native users.
+Module Federation is an exciting and continually evolving technology. The use cases for Module Federation have expanded from [Micro Frontends](/docs/technologies/module-federation/concepts/micro-frontend-architecture) and [Faster Builds](/docs/technologies/module-federation/concepts/faster-builds-with-module-federation) to also include something that should be extremely interesting for React Native users.
 
 Thanks to the wonderful work from the [Re.Pack](https://re-pack.dev/) team at [Callstack](https://www.callstack.com/) and [Zephyr Cloud](https://www.zephyr-cloud.io/) now you can provide over-the-air (OTA) updates to your deployed native mobile apps by running a build from your laptop - without having to deal with the difficulties or time-consuming process of deploying a new binary to each of the app stores your application is deployed to.
 
@@ -54,13 +54,13 @@ While you could have multiple repositories housing each portion of the applicati
 
 There are known limitations around dependency management when using React Native, Re.Pack and Module Federation. Limitations such as dependencies that rely on native code must be aligned between all portions of the application. If these were to change, a new binary deployment to the app store must be done. JavaScript dependencies _can_ differ between portions, but this also introduces risk of runtime breaking changes.
 
-Nx mitigates these risks. With its enforcement of a [single-version policy](/concepts/decisions/dependency-management#single-version-policy) it becomes much easier to ensure that if a dependency changes _all_ portions of the Module Federation setup are marked as ["affected"](/ci/features/affected) requiring a new deployment.
+Nx mitigates these risks. With its enforcement of a [single-version policy](/docs/concepts/decisions/dependency-management#single-version-policy) it becomes much easier to ensure that if a dependency changes _all_ portions of the Module Federation setup are marked as ["affected"](/docs/features/ci-features/affected) requiring a new deployment.
 
-Beyond just mitigating risk of changing dependencies that can cause runtime errors, Nx will also ensure your application to scale to more developers and more feature teams. With features such as [Task Caching](/features/cache-task-results) and [Task Orchestration](/features/run-tasks#defining-a-task-pipeline) developers will know when they make their changes if they are introducing regressions or breaking changes to other areas within the system faster - before it hits production.
+Beyond just mitigating risk of changing dependencies that can cause runtime errors, Nx will also ensure your application to scale to more developers and more feature teams. With features such as [Task Caching](/docs/features/cache-task-results) and [Task Orchestration](/docs/features/run-tasks#defining-a-task-pipeline) developers will know when they make their changes if they are introducing regressions or breaking changes to other areas within the system faster - before it hits production.
 
-If you sprinkle [Nx Cloud](/ci/intro/why-nx-cloud) on top - you can ensure your CI remains fast as you scale out your application through [Nx Replay](/ci/features/remote-cache#use-remote-caching-nx-replay) and [Nx Agents](/ci/features/distribute-task-execution). Increased scalability does not come with an increased maintenance cost of managing CI machines manually thanks to declarative [config files](/ci/recipes/set-up/monorepo-ci-github-actions).
+If you sprinkle [Nx Cloud](/docs/features/ci-features) on top - you can ensure your CI remains fast as you scale out your application through [Nx Replay](/docs/features/ci-features/remote-cache#use-remote-caching-nx-replay) and [Nx Agents](/docs/features/ci-features/distribute-task-execution). Increased scalability does not come with an increased maintenance cost of managing CI machines manually thanks to declarative [config files](/docs/guides/nx-cloud/setup-ci).
 
-You can learn more about Why to use Nx beyond Module Federation support [here](/getting-started/intro).
+You can learn more about Why to use Nx beyond Module Federation support [here](/docs/getting-started/intro).
 
 ## Setting up a Super App with Nx
 

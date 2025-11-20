@@ -25,7 +25,6 @@ export interface Schema {
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   minimal?: boolean;
-  simpleName?: boolean;
   addPlugin?: boolean;
   useProjectJson?: boolean;
 }

@@ -1,25 +1,26 @@
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import {
-  type RspackPluginInstance,
   type Configuration,
+  type RspackPluginInstance,
   type RuleSetRule,
-  LightningCssMinimizerRspackPlugin,
-  DefinePlugin,
   CssExtractRspackPlugin,
+  DefinePlugin,
   EnvironmentPlugin,
-  RspackOptionsNormalized,
   HtmlRspackPlugin,
+  LightningCssMinimizerRspackPlugin,
+  RspackOptionsNormalized,
 } from '@rspack/core';
-import { WriteIndexHtmlPlugin } from '../write-index-html-plugin';
-import { instantiateScriptPlugins } from './instantiate-script-plugins';
 import { join, resolve } from 'path';
+import { WriteIndexHtmlPlugin } from '../write-index-html-plugin';
 import { getOutputHashFormat } from './hash-format';
-import { normalizeExtraEntryPoints } from './normalize-entry';
+import { instantiateScriptPlugins } from './instantiate-script-plugins';
 import {
   getCommonLoadersForCssModules,
   getCommonLoadersForGlobalCss,
   getCommonLoadersForGlobalStyle,
 } from './loaders/stylesheet-loaders';
 import { NormalizedNxAppRspackPluginOptions } from './models';
+import { normalizeExtraEntryPoints } from './normalize-entry';
 
 export function applyWebConfig(
   options: NormalizedNxAppRspackPluginOptions,
@@ -43,7 +44,9 @@ export function applyWebConfig(
     ? join(options.root, options.index)
     : join(
         options.root,
-        options.projectGraph.nodes[options.projectName].data.sourceRoot,
+        getProjectSourceRoot(
+          options.projectGraph.nodes[options.projectName].data
+        ),
         'index.html'
       );
   options.styles ??= [];
@@ -85,6 +88,7 @@ export function applyWebConfig(
       plugins.push(
         new HtmlRspackPlugin({
           template: options.index,
+          templateParameters: options.templateParameters,
           sri: options.subresourceIntegrity ? 'sha256' : undefined,
           ...(options.baseHref ? { base: { href: options.baseHref } } : {}),
           ...(config.output?.scriptType === 'module'
@@ -99,7 +103,7 @@ export function applyWebConfig(
   if (isProd && stylesOptimization) {
     minimizer.push(
       new LightningCssMinimizerRspackPlugin({
-        test: /\.(?:css|scss|sass|less|styl)$/,
+        test: /\.(?:css|scss|sass|less)$/,
       })
     );
   }
@@ -159,15 +163,12 @@ export function applyWebConfig(
         {
           loader: require.resolve('sass-loader'),
           options: {
-            implementation:
-              options.sassImplementation === 'sass'
-                ? require.resolve('sass')
-                : require.resolve('sass-embedded'),
+            implementation: require.resolve('sass-embedded'),
             api: 'modern-compiler',
             sassOptions: {
               fiber: false,
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -190,24 +191,6 @@ export function applyWebConfig(
         },
       ],
     },
-    {
-      test: /\.module\.styl$/,
-      exclude: globalStylePaths,
-      use: [
-        ...getCommonLoadersForCssModules(options, includePaths),
-        {
-          loader: join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            stylusOptions: {
-              include: includePaths,
-            },
-          },
-        },
-      ],
-    },
   ];
 
   const globalCssRules: RuleSetRule[] = [
@@ -225,16 +208,13 @@ export function applyWebConfig(
           loader: require.resolve('sass-loader'),
           options: {
             api: 'modern-compiler',
-            implementation:
-              options.sassImplementation === 'sass'
-                ? require.resolve('sass')
-                : require.resolve('sass-embedded'),
+            implementation: require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -254,25 +234,6 @@ export function applyWebConfig(
               javascriptEnabled: true,
               ...lessPathOptions,
               ...(lessOptions ?? {}),
-            },
-          },
-        },
-      ],
-    },
-    {
-      test: /\.styl$/,
-      exclude: globalStylePaths,
-      use: [
-        ...getCommonLoadersForGlobalCss(options, includePaths),
-        {
-          loader: join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            sourceMap: !!options.sourceMap,
-            stylusOptions: {
-              include: includePaths,
             },
           },
         },
@@ -295,16 +256,13 @@ export function applyWebConfig(
           loader: require.resolve('sass-loader'),
           options: {
             api: 'modern-compiler',
-            implementation:
-              options.sassImplementation === 'sass'
-                ? require.resolve('sass')
-                : require.resolve('sass-embedded'),
+            implementation: require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -329,30 +287,11 @@ export function applyWebConfig(
         },
       ],
     },
-    {
-      test: /\.styl$/,
-      include: globalStylePaths,
-      use: [
-        ...getCommonLoadersForGlobalStyle(options, includePaths),
-        {
-          loader: join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            sourceMap: !!options.sourceMap,
-            stylusOptions: {
-              include: includePaths,
-            },
-          },
-        },
-      ],
-    },
   ];
 
   const rules: RuleSetRule[] = [
     {
-      test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
+      test: /\.css$|\.scss$|\.sass$|\.less$/,
       oneOf: [...cssModuleRules, ...globalCssRules, ...globalStyleRules],
     },
   ];

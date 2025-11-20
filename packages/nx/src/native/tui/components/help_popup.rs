@@ -128,8 +128,6 @@ impl HelpPopup {
             ("↓ or j", "Navigate/scroll task output down"),
             ("<ctrl>+u", "Scroll task output up"),
             ("<ctrl>+d", "Scroll task output down"),
-            ("← or h", "Navigate left"),
-            ("→ or l", "Navigate right"),
             ("", ""),
             // Task List Controls
             ("/", "Filter tasks based on search term"),
@@ -187,6 +185,22 @@ impl HelpPopup {
                     // NOTE: I tried OSC 8 sequences here but they broke the layout, see: https://github.com/ratatui/ratatui/issues/1028
                     "https://nx.dev/terminal-ui",
                     Style::default().fg(THEME.info),
+                ),
+                Span::styled(
+                    "If you would prefer to not use the TUI, you can disable it by: ",
+                    Style::default().fg(THEME.info),
+                ),
+                Span::styled(
+                    "- Adding the `--no-tui` flag to your command.",
+                    Style::default()
+                        .fg(THEME.info)
+                        .add_modifier(Modifier::ITALIC),
+                ),
+                Span::styled(
+                    "- Setting NX_TUI=false in your environment.",
+                    Style::default()
+                        .fg(THEME.info)
+                        .add_modifier(Modifier::ITALIC),
                 ),
             ]),
             Line::from(vec![

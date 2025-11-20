@@ -134,7 +134,7 @@ Keep the agent in discussion mode - no code execution yet. Provide necessary con
 
 The amount of planning needed depends on the task. Small tasks require minimal planning, but skipping planning for large tasks virtually guarantees poor results.
 
-Planning needs substantial context. This is where tools like [Nx's AI integration](/features/enhance-AI) shine by providing agents with derived context about your codebase architecture, team responsibilities, and organizational boundaries. All of these helps LLMs and humans operate from the same architectural and organizational context.
+Planning needs substantial context. This is where tools like [Nx's AI integration](/docs/features/enhance-ai) shine by providing agents with derived context about your codebase architecture, team responsibilities, and organizational boundaries. All of these helps LLMs and humans operate from the same architectural and organizational context.
 
 For large changes, it's a good idea to persist the created plan to disk.
 
@@ -283,7 +283,7 @@ Start small, experiment with the patterns outlined here, and gradually build you
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 📖 [Nx and AI: Why They Work so Well Together](/blog/nx-and-ai-why-they-work-together)
 - 📖 [Combining Predictability and Intelligence With Nx Generators and AI](/blog/nx-generators-ai-integration)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)

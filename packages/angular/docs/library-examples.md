@@ -39,3 +39,4 @@ nx g @nx/angular:library libs/nested/my-lib --importPath=@myorg/nested/my-lib
 ```
 
 {% /tab %}
+{% /tabs %}

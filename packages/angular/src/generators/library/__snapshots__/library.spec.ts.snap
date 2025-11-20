@@ -4,11 +4,10 @@ exports[`lib --standalone should generate a library with a standalone component 
 
 exports[`lib --standalone should generate a library with a standalone component and have it flat 2`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './my-lib.html',
   styleUrl: './my-lib.css'
 })
@@ -49,11 +48,10 @@ export * from './lib/my-lib';"
 
 exports[`lib --standalone should generate a library with a standalone component and have it flat with routing setup 2`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './my-lib.html',
   styleUrl: './my-lib.css'
 })
@@ -100,11 +98,10 @@ exports[`lib --standalone should generate a library with a standalone component 
 
 exports[`lib --standalone should generate a library with a standalone component as entry point 2`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './my-lib.html',
   styleUrl: './my-lib.css'
 })
@@ -141,11 +138,10 @@ exports[`lib --standalone should generate a library with a standalone component 
 
 exports[`lib --standalone should generate a library with a standalone component as entry point and set up view encapsulation and change detection 2`] = `
 "import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  imports: [CommonModule],
+  imports: [],
   template: \`<p>MyLib works!</p>\`,
   styles: \`\`,
   encapsulation: ViewEncapsulation.ShadowDom,
@@ -159,11 +155,10 @@ exports[`lib --standalone should generate a library with a standalone component 
 
 exports[`lib --standalone should generate a library with a standalone component as entry point and skip tests 2`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  imports: [CommonModule],
+  imports: [],
   template: \`<p>MyLib works!</p>\`,
   styles: \`\`
 })
@@ -175,11 +170,10 @@ exports[`lib --standalone should generate a library with a standalone component 
 
 exports[`lib --standalone should generate a library with a standalone component as entry point following SFC pattern 2`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  imports: [CommonModule],
+  imports: [],
   template: \`<p>MyLib works!</p>\`,
   styles: \`\`
 })
@@ -230,11 +224,10 @@ export const myLibRoutes: Route[] = [
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup 3`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './my-lib.html',
   styleUrl: './my-lib.css'
 })
@@ -343,11 +336,10 @@ exports[`lib --standalone should generate a library with a standalone component 
 
 exports[`lib --standalone should generate a library with a standalone component in a directory 2`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './my-lib.html',
   styleUrl: './my-lib.css'
 })
@@ -384,11 +376,10 @@ exports[`lib --standalone should generate a library with a standalone component 
 
 exports[`lib --standalone should generate a library with a standalone component in a directory with a simple name 2`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './my-lib.html',
   styleUrl: './my-lib.css'
 })
@@ -425,11 +416,10 @@ exports[`lib --standalone should generate a library with a valid selector for th
 
 exports[`lib --standalone should generate a library with a valid selector for the standalone component when library name has a slash 2`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-auth-common',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './common.html',
   styleUrl: './common.css'
 })

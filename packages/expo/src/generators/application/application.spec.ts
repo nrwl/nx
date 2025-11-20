@@ -100,7 +100,7 @@ describe('app', () => {
       unitTestRunner: 'jest',
     });
 
-    expect(appTree.exists('my-app/jest.config.ts')).toBeTruthy();
+    expect(appTree.exists('my-app/jest.config.cts')).toBeTruthy();
     expect(appTree.exists('my-app/src/app/App.spec.tsx')).toBeTruthy();
     expect(appTree.exists('my-app/tsconfig.spec.json')).toBeTruthy();
     expect(readJson(appTree, 'my-app/tsconfig.json').references).toEqual(
@@ -111,12 +111,8 @@ describe('app', () => {
       ])
     );
     const packageJson = readJson(appTree, 'package.json');
-    expect(packageJson.devDependencies['react-test-renderer']).toBeDefined();
     expect(
       packageJson.devDependencies['@testing-library/react-native']
-    ).toBeDefined();
-    expect(
-      packageJson.devDependencies['@testing-library/jest-native']
     ).toBeDefined();
     expect(packageJson.devDependencies['jest-expo']).toBeDefined();
   });
@@ -131,7 +127,7 @@ describe('app', () => {
       unitTestRunner: 'none',
     });
 
-    expect(appTree.exists('my-app/jest.config.ts')).toBe(false);
+    expect(appTree.exists('my-app/jest.config.cts')).toBe(false);
     expect(appTree.exists('my-app/src/app/App.spec.tsx')).toBe(false);
     expect(appTree.exists('my-app/tsconfig.spec.json')).toBe(false);
     expect(readJson(appTree, 'my-app/tsconfig.json').references).not.toEqual(
@@ -150,6 +146,36 @@ describe('app', () => {
       packageJson.devDependencies['@testing-library/jest-native']
     ).toBeUndefined();
     expect(packageJson.devDependencies['jest-expo']).toBeUndefined();
+  });
+
+  it('should not ignore "out-tsc" from eslint', async () => {
+    await expoApplicationGenerator(appTree, {
+      directory: 'my-app',
+      linter: 'eslint',
+      e2eTestRunner: 'none',
+      js: false,
+      unitTestRunner: 'none',
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(appTree, 'my-app/.eslintrc.json');
+    expect(eslintConfig.ignorePatterns).not.toContain('**/out-tsc');
+  });
+
+  it('should not ignore "out-tsc" from eslint with flat config', async () => {
+    appTree.write('eslint.config.mjs', 'export default [];');
+
+    await expoApplicationGenerator(appTree, {
+      directory: 'my-app',
+      linter: 'eslint',
+      e2eTestRunner: 'none',
+      js: false,
+      unitTestRunner: 'none',
+      skipFormat: true,
+    });
+
+    const eslintConfig = appTree.read('my-app/eslint.config.mjs', 'utf-8');
+    expect(eslintConfig).not.toContain('**/out-tsc');
   });
 
   describe('detox', () => {
@@ -391,6 +417,8 @@ describe('app', () => {
           "name",
           "version",
           "private",
+          "scripts",
+          "dependencies",
         ]
       `);
       expect(readJson(tree, 'my-app/tsconfig.json')).toMatchInlineSnapshot(`
@@ -435,8 +463,10 @@ describe('app', () => {
             "**/*.spec.jsx",
             "src/test-setup.ts",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
+            "jest.resolver.js",
             "eslint.config.js",
             "eslint.config.cjs",
             "eslint.config.mjs",
@@ -450,6 +480,8 @@ describe('app', () => {
             "**/*.tsx",
             "**/*.js",
             "**/*.jsx",
+            ".expo/types/**/*.ts",
+            "expo-env.d.ts",
           ],
         }
       `);
@@ -473,6 +505,7 @@ describe('app', () => {
           ],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -482,6 +515,7 @@ describe('app', () => {
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
             "src/**/*.d.ts",
+            "jest.resolver.js",
           ],
           "references": [
             {
@@ -515,9 +549,13 @@ describe('app', () => {
           "name",
           "version",
           "private",
+          "scripts",
           "nx",
+          "dependencies",
         ]
       `);
+
+      expect(packageJson).toHaveProperty('dependencies.expo');
     });
 
     it('should generate project.json if useProjectJson is true', async () => {
@@ -563,6 +601,36 @@ describe('app', () => {
         }
       `);
       expect(readJson(tree, 'my-app-e2e/package.json').nx).toBeUndefined();
+    });
+
+    it('should ignore "out-tsc" from eslint', async () => {
+      await expoApplicationGenerator(tree, {
+        directory: 'my-app',
+        linter: 'eslint',
+        e2eTestRunner: 'none',
+        js: false,
+        unitTestRunner: 'none',
+        skipFormat: true,
+      });
+
+      const eslintConfig = readJson(tree, 'my-app/.eslintrc.json');
+      expect(eslintConfig.ignorePatterns).toContain('**/out-tsc');
+    });
+
+    it('should ignore "out-tsc" from eslint with flat config', async () => {
+      tree.write('eslint.config.mjs', 'export default [];');
+
+      await expoApplicationGenerator(tree, {
+        directory: 'my-app',
+        linter: 'eslint',
+        e2eTestRunner: 'none',
+        js: false,
+        unitTestRunner: 'none',
+        skipFormat: true,
+      });
+
+      const eslintConfig = tree.read('my-app/eslint.config.mjs', 'utf-8');
+      expect(eslintConfig).toContain('**/out-tsc');
     });
   });
 });

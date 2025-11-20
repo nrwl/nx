@@ -28,7 +28,7 @@ npx add-nx-to-monorepo
 
 > Victor Savkin demoed the flexibility of Nx by migrating Meta's (Facebook) React repository: [video link](https://youtu.be/XLP2RAOwfLQ)
 
-Learn more in our guide of [adding Nx to an existing workspace](/recipes/adopting-nx/adding-to-monorepo) and the config inside the [**nx.json**](/reference/project-configuration)**.**
+Learn more in our guide of [adding Nx to an existing workspace](/docs/guides/adopting-nx/adding-to-monorepo) and the config inside the [**nx.json**](/docs/reference/project-configuration)**.**
 
 ## Custom Workspace Presets 🎨
 
@@ -50,7 +50,7 @@ Nx has always shipped with great TypeScript support. In version 13.4 we improve 
 
 This is particularly useful if you have framework-agnostic TS/JS packages within an existing Nx workspace but also for those scenarios where you want to build and publish a TS/JS-based library to some package registry. The setup is very lightweight, but still provides all benefits you'd expect from an Nx-based setup such as Jest, ESLint, Prettier etc.
 
-Read all the details on [our new TypeScript guide](/getting-started/intro) or check out the video walkthrough below.
+Read all the details on [our new TypeScript guide](/docs/getting-started/intro) or check out the video walkthrough below.
 
 {% youtube src="https://www.youtube.com/watch?v=-OmQ-PaSY5M" /%}
 
@@ -65,7 +65,7 @@ Tailwind is a utility-first CSS framework packed with classes that can be compos
 nx g @nrwl/angular:app my-app --addTailwind
 ```
 
-Read more about Angular and Tailwind in our [docs](/technologies/angular/api/generators/setup-tailwind).
+Read more about Angular and Tailwind in our [docs](/docs/technologies/angular/generators).
 
 ### Other Highlights 🗒
 

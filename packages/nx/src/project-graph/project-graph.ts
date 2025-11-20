@@ -386,7 +386,7 @@ export async function createProjectGraphAndSourceMapsAsync(
             'Nx Daemon is going to be disabled until you run "nx reset".',
           ],
         });
-        markDaemonAsDisabled();
+        markDaemonAsDisabled(e.message);
         return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 
@@ -400,7 +400,7 @@ export async function createProjectGraphAndSourceMapsAsync(
             'Nx Daemon is going to be disabled until you run "nx reset".',
           ],
         });
-        markDaemonAsDisabled();
+        markDaemonAsDisabled(e.message);
         return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 

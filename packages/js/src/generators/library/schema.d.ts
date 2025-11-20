@@ -30,7 +30,6 @@ export interface LibraryGeneratorSchema {
   skipTypeCheck?: boolean;
   minimal?: boolean;
   rootProject?: boolean;
-  simpleName?: boolean;
   addPlugin?: boolean;
   useProjectJson?: boolean;
   useTscExecutor?: boolean;

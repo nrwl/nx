@@ -1,5 +1,6 @@
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+'use client';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import { type ReactElement } from 'react';
 
 export function Hero(): ReactElement {
@@ -19,30 +20,31 @@ export function Hero(): ReactElement {
           </SectionHeading>
           <div className="mt-16 flex items-center justify-center gap-x-6">
             <ButtonLink
-              href="https://cloud.nx.app/get-started/"
-              title="Try Nx Cloud for free"
+              href="https://cloud.nx.app/get-started"
+              title="Get started now"
               variant="primary"
               size="default"
               onClick={() =>
-                sendCustomEvent('try-nx-cloud', 'customers-hero', 'customers')
+                sendCustomEvent('get-started-click', 'hero', 'customers')
               }
             >
-              Try Nx Cloud for free
+              Get started now
             </ButtonLink>
-
-            <a
-              title="Live demo"
-              href="https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview"
-              className="group font-semibold leading-6 text-slate-950 dark:text-white"
+            <ButtonLink
+              href="/contact/sales"
+              title="Book a demo"
+              variant="secondary"
+              size="default"
+              onClick={() =>
+                sendCustomEvent(
+                  'contact-sales-click',
+                  'customers-hero-book-demo',
+                  'customers'
+                )
+              }
             >
-              Live demo{' '}
-              <span
-                aria-hidden="true"
-                className="inline-block transition group-hover:translate-x-1"
-              >
-                →
-              </span>
-            </a>
+              Book a demo
+            </ButtonLink>
           </div>
         </div>
       </div>

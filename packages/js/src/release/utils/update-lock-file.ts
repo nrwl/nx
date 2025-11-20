@@ -16,12 +16,10 @@ export async function updateLockFile(
   {
     dryRun,
     verbose,
-    useLegacyVersioning,
     options,
   }: {
     dryRun?: boolean;
     verbose?: boolean;
-    useLegacyVersioning?: boolean;
     options?: {
       skipLockFileUpdate?: boolean;
       installArgs?: string;
@@ -105,7 +103,7 @@ export async function updateLockFile(
     return [];
   }
 
-  execLockFileUpdate(command, cwd, env, useLegacyVersioning);
+  execLockFileUpdate(command, cwd, env);
 
   if (isDaemonEnabled) {
     try {
@@ -125,12 +123,7 @@ export async function updateLockFile(
   return [lockFile];
 }
 
-function execLockFileUpdate(
-  command: string,
-  cwd: string,
-  env: object,
-  useLegacyVersioning: boolean
-): void {
+function execLockFileUpdate(command: string, cwd: string, env: object): void {
   try {
     const LARGE_BUFFER = 1024 * 1000000;
     execSync(command, {
@@ -143,17 +136,13 @@ function execLockFileUpdate(
       windowsHide: false,
     });
   } catch (e) {
-    const configPathStart = useLegacyVersioning
-      ? 'release.version.generatorOptions'
-      : 'release.version.versionActionsOptions';
-
     output.error({
       title: `Error updating lock file with command '${command}'`,
       bodyLines: [
         `Verify that '${command}' succeeds when run from the workspace root.`,
-        `To configure a string of arguments to be passed to this command, set the '${configPathStart}.installArgs' property in nx.json.`,
-        `To ignore install lifecycle scripts, set '${configPathStart}.installIgnoreScripts' to true in nx.json.`,
-        `To disable this step entirely, set '${configPathStart}.skipLockFileUpdate' to true in nx.json.`,
+        `To configure a string of arguments to be passed to this command, set the 'release.version.versionActionsOptions.installArgs' property in nx.json.`,
+        `To ignore install lifecycle scripts, set 'release.version.versionActionsOptions.installIgnoreScripts' to true in nx.json.`,
+        `To disable this step entirely, set 'release.version.versionActionsOptions.skipLockFileUpdate' to true in nx.json.`,
       ],
     });
     throw e;

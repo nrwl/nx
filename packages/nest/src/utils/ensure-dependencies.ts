@@ -1,5 +1,5 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
-import { addDependenciesToPackageJson } from '@nx/devkit';
+import { addDependenciesToPackageJson, joinPathFragments } from '@nx/devkit';
 import {
   nestJsVersion,
   reflectMetadataVersion,
@@ -7,7 +7,14 @@ import {
   tsLibVersion,
 } from './versions';
 
-export function ensureDependencies(tree: Tree): GeneratorCallback {
+export function ensureDependencies(
+  tree: Tree,
+  projectRoot?: string
+): GeneratorCallback {
+  const packageJsonPath = projectRoot
+    ? joinPathFragments(projectRoot, 'package.json')
+    : 'package.json';
+
   return addDependenciesToPackageJson(
     tree,
     {
@@ -20,6 +27,7 @@ export function ensureDependencies(tree: Tree): GeneratorCallback {
     },
     {
       '@nestjs/testing': nestJsVersion,
-    }
+    },
+    packageJsonPath
   );
 }

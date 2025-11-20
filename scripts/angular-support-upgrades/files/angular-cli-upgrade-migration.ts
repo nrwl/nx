@@ -1,26 +1,26 @@
 export const getAngularCliMigrationGenerator = (
   version: string,
   isPrerelease: boolean
-) => `import { formatFiles, Tree, updateJson } from '@nx/devkit';
+) => `import {
+  addDependenciesToPackageJson,
+  formatFiles,
+  readJson,
+  type Tree,
+} from '@nx/devkit';
 
 export const angularCliVersion = '${isPrerelease ? version : `~${version}`}';
 
 export default async function (tree: Tree) {
-  let shouldFormat = false;
+  const { devDependencies, dependencies } = readJson(tree, 'package.json');
+  const hasAngularCli =
+    devDependencies?.['@angular/cli'] || dependencies?.['@angular/cli'];
 
-  updateJson(tree, 'package.json', (json) => {
-    if (json.devDependencies?.['@angular/cli']) {
-      json.devDependencies['@angular/cli'] = angularCliVersion;
-      shouldFormat = true;
-    } else if (json.dependencies?.['@angular/cli']) {
-      json.dependencies['@angular/cli'] = angularCliVersion;
-      shouldFormat = true;
-    }
-
-    return json;
-  });
-
-  if (shouldFormat) {
+  if (hasAngularCli) {
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@angular/cli': angularCliVersion }
+    );
     await formatFiles(tree);
   }
 }

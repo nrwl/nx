@@ -33,8 +33,9 @@ export async function normalizeOptions(
 
   const nxJson = readNxJson(host);
   const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
+    options.addPlugin ??
+    (process.env.NX_ADD_PLUGINS !== 'false' &&
+      nxJson.useInferencePlugins !== false);
 
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   const swcJest = options.swcJest ?? isUsingTsSolutionConfig;
@@ -44,8 +45,8 @@ export async function normalizeOptions(
   const useProjectJson = options.useProjectJson ?? !isUsingTsSolutionConfig;
 
   return {
-    addPlugin,
     ...options,
+    addPlugin,
     name: appProjectName,
     frontendProject: options.frontendProject
       ? names(options.frontendProject).fileName

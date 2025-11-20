@@ -1,12 +1,17 @@
-import { Footer, Header } from '@nx/nx-dev/ui-common';
+import { Footer, Header, ButtonLinkProps } from '@nx/nx-dev-ui-common';
 import { PropsWithChildren, ReactElement } from 'react';
 
 export function EnterpriseLayout({
   children,
-}: PropsWithChildren): ReactElement {
+  headerCTAConfig,
+  scrollCTAConfig,
+}: {
+  headerCTAConfig?: ButtonLinkProps[];
+  scrollCTAConfig?: ButtonLinkProps[];
+} & PropsWithChildren): ReactElement {
   return (
     <div className="w-full dark:bg-slate-950">
-      <Header />
+      <Header ctaButtons={headerCTAConfig} scrollCtaButtons={scrollCTAConfig} />
       <main data-document="main">{children}</main>
       <Footer />
     </div>

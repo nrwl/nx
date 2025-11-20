@@ -1,12 +1,13 @@
 import {
   checkFilesExist,
   cleanupProject,
+  getAvailablePort,
   newProject,
   runCLI,
   runCLIAsync,
   runE2ETests,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Build React applications and libraries with Rsbuild', () => {
   beforeAll(() => {
@@ -18,27 +19,6 @@ describe('Build React applications and libraries with Rsbuild', () => {
   afterAll(() => {
     cleanupProject();
   });
-
-  it('should test and lint app with bundler=rsbuild', async () => {
-    const rsbuildApp = uniq('rsbuildapp');
-
-    runCLI(
-      `generate @nx/react:app apps/${rsbuildApp} --bundler=rsbuild --unitTestRunner=vitest --no-interactive --linter=eslint`
-    );
-
-    const appTestResults = await runCLIAsync(`test ${rsbuildApp}`);
-    expect(appTestResults.combinedOutput).toContain(
-      'Successfully ran target test'
-    );
-
-    const appLintResults = await runCLIAsync(`lint ${rsbuildApp}`);
-    expect(appLintResults.combinedOutput).toContain(
-      'Successfully ran target lint'
-    );
-
-    await runCLIAsync(`build ${rsbuildApp}`);
-    checkFilesExist(`apps/${rsbuildApp}/dist/index.html`);
-  }, 300_000);
 
   it('should test and lint app with bundler=rsbuild', async () => {
     const rsbuildApp = uniq('rsbuildapp');
@@ -87,9 +67,10 @@ describe('Build React applications and libraries with Rsbuild', () => {
 
   it('should support bundling with Rsbuild and Jest', async () => {
     const rsbuildApp = uniq('rsbuildapp');
+    const port = await getAvailablePort();
 
     runCLI(
-      `generate @nx/react:app apps/${rsbuildApp} --bundler=rsbuild --unitTestRunner=jest --no-interactive --linter=eslint`
+      `generate @nx/react:app apps/${rsbuildApp} --port=${port} --bundler=rsbuild --unitTestRunner=jest --no-interactive --linter=eslint`
     );
 
     const appTestResults = await runCLIAsync(`test ${rsbuildApp}`);

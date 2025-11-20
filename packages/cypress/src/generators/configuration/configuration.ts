@@ -290,8 +290,6 @@ async function addFiles(
   hasPlugin: boolean
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
-  const cyVersion = getInstalledCypressMajorVersion(tree);
-  const filesToUse = cyVersion && cyVersion < 10 ? 'v9' : 'v10';
 
   const hasTsConfig = tree.exists(
     joinPathFragments(projectConfig.root, 'tsconfig.json')
@@ -314,90 +312,66 @@ async function addFiles(
     tmpl: '',
   };
 
-  generateFiles(
-    tree,
-    join(__dirname, 'files', filesToUse),
+  generateFiles(tree, join(__dirname, 'files'), projectConfig.root, fileOpts);
+
+  addBaseCypressSetup(tree, {
+    project: options.project,
+    directory: options.directory,
+    jsx: options.jsx,
+    js: options.js,
+  });
+
+  const cyFile = joinPathFragments(
     projectConfig.root,
-    fileOpts
+    options.js ? 'cypress.config.js' : 'cypress.config.ts'
+  );
+  let webServerCommands: Record<string, string>;
+
+  let ciWebServerCommand: string;
+  let ciBaseUrl: string;
+
+  if (hasPlugin && options.webServerCommands && options.ciWebServerCommand) {
+    webServerCommands = options.webServerCommands;
+    ciWebServerCommand = options.ciWebServerCommand;
+    ciBaseUrl = options.ciBaseUrl;
+  } else if (hasPlugin && options.devServerTarget) {
+    webServerCommands = {};
+
+    webServerCommands.default = 'nx run ' + options.devServerTarget;
+    const parsedTarget = parseTargetString(
+      options.devServerTarget,
+      projectGraph
+    );
+
+    const devServerProjectConfig: ProjectConfiguration | undefined =
+      readProjectConfiguration(tree, parsedTarget.project);
+    // Add production e2e target if serve target is found
+    if (
+      parsedTarget.configuration !== 'production' &&
+      devServerProjectConfig?.targets?.[parsedTarget.target]?.configurations?.[
+        'production'
+      ]
+    ) {
+      webServerCommands.production = `nx run ${parsedTarget.project}:${parsedTarget.target}:production`;
+    }
+    // Add ci/static e2e target if serve target is found
+    if (devServerProjectConfig?.targets?.['serve-static']) {
+      ciWebServerCommand = `nx run ${parsedTarget.project}:serve-static`;
+    }
+  }
+  const updatedCyConfig = await addDefaultE2EConfig(
+    tree.read(cyFile, 'utf-8'),
+    {
+      cypressDir: options.directory,
+      bundler: options.bundler === 'vite' ? 'vite' : undefined,
+      webServerCommands,
+      ciWebServerCommand: ciWebServerCommand,
+      ciBaseUrl,
+    },
+    options.baseUrl
   );
 
-  if (filesToUse === 'v10') {
-    addBaseCypressSetup(tree, {
-      project: options.project,
-      directory: options.directory,
-      jsx: options.jsx,
-      js: options.js,
-    });
-
-    const cyFile = joinPathFragments(
-      projectConfig.root,
-      options.js ? 'cypress.config.js' : 'cypress.config.ts'
-    );
-    let webServerCommands: Record<string, string>;
-
-    let ciWebServerCommand: string;
-    let ciBaseUrl: string;
-
-    if (hasPlugin && options.webServerCommands && options.ciWebServerCommand) {
-      webServerCommands = options.webServerCommands;
-      ciWebServerCommand = options.ciWebServerCommand;
-      ciBaseUrl = options.ciBaseUrl;
-    } else if (hasPlugin && options.devServerTarget) {
-      webServerCommands = {};
-
-      webServerCommands.default = 'nx run ' + options.devServerTarget;
-      const parsedTarget = parseTargetString(
-        options.devServerTarget,
-        projectGraph
-      );
-
-      const devServerProjectConfig: ProjectConfiguration | undefined =
-        readProjectConfiguration(tree, parsedTarget.project);
-      // Add production e2e target if serve target is found
-      if (
-        parsedTarget.configuration !== 'production' &&
-        devServerProjectConfig?.targets?.[parsedTarget.target]
-          ?.configurations?.['production']
-      ) {
-        webServerCommands.production = `nx run ${parsedTarget.project}:${parsedTarget.target}:production`;
-      }
-      // Add ci/static e2e target if serve target is found
-      if (devServerProjectConfig?.targets?.['serve-static']) {
-        ciWebServerCommand = `nx run ${parsedTarget.project}:serve-static`;
-      }
-    }
-    const updatedCyConfig = await addDefaultE2EConfig(
-      tree.read(cyFile, 'utf-8'),
-      {
-        cypressDir: options.directory,
-        bundler: options.bundler === 'vite' ? 'vite' : undefined,
-        webServerCommands,
-        ciWebServerCommand: ciWebServerCommand,
-        ciBaseUrl,
-      },
-      options.baseUrl
-    );
-
-    tree.write(cyFile, updatedCyConfig);
-  }
-
-  if (
-    cyVersion &&
-    cyVersion < 7 &&
-    tree.exists(
-      joinPathFragments(projectConfig.root, 'src', 'plugins', 'index.js')
-    )
-  ) {
-    updateJson(tree, join(projectConfig.root, 'cypress.json'), (json) => {
-      json.pluginsFile = './src/plugins/index';
-      return json;
-    });
-  } else if (cyVersion < 10) {
-    const pluginPath = join(projectConfig.root, 'src/plugins/index.js');
-    if (tree.exists(pluginPath)) {
-      tree.delete(pluginPath);
-    }
-  }
+  tree.write(cyFile, updatedCyConfig);
 
   if (options.js) {
     toJS(tree);
@@ -410,16 +384,13 @@ function addTarget(
   projectGraph: ProjectGraph
 ) {
   const projectConfig = readProjectConfiguration(tree, opts.project);
-  const cyVersion = getInstalledCypressMajorVersion(tree);
   projectConfig.targets ??= {};
   projectConfig.targets.e2e = {
     executor: '@nx/cypress:cypress',
     options: {
       cypressConfig: joinPathFragments(
         projectConfig.root,
-        cyVersion && cyVersion < 10
-          ? 'cypress.json'
-          : `cypress.config.${opts.js ? 'js' : 'ts'}`
+        `cypress.config.${opts.js ? 'js' : 'ts'}`
       ),
       testingType: 'e2e',
     },

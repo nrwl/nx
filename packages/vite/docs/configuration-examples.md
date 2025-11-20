@@ -3,7 +3,7 @@ title: Examples for the Vite configuration generator
 description: This page contains examples for the Vite @nx/vite:configuration generator, which helps you set up Vite on your Nx workspace, or convert an existing project to use Vite.
 ---
 
-This generator is used for converting an existing React or Web project to use [Vite.js](https://vitejs.dev/).
+This generator is used for converting an existing React or Web project to use [Vite](https://vite.dev/).
 
 It will create a `vite.config.ts` file at the root of your project with the correct settings, or if there's already a `vite.config.ts` file, it will modify it to include the correct settings.
 
@@ -23,6 +23,10 @@ When running this generator, you will be prompted to provide the following:
 You must provide a `project` and a `uiFramework` for the generator to work.
 
 You may also pass the `includeVitest` flag. This will also configure your project for testing with [Vitest](https://vitest.dev/), by adding the `test` configuration in your `vite.config.ts` file.
+
+{% callout type="note" title="Vitest-only configuration" %}
+If you only need to add Vitest to a project (without Vite build configuration), use the `@nx/vitest:configuration` generator instead. See the [@nx/vitest package](/packages/vitest) for more information.
+{% /callout %}
 
 ## How to use
 

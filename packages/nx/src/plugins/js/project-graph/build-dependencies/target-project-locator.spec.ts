@@ -367,6 +367,36 @@ describe('TargetProjectLocator', () => {
       expect(res5).toEqual('rootProj');
     });
 
+    it('should be able to resolve a module by using relative paths within a nested project', () => {
+      // Test resolving "./" import from child-project (nested 1 level under parent-project)
+      const res1 = targetProjectLocator.findProjectFromImport(
+        './index.ts',
+        'libs/parent-path/child-path/src/index.ts'
+      );
+      expect(res1).toEqual('child-project');
+
+      // Test resolving "../" import from child-project back to parent-project
+      const res2 = targetProjectLocator.findProjectFromImport(
+        '../index.ts',
+        'libs/parent-path/child-path/index.ts'
+      );
+      expect(res2).toEqual('parent-project');
+
+      // Test resolving "./" import within the same nested project
+      const res3 = targetProjectLocator.findProjectFromImport(
+        './utils.ts',
+        'libs/parent-path/child-path/index.ts'
+      );
+      expect(res3).toEqual('child-project');
+
+      // Test resolving "./" import within the same nested project
+      const res4 = targetProjectLocator.findProjectFromImport(
+        './',
+        'libs/parent-path/child-path/module.ts'
+      );
+      expect(res4).toEqual('child-project');
+    });
+
     it('should be able to resolve a module by using tsConfig paths', () => {
       const proj2 = targetProjectLocator.findProjectFromImport(
         '@proj/my-second-proj',
@@ -1086,8 +1116,11 @@ describe('TargetProjectLocator', () => {
           {},
           new Map()
         );
-        const result =
-          targetProjectLocator.findDependencyInWorkspaceProjects('@org/pkg1');
+        const result = targetProjectLocator.findDependencyInWorkspaceProjects(
+          '',
+          '@org/pkg1',
+          '*'
+        );
 
         expect(result).toEqual('pkg1');
       }
@@ -1115,8 +1148,11 @@ describe('TargetProjectLocator', () => {
         {},
         new Map()
       );
-      const result =
-        targetProjectLocator.findDependencyInWorkspaceProjects('@org/pkg2');
+      const result = targetProjectLocator.findDependencyInWorkspaceProjects(
+        '',
+        '@org/pkg2',
+        '*'
+      );
 
       expect(result).toBeFalsy();
     });
@@ -1254,8 +1290,13 @@ describe('TargetProjectLocator', () => {
 
 describe('isBuiltinModuleImport()', () => {
   const withExclusions = builtinModules
-    .concat(builtinModules.filter((a) => true).map((s) => 'node:' + s))
-    .concat(['node:test', 'node:sqlite', 'node:test']);
+    .concat(
+      builtinModules.map((s) =>
+        // Node 24 includes node:sea, node:sqlite, etc. that already prefixes with `node:`.
+        s.startsWith('node:') ? s : 'node:' + s
+      )
+    )
+    .concat(['node:test', 'node:sqlite']);
 
   it.each(withExclusions)(
     `should return true for %s builtin module`,

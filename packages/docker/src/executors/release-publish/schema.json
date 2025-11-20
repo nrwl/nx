@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Implementation details of `nx release publish`",
+  "description": "DO NOT INVOKE DIRECTLY WITH `nx run`. Use `nx release publish` instead.",
+  "type": "object",
+  "properties": {
+    "dryRun": {
+      "type": "boolean",
+      "description": "Whether to run the command without actually publishing the image to the registry."
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Suppress verbose output",
+      "default": false
+    }
+  },
+  "required": []
+}

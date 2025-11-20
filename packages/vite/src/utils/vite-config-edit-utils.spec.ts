@@ -57,7 +57,7 @@ describe('ensureViteConfigIsCorrect', () => {
           export default defineConfig({
             
           // Configuration for building your library.
-          // See: https://vitejs.dev/guide/build.html#library-mode
+          // See: https://vite.dev/guide/build.html#library-mode
           build: {
             lib: {
               // Could also be a dictionary or array of multiple entry points.
@@ -172,7 +172,7 @@ describe('ensureViteConfigIsCorrect', () => {
 
           export default defineConfig({
           // Configuration for building your library.
-          // See: https://vitejs.dev/guide/build.html#library-mode
+          // See: https://vite.dev/guide/build.html#library-mode
           plugins: [react(), nxViteTsPaths()],build: {
             lib: {
               // Could also be a dictionary or array of multiple entry points.
@@ -250,7 +250,7 @@ describe('ensureViteConfigIsCorrect', () => {
 
           export default {
           // Configuration for building your library.
-          // See: https://vitejs.dev/guide/build.html#library-mode
+          // See: https://vite.dev/guide/build.html#library-mode
           build: {
             lib: {
               // Could also be a dictionary or array of multiple entry points.
@@ -322,7 +322,7 @@ describe('ensureViteConfigIsCorrect', () => {
             plugins: [dts({ entryRoot: 'src', tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'), skipDiagnostics: true }), react(), nxViteTsPaths(), ],
           
             // Configuration for building your library.
-            // See: https://vitejs.dev/guide/build.html#library-mode
+            // See: https://vite.dev/guide/build.html#library-mode
             build: {
               lib: {
                 // Could also be a dictionary or array of multiple entry points.
@@ -375,7 +375,7 @@ describe('ensureViteConfigIsCorrect', () => {
           
             
           // Configuration for building your library.
-          // See: https://vitejs.dev/guide/build.html#library-mode
+          // See: https://vite.dev/guide/build.html#library-mode
           build: {
             lib: {
               // Could also be a dictionary or array of multiple entry points.

@@ -9,12 +9,12 @@
 
 <hr>
 
-> Note: this plugin is currently experimental.
+> Note: The `@nx/gradle` plugin is currently experimental. Features and APIs may change.
 
 # Nx: Smart Repos · Fast Builds
 
-An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.
+Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.
 
-This package is a [Gradle plugin for Nx](https://nx.dev/gradle/overview).
+This package is a [Gradle plugin for Nx](https://nx.dev/technologies/java/gradle/introduction).
 
 {{content}}

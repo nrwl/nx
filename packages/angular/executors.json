@@ -50,7 +50,7 @@
     "dev-server": {
       "implementation": "./src/builders/dev-server/dev-server.impl",
       "schema": "./src/builders/dev-server/schema.json",
-      "description": "Serves an Angular application using [webpack](https://webpack.js.org/) when the build target is using a webpack-based executor, or [Vite](https://vitejs.dev/) when the build target uses an [esbuild](https://esbuild.github.io/)-based executor."
+      "description": "Serves an Angular application using [webpack](https://webpack.js.org/) when the build target is using a webpack-based executor, or [Vite](https://vite.dev/) when the build target uses an [esbuild](https://esbuild.github.io/)-based executor."
     },
     "webpack-server": {
       "implementation": "./src/builders/webpack-server/webpack-server.impl",

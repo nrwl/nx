@@ -1,7 +1,4 @@
-import { redirect, RouteObject, json } from 'react-router-dom';
-import { ProjectsSidebar } from './feature-projects/projects-sidebar';
-import { TasksSidebar } from './feature-tasks/tasks-sidebar';
-import { Shell } from './shell';
+import { redirect, RouteObject, json, LoaderFunction } from 'react-router-dom';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
@@ -10,14 +7,17 @@ import type {
 } from 'nx/src/command-line/graph/graph';
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
-/* eslint-enable @nx/enforce-module-boundaries */
 import {
   getEnvironmentConfig,
   getProjectGraphDataService,
-} from '@nx/graph/legacy/shared';
+} from '@nx/graph-shared';
 import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
-import { ProjectDetailsPage } from '@nx/graph-internal/project-details';
+import { ProjectDetailsPage } from '@nx/graph-internal-project-details';
 import { ErrorBoundary } from './ui-components/error-boundary';
+import { taskGraphClientCache } from './task-graph-client-cache';
+import { ProjectsShell } from './feature-projects/projects-shell';
+import { TasksShell } from './feature-tasks/tasks-shell';
+import { GraphSerializableState, GraphStateSerializer } from '@nx/graph';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
@@ -34,6 +34,10 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
   const workspaceInfo = appConfig.workspaces.find(
     (graph) => graph.id === selectedWorkspaceId
   );
+
+  if (!workspaceInfo) {
+    throw new Error(`Workspace ${selectedWorkspaceId} not found`);
+  }
 
   projectGraphDataService.setTaskInputsUrl?.(workspaceInfo.taskInputsUrl);
 
@@ -57,21 +61,94 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
   return { ...projectGraph, targets, sourceMaps };
 };
 
-const taskDataLoader = async (selectedWorkspaceId: string) => {
-  const workspaceInfo = appConfig.workspaces.find(
-    (graph) => graph.id === selectedWorkspaceId
-  );
-
-  return await projectGraphDataService.getTaskGraph(workspaceInfo.taskGraphUrl);
-};
-
 const sourceMapsLoader = async (selectedWorkspaceId: string) => {
   const workspaceInfo = appConfig.workspaces.find(
     (graph) => graph.id === selectedWorkspaceId
   );
 
+  if (!workspaceInfo) {
+    throw new Error(`Workspace ${selectedWorkspaceId} not found`);
+  }
+
   return await projectGraphDataService.getSourceMaps(
     workspaceInfo.sourceMapsUrl
+  );
+};
+
+const tasksLoader: LoaderFunction = async ({ params, request }) => {
+  const selectedWorkspaceId =
+    params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
+
+  const workspaceInfo = appConfig.workspaces.find(
+    (graph) => graph.id === selectedWorkspaceId
+  );
+
+  if (!workspaceInfo) {
+    throw new Error(`Workspace ${selectedWorkspaceId} not found`);
+  }
+
+  // bust the task graph cache if workspaceId changes
+  taskGraphClientCache.setWorkspace(selectedWorkspaceId);
+
+  const requestUrl = new URL(request.url);
+  const targetsParam = requestUrl.searchParams.get('targets');
+  const projectsParam = requestUrl.searchParams.get('projects');
+
+  const selectedTargets = targetsParam
+    ? targetsParam.split(' ').filter(Boolean)
+    : [];
+  const requestedProjects = projectsParam
+    ? projectsParam.split(' ').filter(Boolean)
+    : undefined;
+
+  // if no targets are selected, empty taskGraph response
+  if (selectedTargets.length === 0) {
+    return {
+      taskGraph: {
+        tasks: {},
+        dependencies: {},
+        continuousDependencies: {},
+        roots: [],
+      },
+      error: null,
+    };
+  }
+
+  const isAllRoute = requestUrl.pathname.endsWith('/all');
+
+  // if we don't request any projects and we're not on the "all" route,
+  // we return empty taskGraph response. consumers need to select projects
+  if (!requestedProjects && !isAllRoute) {
+    return {
+      taskGraph: {
+        tasks: {},
+        dependencies: {},
+        continuousDependencies: {},
+        roots: [],
+      },
+      error: null,
+    };
+  }
+
+  // Check if we have cached data for this exact combination
+  const { cached, missingTargets, missingProjects } =
+    taskGraphClientCache.getCached(selectedTargets, requestedProjects);
+
+  if (cached) return cached;
+
+  const response = await projectGraphDataService.getSpecificTaskGraph(
+    workspaceInfo.taskGraphUrl,
+    missingProjects,
+    missingTargets
+  );
+
+  if (response.error) return response;
+
+  // only merge if we don't have error
+  return taskGraphClientCache.mergeTaskGraph(
+    response,
+    missingTargets,
+    missingProjects
   );
 };
 
@@ -109,69 +186,82 @@ const projectDetailsLoader = async (
   };
 };
 
+const tasksRouteObject: RouteObject = {
+  element: <TasksShell />,
+  errorElement: <TasksSidebarErrorBoundary />,
+  loader: tasksLoader,
+  shouldRevalidate: ({ currentParams, nextParams, currentUrl, nextUrl }) => {
+    // Always revalidate if workspace changes
+    if (
+      !currentParams.selectedWorkspaceId ||
+      currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
+    ) {
+      return true;
+    }
+
+    // Revalidate if query parameters change (targets or projects)
+    const currentSearchParams = new URLSearchParams(currentUrl.search);
+    const nextSearchParams = new URLSearchParams(nextUrl.search);
+
+    const currentTargets = currentSearchParams.get('targets');
+    const nextTargets = nextSearchParams.get('targets');
+    const currentProjects = currentSearchParams.get('projects');
+    const nextProjects = nextSearchParams.get('projects');
+
+    return currentTargets !== nextTargets || currentProjects !== nextProjects;
+  },
+};
+
 const childRoutes: RouteObject[] = [
   {
     path: 'projects',
-    children: [
-      {
-        index: true,
-        element: <ProjectsSidebar />,
-      },
-      {
-        path: 'all',
-        element: <ProjectsSidebar />,
-      },
-      {
-        path: 'affected',
-        element: <ProjectsSidebar />,
-      },
-      {
-        path: ':focusedProject',
-        element: <ProjectsSidebar />,
-      },
-      {
-        path: 'trace/:startTrace',
-        element: <ProjectsSidebar />,
-      },
-      {
-        path: 'trace/:startTrace/:endTrace',
-        element: <ProjectsSidebar />,
-      },
-    ],
+    element: <ProjectsShell />,
+    loader: ({ request }) => {
+      const url = new URL(request.url);
+      if (!url.searchParams.has('rawGraph')) {
+        return null;
+      }
+      handleRawGraphQueryParam(url.searchParams);
+      return redirect(`${url.pathname}?${url.searchParams.toString()}`);
+    },
   },
   {
-    loader: async ({ request, params }) => {
-      const selectedWorkspaceId =
-        params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
-      return taskDataLoader(selectedWorkspaceId);
-    },
     path: 'tasks',
-    id: 'selectedTarget',
-    errorElement: <TasksSidebarErrorBoundary />,
-    shouldRevalidate: ({ currentParams, nextParams }) => {
-      return (
-        !currentParams.selectedWorkspaceId ||
-        currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
-      );
-    },
-    children: [
-      {
-        index: true,
-        element: <TasksSidebar />,
-      },
-      {
-        path: ':selectedTarget',
-        element: <TasksSidebar />,
-        children: [
-          {
-            path: 'all',
-            element: <TasksSidebar />,
-          },
-        ],
-      },
-    ],
+    id: 'tasks',
+    ...tasksRouteObject,
+  },
+  {
+    path: 'tasks/all',
+    id: 'tasksAll',
+    ...tasksRouteObject,
   },
 ];
+
+function handleRawGraphQueryParam(searchParams: URLSearchParams) {
+  const rawGraph = searchParams.get('rawGraph');
+
+  // nothing to do here, bail
+  if (!rawGraph) return;
+
+  try {
+    const rawGraphJson: {
+      config: Record<string, unknown>;
+      state?: Record<string, unknown>;
+    } = JSON.parse(rawGraph);
+
+    searchParams.delete('rawGraph');
+    searchParams.set(
+      'graph',
+      GraphStateSerializer.serialize({
+        c: rawGraphJson.config,
+        s: rawGraphJson.state,
+      } as Omit<GraphSerializableState<any>, 'v'>)
+    );
+  } catch (err) {
+    console.error('Graph Client: error during rawGraph handling', err);
+    return;
+  }
+}
 
 export const devRoutes: RouteObject[] = [
   {
@@ -180,22 +270,25 @@ export const devRoutes: RouteObject[] = [
     children: [
       {
         index: true,
-        loader: async ({ request, params }) => {
-          const { search } = new URL(request.url);
-
-          return redirect(`/${appConfig.defaultWorkspaceId}/projects${search}`);
+        loader: ({ request }) => {
+          const { searchParams } = new URL(request.url);
+          handleRawGraphQueryParam(searchParams);
+          return redirect(
+            `/${
+              appConfig.defaultWorkspaceId
+            }/projects?${searchParams.toString()}`
+          );
         },
       },
       {
         path: ':selectedWorkspaceId',
         id: 'selectedWorkspace',
-        element: <Shell />,
         shouldRevalidate: ({ currentParams, nextParams }) => {
           return (
             currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
           );
         },
-        loader: async ({ request, params }) => {
+        loader: async ({ params }) => {
           const selectedWorkspaceId =
             params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
           return workspaceDataLoader(selectedWorkspaceId);
@@ -226,14 +319,13 @@ export const releaseRoutes: RouteObject[] = [
     shouldRevalidate: () => {
       return false;
     },
-    element: <Shell />,
     children: [
       {
         index: true,
         loader: ({ request }) => {
-          const { search } = new URL(request.url);
-
-          return redirect(`/projects${search}`);
+          const { searchParams } = new URL(request.url);
+          handleRawGraphQueryParam(searchParams);
+          return redirect(`/projects?${searchParams.toString()}`);
         },
       },
       ...childRoutes,

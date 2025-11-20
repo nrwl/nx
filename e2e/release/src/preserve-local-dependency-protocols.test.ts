@@ -10,7 +10,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 
@@ -67,6 +67,8 @@ describe('nx release preserve local dependency protocols', () => {
     previousPackageManager = process.env.SELECTED_PM;
     // This is the verdaccio instance that the e2e tests themselves are working from
     e2eRegistryUrl = execSync('npm config get registry').toString().trim();
+    // Ignore NPM warnings as to not affect snapshots
+    execSync('npm config set loglevel error');
   });
 
   afterEach(() => cleanupProject());
@@ -148,11 +150,11 @@ describe('nx release preserve local dependency protocols', () => {
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.1.0",
-      "scripts": {
+      "exports": {
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.1.0",
-      "scripts": {
+      "exports": {
       "dependencies": {
       -     "@proj/{project-name}": "workspace:*"
       +     "@proj/{project-name}": "0.1.0"
@@ -193,11 +195,11 @@ describe('nx release preserve local dependency protocols', () => {
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.1.0",
-      "scripts": {
+      "exports": {
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.1.0",
-      "scripts": {
+      "exports": {
       }
       +
       NX   Updating PM lock file
@@ -219,6 +221,10 @@ describe('nx release preserve local dependency protocols', () => {
         {
           dependencies: {
             @proj/{project-name}: workspace:*,
+          },
+          exports: {
+            .: ./index.js,
+            ./package.json: ./package.json,
           },
           name: @proj/{project-name},
           scripts: {
@@ -288,6 +294,10 @@ describe('nx release preserve local dependency protocols', () => {
         {
           dependencies: {
             @proj/{project-name}: workspace:*,
+          },
+          exports: {
+            .: ./index.js,
+            ./package.json: ./package.json,
           },
           name: @proj/{project-name},
           scripts: {

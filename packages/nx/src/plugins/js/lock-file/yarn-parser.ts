@@ -43,9 +43,6 @@ type YarnDependency = {
 let currentLockFileHash: string;
 let cachedParsedLockFile;
 
-// we use key => node map to avoid duplicate work when parsing keys
-let keyMap = new Map<string, ProjectGraphExternalNode>();
-
 function parseLockFile(lockFileContent: string, lockFileHash: string) {
   if (currentLockFileHash === lockFileHash) {
     return cachedParsedLockFile;
@@ -54,7 +51,6 @@ function parseLockFile(lockFileContent: string, lockFileHash: string) {
   const { parseSyml } =
     require('@yarnpkg/parsers') as typeof import('@yarnpkg/parsers');
 
-  keyMap.clear();
   const result = parseSyml(lockFileContent);
   cachedParsedLockFile = result;
   currentLockFileHash = lockFileHash;
@@ -65,7 +61,10 @@ export function getYarnLockfileNodes(
   lockFileContent: string,
   lockFileHash: string,
   packageJson: NormalizedPackageJson
-) {
+): {
+  nodes: Record<string, ProjectGraphExternalNode>;
+  keyMap: Map<string, ProjectGraphExternalNode>;
+} {
   const { __metadata, ...dependencies } = parseLockFile(
     lockFileContent,
     lockFileHash
@@ -82,7 +81,8 @@ export function getYarnLockfileNodes(
 export function getYarnLockfileDependencies(
   lockFileContent: string,
   lockFileHash: string,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
+  keyMap: Map<string, ProjectGraphExternalNode>
 ) {
   const { __metadata, ...dependencies } = parseLockFile(
     lockFileContent,
@@ -94,7 +94,7 @@ export function getYarnLockfileDependencies(
   // yarn classic splits keys when parsing so we need to stich them back together
   const groupedDependencies = groupDependencies(dependencies, isBerry);
 
-  return getDependencies(groupedDependencies, ctx);
+  return getDependencies(groupedDependencies, ctx, keyMap);
 }
 
 function getPackageNameKeyPairs(keys: string): Map<string, Set<string>> {
@@ -114,7 +114,11 @@ function getNodes(
   dependencies: Record<string, YarnDependency>,
   packageJson: NormalizedPackageJson,
   isBerry: boolean
-) {
+): {
+  nodes: Record<string, ProjectGraphExternalNode>;
+  keyMap: Map<string, ProjectGraphExternalNode>;
+} {
+  const keyMap = new Map<string, ProjectGraphExternalNode>();
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
   const combinedDeps = {
     ...packageJson.dependencies,
@@ -190,7 +194,7 @@ function getNodes(
       externalNodes[node.name] = node;
     });
   }
-  return externalNodes;
+  return { nodes: externalNodes, keyMap };
 }
 
 function findHoistedNode(
@@ -296,7 +300,8 @@ function getHoistedVersion(packageName: string): string {
 
 function getDependencies(
   dependencies: Record<string, YarnDependency>,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
+  keyMap: Map<string, ProjectGraphExternalNode>
 ) {
   const projectGraphDependencies: RawProjectGraphDependency[] = [];
   Object.keys(dependencies).forEach((keys) => {

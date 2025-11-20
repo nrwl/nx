@@ -23,11 +23,13 @@ import {
   ArrowTrendingUpIcon,
   CommandLineIcon,
   UsersIcon,
+  DocumentChartBarIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
 import { BuildingOfficeIcon } from '@heroicons/react/24/solid';
-import { NxAgentsIcon, NxReplayIcon } from '@nx/nx-dev/ui-icons';
+import { NxAgentsIcon, NxReplayIcon } from '@nx/nx-dev-ui-icons';
 
 export interface MenuItem {
   name: string;
@@ -156,16 +158,8 @@ export const learnItems: MenuItem[] = [
   {
     name: 'Step by step tutorials',
     description: null,
-    href: '/getting-started/intro#learn-nx',
+    href: '/docs/getting-started/tutorials',
     icon: AcademicCapIcon,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Code examples for your stack',
-    description: null,
-    href: '/showcase/example-repos',
-    icon: CodeBracketIcon,
     isNew: false,
     isHighlight: false,
   },
@@ -217,20 +211,36 @@ export const learnItems: MenuItem[] = [
     isNew: false,
     isHighlight: false,
   },
-];
-export const eventItems: MenuItem[] = [
   {
-    name: 'Office Hours',
+    name: 'Books',
     description: null,
-    href: 'https://go.nx.dev/office-hours',
-    icon: DiscordIcon,
+    href: '/resources-library?filterBy=book',
+    icon: BookOpenIcon,
     isNew: false,
     isHighlight: false,
   },
   {
-    name: 'Live Streams',
+    name: 'Case Studies',
     description: null,
-    href: 'https://www.youtube.com/@nxdevtools/streams',
+    href: '/resources-library?filterBy=case-study',
+    icon: DocumentChartBarIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Whitepapers',
+    description: null,
+    href: '/resources-library?filterBy=whitepaper',
+    icon: DocumentTextIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+];
+export const eventItems: MenuItem[] = [
+  {
+    name: 'Nx Live',
+    description: null,
+    href: 'https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5',
     icon: VideoCameraIcon,
     isNew: false,
     isHighlight: false,

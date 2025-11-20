@@ -1,3 +1,4 @@
+import { signalToCode } from '@nx/devkit/internal';
 import { execFileSync, fork } from 'child_process';
 import * as pc from 'picocolors';
 import {
@@ -11,9 +12,9 @@ import { Schema } from './schema';
 import { platform } from 'os';
 import { join, resolve } from 'path';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
-import * as detectPort from 'detect-port';
 import { daemonClient } from 'nx/src/daemon/client/client';
 import { interpolate } from 'nx/src/tasks-runner/utils';
+const detectPort = require('detect-port');
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
@@ -267,7 +268,8 @@ export default async function* fileServerExecutor(
   };
 
   return new Promise<{ success: boolean }>((res) => {
-    serve.on('exit', (code) => {
+    serve.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code == 0) {
         res({ success: true });
       } else {

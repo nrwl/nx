@@ -1,8 +1,11 @@
-import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  getDependencyVersionFromPackageJson,
+  type Tree,
+} from '@nx/devkit';
 import {
   getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
-  getInstalledPackageVersion,
   versions,
 } from '../../utils/version-utils';
 
@@ -14,12 +17,13 @@ export function addDependencies(
 
   const dependencies: Record<string, string> = {
     '@angular/platform-server':
-      getInstalledPackageVersion(tree, '@angular/platform-server') ??
+      getDependencyVersionFromPackageJson(tree, '@angular/platform-server') ??
       pkgVersions.angularVersion,
     express: pkgVersions.expressVersion,
   };
   const devDependencies: Record<string, string> = {
     '@types/express': pkgVersions.typesExpressVersion,
+    '@types/node': pkgVersions.typesNodeVersion,
   };
 
   const angularDevkitVersion =
@@ -35,5 +39,11 @@ export function addDependencies(
     }
   }
 
-  addDependenciesToPackageJson(tree, dependencies, devDependencies);
+  addDependenciesToPackageJson(
+    tree,
+    dependencies,
+    devDependencies,
+    undefined,
+    true
+  );
 }

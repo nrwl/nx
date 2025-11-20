@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  getAvailablePort,
   killProcessAndPorts,
   newProject,
   readFile,
@@ -9,7 +10,7 @@ import {
   runE2ETests,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { ChildProcess } from 'child_process';
 
 describe('Webpack Plugin (legacy)', () => {
@@ -50,7 +51,7 @@ describe('Webpack Plugin (legacy)', () => {
 
   it('should run serve-static', async () => {
     let process: ChildProcess;
-    const port = 8081;
+    const port = await getAvailablePort();
 
     try {
       process = await runCommandUntil(
@@ -84,6 +85,7 @@ describe('Webpack Plugin (legacy)', () => {
       `
         const { composePlugins, withNx, withWeb } = require('@nx/webpack');
         module.exports = composePlugins(withNx(), withWeb(), (config) => {
+        config.output.clean = true;
           return {
             ...config,
             entry: {

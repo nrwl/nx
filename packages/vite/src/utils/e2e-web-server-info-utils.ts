@@ -66,7 +66,7 @@ export async function getReactRouterE2EWebServerInfo(
       defaultServeTargetName: 'dev',
       defaultServeStaticTargetName: 'dev',
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
-      defaultE2ECiBaseUrl: `http://localhost:${e2eCIPortOverride ?? 4300}`,
+      defaultE2ECiBaseUrl: `http://localhost:${e2eCIPortOverride ?? 4200}`,
       defaultE2EPort: e2ePort,
     },
     isPluginBeingAdded

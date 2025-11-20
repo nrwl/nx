@@ -1,12 +1,18 @@
 'use client';
-import { Fragment, type MouseEvent, ReactElement } from 'react';
-import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import {
+  Fragment,
+  type MouseEvent,
+  ReactElement,
+  useState,
+  useEffect,
+} from 'react';
+import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev-ui-icons';
 import {
   Bars3Icon,
   ChevronDownIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
+import { AlgoliaSearch } from '@nx/nx-dev-feature-search';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -21,6 +27,7 @@ import { resourceMenuItems } from './menu-items';
 import { SectionsMenu } from './sections-menu';
 import { DiscordIcon } from '../discord-icon';
 import { VersionPicker } from '../version-picker';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 function Menu({ tabs }: { tabs: any[] }): ReactElement {
   return (
@@ -59,25 +66,39 @@ export function DocumentationHeader({
   toggleNav: (value: boolean) => void;
 }): ReactElement {
   const router = useRouter();
-  let routerPath = router.asPath;
-  const isCI: boolean = routerPath.startsWith('/ci');
-  const isExtendingNx: boolean = routerPath.startsWith('/extending-nx');
-  const isPlugins: boolean = routerPath.startsWith('/plugin-registry');
-  const isChangelog: boolean = routerPath.startsWith('/changelog');
-  const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
+  const [currentPath, setCurrentPath] = useState<string>('');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    setCurrentPath(router.asPath);
+  }, [router.asPath]);
+
+  const isCI: boolean = isClient && currentPath.startsWith('/ci');
+  const isExtendingNx: boolean =
+    isClient && currentPath.startsWith('/extending-nx');
+  const isPlugins: boolean =
+    isClient && currentPath.startsWith('/plugin-registry');
+  const isChangelog: boolean = isClient && currentPath.startsWith('/changelog');
+  const isAiChat: boolean = isClient && currentPath.startsWith('/ai-chat');
   const isNx: boolean =
     !isCI && !isExtendingNx && !isPlugins && !isChangelog && !isAiChat;
 
   const handleContextMenu = (e: MouseEvent) => {
     e.preventDefault();
-    router.push('/brands');
+    if (isClient) {
+      router.push('/brands');
+    }
   };
 
+  // Use the new docs URL when Astro docs are enabled
+  const docsUrl = '/docs/getting-started/intro';
+
   const sections = [
-    { name: 'Nx', href: '/getting-started/intro', current: isNx },
+    { name: 'Nx', href: docsUrl, current: isNx },
     {
       name: 'CI',
-      href: '/ci/intro/ci-with-nx',
+      href: '/docs/features/ci-features',
       current: isCI,
     },
     {
@@ -87,7 +108,7 @@ export function DocumentationHeader({
     },
     {
       name: 'Plugins',
-      href: '/plugin-registry',
+      href: '/docs/plugin-registry',
       current: isPlugins,
     },
     {
@@ -218,9 +239,6 @@ export function DocumentationHeader({
           </button>
 
           {/*SEARCH*/}
-          <div className="mx-4 w-auto">
-            <AlgoliaSearch />
-          </div>
         </div>
         {/*LOGO*/}
         <div className="flex items-center gap-4">
@@ -236,9 +254,16 @@ export function DocumentationHeader({
             <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <Link
-            href="/getting-started/intro"
+            href={docsUrl}
             className="ml-2 hidden items-center px-4 text-slate-900 lg:flex lg:px-0 dark:text-white"
             prefetch={false}
+            onClick={() =>
+              sendCustomEvent(
+                'documentation-click',
+                'header-navigation',
+                'documentation-header'
+              )
+            }
           >
             <span className="text-xl font-bold uppercase tracking-wide">
               Docs
@@ -247,11 +272,8 @@ export function DocumentationHeader({
           <VersionPicker />
         </div>
         {/*SEARCH*/}
-        <div className="hidden w-full max-w-[14rem] lg:inline">
-          <AlgoliaSearch />
-        </div>
         {/*NAVIGATION*/}
-        <div className="hidden flex-shrink-0 xl:flex">
+        <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="menu"
             className="hidden items-center justify-center space-x-2 text-sm lg:flex"
@@ -322,14 +344,6 @@ export function DocumentationHeader({
             >
               Nx Cloud
             </Link>
-            <Link
-              href="/pricing"
-              title="Pricing"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Pricing
-            </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             <Link
               href="/enterprise"
@@ -345,16 +359,37 @@ export function DocumentationHeader({
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="menu"
-            className="items-justified hidden justify-center space-x-4 lg:flex"
+            className="items-justified hidden justify-center space-x-2 lg:flex"
           >
+            <ButtonLink
+              href="/contact"
+              title="Contact"
+              variant="secondary"
+              size="small"
+              onClick={() =>
+                sendCustomEvent(
+                  'contact-click',
+                  'header-cta',
+                  'documentation-header'
+                )
+              }
+            >
+              Contact
+            </ButtonLink>
             <ButtonLink
               href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
               title="Try Nx Cloud for free"
               variant="primary"
               size="small"
+              onClick={() =>
+                sendCustomEvent(
+                  'login-click',
+                  'header-cta',
+                  'documentation-header'
+                )
+              }
             >
-              <NxCloudAnimatedIcon className="size-4" aria-hidden="true" />
-              <span>Try Nx Cloud for free</span>
+              Try Nx Cloud for free
             </ButtonLink>
           </nav>
         </div>

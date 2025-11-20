@@ -7,6 +7,18 @@ import { RELEASE_TYPES, ReleaseType, inc, valid } from 'semver';
 import { NxReleaseConfig } from '../config/config';
 import { GitCommit } from './git';
 
+export const enum SemverSpecifier {
+  MAJOR = 3,
+  MINOR = 2,
+  PATCH = 1,
+}
+
+export const SemverSpecifierType = {
+  3: 'major',
+  2: 'minor',
+  1: 'patch',
+};
+
 export function isRelativeVersionKeyword(val: string): val is ReleaseType {
   return RELEASE_TYPES.includes(val as ReleaseType);
 }
@@ -17,34 +29,38 @@ export function isValidSemverSpecifier(specifier: string): boolean {
   );
 }
 
-/**
- * TODO: We would be able to make the logging for the conventional commits use-case
- * for fixed release groups more clear/precise if we passed through which project
- * the conventional commits were detected for.
- *
- * It would then flow up through deriveSpecifierFromConventionalCommits back to
- * ReleaseGroupProcessor.
- */
-// https://github.com/unjs/changelogen/blob/main/src/semver.ts
 export function determineSemverChange(
-  commits: GitCommit[],
+  relevantCommits: Map<
+    string,
+    { commit: GitCommit; isProjectScopedCommit: boolean }[]
+  >,
   config: NxReleaseConfig['conventionalCommits']
-): 'patch' | 'minor' | 'major' | null {
-  let [hasMajor, hasMinor, hasPatch] = [false, false, false];
-  for (const commit of commits) {
-    const semverType = config.types[commit.type]?.semverBump;
-    if (semverType === 'major' || commit.isBreaking) {
-      hasMajor = true;
-    } else if (semverType === 'minor') {
-      hasMinor = true;
-    } else if (semverType === 'patch') {
-      hasPatch = true;
-    } else if (semverType === 'none' || !semverType) {
-      // do not report a change
+): Map<string, SemverSpecifier | null> {
+  const semverChangePerProject: Map<string, SemverSpecifier | null> = new Map();
+  for (const [projectName, relevantCommit] of relevantCommits) {
+    let highestChange: SemverSpecifier | null = null;
+
+    for (const { commit, isProjectScopedCommit } of relevantCommit) {
+      if (!isProjectScopedCommit) {
+        // commit is relevant to the project, but not directly, report patch change to match side-effectful bump behavior in update dependents in release-group-processor
+        highestChange = Math.max(SemverSpecifier.PATCH, highestChange ?? 0);
+        continue;
+      }
+      const semverType = config.types[commit.type]?.semverBump;
+      if (semverType === 'major' || commit.isBreaking) {
+        highestChange = Math.max(SemverSpecifier.MAJOR, highestChange ?? 0);
+        break; // Major is highest priority, no need to check more commits
+      } else if (semverType === 'minor') {
+        highestChange = Math.max(SemverSpecifier.MINOR, highestChange ?? 0);
+      } else if (semverType === 'patch') {
+        highestChange = Math.max(SemverSpecifier.PATCH, highestChange ?? 0);
+      }
     }
+
+    semverChangePerProject.set(projectName, highestChange);
   }
 
-  return hasMajor ? 'major' : hasMinor ? 'minor' : hasPatch ? 'patch' : null;
+  return semverChangePerProject;
 }
 
 export function deriveNewSemverVersion(

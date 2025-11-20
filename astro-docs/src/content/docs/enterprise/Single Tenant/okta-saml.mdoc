@@ -1,0 +1,146 @@
+---
+title: Okta SAML Auth
+description: Configure SAML authentication for Nx Cloud Enterprise with Okta
+filter: 'type:Guides'
+---
+
+1.  Create a new Okta App Integration:
+
+    ![Create new app integration in Okta admin console](../../../../assets/enterprise/single-tenant/saml/okta_1.png)
+
+    ![Select SAML 2.0 integration type](../../../../assets/enterprise/single-tenant/saml/okta_2.png)
+
+2.  Give it a name:
+
+    ![Enter SAML application name](../../../../assets/enterprise/single-tenant/saml/okta_3.png)
+
+3.  On the Next page, configure it as below:
+
+    1. The Single Sign On URL needs to point to your Nx Cloud instance URL and ends with `/auth-callback`
+    2. The Audience should be `nx-private-cloud`
+
+    ![Configure Single Sign On URL and Audience settings](../../../../assets/enterprise/single-tenant/saml/okta_4.png)
+
+4.  Under **Advanced Settings**, make sure both **Response** and **Assertion** are set to **Signed**
+
+    ![Set Response and Assertion signature settings to Signed](../../../../assets/enterprise/single-tenant/saml/okta_11.png)
+
+5.  Scroll down to attribute statements and configure them as per below:
+
+    ![Configure SAML attribute statements](../../../../assets/enterprise/single-tenant/saml/okta_5.png)
+
+6.  Click “Next”, and select the first option on the next screen.
+7.  Go to the assignments tab and assign the users that can login to the Nx Cloud WebApp:
+
+    1. **Note:** This just gives them permission to use the Nx Cloud web app with their own workspace. Users will still need to be invited manually through the web app to your main workspace.
+
+    ![Assign users to SAML application](../../../../assets/enterprise/single-tenant/saml/okta_6.png)
+
+8.  Then in the Sign-On tab scroll down:
+
+    ![Navigate to Sign-On tab for certificate download](../../../../assets/enterprise/single-tenant/saml/okta_7.png)
+
+9.  Scroll down and from the list of certificates, download the one with the "Active" status:
+
+    ![Download active SAML signing certificate](../../../../assets/enterprise/single-tenant/saml/okta_8.png)
+
+10. Extract the downloaded certificate value as a one-line string:
+    1. `awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' okta.cert`
+    2. We'll use this later
+11. Then view the ldP metadata:
+
+    ![View identity provider metadata](../../../../assets/enterprise/single-tenant/saml/okta_9.png)
+
+12. Then find the row similar to the below, and copy the highlighted URL (see screenshot as well):
+
+        1. ```html
+           <md:SingleSignOnService
+             Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+             Location="https://trial-xxxxx.okta.com/app/trial-xxxxx_nxcloudtest_1/xxxxxxxxx/sso/saml"
+           />
+           ```
+
+        ![Copy SingleSignOnService location URL from metadata](../../../../assets/enterprise/single-tenant/saml/okta_10.png)
+
+## SCIM Provisioning
+
+SCIM (System for Cross-domain Identity Management) provisioning enables automatic user lifecycle management for Nx Cloud through Okta.
+Once configured, Okta will automatically:
+
+- **Provision new users** when they're added to designated groups
+- **Update user permissions** when group memberships change
+- **Deprovision users** when they're removed from groups or deactivated
+
+### Enable SCIM provisioning
+
+Select the SAML application you created in the above setup steps.
+
+1. Navigate to **General** then click **Edit**
+2. Check **Enable SCIM Provisioning**
+3. Click **Save**
+
+![Enable SCIM provisioning in general settings](../../../../assets/enterprise/single-tenant/saml/okta_scim_1.jpg)
+
+### Configure SCIM
+
+After SCIM provisioning is enabled, **Provisioning** tab will become available for the SAML application.
+
+1. Navigate to **Provisioning** then click **Edit**
+2. Enter `{NX_CLOUD_APP_URL}/v1/scim` for connector base URL
+   - `NX_CLOUD_APP_URL` is provided by your DPE
+3. Enter `email` for unique identifier field
+4. Check **Push New Users** and **Push Profile Updates**
+5. Select **HTTP Header** for authentication mode
+6. Enter the JWT token
+   - JWT token is provided by your DPE
+7. Click **Save**
+
+![Configure SCIM connector base URL and authentication](../../../../assets/enterprise/single-tenant/saml/okta_scim_2.jpg)
+
+After SCIM provision is configured, **To App** settings will become available under **Provisioning** tab
+
+1. Navigate to **Provisioning**
+2. Click **To App** then click **Edit**
+3. Enable **Create Users**
+4. Enable **Update User Attributes**
+5. Enable **Deactivate Users**
+6. Click **Save**
+
+![Enable SCIM provisioning features to app](../../../../assets/enterprise/single-tenant/saml/okta_scim_3.jpg)
+
+### Add custom attribute for access specification
+
+1. Under **Directory** section, navigate to **Profile Editor**
+2. Select your SAML application
+
+![Select SAML application in Profile Editor](../../../../assets/enterprise/single-tenant/saml/okta_scim_4.jpg)
+
+1. Click **Add Attribute**
+
+![Click Add Attribute button](../../../../assets/enterprise/single-tenant/saml/okta_scim_5.jpg)
+
+1. Select `string array` for data type
+2. Enter `Nx Cloud Access Spec` for display name
+3. Enter `nxCloudAccessSpec` for variable name
+   - External name will be populated automatically
+4. Enter `urn:ietf:params:scim:schemas:extension:nxcloud:2.0:User` for external namespace
+5. Check **Enum**
+6. Define enum values
+   - `Read` with `nxcloud:organization:{organization_id}:read`
+   - `Write` with `nxcloud:organization:{organization_id}:write`
+   - `organization_id` can be provided by your DPE
+7. Check **Attribute required**
+8. Select **Group** for attribute type
+9. Click **Save**
+
+![Configure Nx Cloud access specification attribute](../../../../assets/enterprise/single-tenant/saml/okta_scim_6.jpg)
+
+### Provision users
+
+Select the appropriate `nxCloudAccessSpec` value when you assign your SAML application to your Groups.
+
+![Select access specification when assigning application to groups](../../../../assets/enterprise/single-tenant/saml/okta_scim_7.jpg)
+
+## Connect Your Nx Cloud Installation to Your SAML Set Up
+
+Contact your developer productivity engineer to connect your Nx Cloud instance to the SAML configuration.

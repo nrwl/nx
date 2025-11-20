@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, renameSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { NxJsonConfiguration, PluginConfiguration } from '../config/nx-json';
-import {
+import { NxJsonConfiguration } from '../config/nx-json';
+import type {
   FileData,
   FileMap,
   ProjectFileMap,
@@ -16,7 +16,6 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../utils/fileutils';
-import { PackageJson } from '../utils/package-json';
 import { nxVersion } from '../utils/versions';
 import { ConfigurationSourceMaps } from './utils/project-configuration-utils';
 import {
@@ -24,6 +23,8 @@ import {
   ProjectGraphErrorTypes,
   StaleProjectGraphCacheError,
 } from './error-types';
+import { isOnDaemon } from '../daemon/is-on-daemon';
+import { serverLogger } from '../daemon/server/logger';
 
 export interface FileMapCache {
   version: string;
@@ -32,6 +33,7 @@ export interface FileMapCache {
   nxJsonPlugins: PluginData[];
   pluginsConfig?: any;
   fileMap: FileMap;
+  externalNodesHash?: string;
 }
 
 export const nxProjectGraph = join(
@@ -180,7 +182,8 @@ export function createProjectFileMapCache(
   nxJson: NxJsonConfiguration<'*' | string[]>,
   packageJsonDeps: Record<string, string>,
   fileMap: FileMap,
-  tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } }
+  tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } },
+  externalNodesHash: string
 ) {
   const nxJsonPlugins = getNxJsonPluginsData(nxJson, packageJsonDeps);
   const newValue: FileMapCache = {
@@ -191,6 +194,7 @@ export function createProjectFileMapCache(
     nxJsonPlugins,
     pluginsConfig: nxJson?.pluginsConfig,
     fileMap,
+    externalNodesHash,
   };
   return newValue;
 }
@@ -233,6 +237,15 @@ export function writeCache(
         writeJsonFile(tmpFileMapPath, cache);
         renameSync(tmpFileMapPath, nxFileMap);
       }
+
+      if (isOnDaemon()) {
+        serverLogger.log(
+          `Wrote project graph cache to ${nxProjectGraph}${
+            errors.length > 0 ? ' with errors' : ''
+          }`
+        );
+      }
+
       done = true;
     } catch (err: any) {
       if (err instanceof Error) {
@@ -247,6 +260,11 @@ export function writeCache(
       ++retry;
     }
   } while (!done && retry < 5);
+  if (!done) {
+    throw new Error(
+      `Failed to write project graph cache to ${nxProjectGraph} and ${nxFileMap} after 5 attempts.`
+    );
+  }
   performance.mark('write cache:end');
   performance.measure('write cache', 'write cache:start', 'write cache:end');
 }
@@ -256,7 +274,8 @@ export function shouldRecomputeWholeGraph(
   packageJsonDeps: Record<string, string>,
   projects: Record<string, ProjectConfiguration>,
   nxJson: NxJsonConfiguration,
-  tsConfig: { compilerOptions: { paths: { [k: string]: any } } }
+  tsConfig: { compilerOptions: { paths: { [k: string]: any } } },
+  externalNodesHash: string
 ): boolean {
   if (cache.version !== '6.0') {
     return true;
@@ -300,6 +319,11 @@ export function shouldRecomputeWholeGraph(
     JSON.stringify(nxJson?.pluginsConfig) !==
     JSON.stringify(cache.pluginsConfig)
   ) {
+    return true;
+  }
+
+  // Check if external nodes have changed
+  if (externalNodesHash !== cache.externalNodesHash) {
     return true;
   }
 

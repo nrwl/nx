@@ -15,7 +15,7 @@ import {
   populateProjectGraph,
 } from './utils/get-project-graph-from-gradle-plugin';
 import { GradlePluginOptions } from './utils/gradle-plugin-options';
-import { GRALDEW_FILES, splitConfigFiles } from '../utils/split-config-files';
+import { GRADLEW_FILES, splitConfigFiles } from '../utils/split-config-files';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { existsSync } from 'node:fs';
 
@@ -27,7 +27,7 @@ export const createDependencies: CreateDependencies<
 ) => {
   const files = await globWithWorkspaceContext(
     workspaceRoot,
-    Array.from(GRALDEW_FILES)
+    Array.from(GRADLEW_FILES)
   );
   const { gradlewFiles } = splitConfigFiles(files);
   await populateProjectGraph(

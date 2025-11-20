@@ -62,19 +62,24 @@ This is the default configuration for Next.js standalone projects. Our `@nx/next
 ```
 
 {% /tab %}
-{% tab label="Enable turbo" %}
+{% tab label="Choosing your bundler" %}
 
-Turbopack (beta) is a cutting-edge bundler designed for JavaScript and TypeScript. To read more about support features see [Next.js Turbopack Documentation](https://turbo.build/pack/docs/features)
+Turbopack is a cutting-edge bundler designed for JavaScript and TypeScript. To read more about supported features see [Next.js Turbopack Documentation](https://turbo.build/pack/docs/features)
 
-In the context of Nx, you can utilize Turbopack within both the `pages` and `app` directories of Next.js to enhance local development speed. To activate Turbopack, simply:
+**Important: Next.js 16 changed the default bundler**
 
-Append the `--turbo` flag while executing the Nx development server.
+- **Next.js 15 and below**: Webpack is the default bundler. Use `--turbo` to enable Turbopack.
+- **Next.js 16 and above**: Turbopack is the default bundler. Use `--webpack` to use Webpack instead.
+
+### Using Turbopack in Next.js 15 and below
+
+Append the `--turbo` flag while executing the Nx development server:
 
 ```shell
 nx run acme:serve --turbo
 ```
 
-Updating the build options to include `turbo`.
+Or update the serve options to include `turbo`:
 
 ```json
     "serve": {
@@ -89,14 +94,37 @@ Updating the build options to include `turbo`.
           "buildTarget": "acme:build:development",
           "dev": true,
           "turbo": true
-        },
-        //
+        }
+      }
     }
-  }
 ```
 
-```bash
-nx run acme:serve
+### Using Webpack in Next.js 16 and above
+
+If you need to use Webpack instead of the default Turbopack in Next.js 16+:
+
+```shell
+nx run acme:serve --webpack
+```
+
+Or update the serve options to include `webpack`:
+
+```json
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "acme:build",
+        "dev": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "acme:build:development",
+          "dev": true,
+          "webpack": true
+        }
+      }
+    }
 ```
 
 {% /tab %}

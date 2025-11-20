@@ -1,5 +1,6 @@
 'use client';
-import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+import { AlgoliaSearch } from '@nx/nx-dev-feature-search';
+import { BlogPostDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 import { MoreBlogs } from './more-blogs';
 import { FeaturedBlogs } from './featured-blogs';
 import { useEffect, useMemo, useState } from 'react';
@@ -60,12 +61,11 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
     const firstFive = sortFirstFivePosts(filteredList);
     setFirstFiveBlogs(firstFive);
 
-    // Get the remaining blogs, sorted by date (unpinned posts after the first 5)
-    const firstFiveSlugs = new Set(firstFive.map((post) => post.slug));
-    const remaining = filteredList
-      .filter((post) => !firstFiveSlugs.has(post.slug))
-      .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
-    setRemainingBlogs(remaining);
+    // Get all blogs, sorted by date
+    const allBlogs = filteredList.sort(
+      (a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf()
+    );
+    setRemainingBlogs(allBlogs);
   }
 
   useEffect(() => updateBlogPosts(), [filteredList]);
@@ -73,8 +73,8 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
   return (
     <main id="main" role="main" className="w-full py-8">
       <div className="mx-auto mb-8 w-full max-w-[1088px] px-8">
-        <div className="mb-12 mt-20 flex items-center justify-between">
-          <header>
+        <>
+          <header className="mb-8 mt-20">
             <h1
               id="blog-title"
               className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl dark:text-slate-100"
@@ -82,21 +82,26 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
               {selectedFilterHeading}
             </h1>
           </header>
-          <div className="flex items-center justify-end md:justify-start">
-            <Filters
-              blogs={blogPosts}
-              filters={filters}
-              initialSelectedFilter={initialSelectedFilter}
-              setFilteredList={setFilteredList}
-              setSelectedFilterHeading={setSelectedFilterHeading}
-            />
+          <div className="mb-12 flex items-center justify-between">
+            <div className="flex items-center">
+              <Filters
+                blogs={blogPosts}
+                filters={filters}
+                initialSelectedFilter={initialSelectedFilter}
+                setFilteredList={setFilteredList}
+                setSelectedFilterHeading={setSelectedFilterHeading}
+              />
+            </div>
+            <div className="flex w-48 items-center justify-end md:justify-start">
+              <AlgoliaSearch blogOnly={true} />
+            </div>
           </div>
-        </div>
+        </>
         <FeaturedBlogs blogs={firstFiveBlogs} />
         {!!remainingBlogs.length && (
           <>
             <div className="mx-auto mb-8 mt-20 flex items-center justify-between border-b-2 border-slate-300 pb-3 text-sm dark:border-slate-700">
-              <h2 className="font-semibold">More blogs</h2>
+              <h2 className="font-semibold">All blogs</h2>
               <div className="flex gap-2">
                 <Link
                   href="/blog/rss.xml"
@@ -129,14 +134,13 @@ function initializeFilters(
   const filterBy = searchParams.get('filterBy');
 
   const firstFive = sortFirstFivePosts(blogPosts);
-  const firstFiveSlugs = new Set(firstFive.map((post) => post.slug));
-  const remaining = blogPosts
-    .filter((post) => !firstFiveSlugs.has(post.slug))
-    .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
+  const allBlogs = blogPosts.sort(
+    (a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf()
+  );
 
   const defaultState = {
     initialFirstFive: firstFive,
-    initialRest: remaining,
+    initialRest: allBlogs,
     initialSelectedFilterHeading: 'All Blogs',
     initialSelectedFilter: 'All',
   };
@@ -150,16 +154,13 @@ function initializeFilters(
   const initialFilter = ALL_TOPICS.find((filter) => filter.value === filterBy);
 
   const filteredFirstFive = sortFirstFivePosts(result);
-  const filteredFirstFiveSlugs = new Set(
-    filteredFirstFive.map((post) => post.slug)
+  const filteredAllBlogs = result.sort(
+    (a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf()
   );
-  const filteredRemaining = result
-    .filter((post) => !filteredFirstFiveSlugs.has(post.slug))
-    .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
 
   return {
     initialFirstFive: filteredFirstFive,
-    initialRest: filteredRemaining,
+    initialRest: filteredAllBlogs,
     initialSelectedFilterHeading: initialFilter?.heading || 'All Blogs',
     initialSelectedFilter: initialFilter?.value || 'All',
   };

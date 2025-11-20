@@ -1,5 +1,5 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
   "overrides": [
     {
@@ -62,6 +62,7 @@
               "@nx/rspack",
               "@nx/storybook",
               "@nx/vite",
+              "@nx/vitest",
               "@nx/webpack",
               // These are brought in by the webpack, rollup, or vite packages via init generators.
               "@babel/preset-react",
@@ -84,7 +85,6 @@
               "sass",
               "sass-loader",
               "style-loader",
-              "stylus-loader",
               "swc-loader",
               "tsconfig-paths-webpack-plugin",
               "webpack",
@@ -97,5 +97,5 @@
       }
     }
   ],
-  "ignorePatterns": ["!**/*"]
+  "ignorePatterns": ["!**/*", "node_modules"]
 }

@@ -29,6 +29,19 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "22.0.2": {
+      "version": "22.0.2-beta.0",
+      "packages": {
+        "koa": {
+          "version": "^3.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/koa": {
+          "version": "^3.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

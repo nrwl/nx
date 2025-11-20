@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { SectionHeading, Strong } from '@nx/nx-dev/ui-common';
+import { SectionHeading, Strong } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
 import { VisibilityAnimation } from './animations/visibility';
 import { ConformanceAnimation } from './animations/conformance';
@@ -156,23 +156,14 @@ export function ScaleYourOrganization(): ReactElement {
                     <ul className="mt-6 space-y-2 pl-4">
                       <li>
                         <Link
-                          href="/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud"
+                          href={
+                            '/docs/reference/powerpack/conformance/overview'
+                          }
                           prefetch={false}
-                          title="Configure Conformance Rules"
+                          title="Learn More About Conformance"
                           className="text-sm/6 font-semibold"
                         >
-                          Configure Conformance Rules{' '}
-                          <span aria-hidden="true">→</span>
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud"
-                          prefetch={false}
-                          title="Publish Conformance Rules"
-                          className="text-sm/6 font-semibold"
-                        >
-                          Publish Conformance Rules{' '}
+                          Learn More About Conformance
                           <span aria-hidden="true">→</span>
                         </Link>
                       </li>

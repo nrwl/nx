@@ -1,0 +1,65 @@
+{
+  "name": "@nx/maven",
+  "version": "0.0.1",
+  "private": false,
+  "description": "Nx plugin for Maven integration",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/maven"
+  },
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json"
+  },
+  "generators": "./generators.json",
+  "executors": "./executors.json",
+  "nx-migrations": {
+    "migrations": "./migrations.json"
+  },
+  "files": [
+    "dist",
+    "generators.json",
+    "executors.json",
+    "!dist/tsconfig.lib.tsbuildinfo"
+  ],
+  "keywords": [
+    "nx",
+    "maven",
+    "plugin",
+    "java",
+    "build"
+  ],
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "dependencies": {
+    "@nx/devkit": "workspace:*",
+    "@xmldom/xmldom": "^0.8.10",
+    "tslib": "catalog:typescript"
+  },
+  "devDependencies": {
+    "@types/jest": "catalog:jest",
+    "@types/node": "catalog:typescript",
+    "@types/xmldom": "^0.1.34",
+    "jest": "catalog:jest",
+    "memfs": "^4.9.2",
+    "nx": "workspace:*",
+    "ts-jest": "catalog:jest",
+    "typescript": "catalog:typescript"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

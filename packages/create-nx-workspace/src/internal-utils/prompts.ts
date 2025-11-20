@@ -13,6 +13,11 @@ import {
 import { stringifyCollection } from '../utils/string-utils';
 import { NxCloud } from '../utils/nx/nx-cloud';
 import { isCI } from '../utils/ci/is-ci';
+import {
+  Agent,
+  agentDisplayMap,
+  supportedAgents,
+} from '../create-workspace-options';
 
 export async function determineNxCloud(
   parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>
@@ -69,6 +74,31 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
     }
     return a.NxCloud;
   });
+}
+
+export async function determineAiAgents(
+  parsedArgs: yargs.Arguments<{ aiAgents?: Agent[]; interactive?: boolean }>
+): Promise<Agent[]> {
+  return parsedArgs.aiAgents ?? [];
+}
+
+async function aiAgentsPrompt(): Promise<Agent[]> {
+  const promptConfig: Parameters<typeof enquirer.prompt>[0] & {
+    footer: () => void;
+  } = {
+    name: 'agents',
+    message: 'Which AI agents, if any, would you like to set up?',
+    type: 'multiselect',
+    choices: supportedAgents.map((a) => ({
+      name: a,
+      message: agentDisplayMap[a],
+    })),
+    footer: () =>
+      chalk.dim(
+        'Multiple selections possible. <Space> to select. <Enter> to confirm.'
+      ),
+  };
+  return (await enquirer.prompt<{ agents: Agent[] }>([promptConfig])).agents;
 }
 
 export async function determineDefaultBase(

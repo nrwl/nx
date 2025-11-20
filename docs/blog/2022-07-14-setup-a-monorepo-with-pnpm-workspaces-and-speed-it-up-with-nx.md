@@ -445,7 +445,7 @@ npx nx run-many --target=build --projects=my-remix-app,shared-ui
 
 ## Configure Caching
 
-One of the main benefits of adding Nx to our PNPM workspace is **speed via caching**. [Computation caching](/concepts/how-caching-works) is a feature where different inputs (source files, env variables, command flags, etc.) are collected and a hash computed & stored in a local folder. Next time you run the command again, Nx looks for a matching hash, and if it finds one it just restores it. This includes restoring the terminal output as well as build artifacts (e.g. JS files in `dist` folders).
+One of the main benefits of adding Nx to our PNPM workspace is **speed via caching**. [Computation caching](/docs/concepts/how-caching-works) is a feature where different inputs (source files, env variables, command flags, etc.) are collected and a hash computed & stored in a local folder. Next time you run the command again, Nx looks for a matching hash, and if it finds one it just restores it. This includes restoring the terminal output as well as build artifacts (e.g. JS files in `dist` folders).
 
 Not all operations are cacheable, only side-effect free ones are. For example, if you run an operation with the same inputs, it reliably always has to produce the same output. If as part of that operation you call some API for instance, it wouldn't be cacheable because the result of that API might vary given the same input parameters.
 
@@ -492,11 +492,11 @@ Nx read the output from the cache instead of running the command for 1 out of 1 
 
 You can also see that from the terminal output mentioning "existing outputs match the cache, left as is" as well as at the end "Nx read the output from the cache instead of running the command for 1 out of 1 tasks."
 
-Having caching in place can drastically improve command execution times. It also gets even more useful if the cache is remotely distributed so that it can be shared with CI as well as other developer machines. In the case of Nx this can be done by enabling [Nx Cloud](/ci/features/remote-cache), which comes with 500 hours saved/month for free (no credit card required) and unlimited hours for open source projects.
+Having caching in place can drastically improve command execution times. It also gets even more useful if the cache is remotely distributed so that it can be shared with CI as well as other developer machines. In the case of Nx this can be done by enabling [Nx Cloud](/docs/features/ci-features/remote-cache), which comes with 500 hours saved/month for free (no credit card required) and unlimited hours for open source projects.
 
 ## Fine-tuning the caching
 
-By default the caching mechanism takes [all project-level files as an input](/concepts/how-caching-works). We might want to distinguish though which files are being considered based on the target that we execute. Example: you might not want to invalidate the cache for the `build` task if only spec files for unit testing got changed.
+By default the caching mechanism takes [all project-level files as an input](/docs/concepts/how-caching-works). We might want to distinguish though which files are being considered based on the target that we execute. Example: you might not want to invalidate the cache for the `build` task if only spec files for unit testing got changed.
 
 To illustrate this on our example, run `npx nx build my-remix-app` twice, such that the caching gets activated. Next, change the `README.md` of the Remix project (`apps/my-remix-app/README.md`). If you re-run the Remix app build the cache will be invalidated due to the change of the README file. This might definitely not be a desirable operation.
 
@@ -522,7 +522,7 @@ We can fine-tune the caching by adding a `targetDefaults` node in the `nx.json` 
 
 With this change, MD files would not be considered as part of the cache input whenever you run the `build` task.
 
-> _Note that all path globs are_ **_relative to the root of the workspace_**_. This avoids confusion as the inputs could also be defined at the project level in the_ `_package.json_` _(_[_more here_](/reference/project-configuration)_). You can use the interpolation variables_ `_{projectRoot}_` _and_ `_{workspaceRoot}_` _do distinguish whether the path should be targeting the project specific files or workspace level files._
+> _Note that all path globs are_ **_relative to the root of the workspace_**_. This avoids confusion as the inputs could also be defined at the project level in the_ `_package.json_` _(_[_more here_](/docs/reference/project-configuration)_). You can use the interpolation variables_ `_{projectRoot}_` _and_ `_{workspaceRoot}_` _do distinguish whether the path should be targeting the project specific files or workspace level files._
 
 ## Reusing Cache Input Globs
 
@@ -645,7 +645,7 @@ _Nx highlights dependent projects being built, but it keeps the main attention t
 
 ## Running just what changed
 
-In addition to providing caching, Nx also allows to just run what changed in a given branch with respect to a base branch by using the so-called ["affected command"](/ci/features/affected).
+In addition to providing caching, Nx also allows to just run what changed in a given branch with respect to a base branch by using the so-called ["affected command"](/docs/features/ci-features/affected).
 
 ```shell
 npx nx affected:<target>
@@ -750,7 +750,7 @@ You can find an example of such setup on the **Nx Recipe GitHub repository**:
 
 ## Learn more
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)

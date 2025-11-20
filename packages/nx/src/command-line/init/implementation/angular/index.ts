@@ -4,7 +4,10 @@ import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils';
 import { nxVersion } from '../../../../utils/versions';
 import { sortObjectByKeys } from '../../../../utils/object-sort';
 import { output } from '../../../../utils/output';
-import type { PackageJson } from '../../../../utils/package-json';
+import {
+  getDependencyVersionFromPackageJson,
+  type PackageJson,
+} from '../../../../utils/package-json';
 import {
   addDepsToPackageJson,
   initCloud,
@@ -15,7 +18,7 @@ import { setupIntegratedWorkspace } from './integrated-workspace';
 import { getLegacyMigrationFunctionIfApplicable } from './legacy-angular-versions';
 import { setupStandaloneWorkspace } from './standalone-workspace';
 import type { AngularJsonConfig, Options } from './types';
-import { connectExistingRepoToNxCloudPrompt } from '../../../connect/connect-to-nx-cloud';
+import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
 
 const defaultCacheableOperations: string[] = [
   'build',
@@ -125,12 +128,21 @@ function addPluginDependencies(): void {
     '@schematics/angular',
   ];
   const angularCliVersion =
-    packageJson.devDependencies['@angular/cli'] ??
-    packageJson.dependencies?.['@angular/cli'] ??
-    packageJson.devDependencies['@angular-devkit/build-angular'] ??
-    packageJson.dependencies?.['@angular-devkit/build-angular'] ??
-    packageJson.devDependencies['@angular/build'] ??
-    packageJson.dependencies?.['@angular/build'];
+    getDependencyVersionFromPackageJson(
+      '@angular/cli',
+      repoRoot,
+      packageJson
+    ) ??
+    getDependencyVersionFromPackageJson(
+      '@angular-devkit/build-angular',
+      repoRoot,
+      packageJson
+    ) ??
+    getDependencyVersionFromPackageJson(
+      '@angular/build',
+      repoRoot,
+      packageJson
+    );
 
   for (const dep of peerDepsToInstall) {
     if (!packageJson.devDependencies[dep] && !packageJson.dependencies?.[dep]) {

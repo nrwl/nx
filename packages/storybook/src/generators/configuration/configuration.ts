@@ -34,6 +34,7 @@ import {
 import type { LinterType } from '@nx/eslint';
 import {
   findStorybookAndBuildTargetsAndCompiler,
+  getStorybookVersionToInstall,
   pleaseUpgrade,
   storybookMajorVersion,
 } from '../../utils/utilities';
@@ -59,7 +60,7 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   rawSchema: StorybookConfigureSchema
 ) {
-  const storybookMajor = storybookMajorVersion();
+  const storybookMajor = storybookMajorVersion(tree);
   if (storybookMajor > 0 && storybookMajor === 7) {
     throw new Error(pleaseUpgrade());
   } else if (storybookMajor === 8) {
@@ -192,7 +193,7 @@ export async function configurationGeneratorInternal(
       await addStaticTarget(tree, schema);
     }
   } else {
-    devDeps['storybook'] = storybookVersion;
+    devDeps['storybook'] = getStorybookVersionToInstall(tree);
   }
 
   if (schema.tsConfiguration) {

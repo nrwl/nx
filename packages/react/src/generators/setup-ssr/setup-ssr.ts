@@ -1,4 +1,3 @@
-import type * as ts from 'typescript';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
@@ -6,7 +5,6 @@ import {
   formatFiles,
   generateFiles,
   joinPathFragments,
-  type ProjectGraph,
   readCachedProjectGraph,
   readNxJson,
   readProjectConfiguration,
@@ -14,8 +12,12 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import type * as ts from 'typescript';
 
-import type { Schema } from './schema';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { join } from 'path';
+import { addStaticRouter } from '../../utils/ast-utils';
 import {
   corsVersion,
   expressVersion,
@@ -23,9 +25,7 @@ import {
   typesCorsVersion,
   typesExpressVersion,
 } from '../../utils/versions';
-import { addStaticRouter } from '../../utils/ast-utils';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { join } from 'path';
+import type { Schema } from './schema';
 
 let tsModule: typeof import('typescript');
 
@@ -81,7 +81,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     return {
       importPath,
       filePath: joinPathFragments(
-        projectConfig.sourceRoot || projectConfig.root,
+        getProjectSourceRoot(projectConfig, tree),
         `${importPath}.tsx`
       ),
     };

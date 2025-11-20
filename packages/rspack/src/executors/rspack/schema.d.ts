@@ -40,7 +40,6 @@ export interface RspackExecutorSchema {
     sassOptions?: Record<string, any>;
     lessOptions?: Record<string, any>;
   };
-  sassImplementation?: 'sass' | 'sass-embedded';
   styles?: Array<ExtraEntryPointClass | string>;
   target?: 'web' | 'node';
   transformers?: TransformerEntry[];

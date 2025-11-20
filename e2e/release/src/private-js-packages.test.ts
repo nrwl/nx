@@ -5,7 +5,7 @@ import {
   tmpProjPath,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 
 expect.addSnapshotSerializer({
@@ -207,8 +207,10 @@ describe('nx release - private JS packages', () => {
 
       - {private-project-name}
 
-      This is usually caused by not having an appropriate plugin, such as "@nx/js" installed, which will add the appropriate "nx-release-publish" target for you automatically.
-
+      This is usually caused by either
+      - not having an appropriate plugin, such as "@nx/js" installed, which will add the appropriate "nx-release-publish" target for you automatically
+      - having "private": true set in your package.json, which prevents the target from being created
+      
       Pass --verbose to see the stacktrace.
 
 

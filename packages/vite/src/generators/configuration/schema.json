@@ -1,7 +1,7 @@
 {
   "cli": "nx",
-  "title": "Configure a project to use Vite.js.",
-  "description": "Configure a project to use Vite.js.",
+  "title": "Configure a project to use Vite.",
+  "description": "Configure a project to use Vite.",
   "$id": "configure-vite-project",
   "type": "object",
   "properties": {

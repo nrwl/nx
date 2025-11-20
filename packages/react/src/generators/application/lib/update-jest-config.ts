@@ -1,5 +1,7 @@
-import { maybeJs } from '../../../utils/maybe-js';
-import { updateJestConfigContent } from '../../../utils/jest-utils';
+import {
+  updateJestConfigContent,
+  findProjectJestConfig,
+} from '../../../utils/jest-utils';
 import { NormalizedSchema } from '../schema';
 import { Tree, updateJson } from '@nx/devkit';
 
@@ -32,10 +34,10 @@ export function updateSpecConfig(host: Tree, options: NormalizedSchema) {
     return;
   }
 
-  const configPath = maybeJs(
-    options,
-    `${options.appProjectRoot}/jest.config.ts`
-  );
+  const configPath = findProjectJestConfig(host, options.appProjectRoot);
+  if (!configPath) {
+    return;
+  }
   const originalContent = host.read(configPath, 'utf-8');
   const content = updateJestConfigContent(originalContent);
   host.write(configPath, content);

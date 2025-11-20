@@ -1,4 +1,4 @@
-use std::io::{Stdin, Write};
+use std::io::Stdin;
 use std::os::windows::ffi::OsStrExt;
 use std::{ffi::OsString, os::windows::ffi::OsStringExt};
 use winapi::um::fileapi::GetShortPathNameW;

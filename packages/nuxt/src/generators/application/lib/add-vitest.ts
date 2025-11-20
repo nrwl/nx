@@ -12,11 +12,14 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
       : p.plugin === '@nx/nuxt/plugin'
   );
 
-  const { createOrEditViteConfig, vitestGenerator } = ensurePackage<
-    typeof import('@nx/vite')
-  >('@nx/vite', nxVersion);
+  const { createOrEditViteConfig } = ensurePackage<typeof import('@nx/vite')>(
+    '@nx/vite',
+    nxVersion
+  );
+  ensurePackage('@nx/vitest', nxVersion);
+  const { configurationGenerator } = await import('@nx/vitest/generators');
 
-  const vitestTask = await vitestGenerator(
+  const vitestTask = await configurationGenerator(
     tree,
     {
       project: options.projectName,
@@ -39,6 +42,10 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
       testEnvironment: 'jsdom',
       imports: [`import vue from '@vitejs/plugin-vue'`],
       plugins: ['vue()'],
+      // NOTE: Set to false to generate .ts instead of .mts because @nuxt/eslint-config
+      // does not handle .mts files in its parser configuration.
+      // See: https://github.com/nuxt/eslint/blob/v0.5.6/packages/eslint-config/src/legacy.ts#L6-L11
+      useEsmExtension: false,
     },
     true,
     undefined,

@@ -1,9 +1,8 @@
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve, dirname } from 'path';
 import { ExecutorContext, logger, readJsonFile } from '@nx/devkit';
-import { fileExists } from '@nx/workspace/src/utilities/fileutils';
 import * as pc from 'picocolors';
-import { sync as globSync } from 'glob';
+import { globSync } from 'tinyglobby';
 
 import { ReactNativeStorybookOptions } from './schema';
 import {
@@ -39,7 +38,7 @@ export default async function* reactNativeStorybookExecutor(
   );
   const projectPackageJson = readJsonFile<PackageJson>(packageJsonPath);
 
-  if (isSyncDepsEnabled && fileExists(packageJsonPath))
+  if (isSyncDepsEnabled && existsSync(packageJsonPath))
     displayNewlyAddedDepsMessage(
       context.projectName,
       await syncDeps(

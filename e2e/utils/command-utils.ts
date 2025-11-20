@@ -2,8 +2,6 @@ import { output, PackageManager, ProjectConfiguration } from '@nx/devkit';
 import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   detectPackageManager,
-  ensureCypressInstallation,
-  ensurePlaywrightBrowsersInstallation,
   getNpmMajorVersion,
   getPnpmVersion,
   getPublishedVersion,
@@ -11,6 +9,10 @@ import {
   getYarnMajorVersion,
   isVerboseE2ERun,
 } from './get-env-info';
+import {
+  ensureCypressInstallation,
+  ensurePlaywrightBrowsersInstallation,
+} from './ensure-browser-installation';
 import { TargetConfiguration } from '@nx/devkit';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import { join } from 'path';
@@ -64,7 +66,11 @@ export function runCommand(
   command: string,
   options?: Partial<ExecSyncOptions> & { failOnError?: boolean }
 ): string {
-  const { failOnError, ...childProcessOptions } = options ?? {};
+  const {
+    failOnError,
+    env: optionsEnv,
+    ...childProcessOptions
+  } = options ?? {};
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
@@ -73,7 +79,7 @@ export function runCommand(
         // Use new versioning by default in e2e tests
         NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
         ...getStrippedEnvironmentVariables(),
-        ...childProcessOptions?.env,
+        ...optionsEnv,
         FORCE_COLOR: 'false',
       },
       encoding: 'utf-8',
@@ -137,8 +143,8 @@ export function getPackageManagerCommand({
       runUninstalledPackage: `npx --yes`,
       install: 'npm install',
       ciInstall: 'npm ci',
-      addProd: `npm install --legacy-peer-deps`,
-      addDev: `npm install --legacy-peer-deps -D`,
+      addProd: `npm install`,
+      addDev: `npm install -D`,
       list: 'npm ls --depth 10',
       runLerna: `npx lerna`,
       exec: 'npx',
@@ -496,4 +502,13 @@ export function waitUntil(
       reject(new Error(`Timed out waiting for condition to return true`));
     }, opts.timeout);
   });
+}
+
+export function isDockerAvailable() {
+  try {
+    const dockerVersionInfo = runCommand(`docker info -f json`);
+    return !dockerVersionInfo.includes('Cannot connect to the Docker daemon');
+  } catch {
+    return false;
+  }
 }

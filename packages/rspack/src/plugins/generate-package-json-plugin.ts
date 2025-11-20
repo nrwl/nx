@@ -77,12 +77,21 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
             new sources.RawSource(serializeJson(packageJson))
           );
           const packageManager = detectPackageManager(this.context.root);
-          compilation.emitAsset(
-            getLockFileName(packageManager),
-            new sources.RawSource(
-              createLockFile(packageJson, this.projectGraph, packageManager)
-            )
-          );
+
+          if (packageManager === 'bun') {
+            compilation
+              .getLogger('GeneratePackageJsonPlugin')
+              .warn(
+                'Bun lockfile generation is not supported. Only package.json will be generated.'
+              );
+          } else {
+            compilation.emitAsset(
+              getLockFileName(packageManager),
+              new sources.RawSource(
+                createLockFile(packageJson, this.projectGraph, packageManager)
+              )
+            );
+          }
         }
       );
     });

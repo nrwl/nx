@@ -15,6 +15,8 @@ import {
   readCachedProjectGraph,
 } from '@nx/devkit';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+import { applyDefaultEagerPackages as applyReactEagerPackages } from '../react/utils';
+import { isReactProject } from '../../utils/framework-detection';
 
 export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
   const target = 'serve';
@@ -61,7 +63,8 @@ export async function getModuleFederationConfig(
   options: {
     isServer: boolean;
     determineRemoteUrl?: (remote: string) => string;
-  } = { isServer: false }
+  } = { isServer: false },
+  bundler: 'rspack' | 'webpack' = 'rspack'
 ) {
   let projectGraph: ProjectGraph;
   try {
@@ -93,7 +96,9 @@ export async function getModuleFederationConfig(
   }
 
   const sharedLibraries = shareWorkspaceLibraries(
-    dependencies.workspaceLibraries
+    dependencies.workspaceLibraries,
+    undefined,
+    bundler
   );
 
   const npmPackages = sharePackages(dependencies.npmPackages);
@@ -102,6 +107,11 @@ export async function getModuleFederationConfig(
     ...sharedLibraries.getLibraries(project.root),
     ...npmPackages,
   };
+
+  // Apply framework-specific eager packages
+  if (isReactProject(mfConfig.name, projectGraph)) {
+    applyReactEagerPackages(sharedDependencies);
+  }
 
   applySharedFunction(sharedDependencies, mfConfig.shared);
   applyAdditionalShared(

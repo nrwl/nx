@@ -1,8 +1,10 @@
 /* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
+// nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
+// nx-ignore-next-line
 import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
-
 /* eslint-enable @nx/enforce-module-boundaries */
 
 import {
@@ -18,7 +20,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useEffect, useState, useRef } from 'react';
 import { MigrationCard, MigrationCardHandle } from './migration-card';
-import { Collapsible } from '@nx/graph/ui-common';
+import { Collapsible } from '@nx/graph-ui-common';
 import { twMerge } from 'tailwind-merge';
 import type { Interpreter } from 'xstate';
 import type {

@@ -1,6 +1,9 @@
 /* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
+// nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
+// nx-ignore-next-line
 import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 /* eslint-enable @nx/enforce-module-boundaries */
 
@@ -11,7 +14,7 @@ import {
   ListBulletIcon,
   PlayIcon,
 } from '@heroicons/react/24/outline';
-import { Pill } from '@nx/graph-internal/ui-project-details';
+import { Pill } from '@nx/graph-internal-ui-project-details';
 import {
   useState,
   forwardRef,

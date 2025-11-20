@@ -14,7 +14,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { readFileSync } from 'fs-extra';
 import { join } from 'path';
 
@@ -39,7 +39,7 @@ describe('React Applications', () => {
       );
 
       // Library generated with Vite
-      checkFilesExist(`libs/${libName}/vite.config.ts`);
+      checkFilesExist(`libs/${libName}/vite.config.mts`);
 
       const mainPath = `apps/${appName}/src/main.tsx`;
       updateFile(

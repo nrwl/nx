@@ -1,7 +1,26 @@
+import * as devkitExports from 'nx/src/devkit-exports';
+import { createTree } from 'nx/src/generators/testing-utils/create-tree';
 import type { Tree } from 'nx/src/generators/tree';
 import { readJson, writeJson } from 'nx/src/generators/utils/json';
 import { addDependenciesToPackageJson, ensurePackage } from './package-json';
-import { createTree } from 'nx/src/generators/testing-utils/create-tree';
+
+// Mock fs for catalog tests
+jest.mock('fs', () => require('memfs').fs);
+jest.mock('node:fs', () => require('memfs').fs);
+
+// Mock yaml reading functions
+jest.mock('nx/src/devkit-internals', () => ({
+  ...jest.requireActual('nx/src/devkit-internals'),
+  readYamlFile: jest.fn((path: string) => {
+    const { vol } = require('memfs');
+    try {
+      const content = vol.readFileSync(path, 'utf8');
+      return require('@zkochan/js-yaml').load(content);
+    } catch (error) {
+      throw new Error(`Cannot read YAML file at ${path}`);
+    }
+  }),
+}));
 
 describe('addDependenciesToPackageJson', () => {
   let tree: Tree;
@@ -467,6 +486,200 @@ describe('addDependenciesToPackageJson', () => {
     const result = readJson(tree, 'package.json');
     expect(result.dependencies).toEqual({
       foo: '1.0.0',
+    });
+  });
+
+  describe('catalog support', () => {
+    beforeEach(() => {
+      jest.spyOn(devkitExports, 'detectPackageManager').mockReturnValue('pnpm');
+      tree.root = '/test-workspace';
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should update existing catalog dependencies in pnpm workspace', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+packages:
+  - packages/*
+catalog:
+  react: ^18.0.0
+`
+      );
+
+      writeJson(tree, 'package.json', {
+        dependencies: { react: 'catalog:' },
+      });
+
+      addDependenciesToPackageJson(tree, { react: '^18.2.0' }, {});
+
+      const result = readJson(tree, 'package.json');
+      expect(result.dependencies).toEqual({ react: 'catalog:' });
+
+      const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(workspace).toContain('react: "^18.2.0"');
+    });
+
+    it('should add new dependencies as regular dependencies when no existing catalog reference', () => {
+      writeJson(tree, 'package.json', { dependencies: {} });
+
+      addDependenciesToPackageJson(tree, { lodash: '^4.17.21' }, {});
+
+      const result = readJson(tree, 'package.json');
+      expect(result.dependencies).toEqual({ lodash: '^4.17.21' });
+    });
+
+    it('should use direct dependencies with unsupported package managers', () => {
+      jest.spyOn(devkitExports, 'detectPackageManager').mockReturnValue('npm');
+      writeJson(tree, 'package.json', {
+        dependencies: { react: 'catalog:' },
+      });
+
+      addDependenciesToPackageJson(tree, { react: '^18.0.0' }, {});
+
+      const result = readJson(tree, 'package.json');
+      expect(result.dependencies).toEqual({ react: '^18.0.0' });
+    });
+
+    it('should handle mixed catalog and direct dependencies', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `packages:\n  - packages/*\ncatalog:\n  react: ^18.0.0`
+      );
+
+      writeJson(tree, 'package.json', {
+        dependencies: { react: 'catalog:', lodash: '^4.17.20' },
+      });
+
+      addDependenciesToPackageJson(
+        tree,
+        { react: '^18.2.0', lodash: '^4.17.21' },
+        {}
+      );
+
+      const result = readJson(tree, 'package.json');
+      expect(result.dependencies).toEqual({
+        react: 'catalog:',
+        lodash: '^4.17.21',
+      });
+
+      const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(workspace).toContain('react: "^18.2.0"');
+    });
+
+    it('should preserve existing catalog references when updating with direct versions', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `packages:\n  - packages/*\ncatalog:\n  react: ^18.0.0`
+      );
+
+      writeJson(tree, 'package.json', {
+        dependencies: { react: 'catalog:' },
+      });
+
+      addDependenciesToPackageJson(tree, { react: '^18.2.0' }, {});
+
+      const result = readJson(tree, 'package.json');
+      expect(result.dependencies).toEqual({ react: 'catalog:' });
+
+      const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(workspace).toContain('react: "^18.2.0"');
+    });
+
+    it('should update only the specific catalog when package exists in multiple catalogs', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `packages:\n  - packages/*\ncatalog:\n  react: ^18.0.0\ncatalogs:\n  dev:\n    react: ^17.0.0`
+      );
+
+      writeJson(tree, 'package.json', {
+        dependencies: { react: 'catalog:dev' },
+      });
+
+      addDependenciesToPackageJson(tree, { react: '^18.2.0' }, {});
+
+      const result = readJson(tree, 'package.json');
+      expect(result.dependencies).toEqual({ react: 'catalog:dev' });
+
+      const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(workspace).toMatch(/catalogs:\s*dev:\s*react: "?\^18\.2\.0"?/);
+      expect(workspace).toMatch(/catalog:\s*react: "?\^18\.0\.0"?/);
+    });
+
+    it('should filter catalog dependencies using version comparison logic', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `packages:\n  - packages/*\ncatalog:\n  react: ^18.2.0`
+      );
+      writeJson(tree, 'package.json', {
+        dependencies: { react: 'catalog:' },
+      });
+
+      addDependenciesToPackageJson(tree, { react: '^18.1.0' }, {});
+
+      const result = readJson(tree, 'package.json');
+      expect(result.dependencies).toEqual({ react: 'catalog:' });
+
+      const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(workspace).toContain('react: ^18.2.0');
+    });
+
+    it('should handle named catalog references', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `packages:\n  - packages/*\ncatalogs:\n  dev:\n    jest: ^28.0.0`
+      );
+
+      writeJson(tree, 'package.json', {
+        devDependencies: { jest: 'catalog:dev' },
+      });
+
+      addDependenciesToPackageJson(tree, {}, { jest: '^29.0.0' });
+
+      const result = readJson(tree, 'package.json');
+      expect(result.devDependencies).toEqual({ jest: 'catalog:dev' });
+
+      const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(workspace).toContain('jest: "^29.0.0"');
+    });
+
+    it('should resolve catalog references for version comparison', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `packages:\n  - packages/*\ncatalog:\n  react: ^18.2.0`
+      );
+
+      writeJson(tree, 'package.json', {
+        dependencies: { react: 'catalog:' },
+      });
+
+      addDependenciesToPackageJson(tree, { react: '^18.1.0' }, {});
+
+      const result = readJson(tree, 'package.json');
+      expect(result.dependencies).toEqual({ react: 'catalog:' });
+
+      const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(workspace).toContain('react: ^18.2.0');
+    });
+
+    it('should throw an error for invalid catalog references', () => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `packages:\n  - packages/*\ncatalog: {}`
+      );
+
+      writeJson(tree, 'package.json', {
+        dependencies: { react: 'catalog:nonexistent' },
+      });
+
+      expect(() =>
+        addDependenciesToPackageJson(tree, { react: '^18.2.0' }, {})
+      ).toThrow(
+        "Failed to resolve catalog reference 'catalog:nonexistent' for package 'react'"
+      );
     });
   });
 });

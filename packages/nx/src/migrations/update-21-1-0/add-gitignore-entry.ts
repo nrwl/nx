@@ -1,5 +1,5 @@
 import { Tree } from '../../generators/tree';
-import ignore from 'ignore';
+import ignore = require('ignore');
 
 export default async function addGitignoreEntry(tree: Tree) {
   if (!tree.exists('nx.json')) {

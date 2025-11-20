@@ -40,6 +40,14 @@ export function findRootJestConfig(tree: Tree): string | null {
   return ext ? `jest.config.${ext}` : null;
 }
 
+export function findJestConfig(tree: Tree, projectPath: string): string | null {
+  const ext = jestConfigExtensions.find((ext) =>
+    tree.exists(`${projectPath}/jest.config.${ext}`)
+  );
+
+  return ext ? `${projectPath}/jest.config.${ext}` : null;
+}
+
 export function findRootJestPreset(tree: Tree): string | null {
   const ext = jestPresetExtensions.find((ext) =>
     tree.exists(`jest.preset.${ext}`)

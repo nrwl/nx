@@ -1,0 +1,419 @@
+---
+title: Migrate from @nx-dotnet/core to @nx/dotnet
+description: Step-by-step guide to migrate from the community @nx-dotnet/core plugin to the official @nx/dotnet plugin
+sidebar:
+  label: Migrate from @nx-dotnet/core
+filter: 'type:Guides'
+---
+
+This guide provides a streamlined migration path from the community `@nx-dotnet/core` plugin to Nx's official `@nx/dotnet` plugin.
+
+{% aside type="note" title="Plugin Status" %}
+The `@nx-dotnet/core` plugin is deprecated in favor of the official `@nx/dotnet` plugin (available in Nx 22+), which is maintained by the Nx team and integrated directly into the Nx repository.
+{% /aside %}
+
+## Why Migrate?
+
+The official `@nx/dotnet` plugin represents a natural evolution, building on lessons learned from the community plugin while embracing native .NET workflows:
+
+- **Project inference**: Automatic detection of .NET projects without configuration with [Nx inferred targets](/docs/guides/tasks--caching/convert-to-inferred)
+- **MSBuild integration**: Direct use of Microsoft's APIs for accurate dependency analysis
+- **Native CLI first**: Uses `dotnet` commands directly instead of custom wrappers
+- **Minimal abstraction**: Simpler implementation with fewer dependencies
+
+This results in a faster, and more reliable .NET plugin.
+
+## Prerequisites
+
+Before starting the migration:
+
+- [ ] Upgrade to **.NET SDK 8.0 or later** (required)
+- [ ] Locate your current @nx-dotnet/core configuration (see below)
+- [ ] Review any custom generators and executors you're using
+- [ ] Ensure your projects build successfully with current setup
+
+### Locating Your Configuration
+
+The @nx-dotnet/core plugin configuration can be in one of two places:
+
+{% tabs %}
+{% tabitem label="nx.json" %}
+
+```json
+{
+  "plugins": [
+    {
+      "plugin": "@nx-dotnet/core",
+      "options": {
+        "inferredTargets": { ... },
+        "solutionFile": "...",
+        // ... other options
+      }
+    }
+  ]
+}
+```
+
+{% /tabitem %}
+{% tabitem label=".nx-dotnet.rc.json" %}
+
+```json
+{
+  "inferredTargets": { ... },
+  "solutionFile": "...",
+  // ... other options
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+{% aside type="note" title="No Configuration?" %}
+If you don't have custom configuration in either location, that's fine! The plugin works with defaults, and migration will be even simpler.
+{% /aside %}
+
+## Migration Steps
+
+### 1. Install @nx/dotnet
+
+```shell
+nx add @nx/dotnet
+```
+
+This automatically:
+
+- Adds `@nx/dotnet` as a dependency
+- Registers the plugin in `nx.json`
+- Configures target inputs
+- Updates `.gitignore`
+
+### 2. Remove @nx-dotnet/core
+
+```shell
+npm uninstall @nx-dotnet/core @nx-dotnet/utils @nx-dotnet/dotnet
+```
+
+Clean up the relevant workspace configurations:
+
+- Remove `@nx-dotnet/core` from the `plugins` array in `nx.json` (if present)
+- Delete `.nx-dotnet.rc.json` (if it exists)
+
+### 3. Migrate Plugin Configuration
+
+Move any customized target configurations from your @nx-dotnet/core config to the new @nx/dotnet plugin options.
+
+**Before** (in `nx.json` or `.nx-dotnet.rc.json`):
+
+```json
+{
+  "inferredTargets": {
+    "build": "build",
+    "test": {
+      "targetName": "test:dotnet",
+      "cache": false
+    }
+  }
+}
+```
+
+**After** (in `nx.json`):
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/dotnet",
+      "options": {
+        "build": {
+          "targetName": "build"
+        },
+        "test": {
+          "targetName": "test:dotnet"
+        }
+      }
+    }
+  ]
+}
+```
+
+### 4. Clear Cache and Verify
+
+```shell
+nx reset
+nx graph
+```
+
+The `nx graph` command should show all your .NET projects with their dependencies correctly detected. If you encounter any issues, see the [Troubleshooting](#troubleshooting) section below.
+
+## Key Workflow Changes
+
+Here's what changes in your day-to-day usage with the new `@nx/dotnet` plugin:
+
+| Task                      | Old (@nx-dotnet/core)                                          | New (@nx/dotnet)                                |
+| ------------------------- | -------------------------------------------------------------- | ----------------------------------------------- |
+| **Create application**    | `nx g @nx-dotnet/core:app my-api`                              | `dotnet new webapi -n MyApi`                    |
+| **Create library**        | `nx g @nx-dotnet/core:lib my-lib`                              | `dotnet new classlib -n MyLib`                  |
+| **Add project reference** | `nx g @nx-dotnet/core:project-reference --source A --target B` | `dotnet add reference ../B/B.csproj`            |
+| **Add NuGet package**     | `nx g @nx-dotnet/core:nuget-reference`                         | `dotnet add package PackageName`                |
+| **Build project**         | `nx build my-api`                                              | `nx build my-api` ✅ (same)                     |
+| **Run tests**             | `nx test my-api`                                               | `nx test my-api` ✅ (same)                      |
+| **Serve/watch**           | `nx serve my-api`                                              | `dotnet watch run` (or configure custom target) |
+
+### Default Targets Generated
+
+The plugin automatically creates these targets for .NET projects:
+
+| Target    | When Created        | Command                                       |
+| --------- | ------------------- | --------------------------------------------- |
+| `build`   | All projects        | `dotnet build --no-restore --no-dependencies` |
+| `test`    | Test projects only  | `dotnet test --no-build --no-restore`         |
+| `restore` | All projects        | `dotnet restore`                              |
+| `clean`   | All projects        | `dotnet clean`                                |
+| `publish` | Executable projects | `dotnet publish`                              |
+| `pack`    | Library projects    | `dotnet pack`                                 |
+
+### Adding Back Missing Targets
+
+The `serve` and `format` targets are not automatically created. `serve` defaults to a target named `watch` now. To run it, you'd need to run `nx run my-api:watch run`. To configure the watch target to act like `serve`, you could set the following in `nx.json`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/dotnet",
+      "options": {
+        "watch": {
+          "targetName": "serve",
+          "args": ["run"]
+        }
+      }
+    }
+  ]
+}
+```
+
+The `format` target is not present by default. You should add it as a custom target if desired.
+
+## Advanced Migration Scenarios
+
+### Migrating from Explicit Executor Configurations
+
+If you have `project.json` files that explicitly configure @nx-dotnet/core executors, you'll need to update them to use command targets.
+
+**Before** (`project.json`):
+
+```json
+// project.json
+{
+  "name": "my-api",
+  "targets": {
+    "build": {
+      "executor": "@nx-dotnet/core:build",
+      "options": {
+        "configuration": "Release",
+        "noDependencies": true
+      }
+    },
+    "test": {
+      "executor": "@nx-dotnet/core:test",
+      "options": {
+        "testProject": "MyApi.Tests.csproj"
+      }
+    },
+    "serve": {
+      "executor": "@nx-dotnet/core:serve",
+      "options": {
+        "project": "MyApi.csproj"
+      }
+    }
+  }
+}
+```
+
+**After** (`project.json`):
+
+```json
+// project.json
+{
+  "name": "my-api",
+  "targets": {
+    "build": {
+      "command": "dotnet build",
+      "options": {
+        "cwd": "{projectRoot}",
+        "args": ["--configuration", "Release", "--no-dependencies"]
+      }
+    },
+    "test": {
+      "command": "dotnet test MyApi.Tests.csproj",
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    },
+    "serve": {
+      "command": "dotnet watch run",
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}
+```
+
+{% aside type="tip" title="Automatic Target Inference" %}
+In most cases, you can delete these `project.json` files entirely. The @nx/dotnet plugin will [automatically infer](/docs/guides/tasks--caching/convert-to-inferred) the correct targets based on your `.csproj` files. Only keep custom `project.json` configurations if you need non-standard options.
+{% /aside %}
+
+### Migrating from `inferProjects: false`
+
+If you previously set `inferProjects: false` in your @nx-dotnet/core config, this option no longer exists in @nx/dotnet. The new plugin **always** infers projects automatically.
+
+**Why this changed:**
+
+- Project inference is a core feature of how Nx plugins work
+- Manual project management doesn't align with Nx's preferred automatic detection model
+- Maintaining explicit project configurations is error-prone
+
+**Migration path:**
+
+1. **If you disabled inference to exclude certain projects:**
+
+   - Use the `exclude` property in the plugin configuration:
+     ```json
+     // nx.json
+     {
+       "plugins": [
+         {
+           "plugin": "@nx/dotnet",
+           "exclude": ["legacy-projects/**", "temp-projects/**"]
+         }
+       ]
+     }
+     ```
+
+2. **If you disabled inference to use explicit project.json files:**
+
+   - The new plugin will still detect your projects via `.csproj` files
+   - You can keep `project.json` files to customize targets, but they're optional
+   - Consider removing them to use the automatically inferred targets
+
+## Configuration Changes
+
+### Module Boundaries → Nx Conformance
+
+If you used `moduleBoundaries` in your @nx-dotnet/core config, you may want to migrate to [Nx Conformance rules](/docs/enterprise/powerpack/conformance)
+
+The script used to evaluate module boundaries is missing several features from the eslint and conformance implementations, and is not present in the new plugin. If you wish to continue using it, you'll need to inline the implementation in your repository and update the path in `Directory.build.targets`. Otherwise, you should remove the target from `Directory.build.targets`.
+
+### NuGet Package Management
+
+Replace the `sync` generator with MSBuild's [Central Package Management](https://learn.microsoft.com/nuget/consume-packages/central-package-management).
+
+Create `Directory.Packages.props` at workspace root:
+
+```xml
+// Directory.Packages.props
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+  </ItemGroup>
+</Project>
+```
+
+Update project files to remove version attributes:
+
+```diff {% meta="lang='xml'" %}
+- <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
++ <PackageReference Include="Newtonsoft.Json" />
+```
+
+## Testing the Migration
+
+Run these commands to verify everything works:
+
+```shell
+# Clear cache
+nx reset
+
+# Verify project detection
+nx show projects
+
+# Test builds
+nx run-many -t build
+
+# Test affected builds
+nx affected -t build
+
+# Run tests
+nx run-many -t test
+```
+
+## Troubleshooting
+
+### Projects Not Detected After Migration
+
+**Symptom**: Some .NET projects don't appear in `nx show projects`
+
+**Solution**:
+
+- Ensure project files have `.csproj`, `.fsproj`, or `.vbproj` extensions
+- Check that the plugin is registered in `nx.json`
+- Run `nx reset` to clear the cache
+
+### "Could not find project reference" Build Error
+
+**Symptom**: Build fails with "Could not find project reference"
+
+**Solution**:
+
+- Verify the referenced project exists in the workspace
+- Ensure build targets have `"dependsOn": ["^build"]` (plugin adds this automatically)
+- Check that project references in `.csproj` files use correct relative paths
+- Run `nx reset` to clear stale cache
+
+### Missing Targets (test, pack, publish)
+
+**Symptom**: Expected targets like `test` or `pack` don't show up
+
+**Solution**:
+
+- `test`: Only created for projects with `IsTestProject` property or `Microsoft.NET.Test.Sdk` package
+- `pack`: Only created for library projects (not executables)
+- `publish`: Only created for executable projects (`OutputType="Exe"`)
+- Use `nx show project my-project` to see all available targets
+
+### Project Name Mismatch After Migration
+
+**Symptom**: Project names don't match expectations
+
+**Solution**:
+Add a `Name` property to your `.csproj` file under the `Nx` property group:
+
+```xml
+<PropertyGroup>
+  <Nx>
+    <Name>my-custom-name</Name>
+  </Nx>
+</PropertyGroup>
+```
+
+## Next Steps
+
+After completing the migration:
+
+- Review the [incremental builds guide](/docs/technologies/dotnet/guides/incremental-builds) to understand how `--no-dependencies` optimizes builds
+- Configure [Nx Cloud](https://nx.dev/nx-cloud?utm_source=nx.dev&utm_medium=dotnet-migration) for improved repo experience for your team and CI
+- Set up custom targets for `serve`, `lint`, or other specialized tasks as needed
+- Update CI/CD pipelines to ensure .NET SDK 8.0+ is installed
+
+## Additional Resources
+
+- [Nx .NET Plugin Documentation](/docs/technologies/dotnet/introduction)
+- [Nx Conformance](/docs/enterprise/powerpack/conformance)
+- [Central Package Management](https://learn.microsoft.com/nuget/consume-packages/central-package-management)

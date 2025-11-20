@@ -2,7 +2,6 @@ import {
   type Tree,
   type PluginConfiguration,
   readNxJson,
-  CreateNodes,
   CreateNodesV2,
 } from 'nx/src/devkit-exports';
 import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
@@ -31,7 +30,7 @@ export async function findPluginForConfigFile(
 
     if (plugin.include || plugin.exclude) {
       const resolvedPlugin: {
-        createNodes?: CreateNodes;
+        createNodes?: CreateNodesV2;
         createNodesV2?: CreateNodesV2;
       } = await import(pluginName);
       const pluginGlob =

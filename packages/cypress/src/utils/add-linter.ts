@@ -21,7 +21,7 @@ import {
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
-import { getInstalledCypressMajorVersion, versions } from './versions';
+import { versions } from './versions';
 
 export interface CyLinterOptions {
   project: string;
@@ -120,7 +120,6 @@ export async function addLinterToCyProject(
       );
       tasks.push(addExtendsTask);
     }
-    const cyVersion = getInstalledCypressMajorVersion(tree);
     /**
      * We need this override because we enabled allowJS in the tsconfig to allow for JS based Cypress tests.
      * That however leads to issues with the CommonJS Cypress plugin file.
@@ -132,7 +131,6 @@ export async function addLinterToCyProject(
         'no-undef': 'off',
       },
     };
-    const addCy6Override = cyVersion && cyVersion < 7;
 
     if (options.overwriteExisting) {
       overrides.unshift({
@@ -147,9 +145,6 @@ export async function addLinterToCyProject(
             },
         rules: {},
       });
-      if (addCy6Override) {
-        overrides.push(cy6Override);
-      }
       replaceOverridesInLintConfig(tree, projectConfig.root, overrides);
     } else {
       overrides.unshift({
@@ -167,9 +162,6 @@ export async function addLinterToCyProject(
             },
         rules: {},
       });
-      if (addCy6Override) {
-        overrides.push(cy6Override);
-      }
       overrides.forEach((override) =>
         addOverrideToLintConfig(tree, projectConfig.root, override)
       );

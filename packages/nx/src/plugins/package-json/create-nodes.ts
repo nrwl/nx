@@ -16,6 +16,7 @@ import {
   readTargetsFromPackageJson,
 } from '../../utils/package-json';
 import { joinPathFragments } from '../../utils/path';
+import { nxVersion } from '../../utils/versions';
 import {
   createNodesFromFiles,
   CreateNodesV2,
@@ -38,10 +39,11 @@ export const createNodesV2: CreateNodesV2 = [
     const { packageJsons, projectJsonRoots } = splitConfigFiles(configFiles);
 
     const readJson = (f) => readJsonFile(join(context.workspaceRoot, f));
-    const isInPackageJsonWorkspaces = buildPackageJsonWorkspacesMatcher(
-      context.workspaceRoot,
-      readJson
-    );
+    const isInPackageJsonWorkspaces =
+      process.env.NX_INFER_ALL_PACKAGE_JSONS === 'true' &&
+      !configFiles.includes('package.json')
+        ? () => true
+        : buildPackageJsonWorkspacesMatcher(context.workspaceRoot, readJson);
     const isNextToProjectJson = (packageJsonPath: string) => {
       return projectJsonRoots.has(dirname(packageJsonPath));
     };
@@ -143,9 +145,7 @@ export function createNodeFromPackageJson(
     ...json,
     root: projectRoot,
     isInPackageManagerWorkspaces,
-    // change this to bust the cache when making changes that result in different
-    // results for the same hash
-    bust: 1,
+    nxVersion,
   });
 
   const cached = cache[hash];
@@ -202,7 +202,7 @@ export function buildProjectConfigurationFromPackageJson(
     }
   }
 
-  if (!packageJson.name && projectRoot === '.') {
+  if (!packageJson.name && projectRoot === '.' && !packageJson.nx?.name) {
     throw new Error(
       'Nx requires the root package.json to specify a name if it is being used as an Nx project.'
     );

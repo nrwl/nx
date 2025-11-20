@@ -2,7 +2,7 @@ use crate::native::tui::theme::THEME;
 use color_eyre::eyre::Result;
 use crossterm::{
     cursor,
-    event::{Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent},
+    event::{Event as CrosstermEvent, KeyEvent, KeyEventKind},
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -33,7 +33,6 @@ pub enum Event {
     FocusLost,
     Paste(String),
     Key(KeyEvent),
-    Mouse(MouseEvent),
     Resize(u16, u16),
 }
 
@@ -49,7 +48,7 @@ pub struct Tui {
 
 impl Tui {
     pub fn new() -> Result<Self> {
-        let tick_rate = 4.0;
+        let tick_rate = 10.0;
         let frame_rate = 60.0;
         let terminal = ratatui::Terminal::new(Backend::new(std::io::stderr()))?;
         let (event_tx, event_rx) = mpsc::unbounded_channel();
@@ -109,9 +108,6 @@ impl Tui {
                           CrosstermEvent::Key(key) if key.kind == KeyEventKind::Press => {
                             trace!("Key: {:?}", key);
                             _event_tx.send(Event::Key(key)).unwrap();
-                          },
-                          CrosstermEvent::Mouse(mouse) => {
-                            _event_tx.send(Event::Mouse(mouse)).unwrap();
                           },
                           CrosstermEvent::Resize(x, y) => {
                             _event_tx.send(Event::Resize(x, y)).unwrap();

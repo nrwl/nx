@@ -1,5 +1,5 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
   "overrides": [
     {
@@ -57,6 +57,7 @@
               "@nx/cypress",
               "@nx/playwright",
               "@nx/vite",
+              "@nx/vitest",
               "@nx/webpack",
               "@nx/jest"
             ]
@@ -65,5 +66,5 @@
       }
     }
   ],
-  "ignorePatterns": ["!**/*"]
+  "ignorePatterns": ["!**/*", "node_modules"]
 }

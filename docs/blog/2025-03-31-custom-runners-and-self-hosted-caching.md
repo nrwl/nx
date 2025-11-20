@@ -32,7 +32,7 @@ We have [published a new RFC](https://github.com/nrwl/nx/discussions/30548) deta
 
 ### New preTasksExecution and postTasksExecution API
 
-Some teams used custom task runners for non-cache-related workflows, and removing them created gaps in functionality. We have released open-source preTasksExecution and postTasksExecution hooks to provide the same capabilities in a more composable way. More details [in our docs](/extending-nx/recipes/task-running-lifecycle). We also [added detailed instructions to migrate to this new API](/deprecated/custom-tasks-runner#the-pretasksexecution-and-posttasksexecution-hooks) if you've been using custom task runners for such use cases in the past.
+Some teams used custom task runners for non-cache-related workflows, and removing them created gaps in functionality. We have released open-source preTasksExecution and postTasksExecution hooks to provide the same capabilities in a more composable way. More details [in our docs](/docs/extending-nx/task-running-lifecycle). We also [added detailed instructions to migrate to this new API](/docs/reference/deprecated/custom-tasks-runner#the-pretasksexecution-and-posttasksexecution-hooks) if you've been using custom task runners for such use cases in the past.
 
 We worked closely with large teams that have advanced use cases to ensure they can still accomplish everything they did before.
 

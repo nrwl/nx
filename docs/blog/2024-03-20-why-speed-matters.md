@@ -9,7 +9,7 @@ description: 'Discover how Nx enhances development speed through Rust integratio
 
 In the ever-evolving landscape of software development, efficiency and speed are vital. As projects grow in complexity, developers and teams need tools that can keep up without sacrificing quality or performance.
 
-Nx is a suite of powerful tools designed to optimize your development workflow, which sets the [building blocks for a fast CI](/ci/concepts/building-blocks-fast-ci). Nx is always innovating in many ways to make developers' lives easier, but this post is exclusively focused on the things Nx has done in the past year to make development faster and faster.
+Nx is a suite of powerful tools designed to optimize your development workflow, which sets the [building blocks for a fast CI](/docs/concepts/ci-concepts/building-blocks-fast-ci). Nx is always innovating in many ways to make developers' lives easier, but this post is exclusively focused on the things Nx has done in the past year to make development faster and faster.
 
 ## Why speed matters
 
@@ -17,13 +17,13 @@ The ability to iterate quickly and efficiently is vital for any software project
 
 - **Faster feedback loops:** Quick iterations mean immediate feedback, allowing teams to adapt, learn, and improve their work on the fly.
 - **Reduced time to market:** Accelerating the development process can significantly cut down the overall time to market, providing a competitive edge which reclaims revenue that would have otherwise been lost.
-- **Decreased developer frustration:** [No more waiting for builds and tests to complete](/ci/concepts/reduce-waste). A streamlined workflow keeps morale high and productivity higher.
+- **Decreased developer frustration:** [No more waiting for builds and tests to complete](/docs/concepts/ci-concepts/reduce-waste). A streamlined workflow keeps morale high and productivity higher.
 
 If you're using Nx already, you're already familiar with
 
-- [**Affected**](/ci/features/affected) - identifying and running tasks only on projects impacted by code changes,
-- [**Nx Replay**](/ci/features/remote-cache) - our powerful cache and
-- [**Nx Agents**](/ci/features/distribute-task-execution) - the concept of [Parallelization and Distribution](/ci/concepts/parallelization-distribution).
+- [**Affected**](/docs/features/ci-features/affected) - identifying and running tasks only on projects impacted by code changes,
+- [**Nx Replay**](/docs/features/ci-features/remote-cache) - our powerful cache and
+- [**Nx Agents**](/docs/features/ci-features/distribute-task-execution) - the concept of [Parallelization and Distribution](/docs/concepts/ci-concepts/parallelization-distribution).
 
 But let's see all the extra things we did this past year to make everything faster.
 
@@ -53,11 +53,11 @@ With Nx Replay, you can see significant speed improvements in your CI pipelines 
 
 ![](/blog/images/2024-03-20/bodyimg2.avif)
 
-[Nx Agents](/ci/features/distribute-task-execution) represent the pinnacle of task distribution optimization, ensuring that tasks are executed as efficiently as possible based on the specific requirements of each change. Some features that make up this effort are:
+[Nx Agents](/docs/features/ci-features/distribute-task-execution) represent the pinnacle of task distribution optimization, ensuring that tasks are executed as efficiently as possible based on the specific requirements of each change. Some features that make up this effort are:
 
-- [Easy integration with existing providers](/ci/recipes/set-up)
+- [Easy integration with existing providers](/docs/guides/nx-cloud/setup-ci)
   - Distribution is handled on the Nx Cloud infrastructure and all you need is a single line. What's more, all results are played back to your original CI provider script which triggers the Nx Cloud distribution, so that you can make use of the resulting artifacts
-- [Efficient task distribution](/ci/features/dynamic-agents)
+- [Efficient task distribution](/docs/features/ci-features/dynamic-agents)
   - Save compute resources and reduce costs, minimizing idle time and compute waste
   - Dynamic sizing based on PR size
 - [Tusky](https://nx.app/products/tusky) - our AI solution - coming soon
@@ -67,13 +67,13 @@ You can read more about Nx Agents [here](https://nx.app/products/agents#content)
 
 ### Atomizer
 
-The [Atomizer](/ci/features/split-e2e-tasks) splits your Cypress or Playwright e2e tests by file. This significantly enhances granularity for caching, parallel execution, and flaky test identification. This granular approach ensures that individual test results can be cached and only the necessary tests rerun, greatly reducing CI pipeline times and facilitating more accurate flaky test detection.
+The [Atomizer](/docs/features/ci-features/split-e2e-tasks) splits your Cypress or Playwright e2e tests by file. This significantly enhances granularity for caching, parallel execution, and flaky test identification. This granular approach ensures that individual test results can be cached and only the necessary tests rerun, greatly reducing CI pipeline times and facilitating more accurate flaky test detection.
 
 {% youtube src="https://www.youtube.com/watch?v=0YxcxIR7QU0" /%}
 
 ### Addressing flaky tests with test deflaking
 
-Flaky tests can be a significant bottleneck in the CI process. Nx tackles this issue head-on by intelligently [re-running only the flaky tasks](/ci/features/flaky-tasks), rather than the entire pipeline. This approach not only saves time but also provides developers with more confidence in their CI pipeline's reliability.
+Flaky tests can be a significant bottleneck in the CI process. Nx tackles this issue head-on by intelligently [re-running only the flaky tasks](/docs/features/ci-features/flaky-tasks), rather than the entire pipeline. This approach not only saves time but also provides developers with more confidence in their CI pipeline's reliability.
 
 ![](/blog/images/2024-03-20/bodyimg3.avif)
 
@@ -97,7 +97,7 @@ Nx provides an unparalleled toolkit for developers and teams looking to optimize
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [X / Twitter](https://twitter.com/nxdevtools)
 - [LinkedIn](https://www.linkedin.com/company/nrwl)
 - [Nx GitHub](https://github.com/nrwl/nx)

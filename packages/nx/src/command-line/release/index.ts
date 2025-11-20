@@ -8,15 +8,32 @@ import { createAPI as createReleaseVersionAPI } from './version';
  * @public
  */
 export class ReleaseClient {
-  releaseChangelog = createReleaseChangelogAPI(this.overrideReleaseConfig);
-  releasePublish = createReleasePublishAPI(this.overrideReleaseConfig);
-  releaseVersion = createReleaseVersionAPI(this.overrideReleaseConfig);
-  release = createReleaseAPI(this.overrideReleaseConfig);
+  releaseChangelog = createReleaseChangelogAPI(
+    this.nxReleaseConfig,
+    this.ignoreNxJsonConfig
+  );
+  releasePublish = createReleasePublishAPI(
+    this.nxReleaseConfig,
+    this.ignoreNxJsonConfig
+  );
+  releaseVersion = createReleaseVersionAPI(
+    this.nxReleaseConfig,
+    this.ignoreNxJsonConfig
+  );
+  release = createReleaseAPI(this.nxReleaseConfig, this.ignoreNxJsonConfig);
 
-  constructor(private overrideReleaseConfig: NxReleaseConfiguration) {}
+  constructor(
+    /**
+     * Nx release configuration to use for the current release client. By default, it will be combined with any
+     * configuration in nx.json, but you can choose to use it as the sole source of truth by setting ignoreNxJsonConfig
+     * to true.
+     */
+    private nxReleaseConfig: NxReleaseConfiguration,
+    private ignoreNxJsonConfig: boolean = false
+  ) {}
 }
 
-const defaultClient = new ReleaseClient({});
+const defaultClient = new ReleaseClient({} as NxReleaseConfiguration);
 
 /**
  * @public

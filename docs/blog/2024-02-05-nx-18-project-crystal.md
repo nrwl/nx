@@ -44,7 +44,7 @@ You can add Nx to an existing npm/yarn/pnpm monorepo quite straightforwardly. Yo
 npx nx@latest init
 ```
 
-You'll get an `nx` package installed and an `nx.json` allowing you to define [task dependencies](/recipes/running-tasks/defining-task-pipeline) and caching. With that, you're now able to run commands like `nx build <your project>` or nx `run-many -t build test` to run all `build` and `test` targets in your workspace in parallel. Nx will read and use your existing `package.json` scripts. I've written an in-depth [blog post about adopting Nx in such a scenario](/blog/setup-a-monorepo-with-pnpm-workspaces-and-speed-it-up-with-nx).
+You'll get an `nx` package installed and an `nx.json` allowing you to define [task dependencies](/docs/guides/tasks--caching/defining-task-pipeline) and caching. With that, you're now able to run commands like `nx build <your project>` or nx `run-many -t build test` to run all `build` and `test` targets in your workspace in parallel. Nx will read and use your existing `package.json` scripts. I've written an in-depth [blog post about adopting Nx in such a scenario](/blog/setup-a-monorepo-with-pnpm-workspaces-and-speed-it-up-with-nx).
 
 This is the most lightweight setup you can get while still getting some improvements via Nx regarding faster task running and more intelligent parallelization. But, you need to deal with the remaining of the monorepo setup.
 
@@ -90,7 +90,7 @@ npx create-nx-workspace myorg
 
 ### Inferred Targets
 
-Starting with Nx 18 and Project Crystal, we don't generate any targets anymore, but the corresponding Nx plugin instead [infers them](/concepts/inferred-tasks). If we open the `nx.json`, you'll see a new property, `plugins`:
+Starting with Nx 18 and Project Crystal, we don't generate any targets anymore, but the corresponding Nx plugin instead [infers them](/docs/concepts/inferred-tasks). If we open the `nx.json`, you'll see a new property, `plugins`:
 
 ```json {% fileName="nx.json" %}
 {
@@ -144,7 +144,7 @@ This opens your browser with the following view:
 ![Browser view reads "reactapp, root: apps/reactapp, type: application" and shows a list of targets.](/blog/images/2024-02-05/bodyimg3.webp)
 _Browser view of the inferred targets_
 
-Option 2 is [Nx Console](/getting-started/editor-setup), which is an extension for VSCode as well as IntelliJ (Webstorm etc.). It comes with a project detail view, as shown below, as well as “Codelens” features that enhance your configuration files with context-based information and features.
+Option 2 is [Nx Console](/docs/getting-started/editor-setup), which is an extension for VSCode as well as IntelliJ (Webstorm etc.). It comes with a project detail view, as shown below, as well as “Codelens” features that enhance your configuration files with context-based information and features.
 
 ![](/blog/images/2024-02-05/bodyimg4.webp)
 _Nx Console showing the inferred targets in a dedicated view_
@@ -182,7 +182,7 @@ We just released Project Crystal, so this is just the beginning of it. While we�
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

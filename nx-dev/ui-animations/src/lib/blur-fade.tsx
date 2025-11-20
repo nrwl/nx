@@ -33,7 +33,7 @@ export function BlurFade({
 }: BlurFadeProps) {
   const willChange = useWillChange();
   const ref = useRef(null);
-  const inViewResult = useInView(ref, { once, margin: inViewMargin });
+  const inViewResult = useInView(ref, { once, margin: inViewMargin as any });
   const isInView = useMemo(
     () => !inView || inViewResult,
     [inView, inViewResult]

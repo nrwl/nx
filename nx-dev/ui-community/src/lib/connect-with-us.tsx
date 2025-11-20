@@ -1,5 +1,5 @@
 import { EnvelopeIcon } from '@heroicons/react/24/solid';
-import { DiscordIcon, SectionHeading } from '@nx/nx-dev/ui-common';
+import { DiscordIcon, SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
 
 export function ConnectWithUs(): JSX.Element {
@@ -20,7 +20,7 @@ export function ConnectWithUs(): JSX.Element {
           <p className="py-4">
             Looking for community plugins? Find them listed in the{' '}
             <Link
-              href="/plugin-registry"
+              href={'/docs/plugin-registry'}
               className="font-semibold underline"
               prefetch={false}
             >

@@ -7,12 +7,40 @@ import { Gtag } from './gtag';
 
 declare const gtag: Gtag;
 
+declare global {
+  interface Window {
+    Cookiebot?: any;
+  }
+}
+
 export function sendPageViewEvent(data: {
   gaId: string;
   path?: string;
   title?: string;
 }): void {
   if (process.env.NODE_ENV !== 'production') return;
+
+  // Check if user has consented to statistics cookies
+  if (
+    // Browswer only
+    typeof window !== 'undefined' &&
+    // Disabled for Astro
+    !window.__CONFIG?.disableCookiebot &&
+    // Disabled for Next.js
+    typeof process === 'object' &&
+    process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
+    // Cookiebot
+    window.Cookiebot &&
+    !window.Cookiebot.consent?.statistics
+  ) {
+    return;
+  }
+
+  // Check if gtag is available (might not be loaded yet if consent was just given)
+  if (typeof gtag === 'undefined') {
+    return;
+  }
+
   try {
     gtag('config', data.gaId, {
       ...(!!data.path && { page_path: data.path }),
@@ -31,6 +59,28 @@ export function sendCustomEvent(
   customObject?: Record<string, unknown>
 ): void {
   if (process.env.NODE_ENV !== 'production') return;
+
+  // Check if user has consented to statistics cookies
+  if (
+    // Browswer only
+    typeof window !== 'undefined' &&
+    // Disabled for Astro
+    !window.__CONFIG?.disableCookiebot &&
+    // Disabled for Next.js
+    typeof process === 'object' &&
+    process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
+    // Cookiebot
+    window.Cookiebot &&
+    !window.Cookiebot.consent?.statistics
+  ) {
+    return;
+  }
+
+  // Check if gtag is available (might not be loaded yet if consent was just given)
+  if (typeof gtag === 'undefined') {
+    return;
+  }
+
   try {
     gtag('event', action, {
       event_category: category,

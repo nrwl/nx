@@ -662,8 +662,8 @@ Browse to [http://localhost:4200](http://localhost:4200) and see the results of 
 
 The configuration for the `codegen` targets is a good start, but it's currently lacking two things:
 
-1. [Caching](/features/cache-task-results)
-2. [Dependent tasks](/concepts/task-pipeline-configuration)
+1. [Caching](/docs/features/cache-task-results)
+2. [Dependent tasks](/docs/concepts/task-pipeline-configuration)
 
 Without caching enabled, `codegen` tasks will be run every time, regardless if they need to be or not. And without dependent tasks configured, we can't be sure that `codegen` is run any time our generated code depends on the generated code in another project. IOn our example, the generated code in both `api` and `feature-sets` rely on the models generated in `models-graphql`. If we make changes to the schema in `models-graph` and then run `codegen` on `api`, our models will be out-of-sync and lead to errors.
 
@@ -713,7 +713,7 @@ Try running the command again, and you'll see that the results are pulled from t
 - [Apollo Server](https://www.apollographql.com/docs/apollo-server)
 - [Apollo React Client](https://www.apollographql.com/docs/react/)
 - [GraphQL Codegen](https://the-guild.dev/graphql/codegen)
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
@@ -17,7 +17,7 @@ jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
 
 describe('@nx/vite/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
 
   beforeEach(() => {
     (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
@@ -28,7 +28,6 @@ describe('@nx/vite/plugin', () => {
     beforeEach(async () => {
       tempFs = new TempFs('vite-plugin-tests');
       context = {
-        configFiles: [],
         nxJsonConfiguration: {
           // These defaults should be overridden by plugin
           targetDefaults: {
@@ -247,7 +246,6 @@ describe('@nx/vite/plugin', () => {
     beforeEach(() => {
       tempFs = new TempFs('test');
       context = {
-        configFiles: [],
         nxJsonConfiguration: {
           namedInputs: {
             default: ['{projectRoot}/**/*'],
@@ -334,7 +332,6 @@ describe('@nx/vite/plugin', () => {
         }),
       }),
         (context = {
-          configFiles: [],
           nxJsonConfiguration: {
             namedInputs: {
               default: ['{projectRoot}/**/*'],
@@ -371,11 +368,13 @@ describe('@nx/vite/plugin', () => {
               name: 'my-lib',
             },
           },
-          server: {},
+          server: {
+            port: 3000,
+            host: 'localhost',
+          },
         }),
       }),
         (context = {
-          configFiles: [],
           nxJsonConfiguration: {
             namedInputs: {
               default: ['{projectRoot}/**/*'],

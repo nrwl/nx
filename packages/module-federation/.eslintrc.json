@@ -1,6 +1,6 @@
 {
   "extends": ["../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -36,7 +36,9 @@
               "@nx/cypress",
               "@nx/playwright",
               "@nx/vite",
-              "@module-federation/node"
+              "@module-federation/node",
+              // Usage `require.resolve` in withModuleFederation to get full path to loaders is causing the self-import, ignore
+              "@nx/module-federation"
             ]
           }
         ]

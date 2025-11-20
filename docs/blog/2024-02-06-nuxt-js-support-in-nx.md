@@ -65,7 +65,7 @@ When you run `nx init` in your existing Nuxt.js project, Nx does the following:
 To begin the integration process, simply navigate to the root of your existing Nuxt.js project and run:
 
 ```shell
-npx nx init
+npx nx@latest init
 ```
 
 This approach offers several key benefits for teams looking to adopt Nx:
@@ -110,7 +110,7 @@ nx show project my-nuxt-app --web
 
 ### Using Nx Console
 
-You get access to all these features through our VSCode and WebStorm [Nx Console extension](/getting-started/editor-setup).
+You get access to all these features through our VSCode and WebStorm [Nx Console extension](/docs/getting-started/editor-setup).
 
 You can use Nx Console to visualize tasks, and understand where each inferred task (like `build` and `serve` in Nuxt's case) is coming from, with our codelens-like feature, as an alternative to the `--web` flag on the `nx show project` command.
 
@@ -189,7 +189,7 @@ Don't miss Nx team members Zack and Katerina with Nuxt's maintainer, Daniel Roe 
 
 Check out the [example repo](https://github.com/mandarini/my-nx-nuxt-workspace) used in this blog post or one of the links below to learn more:
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Community Discord](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

@@ -34,7 +34,7 @@ Enable notifications here:
 
 Starting with Nx 15.8, we now have a Rust-based Hasher enabled by default!
 
-Performance is at the core of what we do at Nx. Hence it isn't surprising that Nx is the fastest JS-based monorepo solution out there. We've shown [that a couple of times](https://github.com/vsavkin/large-monorepo). But every millisecond counts! As such, we decided to experiment with Rust to see whether we could further optimize our project graph creation as well as the hasher function that is used for the [computation cache](/features/cache-task-results).
+Performance is at the core of what we do at Nx. Hence it isn't surprising that Nx is the fastest JS-based monorepo solution out there. We've shown [that a couple of times](https://github.com/vsavkin/large-monorepo). But every millisecond counts! As such, we decided to experiment with Rust to see whether we could further optimize our project graph creation as well as the hasher function that is used for the [computation cache](/docs/features/cache-task-results).
 
 Our original implementation used Git to calculate the hash. But it had some downsides as
 
@@ -64,7 +64,7 @@ When running these tests on Windows (not WSL), the Nx repo hashing timings turne
 
 Right now, we only observed the Rust hasher to be slightly slower on large repositories when you don't have any changes. Once you start making changes the Git hasher becomes slower again and is overtaken by the Rust version which remains stable in performance.
 
-An interesting side-effect of using the Rust-based hasher is the size of the generated hashes, which are much smaller and thus allow for a quicker serialization between the [Nx Daemon](/concepts/nx-daemon) and Nx.
+An interesting side-effect of using the Rust-based hasher is the size of the generated hashes, which are much smaller and thus allow for a quicker serialization between the [Nx Daemon](/docs/concepts/nx-daemon) and Nx.
 
 **Future work**
 
@@ -131,13 +131,13 @@ With the growing popularity, the ask for an equivalent extension for JetBrains' 
 Since our team [now works full-time on Nx](/blog/from-bootstrapped-to-venture-backed) and the surrounding tooling, we decided to have a dedicated Nx Console extensions for IntelliJ and WebStorm that is actively maintained and developed by the core team. We reached out to Issam and Edward and started collaborating on it. The result can now be installed from the JetBrains marketplace:  
 [https://plugins.jetbrains.com/plugin/21060-nx-console](https://plugins.jetbrains.com/plugin/21060-nx-console)
 
-Read all the details [on our blog post](/blog/expanding-nx-console-to-jetbrains-ides) or check out our docs page about [integrating with editors](/getting-started/editor-setup).
+Read all the details [on our blog post](/blog/expanding-nx-console-to-jetbrains-ides) or check out our docs page about [integrating with editors](/docs/getting-started/editor-setup).
 
 ## Nx Console Field Prioritization (x-priority)
 
 {% youtube src="https://youtu.be/JJ12zKedwIs" /%}
 
-Nx Console has proven a highly valuable tool for exploring Nx generators. Especially if you cannot recall all the various parameters, you can possibly pass. And sure, you could always pass the `--help` or browse [the docs](/technologies/react/api/generators/library), but it is just less convenient.
+Nx Console has proven a highly valuable tool for exploring Nx generators. Especially if you cannot recall all the various parameters, you can possibly pass. And sure, you could always pass the `--help` or browse [the docs](/docs/technologies/react/generators), but it is just less convenient.
 
 ![](/blog/images/2023-03-08/xFSreZ1G_zifIsdf.avif)
 
@@ -160,13 +160,13 @@ All required properties and those marked with an `x-priority: important` will be
 
 ![](/blog/images/2023-03-08/eDOHabm8ca96lwul.avif)
 
-Read all about it [in the doc about Customizing Generator Options](/extending-nx/recipes/generator-options).
+Read all about it [in the doc about Customizing Generator Options](/docs/extending-nx).
 
 ## Modular Node Applications
 
-Nx has had Node backend support since the beginning, where you could add an [ExpressJS](/technologies/node/express/introduction) or [Nest.js](/technologies/node/nest/introduction) based application to your monorepo. This is a powerful approach as it allows you to colocate your frontend and backend code, which helps share code and, in particular, TypeScript types for your APIs!!
+Nx has had Node backend support since the beginning, where you could add an [ExpressJS](/docs/technologies/node/express/introduction) or [Nest.js](/docs/technologies/node/nest/introduction) based application to your monorepo. This is a powerful approach as it allows you to colocate your frontend and backend code, which helps share code and, in particular, TypeScript types for your APIs!!
 
-In [Nx 15.7](/blog/nx-15-7-node-support-angular-lts-lockfile-pruning), we then announced [Nx Standalone Projects](https://youtu.be/qEaVzh-oBBc) support for Node. This allows to develop a Node backend in isolation but still leverages all the features from Nx in terms of code generators, automated migrations, and speed features such as [affected commands](/ci/features/affected), [caching](/concepts/how-caching-works), and [optimized CI setups](/ci/features/distribute-task-execution).
+In [Nx 15.7](/blog/nx-15-7-node-support-angular-lts-lockfile-pruning), we then announced [Nx Standalone Projects](https://youtu.be/qEaVzh-oBBc) support for Node. This allows to develop a Node backend in isolation but still leverages all the features from Nx in terms of code generators, automated migrations, and speed features such as [affected commands](/docs/features/ci-features/affected), [caching](/docs/concepts/how-caching-works), and [optimized CI setups](/docs/features/ci-features/distribute-task-execution).
 
 In 15.8, we kept improving our Node support. Our main focus was on
 
@@ -180,7 +180,7 @@ Check out the following video walkthrough on using these features for modularizi
 
 ## Storybook
 
-Nx now generates stories using [Component Storybook Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/). If you are using our `@nrwl/react:storybook-configuration`, `@nrwl/angular:storybook-configuration`, `@nrwl/react:stories` and `@nrwl/angular:stories` generators, you will notice that the stories are now generated in the new format. You can check out our documentation for [Storybook and Angular](/technologies/test-tools/storybook/recipes/overview-angular) or [Storybook and React](/technologies/test-tools/storybook/recipes/overview-react) to see the new syntax.
+Nx now generates stories using [Component Storybook Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/). If you are using our `@nrwl/react:storybook-configuration`, `@nrwl/angular:storybook-configuration`, `@nrwl/react:stories` and `@nrwl/angular:stories` generators, you will notice that the stories are now generated in the new format. You can check out our documentation for [Storybook and Angular](/docs/technologies/test-tools/storybook/guides/overview-angular) or [Storybook and React](/docs/technologies/test-tools/storybook/guides/overview-react) to see the new syntax.
 
 As the Storybook doc mentions, CSF3 _reduces boilerplate code and improves ergonomics. This makes stories more concise, faster to write and easier to maintain._
 
@@ -206,7 +206,7 @@ npx nx migrate --run-migrations
 
 ## Learn more
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

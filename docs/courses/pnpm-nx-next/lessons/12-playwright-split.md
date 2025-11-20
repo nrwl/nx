@@ -12,4 +12,4 @@ In this lesson, we'll optimize the existing Playwright end-to-end tests that cur
 
 ## Relevant Links
 
-- [Automatically Split E2E Tasks](/ci/features/split-e2e-tasks)
+- [Automatically Split E2E Tasks](/docs/features/ci-features/split-e2e-tasks)

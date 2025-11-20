@@ -1,4 +1,4 @@
-import { Tooltip } from '@nx/graph/legacy/tooltips';
+import { Tooltip } from '@nx/graph-ui-common';
 import { JSX, ReactNode } from 'react';
 import { TooltipTriggerText } from './tooltip-trigger-text';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';

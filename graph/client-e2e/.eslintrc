@@ -9,6 +9,6 @@
       }
     }
   ],
-  "extends": ["plugin:cypress/recommended", "../../.eslintrc"],
+  "extends": ["plugin:cypress/recommended", "../../.eslintrc.json"],
   "ignorePatterns": ["!**/*"]
 }

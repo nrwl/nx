@@ -12,7 +12,7 @@ import {
 import {
   yargsConnectCommand,
   yargsViewLogsCommand,
-} from './connect/command-object';
+} from './nx-cloud/connect/command-object';
 import { yargsDaemonCommand } from './daemon/command-object';
 import { yargsGraphCommand } from './graph/command-object';
 import { yargsExecCommand } from './exec/command-object';
@@ -38,14 +38,21 @@ import { yargsWatchCommand } from './watch/command-object';
 import { yargsResetCommand } from './reset/command-object';
 import { yargsReleaseCommand } from './release/command-object';
 import { yargsAddCommand } from './add/command-object';
-import { yargsLoginCommand } from './login/command-object';
-import { yargsLogoutCommand } from './logout/command-object';
+import { yargsConfigureAiAgentsCommand } from './configure-ai-agents/command-object';
+import { yargsLoginCommand } from './nx-cloud/login/command-object';
+import { yargsLogoutCommand } from './nx-cloud/logout/command-object';
+import { yargsRecordCommand } from './nx-cloud/record/command-object';
+import { yargsStartCiRunCommand } from './nx-cloud/start-ci-run/command-object';
+import { yargsStartAgentCommand } from './nx-cloud/start-agent/command-object';
+import { yargsStopAllAgentsCommand } from './nx-cloud/complete-run/command-object';
+import { yargsFixCiCommand } from './nx-cloud/fix-ci/command-object';
 import {
   yargsPrintAffectedCommand,
   yargsAffectedGraphCommand,
 } from './deprecated/command-objects';
 import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
 import { output } from '../utils/output';
+import { yargsMcpCommand } from './mcp/command-object';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -67,6 +74,7 @@ export const commandsObject = yargs
   .demandCommand(1, '')
   .command(yargsRegisterCommand)
   .command(yargsAddCommand)
+  .command(yargsConfigureAiAgentsCommand)
   .command(yargsAffectedBuildCommand)
   .command(yargsAffectedCommand)
   .command(yargsAffectedE2ECommand)
@@ -101,10 +109,16 @@ export const commandsObject = yargs
   .command(yargsNxInfixCommand)
   .command(yargsLoginCommand)
   .command(yargsLogoutCommand)
+  .command(yargsRecordCommand)
+  .command(yargsStartCiRunCommand)
+  .command(yargsStartAgentCommand)
+  .command(yargsStopAllAgentsCommand)
+  .command(yargsFixCiCommand)
+  .command(yargsMcpCommand)
   .command(resolveConformanceCommandObject())
   .command(resolveConformanceCheckCommandObject())
   .scriptName('nx')
-  .help()
+  .help(false)
   // NOTE: we handle --version in nx.ts, this just tells yargs that the option exists
   // so that it shows up in help. The default yargs implementation of --version is not
   // hit, as the implementation in nx.ts is hit first and calls process.exit(0).

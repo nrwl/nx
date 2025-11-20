@@ -5,14 +5,14 @@ Add `.nx/cache` to the `.gitignore` file.
 {% tabs %}
 {% tab label="Before" %}
 
-```{% fileName=".gitignore" %}
+```text {% fileName=".gitignore" %}
 node_modules
 ```
 
 {% /tab %}
 {% tab label="After" %}
 
-```{% highlightLines=[2] fileName=".gitignore" %}
+```text {% highlightLines=[2] fileName=".gitignore" %}
 node_modules
 .nx/cache
 ```

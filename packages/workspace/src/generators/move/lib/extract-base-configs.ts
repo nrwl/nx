@@ -4,6 +4,7 @@ import {
   ProjectConfiguration,
   Tree,
 } from '@nx/devkit';
+import { findProjectJestConfig } from '../../utils/jest-config';
 
 export function maybeExtractTsConfigBase(tree: Tree): void {
   let extractTsConfigBase: any;
@@ -41,9 +42,6 @@ export function maybeMigrateEslintConfigIfRootProject(
   migrateConfigToMonorepoStyle?.(
     Array.from(getProjects(tree).values()),
     tree,
-    tree.exists(joinPathFragments(rootProject.root, 'jest.config.ts')) ||
-      tree.exists(joinPathFragments(rootProject.root, 'jest.config.js'))
-      ? 'jest'
-      : 'none'
+    findProjectJestConfig(tree, rootProject.root) ? 'jest' : 'none'
   );
 }

@@ -34,7 +34,7 @@ Now, tasks can be marked as continuous, and other tasks can depend on them. Nx w
 
 ## What is a task pipeline?
 
-A [task pipeline](/concepts/task-pipeline-configuration) is a series of definitions determining how tasks depend on one another. In a monorepo, you're rarely running a single task. That task may rely on the output of another task. For example, if your application depends on a buildable design system library, the design system must be built before the application. The application's `build` task depends on the design system's `build` task.
+A [task pipeline](/docs/concepts/task-pipeline-configuration) is a series of definitions determining how tasks depend on one another. In a monorepo, you're rarely running a single task. That task may rely on the output of another task. For example, if your application depends on a buildable design system library, the design system must be built before the application. The application's `build` task depends on the design system's `build` task.
 
 This is such a common pipeline that we include it by default when Nx workspaces are created. It's defined in your `nx.json` in `targetDefaults`:
 
@@ -64,7 +64,7 @@ This task pipeline says that all `build` tasks depend on the `build` task of any
 }
 ```
 
-This is a brief overview of task pipelines. Be sure to [check the docs](/recipes/running-tasks/defining-task-pipeline) for more details.
+This is a brief overview of task pipelines. Be sure to [check the docs](/docs/guides/tasks--caching/defining-task-pipeline) for more details.
 
 But these examples configure finite tasks: tasks that start up, produce an artifact, and then shut down. How do things change when we configure continuous tasks?
 
@@ -89,7 +89,7 @@ Assuming we run a `dev` target from our `frontend` project, and a `serve` target
 }
 ```
 
-The `frontend:dev` task now depends on `api:serve`. We must also ensure the `api:serve` target is flagged as continuous. Tasks are already flagged as continuous if you're using [inferred tasks](/concepts/inferred-tasks). If your target uses an executor, you must flag those targets as continuous yourself. This is as easy as adding `continuous: true` to the target configuration like so:
+The `frontend:dev` task now depends on `api:serve`. We must also ensure the `api:serve` target is flagged as continuous. Tasks are already flagged as continuous if you're using [inferred tasks](/docs/concepts/inferred-tasks). If your target uses an executor, you must flag those targets as continuous yourself. This is as easy as adding `continuous: true` to the target configuration like so:
 
 ```json {% fileName="apps/api/package.json" %}
 {
@@ -224,7 +224,7 @@ What processes could you improve using continuous tasks?
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 🌩️ [Nx Cloud](/nx-cloud)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)

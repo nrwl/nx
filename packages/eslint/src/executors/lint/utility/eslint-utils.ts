@@ -22,7 +22,9 @@ export async function resolveAndInstantiateESLint(
   // ruleFilter exist only in eslint 9+, remove this type when eslint 8 support dropped
   const eslintOptions: ESLint.Options & { ruleFilter?: Function } = {
     overrideConfigFile: eslintConfigPath,
-    fix: !!options.fix,
+    fix:
+      !!options.fix &&
+      (options.quiet ? (message) => message.severity === 2 : true),
     cache: !!options.cache,
     cacheLocation: options.cacheLocation || undefined,
     cacheStrategy: options.cacheStrategy || undefined,

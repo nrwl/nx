@@ -84,7 +84,7 @@ We're very excited about Nx Agents because we think that in its current state, C
 
 Be sure to also checkout the [blog post from Isaac on Nx Agents](/blog/fast-effortless-ci), including explanations of exclusive features like auto-detection and retrying for flaky tasks and automatically splitting lengthy end-to-end tests!
 
-You can find out [more of the details in our docs](/ci/features/distribute-task-execution)!
+You can find out [more of the details in our docs](/docs/features/ci-features/distribute-task-execution)!
 
 Rares and Altan are on the team building Nx Cloud, and during the conference, they dove deeper into some of these topics:
 
@@ -120,7 +120,7 @@ Versioning and publishing packages is always a bit tricky. Mix in the added comp
 
 For a long time, Nx has been purposefully versioning and publishing agnostic, but given our time spent as [stewards of Lerna](/blog/lerna-is-dead-long-live-lerna) (the OG Javascript monorepo tool), we've been able to take alot of that experience and finally feel confident creating our own versioning and publishing implementation.
 
-Therefore, we've been working on a new command to the Nx CLI: [nx release](/recipes/nx-release/get-started-with-nx-release#get-started-with-nx-release). We launched this on Friday of our Launch Nx week!
+Therefore, we've been working on a new command to the Nx CLI: [nx release](/docs/guides/nx-release/release-npm-packages). We launched this on Friday of our Launch Nx week!
 
 Juri goes into [full details in this blog post](/blog/versioning-and-releasing-packages-in-a-monorepo), and James Henry — our Director of Engineering and the primary engineer responsible for both maintaining Lerna and creating Nx Release — expands further in his conference talk:
 
@@ -142,7 +142,7 @@ That's all for now folks! We're just starting up a new iteration of development 
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

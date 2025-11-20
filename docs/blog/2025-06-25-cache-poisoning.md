@@ -5,7 +5,6 @@ authors: ['Victor Savkin']
 tags: ['caching', 'security']
 cover_image: /blog/images/2025-06-25/header.avif
 description: 'Build systems with remote caching can inadvertently grant every developer write access to production. Learn about the CREEP vulnerability (CVE-2025-36852) and how to protect your organization.'
-pinned: false
 ---
 
 Build systems with remote caching make CI/CD pipelines fast. Very fast. They are essential for scaling modern software development.
@@ -198,7 +197,7 @@ Implement a multi-tiered cache system:
 - Each PR gets its own isolated cache namespace
 - PRs can read from the trusted cache but write only to their isolated space
 
-Unfortunately, many popular build systems don't offer this as an option. Implementing secure multi-tier caching is complex—it must detect and prevent PRs from impersonating trusted branches, requiring deep integration with both version control and CI systems.
+Unfortunately, many popular build systems don't offer this as an option. Implementing secure multi-tier caching is complex—it must detect and prevent PRs from impersonating trusted branches, requiring deep integration with both version control and CI systems. **The remote cache provided by Nx Cloud is in this category.**
 
 ## Picking the Right Option
 
@@ -230,7 +229,7 @@ That's why we recommend that all teams using build systems with remote cache to 
 Nx Cloud implements a multi-tiered cache (i.e., it's both safe and fast), so no action is required. Continue following security best practices for your CI/CD pipeline
 
 **For Nx users, using self-hosted remote cache:**  
-Any implementation that writes directly to S3, GCS, Azure, **including the packages Nx provides**, doesn't support Option 3. They are all vulnerable to the CREEP vulnerability.
+Any implementation that writes directly to S3, GCS, Azure, **including the packages Nx provides**, doesn't support Option 3. They are all vulnerable to the CREEP vulnerability. If you aren't sure, assume you are vulnerable. **Immediately switch to Option 2 (Safe but Slow): write to cache from the main branch, not from PRs. This will negatively affect performance but will make your setup safe. Use Nx Cloud or another provider that offers a multi-tier cache implementation to get the cache that is both fast and secure.**
 
 **Other build systems and other remote cache solutions for Nx we are aware of are also vulnerable to the CREEP vulnerability.**
 

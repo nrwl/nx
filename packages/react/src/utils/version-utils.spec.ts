@@ -1,6 +1,10 @@
+import type { ProjectGraph, Tree } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { getReactDependenciesVersionsToInstall } from './version-utils';
-import { type ProjectGraph } from '@nx/devkit';
+import {
+  getInstalledReactVersion,
+  getReactDependenciesVersionsToInstall,
+} from './version-utils';
 import {
   reactDomV18Version,
   reactDomVersion,
@@ -111,5 +115,80 @@ describe('getReactDependenciesVersionsToInstall', () => {
       '@types/react-dom': typesReactDomVersion,
       '@types/react-is': typesReactIsVersion,
     });
+  });
+});
+
+describe('getInstalledReactVersion', () => {
+  let tempFs: TempFs;
+  let tree: Tree;
+
+  beforeEach(() => {
+    tempFs = new TempFs('react-version-test');
+    tree = createTreeWithEmptyWorkspace();
+    tree.root = tempFs.tempDir;
+    // force `detectPackageManager` to return `pnpm`
+    tempFs.createFileSync('pnpm-lock.yaml', 'lockfileVersion: 9.0');
+
+    tree.write(
+      'pnpm-workspace.yaml',
+      `
+packages:
+  - packages/*
+
+catalog:
+  react: ^18.2.0
+  lodash: ^4.17.0
+
+catalogs:
+  react17:
+    react: ^17.0.2
+`
+    );
+  });
+
+  afterEach(() => {
+    tempFs.cleanup();
+  });
+
+  it('should get installed React version from default catalog reference', () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({
+        name: 'test',
+        dependencies: {
+          react: 'catalog:',
+        },
+      })
+    );
+
+    expect(getInstalledReactVersion(tree)).toBe('18.2.0');
+  });
+
+  it('should get installed React version from named catalog reference', () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({
+        name: 'test',
+        dependencies: {
+          react: 'catalog:react17',
+        },
+      })
+    );
+
+    expect(getInstalledReactVersion(tree)).toBe('17.0.2');
+  });
+
+  it('should get installed React version from regular semver version', () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({
+        name: 'test',
+        dependencies: {
+          react: '^18.2.0',
+        },
+      })
+    );
+
+    expect(getInstalledReactVersion(tree)).toBe('18.2.0');
   });
 });

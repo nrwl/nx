@@ -21,6 +21,7 @@ export function generateNgrxFilesFromTemplates(
       ...options,
       ...projectNames,
       importFromOperators: lt(options.rxjsVersion, '7.2.0'),
+      isRxJs7: options.rxjsMajorVersion >= 7,
       tmpl: '',
     }
   );

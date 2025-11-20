@@ -9,7 +9,7 @@ Update in `devDependencies`:
 {% tabs %}
 {% tab label="Before" %}
 
-```{% fileName="package.json" %}
+```json {% fileName="package.json" %}
 {
   "devDependencies": {
     "@angular/cli": "~13.3.0"
@@ -20,7 +20,7 @@ Update in `devDependencies`:
 {% /tab %}
 {% tab label="After" %}
 
-```{% fileName="package.json" %}
+```json {% fileName="package.json" %}
 {
   "devDependencies": {
     "@angular/cli": "~19.0.0"
@@ -36,7 +36,7 @@ Update in `dependencies`:
 {% tabs %}
 {% tab label="Before" %}
 
-```{% fileName="package.json" %}
+```json {% fileName="package.json" %}
 {
   "dependencies": {
     "@angular/cli": "~13.3.0"
@@ -47,7 +47,7 @@ Update in `dependencies`:
 {% /tab %}
 {% tab label="After" %}
 
-```{% fileName="package.json" %}
+```json {% fileName="package.json" %}
 {
   "dependencies": {
     "@angular/cli": "~19.0.0"

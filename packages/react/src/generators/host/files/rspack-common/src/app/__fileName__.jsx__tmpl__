@@ -4,7 +4,7 @@ import NxWelcome from "./nx-welcome";
 <%_ } _%>
 import { Link, Route, Routes } from 'react-router-dom';
 
-<%_ if (dynamic) { _%>
+<%_ if (dynamic && remotes.length > 0) { _%>
 import { loadRemote } from '@module-federation/enhanced/runtime';
 <%_ } _%>
 

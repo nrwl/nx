@@ -1,4 +1,5 @@
 import { ExecutorContext, logger } from '@nx/devkit';
+import { signalToCode } from '@nx/devkit/internal';
 import { ChildProcess, execSync, fork } from 'child_process';
 import * as detectPort from 'detect-port';
 import { existsSync, rmSync } from 'node:fs';
@@ -105,7 +106,8 @@ function startVerdaccio(
     childProcess.on('disconnect', (err) => {
       reject(err);
     });
-    childProcess.on('exit', (code) => {
+    childProcess.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code === 0) {
         resolve(code);
       } else {

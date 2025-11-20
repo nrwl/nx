@@ -282,7 +282,7 @@ describe('app', () => {
         tree.read('my-app-e2e/playwright.config.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.exists('my-app/index.html')).toBeTruthy();
-      expect(tree.exists('my-app/vite.config.ts')).toBeTruthy();
+      expect(tree.exists('my-app/vite.config.mts')).toBeTruthy();
       expect(tree.exists(`my-app/environments/environment.ts`)).toBeFalsy();
       expect(
         tree.exists(`my-app/environments/environment.prod.ts`)
@@ -439,7 +439,7 @@ describe('app', () => {
       addPlugin: true,
     });
 
-    expect(tree.read('my-app/jest.config.ts', 'utf-8')).not.toContain(
+    expect(tree.read('my-app/jest.config.cts', 'utf-8')).not.toContain(
       `'jest-preset-angular/build/AngularSnapshotSerializer.js',`
     );
   });
@@ -469,6 +469,38 @@ describe('app', () => {
     expect(tree.read('my-app/.eslintrc.json', 'utf-8')).toMatchSnapshot();
   });
 
+  it('should not ignore "out-tsc" from eslint', async () => {
+    await applicationGenerator(tree, {
+      directory: 'myapp',
+      linter: 'eslint',
+      style: 'none',
+      bundler: 'vite',
+      unitTestRunner: 'none',
+      e2eTestRunner: 'none',
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(tree, 'myapp/.eslintrc.json');
+    expect(eslintConfig.ignorePatterns).not.toContain('**/out-tsc');
+  });
+
+  it('should not ignore "out-tsc" from eslint with flat config', async () => {
+    tree.write('eslint.config.mjs', 'export default [];');
+
+    await applicationGenerator(tree, {
+      directory: 'myapp',
+      linter: 'eslint',
+      style: 'none',
+      bundler: 'vite',
+      unitTestRunner: 'none',
+      e2eTestRunner: 'none',
+      skipFormat: true,
+    });
+
+    const eslintConfig = tree.read('myapp/eslint.config.mjs', 'utf-8');
+    expect(eslintConfig).not.toContain('**/out-tsc');
+  });
+
   describe('--prefix', () => {
     it('should use the prefix in the index.html', async () => {
       await applicationGenerator(tree, {
@@ -490,10 +522,10 @@ describe('app', () => {
         unitTestRunner: 'none',
         addPlugin: true,
       });
-      expect(tree.exists('jest.config.ts')).toBeFalsy();
+      expect(tree.exists('jest.config.cts')).toBeFalsy();
       expect(tree.exists('my-app/src/app/app.element.spec.ts')).toBeFalsy();
       expect(tree.exists('my-app/tsconfig.spec.json')).toBeFalsy();
-      expect(tree.exists('my-app/jest.config.ts')).toBeFalsy();
+      expect(tree.exists('my-app/jest.config.cts')).toBeFalsy();
     });
 
     it('--bundler=none should use jest as the default', async () => {
@@ -502,7 +534,7 @@ describe('app', () => {
         bundler: 'none',
         addPlugin: true,
       });
-      expect(tree.exists('my-cool-app/jest.config.ts')).toBeTruthy();
+      expect(tree.exists('my-cool-app/jest.config.cts')).toBeTruthy();
       expect(
         readJson(tree, 'my-cool-app/tsconfig.spec.json').compilerOptions.types
       ).toMatchInlineSnapshot(`
@@ -524,8 +556,8 @@ describe('app', () => {
         unitTestRunner: 'jest',
         addPlugin: true,
       });
-      expect(tree.exists('my-vite-app/vite.config.ts')).toBeTruthy();
-      expect(tree.exists('my-vite-app/jest.config.ts')).toBeTruthy();
+      expect(tree.exists('my-vite-app/vite.config.mts')).toBeTruthy();
+      expect(tree.exists('my-vite-app/jest.config.cts')).toBeTruthy();
     });
 
     it('--bundler=vite --unitTestRunner=none', async () => {
@@ -535,8 +567,8 @@ describe('app', () => {
         unitTestRunner: 'none',
         addPlugin: true,
       });
-      expect(tree.exists('my-vite-app/vite.config.ts')).toBeTruthy();
-      expect(tree.read('my-vite-app/vite.config.ts', 'utf-8')).not.toContain(
+      expect(tree.exists('my-vite-app/vite.config.mts')).toBeTruthy();
+      expect(tree.read('my-vite-app/vite.config.mts', 'utf-8')).not.toContain(
         'test: {'
       );
       expect(tree.exists('my-vite-app/tsconfig.spec.json')).toBeFalsy();
@@ -549,8 +581,8 @@ describe('app', () => {
         unitTestRunner: 'vitest',
         addPlugin: true,
       });
-      expect(tree.exists('my-webpack-app/vite.config.ts')).toBeTruthy();
-      expect(tree.exists('my-webpack-app/jest.config.ts')).toBeFalsy();
+      expect(tree.exists('my-webpack-app/vite.config.mts')).toBeTruthy();
+      expect(tree.exists('my-webpack-app/jest.config.cts')).toBeFalsy();
       expect(
         readJson(tree, 'my-webpack-app/tsconfig.spec.json').compilerOptions
           .types
@@ -585,9 +617,9 @@ describe('app', () => {
         addPlugin: true,
       } as Schema);
 
-      expect(tree.read(`my-app/jest.config.ts`, 'utf-8'))
+      expect(tree.read(`my-app/jest.config.cts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "export default {
+        "module.exports = {
           displayName: 'my-app',
           preset: '../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
@@ -611,9 +643,9 @@ describe('app', () => {
         addPlugin: true,
       } as Schema);
 
-      expect(tree.read(`my-app/jest.config.ts`, 'utf-8'))
+      expect(tree.read(`my-app/jest.config.cts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "export default {
+        "module.exports = {
           displayName: 'my-app',
           preset: '../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
@@ -654,7 +686,7 @@ describe('app', () => {
     });
 
     it('should setup vite configuration', () => {
-      expect(tree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
     it('should add dependencies in package.json', () => {
       const packageJson = readJson(viteAppTree, '/package.json');
@@ -671,7 +703,7 @@ describe('app', () => {
 
     it('should create index.html and vite.config file at the root of the app', () => {
       expect(viteAppTree.exists('/my-app/index.html')).toBe(true);
-      expect(viteAppTree.exists('/my-app/vite.config.ts')).toBe(true);
+      expect(viteAppTree.exists('/my-app/vite.config.mts')).toBe(true);
     });
 
     it('should not include a spec file when the bundler or unitTestRunner is vite and insourceTests is false', async () => {
@@ -710,6 +742,7 @@ describe('app', () => {
         module.exports = {
           output: {
             path: join(__dirname, '../../dist/apps/my-app'),
+            clean: true,
           },
           devServer: {
             port: 4200
@@ -920,6 +953,7 @@ describe('app', () => {
         module.exports = {
           output: {
             path: join(__dirname, 'dist'),
+            clean: true,
           },
           devServer: {
             port: 4200
@@ -1009,6 +1043,42 @@ describe('app', () => {
         }
       `);
       expect(readJson(tree, 'apps/myapp-e2e/package.json').nx).toBeUndefined();
+    });
+
+    it('should ignore "out-tsc" from eslint', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/myapp',
+        linter: 'eslint',
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const eslintConfig = readJson(tree, 'apps/myapp/.eslintrc.json');
+      expect(eslintConfig.ignorePatterns).toContain('**/out-tsc');
+    });
+
+    it('should ignore "out-tsc" from eslint with flat config', async () => {
+      tree.write('eslint.config.mjs', 'export default [];');
+
+      await applicationGenerator(tree, {
+        directory: 'apps/myapp',
+        linter: 'eslint',
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const eslintConfig = tree.read('apps/myapp/eslint.config.mjs', 'utf-8');
+      expect(eslintConfig).toContain('**/out-tsc');
     });
   });
 });

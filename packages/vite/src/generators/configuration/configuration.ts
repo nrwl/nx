@@ -16,6 +16,7 @@ import {
 } from '@nx/js';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
+  getDefinedCustomConditionName,
   getProjectType,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
@@ -153,28 +154,39 @@ export async function viteConfigurationGeneratorInternal(
           ],
           plugins: ['react()'],
           port: schema.port,
+          useEsmExtension: true,
         },
         false,
         undefined
       );
     } else {
-      createOrEditViteConfig(tree, schema, false, projectAlreadyHasViteTargets);
+      createOrEditViteConfig(
+        tree,
+        { ...schema, useEsmExtension: true },
+        false,
+        projectAlreadyHasViteTargets
+      );
     }
   }
 
   if (schema.includeVitest) {
-    const vitestTask = await vitestGenerator(tree, {
-      project: schema.project,
-      uiFramework: schema.uiFramework,
-      inSourceTests: schema.inSourceTests,
-      coverageProvider: 'v8',
-      skipViteConfig: true,
-      testTarget: 'test',
-      skipFormat: true,
-      addPlugin: schema.addPlugin,
-      compiler: schema.compiler,
-      projectType,
-    });
+    const vitestTask = await vitestGenerator(
+      tree,
+      {
+        project: schema.project,
+        uiFramework: schema.uiFramework,
+        inSourceTests: schema.inSourceTests,
+        coverageProvider: 'v8',
+        skipViteConfig: true,
+        testTarget: 'test',
+        skipFormat: true,
+        addPlugin: schema.addPlugin,
+        compiler: schema.compiler,
+        projectType,
+      },
+      false,
+      true
+    );
     tasks.push(vitestTask);
   }
 
@@ -220,10 +232,6 @@ function updatePackageJson(
     const rootDir = join(project.root, 'src');
     const outputPath = joinPathFragments(project.root, 'dist');
 
-    // the file must exist in the TS solution setup, which is the only case this
-    // function is called
-    const tsconfigBase = readJson(tree, 'tsconfig.base.json');
-
     packageJson = getUpdatedPackageJsonContent(packageJson, {
       main,
       outputPath,
@@ -232,10 +240,7 @@ function updatePackageJson(
       generateExportsField: true,
       packageJsonPath,
       format: ['esm'],
-      skipDevelopmentExports:
-        !tsconfigBase.compilerOptions?.customConditions?.includes(
-          'development'
-        ),
+      developmentConditionName: getDefinedCustomConditionName(tree),
     });
   }
 

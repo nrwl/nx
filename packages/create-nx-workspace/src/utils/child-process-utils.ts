@@ -22,7 +22,8 @@ export function spawnAndWait(command: string, args: string[], cwd: string) {
       windowsHide: false,
     });
 
-    childProcess.on('exit', (code) => {
+    childProcess.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code !== 0) {
         rej({ code: code });
       } else {
@@ -32,21 +33,42 @@ export function spawnAndWait(command: string, args: string[], cwd: string) {
   });
 }
 
-export function execAndWait(command: string, cwd: string) {
+export function execAndWait(
+  command: string,
+  cwd: string,
+  silenceErrors = false
+) {
   return new Promise<{ code: number; stdout: string }>((res, rej) => {
     exec(
       command,
       { cwd, env: { ...process.env, NX_DAEMON: 'false' }, windowsHide: false },
       (error, stdout, stderr) => {
         if (error) {
-          const logFile = join(cwd, 'error.log');
-          writeFileSync(logFile, `${stdout}\n${stderr}`);
-          const message = stderr && stderr.trim().length ? stderr : stdout;
-          rej(new CreateNxWorkspaceError(message, error.code, logFile));
+          if (silenceErrors) {
+            rej();
+          } else {
+            const logFile = join(cwd, 'error.log');
+            writeFileSync(logFile, `${stdout}\n${stderr}`);
+            const message = stderr && stderr.trim().length ? stderr : stdout;
+            rej(new CreateNxWorkspaceError(message, error.code, logFile));
+          }
         } else {
           res({ code: 0, stdout });
         }
       }
     );
   });
+}
+
+function signalToCode(signal: NodeJS.Signals | null): number {
+  switch (signal) {
+    case 'SIGHUP':
+      return 128 + 1;
+    case 'SIGINT':
+      return 128 + 2;
+    case 'SIGTERM':
+      return 128 + 15;
+    default:
+      return 128;
+  }
 }

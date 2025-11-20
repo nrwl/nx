@@ -1,21 +1,21 @@
 import 'nx/src/internal-testing-utils/mock-fs';
 
-import dependencyChecks, {
-  Options,
-  RULE_NAME as dependencyChecksRuleName,
-} from './dependency-checks';
-import * as jsoncParser from 'jsonc-eslint-parser';
-import { createProjectRootMappings } from 'nx/src/project-graph/utils/find-project-for-path';
-
-import { vol } from 'memfs';
-import {
+import type {
   FileData,
   ProjectFileMap,
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '@nx/devkit';
 import { Linter } from 'eslint';
-import { FileDataDependency } from 'nx/src/config/project-graph';
+import * as jsoncParser from 'jsonc-eslint-parser';
+import { vol } from 'memfs';
+import type { FileDataDependency } from 'nx/src/config/project-graph';
+import { createProjectRootMappings } from 'nx/src/project-graph/utils/find-project-for-path';
+import * as packageManager from 'nx/src/utils/package-manager';
+import dependencyChecks, {
+  Options,
+  RULE_NAME as dependencyChecksRuleName,
+} from './dependency-checks';
 
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
@@ -1708,61 +1708,537 @@ describe('Dependency checks (eslint)', () => {
     expect(failures.length).toEqual(0);
   });
 
-  it('should not report catalog: protocol', () => {
-    const packageJson = {
-      name: '@mycompany/liba',
-      dependencies: {
-        external1: 'catalog:',
-        external2: 'catalog:nx',
-      },
-    };
+  describe('pnpm catalogs', () => {
+    beforeEach(() => {
+      jest
+        .spyOn(packageManager, 'detectPackageManager')
+        .mockReturnValue('pnpm');
+    });
 
-    const fileSys = {
-      './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
-      './libs/liba/src/index.ts': '',
-      './package.json': JSON.stringify(rootPackageJson, null, 2),
-    };
-    vol.fromJSON(fileSys, '/root');
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
 
-    const failures = runRule(
-      {},
-      `/root/libs/liba/package.json`,
-      JSON.stringify(packageJson, null, 2),
-      {
-        nodes: {
-          liba: {
-            name: 'liba',
-            type: 'lib',
-            data: {
-              root: 'libs/liba',
-              targets: {
-                build: {},
+    it('should report error for catalog references without pnpm-workspace.yaml', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: 'catalog:',
+          external2: 'catalog:nx',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+        // Note: No pnpm-workspace.yaml file
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
               },
             },
           },
+          externalNodes,
+          dependencies: {
+            liba: [
+              { source: 'liba', target: 'npm:external1', type: 'static' },
+              { source: 'liba', target: 'npm:external2', type: 'static' },
+            ],
+          },
         },
-        externalNodes,
-        dependencies: {
+        {
           liba: [
-            { source: 'liba', target: 'npm:external1', type: 'static' },
-            { source: 'liba', target: 'npm:external2', type: 'static' },
+            createFile(`libs/liba/src/main.ts`, [
+              'npm:external1',
+              'npm:external2',
+            ]),
+            createFile(`libs/liba/package.json`, [
+              'npm:external1',
+              'npm:external2',
+            ]),
           ],
+        }
+      );
+
+      // With pnpm detected but no workspace file, should report invalid catalog references
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toContain('Invalid catalog reference');
+      expect(failures[0].message).toContain('external1');
+      expect(failures[1].message).toContain('Invalid catalog reference');
+      expect(failures[1].message).toContain('external2');
+    });
+
+    it('should not report error for valid default catalog reference', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: 'catalog:',
         },
-      },
-      {
-        liba: [
-          createFile(`libs/liba/src/main.ts`, [
-            'npm:external1',
-            'npm:external2',
-          ]),
-          createFile(`libs/liba/package.json`, [
-            'npm:external1',
-            'npm:external2',
-          ]),
-        ],
-      }
-    );
-    expect(failures.length).toEqual(0);
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+        './pnpm-workspace.yaml': `catalog:\n  external1: '^16.0.0'\n`,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, ['npm:external1']),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should not report error for valid named catalog reference', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: 'catalog:nx',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+        './pnpm-workspace.yaml': `catalogs:\n  nx:\n    external1: '~16.1.2'\n`,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, ['npm:external1']),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should report version mismatch after resolving catalog reference', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: 'catalog:',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+        './pnpm-workspace.yaml': `catalog:\n  external1: '^15.0.0'\n`,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, ['npm:external1']),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain(
+        'version specifier does not contain'
+      );
+      expect(failures[0].message).toContain('external1');
+      expect(failures[0].message).toContain('16.1.8');
+    });
+
+    it('should report error when package not in catalog', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: 'catalog:',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+        './pnpm-workspace.yaml': `catalog:\n  external2: '^5.2.0'\n`,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, ['npm:external1']),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain('Invalid catalog reference');
+      expect(failures[0].message).toContain('external1');
+    });
+
+    it('should report error when named catalog does not exist', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: 'catalog:nonexistent',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+        './pnpm-workspace.yaml': `catalog:\n  external1: '^16.0.0'\n`,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, ['npm:external1']),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain('Invalid catalog reference');
+      expect(failures[0].message).toContain('external1');
+    });
+
+    it('should resolve catalog reference when fixing missing dependency', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: '^16.0.0',
+        },
+      };
+
+      const rootPkgJsonWithCatalog = {
+        ...rootPackageJson,
+        dependencies: {
+          ...rootPackageJson.dependencies,
+          external2: 'catalog:',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPkgJsonWithCatalog, null, 2),
+        './pnpm-workspace.yaml': `catalog:\n  external2: '^5.2.0'\n`,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [
+              { source: 'liba', target: 'npm:external1', type: 'static' },
+              { source: 'liba', target: 'npm:external2', type: 'static' },
+            ],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, [
+              'npm:external1',
+              'npm:external2',
+            ]),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain('external2');
+
+      // Apply fix and verify it keeps the catalog reference
+      const content = JSON.stringify(packageJson, null, 2);
+      const result =
+        content.slice(0, failures[0].fix!.range[0]) +
+        failures[0].fix!.text +
+        content.slice(failures[0].fix!.range[1]);
+
+      expect(result).toContain('"external2": "catalog:"');
+    });
+
+    it('should resolve catalog reference when fixing version mismatch', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: '^15.0.0',
+        },
+      };
+
+      const rootPkgJsonWithCatalog = {
+        ...rootPackageJson,
+        dependencies: {
+          ...rootPackageJson.dependencies,
+          external1: 'catalog:',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPkgJsonWithCatalog, null, 2),
+        './pnpm-workspace.yaml': `catalog:\n  external1: '^16.0.0'\n`,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, ['npm:external1']),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain(
+        'version specifier does not contain'
+      );
+
+      // Apply fix and verify it keeps the catalog reference
+      const content = JSON.stringify(packageJson, null, 2);
+      const result =
+        content.slice(0, failures[0].fix!.range[0]) +
+        failures[0].fix!.text +
+        content.slice(failures[0].fix!.range[1]);
+
+      expect(result).toContain('"external1": "catalog:"');
+    });
+
+    it('should resolve catalog reference when fixing missing dependency section', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+      };
+
+      const rootPkgJsonWithCatalog = {
+        ...rootPackageJson,
+        dependencies: {
+          ...rootPackageJson.dependencies,
+          external1: 'catalog:',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPkgJsonWithCatalog, null, 2),
+        './pnpm-workspace.yaml': `catalog:\n  external1: '^16.0.0'\n`,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+          },
+        },
+        {
+          liba: [createFile(`libs/liba/src/main.ts`, ['npm:external1'])],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain('Dependency sections are missing');
+
+      // Apply fix and verify it keeps the catalog reference
+      const content = JSON.stringify(packageJson, null, 2);
+      const result =
+        content.slice(0, failures[0].fix!.range[0]) +
+        failures[0].fix!.text +
+        content.slice(failures[0].fix!.range[1]);
+
+      expect(result).toContain('"external1": "catalog:"');
+    });
   });
 
   it('should require swc if @nx/js:swc executor', () => {

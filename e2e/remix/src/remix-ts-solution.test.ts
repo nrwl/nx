@@ -4,17 +4,17 @@ import {
   readJson,
   runCLI,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Remix - TS solution setup', () => {
-  beforeAll(() => {
+  beforeEach(() => {
     newProject({
       packages: ['@nx/remix'],
       preset: 'ts',
     });
   });
 
-  afterAll(() => {
+  afterEach(() => {
     cleanupProject();
   });
 

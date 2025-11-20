@@ -118,13 +118,13 @@ We're actively developing this integration and would love to hear your feedback!
 
 Also, subscribe to our [YouTube channel](https://www.youtube.com/@nxdevtools) for upcoming feature announcements and demonstrations.
 
-Want to try it out? Install [Nx Console from the VS Code marketplace](/getting-started/editor-setup) and follow the MCP setup prompts to get started.
+Want to try it out? Install [Nx Console from the VS Code marketplace](/docs/getting-started/editor-setup) and follow the MCP setup prompts to get started.
 
 ---
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 📖 [Making Cursor Smarter with MCP](/blog/nx-made-cursor-smarter)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)

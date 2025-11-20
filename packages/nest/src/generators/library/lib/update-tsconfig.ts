@@ -7,6 +7,10 @@ export function updateTsConfig(tree: Tree, options: NormalizedOptions): void {
 
   return updateJson(tree, `${project.root}/tsconfig.lib.json`, (json) => {
     json.compilerOptions.target = options.target;
+    // NestJS requires decorators to be enabled for dependency injection
+    json.compilerOptions.experimentalDecorators = true;
+    json.compilerOptions.emitDecoratorMetadata = true;
+
     if (options.strict) {
       json.compilerOptions = {
         ...json.compilerOptions,

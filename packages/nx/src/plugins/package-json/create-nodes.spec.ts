@@ -6,7 +6,6 @@ import { createNodeFromPackageJson, createNodesV2 } from './create-nodes';
 describe('nx package.json workspaces plugin', () => {
   const context = {
     workspaceRoot: '/root',
-    configFiles: [],
     nxJsonConfiguration: {},
   };
 
@@ -60,6 +59,7 @@ describe('nx package.json workspaces plugin', () => {
                 "packageExports": undefined,
                 "packageMain": undefined,
                 "packageName": "root",
+                "packageVersion": undefined,
               },
               "targetGroups": {
                 "NPM Scripts": [
@@ -113,6 +113,7 @@ describe('nx package.json workspaces plugin', () => {
                 "packageExports": undefined,
                 "packageMain": undefined,
                 "packageName": "lib-a",
+                "packageVersion": undefined,
               },
               "targetGroups": {
                 "NPM Scripts": [
@@ -173,6 +174,7 @@ describe('nx package.json workspaces plugin', () => {
                 "packageExports": undefined,
                 "packageMain": undefined,
                 "packageName": "lib-b",
+                "packageVersion": undefined,
               },
               "targetGroups": {
                 "NPM Scripts": [
@@ -252,7 +254,6 @@ describe('nx package.json workspaces plugin', () => {
 
       const context = {
         workspaceRoot: '/root',
-        configFiles: [],
         nxJsonConfiguration: {},
       };
 
@@ -282,6 +283,7 @@ describe('nx package.json workspaces plugin', () => {
                       "packageExports": undefined,
                       "packageMain": undefined,
                       "packageName": "vite",
+                      "packageVersion": undefined,
                     },
                     "targetGroups": {},
                   },
@@ -355,7 +357,6 @@ describe('nx package.json workspaces plugin', () => {
 
       const context = {
         workspaceRoot: '/root',
-        configFiles: [],
         nxJsonConfiguration: {},
       };
 
@@ -385,6 +386,7 @@ describe('nx package.json workspaces plugin', () => {
                       "packageExports": undefined,
                       "packageMain": undefined,
                       "packageName": "vite",
+                      "packageVersion": undefined,
                     },
                     "targetGroups": {},
                   },
@@ -484,6 +486,7 @@ describe('nx package.json workspaces plugin', () => {
                       "packageExports": undefined,
                       "packageMain": undefined,
                       "packageName": "vite",
+                      "packageVersion": undefined,
                     },
                     "targetGroups": {},
                   },
@@ -567,6 +570,7 @@ describe('nx package.json workspaces plugin', () => {
                       "packageExports": undefined,
                       "packageMain": undefined,
                       "packageName": "root",
+                      "packageVersion": undefined,
                     },
                     "targetGroups": {
                       "NPM Scripts": [
@@ -650,6 +654,7 @@ describe('nx package.json workspaces plugin', () => {
                       "packageExports": undefined,
                       "packageMain": undefined,
                       "packageName": "root",
+                      "packageVersion": undefined,
                     },
                     "targetGroups": {
                       "NPM Scripts": [
@@ -740,6 +745,7 @@ describe('nx package.json workspaces plugin', () => {
                       "packageExports": undefined,
                       "packageMain": undefined,
                       "packageName": "root",
+                      "packageVersion": undefined,
                     },
                     "targetGroups": {},
                   },
@@ -921,6 +927,7 @@ describe('nx package.json workspaces plugin', () => {
                     },
                     "packageMain": undefined,
                     "packageName": "lib-a",
+                    "packageVersion": undefined,
                   },
                   "targetGroups": {
                     "NPM Scripts": [
@@ -971,6 +978,7 @@ describe('nx package.json workspaces plugin', () => {
                     },
                     "packageMain": undefined,
                     "packageName": "lib-b",
+                    "packageVersion": undefined,
                   },
                   "targetGroups": {
                     "NPM Scripts": [

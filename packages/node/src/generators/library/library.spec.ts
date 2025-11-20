@@ -32,7 +32,7 @@ describe('lib', () => {
       const configuration = readProjectConfiguration(tree, 'my-lib');
       expect(configuration.root).toEqual('my-lib');
       expect(configuration.targets.build).toBeUndefined();
-      expect(tree.read('my-lib/jest.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-lib/jest.config.cts', 'utf-8')).toMatchSnapshot();
       expect(
         readJson(tree, 'package.json').devDependencies['jest-environment-jsdom']
       ).not.toBeDefined();
@@ -115,6 +115,7 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, 'my-lib/tsconfig.lib.json');
       expect(tsconfigJson.exclude).toEqual([
         'jest.config.ts',
+        'jest.config.cts',
         'src/**/*.spec.ts',
         'src/**/*.test.ts',
       ]);
@@ -122,7 +123,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       await libraryGenerator(tree, baseLibraryConfig);
-      expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-lib/src/index.ts')).toBeTruthy();
 
       const eslintrc = readJson(tree, 'my-lib/.eslintrc.json');
@@ -200,7 +201,7 @@ describe('lib', () => {
         ...baseLibraryConfig,
         directory: 'my-dir/my-lib',
       });
-      expect(tree.exists(`my-dir/my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-dir/my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
     });
 
@@ -276,7 +277,7 @@ describe('lib', () => {
         directory: 'my-dir/my-lib',
         simpleModuleName: true,
       });
-      expect(tree.exists(`my-dir/my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-dir/my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/lib/my-lib.ts')).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
@@ -318,7 +319,7 @@ describe('lib', () => {
         unitTestRunner: 'none',
       });
       expect(tree.exists('my-lib/tsconfig.spec.json')).toBeFalsy();
-      expect(tree.exists('my-lib/jest.config.ts')).toBeFalsy();
+      expect(tree.exists('my-lib/jest.config.cts')).toBeFalsy();
       expect(tree.exists('my-lib/lib/my-lib.spec.ts')).toBeFalsy();
       expect(
         readProjectConfiguration(tree, 'my-lib').targets.test
@@ -439,9 +440,9 @@ describe('lib', () => {
         babelJest: true,
       } as Schema);
 
-      expect(tree.read(`my-lib/jest.config.ts`, 'utf-8'))
+      expect(tree.read(`my-lib/jest.config.cts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "export default {
+        "module.exports = {
           displayName: 'my-lib',
           preset: '../jest.preset.js',
           testEnvironment: 'node',
@@ -531,7 +532,7 @@ describe('lib', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
-          customConditions: ['development'],
+          customConditions: ['@proj/source'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -618,6 +619,7 @@ describe('lib', () => {
           },
           "exclude": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
           ],
@@ -642,6 +644,7 @@ describe('lib', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.d.ts",
@@ -676,7 +679,7 @@ describe('lib', () => {
           "exports": {
             "./package.json": "./package.json",
             ".": {
-              "development": "./src/index.ts",
+              "@proj/source": "./src/index.ts",
               "types": "./dist/index.d.ts",
               "import": "./dist/index.js",
               "default": "./dist/index.js"
@@ -690,7 +693,7 @@ describe('lib', () => {
       `);
     });
 
-    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+    it('should not set the custom condition in exports when it does not exist in tsconfig.base.json', async () => {
       updateJson(tree, 'tsconfig.base.json', (json) => {
         delete json.compilerOptions.customConditions;
         return json;
@@ -727,8 +730,8 @@ describe('lib', () => {
           },
           "exports": {
             ".": {
+              "@proj/source": "./src/index.ts",
               "default": "./dist/index.js",
-              "development": "./src/index.ts",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },

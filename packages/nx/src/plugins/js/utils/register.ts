@@ -130,7 +130,8 @@ export function getSwcTranspiler(
 
 export function getTsNodeTranspiler(
   compilerOptions: CompilerOptions,
-  tsNodeOptions?: TsConfigOptions
+  tsNodeOptions?: TsConfigOptions,
+  preferTsNode?: boolean
 ): (...args: unknown[]) => unknown {
   const { register } = require('ts-node') as typeof import('ts-node');
   // ts-node doesn't provide a cleanup method
@@ -148,7 +149,7 @@ export function getTsNodeTranspiler(
   const { transpiler, swc } = service.options;
 
   // Don't warn if a faster transpiler is enabled
-  if (!transpiler && !swc) {
+  if (!transpiler && !swc && !preferTsNode) {
     warnTsNodeUsage();
   }
 
@@ -255,10 +256,19 @@ export function getTranspiler(
   compilerOptions.target = ts.ScriptTarget.ES2021;
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
+  // These options are different per project, and since they are not needed for transpilation, we can remove them so we have more cache hits.
+  compilerOptions.outDir = undefined;
+  compilerOptions.outFile = undefined;
+  compilerOptions.declaration = undefined;
+  compilerOptions.declarationMap = undefined;
+  compilerOptions.composite = undefined;
+  compilerOptions.tsBuildInfoFile = undefined;
+  delete compilerOptions.strict;
 
   let _getTranspiler: (
     compilerOptions: CompilerOptions,
-    tsNodeOptions?: TsConfigOptions
+    tsNodeOptions?: TsConfigOptions,
+    preferTsNode?: boolean
   ) => (...args: unknown[]) => unknown;
 
   let registrationKey = JSON.stringify(compilerOptions);
@@ -285,7 +295,11 @@ export function getTranspiler(
   }
 
   if (_getTranspiler) {
-    const transpilerCleanup = _getTranspiler(compilerOptions, tsNodeOptions);
+    const transpilerCleanup = _getTranspiler(
+      compilerOptions,
+      tsNodeOptions,
+      preferTsNode
+    );
     const currRegistrationEntry = {
       refCount: 1,
       cleanup: () => {

@@ -1,6 +1,6 @@
 import {
   type CreateNodesV2,
-  type CreateNodesContext,
+  type CreateNodesContextV2,
   detectPackageManager,
   readJsonFile,
   type TargetConfiguration,
@@ -9,7 +9,6 @@ import {
   getPackageManagerCommand,
   joinPathFragments,
   type ProjectConfiguration,
-  type CreateNodesContextV2,
 } from '@nx/devkit';
 
 import { dirname, join } from 'path';
@@ -150,7 +149,7 @@ async function buildReactRouterTargets(
   configFilePath: string,
   projectRoot: string,
   options: ReactRouterPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   siblingFiles: string[],
   isUsingTsSolutionSetup: boolean
 ): Promise<ReactRouterTargets> {
@@ -362,7 +361,7 @@ function normalizeOptions(options: ReactRouterPluginOptions) {
 
 function checkIfConfigFileShouldBeProject(
   projectRoot: string,
-  context: CreateNodesContext | CreateNodesContextV2
+  context: CreateNodesContextV2
 ): boolean {
   // Do not create a project if package.json and project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));

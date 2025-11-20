@@ -73,7 +73,7 @@ export const handler: Handler = async (event, _) => {
 When we created our workspace, the initial scaffolding generated a **deploy-target** inside our `project.json`.
 
 > A **target** is a specific task you can run for a project.  
-> You can think of it as a script/command that does a specific job. The most common targets are "build", "serve", "test", "lint", "deploy", etc. For more information regarding `project.json` you can read about it at [project-configuration](/reference/project-configuration)
+> You can think of it as a script/command that does a specific job. The most common targets are "build", "serve", "test", "lint", "deploy", etc. For more information regarding `project.json` you can read about it at [project-configuration](/docs/reference/project-configuration)
 
 We can start off by creating our site on Netlify by running:
 
@@ -101,13 +101,13 @@ By following these steps, you've successfully used `@nx/netlify` serverless func
 
 ### Wrapping up
 
-Never used Nx before? Learn more about Nx [here](/getting-started/intro).  
-[Official recipe from Nx](/technologies/node/recipes/node-serverless-functions-netlify)  
+Never used Nx before? Learn more about Nx [here](/docs/getting-started/intro).  
+[Official recipe from Nx](/docs/technologies/node/guides/node-serverless-functions-netlify)  
 [Github example](https://github.com/ndcunningham/nx-netlify-serverless)
 
 ### Learn more
 
-🧠 [Nx Docs](/getting-started/intro)  
+🧠 [Nx Docs](/docs/getting-started/intro)  
 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)  
 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 📹 [Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)  

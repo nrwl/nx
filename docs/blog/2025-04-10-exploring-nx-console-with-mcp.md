@@ -8,7 +8,7 @@ description: 'A walkthrough of using the Nx MCP integration in Cursor to navigat
 youtubeUrl: https://youtu.be/WUm61cDH8C8
 ---
 
-[Nx Console](/getting-started/editor-setup) is our IDE extension for VSCode, Cursor, IntelliJ IDEA and other Jetbrains IDEs. It integrates deeply with Nx workspaces. Recently, we've also added features to [enhance your LLM assistant](/features/enhance-AI) with rich context about your monorepo, which is particularly valuable for exploring large codebases. Our Model Context Protocol (MCP) integration specifically improves the AI's reasoning capabilities in these complex environments. Read more in the [announcement blog post](/blog/nx-made-cursor-smarter).
+[Nx Console](/docs/getting-started/editor-setup) is our IDE extension for VSCode, Cursor, IntelliJ IDEA and other Jetbrains IDEs. It integrates deeply with Nx workspaces. Recently, we've also added features to [enhance your LLM assistant](/docs/features/enhance-ai) with rich context about your monorepo, which is particularly valuable for exploring large codebases. Our Model Context Protocol (MCP) integration specifically improves the AI's reasoning capabilities in these complex environments. Read more in the [announcement blog post](/blog/nx-made-cursor-smarter).
 
 While often associated with code generation, LLMs are **incredibly powerful for exploration and understanding complex codebases**. Imagine onboarding a new developer onto a large project – an LLM armed with workspace context could significantly speed up their learning process.
 
@@ -20,7 +20,7 @@ Let's see how that went.
 
 ## Setting up the Nx MCP
 
-First, you need to ensure the Model Context Protocol (MCP) integration is set up, which allows Cursor to understand your Nx workspace. This starts with having the [Nx Console](/getting-started/editor-setup) extension installed, as it provides the necessary MCP server.
+First, you need to ensure the Model Context Protocol (MCP) integration is set up, which allows Cursor to understand your Nx workspace. This starts with having the [Nx Console](/docs/getting-started/editor-setup) extension installed, as it provides the necessary MCP server.
 
 When you start Cursor (version 0.46 or newer) in an Nx workspace with Nx Console present, it should automatically detect the server and prompt you via a notification to enable the "Nx Enhancement" agent. Clicking the notification is the easiest way, but you can also manually trigger the setup using the `nx.configureMcpServer` command from the command palette (`Ctrl/Cmd + Shift + P`).
 
@@ -28,7 +28,7 @@ Finally, verify that the "Nx Console MCP" server is listed and enabled within Cu
 
 ![Making sure the Nx MCP is registered in Cursor settings](/blog/images/articles/cursor-mcp-registered.avif)
 
-The [docs have all the details](/features/enhance-AI) if you need more infos.
+The [docs have all the details](/docs/features/enhance-ai) if you need more infos.
 
 ## Figuring out the Build Process
 
@@ -48,7 +48,7 @@ The assistant, using the `nx_project_details` tool, examines the configuration f
 
 ## Understanding Task Dependencies
 
-A common question when dealing with [build pipelines](/features/run-tasks#defining-a-task-pipeline) is whether prerequisite steps need to be run manually.
+A common question when dealing with [build pipelines](/docs/features/run-tasks#defining-a-task-pipeline) is whether prerequisite steps need to be run manually.
 
 **Query:** "When I run the package command, do I need to run build beforehand?"
 
@@ -97,7 +97,7 @@ We're really just getting started with Nx's LLM integration. Keep an eye on our 
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 📖 [Making Cursor Smarter with an MCP Server For Nx Monorepos](/blog/nx-made-cursor-smarter)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)

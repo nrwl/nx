@@ -304,8 +304,14 @@ Have a more decent button-like widget that you can place below sections of a tut
 This is for embedding a video just like with the Youtube component, but in addition to have a link to a Nx Course (nx.dev/courses) video to improve the discoverability of these courses.
 
 ```markdown
-{% course-video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-01-nx-init" title="Initialize Nx in Your Project with nx init" /%}
+{% course_video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-01-nx-init" /%}
 ```
+
+Attributes:
+
+- `src` (required): YouTube video URL
+- `courseTitle` (required): Title of the course
+- `courseUrl` (required): Link to the course page (e.g., `/courses/pnpm-nx-next/lessons-01-nx-init`)
 
 #### Project Details View
 

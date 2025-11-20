@@ -1,13 +1,14 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { printDiagnostics, runTypeCheck } from '@nx/js';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Compiler, MultiCompiler, MultiStats, Stats } from '@rspack/core';
 import { rmSync } from 'fs';
+import { join, resolve } from 'path';
 import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
-import { RspackExecutorSchema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
-import { join, resolve } from 'path';
+import { RspackExecutorSchema } from './schema';
 
 export default async function* runExecutor(
   options: RspackExecutorSchema,
@@ -17,7 +18,7 @@ export default async function* runExecutor(
   options.target ??= 'web';
 
   const metadata = context.projectsConfigurations.projects[context.projectName];
-  const sourceRoot = metadata.sourceRoot;
+  const sourceRoot = getProjectSourceRoot(metadata);
 
   const normalizedOptions = normalizeOptions(
     options,
@@ -34,19 +35,18 @@ export default async function* runExecutor(
     await executeTypeCheck(normalizedOptions, context);
   }
 
-  // Mimic --clean from webpack.
-  rmSync(join(context.root, normalizedOptions.outputPath), {
-    force: true,
-    recursive: true,
-  });
-
   const compiler = await createCompiler(normalizedOptions, context);
 
   const iterable = createAsyncIterable<{
     success: boolean;
     outfile?: string;
   }>(async ({ next, done }) => {
-    if (options.watch) {
+    const watch =
+      (compiler instanceof Compiler
+        ? compiler.options.watch
+        : compiler.options[0].watch) ?? options.watch;
+
+    if (watch) {
       const watcher = compiler.watch(
         {},
         async (err, stats: Stats | MultiStats) => {

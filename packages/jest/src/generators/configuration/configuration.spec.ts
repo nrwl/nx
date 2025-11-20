@@ -16,6 +16,13 @@ import { jestConfigObject } from '../../utils/config/functions';
 import configurationGenerator from './configuration';
 import { JestProjectSchema } from './schema.d';
 
+// Mock Jest version detection to return Jest 29 by default
+// This ensures existing tests continue to work with .ts config files
+jest.mock('../../utils/versions', () => ({
+  ...jest.requireActual('../../utils/versions'),
+  getInstalledJestMajorVersion: jest.fn(() => 29),
+}));
+
 describe('jestProject', () => {
   let tree: Tree;
   let defaultOptions: Omit<JestProjectSchema, 'project'> = {
@@ -688,6 +695,101 @@ describe('jestProject', () => {
           "sourceMaps": true,
           "exclude": []
         }
+        "
+      `);
+    });
+  });
+
+  describe('Jest 30+', () => {
+    const { getInstalledJestMajorVersion } = require('../../utils/versions');
+
+    it('should create jest.config.cts', async () => {
+      getInstalledJestMajorVersion.mockReturnValue(30);
+
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+      } as JestProjectSchema);
+
+      expect(tree.exists('libs/lib1/jest.config.cts')).toBeTruthy();
+      expect(tree.exists('libs/lib1/jest.config.ts')).toBeFalsy();
+      expect(tree.read('libs/lib1/jest.config.cts', 'utf-8')).toContain(
+        'module.exports ='
+      );
+      expect(tree.read('libs/lib1/jest.config.cts', 'utf-8')).not.toContain(
+        'export default'
+      );
+    });
+
+    it('should create jest.config.cts when Jest version cannot be determined (null)', async () => {
+      getInstalledJestMajorVersion.mockReturnValue(null);
+
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+      } as JestProjectSchema);
+
+      expect(tree.exists('libs/lib1/jest.config.cts')).toBeTruthy();
+      expect(tree.exists('libs/lib1/jest.config.ts')).toBeFalsy();
+      expect(tree.read('libs/lib1/jest.config.cts', 'utf-8')).toContain(
+        'module.exports ='
+      );
+    });
+
+    it('should exclude jest.config.ts and jest.config.cts from tsconfig', async () => {
+      getInstalledJestMajorVersion.mockReturnValue(30);
+
+      // Create tsconfig.lib.json first
+      writeJson(tree, 'libs/lib1/tsconfig.lib.json', {
+        extends: './tsconfig.json',
+        compilerOptions: {
+          outDir: '../../dist/out-tsc',
+        },
+        include: ['src/**/*.ts'],
+        exclude: [],
+      });
+
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+      } as JestProjectSchema);
+
+      const tsConfig = readJson(tree, 'libs/lib1/tsconfig.lib.json');
+      expect(tsConfig.exclude).toContain('jest.config.ts');
+      expect(tsConfig.exclude).toContain('jest.config.cts');
+    });
+
+    it('root jest.config.cts should be project config', async () => {
+      getInstalledJestMajorVersion.mockReturnValue(30);
+
+      writeJson(tree, 'tsconfig.json', {
+        files: [],
+        include: [],
+        references: [],
+      });
+      addProjectConfiguration(tree, 'my-project', {
+        root: '',
+        sourceRoot: 'src',
+        name: 'my-project',
+        targets: {},
+      });
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'my-project',
+      });
+
+      expect(tree.exists('jest.config.cts')).toBeTruthy();
+      expect(tree.exists('jest.config.ts')).toBeFalsy();
+      expect(tree.read('jest.config.cts', 'utf-8')).toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'my-project',
+          preset: './jest.preset.js',
+          coverageDirectory: './coverage/my-project',
+          testMatch: [
+            '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
+            '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',
+          ],
+        };
         "
       `);
     });

@@ -4,8 +4,8 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
 } from '@heroicons/react/24/solid';
-import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev-ui-common';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import Link from 'next/link';
 
 export function RemoteCacheSolutions(): ReactElement {
@@ -168,7 +168,7 @@ export function RemoteCacheSolutions(): ReactElement {
                 </p>
                 <div className="my-8">
                   <ButtonLink
-                    href="/recipes/running-tasks/self-hosted-caching"
+                    href={'/docs/guides/tasks--caching/self-hosted-caching'}
                     aria-describedby="official-plugins"
                     title="Free official remote cache plugins"
                     size="default"
@@ -256,7 +256,9 @@ export function RemoteCacheSolutions(): ReactElement {
 
                 <div className="mt-8">
                   <ButtonLink
-                    href="/recipes/running-tasks/self-hosted-caching#build-your-own-caching-server"
+                    href={
+                      '/docs/guides/tasks--caching/self-hosted-caching#build-your-own-caching-server'
+                    }
                     aria-describedby="open-api"
                     title="Remote cache api specs"
                     size="default"

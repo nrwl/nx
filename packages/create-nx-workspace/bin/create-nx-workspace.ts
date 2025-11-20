@@ -2,7 +2,10 @@ import * as enquirer from 'enquirer';
 import * as yargs from 'yargs';
 import * as chalk from 'chalk';
 
-import { CreateWorkspaceOptions } from '../src/create-workspace-options';
+import {
+  CreateWorkspaceOptions,
+  supportedAgents,
+} from '../src/create-workspace-options';
 import { createWorkspace } from '../src/create-workspace';
 import { isKnownPreset, Preset } from '../src/utils/preset/preset';
 import { CLIErrorMessageConfig, output } from '../src/utils/output';
@@ -11,6 +14,7 @@ import { nxVersion } from '../src/utils/nx/nx-version';
 import { yargsDecorator } from './decorator';
 import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
 import {
+  determineAiAgents,
   determineDefaultBase,
   determineIfGitHubWillBeUsed,
   determineNxCloud,
@@ -19,16 +23,15 @@ import {
 import {
   withAllPrompts,
   withGitOptions,
-  withUseGitHub,
   withNxCloud,
   withOptions,
   withPackageManager,
+  withUseGitHub,
 } from '../src/internal-utils/yargs-options';
 import { messages, recordStat } from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 import { isCI } from '../src/utils/ci/is-ci';
-import { printSocialInformation } from '../src/utils/social-information';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -216,6 +219,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('prefix', {
             describe: chalk.dim`Prefix to use for Angular component and directive selectors.`,
             type: 'string',
+          })
+          .option('aiAgents', {
+            describe: chalk.dim`List of AI agents to configure.`,
+            type: 'array',
+            choices: [...supportedAgents],
           }),
         withNxCloud,
         withUseGitHub,
@@ -243,6 +251,20 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     nxVersion
   ) as yargs.Argv<Arguments>;
 
+// Node 24 has stricter readline behavior, and enquirer is not checking for closed state
+// when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
+process.on('uncaughtException', (error: unknown) => {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    error['code'] === 'ERR_USE_AFTER_CLOSE'
+  )
+    return;
+  throw error;
+});
+
+let rawArgs: Arguments;
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   output.log({
     title: `Creating your v${nxVersion} workspace.`,
@@ -250,7 +272,8 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 
   const workspaceInfo = await createWorkspace<Arguments>(
     parsedArgs.preset,
-    parsedArgs
+    parsedArgs,
+    rawArgs
   );
 
   await recordStat({
@@ -261,6 +284,8 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       messages.codeOfSelectedPromptMessage('setupCI'),
       messages.codeOfSelectedPromptMessage('setupNxCloud'),
       parsedArgs.nxCloud,
+      rawArgs.nxCloud,
+      workspaceInfo.pushedToVcs,
     ],
   });
 
@@ -268,13 +293,13 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     process.stdout.write(workspaceInfo.nxCloudInfo);
   }
 
-  if (isKnownPreset(parsedArgs.preset)) {
-    printSocialInformation();
-  } else {
-    output.log({
-      title: `Successfully applied preset: ${parsedArgs.preset}`,
-    });
-  }
+  // if (isKnownPreset(parsedArgs.preset)) {
+  //   printSocialInformation();
+  // } else {
+  //   output.log({
+  //     title: `Successfully applied preset: ${parsedArgs.preset}`,
+  //   });
+  // }
 }
 
 /**
@@ -286,9 +311,18 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 async function normalizeArgsMiddleware(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
+  rawArgs = { ...argv };
   output.log({
     title:
       "Let's create a new workspace [https://nx.dev/getting-started/intro]",
+  });
+
+  // Record stat for initial invocation before any prompts
+  await recordStat({
+    nxVersion,
+    command: 'create-nx-workspace',
+    meta: ['start'],
+    useCloud: argv.nxCloud !== 'skip',
   });
 
   argv.workspaces ??= true;
@@ -317,6 +351,7 @@ async function normalizeArgsMiddleware(
     }
 
     const packageManager = await determinePackageManager(argv);
+    const aiAgents = await determineAiAgents(argv);
     const defaultBase = await determineDefaultBase(argv);
     const nxCloud =
       argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
@@ -329,6 +364,7 @@ async function normalizeArgsMiddleware(
       useGitHub,
       packageManager,
       defaultBase,
+      aiAgents,
     });
   } catch (e) {
     console.error(e);
@@ -346,13 +382,32 @@ function invariant(
   }
 }
 
+export function validateWorkspaceName(name: string): void {
+  const pattern = /^[a-zA-Z]/;
+  if (!pattern.test(name)) {
+    output.error({
+      title: 'Invalid workspace name',
+      bodyLines: [
+        `The workspace name "${name}" is invalid.`,
+        `Workspace names must start with a letter.`,
+        `Examples of valid names: myapp, MyApp, my-app, my_app`,
+      ],
+    });
+    process.exit(1);
+  }
+}
+
 async function determineFolder(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
   const folderName: string = parsedArgs._[0]
     ? parsedArgs._[0].toString()
     : parsedArgs.name;
-  if (folderName) return folderName;
+
+  if (folderName) {
+    validateWorkspaceName(folderName);
+    return folderName;
+  }
   const reply = await enquirer.prompt<{ folderName: string }>([
     {
       name: 'folderName',
@@ -367,6 +422,8 @@ async function determineFolder(
     title: 'Invalid folder name',
     bodyLines: [`Folder name cannot be empty`],
   });
+
+  validateWorkspaceName(reply.folderName);
 
   invariant(!existsSync(reply.folderName), {
     title: 'That folder is already taken',
@@ -633,7 +690,7 @@ async function determineReactOptions(
       appName = await determineAppName(parsedArgs);
     }
 
-    if (framework === 'nextjs') {
+    if (framework === 'next') {
       if (isStandalone) {
         preset = Preset.NextJsStandalone;
       } else {
@@ -1206,9 +1263,17 @@ async function determineAppName(
 
 async function determineReactFramework(
   parsedArgs: yargs.Arguments<ReactArguments>
-): Promise<'none' | 'nextjs' | 'expo' | 'react-native'> {
+): Promise<'none' | 'next' | 'expo' | 'react-native'> {
+  if (parsedArgs.framework) {
+    return parsedArgs.framework;
+  }
+
+  if (!parsedArgs.interactive) {
+    return 'none';
+  }
+
   const reply = await enquirer.prompt<{
-    framework: 'none' | 'nextjs' | 'expo' | 'react-native';
+    framework: 'none' | 'next' | 'expo' | 'react-native';
   }>([
     {
       name: 'framework',
@@ -1221,7 +1286,7 @@ async function determineReactFramework(
           hint: '         I only want react, react-dom or react-router',
         },
         {
-          name: 'nextjs',
+          name: 'next',
           message: 'Next.js       [ https://nextjs.org/       ]',
         },
         {
@@ -1254,7 +1319,7 @@ async function determineReactBundler(
       choices: [
         {
           name: 'vite',
-          message: 'Vite    [ https://vitejs.dev/     ]',
+          message: 'Vite    [ https://vite.dev/     ]',
         },
         {
           name: 'webpack',
@@ -1496,7 +1561,7 @@ async function determineReactRouter(
       choices: [
         {
           name: 'Yes',
-          hint: 'I want to use React Router',
+          hint: 'I want to use React Router. (Vite will be selected as the bundler)',
         },
         {
           name: 'No',

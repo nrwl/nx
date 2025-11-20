@@ -2,12 +2,14 @@
 import cx from 'classnames';
 import React, { ReactNode } from 'react';
 
-export function Steps({ children }: { children: ReactNode }) {
+export type StepsProps = { children: ReactNode };
+
+export function Steps({ children }: StepsProps) {
   const steps = React.Children.toArray(children);
   const stepsCount = steps.length;
 
   return (
-    <div className="not-prose relative">
+    <div className="relative">
       {steps.map((step, index) => (
         <div key={index} className="relative flex pb-8 last:pb-0">
           {/* Vertical line connecting steps */}
@@ -31,13 +33,12 @@ export function Steps({ children }: { children: ReactNode }) {
   );
 }
 
-export function Step({
-  title,
-  children,
-}: {
+export type StepProps = {
   title?: string;
   children: ReactNode;
-}) {
+};
+
+export function Step({ title, children }: StepProps) {
   const passPropsToChildren = (children: ReactNode) => {
     return React.Children.map(children, (child) => {
       if (React.isValidElement(child) && typeof child.type !== 'string') {

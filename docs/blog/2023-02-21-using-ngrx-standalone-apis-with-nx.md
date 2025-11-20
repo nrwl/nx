@@ -174,7 +174,7 @@ You can check out an example repository that was created following the steps abo
 
 ## Learn More
 
-🧠 [Nx Docs](/getting-started/intro)  
+🧠 [Nx Docs](/docs/getting-started/intro)  
 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)  
 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 📹 [Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)  

@@ -1,0 +1,337 @@
+---
+title: Release Groups
+description: Learn how to configure Nx Release to organize projects into release groups, with specific configuration for each group depending on your needs.
+filter: 'type:Guides'
+---
+
+Nx supports workspaces of any size and scale, and that means that projects can often be worked on in the same Nx workspace that have very different release requirements.
+
+Nx release supports the concept of release groups to allow you to configure different subsets of projects in different ways. Importantly, projects in different release groups can still depend on each other, and nx release can automatically handle updating dependencies and dependents across any number of group boundaries.
+
+{% aside type="note" title="Default Group" %}
+Technically, even if you have no nx release configuration at all, you are always dealing with release groups. Behind the scenes, if no release groups are configured, Nx will automatically create an implicit `__default__` release group for you that includes all projects in the workspace that are able to be released.
+
+When you use the `"projects"` property in the `"release"` config at the top level, you are really adjusting the projects that are present in that `__default__` group.
+{% /aside %}
+
+## Understanding Release Groups
+
+Release groups provide a way to organize your projects based on their release requirements. Each group can have its own:
+
+- **Projects Relationship** - Whether projects within the group are versioned independently or in lock step (fixed)
+- **Version configuration** - Custom conventional commits, version prefixes, and more
+- **Changelog configuration** - Different changelog formats and locations
+- **Release tag** - Various options related to the git tags that influence the release process
+- **Docker configuration** - Specific Docker versioning schemes
+
+## Creating Release Groups
+
+To create release groups, define them in your `nx.json` file under the `release.groups` property:
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "groups": {
+      "backend": {
+        "projects": ["api", "auth-service", "payment-service"],
+        "projectsRelationship": "fixed"
+      },
+      "frontend": {
+        "projects": ["web-app", "mobile-app"],
+        "projectsRelationship": "independent"
+      }
+    }
+  }
+}
+```
+
+### Project Selection
+
+You can specify projects for a group using project matchers that you may already be familiar with from `nx run-many` command filters:
+
+- **Explicit project names**: `"projects": ["project-a", "project-b"]`
+- **Glob patterns**: `"projects": ["packages/shared-*"]`
+- **Tag references**: `"projects": ["tag:npm-public"]`
+- **Negation**: `"projects": ["!ignore-me"]`
+
+{% aside type="note" title="Project Uniqueness" %}
+Each project can only belong to one release group. If you try to assign a project to multiple groups, Nx will throw an error during configuration validation.
+{% /aside %}
+
+## Projects Relationship
+
+The `projectsRelationship` property determines how projects within a group are released:
+
+### Fixed
+
+When `projectsRelationship` is set to `"fixed"` (the default):
+
+- All projects in the group share the same version number
+- When one project requires a version bump, all projects in the group are versioned together
+- Dependencies between projects in the group are always automatically updated
+- Each project will receive a changelog entry, with a specific (configurable) message for those projects that were only bumped to align with the group version
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "groups": {
+      "shared-libraries": {
+        "projects": ["ui-components", "utils", "data-access"],
+        // this is also the default and can be omitted
+        "projectsRelationship": "fixed"
+        // ... other group configuration options ...
+      }
+    }
+  }
+}
+```
+
+### Independent
+
+When `projectsRelationship` is set to `"independent"`:
+
+- Each project in the group maintains its own version
+- Projects are versioned only when they have changes (apart from the influence of ["updateDependents" configuration](#update-dependents), learn more below)
+- Changelog entries are generated only when there are direct or indirect ("updateDependents") changes to the project
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "groups": {
+      "microservices": {
+        "projects": ["user-service", "order-service", "inventory-service"],
+        "projectsRelationship": "independent"
+        // ... other group configuration options ...
+      }
+    }
+  }
+}
+```
+
+## Group-Specific Configuration
+
+Each release group can override the root `"release"` configuration with its own settings:
+
+### Version Configuration
+
+Customize versioning behavior per group:
+
+```jsonc
+{
+  "release": {
+    "version": {
+      "conventionalCommits": false,
+      "versionPrefix": "~",
+      "updateDependents": "always"
+    },
+    "groups": {
+      "npm-packages": {
+        "projects": ["package-*"],
+        "version": {
+          // These properties override the root version
+          //configuration for this specific group
+          "conventionalCommits": true,
+          "versionPrefix": "^",
+          "updateDependents": "auto"
+        }
+      }
+    }
+  }
+}
+```
+
+### Changelog Configuration
+
+Configure changelog generation per group:
+
+```jsonc
+{
+  "release": {
+    "changelog": {
+      "projectChangelogs": {
+        "file": false
+        // ... other changelog configuration options ...
+      }
+    },
+    "groups": {
+      "public-apis": {
+        "projects": ["api-*"],
+        // overrides at the group level
+        "changelog": {
+          "file": "{projectRoot}/CHANGELOG.md",
+          "createRelease": "github",
+          "renderer": "@my-org/custom-changelog-renderer"
+        }
+      }
+    }
+  }
+}
+```
+
+### Release Tag Patterns
+
+Customize how relevant git tags should be discovered and created for each group independently:
+
+```jsonc
+{
+  "release": {
+    "groups": {
+      "backend": {
+        "projects": ["backend-*"],
+        "releaseTag": {
+          "pattern": "backend-{version}",
+          "requireSemver": true
+        }
+      },
+      "frontend": {
+        "projects": ["frontend-*"],
+        "releaseTag": {
+          "pattern": "frontend-{version}"
+        }
+      }
+    }
+  }
+}
+```
+
+## Update Dependents
+
+For independently versioned projects, regardless of whether they are in the same release group or not, we will have to consider what happens when those projects depend on one another.
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "groups": {
+      "group1": {
+        // project-a depends on project-b, even though it
+        // happens to be in a different release group here
+        "projects": ["project-a"]
+      },
+      "group2": {
+        // project-a depends on project-b, even though it
+        // happens to be in a different release group here
+        "projects": ["project-b"]
+      }
+    }
+  }
+}
+```
+
+Nx can handle this cascade of updates automatically, across any number of release group boundaries, and this behavior is configurable via the `version.updateDependents` option.
+
+See the [Update Dependents](/docs/guides/nx-release/update-dependents) guide for more details.
+
+## More Examples
+
+### Mixed Relationship Groups
+
+You can have different relationship types for different groups in the same workspace:
+
+```jsonc
+{
+  "release": {
+    "groups": {
+      "platform": {
+        "projects": ["core", "common", "shared"],
+        "projectsRelationship": "fixed"
+      },
+      "applications": {
+        "projects": ["app-*"],
+        "projectsRelationship": "independent"
+      }
+    }
+  }
+}
+```
+
+### Group-Specific Pre-Version Commands
+
+Run different build or preparation commands for each group:
+
+```jsonc
+{
+  "release": {
+    "groups": {
+      "compiled-packages": {
+        "projects": ["lib-*"],
+        "version": {
+          "groupPreVersionCommand": "nx run-many -t build --projects=..."
+        }
+      },
+      "documentation": {
+        "projects": ["docs-*"],
+        "version": {
+          "groupPreVersionCommand": "nx run-many -t generate-docs --projects=..."
+        }
+      }
+    }
+  }
+}
+```
+
+### Version Plans with Groups
+
+When using [version plans](/docs/guides/nx-release/file-based-versioning-version-plans), you can target specific groups:
+
+```jsonc
+{
+  "release": {
+    "groups": {
+      "backend": {
+        "projects": ["api-*"],
+        "versionPlans": true
+      },
+      "frontend": {
+        "projects": ["ui-*"]
+        // version plans is not enabled here and
+        // it's not set at the root level either
+      }
+    }
+  }
+}
+```
+
+## Processing Order
+
+Nx Release processes groups in topological order based on their dependencies:
+
+1. Groups with no dependencies are processed first
+2. Groups that depend on already-processed groups are processed next
+3. Within each group, projects are also processed in topological order
+
+This ensures that:
+
+- Dependencies are always versioned before their dependents
+- Version updates cascade correctly through the `ReleaseGraph` that is constructed behind the scenes
+
+NOTE: Circular dependencies are not recommended, but can be tolerated by nx release, as it can sometimes be unavoidable.
+
+## Using Filters with Groups
+
+You can filter which groups or projects to release:
+
+```bash
+# Release only a specific group
+nx release --groups=backend
+
+# Release specific independent projects across any groups
+nx release --projects=api,web-app
+
+# Combine with dry-run to preview
+nx release --groups=frontend --dry-run
+```
+
+{% aside type="caution" title="Fixed Groups and Filters" %}
+When filtering projects in a fixed release group, you must include all projects in that group. You cannot release a subset of projects from a fixed group as they must be versioned together.
+{% /aside %}
+
+## Next Steps
+
+- Learn about [conventional commits](/docs/guides/nx-release/automatically-version-with-conventional-commits) for automatic versioning
+- Explore [version plans](/docs/guides/nx-release/file-based-versioning-version-plans) for file based versioning
+- Configure [custom registries](/docs/guides/nx-release/configure-custom-registries) for publishing
+- Set up [CI/CD integration](/docs/guides/nx-release/publish-in-ci-cd) for automated releases

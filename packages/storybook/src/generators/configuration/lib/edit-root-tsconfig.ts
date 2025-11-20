@@ -1,5 +1,6 @@
 import { readJson, updateJson, type Tree } from '@nx/devkit';
 import { getRootTsConfigFileName } from '@nx/js';
+import { storybookMajorVersion } from '../../../utils/utilities';
 
 /**
  * This is a temporary fix for Storybook to support TypeScript configuration files.
@@ -9,6 +10,11 @@ import { getRootTsConfigFileName } from '@nx/js';
  */
 export function editRootTsConfig(tree: Tree) {
   if (!tree.exists('tsconfig.json')) {
+    return;
+  }
+
+  if (storybookMajorVersion(tree) >= 10) {
+    // This is not needed from storybook 10+
     return;
   }
 

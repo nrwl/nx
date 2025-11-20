@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="problems" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 200">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        opacity: .45;
+      }
+
+      .cls-3 {
+        stroke: url(#linear-gradient-2);
+      }
+
+      .cls-3, .cls-4, .cls-5, .cls-6, .cls-7, .cls-8 {
+        stroke-width: 2px;
+      }
+
+      .cls-3, .cls-4, .cls-5, .cls-6, .cls-7, .cls-8, .cls-9 {
+        fill: none;
+        stroke-miterlimit: 10;
+      }
+
+      .cls-4 {
+        stroke: url(#linear-gradient-4);
+      }
+
+      .cls-5 {
+        stroke: url(#linear-gradient-3);
+      }
+
+      .cls-6 {
+        stroke: url(#linear-gradient-6);
+      }
+
+      .cls-7 {
+        stroke: url(#linear-gradient-5);
+      }
+
+      .cls-8 {
+        stroke: url(#linear-gradient);
+      }
+
+      .cls-9 {
+        stroke: #000;
+        stroke-width: 3px;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="181.66" y1="186.59" x2="143.73" y2="120.9" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/>
+      <stop offset=".14" stop-color="#000" stop-opacity=".39"/>
+      <stop offset="1" stop-color="#000"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" x1="193.06" y1="180.02" x2="124.35" y2="61" xlink:href="#linear-gradient"/>
+    <linearGradient id="linear-gradient-3" x1="188.47" y1="182.54" x2="137.54" y2="94.34" xlink:href="#linear-gradient"/>
+    <linearGradient id="linear-gradient-4" x1="45.83" y1="132.34" x2="140.68" y2="132.34" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-5" x1="25.83" y1="102.34" x2="120.68" y2="102.34" xlink:href="#linear-gradient-4"/>
+    <linearGradient id="linear-gradient-6" x1="5.83" y1="72.34" x2="100.68" y2="72.34" xlink:href="#linear-gradient-4"/>
+    <image id="image" width="61" height="60" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD0AAAA8CAYAAADVPrJMAAAACXBIWXMAAAsSAAALEgHS3X78AAAE6klEQVRoge2a23LbMAxEYeee/P+vtnXs2H2odrLeLEBQdh7aGjMcSZFI63DBC6BE3OxmN/uXbPOXtH+6UjsR8T3Qrs01v5OBXtwB14LWdkbXHXNwp8H9ll0KvRmcZ/dHlsGdBvdbdj9bYbEKcJP8Tes5y6AqV9/QecvWQI8gtbhn1DLIU3Lt6m+SeynA7LMV6Nb8zXWCvjSOa4q2UVpX6UxdB7ul4jqC24FlMMfiqPXbSs+4twN2oHdyvY0cPFP4mJRNfAIrPNoawnegnVtnoHdUqg7IoBXygwquUf+4tOdUL20EXY1bhbxb2uOjdoKqnQEz7IGOm+UcdqS2GLZUu6t0BXxvyoNcq+IKncEelrr7+NpZbMf42mZqFbTbVWXAD1Qe5dqBO2iG3dMxA+Y5APdbanfc2ymtwI9Sngw8uzkDsMoM+i7Pu47CUZdEPGMtg64mL1YZwE9JQSdAcdTlcQhoBWbv4Od1/G8rwBlohsW5ztYK/WwK4FVthf4Q4F0CrGMfszcLM3Tx2Yksc21AvyzlVcChuINmt86A3SR3Z8Bb5qCda6vKmdIvEfG2QKMDngkaLqswBwJ+oGfcJFctgU7tFjRXdipvDTBDvy7ljaAB7qBZ5QwYz1QrwUVKVx3glH4I794orLaDAtBO7qnbZ8BuOXMblhQ6m7WrNZqXKajq1K6g38MDQ/1qk6NlaDNRVgbO6zSD66SWQe8N8D7O13le7kYqr4J2E0OmuG493TjHMYN2wKputY11739xlOXg3ZqdbUd5p6bQCB4wYel+vevOU2p39t4d1V3ElXkCoLG2Aj6DdNvQi2xtjqwqLsbOYupT0U7EOWiVJ5vKjm5HDzQte9kZ98vSREe6rpKGbVujtPthfTmX6tGICOOYj3petaPAnazpENplGUdqfCQF20eMYUAfGoXTRU71abW7SmeJO5fp0BBRZ2yMad2CatlT0Q5AJ1Qp4SlozSqOgBmSAVzwgKiI3fs9In5R2VF9hQa4c3lnqzInXDkD1rAQsBxcAPg+PifPU5xHVz8NPDoAyjt3n3ZxhcZ4Y9BMZXXNXfzZgPyM87iZ99IOek+gP5b63AEAd26+anx3lO64tbqzCyoQWgKa3Rsu/oMKwBl6b4CzmXwa2s3YGTTnszjjoVEUXN4pDWiozNBObefeCju1ZFUuzq6NfDRnLRmYAwge56q0jmsF53E9cu+Wdd0bmwp8VjlEHggACGHje5xnTVhphuZZ3I1rnslH6/ZqaF26+AMaXtYBAwYqq2s7aFZ7F34JGynt3n0KWl0cR/6I5gIEHQIAnkn/MrwuWW4im96Zjdzb7W0duLuvKmd5bPYK1OEOwHm1Jc3eeRqa1eaXjPgc33yPJ69DnGc/2LUVmj1Dd3e6G+PxvHr/3Z3I9Np9E1blsBnRpSzzDN2/M2Qn8HDvaq3j3ppzyoAdACcSkGDQulmE5gIMB8xttayrtE5qR7rONjAuYxLhh4wW/e+DKpZuw8JmkgiqOn8/wkvgu9I2PiOqKl3rOqyTOFDgKfCZZFs3UeiOCsydp+Du6Cas1UrPZhj1xasOyNZyNQdVga4axxnEmnqV+mHOnTmgkaqrYGGX5JJV9c4xsxHcxeqyXSOB7uBd2yOl3fVVYUcvco221rY9va2ctWtCX7Pdq4OyfRf07O98K+TNbvYf2W/piJVxWj7nTAAAAABJRU5ErkJggg=="/>
+  </defs>
+  <path class="cls-8" d="M125.57,132.39h23.06c9.08,0,16.44,7.36,16.44,16.44v10.6c0,8.66,7.02,15.68,15.68,15.68h19.08"/>
+  <path class="cls-3" d="M199.84,175.11h-19.08c-8.66,0-15.68-7.02-15.68-15.68v-70.6c0-8.36-6.77-15.13-15.13-15.13h-45.86"/>
+  <path class="cls-5" d="M125.55,102.26h23.06c9.08,0,16.44,7.36,16.44,16.44v40.61c0,8.66,7.02,15.68,15.68,15.68h19.08"/>
+  <g>
+    <g>
+      <line class="cls-4" x1="45.83" y1="132.34" x2="140.68" y2="132.34"/>
+      <g>
+        <use class="cls-2" transform="translate(113.39 107.43)" xlink:href="#image"/>
+        <g>
+          <circle class="cls-1" cx="138.74" cy="133.7" r="11.06"/>
+          <polyline class="cls-9" points="132.31 130.59 137.74 137.58 150.54 122.45"/>
+        </g>
+      </g>
+    </g>
+    <g>
+      <line class="cls-7" x1="25.83" y1="102.34" x2="120.68" y2="102.34"/>
+      <g>
+        <use class="cls-2" transform="translate(93.39 77.43)" xlink:href="#image"/>
+        <g>
+          <circle class="cls-1" cx="118.74" cy="103.7" r="11.06"/>
+          <polyline class="cls-9" points="112.31 100.59 117.74 107.58 130.54 92.45"/>
+        </g>
+      </g>
+    </g>
+    <g>
+      <line class="cls-6" x1="5.83" y1="72.34" x2="100.68" y2="72.34"/>
+      <g>
+        <use class="cls-2" transform="translate(73.39 47.43)" xlink:href="#image"/>
+        <g>
+          <circle class="cls-1" cx="98.74" cy="73.7" r="11.06"/>
+          <polyline class="cls-9" points="92.31 70.59 97.74 77.58 110.54 62.45"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
