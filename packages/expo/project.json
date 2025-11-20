@@ -4,6 +4,9 @@
   "sourceRoot": "./src",
   "projectType": "library",
   "targets": {
+    "build-base": {
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/*.d.ts"]
+    },
     "build": {
       "inputs": [
         "production",

@@ -4,6 +4,9 @@
   "sourceRoot": "packages/js/src",
   "projectType": "library",
   "targets": {
+    "build-base": {
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/*.d.ts"]
+    },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "outputs": ["{projectRoot}/dist"],

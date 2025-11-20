@@ -4,6 +4,9 @@
   "sourceRoot": "packages/jest",
   "projectType": "library",
   "targets": {
+    "build-base": {
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/*.d.ts"]
+    },
     "build": {
       "dependsOn": ["^build"],
       "inputs": [

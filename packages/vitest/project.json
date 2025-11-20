@@ -4,6 +4,9 @@
   "sourceRoot": "packages/vitest",
   "projectType": "library",
   "targets": {
+    "build-base": {
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/*.d.ts"]
+    },
     "build": {
       "command": "node ./scripts/copy-readme.js vitest packages/vitest/readme-template.md packages/vitest/README.md",
       "outputs": [
