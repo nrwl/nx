@@ -703,6 +703,34 @@ The `docker` property configures Docker image versioning and publishing when usi
 
 Read more about it in the [Release Docker Images guide](/docs/guides/nx-release/release-docker-images).
 
+#### Docker Plugin Options
+
+When configuring the `@nx/docker` plugin in `nx.json`, you can customize the behavior of Docker build and run targets. One important option is `skipDefaultTag`:
+
+```jsonc
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/docker/plugin",
+      "options": {
+        "buildTarget": {
+          "name": "docker:build",
+          // Skip the default --tag argument
+          "skipDefaultTag": true,
+          // You must provide your own tags via args
+          "args": ["--tag myorg/myapp:latest", "--tag myorg/myapp:1.0.0"]
+        }
+      }
+    }
+  ]
+}
+```
+
+**Important:** Setting `skipDefaultTag: true` opts out of Nx Release support for that project. When you explicitly manage your own Docker tags via the `args` property, the automatic versioning and publishing features of `nx release` will not work for those Docker projects. Only use `skipDefaultTag: true` if you are not using `nx release` to manage your Docker image versions.
+
+If you want to use `nx release` with Docker projects, leave `skipDefaultTag` as `false` (the default) or omit it entirely.
+
 #### Version Scheme Syntax
 
 Docker version schemes support calendar-based patterns using the following placeholders:

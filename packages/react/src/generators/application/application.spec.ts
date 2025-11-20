@@ -96,7 +96,7 @@ describe('app', () => {
         '@nx/react/typings/cssmodule.d.ts',
         '@nx/react/typings/image.d.ts',
       ]);
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should setup cypress correctly for vite', async () => {
@@ -250,7 +250,7 @@ describe('app', () => {
         '@nx/react/typings/cssmodule.d.ts',
         '@nx/react/typings/image.d.ts',
       ]);
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should not overwrite default project if already set', async () => {
@@ -600,7 +600,7 @@ describe('app', () => {
       bundler: 'vite',
     });
 
-    expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     expect(appTree.read('my-app/index.html', 'utf-8')).toContain('main.tsx');
   });
 
@@ -623,7 +623,7 @@ describe('app', () => {
       bundler: 'vite',
     });
 
-    expect(appTree.exists('my-app/vite.config.ts')).toBeTruthy();
+    expect(appTree.exists('my-app/vite.config.mts')).toBeTruthy();
   });
 
   it('should setup the eslint builder', async () => {
@@ -814,7 +814,7 @@ describe('app', () => {
         bundler: 'vite',
       });
 
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -893,7 +893,7 @@ describe('app', () => {
         bundler: 'vite',
       });
 
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should add dependencies to package.json', async () => {
@@ -1080,7 +1080,7 @@ describe('app', () => {
         unitTestRunner: 'vitest',
       });
 
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8'))
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
@@ -1089,7 +1089,7 @@ describe('app', () => {
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/my-app',
           server: {
             port: 4200,
@@ -1258,7 +1258,7 @@ describe('app', () => {
     });
 
     it('should setup targets with vite configuration', () => {
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should add dependencies in package.json', () => {
@@ -1277,7 +1277,7 @@ describe('app', () => {
 
     it('should create index.html and vite.config file at the root of the app', () => {
       expect(viteAppTree.exists('/my-app/index.html')).toBe(true);
-      expect(viteAppTree.exists('/my-app/vite.config.ts')).toBe(true);
+      expect(viteAppTree.exists('/my-app/vite.config.mts')).toBe(true);
     });
 
     it('should not include a spec file when the bundler or unitTestRunner is vite and insourceTests is false', async () => {
@@ -1882,7 +1882,7 @@ describe('app', () => {
         port: 9000,
       });
 
-      const viteConfig = appTree.read('my-app/vite.config.ts', 'utf-8');
+      const viteConfig = appTree.read('my-app/vite.config.mts', 'utf-8');
       expect(viteConfig).toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
@@ -1891,7 +1891,7 @@ describe('app', () => {
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/my-app',
           server:{
             port: 9000,
@@ -2024,7 +2024,7 @@ describe('app', () => {
         bundler: 'vite',
       });
 
-      const viteConfig = appTree.read('my-app/vite.config.ts', 'utf-8');
+      const viteConfig = appTree.read('my-app/vite.config.mts', 'utf-8');
       expect(viteConfig).toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
@@ -2033,7 +2033,7 @@ describe('app', () => {
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/my-app',
           server:{
             port: 4200,

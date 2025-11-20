@@ -82,6 +82,7 @@ pub enum GroupType {
     MainCLI,
     MainCliSubprocesses,
     Daemon,
+    DaemonSubprocesses,
     Task,
     Batch,
 }

@@ -68,6 +68,49 @@ describe('Docker E2Es', () => {
       );
       expect(releaseResult.includes('Successfully ran target')).toBeTruthy();
     });
+
+    it(
+      'should skip default tag when skipDefaultTag is true',
+      () => {
+        const myapp = uniq('myapp');
+        createDockerApp(myapp);
+
+        // Configure plugin with skipDefaultTag
+        updateJson('nx.json', (nxJson) => {
+          nxJson.plugins = nxJson.plugins || [];
+          const dockerPlugin = nxJson.plugins.find(
+            (p) => p.plugin === '@nx/docker'
+          );
+          if (dockerPlugin) {
+            dockerPlugin.options = {
+              buildTarget: {
+                name: 'docker:build',
+                skipDefaultTag: true,
+                args: ['--tag', `${myapp}:custom`],
+              },
+              runTarget: 'docker:run',
+            };
+          }
+          return nxJson;
+        });
+
+        // Ensure project graph up to date
+        runCLI(`reset`);
+
+        // Build with custom tag only
+        const result = runCLI(`run ${myapp}:docker:build`);
+        expect(result.includes('Successfully ran target')).toBeTruthy();
+
+        // Verify the custom tag was created
+        const imagesOutput = runCommand(`docker images ${myapp}:custom`);
+        expect(imagesOutput).toContain(`${myapp}`);
+        expect(imagesOutput).toContain('custom');
+
+        // Cleanup
+        runCommand(`docker rmi ${myapp}:custom || true`);
+      },
+      TEN_MINS_MS
+    );
   } else {
     it('docker is not available', () => expect(true).toBe(true));
   }

@@ -40,4 +40,48 @@ describe('moveProject', () => {
     expect(destinationChildren.length).toBeGreaterThan(0);
     expect(tree.exists('my-lib')).toBeFalsy();
   });
+
+  it('should move vite.config.mts for root projects', () => {
+    const rootProjectConfig: ProjectConfiguration = {
+      root: '.',
+      sourceRoot: 'src',
+      name: 'root-project',
+    };
+    const schema: NormalizedSchema = {
+      projectName: 'root-project',
+      destination: 'apps/my-app',
+      importPath: '@proj/my-app',
+      updateImportPath: true,
+      newProjectName: 'my-app',
+      relativeToRootDestination: 'apps/my-app',
+    };
+    tree.write('vite.config.mts', 'export default {}');
+
+    moveProjectFiles(tree, schema, rootProjectConfig);
+
+    expect(tree.exists('apps/my-app/vite.config.mts')).toBeTruthy();
+    expect(tree.exists('vite.config.mts')).toBeFalsy();
+  });
+
+  it('should move vite.config.mjs for root projects', () => {
+    const rootProjectConfig: ProjectConfiguration = {
+      root: '.',
+      sourceRoot: 'src',
+      name: 'root-project',
+    };
+    const schema: NormalizedSchema = {
+      projectName: 'root-project',
+      destination: 'apps/my-app',
+      importPath: '@proj/my-app',
+      updateImportPath: true,
+      newProjectName: 'my-app',
+      relativeToRootDestination: 'apps/my-app',
+    };
+    tree.write('vite.config.mjs', 'export default {}');
+
+    moveProjectFiles(tree, schema, rootProjectConfig);
+
+    expect(tree.exists('apps/my-app/vite.config.mjs')).toBeTruthy();
+    expect(tree.exists('vite.config.mjs')).toBeFalsy();
+  });
 });

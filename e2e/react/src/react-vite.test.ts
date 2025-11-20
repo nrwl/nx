@@ -72,7 +72,7 @@ describe('Build React applications and libraries with Vite', () => {
       `generate @nx/react:app apps/${viteApp} --bundler=vite --port=${customPort} --unitTestRunner=vitest --no-interactive --linter=eslint --e2eTestRunner=playwright`
     );
 
-    const viteConfig = readFile(`apps/${viteApp}/vite.config.ts`);
+    const viteConfig = readFile(`apps/${viteApp}/vite.config.mts`);
     expect(viteConfig).toContain(`port: ${customPort}`);
 
     if (runE2ETests()) {

@@ -115,7 +115,7 @@ describe('Vite Plugin', () => {
           return json;
         });
         updateFile(
-          `${myApp}/vite.config.ts`,
+          `${myApp}/vite.config.mts`,
           `/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -426,7 +426,7 @@ export default App;
         runCLI(
           `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
         );
-        expect(exists(tmpProjPath(`libs/${lib}/vite.config.ts`))).toBeTruthy();
+        expect(exists(tmpProjPath(`libs/${lib}/vite.config.mts`))).toBeTruthy();
 
         const result = await runCLIAsync(`test ${lib}`);
         expect(result.combinedOutput).toContain(
@@ -445,7 +445,7 @@ export default App;
         runCLI(
           `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
         );
-        updateFile(`libs/${lib}/vite.config.ts`, () => {
+        updateFile(`libs/${lib}/vite.config.mts`, () => {
           return `/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
@@ -492,12 +492,12 @@ export default App;
       }, 100_000);
 
       it('should not delete the project directory when coverage is enabled', async () => {
-        // when coverage is enabled in the vite.config.ts but reportsDirectory is removed
+        // when coverage is enabled in the vite.config.mts but reportsDirectory is removed
         // from the @nx/vite:test executor options, vite will delete the project root directory
         runCLI(
           `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
         );
-        updateFile(`libs/${lib}/vite.config.ts`, () => {
+        updateFile(`libs/${lib}/vite.config.mts`, () => {
           return `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -582,7 +582,7 @@ export default defineConfig({
       });
     });
 
-    it('should support ESM-only plugins in vite.config.ts for root apps (#NXP-168)', () => {
+    it('should support ESM-only plugins in vite.config.mts for root apps (#NXP-168)', () => {
       // ESM-only plugin to test with
       updateFile(
         'foo/package.json',
@@ -616,12 +616,12 @@ export default defineConfig({
         `generate @nx/react:app ${rootApp} --rootProject --bundler=vite --unitTestRunner=none --e2eTestRunner=none --style=css --no-interactive`
       );
       updateJson(`package.json`, (json) => {
-        // This allows us to use ESM-only packages in vite.config.ts.
+        // This allows us to use ESM-only packages in vite.config.mts.
         json.type = 'module';
         return json;
       });
       updateFile(
-        `vite.config.ts`,
+        `vite.config.mts`,
         `
         import fooPlugin from '@acme/foo';
         import { defineConfig } from 'vite';

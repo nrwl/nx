@@ -147,9 +147,9 @@ describe('generator utils', () => {
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/myproj',
-          plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'), pathsToAliases: false })],
+          plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'), pathsToAliases: false })],
           // Uncomment this if you are using workers.
           // worker: {
           //  plugins: [ nxViteTsPaths() ],
@@ -222,7 +222,7 @@ describe('generator utils', () => {
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/myproj',
           server:{
             port: 4200,
@@ -291,9 +291,9 @@ describe('generator utils', () => {
         import * as path from 'path';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../../node_modules/.vite/apps/myproj',
-          plugins: [dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
+          plugins: [dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json') })],
           // Uncomment this if you are using workers.
           // worker: {
           //  plugins: [],

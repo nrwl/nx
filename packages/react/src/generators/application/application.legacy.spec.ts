@@ -140,7 +140,7 @@ describe('react app generator (legacy)', () => {
       skipFormat: true,
     });
     expect(
-      appTree.read('my-vite-app/vite.config.ts', 'utf-8')
+      appTree.read('my-vite-app/vite.config.mts', 'utf-8')
     ).toMatchSnapshot();
   });
 

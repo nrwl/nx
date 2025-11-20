@@ -225,7 +225,7 @@ export class TaskOrchestrator {
   // region Processing Scheduled Tasks
   private async processTask(taskId: string): Promise<NodeJS.ProcessEnv> {
     const task = this.taskGraph.tasks[taskId];
-    const taskSpecificEnv = getTaskSpecificEnv(task);
+    const taskSpecificEnv = getTaskSpecificEnv(task, this.projectGraph);
 
     if (!task.hash) {
       await hashTask(

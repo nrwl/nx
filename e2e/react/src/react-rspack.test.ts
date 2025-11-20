@@ -54,7 +54,7 @@ describe('Build React applications and libraries with Rspack', () => {
     );
 
     // Library generated with Vite
-    checkFilesExist(`${libName}/vite.config.ts`);
+    checkFilesExist(`${libName}/vite.config.mts`);
 
     const mainPath = `${appName}/src/main.tsx`;
     updateFile(
