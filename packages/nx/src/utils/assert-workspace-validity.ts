@@ -37,36 +37,33 @@ export function assertWorkspaceValidity(
 
   const projectsWithNonArrayImplicitDependencies = new Map<string, unknown>();
 
-  projectNames
-    .filter((projectName) => {
-      const project = projects[projectName];
+  projectNames.reduce((map, projectName) => {
+    const project = projects[projectName];
 
-      // Report if for whatever reason, a project is configured to use implicitDependencies but it is not an array
-      if (
-        !!project.implicitDependencies &&
-        !Array.isArray(project.implicitDependencies)
-      ) {
-        projectsWithNonArrayImplicitDependencies.set(
-          projectName,
-          project.implicitDependencies
-        );
-      }
-      return (
-        !!project.implicitDependencies &&
-        Array.isArray(project.implicitDependencies)
-      );
-    })
-    .reduce((map, projectName) => {
-      const project = projects[projectName];
-      detectAndSetInvalidProjectGlobValues(
-        map,
+    if (
+      !!project.implicitDependencies &&
+      !Array.isArray(project.implicitDependencies)
+    ) {
+      projectsWithNonArrayImplicitDependencies.set(
         projectName,
-        project.implicitDependencies,
-        projects,
-        projectGraphNodes
+        project.implicitDependencies
       );
       return map;
-    }, invalidImplicitDependencies);
+    }
+
+    if (!project.implicitDependencies) {
+      return map;
+    }
+
+    detectAndSetInvalidProjectGlobValues(
+      map,
+      projectName,
+      project.implicitDependencies,
+      projects,
+      projectGraphNodes
+    );
+    return map;
+  }, invalidImplicitDependencies);
 
   if (
     projectsWithNonArrayImplicitDependencies.size === 0 &&
