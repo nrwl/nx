@@ -7,6 +7,7 @@ import {
 } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
+import { major } from 'semver';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
 import { readJson, updateJson, writeJson } from '../../generators/utils/json';
@@ -20,13 +21,16 @@ import {
   CLIErrorMessageConfig,
   CLINoteMessageConfig,
 } from '../../utils/output';
-import { installPackageToTmp } from '../../utils/package-json';
+import {
+  installPackageToTmp,
+  readModulePackageJson,
+} from '../../utils/package-json';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { agentsMdPath, codexConfigTomlPath, geminiMdPath } from '../constants';
 import { Agent, supportedAgents } from '../utils';
 import {
   getAgentRulesWrapped,
-  nxMcpTomlConfig,
+  getNxMcpTomlConfig,
   nxMcpTomlHeader,
   nxRulesMarkerCommentDescription,
   nxRulesMarkerCommentEnd,
@@ -42,6 +46,31 @@ export type ModificationResults = {
   messages: CLINoteMessageConfig[];
   errors: CLIErrorMessageConfig[];
 };
+
+/**
+ * Get the installed Nx version, with fallback to local package.json or default version.
+ */
+function getNxVersion(): string {
+  try {
+    // Try to read from node_modules first
+    const {
+      packageJson: { version },
+    } = readModulePackageJson('nx');
+    return version;
+  } catch {
+    try {
+      // Fallback: try to read from local package.json (for development)
+      const localPackageJson = JSON.parse(
+        readFileSync(join(__dirname, '../../../package.json'), 'utf-8')
+      );
+      return localPackageJson.version;
+    } catch {
+      // If we can't determine the version, default to the newer format
+      // This handles cases where nx might not be installed or is globally installed
+      return '22.0.0';
+    }
+  }
+}
 
 export async function setupAiAgentsGenerator(
   tree: Tree,
@@ -100,6 +129,7 @@ export async function setupAiAgentsGeneratorImpl(
   options: NormalizedSetupAiAgentsGeneratorSchema
 ): Promise<() => Promise<ModificationResults>> {
   const hasAgent = (agent: Agent) => options.agents.includes(agent);
+  const nxVersion = getNxVersion();
 
   const agentsMd = agentsMdPath(options.directory);
 
@@ -116,7 +146,7 @@ export async function setupAiAgentsGeneratorImpl(
     if (!tree.exists(mcpJsonPath)) {
       writeJson(tree, mcpJsonPath, {});
     }
-    updateJson(tree, mcpJsonPath, mcpConfigUpdater);
+    updateJson(tree, mcpJsonPath, (json) => mcpConfigUpdater(json, nxVersion));
   }
 
   if (hasAgent('gemini')) {
@@ -128,7 +158,9 @@ export async function setupAiAgentsGeneratorImpl(
     if (!tree.exists(geminiSettingsPath)) {
       writeJson(tree, geminiSettingsPath, {});
     }
-    updateJson(tree, geminiSettingsPath, mcpConfigUpdater);
+    updateJson(tree, geminiSettingsPath, (json) =>
+      mcpConfigUpdater(json, nxVersion)
+    );
 
     const contextFileName: string | undefined = readJson(
       tree,
@@ -164,7 +196,10 @@ export async function setupAiAgentsGeneratorImpl(
         const tomlContents = readFileSync(codexConfigTomlPath, 'utf-8');
         if (!tomlContents.includes(nxMcpTomlHeader)) {
           if (!check) {
-            appendFileSync(codexConfigTomlPath, `\n${nxMcpTomlConfig}`);
+            appendFileSync(
+              codexConfigTomlPath,
+              `\n${getNxMcpTomlConfig(nxVersion)}`
+            );
           }
           messages.push({
             title: `Updated ${codexConfigTomlPath} with nx-mcp server`,
@@ -173,7 +208,7 @@ export async function setupAiAgentsGeneratorImpl(
       } else {
         if (!check) {
           mkdirSync(join(homedir(), '.codex'), { recursive: true });
-          writeFileSync(codexConfigTomlPath, nxMcpTomlConfig);
+          writeFileSync(codexConfigTomlPath, getNxMcpTomlConfig(nxVersion));
         }
         messages.push({
           title: `Created ${codexConfigTomlPath} with nx-mcp server`,
@@ -281,19 +316,22 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
   }
 }
 
-function mcpConfigUpdater(existing: any): any {
+function mcpConfigUpdater(existing: any, nxVersion: string): any {
+  const majorVersion = major(nxVersion);
+  const mcpArgs = majorVersion >= 22 ? ['nx', 'mcp'] : ['nx-mcp'];
+
   if (existing.mcpServers) {
     existing.mcpServers['nx-mcp'] = {
       type: 'stdio',
       command: 'npx',
-      args: ['nx', 'mcp'],
+      args: mcpArgs,
     };
   } else {
     existing.mcpServers = {
       'nx-mcp': {
         type: 'stdio',
         command: 'npx',
-        args: ['nx', 'mcp'],
+        args: mcpArgs,
       },
     };
   }
