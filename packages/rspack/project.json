@@ -4,6 +4,9 @@
   "sourceRoot": "packages/rspack/src",
   "projectType": "library",
   "targets": {
+    "build-base": {
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/*.d.ts"]
+    },
     "build": {
       "inputs": [
         "production",
@@ -31,6 +34,7 @@
           {
             "input": "./packages/rspack/src",
             "glob": "**/!(*.ts)",
+            "ignore": ["**/*.snap", "**/*.d.ts"],
             "output": "./src"
           },
           {

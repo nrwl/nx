@@ -2,9 +2,10 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "../scripts/tools-out",
-    "module": "commonjs",
     "types": ["node"],
-    "baseUrl": ".."
+    "baseUrl": "..",
+    "module": "nodenext",
+    "moduleResolution": "nodenext"
   },
   "include": ["**/*.ts"],
   "references": [
@@ -31,7 +32,8 @@
     "require": ["tsconfig-paths/register"],
     "transpileOnly": true,
     "compilerOptions": {
-      "module": "commonjs"
+      "module": "nodenext",
+      "moduleResolution": "nodenext"
     }
   }
 }
