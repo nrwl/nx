@@ -6,10 +6,9 @@ Update ESLint flat config to include .cjs, .mjs, .cts, and .mts files in overrid
 
 Add `.cjs`, `.mjs`, `.cts`, `.mts` file extensions to overrides converted using `convert-to-flat-config`
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```js {% fileName="eslint.config.js" %}
+```js title="eslint.config.js"
 const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
@@ -45,10 +44,9 @@ module.exports = [
 ];
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```js {% highlightLines=[17,28] fileName="eslint.config.js" %}
+```js title="eslint.config.js" {17,28}
 const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
@@ -83,6 +81,3 @@ module.exports = [
     })),
 ];
 ```
-
-{% /tab %}
-{% /tabs %}

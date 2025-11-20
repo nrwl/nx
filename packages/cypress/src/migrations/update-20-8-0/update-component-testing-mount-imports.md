@@ -6,10 +6,9 @@ Updates the relevant module specifiers when importing the `mount` function and u
 
 If using the Angular framework with a version greater than or equal to v17.2.0 and importing the `mount` function from the `cypress/angular-signals` module, the migration will update the import to use the `cypress/angular` module.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/app1/cypress/support/component.ts" %}
+```ts title="apps/app1/cypress/support/component.ts"
 import { mount } from 'cypress/angular-signals';
 import './commands';
 
@@ -24,11 +23,9 @@ declare global {
 Cypress.Commands.add('mount', mount);
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```ts {% fileName="apps/app1/cypress/support/component.ts" highlightLines=[1] %}
+```ts title="apps/app1/cypress/support/component.ts" {1}
 import { mount } from 'cypress/angular';
 import './commands';
 
@@ -43,15 +40,11 @@ declare global {
 Cypress.Commands.add('mount', mount);
 ```
 
-{% /tab %}
-{% /tabs %}
-
 If using the Angular framework with a version lower than v17.2.0 and importing the `mount` function from the `cypress/angular` module, the migration will install the `@cypress/angular@2` package and update the import to use the `@cypress/angular` module.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="package.json" %}
+```json title="package.json"
 {
   "name": "@my-repo/source",
   "dependencies": {
@@ -61,7 +54,7 @@ If using the Angular framework with a version lower than v17.2.0 and importing t
 }
 ```
 
-```ts {% fileName="apps/app1/cypress/support/component.ts" %}
+```ts title="apps/app1/cypress/support/component.ts"
 import { mount } from 'cypress/angular';
 import './commands';
 
@@ -76,11 +69,9 @@ declare global {
 Cypress.Commands.add('mount', mount);
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="package.json" highlightLines=[6] %}
+```json title="package.json" {6}
 {
   "name": "@my-repo/source",
   "dependencies": {
@@ -91,7 +82,7 @@ Cypress.Commands.add('mount', mount);
 }
 ```
 
-```ts {% fileName="apps/app1/cypress/support/component.ts" highlightLines=[1] %}
+```ts title="apps/app1/cypress/support/component.ts" {1}
 import { mount } from '@cypress/angular';
 import './commands';
 
@@ -106,15 +97,11 @@ declare global {
 Cypress.Commands.add('mount', mount);
 ```
 
-{% /tab %}
-{% /tabs %}
-
 If using the React framework and importing the `mount` function from the `cypress/react18` module, the migration will update the import to use the `cypress/react` module.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/app1/cypress/support/component.ts" %}
+```ts title="apps/app1/cypress/support/component.ts"
 import { mount } from 'cypress/react18';
 import './commands';
 
@@ -129,11 +116,9 @@ declare global {
 Cypress.Commands.add('mount', mount);
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```ts {% fileName="apps/app1/cypress/support/component.ts" highlightLines=[1] %}
+```ts title="apps/app1/cypress/support/component.ts" {1}
 import { mount } from 'cypress/react';
 import './commands';
 
@@ -147,6 +132,3 @@ declare global {
 
 Cypress.Commands.add('mount', mount);
 ```
-
-{% /tab %}
-{% /tabs %}

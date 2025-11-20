@@ -6,10 +6,9 @@ Removes `tasksRunnerOptions` entries from `nx.json` that contain custom tasks ru
 
 Removes custom task runner configuration from `nx.json`.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "targetDefaults": {},
   "tasksRunnerOptions": {
@@ -20,14 +19,10 @@ Removes custom task runner configuration from `nx.json`.
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "targetDefaults": {}
 }
 ```
-
-{% /tab %}
-{% /tabs %}
