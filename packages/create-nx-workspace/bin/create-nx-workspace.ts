@@ -238,8 +238,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
       await main(argv).catch((error) => {
         const { version } = require('../package.json');
         output.error({
-          title: `Something went wrong! v${version}`,
+          title: `Failed to create workspace!`,
+          bodyLines: mapErrorToBodyLines(error),
         });
+        process.exit(1);
         throw error;
       });
     },

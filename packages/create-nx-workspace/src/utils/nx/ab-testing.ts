@@ -51,7 +51,7 @@ const messageOptions: Record<string, MessageData[]> = {
       ],
       footer:
         '\nRead more about remote caching at https://nx.dev/ci/features/remote-cache',
-      hint: `\n(can be disabled any time)`,
+      hint: `\n(can be disabled any time).`,
       fallback: undefined,
     },
   ],
