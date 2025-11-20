@@ -519,172 +519,35 @@ export class TaskOrchestrator {
         terminalOutput,
       });
     }
+
     await this.postRunSteps([task], results, doNotSkipCache, { groupId });
+
     return results[0];
   }
 
   private async runTask(
     task: Task,
     streamOutput: boolean,
-    env: { [p: string]: string | undefined; TZ?: string },
+    env: NodeJS.ProcessEnv,
     temporaryOutputPath: string,
     pipeOutput: boolean
-  ): Promise<RunningTask> {
-    const shouldPrefix =
-      streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
-    const targetConfiguration = getTargetConfigurationForTask(
-      task,
-      this.projectGraph
-    );
-    if (
-      process.env.NX_RUN_COMMANDS_DIRECTLY !== 'false' &&
-      targetConfiguration.executor === 'nx:run-commands' &&
-      !shouldPrefix
-    ) {
-      try {
-        const { schema } = getExecutorForTask(task, this.projectGraph);
-        const combinedOptions = combineOptionsForExecutor(
-          task.overrides,
-          task.target.configuration ?? targetConfiguration.defaultConfiguration,
-          targetConfiguration,
-          schema,
-          task.target.project,
-          relative(task.projectRoot ?? workspaceRoot, process.cwd()),
-          process.env.NX_VERBOSE_LOGGING === 'true'
-        );
-        if (combinedOptions.env) {
-          env = {
-            ...env,
-            ...combinedOptions.env,
-          };
-        }
-        if (streamOutput) {
-          const args = getPrintableCommandArgsForTask(task);
-          output.logCommand(args.join(' '));
-        }
-        const runCommandsOptions = {
-          ...combinedOptions,
-          env,
-          usePty:
-            this.tuiEnabled ||
-            (!this.tasksSchedule.hasTasks() &&
-              this.runningContinuousTasks.size === 0),
-          streamOutput,
-        };
-
-        const runningTask = await runCommands(
-          runCommandsOptions,
-          {
-            root: workspaceRoot, // only root is needed in runCommands
-          } as any,
-          task.id
-        );
-
-        this.runningRunCommandsTasks.set(task.id, runningTask);
-        runningTask.onExit(() => {
-          this.runningRunCommandsTasks.delete(task.id);
-        });
-
-        if (this.tuiEnabled) {
-          if (runningTask instanceof PseudoTtyProcess) {
-            // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
-            this.options.lifeCycle.registerRunningTask(
-              task.id,
-              runningTask.getParserAndWriter()
-            );
-            runningTask.onOutput((output) => {
-              this.options.lifeCycle.appendTaskOutput(task.id, output, true);
-            });
-          } else {
-            this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
-            runningTask.onOutput((output) => {
-              this.options.lifeCycle.appendTaskOutput(task.id, output, false);
-            });
-          }
-        }
-
-        if (!streamOutput) {
-          if (runningTask instanceof PseudoTtyProcess) {
-            // TODO: shouldn't this be checking if the task is continuous before writing anything to disk or calling printTaskTerminalOutput?
-            let terminalOutput = '';
-            runningTask.onOutput((data) => {
-              terminalOutput += data;
-            });
-            runningTask.onExit((code) => {
-              this.options.lifeCycle.printTaskTerminalOutput(
-                task,
-                code === 0 ? 'success' : 'failure',
-                terminalOutput
-              );
-              writeFileSync(temporaryOutputPath, terminalOutput);
-            });
-          } else {
-            runningTask.onExit((code, terminalOutput) => {
-              this.options.lifeCycle.printTaskTerminalOutput(
-                task,
-                code === 0 ? 'success' : 'failure',
-                terminalOutput
-              );
-              writeFileSync(temporaryOutputPath, terminalOutput);
-            });
-          }
-        }
-
-        return runningTask;
-      } catch (e) {
-        if (process.env.NX_VERBOSE_LOGGING === 'true') {
-          console.error(e);
-        } else {
-          console.error(e.message);
-        }
-        const terminalOutput = e.stack ?? e.message ?? '';
-        writeFileSync(temporaryOutputPath, terminalOutput);
-        return new NoopChildProcess({
-          code: 1,
-          terminalOutput,
-        });
-      }
-    } else if (targetConfiguration.executor === 'nx:noop') {
-      writeFileSync(temporaryOutputPath, '');
-      return new NoopChildProcess({
-        code: 0,
-        terminalOutput: '',
-      });
-    } else {
-      // cache prep
-      const runningTask = await this.runTaskInForkedProcess(
+  ) {
+    const runTaskStart = performance.mark('TaskOrchestrator-run-task:start');
+    try {
+      return await this.runTaskInForkedProcess(
         task,
         env,
         pipeOutput,
         temporaryOutputPath,
         streamOutput
       );
-      if (this.tuiEnabled) {
-        if (runningTask instanceof PseudoTtyProcess) {
-          // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
-          this.options.lifeCycle.registerRunningTask(
-            task.id,
-            runningTask.getParserAndWriter()
-          );
-          runningTask.onOutput((output) => {
-            this.options.lifeCycle.appendTaskOutput(task.id, output, true);
-          });
-        } else if (
-          'onOutput' in runningTask &&
-          typeof runningTask.onOutput === 'function'
-        ) {
-          // Register task that can provide progressive output but isn't interactive (e.g., NodeChildProcessWithNonDirectOutput)
-          this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
-          runningTask.onOutput((output) => {
-            this.options.lifeCycle.appendTaskOutput(task.id, output, false);
-          });
-        } else {
-          // Fallback for tasks that don't support progressive output
-          this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
-        }
-      }
-
-      return runningTask;
+    } finally {
+      const runTaskEnd = performance.mark('TaskOrchestrator-run-task:end');
+      performance.measure(
+        'TaskOrchestrator-run-task',
+        runTaskStart.name,
+        runTaskEnd.name
+      );
     }
   }
 
@@ -748,7 +611,7 @@ export class TaskOrchestrator {
       );
 
       this.runningContinuousTasks.set(task.id, runningTask);
-      runningTask.onExit((code) => {
+      runningTask.onExit(async (code) => {
         if (this.tuiEnabled && !this.completedTasks[task.id]) {
           this.options.lifeCycle.setTaskStatus(
             task.id,
@@ -757,12 +620,11 @@ export class TaskOrchestrator {
         }
         this.runningContinuousTasks.delete(task.id);
 
-        // we're not cleaning up, so this is an unexpected exit, fail the task
         if (!this.cleaningUp) {
-          console.error(
-            `Task "${task.id}" is continuous but exited with code ${code}`
-          );
-          this.complete([{ taskId: task.id, status: 'failure' }]);
+          const status = code === 0 ? 'success' : 'failure';
+          await this.postRunSteps([task], [{ task, status }], false, {
+            groupId,
+          });
         }
       });
 
@@ -814,7 +676,7 @@ export class TaskOrchestrator {
     this.runningTasksService.addRunningTask(task.id);
     this.runningContinuousTasks.set(task.id, childProcess);
 
-    childProcess.onExit((code) => {
+    childProcess.onExit(async (code) => {
       // Only set status to Stopped if task hasn't been completed yet
       if (this.tuiEnabled && !this.completedTasks[task.id]) {
         this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Stopped);
@@ -823,12 +685,9 @@ export class TaskOrchestrator {
         this.runningTasksService.removeRunningTask(task.id);
       }
 
-      // we're not cleaning up, so this is an unexpected exit, fail the task
       if (!this.cleaningUp) {
-        console.error(
-          `Task "${task.id}" is continuous but exited with code ${code}`
-        );
-        this.complete([{ taskId: task.id, status: 'failure' }]);
+        const status = code === 0 ? 'success' : 'failure';
+        await this.postRunSteps([task], [{ task, status }], false, { groupId });
       }
     });
     await this.scheduleNextTasksAndReleaseThreads();
@@ -860,7 +719,10 @@ export class TaskOrchestrator {
     const now = Date.now();
     for (const task of tasks) {
       task.endTime = now;
-      await this.recordOutputsHash(task);
+      // Continuous tasks don't have outputs to track
+      if (!task.continuous) {
+        await this.recordOutputsHash(task);
+      }
     }
 
     if (doNotSkipCache) {
