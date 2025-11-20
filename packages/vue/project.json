@@ -4,8 +4,14 @@
   "sourceRoot": "packages/vue",
   "projectType": "library",
   "targets": {
+    "build-base": {
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,cjs,mjs}",
+        "{projectRoot}/**/*.d.ts"
+      ]
+    },
     "build": {
-      "dependsOn": ["^build", "build-base"],
+      "dependsOn": ["^build", "build-base", "legacy-post-build"],
       "inputs": [
         "production",
         "^production",
@@ -16,7 +22,18 @@
         "{projectRoot}/dist/**/*.{js,mjs,cjs}",
         "{projectRoot}/README.md"
       ],
-      "command": "node ./scripts/copy-readme.js vue packages/vue/readme-template.md packages/vue/README.md"
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js vue packages/vue/readme-template.md packages/vue/README.md"
+          },
+          {
+            "command": "node ./scripts/cleanup-json-in-dist packages/vue/dist"
+          }
+        ],
+        "parallel": false
+      }
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",

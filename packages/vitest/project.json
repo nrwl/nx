@@ -5,14 +5,35 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "outputs": ["{projectRoot}/dist", "{projectRoot}/*.d.ts"]
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,cjs,mjs}",
+        "{projectRoot}/**/*.d.ts"
+      ]
     },
     "build": {
-      "command": "node ./scripts/copy-readme.js vitest packages/vitest/readme-template.md packages/vitest/README.md",
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
       "outputs": [
         "{projectRoot}/dist/**/*.{js,mjs,cjs}",
         "{projectRoot}/README.md"
-      ]
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js vitest packages/vitest/readme-template.md packages/vitest/README.md"
+          },
+          {
+            "command": "node ./scripts/cleanup-json-in-dist packages/vitest/dist"
+          }
+        ],
+        "parallel": false
+      },
+      "dependsOn": ["^build", "build-base", "legacy-post-build"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",

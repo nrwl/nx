@@ -5,7 +5,10 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "outputs": ["{projectRoot}/dist", "{projectRoot}/*.d.ts"]
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,cjs,mjs}",
+        "{projectRoot}/**/*.d.ts"
+      ]
     },
     "build": {
       "inputs": [
@@ -18,7 +21,19 @@
         "{projectRoot}/dist/**/*.{js,mjs,cjs}",
         "{projectRoot}/README.md"
       ],
-      "command": "node ./scripts/copy-readme.js eslint-plugin packages/eslint-plugin/readme-template.md packages/eslint-plugin/README.md"
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js eslint-plugin packages/eslint-plugin/readme-template.md packages/eslint-plugin/README.md"
+          },
+          {
+            "command": "node ./scripts/cleanup-json-in-dist packages/eslint-plugin/dist"
+          }
+        ],
+        "parallel": false
+      },
+      "dependsOn": ["^build", "build-base", "legacy-post-build"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",

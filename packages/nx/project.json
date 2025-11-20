@@ -56,12 +56,11 @@
     "echo": {
       "command": "echo hi"
     },
-    "test": {
-      "options": {
-        "env": {
-          "NX_ISOLATE_PLUGINS": "false"
-        }
-      }
+    "build-base": {
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,cjs,mjs}",
+        "{projectRoot}/**/*.d.ts"
+      ]
     },
     "build": {
       "dependsOn": [
@@ -103,6 +102,9 @@
           },
           {
             "command": "node ./scripts/copy-readme.js nx packages/nx/readme-template.md packages/nx/README.md"
+          },
+          {
+            "command": "node ./scripts/cleanup-json-in-dist packages/nx/dist"
           }
         ],
         "parallel": false
@@ -139,6 +141,7 @@
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
         "main": "./bin/nx.js",
         "types": "./bin/nx.d.ts",
