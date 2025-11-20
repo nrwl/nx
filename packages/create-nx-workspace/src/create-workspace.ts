@@ -59,12 +59,26 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     const workingDir = process.cwd().replace(/\\/g, '/');
     directory = join(workingDir, name);
 
-    await cloneTemplate(templateUrl, name);
-    await cleanupLockfiles(directory, packageManager);
+    const ora = require('ora');
+    const workspaceSetupSpinner = ora(
+      `Creating workspace from template`
+    ).start();
 
-    // Install dependencies
-    const pmc = getPackageManagerCommand(packageManager);
-    await execAndWait(pmc.install, directory);
+    try {
+      await cloneTemplate(templateUrl, name);
+      await cleanupLockfiles(directory, packageManager);
+
+      // Install dependencies
+      const pmc = getPackageManagerCommand(packageManager);
+      await execAndWait(pmc.install, directory);
+
+      workspaceSetupSpinner.succeed(
+        `Successfully created the workspace: ${directory}`
+      );
+    } catch (e) {
+      workspaceSetupSpinner.fail();
+      throw e;
+    }
 
     // Connect to Nx Cloud for template flow
     if (nxCloud !== 'skip') {
