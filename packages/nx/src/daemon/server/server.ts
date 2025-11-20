@@ -12,11 +12,15 @@ import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
-import { isNxVersionMismatch } from '../is-nx-version-mismatch';
+import {
+  getInstalledNxVersion,
+  isNxVersionMismatch,
+} from '../is-nx-version-mismatch';
 import {
   getFullOsSocketPath,
   isWindows,
   killSocketOrPath,
+  serializeResult,
 } from '../socket-utils';
 import {
   hasRegisteredFileWatcherSockets,
@@ -49,6 +53,7 @@ import {
   getOutputWatcherInstance,
   getWatcherInstance,
   handleServerProcessTermination,
+  handleServerProcessTerminationWithRestart,
   resetInactivityTimeout,
   respondToClient,
   respondWithErrorAndExit,
@@ -178,6 +183,7 @@ const server = createServer(async (socket) => {
     `Established a connection. Number of open connections: ${numberOfOpenConnections}`
   );
   resetInactivityTimeout(handleInactivityTimeout);
+
   if (!performanceObserver) {
     performanceObserver = new PerformanceObserver((list) => {
       const entry = list.getEntries()[0];
@@ -222,11 +228,31 @@ async function handleMessage(socket: Socket, data: string) {
 
   const outdated = daemonIsOutdated();
   if (outdated) {
-    await respondWithErrorAndExit(
-      socket,
-      `Daemon outdated`,
-      new Error(outdated)
-    );
+    if (outdated === 'LOCK_FILES_CHANGED') {
+      // For lock file changes, restart daemon - clients will reconnect automatically
+      await handleServerProcessTerminationWithRestart({
+        server,
+        reason: outdated,
+        sockets: openSockets,
+      });
+    } else if (outdated === 'NX_VERSION_CHANGED') {
+      // For version changes, restart daemon - clients will reconnect automatically
+      serverLogger.log(
+        'Nx version changed, starting new daemon and shutting down'
+      );
+      await handleServerProcessTerminationWithRestart({
+        server,
+        reason: outdated,
+        sockets: openSockets,
+      });
+    } else {
+      // For other reasons, just exit normally
+      await respondWithErrorAndExit(
+        socket,
+        `Daemon outdated`,
+        new Error(outdated)
+      );
+    }
   }
 
   resetInactivityTimeout(handleInactivityTimeout);
@@ -254,6 +280,19 @@ async function handleMessage(socket: Socket, data: string) {
     );
   }
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
+
+  // Handle version check handshake
+  if (payload.type === 'VERSION_CHECK') {
+    await respondToClient(
+      socket,
+      JSON.stringify({
+        type: 'VERSION_CHECK_RESPONSE',
+        serverVersion: nxVersion,
+      }),
+      'VERSION_CHECK_RESPONSE'
+    );
+    return;
+  }
 
   if (payload.type === 'PING') {
     await handleResult(
@@ -545,17 +584,20 @@ function daemonIsOutdated(): string | null {
 }
 
 function lockFileHashChanged(): boolean {
-  const lockHashes = [
+  const lockFiles = [
     join(workspaceRoot, 'package-lock.json'),
     join(workspaceRoot, 'yarn.lock'),
     join(workspaceRoot, 'pnpm-lock.yaml'),
     join(workspaceRoot, 'bun.lockb'),
     join(workspaceRoot, 'bun.lock'),
-  ]
-    .filter((file) => existsSync(file))
-    .map((file) => hashFile(file));
+  ];
+
+  const existingFiles = lockFiles.filter((file) => existsSync(file));
+  const lockHashes = existingFiles.map((file) => hashFile(file));
   const newHash = hashArray(lockHashes);
+
   if (existingLockHash && newHash != existingLockHash) {
+    serverLogger.log(`lock file hash changed! triggering daemon restart`);
     existingLockHash = newHash;
     return true;
   } else {
@@ -585,11 +627,22 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
 
     const outdatedReason = daemonIsOutdated();
     if (outdatedReason) {
-      await handleServerProcessTermination({
-        server,
-        reason: outdatedReason,
-        sockets: openSockets,
-      });
+      if (
+        outdatedReason === 'LOCK_FILES_CHANGED' ||
+        outdatedReason === 'NX_VERSION_CHANGED'
+      ) {
+        await handleServerProcessTerminationWithRestart({
+          server,
+          reason: outdatedReason,
+          sockets: openSockets,
+        });
+      } else {
+        await handleServerProcessTermination({
+          server,
+          reason: outdatedReason,
+          sockets: openSockets,
+        });
+      }
       return;
     }
 
@@ -673,6 +726,14 @@ export async function startServer(): Promise<Server> {
 
   const socketPath = getFullOsSocketPath();
 
+  // Log daemon startup information for debugging
+  serverLogger.log(`New daemon starting from: ${__filename}`);
+  serverLogger.log(`New daemon __dirname: ${__dirname}`);
+  serverLogger.log(`New daemon nxVersion: ${nxVersion}`);
+  serverLogger.log(
+    `New daemon getInstalledNxVersion(): ${getInstalledNxVersion()}`
+  );
+
   // Persist metadata about the background process so that it can be cleaned up later if needed
   await writeDaemonJsonProcessCache({
     processId: process.pid,
@@ -692,6 +753,26 @@ export async function startServer(): Promise<Server> {
         reason: 'this process is no longer the current daemon (native)',
         sockets: openSockets,
       });
+    }
+
+    const outdated = daemonIsOutdated();
+    if (outdated) {
+      if (
+        outdated === 'LOCK_FILES_CHANGED' ||
+        outdated === 'NX_VERSION_CHANGED'
+      ) {
+        handleServerProcessTerminationWithRestart({
+          server,
+          reason: outdated,
+          sockets: openSockets,
+        });
+      } else {
+        handleServerProcessTermination({
+          server,
+          reason: outdated,
+          sockets: openSockets,
+        });
+      }
     }
   }, 20).unref();
 

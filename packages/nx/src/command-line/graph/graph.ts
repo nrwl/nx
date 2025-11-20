@@ -841,8 +841,16 @@ function createFileWatcher() {
       allowPartialGraph: true,
     },
     debounce(async (error, changes) => {
-      if (error === 'closed') {
-        output.error({ title: `Watch error: Daemon closed the connection` });
+      if (error === 'reconnecting') {
+        // Silent - daemon restarts automatically on lockfile changes
+        return;
+      } else if (error === 'reconnected') {
+        // Silent - reconnection succeeded
+        return;
+      } else if (error === 'closed') {
+        output.error({
+          title: `Failed to reconnect to daemon after multiple attempts`,
+        });
         process.exit(1);
       } else if (error) {
         output.error({ title: `Watch error: ${error?.message ?? 'Unknown'}` });

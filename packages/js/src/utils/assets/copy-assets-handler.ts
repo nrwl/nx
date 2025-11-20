@@ -186,8 +186,14 @@ export class CopyAssetsHandler {
         includeGlobalWorkspaceFiles: true,
       },
       (err, data) => {
-        if (err === 'closed') {
-          logger.error(`Watch error: Daemon closed the connection`);
+        if (err === 'reconnecting') {
+          // Silent - daemon restarts automatically on lockfile changes
+          return;
+        } else if (err === 'reconnected') {
+          // Silent - reconnection succeeded
+          return;
+        } else if (err === 'closed') {
+          logger.error(`Failed to reconnect to daemon after multiple attempts`);
           process.exit(1);
         } else if (err) {
           logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);

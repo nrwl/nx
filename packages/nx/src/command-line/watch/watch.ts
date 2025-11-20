@@ -210,13 +210,16 @@ export async function watch(args: WatchArguments) {
       includeGlobalWorkspaceFiles: args.includeGlobalWorkspaceFiles,
     },
     async (err, data) => {
-      if (err === 'closed') {
+      if (err === 'reconnecting') {
+        // Silent - daemon restarts automatically on lockfile changes
+        return;
+      } else if (err === 'reconnected') {
+        // Silent - reconnection succeeded
+        return;
+      } else if (err === 'closed') {
         output.error({
-          title: 'Watch connection closed',
-          bodyLines: [
-            'The daemon has closed the connection to this watch process.',
-            'Please restart your watch command.',
-          ],
+          title: 'Failed to reconnect to daemon after multiple attempts',
+          bodyLines: ['Please restart your watch command.'],
         });
         process.exit(1);
       } else if (err !== null) {
@@ -238,4 +241,9 @@ export async function watch(args: WatchArguments) {
     }
   );
   args.verbose && output.logSingleLine('watch process waiting...');
+
+  // Keep the process alive while watching for file changes
+  // The file watcher callbacks will handle incoming events
+  // The process will exit when Ctrl+C is pressed or if the connection closes
+  await new Promise(() => {});
 }
