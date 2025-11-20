@@ -17,8 +17,10 @@ export function getCallSites() {
     return stackTraces;
   };
 
-  const trace = Error.captureStackTrace({}) as any as NodeJS.CallSite[];
+  const errorObject = {};
+  Error.captureStackTrace(errorObject);
+  const trace = (errorObject as any).stack as NodeJS.CallSite[];
   Error.prepareStackTrace = prepareStackTraceBackup;
-  trace.pop(); // remove getCallSites
+  trace.shift(); // remove getCallSites
   return trace; // return stack up to what called getCallSites
 }
