@@ -26,6 +26,7 @@ import {
   readModulePackageJson,
 } from '../../utils/package-json';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { agentsMdPath, codexConfigTomlPath, geminiMdPath } from '../constants';
 import { Agent, supportedAgents } from '../utils';
 import {
@@ -48,7 +49,7 @@ export type ModificationResults = {
 };
 
 /**
- * Get the installed Nx version, with fallback to local package.json or default version.
+ * Get the installed Nx version, with fallback to workspace package.json or default version.
  */
 function getNxVersion(): string {
   try {
@@ -59,11 +60,19 @@ function getNxVersion(): string {
     return version;
   } catch {
     try {
-      // Fallback: try to read from local package.json (for development)
-      const localPackageJson = JSON.parse(
-        readFileSync(join(__dirname, '../../../package.json'), 'utf-8')
+      // Fallback: try to read from workspace package.json
+      const workspacePackageJson = JSON.parse(
+        readFileSync(join(workspaceRoot, 'package.json'), 'utf-8')
       );
-      return localPackageJson.version;
+      // Check devDependencies first, then dependencies
+      const nxVersion =
+        workspacePackageJson.devDependencies?.nx ||
+        workspacePackageJson.dependencies?.nx;
+      if (nxVersion) {
+        // Remove any semver range characters (^, ~, >=, etc.)
+        return nxVersion.replace(/^[\^~>=<]+/, '');
+      }
+      throw new Error('Nx not found in package.json');
     } catch {
       // If we can't determine the version, default to the newer format
       // This handles cases where nx might not be installed or is globally installed
