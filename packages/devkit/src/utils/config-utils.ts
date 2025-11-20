@@ -118,7 +118,7 @@ export function clearRequireCache(): void {
   }
 }
 
-export async function load(path: string): Promise<any> {
+async function load(path: string): Promise<any> {
   try {
     // Try using `require` first, which works for CJS modules.
     // Modules are CJS unless it is named `.mjs` or `package.json` sets type to "module".
@@ -137,7 +137,7 @@ export async function load(path: string): Promise<any> {
 /**
  * Load the module after ensuring that the require cache is cleared.
  */
-export async function loadCommonJS(path: string): Promise<any> {
+async function loadCommonJS(path: string): Promise<any> {
   // Clear cache if the path is in the cache
   if (require.cache[path]) {
     clearRequireCache();
@@ -145,7 +145,7 @@ export async function loadCommonJS(path: string): Promise<any> {
   return require(path);
 }
 
-export async function loadESM(path: string): Promise<any> {
+async function loadESM(path: string): Promise<any> {
   const pathAsFileUrl = pathToFileURL(path).pathname;
   return await dynamicImport(`${pathAsFileUrl}?t=${Date.now()}`);
 }
