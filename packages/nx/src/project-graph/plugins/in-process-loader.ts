@@ -10,7 +10,7 @@ import {
 import { readJsonFile } from '../../utils/fileutils';
 
 import type { PluginConfiguration } from '../../config/nx-json';
-import type { LoadedNxPlugin } from './loaded-nx-plugin';
+import { LoadedNxPlugin } from './loaded-nx-plugin';
 import { LoadPluginError } from '../error-types';
 import path = require('node:path/posix');
 import { loadResolvedNxPluginAsync } from './load-resolved-plugin';
