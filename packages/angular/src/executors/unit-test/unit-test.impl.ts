@@ -35,7 +35,7 @@ export default async function* unitTestExecutor(
 
   const builderContext = await createBuilderContext(
     {
-      builderName: 'unit-test',
+      builderName: '@nx/angular:unit-test',
       description: 'Run application unit tests.',
       optionSchema: require('./schema.json'),
     },

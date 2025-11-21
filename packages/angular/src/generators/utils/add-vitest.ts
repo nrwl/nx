@@ -25,10 +25,13 @@ import {
 export type AddVitestOptions = {
   name: string;
   projectRoot: string;
+  skipFormat: boolean;
   skipPackageJson: boolean;
   strict: boolean;
+  zoneless: boolean;
   addPlugin?: boolean;
-  useNxUnitTestRunner?: boolean;
+  forceAnalog?: boolean;
+  useNxUnitTestRunnerExecutor?: boolean;
 };
 
 export async function addVitest(
@@ -36,10 +39,10 @@ export async function addVitest(
   options: AddVitestOptions
 ): Promise<void> {
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  if (angularMajorVersion >= 21) {
+  if (angularMajorVersion >= 21 && !options.forceAnalog) {
     await configureAngularUnitTestBuilderTarget(tree, options);
   } else {
-    await configureVitestWithAnalog(tree, options);
+    await configureVitestWithAnalog(tree, options, angularMajorVersion);
   }
 }
 
@@ -49,7 +52,7 @@ async function configureAngularUnitTestBuilderTarget(
 ): Promise<void> {
   validateVitestVersion(tree);
 
-  const executor = options.useNxUnitTestRunner
+  const executor = options.useNxUnitTestRunnerExecutor
     ? '@nx/angular:unit-test'
     : '@angular/build:unit-test';
   const project = readProjectConfiguration(tree, options.name);
@@ -93,7 +96,8 @@ async function configureAngularUnitTestBuilderTarget(
 
 async function configureVitestWithAnalog(
   tree: Tree,
-  options: AddVitestOptions
+  options: AddVitestOptions,
+  angularMajorVersion: number
 ): Promise<void> {
   ensurePackage('@nx/vitest', nxVersion);
   const { configurationGenerator } = await import('@nx/vitest/generators');
@@ -104,8 +108,11 @@ async function configureVitestWithAnalog(
     testEnvironment: 'jsdom',
     coverageProvider: 'v8',
     addPlugin: options.addPlugin ?? false,
+    skipFormat: options.skipFormat,
     skipPackageJson: options.skipPackageJson,
   });
+
+  createAnalogSetupFile(tree, options, angularMajorVersion);
 
   if (!options.skipPackageJson) {
     const angularDevkitVersion =
@@ -229,4 +236,53 @@ function addVitestScreenshotsToGitIgnore(tree: Tree): void {
   } else {
     logger.warn(`Couldn't find .gitignore file to update`);
   }
+}
+
+function createAnalogSetupFile(
+  tree: Tree,
+  options: AddVitestOptions,
+  angularMajorVersion: number
+): void {
+  let setupFile: string;
+
+  if (angularMajorVersion >= 21) {
+    setupFile = `import '@angular/compiler';
+import '@analogjs/vitest-angular/setup-snapshots';
+import { setupTestBed } from '@analogjs/vitest-angular/setup-testbed';
+
+setupTestBed(${options.zoneless ? '' : '{ zoneless: false }'});
+`;
+  } else if (angularMajorVersion === 20) {
+    setupFile = `import '@angular/compiler';
+import '@analogjs/vitest-angular/setup-zone';
+import {
+  BrowserTestingModule,
+  platformBrowserTesting,
+} from '@angular/platform-browser/testing';
+import { getTestBed } from '@angular/core/testing';
+
+getTestBed().initTestEnvironment(
+  BrowserTestingModule,
+  platformBrowserTesting(),
+);
+`;
+  } else {
+    setupFile = `import '@analogjs/vitest-angular/setup-zone';
+import {
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting,
+} from '@angular/platform-browser-dynamic/testing';
+import { getTestBed } from '@angular/core/testing';
+
+getTestBed().initTestEnvironment(
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting(),
+);
+`;
+  }
+
+  tree.write(
+    joinPathFragments(options.projectRoot, 'src/test-setup.ts'),
+    setupFile
+  );
 }

@@ -1,6 +1,5 @@
 import {
   cleanupProject,
-  expectTestsPass,
   newProject,
   readJson,
   runCLI,
@@ -40,8 +39,12 @@ describe('NgRx', () => {
     );
 
     expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
-    expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
-    expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
+    expect(
+      (await runCLIAsync(`test ${myapp} --no-watch`)).combinedOutput
+    ).toContain(`Successfully ran target test for project ${myapp}`);
+    expect(
+      (await runCLIAsync(`test ${mylib} --no-watch`)).combinedOutput
+    ).toContain(`Successfully ran target test for project ${mylib}`);
   }, 1000000);
 
   it('should work with creators', async () => {
@@ -72,8 +75,12 @@ describe('NgRx', () => {
     );
 
     expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
-    expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
-    expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
+    expect(
+      (await runCLIAsync(`test ${myapp} --no-watch`)).combinedOutput
+    ).toContain(`Successfully ran target test for project ${myapp}`);
+    expect(
+      (await runCLIAsync(`test ${mylib} --no-watch`)).combinedOutput
+    ).toContain(`Successfully ran target test for project ${mylib}`);
   }, 1000000);
 
   it('should work with creators using --module', async () => {
@@ -104,7 +111,11 @@ describe('NgRx', () => {
     );
 
     expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
-    expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
-    expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
+    expect(
+      (await runCLIAsync(`test ${myapp} --no-watch`)).combinedOutput
+    ).toContain(`Successfully ran target test for project ${myapp}`);
+    expect(
+      (await runCLIAsync(`test ${mylib} --no-watch`)).combinedOutput
+    ).toContain(`Successfully ran target test for project ${mylib}`);
   }, 1000000);
 });

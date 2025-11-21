@@ -21,9 +21,11 @@ export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
       await addVitest(host, {
         name: options.name,
         projectRoot: options.appProjectRoot,
+        skipFormat: options.skipFormat,
         skipPackageJson: options.skipPackageJson,
         strict: options.strict,
         addPlugin: options.addPlugin,
+        zoneless: options.zoneless,
       });
       break;
   }
