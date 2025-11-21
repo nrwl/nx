@@ -62,13 +62,7 @@ describe('setupSSR', () => {
             "types": ["node"]
           },
           "include": ["src/**/*.ts"],
-          "exclude": [
-            "jest.config.ts",
-            "src/test-setup.ts",
-            "src/**/*.test.ts",
-            "src/**/*.spec.ts",
-            "jest.config.cts"
-          ]
+          "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
         }
         "
       `);
@@ -170,13 +164,7 @@ describe('setupSSR', () => {
             "types": ["node"]
           },
           "include": ["src/**/*.ts"],
-          "exclude": [
-            "jest.config.ts",
-            "src/test-setup.ts",
-            "src/**/*.test.ts",
-            "src/**/*.spec.ts",
-            "jest.config.cts"
-          ]
+          "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
         }
         "
       `);
@@ -750,22 +738,22 @@ describe('setupSSR', () => {
       // ASSERT
       const pkgJson = readJson(tree, 'package.json');
       expect(pkgJson.dependencies['@angular/ssr']).toBe(
-        backwardCompatibleVersions.angularV19.angularDevkitVersion
+        backwardCompatibleVersions[19].angularDevkitVersion
       );
       expect(pkgJson.dependencies['@angular/platform-server']).toEqual(
-        backwardCompatibleVersions.angularV19.angularVersion
+        backwardCompatibleVersions[19].angularVersion
       );
       expect(pkgJson.dependencies['@angular/ssr']).toEqual(
-        backwardCompatibleVersions.angularV19.angularDevkitVersion
+        backwardCompatibleVersions[19].angularDevkitVersion
       );
       expect(pkgJson.dependencies['express']).toEqual(
-        backwardCompatibleVersions.angularV19.expressVersion
+        backwardCompatibleVersions[19].expressVersion
       );
       expect(
         pkgJson.dependencies['@nguniversal/express-engine']
       ).toBeUndefined();
       expect(pkgJson.devDependencies['@types/express']).toBe(
-        backwardCompatibleVersions.angularV19.typesExpressVersion
+        backwardCompatibleVersions[19].typesExpressVersion
       );
       expect(pkgJson.devDependencies['@nguniversal/builders']).toBeUndefined();
     });

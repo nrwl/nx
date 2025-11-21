@@ -23,6 +23,7 @@ describe('addJest', () => {
       projectRoot: 'app1',
       skipPackageJson: false,
       strict: false,
+      runtimeTsconfigFileName: 'tsconfig.app.json',
       zoneless: true,
     });
 
@@ -40,6 +41,7 @@ describe('addJest', () => {
       projectRoot: 'app1',
       skipPackageJson: false,
       strict: true,
+      runtimeTsconfigFileName: 'tsconfig.app.json',
       zoneless: true,
     });
 
@@ -60,6 +62,7 @@ describe('addJest', () => {
       projectRoot: 'app1',
       skipPackageJson: false,
       strict: false,
+      runtimeTsconfigFileName: 'tsconfig.app.json',
       zoneless: false,
     });
 
@@ -77,6 +80,7 @@ describe('addJest', () => {
       projectRoot: 'app1',
       skipPackageJson: false,
       strict: true,
+      runtimeTsconfigFileName: 'tsconfig.app.json',
       zoneless: false,
     });
 

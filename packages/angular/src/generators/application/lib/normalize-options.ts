@@ -52,6 +52,9 @@ export async function normalizeOptions(
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
   const zonelessDefaultValue = angularMajorVersion >= 21 ? true : false;
+  const unitTestRunner =
+    options.unitTestRunner ??
+    (angularMajorVersion >= 21 ? UnitTestRunner.Vitest : UnitTestRunner.Jest);
 
   // Set defaults and then overwrite with user options
   return {
@@ -60,7 +63,7 @@ export async function normalizeOptions(
     routing: true,
     inlineStyle: false,
     inlineTemplate: false,
-    skipTests: options.unitTestRunner === UnitTestRunner.None,
+    skipTests: unitTestRunner === UnitTestRunner.None,
     skipFormat: false,
     e2eTestRunner: E2eTestRunner.Playwright,
     linter: 'eslint',
@@ -81,7 +84,7 @@ export async function normalizeOptions(
       !options.rootProject ? appProjectRoot : appProjectName
     ),
     ssr: options.ssr ?? false,
-    unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
+    unitTestRunner,
     zoneless: options.zoneless ?? zonelessDefaultValue,
   };
 }

@@ -139,6 +139,7 @@ async function addUnitTestRunner(
         projectRoot: options.projectRoot,
         skipPackageJson: options.skipPackageJson,
         strict: options.strict,
+        runtimeTsconfigFileName: 'tsconfig.lib.json',
         zoneless,
       });
       break;
@@ -148,6 +149,7 @@ async function addUnitTestRunner(
         projectRoot: options.projectRoot,
         skipPackageJson: options.skipPackageJson,
         strict: options.strict,
+        useNxUnitTestRunner: options.buildable || options.publishable,
       });
       break;
   }
