@@ -14,11 +14,7 @@ import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
-import {
-  getFullOsSocketPath,
-  isWindows,
-  killSocketOrPath,
-} from '../socket-utils';
+import { getFullOsSocketPath } from '../socket-utils';
 import {
   hasRegisteredFileWatcherSockets,
   registeredFileWatcherSockets,
@@ -688,11 +684,6 @@ export async function startServer(): Promise<Server> {
   await writeDaemonJsonProcessCache({
     processId: process.pid,
   });
-
-  // See notes in socket-command-line-utils.ts on OS differences regarding clean up of existings connections.
-  if (!isWindows) {
-    killSocketOrPath();
-  }
 
   setInterval(() => {
     if (getDaemonProcessIdSync() !== process.pid) {
