@@ -15,7 +15,7 @@ import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { existsSync } from 'node:fs';
 
-import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
+import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
   AggregateCreateNodesError,
   formatAggregateCreateNodesError,
