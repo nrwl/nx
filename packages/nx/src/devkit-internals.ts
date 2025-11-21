@@ -24,7 +24,6 @@ export { stripIndent } from './utils/logger';
 export {
   readModulePackageJson,
   installPackageToTmp,
-  installPackageToTmpAsync,
 } from './utils/package-json';
 export { splitByColons } from './utils/split-target';
 export { hashObject } from './hasher/file-hasher';
