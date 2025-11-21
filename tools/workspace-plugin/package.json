@@ -11,6 +11,7 @@
     "@nx/js": "catalog:nx",
     "@xmldom/xmldom": "^0.8.10",
     "nx": "catalog:nx",
+    "shiki": "~3.15.0",
     "tslib": "catalog:typescript"
   },
   "type": "commonjs",

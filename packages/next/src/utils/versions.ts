@@ -1,4 +1,4 @@
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require('nx/package.json').version;
 
 export const next16Version = '~16.0.1';
 export const next15Version = '~15.2.4';

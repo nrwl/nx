@@ -1,4 +1,4 @@
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require('nx/package.json').version;
 export const rsbuildVersion = '1.1.10';
 export const rsbuildPluginReactVersion = '1.1.0';
 export const rsbuildPluginVueVersion = '1.0.5';

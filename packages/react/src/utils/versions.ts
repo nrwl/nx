@@ -1,4 +1,4 @@
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require('nx/package.json').version;
 
 export const reactVersion = '^19.0.0';
 export const reactV18Version = '18.3.1';

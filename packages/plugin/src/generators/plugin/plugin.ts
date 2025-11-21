@@ -24,7 +24,7 @@ import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
 import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema';
 
-const nxVersion = require('../../../package.json').version;
+const nxVersion = require('nx/package.json').version;
 
 async function addFiles(host: Tree, options: NormalizedSchema) {
   host.delete(normalizePath(`${options.projectRoot}/src/lib`));

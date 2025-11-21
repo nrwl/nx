@@ -1,4 +1,4 @@
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require('nx/package.json').version;
 
 export const esbuildVersion = '^0.19.2';
 export const prettierVersion = '^2.6.2';

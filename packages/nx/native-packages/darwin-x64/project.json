@@ -1,4 +1,17 @@
 {
   "name": "darwin-x64",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json"
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "release": {
+    "version": {
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["dist/packages/darwin-x64"]
+    }
+  },
+  "targets": {
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/packages/{projectName}"
+      }
+    }
+  }
 }

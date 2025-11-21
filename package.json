@@ -102,6 +102,7 @@
     "@nx/rspack": "catalog:nx",
     "@nx/storybook": "catalog:nx",
     "@nx/vite": "catalog:nx",
+    "@nx/vitest": "catalog:nx",
     "@nx/web": "catalog:nx",
     "@nx/webpack": "catalog:nx",
     "@phenomnomnominal/tsquery": "catalog:typescript",

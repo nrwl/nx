@@ -42,6 +42,7 @@ catalogs:
     '@nx/rspack': 22.2.0-beta.3
     '@nx/storybook': 22.2.0-beta.3
     '@nx/vite': 22.2.0-beta.3
+    '@nx/vitest': 22.2.0-beta.3
     '@nx/web': 22.2.0-beta.3
     '@nx/webpack': 22.2.0-beta.3
 

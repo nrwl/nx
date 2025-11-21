@@ -1,4 +1,4 @@
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require('nx/package.json').version;
 
 export const angularVersion = '~20.3.0';
 export const angularDevkitVersion = '~20.3.0';
