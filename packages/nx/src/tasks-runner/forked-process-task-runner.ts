@@ -441,7 +441,7 @@ export class ForkedProcessTaskRunner {
       this.cleanup('SIGTERM');
       process.off('message', messageHandler);
       // we exit here because we don't need to write anything to cache.
-      process.exit(signalToCode('SIGINT'));
+      process.exitCode = signalToCode('SIGINT');
     });
     process.once('SIGTERM', () => {
       this.cleanup('SIGTERM');

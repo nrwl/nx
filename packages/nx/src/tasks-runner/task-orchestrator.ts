@@ -761,7 +761,7 @@ export class TaskOrchestrator {
           runningTask.onExit((code) => {
             if (!this.tuiEnabled) {
               if (code > 128) {
-                process.exit(code);
+                process.exitCode = code;
               }
             }
             res();
@@ -836,7 +836,7 @@ export class TaskOrchestrator {
         childProcess.onExit((code) => {
           if (!this.tuiEnabled) {
             if (code > 128) {
-              process.exit(code);
+              process.exitCode = code;
             }
           }
           res();
