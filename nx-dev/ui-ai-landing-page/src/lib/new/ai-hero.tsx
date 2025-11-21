@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import {
   CodeBracketIcon,
   ServerStackIcon,
@@ -25,7 +25,7 @@ export function AiHero(): ReactElement {
           </SectionHeading>
           <div className="mt-6">
             <ButtonLink
-              href="/getting-started/ai-integration"
+              href={'/docs/getting-started/ai-setup'}
               title="Nx AI Integration"
               variant="primary"
               size="small"

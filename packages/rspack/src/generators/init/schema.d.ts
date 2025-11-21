@@ -6,6 +6,6 @@ export interface InitGeneratorSchema {
   framework?: Framework;
   keepExistingVersions?: boolean;
   rootProject?: boolean;
-  style?: 'none' | 'css' | 'scss' | 'less' | 'styl';
+  style?: 'none' | 'css' | 'scss' | 'less';
   updatePackageScripts?: boolean;
 }

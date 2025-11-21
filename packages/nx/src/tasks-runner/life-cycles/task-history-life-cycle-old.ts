@@ -1,9 +1,11 @@
+import { readNxJson } from '../../config/nx-json';
 import { Task } from '../../config/task-graph';
 import {
   getHistoryForHashes,
   TaskRun,
   writeTaskRunsToHistory,
 } from '../../utils/legacy-task-history';
+import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { output } from '../../utils/output';
 import { serializeTarget } from '../../utils/serialize-target';
 import { isTuiEnabled } from '../is-tui-enabled';
@@ -64,7 +66,7 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
   }
 
   printFlakyTasksMessage() {
-    if (this.flakyTasks.length > 0) {
+    if (this.flakyTasks?.length > 0) {
       output.warn({
         title: `Nx detected ${
           this.flakyTasks.length === 1 ? 'a flaky task' : ' flaky tasks'
@@ -72,8 +74,12 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
         bodyLines: [
           ,
           ...this.flakyTasks.map((t) => `  ${t}`),
-          '',
-          `Flaky tasks can disrupt your CI pipeline. Automatically retry them with Nx Cloud. Learn more at https://nx.dev/ci/features/flaky-tasks`,
+          ...(isNxCloudUsed(readNxJson())
+            ? []
+            : [
+                '',
+                `Flaky tasks can disrupt your CI pipeline. Automatically retry them with Nx Cloud. Learn more at https://nx.dev/ci/features/flaky-tasks`,
+              ]),
         ],
       });
     }

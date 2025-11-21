@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  getAvailablePort,
   killPorts,
   newProject,
   readFile,
@@ -8,7 +9,7 @@ import {
   runCLIAsync,
   runE2ETests,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Build React applications and libraries with Vite', () => {
   beforeAll(() => {
@@ -65,13 +66,13 @@ describe('Build React applications and libraries with Vite', () => {
 
   it('should generate app with custom port', async () => {
     const viteApp = uniq('viteapp');
-    const customPort = 8081;
+    const customPort = await getAvailablePort();
 
     runCLI(
       `generate @nx/react:app apps/${viteApp} --bundler=vite --port=${customPort} --unitTestRunner=vitest --no-interactive --linter=eslint --e2eTestRunner=playwright`
     );
 
-    const viteConfig = readFile(`apps/${viteApp}/vite.config.ts`);
+    const viteConfig = readFile(`apps/${viteApp}/vite.config.mts`);
     expect(viteConfig).toContain(`port: ${customPort}`);
 
     if (runE2ETests()) {

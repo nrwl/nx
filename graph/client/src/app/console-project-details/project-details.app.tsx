@@ -1,9 +1,7 @@
-import { ProjectDetails } from '@nx/graph-internal/ui-project-details';
-import {
-  ErrorToastUI,
-  ExpandedTargetsProvider,
-  getExternalApiService,
-} from '@nx/graph/legacy/shared';
+import { ProjectDetails } from '@nx/graph-internal-ui-project-details';
+import { getExternalApiService } from '@nx/graph-shared';
+import { ErrorToastUI } from '@nx/graph-ui-common';
+import { ExpandedTargetsProvider } from '@nx/graph-internal-ui-project-details';
 import { useSelector } from '@xstate/react';
 import { useCallback } from 'react';
 import { Interpreter } from 'xstate';
@@ -11,6 +9,8 @@ import {
   ProjectDetailsEvents,
   ProjectDetailsState,
 } from './project-details.machine';
+import { GraphStateSerializer } from '@nx/graph';
+import { ProjectElement } from '@nx/graph/projects';
 
 export function ProjectDetailsApp({
   service,
@@ -33,10 +33,18 @@ export function ProjectDetailsApp({
 
   const handleViewInProjectGraph = useCallback(
     (data: { projectName: string }) => {
+      const serializedState = GraphStateSerializer.serialize({
+        c: {},
+        s: {
+          type: 'focused',
+          nodeId: ProjectElement.makeId('project', data.projectName),
+        },
+      });
       externalApiService.postEvent({
         type: 'open-project-graph',
         payload: {
           projectName: data.projectName,
+          serializedProjectGraphState: serializedState,
         },
       });
     },
@@ -79,7 +87,7 @@ export function ProjectDetailsApp({
       <>
         <ExpandedTargetsProvider>
           <ProjectDetails
-            project={project}
+            project={project as any}
             sourceMap={sourceMap}
             onViewInProjectGraph={handleViewInProjectGraph}
             onViewInTaskGraph={handleViewInTaskGraph}

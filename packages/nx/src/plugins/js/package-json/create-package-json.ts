@@ -7,7 +7,10 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
-import { PackageJson } from '../../../utils/package-json';
+import {
+  getDependencyVersionFromPackageJson,
+  PackageJson,
+} from '../../../utils/package-json';
 import { existsSync } from 'fs';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { readNxJson } from '../../../config/configuration';
@@ -46,10 +49,9 @@ export function createPackageJson(
 ): PackageJson {
   const projectNode = graph.nodes[projectName];
   const isLibrary = projectNode.type === 'lib';
+  const root = options.root ?? workspaceRoot;
 
-  const rootPackageJson: PackageJson = readJsonFile(
-    join(options.root ?? workspaceRoot, 'package.json')
-  );
+  const rootPackageJson: PackageJson = readJsonFile(join(root, 'package.json'));
 
   const npmDeps = findProjectsNpmDependencies(
     projectNode,
@@ -69,7 +71,7 @@ export function createPackageJson(
     version: '0.0.1',
   };
   const projectPackageJsonPath = join(
-    options.root ?? workspaceRoot,
+    root,
     projectNode.data.root,
     'package.json'
   );
@@ -100,11 +102,31 @@ export function createPackageJson(
     version: string,
     section: 'devDependencies' | 'dependencies'
   ) => {
-    return (
-      packageJson[section][packageName] ||
-      (isLibrary && rootPackageJson[section]?.[packageName]) ||
-      version
+    // Try project package.json first (single section)
+    const projectVersion = getDependencyVersionFromPackageJson(
+      packageName,
+      root,
+      packageJson,
+      [section]
     );
+    if (projectVersion) {
+      return projectVersion;
+    }
+
+    // For libraries, fall back to root package.json (single section)
+    if (isLibrary) {
+      const rootVersion = getDependencyVersionFromPackageJson(
+        packageName,
+        root,
+        rootPackageJson,
+        [section]
+      );
+      if (rootVersion) {
+        return rootVersion;
+      }
+    }
+
+    return version;
   };
 
   Object.entries(npmDeps.dependencies).forEach(([packageName, version]) => {
@@ -283,7 +305,8 @@ export function findProjectsNpmDependencies(
     seen,
     ignoredDependencies,
     dependencyInputs,
-    selfInputs
+    selfInputs,
+    false
   );
 
   return npmDeps;
@@ -297,7 +320,8 @@ function findAllNpmDeps(
   seen: Set<string>,
   ignoredDependencies: string[],
   dependencyPatterns: string[],
-  rootPatterns?: string[]
+  rootPatterns?: string[],
+  isTransitiveDependency = false
 ): void {
   if (seen.has(projectNode.name)) return;
 
@@ -306,7 +330,9 @@ function findAllNpmDeps(
   const projectFiles = filterUsingGlobPatterns(
     projectNode.data.root,
     projectFileMap[projectNode.name] || [],
-    rootPatterns ?? dependencyPatterns
+    isTransitiveDependency
+      ? ['{projectRoot}/**/*']
+      : rootPatterns ?? dependencyPatterns
   );
 
   const projectDependencies = new Set<string>();
@@ -356,7 +382,9 @@ function findAllNpmDeps(
           npmDeps,
           seen,
           ignoredDependencies,
-          dependencyPatterns
+          dependencyPatterns,
+          undefined,
+          true
         );
       }
     }

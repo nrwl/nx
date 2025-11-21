@@ -4,9 +4,14 @@
   "sourceRoot": "packages/workspace/src",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/workspace/README.md"],
+      "command": "node ./scripts/copy-readme.js workspace"
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/workspace",
@@ -72,10 +77,6 @@
           }
         ]
       }
-    },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/workspace/README.md"],
-      "command": "node ./scripts/copy-readme.js workspace"
     },
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js workspace nx"

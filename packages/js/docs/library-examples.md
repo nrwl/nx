@@ -71,7 +71,7 @@ If you do not want to use `swc` as the compiler, and want to use the default `ba
 
 {% tab label="Buildable, with Vite as a bundler" %}
 
-Generate a buildable library using [Vite](https://vitejs.dev/) as the bundler. This will use the `@nx/vite:build` executor.
+Generate a buildable library using [Vite](https://vite.dev/) as the bundler. This will use the `@nx/vite:build` executor.
 
 ```bash
 npx nx g @nx/js:lib libs/mylib --bundler=vite

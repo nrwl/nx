@@ -12,7 +12,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 describe('Node Applications + webpack', () => {
@@ -169,8 +169,6 @@ describe('Node Applications + webpack', () => {
     );
 
     checkFilesExist(`apps/${expressApp}/Dockerfile`);
-    const dockerFile = readFile(`apps/${expressApp}/Dockerfile`);
-    expect(dockerFile).toMatchSnapshot();
   }, 300_000);
 
   it('should support waitUntilTargets for serve target', async () => {

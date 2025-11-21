@@ -1,5 +1,5 @@
 'use client';
-import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev-ui-common';
 import { ReactElement, useState, useEffect } from 'react';
 import { Dialog, DialogPanel, Transition } from '@headlessui/react';
 import Link from 'next/link';

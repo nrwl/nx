@@ -1,0 +1,63 @@
+{
+  "name": "maven",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/maven/src",
+  "projectType": "library",
+  "targets": {
+    "nx-release-publish": {
+      "dependsOn": ["^nx-release-publish", "nx-maven-plugin:_install"],
+      "executor": "@nx/js:release-publish",
+      "options": {
+        "packageRoot": "packages/maven"
+      }
+    },
+    "build": {
+      "command": "node ./scripts/copy-readme.js maven packages/maven/readme-template.md packages/maven/README.md",
+      "inputs": [
+        "{projectRoot}/readme-template.md",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{workspaceRoot}/scripts/readme-fragments"
+      ],
+      "outputs": ["{projectRoot}/README.md"]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "packages/maven/dist",
+        "assets": [
+          {
+            "input": "packages/maven/src",
+            "glob": "**/@(files|files-angular)/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/maven/src",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/maven/src",
+            "glob": "**/*.json",
+            "ignore": ["maven-plugin/**/*"],
+            "output": "/"
+          },
+          {
+            "input": "packages/maven",
+            "glob": "@(generators|executors).json",
+            "output": "/"
+          }
+        ]
+      }
+    }
+  },
+  "release": {
+    "version": {
+      "preserveLocalDependencyProtocols": false,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
+  "tags": [],
+  "implicitDependencies": ["nx-maven-plugin"]
+}

@@ -1,10 +1,16 @@
-import { TargetConfiguration, joinPathFragments } from '@nx/devkit';
+import {
+  TargetConfiguration,
+  Tree,
+  joinPathFragments,
+  readProjectConfiguration,
+} from '@nx/devkit';
 import type { WithReactOptions } from '@nx/react';
 import type { WithNxOptions } from '@nx/webpack';
 
 import { NormalizedSchema } from './normalize-schema';
 
 export function createBuildTarget(
+  tree: Tree,
   options: NormalizedSchema
 ): TargetConfiguration {
   return {
@@ -21,7 +27,10 @@ export function createBuildTarget(
       index: joinPathFragments(options.projectRoot, 'src/index.html'),
       baseHref: '/',
       main: joinPathFragments(options.projectRoot, `src/main-web.tsx`),
-      tsConfig: joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
+      tsConfig: joinPathFragments(
+        options.projectRoot,
+        determineTsConfig(tree, options)
+      ),
       assets: [
         joinPathFragments(options.projectRoot, 'src/favicon.ico'),
         joinPathFragments(options.projectRoot, 'src/assets'),
@@ -73,6 +82,7 @@ export function createServeTarget(
 }
 
 export function createNxWebpackPluginOptions(
+  tree: Tree,
   options: NormalizedSchema
 ): WithNxOptions & WithReactOptions {
   return {
@@ -85,8 +95,20 @@ export function createNxWebpackPluginOptions(
     index: './src/index.html',
     baseHref: '/',
     main: `./src/main-web.tsx`,
-    tsConfig: './tsconfig.app.json',
+    tsConfig: determineTsConfig(tree, options),
     assets: ['./src/favicon.ico', './src/assets'],
     styles: [],
   };
+}
+
+export function determineTsConfig(tree: Tree, options: NormalizedSchema) {
+  const project = readProjectConfiguration(tree, options.project);
+
+  const appJson = joinPathFragments(project.root, 'tsconfig.app.json');
+  if (tree.exists(appJson)) return 'tsconfig.app.json';
+
+  const libJson = joinPathFragments(project.root, 'tsconfig.lib.json');
+  if (tree.exists(libJson)) return 'tsconfig.lib.json';
+
+  return 'tsconfig.json';
 }

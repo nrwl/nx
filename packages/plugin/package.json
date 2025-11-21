@@ -13,7 +13,7 @@
     "Nx",
     "CLI"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "types": "./index.d.ts",
   "author": "Nrwl",
   "license": "MIT",
@@ -27,11 +27,14 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "tslib": "^2.3.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/jest": "file:../jest",
-    "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint"
+    "tslib": "catalog:typescript",
+    "@nx/devkit": "workspace:*",
+    "@nx/jest": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/eslint": "workspace:*"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

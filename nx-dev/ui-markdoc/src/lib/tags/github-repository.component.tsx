@@ -1,14 +1,16 @@
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
 
+export type GithubRepositoryProps = {
+  url: string;
+  title?: string;
+};
+
 export function GithubRepository({
   url,
   title,
-}: {
-  url: string;
-  title?: string;
-}): JSX.Element {
+}: GithubRepositoryProps): JSX.Element {
   return (
-    <div className="not-prose group relative mx-auto my-12 flex w-full max-w-md items-center gap-3 overflow-hidden rounded-lg bg-slate-50 shadow-md transition hover:text-white dark:bg-slate-800/60">
+    <div className="not-content not-prose group relative mx-auto my-12 flex w-full max-w-md items-center gap-3 overflow-hidden rounded-lg bg-slate-50 shadow-md transition hover:text-white dark:bg-slate-800/60">
       <div className="absolute inset-0 z-0 w-2 bg-blue-500 transition-all duration-150 group-hover:w-full dark:bg-sky-500"></div>
       <div className="w-2 bg-blue-500 dark:bg-sky-500"></div>
 
@@ -31,7 +33,7 @@ export function GithubRepository({
               href={url}
               target="_blank"
               rel="noreferrer"
-              className="block text-sm font-medium opacity-80"
+              className="block text-sm font-medium text-white no-underline opacity-80"
             >
               <span className="absolute inset-0" aria-hidden="true"></span>
               {url.replace(/^.*\/\/[^\/]+/, '')}

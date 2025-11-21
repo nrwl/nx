@@ -145,6 +145,7 @@ describe('getUpdatedPackageJsonContent', () => {
           projectRoot: 'proj',
           format: ['esm'],
           generateExportsField: true,
+          developmentConditionName: '@my-org/source',
         }
       );
 
@@ -157,7 +158,7 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         exports: {
           '.': {
-            development: './src/index.ts',
+            '@my-org/source': './src/index.ts',
             default: './src/index.js',
             import: './src/index.js',
             types: './src/index.d.ts',
@@ -180,6 +181,7 @@ describe('getUpdatedPackageJsonContent', () => {
           format: ['cjs'],
           outputFileExtensionForCjs: '.cjs',
           generateExportsField: true,
+          developmentConditionName: '@my-org/source',
         }
       );
 
@@ -191,7 +193,7 @@ describe('getUpdatedPackageJsonContent', () => {
         type: 'commonjs',
         exports: {
           '.': {
-            development: './src/index.ts',
+            '@my-org/source': './src/index.ts',
             default: './src/index.cjs',
             types: './src/index.d.ts',
           },
@@ -220,6 +222,7 @@ describe('getUpdatedPackageJsonContent', () => {
             projectRoot: 'proj',
             format: ['cjs'],
             generateExportsField: true,
+            developmentConditionName: '@my-org/source',
           }
         )
       ).toEqual({
@@ -230,26 +233,26 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         exports: {
           '.': {
-            development: './src/index.ts',
+            '@my-org/source': './src/index.ts',
             default: './src/index.js',
             types: './src/index.d.ts',
           },
           './foo': {
-            development: './src/foo.ts',
+            '@my-org/source': './src/foo.ts',
             default: './src/foo.js',
           },
           './bar': {
-            development: './src/bar.ts',
+            '@my-org/source': './src/bar.ts',
             default: './src/bar.js',
           },
           './package.json': './package.json',
           './migrations.json': './migrations.json',
           './feature': {
-            development: './feature/index.ts',
+            '@my-org/source': './feature/index.ts',
             default: './feature/index.js',
           },
           './feature/index': {
-            development: './feature/index.ts',
+            '@my-org/source': './feature/index.ts',
             default: './feature/index.js',
           },
         },
@@ -273,6 +276,7 @@ describe('getUpdatedPackageJsonContent', () => {
             projectRoot: 'proj',
             format: ['esm'],
             generateExportsField: true,
+            developmentConditionName: '@my-org/source',
           }
         )
       ).toEqual({
@@ -284,29 +288,29 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         exports: {
           '.': {
-            development: './src/index.ts',
+            '@my-org/source': './src/index.ts',
             default: './src/index.js',
             import: './src/index.js',
             types: './src/index.d.ts',
           },
           './foo': {
-            development: './src/foo.ts',
+            '@my-org/source': './src/foo.ts',
             import: './src/foo.js',
             default: './src/foo.js',
           },
           './bar': {
-            development: './src/bar.ts',
+            '@my-org/source': './src/bar.ts',
             import: './src/bar.js',
             default: './src/bar.js',
           },
           './package.json': './package.json',
           './feature': {
-            development: './feature/index.ts',
+            '@my-org/source': './feature/index.ts',
             import: './feature/index.js',
             default: './feature/index.js',
           },
           './feature/index': {
-            development: './feature/index.ts',
+            '@my-org/source': './feature/index.ts',
             import: './feature/index.js',
             default: './feature/index.js',
           },
@@ -332,6 +336,7 @@ describe('getUpdatedPackageJsonContent', () => {
             format: ['cjs', 'esm'],
             outputFileExtensionForCjs: '.cjs',
             generateExportsField: true,
+            developmentConditionName: '@my-org/source',
           }
         )
       ).toEqual({
@@ -342,28 +347,28 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         exports: {
           '.': {
-            development: './src/index.ts',
+            '@my-org/source': './src/index.ts',
             import: './src/index.js',
             default: './src/index.cjs',
             types: './src/index.d.ts',
           },
           './foo': {
-            development: './src/foo.ts',
+            '@my-org/source': './src/foo.ts',
             import: './src/foo.js',
             default: './src/foo.cjs',
           },
           './bar': {
-            development: './src/bar.ts',
+            '@my-org/source': './src/bar.ts',
             import: './src/bar.js',
             default: './src/bar.cjs',
           },
           './feature': {
-            development: './feature/index.ts',
+            '@my-org/source': './feature/index.ts',
             import: './feature/index.js',
             default: './feature/index.cjs',
           },
           './feature/index': {
-            development: './feature/index.ts',
+            '@my-org/source': './feature/index.ts',
             import: './feature/index.js',
             default: './feature/index.cjs',
           },
@@ -391,6 +396,7 @@ describe('getUpdatedPackageJsonContent', () => {
           format: ['esm', 'cjs'],
           outputFileExtensionForCjs: '.cjs',
           generateExportsField: true,
+          developmentConditionName: '@my-org/source',
         }
       )
     ).toEqual({
@@ -401,7 +407,7 @@ describe('getUpdatedPackageJsonContent', () => {
       version: '0.0.1',
       exports: {
         '.': {
-          development: './src/index.ts',
+          '@my-org/source': './src/index.ts',
           import: './src/index.js',
           default: './src/index.cjs',
           types: './src/index.d.ts',
@@ -428,6 +434,7 @@ describe('getUpdatedPackageJsonContent', () => {
           format: ['cjs'],
           outputFileExtensionForCjs: '.cjs',
           generateExportsField: true,
+          developmentConditionName: '@my-org/source',
         }
       )
     ).toEqual({
@@ -438,7 +445,7 @@ describe('getUpdatedPackageJsonContent', () => {
       type: 'module',
       exports: {
         '.': {
-          development: './src/index.ts',
+          '@my-org/source': './src/index.ts',
           default: './src/index.cjs',
           types: './src/index.d.ts',
         },
@@ -461,6 +468,7 @@ describe('getUpdatedPackageJsonContent', () => {
           format: ['cjs'],
           generateExportsField: true,
           outputFileName: 'src/index.js',
+          developmentConditionName: '@my-org/source',
         }
       )
     ).toEqual({
@@ -471,7 +479,7 @@ describe('getUpdatedPackageJsonContent', () => {
       type: 'commonjs',
       exports: {
         '.': {
-          development: './src/index.ts',
+          '@my-org/source': './src/index.ts',
           default: './src/index.js',
           types: './src/index.d.ts',
         },

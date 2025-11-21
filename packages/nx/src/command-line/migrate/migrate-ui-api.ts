@@ -224,10 +224,14 @@ export async function runSingleMigration(
     );
 
     if (gitRefBefore !== gitRefAfter) {
-      execSync('git add migrations.json', {
-        cwd: workspacePath,
-        encoding: 'utf-8',
-      });
+      try {
+        execSync('git add migrations.json', {
+          cwd: workspacePath,
+          encoding: 'utf-8',
+        });
+      } catch (e) {
+        // do nothing, this will fail if it's gitignored
+      }
       execSync('git commit --amend --no-verify --no-edit', {
         cwd: workspacePath,
         encoding: 'utf-8',
@@ -266,10 +270,14 @@ export async function runSingleMigration(
       removeRunningMigration(migration.id)
     );
 
-    execSync('git add migrations.json', {
-      cwd: workspacePath,
-      encoding: 'utf-8',
-    });
+    try {
+      execSync('git add migrations.json', {
+        cwd: workspacePath,
+        encoding: 'utf-8',
+      });
+    } catch (e) {
+      // do nothing, this will fail if it's gitignored
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-import { RelatedDocumentsCategory } from '@nx/nx-dev/models-document';
+import { RelatedDocumentsCategory } from '@nx/nx-dev-models-document';
 import {
   CubeTransparentIcon,
   ArrowRightIcon,

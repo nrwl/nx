@@ -1,4 +1,4 @@
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import { ListenOn } from './listen-on';
 
 export function Hero(): JSX.Element {

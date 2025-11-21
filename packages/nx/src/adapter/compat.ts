@@ -45,6 +45,8 @@ export const allowedProjectExtensions = [
   'release',
   'includedScripts',
   'metadata',
+  'owners',
+  'nxCloudImplicitDependencies',
 ] as const;
 
 // If we pass props on the workspace that angular doesn't know about,
@@ -84,6 +86,7 @@ export const allowedWorkspaceExtensions = [
   'useLegacyCache',
   'maxCacheSize',
   'tui',
+  'owners',
 ] as const;
 
 if (!patched) {

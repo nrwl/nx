@@ -13,6 +13,7 @@ export interface EsBuildExecutorOptions {
   esbuildOptions?: Record<string, any>;
   esbuildConfig?: string;
   external?: string[];
+  excludeFromExternal?: string[];
   format?: Array<'esm' | 'cjs'>;
   generatePackageJson?: boolean;
   main: string;
@@ -35,6 +36,7 @@ export interface NormalizedEsBuildExecutorOptions
   assets: (AssetGlob | string)[];
   singleEntry: boolean;
   external: string[];
+  excludeFromExternal: string[];
   userDefinedBuildOptions: esbuild.BuildOptions | undefined;
   isTsSolutionSetup?: boolean;
 }

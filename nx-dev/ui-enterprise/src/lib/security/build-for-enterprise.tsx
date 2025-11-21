@@ -1,5 +1,5 @@
 'use client';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 import {
   AdobeIcon,
@@ -9,7 +9,7 @@ import {
   ModernaIcon,
   PayfitIcon,
   RoyalBankOfCanadaIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 
 export function BuiltForEnterprise(): ReactElement {
   return (

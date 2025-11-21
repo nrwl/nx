@@ -3,14 +3,15 @@ import {
   combineAsyncIterables,
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
-import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
 import devServerExecutor from '../dev-server/dev-server.impl';
+import { normalizeOptions, startRemotes } from './lib';
 import { ModuleFederationDevServerOptions } from './schema';
-import { getBuildOptions, normalizeOptions, startRemotes } from './lib';
 
 export default async function* moduleFederationDevServer(
   schema: ModuleFederationDevServerOptions,
@@ -32,11 +33,10 @@ export default async function* moduleFederationDevServer(
     : devServerExecutor(options, context);
 
   const p = context.projectsConfigurations.projects[context.projectName];
-  const buildOptions = getBuildOptions(options.buildTarget, context);
 
   let pathToManifestFile = join(
     context.root,
-    p.sourceRoot,
+    getProjectSourceRoot(p),
     'assets/module-federation.manifest.json'
   );
   if (options.pathToManifestFile) {
@@ -89,9 +89,10 @@ export default async function* moduleFederationDevServer(
           const baseUrl = `http${options.ssl ? 's' : ''}://${host}:${
             options.port
           }`;
-          const portsToWaitFor = staticRemotesIter
-            ? [options.staticRemotesPort, ...remotes.remotePorts]
-            : [...remotes.remotePorts];
+          const portsToWaitFor =
+            staticRemotesIter && options.staticRemotesPort
+              ? [options.staticRemotesPort, ...remotes.remotePorts]
+              : [...remotes.remotePorts];
           await Promise.all(
             portsToWaitFor.map((port) =>
               waitForPortOpen(port, {

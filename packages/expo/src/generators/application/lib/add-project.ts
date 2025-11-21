@@ -2,6 +2,7 @@ import {
   addProjectConfiguration,
   joinPathFragments,
   ProjectConfiguration,
+  readJson,
   TargetConfiguration,
   Tree,
   writeJson,
@@ -26,7 +27,13 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
   };
 
+  const templatedPackageJson = readJson(
+    host,
+    joinPathFragments(options.appProjectRoot, 'package.json')
+  );
+
   const packageJson: PackageJson = {
+    ...templatedPackageJson,
     name: options.importPath,
     version: '0.0.1',
     private: true,
@@ -138,7 +145,7 @@ function getTargets(options: NormalizedSchema) {
     outputs: ['{options.outputDir}'],
     options: {
       platform: 'all',
-      outputDir: `dist/${options.appProjectRoot}`,
+      outputDir: `${options.appProjectRoot}/dist`,
     },
   };
 

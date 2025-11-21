@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`@nx/vite/plugin Library mode should exclude serve and preview targets when vite.config.ts is in library mode 1`] = `
 [

@@ -3,6 +3,7 @@ node_modules
 /.fleet
 /.vscode
 dist
+out-tsc
 /build
 /coverage
 ./test
@@ -12,7 +13,8 @@ tmp
 jest.debug.config.js
 .tool-versions
 /.nx-cache
-/.nx
+/.nx/cache
+/.nx/workspace-data
 /.verdaccio/build/local-registry
 /graph/client/src/assets/environment.js
 /graph/client/src/assets/dev/environment.js
@@ -35,6 +37,7 @@ CHANGELOG.md
 .next
 out
 
+
 # Angular Cache
 .angular
 
@@ -49,8 +52,6 @@ out
 
 # Fix for issue when working on the repo in a dev container
 .pnpm-store
-.nx
-!.nx/workflows
 
 .cargo/.package-cache
 .cargo/bin/
@@ -61,6 +62,7 @@ out
 .profile
 .rustup/
 target
+.flattened-pom.xml
 *.wasm
 /wasi-sdk*
 
@@ -89,6 +91,7 @@ dev-debug.log
 node_modules/
 # Environment variables
 .env
+!e2e/dotnet/.env
 # Editor directories and files
 .idea
 .vscode
@@ -101,9 +104,32 @@ node_modules/
 .cursorindexingignore
 # OS specific
 # Task files
-tasks.json
-tasks/
+/tasks.json
+/tasks
 
-# Raw docs local configuration (machine-specific)
-.rawdocs.local.json
+# Upstream docs local configuration (machine-specific)
+.upstreamdocs.local.json
 
+astro-docs/.netlify
+
+coverage
+
+# Angular Rspack Specific Options
+packages/angular-rspack/coverage
+packages/angular-rspack-compiler/coverage
+
+# Some Packages use a template to generate the correct README
+packages/angular-rspack/README.md
+packages/angular-rspack-compiler/README.md
+packages/dotnet/README.md
+packages/maven/README.md
+
+test-output
+test-results
+
+# TypeScript build info files
+*.tsbuildinfo
+
+# .NET build output
+/packages/dotnet/analyzer/bin
+/packages/dotnet/analyzer/obj

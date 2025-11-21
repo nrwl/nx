@@ -3,4 +3,5 @@ export interface GradleExecutorSchema {
   testClassName?: string;
   args?: string[] | string;
   excludeDependsOn: boolean;
+  __unparsed__?: string[];
 }

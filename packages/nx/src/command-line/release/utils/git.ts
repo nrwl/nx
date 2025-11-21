@@ -7,6 +7,7 @@ import { minimatch } from 'minimatch';
 import { interpolate } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
+import { isPrerelease } from './shared';
 
 export interface GitCommitAuthor {
   name: string;
@@ -25,6 +26,11 @@ export interface Reference {
   value: string;
 }
 
+export interface GitTagAndVersion {
+  tag: string;
+  extractedVersion: string;
+}
+
 export interface GitCommit extends RawGitCommit {
   description: string;
   type: string;
@@ -36,6 +42,13 @@ export interface GitCommit extends RawGitCommit {
   revertedHashes: string[];
 }
 
+export interface GetLatestGitTagForPatternOptions {
+  checkAllBranchesWhen?: boolean | string[];
+  preid?: string;
+  requireSemver: boolean;
+  strictPreid: boolean;
+}
+
 function escapeRegExp(string) {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
 }
@@ -44,11 +57,56 @@ function escapeRegExp(string) {
 const SEMVER_REGEX =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/g;
 
+/**
+ * Extract the tag and version from a tag string
+ *
+ * @param tag - The tag string to extract the tag and version from
+ * @param tagRegexp - The regex to use to extract the tag and version from the tag string
+ *
+ * @returns The tag and version
+ */
+export function extractTagAndVersion(
+  tag: string,
+  tagRegexp: string,
+  options: GetLatestGitTagForPatternOptions
+): GitTagAndVersion {
+  const { requireSemver } = options;
+
+  const [latestMatchingTag, ...rest] = tag.match(tagRegexp);
+  let version = requireSemver
+    ? rest.filter((r) => {
+        return r.match(SEMVER_REGEX);
+      })[0]
+    : rest[0];
+
+  return {
+    tag: latestMatchingTag,
+    extractedVersion: version ?? null,
+  };
+}
+
+/**
+ * Get the latest git tag for the configured release tag pattern.
+ *
+ * This function will:
+ * - Get all tags from the git repo, sorted by version
+ * - Filter the tags into a list with SEMVER-compliant tags, matching the release tag pattern
+ * - If a preid is provided, prioritise tags for that preid, then semver tags without a preid
+ * - If no preid is provided, search only for stable semver tags (i.e. no pre-release or build metadata)
+ *
+ * @param releaseTagPattern - The pattern to filter the tags list by
+ * @param additionalInterpolationData - Additional data used when interpolating the release tag pattern
+ * @param options - The options to use when getting the latest git tag for the pattern
+ *
+ * @returns The tag and version
+ */
 export async function getLatestGitTagForPattern(
   releaseTagPattern: string,
   additionalInterpolationData = {},
-  checkAllBranchesWhen?: boolean | string[]
-): Promise<{ tag: string; extractedVersion: string } | null> {
+  options: GetLatestGitTagForPatternOptions
+): Promise<GitTagAndVersion | null> {
+  const { checkAllBranchesWhen, requireSemver, strictPreid, preid } = options;
+
   /**
    * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
    * falling back to all branches if no match is found on the current branch.
@@ -131,33 +189,68 @@ export async function getLatestGitTagForPattern(
     const interpolatedTagPattern = interpolate(releaseTagPattern, {
       version: '%v%',
       projectName: '%p%',
+      releaseGroupName: '%rg%',
       ...additionalInterpolationData,
     });
 
     const tagRegexp = `^${escapeRegExp(interpolatedTagPattern)
       .replace('%v%', '(.+)')
-      .replace('%p%', '(.+)')}`;
+      .replace('%p%', '(.+)')
+      .replace('%rg%', '(.+)')}`;
 
-    const matchingSemverTags = tags.filter(
-      (tag) =>
-        // Do the match against SEMVER_REGEX to ensure that we skip tags that aren't valid semver versions
-        !!tag.match(tagRegexp) &&
-        tag.match(tagRegexp).some((r) => r.match(SEMVER_REGEX))
-    );
+    const matchingTags = tags.filter((tag) => {
+      if (requireSemver) {
+        // Match against Semver Regex when using semverVersioning to ensure only valid semver tags are matched
+        return (
+          !!tag.match(tagRegexp) &&
+          tag.match(tagRegexp).some((r) => r.match(SEMVER_REGEX))
+        );
+      } else {
+        return !!tag.match(tagRegexp);
+      }
+    });
 
-    if (!matchingSemverTags.length) {
+    if (!matchingTags.length) {
       return null;
     }
 
-    const [latestMatchingTag, ...rest] = matchingSemverTags[0].match(tagRegexp);
-    const version = rest.filter((r) => {
-      return r.match(SEMVER_REGEX);
-    })[0];
+    if (!strictPreid) {
+      // If not using strict preid, we can just return the first matching tag
+      return extractTagAndVersion(matchingTags[0], tagRegexp, options);
+    }
 
-    return {
-      tag: latestMatchingTag,
-      extractedVersion: version,
-    };
+    if (preid && preid.length > 0) {
+      // When a preid is provided, first try to find a tag for it
+      const preidReleaseTags = matchingTags.filter((tag) => {
+        const match = tag.match(tagRegexp);
+        if (!match) return false;
+
+        const version = match.find((part) => part.match(SEMVER_REGEX));
+        return version && version.includes(`-${preid}.`);
+      });
+
+      if (preidReleaseTags.length > 0) {
+        return extractTagAndVersion(preidReleaseTags[0], tagRegexp, options);
+      }
+    }
+
+    // Then try to find the latest stable release tag
+    const stableReleaseTags = matchingTags.filter((tag) => {
+      const matches = tag.match(tagRegexp);
+
+      if (!matches) return false;
+
+      const [, version] = matches;
+      return version && !isPrerelease(version);
+    });
+
+    // If there are stable release tags, use the latest one
+    if (stableReleaseTags.length > 0) {
+      return extractTagAndVersion(stableReleaseTags[0], tagRegexp, options);
+    }
+
+    // Otherwise return null
+    return null;
   } catch {
     return null;
   }
@@ -548,29 +641,17 @@ const IssueRE = /(#\d+)/gm;
 const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
 
-export function parseGitCommit(
-  commit: RawGitCommit,
-  isVersionPlanCommit = false
-): GitCommit | null {
-  // For version plans, we do not require conventional commits and therefore cannot extract data based on that format
-  if (isVersionPlanCommit) {
-    return {
-      ...commit,
-      description: commit.message,
-      type: '',
-      scope: '',
-      references: extractReferencesFromCommit(commit),
-      // The commit message is not the source of truth for a breaking (major) change in version plans, so the value is not relevant
-      // TODO(v22): Make the current GitCommit interface more clearly tied to conventional commits
-      isBreaking: false,
-      authors: getAllAuthorsForCommit(commit),
-      // Not applicable to version plans
-      affectedFiles: [],
-      // Not applicable, a version plan cannot have been added in a commit that also reverts another commit
-      revertedHashes: [],
-    };
-  }
+export function parseVersionPlanCommit(commit: RawGitCommit): {
+  references: Reference[];
+  authors: GitCommitAuthor[];
+} {
+  return {
+    references: extractReferencesFromCommit(commit),
+    authors: getAllAuthorsForCommit(commit),
+  };
+}
 
+export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   const parsedMessage = parseConventionalCommitsMessage(commit.message);
   if (!parsedMessage) {
     return null;
@@ -657,6 +738,7 @@ async function getGitRoot() {
 }
 
 let gitRootRelativePath: string;
+
 async function getGitRootRelativePath() {
   if (!gitRootRelativePath) {
     const gitRoot = await getGitRoot();

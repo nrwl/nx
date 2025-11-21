@@ -10,6 +10,7 @@ import {
   readProjectConfiguration,
   stripIndents,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { Schema } from '../schema';
 
 export function addCypressOnErrorWorkaround(tree: Tree, schema: Schema) {
@@ -58,7 +59,7 @@ export function addCypressOnErrorWorkaround(tree: Tree, schema: Schema) {
   });`;
 
   const pathToCommandsFile = joinPathFragments(
-    e2eProject.sourceRoot,
+    getProjectSourceRoot(e2eProject, tree),
     'support/e2e.ts'
   );
 

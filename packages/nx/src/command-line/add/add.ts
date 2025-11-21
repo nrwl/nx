@@ -1,7 +1,5 @@
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
-import * as ora from 'ora';
-import * as yargsParser from 'yargs-parser';
 import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json';
 import { runNxAsync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
@@ -22,6 +20,7 @@ import {
   runPluginInitGenerator,
   getFailedToInstallPluginErrorMessages,
 } from '../init/configure-plugins';
+import { globalSpinner } from '../../utils/spinner';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
@@ -44,8 +43,7 @@ async function installPackage(
   version: string,
   nxJson: NxJsonConfiguration
 ): Promise<void> {
-  const spinner = ora(`Installing ${pkgName}@${version}...`);
-  spinner.start();
+  const spinner = globalSpinner.start(`Installing ${pkgName}@${version}...`);
 
   if (existsSync('package.json')) {
     const pm = detectPackageManager();
@@ -63,11 +61,14 @@ async function installPackage(
         {
           windowsHide: false,
         },
-        (error, stdout) => {
+        (error, stdout, stderr) => {
           if (error) {
             spinner.fail();
             output.addNewline();
-            logger.error(stdout);
+            const errorOutput = [stdout.trim(), stderr.trim()]
+              .filter(Boolean)
+              .join('\n');
+            logger.error(errorOutput);
             output.error({
               title: `Failed to install ${pkgName}. Please check the error above for more details.`,
             });
@@ -122,8 +123,7 @@ async function initializePlugin(
     updatePackageScripts = true;
   }
 
-  const spinner = ora(`Initializing ${pkgName}...`);
-  spinner.start();
+  const spinner = globalSpinner.start(`Initializing ${pkgName}...`);
 
   try {
     await runPluginInitGenerator(

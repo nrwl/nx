@@ -4,9 +4,9 @@ import {
   readProjectsConfigurationFromProjectGraph,
   workspaceRoot,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { Configuration } from '@rspack/core';
 import { readNxJson } from 'nx/src/config/configuration';
-
 import { NormalizedRspackExecutorSchema } from '../executors/rspack/schema';
 
 export const nxRspackComposablePlugin = 'nxRspackComposablePlugin';
@@ -93,7 +93,7 @@ function ensureNxRspackExecutionContext(ctx: NxRspackExecutionContext): void {
   ctx.options ??= {
     root: workspaceRoot,
     projectRoot: projectNode.data.root,
-    sourceRoot: projectNode.data.sourceRoot ?? projectNode.data.root,
+    sourceRoot: getProjectSourceRoot(projectNode.data),
     // These aren't actually needed since NxRspackPlugin and withNx both support them being undefined.
     assets: undefined,
     outputFileName: undefined,

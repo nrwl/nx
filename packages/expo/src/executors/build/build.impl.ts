@@ -1,11 +1,13 @@
 import {
   detectPackageManager,
   ExecutorContext,
+  isWorkspacesEnabled,
   names,
   PackageManager,
   readJsonFile,
   writeJsonFile,
 } from '@nx/devkit';
+import { signalToCode } from '@nx/devkit/internal';
 import { getLockFileName } from '@nx/js';
 import { ChildProcess, fork } from 'child_process';
 import { copyFileSync, existsSync, rmSync, writeFileSync } from 'node:fs';
@@ -73,7 +75,8 @@ function runCliBuild(
     childProcess.on('error', (err) => {
       reject(err);
     });
-    childProcess.on('exit', (code) => {
+    childProcess.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code === 0) {
         resolve(code);
       } else {
@@ -121,11 +124,7 @@ function copyPackageJsonAndLock(
   const packageJson = pathResolve(workspaceRoot, 'package.json');
   const rootPackageJson = readJsonFile<PackageJson>(packageJson);
   // do not copy package.json and lock file if workspaces are enabled
-  if (
-    (packageManager === 'pnpm' &&
-      existsSync(pathResolve(workspaceRoot, 'pnpm-workspace.yaml'))) ||
-    rootPackageJson.workspaces
-  ) {
+  if (isWorkspacesEnabled(packageManager, workspaceRoot)) {
     // no resource taken, no resource cleaned up
     return () => {};
   }

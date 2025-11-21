@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "executors": {
+    "release-publish": {
+      "implementation": "./src/executors/release-publish/release-publish.impl",
+      "schema": "./src/executors/release-publish/schema.json",
+      "description": "DO NOT INVOKE DIRECTLY WITH `nx run`. Use `nx release publish` instead.",
+      "hidden": true
+    }
+  }
+}

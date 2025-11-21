@@ -3,15 +3,20 @@ import {
   generateFiles,
   joinPathFragments,
   names,
-  readProjectConfiguration,
   offsetFromRoot,
+  readProjectConfiguration,
 } from '@nx/devkit';
+import {
+  getProjectSourceRoot,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { maybeJs } from '../../../utils/maybe-js';
-import { NormalizedSchema } from '../schema';
 import {
   createNxRspackPluginOptions,
   getDefaultTemplateVariables,
 } from '../../application/lib/create-application-files';
+import { NormalizedSchema } from '../schema';
+import { join } from 'path';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -53,7 +58,7 @@ export function addModuleFederationFiles(
 
   const projectConfig = readProjectConfiguration(host, options.projectName);
   const pathToMFManifest = joinPathFragments(
-    projectConfig.sourceRoot,
+    getProjectSourceRoot(projectConfig, host),
     'assets/module-federation.manifest.json'
   );
 
@@ -79,7 +84,7 @@ export function addModuleFederationFiles(
 
   generateFiles(
     host,
-    joinPathFragments(
+    join(
       __dirname,
       `../files/${
         options.js
@@ -103,7 +108,7 @@ export function addModuleFederationFiles(
   // New entry file is created here.
   generateFiles(
     host,
-    joinPathFragments(__dirname, `../files/${pathToModuleFederationFiles}`),
+    join(__dirname, `../files/${pathToModuleFederationFiles}`),
     options.appProjectRoot,
     templateVariables
   );
@@ -129,6 +134,15 @@ export function addModuleFederationFiles(
     } else {
       processBundlerConfigFile(options, host, 'webpack.config.js');
       processBundlerConfigFile(options, host, 'webpack.config.prod.js');
+    }
+
+    // Delete TypeScript prod config in TS solution setup - not needed in Crystal
+    if (isUsingTsSolutionSetup(host)) {
+      const prodConfigFileName =
+        options.bundler === 'rspack'
+          ? 'rspack.config.prod.ts'
+          : 'webpack.config.prod.ts';
+      processBundlerConfigFile(options, host, prodConfigFileName);
     }
   }
 

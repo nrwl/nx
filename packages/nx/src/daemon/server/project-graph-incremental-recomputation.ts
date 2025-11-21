@@ -27,9 +27,13 @@ import {
 } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
+import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
 import { serverLogger } from './logger';
 import { NxWorkspaceFilesExternals } from '../../native';
-import { ConfigurationResult } from '../../project-graph/utils/project-configuration-utils';
+import {
+  ConfigurationResult,
+  ConfigurationSourceMaps,
+} from '../../project-graph/utils/project-configuration-utils';
 import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 import {
   DaemonProjectGraphError,
@@ -46,6 +50,7 @@ interface SerializedProjectGraph {
   allWorkspaceFiles: FileData[] | null;
   serializedProjectGraph: string | null;
   serializedSourceMaps: string | null;
+  sourceMaps: ConfigurationSourceMaps | null;
   rustReferences: NxWorkspaceFilesExternals | null;
 }
 
@@ -63,7 +68,7 @@ export let currentProjectGraph: ProjectGraph | undefined;
 const collectedUpdatedFiles = new Set<string>();
 const collectedDeletedFiles = new Set<string>();
 const projectGraphRecomputationListeners = new Set<
-  (projectGraph: ProjectGraph) => void
+  (projectGraph: ProjectGraph, sourceMaps: ConfigurationSourceMaps) => void
 >();
 let storedWorkspaceConfigHash: string | undefined;
 let waitPeriod = 100;
@@ -88,15 +93,51 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
       if (!cachedSerializedProjectGraphPromise) {
         cachedSerializedProjectGraphPromise =
           processFilesAndCreateAndSerializeProjectGraph(plugins);
+        serverLogger.log(
+          'No files changed, but no in-memory cached project graph found. Recomputing it...'
+        );
+      } else {
+        serverLogger.log(
+          'Reusing in-memory cached project graph because no files changed.'
+        );
       }
     } else {
+      serverLogger.log(
+        `Recomputing project graph because of ${collectedUpdatedFiles.size} updated and ${collectedDeletedFiles.size} deleted files.`
+      );
       cachedSerializedProjectGraphPromise =
         processFilesAndCreateAndSerializeProjectGraph(plugins);
     }
     const result = await cachedSerializedProjectGraphPromise;
 
     if (wasScheduled) {
-      notifyProjectGraphRecomputationListeners(result.projectGraph);
+      notifyProjectGraphRecomputationListeners(
+        result.projectGraph,
+        result.sourceMaps
+      );
+    }
+
+    const errors = result.error
+      ? result.error instanceof DaemonProjectGraphError
+        ? result.error.errors
+        : [result.error]
+      : [];
+
+    // Always write the daemon's current graph to disk to ensure disk cache
+    // stays in sync with the daemon's in-memory cache. This prevents issues
+    // where a non-daemon process writes a stale/errored cache that never
+    // gets overwritten by the daemon's valid graph.
+    if (
+      result.projectGraph &&
+      result.projectFileMapCache &&
+      result.sourceMaps
+    ) {
+      writeCache(
+        result.projectFileMapCache,
+        result.projectGraph,
+        result.sourceMaps,
+        errors
+      );
     }
 
     return result;
@@ -105,6 +146,7 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
       error: e,
       serializedProjectGraph: null,
       serializedSourceMaps: null,
+      sourceMaps: null,
       projectGraph: null,
       projectFileMapCache: null,
       fileMap: null,
@@ -146,19 +188,23 @@ export function addUpdatedAndDeletedFiles(
 
       cachedSerializedProjectGraphPromise =
         processFilesAndCreateAndSerializeProjectGraph(await getPlugins());
-      const { projectGraph } = await cachedSerializedProjectGraphPromise;
+      const { projectGraph, sourceMaps } =
+        await cachedSerializedProjectGraphPromise;
 
       if (createdFiles.length > 0) {
         notifyFileWatcherSockets(createdFiles, null, null);
       }
 
-      notifyProjectGraphRecomputationListeners(projectGraph);
+      notifyProjectGraphRecomputationListeners(projectGraph, sourceMaps);
     }, waitPeriod);
   }
 }
 
 export function registerProjectGraphRecomputationListener(
-  listener: (projectGraph: ProjectGraph) => void
+  listener: (
+    projectGraph: ProjectGraph,
+    sourceMaps: ConfigurationSourceMaps
+  ) => void
 ) {
   projectGraphRecomputationListeners.add(listener);
 }
@@ -296,15 +342,10 @@ async function processFilesAndCreateAndSerializeProjectGraph(
           allWorkspaceFiles: null,
           serializedProjectGraph: null,
           serializedSourceMaps: null,
+          sourceMaps: null,
         };
       }
     }
-    writeCache(
-      g.projectFileMapCache,
-      g.projectGraph,
-      projectConfigurationsResult.sourceMaps,
-      errors
-    );
     if (errors.length > 0) {
       return {
         error: new DaemonProjectGraphError(
@@ -319,6 +360,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
         allWorkspaceFiles: null,
         serializedProjectGraph: null,
         serializedSourceMaps: null,
+        sourceMaps: null,
       };
     } else {
       return g;
@@ -333,6 +375,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
       allWorkspaceFiles: null,
       serializedProjectGraph: null,
       serializedSourceMaps: null,
+      sourceMaps: null,
     };
   }
 }
@@ -401,6 +444,7 @@ async function createAndSerializeProjectGraph({
       allWorkspaceFiles,
       serializedProjectGraph,
       serializedSourceMaps,
+      sourceMaps,
       rustReferences,
     };
   } catch (e) {
@@ -415,6 +459,7 @@ async function createAndSerializeProjectGraph({
       allWorkspaceFiles: null,
       serializedProjectGraph: null,
       serializedSourceMaps: null,
+      sourceMaps: null,
       rustReferences: null,
     };
   }
@@ -441,8 +486,12 @@ async function resetInternalStateIfNxDepsMissing() {
   }
 }
 
-function notifyProjectGraphRecomputationListeners(projectGraph: ProjectGraph) {
+function notifyProjectGraphRecomputationListeners(
+  projectGraph: ProjectGraph,
+  sourceMaps: ConfigurationSourceMaps
+) {
   for (const listener of projectGraphRecomputationListeners) {
-    listener(projectGraph);
+    listener(projectGraph, sourceMaps);
   }
+  notifyProjectGraphListenerSockets(projectGraph, sourceMaps);
 }

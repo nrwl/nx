@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { Course } from '@nx/nx-dev/data-access-courses';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { Course } from '@nx/nx-dev-data-access-courses';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { ClockIcon } from '@heroicons/react/24/outline';
 
 interface CourseOverviewProps {

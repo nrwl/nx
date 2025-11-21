@@ -1,4 +1,4 @@
-import tseslint from 'typescript-eslint';
+import tseslint, { type ConfigArray } from 'typescript-eslint';
 import reactBase from './react-base';
 import reactTypescript from './react-typescript';
 import reactJsx from './react-jsx';
@@ -11,4 +11,10 @@ import reactJsx from './react-jsx';
  * It will be refactored in a follow up PR to correctly apply rules
  * to the right file types via overrides.
  */
-export default tseslint.config(...reactBase, ...reactTypescript, ...reactJsx);
+const config: ConfigArray = tseslint.config(
+  ...reactBase,
+  ...reactTypescript,
+  ...reactJsx
+);
+
+export default config;

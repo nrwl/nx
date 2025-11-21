@@ -65,3 +65,63 @@ It generates a json file to be consumed by nx:
   "externalNodes": {}
 }
 ```
+
+## Configuration
+
+The plugin provides a type-safe `nx {}` DSL for configuring Nx-specific metadata on your Gradle projects and tasks.
+
+### Project-Level Configuration
+
+Configure project metadata such as name, tags, and custom properties:
+
+**Kotlin (build.gradle.kts):**
+
+```kotlin
+import dev.nx.gradle.nx
+
+nx {
+  set("name", "my-custom-name")
+  array("tags", "api", "backend")
+}
+```
+
+**Groovy (build.gradle):**
+
+```groovy
+import static dev.nx.gradle.Groovy.nx
+
+nx(project) {
+  it.set 'name', 'my-custom-name'
+  it.array 'tags', 'api', 'backend'
+}
+```
+
+### Task-Level Configuration
+
+Configure Nx target-specific behavior on individual tasks:
+
+**Kotlin (build.gradle.kts):**
+
+```kotlin
+import dev.nx.gradle.nx
+
+tasks.named("integrationTest") {
+  nx {
+    set("cache", true)
+  }
+}
+```
+
+**Groovy (build.gradle):**
+
+```groovy
+import static dev.nx.gradle.Groovy.nx
+
+tasks.named('integrationTest') {
+  nx(it) {
+    it.set 'cache', true
+  }
+}
+```
+
+For complete documentation on the Gradle DSL including all available options and examples, see the [Gradle plugin configuration guide](https://nx.dev/packages/gradle/documents/overview#configuring-projects-and-tasks-with-the-gradle-dsl).

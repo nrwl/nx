@@ -13,18 +13,30 @@ export async function ensureNxConsoleInstalled() {
 
   const canInstallConsole = canInstallNxConsole();
 
+  // If user previously opted in but extension is not installed,
+  // they must have manually uninstalled it - respect that choice
+  if (setting === true && canInstallConsole) {
+    // User had auto-install enabled but extension is missing
+    // This means they manually uninstalled it
+    preferences.setAutoInstallPreference(false);
+    return;
+  }
+
   // Noop
   if (!canInstallConsole) {
     return;
   }
 
-  if (typeof setting !== 'boolean') {
+  if (process.stdout.isTTY && typeof setting !== 'boolean') {
     setting = await promptForNxConsoleInstallation();
     preferences.setAutoInstallPreference(setting);
   }
 
   if (setting) {
-    installNxConsole();
+    const installed = installNxConsole();
+    if (installed) {
+      output.log({ title: 'Successfully installed Nx Console!' });
+    }
   }
 }
 

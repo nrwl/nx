@@ -7,6 +7,7 @@ import {
   updateJson,
   workspaceRoot,
 } from '@nx/devkit';
+import { getCatalogManager } from '@nx/devkit/src/utils/catalog';
 import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { AfterAllProjectsVersioned, VersionActions } from 'nx/release';
@@ -14,6 +15,7 @@ import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import { parseRegistryOptions } from '../utils/npm-config';
 import { updateLockFile } from './utils/update-lock-file';
 import chalk = require('chalk');
+import { isMatchingDependencyRange, isValidRange } from './utils/semver';
 
 export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
   cwd: string,
@@ -29,7 +31,6 @@ export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
   return {
     changedFiles: await updateLockFile(cwd, {
       ...opts,
-      useLegacyVersioning: false,
       options: rootVersionActionsOptions,
     }),
     deletedFiles: [],
@@ -111,7 +112,15 @@ export default class JsVersionActions extends VersionActions {
             if (error) {
               return reject(error);
             }
-            if (stderr) {
+            // Only reject on stderr if it contains actual errors, not just npm warnings
+            // npm 11+ writes "npm warn" messages to stderr even on successful commands
+            if (
+              stderr &&
+              !stderr
+                .trim()
+                .split('\n')
+                .every((line) => line.startsWith('npm warn'))
+            ) {
               return reject(stderr);
             }
             return resolve(stdout.trim());
@@ -159,6 +168,19 @@ export default class JsVersionActions extends VersionActions {
         break;
       }
     }
+
+    // Resolve catalog references if needed
+    if (currentVersion) {
+      const catalogManager = getCatalogManager(tree.root);
+      if (catalogManager?.isCatalogReference(currentVersion)) {
+        currentVersion = catalogManager.resolveCatalogReference(
+          tree,
+          dependencyPackageName,
+          currentVersion
+        );
+      }
+    }
+
     return {
       currentVersion,
       dependencyCollection,
@@ -193,6 +215,13 @@ export default class JsVersionActions extends VersionActions {
     }
 
     const logMessages: string[] = [];
+    const catalogUpdates: Array<{
+      packageName: string;
+      version: string;
+      catalogName?: string;
+    }> = [];
+    const catalogManager = getCatalogManager(tree.root);
+
     for (const manifestToUpdate of this.manifestsToUpdate) {
       updateJson(tree, manifestToUpdate.manifestPath, (json) => {
         const dependencyTypes = [
@@ -201,6 +230,15 @@ export default class JsVersionActions extends VersionActions {
           'peerDependencies',
           'optionalDependencies',
         ];
+
+        const preserveMatchingDependencyRanges =
+          this.finalConfigForProject.preserveMatchingDependencyRanges === true
+            ? dependencyTypes
+            : this.finalConfigForProject.preserveMatchingDependencyRanges ===
+              false
+            ? []
+            : this.finalConfigForProject.preserveMatchingDependencyRanges ||
+              dependencyTypes;
 
         for (const depType of dependencyTypes) {
           if (json[depType]) {
@@ -215,14 +253,43 @@ export default class JsVersionActions extends VersionActions {
               }
               const currentVersion = json[depType][packageName];
               if (currentVersion) {
-                // Check if the local dependency protocol should be preserved or not
-                if (
+                if (catalogManager?.isCatalogReference(currentVersion)) {
+                  // collect the catalog updates so we can update the catalog definitions later
+                  const catalogRef =
+                    catalogManager.parseCatalogReference(currentVersion)!;
+                  catalogUpdates.push({
+                    packageName,
+                    version,
+                    catalogName: catalogRef.catalogName,
+                  });
+
+                  numDependenciesToUpdate--;
+                  continue;
+                }
+                // Check if other local dependency protocols should be preserved
+                else if (
                   manifestToUpdate.preserveLocalDependencyProtocols &&
                   this.isLocalDependencyProtocol(currentVersion)
                 ) {
                   // Reduce the count appropriately to avoid confusing user-facing logs
                   numDependenciesToUpdate--;
                   continue;
+                } else if (
+                  preserveMatchingDependencyRanges.includes(depType) &&
+                  !this.isLocalDependencyProtocol(currentVersion)
+                ) {
+                  // If the dependency is specified using a range, do some additional processing to determine whether to update the version
+                  if (
+                    isValidRange(currentVersion) &&
+                    !isMatchingDependencyRange(version, currentVersion)
+                  ) {
+                    throw new Error(
+                      `"preserveMatchingDependencyRanges" is enabled for "${depType}" and the new version "${version}" is outside the current range for "${packageName}" in manifest "${manifestToUpdate.manifestPath}". Please update the range before releasing.`
+                    );
+                  } else if (isValidRange(currentVersion)) {
+                    // it is a range, but it is valid
+                    continue;
+                  }
                 }
                 json[depType][packageName] = version;
               }
@@ -245,6 +312,18 @@ export default class JsVersionActions extends VersionActions {
         `✍️  Updated ${numDependenciesToUpdate} ${depText} in manifest: ${manifestToUpdate.manifestPath}`
       );
     }
+
+    // Update catalog definitions in pnpm-workspace.yaml
+    if (catalogUpdates.length > 0) {
+      // catalogManager is guaranteed to be defined when there are catalog updates
+      catalogManager!.updateCatalogVersions(tree, catalogUpdates);
+
+      const catalogText = catalogUpdates.length === 1 ? 'entry' : 'entries';
+      logMessages.push(
+        `✍️  Updated ${catalogUpdates.length} catalog ${catalogText} in pnpm-workspace.yaml`
+      );
+    }
+
     return logMessages;
   }
 

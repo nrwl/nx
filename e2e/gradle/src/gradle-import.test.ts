@@ -10,7 +10,7 @@ import {
   readJson,
   runCommand,
   createFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { mkdirSync, rmdirSync, writeFileSync } from 'fs';
 import { execSync } from 'node:child_process';
 import { join } from 'path';

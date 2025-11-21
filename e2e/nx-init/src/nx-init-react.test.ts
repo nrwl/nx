@@ -10,15 +10,13 @@ import {
   runCLI,
   runCommand,
   updateFile,
-} from '@nx/e2e/utils';
-import { copySync, renameSync } from 'fs-extra';
-import { sync as globSync } from 'glob';
-import { join } from 'path';
-import {
   createNonNxProjectDirectory,
   tmpProjPath,
   updateJson,
-} from '../../utils';
+} from '@nx/e2e-utils';
+import { copySync, renameSync } from 'fs-extra';
+import { sync as globSync } from 'glob';
+import { join } from 'path';
 
 describe('nx init (React)', () => {
   let pmc: ReturnType<typeof getPackageManagerCommand>;
@@ -36,7 +34,8 @@ describe('nx init (React)', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive`
+      } nx@${getPublishedVersion()} init --no-interactive`,
+      { env: { NX_USE_LOCAL: 'true' } }
     );
 
     expect(craToNxOutput).toContain('Done!');
@@ -46,7 +45,7 @@ describe('nx init (React)', () => {
       'tools/tsconfig.tools.json',
       'babel.config.json',
       'jest.preset.js',
-      'jest.config.ts'
+      'jest.config.cts'
     );
 
     const packageJson = readJson('package.json');
@@ -92,7 +91,8 @@ describe('nx init (React)', () => {
     runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive`
+      } nx@${getPublishedVersion()} init --no-interactive`,
+      { env: { NX_USE_LOCAL: 'true' } }
     );
 
     expect(() => runCLI(`build ${appName}`)).not.toThrow();

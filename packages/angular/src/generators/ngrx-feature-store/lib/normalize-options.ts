@@ -2,6 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { joinPathFragments, names, readJson } from '@nx/devkit';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { dirname } from 'path';
+import { major } from 'semver';
 import { rxjsVersion as defaultRxjsVersion } from '../../../utils/versions';
 import type { Schema } from '../schema';
 
@@ -9,6 +10,7 @@ export type NormalizedNgRxFeatureStoreGeneratorOptions = Schema & {
   parentDirectory: string;
   subdirectory: string;
   rxjsVersion: string;
+  rxjsMajorVersion: number;
 };
 
 export function normalizeOptions(
@@ -18,12 +20,14 @@ export function normalizeOptions(
   let rxjsVersion: string;
   try {
     rxjsVersion = checkAndCleanWithSemver(
+      tree,
       'rxjs',
       readJson(tree, 'package.json').dependencies['rxjs']
     );
   } catch {
-    rxjsVersion = checkAndCleanWithSemver('rxjs', defaultRxjsVersion);
+    rxjsVersion = checkAndCleanWithSemver(tree, 'rxjs', defaultRxjsVersion);
   }
+  const rxjsMajorVersion = major(rxjsVersion);
 
   const { subdirectory, name } = determineSubdirectoryAndName(options.name);
 
@@ -35,6 +39,7 @@ export function normalizeOptions(
     route: options.route === '' ? `''` : options.route ?? `''`,
     directory: names(options.directory).fileName,
     rxjsVersion,
+    rxjsMajorVersion,
   };
 }
 

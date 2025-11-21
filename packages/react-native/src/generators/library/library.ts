@@ -8,10 +8,12 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
+  readJson,
   runTasksInSerial,
   toJS,
   Tree,
   updateJson,
+  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 
@@ -30,6 +32,7 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
@@ -38,6 +41,11 @@ import { addRollupBuildTarget } from '@nx/react/src/generators/library/lib/add-r
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { relative } from 'path';
 import { reactNativeVersion, reactVersion } from '../../utils/versions';
+import {
+  addReleaseConfigForNonTsSolution,
+  addReleaseConfigForTsSolution,
+  releaseTasks,
+} from '@nx/js/src/generators/library/utils/add-release-config';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,
@@ -56,8 +64,10 @@ export async function reactNativeLibraryGeneratorInternal(
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
+    addTsPlugin,
     skipFormat: true,
   });
   tasks.push(jsInitTask);
@@ -73,7 +83,7 @@ export async function reactNativeLibraryGeneratorInternal(
   tasks.push(initTask);
 
   if (!options.skipPackageJson) {
-    tasks.push(ensureDependencies(host));
+    tasks.push(ensureDependencies(host, options.unitTestRunner));
   }
 
   createFiles(host, options);
@@ -122,6 +132,10 @@ export async function reactNativeLibraryGeneratorInternal(
     js: options.js,
   });
   tasks.push(() => componentTask);
+
+  if (options.publishable) {
+    tasks.push(await releaseTasks(host));
+  }
 
   if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(host, options.importPath, [
@@ -184,7 +198,9 @@ async function addProject(
   if (!options.useProjectJson) {
     packageJson = {
       ...packageJson,
-      ...determineEntryFields(options),
+      ...(options.buildable || options.publishable
+        ? {}
+        : determineEntryFields(options)),
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
       peerDependencies: {
         react: reactVersion,
@@ -199,6 +215,10 @@ async function addProject(
       packageJson.nx.tags = options.parsedTags;
     }
   } else {
+    if (options.publishable) {
+      const nxJson = readJson(host, 'nx.json');
+      await addReleaseConfigForNonTsSolution(host, options.name, project);
+    }
     addProjectConfiguration(host, options.name, project);
   }
 
@@ -213,6 +233,10 @@ async function addProject(
       joinPathFragments(options.projectRoot, 'package.json'),
       packageJson
     );
+    if (options.publishable) {
+      await addReleaseConfigForTsSolution(host, options.name, project);
+      updateProjectConfiguration(host, options.name, project);
+    }
   }
 
   if (options.publishable || options.buildable) {

@@ -4,9 +4,14 @@
   "sourceRoot": "packages/webpack",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/webpack/README.md"],
+      "command": "node ./scripts/copy-readme.js webpack"
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/webpack",
@@ -42,10 +47,6 @@
           }
         ]
       }
-    },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/webpack/README.md"],
-      "command": "node ./scripts/copy-readme.js webpack"
     }
   }
 }

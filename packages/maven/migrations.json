@@ -1,0 +1,23 @@
+{
+  "$schema": "../../node_modules/nx/schemas/generators-schema.json",
+  "generators": {
+    "update-0.0.8": {
+      "cli": "nx",
+      "version": "22.1.0-beta.4",
+      "description": "Update Maven plugin version from 0.0.7 to 0.0.8 in pom.xml files",
+      "factory": "./dist/migrations/0-0-8/update-pom-xml-version"
+    },
+    "update-0.0.9": {
+      "cli": "nx",
+      "version": "22.1.0-beta.6",
+      "description": "Update Maven plugin version from 0.0.8 to 0.0.9 in pom.xml files",
+      "factory": "./dist/migrations/0-0-9/update-pom-xml-version"
+    },
+    "update-0-0-10": {
+      "cli": "nx",
+      "version": "22.1.0-rc.3",
+      "description": "Update Maven plugin version from 0.0.9 to 0.0.10 in pom.xml files",
+      "factory": "./dist/migrations/0-0-10/update-pom-xml-version"
+    }
+  }
+}

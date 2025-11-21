@@ -3,7 +3,7 @@ import { createTreeWithEmptyWorkspace } from '../../../generators/testing-utils/
 import type { Tree } from '../../../generators/tree';
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { ProjectLogger } from './project-logger';
-import type { FinalConfigForProject } from './release-group-processor';
+import type { FinalConfigForProject } from '../utils/release-graph';
 import { resolveCurrentVersion } from './resolve-current-version';
 import { VersionActions } from './version-actions';
 
@@ -23,8 +23,16 @@ describe('resolveCurrentVersion', () => {
       fallbackCurrentVersionResolver: 'disk',
       versionPrefix: 'auto',
       preserveLocalDependencyProtocols: true,
+      preserveMatchingDependencyRanges: false,
       manifestRootsToUpdate: [],
       versionActionsOptions: {},
+      dockerOptions: {
+        preVersionCommand: undefined,
+        skipVersionActions: undefined,
+        versionSchemes: undefined,
+        repositoryName: undefined,
+        registryUrl: undefined,
+      },
     };
 
     class TestVersionActions extends VersionActions {
@@ -36,24 +44,29 @@ describe('resolveCurrentVersion', () => {
           manifestPath: 'package.json',
         };
       }
+
       async readCurrentVersionFromRegistry() {
         return {
           currentVersion: '1.2.3',
           logText: 'https://example.com/fake-registry',
         };
       }
+
       async updateProjectVersion() {
         return [];
       }
+
       async readCurrentVersionOfDependency() {
         return {
           currentVersion: '1.2.3',
           dependencyCollection: 'dependencies',
         };
       }
+
       async isLocalDependencyProtocol() {
         return false;
       }
+
       async updateProjectDependencies() {
         return [];
       }
@@ -63,6 +76,7 @@ describe('resolveCurrentVersion', () => {
       constructor(projectName: string) {
         super(projectName);
       }
+
       override buffer(message: string) {}
     }
 
@@ -94,7 +108,7 @@ describe('resolveCurrentVersion', () => {
         new TestProjectLogger(projectGraphNode.name),
         new Map(),
         finalConfigForProject,
-        undefined
+        ''
       );
       expect(currentVersion).toBe('1.2.3');
     });
@@ -132,7 +146,7 @@ describe('resolveCurrentVersion', () => {
         new TestProjectLogger(projectGraphNode.name),
         new Map(),
         finalConfigForProject,
-        undefined
+        ''
       );
       expect(currentVersion).toBe('1.2.3');
     });
@@ -160,24 +174,29 @@ describe('resolveCurrentVersion', () => {
         async readCurrentVersionFromSourceManifest() {
           return null;
         }
+
         async readCurrentVersionFromRegistry() {
           return {
             currentVersion: '1.2.3',
             logText: 'https://example.com/fake-registry',
           };
         }
+
         async updateProjectVersion() {
           return [];
         }
+
         async readCurrentVersionOfDependency() {
           return {
             currentVersion: '1.2.3',
             dependencyCollection: 'dependencies',
           };
         }
+
         async isLocalDependencyProtocol() {
           return false;
         }
+
         async updateProjectDependencies() {
           return [];
         }
@@ -196,7 +215,7 @@ describe('resolveCurrentVersion', () => {
           new TestProjectLogger(projectGraphNode.name),
           new Map(),
           finalConfigForProject,
-          undefined
+          ''
         )
       ).rejects.toThrowErrorMatchingInlineSnapshot(
         `"For project "test", the "currentVersionResolver" is set to "disk" but it is using "versionActions" of type "TestVersionActionsWithoutManifest". This is invalid because "TestVersionActionsWithoutManifest" does not support a manifest file. You should use a different "currentVersionResolver" or use a different "versionActions" implementation that supports a manifest file"`

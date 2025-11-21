@@ -16,11 +16,16 @@ export {
   readProjectConfigurationsFromRootMap,
   findMatchingConfigFiles,
 } from './project-graph/utils/project-configuration-utils';
+export { getIgnoreObjectForTree } from './utils/ignore';
 export { splitTarget } from './utils/split-target';
 export { combineOptionsForExecutor } from './utils/params';
 export { sortObjectByKeys } from './utils/object-sort';
 export { stripIndent } from './utils/logger';
-export { readModulePackageJson } from './utils/package-json';
+export {
+  readModulePackageJson,
+  installPackageToTmp,
+  installPackageToTmpAsync,
+} from './utils/package-json';
 export { splitByColons } from './utils/split-target';
 export { hashObject } from './hasher/file-hasher';
 export {
@@ -29,6 +34,7 @@ export {
 } from './utils/workspace-context';
 export {
   createProjectRootMappingsFromProjectConfigurations,
+  createProjectRootMappings,
   findProjectForPath,
 } from './project-graph/utils/find-project-for-path';
 export { retrieveProjectConfigurations } from './project-graph/utils/retrieve-workspace-files';
@@ -38,3 +44,6 @@ export { registerTsProject } from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';
 export { isCI } from './utils/is-ci';
 export { isUsingPrettierInTree } from './utils/is-using-prettier';
+export { readYamlFile } from './utils/fileutils';
+export { globalSpinner } from './utils/spinner';
+export { signalToCode } from './utils/exit-codes';

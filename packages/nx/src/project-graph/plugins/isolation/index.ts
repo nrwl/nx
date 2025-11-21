@@ -5,7 +5,8 @@ import { loadRemoteNxPlugin } from './plugin-pool';
 
 export async function loadNxPluginInIsolation(
   plugin: PluginConfiguration,
-  root = workspaceRoot
+  root = workspaceRoot,
+  index?: number
 ): Promise<readonly [Promise<LoadedNxPlugin>, () => void]> {
-  return loadRemoteNxPlugin(plugin, root);
+  return loadRemoteNxPlugin(plugin, root, index);
 }

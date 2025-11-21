@@ -1,5 +1,5 @@
 import { globSync } from 'tinyglobby';
-import { logger } from '@nx/devkit';
+import { logger, normalizePath } from '@nx/devkit';
 
 export function createEntryPoints(
   additionalEntryPoints: undefined | string[],
@@ -13,12 +13,13 @@ export function createEntryPoints(
   // Performance impact should be negligible since there shouldn't be that many entry points.
   // Benchmarks show only 1-3% difference in execution time.
   for (const pattern of additionalEntryPoints) {
-    const matched = globSync([pattern], {
+    const normalizedPattern = normalizePath(pattern);
+    const matched = globSync([normalizedPattern], {
       cwd: root,
       expandDirectories: false,
     });
     if (!matched.length)
-      logger.warn(`The pattern ${pattern} did not match any files.`);
+      logger.warn(`The pattern ${normalizedPattern} did not match any files.`);
     files.push(...matched);
   }
   return files;

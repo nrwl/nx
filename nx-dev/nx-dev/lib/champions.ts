@@ -1,4 +1,4 @@
-import { Champion } from '@nx/nx-dev/ui-common';
+import { Champion } from '@nx/nx-dev-ui-common';
 
 export const champions: Champion[] = [
   {

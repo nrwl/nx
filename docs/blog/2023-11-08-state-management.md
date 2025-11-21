@@ -115,7 +115,7 @@ npx nx generate @nx/expo:lib libs/queries/use-cat-fact
 npx nx generate @nx/react-native:lib libs/queries/use-cat-fact
 ```
 
-Or use [Nx Console](/recipes/nx-console):
+Or use [Nx Console](/docs/guides/nx-console):
 
 ![](/blog/images/2023-11-08/bodyimg3.webp)
 
@@ -433,7 +433,7 @@ For this app, it is going to track when users click the like button, so you need
 
 ![](/blog/images/2023-11-08/bodyimg7.webp)
 
-You can use the [Nx Console](/recipes/nx-console) to create a redux slice:
+You can use the [Nx Console](/docs/guides/nx-console) to create a redux slice:
 
 ![](/blog/images/2023-11-08/bodyimg8.webp)
 
@@ -706,14 +706,14 @@ Here is a simple app that uses TanStack Query and Redux for state management. Th
 Nx is a powerful monorepo tool. Together with Nx and these 2 state management tools, it will be very easy to scale up any app.
 
 - TanStack Query site: [https://tanstack.com/query/latest](https://tanstack.com/query/latest)
-- Official @nx/expo plugin: [/technologies/react/expo/introduction](/technologies/react/expo/introduction)
-- Official @nx/react-native plugin: [/technologies/react/react-native/introduction](/technologies/react/react-native/introduction)
+- Official @nx/expo plugin: [/technologies/react/expo/introduction](/docs/technologies/react/expo/introduction)
+- Official @nx/react-native plugin: [/technologies/react/react-native/introduction](/docs/technologies/react/react-native/introduction)
 
 ---
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)

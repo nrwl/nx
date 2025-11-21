@@ -6,8 +6,8 @@ import {
   SiriusxmAlternateIcon,
   UkgIcon,
   VmwareIcon,
-} from '@nx/nx-dev/ui-icons';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-icons';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 
 export function SolutionsEngineeringTestimonials(): ReactElement {
   return (

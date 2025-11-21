@@ -9,7 +9,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { basename, dirname, join } from 'path';
 
 import { createGradleProject } from './utils/create-gradle-project';
@@ -20,7 +20,9 @@ describe('Gradle Plugin V1', () => {
     ({ type }: { type: 'kotlin' | 'groovy' }) => {
       let gradleProjectName = uniq('my-gradle-project');
       beforeAll(() => {
-        newProject();
+        newProject({
+          packages: ['@nx/js'],
+        });
         createGradleProject(gradleProjectName, type);
         runCLI(`add @nx/gradle`);
         updateJson('nx.json', (json) => {

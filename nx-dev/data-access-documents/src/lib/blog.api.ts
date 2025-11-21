@@ -1,6 +1,6 @@
 import { readFileSync, accessSync, constants } from 'fs';
 import { join, basename, parse, resolve } from 'path';
-import { extractFrontmatter } from '@nx/nx-dev/ui-markdoc';
+import { extractFrontmatter } from '@nx/nx-dev-ui-markdoc';
 import { sortPosts } from './blog.util';
 import { BlogPostDataEntry } from './blog.model';
 import { readFile, readdir } from 'fs/promises';

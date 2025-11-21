@@ -87,3 +87,4 @@ export default helloWorldMiddleware;
 ```
 
 {% /tab %}
+{% /tabs %}

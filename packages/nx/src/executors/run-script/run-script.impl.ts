@@ -1,13 +1,14 @@
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
 import * as path from 'path';
+import * as treeKill from 'tree-kill';
 import type { ExecutorContext } from '../../config/misc-interfaces';
 import {
   createPseudoTerminal,
   PseudoTerminal,
-  PseudoTtyProcess,
 } from '../../tasks-runner/pseudo-terminal';
 import { getPackageManagerCommand } from '../../utils/package-manager';
-import { signalToCode } from '../../utils/exit-codes';
+
+const LARGE_BUFFER = 1024 * 1000000;
 
 export interface RunScriptOptions {
   script: string;
@@ -39,7 +40,7 @@ export default async function (
     if (PseudoTerminal.isSupported()) {
       await ptyProcess(command, cwd, env);
     } else {
-      nodeProcess(command, cwd, env);
+      await nodeProcess(command, cwd, env);
     }
     return { success: true };
   } catch (e) {
@@ -51,16 +52,43 @@ function nodeProcess(
   command: string,
   cwd: string,
   env: Record<string, string>
-) {
-  execSync(command, {
-    stdio: ['inherit', 'inherit', 'inherit'],
-    cwd,
-    env,
-    windowsHide: false,
+): Promise<void> {
+  return new Promise<void>((res, rej) => {
+    let cp = exec(
+      command,
+      { cwd, env, maxBuffer: LARGE_BUFFER, windowsHide: false },
+      (error) => {
+        if (error) {
+          rej(error);
+        } else {
+          res();
+        }
+      }
+    );
+
+    // Forward stdout/stderr to parent process
+    cp.stdout.pipe(process.stdout);
+    cp.stderr.pipe(process.stderr);
+
+    const exitHandler = (signal: NodeJS.Signals) => {
+      if (cp && cp.pid && !cp.killed) {
+        treeKill(cp.pid, signal, (error) => {
+          // On Windows, tree-kill (which uses taskkill) may fail when the process or its child process is already terminated.
+          // Ignore the errors, otherwise we will log them unnecessarily.
+          if (error && process.platform !== 'win32') {
+            rej(error);
+          } else {
+            res();
+          }
+        });
+      }
+    };
+
+    process.on('SIGINT', () => exitHandler('SIGINT'));
+    process.on('SIGTERM', () => exitHandler('SIGTERM'));
+    process.on('SIGHUP', () => exitHandler('SIGHUP'));
   });
 }
-
-let cp: PseudoTtyProcess | undefined;
 
 async function ptyProcess(
   command: string,
@@ -71,7 +99,7 @@ async function ptyProcess(
   await terminal.init();
 
   return new Promise<void>((res, rej) => {
-    cp = terminal.runCommand(command, { cwd, jsEnv: env });
+    let cp = terminal.runCommand(command, { cwd, jsEnv: env });
     cp.onExit((code) => {
       if (code === 0) {
         res();

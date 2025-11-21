@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
-import { LinuxIcon, WindowsIcon } from '@nx/nx-dev/ui-icons';
-import { SectionDescription, SectionHeading } from '@nx/nx-dev/ui-common';
+import { LinuxIcon, WindowsIcon } from '@nx/nx-dev-ui-icons';
+import { SectionDescription, SectionHeading } from '@nx/nx-dev-ui-common';
 
 const nonComputeItems = [
   {

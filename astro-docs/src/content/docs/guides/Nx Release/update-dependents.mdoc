@@ -1,0 +1,49 @@
+---
+title: Update Dependents
+description: Learn how to configure Nx Release to automatically update dependents when a dependency is versioned, across any number of release group boundaries.
+filter: 'type:Guides'
+---
+
+When versioning independently maintained projects, we will have to consider what happens when those projects depend on one another.
+
+For example, `project-a` might be version `1.0.0` and `project-b` might be version `2.0.0`, where `project-a` depends on `project-b`:
+
+`project-a -> project-b`.
+
+**In other words, `project-a` is a dependent of `project-b`, and `project-b` is a dependency of `project-a`.**
+
+This means that whenever we update `project-b` we need to consider the side-effects of that on `project-a`. There will now be a dependency reference, e.g. in a manifest file such as `package.json` for the TypeScript/JavaScript ecosystem, that needs to be updated to reflect the new version of `project-b`.
+
+Nx can handle this cascade of updates automatically, across any number of [Release Group](/docs/guides/nx-release/release-groups) boundaries, and this behavior is configurable via the `version.updateDependents` option.
+
+### Update Dependents Configuration
+
+- **`"always"`** (introduced in v22 and now the default): Always update dependents when a dependency is versioned, regardless of which group they belong to, or what filters are applied to the release command/programmatic API.
+- **`"auto"`**: (old default) Update dependents within the same release group, and only when not filtered out by `--projects` or `--groups`
+- **`"never"`**: Never automatically update dependents
+
+When Nx release detects that a side-effectful bump needs to be made, e.g. in our example to `project-a`, it will update any dependency references in manifest files (e.g. `project-a/package.json`), and bump `project-a`'s own version to the next appropriate patch version.
+
+For example, if `project-b` is bumped to version `2.1.0`, `project-a` will be updated to depend on `project-b@2.1.0`, and `project-a` will be bumped to version `1.0.1`.
+
+```json
+// Before
+{
+  "name": "project-a",
+  "version": "1.0.0",
+  "dependencies": {
+    "project-b": "2.0.0"
+  }
+}
+```
+
+```json
+// After
+{
+  "name": "project-a",
+  "version": "1.0.1", // Side-effectful patch of project-a
+  "dependencies": {
+    "project-b": "2.1.0" // New version of project-b
+  }
+}
+```

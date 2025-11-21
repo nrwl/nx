@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
-import { FitText } from '@nx/nx-dev/ui-animations';
+import { FitText } from '@nx/nx-dev-ui-animations';
 import {
   ButtonLink,
   SectionHeading,
   Strong,
   TextLink,
-} from '@nx/nx-dev/ui-common';
-import { cx } from '@nx/nx-dev/ui-primitives';
+} from '@nx/nx-dev-ui-common';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { motion } from 'framer-motion';
 import {
   AngularIcon,
@@ -42,7 +42,7 @@ import {
   ViteIcon,
   VueIcon,
   WebpackIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 
 export function SmarterToolsForMonorepos(): JSX.Element {
   return (

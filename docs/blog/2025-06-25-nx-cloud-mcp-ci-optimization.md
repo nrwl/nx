@@ -100,7 +100,7 @@ More about that [in the video](https://youtu.be/A68sjLnDwZQ).
 
 ## Getting started
 
-While we are working on a fully integrated remote Nx Cloud MCP that you can just connect with your favorite MCP-compatible client, for now you need to have a local Nx workspace and configure the [Nx MCP](/getting-started/ai-integration#manual-setup-for-other-ai-clients) for it.
+While we are working on a fully integrated remote Nx Cloud MCP that you can just connect with your favorite MCP-compatible client, for now you need to have a local Nx workspace and configure the [Nx MCP](/docs/getting-started/ai-setup#manual-setup-for-other-ai-clients) for it.
 
 As an example, to connect the Nx MCP with Claude Desktop, open the settings and go to the developer section and hit "Edit Config".
 
@@ -125,10 +125,10 @@ Then update the JSON configuration as follows, making sure the `cwd` points to t
 If you haven't already connected your Nx workspace to Nx Cloud, run:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
-This command will walk you through connecting your existing Nx workspace to a new Nx Cloud account. **There's a [free hobby plan](/pricing)**. Run it for a couple of weeks and then try out these conversational analytics features.
+This command will walk you through connecting your existing Nx workspace to a new Nx Cloud account. **There's a [free hobby plan](/nx-cloud#plans)**. Run it for a couple of weeks and then try out these conversational analytics features.
 
 ### For enterprise teams
 
@@ -146,7 +146,7 @@ More exciting features are coming soon, so stay tuned!
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 🌩️ [Nx Cloud](/nx-cloud)
 - 🌩️ [Nx Cloud Live demo](https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview)
 - 👩‍💻 [Nx Enterprise](/enterprise)

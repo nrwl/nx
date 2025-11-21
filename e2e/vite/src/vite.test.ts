@@ -8,7 +8,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { ChildProcess } from 'child_process';
 import { names } from '@nx/devkit';
 
@@ -94,7 +94,7 @@ describe('@nx/vite/plugin', () => {
         );
 
         updateFile(
-          `apps/${myApp}/vite.config.ts`,
+          `apps/${myApp}/vite.config.mts`,
           `/// <reference types='vitest' />
           import { defineConfig } from 'vite';
           import react from '@vitejs/plugin-react';
@@ -247,14 +247,51 @@ describe('@nx/vite/plugin', () => {
 
       expect(() => runCLI(`test ${lib1}`)).not.toThrow();
     });
+
+    it('should support local path aliases in project tsconfig.app.json', () => {
+      const myLocalApp = uniq('myapp');
+      runCLI(
+        `generate @nx/react:app ${myLocalApp} --directory=apps/${myLocalApp} --bundler=vite --unitTestRunner=vitest`
+      );
+
+      // Add a local path alias in the project's tsconfig.app.json
+      updateJson(`apps/${myLocalApp}/tsconfig.app.json`, (json) => {
+        json.compilerOptions = json.compilerOptions || {};
+        json.compilerOptions.baseUrl = '.';
+        json.compilerOptions.paths = {
+          '~/*': ['src/*'],
+        };
+        return json;
+      });
+
+      // Update the app to use the local path alias
+      updateFile(
+        `apps/${myLocalApp}/src/app/app.tsx`,
+        `import NxWelcome from '~/app/nx-welcome';
+
+        export function App() {
+          return (
+            <div>
+              <NxWelcome title="${myLocalApp}" />
+            </div>
+          );
+        }
+
+        export default App;`
+      );
+
+      // Ensure build works with local path aliases
+      expect(() => runCLI(`build ${myLocalApp}`)).not.toThrow();
+    });
   });
 
+  // TODO(Colum): Move this to a vitest specific e2e project when one is created
   describe('react with vitest only', () => {
     const reactVitest = uniq('reactVitest');
 
     beforeAll(() => {
       proj = newProject({
-        packages: ['@nx/vite', '@nx/react'],
+        packages: ['@nx/vitest', '@nx/react'],
       });
       runCLI(
         `generate @nx/react:app ${reactVitest} --bundler=webpack --unitTestRunner=vitest --e2eTestRunner=none`
@@ -265,14 +302,11 @@ describe('@nx/vite/plugin', () => {
       cleanupProject();
     });
 
-    it('should contain targets build, test and lint', () => {
+    it('should contain targets test', () => {
       const nxJson = readJson('nx.json');
 
-      const vitePlugin = nxJson.plugins.find(
-        (p) => p.plugin === '@nx/vite/plugin'
-      );
+      const vitePlugin = nxJson.plugins.find((p) => p.plugin === '@nx/vitest');
       expect(vitePlugin).toBeDefined();
-      expect(vitePlugin.options.buildTargetName).toEqual('build');
       expect(vitePlugin.options.testTargetName).toEqual('test');
     });
 

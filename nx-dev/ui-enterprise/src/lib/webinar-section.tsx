@@ -2,11 +2,10 @@ import React from 'react';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
 
 export const WebinarSection: React.FC = () => {
-  // return undefined;
   return (
     <p>
       <a
-        href="https://bit.ly/46cAHDu"
+        href="https://bit.ly/496NV6n"
         title="See live event in details"
         className="group/event-link inline-flex space-x-6"
       >
@@ -14,7 +13,7 @@ export const WebinarSection: React.FC = () => {
           Live event
         </span>
         <span className="inline-flex items-center space-x-2 text-sm/6 font-medium">
-          <span>Webinar + live Q&A on July 9th and 16th</span>
+          <span>Webinar on November 19th</span>
           <ChevronRightIcon
             aria-hidden="true"
             className="size-5 transform transition-all group-hover/event-link:translate-x-1"

@@ -1,13 +1,11 @@
 import {
   formatFiles,
   names,
-  readNxJson,
   runTasksInSerial,
   updateJson,
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { createPackageGenerator } from '../create-package/create-package';
 import { pluginGenerator } from '../plugin/plugin';
@@ -32,7 +30,7 @@ export async function presetGeneratorInternal(
   rawOptions: PresetGeneratorSchema
 ) {
   const tasks: GeneratorCallback[] = [];
-  const options = normalizeOptions(tree, rawOptions);
+  const options = normalizeOptions(rawOptions);
 
   const pluginTask = await pluginGenerator(tree, {
     compiler: 'tsc',
@@ -89,18 +87,8 @@ function moveNxPluginToDevDeps(tree: Tree) {
 }
 
 function normalizeOptions(
-  tree: Tree,
   options: PresetGeneratorSchema
 ): NormalizedPresetGeneratorOptions {
-  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
-
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    options.addPlugin ??
-    (isTsSolutionSetup &&
-      process.env.NX_ADD_PLUGINS !== 'false' &&
-      nxJson.useInferencePlugins !== false);
-
   return {
     ...options,
     pluginName: names(
@@ -112,8 +100,6 @@ function normalizeOptions(
       options.createPackageName === 'false' // for command line in e2e, it is passed as a string
         ? undefined
         : options.createPackageName,
-    addPlugin,
-    useProjectJson: options.useProjectJson ?? !isTsSolutionSetup,
   };
 }
 

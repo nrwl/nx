@@ -4,6 +4,7 @@ import {
   NxModuleFederationConfigOverride,
 } from '../../../utils/models';
 import { getModuleFederationConfig } from '../../../with-module-federation/rspack/utils';
+import { normalizeProjectName } from '../../../utils';
 
 export class NxModuleFederationPlugin implements RspackPluginInstance {
   constructor(
@@ -22,6 +23,11 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
     // This is required to ensure Module Federation will build the project correctly
     compiler.options.optimization ??= {};
     compiler.options.optimization.runtimeChunk = false;
+    if (compiler.options.optimization.splitChunks) {
+      compiler.options.optimization.splitChunks.cacheGroups ??= {};
+      compiler.options.optimization.splitChunks.cacheGroups.default = false;
+      compiler.options.optimization.splitChunks.cacheGroups.common = false;
+    }
     compiler.options.output.uniqueName = this._options.config.name;
     if (compiler.options.output.scriptType === 'module') {
       compiler.options.output.scriptType = undefined;
@@ -53,7 +59,7 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
     }
 
     new (require('@module-federation/enhanced/rspack').ModuleFederationPlugin)({
-      name: this._options.config.name.replace(/-/g, '_'),
+      name: normalizeProjectName(this._options.config.name),
       filename: 'remoteEntry.js',
       exposes: this._options.config.exposes,
       remotes: mappedRemotes,
@@ -70,7 +76,6 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
         : {}),
       ...(this.configOverride ? this.configOverride : {}),
       runtimePlugins,
-      virtualRuntimeEntry: true,
     }).apply(compiler);
 
     if (sharedLibraries) {

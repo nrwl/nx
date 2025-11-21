@@ -5,7 +5,7 @@ import {
   runCLI,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Vue (TS solution)', () => {
   let proj: string;

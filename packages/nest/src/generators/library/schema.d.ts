@@ -30,7 +30,6 @@ export interface LibraryGeneratorOptions {
   unitTestRunner?: UnitTestRunner;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
-  simpleName?: boolean;
   addPlugin?: boolean;
   isUsingTsSolutionsConfig?: boolean;
   useProjectJson?: boolean;

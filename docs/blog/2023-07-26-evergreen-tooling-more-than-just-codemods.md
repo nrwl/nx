@@ -148,9 +148,9 @@ Nx’s modular design helps as each plugin is responsible for a particular area 
 
 ![](/blog/images/2023-07-26/LNYWLmdgxQ07bqyt.avif)
 
-_(Source:_ [_/getting-started/intro_](/getting-started/intro)_)_
+_(Source:_ [_/getting-started/intro_](/docs/getting-started/intro)_)_
 
-These plugins are usually technology-specific, like a plugin to help you manage React, Next, Remix, or Angular projects and tooling like ESLint, Cypress, Playwright, Vite, Jest, and so on. There are no limits as you can [create your own](/extending-nx/intro/getting-started). They are **optional**, in that you can use Nx and React and set everything up on your own. But it might be worth relying on them for some better DX and automation, such as the update mechanism we’re currently looking at.
+These plugins are usually technology-specific, like a plugin to help you manage React, Next, Remix, or Angular projects and tooling like ESLint, Cypress, Playwright, Vite, Jest, and so on. There are no limits as you can [create your own](/docs/extending-nx/intro). They are **optional**, in that you can use Nx and React and set everything up on your own. But it might be worth relying on them for some better DX and automation, such as the update mechanism we’re currently looking at.
 
 Plugins are helpful here, because each plugin has a clearly defined responsibility. Like the `@nx/webpack` we looked at earlier, handles everything related to Webpack. So it’ll be responsible for updating the `webpack` NPM package and adjusting config Webpack-related files.
 
@@ -190,13 +190,13 @@ After that, your codebase should have been updated. Run your (ideally automated)
 That’s it! If you want to dive deeper, here are some potentially helpful links:
 
 - [Watch our YT video about Code Migrations](https://youtu.be/Ss6MfcXi0jE)
-- [/features/automate-updating-dependencies](/features/automate-updating-dependencies)
+- [/features/automate-updating-dependencies](/docs/features/automate-updating-dependencies)
 
 Also, if you haven’t already, give us a ⭐️ on Github: [https://github.com/nrwl/nx](https://github.com/nrwl/nx). We’d appreciate it 😃.
 
 ## Learn more
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

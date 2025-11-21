@@ -5,6 +5,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { findNodes } from '@nx/js';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getModifiers } from '@typescript-eslint/type-utils';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
@@ -70,9 +71,10 @@ export function getBarrelEntryPointProjectNode(
       .filter((entry) => {
         const sourceFolderPaths = tsConfigBase.compilerOptions.paths[entry];
         return sourceFolderPaths.some((sourceFolderPath) => {
+          const sourceRoot = getProjectSourceRoot(projectNode.data);
           return (
-            sourceFolderPath === projectNode.data.sourceRoot ||
-            sourceFolderPath.indexOf(`${projectNode.data.sourceRoot}/`) === 0
+            sourceFolderPath === sourceRoot ||
+            sourceFolderPath.indexOf(`${sourceRoot}/`) === 0
           );
         });
       })

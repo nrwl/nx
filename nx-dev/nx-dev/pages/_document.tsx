@@ -1,6 +1,7 @@
 import { Head, Html, Main, NextScript } from 'next/document';
+import type { ReactElement } from 'react';
 
-export default function Document(): JSX.Element {
+export default function Document(): ReactElement {
   return (
     <Html className="h-full scroll-smooth" lang="en">
       <Head>

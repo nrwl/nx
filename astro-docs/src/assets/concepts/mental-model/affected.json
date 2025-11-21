@@ -1,0 +1,6794 @@
+{
+  "tasks": [],
+  "projects": [
+    "docs",
+    "tools-documentation-create-embeddings",
+    "nx-dev",
+    "nx-dev-e2e",
+    "@nx/nx-source",
+    "nx-dev-ui-markdoc",
+    "nx-dev-feature-package-schema-viewer",
+    "nx-dev-feature-doc-viewer",
+    "nx-dev-feature-ai"
+  ],
+  "projectGraph": {
+    "nodes": [
+      "tools-documentation-create-embeddings",
+      "nx-dev-feature-package-schema-viewer",
+      "eslint-plugin-nx-legacy",
+      "react-native-legacy",
+      "nx-dev-data-access-documents",
+      "create-nx-workspace",
+      "nx-dev-data-access-packages",
+      "workspace-legacy",
+      "nx-dev-feature-doc-viewer",
+      "storybook-legacy",
+      "nx-plugin-legacy",
+      "create-nx-plugin",
+      "e2e-workspace-create-npm",
+      "nx-dev-feature-analytics",
+      "webpack-legacy",
+      "angular-legacy",
+      "cypress-legacy",
+      "nx-dev-data-access-menu",
+      "esbuild-legacy",
+      "express-legacy",
+      "linter-legacy",
+      "nx-dev-models-document",
+      "rollup-legacy",
+      "devkit-legacy",
+      "eslint-plugin",
+      "e2e-angular-extensions",
+      "nx-dev-ui-sponsor-card",
+      "nx-dev-feature-search",
+      "e2e-lerna-smoke-tests",
+      "detox-legacy",
+      "react-native",
+      "nx-dev-ui-member-card",
+      "e2e-storybook-angular",
+      "nx-dev-models-package",
+      "react-legacy",
+      "nx-dev-ui-conference",
+      "nx-dev-ui-references",
+      "vite-legacy",
+      "nx-dev-ui-primitives",
+      "nest-legacy",
+      "next-legacy",
+      "e2e-workspace-create",
+      "e2e-react-extensions",
+      "node-legacy",
+      "jest-legacy",
+      "expo-legacy",
+      "e2e-next-extensions",
+      "graph-ui-components",
+      "playwright",
+      "nx-dev-ui-community",
+      "web-legacy",
+      "js-legacy",
+      "storybook",
+      "nx-dev-ui-commands",
+      "workspace",
+      "eslint-rules",
+      "nx-dev-models-menu",
+      "nx-dev-e2e",
+      "nx-dev-ui-markdoc",
+      "nx-dev-feature-ai",
+      "graph-ui-tooltips",
+      "cypress",
+      "esbuild",
+      "e2e-react-native",
+      "webpack",
+      "nx-dev-ui-common",
+      "express",
+      "angular",
+      "e2e-angular-core",
+      "e2e-graph-client",
+      "plugin",
+      "rollup",
+      "devkit",
+      "nx-dev-ui-theme",
+      "linter",
+      "nx-dev-util-ai",
+      "nx-dev-ui-home",
+      "e2e-react-core",
+      "graph-ui-graph",
+      "e2e-playwright",
+      "react",
+      "detox",
+      "e2e-storybook",
+      "e2e-next-core",
+      "nest",
+      "next",
+      "typedoc-theme",
+      "node",
+      "vite",
+      "expo",
+      "jest",
+      "nx-dev",
+      "web",
+      "tao",
+      "graph-client",
+      "e2e-nx-misc",
+      "e2e-nx-init",
+      "e2e-esbuild",
+      "e2e-cypress",
+      "e2e-webpack",
+      "js",
+      "nx",
+      "e2e-rollup",
+      "e2e-plugin",
+      "e2e-linter",
+      "e2e-nx-run",
+      "e2e-detox",
+      "e2e-utils",
+      "e2e-expo",
+      "e2e-node",
+      "e2e-jest",
+      "e2e-vite",
+      "e2e-web",
+      "e2e-js",
+      "docs",
+      "@nx/nx-source"
+    ],
+    "dependencies": {
+      "tools-documentation-create-embeddings": [
+        {
+          "source": "tools-documentation-create-embeddings",
+          "target": "jest",
+          "type": "static"
+        },
+        {
+          "source": "tools-documentation-create-embeddings",
+          "target": "npm:@supabase/supabase-js",
+          "type": "static"
+        },
+        {
+          "source": "tools-documentation-create-embeddings",
+          "target": "npm:dotenv",
+          "type": "static"
+        },
+        {
+          "source": "tools-documentation-create-embeddings",
+          "target": "npm:dotenv-expand",
+          "type": "static"
+        },
+        {
+          "source": "tools-documentation-create-embeddings",
+          "target": "npm:openai",
+          "type": "static"
+        },
+        {
+          "source": "tools-documentation-create-embeddings",
+          "target": "npm:yargs",
+          "type": "static"
+        },
+        {
+          "source": "tools-documentation-create-embeddings",
+          "target": "npm:github-slugger",
+          "type": "static"
+        },
+        {
+          "source": "tools-documentation-create-embeddings",
+          "target": "npm:mdast-util-from-markdown",
+          "type": "static"
+        },
+        {
+          "source": "tools-documentation-create-embeddings",
+          "target": "npm:mdast-util-to-markdown",
+          "type": "static"
+        },
+        {
+          "source": "tools-documentation-create-embeddings",
+          "target": "npm:mdast-util-to-string",
+          "type": "static"
+        },
+        {
+          "source": "tools-documentation-create-embeddings",
+          "target": "npm:unist-builder",
+          "type": "static"
+        },
+        {
+          "source": "tools-documentation-create-embeddings",
+          "target": "docs",
+          "type": "static"
+        }
+      ],
+      "nx-dev-feature-package-schema-viewer": [
+        {
+          "source": "nx-dev-feature-package-schema-viewer",
+          "target": "npm:@heroicons/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-package-schema-viewer",
+          "target": "nx-dev-data-access-packages",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-package-schema-viewer",
+          "target": "nx-dev-models-package",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-package-schema-viewer",
+          "target": "nx-dev-ui-markdoc",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-package-schema-viewer",
+          "target": "npm:next",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-package-schema-viewer",
+          "target": "npm:react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-package-schema-viewer",
+          "target": "nx-dev-ui-common",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-package-schema-viewer",
+          "target": "npm:next-seo",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-package-schema-viewer",
+          "target": "npm:@monaco-editor/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-package-schema-viewer",
+          "target": "nx-dev-ui-theme",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-package-schema-viewer",
+          "target": "nx-dev-models-document",
+          "type": "static"
+        }
+      ],
+      "eslint-plugin-nx-legacy": [
+        {
+          "source": "eslint-plugin-nx-legacy",
+          "target": "eslint-plugin",
+          "type": "static"
+        }
+      ],
+      "react-native-legacy": [
+        {
+          "source": "react-native-legacy",
+          "target": "react-native",
+          "type": "static"
+        },
+        {
+          "source": "react-native-legacy",
+          "target": "npm:react",
+          "type": "static"
+        }
+      ],
+      "nx-dev-data-access-documents": [
+        {
+          "source": "nx-dev-data-access-documents",
+          "target": "nx-dev-models-document",
+          "type": "static"
+        }
+      ],
+      "create-nx-workspace": [
+        {
+          "source": "create-nx-workspace",
+          "target": "workspace",
+          "type": "implicit"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "js",
+          "type": "implicit"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "react",
+          "type": "implicit"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "expo",
+          "type": "implicit"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "next",
+          "type": "implicit"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "angular",
+          "type": "implicit"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "nest",
+          "type": "implicit"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "express",
+          "type": "implicit"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "npm:enquirer",
+          "type": "static"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "npm:yargs",
+          "type": "static"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "npm:flat",
+          "type": "static"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "npm:ora",
+          "type": "static"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "npm:tmp",
+          "type": "static"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "npm:axios",
+          "type": "static"
+        },
+        {
+          "source": "create-nx-workspace",
+          "target": "npm:axios",
+          "type": "dynamic"
+        }
+      ],
+      "nx-dev-data-access-packages": [
+        {
+          "source": "nx-dev-data-access-packages",
+          "target": "nx-dev-models-package",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-data-access-packages",
+          "target": "npm:jsonpointer",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-data-access-packages",
+          "target": "nx-dev-data-access-documents",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-data-access-packages",
+          "target": "nx-dev-models-document",
+          "type": "static"
+        }
+      ],
+      "workspace-legacy": [
+        {
+          "source": "workspace-legacy",
+          "target": "workspace",
+          "type": "static"
+        }
+      ],
+      "nx-dev-feature-doc-viewer": [
+        {
+          "source": "nx-dev-feature-doc-viewer",
+          "target": "nx-dev-models-document",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-doc-viewer",
+          "target": "nx-dev-ui-common",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-doc-viewer",
+          "target": "nx-dev-ui-markdoc",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-doc-viewer",
+          "target": "npm:next-seo",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-doc-viewer",
+          "target": "npm:next",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-doc-viewer",
+          "target": "nx-dev-ui-primitives",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-doc-viewer",
+          "target": "npm:react",
+          "type": "static"
+        }
+      ],
+      "storybook-legacy": [
+        {
+          "source": "storybook-legacy",
+          "target": "storybook",
+          "type": "static"
+        }
+      ],
+      "nx-plugin-legacy": [
+        {
+          "source": "nx-plugin-legacy",
+          "target": "plugin",
+          "type": "static"
+        }
+      ],
+      "create-nx-plugin": [
+        {
+          "source": "create-nx-plugin",
+          "target": "plugin",
+          "type": "implicit"
+        },
+        {
+          "source": "create-nx-plugin",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "create-nx-plugin",
+          "target": "npm:enquirer",
+          "type": "static"
+        },
+        {
+          "source": "create-nx-plugin",
+          "target": "npm:yargs",
+          "type": "static"
+        },
+        {
+          "source": "create-nx-plugin",
+          "target": "create-nx-workspace",
+          "type": "static"
+        },
+        {
+          "source": "create-nx-plugin",
+          "target": "npm:tslib",
+          "type": "static"
+        }
+      ],
+      "e2e-workspace-create-npm": [
+        {
+          "source": "e2e-workspace-create-npm",
+          "target": "create-nx-workspace",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-workspace-create-npm",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "nx-dev-feature-analytics": [],
+      "webpack-legacy": [
+        {
+          "source": "webpack-legacy",
+          "target": "webpack",
+          "type": "static"
+        }
+      ],
+      "angular-legacy": [
+        {
+          "source": "angular-legacy",
+          "target": "workspace",
+          "type": "implicit"
+        },
+        {
+          "source": "angular-legacy",
+          "target": "cypress",
+          "type": "implicit"
+        },
+        {
+          "source": "angular-legacy",
+          "target": "jest",
+          "type": "implicit"
+        },
+        {
+          "source": "angular-legacy",
+          "target": "angular",
+          "type": "static"
+        }
+      ],
+      "cypress-legacy": [
+        {
+          "source": "cypress-legacy",
+          "target": "cypress",
+          "type": "static"
+        }
+      ],
+      "nx-dev-data-access-menu": [
+        {
+          "source": "nx-dev-data-access-menu",
+          "target": "nx-dev-models-menu",
+          "type": "static"
+        }
+      ],
+      "esbuild-legacy": [
+        {
+          "source": "esbuild-legacy",
+          "target": "esbuild",
+          "type": "static"
+        }
+      ],
+      "express-legacy": [
+        {
+          "source": "express-legacy",
+          "target": "node",
+          "type": "implicit"
+        },
+        {
+          "source": "express-legacy",
+          "target": "express",
+          "type": "static"
+        }
+      ],
+      "linter-legacy": [
+        {
+          "source": "linter-legacy",
+          "target": "linter",
+          "type": "static"
+        }
+      ],
+      "nx-dev-models-document": [],
+      "rollup-legacy": [
+        {
+          "source": "rollup-legacy",
+          "target": "rollup",
+          "type": "static"
+        }
+      ],
+      "devkit-legacy": [
+        {
+          "source": "devkit-legacy",
+          "target": "devkit",
+          "type": "static"
+        }
+      ],
+      "eslint-plugin": [
+        {
+          "source": "eslint-plugin",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "npm:@typescript-eslint/type-utils",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "npm:@typescript-eslint/utils",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "npm:confusing-browser-globals",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "npm:jsonc-eslint-parser",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "npm:semver",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "npm:@typescript-eslint/parser",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "npm:eslint-config-prettier",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "npm:@angular-eslint/eslint-plugin",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "npm:@angular-eslint/eslint-plugin",
+          "type": "dynamic"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "npm:memfs",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "npm:eslint",
+          "type": "static"
+        },
+        {
+          "source": "eslint-plugin",
+          "target": "npm:typescript",
+          "type": "static"
+        }
+      ],
+      "e2e-angular-extensions": [
+        {
+          "source": "e2e-angular-extensions",
+          "target": "angular",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-angular-extensions",
+          "target": "e2e-utils",
+          "type": "static"
+        },
+        {
+          "source": "e2e-angular-extensions",
+          "target": "devkit",
+          "type": "static"
+        }
+      ],
+      "nx-dev-ui-sponsor-card": [
+        {
+          "source": "nx-dev-ui-sponsor-card",
+          "target": "npm:@testing-library/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-sponsor-card",
+          "target": "npm:next",
+          "type": "static"
+        }
+      ],
+      "nx-dev-feature-search": [
+        {
+          "source": "nx-dev-feature-search",
+          "target": "npm:@docsearch/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-search",
+          "target": "npm:@heroicons/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-search",
+          "target": "npm:next",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-search",
+          "target": "npm:react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-search",
+          "target": "npm:react-dom",
+          "type": "static"
+        }
+      ],
+      "e2e-lerna-smoke-tests": [
+        {
+          "source": "e2e-lerna-smoke-tests",
+          "target": "nx",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-lerna-smoke-tests",
+          "target": "devkit",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-lerna-smoke-tests",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "detox-legacy": [
+        {
+          "source": "detox-legacy",
+          "target": "detox",
+          "type": "static"
+        }
+      ],
+      "react-native": [
+        {
+          "source": "react-native",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "npm:enhanced-resolve",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "npm:fs-extra",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "npm:glob",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "npm:ignore",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "npm:metro-config",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "npm:metro-resolver",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "npm:minimatch",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "npm:node-fetch",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "npm:tsconfig-paths",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "detox",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "jest",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "linter",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "react",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "workspace",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "rollup",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "storybook",
+          "type": "dynamic"
+        },
+        {
+          "source": "react-native",
+          "target": "storybook",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "npm:prettier",
+          "type": "static"
+        },
+        {
+          "source": "react-native",
+          "target": "npm:react",
+          "type": "static"
+        }
+      ],
+      "nx-dev-ui-member-card": [
+        {
+          "source": "nx-dev-ui-member-card",
+          "target": "npm:@testing-library/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-member-card",
+          "target": "npm:next",
+          "type": "static"
+        }
+      ],
+      "e2e-storybook-angular": [
+        {
+          "source": "e2e-storybook-angular",
+          "target": "storybook",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-storybook-angular",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "nx-dev-models-package": [
+        {
+          "source": "nx-dev-models-package",
+          "target": "nx-dev-models-document",
+          "type": "static"
+        }
+      ],
+      "react-legacy": [
+        {
+          "source": "react-legacy",
+          "target": "react",
+          "type": "static"
+        },
+        {
+          "source": "react-legacy",
+          "target": "npm:react",
+          "type": "static"
+        }
+      ],
+      "nx-dev-ui-conference": [
+        {
+          "source": "nx-dev-ui-conference",
+          "target": "nx-dev-ui-member-card",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-conference",
+          "target": "nx-dev-ui-sponsor-card",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-conference",
+          "target": "npm:classnames",
+          "type": "static"
+        }
+      ],
+      "nx-dev-ui-references": [
+        {
+          "source": "nx-dev-ui-references",
+          "target": "npm:classnames",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-references",
+          "target": "npm:@heroicons/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-references",
+          "target": "nx-dev-models-menu",
+          "type": "static"
+        }
+      ],
+      "vite-legacy": [
+        {
+          "source": "vite-legacy",
+          "target": "vite",
+          "type": "static"
+        }
+      ],
+      "nx-dev-ui-primitives": [
+        {
+          "source": "nx-dev-ui-primitives",
+          "target": "npm:classnames",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-primitives",
+          "target": "npm:tailwind-merge",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-primitives",
+          "target": "npm:react",
+          "type": "static"
+        }
+      ],
+      "nest-legacy": [
+        {
+          "source": "nest-legacy",
+          "target": "node",
+          "type": "implicit"
+        },
+        {
+          "source": "nest-legacy",
+          "target": "linter",
+          "type": "implicit"
+        },
+        {
+          "source": "nest-legacy",
+          "target": "nest",
+          "type": "static"
+        }
+      ],
+      "next-legacy": [
+        {
+          "source": "next-legacy",
+          "target": "next",
+          "type": "static"
+        },
+        {
+          "source": "next-legacy",
+          "target": "npm:react",
+          "type": "static"
+        }
+      ],
+      "e2e-workspace-create": [
+        {
+          "source": "e2e-workspace-create",
+          "target": "create-nx-workspace",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-workspace-create",
+          "target": "e2e-utils",
+          "type": "static"
+        },
+        {
+          "source": "e2e-workspace-create",
+          "target": "npm:fs-extra",
+          "type": "static"
+        }
+      ],
+      "e2e-react-extensions": [
+        {
+          "source": "e2e-react-extensions",
+          "target": "react",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-react-extensions",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "node-legacy": [
+        {
+          "source": "node-legacy",
+          "target": "node",
+          "type": "static"
+        }
+      ],
+      "jest-legacy": [
+        {
+          "source": "jest-legacy",
+          "target": "jest",
+          "type": "static"
+        }
+      ],
+      "expo-legacy": [
+        {
+          "source": "expo-legacy",
+          "target": "expo",
+          "type": "static"
+        },
+        {
+          "source": "expo-legacy",
+          "target": "npm:react",
+          "type": "static"
+        }
+      ],
+      "e2e-next-extensions": [
+        {
+          "source": "e2e-next-extensions",
+          "target": "next",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-next-extensions",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "graph-ui-components": [
+        {
+          "source": "graph-ui-components",
+          "target": "npm:@storybook/react",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-components",
+          "target": "npm:react",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-components",
+          "target": "npm:@heroicons/react",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-components",
+          "target": "npm:@tailwindcss/typography",
+          "type": "static"
+        }
+      ],
+      "playwright": [
+        {
+          "source": "playwright",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "playwright",
+          "target": "linter",
+          "type": "static"
+        },
+        {
+          "source": "playwright",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "playwright",
+          "target": "npm:@playwright/test",
+          "type": "static"
+        },
+        {
+          "source": "playwright",
+          "target": "npm:@playwright/test",
+          "type": "dynamic"
+        }
+      ],
+      "nx-dev-ui-community": [
+        {
+          "source": "nx-dev-ui-community",
+          "target": "npm:@heroicons/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-community",
+          "target": "nx-dev-ui-common",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-community",
+          "target": "npm:next",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-community",
+          "target": "npm:react",
+          "type": "static"
+        }
+      ],
+      "web-legacy": [
+        {
+          "source": "web-legacy",
+          "target": "web",
+          "type": "static"
+        }
+      ],
+      "js-legacy": [
+        {
+          "source": "js-legacy",
+          "target": "js",
+          "type": "static"
+        }
+      ],
+      "storybook": [
+        {
+          "source": "storybook",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "storybook",
+          "target": "npm:@phenomnomnominal/tsquery",
+          "type": "static"
+        },
+        {
+          "source": "storybook",
+          "target": "npm:semver",
+          "type": "static"
+        },
+        {
+          "source": "storybook",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "storybook",
+          "target": "cypress",
+          "type": "static"
+        },
+        {
+          "source": "storybook",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "storybook",
+          "target": "linter",
+          "type": "static"
+        },
+        {
+          "source": "storybook",
+          "target": "workspace",
+          "type": "static"
+        },
+        {
+          "source": "storybook",
+          "target": "npm:@storybook/core-server",
+          "type": "static"
+        },
+        {
+          "source": "storybook",
+          "target": "npm:@storybook/types",
+          "type": "static"
+        },
+        {
+          "source": "storybook",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "storybook",
+          "target": "web",
+          "type": "static"
+        },
+        {
+          "source": "storybook",
+          "target": "nx",
+          "type": "static"
+        }
+      ],
+      "nx-dev-ui-commands": [
+        {
+          "source": "nx-dev-ui-commands",
+          "target": "npm:react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-commands",
+          "target": "npm:react-copy-to-clipboard",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-commands",
+          "target": "npm:react-syntax-highlighter",
+          "type": "static"
+        }
+      ],
+      "workspace": [
+        {
+          "source": "workspace",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "workspace",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "workspace",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "workspace",
+          "target": "npm:ignore",
+          "type": "static"
+        },
+        {
+          "source": "workspace",
+          "target": "npm:rxjs",
+          "type": "static"
+        },
+        {
+          "source": "workspace",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "workspace",
+          "target": "npm:yargs-parser",
+          "type": "static"
+        },
+        {
+          "source": "workspace",
+          "target": "npm:yargs",
+          "type": "static"
+        },
+        {
+          "source": "workspace",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "workspace",
+          "target": "npm:ajv",
+          "type": "static"
+        },
+        {
+          "source": "workspace",
+          "target": "npm:memfs",
+          "type": "static"
+        },
+        {
+          "source": "workspace",
+          "target": "npm:@angular-devkit/schematics",
+          "type": "static"
+        },
+        {
+          "source": "workspace",
+          "target": "npm:@angular-devkit/schematics",
+          "type": "dynamic"
+        },
+        {
+          "source": "workspace",
+          "target": "npm:prettier",
+          "type": "dynamic"
+        },
+        {
+          "source": "workspace",
+          "target": "npm:@angular-devkit/core",
+          "type": "static"
+        },
+        {
+          "source": "workspace",
+          "target": "npm:@angular-devkit/architect",
+          "type": "static"
+        }
+      ],
+      "eslint-rules": [
+        {
+          "source": "eslint-rules",
+          "target": "npm:@typescript-eslint/utils",
+          "type": "static"
+        },
+        {
+          "source": "eslint-rules",
+          "target": "npm:@typescript-eslint/parser",
+          "type": "static"
+        },
+        {
+          "source": "eslint-rules",
+          "target": "npm:jsonc-eslint-parser",
+          "type": "static"
+        }
+      ],
+      "nx-dev-models-menu": [],
+      "nx-dev-e2e": [
+        {
+          "source": "nx-dev-e2e",
+          "target": "nx-dev",
+          "type": "implicit"
+        },
+        {
+          "source": "nx-dev-e2e",
+          "target": "npm:@playwright/test",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-e2e",
+          "target": "npm:@nx/playwright",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-e2e",
+          "target": "devkit",
+          "type": "static"
+        }
+      ],
+      "nx-dev-ui-markdoc": [
+        {
+          "source": "nx-dev-ui-markdoc",
+          "target": "npm:@markdoc/markdoc",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-markdoc",
+          "target": "npm:js-yaml",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-markdoc",
+          "target": "npm:react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-markdoc",
+          "target": "npm:@heroicons/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-markdoc",
+          "target": "npm:react-copy-to-clipboard",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-markdoc",
+          "target": "npm:react-syntax-highlighter",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-markdoc",
+          "target": "npm:next",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-markdoc",
+          "target": "nx-dev-ui-common",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-markdoc",
+          "target": "nx-dev-ui-primitives",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-markdoc",
+          "target": "npm:classnames",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-markdoc",
+          "target": "nx-dev-ui-theme",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-markdoc",
+          "target": "graph-ui-graph",
+          "type": "dynamic"
+        }
+      ],
+      "nx-dev-feature-ai": [
+        {
+          "source": "nx-dev-feature-ai",
+          "target": "npm:@heroicons/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-ai",
+          "target": "nx-dev-feature-analytics",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-ai",
+          "target": "npm:react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-ai",
+          "target": "nx-dev-util-ai",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-ai",
+          "target": "npm:ai",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-ai",
+          "target": "nx-dev-ui-primitives",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-ai",
+          "target": "npm:react-markdown",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-ai",
+          "target": "nx-dev-ui-markdoc",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-ai",
+          "target": "nx-dev-ui-common",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-feature-ai",
+          "target": "npm:react-textarea-autosize",
+          "type": "static"
+        }
+      ],
+      "graph-ui-tooltips": [
+        {
+          "source": "graph-ui-tooltips",
+          "target": "npm:@storybook/react",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-tooltips",
+          "target": "graph-ui-components",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-tooltips",
+          "target": "npm:@heroicons/react",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-tooltips",
+          "target": "npm:react",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-tooltips",
+          "target": "npm:react-router-dom",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-tooltips",
+          "target": "npm:@floating-ui/react",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-tooltips",
+          "target": "npm:@tailwindcss/typography",
+          "type": "static"
+        }
+      ],
+      "cypress": [
+        {
+          "source": "cypress",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "cypress",
+          "target": "npm:@phenomnomnominal/tsquery",
+          "type": "static"
+        },
+        {
+          "source": "cypress",
+          "target": "npm:@phenomnomnominal/tsquery",
+          "type": "dynamic"
+        },
+        {
+          "source": "cypress",
+          "target": "npm:detect-port",
+          "type": "static"
+        },
+        {
+          "source": "cypress",
+          "target": "npm:semver",
+          "type": "static"
+        },
+        {
+          "source": "cypress",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "cypress",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "cypress",
+          "target": "linter",
+          "type": "static"
+        },
+        {
+          "source": "cypress",
+          "target": "npm:cypress",
+          "type": "static"
+        },
+        {
+          "source": "cypress",
+          "target": "npm:cypress",
+          "type": "dynamic"
+        },
+        {
+          "source": "cypress",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "cypress",
+          "target": "npm:eslint",
+          "type": "static"
+        },
+        {
+          "source": "cypress",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "cypress",
+          "target": "npm:rollup",
+          "type": "static"
+        },
+        {
+          "source": "cypress",
+          "target": "npm:vite",
+          "type": "static"
+        }
+      ],
+      "esbuild": [
+        {
+          "source": "esbuild",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "esbuild",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "esbuild",
+          "target": "npm:fast-glob",
+          "type": "static"
+        },
+        {
+          "source": "esbuild",
+          "target": "npm:fs-extra",
+          "type": "static"
+        },
+        {
+          "source": "esbuild",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "esbuild",
+          "target": "npm:tsconfig-paths",
+          "type": "static"
+        },
+        {
+          "source": "esbuild",
+          "target": "npm:tsconfig-paths",
+          "type": "dynamic"
+        },
+        {
+          "source": "esbuild",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "esbuild",
+          "target": "npm:esbuild",
+          "type": "static"
+        },
+        {
+          "source": "esbuild",
+          "target": "nx",
+          "type": "static"
+        }
+      ],
+      "e2e-react-native": [
+        {
+          "source": "e2e-react-native",
+          "target": "react-native",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-react-native",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "webpack": [
+        {
+          "source": "webpack",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:@babel/core",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:autoprefixer",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:babel-loader",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:browserslist",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:copy-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:css-loader",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:css-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:css-minimizer-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:fork-ts-checker-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:less",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:less-loader",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:less-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:license-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:loader-utils",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:mini-css-extract-plugin",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:parse5",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:postcss",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:postcss",
+          "type": "dynamic"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:postcss-import",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:postcss-loader",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:postcss-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:rxjs",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:sass",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:sass",
+          "type": "dynamic"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:sass-loader",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:sass-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:source-map-loader",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:source-map-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:style-loader",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:style-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:stylus",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:stylus-loader",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:stylus-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:terser-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:ts-loader",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:tsconfig-paths-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:webpack",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:webpack-dev-server",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:webpack-node-externals",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:webpack-subresource-integrity",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "webpack",
+          "target": "js",
+          "type": "dynamic"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:swc-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "webpack",
+          "target": "npm:@swc/core",
+          "type": "dynamic"
+        },
+        {
+          "source": "webpack",
+          "target": "nx",
+          "type": "static"
+        }
+      ],
+      "nx-dev-ui-common": [
+        {
+          "source": "nx-dev-ui-common",
+          "target": "npm:next",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-common",
+          "target": "npm:@heroicons/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-common",
+          "target": "npm:classnames",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-common",
+          "target": "nx-dev-ui-primitives",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-common",
+          "target": "npm:react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-common",
+          "target": "nx-dev-feature-search",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-common",
+          "target": "nx-dev-ui-theme",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-common",
+          "target": "nx-dev-feature-analytics",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-common",
+          "target": "npm:@headlessui/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-common",
+          "target": "nx-dev-models-menu",
+          "type": "static"
+        }
+      ],
+      "express": [
+        {
+          "source": "express",
+          "target": "node",
+          "type": "implicit"
+        },
+        {
+          "source": "express",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "express",
+          "target": "node",
+          "type": "static"
+        },
+        {
+          "source": "express",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "express",
+          "target": "npm:express",
+          "type": "static"
+        },
+        {
+          "source": "express",
+          "target": "linter",
+          "type": "static"
+        }
+      ],
+      "angular": [
+        {
+          "source": "angular",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "devkit",
+          "type": "dynamic"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@phenomnomnominal/tsquery",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@phenomnomnominal/tsquery",
+          "type": "dynamic"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@typescript-eslint/type-utils",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@typescript-eslint/type-utils",
+          "type": "dynamic"
+        },
+        {
+          "source": "angular",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:find-cache-dir",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:ignore",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:magic-string",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:minimatch",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:semver",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:webpack",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:webpack-merge",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:enquirer",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "cypress",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "jest",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "linter",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "webpack",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "workspace",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@angular-devkit/build-angular",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@angular-devkit/build-angular",
+          "type": "dynamic"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@angular-devkit/schematics",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@schematics/angular",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@angular-devkit/core",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@nguniversal/builders",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@nguniversal/builders",
+          "type": "dynamic"
+        },
+        {
+          "source": "angular",
+          "target": "npm:rxjs",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:esbuild",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:cypress",
+          "type": "dynamic"
+        },
+        {
+          "source": "angular",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@angular-devkit/architect",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:injection-js",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:ng-packagr",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:ng-packagr",
+          "type": "dynamic"
+        },
+        {
+          "source": "angular",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@angular/compiler",
+          "type": "dynamic"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@angular/compiler-cli",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:browserslist",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:browserslist",
+          "type": "dynamic"
+        },
+        {
+          "source": "angular",
+          "target": "npm:postcss-preset-env",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:postcss-url",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:postcss",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:sass",
+          "type": "dynamic"
+        },
+        {
+          "source": "angular",
+          "target": "npm:less",
+          "type": "dynamic"
+        },
+        {
+          "source": "angular",
+          "target": "npm:ora",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:convert-source-map",
+          "type": "dynamic"
+        },
+        {
+          "source": "angular",
+          "target": "npm:postcss-import",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:tailwindcss",
+          "type": "dynamic"
+        },
+        {
+          "source": "angular",
+          "target": "npm:eslint",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "playwright",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "storybook",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@angular/core",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@angular/router",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@ngrx/router-store",
+          "type": "static"
+        },
+        {
+          "source": "angular",
+          "target": "npm:@ngrx/store",
+          "type": "static"
+        }
+      ],
+      "e2e-angular-core": [
+        {
+          "source": "e2e-angular-core",
+          "target": "angular",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-angular-core",
+          "target": "e2e-utils",
+          "type": "static"
+        },
+        {
+          "source": "e2e-angular-core",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "e2e-angular-core",
+          "target": "nx",
+          "type": "static"
+        }
+      ],
+      "e2e-graph-client": [
+        {
+          "source": "e2e-graph-client",
+          "target": "graph-client",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-graph-client",
+          "target": "npm:cypress",
+          "type": "static"
+        },
+        {
+          "source": "e2e-graph-client",
+          "target": "cypress",
+          "type": "static"
+        },
+        {
+          "source": "e2e-graph-client",
+          "target": "graph-client",
+          "type": "static"
+        }
+      ],
+      "plugin": [
+        {
+          "source": "plugin",
+          "target": "npm:@phenomnomnominal/tsquery",
+          "type": "static"
+        },
+        {
+          "source": "plugin",
+          "target": "npm:fs-extra",
+          "type": "static"
+        },
+        {
+          "source": "plugin",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "plugin",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "plugin",
+          "target": "jest",
+          "type": "static"
+        },
+        {
+          "source": "plugin",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "plugin",
+          "target": "linter",
+          "type": "static"
+        },
+        {
+          "source": "plugin",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "plugin",
+          "target": "nx",
+          "type": "dynamic"
+        },
+        {
+          "source": "plugin",
+          "target": "npm:eslint",
+          "type": "static"
+        },
+        {
+          "source": "plugin",
+          "target": "npm:typescript",
+          "type": "static"
+        }
+      ],
+      "rollup": [
+        {
+          "source": "rollup",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:@rollup/plugin-babel",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:@rollup/plugin-commonjs",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:@rollup/plugin-image",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:@rollup/plugin-json",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:@rollup/plugin-node-resolve",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:autoprefixer",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:babel-plugin-transform-async-to-promises",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:babel-plugin-transform-async-to-promises",
+          "type": "dynamic"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:fast-glob",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:postcss",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:rollup",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:rollup-plugin-copy",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:rollup-plugin-copy",
+          "type": "dynamic"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:rollup-plugin-peer-deps-external",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:rollup-plugin-postcss",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:rollup-plugin-typescript2",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:rollup-plugin-typescript2",
+          "type": "dynamic"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:rxjs",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:@swc/core",
+          "type": "dynamic"
+        },
+        {
+          "source": "rollup",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "rollup",
+          "target": "npm:typescript",
+          "type": "static"
+        }
+      ],
+      "devkit": [
+        {
+          "source": "devkit",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "devkit",
+          "target": "nx",
+          "type": "dynamic"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:ejs",
+          "type": "static"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:ejs",
+          "type": "dynamic"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:enquirer",
+          "type": "static"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:ignore",
+          "type": "static"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:tmp",
+          "type": "static"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:semver",
+          "type": "static"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:prettier",
+          "type": "static"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:prettier",
+          "type": "dynamic"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:file-type",
+          "type": "static"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:@angular-devkit/core",
+          "type": "dynamic"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:@angular-devkit/architect",
+          "type": "dynamic"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:rxjs",
+          "type": "static"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:rxjs",
+          "type": "dynamic"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:@angular-devkit/schematics",
+          "type": "dynamic"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:@schematics/angular",
+          "type": "dynamic"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:webpack",
+          "type": "static"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:webpack",
+          "type": "dynamic"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "devkit",
+          "target": "npm:typescript",
+          "type": "dynamic"
+        }
+      ],
+      "nx-dev-ui-theme": [
+        {
+          "source": "nx-dev-ui-theme",
+          "target": "npm:@headlessui/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-theme",
+          "target": "npm:@heroicons/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-theme",
+          "target": "npm:classnames",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-theme",
+          "target": "npm:react",
+          "type": "static"
+        }
+      ],
+      "linter": [
+        {
+          "source": "linter",
+          "target": "eslint-plugin",
+          "type": "implicit"
+        },
+        {
+          "source": "linter",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "linter",
+          "target": "npm:@phenomnomnominal/tsquery",
+          "type": "static"
+        },
+        {
+          "source": "linter",
+          "target": "npm:tmp",
+          "type": "static"
+        },
+        {
+          "source": "linter",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "linter",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "linter",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "linter",
+          "target": "npm:eslint",
+          "type": "static"
+        },
+        {
+          "source": "linter",
+          "target": "npm:eslint",
+          "type": "dynamic"
+        },
+        {
+          "source": "linter",
+          "target": "npm:@angular-devkit/core",
+          "type": "static"
+        },
+        {
+          "source": "linter",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "linter",
+          "target": "jest",
+          "type": "static"
+        },
+        {
+          "source": "linter",
+          "target": "npm:tslint-to-eslint-config",
+          "type": "static"
+        },
+        {
+          "source": "linter",
+          "target": "npm:tslint-to-eslint-config",
+          "type": "dynamic"
+        },
+        {
+          "source": "linter",
+          "target": "npm:@typescript-eslint/eslint-plugin",
+          "type": "dynamic"
+        }
+      ],
+      "nx-dev-util-ai": [
+        {
+          "source": "nx-dev-util-ai",
+          "target": "npm:@supabase/supabase-js",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-util-ai",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-util-ai",
+          "target": "npm:openai",
+          "type": "static"
+        }
+      ],
+      "nx-dev-ui-home": [
+        {
+          "source": "nx-dev-ui-home",
+          "target": "npm:@headlessui/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-home",
+          "target": "nx-dev-ui-common",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-home",
+          "target": "npm:framer-motion",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-home",
+          "target": "npm:next",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-home",
+          "target": "npm:react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-home",
+          "target": "npm:@heroicons/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-home",
+          "target": "npm:classnames",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-home",
+          "target": "npm:react-copy-to-clipboard",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev-ui-home",
+          "target": "npm:react-intersection-observer",
+          "type": "static"
+        }
+      ],
+      "e2e-react-core": [
+        {
+          "source": "e2e-react-core",
+          "target": "react",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-react-core",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "e2e-react-core",
+          "target": "e2e-utils",
+          "type": "static"
+        },
+        {
+          "source": "e2e-react-core",
+          "target": "npm:fs-extra",
+          "type": "static"
+        }
+      ],
+      "graph-ui-graph": [
+        {
+          "source": "graph-ui-graph",
+          "target": "npm:@floating-ui/react",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-graph",
+          "target": "npm:cytoscape-dagre",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-graph",
+          "target": "npm:cytoscape-popper",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-graph",
+          "target": "graph-ui-tooltips",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-graph",
+          "target": "npm:@storybook/react",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-graph",
+          "target": "npm:react",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-graph",
+          "target": "npm:cytoscape",
+          "type": "static"
+        },
+        {
+          "source": "graph-ui-graph",
+          "target": "npm:@tailwindcss/typography",
+          "type": "static"
+        }
+      ],
+      "e2e-playwright": [
+        {
+          "source": "e2e-playwright",
+          "target": "playwright",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-playwright",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "react": [
+        {
+          "source": "react",
+          "target": "js",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "npm:@babel/preset-react",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "devkit",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:@phenomnomnominal/tsquery",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "npm:@svgr/webpack",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "npm:@svgr/webpack",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "npm:file-loader",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "npm:file-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:minimatch",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "linter",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "web",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "npm:rollup",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "npm:@rollup/plugin-url",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:@svgr/rollup",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "cypress",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "cypress",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:vite",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "webpack",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "webpack",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:tsconfig-paths-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "npm:webpack",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "npm:style-loader",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "npm:swc-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:babel-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:css-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:sass-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:sass",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:less-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:stylus-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:@swc/jest",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:babel-jest",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:react-refresh",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:@pmmmwh/react-refresh-webpack-plugin",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "nx",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "vite",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "playwright",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "jest",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "rollup",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "storybook",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "storybook",
+          "type": "dynamic"
+        },
+        {
+          "source": "react",
+          "target": "npm:prettier",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "npm:eslint",
+          "type": "static"
+        },
+        {
+          "source": "react",
+          "target": "npm:react",
+          "type": "static"
+        }
+      ],
+      "detox": [
+        {
+          "source": "detox",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "detox",
+          "target": "jest",
+          "type": "static"
+        },
+        {
+          "source": "detox",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "detox",
+          "target": "linter",
+          "type": "static"
+        },
+        {
+          "source": "detox",
+          "target": "react",
+          "type": "static"
+        },
+        {
+          "source": "detox",
+          "target": "npm:tslib",
+          "type": "static"
+        }
+      ],
+      "e2e-storybook": [
+        {
+          "source": "e2e-storybook",
+          "target": "storybook",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-storybook",
+          "target": "e2e-utils",
+          "type": "static"
+        },
+        {
+          "source": "e2e-storybook",
+          "target": "npm:fs-extra",
+          "type": "static"
+        }
+      ],
+      "e2e-next-core": [
+        {
+          "source": "e2e-next-core",
+          "target": "next",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-next-core",
+          "target": "e2e-utils",
+          "type": "static"
+        },
+        {
+          "source": "e2e-next-core",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "e2e-next-core",
+          "target": "npm:fs-extra",
+          "type": "static"
+        }
+      ],
+      "nest": [
+        {
+          "source": "nest",
+          "target": "node",
+          "type": "implicit"
+        },
+        {
+          "source": "nest",
+          "target": "linter",
+          "type": "implicit"
+        },
+        {
+          "source": "nest",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "nest",
+          "target": "devkit",
+          "type": "dynamic"
+        },
+        {
+          "source": "nest",
+          "target": "npm:@nestjs/schematics",
+          "type": "static"
+        },
+        {
+          "source": "nest",
+          "target": "npm:enquirer",
+          "type": "static"
+        },
+        {
+          "source": "nest",
+          "target": "npm:enquirer",
+          "type": "dynamic"
+        },
+        {
+          "source": "nest",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "nest",
+          "target": "linter",
+          "type": "static"
+        },
+        {
+          "source": "nest",
+          "target": "node",
+          "type": "static"
+        },
+        {
+          "source": "nest",
+          "target": "npm:@phenomnomnominal/tsquery",
+          "type": "static"
+        },
+        {
+          "source": "nest",
+          "target": "npm:semver",
+          "type": "static"
+        },
+        {
+          "source": "nest",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "nest",
+          "target": "npm:eslint",
+          "type": "static"
+        },
+        {
+          "source": "nest",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "nest",
+          "target": "nx",
+          "type": "static"
+        }
+      ],
+      "next": [
+        {
+          "source": "next",
+          "target": "npm:@babel/plugin-proposal-decorators",
+          "type": "dynamic"
+        },
+        {
+          "source": "next",
+          "target": "npm:@babel/plugin-proposal-decorators",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "devkit",
+          "type": "dynamic"
+        },
+        {
+          "source": "next",
+          "target": "npm:@svgr/webpack",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "npm:@svgr/webpack",
+          "type": "dynamic"
+        },
+        {
+          "source": "next",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "npm:copy-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "npm:fs-extra",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "npm:ignore",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "npm:semver",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "npm:semver",
+          "type": "dynamic"
+        },
+        {
+          "source": "next",
+          "target": "npm:url-loader",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "npm:url-loader",
+          "type": "dynamic"
+        },
+        {
+          "source": "next",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "npm:webpack-merge",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "js",
+          "type": "dynamic"
+        },
+        {
+          "source": "next",
+          "target": "linter",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "react",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "web",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "workspace",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "npm:next",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "npm:next",
+          "type": "dynamic"
+        },
+        {
+          "source": "next",
+          "target": "cypress",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "cypress",
+          "type": "dynamic"
+        },
+        {
+          "source": "next",
+          "target": "webpack",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "nx",
+          "type": "dynamic"
+        },
+        {
+          "source": "next",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "playwright",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "jest",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "npm:webpack",
+          "type": "static"
+        },
+        {
+          "source": "next",
+          "target": "npm:react",
+          "type": "static"
+        }
+      ],
+      "typedoc-theme": [
+        {
+          "source": "typedoc-theme",
+          "target": "npm:typedoc",
+          "type": "static"
+        },
+        {
+          "source": "typedoc-theme",
+          "target": "npm:handlebars",
+          "type": "static"
+        },
+        {
+          "source": "typedoc-theme",
+          "target": "npm:typedoc-plugin-markdown",
+          "type": "static"
+        }
+      ],
+      "node": [
+        {
+          "source": "node",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "node",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "node",
+          "target": "jest",
+          "type": "static"
+        },
+        {
+          "source": "node",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "node",
+          "target": "linter",
+          "type": "static"
+        },
+        {
+          "source": "node",
+          "target": "workspace",
+          "type": "static"
+        }
+      ],
+      "vite": [
+        {
+          "source": "vite",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "vite",
+          "target": "npm:@phenomnomnominal/tsquery",
+          "type": "static"
+        },
+        {
+          "source": "vite",
+          "target": "npm:@phenomnomnominal/tsquery",
+          "type": "dynamic"
+        },
+        {
+          "source": "vite",
+          "target": "npm:@swc/helpers",
+          "type": "static"
+        },
+        {
+          "source": "vite",
+          "target": "npm:enquirer",
+          "type": "static"
+        },
+        {
+          "source": "vite",
+          "target": "npm:enquirer",
+          "type": "dynamic"
+        },
+        {
+          "source": "vite",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "vite",
+          "target": "npm:tsconfig-paths",
+          "type": "static"
+        },
+        {
+          "source": "vite",
+          "target": "npm:vite",
+          "type": "static"
+        },
+        {
+          "source": "vite",
+          "target": "npm:vitest",
+          "type": "static"
+        },
+        {
+          "source": "vite",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "vite",
+          "target": "npm:typescript",
+          "type": "dynamic"
+        }
+      ],
+      "expo": [
+        {
+          "source": "expo",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "npm:enhanced-resolve",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "npm:fs-extra",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "npm:metro-config",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "npm:metro-resolver",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "npm:node-fetch",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "npm:tar-fs",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "npm:tsconfig-paths",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "npm:tsconfig-paths-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "detox",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "jest",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "linter",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "react",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "webpack",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "webpack",
+          "type": "dynamic"
+        },
+        {
+          "source": "expo",
+          "target": "npm:util",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "rollup",
+          "type": "static"
+        },
+        {
+          "source": "expo",
+          "target": "npm:react",
+          "type": "static"
+        }
+      ],
+      "jest": [
+        {
+          "source": "jest",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "npm:@jest/reporters",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "npm:@jest/test-result",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "npm:@phenomnomnominal/tsquery",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "npm:identity-obj-proxy",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "npm:identity-obj-proxy",
+          "type": "dynamic"
+        },
+        {
+          "source": "jest",
+          "target": "npm:jest-config",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "npm:jest-resolve",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "npm:jest-util",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "npm:resolve.exports",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "npm:typescript",
+          "type": "dynamic"
+        },
+        {
+          "source": "jest",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "npm:jest",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "npm:@jest/types",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "jest",
+          "target": "npm:prettier",
+          "type": "dynamic"
+        }
+      ],
+      "nx-dev": [
+        {
+          "source": "nx-dev",
+          "target": "docs",
+          "type": "implicit"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:fs-extra",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-ui-common",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-data-access-documents",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:octokit",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-data-access-menu",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:next",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-data-access-packages",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-models-package",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-feature-analytics",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:next-seo",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-feature-doc-viewer",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-models-document",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-models-menu",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-feature-ai",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-util-ai",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:@supabase/supabase-js",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:openai",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:ai",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:gpt3-tokenizer",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:@heroicons/react",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-ui-markdoc",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-ui-primitives",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:semver",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-ui-community",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-ui-conference",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-ui-home",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-feature-package-schema-viewer",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "nx-dev-ui-references",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:@tailwindcss/aspect-ratio",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:@tailwindcss/typography",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:@tailwindcss/forms",
+          "type": "static"
+        },
+        {
+          "source": "nx-dev",
+          "target": "npm:@tailwindcss/line-clamp",
+          "type": "static"
+        }
+      ],
+      "web": [
+        {
+          "source": "web",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "npm:detect-port",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "npm:http-server",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "cypress",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "linter",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "webpack",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "vite",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "playwright",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "jest",
+          "type": "static"
+        }
+      ],
+      "tao": [
+        {
+          "source": "tao",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "tao",
+          "target": "npm:tslib",
+          "type": "static"
+        }
+      ],
+      "graph-client": [
+        {
+          "source": "graph-client",
+          "target": "npm:react-router-dom",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:@xstate/react",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:@xstate/immer",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:xstate",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:@storybook/react",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:react",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:@heroicons/react",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "graph-ui-components",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:@headlessui/react",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:classnames",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "graph-ui-tooltips",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "graph-ui-graph",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:use-sync-external-store",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:@xstate/inspect",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:preact",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:core-js",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:regenerator-runtime",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:@tailwindcss/typography",
+          "type": "static"
+        },
+        {
+          "source": "graph-client",
+          "target": "npm:@tailwindcss/forms",
+          "type": "static"
+        }
+      ],
+      "e2e-nx-misc": [
+        {
+          "source": "e2e-nx-misc",
+          "target": "js",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-nx-misc",
+          "target": "e2e-utils",
+          "type": "static"
+        },
+        {
+          "source": "e2e-nx-misc",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "e2e-nx-misc",
+          "target": "npm:fs-extra",
+          "type": "static"
+        },
+        {
+          "source": "e2e-nx-misc",
+          "target": "npm:semver",
+          "type": "static"
+        },
+        {
+          "source": "e2e-nx-misc",
+          "target": "npm:chalk",
+          "type": "static"
+        }
+      ],
+      "e2e-nx-init": [
+        {
+          "source": "e2e-nx-init",
+          "target": "nx",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-nx-init",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "e2e-nx-init",
+          "target": "e2e-utils",
+          "type": "static"
+        },
+        {
+          "source": "e2e-nx-init",
+          "target": "npm:fs-extra",
+          "type": "static"
+        },
+        {
+          "source": "e2e-nx-init",
+          "target": "npm:glob",
+          "type": "static"
+        }
+      ],
+      "e2e-esbuild": [
+        {
+          "source": "e2e-esbuild",
+          "target": "esbuild",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-esbuild",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "e2e-cypress": [
+        {
+          "source": "e2e-cypress",
+          "target": "cypress",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-cypress",
+          "target": "react",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-cypress",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "e2e-webpack": [
+        {
+          "source": "e2e-webpack",
+          "target": "webpack",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-webpack",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "js": [
+        {
+          "source": "js",
+          "target": "npm:@babel/preset-env",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:@babel/preset-env",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:@babel/preset-typescript",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:@babel/preset-typescript",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:@babel/plugin-transform-runtime",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:@babel/plugin-transform-runtime",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:@babel/runtime",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:@babel/runtime",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:babel-plugin-macros",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:babel-plugin-macros",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:babel-plugin-transform-typescript-metadata",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:babel-plugin-transform-typescript-metadata",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:@babel/plugin-proposal-decorators",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:@babel/plugin-proposal-decorators",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:@babel/plugin-proposal-class-properties",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:@babel/plugin-proposal-class-properties",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:babel-plugin-const-enum",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:babel-plugin-const-enum",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:@babel/core",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:@phenomnomnominal/tsquery",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:detect-port",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:fast-glob",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:fs-extra",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:ts-node",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:ts-node",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:tsconfig-paths",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:tsconfig-paths",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:ignore",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:js-tokens",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:minimatch",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:semver",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:source-map-support",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:source-map-support",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "workspace",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:verdaccio",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:verdaccio",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "nx",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:typescript",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:rxjs",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:memfs",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:prettier",
+          "type": "static"
+        },
+        {
+          "source": "js",
+          "target": "npm:prettier",
+          "type": "dynamic"
+        },
+        {
+          "source": "js",
+          "target": "npm:@swc/cli",
+          "type": "static"
+        }
+      ],
+      "nx": [
+        {
+          "source": "nx",
+          "target": "graph-client",
+          "type": "implicit"
+        },
+        {
+          "source": "nx",
+          "target": "npm:enquirer",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:enquirer",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:chalk",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:dotenv",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:dotenv",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:dotenv-expand",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:semver",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:v8-compile-cache",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:v8-compile-cache",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@parcel/watcher",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@parcel/watcher",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@yarnpkg/lockfile",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@yarnpkg/lockfile",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@yarnpkg/parsers",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@yarnpkg/parsers",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@zkochan/js-yaml",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@zkochan/js-yaml",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:axios",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:axios",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:cli-cursor",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:cli-spinners",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:cliui",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:fast-glob",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:figures",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:figures",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:flat",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:fs-extra",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:glob",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:ignore",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:js-yaml",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:js-yaml",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:jsonc-parser",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:lines-and-columns",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:minimatch",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:npm-run-path",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:open",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:string-width",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:strong-log-transformer",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:tar-stream",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:tmp",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:tsconfig-paths",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:tsconfig-paths",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:yargs",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:yargs-parser",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:node-machine-id",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@swc-node/register",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@swc-node/register",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@swc/core",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-darwin-x64",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-darwin-x64",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-darwin-arm64",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-darwin-arm64",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-linux-x64-gnu",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-linux-x64-gnu",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-linux-x64-musl",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-linux-x64-musl",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-win32-x64-msvc",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-win32-x64-msvc",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-linux-arm64-gnu",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-linux-arm64-gnu",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-linux-arm64-musl",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-linux-arm64-musl",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-linux-arm-gnueabihf",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-linux-arm-gnueabihf",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-win32-arm64-msvc",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-win32-arm64-msvc",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-freebsd-x64",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nx/nx-freebsd-x64",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:memfs",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:memfs",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@nrwl/angular",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@angular-devkit/core",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@angular-devkit/build-angular",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@angular-devkit/architect",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@angular-devkit/architect",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:rxjs",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:rxjs",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@angular-devkit/schematics",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@angular-devkit/schematics",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:process",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:prettier",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:prettier",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:util",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:ajv",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:@pnpm/lockfile-types",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:typescript",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:ts-node",
+          "type": "static"
+        },
+        {
+          "source": "nx",
+          "target": "npm:ts-node",
+          "type": "dynamic"
+        },
+        {
+          "source": "nx",
+          "target": "npm:events",
+          "type": "static"
+        }
+      ],
+      "e2e-rollup": [
+        {
+          "source": "e2e-rollup",
+          "target": "rollup",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-rollup",
+          "target": "js",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-rollup",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "e2e-plugin": [
+        {
+          "source": "e2e-plugin",
+          "target": "create-nx-plugin",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-plugin",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "e2e-plugin",
+          "target": "e2e-utils",
+          "type": "static"
+        },
+        {
+          "source": "e2e-plugin",
+          "target": "nx",
+          "type": "static"
+        }
+      ],
+      "e2e-linter": [
+        {
+          "source": "e2e-linter",
+          "target": "linter",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-linter",
+          "target": "e2e-utils",
+          "type": "static"
+        },
+        {
+          "source": "e2e-linter",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "e2e-linter",
+          "target": "npm:@typescript-eslint/type-utils",
+          "type": "static"
+        }
+      ],
+      "e2e-nx-run": [
+        {
+          "source": "e2e-nx-run",
+          "target": "js",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-nx-run",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "e2e-nx-run",
+          "target": "e2e-utils",
+          "type": "static"
+        },
+        {
+          "source": "e2e-nx-run",
+          "target": "nx",
+          "type": "static"
+        }
+      ],
+      "e2e-detox": [
+        {
+          "source": "e2e-detox",
+          "target": "detox",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-detox",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "e2e-utils": [
+        {
+          "source": "e2e-utils",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "e2e-utils",
+          "target": "npm:is-ci",
+          "type": "static"
+        },
+        {
+          "source": "e2e-utils",
+          "target": "npm:fs-extra",
+          "type": "static"
+        },
+        {
+          "source": "e2e-utils",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "e2e-utils",
+          "target": "workspace",
+          "type": "static"
+        },
+        {
+          "source": "e2e-utils",
+          "target": "npm:@zkochan/js-yaml",
+          "type": "static"
+        },
+        {
+          "source": "e2e-utils",
+          "target": "npm:tmp",
+          "type": "static"
+        },
+        {
+          "source": "e2e-utils",
+          "target": "npm:is-windows",
+          "type": "static"
+        },
+        {
+          "source": "e2e-utils",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "e2e-utils",
+          "target": "npm:@jest/types",
+          "type": "static"
+        },
+        {
+          "source": "e2e-utils",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "e2e-utils",
+          "target": "npm:util",
+          "type": "static"
+        },
+        {
+          "source": "e2e-utils",
+          "target": "npm:tree-kill",
+          "type": "static"
+        },
+        {
+          "source": "e2e-utils",
+          "target": "npm:tcp-port-used",
+          "type": "static"
+        },
+        {
+          "source": "e2e-utils",
+          "target": "npm:kill-port",
+          "type": "static"
+        }
+      ],
+      "e2e-expo": [
+        {
+          "source": "e2e-expo",
+          "target": "expo",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-expo",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "e2e-node": [
+        {
+          "source": "e2e-node",
+          "target": "node",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-node",
+          "target": "nest",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-node",
+          "target": "e2e-utils",
+          "type": "static"
+        },
+        {
+          "source": "e2e-node",
+          "target": "npm:@angular-devkit/core",
+          "type": "static"
+        },
+        {
+          "source": "e2e-node",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "e2e-node",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "e2e-node",
+          "target": "npm:semver",
+          "type": "static"
+        }
+      ],
+      "e2e-jest": [
+        {
+          "source": "e2e-jest",
+          "target": "jest",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-jest",
+          "target": "e2e-utils",
+          "type": "static"
+        },
+        {
+          "source": "e2e-jest",
+          "target": "npm:@angular-devkit/core",
+          "type": "static"
+        }
+      ],
+      "e2e-vite": [
+        {
+          "source": "e2e-vite",
+          "target": "vite",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-vite",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "e2e-vite",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "e2e-web": [
+        {
+          "source": "e2e-web",
+          "target": "web",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-web",
+          "target": "e2e-utils",
+          "type": "static"
+        }
+      ],
+      "e2e-js": [
+        {
+          "source": "e2e-js",
+          "target": "jest",
+          "type": "implicit"
+        },
+        {
+          "source": "e2e-js",
+          "target": "e2e-utils",
+          "type": "static"
+        },
+        {
+          "source": "e2e-js",
+          "target": "npm:semver",
+          "type": "static"
+        }
+      ],
+      "docs": [],
+      "@nx/nx-source": [
+        {
+          "source": "@nx/nx-source",
+          "target": "jest",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@docsearch/react",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@headlessui/react",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@heroicons/react",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@markdoc/markdoc",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@monaco-editor/react",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@napi-rs/canvas",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@swc/helpers",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@tailwindcss/aspect-ratio",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@tailwindcss/forms",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@tailwindcss/line-clamp",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@tailwindcss/typography",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/license-checker",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/minimatch",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@yarnpkg/lockfile",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@yarnpkg/parsers",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@zkochan/js-yaml",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:axios",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:classnames",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:cliui",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:core-js",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:enquirer",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:fast-glob",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:framer-motion",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:glob",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:history",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:json-schema-to-typescript",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:jsonpointer",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:license-checker",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:next",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:next-seo",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:node-machine-id",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:npm-run-path",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:preact",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:react",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:react-copy-to-clipboard",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:react-dom",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:react-intersection-observer",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:react-syntax-highlighter",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:regenerator-runtime",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:send",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:string-width",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:strong-log-transformer",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:tailwind-merge",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:tailwindcss",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:tslib",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:vitest",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:weak-napi",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@actions/core",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@angular-devkit/architect",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@angular-devkit/build-angular",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@angular-devkit/core",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@angular-devkit/schematics",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@angular-eslint/eslint-plugin",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@angular-eslint/eslint-plugin-template",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@angular-eslint/template-parser",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@angular/cli",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@angular/common",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@angular/compiler",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@angular/compiler-cli",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@angular/core",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@angular/router",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@babel/core",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@babel/helper-create-regexp-features-plugin",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@babel/plugin-transform-runtime",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@babel/preset-react",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@babel/preset-typescript",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@babel/runtime",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@eslint/eslintrc",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@eslint/js",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@floating-ui/react",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@jest/reporters",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@jest/test-result",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@jest/types",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@monodon/rust",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@napi-rs/cli",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@nestjs/cli",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@nestjs/common",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@nestjs/core",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@nestjs/platform-express",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@nestjs/schematics",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@nestjs/swagger",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@nestjs/testing",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@ngrx/effects",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@ngrx/router-store",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@ngrx/store",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@nguniversal/builders",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "angular",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "cypress",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "devkit",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "esbuild",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "eslint-plugin",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "js",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "linter",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "next",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "playwright",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "react",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "storybook",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "web",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "webpack",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@parcel/watcher",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@phenomnomnominal/tsquery",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@playwright/test",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@pmmmwh/react-refresh-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@pnpm/lockfile-types",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@reduxjs/toolkit",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@rollup/plugin-babel",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@rollup/plugin-commonjs",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@rollup/plugin-image",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@rollup/plugin-json",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@rollup/plugin-node-resolve",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@rollup/plugin-url",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@schematics/angular",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@side/jest-runtime",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@storybook/addon-essentials",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@storybook/core-server",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@storybook/react",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@storybook/react-webpack5",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@storybook/types",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@supabase/supabase-js",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@svgr/rollup",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@svgr/webpack",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@swc-node/register",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@swc/cli",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@swc/core",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@swc/jest",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@testing-library/react",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/cytoscape",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/detect-port",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/eslint",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/express",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/flat",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/fs-extra",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/is-ci",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/jasmine",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/jasminewd2",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/jest",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/js-yaml",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/marked",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/node",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/prettier",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/react",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/react-dom",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/semver",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/tar-stream",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/tmp",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/yargs",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@types/yarnpkg__lockfile",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@typescript-eslint/eslint-plugin",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@typescript-eslint/parser",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@typescript-eslint/type-utils",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@typescript-eslint/utils",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@xstate/immer",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@xstate/inspect",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:@xstate/react",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:ai",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:ajv",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:autoprefixer",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:babel-jest",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:babel-loader",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:babel-plugin-transform-async-to-promises",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:browserslist",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:chalk",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:cli-cursor",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:cli-spinners",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:confusing-browser-globals",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:conventional-changelog-cli",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:convert-source-map",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:copy-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:css-minimizer-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:cypress",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:cytoscape",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:cytoscape-dagre",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:cytoscape-popper",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:cz-git",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:czg",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:detect-port",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:dotenv",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:dotenv-expand",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:ejs",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:enhanced-resolve",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:esbuild",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:eslint",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:eslint-config-next",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:eslint-config-prettier",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:eslint-plugin-cypress",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:eslint-plugin-import",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:eslint-plugin-jsx-a11y",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:eslint-plugin-playwright",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:eslint-plugin-react",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:eslint-plugin-react-hooks",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:eslint-plugin-storybook",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:express",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:fast-xml-parser",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:figures",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:file-loader",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:file-type",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:find-cache-dir",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:flat",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:fork-ts-checker-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:fs-extra",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:github-slugger",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:gpt3-tokenizer",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:handlebars",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:html-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:http-server",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:husky",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:identity-obj-proxy",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:identity-obj-proxy",
+          "type": "dynamic"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:ignore",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:immer",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:import-fresh",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:injection-js",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:is-ci",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:is-windows",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:jasmine-core",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:jasmine-spec-reporter",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:jest",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:jest-config",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:jest-environment-jsdom",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:jest-environment-node",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:jest-resolve",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:jest-util",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:js-tokens",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:js-yaml",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:jsonc-eslint-parser",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:jsonc-parser",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:kill-port",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:lerna",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:less",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:less-loader",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:license-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:lines-and-columns",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:loader-utils",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:magic-string",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:markdown-factory",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:mdast-util-from-markdown",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:mdast-util-to-markdown",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:mdast-util-to-string",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:memfs",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:metro-config",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:metro-resolver",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:mini-css-extract-plugin",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:minimatch",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:next-sitemap",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:ng-packagr",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:node-fetch",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "nx",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:nx-cloud",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:octokit",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:open",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:openai",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:ora",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:parse-markdown-links",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:parse5",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:postcss",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:postcss-import",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:postcss-preset-env",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:postcss-url",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:prettier",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:prettier-plugin-tailwindcss",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:pretty-quick",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:raw-loader",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:react-markdown",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:react-redux",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:react-refresh",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:react-router-dom",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:react-textarea-autosize",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:resolve.exports",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:rollup",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:rollup-plugin-copy",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:rollup-plugin-peer-deps-external",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:rollup-plugin-postcss",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:rollup-plugin-typescript2",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:rxjs",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:sass",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:sass-loader",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:semver",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:source-map",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:source-map-loader",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:source-map-support",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:storybook-dark-mode",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:style-loader",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:styled-components",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:stylus",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:stylus-loader",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:tar-fs",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:tar-stream",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:tcp-port-used",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:terser-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:tmp",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:tree-kill",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:ts-jest",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:ts-loader",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:ts-node",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:tsconfig-paths",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:tsconfig-paths-webpack-plugin",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:tslint-to-eslint-config",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:typedoc",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:typedoc-plugin-markdown",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:typescript",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:unist-builder",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:unzipper",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:url-loader",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:use-sync-external-store",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:verdaccio",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:vite",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:webpack",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:webpack-dev-server",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:webpack-merge",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:webpack-node-externals",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:webpack-sources",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:webpack-subresource-integrity",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:xstate",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:yargs",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:yargs-parser",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "nx-dev-models-document",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "nx-dev-models-menu",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "nx-dev-models-package",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "nx-dev-data-access-packages",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "docs",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "nx-dev",
+          "type": "static"
+        },
+        {
+          "source": "@nx/nx-source",
+          "target": "npm:strip-ansi",
+          "type": "static"
+        }
+      ]
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -58,6 +58,7 @@
               "@nx/playwright",
               "@nx/storybook",
               "@nx/vite",
+              "@nx/vitest",
               "@schematics/angular",
               "browserslist",
               "cypress",

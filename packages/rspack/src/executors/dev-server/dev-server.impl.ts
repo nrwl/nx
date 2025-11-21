@@ -5,13 +5,14 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Configuration } from '@rspack/core';
 import { RspackDevServer } from '@rspack/dev-server';
 import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
+import { normalizeOptions } from '../rspack/lib/normalize-options';
 import { getDevServerOptions } from './lib/get-dev-server-config';
 import { DevServerExecutorSchema } from './schema';
-import { normalizeOptions } from '../rspack/lib/normalize-options';
 
 type DevServer = Configuration['devServer'];
 export default async function* runExecutor(
@@ -35,7 +36,7 @@ export default async function* runExecutor(
   process.env.NX_BUILD_TARGET = options.buildTarget;
 
   const metadata = context.projectsConfigurations.projects[context.projectName];
-  const sourceRoot = metadata.sourceRoot;
+  const sourceRoot = getProjectSourceRoot(metadata);
   const normalizedBuildOptions = normalizeOptions(
     buildOptions,
     context.root,

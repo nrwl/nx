@@ -19,6 +19,7 @@ exports[`component Generator secondary entry points should create the component 
 @Component({
   selector: 'example',
   standalone: false,
+  imports: [],
   templateUrl: './example.html',
   styleUrl: './example.css'
 })
@@ -37,6 +38,7 @@ exports[`component Generator should create component files correctly: component 
 @Component({
   selector: 'example',
   standalone: false,
+  imports: [],
   templateUrl: './example.html',
   styleUrl: './example.css',
 })
@@ -87,6 +89,7 @@ exports[`component Generator should create the component correctly and export it
 @Component({
   selector: 'example',
   standalone: false,
+  imports: [],
   templateUrl: './example.html',
   styleUrl: './example.css'
 })
@@ -101,11 +104,10 @@ export * from './lib/example/example';"
 
 exports[`component Generator should create the component correctly and export it in the entry point when is standalone and "export=true" 1`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'example',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './example.html',
   styleUrl: './example.css'
 })
@@ -119,6 +121,7 @@ exports[`component Generator should create the component correctly and not expor
 @Component({
   selector: 'example',
   standalone: false,
+  imports: [],
   templateUrl: './example.html',
   styleUrl: './example.css'
 })
@@ -128,11 +131,10 @@ export class Example {}
 
 exports[`component Generator should create the component correctly and not export it in the entry point when is standalone and "export=false" 1`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'example',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './example.html',
   styleUrl: './example.css'
 })
@@ -146,6 +148,7 @@ exports[`component Generator should create the component correctly and not expor
 @Component({
   selector: 'example',
   standalone: false,
+  imports: [],
   templateUrl: './example.html',
   styleUrl: './example.css'
 })
@@ -159,6 +162,7 @@ exports[`component Generator should create the component correctly but not expor
 @Component({
   selector: 'example',
   standalone: false,
+  imports: [],
   templateUrl: './example.html',
   styleUrl: './example.css'
 })
@@ -168,11 +172,10 @@ export class Example {}
 
 exports[`component Generator should handle path with file extension: component 1`] = `
 "import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'example.component',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './example.component.html',
   styleUrl: './example.component.css',
 })
@@ -220,6 +223,7 @@ exports[`component Generator should inline styles when --inline-style=true 1`] =
 @Component({
   selector: 'example',
   standalone: false,
+  imports: [],
   templateUrl: './example.html',
   styles: \`\`
 })
@@ -233,6 +237,7 @@ exports[`component Generator should inline template when --inline-template=true 
 @Component({
   selector: 'example',
   standalone: false,
+  imports: [],
   template: \`<p>example works!</p>\`,
   styleUrl: './example.css'
 })

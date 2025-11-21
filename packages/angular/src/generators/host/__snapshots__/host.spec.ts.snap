@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Host App Generator --ssr should generate the correct files 1`] = `
 "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
@@ -223,11 +223,15 @@ bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 2`] = `
-"import { bootstrapApplication } from '@angular/platform-browser';
+"import {
+  BootstrapContext,
+  bootstrapApplication,
+} from '@angular/platform-browser';
 import { App } from './app/app';
 import { config } from './app/app.config.server';
 
-const bootstrap = () => bootstrapApplication(App, config);
+const bootstrap = (context: BootstrapContext) =>
+  bootstrapApplication(App, config, context);
 
 export default bootstrap;
 "
@@ -451,11 +455,15 @@ bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 2`] = `
-"import { bootstrapApplication } from '@angular/platform-browser';
+"import {
+  BootstrapContext,
+  bootstrapApplication,
+} from '@angular/platform-browser';
 import { App } from './app/app';
 import { config } from './app/app.config.server';
 
-const bootstrap = () => bootstrapApplication(App, config);
+const bootstrap = (context: BootstrapContext) =>
+  bootstrapApplication(App, config, context);
 
 export default bootstrap;
 "

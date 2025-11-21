@@ -1,5 +1,5 @@
 import { ReactElement, useState } from 'react';
-import { SectionHeading, VideoModal } from '@nx/nx-dev/ui-common';
+import { SectionHeading, VideoModal } from '@nx/nx-dev-ui-common';
 import { FeatureCard, type FeatureCardProps } from './feature-card';
 import Link from 'next/link';
 

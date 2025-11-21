@@ -4,8 +4,8 @@ import {
   PayfitIcon,
   SiriusxmAlternateIcon,
   UkgIcon,
-} from '@nx/nx-dev/ui-icons';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-icons';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 
 export function SolutionsPlatformTestimonials(): ReactElement {
   return (

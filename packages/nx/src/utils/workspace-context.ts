@@ -55,7 +55,7 @@ export async function globWithWorkspaceContext(
   globs: string[],
   exclude?: string[]
 ) {
-  if (isOnDaemon() || !daemonClient.enabled()) {
+  if (workspaceRoot === '/virtual' || isOnDaemon() || !daemonClient.enabled()) {
     ensureContextAvailable(workspaceRoot);
     return workspaceContext.glob(globs, exclude);
   } else {

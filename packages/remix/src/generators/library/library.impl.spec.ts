@@ -74,7 +74,7 @@ describe('Remix Library Generator', () => {
       });
 
       // ASSERT
-      expect(tree.exists(`test/jest.config.ts`)).toBeFalsy();
+      expect(tree.exists(`test/jest.config.cts`)).toBeFalsy();
       expect(tree.exists(`test/vite.config.ts`)).toBeFalsy();
     });
 
@@ -91,7 +91,7 @@ describe('Remix Library Generator', () => {
       });
 
       // ASSERT
-      expect(tree.read(`test/jest.config.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`test/jest.config.cts`, 'utf-8')).toMatchSnapshot();
       expect(tree.read(`test/src/test-setup.ts`, 'utf-8')).toMatchSnapshot();
     });
 
@@ -149,7 +149,7 @@ describe('Remix Library Generator', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
-          customConditions: ['development'],
+          customConditions: ['@proj/source'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -219,7 +219,7 @@ describe('Remix Library Generator', () => {
           "exports": {
             "./package.json": "./package.json",
             ".": {
-              "development": "./src/index.ts",
+              "@proj/source": "./src/index.ts",
               "types": "./dist/index.esm.d.ts",
               "import": "./dist/index.esm.js",
               "default": "./dist/index.esm.js"
@@ -230,7 +230,7 @@ describe('Remix Library Generator', () => {
       `);
     });
 
-    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+    it('should not set the custom condition in exports when it does not exist in tsconfig.base.json', async () => {
       updateJson(tree, 'tsconfig.base.json', (json) => {
         delete json.compilerOptions.customConditions;
         return json;

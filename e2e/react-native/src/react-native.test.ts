@@ -10,7 +10,8 @@ import {
   checkFilesExist,
   runE2ETests,
   updateFile,
-} from 'e2e/utils';
+  readJson,
+} from '@nx/e2e-utils';
 
 describe('@nx/react-native', () => {
   let proj: string;
@@ -19,10 +20,10 @@ describe('@nx/react-native', () => {
   let componentName: string;
 
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/react-native'] });
     appName = uniq('app');
     runCLI(
-      `generate @nx/react-native:app ${appName} --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
+      `generate @nx/react-native:app ${appName} --install=false --no-interactive --unitTestRunner=jest --e2eTestRunner=cypress --linter=eslint`
     );
     libName = uniq('lib');
     runCLI(
@@ -43,6 +44,28 @@ describe('@nx/react-native', () => {
   it('should test and lint', async () => {
     expect(() => runCLI(`test ${appName}`)).not.toThrow();
     expect(() => runCLI(`lint ${appName}`)).not.toThrow();
+
+    expect(() => runCLI(`test ${libName}`)).not.toThrow();
+    expect(() => runCLI(`lint ${libName}`)).not.toThrow();
+  });
+
+  it('should have dependencies synced after React Native app creation', () => {
+    // Check that the app's package.json exists
+    checkFilesExist(`${appName}/package.json`);
+
+    // Read the app's package.json
+    const appPackageJson = readJson(`${appName}/package.json`);
+
+    // Verify that the app package.json has dependencies section
+    expect(appPackageJson.dependencies).toBeDefined();
+
+    // Verify that React Native specific dependencies are synced
+    expect(appPackageJson.dependencies).toEqual(
+      expect.objectContaining({
+        react: '*',
+        'react-native': '*',
+      })
+    );
   });
 
   it('should bundle the app', async () => {
@@ -55,11 +78,11 @@ describe('@nx/react-native', () => {
   }, 200_000);
 
   it('should start the app', async () => {
-    let process: ChildProcess;
-    const port = 8081;
+    let childProcess: ChildProcess;
+    const port = 8082;
 
     try {
-      process = await runCommandUntil(
+      childProcess = await runCommandUntil(
         `start ${appName} --no-interactive --port=${port}`,
         (output) => {
           return (
@@ -74,17 +97,21 @@ describe('@nx/react-native', () => {
     }
 
     // port and process cleanup
-    if (process && process.pid) {
-      await killProcessAndPorts(process.pid, port);
+    try {
+      if (childProcess && childProcess.pid) {
+        await killProcessAndPorts(childProcess.pid, port);
+      }
+    } catch (err) {
+      expect(err).toBeFalsy();
     }
   });
 
   it('should serve', async () => {
-    let process: ChildProcess;
+    let childProcess: ChildProcess;
     const port = 8081;
 
     try {
-      process = await runCommandUntil(
+      childProcess = await runCommandUntil(
         `serve ${appName} --port=${port}`,
         (output) => {
           return output.includes(`http://localhost:${port}`);
@@ -96,8 +123,8 @@ describe('@nx/react-native', () => {
 
     // port and process cleanup
     try {
-      if (process && process.pid) {
-        await killProcessAndPorts(process.pid, port);
+      if (childProcess && childProcess.pid) {
+        await killProcessAndPorts(childProcess.pid, port);
       }
     } catch (err) {
       expect(err).toBeFalsy();
@@ -114,9 +141,7 @@ describe('@nx/react-native', () => {
 
       // port and process cleanup
       try {
-        if (process && process.pid) {
-          await killProcessAndPorts(process.pid, 4200);
-        }
+        await killProcessAndPorts(undefined, 4200);
       } catch (err) {
         expect(err).toBeFalsy();
       }
@@ -169,9 +194,7 @@ describe('@nx/react-native', () => {
       expect(() => runCLI(`e2e ${appName2}-e2e`)).not.toThrow();
       // port and process cleanup
       try {
-        if (process && process.pid) {
-          await killProcessAndPorts(process.pid, 4200);
-        }
+        await killProcessAndPorts(undefined, 4200);
       } catch (err) {
         expect(err).toBeFalsy();
       }

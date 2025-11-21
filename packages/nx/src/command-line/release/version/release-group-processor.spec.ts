@@ -7,7 +7,8 @@ jest.doMock('./derive-specifier-from-conventional-commits', () => ({
     mockDeriveSpecifierFromConventionalCommits,
 }));
 
-jest.doMock('./version-actions', () => ({
+// Use jest.mock (hoisted) to ensure it's set up before any imports
+jest.mock('./version-actions', () => ({
   ...jest.requireActual('./version-actions'),
   deriveSpecifierFromVersionPlan: mockDeriveSpecifierFromVersionPlan,
   resolveVersionActionsForProject: mockResolveVersionActionsForProject,
@@ -18,6 +19,7 @@ jest.doMock('./project-logger', () => ({
   // Don't slow down or add noise to unit tests output unnecessarily
   ProjectLogger: class ProjectLogger {
     buffer() {}
+
     flush() {}
   },
 }));
@@ -32,13 +34,9 @@ import type { Tree } from '../../../generators/tree';
 import { readJson, updateJson } from '../../../generators/utils/json';
 import {
   createNxReleaseConfigAndPopulateWorkspace,
+  createTestReleaseGroupProcessor,
   mockResolveVersionActionsForProjectImplementation,
 } from './test-utils';
-
-// This does not work with the mocking if we use import
-const { ReleaseGroupProcessor } = require('./release-group-processor') as {
-  ReleaseGroupProcessor: typeof import('./release-group-processor').ReleaseGroupProcessor;
-};
 
 // Using the daemon in unit tests would cause jest to never exit
 process.env.NX_DAEMON = 'false';
@@ -63,43 +61,29 @@ describe('ReleaseGroupProcessor', () => {
   });
 
   it('should handle a single default group with fixed versioning, with no project dependency relationships', async () => {
-    const {
-      nxReleaseConfig,
-      projectGraph,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-      filters,
-    } = await createNxReleaseConfigAndPopulateWorkspace(
-      tree,
-      `
+    const { nxReleaseConfig, projectGraph, filters } =
+      await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
           __default__ ({ "projectsRelationship": "fixed" }):
             - projectA@1.0.0 [js]
             - projectB@1.0.0 [js]
             - projectC@1.0.0 [js]
         `,
-      {
-        version: {
-          conventionalCommits: true,
+        {
+          version: {
+            conventionalCommits: true,
+          },
         },
-      },
-      mockResolveCurrentVersion
-    );
+        mockResolveCurrentVersion
+      );
 
-    const processor = new ReleaseGroupProcessor(
+    const processor = await createTestReleaseGroupProcessor(
       tree,
       projectGraph,
       nxReleaseConfig,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-      {
-        dryRun: false,
-        verbose: false,
-        firstRelease: false,
-        preid: undefined,
-        filters,
-      }
+      filters
     );
-    await processor.init();
 
     mockDeriveSpecifierFromConventionalCommits.mockImplementation(() => {
       // This should only be called once for this group (for the first project)
@@ -130,15 +114,10 @@ describe('ReleaseGroupProcessor', () => {
   });
 
   it('should handle a single default group with fixed versioning, with project dependency relationships', async () => {
-    const {
-      nxReleaseConfig,
-      projectGraph,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-      filters,
-    } = await createNxReleaseConfigAndPopulateWorkspace(
-      tree,
-      `
+    const { nxReleaseConfig, projectGraph, filters } =
+      await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
           __default__ ({ "projectsRelationship": "fixed" }):
             - projectD@1.0.0 [js]
               -> depends on projectE
@@ -146,29 +125,20 @@ describe('ReleaseGroupProcessor', () => {
               -> depends on projectF
             - projectF@1.0.0 [js]
         `,
-      {
-        version: {
-          conventionalCommits: true,
+        {
+          version: {
+            conventionalCommits: true,
+          },
         },
-      },
-      mockResolveCurrentVersion
-    );
+        mockResolveCurrentVersion
+      );
 
-    const processor = new ReleaseGroupProcessor(
+    const processor = await createTestReleaseGroupProcessor(
       tree,
       projectGraph,
       nxReleaseConfig,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-      {
-        dryRun: false,
-        verbose: false,
-        firstRelease: false,
-        preid: undefined,
-        filters,
-      }
+      filters
     );
-    await processor.init();
 
     mockDeriveSpecifierFromConventionalCommits.mockImplementation(() => {
       // This should only be called once for this group (for the first project)
@@ -205,15 +175,10 @@ describe('ReleaseGroupProcessor', () => {
   });
 
   it('should handle a single default group with fixed versioning, with project dependency relationships when using scoped packages which do not match their project names', async () => {
-    const {
-      nxReleaseConfig,
-      projectGraph,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-      filters,
-    } = await createNxReleaseConfigAndPopulateWorkspace(
-      tree,
-      `
+    const { nxReleaseConfig, projectGraph, filters } =
+      await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
           __default__ ({ "projectsRelationship": "fixed" }):
             - projectD@1.0.0 [js:@myorg/projectD]
               -> depends on projectE
@@ -221,29 +186,20 @@ describe('ReleaseGroupProcessor', () => {
               -> depends on projectF
             - projectF@1.0.0 [js:@myorg/projectF]
         `,
-      {
-        version: {
-          conventionalCommits: true,
+        {
+          version: {
+            conventionalCommits: true,
+          },
         },
-      },
-      mockResolveCurrentVersion
-    );
+        mockResolveCurrentVersion
+      );
 
-    const processor = new ReleaseGroupProcessor(
+    const processor = await createTestReleaseGroupProcessor(
       tree,
       projectGraph,
       nxReleaseConfig,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-      {
-        dryRun: false,
-        verbose: false,
-        firstRelease: false,
-        preid: undefined,
-        filters,
-      }
+      filters
     );
-    await processor.init();
 
     mockDeriveSpecifierFromConventionalCommits.mockImplementation(() => {
       // This should only be called once for this group (for the first project)
@@ -280,44 +236,29 @@ describe('ReleaseGroupProcessor', () => {
   });
 
   it('should handle a single default group with independent versioning, with no project dependency relationships', async () => {
-    const {
-      nxReleaseConfig,
-      projectGraph,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-      filters,
-    } = await createNxReleaseConfigAndPopulateWorkspace(
-      tree,
-      `
+    const { nxReleaseConfig, projectGraph, filters } =
+      await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
           __default__ ({ "projectsRelationship": "independent" }):
             - projectG@1.0.0 [js]
             - projectH@2.0.0 [js]
             - projectI@3.0.0 [js]
         `,
-      {
-        version: {
-          conventionalCommits: true,
+        {
+          version: {
+            conventionalCommits: true,
+          },
         },
-      },
-      mockResolveCurrentVersion
-    );
+        mockResolveCurrentVersion
+      );
 
-    const processor = new ReleaseGroupProcessor(
+    const processor = await createTestReleaseGroupProcessor(
       tree,
       projectGraph,
       nxReleaseConfig,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-      {
-        dryRun: false,
-        verbose: false,
-        firstRelease: false,
-        preid: undefined,
-        filters,
-      }
+      filters
     );
-
-    await processor.init();
 
     mockDeriveSpecifierFromConventionalCommits.mockImplementation(
       (_, __, ___, ____, { name: projectName }) => {
@@ -359,15 +300,10 @@ describe('ReleaseGroupProcessor', () => {
     // Share a tree, project graph and release groups setup between these tests
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace();
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
           __default__ ({ "projectsRelationship": "independent" }):
             - projectJ@1.0.0 [js]
               -> depends on projectK
@@ -375,29 +311,20 @@ describe('ReleaseGroupProcessor', () => {
               -> depends on projectL
             - projectL@3.0.0 [js]
         `,
-        {
-          version: {
-            conventionalCommits: true,
+          {
+            version: {
+              conventionalCommits: true,
+            },
           },
-        },
-        mockResolveCurrentVersion
-      );
+          mockResolveCurrentVersion
+        );
 
-      processor = new ReleaseGroupProcessor(
+      processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
+        filters
       );
-      await processor.init();
     });
 
     it('should not bump anything when no specifiers are resolved', async () => {
@@ -480,16 +407,199 @@ describe('ReleaseGroupProcessor', () => {
       `);
     });
 
-    it('should handle projects with mixed dependency types', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
+    it('should only bump projects based on their own specifiers if no dependencies have resolved specifiers and file:// ref is used and preserveLocalDependencyProtocols is false', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectJ@1.0.0 [js]
+              -> depends on projectK(file://../projectK)
+            - projectK@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
         tree,
-        `
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // Only projectJ has a specifier, it is not depended on by anything else
+          if (projectName === 'projectJ') return 'minor';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // Called for each project
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        2
+      );
+
+      // Only projectJ is bumped
+      expect(readJson(tree, 'projectJ/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectK": "2.0.0",
+          },
+          "name": "projectJ",
+          "version": "1.1.0",
+        }
+      `);
+      expect(readJson(tree, 'projectK/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectK",
+          "version": "2.0.0",
+        }
+      `);
+    });
+
+    it('should only bump projects based on their own specifiers if no dependencies have resolved specifiers and file:// ref is used and preserveLocalDependencyProtocols is true', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectJ@1.0.0 [js]
+              -> depends on projectK(file://../projectK)
+            - projectK@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              preserveLocalDependencyProtocols: true,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // Only projectJ has a specifier, it is not depended on by anything else
+          if (projectName === 'projectJ') return 'minor';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // Called for each project
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        2
+      );
+
+      // Only projectJ is bumped
+      expect(readJson(tree, 'projectJ/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectK": "file://../projectK",
+          },
+          "name": "projectJ",
+          "version": "1.1.0",
+        }
+      `);
+      expect(readJson(tree, 'projectK/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectK",
+          "version": "2.0.0",
+        }
+      `);
+    });
+
+    it('should bump dependents when their dependencies have been bumped and they are linked via file:// ref and preserveLocalDependencyProtocols is false', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectJ@1.0.0 [js]
+              -> depends on projectK(file://../projectK)
+            - projectK@2.0.0 [js]
+              -> depends on projectL(file://../projectL)
+            - projectL@3.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // Only projectJ has a specifier, it is not depended on by anything else
+          if (projectName === 'projectJ') return 'patch';
+          if (projectName === 'projectL') return 'patch';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      // Called for each project
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        3
+      );
+
+      // projectL is patch bumped
+      expect(readJson(tree, 'projectL/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectL",
+          "version": "3.0.1",
+        }
+      `);
+      // projectK is patch bumped, and its dependency on projectL is bumped
+      expect(readJson(tree, 'projectK/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectL": "3.0.1",
+          },
+          "name": "projectK",
+          "version": "2.0.1",
+        }
+      `);
+      // projectJ has its dep on projectK updated to projectK's new patch bumped version as a result of its dependency on projectL updating and projectJ's own version is patch bumped
+      expect(readJson(tree, 'projectJ/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectK": "2.0.1",
+          },
+          "name": "projectJ",
+          "version": "1.0.1",
+        }
+      `);
+    });
+
+    it('should handle projects with mixed dependency types', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             __default__ ({ "projectsRelationship": "independent" }):
               - projectM@1.0.0 [js]
                 -> depends on projectN
@@ -499,30 +609,20 @@ describe('ReleaseGroupProcessor', () => {
               - projectO@1.0.0 [js]
               - projectP@1.0.0 [js]
           `,
-        {
-          version: {
-            conventionalCommits: true,
+          {
+            version: {
+              conventionalCommits: true,
+            },
           },
-        },
-        mockResolveCurrentVersion
-      );
+          mockResolveCurrentVersion
+        );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
+        filters
       );
-
-      await processor.init();
 
       mockDeriveSpecifierFromConventionalCommits.mockImplementation(
         (_, __, ___, ____, { name: projectName }) => {
@@ -575,15 +675,10 @@ describe('ReleaseGroupProcessor', () => {
 
     describe('mixed ecosystems', () => {
       it('should handle a single fixed group containing both rust and js projects with separate dependency relationships', async () => {
-        const {
-          nxReleaseConfig,
-          projectGraph,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          filters,
-        } = await createNxReleaseConfigAndPopulateWorkspace(
-          tree,
-          `
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            `
               __default__ ({ "projectsRelationship": "fixed" }):
                 - rustLibA@1.0.0 [rust]
                 - rustLibB@1.0.0 [rust]
@@ -592,13 +687,13 @@ describe('ReleaseGroupProcessor', () => {
                 - jsPackageY@1.0.0 [js]
                   -> depends on jsPackageX
             `,
-          {
-            version: {
-              conventionalCommits: true,
+            {
+              version: {
+                conventionalCommits: true,
+              },
             },
-          },
-          mockResolveCurrentVersion
-        );
+            mockResolveCurrentVersion
+          );
 
         // Initial state of rustLibA
         expect(tree.read('rustLibA/Cargo.toml', 'utf-8'))
@@ -623,21 +718,12 @@ describe('ReleaseGroupProcessor', () => {
           "
         `);
 
-        const processor = new ReleaseGroupProcessor(
+        const processor = await createTestReleaseGroupProcessor(
           tree,
           projectGraph,
           nxReleaseConfig,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          {
-            dryRun: false,
-            verbose: false,
-            firstRelease: false,
-            preid: undefined,
-            filters,
-          }
+          filters
         );
-        await processor.init();
 
         mockDeriveSpecifierFromConventionalCommits.mockImplementation(() => {
           // This should only be called once for this group (for the first project)
@@ -696,15 +782,10 @@ describe('ReleaseGroupProcessor', () => {
       });
 
       it('should handle a single independent group containing both rust and js projects with separate dependency relationships', async () => {
-        const {
-          nxReleaseConfig,
-          projectGraph,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          filters,
-        } = await createNxReleaseConfigAndPopulateWorkspace(
-          tree,
-          `
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            `
               __default__ ({ "projectsRelationship": "independent" }):
                 - rustLibA@1.0.0 [rust]
                 - rustLibB@2.0.0 [rust]
@@ -713,13 +794,13 @@ describe('ReleaseGroupProcessor', () => {
                 - jsPackageY@4.0.0 [js]
                   -> depends on jsPackageX
             `,
-          {
-            version: {
-              conventionalCommits: true,
+            {
+              version: {
+                conventionalCommits: true,
+              },
             },
-          },
-          mockResolveCurrentVersion
-        );
+            mockResolveCurrentVersion
+          );
 
         // Initial state of rustLibA
         expect(tree.read('rustLibA/Cargo.toml', 'utf-8'))
@@ -744,21 +825,12 @@ describe('ReleaseGroupProcessor', () => {
           "
         `);
 
-        const processor = new ReleaseGroupProcessor(
+        const processor = await createTestReleaseGroupProcessor(
           tree,
           projectGraph,
           nxReleaseConfig,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          {
-            dryRun: false,
-            verbose: false,
-            firstRelease: false,
-            preid: undefined,
-            filters,
-          }
+          filters
         );
-        await processor.init();
 
         mockDeriveSpecifierFromConventionalCommits.mockImplementation(
           (_, __, ___, ____, { name: projectName }) => {
@@ -823,7 +895,7 @@ describe('ReleaseGroupProcessor', () => {
     });
 
     describe('updateDependents', () => {
-      it('should bump projects if their dependencies have resolved specifiers, even when they have not resolved their own specifiers, when updateDependents is set to its default of "auto" - SINGLE LEVEL DEPENDENCY', async () => {
+      it('should bump projects if their dependencies have resolved specifiers, even when they have not resolved their own specifiers, when updateDependents is set to its default of "always" - SINGLE LEVEL DEPENDENCY', async () => {
         mockDeriveSpecifierFromConventionalCommits.mockImplementation(
           (_, __, ___, ____, { name: projectName }) => {
             // Only projectK has a specifier. This should cause both itself and projectJ to be bumped.
@@ -867,7 +939,7 @@ describe('ReleaseGroupProcessor', () => {
         `);
       });
 
-      it('should bump projects if their dependencies have resolved specifiers, even when they have not resolved their own specifiers, when updateDependents is set to its default of "auto" - TRANSITIVE DEPENDENCY', async () => {
+      it('should bump projects if their dependencies have resolved specifiers, even when they have not resolved their own specifiers, when updateDependents is set to its default of "always" - TRANSITIVE DEPENDENCY', async () => {
         // This time bump projectL which should cause a cascade of bumps across projectK and projectJ
         mockDeriveSpecifierFromConventionalCommits.mockImplementation(
           (_, __, ___, ____, { name: projectName }) => {
@@ -912,16 +984,11 @@ describe('ReleaseGroupProcessor', () => {
         `);
       });
 
-      it('should bump projects if their dependencies have resolved specifiers, even when they have not resolved their own specifiers, when updateDependents is set to its default of "auto" - TRANSITIVE DEPENDENCY MANY LEVELS AWAY', async () => {
-        const {
-          nxReleaseConfig,
-          projectGraph,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          filters,
-        } = await createNxReleaseConfigAndPopulateWorkspace(
-          tree,
-          `
+      it('should bump projects if their dependencies have resolved specifiers, even when they have not resolved their own specifiers, when updateDependents is set to its default of "always" - TRANSITIVE DEPENDENCY MANY LEVELS AWAY', async () => {
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            `
           __default__ ({ "projectsRelationship": "independent" }):
             - projectJ@1.0.0 [js]
               -> depends on projectK {devDependencies}
@@ -935,29 +1002,20 @@ describe('ReleaseGroupProcessor', () => {
               -> depends on projectO {dependencies}
             - projectO@6.0.0 [js]
         `,
-          {
-            version: {
-              conventionalCommits: true,
+            {
+              version: {
+                conventionalCommits: true,
+              },
             },
-          },
-          mockResolveCurrentVersion
-        );
+            mockResolveCurrentVersion
+          );
 
-        processor = new ReleaseGroupProcessor(
+        processor = await createTestReleaseGroupProcessor(
           tree,
           projectGraph,
           nxReleaseConfig,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          {
-            dryRun: false,
-            verbose: false,
-            firstRelease: false,
-            preid: undefined,
-            filters,
-          }
+          filters
         );
-        await processor.init();
 
         mockDeriveSpecifierFromConventionalCommits.mockImplementation(
           (_, __, ___, ____, { name: projectName }) => {
@@ -1032,7 +1090,7 @@ describe('ReleaseGroupProcessor', () => {
         `);
       });
 
-      it('should bump projects by the maximum of their own specifier and the updateDependents bump but not both, when updateDependents is set to its default of "auto"', async () => {
+      it('should bump projects by the maximum of their own specifier and the updateDependents bump but not both, when updateDependents is set to its default of "always"', async () => {
         mockDeriveSpecifierFromConventionalCommits.mockImplementation(
           (_, __, ___, ____, { name: projectName }) => {
             // projectL has a specifier, this will cause projectK and projectJ to need to be bumped.
@@ -1081,15 +1139,10 @@ describe('ReleaseGroupProcessor', () => {
       });
 
       it('should not bump dependents if their dependencies have resolved specifiers, if updateDependents is set to "never" - SINGLE LEVEL DEPENDENCY', async () => {
-        const {
-          nxReleaseConfig,
-          projectGraph,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          filters,
-        } = await createNxReleaseConfigAndPopulateWorkspace(
-          tree,
-          `
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            `
           __default__ ({ "projectsRelationship": "independent" }):
             - projectJ@1.0.0 [js]
               -> depends on projectK
@@ -1097,30 +1150,21 @@ describe('ReleaseGroupProcessor', () => {
               -> depends on projectL
             - projectL@3.0.0 [js]
         `,
-          {
-            version: {
-              conventionalCommits: true,
-              updateDependents: 'never',
+            {
+              version: {
+                conventionalCommits: true,
+                updateDependents: 'never',
+              },
             },
-          },
-          mockResolveCurrentVersion
-        );
+            mockResolveCurrentVersion
+          );
 
-        processor = new ReleaseGroupProcessor(
+        processor = await createTestReleaseGroupProcessor(
           tree,
           projectGraph,
           nxReleaseConfig,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          {
-            dryRun: false,
-            verbose: false,
-            firstRelease: false,
-            preid: undefined,
-            filters,
-          }
+          filters
         );
-        await processor.init();
 
         mockDeriveSpecifierFromConventionalCommits.mockImplementation(
           (_, __, ___, ____, { name: projectName }) => {
@@ -1166,15 +1210,10 @@ describe('ReleaseGroupProcessor', () => {
       });
 
       it('should not bump dependents if their dependencies have resolved specifiers, if updateDependents is set to "never" - TRANSITIVE DEPENDENCY', async () => {
-        const {
-          nxReleaseConfig,
-          projectGraph,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          filters,
-        } = await createNxReleaseConfigAndPopulateWorkspace(
-          tree,
-          `
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            `
           __default__ ({ "projectsRelationship": "independent" }):
             - projectJ@1.0.0 [js]
               -> depends on projectK
@@ -1182,30 +1221,21 @@ describe('ReleaseGroupProcessor', () => {
               -> depends on projectL
             - projectL@3.0.0 [js]
         `,
-          {
-            version: {
-              conventionalCommits: true,
-              updateDependents: 'never',
+            {
+              version: {
+                conventionalCommits: true,
+                updateDependents: 'never',
+              },
             },
-          },
-          mockResolveCurrentVersion
-        );
+            mockResolveCurrentVersion
+          );
 
-        processor = new ReleaseGroupProcessor(
+        processor = await createTestReleaseGroupProcessor(
           tree,
           projectGraph,
           nxReleaseConfig,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          {
-            dryRun: false,
-            verbose: false,
-            firstRelease: false,
-            preid: undefined,
-            filters,
-          }
+          filters
         );
-        await processor.init();
 
         // This time bump projectL which would otherwise cause a cascade of bumps across projectK and projectJ, but should not here because updateDependents is set to "never"
         mockDeriveSpecifierFromConventionalCommits.mockImplementation(
@@ -1251,55 +1281,233 @@ describe('ReleaseGroupProcessor', () => {
         `);
       });
     });
+
+    it('should bump projects within same group when updateDependents is explicitly set to "auto"', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectJ@1.0.0 [js]
+              -> depends on projectK
+            - projectK@2.0.0 [js]
+              -> depends on projectL
+            - projectL@3.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              updateDependents: 'auto', // Explicitly set to 'auto'
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          if (projectName === 'projectK') return 'minor';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        3
+      );
+
+      // projectJ is bumped because updateDependents is 'auto' and both are in same group
+      expect(readJson(tree, 'projectJ/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectK": "2.1.0",
+          },
+          "name": "projectJ",
+          "version": "1.0.1",
+        }
+      `);
+
+      expect(readJson(tree, 'projectK/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectL": "3.0.0",
+          },
+          "name": "projectK",
+          "version": "2.1.0",
+        }
+      `);
+
+      expect(readJson(tree, 'projectL/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectL",
+          "version": "3.0.0",
+        }
+      `);
+    });
+
+    it('should NOT bump projects across different release groups when updateDependents is set to "auto" and a filter is applied', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          group1 ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+              -> depends on projectB
+          group2 ({ "projectsRelationship": "independent" }):
+            - projectB@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              updateDependents: 'auto', // 'auto' respects group boundaries when filtering
+            },
+          },
+          mockResolveCurrentVersion,
+          {
+            projects: ['projectB'], // Only release projectB in group2
+          }
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // Only projectB in group2 has changes
+          if (projectName === 'projectB') return 'minor';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        1
+      );
+
+      // projectA in group1 is NOT bumped because updateDependents is 'auto' and projectA is not in the filtered group
+      expect(readJson(tree, 'projectA/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectB": "2.0.0",
+          },
+          "name": "projectA",
+          "version": "1.0.0",
+        }
+      `);
+
+      // projectB in group2 is bumped based on its own specifier
+      expect(readJson(tree, 'projectB/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectB",
+          "version": "2.1.0",
+        }
+      `);
+    });
+
+    it('should bump projects across different release groups when updateDependents is explicitly set to "always"', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          group1 ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+              -> depends on projectB
+          group2 ({ "projectsRelationship": "independent" }):
+            - projectB@2.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+              updateDependents: 'always', // Explicitly set to 'always' to propagate across groups
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // Only projectB in group2 has changes
+          if (projectName === 'projectB') return 'minor';
+          return 'none';
+        }
+      );
+      await processor.processGroups();
+
+      expect(mockDeriveSpecifierFromConventionalCommits).toHaveBeenCalledTimes(
+        2
+      );
+
+      // projectA in group1 is bumped because updateDependents is 'always' (propagates across groups)
+      expect(readJson(tree, 'projectA/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "projectB": "2.1.0",
+          },
+          "name": "projectA",
+          "version": "1.0.1",
+        }
+      `);
+
+      // projectB in group2 is bumped based on its own specifier
+      expect(readJson(tree, 'projectB/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "projectB",
+          "version": "2.1.0",
+        }
+      `);
+    });
   });
 
   /**
    * NOTE: Fundamental issues with filters, like trying to filter to a single project within a fixed release group,
-   * will have already been caught and handled by filterReleaseGroups(), so that is not repeated here.
+   * will have already been caught and handled by the release graph construction, so that is not repeated here.
    */
   describe('filters', () => {
     it('should filter out projects with no dependency relationships within a single independent release group based on the provided user filter', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             __default__ ({ "projectsRelationship": "independent" }):
               - projectJ@1.0.0 [js]
               - projectK@2.0.0 [js]
               - projectL@3.0.0 [js]
           `,
-        {
-          version: {
-            conventionalCommits: true,
+          {
+            version: {
+              conventionalCommits: true,
+            },
           },
-        },
-        mockResolveCurrentVersion,
-        {
-          // Apply the projects filter to only include projectJ in versioning
-          projects: ['projectJ'],
-        }
-      );
+          mockResolveCurrentVersion,
+          {
+            // Apply the projects filter to only include projectJ in versioning
+            projects: ['projectJ'],
+          }
+        );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
+        filters
       );
-      await processor.init();
 
       mockDeriveSpecifierFromConventionalCommits.mockImplementation(
         () => 'minor'
@@ -1335,15 +1543,10 @@ describe('ReleaseGroupProcessor', () => {
     });
 
     it('should filter out projects when applying a user provided projects filter to independent projects which do have dependency relationships within a single independent release group, but which have no dependents', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             __default__ ({ "projectsRelationship": "independent" }):
               - projectJ@1.0.0 [js]
                 -> depends on projectK
@@ -1351,34 +1554,25 @@ describe('ReleaseGroupProcessor', () => {
                 -> depends on projectL
               - projectL@3.0.0 [js]
           `,
-        {
-          version: {
-            conventionalCommits: true,
+          {
+            version: {
+              conventionalCommits: true,
+            },
           },
-        },
-        mockResolveCurrentVersion,
-        {
-          // Apply the projects filter to only include projectJ in versioning.
-          // projectJ does not have any DEPENDENTS, so it is safe to filter everything else out.
-          projects: ['projectJ'],
-        }
-      );
+          mockResolveCurrentVersion,
+          {
+            // Apply the projects filter to only include projectJ in versioning.
+            // projectJ does not have any DEPENDENTS, so it is safe to filter everything else out.
+            projects: ['projectJ'],
+          }
+        );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
+        filters
       );
-      await processor.init();
 
       mockDeriveSpecifierFromConventionalCommits.mockImplementation(
         () => 'minor'
@@ -1420,15 +1614,10 @@ describe('ReleaseGroupProcessor', () => {
     });
 
     it('should filter out projects when applying a user provided projects filter to independent projects which do have dependency relationships within a single independent release group, and which have dependents, as long as updateDependents is set to "never"', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             __default__ ({ "projectsRelationship": "independent" }):
               - projectJ@1.0.0 [js]
                 -> depends on projectK
@@ -1436,34 +1625,25 @@ describe('ReleaseGroupProcessor', () => {
                 -> depends on projectL
               - projectL@3.0.0 [js]
           `,
-        {
-          version: {
-            conventionalCommits: true,
-            updateDependents: 'never',
+          {
+            version: {
+              conventionalCommits: true,
+              updateDependents: 'never',
+            },
           },
-        },
-        mockResolveCurrentVersion,
-        {
-          // Apply the projects filter to only include projectL in versioning.
-          projects: ['projectL'],
-        }
-      );
+          mockResolveCurrentVersion,
+          {
+            // Apply the projects filter to only include projectL in versioning.
+            projects: ['projectL'],
+          }
+        );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
+        filters
       );
-      await processor.init();
 
       mockDeriveSpecifierFromConventionalCommits.mockImplementation(
         () => 'minor'
@@ -1506,23 +1686,18 @@ describe('ReleaseGroupProcessor', () => {
 
   describe('non-semver versioning', () => {
     it('should handle non-semver versioning for a simple fixed release group with no dependencies', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        // projectB also intentionally has no current version
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          // projectB also intentionally has no current version
+          `
           __default__ ({ "projectsRelationship": "fixed" }):
             - projectA@1.0 [non-semver]
             - projectB [non-semver]
         `,
-        {},
-        mockResolveCurrentVersion
-      );
+          {},
+          mockResolveCurrentVersion
+        );
 
       expect(tree.read('projectA/version.txt', 'utf-8')).toMatchInlineSnapshot(
         `"1.0"`
@@ -1532,22 +1707,15 @@ describe('ReleaseGroupProcessor', () => {
         `""`
       );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
+        filters,
         {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
           userGivenSpecifier: '2.0',
         }
       );
-      await processor.init();
       await processor.processGroups();
 
       expect(tree.read('projectA/version.txt', 'utf-8')).toMatchInlineSnapshot(
@@ -1559,26 +1727,21 @@ describe('ReleaseGroupProcessor', () => {
     });
 
     it('should handle non-semver versioning for a simple independent release group with no dependencies', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
           __default__ ({ "projectsRelationship": "independent" }):
             - projectA@abc123 [non-semver]
             - projectB@2099-01-01.build1 [non-semver]
         `,
-        {},
-        mockResolveCurrentVersion,
-        {
-          // Update version projectB
-          projects: ['projectB'],
-        }
-      );
+          {},
+          mockResolveCurrentVersion,
+          {
+            // Update version projectB
+            projects: ['projectB'],
+          }
+        );
 
       expect(tree.read('projectA/version.txt', 'utf-8')).toMatchInlineSnapshot(
         `"abc123"`
@@ -1587,22 +1750,15 @@ describe('ReleaseGroupProcessor', () => {
         `"2099-01-01.build1"`
       );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
+        filters,
         {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
           userGivenSpecifier: '2099-01-01.build2',
         }
       );
-      await processor.init();
       await processor.processGroups();
 
       // Unchanged
@@ -1616,27 +1772,22 @@ describe('ReleaseGroupProcessor', () => {
     });
 
     it('should handle non-semver versioning for a simple independent release group with dependencies', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
           __default__ ({ "projectsRelationship": "independent" }):
             - projectA@abc123 [non-semver]
               -> depends on projectB
             - projectB@2099-01-01.build1 [non-semver]
         `,
-        {},
-        mockResolveCurrentVersion,
-        {
-          // Update version projectB
-          projects: ['projectB'],
-        }
-      );
+          {},
+          mockResolveCurrentVersion,
+          {
+            // Update version projectB
+            projects: ['projectB'],
+          }
+        );
 
       expect(tree.read('projectA/version.txt', 'utf-8')).toMatchInlineSnapshot(
         `"abc123"`
@@ -1645,22 +1796,15 @@ describe('ReleaseGroupProcessor', () => {
         `"2099-01-01.build1"`
       );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
+        filters,
         {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
           userGivenSpecifier: '2099-01-01.build2',
         }
       );
-      await processor.init();
       await processor.processGroups();
 
       // projectA changed its version in some arbitrary way as a side effect of the dependency bump (as dictated by its version actions implementation)
@@ -1676,42 +1820,28 @@ describe('ReleaseGroupProcessor', () => {
 
   describe('versionData', () => {
     it('should populate versionData even when projects are not versioned', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
           __default__ ({ "projectsRelationship": "independent" }):
             - libtest1@4.5.0 [js]
             - my-nest-app@1.0.0 [js]
         `,
-        {
-          version: {
-            conventionalCommits: true,
+          {
+            version: {
+              conventionalCommits: true,
+            },
           },
-        },
-        mockResolveCurrentVersion
-      );
+          mockResolveCurrentVersion
+        );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
+        filters
       );
-      await processor.init();
 
       mockDeriveSpecifierFromConventionalCommits.mockImplementation(
         () => 'none'
@@ -1723,11 +1853,13 @@ describe('ReleaseGroupProcessor', () => {
           "libtest1": {
             "currentVersion": "4.5.0",
             "dependentProjects": [],
+            "dockerVersion": null,
             "newVersion": null,
           },
           "my-nest-app": {
             "currentVersion": "1.0.0",
             "dependentProjects": [],
+            "dockerVersion": null,
             "newVersion": null,
           },
         }

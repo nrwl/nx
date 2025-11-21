@@ -71,6 +71,7 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
       }
     });
   }
+
   onExit(cb: (code: number, terminalOutput: string) => void) {
     this.exitCallbacks.push(cb);
   }

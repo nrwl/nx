@@ -1,0 +1,39 @@
+---
+import { Card, LinkCard as LinkCardComponent } from '@nx/nx-dev-ui-markdoc/src/lib/tags/cards.component';
+
+interface Props {
+  title: string;
+  description?: string;
+  href?: string;
+  url?: string;
+  type?: string;
+  icon?: string;
+  appearance?: 'default' | 'small';
+}
+
+const { title, description, href, url, type = 'documentation', icon, appearance } = Astro.props;
+
+// Map href to url for backward compatibility
+const finalUrl = url || href || '#';
+
+// If we have a description, use the Card component (for linkcard tags)
+// Otherwise use LinkCard component (for link_card tags)
+const useCard = description !== undefined && description !== '';
+---
+
+{useCard ? (
+  <Card 
+    title={title}
+    description={description || ''}
+    type={type as 'documentation' | 'external' | 'video'}
+    url={finalUrl}
+  />
+) : (
+  <LinkCardComponent
+    title={title}
+    type={type}
+    icon={icon || ''}
+    url={finalUrl}
+    appearance={appearance}
+  />
+)}

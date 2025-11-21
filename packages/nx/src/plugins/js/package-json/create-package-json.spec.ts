@@ -576,6 +576,7 @@ describe('createPackageJson', () => {
     });
 
     it('should use fixed versions when creating package json for apps', () => {
+      spies.push(jest.spyOn(configModule, 'readNxJson').mockReturnValue({}));
       spies.push(
         jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
           if (path === 'apps/app1/package.json') {
@@ -604,6 +605,7 @@ describe('createPackageJson', () => {
     });
 
     it('should override fixed versions with local ranges when creating package json for apps', () => {
+      spies.push(jest.spyOn(configModule, 'readNxJson').mockReturnValue({}));
       spies.push(
         jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
           if (path === 'apps/app1/package.json') {
@@ -646,6 +648,7 @@ describe('createPackageJson', () => {
     });
 
     it('should use range versions when creating package json for libs', () => {
+      spies.push(jest.spyOn(configModule, 'readNxJson').mockReturnValue({}));
       spies.push(
         jest
           .spyOn(fileutilsModule, 'readJsonFile')
@@ -676,6 +679,11 @@ describe('createPackageJson', () => {
     });
 
     it('should override range versions with local ranges when creating package json for libs', () => {
+      spies.push(
+        jest
+          .spyOn(configModule, 'readNxJson')
+          .mockReturnValue({ cli: { packageManager: 'pnpm' } })
+      );
       spies.push(
         jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
           if (path === 'libs/lib1/package.json') {
@@ -1061,6 +1069,154 @@ describe('createPackageJson', () => {
           bar: '1.0.0',
         },
       });
+    });
+  });
+
+  describe('nested library dependencies', () => {
+    it('should include dependencies from nested libraries (App -> lib1 -> lib2)', () => {
+      const mockFilterUsingGlobPatterns = jest.spyOn(
+        hashModule,
+        'filterUsingGlobPatterns'
+      );
+      const mockGetTargetInputs = jest.spyOn(hashModule, 'getTargetInputs');
+      const mockReadNxJson = jest.spyOn(configModule, 'readNxJson');
+
+      // Mock restrictive patterns that would miss nested dependencies
+      mockGetTargetInputs.mockReturnValue({
+        selfInputs: ['production'],
+        dependencyInputs: ['^production'],
+      });
+
+      mockReadNxJson.mockReturnValue({
+        namedInputs: {
+          production: [
+            'default',
+            '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+          ],
+        },
+      } as any);
+
+      mockFilterUsingGlobPatterns.mockImplementation(
+        (root, files, patterns) => {
+          if (root === 'apps/myapp') {
+            return files.filter((f) => f.file.includes('main.ts'));
+          }
+
+          if (root === 'libs/lib1' && patterns.includes('^production')) {
+            return files.filter((f) => f.file.includes('index.ts'));
+          }
+
+          if (root === 'libs/lib1' && patterns.includes('{projectRoot}/**/*')) {
+            return files;
+          }
+
+          if (root === 'libs/lib2' && patterns.includes('^production')) {
+            return [];
+          }
+          if (root === 'libs/lib2' && patterns.includes('{projectRoot}/**/*')) {
+            return files; // This is the fix - broad patterns find all files
+          }
+          return files;
+        }
+      );
+
+      const graph: ProjectGraph = {
+        nodes: {
+          myapp: {
+            type: 'app',
+            name: 'myapp',
+            data: {
+              targets: { build: {} },
+              root: 'apps/myapp',
+            },
+          },
+          lib1: {
+            type: 'lib',
+            name: 'lib1',
+            data: {
+              targets: { build: {} },
+              root: 'libs/lib1',
+            },
+          },
+          lib2: {
+            type: 'lib',
+            name: 'lib2',
+            data: {
+              targets: { build: {} },
+              root: 'libs/lib2',
+            },
+          },
+        },
+        externalNodes: {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: { version: '4.17.21', hash: '', packageName: 'lodash' },
+          },
+          'npm:axios': {
+            type: 'npm',
+            name: 'npm:axios',
+            data: { version: '1.0.0', hash: '', packageName: 'axios' },
+          },
+        },
+        dependencies: {
+          myapp: [
+            { source: 'myapp', target: 'lib1', type: DependencyType.static },
+          ],
+          lib1: [
+            { source: 'lib1', target: 'lib2', type: DependencyType.static },
+          ],
+          lib2: [],
+        },
+      };
+
+      const fileMap: ProjectFileMap = {
+        myapp: [
+          createFile('apps/myapp/src/main.ts', [
+            ['apps/myapp/src/main.ts', 'lib1', DependencyType.static],
+          ]),
+        ],
+        lib1: [
+          createFile('libs/lib1/src/index.ts', [
+            ['libs/lib1/src/index.ts', 'lib2', DependencyType.static],
+            ['libs/lib1/src/index.ts', 'npm:axios', DependencyType.static],
+          ]),
+        ],
+        lib2: [
+          createFile('libs/lib2/src/index.ts', [
+            ['libs/lib2/src/index.ts', 'npm:lodash', DependencyType.static],
+          ]),
+          createFile('libs/lib2/src/utils.ts', [
+            ['libs/lib2/src/utils.ts', 'npm:lodash', DependencyType.static],
+          ]),
+        ],
+      };
+
+      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+      jest.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({
+        name: 'root-package',
+        dependencies: {},
+      });
+
+      const result = createPackageJson(
+        'myapp',
+        graph,
+        {
+          target: 'build',
+          root: '',
+          isProduction: true,
+        },
+        fileMap
+      );
+
+      expect(result.dependencies).toEqual({
+        axios: '1.0.0',
+        lodash: '4.17.21',
+      });
+
+      mockFilterUsingGlobPatterns.mockRestore();
+      mockGetTargetInputs.mockRestore();
+      mockReadNxJson.mockRestore();
     });
   });
 });

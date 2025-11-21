@@ -46,10 +46,14 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     const bodyLines = this.projectNames.map(
       (affectedProject) => `${output.dim('-')} ${affectedProject}`
     );
-    if (Object.keys(this.taskOverrides).length > 0) {
+    const filteredOverrides = Object.entries(this.taskOverrides).filter(
+      // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
+      ([flag]) => flag !== 'nxReleaseVersionData'
+    );
+    if (filteredOverrides.length > 0) {
       bodyLines.push('');
       bodyLines.push(`${output.dim('With additional flags:')}`);
-      Object.entries(this.taskOverrides)
+      filteredOverrides
         .map(([flag, value]) => formatFlags('', flag, value))
         .forEach((arg) => bodyLines.push(arg));
     }

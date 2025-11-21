@@ -6,6 +6,7 @@ export interface CopyAssetsOptions {
   outputPath: string;
   assets: (string | AssetGlob)[];
   watch?: boolean | WatchMode;
+  includeIgnoredAssetFiles?: boolean;
 }
 
 export interface CopyAssetsResult {
@@ -30,6 +31,7 @@ export async function copyAssets(
     assets: options.assets,
     callback:
       typeof options?.watch === 'object' ? options.watch.onCopy : undefined,
+    includeIgnoredFiles: options.includeIgnoredAssetFiles,
   });
   const result: CopyAssetsResult = {
     success: true,

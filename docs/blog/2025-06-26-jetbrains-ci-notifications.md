@@ -45,7 +45,7 @@ Setting up CI notifications takes just a few steps:
 
 - Make sure you have [Nx Console for JetBrains](https://plugins.jetbrains.com/plugin/21060-nx-console) installed from the marketplace (1.43.0 or later)
 - Enable the JetBrains AI Assistant plugin
-- Enable the Nx MCP server – just click on the popup notification when it comes [or refer to our guide here](/getting-started/ai-integration#automatic-setup-with-nx-console)
+- Enable the Nx MCP server – just click on the popup notification when it comes [or refer to our guide here](/docs/getting-started/ai-setup#automatic-setup-with-nx-console)
 
 Once configured, you'll receive notifications for any CI failures in your Nx Cloud workspace. The integration works across IntelliJ IDEA, WebStorm, and other JetBrains IDEs.
 

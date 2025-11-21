@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 
 export function FeatureSections(): ReactElement {
   return (
@@ -20,7 +20,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-affected.avif"
             alt="Nx Affected: Run tasks only on affected projects"
             tag="Affected"
-            href="/ci/features/affected"
+            href={'/docs/ci/features/affected'}
           />
 
           {/* Remote Caching Section */}
@@ -30,7 +30,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-replay.avif"
             alt="Nx Replay: Remote caching"
             tag="Nx Replay"
-            href="/features/cache-task-results"
+            href={'/docs/features/cache-task-results'}
           />
 
           {/* Distribution Section */}
@@ -40,7 +40,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-agents.avif"
             alt="Nx Agents: Task distribution"
             tag="Nx Agents"
-            href="/ci/features/distribute-task-execution"
+            href={'/docs/ci/features/distribute-task-execution'}
           />
 
           {/* Atomizer Section */}
@@ -50,7 +50,7 @@ export function FeatureSections(): ReactElement {
             imageSrc="/images/enterprise/nx-atomizer.avif"
             alt="Nx Atomizer: Split large test tasks"
             tag="Atomizer"
-            href="/ci/features/split-e2e-tasks"
+            href={'/docs/ci/features/split-e2e-tasks'}
           />
 
           {/* Flaky Test Retries Section */}

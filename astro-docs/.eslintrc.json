@@ -1,0 +1,28 @@
+{
+  "extends": ["plugin:playwright/recommended", "../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["**/*.spec.ts", "**/*.test.ts", "**/*.spec.js", "**/*.test.js"],
+      "rules": {
+        "playwright/no-standalone-expect": "off"
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["e2e/**/*.{ts,js,tsx,jsx}"],
+      "rules": {}
+    }
+  ]
+}

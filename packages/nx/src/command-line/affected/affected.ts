@@ -1,7 +1,7 @@
 import { calculateFileChanges } from '../../project-graph/file-utils';
 import { runCommand } from '../../tasks-runner/run-command';
 import { output } from '../../utils/output';
-import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
+import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
 import type { NxArgs } from '../../utils/command-line-utils';
 import {
   parseFiles,
@@ -72,6 +72,9 @@ export async function affected(
               open: true,
               view: 'tasks',
               targets: nxArgs.targets,
+              all:
+                nxArgs.all &&
+                (!nxArgs.projects || nxArgs.projects.length === 0),
               projects: projectNames,
               file,
             },
@@ -108,11 +111,7 @@ export async function getAffectedGraphNodes(
     ? projectGraph
     : await filterAffected(
         projectGraph,
-        calculateFileChanges(
-          parseFiles(nxArgs).files,
-          await allFileData(),
-          nxArgs
-        )
+        calculateFileChanges(parseFiles(nxArgs).files, nxArgs)
       );
 
   if (nxArgs.exclude) {

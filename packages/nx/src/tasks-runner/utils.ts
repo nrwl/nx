@@ -22,7 +22,7 @@ import { findMatchingProjects } from '../utils/find-matching-projects';
 import { isGlobPattern } from '../utils/globs';
 import { joinPathFragments } from '../utils/path';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
-import { splitByColons } from '../utils/split-target';
+import { splitTarget } from '../utils/split-target';
 import { workspaceRoot } from '../utils/workspace-root';
 import { isTuiEnabled } from './is-tui-enabled';
 
@@ -167,7 +167,9 @@ export function readProjectAndTargetFromTargetString(
   projects: Record<string, ProjectGraphProjectNode>
 ): { projects?: string[]; target: string } {
   // Support for both `project:target` and `target:with:colons` syntax
-  const [maybeProject, ...segments] = splitByColons(targetString);
+  const [maybeProject, ...segments] = splitTarget(targetString, {
+    nodes: projects,
+  } as ProjectGraph);
 
   if (!segments.length) {
     // if no additional segments are provided, then the string references
@@ -574,7 +576,7 @@ export function isCacheableTask(
     cacheableTargets?: string[] | null;
   }
 ): boolean {
-  if (task.cache !== undefined && !longRunningTask(task)) {
+  if (task.cache !== undefined) {
     return task.cache;
   }
 
@@ -589,6 +591,7 @@ export function isCacheableTask(
 function longRunningTask(task: Task) {
   const t = task.target.target;
   return (
+    task.continuous ||
     (!!task.overrides['watch'] && task.overrides['watch'] !== 'false') ||
     t.endsWith(':watch') ||
     t.endsWith('-watch') ||
@@ -601,4 +604,16 @@ function longRunningTask(task: Task) {
 // TODO: vsavkin remove when nx-cloud doesn't depend on it
 export function unparse(options: Object): string[] {
   return serializeOverridesIntoCommandLine(options);
+}
+
+export function createTaskId(
+  project: string,
+  target: string,
+  configuration: string | undefined
+): string {
+  let id = `${project}:${target}`;
+  if (configuration) {
+    id += `:${configuration}`;
+  }
+  return id;
 }

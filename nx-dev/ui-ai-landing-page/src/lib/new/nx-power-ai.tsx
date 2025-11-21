@@ -4,8 +4,8 @@ import {
   GoogleGeminiIcon,
   MetaIcon,
   OpenAiIcon,
-} from '@nx/nx-dev/ui-icons';
-import { cx } from '@nx/nx-dev/ui-primitives';
+} from '@nx/nx-dev-ui-icons';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 const HexagonShape: FC<SVGProps<SVGSVGElement>> = (props) => (
   <svg

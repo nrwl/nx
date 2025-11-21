@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   getProjects,
+  joinPathFragments,
   readNxJson,
   type Tree,
   updateNxJson,
@@ -14,6 +15,7 @@ import {
 } from '../../utils/versions';
 import { transformEsmConfigFile } from './lib/transform-esm';
 import { transformCjsConfigFile } from './lib/transform-cjs';
+import { transformPluginConfig } from './lib/transform-plugin-config';
 
 export default async function (tree: Tree, options: Schema) {
   const projects = getProjects(tree);
@@ -24,7 +26,8 @@ export default async function (tree: Tree, options: Schema) {
   }
   const project = projects.get(options.project);
 
-  const webpackConfigsToConvert: [string, string][] = [];
+  const webpackConfigsWithHelpersToConvert: [string, string][] = [];
+  const webpackConfigsWithPluginsToConvert: [string, string][] = [];
 
   for (const [targetName, target] of Object.entries(project.targets)) {
     if (target.executor === '@nx/webpack:webpack') {
@@ -40,7 +43,10 @@ export default async function (tree: Tree, options: Schema) {
           /webpack(?!.*webpack)/,
           'rspack'
         );
-        webpackConfigsToConvert.push([options.webpackConfig, rspackConfigPath]);
+        webpackConfigsWithHelpersToConvert.push([
+          options.webpackConfig,
+          rspackConfigPath,
+        ]);
 
         options.rspackConfig = rspackConfigPath;
         delete options.webpackConfig;
@@ -56,6 +62,23 @@ export default async function (tree: Tree, options: Schema) {
         )) {
           convertWebpackConfigOption(configuration);
         }
+      }
+    } else if (
+      (target.executor === 'nx:run-commands' && target.options.command) ||
+      target.command === 'webpack-cli build'
+    ) {
+      if (target.options?.command) {
+        target.options.command = 'rspack build';
+      } else if (target.command) {
+        target.command = 'rspack build';
+      }
+
+      const webpackConfigPath = findWebpackConfigPath(tree, project.root);
+      if (webpackConfigPath) {
+        webpackConfigsWithPluginsToConvert.push([
+          webpackConfigPath,
+          webpackConfigPath.replace(/webpack(?!.*webpack)/, 'rspack'),
+        ]);
       }
     } else if (target.executor === '@nx/webpack:dev-server') {
       target.executor = '@nx/rspack:dev-server';
@@ -74,9 +97,30 @@ export default async function (tree: Tree, options: Schema) {
     }
   }
 
-  for (const [webpackConfigPath, rspackConfigPath] of webpackConfigsToConvert) {
+  if (
+    webpackConfigsWithHelpersToConvert.length === 0 &&
+    webpackConfigsWithPluginsToConvert.length === 0
+  ) {
+    console.error(
+      `Project '${options.project}' does not have any webpack targets to convert.`
+    );
+    return;
+  }
+
+  for (const [
+    webpackConfigPath,
+    rspackConfigPath,
+  ] of webpackConfigsWithHelpersToConvert) {
     tree.rename(webpackConfigPath, rspackConfigPath);
-    transformConfigFile(tree, rspackConfigPath);
+    transformConfigFileWithHelpers(tree, rspackConfigPath);
+  }
+
+  for (const [
+    webpackConfigPath,
+    rspackConfigPath,
+  ] of webpackConfigsWithPluginsToConvert) {
+    tree.rename(webpackConfigPath, rspackConfigPath);
+    transformConfigFileWithPlugins(tree, rspackConfigPath);
   }
 
   updateProjectConfiguration(tree, options.project, project);
@@ -127,7 +171,11 @@ export default async function (tree: Tree, options: Schema) {
   return installTask;
 }
 
-function transformConfigFile(tree: Tree, configPath: string) {
+function transformConfigFileWithPlugins(tree: Tree, configPath: string) {
+  transformPluginConfig(tree, configPath);
+}
+
+function transformConfigFileWithHelpers(tree: Tree, configPath: string) {
   transformEsmConfigFile(tree, configPath);
   transformCjsConfigFile(tree, configPath);
   cleanupEmptyImports(tree, configPath);
@@ -153,4 +201,21 @@ function cleanupEmptyImports(tree: Tree, configPath: string) {
   let newContents = configContents.replace(emptyImportRegex, '');
   newContents = newContents.replace(emptyConstRequires, '');
   tree.write(configPath, newContents);
+}
+
+function findWebpackConfigPath(tree: Tree, projectRoot: string) {
+  const possibleConfigPaths = [
+    'webpack.config.js',
+    'webpack.config.mjs',
+    'webpack.config.cjs',
+    'webpack.config.ts',
+    'webpack.config.mts',
+    'webpack.config.cts',
+  ];
+  for (const configPath of possibleConfigPaths) {
+    const possiblePath = joinPathFragments(projectRoot, configPath);
+    if (tree.exists(possiblePath)) {
+      return possiblePath;
+    }
+  }
 }

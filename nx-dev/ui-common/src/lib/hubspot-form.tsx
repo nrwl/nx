@@ -9,12 +9,16 @@ let globalId = 0;
 
 declare const window: {
   hbspt: any;
+  Cookiebot?: any;
 };
+
+declare const Calendly: any;
 
 interface HubspotFormProps {
   region?: string;
   portalId?: string;
   formId?: string;
+  calendlyFormId?: string | null;
   noScript?: boolean;
   loading?: any;
   onSubmit?: (formData) => void;
@@ -25,8 +29,13 @@ export class HubspotForm extends Component<
   HubspotFormProps,
   { loaded: boolean }
 > {
+  static defaultProps = {
+    calendlyFormId: null,
+  };
+
   id: number;
   el?: HTMLDivElement | null = null;
+  calendlyInitAttempts: number = 0;
 
   constructor(props) {
     super(props);
@@ -40,6 +49,12 @@ export class HubspotForm extends Component<
 
   createForm(): void {
     if (typeof window === 'undefined') return;
+
+    // Check if user has consented to marketing cookies
+    if (window.Cookiebot && !window.Cookiebot.consent?.marketing) {
+      // Don't create form if marketing consent is not given
+      return;
+    }
 
     if (window.hbspt) {
       // protect against component unmounting before window.hbspt is available
@@ -73,6 +88,12 @@ export class HubspotForm extends Component<
   }
 
   loadScript() {
+    // Check if user has consented to marketing cookies
+    if (window.Cookiebot && !window.Cookiebot.consent?.marketing) {
+      // Don't load script if marketing consent is not given
+      return;
+    }
+
     const script = document.createElement(`script`);
     script.defer = true;
     script.onload = () => {
@@ -94,17 +115,58 @@ export class HubspotForm extends Component<
       if (this.props.onReady) {
         this.props.onReady(form);
       }
+      this.initCalendlyIfAvailable();
     } else {
       setTimeout(this.findFormElement, 1);
     }
   }
 
+  initCalendlyIfAvailable() {
+    try {
+      if (
+        this.props.calendlyFormId &&
+        typeof this.props.calendlyFormId === 'string' &&
+        this.props.formId &&
+        typeof Calendly !== 'undefined' &&
+        typeof Calendly.initHubspotForm === 'function'
+      ) {
+        Calendly.initHubspotForm({
+          id: this.props.formId,
+          url: `https://calendly.com/api/form_builder/forms/${this.props.calendlyFormId}/submissions`,
+        });
+        return;
+      }
+    } catch {}
+    if (this.props.calendlyFormId && this.calendlyInitAttempts < 20) {
+      this.calendlyInitAttempts++;
+      setTimeout(() => this.initCalendlyIfAvailable(), 150);
+    }
+  }
+
   override componentDidMount() {
-    if (!window.hbspt && !this.props.noScript) {
-      this.loadScript();
+    // Function to initialize when consent is available
+    const initialize = () => {
+      if (!window.hbspt && !this.props.noScript) {
+        this.loadScript();
+      } else {
+        this.createForm();
+        this.findFormElement();
+      }
+    };
+
+    // Check if Cookiebot is loaded and consent is given
+    if (
+      process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE === 'true' ||
+      (window.Cookiebot && window.Cookiebot.consent?.marketing)
+    ) {
+      initialize();
     } else {
-      this.createForm();
-      this.findFormElement();
+      // Listen for consent acceptance
+      window.addEventListener('CookiebotOnAccept', () => {
+        if (window.Cookiebot && window.Cookiebot.consent?.marketing) {
+          initialize();
+        }
+      });
     }
   }
 
@@ -112,7 +174,9 @@ export class HubspotForm extends Component<
     return (
       <>
         <div
-          ref={(el) => (this.el = el)}
+          ref={(el) => {
+            this.el = el;
+          }}
           id={`reactHubspotForm${this.id}`}
           style={{ display: this.state.loaded ? 'block' : 'none' }}
         />

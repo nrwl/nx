@@ -64,7 +64,6 @@ describe('getTouchedNpmPackages', () => {
       [
         {
           file: 'package.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: JsonDiffType.Modified,
@@ -94,7 +93,6 @@ describe('getTouchedNpmPackages', () => {
       [
         {
           file: 'package.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: JsonDiffType.Modified,
@@ -129,7 +127,6 @@ describe('getTouchedNpmPackages', () => {
       [
         {
           file: 'package.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: JsonDiffType.Modified,
@@ -159,7 +156,6 @@ describe('getTouchedNpmPackages', () => {
       [
         {
           file: 'package.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: JsonDiffType.Deleted,
@@ -197,7 +193,6 @@ describe('getTouchedNpmPackages', () => {
       [
         {
           file: 'package.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: JsonDiffType.Added,
@@ -236,7 +231,6 @@ describe('getTouchedNpmPackages', () => {
       [
         {
           file: 'package.json',
-          hash: 'some-hash',
           getChanges: () => [new WholeFileChange()],
         },
       ],
@@ -262,7 +256,6 @@ describe('getTouchedNpmPackages', () => {
       [
         {
           file: 'package.json',
-          hash: 'some-hash',
           getChanges: () => [
             {
               type: 'JsonPropertyAdded',
@@ -302,7 +295,6 @@ describe('getTouchedNpmPackages', () => {
         [
           {
             file: 'package.json',
-            hash: 'some-hash',
             getChanges: () => [
               {
                 type: 'JsonPropertyAdded',
@@ -327,7 +319,7 @@ describe('getTouchedNpmPackages', () => {
         },
         projectGraph
       );
-    }).not.toThrowError();
+    }).not.toThrow();
     expect(logger.warn).toHaveBeenCalledWith(
       'The affected projects might have not been identified properly. The package(s) changed-test-pkg-name-1, changed-test-pkg-name-2 were not found. Please open an issue in GitHub including the package.json file.'
     );

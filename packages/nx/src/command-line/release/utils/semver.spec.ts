@@ -1,7 +1,11 @@
 import { NxReleaseConfig } from '../config/config';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from '../config/conventional-commits';
 import { GitCommit } from './git';
-import { deriveNewSemverVersion, determineSemverChange } from './semver';
+import {
+  deriveNewSemverVersion,
+  determineSemverChange,
+  SemverSpecifier,
+} from './semver';
 
 describe('semver', () => {
   describe('deriveNewSemverVersion()', () => {
@@ -119,46 +123,119 @@ describe('semver', () => {
     it('should return the highest bump level of all commits', () => {
       expect(
         determineSemverChange(
-          [fixCommit, featNonBreakingCommit, choreCommit],
+          new Map([
+            [
+              'default',
+              [
+                { commit: fixCommit, isProjectScopedCommit: true },
+                {
+                  commit: featNonBreakingCommit,
+                  isProjectScopedCommit: true,
+                },
+                { commit: choreCommit, isProjectScopedCommit: true },
+              ],
+            ],
+          ]),
           config
-        )
-      ).toEqual('minor');
+        ).get('default')
+      ).toEqual(SemverSpecifier.MINOR);
+    });
+
+    it('should return a patch bump level if none of the commits are project scoped', () => {
+      expect(
+        determineSemverChange(
+          new Map([
+            [
+              'default',
+              [
+                { commit: fixCommit, isProjectScopedCommit: false },
+                {
+                  commit: featNonBreakingCommit,
+                  isProjectScopedCommit: false,
+                },
+                { commit: choreCommit, isProjectScopedCommit: false },
+              ],
+            ],
+          ]),
+          config
+        ).get('default')
+      ).toEqual(SemverSpecifier.PATCH);
     });
 
     it('should return major if any commits are breaking', () => {
       expect(
         determineSemverChange(
-          [fixCommit, featBreakingCommit, featNonBreakingCommit, choreCommit],
+          new Map([
+            [
+              'default',
+              [
+                { commit: fixCommit, isProjectScopedCommit: true },
+                { commit: featBreakingCommit, isProjectScopedCommit: true },
+                { commit: featNonBreakingCommit, isProjectScopedCommit: true },
+                { commit: choreCommit, isProjectScopedCommit: true },
+              ],
+            ],
+          ]),
           config
-        )
-      ).toEqual('major');
+        ).get('default')
+      ).toEqual(SemverSpecifier.MAJOR);
     });
 
     it('should return major if any commits (including unknown types) are breaking', () => {
       expect(
         determineSemverChange(
-          [
-            fixCommit,
-            unknownTypeBreakingCommit,
-            featNonBreakingCommit,
-            choreCommit,
-          ],
+          new Map([
+            [
+              'default',
+              [
+                { commit: fixCommit, isProjectScopedCommit: true },
+                {
+                  commit: unknownTypeBreakingCommit,
+                  isProjectScopedCommit: true,
+                },
+                { commit: featNonBreakingCommit, isProjectScopedCommit: true },
+                { commit: choreCommit, isProjectScopedCommit: true },
+              ],
+            ],
+          ]),
           config
-        )
-      ).toEqual('major');
+        ).get('default')
+      ).toEqual(SemverSpecifier.MAJOR);
     });
 
     it('should return patch when given only patch commits, ignoring unknown types', () => {
       expect(
         determineSemverChange(
-          [fixCommit, choreCommit, unknownTypeCommit],
+          new Map([
+            [
+              'default',
+              [
+                { commit: fixCommit, isProjectScopedCommit: true },
+                {
+                  commit: choreCommit,
+                  isProjectScopedCommit: true,
+                },
+                { commit: unknownTypeCommit, isProjectScopedCommit: true },
+              ],
+            ],
+          ]),
           config
-        )
-      ).toEqual('patch');
+        ).get('default')
+      ).toEqual(SemverSpecifier.PATCH);
     });
 
     it('should return null when given only unknown type commits', () => {
-      expect(determineSemverChange([unknownTypeCommit], config)).toEqual(null);
+      expect(
+        determineSemverChange(
+          new Map([
+            [
+              'default',
+              [{ commit: unknownTypeCommit, isProjectScopedCommit: true }],
+            ],
+          ]),
+          config
+        ).get('default')
+      ).toEqual(null);
     });
   });
 });

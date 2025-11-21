@@ -3,7 +3,7 @@ import {
   PropertyInfoTooltip,
   PropertyInfoTooltipProps,
 } from './property-info-tooltip';
-import { Tooltip } from '@nx/graph/legacy/tooltips';
+import { Tooltip } from '@nx/graph-ui-common';
 
 const meta: Meta<typeof PropertyInfoTooltip> = {
   component: PropertyInfoTooltip,

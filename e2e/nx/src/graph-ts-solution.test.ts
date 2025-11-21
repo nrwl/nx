@@ -11,7 +11,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { basename } from 'node:path';
 
 describe('Graph - TS solution setup', () => {

@@ -1,7 +1,7 @@
 import type { Metadata, ResolvingMetadata } from 'next';
 import { coursesApi } from '../../../lib/courses.api';
-import { CourseDetails } from '@nx/nx-dev/ui-courses';
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { CourseDetails } from '@nx/nx-dev-ui-courses';
+import { DefaultLayout } from '@nx/nx-dev-ui-common';
 
 interface CourseDetailProps {
   params: { courseId: string };

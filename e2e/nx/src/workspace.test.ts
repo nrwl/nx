@@ -14,7 +14,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 let proj: string;
@@ -189,7 +189,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
 
 describe('Workspace Tests', () => {
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/workspace', '@nx/js'] });
   });
 
   afterAll(() => cleanupProject());
@@ -283,7 +283,7 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${readmePath}`);
       checkFilesExist(readmePath);
 
-      const jestConfigPath = `${newPath}/jest.config.ts`;
+      const jestConfigPath = `${newPath}/jest.config.cts`;
       expect(moveOutput).toContain(`CREATE ${jestConfigPath}`);
       checkFilesExist(jestConfigPath);
       const jestConfig = readFile(jestConfigPath);
@@ -420,7 +420,7 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${readmePath}`);
       checkFilesExist(readmePath);
 
-      const jestConfigPath = `${newPath}/jest.config.ts`;
+      const jestConfigPath = `${newPath}/jest.config.cts`;
       expect(moveOutput).toContain(`CREATE ${jestConfigPath}`);
       checkFilesExist(jestConfigPath);
       const jestConfig = readFile(jestConfigPath);
@@ -543,7 +543,7 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${readmePath}`);
       checkFilesExist(readmePath);
 
-      const jestConfigPath = `${newPath}/jest.config.ts`;
+      const jestConfigPath = `${newPath}/jest.config.cts`;
       expect(moveOutput).toContain(`CREATE ${jestConfigPath}`);
       checkFilesExist(jestConfigPath);
       const jestConfig = readFile(jestConfigPath);

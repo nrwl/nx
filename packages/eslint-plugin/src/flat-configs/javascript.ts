@@ -1,6 +1,6 @@
 import eslint from '@eslint/js';
 import globals from 'globals';
-import tseslint from 'typescript-eslint';
+import tseslint, { type ConfigArray } from 'typescript-eslint';
 import { packageExists } from '../utils/config-utils';
 
 const isPrettierAvailable =
@@ -22,7 +22,7 @@ const isPrettierAvailable =
  * breaking changes - we should also look to replace all the @typescript-eslint
  * related plugins and rules below.
  */
-export default tseslint.config(
+const config: ConfigArray = tseslint.config(
   {
     files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
@@ -85,3 +85,5 @@ export default tseslint.config(
    */
   ...(isPrettierAvailable ? [require('eslint-config-prettier')] : [])
 );
+
+export default config;

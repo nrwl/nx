@@ -1,14 +1,14 @@
 import chalk = require('chalk');
 import { prompt } from 'enquirer';
-import * as ora from 'ora';
 import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import type { Tree } from '../../../generators/tree';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { getLatestGitTagForPattern } from '../utils/git';
 import { ProjectLogger } from './project-logger';
-import type { FinalConfigForProject } from './release-group-processor';
+import type { FinalConfigForProject } from '../utils/release-graph';
 import { VersionActions } from './version-actions';
+import { globalSpinner } from '../../../utils/spinner';
 
 export async function resolveCurrentVersion(
   tree: Tree,
@@ -109,7 +109,7 @@ export async function resolveCurrentVersionFromDisk(
         projectGraphNode.name
       }" does not have a ${versionActions.validManifestFilenames.join(
         ' or '
-      )} file available in ./${projectGraphNode.data.root}.
+      )} file available in ${projectGraphNode.data.root}
 
 To fix this you will either need to add a ${versionActions.validManifestFilenames.join(
         ' or '
@@ -152,11 +152,9 @@ export async function resolveCurrentVersionFromRegistry(
 
   let registryTxt = '';
 
-  const spinner = ora(
+  const spinner = globalSpinner.start(
     `Resolving the current version for ${projectGraphNode.name} from the configured registry...`
   );
-  spinner.color = 'cyan';
-  spinner.start();
 
   try {
     const res = await versionActions.readCurrentVersionFromRegistry(

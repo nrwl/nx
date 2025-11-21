@@ -13,7 +13,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 import { join } from 'path';
@@ -26,7 +26,7 @@ describe('Nx Plugin', () => {
   let workspaceName: string;
 
   beforeAll(() => {
-    workspaceName = newProject();
+    workspaceName = newProject({ packages: ['@nx/plugin'] });
   });
 
   afterAll(() => cleanupProject());

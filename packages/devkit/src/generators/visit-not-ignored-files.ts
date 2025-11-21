@@ -1,5 +1,5 @@
 import type { Tree } from 'nx/src/devkit-exports';
-import ignore from 'ignore';
+import { getIgnoreObjectForTree } from 'nx/src/devkit-internals';
 import { join, relative, sep } from 'path';
 
 /**
@@ -10,17 +10,7 @@ export function visitNotIgnoredFiles(
   dirPath: string = tree.root,
   visitor: (path: string) => void
 ): void {
-  // TODO (v17): use packages/nx/src/utils/ignore.ts
-  let ig: ReturnType<typeof ignore>;
-  if (tree.exists('.gitignore')) {
-    ig = ignore();
-    ig.add('.git');
-    ig.add(tree.read('.gitignore', 'utf-8'));
-  }
-  if (tree.exists('.nxignore')) {
-    ig ??= ignore();
-    ig.add(tree.read('.nxignore', 'utf-8'));
-  }
+  const ig = getIgnoreObjectForTree(tree);
   dirPath = normalizePathRelativeToRoot(dirPath, tree.root);
   if (dirPath !== '' && ig?.ignores(dirPath)) {
     return;

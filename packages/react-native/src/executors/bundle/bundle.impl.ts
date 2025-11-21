@@ -1,9 +1,10 @@
-import { createDirectory } from '@nx/workspace/src/utilities/fileutils';
 import { names, ExecutorContext } from '@nx/devkit';
+import { signalToCode } from '@nx/devkit/internal';
 import { dirname, join, resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { ReactNativeBundleOptions } from './schema';
+import { mkdirSync } from 'fs';
 
 export interface ReactNativeBundleOutput {
   success: boolean;
@@ -18,7 +19,7 @@ export default async function* bundleExecutor(
 
   options.bundleOutput = join(context.root, options.bundleOutput);
 
-  createDirectory(dirname(options.bundleOutput));
+  mkdirSync(dirname(options.bundleOutput));
 
   await runCliBuild(context.root, projectRoot, options);
   yield { success: true };
@@ -56,7 +57,8 @@ function runCliBuild(
     childProcess.on('error', (err) => {
       reject(err);
     });
-    childProcess.on('exit', (code) => {
+    childProcess.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code === 0) {
         resolve(childProcess);
       } else {

@@ -1,5 +1,18 @@
 import { Tree, offsetFromRoot } from '@nx/devkit';
 
+function findProjectJestConfig(host: Tree, projectRoot: string): string | null {
+  const extensions = ['js', 'ts', 'cts'];
+
+  for (const ext of extensions) {
+    const configPath = `${projectRoot}/jest.config.${ext}`;
+    if (host.exists(configPath)) {
+      return configPath;
+    }
+  }
+
+  return null;
+}
+
 export function updateJestConfig(
   host: Tree,
   options: {
@@ -13,15 +26,15 @@ export function updateJestConfig(
     return;
   }
 
-  const configPath = `${options.projectRoot}/jest.config.${
-    options.js ? 'js' : 'ts'
-  }`;
+  const configPath = findProjectJestConfig(host, options.projectRoot);
 
-  if (!host.exists(configPath)) return;
+  if (!configPath) return;
 
   const offset = offsetFromRoot(options.projectRoot);
+  const isCommonJS = configPath.endsWith('.js') || configPath.endsWith('.cts');
+
   // Easier to override the whole file rather than replace content since the structure has changed with `next/jest.js` being used.
-  const newContent = options.js
+  const newContent = isCommonJS
     ? `const nextJest = require('next/jest.js');
 
 const createJestConfig = nextJest({

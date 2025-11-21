@@ -257,12 +257,6 @@
       },
       "additionalProperties": false
     },
-    "sassImplementation": {
-      "type": "string",
-      "description": "The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.",
-      "enum": ["sass", "sass-embedded"],
-      "default": "sass"
-    },
     "styles": {
       "type": "array",
       "description": "External Styles which will be included with the application",
@@ -332,7 +326,7 @@
               "type": "string",
               "description": "The file to include.",
               "x-completion-type": "file",
-              "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+              "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
             },
             "bundleName": {
               "type": "string",
@@ -351,7 +345,7 @@
           "type": "string",
           "description": "The file to include.",
           "x-completion-type": "file",
-          "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+          "x-completion-glob": "**/*@(.css|.scss|.less|.sass)"
         }
       ]
     },

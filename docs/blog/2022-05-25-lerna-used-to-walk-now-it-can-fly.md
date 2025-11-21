@@ -12,7 +12,7 @@ description: Lerna v5.1 introduces the useNx flag for dramatic performance gains
 > _ICYMI: A couple of weeks ago we (Nrwl) announced that we take over stewardship of Lerna. Read all about it in our_ [_recent blog post_](/blog/lerna-is-dead-long-live-lerna)_.  
 > We also just released Lerna v5 as a first maintenance release:_ [_Read more here_](https://github.com/lerna/lerna/releases/tag/v5.0.0)_._
 
-For folks that want to migrate to Nx, we always had a dedicated [Nx and Lerna](/recipes/adopting-nx) docs page that shows you how you can easily integrate the two. However, we felt we could do better and allow you to get all the speed benefits that come from Nx's task scheduling abilities, without needing to change nearly anything in your Lerna workspace.
+For folks that want to migrate to Nx, we always had a dedicated [Nx and Lerna](/docs/guides/adopting-nx) docs page that shows you how you can easily integrate the two. However, we felt we could do better and allow you to get all the speed benefits that come from Nx's task scheduling abilities, without needing to change nearly anything in your Lerna workspace.
 
 And it got fast, like really fast!!
 
@@ -53,7 +53,7 @@ Finally, add the following to your `lerna.json`.
 
 That's mostly it. You can continue using the usual Lerna commands, but at this point Lerna would delegate its operations to Nx underneath.
 
-To get more out of it, you might want to create a small `nx.json` file (or run `npx nx init` to generate one) for going into some more details on configuring the cacheable operations:
+To get more out of it, you might want to create a small `nx.json` file (or run `npx nx@latest init` to generate one) for going into some more details on configuring the cacheable operations:
 
 ```json5 {% fileName="nx.json" %}
 {
@@ -81,17 +81,17 @@ With the change we made in Lerna 5.1 we are adding Nx (MIT licensed) as a third 
 
 By having Nx integrated, you not just get faster builds but also some other Nx's features for free!
 
-[**Nx Project graph**](/features/explore-graph) — By running `npx nx graph` you get the visualization of the graph. You can interactively explore what your workspace looks like and the relationships between the packages. We actually used this same graph on the Lerna repo itself, which helped us to get a better understanding of how the repo is structured when we took over the maintenance. Here's an example of filtering the lerna packages to understand what `@lerna/exec` is about and how it relates to other packages in the repo.
+[**Nx Project graph**](/docs/features/explore-graph) — By running `npx nx graph` you get the visualization of the graph. You can interactively explore what your workspace looks like and the relationships between the packages. We actually used this same graph on the Lerna repo itself, which helped us to get a better understanding of how the repo is structured when we took over the maintenance. Here's an example of filtering the lerna packages to understand what `@lerna/exec` is about and how it relates to other packages in the repo.
 
 ![](/blog/images/2022-05-25/uW4TaZQy7smwCDEj.avif)
 
 **Distributed caching** — Right now when you enable `useNx` in your existing Lerna repo, you will get local caching, meaning the cache sits in a local folder on your machine. You get much more value out of it when you start distributing and sharing it with your teammates but especially in CI. This can be done by adding Nx Cloud, which comes with a no-credit card, 500 hours free / month offer which is more than what most workspaces need. Adding that is easy and can be done by adding `@nrwl/nx-cloud` to your root-level `package.json` and then by running:
 
 ```shell
-npx nx connect-to-nx-cloud
+npx nx@latest connect-to-nx-cloud
 ```
 
-**Distributed task execution** — Distribution of the cache is one thing, but the real speed improvements come from also [distributing the task execution](/ci/features/distribute-task-execution) to speed up your CI. Having the Nx project graph and as well as the cache and historical data about previous runs, Nx Cloud DTE is able to maximize the CI agent utilization by evenly distributing tasks based on their (historical) duration as well as based on their topological order. In addition, the DTE process makes sure to properly move cached assets between the agents. Setting up DTE is straightforward, read more on our [Nx Cloud docs](/ci/features/distribute-task-execution). Hint: we also have a CI generator in Nx (you need the `@nrwl/workspace` package) that allows you to generate your CI setup using a single command: `npx nx generate @nrwl/workspace:ci-workflow --ci=github`
+**Distributed task execution** — Distribution of the cache is one thing, but the real speed improvements come from also [distributing the task execution](/docs/features/ci-features/distribute-task-execution) to speed up your CI. Having the Nx project graph and as well as the cache and historical data about previous runs, Nx Cloud DTE is able to maximize the CI agent utilization by evenly distributing tasks based on their (historical) duration as well as based on their topological order. In addition, the DTE process makes sure to properly move cached assets between the agents. Setting up DTE is straightforward, read more on our [Nx Cloud docs](/docs/features/ci-features/distribute-task-execution). Hint: we also have a CI generator in Nx (you need the `@nrwl/workspace` package) that allows you to generate your CI setup using a single command: `npx nx generate @nrwl/workspace:ci-workflow --ci=github`
 
 **Lerna roadmap** — We also just published a roadmap of the next steps for the Lerna repository. Check it out here: [https://github.com/lerna/lerna/discussions/3140](https://github.com/lerna/lerna/discussions/3140)
 

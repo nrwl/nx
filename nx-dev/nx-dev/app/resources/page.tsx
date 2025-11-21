@@ -1,12 +1,12 @@
 import React from 'react';
-import { DefaultLayout, SectionHeading } from '@nx/nx-dev/ui-common';
+import { DefaultLayout, SectionHeading } from '@nx/nx-dev-ui-common';
 import {
   learnItems,
   eventItems,
   companyItems,
   MenuItem,
-} from '@nx/nx-dev/ui-common';
-import { cx } from '@nx/nx-dev/ui-primitives';
+} from '@nx/nx-dev-ui-common';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { Metadata } from 'next';
 
 interface ResourceCardProps {

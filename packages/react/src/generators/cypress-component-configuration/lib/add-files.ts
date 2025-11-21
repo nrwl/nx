@@ -7,6 +7,7 @@ import {
   Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { nxVersion } from 'nx/src/utils/versions';
 import { getActualBundler, isComponent } from '../../../utils/ct-utils';
 import { componentTestGenerator } from '../../component-test/component-test';
@@ -71,7 +72,8 @@ export async function addFiles(
 
   if (options.generateTests) {
     const filePaths = [];
-    visitNotIgnoredFiles(tree, projectConfig.sourceRoot, (filePath) => {
+    const sourceRoot = getProjectSourceRoot(projectConfig, tree);
+    visitNotIgnoredFiles(tree, sourceRoot, (filePath) => {
       if (isComponent(tree, filePath)) {
         filePaths.push(filePath);
       }

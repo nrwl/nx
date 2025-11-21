@@ -12,11 +12,8 @@ export function addTsconfigEntryPoints(
   tree: Tree,
   options: RemixLibraryOptions
 ) {
-  const { root: projectRoot, sourceRoot } = readProjectConfiguration(
-    tree,
-    options.projectName
-  );
-  const projectSourceRoot = getProjectSourceRoot(tree, sourceRoot, projectRoot);
+  const project = readProjectConfiguration(tree, options.projectName);
+  const projectSourceRoot = getProjectSourceRoot(project, tree);
   const serverFilePath = joinPathFragments(projectSourceRoot, 'server.ts');
 
   tree.write(

@@ -5,6 +5,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   readJson,
   readNxJson,
   runTasksInSerial,
@@ -18,7 +19,10 @@ import { satisfies, valid } from 'semver';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { generatePrettierSetup } from '../../utils/prettier';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
-import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
+import {
+  getCustomConditionName,
+  isUsingTsSolutionSetup,
+} from '../../utils/typescript/ts-solution-setup';
 import {
   nxVersion,
   prettierVersion,
@@ -34,10 +38,10 @@ import { InitSchema } from './schema';
 async function getInstalledTypescriptVersion(
   tree: Tree
 ): Promise<string | null> {
-  const rootPackageJson = readJson(tree, 'package.json');
-  const tsVersionInRootPackageJson =
-    rootPackageJson.devDependencies?.['typescript'] ??
-    rootPackageJson.dependencies?.['typescript'];
+  const tsVersionInRootPackageJson = getDependencyVersionFromPackageJson(
+    tree,
+    'typescript'
+  );
 
   if (!tsVersionInRootPackageJson) {
     return null;
@@ -61,7 +65,11 @@ async function getInstalledTypescriptVersion(
       return installedTsVersion;
     }
   } finally {
-    return checkAndCleanWithSemver('typescript', tsVersionInRootPackageJson);
+    return checkAndCleanWithSemver(
+      tree,
+      'typescript',
+      tsVersionInRootPackageJson
+    );
   }
 }
 
@@ -131,8 +139,10 @@ export async function initGeneratorInternal(
   if (schema.addTsConfigBase && !getRootTsConfigFileName(tree)) {
     if (schema.addTsPlugin) {
       const platform = schema.platform ?? 'node';
+      const customCondition = getCustomConditionName(tree);
       generateFiles(tree, join(__dirname, './files/ts-solution'), '.', {
         platform,
+        customCondition,
         tmpl: '',
       });
     } else {

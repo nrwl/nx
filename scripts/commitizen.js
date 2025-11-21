@@ -1,6 +1,7 @@
 // prettier-ignore
 const scopes = [
   { value: 'angular',           name: 'angular:               anything Angular specific' },
+  { value: 'angular-rspack',    name: 'angular-rspack:        anything Angular Rspack specific' },
   { value: 'core',              name: 'core:                  anything Nx core specific' },
   { value: 'bundling',          name: 'bundling:              anything bundling specific (e.g. rollup, webpack, etc.)' },
   { value: 'detox',             name: 'detox:                 anything Detox specific' },
@@ -28,11 +29,15 @@ const scopes = [
   { value: 'storybook',         name: 'storybook:             anything Storybook specific' },
   { value: 'testing',           name: 'testing:               anything testing specific (e.g. jest or cypress)' },
   { value: 'vite',              name: 'vite:                  anything Vite specific' },
+  { value: 'vitest',            name: 'vitest:                anything Vitest specific' },
   { value: 'vue',               name: 'vue:                   anything Vue specific' },
   { value: 'web',               name: 'web:                   anything Web specific' },
   { value: 'webpack',           name: 'webpack:               anything Webpack specific' },
   { value: 'gradle',            name: 'gradle:                anything Gradle specific'},
+  { value: 'maven',             name: 'maven:                 anything Maven specific'},
   { value: 'module-federation', name: 'module-federation:     anything Module Federation specific'},
+  { value: 'docker',            name: 'docker:                anything Docker specific'},
+  { value: 'dotnet',            name: 'dotnet:                anything .NET specific'},
 ];
 
 // precomputed scope

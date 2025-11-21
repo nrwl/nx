@@ -1,4 +1,5 @@
 {
+  "buildFiles": ["nested/nested/proj/build.gradle"],
   "nodes": {
     "nested/nested/proj": {
       "targets": {

@@ -4,7 +4,7 @@ videoUrl: 'https://youtu.be/3hW53b1IJ84'
 duration: '3:42'
 ---
 
-In this lesson, we'll explore how to add Nx to our existing PNPM workspace. You can either add just the `nx` package to your `package.json` and then create a `nx.json` [configuration file](/reference/nx-json), or simply run:
+In this lesson, we'll explore how to add Nx to our existing PNPM workspace. You can either add just the `nx` package to your `package.json` and then create a `nx.json` [configuration file](/docs/reference/nx-json), or simply run:
 
 ```shell
 nx init
@@ -14,5 +14,5 @@ This process will analyze your repository and ask you a couple of questions to p
 
 ## Relevant Links
 
-- [Adopting Nx](/recipes/adopting-nx)
-- [Import an Existing Project into an Nx Workspace](/recipes/adopting-nx/import-project)
+- [Adopting Nx](/docs/guides/adopting-nx)
+- [Import an Existing Project into an Nx Workspace](/docs/guides/adopting-nx/import-project)

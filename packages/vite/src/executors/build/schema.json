@@ -3,7 +3,7 @@
   "outputCapture": "direct-nodejs",
   "title": "Vite Prod Builder",
   "cli": "nx",
-  "description": "Builds a Vite.js application for production.",
+  "description": "Builds a Vite application for production.",
   "type": "object",
   "presets": [
     {
@@ -36,7 +36,7 @@
     },
     "configFile": {
       "type": "string",
-      "description": "The name of the Vite.js configuration file.",
+      "description": "The name of the Vite configuration file.",
       "x-completion-type": "file",
       "x-completion-glob": "vite.config.@(js|ts)"
     },

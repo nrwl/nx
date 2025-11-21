@@ -6,7 +6,7 @@ import {
   readJson,
   runCLI,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Nuxt Plugin', () => {
   const app = uniq('app');

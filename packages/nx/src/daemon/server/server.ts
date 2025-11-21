@@ -4,7 +4,10 @@ import { join } from 'path';
 import { PerformanceObserver } from 'perf_hooks';
 import { hashArray } from '../../hasher/file-hasher';
 import { hashFile } from '../../native';
-import { consumeMessagesFromSocket } from '../../utils/consume-messages-from-socket';
+import {
+  consumeMessagesFromSocket,
+  isJsonMessage,
+} from '../../utils/consume-messages-from-socket';
 import { readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { nxVersion } from '../../utils/versions';
@@ -21,6 +24,11 @@ import {
   registeredFileWatcherSockets,
   removeRegisteredFileWatcherSocket,
 } from './file-watching/file-watcher-sockets';
+import {
+  hasRegisteredProjectGraphListenerSockets,
+  registeredProjectGraphListenerSockets,
+  removeRegisteredProjectGraphListenerSocket,
+} from './project-graph-listener-sockets';
 import { handleHashTasks } from './handle-hash-tasks';
 import {
   handleOutputsHashesMatch,
@@ -129,6 +137,21 @@ import {
   handleRunPostTasksExecution,
   handleRunPreTasksExecution,
 } from './handle-tasks-execution-hooks';
+import {
+  isRegisterProjectGraphListenerMessage,
+  REGISTER_PROJECT_GRAPH_LISTENER,
+} from '../message-types/register-project-graph-listener';
+import {
+  GET_NX_CONSOLE_STATUS,
+  isHandleGetNxConsoleStatusMessage,
+  isHandleSetNxConsolePreferenceAndInstallMessage,
+  SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
+} from '../message-types/nx-console';
+import {
+  handleGetNxConsoleStatus,
+  handleSetNxConsolePreferenceAndInstall,
+} from './handle-nx-console';
+import { deserialize, serialize } from 'v8';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -139,7 +162,7 @@ global.NX_DAEMON = true;
 export type HandlerResult = {
   description: string;
   error?: any;
-  response?: string;
+  response?: string | object | boolean;
 };
 
 let numberOfOpenConnections = 0;
@@ -180,11 +203,12 @@ const server = createServer(async (socket) => {
     );
 
     removeRegisteredFileWatcherSocket(socket);
+    removeRegisteredProjectGraphListenerSocket(socket);
   });
 });
 registerProcessTerminationListeners();
 
-async function handleMessage(socket, data: string) {
+async function handleMessage(socket: Socket, data: string) {
   if (workspaceWatcherError) {
     await respondWithErrorAndExit(
       socket,
@@ -206,8 +230,19 @@ async function handleMessage(socket, data: string) {
 
   const unparsedPayload = data;
   let payload;
+  let mode: 'json' | 'v8' = 'json';
+
+  serverLogger.log(`Received raw message of length ${unparsedPayload.length}`);
+
   try {
-    payload = JSON.parse(unparsedPayload);
+    // JSON Message
+    if (isJsonMessage(unparsedPayload)) {
+      payload = JSON.parse(unparsedPayload);
+    } else {
+      // V8 Serialized Message
+      payload = deserialize(Buffer.from(unparsedPayload, 'binary'));
+      mode = 'v8';
+    }
   } catch (e) {
     await respondWithErrorAndExit(
       socket,
@@ -215,106 +250,198 @@ async function handleMessage(socket, data: string) {
       new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
     );
   }
+  serverLogger.log(`Received ${mode} message of type ${payload.type}`);
 
   if (payload.type === 'PING') {
-    await handleResult(socket, 'PING', () =>
-      Promise.resolve({ response: JSON.stringify(true), description: 'ping' })
+    await handleResult(
+      socket,
+      'PING',
+      () => Promise.resolve({ response: true, description: 'ping' }),
+      mode
     );
   } else if (payload.type === 'REQUEST_PROJECT_GRAPH') {
-    await handleResult(socket, 'REQUEST_PROJECT_GRAPH', () =>
-      handleRequestProjectGraph()
+    await handleResult(
+      socket,
+      'REQUEST_PROJECT_GRAPH',
+      () => handleRequestProjectGraph(),
+      mode
     );
   } else if (payload.type === 'HASH_TASKS') {
-    await handleResult(socket, 'HASH_TASKS', () => handleHashTasks(payload));
+    await handleResult(
+      socket,
+      'HASH_TASKS',
+      () => handleHashTasks(payload),
+      mode
+    );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
-    await handleResult(socket, 'PROCESS_IN_BACKGROUND', () =>
-      handleProcessInBackground(payload)
+    await handleResult(
+      socket,
+      'PROCESS_IN_BACKGROUND',
+      () => handleProcessInBackground(payload),
+      mode
     );
   } else if (payload.type === 'RECORD_OUTPUTS_HASH') {
-    await handleResult(socket, 'RECORD_OUTPUTS_HASH', () =>
-      handleRecordOutputsHash(payload)
+    await handleResult(
+      socket,
+      'RECORD_OUTPUTS_HASH',
+      () => handleRecordOutputsHash(payload),
+      mode
     );
   } else if (payload.type === 'OUTPUTS_HASHES_MATCH') {
-    await handleResult(socket, 'OUTPUTS_HASHES_MATCH', () =>
-      handleOutputsHashesMatch(payload)
+    await handleResult(
+      socket,
+      'OUTPUTS_HASHES_MATCH',
+      () => handleOutputsHashesMatch(payload),
+      mode
     );
   } else if (payload.type === 'REQUEST_SHUTDOWN') {
-    await handleResult(socket, 'REQUEST_SHUTDOWN', () =>
-      handleRequestShutdown(server, numberOfOpenConnections)
+    await handleResult(
+      socket,
+      'REQUEST_SHUTDOWN',
+      () => handleRequestShutdown(server, numberOfOpenConnections),
+      mode
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
     registeredFileWatcherSockets.push({ socket, config: payload.config });
+  } else if (isRegisterProjectGraphListenerMessage(payload)) {
+    registeredProjectGraphListenerSockets.push(socket);
   } else if (isHandleGlobMessage(payload)) {
-    await handleResult(socket, GLOB, () =>
-      handleGlob(payload.globs, payload.exclude)
+    await handleResult(
+      socket,
+      GLOB,
+      () => handleGlob(payload.globs, payload.exclude),
+      mode
     );
   } else if (isHandleMultiGlobMessage(payload)) {
-    await handleResult(socket, MULTI_GLOB, () =>
-      handleMultiGlob(payload.globs, payload.exclude)
+    await handleResult(
+      socket,
+      MULTI_GLOB,
+      () => handleMultiGlob(payload.globs, payload.exclude),
+      mode
     );
   } else if (isHandleNxWorkspaceFilesMessage(payload)) {
-    await handleResult(socket, GET_NX_WORKSPACE_FILES, () =>
-      handleNxWorkspaceFiles(payload.projectRootMap)
+    await handleResult(
+      socket,
+      GET_NX_WORKSPACE_FILES,
+      () => handleNxWorkspaceFiles(payload.projectRootMap),
+      mode
     );
   } else if (isHandleGetFilesInDirectoryMessage(payload)) {
-    await handleResult(socket, GET_FILES_IN_DIRECTORY, () =>
-      handleGetFilesInDirectory(payload.dir)
+    await handleResult(
+      socket,
+      GET_FILES_IN_DIRECTORY,
+      () => handleGetFilesInDirectory(payload.dir),
+      mode
     );
   } else if (isHandleContextFileDataMessage(payload)) {
-    await handleResult(socket, GET_CONTEXT_FILE_DATA, () =>
-      handleContextFileData()
+    await handleResult(
+      socket,
+      GET_CONTEXT_FILE_DATA,
+      () => handleContextFileData(),
+      mode
     );
   } else if (isHandleHashGlobMessage(payload)) {
-    await handleResult(socket, HASH_GLOB, () =>
-      handleHashGlob(payload.globs, payload.exclude)
+    await handleResult(
+      socket,
+      HASH_GLOB,
+      () => handleHashGlob(payload.globs, payload.exclude),
+      mode
     );
   } else if (isHandleHashMultiGlobMessage(payload)) {
-    await handleResult(socket, HASH_GLOB, () =>
-      handleHashMultiGlob(payload.globGroups)
+    await handleResult(
+      socket,
+      HASH_GLOB,
+      () => handleHashMultiGlob(payload.globGroups),
+      mode
     );
   } else if (isHandleGetFlakyTasksMessage(payload)) {
-    await handleResult(socket, GET_FLAKY_TASKS, () =>
-      handleGetFlakyTasks(payload.hashes)
+    await handleResult(
+      socket,
+      GET_FLAKY_TASKS,
+      () => handleGetFlakyTasks(payload.hashes),
+      mode
     );
   } else if (isHandleGetEstimatedTaskTimings(payload)) {
-    await handleResult(socket, GET_ESTIMATED_TASK_TIMINGS, () =>
-      handleGetEstimatedTaskTimings(payload.targets)
+    await handleResult(
+      socket,
+      GET_ESTIMATED_TASK_TIMINGS,
+      () => handleGetEstimatedTaskTimings(payload.targets),
+      mode
     );
   } else if (isHandleWriteTaskRunsToHistoryMessage(payload)) {
-    await handleResult(socket, RECORD_TASK_RUNS, () =>
-      handleRecordTaskRuns(payload.taskRuns)
+    await handleResult(
+      socket,
+      RECORD_TASK_RUNS,
+      () => handleRecordTaskRuns(payload.taskRuns),
+      mode
     );
   } else if (isHandleForceShutdownMessage(payload)) {
-    await handleResult(socket, 'FORCE_SHUTDOWN', () =>
-      handleForceShutdown(server)
+    await handleResult(
+      socket,
+      'FORCE_SHUTDOWN',
+      () => handleForceShutdown(server),
+      mode
     );
   } else if (isHandleGetSyncGeneratorChangesMessage(payload)) {
-    await handleResult(socket, GET_SYNC_GENERATOR_CHANGES, () =>
-      handleGetSyncGeneratorChanges(payload.generators)
+    await handleResult(
+      socket,
+      GET_SYNC_GENERATOR_CHANGES,
+      () => handleGetSyncGeneratorChanges(payload.generators),
+      mode
     );
   } else if (isHandleFlushSyncGeneratorChangesToDiskMessage(payload)) {
-    await handleResult(socket, FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK, () =>
-      handleFlushSyncGeneratorChangesToDisk(payload.generators)
+    await handleResult(
+      socket,
+      FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+      () => handleFlushSyncGeneratorChangesToDisk(payload.generators),
+      mode
     );
   } else if (isHandleGetRegisteredSyncGeneratorsMessage(payload)) {
-    await handleResult(socket, GET_REGISTERED_SYNC_GENERATORS, () =>
-      handleGetRegisteredSyncGenerators()
+    await handleResult(
+      socket,
+      GET_REGISTERED_SYNC_GENERATORS,
+      () => handleGetRegisteredSyncGenerators(),
+      mode
     );
   } else if (isHandleUpdateWorkspaceContextMessage(payload)) {
-    await handleResult(socket, UPDATE_WORKSPACE_CONTEXT, () =>
-      handleUpdateWorkspaceContext(
-        payload.createdFiles,
-        payload.updatedFiles,
-        payload.deletedFiles
-      )
+    await handleResult(
+      socket,
+      UPDATE_WORKSPACE_CONTEXT,
+      () =>
+        handleUpdateWorkspaceContext(
+          payload.createdFiles,
+          payload.updatedFiles,
+          payload.deletedFiles
+        ),
+      mode
     );
   } else if (isHandlePreTasksExecutionMessage(payload)) {
-    await handleResult(socket, PRE_TASKS_EXECUTION, () =>
-      handleRunPreTasksExecution(payload.context)
+    await handleResult(
+      socket,
+      PRE_TASKS_EXECUTION,
+      () => handleRunPreTasksExecution(payload.context),
+      mode
     );
   } else if (isHandlePostTasksExecutionMessage(payload)) {
-    await handleResult(socket, POST_TASKS_EXECUTION, () =>
-      handleRunPostTasksExecution(payload.context)
+    await handleResult(
+      socket,
+      POST_TASKS_EXECUTION,
+      () => handleRunPostTasksExecution(payload.context),
+      mode
+    );
+  } else if (isHandleGetNxConsoleStatusMessage(payload)) {
+    await handleResult(
+      socket,
+      GET_NX_CONSOLE_STATUS,
+      () => handleGetNxConsoleStatus(),
+      mode
+    );
+  } else if (isHandleSetNxConsolePreferenceAndInstallMessage(payload)) {
+    await handleResult(
+      socket,
+      SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
+      () => handleSetNxConsolePreferenceAndInstall(payload.preference),
+      mode
     );
   } else {
     await respondWithErrorAndExit(
@@ -328,7 +455,8 @@ async function handleMessage(socket, data: string) {
 export async function handleResult(
   socket: Socket,
   type: string,
-  hrFn: () => Promise<HandlerResult>
+  hrFn: () => Promise<HandlerResult>,
+  mode: 'json' | 'v8'
 ) {
   let hr: HandlerResult;
   const startMark = new Date();
@@ -341,20 +469,31 @@ export async function handleResult(
   if (hr.error) {
     await respondWithErrorAndExit(socket, hr.description, hr.error);
   } else {
-    await respondToClient(socket, hr.response, hr.description);
+    serverLogger.log(
+      `Serializing response for ${type} message in ${mode} mode`
+    );
+    const response =
+      typeof hr.response === 'string'
+        ? hr.response
+        : serializeUnserializedResult(hr.response, mode);
+    serverLogger.log(`Responding to ${type} message`);
+    await respondToClient(socket, response, hr.description);
   }
   const endMark = new Date();
   serverLogger.log(
-    `Handled ${type}. Handling time: ${
+    `Handled ${mode} message ${type}. Handling time: ${
       doneHandlingMark.getTime() - startMark.getTime()
     }. Response time: ${endMark.getTime() - doneHandlingMark.getTime()}.`
   );
 }
 
 function handleInactivityTimeout() {
-  if (hasRegisteredFileWatcherSockets()) {
+  if (
+    hasRegisteredFileWatcherSockets() ||
+    hasRegisteredProjectGraphListenerSockets()
+  ) {
     serverLogger.log(
-      `There are open file watchers. Resetting inactivity timer.`
+      `There are open file watchers or project graph listeners. Resetting inactivity timer.`
     );
     resetInactivityTimeout(handleInactivityTimeout);
   } else {
@@ -555,21 +694,21 @@ export async function startServer(): Promise<Server> {
     killSocketOrPath();
   }
 
+  setInterval(() => {
+    if (getDaemonProcessIdSync() !== process.pid) {
+      return handleServerProcessTermination({
+        server,
+        reason: 'this process is no longer the current daemon (native)',
+        sockets: openSockets,
+      });
+    }
+  }, 20).unref();
+
   return new Promise(async (resolve, reject) => {
     try {
       server.listen(getFullOsSocketPath(), async () => {
         try {
           serverLogger.log(`Started listening on: ${getFullOsSocketPath()}`);
-
-          setInterval(() => {
-            if (getDaemonProcessIdSync() !== process.pid) {
-              return handleServerProcessTermination({
-                server,
-                reason: 'this process is no longer the current daemon (native)',
-                sockets: openSockets,
-              });
-            }
-          }).unref();
 
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
@@ -597,6 +736,11 @@ export async function startServer(): Promise<Server> {
           // trigger an initial project graph recomputation
           addUpdatedAndDeletedFiles([], [], []);
 
+          // Kick off Nx Console check in background to prime the cache
+          handleGetNxConsoleStatus().catch(() => {
+            // Ignore errors, this is a background operation
+          });
+
           return resolve(server);
         } catch (err) {
           await handleWorkspaceChanges(err, []);
@@ -606,4 +750,14 @@ export async function startServer(): Promise<Server> {
       reject(err);
     }
   });
+}
+function serializeUnserializedResult(
+  response: boolean | object,
+  mode: 'json' | 'v8'
+) {
+  if (mode === 'json') {
+    return JSON.stringify(response);
+  } else {
+    return serialize(response).toString('binary');
+  }
 }

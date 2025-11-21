@@ -1,6 +1,7 @@
-import { join } from 'path';
-import { existsSync } from 'fs';
 import { type ProjectConfiguration } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
 export function getDynamicMfManifestFile(
   project: ProjectConfiguration,
@@ -16,7 +17,7 @@ export function getDynamicMfManifestFile(
     join(workspaceRoot, project.root, 'public/module-federation.manifest.json'),
     join(
       workspaceRoot,
-      project.sourceRoot!,
+      getProjectSourceRoot(project),
       'assets/module-federation.manifest.json'
     ),
   ].find((path) => existsSync(path));

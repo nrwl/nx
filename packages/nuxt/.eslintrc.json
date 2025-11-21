@@ -1,6 +1,6 @@
 {
   "extends": ["../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -35,7 +35,8 @@
               "typescript",
               "@nx/cypress",
               "@nx/playwright",
-              "@nx/vite"
+              "@nx/vite",
+              "@nx/vitest"
             ]
           }
         ]

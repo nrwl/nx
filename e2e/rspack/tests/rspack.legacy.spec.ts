@@ -5,7 +5,7 @@ import {
   updateFile,
   runCLI,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('rspack e2e legacy', () => {
   let originalEnv;
