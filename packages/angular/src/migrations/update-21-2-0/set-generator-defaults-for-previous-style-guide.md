@@ -6,20 +6,17 @@ Updates the generator defaults in the `nx.json` file to maintain the previous An
 
 The migration will add default configurations for the relevant Angular generators in the workspace's `nx.json` file:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "generators": {}
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "generators": {
     "@nx/angular:component": {
@@ -79,16 +76,12 @@ The migration will add default configurations for the relevant Angular generator
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 If some of the generator defaults are already set, the migration will not override them:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" highlightLines=["3-14"] %}
+```json title="nx.json" {3-14}
 {
   "generators": {
     "@nx/angular:component": {
@@ -107,11 +100,9 @@ If some of the generator defaults are already set, the migration will not overri
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="nx.json" highlightLines=["3-14"] %}
+```json title="nx.json" {3-14}
 {
   "generators": {
     "@nx/angular:component": {
@@ -171,6 +162,3 @@ If some of the generator defaults are already set, the migration will not overri
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}
