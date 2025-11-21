@@ -5,6 +5,7 @@ import {
   withAffectedOptions,
   withOutputStyleOption,
   withRunManyOptions,
+  withTuiOptions,
 } from './shared-options';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 
@@ -129,6 +130,54 @@ describe('shared-options', () => {
           }
         )
     );
+
+    it('should enable the tui when flag set', () =>
+      withEnvironmentVariables(
+        {
+          NX_TUI: 'false',
+          CI: 'false',
+          NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
+        },
+        () => {
+          const command = withOutputStyleOption(withTuiOptions(argv));
+          command.parseSync(['--tui']);
+          expect(process.env.NX_TUI).toEqual('true');
+        }
+      ));
+
+    it('should disable the tui when flag set to false', () =>
+      withEnvironmentVariables(
+        {
+          NX_TUI: 'true',
+          CI: 'false',
+          NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
+        },
+        () => {
+          const command = withOutputStyleOption(withTuiOptions(argv));
+          command.parseSync(['--tui=false']);
+          expect(process.env.NX_TUI).toEqual('false');
+        }
+      ));
+  });
+
+  describe('withTuiOptions', () => {
+    it('should parse tui flag', () => {
+      const command = withTuiOptions(argv);
+      const result = command.parseSync(['--tui']);
+      expect(result.tui).toEqual(true);
+    });
+
+    it('should parse tui flag set to false', () => {
+      const command = withTuiOptions(argv);
+      const result = command.parseSync(['--tui=false']);
+      expect(result.tui).toEqual(false);
+    });
+
+    it('should parse tuiAutoExit flag', () => {
+      const command = withTuiOptions(argv);
+      const result = command.parseSync(['--tuiAutoExit=5']);
+      expect(result.tuiAutoExit).toEqual(5);
+    });
   });
 });
 

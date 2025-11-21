@@ -31,7 +31,7 @@ describe('TaskHasher', () => {
         expandNamedInput('b', {
           b: ['^c'],
         })
-      ).toThrowError('namedInputs definitions cannot start with ^');
+      ).toThrow('namedInputs definitions cannot start with ^');
     });
 
     it('should treat strings as filesets when no matching inputs', () => {

@@ -7,11 +7,9 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
-  logger,
   names,
   offsetFromRoot,
   ProjectConfiguration,
-  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -29,7 +27,6 @@ import {
 import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
@@ -50,8 +47,10 @@ import {
 } from '../../utils/typescript/ts-config';
 import {
   addProjectToTsSolutionWorkspace,
+  getDefinedCustomConditionName,
   isUsingTsSolutionSetup,
   isUsingTypeScriptPlugin,
+  shouldConfigureTsSolutionSetup,
 } from '../../utils/typescript/ts-solution-setup';
 import {
   esbuildVersion,
@@ -91,24 +90,19 @@ export async function libraryGeneratorInternal(
 ) {
   const tasks: GeneratorCallback[] = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
   tasks.push(
     await jsInitGenerator(tree, {
       ...schema,
       skipFormat: true,
       tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
       addTsConfigBase: true,
+      addTsPlugin,
       // In the new setup, Prettier is prompted for and installed during `create-nx-workspace`.
       formatter: isUsingTsSolutionSetup(tree) ? 'none' : 'prettier',
     })
   );
   const options = await normalizeOptions(tree, schema);
-
-  if (schema.simpleName !== undefined && schema.simpleName !== false) {
-    // TODO(v22): Remove simpleName as user should be using name.
-    logger.warn(
-      `The "--simpleName" option is deprecated and will be removed in Nx 22. Please use the "--name" option to provide the exact name you want for the library.`
-    );
-  }
 
   createFiles(tree, options);
 
@@ -155,6 +149,7 @@ export async function libraryGeneratorInternal(
         includeLib: true,
         includeVitest: options.unitTestRunner === 'vitest',
         testEnvironment: options.testEnvironment,
+        useEsmExtension: true,
       },
       false
     );
@@ -178,11 +173,11 @@ export async function libraryGeneratorInternal(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // Test would have been set up already
   ) {
-    const { vitestGenerator, createOrEditViteConfig } = ensurePackage(
-      '@nx/vite',
-      nxVersion
-    );
-    const vitestTask = await vitestGenerator(tree, {
+    const { createOrEditViteConfig } = ensurePackage('@nx/vite', nxVersion);
+    ensurePackage('@nx/vitest', nxVersion);
+    // nx-ignore-next-line
+    const { configurationGenerator } = require('@nx/vitest/generators');
+    const vitestTask = await configurationGenerator(tree, {
       project: options.name,
       uiFramework: 'none',
       coverageProvider: 'v8',
@@ -353,7 +348,6 @@ async function configureProject(
       );
     } else {
       await addReleaseConfigForNonTsSolution(
-        shouldUseLegacyVersioning(nxJson.release),
         tree,
         options.name,
         projectConfiguration,
@@ -402,6 +396,7 @@ export type AddLintOptions = Pick<
   | 'rootProject'
   | 'bundler'
   | 'addPlugin'
+  | 'isUsingTsSolutionConfig'
 >;
 
 export async function addLint(
@@ -429,6 +424,7 @@ export async function addLint(
     lintConfigHasOverride,
     isEslintConfigSupported,
     updateOverrideInLintConfig,
+    addIgnoresToLintConfig,
     // nx-ignore-next-line
   } = require('@nx/eslint/src/generators/utils/eslint-file');
 
@@ -507,6 +503,12 @@ export async function addLint(
       }
     );
   }
+
+  // Add out-tsc ignore pattern when using TS solution setup
+  if (options.isUsingTsSolutionConfig) {
+    addIgnoresToLintConfig(tree, options.projectRoot, ['**/out-tsc']);
+  }
+
   return task;
 }
 
@@ -643,9 +645,6 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         options.isUsingTsSolutionConfig &&
         !['none', 'rollup', 'vite'].includes(options.bundler)
       ) {
-        // the file must exist in the TS solution setup
-        const tsconfigBase = readJson(tree, 'tsconfig.base.json');
-
         return getUpdatedPackageJsonContent(updatedPackageJson, {
           main: join(options.projectRoot, 'src/index.ts'),
           outputPath: joinPathFragments(options.projectRoot, 'dist'),
@@ -654,10 +653,7 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
           generateExportsField: true,
           packageJsonPath,
           format: ['esm'],
-          skipDevelopmentExports:
-            !tsconfigBase.compilerOptions?.customConditions?.includes(
-              'development'
-            ),
+          developmentConditionName: getDefinedCustomConditionName(tree),
         });
       }
 
@@ -683,8 +679,6 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
       options.isUsingTsSolutionConfig &&
       !['none', 'rollup', 'vite'].includes(options.bundler)
     ) {
-      const tsconfigBase = readJson(tree, 'tsconfig.base.json');
-
       packageJson = getUpdatedPackageJsonContent(packageJson, {
         main: join(options.projectRoot, 'src/index.ts'),
         outputPath: joinPathFragments(options.projectRoot, 'dist'),
@@ -693,10 +687,7 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         generateExportsField: true,
         packageJsonPath,
         format: ['esm'],
-        skipDevelopmentExports:
-          !tsconfigBase.compilerOptions?.customConditions?.includes(
-            'development'
-          ),
+        developmentConditionName: getDefinedCustomConditionName(tree),
       });
     }
 
@@ -761,7 +752,7 @@ function replaceJestConfig(
   // the existing config has to be deleted otherwise the new config won't overwrite it
   const existingJestConfig = joinPathFragments(
     filesDir,
-    `jest.config.${options.js ? 'js' : 'ts'}`
+    `jest.config.${options.js ? 'js' : 'cts'}`
   );
   if (tree.exists(existingJestConfig)) {
     tree.delete(existingJestConfig);
@@ -770,7 +761,7 @@ function replaceJestConfig(
 
   // replace with JS:SWC specific jest config
   generateFiles(tree, filesDir, options.projectRoot, {
-    ext: options.js ? 'js' : 'ts',
+    ext: options.js ? 'js' : 'cts',
     jestPreset,
     js: !!options.js,
     project: options.name,
@@ -902,11 +893,7 @@ async function normalizeOptions(
     rootProject: options.rootProject,
   });
   options.rootProject = projectRoot === '.';
-  const fileName = names(
-    options.simpleName
-      ? projectNames.projectSimpleName
-      : projectNames.projectFileName
-  ).fileName;
+  const fileName = names(projectNames.projectFileName).fileName;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

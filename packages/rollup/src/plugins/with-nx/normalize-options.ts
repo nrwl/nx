@@ -98,11 +98,11 @@ function normalizeRelativePaths(
 ): void {
   for (const [fieldName, fieldValue] of Object.entries(options)) {
     if (isRelativePath(fieldValue)) {
-      options[fieldName] = join(projectRoot, fieldValue);
+      options[fieldName] = normalizePath(join(projectRoot, fieldValue));
     } else if (Array.isArray(fieldValue)) {
       for (let i = 0; i < fieldValue.length; i++) {
         if (isRelativePath(fieldValue[i])) {
-          fieldValue[i] = join(projectRoot, fieldValue[i]);
+          fieldValue[i] = normalizePath(join(projectRoot, fieldValue[i]));
         }
       }
     }

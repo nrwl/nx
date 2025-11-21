@@ -5,7 +5,7 @@ import {
   runCLI,
   runE2ETests,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 const TEN_MINS_MS = 600_000;
 

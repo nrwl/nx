@@ -1,4 +1,4 @@
-import { MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
+import { MenuItem, MenuSection } from '@nx/nx-dev-models-menu';
 
 const COLLAPSIBLE_SECTIONS = ['concepts', 'recipes', 'enterprise'];
 
@@ -71,7 +71,7 @@ export function getBasicNxCloudSection(items: MenuItem[]): MenuSection {
     itemList: items
       .filter(
         (m) =>
-          m.id === 'intro' ||
+          m.id === 'getting-started' ||
           m.id === 'features' ||
           m.id === 'concepts' ||
           m.id === 'recipes' ||

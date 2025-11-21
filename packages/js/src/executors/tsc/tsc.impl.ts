@@ -12,11 +12,6 @@ import {
   getHelperDependency,
   HelperDependency,
 } from '../../utils/compiler-helper-dependency';
-import {
-  handleInliningBuild,
-  isInlineGraphEmpty,
-  postProcessInlinedDependencies,
-} from '../../utils/inline';
 import { updatePackageJson } from '../../utils/package-json/update-package-json';
 import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema';
 import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
@@ -92,22 +87,13 @@ export async function* tscExecutor(
     rootDir: context.root,
     outputDir: _options.outputPath,
     assets: _options.assets,
+    includeIgnoredFiles: _options.includeIgnoredAssetFiles,
   });
 
   const tsCompilationOptions = createTypeScriptCompilationOptions(
     options,
     context
   );
-
-  const inlineProjectGraph = handleInliningBuild(
-    context,
-    options,
-    tsCompilationOptions.tsConfig
-  );
-
-  if (!isInlineGraphEmpty(inlineProjectGraph)) {
-    tsCompilationOptions.rootDir = '.';
-  }
 
   const typescriptCompilation = compileTypeScriptFiles(
     options,
@@ -129,11 +115,6 @@ export async function* tscExecutor(
           dependencies
         );
       }
-      postProcessInlinedDependencies(
-        tsCompilationOptions.outputPath,
-        tsCompilationOptions.projectRoot,
-        inlineProjectGraph
-      );
     }
   );
 

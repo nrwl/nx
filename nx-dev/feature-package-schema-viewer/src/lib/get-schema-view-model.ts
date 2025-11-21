@@ -2,16 +2,16 @@ import {
   getSchemaFromReference,
   InternalLookup,
   Lookup,
-} from '@nx/nx-dev/data-access-packages';
+} from '@nx/nx-dev-data-access-packages';
 import {
   JsonSchema,
   NxSchema,
   ProcessedPackageMetadata,
   SchemaMetadata,
-} from '@nx/nx-dev/models-package';
+} from '@nx/nx-dev-models-package';
 import { ParsedUrlQuery } from 'querystring';
 import { Errors, Example, generateJsonExampleFor } from './examples';
-import { pkgToGeneratedApiDocs } from '@nx/nx-dev/models-document';
+import { pkgToGeneratedApiDocs } from '@nx/nx-dev-models-document';
 
 function getReferenceFromQuery(query: string): string {
   return query.replace('root/', '#/');

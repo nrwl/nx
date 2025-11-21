@@ -8,5 +8,6 @@ export interface DevServerExecutorSchema {
   ssl?: boolean;
   sslKey?: string;
   sslCert?: string;
+  proxyConfig?: string;
   publicHost?: string;
 }

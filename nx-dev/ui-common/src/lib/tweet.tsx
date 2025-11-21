@@ -11,7 +11,9 @@ export const tweet: Schema = {
   },
 };
 
-export function Tweet(props: { url: string }) {
+export type TweetProps = { url: string };
+
+export function Tweet(props: TweetProps) {
   return (
     <>
       <blockquote

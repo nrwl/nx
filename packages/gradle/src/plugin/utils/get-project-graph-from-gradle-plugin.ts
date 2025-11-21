@@ -25,6 +25,7 @@ export interface ProjectGraphReport {
   };
   dependencies: Array<StaticDependency>;
   externalNodes?: Record<string, ProjectGraphExternalNode>;
+  buildFiles?: string[];
 }
 
 export interface ProjectGraphReportCache extends ProjectGraphReport {
@@ -82,6 +83,11 @@ export function getCurrentProjectGraphReport(): ProjectGraphReport {
   return projectGraphReportCache;
 }
 
+export function getCurrentBuildFiles(): string[] {
+  const report = getCurrentProjectGraphReport();
+  return report.buildFiles || [];
+}
+
 /**
  * This function populates the gradle report cache.
  * For each gradlew file, it runs the `nxProjectGraph` task and processes the output.
@@ -89,6 +95,7 @@ export function getCurrentProjectGraphReport(): ProjectGraphReport {
  * It will accumulate the output of all gradlew files.
  * @param workspaceRoot
  * @param gradlewFiles absolute paths to all gradlew files in the workspace
+ * @param options user specified gradle plugin options
  * @returns Promise<void>
  */
 export async function populateProjectGraph(
@@ -168,6 +175,8 @@ export function processNxProjectGraph(
     dependencies: [],
     externalNodes: {},
   };
+  const allBuildFiles = new Set<string>();
+
   while (index < projectGraphLines.length) {
     const line = projectGraphLines[index].trim();
     if (line.startsWith('> Task ') && line.endsWith(':nxProjectGraph')) {
@@ -195,9 +204,17 @@ export function processNxProjectGraph(
           ...projectGraphReportJson.externalNodes,
         };
       }
+      if (projectGraphReportJson.buildFiles) {
+        projectGraphReportJson.buildFiles.forEach((buildFile) =>
+          allBuildFiles.add(buildFile)
+        );
+      }
     }
     index++;
   }
+
+  // Convert Set to array for the final result
+  projectGraphReportForAllProjects.buildFiles = Array.from(allBuildFiles);
 
   return projectGraphReportForAllProjects;
 }

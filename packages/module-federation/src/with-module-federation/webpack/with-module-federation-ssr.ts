@@ -1,5 +1,6 @@
 import {
   ModuleFederationConfig,
+  normalizeProjectName,
   NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
@@ -15,9 +16,13 @@ export async function withModuleFederationForSSR(
   const isDevServer = process.env['WEBPACK_SERVE'];
 
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
-    await getModuleFederationConfig(options, {
-      isServer: true,
-    });
+    await getModuleFederationConfig(
+      options,
+      {
+        isServer: true,
+      },
+      'webpack'
+    );
 
   return (config) => {
     config.target = 'async-node';
@@ -32,7 +37,7 @@ export async function withModuleFederationForSSR(
     config.plugins.push(
       new (require('@module-federation/enhanced').ModuleFederationPlugin)(
         {
-          name: options.name.replace(/-/g, '_'),
+          name: normalizeProjectName(options.name),
           filename: 'remoteEntry.js',
           exposes: options.exposes,
           remotes: mappedRemotes,
@@ -48,8 +53,8 @@ export async function withModuleFederationForSSR(
            */
           ...(configOverride ? configOverride : {}),
           experiments: {
-            federationRuntime: 'hoisted',
-            // We should allow users to override federationRuntime
+            asyncStartup: true,
+            // We should allow users to override experiments
             ...(configOverride?.experiments ?? {}),
           },
           runtimePlugins:
@@ -65,7 +70,6 @@ export async function withModuleFederationForSSR(
                   ...(configOverride?.runtimePlugins ?? []),
                   require.resolve('@module-federation/node/runtimePlugin'),
                 ],
-          virtualRuntimeEntry: true,
         },
         {}
       ),

@@ -22,14 +22,6 @@ export interface TaskMetadata {
   groupId: number;
 }
 
-interface RustRunningTask extends RunningTask {
-  getResults(): Promise<{ code: number; terminalOutput: string }>;
-
-  onExit(cb: (code: number, terminalOutput: string) => void): void;
-
-  kill(signal?: NodeJS.Signals): Promise<void> | void;
-}
-
 export interface LifeCycle {
   startCommand?(parallel?: number): void | Promise<void>;
 
@@ -76,6 +68,8 @@ export interface LifeCycle {
   setTaskStatus?(taskId: string, status: NativeTaskStatus): void;
 
   registerForcedShutdownCallback?(callback: () => void): void;
+
+  setEstimatedTaskTimings?(timings: Record<string, number>): void;
 }
 
 export class CompositeLifeCycle implements LifeCycle {
@@ -195,6 +189,14 @@ export class CompositeLifeCycle implements LifeCycle {
     for (let l of this.lifeCycles) {
       if (l.registerForcedShutdownCallback) {
         l.registerForcedShutdownCallback(callback);
+      }
+    }
+  }
+
+  setEstimatedTaskTimings(timings: Record<string, number>): void {
+    for (let l of this.lifeCycles) {
+      if (l.setEstimatedTaskTimings) {
+        l.setEstimatedTaskTimings(timings);
       }
     }
   }

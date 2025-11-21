@@ -4,15 +4,13 @@ import {
   newProject,
   runCLI,
   uniq,
-  updateFile,
-  readFile,
-} from 'e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Next.js Jest Configuration', () => {
   let proj: string;
 
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/next'] });
   });
 
   afterAll(() => cleanupProject());

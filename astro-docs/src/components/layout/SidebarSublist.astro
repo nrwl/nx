@@ -1,0 +1,204 @@
+---
+/*
+ * This is a modified version of the SidebarSublist component from Starlight with support for icons.
+ * https://github.com/withastro/starlight/blob/46524ac/packages/starlight/components/SidebarSublist.astro -->
+ */
+import { Badge, Icon } from '@astrojs/starlight/components'
+
+export interface SidebarLink {
+  type: 'link'
+  label: string
+  href: string
+  isCurrent: boolean
+  badge: any
+  attrs: any
+}
+
+export interface SidebarGroup {
+  type: 'group'
+  label: string
+  entries: (SidebarLink | SidebarGroup)[]
+  collapsed: boolean
+  badge: any
+  attrs?: any
+}
+
+export type SidebarEntry = SidebarLink | SidebarGroup
+
+interface Props {
+  sublist: SidebarEntry[]
+
+  nested?: boolean
+}
+
+const { sublist, nested } = Astro.props
+
+// Copied from https://github.com/withastro/starlight/blob/46524ac/packages/starlight/utils/navigation.ts#L447
+function flattenSidebar(entries: SidebarEntry[]): SidebarEntry[] {
+  return entries.reduce<SidebarEntry[]>((acc, entry) => {
+    if (entry.type === 'group') acc.push(...flattenSidebar(entry.entries))
+    else acc.push(entry)
+    return acc
+  }, [])
+}
+
+function getIconPath(iconName: string | undefined): string | null {
+  if (!iconName) return null;
+  return `/docs/images/icons/${iconName}.svg`;
+}
+---
+
+<ul class:list={{ 'top-level': !nested }}>
+  {
+    sublist.map((entry) => {
+      const icon = getIconPath(entry.attrs?.['data-icon']);
+      return (
+        <li class={icon ? 'p-0 border-none' : ''}>
+          {entry.type === 'link' ? (
+            <a
+              href={entry.href}
+              aria-current={entry.isCurrent && 'page'}
+              class:list={[{ large: !nested }, entry.attrs?.class]}
+              {...entry.attrs}
+            >
+              {icon && (
+                <img
+                  aria-hidden="true"
+                  src={icon}
+                  alt=""
+                  class="sidebar-icon w-4 h-4 dark:invert"
+                />
+              )}
+              <span>{entry.label}</span>
+              {entry.badge &&
+                <Badge variant={entry.badge.variant} class={entry.badge.class}
+                       text={entry.badge.text}/>}
+            </a>
+          ) : (
+            <details
+              open={flattenSidebar(entry.entries).some((i: any) => i.isCurrent) || !entry.collapsed}>
+              <summary class={icon ? 'pl-0 py-2' : ''}>
+                <div class="group-label">
+                  {icon && (
+                    <img
+                      aria-hidden="true"
+                      src={icon}
+                      alt=""
+                      class="sidebar-icon w-4 h-4 dark:invert"
+                    />
+                  )}
+                  <span class="large">{entry.label}</span>
+                  {entry.badge && (
+                    <Badge variant={entry.badge.variant} class={entry.badge.class} text={entry.badge.text}/>
+                  )}
+                </div>
+                <Icon name="right-caret" class="caret" size="1.25rem"/>
+              </summary>
+              <Astro.self sublist={entry.entries} nested/>
+            </details>
+          )}
+        </li>
+      );
+    })
+  }
+</ul>
+
+<!-- Copied from https://github.com/withastro/starlight/blob/46524ac/packages/starlight/components/SidebarSublist.astro -->
+<style>
+  @layer starlight.core {
+    ul {
+      --sl-sidebar-item-padding-inline: 0.5rem;
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      overflow-wrap: anywhere;
+    }
+
+    ul ul li {
+      margin-inline-start: var(--sl-sidebar-item-padding-inline);
+      border-inline-start: 1px solid var(--sl-color-hairline-light);
+      padding-inline-start: var(--sl-sidebar-item-padding-inline);
+    }
+
+    .large {
+      font-size: var(--sl-text-lg);
+      font-weight: 600;
+      color: var(--sl-color-white);
+    }
+
+    .top-level > li + li {
+      margin-top: 0.75rem;
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.2em var(--sl-sidebar-item-padding-inline);
+      line-height: 1.4;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    summary::marker,
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .caret {
+      transition: transform 0.2s ease-in-out;
+      flex-shrink: 0;
+    }
+
+    :global([dir='rtl']) .caret {
+      transform: rotateZ(180deg);
+    }
+
+    [open] > summary .caret {
+      transform: rotateZ(90deg);
+    }
+
+    a {
+      display: block;
+      border-radius: 0.25rem;
+      text-decoration: none;
+      color: var(--sl-color-gray-2);
+      padding: 0.3em var(--sl-sidebar-item-padding-inline);
+      line-height: 1.4;
+    }
+
+    a:hover,
+    a:focus {
+      color: var(--sl-color-white);
+    }
+
+    [aria-current='page'],
+    [aria-current='page']:hover,
+    [aria-current='page']:focus {
+      font-weight: 600;
+      color: var(--sl-color-text-invert);
+      background-color: var(--sl-color-text-accent);
+    }
+
+    a > *:not(:last-child),
+    .group-label > *:not(:last-child) {
+      margin-inline-end: 0.25em;
+    }
+
+    @media (min-width: 50rem) {
+      .top-level > li + li {
+        margin-top: 0.5rem;
+      }
+
+      .large {
+        font-size: var(--sl-text-base);
+      }
+
+      a {
+        font-size: var(--sl-text-sm);
+      }
+    }
+  }
+</style>

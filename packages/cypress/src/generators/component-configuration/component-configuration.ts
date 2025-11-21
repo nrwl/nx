@@ -84,13 +84,6 @@ function normalizeOptions(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  const cyVersion = getInstalledCypressMajorVersion(tree);
-  if (cyVersion && cyVersion < 10) {
-    throw new Error(
-      'Cypress version of 10 or higher is required to use component testing. See the migration guide to upgrade. https://nx.dev/cypress/v11-migration-guide'
-    );
-  }
-
   const nxJson = readNxJson(tree);
   const addPlugin =
     process.env.NX_ADD_PLUGINS !== 'false' &&

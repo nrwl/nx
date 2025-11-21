@@ -1,14 +1,20 @@
-import type { Tree } from 'nx/src/generators/tree';
 import {
-  vitestVersion,
-  vitestV1Version,
-  vitestCoverageV8Version,
-  vitestV1CoverageV8Version,
-  vitestCoverageIstanbulVersion,
-  vitestV1CoverageIstanbulVersion,
-} from './versions';
+  createProjectGraphAsync,
+  getDependencyVersionFromPackageJson,
+} from '@nx/devkit';
+import type { Tree } from 'nx/src/generators/tree';
 import { clean, coerce, major } from 'semver';
-import { readJson, createProjectGraphAsync } from '@nx/devkit';
+import {
+  vitestCoverageIstanbulVersion,
+  vitestCoverageV8Version,
+  vitestV3CoverageIstanbulVersion,
+  vitestV3CoverageV8Version,
+  vitestV3Version,
+  vitestV2CoverageIstanbulVersion,
+  vitestV2CoverageV8Version,
+  vitestV2Version,
+  vitestVersion,
+} from './versions';
 
 type VitestDependenciesVersions = {
   vitest: string;
@@ -19,13 +25,20 @@ type VitestDependenciesVersions = {
 export async function getVitestDependenciesVersionsToInstall(
   tree: Tree
 ): Promise<VitestDependenciesVersions> {
-  if (await isVitestV1(tree)) {
+  if (await isVitestV3(tree)) {
     return {
-      vitest: vitestV1Version,
-      vitestCoverageV8: vitestV1CoverageV8Version,
-      vitestCoverageIstanbul: vitestV1CoverageIstanbulVersion,
+      vitest: vitestV3Version,
+      vitestCoverageV8: vitestV3CoverageV8Version,
+      vitestCoverageIstanbul: vitestV3CoverageIstanbulVersion,
+    };
+  } else if (await isVitestV2(tree)) {
+    return {
+      vitest: vitestV2Version,
+      vitestCoverageV8: vitestV2CoverageV8Version,
+      vitestCoverageIstanbul: vitestV2CoverageIstanbulVersion,
     };
   } else {
+    // Default to latest (v4)
     return {
       vitest: vitestVersion,
       vitestCoverageV8: vitestCoverageV8Version,
@@ -34,18 +47,27 @@ export async function getVitestDependenciesVersionsToInstall(
   }
 }
 
-export async function isVitestV1(tree: Tree) {
+export async function isVitestV3(tree: Tree) {
   let installedVitestVersion = await getInstalledVitestVersionFromGraph();
   if (!installedVitestVersion) {
     installedVitestVersion = getInstalledVitestVersion(tree);
   }
-  return major(installedVitestVersion) === 1;
+  return major(installedVitestVersion) === 3;
+}
+
+export async function isVitestV2(tree: Tree) {
+  let installedVitestVersion = await getInstalledVitestVersionFromGraph();
+  if (!installedVitestVersion) {
+    installedVitestVersion = getInstalledVitestVersion(tree);
+  }
+  return major(installedVitestVersion) === 2;
 }
 
 export function getInstalledVitestVersion(tree: Tree): string {
-  const pkgJson = readJson(tree, 'package.json');
-  const installedVitestVersion =
-    pkgJson.dependencies && pkgJson.dependencies['vitest'];
+  const installedVitestVersion = getDependencyVersionFromPackageJson(
+    tree,
+    'vitest'
+  );
 
   if (
     !installedVitestVersion ||

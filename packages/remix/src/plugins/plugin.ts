@@ -2,14 +2,12 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
   type CreateDependencies,
-  type CreateNodes,
-  type CreateNodesContext,
+  type CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
-  logger,
   ProjectConfiguration,
   readJsonFile,
   type TargetConfiguration,
@@ -62,7 +60,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const remixConfigGlob = '**/{remix,vite}.config.{js,cjs,mjs,ts,cts,mts}';
 
-export const createNodesV2: CreateNodesV2<RemixPluginOptions> = [
+export const createNodes: CreateNodesV2<RemixPluginOptions> = [
   remixConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -88,26 +86,12 @@ export const createNodesV2: CreateNodesV2<RemixPluginOptions> = [
   },
 ];
 
-export const createNodes: CreateNodes<RemixPluginOptions> = [
-  remixConfigGlob,
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    return createNodesInternal(
-      configFilePath,
-      options,
-      context,
-      {},
-      _isUsingTsSolutionSetup()
-    );
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
   options: RemixPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, RemixTargets>,
   isUsingTsSolutionSetup: boolean
 ) {
@@ -170,7 +154,7 @@ async function buildRemixTargets(
   configFilePath: string,
   projectRoot: string,
   options: RemixPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   siblingFiles: string[],
   remixCompiler: RemixCompiler,
   isUsingTsSolutionSetup: boolean

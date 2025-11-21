@@ -1,9 +1,0 @@
-{
-  "extends": ["../../tsconfig.base.json", "astro/tsconfigs/base"],
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    "lib": ["ESNext", "DOM", "DOM.Iterable"]
-  },
-  "exclude": ["dist", "src/templates", "src/content"]
-}

@@ -11,7 +11,7 @@ import {
   runCreateWorkspace,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Linter (legacy)', () => {
   describe('Integrated (eslintrc config)', () => {

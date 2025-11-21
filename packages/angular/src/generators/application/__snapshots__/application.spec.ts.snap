@@ -702,6 +702,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   test: {
+    name: 'my-app',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -941,6 +942,7 @@ exports[`app nested should create project configs 1`] = `
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "my-dir/my-app/jest.config.ts",
+        "tsConfig": "my-dir/my-app/tsconfig.spec.json",
       },
       "outputs": [
         "{workspaceRoot}/coverage/{projectRoot}",
@@ -1057,6 +1059,7 @@ exports[`app not nested should create project configs 1`] = `
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "my-app/jest.config.ts",
+        "tsConfig": "my-app/tsconfig.spec.json",
       },
       "outputs": [
         "{workspaceRoot}/coverage/{projectRoot}",
@@ -1121,6 +1124,7 @@ exports[`app not nested should generate files: tsconfig.app.json 1`] = `
     "src/test-setup.ts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
+    "jest.config.cts",
   ],
   "extends": "./tsconfig.json",
   "include": [

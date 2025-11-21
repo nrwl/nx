@@ -11,12 +11,11 @@ import {
   expoMetroRuntimeVersion,
   expoSplashScreenVersion,
   expoStatusBarVersion,
+  expoSystemUiVersion,
   jestExpoVersion,
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   reactNativeWebVersion,
-  reactTestRendererVersion,
-  testingLibraryJestNativeVersion,
   testingLibraryReactNativeVersion,
   typesReactVersion,
 } from './versions';
@@ -36,11 +35,8 @@ export function ensureDependencies(
   }
 
   if (unitTestRunner === 'jest') {
-    devDependencies['react-test-renderer'] = reactTestRendererVersion;
     devDependencies['@testing-library/react-native'] =
       testingLibraryReactNativeVersion;
-    devDependencies['@testing-library/jest-native'] =
-      testingLibraryJestNativeVersion;
     devDependencies['jest-expo'] = jestExpoVersion;
   }
 
@@ -49,6 +45,7 @@ export function ensureDependencies(
     {
       'expo-splash-screen': expoSplashScreenVersion,
       'expo-status-bar': expoStatusBarVersion,
+      'expo-system-ui': expoSystemUiVersion,
       'react-native-web': reactNativeWebVersion,
       '@expo/metro-config': expoMetroConfigVersion,
       '@expo/metro-runtime': expoMetroRuntimeVersion,

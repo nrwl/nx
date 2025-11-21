@@ -49,6 +49,10 @@ describe('@nx/workspace:npm-package', () => {
       "{
         "name": "@proj/my-package",
         "version": "0.0.0",
+        "exports": {
+          ".": "./index.js",
+          "./package.json": "./package.json"
+        },
         "scripts": {
           "test": "node index.js"
         }

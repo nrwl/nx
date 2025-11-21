@@ -10,7 +10,6 @@ import {
   readProjectConfiguration,
   updateNxJson,
   updateProjectConfiguration,
-  type CreateNodes,
   type CreateNodesV2,
   type ExpandedPluginConfiguration,
   type NxJsonConfiguration,
@@ -23,6 +22,7 @@ import {
   ProjectConfigurationsError,
   mergeTargetConfigurations,
   retrieveProjectConfigurations,
+  globalSpinner,
 } from 'nx/src/devkit-internals';
 import type { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
@@ -62,7 +62,7 @@ class ExecutorToPluginMigrator<T> {
   #nxJson: NxJsonConfiguration;
   #targetDefaultsForExecutor: Partial<TargetConfiguration>;
   #targetAndProjectsToMigrate: Map<string, Set<string>>;
-  #createNodes?: CreateNodes<T>;
+  #createNodes?: CreateNodesV2<T>;
   #createNodesV2?: CreateNodesV2<T>;
   #createNodesResultsForTargets: Map<string, ConfigurationResult>;
   #skippedProjects: Set<string>;
@@ -74,7 +74,7 @@ class ExecutorToPluginMigrator<T> {
     pluginPath: string,
     pluginOptionsBuilder: PluginOptionsBuilder<T>,
     postTargetTransformer: PostTargetTransformer,
-    createNodes?: CreateNodes<T>,
+    createNodes?: CreateNodesV2<T>,
     createNodesV2?: CreateNodesV2<T>,
     specificProjectToMigrate?: string,
     filters?: {
@@ -381,7 +381,7 @@ export async function migrateProjectExecutorsToPluginV1<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
   pluginPath: string,
-  createNodes: CreateNodes<T>,
+  createNodes: CreateNodesV2<T>,
   defaultPluginOptions: T,
   migrations: Array<{
     executors: string[];
@@ -410,7 +410,7 @@ async function migrateProjects<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
   pluginPath: string,
-  createNodes: CreateNodes<T>,
+  createNodes: CreateNodesV2<T>,
   createNodesV2: CreateNodesV2<T>,
   defaultPluginOptions: T,
   migrations: Array<{
@@ -424,6 +424,10 @@ async function migrateProjects<T>(
   logger?: typeof devkitLogger
 ): Promise<Map<string, Record<string, string>>> {
   const projects = new Map<string, Record<string, string>>();
+  const spinner = globalSpinner.start(
+    `Calculating migration scope...`,
+    pluginPath
+  );
 
   for (const migration of migrations) {
     for (const executor of migration.executors) {
@@ -443,9 +447,7 @@ async function migrateProjects<T>(
         },
         logger
       );
-
       const result = await migrator.run();
-
       // invert the result to have a map of projects to their targets
       for (const [target, projectList] of result.entries()) {
         for (const project of projectList) {
@@ -477,8 +479,10 @@ async function migrateProjects<T>(
     createNodes,
     createNodesV2,
     defaultPluginOptions,
-    projectGraph
+    projectGraph,
+    spinner
   );
+  spinner.succeed(`Migrated configuration for ${projects.size} project(s).\n`);
 
   return projects;
 }
@@ -487,10 +491,11 @@ async function addPluginRegistrations<T>(
   tree: Tree,
   projects: Map<string, Record<string, string>>,
   pluginPath: string,
-  createNodes: CreateNodes | undefined,
+  createNodes: CreateNodesV2 | undefined,
   createNodesV2: CreateNodesV2 | undefined,
   defaultPluginOptions: T,
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
+  spinner: typeof globalSpinner
 ) {
   const nxJson = readNxJson(tree);
 
@@ -498,7 +503,12 @@ async function addPluginRegistrations<T>(
   const createNodesResults = new Map<string, ConfigurationResult>();
   global.NX_GRAPH_CREATION = true;
   try {
+    let index = 0;
     for (const [project, options] of projects.entries()) {
+      index++;
+      spinner.updateText(
+        `${index}/${projects.size} - Parsing "${project}" configuration...`
+      );
       const projectConfigs = await getCreateNodesResultsForPlugin(
         tree,
         { plugin: pluginPath, options },
@@ -538,7 +548,12 @@ async function addPluginRegistrations<T>(
     return !deepEqual(originalResults, result);
   };
 
+  let index = 0;
   for (const [project, options] of projects.entries()) {
+    index++;
+    spinner.updateText(
+      `${index}/${projects.size} - Applying "${project}" configuration...`
+    );
     const existingPlugin = nxJson.plugins?.find(
       (plugin): plugin is ExpandedPluginConfiguration =>
         typeof plugin !== 'string' &&
@@ -582,6 +597,7 @@ async function addPluginRegistrations<T>(
       }
     }
   }
+  spinner.updateText(`Migrations done`);
 
   updateNxJson(tree, nxJson);
 }
@@ -590,7 +606,7 @@ async function getCreateNodesResultsForPlugin(
   tree: Tree,
   pluginConfiguration: ExpandedPluginConfiguration,
   pluginPath: string,
-  createNodes: CreateNodes | undefined,
+  createNodes: CreateNodesV2 | undefined,
   createNodesV2: CreateNodesV2 | undefined,
   nxJson: NxJsonConfiguration
 ): Promise<ConfigurationResult> {

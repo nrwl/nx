@@ -37,7 +37,6 @@ describe('@nx/angular:move', () => {
       buildable: false,
       linter: 'eslint',
       publishable: false,
-      simpleName: true,
       skipFormat: true,
       unitTestRunner: UnitTestRunner.Jest,
       standalone: false,
@@ -133,7 +132,6 @@ describe('@nx/angular:move', () => {
         buildable: false,
         linter: 'eslint',
         publishable: false,
-        simpleName: true,
         skipFormat: true,
         unitTestRunner: UnitTestRunner.Jest,
       });
@@ -260,7 +258,6 @@ describe('@nx/angular:move', () => {
         buildable: false,
         linter: 'eslint',
         publishable: false,
-        simpleName: true,
         skipFormat: true,
         unitTestRunner: UnitTestRunner.Jest,
       });
@@ -343,7 +340,6 @@ describe('@nx/angular:move', () => {
         buildable: false,
         linter: 'eslint',
         publishable: false,
-        simpleName: true,
         skipFormat: true,
         unitTestRunner: UnitTestRunner.Jest,
         standalone: false,

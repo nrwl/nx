@@ -8,7 +8,7 @@ import {
   getOpenAI,
   getUserQuery,
   initializeChat,
-} from '@nx/nx-dev/util-ai';
+} from '@nx/nx-dev-util-ai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { NextRequest } from 'next/server';
 import OpenAI from 'openai';
@@ -65,7 +65,7 @@ export default async function handler(request: NextRequest) {
       });
 
     const sourcesMarkdown = formatMarkdownSources(pageSections);
-    const stream = OpenAIStream(response);
+    const stream = OpenAIStream(response as any);
     const finalStream = await appendToStream(stream, sourcesMarkdown);
 
     return new StreamingTextResponse(finalStream);

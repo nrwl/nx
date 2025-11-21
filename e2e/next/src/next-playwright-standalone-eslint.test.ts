@@ -5,7 +5,7 @@ import {
   runCLI,
   runCreateWorkspace,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 // This test exists as coverage for a previous regression
 describe('nextjs standalone playwright linting', () => {

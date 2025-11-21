@@ -8,7 +8,7 @@ import { type FileChange } from 'nx/src/devkit-exports';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { useEffect, useState } from 'react';
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { Popover } from '@nx/graph/ui-common';
+import { Popover } from '@nx/graph-ui-common';
 import { useInterpret, useSelector } from '@xstate/react';
 import { machine as automaticMigrationMachine } from './state/automatic/machine';
 import {

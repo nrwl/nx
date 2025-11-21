@@ -1,4 +1,4 @@
-import tseslint from 'typescript-eslint';
+import tseslint, { type ConfigArray } from 'typescript-eslint';
 
 /**
  * This configuration is intended to be applied to ONLY .ts and .tsx files within a
@@ -10,7 +10,7 @@ import tseslint from 'typescript-eslint';
  * This configuration is intended to be combined with other configs from this
  * package.
  */
-export default tseslint.config({
+const config: ConfigArray = tseslint.config({
   files: [
     '**/*.ts',
     '**/*.cts',
@@ -63,3 +63,5 @@ export default tseslint.config({
     ],
   },
 });
+
+export default config;

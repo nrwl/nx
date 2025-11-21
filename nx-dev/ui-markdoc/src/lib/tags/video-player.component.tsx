@@ -39,6 +39,16 @@ export const videoPlayer: Schema = {
   },
 };
 
+export type VideoPlayerProps = {
+  src: string;
+  alt: string;
+  link?: string;
+  showDescription?: boolean;
+  showControls?: boolean;
+  autoPlay?: boolean;
+  loop?: boolean;
+};
+
 export function VideoPlayer({
   src,
   alt,
@@ -47,17 +57,9 @@ export function VideoPlayer({
   showControls,
   autoPlay,
   loop,
-}: {
-  src: string;
-  alt: string;
-  link?: string;
-  showDescription?: boolean;
-  showControls?: boolean;
-  autoPlay?: boolean;
-  loop?: boolean;
-}): JSX.Element {
+}: VideoPlayerProps): JSX.Element {
   return (
-    <div className="mb-4 overflow-x-auto">
+    <div className="not-content mb-4 overflow-x-auto">
       <div className="rounded-lg border border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/60">
         <div
           className={

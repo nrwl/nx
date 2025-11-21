@@ -6,7 +6,7 @@ import {
   StarIcon,
 } from '@heroicons/react/24/outline';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
-import { PluginCard, PluginType, SectionHeading } from '@nx/nx-dev/ui-common';
+import { PluginCard, PluginType, SectionHeading } from '@nx/nx-dev-ui-common';
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useRef, ElementRef } from 'react';
 

@@ -6,7 +6,7 @@ import {
   runCLI,
   uniq,
   readFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { checkApp } from './utils';
 
 describe('Next.js Styles', () => {
@@ -39,6 +39,7 @@ describe('Next.js Styles', () => {
       checkUnitTest: false,
       checkLint: false,
       checkE2E: false,
+      useWebpack: true,
     });
 
     const scApp = uniq('app');

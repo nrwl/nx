@@ -1,0 +1,8 @@
+---
+import { type CardProps, Card as Default } from '@nx/nx-dev-ui-markdoc/src/lib/tags/cards.component';
+type Props = CardProps;
+---
+
+<Default {...Astro.props}>
+  <slot />
+</Default>

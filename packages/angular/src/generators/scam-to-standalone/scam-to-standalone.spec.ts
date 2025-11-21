@@ -39,6 +39,7 @@ describe('scam-to-standalone', () => {
         imports: [CommonModule],
         selector: 'app-bar',
         standalone: false,
+        imports: [],
         templateUrl: './bar.html',
         styleUrl: './bar.css',
       })

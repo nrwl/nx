@@ -15,11 +15,10 @@ export interface ExecutorOptions {
   watch: boolean;
   clean?: boolean;
   transformers: TransformerEntry[];
-  external?: 'all' | 'none' | string[];
-  externalBuildTargets?: string[];
   generateLockfile?: boolean;
   stripLeadingPaths?: boolean;
   generatePackageJson?: boolean;
+  includeIgnoredAssetFiles?: boolean;
 }
 
 export interface NormalizedExecutorOptions extends ExecutorOptions {
@@ -57,6 +56,4 @@ export interface NormalizedSwcExecutorOptions
   tmpSwcrcPath: string;
   isTsSolutionSetup: boolean;
   sourceRoot?: string;
-  // TODO(v21): remove inline feature
-  inline?: boolean;
 }

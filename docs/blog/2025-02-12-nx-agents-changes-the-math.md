@@ -73,6 +73,4 @@ Other engineers in other business units are seeing the advantage of Nx, and thei
 
 What's blocking you from getting your products to market fast? Let our team figure it out for you! With Nx Enterprise, you receive expert guidance from day one, ensuring your setup is optimized for maximum efficiency. Whether you're starting fresh, migrating, or scaling your developer platform, we'll work with you to tailor the perfect solution for your team.
 
-{% call-to-action title="Get a Free Trial of Nx Enterprise" url="/enterprise" icon="nxcloud" description="Learn more about our enterprise offerings or request a free trial of Nx Enterprise" %}
-
-{% /call-to-action %}
+{% call-to-action title="Reach out to our team!" url="/contact/sales" icon="nxcloud" description="Looking to transform your teams velocity? Reach out to learn more about Nx Enterprise and see how we can help your team achieve similar results." /%}

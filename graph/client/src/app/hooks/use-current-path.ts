@@ -1,11 +1,14 @@
 import { matchRoutes, useLocation } from 'react-router-dom';
 import { getRoutesForEnvironment } from '../routes';
 import { useState } from 'react';
-import { getEnvironmentConfig } from '@nx/graph/legacy/shared';
+import { getEnvironmentConfig } from '@nx/graph-shared';
 
 export const useCurrentPath = () => {
   const [lastLocation, setLastLocation] = useState<string>();
-  const [lastPath, setLastPath] = useState();
+  const [lastPath, setLastPath] = useState<{
+    workspace: string;
+    currentPath: string;
+  }>();
 
   const location = useLocation();
 
@@ -19,7 +22,7 @@ export const useCurrentPath = () => {
 
   const { environment } = getEnvironmentConfig();
 
-  let currentPath;
+  let currentPath: { workspace: string; currentPath: string };
   // if using dev routes, remove first segment for workspace
   if (environment === 'dev') {
     currentPath = {

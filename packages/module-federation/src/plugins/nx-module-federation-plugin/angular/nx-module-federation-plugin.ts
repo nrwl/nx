@@ -4,6 +4,7 @@ import {
   NxModuleFederationConfigOverride,
 } from '../../../utils/models';
 import { getModuleFederationConfigSync } from '../../../with-module-federation/angular/utils';
+import { normalizeProjectName } from '../../../utils';
 
 export class NxModuleFederationPlugin implements RspackPluginInstance {
   constructor(
@@ -21,15 +22,22 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
 
     // This is required to ensure Module Federation will build the project correctly
     compiler.options.optimization ??= {};
-    compiler.options.optimization.runtimeChunk = false;
+    compiler.options.optimization.runtimeChunk =
+      process.env['WEBPACK_SERVE'] && !this._options.config.exposes
+        ? compiler.options.optimization?.runtimeChunk ?? undefined
+        : false;
+
+    if (compiler.options.optimization.splitChunks) {
+      compiler.options.optimization.splitChunks.cacheGroups ??= {};
+      compiler.options.optimization.splitChunks.cacheGroups.default = false;
+      compiler.options.optimization.splitChunks.cacheGroups.common = false;
+    }
+
     compiler.options.output.publicPath = !compiler.options.output.publicPath
       ? 'auto'
       : compiler.options.output.publicPath;
     compiler.options.output.uniqueName = this._options.config.name;
-    if (compiler.options.output.scriptType === 'module') {
-      compiler.options.output.scriptType = undefined;
-      compiler.options.output.module = undefined;
-    }
+
     if (this._options.isServer) {
       compiler.options.target = 'async-node';
       compiler.options.output.library ??= {
@@ -60,7 +68,7 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
     }
 
     new (require('@module-federation/enhanced/rspack').ModuleFederationPlugin)({
-      name: this._options.config.name.replace(/-/g, '_'),
+      name: normalizeProjectName(this._options.config.name),
       filename: 'remoteEntry.js',
       exposes: this._options.config.exposes,
       remotes: mappedRemotes,
@@ -74,10 +82,9 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
             },
             remoteType: 'script',
           }
-        : {}),
+        : { library: { type: 'module' } }),
       ...(this.configOverride ? this.configOverride : {}),
       runtimePlugins,
-      virtualRuntimeEntry: true,
     }).apply(compiler);
 
     if (sharedLibraries) {

@@ -55,13 +55,13 @@ Example: Run tests only for changed projects in a given PR.
 nx affected:test
 ```
 
-[Nx affected commands](/ci/features/affected) allow you to only run commands against projects that changed with respect to a baseline. Usually, this is applied in PRs processed by your CI system. Nx analyzes the Git commits and identifies all projects that got changed with respect to a base branch (usually `main` or `master`). It then makes sure to run the given command only for those projects as well as all projects depending on them since they might be affected by the change too.
+[Nx affected commands](/docs/features/ci-features/affected) allow you to only run commands against projects that changed with respect to a baseline. Usually, this is applied in PRs processed by your CI system. Nx analyzes the Git commits and identifies all projects that got changed with respect to a base branch (usually `main` or `master`). It then makes sure to run the given command only for those projects as well as all projects depending on them since they might be affected by the change too.
 
 This helps save computation by reducing the set of projects that need to be processed.
 
 ### Local Computation Caching
 
-Nx comes with a so-called [computation caching](/concepts/how-caching-works) feature. For every cacheable operation, Nx takes a set of input parameters, computes a hash and stores the result.
+Nx comes with a so-called [computation caching](/docs/concepts/how-caching-works) feature. For every cacheable operation, Nx takes a set of input parameters, computes a hash and stores the result.
 
 ![](/blog/images/2022-08-18/MusIEMCW5NlEtaaA.avif)
 
@@ -81,7 +81,7 @@ Connecting an existing Nx workspace to Nx Cloud can be done with
 nx connect-to-nx-cloud
 ```
 
-[More on the docs](/ci/features/remote-cache). Nx Cloud comes with [500 hours of computation time saved per month](/pricing) which is plenty for most workspaces. If you go over, you can buy more, or in the worst case, caching simply stops until the next month.
+[More on the docs](/docs/features/ci-features/remote-cache). Nx Cloud comes with [500 hours of computation time saved per month](/nx-cloud#plans) which is plenty for most workspaces. If you go over, you can buy more, or in the worst case, caching simply stops until the next month.
 
 ## Bonus! Lerna can do this too!!
 
@@ -91,7 +91,7 @@ How to enable it? [Read more on the Lerna docs](https://lerna.js.org/docs/featur
 
 ## Learn more
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)

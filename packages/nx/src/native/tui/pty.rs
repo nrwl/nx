@@ -1,5 +1,6 @@
+use super::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use super::utils::normalize_newlines;
-use crossterm::event::{KeyCode, KeyEvent, MouseEvent, MouseEventKind};
+use crossterm::event::{KeyCode, KeyEvent};
 use parking_lot::Mutex;
 use std::{
     io::{self, Write},
@@ -32,8 +33,8 @@ impl std::ops::Deref for PtyScreenRef<'_> {
 pub struct PtyInstance {
     parser: Arc<RwLock<Parser>>,
     writer: Option<Arc<Mutex<Box<dyn Write + Send>>>>,
-    rows: u16,
-    cols: u16,
+    dimensions: Arc<RwLock<(u16, u16)>>,
+    scroll_momentum: Arc<Mutex<ScrollMomentum>>,
 }
 
 impl PtyInstance {
@@ -42,12 +43,15 @@ impl PtyInstance {
         writer: Arc<Mutex<Box<dyn Write + Send>>>,
     ) -> Self {
         // Read the dimensions from the parser
-        let (rows, cols) = parser.read().unwrap().screen().size();
+        let (rows, cols) = parser
+            .read()
+            .map(|guard| guard.screen().size())
+            .unwrap_or((24, 80)); // Fallback to sane defaults
         Self {
             parser,
             writer: Some(writer),
-            rows,
-            cols,
+            dimensions: Arc::new(RwLock::new((rows, cols))),
+            scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
         }
     }
 
@@ -59,8 +63,8 @@ impl PtyInstance {
         Self {
             parser,
             writer: None,
-            rows,
-            cols,
+            dimensions: Arc::new(RwLock::new((rows, cols))),
+            scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
         }
     }
 
@@ -73,12 +77,38 @@ impl PtyInstance {
         let rows = rows.max(3);
         let cols = cols.max(20);
 
-        // Get current dimensions before resize
-        let old_rows = self.rows;
+        // Check dimensions and get old values in a single lock scope
+        let (should_resize, old_rows, old_scrollback) = {
+            let dimensions_guard = self
+                .dimensions
+                .read()
+                .map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to read dimensions"))?;
+            let current_dimensions = *dimensions_guard;
 
-        // Update the stored dimensions
-        self.rows = rows;
-        self.cols = cols;
+            // Skip resize if dimensions haven't changed
+            if rows == current_dimensions.0 && cols == current_dimensions.1 {
+                return Ok(());
+            }
+
+            let old_scrollback = self
+                .parser
+                .read()
+                .map(|guard| guard.screen().scrollback())
+                .unwrap_or(0);
+
+            (true, current_dimensions.0, old_scrollback)
+        };
+
+        if !should_resize {
+            return Ok(());
+        }
+
+        // Update dimensions
+        let mut dimensions_guard = self
+            .dimensions
+            .write()
+            .map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to write dimensions"))?;
+        *dimensions_guard = (rows, cols);
 
         // Create a new parser with the new dimensions while preserving state
         if let Ok(mut parser_guard) = self.parser.write() {
@@ -88,11 +118,22 @@ impl PtyInstance {
             let mut new_parser = Parser::new(rows, cols, 10000);
             new_parser.process(&raw_output);
 
-            // If we lost height, scroll up by that amount to maintain relative view position
-            if rows < old_rows {
-                // Set to 0 to ensure that the cursor is consistently at the bottom of the visible output on resize
-                new_parser.screen_mut().set_scrollback(0);
-            }
+            // Preserve scroll position when possible
+            // Calculate target scroll position based on dimension changes
+            let target_scrollback = if rows < old_rows {
+                // If we lost height and were scrolled up, adjust scroll position
+                if old_scrollback > 0 {
+                    old_scrollback.saturating_sub((old_rows - rows) as usize)
+                } else {
+                    0 // Keep at bottom
+                }
+            } else {
+                // If we gained height or stayed the same, preserve exact scroll position
+                old_scrollback
+            };
+
+            // Set target scroll position before processing
+            new_parser.screen_mut().set_scrollback(target_scrollback);
 
             *parser_guard = new_parser;
         }
@@ -113,52 +154,47 @@ impl PtyInstance {
         Ok(())
     }
 
-    pub fn handle_arrow_keys(&mut self, event: KeyEvent) {
-        let alternative_screen = self.parser.read().unwrap().screen().alternate_screen();
-        debug!("Alternate Screen: {:?}", alternative_screen);
-        if !alternative_screen {
-            match event.code {
-                KeyCode::Up => {
-                    self.scroll_up();
-                }
-                KeyCode::Down => {
-                    self.scroll_down();
-                }
-                _ => {}
-            }
-        } else {
-            match event.code {
-                KeyCode::Up => {
-                    self.write_input(b"\x1b[A").ok();
-                }
-                KeyCode::Down => {
-                    self.write_input(b"\x1b[B").ok();
-                }
-                _ => {}
-            }
-        }
+    pub fn get_dimensions(&self) -> (u16, u16) {
+        self.dimensions
+            .read()
+            .map(|guard| *guard)
+            .unwrap_or((24, 80)) // Fallback to sane defaults
     }
 
-    pub fn send_mouse_event(&mut self, event: MouseEvent) {
-        let alternative_screen = self.parser.read().unwrap().screen().alternate_screen();
-        debug!("Alternate Screen: {:?}", alternative_screen);
-        if !alternative_screen {
-            match event.kind {
-                MouseEventKind::ScrollUp => {
-                    self.scroll_up();
+    pub fn handle_arrow_keys(&mut self, event: KeyEvent) {
+        let handles_arrow_keys = self.handles_arrow_keys();
+        debug!(
+            "Handling arrow keys: {:?}, Interactive: {}",
+            event, handles_arrow_keys
+        );
+
+        if handles_arrow_keys {
+            // Interactive program (enquirer, vim, git log, etc.) - send keys to program
+            match event.code {
+                KeyCode::Up => {
+                    self.write_input(b"\x1b[A").ok();
                 }
-                MouseEventKind::ScrollDown => {
-                    self.scroll_down();
+                KeyCode::Down => {
+                    self.write_input(b"\x1b[B").ok();
                 }
                 _ => {}
             }
         } else {
-            match event.kind {
-                MouseEventKind::ScrollUp => {
-                    self.write_input(b"\x1b[A").ok();
+            // Non-interactive program - handle scrolling ourselves
+            match event.code {
+                KeyCode::Up => {
+                    let amount = self
+                        .scroll_momentum
+                        .lock()
+                        .calculate_momentum(ScrollDirection::Up);
+                    self.scroll_up(amount);
                 }
-                MouseEventKind::ScrollDown => {
-                    self.write_input(b"\x1b[B").ok();
+                KeyCode::Down => {
+                    let amount = self
+                        .scroll_momentum
+                        .lock()
+                        .calculate_momentum(ScrollDirection::Down);
+                    self.scroll_down(amount);
                 }
                 _ => {}
             }
@@ -172,19 +208,39 @@ impl PtyInstance {
             .map(|guard| PtyScreenRef { _guard: guard })
     }
 
-    pub fn scroll_up(&mut self) {
+    pub fn scroll_up(&mut self, amount: u8) {
         if let Ok(mut parser) = self.parser.write() {
             let current = parser.screen().scrollback();
-            parser.screen_mut().set_scrollback(current + 1);
+            parser
+                .screen_mut()
+                .set_scrollback(current + amount as usize);
         }
     }
 
-    pub fn scroll_down(&mut self) {
+    pub fn scroll_down(&mut self, amount: u8) {
         if let Ok(mut parser) = self.parser.write() {
             let current = parser.screen().scrollback();
             if current > 0 {
-                parser.screen_mut().set_scrollback(current - 1);
+                parser
+                    .screen_mut()
+                    .set_scrollback(current.saturating_sub(amount as usize));
             }
+        }
+    }
+
+    pub fn scroll_to_top(&mut self) {
+        if let Ok(mut parser) = self.parser.write() {
+            let screen = parser.screen();
+            let total_content = screen.get_total_content_rows();
+            let viewport_height = screen.size().0 as usize;
+            let max_scrollback = total_content.saturating_sub(viewport_height);
+            parser.screen_mut().set_scrollback(max_scrollback);
+        }
+    }
+
+    pub fn scroll_to_bottom(&mut self) {
+        if let Ok(mut parser) = self.parser.write() {
+            parser.screen_mut().set_scrollback(0);
         }
     }
 
@@ -204,11 +260,128 @@ impl PtyInstance {
         }
     }
 
+    /// Checks if the process is likely in interactive/raw mode
+    /// Uses both alternate screen detection and cursor movement patterns
+    pub fn handles_arrow_keys(&self) -> bool {
+        if let Ok(parser) = self.parser.read() {
+            let screen = parser.screen();
+
+            // Strong indicator: alternate screen mode (vim, less, git log, htop)
+            if screen.alternate_screen() {
+                return true;
+            }
+
+            // Check if recent output contains cursor movement sequences
+            if self.has_cursor_movement_in_output() {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    /// Simple check: does the recent output contain cursor movement escape sequences?
+    /// This catches enquirer-style programs that move cursor but don't use alternate screen
+    fn has_cursor_movement_in_output(&self) -> bool {
+        if let Ok(parser) = self.parser.read() {
+            let raw_output = parser.get_raw_output();
+            let output_str = std::str::from_utf8(raw_output).unwrap_or("");
+
+            // Check for any cursor control sequences in one pass
+            [
+                "\x1b[?25l",
+                "\x1b[?25h",
+                "\x1b[H",
+                "\x1b[A",
+                "\x1b[B",
+                "\x1b[C",
+                "\x1b[D",
+            ]
+            .iter()
+            .any(|seq| output_str.contains(seq))
+        } else {
+            false
+        }
+    }
+
     /// Process output with an existing parser
     pub fn process_output(&self, output: &[u8]) {
         if let Ok(mut parser_guard) = self.parser.write() {
             let normalized = normalize_newlines(output);
             parser_guard.process(&normalized)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Arc, RwLock};
+    use vt100_ctt::Parser;
+
+    fn create_test_pty_instance(alternate_screen: bool) -> PtyInstance {
+        let parser = Arc::new(RwLock::new(Parser::new(24, 80, 1000)));
+
+        // Set alternate screen mode if requested
+        if alternate_screen {
+            if let Ok(mut parser_guard) = parser.write() {
+                parser_guard.process(b"\x1b[?1049h");
+            }
+        }
+
+        PtyInstance {
+            parser,
+            writer: None,
+            dimensions: Arc::new(RwLock::new((24, 80))),
+            scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
+        }
+    }
+
+    #[test]
+    fn test_handles_arrow_keys_initially_false() {
+        let pty = create_test_pty_instance(false);
+        assert!(
+            !pty.handles_arrow_keys(),
+            "Should initially not be interactive"
+        );
+    }
+
+    #[test]
+    fn test_handles_arrow_keys_alternate_screen() {
+        let pty = create_test_pty_instance(true);
+        assert!(
+            pty.handles_arrow_keys(),
+            "Should detect alternate screen as interactive"
+        );
+    }
+
+    #[test]
+    fn test_handles_arrow_keys_cursor_movement() {
+        let pty = create_test_pty_instance(false);
+
+        // Initially should not be interactive
+        assert!(!pty.handles_arrow_keys());
+
+        // Process output with cursor hide sequence (enquirer-style)
+        pty.process_output(b"\x1b[?25l");
+        assert!(
+            pty.handles_arrow_keys(),
+            "Should detect cursor hide as interactive"
+        );
+    }
+
+    #[test]
+    fn test_handles_arrow_keys_enquirer_style_output() {
+        let pty = create_test_pty_instance(false);
+
+        // Simulate enquirer output with cursor positioning
+        let enquirer_output =
+            b"? Select option \x1b[?25l\x1b[1;1H> Option 1\x1b[2;1H  Option 2\x1b[?25h";
+        pty.process_output(enquirer_output);
+
+        assert!(
+            pty.handles_arrow_keys(),
+            "Should detect enquirer-style cursor manipulation"
+        );
     }
 }

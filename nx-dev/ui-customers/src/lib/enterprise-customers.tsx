@@ -39,8 +39,8 @@ import {
   VarianIcon,
   VodafoneIcon,
   ZipariIcon,
-} from '@nx/nx-dev/ui-icons';
-import { DownloadCaseStudy } from '@nx/nx-dev/ui-enterprise';
+} from '@nx/nx-dev-ui-icons';
+import { DownloadCaseStudy } from '@nx/nx-dev-ui-enterprise';
 import { CustomerTestimonialCarousel } from './customer-testimonial-carousel';
 import { type CustomerIcon, CustomerIconGrid } from './customer-icon-grid';
 import { type ReactElement } from 'react';

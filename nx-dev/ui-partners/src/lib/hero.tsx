@@ -1,4 +1,4 @@
-import { SectionHeading, Strong } from '@nx/nx-dev/ui-common';
+import { SectionHeading, Strong } from '@nx/nx-dev-ui-common';
 import { type ReactElement } from 'react';
 
 export function Hero(): ReactElement {

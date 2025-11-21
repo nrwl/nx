@@ -1,17 +1,19 @@
 import {
   generateFiles,
-  getProjects,
   joinPathFragments,
   normalizePath,
+  readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { StorybookStoriesSchema } from '../stories';
 import {
   camelCase,
   createDefautPropsObject,
   getDefinePropsObject,
 } from './utils';
+import { join } from 'path';
 
 let tsModule: typeof import('typescript');
 
@@ -23,8 +25,8 @@ export function createComponentStories(
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const proj = getProjects(host).get(project);
-  const sourceRoot = proj.sourceRoot;
+  const proj = readProjectConfiguration(host, project);
+  const sourceRoot = getProjectSourceRoot(proj);
 
   const componentFilePath = joinPathFragments(sourceRoot, componentPath);
 
@@ -43,7 +45,7 @@ export function createComponentStories(
 
   generateFiles(
     host,
-    joinPathFragments(__dirname, `./files${js ? '/js' : '/ts'}`),
+    join(__dirname, `./files${js ? '/js' : '/ts'}`),
     normalizePath(componentDirectory),
     {
       tmpl: '',

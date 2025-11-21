@@ -209,7 +209,7 @@ describe('js init generator', () => {
           "skipLibCheck": true,
           "strict": true,
           "target": "es2022",
-          "customConditions": ["development"]
+          "customConditions": ["@proj/source"]
         }
       }
       "

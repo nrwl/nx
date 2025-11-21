@@ -12,7 +12,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { fork } from 'child_process';
 
 import { readdir, stat } from 'fs/promises';
@@ -422,6 +422,55 @@ describe('cache', () => {
     }
     console.log('Cache entries:', cacheEntries);
     console.log('Cache size:', cacheEntriesSize);
+    expect(cacheEntries).toBeGreaterThan(1);
+    expect(cacheEntries).toBeLessThan(10);
+    expect(cacheEntriesSize).toBeLessThanOrEqual(500 * 1024);
+  });
+
+  it('should honor NX_MAX_CACHE_SIZE env var', async () => {
+    runCLI('reset');
+    updateJson(`nx.json`, (c) => {
+      c.maxCacheSize = '5MB';
+      return c;
+    });
+
+    const lib = uniq('cache-size-env');
+
+    updateFile(
+      `tools/copy.js`,
+      'require("fs").cpSync(process.argv[2], process.argv[3], { recursive: true, force: true });'
+    );
+    updateFile(
+      `libs/${lib}/project.json`,
+      JSON.stringify({
+        name: lib,
+        targets: {
+          write: {
+            cache: true,
+            command: 'node tools/copy.js {projectRoot}/src dist/{projectRoot}',
+            inputs: ['{projectRoot}/hash.txt'],
+            outputs: ['{workspaceRoot}/dist/{projectRoot}'],
+          },
+        },
+      })
+    );
+    // 100KB file
+    updateFile(`libs/${lib}/src/data.txt`, 'a'.repeat(100 * 1024));
+    for (let i = 0; i < 10; ++i) {
+      updateFile(`libs/${lib}/hash.txt`, i.toString());
+      runCLI(`write ${lib}`, { env: { NX_MAX_CACHE_SIZE: '500KB' } });
+    }
+
+    const cacheDir = tmpProjPath('.nx/cache');
+    const cacheFiles = listFiles('.nx/cache');
+    let cacheEntries = 0;
+    let cacheEntriesSize = 0;
+    for (const file of cacheFiles) {
+      if (file.match(/^[0-9]+$/)) {
+        cacheEntries += 1;
+        cacheEntriesSize += await dirSize(join(cacheDir, file));
+      }
+    }
     expect(cacheEntries).toBeGreaterThan(1);
     expect(cacheEntries).toBeLessThan(10);
     expect(cacheEntriesSize).toBeLessThanOrEqual(500 * 1024);

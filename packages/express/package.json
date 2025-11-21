@@ -17,7 +17,7 @@
     "CLI",
     "Backend"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -31,10 +31,10 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/node": "file:../node",
-    "tslib": "^2.3.0"
+    "@nx/devkit": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/node": "workspace:*",
+    "tslib": "catalog:typescript"
   },
   "peerDependencies": {
     "express": "^4.21.2"

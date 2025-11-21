@@ -17,7 +17,6 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-default
 import { basename, dirname, join } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
 import { getImportPath } from '../../utils/get-import-path';
 import {
   getUpdatedPackageJsonContent,
@@ -26,8 +25,13 @@ import {
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
+import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
 import { readTsConfig } from '../../utils/typescript/ts-config';
-import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
+import {
+  getDefinedCustomConditionName,
+  getProjectSourceRoot,
+  isUsingTsSolutionSetup,
+} from '../../utils/typescript/ts-solution-setup';
 import { nxVersion } from '../../utils/versions';
 import { SetupBuildGeneratorSchema } from './schema';
 
@@ -50,7 +54,7 @@ export async function setupBuildGenerator(
   } else if (options.main) {
     mainFile = options.main;
   } else {
-    const root = project.sourceRoot ?? project.root;
+    const root = getProjectSourceRoot(project, tree);
     for (const f of [
       joinPathFragments(root, 'main.ts'),
       joinPathFragments(root, 'main.js'),
@@ -326,10 +330,6 @@ function updatePackageJson(
     };
   }
 
-  // the file must exist in the TS solution setup, which is the only case this
-  // function is called
-  const tsconfigBase = readJson(tree, 'tsconfig.base.json');
-
   packageJson = getUpdatedPackageJsonContent(packageJson, {
     main,
     outputPath,
@@ -338,8 +338,7 @@ function updatePackageJson(
     packageJsonPath,
     rootDir,
     format,
-    skipDevelopmentExports:
-      !tsconfigBase.compilerOptions?.customConditions?.includes('development'),
+    developmentConditionName: getDefinedCustomConditionName(tree),
   });
   writeJson(tree, packageJsonPath, packageJson);
 }

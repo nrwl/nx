@@ -7,7 +7,7 @@ import {
   tmpProjPath,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { readdirSync, readFileSync, writeFileSync } from 'fs-extra';
 import { join } from 'path';
 

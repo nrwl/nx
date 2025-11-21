@@ -56,9 +56,6 @@ type NpmLockFile = {
   packages?: Record<string, NpmDependencyV3>;
   dependencies?: Record<string, NpmDependencyV1>;
 };
-
-// we use key => node map to avoid duplicate work when parsing keys
-let keyMap = new Map<string, ProjectGraphExternalNode>();
 let currentLockFileHash: string;
 
 let parsedLockFile: NpmLockFile;
@@ -68,7 +65,6 @@ function parsePackageLockFile(lockFileContent: string, lockFileHash: string) {
     return parsedLockFile;
   }
 
-  keyMap.clear();
   const results = JSON.parse(lockFileContent) as NpmLockFile;
   parsedLockFile = results;
   currentLockFileHash = lockFileHash;
@@ -78,20 +74,23 @@ function parsePackageLockFile(lockFileContent: string, lockFileHash: string) {
 export function getNpmLockfileNodes(
   lockFileContent: string,
   lockFileHash: string
-) {
+): {
+  nodes: Record<string, ProjectGraphExternalNode>;
+  keyMap: Map<string, ProjectGraphExternalNode>;
+} {
   const data = parsePackageLockFile(
     lockFileContent,
     lockFileHash
   ) as NpmLockFile;
 
-  // we use key => node map to avoid duplicate work when parsing keys
-  return getNodes(data, keyMap);
+  return getNodes(data);
 }
 
 export function getNpmLockfileDependencies(
   lockFileContent: string,
   lockFileHash: string,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
+  keyMap: Map<string, ProjectGraphExternalNode>
 ) {
   const data = parsePackageLockFile(
     lockFileContent,
@@ -101,10 +100,11 @@ export function getNpmLockfileDependencies(
   return getDependencies(data, keyMap, ctx);
 }
 
-function getNodes(
-  data: NpmLockFile,
-  keyMap: Map<string, ProjectGraphExternalNode>
-) {
+function getNodes(data: NpmLockFile): {
+  nodes: Record<string, ProjectGraphExternalNode>;
+  keyMap: Map<string, ProjectGraphExternalNode>;
+} {
+  const keyMap = new Map<string, ProjectGraphExternalNode>();
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
   if (data.lockfileVersion > 1) {
@@ -116,7 +116,10 @@ function getNodes(
 
       const packageName = path.split('node_modules/').pop();
       const version = findV3Version(snapshot, packageName);
-      createNode(packageName, version, path, nodes, keyMap, snapshot);
+      // symlinked packages in workspaces do not have versions
+      if (version) {
+        createNode(packageName, version, path, nodes, keyMap, snapshot);
+      }
     });
   } else {
     Object.entries(data.dependencies).forEach(([packageName, snapshot]) => {
@@ -161,7 +164,7 @@ function getNodes(
       results[node.name] = node;
     });
   }
-  return results;
+  return { nodes: results, keyMap };
 }
 
 function addV1Node(
@@ -434,7 +437,7 @@ function mapWorkspaceModules(
 ) {
   const output: Record<string, NpmDependencyV3 & NpmDependencyV1> = {};
   for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies
+    packageJson.dependencies ?? {}
   )) {
     if (workspaceModules.has(pkgName)) {
       let workspaceModuleDefinition: NpmDependencyV3 & NpmDependencyV1;
@@ -481,7 +484,7 @@ function mapPackageJsonWithWorkspaceModules(
   packageJson: NormalizedPackageJson
 ) {
   for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies
+    packageJson.dependencies ?? {}
   )) {
     if (pkgVersion.startsWith('workspace:') || pkgVersion.startsWith('file:')) {
       packageJson.dependencies[pkgName] = `workspace_modules/${pkgName}`;

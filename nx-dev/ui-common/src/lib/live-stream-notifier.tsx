@@ -2,7 +2,7 @@
 
 import { useState, useEffect, ReactElement } from 'react';
 import { motion } from 'framer-motion';
-import { MonorepoWorldIcon } from '@nx/nx-dev/ui-icons';
+import { MonorepoWorldIcon } from '@nx/nx-dev-ui-icons';
 import { ButtonLink } from './button';
 import {
   PlayIcon,

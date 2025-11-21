@@ -463,6 +463,43 @@ exports[`@nx/gradle/plugin/nodes should create nodes with atomized tests targets
       },
     },
   ],
+  [
+    "proj/build.gradle",
+    {
+      "externalNodes": {},
+      "projects": {
+        "proj": {
+          "metadata": {
+            "targetGroups": {
+              "help": [
+                "buildEnvironment",
+              ],
+            },
+            "technologies": [
+              "gradle",
+            ],
+          },
+          "name": "gradle-tutorial",
+          "root": "proj",
+          "targets": {
+            "buildEnvironment": {
+              "cache": true,
+              "command": "./gradlew :buildEnvironment",
+              "metadata": {
+                "description": "Displays all buildscript dependencies declared in root project 'gradle-tutorial'.",
+                "technologies": [
+                  "gradle",
+                ],
+              },
+              "options": {
+                "cwd": "proj",
+              },
+            },
+          },
+        },
+      },
+    },
+  ],
 ]
 `;
 
@@ -839,6 +876,43 @@ exports[`@nx/gradle/plugin/nodes should not create nodes with atomized tests tar
                 "{projectRoot}/build/generated/sources/headers/java/test",
                 "{projectRoot}/build/tmp/compileTestJava/previous-compilation-data.bin",
               ],
+            },
+          },
+        },
+      },
+    },
+  ],
+  [
+    "proj/build.gradle",
+    {
+      "externalNodes": {},
+      "projects": {
+        "proj": {
+          "metadata": {
+            "targetGroups": {
+              "help": [
+                "buildEnvironment",
+              ],
+            },
+            "technologies": [
+              "gradle",
+            ],
+          },
+          "name": "gradle-tutorial",
+          "root": "proj",
+          "targets": {
+            "buildEnvironment": {
+              "cache": true,
+              "command": "./gradlew :buildEnvironment",
+              "metadata": {
+                "description": "Displays all buildscript dependencies declared in root project 'gradle-tutorial'.",
+                "technologies": [
+                  "gradle",
+                ],
+              },
+              "options": {
+                "cwd": "proj",
+              },
             },
           },
         },

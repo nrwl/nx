@@ -4,12 +4,14 @@
   "sourceRoot": "packages/rsbuild",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/rsbuild/README.md"],
+      "command": "node ./scripts/copy-readme.js rsbuild"
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
-        "outputPath": "build/packages/rsbuild",
-        "tsConfig": "packages/rsbuild/tsconfig.lib.json",
-        "main": "packages/rsbuild/index.ts",
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/rsbuild",
@@ -44,12 +46,7 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
-    },
-    "build": {
-      "command": "node ./scripts/copy-readme.js rsbuild",
-      "outputs": ["{workspaceRoot}/build/packages/rsbuild/README.md"]
+      }
     }
   }
 }

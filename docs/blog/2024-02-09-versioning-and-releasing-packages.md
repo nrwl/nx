@@ -230,11 +230,11 @@ Note, you can still use `--dry-run` and it'd show you the URL where the GitHub r
 
 As you've seen, you can use `nx release` right away with minimal configuration. However, we are very well aware that many real-world scenarios are more complex, you want/need more control over when the version is happening, when the changelog generation kicks in and so on. This is why we also introduced a **programmatic API.**
 
-This approach gives you full control to embed Nx Release into your current release flow. There's a nice [example script in our docs](/features/manage-releases#using-the-programmatic-api-for-nx-release) that can help you get started.
+This approach gives you full control to embed Nx Release into your current release flow. There's a nice [example script in our docs](/docs/features/manage-releases#using-the-programmatic-api-for-nx-release) that can help you get started.
 
 Create a file — I call it `release.ts` - at the root of my workspace. Nx Release obviously doesn't care how the file is called or where you place it. You can also go with plain JS.
 
-Here's the [example script from our docs](/features/manage-releases#using-the-programmatic-api-for-nx-release):
+Here's the [example script from our docs](/docs/features/manage-releases#using-the-programmatic-api-for-nx-release):
 
 ```ts
 import { releaseChangelog, releasePublish, releaseVersion } from 'nx/release';
@@ -296,11 +296,11 @@ Notice by default in the script we have `dry-run` enabled as a more cautious app
 From here on you have full control and can pretty much do whatever works best for your workspace setup. Common examples include:
 
 - moving files to a common root-level `dist/` folder and version and release them from there. This is pretty common to avoid messing with your src files and swapping versions there, allowing you to always depend on the latest local packages for instance.
-- setting up fully automated releases on CI, including enabling provenance support. Our docs have [more details on how to set that up](/recipes/nx-release/publish-in-ci-cd) or check out the linked talk above which goes through those steps.
+- setting up fully automated releases on CI, including enabling provenance support. Our docs have [more details on how to set that up](/docs/guides/nx-release/publish-in-ci-cd) or check out the linked talk above which goes through those steps.
 
 ## Wrapping Up
 
-With this release of Nx Release it is fully ready to be used. Make sure to check out our docs on [Managing Releases](/features/manage-releases) as well as our [release-related recipes](/recipes/nx-release).
+With this release of Nx Release it is fully ready to be used. Make sure to check out our docs on [Managing Releases](/docs/features/manage-releases) as well as our [release-related recipes](/docs/guides/nx-release).
 
 Here are some example repositories already leveraging Nx release:
 
@@ -313,7 +313,7 @@ Here are some example repositories already leveraging Nx release:
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [X / Twitter](https://twitter.com/nxdevtools) — [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)

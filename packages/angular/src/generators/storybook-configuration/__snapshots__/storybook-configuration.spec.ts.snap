@@ -40,6 +40,7 @@ const meta: Meta<TestButton> = {
   title: 'TestButton',
 };
 export default meta;
+
 type Story = StoryObj<TestButton>;
 
 export const Primary: Story = {
@@ -59,7 +60,7 @@ export const Heading: Story = {
     isOn: false,
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/test-button works!/gi)).toBeTruthy();
+    await expect(canvas.getByText(/test-button/gi)).toBeTruthy();
   },
 };
 "
@@ -75,6 +76,7 @@ const meta: Meta<TestOther> = {
   title: 'TestOther',
 };
 export default meta;
+
 type Story = StoryObj<TestOther>;
 
 export const Primary: Story = {
@@ -84,7 +86,7 @@ export const Primary: Story = {
 export const Heading: Story = {
   args: {},
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/test-other works!/gi)).toBeTruthy();
+    await expect(canvas.getByText(/test-other/gi)).toBeTruthy();
   },
 };
 "

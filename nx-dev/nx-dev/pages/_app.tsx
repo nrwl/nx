@@ -1,15 +1,15 @@
-import { sendPageViewEvent } from '@nx/nx-dev/feature-analytics';
+import { sendPageViewEvent } from '@nx/nx-dev-feature-analytics';
 import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
+import Script from 'next/script';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import Script from 'next/script';
 import { useEffect } from 'react';
 import '../styles/main.css';
 import Link from 'next/link';
-import { WebinarNotifier } from '@nx/nx-dev/ui-common';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 import GlobalScripts from '../app/global-scripts';
+import { WebinarNotifier } from 'nx-dev/ui-common/src';
 
 export default function CustomApp({
   Component,
@@ -22,7 +22,7 @@ export default function CustomApp({
   useEffect(() => {
     const handleRouteChange = (url: URL) =>
       sendPageViewEvent({ gaId: gaMeasurementId, path: url.toString() });
-    router.events.on('routeChangeStart', (url) => handleRouteChange(url));
+    router.events.on('routeChangeStart', handleRouteChange);
     return () => router.events.off('routeChangeStart', handleRouteChange);
   }, [router.events, gaMeasurementId]);
   return (
@@ -30,19 +30,19 @@ export default function CustomApp({
       <FrontendObservability />
       <DefaultSeo
         title="Nx: Smart Repos · Fast Builds"
-        description="An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things."
+        description="Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx: Smart Repos · Fast Builds',
           description:
-            'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
+            'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.',
           images: [
             {
-              url: 'https://nx.dev/images/nx-media.jpg',
+              url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
               alt: 'Nx: Smart Repos · Fast Builds',
-              type: 'image/jpeg',
+              type: 'image/png',
             },
           ],
           siteName: 'Nx',
@@ -77,6 +77,17 @@ export default function CustomApp({
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
+      {process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
+      process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
+        <Script
+          id="Cookiebot"
+          src="https://consent.cookiebot.com/uc.js"
+          data-cbid={process.env.NEXT_PUBLIC_COOKIEBOT_ID}
+          data-blockingmode="auto"
+          type="text/javascript"
+          strategy="beforeInteractive"
+        />
+      ) : null}
       <Link
         id="skip-to-content-link"
         href="#main"

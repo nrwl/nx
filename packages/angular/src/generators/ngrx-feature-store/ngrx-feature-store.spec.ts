@@ -1,7 +1,7 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import type { Tree } from '@nx/devkit';
-import { readJson } from '@nx/devkit';
+import { readJson, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from '../library/library';
 import ngrxFeatureStoreGenerator from './ngrx-feature-store';
@@ -570,6 +570,173 @@ describe('ngrx-feature-store', () => {
 
       // ASSERT
       expect(tree.read(`feature/src/index.ts`, 'utf-8')).toMatchSnapshot();
+    });
+  });
+
+  describe('rxjs v6 support', () => {
+    let tree: Tree;
+
+    beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace();
+      await addStandaloneLib(tree);
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          rxjs: '~6.6.7',
+        },
+      }));
+    });
+
+    it('should generate the ngrx effects using rxjs operators imported from "rxjs/operators"', async () => {
+      await ngrxFeatureStoreGenerator(tree, {
+        name: 'users',
+        minimal: false,
+        parent: 'feature/src/lib/lib.routes.ts',
+        directory: '+state',
+        skipFormat: true,
+      });
+
+      expect(tree.read('feature/src/lib/+state/users.effects.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Injectable, inject } from '@angular/core';
+        import { createEffect, Actions, ofType } from '@ngrx/effects';
+        import { of } from 'rxjs';
+        import { switchMap, catchError } from 'rxjs/operators';
+        import * as UsersActions from './users.actions';
+        import * as UsersFeature from './users.reducer';
+
+        @Injectable()
+        export class UsersEffects {
+          private actions$ = inject(Actions);
+
+          init$ = createEffect(() => this.actions$.pipe(
+            ofType(UsersActions.initUsers),
+            switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
+            catchError((error) => {
+                console.error('Error', error);
+                return of(UsersActions.loadUsersFailure({ error }));
+              }
+            )
+          ));
+        }
+        "
+      `);
+    });
+
+    it('should generate the ngrx facade tests using the "first" operator', async () => {
+      await ngrxFeatureStoreGenerator(tree, {
+        name: 'users',
+        minimal: false,
+        parent: 'feature/src/lib/lib.routes.ts',
+        directory: '+state',
+        facade: true,
+        skipFormat: true,
+      });
+
+      expect(tree.read('feature/src/lib/+state/users.facade.spec.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { TestBed } from '@angular/core/testing';
+        import { EffectsModule } from '@ngrx/effects';
+        import { StoreModule, Store } from '@ngrx/store';
+        import { first } from 'rxjs/operators';
+
+        import * as UsersActions from './users.actions';
+        import { UsersEffects } from './users.effects';
+        import { UsersFacade } from './users.facade';
+        import { UsersEntity } from './users.models';
+        import {
+          USERS_FEATURE_KEY,
+          UsersState,
+          initialUsersState,
+          usersReducer
+        } from './users.reducer';
+        import * as UsersSelectors from './users.selectors';
+
+        interface TestSchema {
+          users: UsersState;
+        }
+
+        describe('UsersFacade', () => {
+          let facade: UsersFacade;
+          let store: Store<TestSchema>;
+          const createUsersEntity = (id: string, name = ''): UsersEntity => ({
+            id,
+            name: name || \`name-\${id}\`
+          });
+
+          describe('used in NgModule', () => {
+            beforeEach(() => {
+              @NgModule({
+                imports: [
+                  StoreModule.forFeature(USERS_FEATURE_KEY, usersReducer),
+                  EffectsModule.forFeature([UsersEffects])
+                ],
+                providers: [UsersFacade]
+              })
+              class CustomFeatureModule {}
+
+              @NgModule({
+                imports: [
+                  StoreModule.forRoot({}),
+                  EffectsModule.forRoot([]),
+                  CustomFeatureModule,
+                ]
+              })
+              class RootModule {}
+              TestBed.configureTestingModule({ imports: [RootModule] });
+
+              store = TestBed.inject(Store);
+              facade = TestBed.inject(UsersFacade);
+            });
+
+            /**
+             * The initially generated facade::loadAll() returns empty array
+             */
+            it('loadAll() should return empty list with loaded == true', async () => {
+              let list = await facade.allUsers$.pipe(first()).toPromise();
+              let isLoaded = await facade.loaded$.pipe(first()).toPromise();
+
+              expect(list.length).toBe(0);
+              expect(isLoaded).toBe(false);
+
+              facade.init();
+
+              list = await facade.allUsers$.pipe(first()).toPromise();
+              isLoaded = await facade.loaded$.pipe(first()).toPromise();
+
+              expect(list.length).toBe(0);
+              expect(isLoaded).toBe(true);
+            });
+
+            /**
+             * Use \`loadUsersSuccess\` to manually update list
+             */
+            it('allUsers$ should return the loaded list; and loaded flag == true', async () => {
+              let list = await facade.allUsers$.pipe(first()).toPromise();
+              let isLoaded = await facade.loaded$.pipe(first()).toPromise();
+
+              expect(list.length).toBe(0);
+              expect(isLoaded).toBe(false);
+
+              store.dispatch(UsersActions.loadUsersSuccess({
+                users: [
+                  createUsersEntity('AAA'),
+                  createUsersEntity('BBB')
+                ]})
+              );
+
+              list = await facade.allUsers$.pipe(first()).toPromise();
+              isLoaded = await facade.loaded$.pipe(first()).toPromise();
+
+              expect(list.length).toBe(2);
+              expect(isLoaded).toBe(true);
+            });
+          });
+        });
+        "
+      `);
     });
   });
 });

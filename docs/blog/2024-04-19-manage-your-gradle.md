@@ -11,7 +11,7 @@ Here's my situation: I have a Gradle workspace with multiple Gradle libraries. H
 
 We are very excited to announce our support for Gradle with our new plugin: `@nx/gradle`.
 
-The Nx Gradle plugin registers Gradle projects in your Nx workspace. It allows Gradle tasks to be run through Nx. Nx effortlessly makes your [CI faster](/ci/intro/ci-with-nx).
+The Nx plugin for Gradle registers Gradle projects in your Nx workspace. It allows Gradle tasks to be run through Nx. Nx effortlessly makes your [CI faster](/docs/guides/nx-cloud/setup-ci).
 
 > **Update:** Learn how to import your existing Gradle projects into Nx in [our recent blog post](/blog/nx-import).
 
@@ -31,10 +31,10 @@ From [nx.dev](): "Nx is a build system with built-in tooling and advanced CI cap
 
 Nx adds the following features to your workspace:
 
-- [Cache task results](/features/cache-task-results): By storing task outputs in a cache, subsequent runs can skip redundant computations and reuse previously calculated results, significantly speeding up build processes. Nx intelligently manages this caching mechanism, invalidating the cache automatically when relevant inputs change.
-- [Distribute task execution](/ci/features/distribute-task-execution): Nx CI efficiently distributes tasks across multiple machines for faster build times. It uses a distributed task execution algorithm to intelligently divide and assign tasks to available resources, minimizing redundant work and maximizing parallelism.
-- [Run only tasks affected by a PR](/ci/features/affected): Nx identifies changes made since a specified base commit or branch, and then selectively runs tasks (like tests, linting, or builds) related to those changes.
-- [Interactively explore your workspace](/features/explore-graph): Nx allows developers to visualize and understand the dependencies and relationships within their projects.
+- [Cache task results](/docs/features/cache-task-results): By storing task outputs in a cache, subsequent runs can skip redundant computations and reuse previously calculated results, significantly speeding up build processes. Nx intelligently manages this caching mechanism, invalidating the cache automatically when relevant inputs change.
+- [Distribute task execution](/docs/features/ci-features/distribute-task-execution): Nx CI efficiently distributes tasks across multiple machines for faster build times. It uses a distributed task execution algorithm to intelligently divide and assign tasks to available resources, minimizing redundant work and maximizing parallelism.
+- [Run only tasks affected by a PR](/docs/features/ci-features/affected): Nx identifies changes made since a specified base commit or branch, and then selectively runs tasks (like tests, linting, or builds) related to those changes.
+- [Interactively explore your workspace](/docs/features/explore-graph): Nx allows developers to visualize and understand the dependencies and relationships within their projects.
 
 ![Example Nx Graph](/blog/images/2024-04-19/bodyimg1.webp)
 
@@ -130,7 +130,7 @@ nx.bat affected -t <task>
 
 For example, when you run `nx affected -t build`, Nx uses your git information to determine the files you changed in your PR. Nx determines the list of projects in the workspace that can be affected by this change and only runs the build task against changed files.
 
-You can also visualize the affected projects highlighted using the [Nx graph](/features/explore-graph). Simply run:
+You can also visualize the affected projects highlighted using the [Nx graph](/docs/features/explore-graph). Simply run:
 
 ```shell
 # macos/linux
@@ -142,7 +142,7 @@ nx.bat affected:graph
 
 ### Nx Console
 
-Furthermore, instead of running the command in terminal, you can use the editor tool [Nx Console](/getting-started/editor-setup). Anything you can do with Nx, you can do with Nx Console.
+Furthermore, instead of running the command in terminal, you can use the editor tool [Nx Console](/docs/getting-started/editor-setup). Anything you can do with Nx, you can do with Nx Console.
 
 ![Screencap of Nx Console UI](/blog/images/2024-04-19/bodyimg4.webp)
 
@@ -163,7 +163,7 @@ npx nx add @nx/gradle
 
 That is it, it will add `@nx/gradle` plugin to your Nx workspace.
 
-You can view inferred tasks for Gradle project in your workspace, open the [project details view](/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project --web` in the command line.
+You can view inferred tasks for Gradle project in your workspace, open the [project details view](/docs/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project --web` in the command line.
 
 For all the interred tasks, you can run using Nx instead of Gradle:
 
@@ -211,7 +211,7 @@ Here is how to set up Nx with the Gradle workspace. Hopefully, this gives you a 
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)

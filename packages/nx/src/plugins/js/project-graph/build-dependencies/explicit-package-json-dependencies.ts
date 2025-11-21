@@ -42,23 +42,27 @@ function isPackageJsonAtProjectRoot(
 
 function processPackageJson(
   sourceProject: string,
-  fileName: string,
+  packageJsonPath: string,
   ctx: CreateDependenciesContext,
   targetProjectLocator: TargetProjectLocator,
   collectedDeps: RawProjectGraphDependency[]
 ) {
   try {
-    const deps = readDeps(parseJson(defaultFileRead(fileName)));
+    const deps = readDeps(parseJson(defaultFileRead(packageJsonPath)));
 
-    for (const d of Object.keys(deps)) {
+    for (const [packageName, packageVersion] of Object.entries(deps)) {
       const localProject =
-        targetProjectLocator.findDependencyInWorkspaceProjects(d);
+        targetProjectLocator.findDependencyInWorkspaceProjects(
+          packageJsonPath,
+          packageName,
+          packageVersion
+        );
       if (localProject) {
         // package.json refers to another project in the monorepo
         const dependency: RawProjectGraphDependency = {
           source: sourceProject,
           target: localProject,
-          sourceFile: fileName,
+          sourceFile: packageJsonPath,
           type: DependencyType.static,
         };
         validateDependency(dependency, ctx);
@@ -67,8 +71,8 @@ function processPackageJson(
       }
 
       const externalNodeName = targetProjectLocator.findNpmProjectFromImport(
-        d,
-        fileName
+        packageName,
+        packageJsonPath
       );
       if (!externalNodeName) {
         continue;
@@ -77,7 +81,7 @@ function processPackageJson(
       const dependency: RawProjectGraphDependency = {
         source: sourceProject,
         target: externalNodeName,
-        sourceFile: fileName,
+        sourceFile: packageJsonPath,
         type: DependencyType.static,
       };
       validateDependency(dependency, ctx);

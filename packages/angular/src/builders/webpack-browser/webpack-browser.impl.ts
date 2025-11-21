@@ -20,6 +20,25 @@ import {
   resolveIndexHtmlTransformer,
 } from '../utilities/webpack';
 import type { BrowserBuilderSchema } from './schema';
+// This is required to ensure that the webpack version used by the Module Federation is the same as the one used by the builders.
+const Module = require('module');
+
+const originalResolveFilename = Module._resolveFilename;
+const patchedWebpackPath = require.resolve('webpack', {
+  paths: [require.resolve('@angular-devkit/build-angular')],
+});
+
+// Override the resolve function
+Module._resolveFilename = function (request, parent, isMain, options) {
+  // Intercept webpack specifically
+  if (request === 'webpack') {
+    // Force webpack to resolve from your specific path
+    return patchedWebpackPath;
+  }
+
+  // For all other modules, use the original resolver
+  return originalResolveFilename.call(this, request, parent, isMain, options);
+};
 
 function shouldSkipInitialTargetRun(
   projectGraph: ProjectGraph,

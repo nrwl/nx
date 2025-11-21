@@ -1,4 +1,4 @@
-import ts = require('typescript');
+import * as ts from 'typescript';
 import {
   addBlockToFlatConfigExport,
   addFlatCompatToFlatConfig,
@@ -6,6 +6,7 @@ import {
   generateAst,
   generateFlatOverride,
   generatePluginExtendsElementWithCompatFixup,
+  hasOverride,
   removeCompatExtends,
   removeImportFromFlatConfig,
   removeOverridesFromLintConfig,
@@ -1172,6 +1173,160 @@ export default [
         playwright.configs['flat/recommended'],
         ];"
       `);
+    });
+  });
+
+  describe('hasOverride', () => {
+    it('should handle variable references in property values', () => {
+      const content = `
+import pluginPackageJson from "eslint-plugin-package-json";
+import jsoncParser from "jsonc-eslint-parser";
+
+export default [
+    {
+        files: ["package.json"],
+        plugins: { "package-json": pluginPackageJson },
+        languageOptions: {
+            parser: jsoncParser,
+        },
+    }
+];`;
+
+      const result = hasOverride(
+        content,
+        (o) => Array.isArray(o.files) && o.files.includes('package.json')
+      );
+      expect(result).toBe(true);
+    });
+
+    it('should handle spread elements', () => {
+      const content = `
+export default [
+    {
+        files: ['*.json'],
+        ...(jest.configs['flat/recommended'])
+        ...getConfig()
+        ...configs['recommended']
+    }
+];`;
+
+      const result = hasOverride(
+        content,
+        (o) => Array.isArray(o.files) && o.files.includes('*.json')
+      );
+      expect(result).toBe(true);
+    });
+
+    it('should extract rules property correctly', () => {
+      const content = `
+export default [
+    {
+        files: ['*.ts'],
+        rules: {
+          '@nx/enforce-module-boundaries': 'error'
+        }
+    }
+];`;
+
+      const result = hasOverride(
+        content,
+        (o) => !!o.rules?.['@nx/enforce-module-boundaries']
+      );
+      expect(result).toBe(true);
+    });
+
+    it('should return false when no matching override is found', () => {
+      const content = `
+export default [
+    {
+        files: ['*.ts'],
+        rules: {}
+    }
+];`;
+
+      const result = hasOverride(
+        content,
+        (o) => Array.isArray(o.files) && o.files.includes('*.js')
+      );
+      expect(result).toBe(false);
+    });
+
+    it('should handle simple spread elements', () => {
+      const content = `
+export default [
+    {
+        files: ['*.ts'],
+        ...baseConfig
+    }
+];`;
+
+      const result = hasOverride(
+        content,
+        (o) => Array.isArray(o.files) && o.files.includes('*.ts')
+      );
+      expect(result).toBe(true);
+    });
+
+    it('should handle nested object literals', () => {
+      const content = `
+export default [
+    {
+        files: ['*.ts'],
+        languageOptions: {
+            parserOptions: {
+                project: './tsconfig.json'
+            }
+        }
+    }
+];`;
+
+      const result = hasOverride(
+        content,
+        (o) =>
+          (o as any).languageOptions?.parserOptions?.project ===
+          './tsconfig.json'
+      );
+      expect(result).toBe(true);
+    });
+
+    it('should handle CJS format', () => {
+      const content = `
+const jest = require("eslint-plugin-jest");
+
+module.exports = [
+    {
+        files: ['**/*.spec.ts'],
+        ...(jest.configs['flat/recommended'])
+    }
+];`;
+
+      const result = hasOverride(
+        content,
+        (o) => Array.isArray(o.files) && o.files.includes('**/*.spec.ts')
+      );
+      expect(result).toBe(true);
+    });
+
+    it('should handle compat.config(...).map(...) pattern', () => {
+      const content = `
+export default [
+    ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
+        ...config,
+        files: [
+            "my-lib/**/*.ts",
+            "my-lib/**/*.tsx"
+        ],
+        rules: {
+            'my-ts-rule': 'error'
+        }
+    })),
+];`;
+
+      const result = hasOverride(
+        content,
+        (o) => Array.isArray(o.files) && o.files.includes('my-lib/**/*.ts')
+      );
+      expect(result).toBe(true);
     });
   });
 

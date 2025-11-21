@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import {
   AnchorHTMLAttributes,
   ForwardedRef,
@@ -42,7 +42,7 @@ const sizes: Record<AllowedSizes, string> = {
  */
 function getLayoutClassName(className = ''): string {
   return cx(
-    'group relative inline-flex opacity-100 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed transition',
+    'group relative inline-flex opacity-100 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed transition no-underline',
     className
   );
 }

@@ -209,6 +209,7 @@ describe('lib', () => {
             "src/**/*.spec.jsx",
             "src/test-setup.ts",
             "jest.config.ts",
+            "jest.config.cts",
           ],
           "extends": "./tsconfig.json",
           "include": [
@@ -243,7 +244,7 @@ describe('lib', () => {
       });
 
       expect(appTree.exists('my-lib/tsconfig.spec.json')).toBeFalsy();
-      expect(appTree.exists('my-lib/jest.config.ts')).toBeFalsy();
+      expect(appTree.exists('my-lib/jest.config.cts')).toBeFalsy();
     });
 
     it('should generate test configuration', async () => {
@@ -266,6 +267,7 @@ describe('lib', () => {
           "files": ["src/test-setup.ts"],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -279,9 +281,11 @@ describe('lib', () => {
         }
         "
       `);
-      expect(appTree.read('my-lib/jest.config.ts', 'utf-8'))
+      expect(appTree.read('my-lib/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "/// <reference types="jest" />
+        /// <reference types="node" />
+        module.exports = {
           displayName: 'my-lib',
           preset: 'react-native',
           resolver: '@nx/jest/plugins/resolver',
@@ -458,7 +462,7 @@ describe('lib', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
-          customConditions: ['development'],
+          customConditions: ['@proj/source'],
         },
       });
       writeJson(appTree, 'tsconfig.json', {
@@ -499,8 +503,8 @@ describe('lib', () => {
           "main": "./src/index.ts",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "~18.3.1",
-            "react-native": "~0.76.3",
+            "react": "^19.0.0",
+            "react-native": "~0.79.3",
           },
           "types": "./src/index.ts",
           "version": "0.0.1",
@@ -548,6 +552,7 @@ describe('lib', () => {
             "src/**/*.spec.jsx",
             "src/test-setup.ts",
             "jest.config.ts",
+            "jest.config.cts",
             "eslint.config.js",
             "eslint.config.cjs",
             "eslint.config.mjs",
@@ -580,6 +585,7 @@ describe('lib', () => {
           ],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -618,22 +624,22 @@ describe('lib', () => {
           "exports": {
             "./package.json": "./package.json",
             ".": {
-              "development": "./src/index.ts",
+              "@proj/source": "./src/index.ts",
               "types": "./dist/index.esm.d.ts",
               "import": "./dist/index.esm.js",
               "default": "./dist/index.cjs.js"
             }
           },
           "peerDependencies": {
-            "react": "~18.3.1",
-            "react-native": "~0.76.3"
+            "react": "^19.0.0",
+            "react-native": "~0.79.3"
           }
         }
         "
       `);
     });
 
-    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+    it('should not set the custom condition in exports when it does not exist in tsconfig.base.json', async () => {
       updateJson(appTree, 'tsconfig.base.json', (json) => {
         delete json.compilerOptions.customConditions;
         return json;

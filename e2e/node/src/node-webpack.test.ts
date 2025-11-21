@@ -12,7 +12,7 @@ import {
   updateFile,
   updateJson,
   promisifiedTreeKill,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 import { join } from 'path';
 

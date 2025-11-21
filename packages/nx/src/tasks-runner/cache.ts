@@ -22,7 +22,10 @@ import {
 import { getDbConnection } from '../utils/db-connection';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
-import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
+import {
+  NxCloudClientUnavailableError,
+  verifyOrUpdateNxCloudClient,
+} from '../nx-cloud/update-manager';
 import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options';
 import { isCI } from '../utils/is-ci';
 import { output } from '../utils/output';
@@ -76,9 +79,7 @@ export class DbCache {
     cacheDir,
     getDbConnection(),
     undefined,
-    this.nxJson.maxCacheSize !== undefined
-      ? parseMaxCacheSize(this.nxJson.maxCacheSize)
-      : getDefaultMaxCacheSize(cacheDir)
+    resolveMaxCacheSize(this.nxJson)
   );
 
   private remoteCache: RemoteCacheV2 | null;
@@ -204,23 +205,39 @@ export class DbCache {
     const nxJson = readNxJson();
     if (isNxCloudUsed(nxJson)) {
       const options = getCloudOptions();
-      const { nxCloudClient } = await verifyOrUpdateNxCloudClient(options);
-      if (nxCloudClient.getRemoteCache) {
-        return nxCloudClient.getRemoteCache();
-      } else {
-        // old nx cloud instance
-        return await RemoteCacheV2.fromCacheV1(this.options.nxCloudRemoteCache);
+      try {
+        const { nxCloudClient } = await verifyOrUpdateNxCloudClient(options);
+        if (nxCloudClient.getRemoteCache) {
+          return nxCloudClient.getRemoteCache();
+        } else {
+          // old nx cloud instance
+          return await RemoteCacheV2.fromCacheV1(
+            this.options.nxCloudRemoteCache
+          );
+        }
+      } catch (e) {
+        if (e instanceof NxCloudClientUnavailableError) {
+          output.warn({
+            title:
+              'No existing Nx Cloud client and failed to download new version.',
+            bodyLines: [
+              'Nx will continue running, but nothing will be written or read from the remote cache.',
+            ],
+          });
+        } else {
+          throw e;
+        }
       }
-    } else {
-      return (
-        (await this.getS3Cache()) ??
-        (await this.getSharedCache()) ??
-        (await this.getGcsCache()) ??
-        (await this.getAzureCache()) ??
-        this.getHttpCache() ??
-        null
-      );
     }
+
+    return (
+      (await this.getS3Cache()) ??
+      (await this.getSharedCache()) ??
+      (await this.getGcsCache()) ??
+      (await this.getAzureCache()) ??
+      this.getHttpCache() ??
+      null
+    );
   }
 
   private async getS3Cache(): Promise<RemoteCacheV2 | null> {
@@ -595,6 +612,20 @@ function tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
   };
   return _try();
+}
+
+/**
+ * Resolves the max cache size from environment variable or nx.json configuration
+ * and converts it to a number of bytes.
+ *
+ * @param nxJson The nx.json configuration object
+ * @returns The resolved max cache size in bytes
+ */
+export function resolveMaxCacheSize(nxJson: NxJsonConfiguration): number {
+  const rawMaxCacheSize = process.env.NX_MAX_CACHE_SIZE ?? nxJson.maxCacheSize;
+  return rawMaxCacheSize !== undefined
+    ? parseMaxCacheSize(rawMaxCacheSize)
+    : getDefaultMaxCacheSize(cacheDir);
 }
 
 /**

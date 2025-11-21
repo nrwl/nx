@@ -362,6 +362,7 @@ describe('app', () => {
             'src/test-setup.ts',
             'src/**/*.test.ts',
             'src/**/*.spec.ts',
+            'jest.config.cts',
           ],
         },
         {
@@ -451,6 +452,7 @@ describe('app', () => {
             'src/test-setup.ts',
             'src/**/*.test.ts',
             'src/**/*.spec.ts',
+            'jest.config.cts',
           ],
         },
         {
@@ -803,13 +805,13 @@ describe('app', () => {
         });
       });
 
-      it('should add @nx/vite dependency', async () => {
+      it('should add @nx/vitest dependency', async () => {
         await generateApp(appTree, 'my-app', {
           unitTestRunner: UnitTestRunner.Vitest,
         });
 
         const { devDependencies } = readJson(appTree, 'package.json');
-        expect(devDependencies['@nx/vite']).toBeDefined();
+        expect(devDependencies['@nx/vitest']).toBeDefined();
       });
 
       it('should add vitest-angular', async () => {
@@ -1269,12 +1271,12 @@ describe('app', () => {
       expect(project.targets.test).not.toBeDefined();
 
       const nxJson = readNxJson(appTree);
-      const vitePlugin = nxJson.plugins.find(
+      const vitestPlugin = nxJson.plugins.find(
         (p) =>
-          (typeof p === 'string' && p === '@nx/vite/plugin') ||
-          (typeof p !== 'string' && p.plugin === '@nx/vite/plugin')
+          (typeof p === 'string' && p === '@nx/vitest') ||
+          (typeof p !== 'string' && p.plugin === '@nx/vitest')
       );
-      expect(vitePlugin).toBeDefined();
+      expect(vitestPlugin).toBeDefined();
     });
 
     it('should generate target options "browser" and "buildTarget"', async () => {
@@ -1589,7 +1591,8 @@ describe('app', () => {
             "jest.config.ts",
             "src/test-setup.ts",
             "src/**/*.test.ts",
-            "src/**/*.spec.ts"
+            "src/**/*.spec.ts",
+            "jest.config.cts"
           ]
         }
         "
@@ -1606,7 +1609,8 @@ describe('app', () => {
             "jest.config.ts",
             "src/test-setup.ts",
             "src/**/*.test.ts",
-            "src/**/*.spec.ts"
+            "src/**/*.spec.ts",
+            "jest.config.cts"
           ]
         }
         "

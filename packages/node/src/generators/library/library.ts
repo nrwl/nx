@@ -32,6 +32,7 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-default
 import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
+  shouldConfigureTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
@@ -164,7 +165,12 @@ async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
+  // this helper is called before the jsLibraryGenerator is called, so, if the
+  // TS solution setup is not configured, we additionally check if the TS
+  // solution setup will be configured by the jsLibraryGenerator
+  const isUsingTsSolutionConfig =
+    isUsingTsSolutionSetup(tree) ||
+    shouldConfigureTsSolutionSetup(tree, options.addPlugin);
   return {
     ...options,
     fileName,

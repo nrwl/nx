@@ -16,6 +16,11 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
 ): Promise<void> {
   const { skipGit, commit, nxCloud, ...restArgs } = parsedArgs;
 
+  // Delete verbose because it will conflict with the --quiet flag
+  if (!restArgs.verbose) {
+    delete restArgs.verbose;
+  }
+
   let args = unparse({
     interactive: true,
     ...restArgs,

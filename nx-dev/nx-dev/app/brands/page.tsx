@@ -1,12 +1,15 @@
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import {
   Hero,
   LernaBrand,
   NxBrand,
   NxCloudBrand,
   NxConsoleBrand,
-} from '@nx/nx-dev/ui-brands';
+} from '@nx/nx-dev-ui-brands';
 import type { Metadata } from 'next';
+
+// Needed without it Next.js will fail to serve the page with start
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Brands & Guidelines',

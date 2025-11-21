@@ -1,11 +1,12 @@
 import {
-  createExecutorContext,
-  getProjectConfigByPath,
-} from '@nx/cypress/src/utils/ct-helpers';
-import {
   nxBaseCypressPreset,
   NxComponentTestingOptions,
 } from '@nx/cypress/plugins/cypress-preset';
+import { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
+import {
+  createExecutorContext,
+  getProjectConfigByPath,
+} from '@nx/cypress/src/utils/ct-helpers';
 import {
   ExecutorContext,
   parseTargetString,
@@ -15,6 +16,7 @@ import {
   stripIndents,
   workspaceRoot,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { withReact } from '@nx/react';
 import {
   AssetGlobPattern,
@@ -22,10 +24,9 @@ import {
   NormalizedWebpackExecutorOptions,
   withNx,
 } from '@nx/webpack';
+import { readNxJson } from 'nx/src/config/configuration';
 import { join } from 'path';
 import { NextBuildBuilderOptions } from '../src/utils/types';
-import { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
-import { readNxJson } from 'nx/src/config/configuration';
 
 export function nxComponentTestingPreset(
   pathToConfig: string,
@@ -125,7 +126,7 @@ Able to find CT project, ${!!ctProjectConfig}.`);
   const webpackOptions: NormalizedWebpackExecutorOptions = {
     root: ctExecutorContext.root,
     projectRoot: ctProjectConfig.root,
-    sourceRoot: ctProjectConfig.sourceRoot,
+    sourceRoot: getProjectSourceRoot(ctProjectConfig),
     main: '',
     useTsconfigPaths: undefined,
     fileReplacements: buildFileReplacements,

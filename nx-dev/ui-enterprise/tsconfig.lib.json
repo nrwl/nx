@@ -1,9 +1,14 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/ui-enterprise",
     "types": ["node"],
-    "lib": ["dom"]
+    "lib": ["dom"],
+    "composite": true,
+    "declaration": true,
+    "strict": false,
+    "noImplicitReturns": false,
+    "skipLibCheck": true
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",
@@ -20,5 +25,22 @@
     "**/*.test.jsx",
     "jest.config.ts"
   ],
-  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"]
+  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
+  "references": [
+    {
+      "path": "../ui-animations/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-primitives/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-icons/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature-analytics/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-common/tsconfig.lib.json"
+    }
+  ]
 }

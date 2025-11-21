@@ -1,5 +1,5 @@
-import { SectionHeading } from '@nx/nx-dev/ui-common';
-import { XIcon } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
+import { XIcon } from '@nx/nx-dev-ui-common';
 
 const coFounders = [
   {

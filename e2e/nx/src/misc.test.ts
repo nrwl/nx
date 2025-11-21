@@ -5,6 +5,7 @@ import {
   e2eCwd,
   getPackageManagerCommand,
   getPublishedVersion,
+  getSelectedPackageManager,
   isNotWindows,
   killProcessAndPorts,
   newProject,
@@ -19,7 +20,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { renameSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
@@ -188,10 +189,37 @@ describe('Nx Commands', () => {
       expect(listOutput).toContain('@nx/workspace');
 
       // temporarily make it look like this isn't installed
-      renameSync(
-        tmpProjPath('node_modules/@nx/next'),
-        tmpProjPath('node_modules/@nx/next_tmp')
-      );
+      // For pnpm, we need to rename the actual package in .pnpm directory, not just the symlink
+      const { readdirSync, statSync } = require('fs');
+      const pnpmDir = tmpProjPath('node_modules/.pnpm');
+      let renamedPnpmEntry = null;
+
+      if (require('fs').existsSync(pnpmDir)) {
+        const entries = readdirSync(pnpmDir);
+        const nextEntries = entries.filter((entry) =>
+          entry.includes('nx+next@')
+        );
+
+        // Rename all nx+next entries
+        const renamedEntries = [];
+        for (const entry of nextEntries) {
+          const tmpName = entry.replace('@nx+next@', 'tmp_nx_next_');
+          renameSync(
+            tmpProjPath(`node_modules/.pnpm/${entry}`),
+            tmpProjPath(`node_modules/.pnpm/${tmpName}`)
+          );
+          renamedEntries.push(entry);
+        }
+        renamedPnpmEntry = renamedEntries;
+      }
+
+      // Also rename the symlink
+      if (require('fs').existsSync(tmpProjPath('node_modules/@nx/next'))) {
+        renameSync(
+          tmpProjPath('node_modules/@nx/next'),
+          tmpProjPath('node_modules/@nx/next_tmp')
+        );
+      }
 
       listOutput = runCLI('list');
       expect(listOutput).toContain('NX   Also available');
@@ -218,7 +246,7 @@ describe('Nx Commands', () => {
       // check for builders
       expect(listOutput).toContain('package');
 
-      // // look for uninstalled core plugin
+      // look for uninstalled core plugin
       listOutput = runCLI('list @nx/next');
 
       expect(listOutput).toContain('NX   @nx/next is not currently installed');
@@ -230,11 +258,23 @@ describe('Nx Commands', () => {
         'NX   @wibble/fish is not currently installed'
       );
 
-      // put back the @nx/angular module (or all the other e2e tests after this will fail)
-      renameSync(
-        tmpProjPath('node_modules/@nx/next_tmp'),
-        tmpProjPath('node_modules/@nx/next')
-      );
+      // put back the @nx/next module (or all the other e2e tests after this will fail)
+      if (renamedPnpmEntry && Array.isArray(renamedPnpmEntry)) {
+        for (const entry of renamedPnpmEntry) {
+          const tmpName = entry.replace('@nx+next@', 'tmp_nx_next_');
+          renameSync(
+            tmpProjPath(`node_modules/.pnpm/${tmpName}`),
+            tmpProjPath(`node_modules/.pnpm/${entry}`)
+          );
+        }
+      }
+
+      if (require('fs').existsSync(tmpProjPath('node_modules/@nx/next_tmp'))) {
+        renameSync(
+          tmpProjPath('node_modules/@nx/next_tmp'),
+          tmpProjPath('node_modules/@nx/next')
+        );
+      }
     }, 120000);
   });
 
@@ -498,6 +538,9 @@ describe('migrate', () => {
                         'migrate-child-package-3': {version: '9.0.0', addToPackageJson: false},
                         'migrate-child-package-4': {version: '9.0.0', addToPackageJson: 'dependencies'},
                         'migrate-child-package-5': {version: '9.0.0', addToPackageJson: 'devDependencies'},
+                        'react': {version: '18.2.0', addToPackageJson: false},
+                        'react-dom': {version: '18.2.0', addToPackageJson: false},
+                        'lodash': {version: '4.17.21', addToPackageJson: false},
                       }},
                     }
                   });
@@ -510,6 +553,12 @@ describe('migrate', () => {
                       }
                     }
                   });
+                } else if (packageName === 'react') {
+                  return Promise.resolve({version: '18.2.0'});
+                } else if (packageName === 'react-dom') {
+                  return Promise.resolve({version: '18.2.0'});
+                } else if (packageName === 'lodash') {
+                  return Promise.resolve({version: '4.17.21'});
                 } else {
                   return Promise.resolve({version: '9.0.0'});
                 }
@@ -523,6 +572,12 @@ describe('migrate', () => {
   });
 
   it('should run migrations', () => {
+    // Ensure package.json has a trailing newline so migration can preserve it
+    const packageJsonContent = readFile('package.json');
+    if (!packageJsonContent.endsWith('\n')) {
+      updateFile('package.json', packageJsonContent + '\n');
+    }
+
     updateJson('nx.json', (j: NxJsonConfiguration) => {
       j.installation = {
         version: getPublishedVersion(),
@@ -563,6 +618,7 @@ describe('migrate', () => {
     );
     // should keep new line on package
     const packageContent = readFile('package.json');
+    console.log('[DEBUG]: Package contents', packageContent);
     expect(packageContent.charCodeAt(packageContent.length - 1)).toEqual(10);
 
     // creates migrations.json
@@ -857,6 +913,171 @@ describe('migrate', () => {
       ],
     });
   });
+
+  if (getSelectedPackageManager() === 'pnpm') {
+    it('should handle pnpm catalog references and update catalog definitions during migration', () => {
+      // Setup pnpm-workspace.yaml with both default and named catalogs. Include
+      // packages that WILL be updated and packages that SHOULD remain unchanged
+      // to test both scenarios.
+      updateFile(
+        'pnpm-workspace.yaml',
+        `
+packages:
+  - packages/*
+
+catalog:
+  migrate-parent-package: ^1.0.0
+  migrate-child-package: ^1.0.0
+  typescript: ^5.3.0
+
+catalogs:
+  react17:
+    react: ^17.0.2
+    react-dom: ^17.0.2
+
+  tools:
+    eslint: ^8.0.0
+    prettier: ^3.0.0
+`
+      );
+      // Update package.json to use MIXED catalog references and explicit versions
+      updateJson('package.json', (json) => {
+        json.dependencies = {
+          'migrate-parent-package': 'catalog:',
+          react: 'catalog:react17',
+          'react-dom': 'catalog:react17',
+          typescript: 'catalog:',
+          eslint: 'catalog:tools',
+          lodash: '^4.17.0', // explicit version that WILL be updated
+          axios: '^1.6.0', // explicit version that SHOULD stay unchanged
+        };
+        json.devDependencies = {
+          'migrate-child-package': 'catalog:',
+          prettier: 'catalog:tools',
+        };
+        return json;
+      });
+      // Create mock node_modules with RESOLVED versions for packages that will be updated
+      updateFile(
+        `./node_modules/react/package.json`,
+        JSON.stringify({
+          name: 'react',
+          version: '17.0.2',
+        })
+      );
+      updateFile(
+        `./node_modules/react-dom/package.json`,
+        JSON.stringify({
+          name: 'react-dom',
+          version: '17.0.2',
+        })
+      );
+      // Create mock node_modules for packages that should stay unchanged
+      updateFile(
+        `./node_modules/typescript/package.json`,
+        JSON.stringify({
+          name: 'typescript',
+          version: '5.3.0',
+        })
+      );
+      updateFile(
+        `./node_modules/eslint/package.json`,
+        JSON.stringify({
+          name: 'eslint',
+          version: '8.0.0',
+        })
+      );
+      updateFile(
+        `./node_modules/prettier/package.json`,
+        JSON.stringify({
+          name: 'prettier',
+          version: '3.0.0',
+        })
+      );
+      // Create mock node_modules for explicit version packages
+      updateFile(
+        `./node_modules/lodash/package.json`,
+        JSON.stringify({
+          name: 'lodash',
+          version: '4.17.0',
+        })
+      );
+      updateFile(
+        `./node_modules/axios/package.json`,
+        JSON.stringify({
+          name: 'axios',
+          version: '1.6.0',
+        })
+      );
+
+      // Run the migration
+      runCLI(
+        'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+        {
+          env: {
+            NX_MIGRATE_SKIP_INSTALL: 'true',
+            NX_MIGRATE_USE_LOCAL: 'true',
+          },
+        }
+      );
+
+      // Verify ALL catalog references are PRESERVED in package.json
+      const packageJson = readJson('package.json');
+      expect(packageJson.dependencies['migrate-parent-package']).toEqual(
+        'catalog:'
+      );
+      expect(packageJson.devDependencies['migrate-child-package']).toEqual(
+        'catalog:'
+      );
+      expect(packageJson.dependencies['typescript']).toEqual('catalog:');
+      expect(packageJson.dependencies['react']).toEqual('catalog:react17');
+      expect(packageJson.dependencies['react-dom']).toEqual('catalog:react17');
+      expect(packageJson.dependencies['eslint']).toEqual('catalog:tools');
+      expect(packageJson.devDependencies['prettier']).toEqual('catalog:tools');
+
+      // Verify catalog definitions in pnpm-workspace.yaml
+      const workspaceYaml = readFile('pnpm-workspace.yaml');
+      // UPDATED packages (no ^ prefix as migrations provide resolved versions)
+      expect(workspaceYaml).toContain('migrate-parent-package: "2.0.0"');
+      expect(workspaceYaml).toContain('migrate-child-package: "9.0.0"');
+      expect(workspaceYaml).toContain('react: "18.2.0"');
+      expect(workspaceYaml).toContain('react-dom: "18.2.0"');
+      // PRESERVED packages (retain original format with ^ prefix)
+      expect(workspaceYaml).toContain('typescript: "^5.3.0"');
+      expect(workspaceYaml).toContain('eslint: "^8.0.0"');
+      expect(workspaceYaml).toContain('prettier: "^3.0.0"');
+
+      // Verify explicit version packages: updated and preserved
+      expect(packageJson.dependencies['lodash']).toEqual('4.17.21');
+      expect(packageJson.dependencies['axios']).toEqual('^1.6.0');
+
+      // Verify migrations.json was created correctly
+      const migrationsJson = readJson('migrations.json');
+      expect(migrationsJson.migrations).toEqual([
+        {
+          package: 'migrate-parent-package',
+          version: '1.1.0',
+          name: 'run11',
+        },
+        {
+          package: 'migrate-parent-package',
+          version: '2.0.0',
+          name: 'run20',
+          cli: 'nx',
+        },
+      ]);
+
+      // Run migrations to ensure they execute successfully
+      runCLI('migrate --run-migrations=migrations.json', {
+        env: {
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      });
+
+      expect(readFile('file-20')).toEqual('content20');
+    });
+  }
 });
 
 describe('global installation', () => {

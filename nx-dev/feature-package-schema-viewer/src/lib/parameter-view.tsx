@@ -1,6 +1,6 @@
-import { Lookup } from '@nx/nx-dev/data-access-packages';
-import { JsonSchema } from '@nx/nx-dev/models-package';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+import { Lookup } from '@nx/nx-dev-data-access-packages';
+import { JsonSchema } from '@nx/nx-dev-models-package';
+import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import { getParameterMetadata } from './parameter-metadata';
 import { getEnum } from './types/get-enum';
 import { Type } from './types/type';

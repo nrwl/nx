@@ -2,24 +2,31 @@ plugins {
   `java-gradle-plugin`
   `maven-publish`
   signing
-  id("com.ncorti.ktfmt.gradle") version "+"
-  id("dev.nx.gradle.project-graph") version "0.1.0"
-  id("org.jetbrains.kotlin.jvm") version "2.1.10"
-  id("com.gradle.plugin-publish") version "1.2.1"
+  alias(libs.plugins.ktfmt)
+  alias(libs.plugins.nx.project.graph)
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.gradle.plugin.publish)
 }
 
 group = "dev.nx.gradle"
 
-version = "0.1.2"
+version = "0.1.9"
 
 repositories { mavenCentral() }
 
 dependencies {
-  implementation("com.google.code.gson:gson:2.10.1")
-  testImplementation(kotlin("test"))
-  testImplementation("org.mockito:mockito-core:5.8.0")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
-  testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+  implementation(libs.gson)
+  implementation(libs.javaparser.core)
+  implementation(libs.kotlinx.coroutines.core)
+  implementation(libs.jgit)
+  // Use compileOnly to avoid runtime conflicts with Kotlin Gradle plugin
+  compileOnly(libs.kotlin.compiler.embeddable) {
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-gradle-plugin")
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-gradle-plugin-api")
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-gradle-plugin-idea")
+  }
+  testImplementation(libs.kotlin.test)
+  testImplementation(libs.junit.jupiter)
 }
 
 java {

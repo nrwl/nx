@@ -1,5 +1,6 @@
 import {
   ModuleFederationConfig,
+  normalizeProjectName,
   NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
@@ -19,7 +20,7 @@ export async function withModuleFederation(
   const isDevServer = process.env['WEBPACK_SERVE'];
 
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
-    await getModuleFederationConfig(options);
+    await getModuleFederationConfig(options, undefined, 'webpack');
 
   return (config, ctx) => {
     config.output.uniqueName = options.name;
@@ -44,7 +45,7 @@ export async function withModuleFederation(
 
     config.plugins.push(
       new ModuleFederationPlugin({
-        name: options.name.replace(/-/g, '_'),
+        name: normalizeProjectName(options.name),
         filename: 'remoteEntry.js',
         exposes: options.exposes,
         remotes: mappedRemotes,
@@ -72,7 +73,6 @@ export async function withModuleFederation(
                 ),
               ]
             : configOverride?.runtimePlugins,
-        virtualRuntimeEntry: true,
       }),
       sharedLibraries.getReplacementPlugin() as NormalModuleReplacementPlugin
     );

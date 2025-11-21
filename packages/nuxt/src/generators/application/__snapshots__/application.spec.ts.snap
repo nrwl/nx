@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`app generated files content - as-provided - my-app general application should add nuxt entries in .gitignore 1`] = `
 "# Nuxt dev/build outputs
@@ -7,7 +7,6 @@ exports[`app generated files content - as-provided - my-app general application 
 .nuxt
 .nitro
 .cache
-vite.config.*.timestamp*
 vitest.config.*.timestamp*"
 `;
 
@@ -19,7 +18,6 @@ exports[`app generated files content - as-provided - my-app general application 
     ".nuxt/**",
     ".output/**",
     "node_modules",
-    "**/vite.config.*.timestamp*",
     "**/vitest.config.*.timestamp*"
   ],
   "overrides": [
@@ -165,7 +163,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
   plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
@@ -173,6 +171,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   test: {
+    name: 'my-app',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -400,7 +399,6 @@ exports[`app generated files content - as-provided - myApp general application s
 .nuxt
 .nitro
 .cache
-vite.config.*.timestamp*
 vitest.config.*.timestamp*"
 `;
 
@@ -412,7 +410,6 @@ exports[`app generated files content - as-provided - myApp general application s
     ".nuxt/**",
     ".output/**",
     "node_modules",
-    "**/vite.config.*.timestamp*",
     "**/vitest.config.*.timestamp*"
   ],
   "overrides": [
@@ -558,7 +555,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/myApp',
   plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
@@ -566,6 +563,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   test: {
+    name: 'myApp',
     watch: false,
     globals: true,
     environment: 'jsdom',

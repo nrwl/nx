@@ -1,6 +1,8 @@
 import type { TSESLint } from '@typescript-eslint/utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
 import type { AST } from 'jsonc-eslint-parser';
+import { readFileSync } from 'fs';
+import { tsquery } from '@phenomnomnominal/tsquery';
 
 import {
   ProjectGraphProjectNode,
@@ -478,8 +480,7 @@ export function validateImplementationNode(
 
     if (identifier) {
       try {
-        const m = require(resolvedPath);
-        if (!(identifier in m && typeof m[identifier] === 'function')) {
+        if (!checkIfIdentifierIsFunction(resolvedPath, identifier)) {
           context.report({
             messageId: 'invalidImplementationModule',
             node: implementationNode.value as any,
@@ -490,6 +491,7 @@ export function validateImplementationNode(
           });
         }
       } catch {
+        // require can throw if the module is not found
         context.report({
           messageId: 'unableToReadImplementationExports',
           node: implementationNode.value as any,
@@ -587,4 +589,41 @@ export function validateVersionJsonExpression(
     (valid(node.value) ||
       context.options[0]?.allowedVersionStrings.includes(node.value))
   );
+}
+
+export function checkIfIdentifierIsFunction(
+  filePath: string,
+  identifier: string
+): boolean {
+  try {
+    const ts = require('typescript');
+    const sourceCode = readFileSync(filePath, 'utf-8');
+    const sourceFile = ts.createSourceFile(
+      filePath,
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const exportedFunctions = tsquery(
+      sourceFile,
+      `
+      FunctionDeclaration[name.text="${identifier}"][modifiers],
+      ExportDeclaration > FunctionDeclaration[name.text="${identifier}"],
+      VariableStatement[modifiers] VariableDeclaration[name.text="${identifier}"] ArrowFunction,
+      VariableStatement[modifiers] VariableDeclaration[name.text="${identifier}"] FunctionExpression,
+      ExportDeclaration > VariableStatement VariableDeclaration[name.text="${identifier}"] ArrowFunction,
+      ExportDeclaration > VariableStatement VariableDeclaration[name.text="${identifier}"] FunctionExpression,
+      ExportDeclaration ExportSpecifier[name.text="${identifier}"]
+    `
+    );
+
+    return exportedFunctions.length > 0;
+  } catch {
+    // ignore
+  }
+
+  // Fallback to require()
+  const m = require(filePath);
+  return identifier in m && typeof m[identifier] === 'function';
 }

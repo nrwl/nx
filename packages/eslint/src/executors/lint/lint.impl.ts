@@ -183,14 +183,14 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
     );
   }
 
+  // output fixes to disk, if applicable based on the options
+  await ESLint.outputFixes(lintResults);
+
   // if quiet, only show errors
   if (normalizedOptions.quiet) {
     console.debug('Quiet mode enabled - filtering out warnings\n');
     lintResults = ESLint.getErrorResults(lintResults);
   }
-
-  // output fixes to disk, if applicable based on the options
-  await ESLint.outputFixes(lintResults);
 
   const formatter = await eslint.loadFormatter(normalizedOptions.format);
 

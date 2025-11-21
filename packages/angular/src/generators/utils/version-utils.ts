@@ -1,4 +1,4 @@
-import { readJson, type Tree } from '@nx/devkit';
+import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
 import {
   backwardCompatibleVersions,
@@ -10,15 +10,18 @@ import { angularVersion } from '../../utils/versions';
 
 export function getInstalledAngularDevkitVersion(tree: Tree): string | null {
   return (
-    getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
-    getInstalledPackageVersion(tree, '@angular/build')
+    getDependencyVersionFromPackageJson(
+      tree,
+      '@angular-devkit/build-angular'
+    ) ?? getDependencyVersionFromPackageJson(tree, '@angular/build')
   );
 }
 
 export function getInstalledAngularVersion(tree: Tree): string {
-  const pkgJson = readJson(tree, 'package.json');
-  const installedAngularVersion =
-    pkgJson.dependencies && pkgJson.dependencies['@angular/core'];
+  const installedAngularVersion = getDependencyVersionFromPackageJson(
+    tree,
+    '@angular/core'
+  );
 
   if (
     !installedAngularVersion ||
@@ -46,18 +49,8 @@ export function getInstalledAngularVersionInfo(tree: Tree) {
   };
 }
 
-export function getInstalledPackageVersion(
-  tree: Tree,
-  pkgName: string
-): string | null {
-  const { dependencies, devDependencies } = readJson(tree, 'package.json');
-  const version = dependencies?.[pkgName] ?? devDependencies?.[pkgName];
-
-  return version;
-}
-
 export function getInstalledPackageVersionInfo(tree: Tree, pkgName: string) {
-  const version = getInstalledPackageVersion(tree, pkgName);
+  const version = getDependencyVersionFromPackageJson(tree, pkgName);
 
   return version ? { major: major(coerce(version)), version } : null;
 }
@@ -74,4 +67,24 @@ export function versions(
     default:
       return latestVersions;
   }
+}
+
+/**
+ * Temporary helper to abstract away the version of angular-rspack to be installed
+ * until we stop supporting Angular 19.
+ */
+export function getAngularRspackVersion(tree: Tree): string | null {
+  const majorAngularVersion = getInstalledAngularMajorVersion(tree);
+
+  if (majorAngularVersion === 19) {
+    return backwardCompatibleVersions.angularV19.angularRspackVersion;
+  }
+  if (majorAngularVersion >= 20) {
+    // Starting with Angular 20, we can use an Angular Rspack version that is
+    // aligned with the Nx version
+    return latestVersions.nxVersion;
+  }
+
+  // Lower versions of Angular are not supported
+  return null;
 }

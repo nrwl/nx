@@ -1,109 +1,103 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`vue:component-story default setup component with other syntax of props defined should create a story with controls 1`] = `
-"import type { Meta, StoryObj } from '@storybook/vue3';
+"import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import testUiLib from './test-ui-lib.vue';
 
 import { expect } from 'storybook/test';
 
 
-const meta: Meta<typeof testUiLib> = {
+const meta = {
   component: testUiLib,
   title: 'testUiLib',
-};
+} satisfies Meta<typeof testUiLib>;
 export default meta;
-type Story = StoryObj<typeof meta>;
 
+type Story = StoryObj<typeof meta>;
 
 export const Primary = {
   args: {
-    name:  'name',
-    displayAge:  false,
-    age:  0,
+    name: 'name',
+    displayAge: false,
+    age: 0,
   },
-};
+} satisfies Story;
 
-
-export const Heading: Story = {
+export const Heading = {
   args: {
-    name:  'name',
-    displayAge:  false,
-    age:  0,
+    name: 'name',
+    displayAge: false,
+    age: 0,
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/Welcome to testUiLib!/gi)).toBeTruthy();
+    await expect(canvas.getByText(/testUiLib/gi)).toBeTruthy();
   },
-};
-
+} satisfies Story;
 "
 `;
 
 exports[`vue:component-story default setup component with props defined should create a story with controls 1`] = `
-"import type { Meta, StoryObj } from '@storybook/vue3';
+"import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import testUiLib from './test-ui-lib.vue';
 
 import { expect } from 'storybook/test';
 
 
-const meta: Meta<typeof testUiLib> = {
+const meta = {
   component: testUiLib,
   title: 'testUiLib',
-};
+} satisfies Meta<typeof testUiLib>;
 export default meta;
-type Story = StoryObj<typeof meta>;
 
+type Story = StoryObj<typeof meta>;
 
 export const Primary = {
   args: {
-    name:  'name',
-    displayAge:  false,
-    age:  0,
+    name: 'name',
+    displayAge: false,
+    age: 0,
   },
-};
+} satisfies Story;
 
-
-export const Heading: Story = {
+export const Heading = {
   args: {
-    name:  'name',
-    displayAge:  false,
-    age:  0,
+    name: 'name',
+    displayAge: false,
+    age: 0,
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/Welcome to testUiLib!/gi)).toBeTruthy();
+    await expect(canvas.getByText(/testUiLib/gi)).toBeTruthy();
   },
-};
-
+} satisfies Story;
 "
 `;
 
 exports[`vue:component-story default setup default component setup should properly set up the story 1`] = `
-"import type { Meta, StoryObj } from '@storybook/vue3';
+"import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import testUiLib from './test-ui-lib.vue';
 
 import { expect } from 'storybook/test';
 
 
-const meta: Meta<typeof testUiLib> = {
+const meta = {
   component: testUiLib,
   title: 'testUiLib',
-};
+} satisfies Meta<typeof testUiLib>;
 export default meta;
-type Story = StoryObj<typeof meta>;
 
+type Story = StoryObj<typeof meta>;
 
 export const Primary = {
   args: {
   },
-};
+} satisfies Story;
 
-
-export const Heading: Story = {
+export const Heading = {
   args: {
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/Welcome to testUiLib!/gi)).toBeTruthy();
+    await expect(canvas.getByText(/testUiLib/gi)).toBeTruthy();
   },
-};
-
+} satisfies Story;
 "
 `;

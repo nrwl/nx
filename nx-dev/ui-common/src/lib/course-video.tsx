@@ -16,7 +16,7 @@ export function CourseVideo({
   courseUrl,
 }: CourseVideoProps): JSX.Element {
   return (
-    <div className="not-prose mx-auto max-w-4xl">
+    <div className="not-prose mx-auto max-w-4xl pt-4">
       <div className="overflow-hidden rounded-xl bg-slate-50 shadow-sm ring-1 ring-slate-900/5 dark:bg-slate-800/50 dark:ring-slate-700/50">
         <div className="aspect-video w-full">
           <YouTube

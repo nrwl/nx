@@ -351,7 +351,7 @@ describe('remote generator', () => {
           typescriptConfiguration: true,
           bundler: 'rspack',
         })
-      ).rejects.toThrowError(`Invalid remote name provided: ${name}.`);
+      ).rejects.toThrow(`Invalid remote name provided: ${name}.`);
     });
 
     it('should throw an error when an invalid remote name is used', async () => {
@@ -369,12 +369,30 @@ describe('remote generator', () => {
           typescriptConfiguration: true,
           bundler: 'rspack',
         })
-      ).rejects.toMatchInlineSnapshot(`
-        [Error: Invalid remote name: my-app. Remote project names must:
-        - Start with a letter, dollar sign ($) or underscore (_)
-        - Followed by any valid character (letters, digits, underscores, or dollar signs)
-        The regular expression used is ^[a-zA-Z_$][a-zA-Z_$0-9]*$.]
-      `);
+      ).rejects.toMatchInlineSnapshot(
+        `[Error: Invalid remote name provided: my-app. The name can only contain letters, digits, underscores, and dollar signs.]`
+      );
+    });
+
+    it('should handle app names in ts proj ref workspaces', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await expect(
+        remote(tree, {
+          directory: 'test/myapp',
+          devServerPort: 4209,
+          e2eTestRunner: 'cypress',
+          linter: 'eslint',
+          skipFormat: false,
+          style: 'css',
+          unitTestRunner: 'jest',
+          ssr: true,
+          typescriptConfiguration: true,
+          bundler: 'rspack',
+        })
+        // Verify that no error occurs
+        // Resolves.not.toThrow() will cause spawnSync error
+        // As the Generator Callback will try to run
+      ).resolves.toMatchInlineSnapshot(`[Function]`);
     });
   });
 });

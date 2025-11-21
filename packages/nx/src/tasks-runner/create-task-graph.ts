@@ -1,5 +1,10 @@
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { getDependencyConfigs, getOutputs, interpolate } from './utils';
+import {
+  getDependencyConfigs,
+  getOutputs,
+  interpolate,
+  createTaskId,
+} from './utils';
 import {
   projectHasTarget,
   projectHasTargetAndConfiguration,
@@ -142,10 +147,12 @@ export class ProcessTasks {
       this.allTargetNames
     );
     for (const dependencyConfig of dependencyConfigs) {
-      const taskOverrides =
-        dependencyConfig.params === 'forward'
-          ? overrides
-          : { __overrides_unparsed__: [] };
+      const taskOverrides = createTaskOverrides(
+        dependencyConfig,
+        overrides,
+        task,
+        this.projectGraph
+      );
       if (dependencyConfig.projects) {
         this.processTasksForMultipleProjects(
           dependencyConfig,
@@ -328,6 +335,7 @@ export class ProcessTasks {
         const dummyId = createTaskId(
           depProject.name,
           task.target.project +
+            task.target.target +
             '__' +
             dependencyConfig.target +
             DUMMY_TASK_TARGET,
@@ -521,14 +529,35 @@ export function getNonDummyDeps(
   }
 }
 
-function createTaskId(
-  project: string,
-  target: string,
-  configuration: string | undefined
-): string {
-  let id = `${project}:${target}`;
-  if (configuration) {
-    id += `:${configuration}`;
+function createTaskOverrides(
+  dependencyConfig: TargetDependencyConfig,
+  cliOverrides: any,
+  sourceTask: Task,
+  projectGraph: ProjectGraph
+): any {
+  const optionsToForward: any = {};
+
+  if (dependencyConfig.options === 'forward') {
+    const sourceTargetConfig =
+      projectGraph.nodes[sourceTask.target.project].data.targets?.[
+        sourceTask.target.target
+      ];
+    if (sourceTargetConfig?.options) {
+      Object.assign(optionsToForward, sourceTargetConfig.options);
+    }
+
+    if (
+      sourceTask.target.configuration &&
+      sourceTargetConfig?.configurations?.[sourceTask.target.configuration]
+    ) {
+      Object.assign(
+        optionsToForward,
+        sourceTargetConfig.configurations[sourceTask.target.configuration]
+      );
+    }
   }
-  return id;
+
+  return dependencyConfig.params === 'forward'
+    ? { ...optionsToForward, ...cliOverrides }
+    : { ...optionsToForward, __overrides_unparsed__: [] };
 }

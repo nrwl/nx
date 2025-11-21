@@ -23,9 +23,9 @@ import {
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { relative } from 'path';
 import { addLinting } from '../../utils/add-linting';
@@ -50,14 +50,22 @@ export function libraryGenerator(tree: Tree, schema: Schema) {
 export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
-  const options = await normalizeOptions(tree, schema);
-  if (options.publishable === true && !schema.importPath) {
+  if (schema.publishable === true && !schema.importPath) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
     );
   }
 
-  tasks.push(await jsInitGenerator(tree, { ...options, skipFormat: true }));
+  const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
+  tasks.push(
+    await jsInitGenerator(tree, {
+      ...schema,
+      addTsPlugin,
+      skipFormat: true,
+    })
+  );
+
+  const options = await normalizeOptions(tree, schema);
 
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
@@ -182,7 +190,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     } else {
       const nxJson = readJson(tree, 'nx.json');
       await addReleaseConfigForNonTsSolution(
-        shouldUseLegacyVersioning(nxJson.release),
         tree,
         options.projectName,
         projectConfig

@@ -14,6 +14,7 @@ import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
 } from '../../tasks-runner/task-env';
+import { getProcessMetricsService } from '../../tasks-runner/process-metrics-service';
 import { signalToCode } from '../../utils/exit-codes';
 import {
   LARGE_BUFFER,
@@ -30,7 +31,11 @@ export class ParallelRunningTasks implements RunningTask {
     [];
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
 
-  constructor(options: NormalizedRunCommandsOptions, context: ExecutorContext) {
+  constructor(
+    options: NormalizedRunCommandsOptions,
+    context: ExecutorContext,
+    taskId: string
+  ) {
     this.childProcesses = options.commands.map(
       (commandConfig) =>
         new RunningNodeProcess(
@@ -40,7 +45,8 @@ export class ParallelRunningTasks implements RunningTask {
           options.env ?? {},
           options.readyWhenStatus,
           options.streamOutput,
-          options.envFile
+          options.envFile,
+          taskId
         )
     );
     this.readyWhenStatus = options.readyWhenStatus;
@@ -122,33 +128,48 @@ export class ParallelRunningTasks implements RunningTask {
         cb(code, terminalOutput);
       }
     } else {
-      const results = await Promise.all(
+      const runningProcesses = new Set<RunningNodeProcess>();
+      let hasFailure = false;
+      let failureDetails: {
+        childProcess: RunningNodeProcess;
+        code: number;
+        terminalOutput: string;
+      } | null = null;
+      const terminalOutputs = new Map<RunningNodeProcess, string>();
+
+      await Promise.allSettled(
         this.childProcesses.map(async (childProcess) => {
+          runningProcesses.add(childProcess);
+
           childProcess.onOutput((terminalOutput) => {
             for (const cb of this.outputCallbacks) {
               cb(terminalOutput);
             }
           });
-          const result = await childProcess.getResults();
-          return {
-            childProcess,
-            result,
-          };
+
+          const { code, terminalOutput } = await childProcess.getResults();
+          terminalOutputs.set(childProcess, terminalOutput);
+
+          if (code !== 0 && !hasFailure) {
+            hasFailure = true;
+            failureDetails = { childProcess, code, terminalOutput };
+
+            // Immediately terminate all other running processes
+            await this.terminateRemainingProcesses(
+              runningProcesses,
+              childProcess
+            );
+          }
+
+          runningProcesses.delete(childProcess);
         })
       );
 
-      let terminalOutput = results
-        .map((r) => r.result.terminalOutput)
-        .join('\r\n');
+      let terminalOutput = Array.from(terminalOutputs.values()).join('\r\n');
 
-      const failed = results.filter((result) => result.result.code !== 0);
-      if (failed.length > 0) {
-        const output = failed
-          .map(
-            (failedResult) =>
-              `Warning: command "${failedResult.childProcess.command}" exited with non-zero status code`
-          )
-          .join('\r\n');
+      if (hasFailure && failureDetails) {
+        // Add failure message
+        const output = `Warning: command "${failureDetails.childProcess.command}" exited with non-zero status code`;
         terminalOutput += output;
         if (this.streamOutput) {
           process.stderr.write(output);
@@ -162,6 +183,41 @@ export class ParallelRunningTasks implements RunningTask {
           cb(0, terminalOutput);
         }
       }
+    }
+  }
+
+  private async terminateRemainingProcesses(
+    runningProcesses: Set<RunningNodeProcess>,
+    failedProcess: RunningNodeProcess
+  ): Promise<void> {
+    const terminationPromises: Promise<void>[] = [];
+
+    const processesToTerminate = [...runningProcesses].filter(
+      (p) => p !== failedProcess
+    );
+    for (const process of processesToTerminate) {
+      runningProcesses.delete(process);
+
+      // Terminate the process
+      terminationPromises.push(
+        process.kill('SIGTERM').catch((err) => {
+          // Log error but don't fail the entire operation
+          if (this.streamOutput) {
+            console.error(
+              `Failed to terminate process "${process.command}":`,
+              err
+            );
+          }
+        })
+      );
+    }
+
+    // Wait for all terminations to complete with a timeout
+    if (terminationPromises.length > 0) {
+      await Promise.race([
+        Promise.all(terminationPromises),
+        new Promise<void>((resolve) => setTimeout(resolve, 5_000)),
+      ]);
     }
   }
 }
@@ -178,7 +234,8 @@ export class SeriallyRunningTasks implements RunningTask {
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
-    private readonly tuiEnabled: boolean
+    private readonly tuiEnabled: boolean,
+    private readonly taskId: string
   ) {
     this.run(options, context)
       .catch((e) => {
@@ -229,6 +286,7 @@ export class SeriallyRunningTasks implements RunningTask {
         options.color,
         calculateCwd(options.cwd, context),
         options.processEnv ?? options.env ?? {},
+        this.taskId,
         options.usePty,
         options.streamOutput,
         options.tty,
@@ -264,6 +322,7 @@ export class SeriallyRunningTasks implements RunningTask {
     color: boolean,
     cwd: string,
     env: Record<string, string>,
+    taskId: string,
     usePty: boolean = true,
     streamOutput: boolean = true,
     tty: boolean,
@@ -280,7 +339,7 @@ export class SeriallyRunningTasks implements RunningTask {
       const pseudoTerminal = createPseudoTerminal();
       registerProcessListener(this, pseudoTerminal);
 
-      return createProcessWithPseudoTty(
+      const pseudoTtyProcess = await createProcessWithPseudoTty(
         pseudoTerminal,
         commandConfig,
         color,
@@ -290,6 +349,15 @@ export class SeriallyRunningTasks implements RunningTask {
         tty,
         envFile
       );
+
+      // Register process for metrics collection (direct run-commands execution)
+      // Skip registration if we're in a forked executor - the fork wrapper already registered
+      const pid = pseudoTtyProcess.getPid();
+      if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
+        getProcessMetricsService().registerTaskProcess(taskId, pid);
+      }
+
+      return pseudoTtyProcess;
     }
 
     return new RunningNodeProcess(
@@ -299,7 +367,8 @@ export class SeriallyRunningTasks implements RunningTask {
       env,
       [],
       streamOutput,
-      envFile
+      envFile,
+      taskId
     );
   }
 }
@@ -319,7 +388,8 @@ class RunningNodeProcess implements RunningTask {
     env: Record<string, string>,
     private readyWhenStatus: { stringToMatch: string; found: boolean }[],
     streamOutput = true,
-    envFile: string
+    envFile: string,
+    private taskId: string
   ) {
     env = processEnv(color, cwd, env, envFile);
     this.command = commandConfig.command;
@@ -333,6 +403,15 @@ class RunningNodeProcess implements RunningTask {
       cwd,
       windowsHide: false,
     });
+
+    // Register process for metrics collection
+    // Skip registration if we're in a forked executor - the fork wrapper already registered
+    if (this.childProcess.pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
+      getProcessMetricsService().registerTaskProcess(
+        this.taskId,
+        this.childProcess.pid
+      );
+    }
 
     this.addListeners(commandConfig, streamOutput);
   }
@@ -434,12 +513,32 @@ class RunningNodeProcess implements RunningTask {
         }
       }
     });
+    // Terminate any task processes on exit
+    process.on('exit', () => {
+      this.childProcess.kill();
+    });
+    process.on('SIGINT', () => {
+      this.childProcess.kill('SIGTERM');
+      // we exit here because we don't need to write anything to cache.
+      process.exit(signalToCode('SIGINT'));
+    });
+    process.on('SIGTERM', () => {
+      this.childProcess.kill('SIGTERM');
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
+    process.on('SIGHUP', () => {
+      this.childProcess.kill('SIGTERM');
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
   }
 }
 
 export async function runSingleCommandWithPseudoTerminal(
   normalized: NormalizedRunCommandsOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
+  taskId: string
 ): Promise<PseudoTtyProcess> {
   const pseudoTerminal = createPseudoTerminal();
   const pseudoTtyProcess = await createProcessWithPseudoTty(
@@ -452,6 +551,14 @@ export async function runSingleCommandWithPseudoTerminal(
     pseudoTerminal ? normalized.isTTY : false,
     normalized.envFile
   );
+
+  // Register process for metrics collection (direct run-commands execution)
+  // Skip registration if we're in a forked executor - the fork wrapper already registered
+  const pid = pseudoTtyProcess.getPid();
+  if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
+    getProcessMetricsService().registerTaskProcess(taskId, pid);
+  }
+
   registerProcessListener(pseudoTtyProcess, pseudoTerminal);
   return pseudoTtyProcess;
 }

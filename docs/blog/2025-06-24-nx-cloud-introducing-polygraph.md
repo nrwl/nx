@@ -6,7 +6,6 @@ tags: ['nx-cloud', 'release']
 cover_image: /blog/images/2025-06-24/header.avif
 description: 'Discover Polygraph for Nx Cloud: Gain organization-wide visibility, enforce coding standards, and automate workflows across all your repositories, even those not using Nx. Learn how Polygraph empowers enterprise teams with proactive architecture management and automated consistency.'
 youtubeUrl: https://youtu.be/BA_nkErlQoE
-pinned: true
 ---
 
 The monorepo approach has proven to be a powerful solution for managing applications and libraries within a single repository. It gives you visibility into the dependency graph of your projects, central management of tooling, and consolidated enforcement of organizational standards. But that visibility and management end at the boundaries of that repo. What if it didn't have to? That's why we’re excited to announce **Polygraph** for **Nx Cloud**. Polygraph brings the power of monorepo-level visibility and efficiency to your entire organization.
@@ -39,7 +38,7 @@ Polygraph is a suite of tools built to help large organizations see across repos
 
 ![Screenshot of workspace graph in Nx Cloud](/blog/images/2025-06-24/workspace-graph.avif)
 
-[**Workspace graph**](/ci/recipes/enterprise/polygraph#workspace-graph) visualizes dependencies between all workspaces and repos, **even repos that don’t use Nx**. Instead of managing repos in isolation, you can easily see the connections between repos and understand your organizational code structure at a glance.
+[**Workspace graph**](/docs/enterprise/polygraph#workspace-graph) visualizes dependencies between all workspaces and repos, **even repos that don’t use Nx**. Instead of managing repos in isolation, you can easily see the connections between repos and understand your organizational code structure at a glance.
 
 This visibility helps you:
 
@@ -51,7 +50,7 @@ This visibility helps you:
 
 ![Screenshot of conformance rules in Nx Cloud](/blog/images/2025-06-24/conformance-rule-results-table.avif)
 
-[**Conformance rules**](/ci/recipes/enterprise/polygraph#conformance) allow you to write language-agnostic rules that apply across all workspaces in your organization. This goes beyond what you can achieve with individual repository tooling—now you can enforce consistency at the organizational level.
+[**Conformance rules**](/docs/enterprise/polygraph#conformance) allow you to write language-agnostic rules that apply across all workspaces in your organization. This goes beyond what you can achieve with individual repository tooling—now you can enforce consistency at the organizational level.
 Platform teams can easily publish and enforce coding standards across an entire organization. They can write and publish rules and then quickly apply them across all repos without requiring work from individual teams. **A single platform engineer can drive standards across the entire organization with one tool.**
 
 For instance, you might create a conformance rule that ensures all repositories use ESLint version 9.0. This rule is published to Nx Cloud and can be configured to automatically run across your entire organization, providing centralized reporting on compliance without requiring any local configuration changes.
@@ -65,14 +64,14 @@ The power of organizational conformance rules extends to:
 
 ![Screenshot of custom workflows in Nx Cloud](/blog/images/2025-06-24/custom-workflow-repeating-workflows.avif)
 
-[**Custom Workflows**](/ci/recipes/enterprise/polygraph#custom-workflows) enable you to run scheduled tasks, extending automation capabilities beyond traditional CI pipelines. This allows you to run conformance rules and other organizational processes even on repositories that don't use Nx locally. You can run conformance rules to enforce standards, but you can also run data collection tools to make sure you’re always up to date with the latest information from repos across your organization. These workflows are separate from CI and language ecosystems, so you can run tasks across any repo in your organization, no matter what language or tool it uses.
+[**Custom Workflows**](/docs/enterprise/polygraph#custom-workflows) enable you to run scheduled tasks, extending automation capabilities beyond traditional CI pipelines. This allows you to run conformance rules and other organizational processes even on repositories that don't use Nx locally. You can run conformance rules to enforce standards, but you can also run data collection tools to make sure you’re always up to date with the latest information from repos across your organization. These workflows are separate from CI and language ecosystems, so you can run tasks across any repo in your organization, no matter what language or tool it uses.
 
 This means you can:
 
 - **Apply standards to any repository** - Even legacy codebases, that can't be easily migrated to Nx, can benefit from organizational conformance rules.
 - **Schedule organizational maintenance** - Run dependency audits, security scans, or compliance checks on a regular schedule across all repositories.
 
-Custom Workflows are built on top of [**Nx Agents**](/ci/features/distribute-task-execution), and enable you to run any task in an on-demand infrastructure. This is just the beginning of what we have planned for this capability. It lays the foundation for **AI-powered refactoring** and **self-healing CI**.
+Custom Workflows are built on top of [**Nx Agents**](/docs/features/ci-features/distribute-task-execution), and enable you to run any task in an on-demand infrastructure. This is just the beginning of what we have planned for this capability. It lays the foundation for **AI-powered refactoring** and **self-healing CI**.
 
 ## How Polygraph Changes Enterprise Development
 
@@ -101,8 +100,8 @@ The era of isolated repositories and manual governance is ending. With Polygraph
 
 Learn more:
 
-- 📄 [Polygraph docs](/ci/recipes/enterprise/polygraph)
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 📄 [Polygraph docs](/docs/enterprise/polygraph)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 🌩️ [Nx Cloud](/nx-cloud)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)

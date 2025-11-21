@@ -4,9 +4,21 @@
   "sourceRoot": "packages/storybook",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/storybook/README.md"],
+      "command": "node ./scripts/copy-readme.js storybook"
+    },
+    "nx-release-publish": {
+      "executor": "@nx/js:release-publish",
       "options": {
+        "packageRoot": "dist/packages/storybook"
+      },
+      "dependsOn": ["^nx-release-publish"]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
+      "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/storybook",
@@ -52,10 +64,6 @@
           }
         ]
       }
-    },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/storybook/README.md"],
-      "command": "node ./scripts/copy-readme.js storybook"
     }
   }
 }

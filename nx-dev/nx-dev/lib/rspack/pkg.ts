@@ -1,4 +1,4 @@
-import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
+import { ProcessedPackageMetadata } from '@nx/nx-dev-models-package';
 
 export const pkg: ProcessedPackageMetadata = {
   description: '',
@@ -86,6 +86,7 @@ export const pkg: ProcessedPackageMetadata = {
       type: 'generator',
     },
   },
+  migrations: {},
   githubRoot: 'https://github.com/nrwl/nx-labs/tree/main/packages/rspack',
   name: 'rspack',
   packageName: '@nx/rspack',

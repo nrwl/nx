@@ -11,6 +11,7 @@ import {
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodesV2 } from '../../../plugins/plugin';
 import {
+  metroVersion,
   nxVersion,
   reactDomVersion,
   reactNativeVersion,
@@ -115,6 +116,8 @@ export function updateDependencies(host: Tree, schema: Schema) {
     },
     {
       '@nx/react-native': nxVersion,
+      'metro-config': metroVersion,
+      'metro-resolver': metroVersion,
     },
     undefined,
     schema.keepExistingVersions

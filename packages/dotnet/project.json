@@ -1,0 +1,94 @@
+{
+  "name": "dotnet",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/dotnet/src",
+  "projectType": "library",
+  "tags": [],
+  "release": {
+    "version": {
+      "preserveLocalDependencyProtocols": false,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
+  "targets": {
+    "build": {
+      "command": "node ./scripts/copy-readme.js dotnet packages/dotnet/readme-template.md packages/dotnet/README.md",
+      "outputs": ["{projectRoot}/README.md"],
+      "inputs": [
+        "{projectRoot}/readme-template.md",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{workspaceRoot}/scripts/readme-fragments"
+      ],
+      "cache": true
+    },
+    "build-analyzer": {
+      "command": "node ./scripts/run-native-target.js _build-analyzer dotnet",
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/msbuild-analyzer"],
+      "inputs": ["{projectRoot}/analyzer/**", { "env": "SKIP_ANALYZER_BUILD" }]
+    },
+    "_build-analyzer": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/msbuild-analyzer"],
+      "inputs": ["{projectRoot}/analyzer/**"],
+      "cache": true,
+      "options": {
+        "commands": [
+          "dotnet publish {projectRoot}/analyzer/MsbuildAnalyzer.csproj -c Release -o dist/msbuild-analyzer --self-contained false",
+          "node scripts/chmod.js dist/msbuild-analyzer/MsbuildAnalyzer"
+        ],
+        "parallel": false
+      }
+    },
+    "format-native": {
+      "command": "node ./scripts/run-native-target.js _format-native dotnet"
+    },
+    "_format-native": {
+      "command": "dotnet format {projectRoot}/analyzer/MsbuildAnalyzer.csproj",
+      "options": {
+        "args": ["--verify-no-changes"]
+      },
+      "configurations": {
+        "fix": {
+          "args": []
+        }
+      }
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
+      "dependsOn": ["build-base", "build-analyzer"],
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "dist",
+        "assets": [
+          "{projectRoot}/*.md",
+          {
+            "input": "{projectRoot}/src",
+            "glob": "**/*.{d.ts,json}",
+            "output": "/",
+            "ignore": [
+              ".eslintrc.json",
+              "generators.json",
+              "executors.json",
+              "migrations.json"
+            ]
+          },
+          {
+            "input": "dist/msbuild-analyzer",
+            "glob": "*",
+            "output": "/lib/",
+            "includeIgnoredFiles": true
+          }
+        ]
+      }
+    },
+    "nx-release-publish": {
+      "executor": "@nx/js:release-publish",
+      "options": {
+        "packageRoot": "packages/dotnet"
+      },
+      "dependsOn": ["^nx-release-publish"]
+    }
+  }
+}

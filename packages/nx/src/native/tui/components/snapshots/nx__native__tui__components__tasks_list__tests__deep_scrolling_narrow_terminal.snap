@@ -1,0 +1,10 @@
+---
+source: packages/nx/src/native/tui/components/tasks_list.rs
+expression: terminal.backend()
+---
+"                                        "
+" NX    Running Deep Scroll   Duration   "
+"                                       ↑"
+"> ·    task1                      ...  █"
+"                                       ↓"
+"                        quit: q  help: ?"

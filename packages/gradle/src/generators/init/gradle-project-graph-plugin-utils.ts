@@ -62,7 +62,11 @@ export async function extractNxPluginVersion(
   let version = match ? match[2] : null;
   if (!version) {
     try {
-      const gradlewFile = findGradlewFile(gradleFilePath, workspaceRoot);
+      const gradlewFile = findGradlewFile(
+        gradleFilePath,
+        workspaceRoot,
+        undefined
+      );
       const buildEnvironment = (
         await execGradleAsync(join(workspaceRoot, gradlewFile), [
           'buildEnvironment',
@@ -193,8 +197,14 @@ async function addNxProjectGraphPluginToBuildGradle(
   );
   if (buildGradleContent.includes('allprojects {')) {
     if (!applyPluginPattern.test(buildGradleContent)) {
-      logger.warn(
-        `Please add the ${gradleProjectGraphPluginName} plugin to your ${gradleFilePath}:\nallprojects {\n  apply {\n      plugin(\"${gradleProjectGraphPluginName}\")\n  }\n}`
+      // Add plugin to existing allprojects block
+      const applyPlugin = isKotlinDsl
+        ? `plugin("${gradleProjectGraphPluginName}")`
+        : `plugin "${gradleProjectGraphPluginName}"`;
+
+      buildGradleContent = buildGradleContent.replace(
+        /allprojects\s*\{/,
+        `allprojects {\n    apply ${applyPlugin}`
       );
     }
   } else {

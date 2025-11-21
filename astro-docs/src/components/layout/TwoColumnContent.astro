@@ -1,0 +1,66 @@
+---
+// Copied from https://github.com/withastro/starlight/blob/f14eb0c/packages/starlight/components/TwoColumnContent.astro with modifications.
+const { data} = Astro.locals.starlightRoute.entry;
+---
+
+<div class="lg:sl-flex">
+  {
+    Astro.locals.starlightRoute.toc && (
+      <aside class="right-sidebar-container print:hidden">
+        <div class="right-sidebar">
+          <slot name="right-sidebar" />
+        </div>
+      </aside>
+    )
+  }
+  <div class="main-pane" data-testid="main-pane" data-pagefind-weight={data.weight} data-pagefind-filter={data.filter}
+  ><slot /></div>
+</div>
+
+<style>
+  @layer starlight.core {
+    .main-pane {
+      isolation: isolate;
+    }
+
+    @media (min-width: 72rem) {
+      .lg\:sl-flex {
+        align-items: stretch;
+      }
+
+      .right-sidebar-container {
+        order: 2;
+        position: relative;
+        width: calc(
+          var(--sl-sidebar-width) + (100% - var(--sl-content-width) - var(--sl-sidebar-width)) / 2
+        );
+        display: flex;
+        flex-direction: column;
+      }
+
+      .right-sidebar {
+        position: sticky;
+        top: var(--sl-nav-height);
+        border-inline-start: 1px solid var(--sl-color-hairline);
+        padding-top: 1rem;
+        width: 100%;
+        max-height: calc(100vh - var(--sl-nav-height));
+        overflow-y: auto;
+        scrollbar-width: none;
+      }
+
+      .main-pane {
+        width: 100%;
+      }
+
+      :global([data-has-sidebar][data-has-toc]) .main-pane {
+        --sl-content-margin-inline: auto 0;
+
+        order: 1;
+        width: calc(
+          var(--sl-content-width) + (100% - var(--sl-content-width) - var(--sl-sidebar-width)) / 2
+        );
+      }
+    }
+  }
+</style>

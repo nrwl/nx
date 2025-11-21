@@ -13,11 +13,41 @@ import {
   Security,
   TestimonialCarousel,
   VmwareTestimonial,
-} from '@nx/nx-dev/ui-enterprise';
+} from '@nx/nx-dev-ui-enterprise';
 import { ReactElement } from 'react';
+import { ButtonLinkProps } from '@nx/nx-dev-ui-common';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function Enterprise(): ReactElement {
   const router = useRouter();
+
+  const ctaConfig: ButtonLinkProps[] = [
+    {
+      href: '/contact',
+      variant: 'secondary',
+      size: 'small',
+      title: 'Contact Us',
+      children: <span>Contact</span>,
+      onClick: () =>
+        sendCustomEvent('contact-click', 'header-cta', 'page-header'),
+    },
+  ];
+
+  const scrollCTAConfig: ButtonLinkProps[] = [
+    {
+      href: '/enterprise/trial',
+      variant: 'primary',
+      size: 'small',
+      title: 'Request a free trial',
+      children: 'Request a free trial',
+      onClick: () =>
+        sendCustomEvent(
+          'request-trial-click',
+          'scrolling-header-cta',
+          'enterprise'
+        ),
+    },
+  ];
 
   return (
     <>
@@ -42,7 +72,10 @@ export function Enterprise(): ReactElement {
           type: 'website',
         }}
       />
-      <EnterpriseLayout>
+      <EnterpriseLayout
+        headerCTAConfig={ctaConfig}
+        scrollCTAConfig={scrollCTAConfig}
+      >
         <div>
           <Hero />
           <CustomerLogos />

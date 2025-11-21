@@ -1,5 +1,5 @@
 import { ChevronRightIcon } from '@heroicons/react/24/solid';
-import { ProcessedDocument } from '@nx/nx-dev/models-document';
+import { ProcessedDocument } from '@nx/nx-dev-models-document';
 import classNames from 'classnames';
 
 interface Crumb {

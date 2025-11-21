@@ -4,7 +4,6 @@ import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-con
 import * as yargs from 'yargs-parser';
 
 import {
-  CreateNodes,
   CreateNodesV2,
   ProjectConfiguration,
   ProjectGraph,
@@ -64,7 +63,7 @@ export async function addPluginV1<PluginOptions>(
   tree: Tree,
   graph: ProjectGraph,
   pluginName: string,
-  createNodesTuple: CreateNodes<PluginOptions>,
+  createNodesTuple: CreateNodesV2<PluginOptions>,
   options: Partial<
     Record<keyof PluginOptions, PluginOptions[keyof PluginOptions][]>
   >,

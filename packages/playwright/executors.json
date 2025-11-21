@@ -4,6 +4,12 @@
       "implementation": "./src/executors/playwright/playwright.impl",
       "schema": "./src/executors/playwright/schema.json",
       "description": "Run Playwright tests."
+    },
+    "merge-reports": {
+      "implementation": "./src/executors/merge-reports/merge-reports.impl",
+      "schema": "./src/executors/merge-reports/schema.json",
+      "description": "Merge Playwright blob reports to produce unified reports for the configured reporters (excluding the `blob` reporter).",
+      "hidden": true
     }
   }
 }

@@ -1,11 +1,24 @@
-import { CreateNodesContext } from '@nx/devkit';
+// Needed so the current environment is not used
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  getPackageManagerCommand: jest.fn(() => ({
+    exec: 'npx',
+  })),
+}));
+
+// Needed so the current environment is not used
+jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  isUsingTsSolutionSetup: jest.fn(() => false),
+}));
+
+import { CreateNodesContextV2 } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { join } from 'path';
 
 describe('@nx/webpack/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let tempFs: TempFs;
 
   beforeEach(() => {
@@ -19,7 +32,6 @@ describe('@nx/webpack/plugin', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
-      configFiles: [],
     };
 
     tempFs.createFileSync(

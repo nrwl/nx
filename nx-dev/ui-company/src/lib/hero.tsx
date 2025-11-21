@@ -1,5 +1,5 @@
 'use client';
-import { SectionHeading, YouTube } from '@nx/nx-dev/ui-common';
+import { SectionHeading, YouTube } from '@nx/nx-dev-ui-common';
 import {
   GlobeAltIcon,
   TrophyIcon,

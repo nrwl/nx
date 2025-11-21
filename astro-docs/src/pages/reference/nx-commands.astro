@@ -1,0 +1,22 @@
+---
+import { getEntry, render } from 'astro:content';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+
+const nxCli = await getEntry('nx-reference-packages', 'nx-cli');
+if (!nxCli || !nxCli.rendered) {
+  throw new Error('No content found for nx-cli docs');
+}
+
+const { Content, headings } = await render(nxCli);
+---
+
+<StarlightPage
+  frontmatter={{
+    ...nxCli.data,
+    title: 'Nx Commands',
+    description: 'Complete reference for Nx CLI',
+  }}
+  headings={headings || []}
+>
+  <Content />
+</StarlightPage>

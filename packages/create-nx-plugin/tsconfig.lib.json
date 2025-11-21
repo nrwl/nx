@@ -1,10 +1,10 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "module": "commonjs",
-    "outDir": "../../dist/out-tsc",
-    "declaration": true,
-    "types": ["node"]
+    "outDir": "../../dist/packages/create-nx-plugin",
+    "types": ["node"],
+    "tsBuildInfoFile": "../../dist/packages/create-nx-plugin/tsconfig.tsbuildinfo"
   },
   "exclude": [
     "**/*.spec.ts",
@@ -13,5 +13,10 @@
     "**/*_test.ts",
     "jest.config.ts"
   ],
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "**/*.json"],
+  "references": [
+    {
+      "path": "../create-nx-workspace/tsconfig.lib.json"
+    }
+  ]
 }

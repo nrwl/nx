@@ -1,4 +1,8 @@
-import { NxJsonConfiguration, readJsonFile, workspaceRoot } from '@nx/devkit';
+import {
+  getDependencyVersionFromPackageJson,
+  NxJsonConfiguration,
+  workspaceRoot,
+} from '@nx/devkit';
 import {
   cleanupProject,
   exists,
@@ -10,7 +14,7 @@ import {
   tmpProjPath,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { ensureDir, readdirSync, writeFile } from 'fs-extra';
 import { join } from 'path';
 
@@ -460,10 +464,12 @@ Update the independent packages with a patch, preminor, and prerelease.
     expect(exists(join(versionPlansDir, 'bump-independent.md'))).toBe(true);
 
     // Reference the same version of yargs as nx uses to avoid compatibility issues
-    const nxPackageJson = readJsonFile(
+    const yargsVersion = getDependencyVersionFromPackageJson(
+      'yargs',
+      workspaceRoot,
       join(workspaceRoot, 'packages/nx/package.json')
     );
-    packageInstall('yargs', null, nxPackageJson.dependencies.yargs, 'dev');
+    packageInstall('yargs', null, yargsVersion, 'dev');
 
     await writeFile(
       tmpProjPath('release.js'),
@@ -493,13 +499,14 @@ const yargs = require('yargs');
     })
     .parseAsync();
 
-  const { workspaceVersion, projectsVersionData } = await releaseVersion({
+  const { workspaceVersion, projectsVersionData, releaseGraph } = await releaseVersion({
     specifier: options.version,
     dryRun: options.dryRun,
     verbose: options.verbose,
   });
 
   await releaseChangelog({
+    releaseGraph,
     versionData: projectsVersionData,
     version: workspaceVersion,
     dryRun: options.dryRun,
@@ -507,6 +514,7 @@ const yargs = require('yargs');
   });
 
   const publishProjectsResult = await releasePublish({
+    releaseGraph,
     dryRun: options.dryRun,
     verbose: options.verbose,
   });

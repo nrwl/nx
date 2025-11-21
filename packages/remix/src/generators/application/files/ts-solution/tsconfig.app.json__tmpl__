@@ -27,6 +27,8 @@
     "**/.client/**/*.tsx"
   ],
   "exclude": [
+    "jest.config.ts",
+    "jest.config.cts",
     "tests/**/*.spec.ts",
     "tests/**/*.test.ts",
     "tests/**/*.spec.tsx",

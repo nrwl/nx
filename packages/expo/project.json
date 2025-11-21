@@ -4,9 +4,14 @@
   "sourceRoot": "packages/expo/src",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/expo/README.md"],
+      "command": "node ./scripts/copy-readme.js expo"
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           "packages/expo/*.md",
           {
@@ -43,10 +48,6 @@
           "LICENSE"
         ]
       }
-    },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/expo/README.md"],
-      "command": "node ./scripts/copy-readme.js expo"
     }
   },
   "tags": []

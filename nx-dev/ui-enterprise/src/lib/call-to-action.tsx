@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ReactElement } from 'react';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function CallToAction(): ReactElement {
   return (
@@ -87,8 +87,8 @@ export function CallToAction(): ReactElement {
               prefetch={false}
               onClick={() =>
                 sendCustomEvent(
-                  'contact-team',
-                  'enterprise-bottom-cta',
+                  'contact-sales-click',
+                  'enterprise-bottom-cta-contact-team',
                   'enterprise'
                 )
               }
