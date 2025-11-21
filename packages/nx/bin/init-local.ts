@@ -3,9 +3,7 @@ import { performance } from 'perf_hooks';
 import { commandsObject } from '../src/command-line/nx-commands';
 import { WorkspaceTypeAndRoot } from '../src/utils/find-workspace-root';
 import { stripIndents } from '../src/utils/strip-indents';
-import { daemonClient } from '../src/daemon/client/client';
-import { prompt } from 'enquirer';
-import { output } from '../src/utils/output';
+import { ensureNxConsoleInstalled } from '../src/utils/nx-console-prompt';
 
 /**
  * Nx is being run inside a workspace.
@@ -35,7 +33,7 @@ export async function initLocal(workspace: WorkspaceTypeAndRoot) {
 
     // Ensure NxConsole is installed if the user has it configured.
     try {
-      await ensureNxConsoleInstalledViaDaemon();
+      await ensureNxConsoleInstalled();
     } catch {}
 
     const command = process.argv[2];
@@ -121,51 +119,6 @@ function shouldDelegateToAngularCLI() {
     'update',
   ];
   return commands.indexOf(command) > -1;
-}
-
-async function ensureNxConsoleInstalledViaDaemon(): Promise<void> {
-  // Only proceed if daemon is available
-  if (!daemonClient.enabled()) {
-    return;
-  }
-
-  // Get status from daemon
-  const status = await daemonClient.getNxConsoleStatus();
-
-  // If we should prompt the user
-  if (status.shouldPrompt && process.stdout.isTTY) {
-    output.log({
-      title: "Install Nx's official editor extension to:",
-      bodyLines: [
-        '- Enable your AI assistant to do more by understanding your workspace',
-        '- Add IntelliSense for Nx configuration files',
-        '- Explore your workspace visually',
-      ],
-    });
-
-    try {
-      const { shouldInstallNxConsole } = await prompt<{
-        shouldInstallNxConsole: boolean;
-      }>({
-        type: 'confirm',
-        name: 'shouldInstallNxConsole',
-        message: 'Install Nx Console? (you can uninstall anytime)',
-        initial: true,
-      });
-
-      // Set preference and install if user said yes
-      const result = await daemonClient.setNxConsolePreferenceAndInstall(
-        shouldInstallNxConsole
-      );
-
-      if (result.installed) {
-        output.log({ title: 'Successfully installed Nx Console!' });
-      }
-    } catch (error) {
-      // User cancelled or error occurred, save preference as false
-      await daemonClient.setNxConsolePreferenceAndInstall(false);
-    }
-  }
 }
 
 function handleAngularCLIFallbacks(workspace: WorkspaceTypeAndRoot) {
