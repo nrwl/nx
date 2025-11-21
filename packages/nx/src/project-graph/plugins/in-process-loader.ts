@@ -78,7 +78,7 @@ export async function loadNxPluginAsync(
       registerPluginTSTranspiler();
     }
     const { loadResolvedNxPluginAsync } = await import(
-      './load-resolved-plugin'
+      './load-resolved-plugin.js'
     );
     return loadResolvedNxPluginAsync(pluginConfiguration, pluginPath, name);
   } catch (e) {

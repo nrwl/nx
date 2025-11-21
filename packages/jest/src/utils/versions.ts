@@ -1,7 +1,7 @@
 import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
 
-const nxVersion = require('../../package.json').version;
+const nxVersion = require('nx/package.json').version;
 
 export const latestVersions = {
   nxVersion,

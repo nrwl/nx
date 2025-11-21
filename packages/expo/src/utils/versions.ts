@@ -1,4 +1,4 @@
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require('nx/package.json').version;
 
 export const expoVersion = '~53.0.10';
 export const expoSplashScreenVersion = '~0.30.9';

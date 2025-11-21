@@ -2,7 +2,7 @@ import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { clean, coerce, major } from 'semver';
 
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require('nx/package.json').version;
 export const eslintPluginCypressVersion = '^3.5.0';
 export const typesNodeVersion = '20.19.9';
 export const cypressViteDevServerVersion = '^7.0.1';

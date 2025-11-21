@@ -5,9 +5,17 @@
     "declaration": true,
     "types": ["node"],
     "composite": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "customConditions": null
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
+  "exclude": [
+    "jest.config.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "src/generators/create-nodes-plugin/files/src/migrations/update-17-2-0"
+  ],
   "references": []
 }
