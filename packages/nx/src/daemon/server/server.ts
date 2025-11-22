@@ -8,12 +8,11 @@ import {
   consumeMessagesFromSocket,
   isJsonMessage,
 } from '../../utils/consume-messages-from-socket';
-import { readJsonFile } from '../../utils/fileutils';
-import { PackageJson } from '../../utils/package-json';
 import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
+import { isNxVersionMismatch } from '../is-nx-version-mismatch';
 import {
   getFullOsSocketPath,
   isWindows,
@@ -509,28 +508,12 @@ function registerProcessTerminationListeners() {
 let existingLockHash: string | undefined;
 
 function daemonIsOutdated(): string | null {
-  if (nxVersionChanged()) {
+  if (isNxVersionMismatch()) {
     return 'NX_VERSION_CHANGED';
   } else if (lockFileHashChanged()) {
     return 'LOCK_FILES_CHANGED';
   }
   return null;
-}
-
-function nxVersionChanged(): boolean {
-  return nxVersion !== getInstalledNxVersion();
-}
-
-const nxPackageJsonPath = require.resolve('nx/package.json');
-
-function getInstalledNxVersion() {
-  try {
-    const { version } = readJsonFile<PackageJson>(nxPackageJsonPath);
-    return version;
-  } catch (e) {
-    // node modules are absent, so we can return null, which would shut down the daemon
-    return null;
-  }
 }
 
 function lockFileHashChanged(): boolean {
@@ -660,9 +643,13 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
 export async function startServer(): Promise<Server> {
   setupWorkspaceContext(workspaceRoot);
 
+  const socketPath = getFullOsSocketPath();
+
   // Persist metadata about the background process so that it can be cleaned up later if needed
   await writeDaemonJsonProcessCache({
     processId: process.pid,
+    socketPath,
+    nxVersion,
   });
 
   // See notes in socket-command-line-utils.ts on OS differences regarding clean up of existings connections.
@@ -682,9 +669,9 @@ export async function startServer(): Promise<Server> {
 
   return new Promise(async (resolve, reject) => {
     try {
-      server.listen(getFullOsSocketPath(), async () => {
+      server.listen(socketPath, async () => {
         try {
-          serverLogger.log(`Started listening on: ${getFullOsSocketPath()}`);
+          serverLogger.log(`Started listening on: ${socketPath}`);
 
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
