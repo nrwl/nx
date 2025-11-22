@@ -42,6 +42,7 @@ import {
   getProjects,
   updateProjectConfiguration,
 } from '../generators/utils/project-configuration';
+import { readNxJson } from '../generators/utils/nx-json';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
@@ -74,7 +75,11 @@ import {
   resolveImplementation,
   resolveSchema,
 } from '../config/schema-utils';
-import { resolveNxTokensInOptions } from '../project-graph/utils/project-configuration-utils';
+import {
+  mergeTargetDefaultWithTargetDefinition,
+  readTargetDefaultsForTarget,
+  resolveNxTokensInOptions,
+} from '../project-graph/utils/project-configuration-utils';
 
 export async function createBuilderContext(
   builderInfo: {
@@ -730,26 +735,60 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
     ) {
       // Replace the Nx-specific tokens in all target options
       const projects = Object.fromEntries(getProjects(this.host));
+
+      // Read nx.json once for performance
+      const nxJson = readNxJson(this.host);
+
       for (const [projectName, project] of Object.entries(projects)) {
-        if (project.targets) {
-          for (const [targetName, target] of Object.entries(project.targets)) {
-            if (target.options) {
-              target.options = resolveNxTokensInOptions(
-                target.options,
-                { ...project, name: projectName },
-                `${projectName}:${targetName}`
-              );
+        if (!project.targets) {
+          continue;
+        }
+
+        for (const [targetName, target] of Object.entries(project.targets)) {
+          // Merge targetDefaults into project configuration
+          if (nxJson?.targetDefaults) {
+            const targetDefaults = readTargetDefaultsForTarget(
+              targetName,
+              nxJson.targetDefaults,
+              target.executor
+            );
+            if (targetDefaults) {
+              // mergeTargetDefaultWithTargetDefinition returns a new object, no side effects
+              project.targets[targetName] =
+                mergeTargetDefaultWithTargetDefinition(
+                  targetName,
+                  project,
+                  targetDefaults,
+                  {}
+                );
             }
-            if (target.configurations) {
-              for (const [configName, config] of Object.entries(
-                target.configurations
-              )) {
-                target.configurations[configName] = resolveNxTokensInOptions(
+          }
+
+          // Use merged target for token resolution
+          // Note: mergeTargetDefaultWithTargetDefinition preserves tokens in the result,
+          // so we need to resolve them here for Angular DevKit
+          const currentTarget = project.targets[targetName];
+
+          // Resolve tokens in all options (both from project and merged defaults)
+          if (currentTarget?.options) {
+            currentTarget.options = resolveNxTokensInOptions(
+              currentTarget.options,
+              { ...project, name: projectName },
+              `${projectName}:${targetName}`
+            );
+          }
+
+          // Resolve tokens in all configurations
+          if (currentTarget?.configurations) {
+            for (const [configName, config] of Object.entries(
+              currentTarget.configurations
+            )) {
+              currentTarget.configurations[configName] =
+                resolveNxTokensInOptions(
                   config,
                   { ...project, name: projectName },
                   `${projectName}:${targetName}:${configName}`
                 );
-              }
             }
           }
         }

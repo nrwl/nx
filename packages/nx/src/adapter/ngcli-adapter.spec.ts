@@ -133,3 +133,232 @@ describe('ngcli-adapter', () => {
     });
   });
 });
+
+describe('NxScopeHostUsedForWrappedSchematics', () => {
+  beforeEach(() => {
+    jest.resetModules();
+  });
+
+  it('should merge target defaults into project configuration', async () => {
+    const { NxScopeHostUsedForWrappedSchematics } = require('./ngcli-adapter');
+    const tree = createTreeWithEmptyWorkspace();
+    const projectConfig = {
+      root: 'libs/lib1',
+      sourceRoot: 'libs/lib1/src',
+      projectType: 'library',
+      targets: {
+        build: {
+          executor: '@nx/angular:package',
+          options: {},
+        },
+      },
+    };
+    addProjectConfiguration(tree, 'lib1', projectConfig as any);
+
+    // Mock nx.json with target defaults (mock from the actual import source)
+    const nxJsonUtils = require('../generators/utils/nx-json');
+    jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({
+      targetDefaults: {
+        build: {
+          options: {
+            project: 'libs/lib1/ng-package.json',
+          },
+        },
+      },
+    });
+
+    // Mock isAngularPluginInstalled to return true so the adapter logic triggers
+    const angularJsonUtils = require('./angular-json');
+    jest
+      .spyOn(angularJsonUtils, 'isAngularPluginInstalled')
+      .mockReturnValue(true);
+
+    const host = new NxScopeHostUsedForWrappedSchematics(tree.root, tree);
+
+    // Read angular.json which should trigger the merging logic
+    const content = await host.read('angular.json').toPromise();
+    const angularJson = JSON.parse(arrayBufferToString(content));
+
+    // Verify that the build target has the merged option
+    expect(angularJson.projects.lib1.architect.build.options.project).toEqual(
+      'libs/lib1/ng-package.json'
+    );
+  });
+
+  it('should resolve tokens in merged target defaults', async () => {
+    const { NxScopeHostUsedForWrappedSchematics } = require('./ngcli-adapter');
+    const tree = createTreeWithEmptyWorkspace();
+    const projectConfig = {
+      root: 'libs/lib1',
+      sourceRoot: 'libs/lib1/src',
+      projectType: 'library',
+      targets: {
+        build: {
+          executor: '@nx/angular:package',
+          options: {},
+        },
+      },
+    };
+    addProjectConfiguration(tree, 'lib1', projectConfig as any);
+
+    // Mock nx.json with target defaults containing tokens
+    const nxJsonUtils = require('../generators/utils/nx-json');
+    jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({
+      targetDefaults: {
+        build: {
+          options: {
+            project: '{projectRoot}/ng-package.json',
+          },
+        },
+      },
+    });
+
+    // Mock isAngularPluginInstalled to return true so the adapter logic triggers
+    const angularJsonUtils = require('./angular-json');
+    jest
+      .spyOn(angularJsonUtils, 'isAngularPluginInstalled')
+      .mockReturnValue(true);
+
+    const host = new NxScopeHostUsedForWrappedSchematics(tree.root, tree);
+
+    // Read angular.json which should trigger the merging and token resolution
+    const content = await host.read('angular.json').toPromise();
+    const angularJson = JSON.parse(arrayBufferToString(content));
+
+    // Verify that the build target has the merged option with resolved token
+    expect(angularJson.projects.lib1.architect.build.options.project).toEqual(
+      'libs/lib1/ng-package.json'
+    );
+  });
+
+  it('should handle target without executor', async () => {
+    const { NxScopeHostUsedForWrappedSchematics } = require('./ngcli-adapter');
+    const tree = createTreeWithEmptyWorkspace();
+    const projectConfig = {
+      root: 'libs/lib1',
+      sourceRoot: 'libs/lib1/src',
+      projectType: 'library',
+      targets: {
+        build: {
+          // No executor
+          options: {},
+        },
+      },
+    };
+    addProjectConfiguration(tree, 'lib1', projectConfig as any);
+
+    const nxJsonUtils = require('../generators/utils/nx-json');
+    jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({
+      targetDefaults: {
+        build: {
+          options: {
+            project: '{projectRoot}/ng-package.json',
+          },
+        },
+      },
+    });
+
+    const angularJsonUtils = require('./angular-json');
+    jest
+      .spyOn(angularJsonUtils, 'isAngularPluginInstalled')
+      .mockReturnValue(true);
+
+    const host = new NxScopeHostUsedForWrappedSchematics(tree.root, tree);
+    const content = await host.read('angular.json').toPromise();
+    const angularJson = JSON.parse(arrayBufferToString(content));
+
+    // Should still merge and resolve tokens even without executor
+    expect(angularJson.projects.lib1.architect.build.options.project).toEqual(
+      'libs/lib1/ng-package.json'
+    );
+  });
+
+  it('should merge configurations from targetDefaults', async () => {
+    const { NxScopeHostUsedForWrappedSchematics } = require('./ngcli-adapter');
+    const tree = createTreeWithEmptyWorkspace();
+    const projectConfig = {
+      root: 'libs/lib1',
+      sourceRoot: 'libs/lib1/src',
+      projectType: 'library',
+      targets: {
+        build: {
+          executor: '@nx/angular:package',
+          options: {},
+        },
+      },
+    };
+    addProjectConfiguration(tree, 'lib1', projectConfig as any);
+
+    const nxJsonUtils = require('../generators/utils/nx-json');
+    jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({
+      targetDefaults: {
+        build: {
+          options: {
+            project: '{projectRoot}/ng-package.json',
+          },
+          configurations: {
+            production: {
+              tsConfig: '{projectRoot}/tsconfig.lib.prod.json',
+            },
+          },
+        },
+      },
+    });
+
+    const angularJsonUtils = require('./angular-json');
+    jest
+      .spyOn(angularJsonUtils, 'isAngularPluginInstalled')
+      .mockReturnValue(true);
+
+    const host = new NxScopeHostUsedForWrappedSchematics(tree.root, tree);
+    const content = await host.read('angular.json').toPromise();
+    const angularJson = JSON.parse(arrayBufferToString(content));
+
+    // Verify configurations are merged and tokens resolved
+    expect(
+      angularJson.projects.lib1.architect.build.configurations.production
+        .tsConfig
+    ).toEqual('libs/lib1/tsconfig.lib.prod.json');
+  });
+
+  it('should handle missing nx.json gracefully', async () => {
+    const { NxScopeHostUsedForWrappedSchematics } = require('./ngcli-adapter');
+    const tree = createTreeWithEmptyWorkspace();
+    const projectConfig = {
+      root: 'libs/lib1',
+      sourceRoot: 'libs/lib1/src',
+      projectType: 'library',
+      targets: {
+        build: {
+          executor: '@nx/angular:package',
+          options: {
+            project: '{projectRoot}/ng-package.json',
+          },
+        },
+      },
+    };
+    addProjectConfiguration(tree, 'lib1', projectConfig as any);
+
+    const nxJsonUtils = require('../generators/utils/nx-json');
+    jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue(null);
+
+    const angularJsonUtils = require('./angular-json');
+    jest
+      .spyOn(angularJsonUtils, 'isAngularPluginInstalled')
+      .mockReturnValue(true);
+
+    const host = new NxScopeHostUsedForWrappedSchematics(tree.root, tree);
+    const content = await host.read('angular.json').toPromise();
+    const angularJson = JSON.parse(arrayBufferToString(content));
+
+    // Should still resolve tokens in project options
+    expect(angularJson.projects.lib1.architect.build.options.project).toEqual(
+      'libs/lib1/ng-package.json'
+    );
+  });
+
+  // Note: When mergeTargetDefaultWithTargetDefinition is called with an empty sourceMap ({}),
+  // the merge behavior depends on targetDefaultShouldBeApplied which may allow defaults
+  // to override project-specific values in certain scenarios. This is consistent with
+  // Nx's merge semantics when no source tracking is available.
+});
