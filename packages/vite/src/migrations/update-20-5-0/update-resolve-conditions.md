@@ -5,18 +5,15 @@ This default was removed in Vite 6, so this migration adds it to your existing c
 
 Learn more: [https://vite.dev/guide/migration#default-value-for-resolve-conditions](https://vite.dev/guide/migration#default-value-for-resolve-conditions)
 
-{% callout type="note" title="Remix" %}
-
+:::note[Remix]
 Remix does not currently support Vite 6 and therefore any `vite.config` file for Remix will not be migrated.
-
-{% /callout %}
+:::
 
 #### Sample Code Changes
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```typescript {% fileName="vite.config.ts" %}
+```typescript title="vite.config.ts"
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -29,10 +26,9 @@ export default defineConfig({
 });
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```typescript {% highlightLines=[4,5,6] fileName="vite.config.ts" %}
+```typescript title="vite.config.ts" {4-6}
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -44,6 +40,3 @@ export default defineConfig({
   },
 });
 ```
-
-{% /tab %}
-{% /tabs %}

@@ -22,7 +22,7 @@ import dependencyChecks, {
 } from './rules/dependency-checks';
 
 // Resolve any custom rules that might exist in the current workspace
-import { workspaceRules } from './resolve-workspace-rules';
+import { workspaceRules, loadWorkspaceRules } from './resolve-workspace-rules';
 
 const configs = {
   // eslintrc configs
@@ -72,4 +72,4 @@ const rules = {
 };
 
 export default { configs, rules };
-export { configs, rules };
+export { configs, rules, loadWorkspaceRules };

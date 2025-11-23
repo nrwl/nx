@@ -154,12 +154,18 @@ export async function viteConfigurationGeneratorInternal(
           ],
           plugins: ['react()'],
           port: schema.port,
+          useEsmExtension: true,
         },
         false,
         undefined
       );
     } else {
-      createOrEditViteConfig(tree, schema, false, projectAlreadyHasViteTargets);
+      createOrEditViteConfig(
+        tree,
+        { ...schema, useEsmExtension: true },
+        false,
+        projectAlreadyHasViteTargets
+      );
     }
   }
 

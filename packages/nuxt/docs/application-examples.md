@@ -41,50 +41,36 @@ Your new app will contain the following:
 
 ## Examples
 
-{% tabs %}
-{% tab label="Create app in a nested directory" %}
+##### Create app in a nested directory
 
 ```shell
 nx g @nx/nuxt:app apps/nested/myapp
 ```
 
-{% /tab %}
-
-{% tab label="Create app with vitest configured" %}
+##### Create app with vitest configured
 
 ```shell
 nx g @nx/nuxt:app apps/nested/myapp --unitTestRunner=vitest
 ```
 
-{% /tab %}
-
-{% tab label="Use plain JavaScript (not TypeScript)" %}
+##### Use plain JavaScript (not TypeScript)
 
 ```shell
 nx g @nx/nuxt:app apps/myapp --js
 ```
 
-{% /tab %}
-{% /tabs %}
-
 ## Generate pages and components
 
 You can use the the [`@nx/vue:component` generator](/nx-api/vue/generators/component) to generate new pages and components for your application. You can read more on the [`@nx/vue:component` generator documentation page](/nx-api/vue/generators/component), but here are some examples:
 
-{% tabs %}
-{% tab label="New page" %}
+##### New page
 
 ```shell
 nx g @nx/nuxt:component my-app/src/pages/my-page
 ```
 
-{% /tab %}
-
-{% tab label="New component" %}
+##### New component
 
 ```shell
 nx g @nx/nuxt:component my-app/src/components/my-cmp
 ```
-
-{% /tab %}
-{% /tabs %}

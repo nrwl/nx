@@ -6,20 +6,14 @@ Read more in the [migration guide](https://docs.cypress.io/app/references/migrat
 
 #### Examples
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/dashboard/src/app/app.component.cy.ts" %}
+```ts title="apps/dashboard/src/app/app.component.cy.ts"
 import { mount } from 'cypress/angular';
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```ts {% fileName="apps/dashboard/src/app/app.component.cy.ts" %}
+```ts title="apps/dashboard/src/app/app.component.cy.ts"
 import { mount } from '@cypress/angular';
 ```
-
-{% /tab %}
-{% /tabs %}

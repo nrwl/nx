@@ -6,10 +6,9 @@ Replace the TypeScript `development` custom condition with a unique workspace-sp
 
 The migration will update the custom condition name in both `tsconfig.base.json` and all workspace package.json files that use the `development` custom condition:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="tsconfig.base.json" highlightLines=["3"] %}
+```json title="tsconfig.base.json" {3}
 {
   "compilerOptions": {
     "customConditions": ["development"]
@@ -17,11 +16,9 @@ The migration will update the custom condition name in both `tsconfig.base.json`
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="tsconfig.base.json" highlightLines=["3"] %}
+```json title="tsconfig.base.json" {3}
 {
   "compilerOptions": {
     "customConditions": ["@my-org/source"] // assuming the root package.json name is `@my-org/source`
@@ -29,15 +26,11 @@ The migration will update the custom condition name in both `tsconfig.base.json`
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 The migration also updates `package.json` files that use the `development` condition in their `exports` field and point to TypeScript files:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="libs/my-lib/package.json" highlightLines=["5"] %}
+```json title="libs/my-lib/package.json" {5}
 {
   "name": "@myorg/my-lib",
   "exports": {
@@ -49,11 +42,9 @@ The migration also updates `package.json` files that use the `development` condi
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="libs/my-lib/package.json" highlightLines=["5"] %}
+```json title="libs/my-lib/package.json" {5}
 {
   "name": "@myorg/my-lib",
   "exports": {
@@ -65,15 +56,11 @@ The migration also updates `package.json` files that use the `development` condi
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 If the custom condition is not set to `["development"]` or the `package.json`'s `exports` field doesn't point to TypeScript files, the migration will not modify the configuration:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="libs/my-lib/package.json" highlightLines=["5"] %}
+```json title="libs/my-lib/package.json" {5}
 {
   "name": "@myorg/my-lib",
   "exports": {
@@ -85,11 +72,9 @@ If the custom condition is not set to `["development"]` or the `package.json`'s 
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="libs/my-lib/package.json" highlightLines=["5"] %}
+```json title="libs/my-lib/package.json" {5}
 {
   "name": "@myorg/my-lib",
   "exports": {
@@ -100,6 +85,3 @@ If the custom condition is not set to `["development"]` or the `package.json`'s 
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

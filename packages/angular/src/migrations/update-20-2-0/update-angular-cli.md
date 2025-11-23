@@ -6,10 +6,9 @@ Update the version of the Angular CLI if it is specified in `package.json`
 
 Update in `devDependencies`:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="package.json" %}
+```json title="package.json"
 {
   "devDependencies": {
     "@angular/cli": "~13.3.0"
@@ -17,26 +16,21 @@ Update in `devDependencies`:
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="package.json" %}
+```json title="package.json"
 {
   "devDependencies": {
     "@angular/cli": "~19.0.0"
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 Update in `dependencies`:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="package.json" %}
+```json title="package.json"
 {
   "dependencies": {
     "@angular/cli": "~13.3.0"
@@ -44,16 +38,12 @@ Update in `dependencies`:
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="package.json" %}
+```json title="package.json"
 {
   "dependencies": {
     "@angular/cli": "~19.0.0"
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

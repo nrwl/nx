@@ -6,20 +6,14 @@ Read more in the [migration guide](https://docs.cypress.io/app/references/migrat
 
 #### Examples
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/app-e2e/src/e2e/sample.cy.ts" %}
+```ts title="apps/app-e2e/src/e2e/sample.cy.ts"
 cy.exec('echo 0').its('code').should('eq', 0);
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```ts {% fileName="apps/app-e2e/src/e2e/sample.cy.ts" %}
+```ts title="apps/app-e2e/src/e2e/sample.cy.ts"
 cy.exec('echo 0').its('exitCode').should('eq', 0);
 ```
-
-{% /tab %}
-{% /tabs %}

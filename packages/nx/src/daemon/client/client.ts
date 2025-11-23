@@ -100,17 +100,10 @@ import {
   PRE_TASKS_EXECUTION,
 } from '../message-types/run-tasks-execution-hooks';
 import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
-import {
-  GET_NX_CONSOLE_STATUS,
-  type HandleGetNxConsoleStatusMessage,
-  type HandleSetNxConsolePreferenceAndInstallMessage,
-  type NxConsoleStatusResponse,
-  SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
-  type SetNxConsolePreferenceAndInstallResponse,
-} from '../message-types/nx-console';
 import { deserialize } from 'node:v8';
 import { isJsonMessage } from '../../utils/consume-messages-from-socket';
 import { isV8SerializerEnabled } from '../is-v8-serializer-enabled';
+import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -231,6 +224,7 @@ export class DaemonClient {
     projectGraph: ProjectGraph;
     sourceMaps: ConfigurationSourceMaps;
   }> {
+    preventRecursionInGraphConstruction();
     let spinner: DelayedSpinner;
     // If the graph takes a while to load, we want to show a spinner.
     spinner = new DelayedSpinner(
@@ -554,23 +548,6 @@ export class DaemonClient {
     const message: HandlePostTasksExecutionMessage = {
       type: POST_TASKS_EXECUTION,
       context,
-    };
-    return this.sendToDaemonViaQueue(message);
-  }
-
-  getNxConsoleStatus(): Promise<NxConsoleStatusResponse> {
-    const message: HandleGetNxConsoleStatusMessage = {
-      type: GET_NX_CONSOLE_STATUS,
-    };
-    return this.sendToDaemonViaQueue(message);
-  }
-
-  setNxConsolePreferenceAndInstall(
-    preference: boolean
-  ): Promise<SetNxConsolePreferenceAndInstallResponse> {
-    const message: HandleSetNxConsolePreferenceAndInstallMessage = {
-      type: SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
-      preference,
     };
     return this.sendToDaemonViaQueue(message);
   }

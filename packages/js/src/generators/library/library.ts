@@ -149,6 +149,7 @@ export async function libraryGeneratorInternal(
         includeLib: true,
         includeVitest: options.unitTestRunner === 'vitest',
         testEnvironment: options.testEnvironment,
+        useEsmExtension: true,
       },
       false
     );

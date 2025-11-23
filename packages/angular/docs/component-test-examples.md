@@ -1,8 +1,8 @@
-{% callout type="caution" title="Can I use component testing?" %}
+:::caution[Can I use component testing?]
 Angular component testing with Nx requires **Cypress version 10.7.0** and up.
 
 You can migrate with to v11 via the [migrate-to-cypress-11 generator](/nx-api/cypress/generators/migrate-to-cypress-11).
-{% /callout %}
+:::
 
 This generator is used to create a Cypress component test file for a given Angular component.
 

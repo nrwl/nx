@@ -18,6 +18,11 @@ import type {
 import { isIsolationEnabled } from './isolation/enabled';
 import { isDaemonEnabled } from '../../daemon/client/client';
 
+/**
+ * NOTE: Avoid using `import type` with this class. It causes issues with
+ * jest's module resolution when running tests in projects that import
+ * the devkit-internals
+ */
 export class LoadedNxPlugin {
   index?: number;
   readonly name: string;

@@ -96,6 +96,13 @@ export class PromptMessages {
 
 export const messages = new PromptMessages();
 
+function getCloudUrl(): string {
+  const url =
+    process.env.NX_CLOUD_API || process.env.NRWL_API || 'https://cloud.nx.app';
+  // Remove trailing slash if present
+  return url[url.length - 1] === '/' ? url.slice(0, -1) : url;
+}
+
 /**
  * We are incrementing a counter to track how often create-nx-workspace is used in CI
  * vs dev environments. No personal information is collected.
@@ -113,14 +120,14 @@ export async function recordStat(opts: {
     const axios = require('axios');
     await (axios['default'] ?? axios)
       .create({
-        baseURL: 'https://cloud.nx.app',
+        baseURL: getCloudUrl(),
         timeout: 400,
       })
       .post('/nx-cloud/stats', {
         command: opts.command,
         isCI: isCI(),
         useCloud: opts.useCloud,
-        meta: opts.meta.filter((v) => !!v).join(','),
+        meta: [opts.nxVersion, ...opts.meta].filter((v) => !!v).join(','),
       });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {

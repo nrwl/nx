@@ -17,7 +17,7 @@ common-init-steps: &common-init-steps
     uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
     inputs:
       key: 'pnpm-lock.yaml'
-      paths: .pnpm-store
+      paths: ~/.local/share/pnpm/store
       base-branch: 'master'
 
   # reads mise.toml and installs toolchains needed for repo

@@ -88,7 +88,7 @@ export interface NxAppWebpackPluginOptions {
    * Define external packages that will not be bundled.
    * Use `all` to exclude all 3rd party packages, and `none` to bundle all packages.
    * Use an array to exclude specific packages from the bundle.
-   * Default is `none`.
+   * Default is `all`.
    */
   externalDependencies?: 'all' | 'none' | string[];
   /**

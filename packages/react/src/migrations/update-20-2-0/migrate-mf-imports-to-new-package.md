@@ -6,27 +6,22 @@ Update the ModuleFederationConfig imports to use @nx/module-federation.
 
 Update import paths for ModuleFederationConfig.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```js {% fileName="apps/shell/webpack.config.js" %}
+```js title="apps/shell/webpack.config.js"
 import { ModuleFederationConfig } from '@nx/webpack';
 ```
 
-```js {% fileName="apps/shell/rspack.config.js" %}
+```js title="apps/shell/rspack.config.js"
 import { ModuleFederationConfig } from '@nx/rspack/module-federation';
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```js {% fileName="apps/shell/webpack.config.js" %}
+```js title="apps/shell/webpack.config.js"
 import { ModuleFederationConfig } from '@nx/module-federation';
 ```
 
-```js {% fileName="apps/shell/rspack.config.js" %}
+```js title="apps/shell/rspack.config.js"
 import { ModuleFederationConfig } from '@nx/module-federation';
 ```
-
-{% /tab %}
-{% /tabs %}

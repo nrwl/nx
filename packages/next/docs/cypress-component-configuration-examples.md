@@ -1,4 +1,4 @@
-{% callout type="caution" title="Can I use component testing?" %}
+:::caution[Can I use component testing?]
 Next component testing with Nx requires **Cypress version 10.7.0** and up.
 
 You can migrate with to v11 via the [migrate-to-cypress-11 generator](/nx-api/cypress/generators/migrate-to-cypress-11).
@@ -6,7 +6,7 @@ You can migrate with to v11 via the [migrate-to-cypress-11 generator](/nx-api/cy
 This generator is for Cypress based component testing.
 
 If you want to test components via Storybook with Cypress, then check out the [storybook-configuration generator docs](/nx-api/react/generators/storybook-configuration). However, this functionality is deprecated, and will be removed on Nx version 19.
-{% /callout %}
+:::
 
 This generator is designed to get your Next project up and running with Cypress Component Testing.
 
@@ -16,7 +16,7 @@ nx g @nx/next:cypress-component-configuration --project=my-cool-next-project
 
 Running this generator, adds the required files to the specified project with a preconfigured `cypress.config.ts` designed for Nx workspaces.
 
-```ts {% fileName="cypress.config.ts" %}
+```ts title="cypress.config.ts"
 import { defineConfig } from 'cypress';
 import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
 
@@ -27,7 +27,7 @@ export default defineConfig({
 
 Here is an example on how to add custom options to the configuration
 
-```ts {% fileName="cypress.config.ts" %}
+```ts title="cypress.config.ts"
 import { defineConfig } from 'cypress';
 import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
 
@@ -61,7 +61,7 @@ nx g component-test my-cool-next-project
 
 Here is an example of the project configuration that is generated.
 
-```json {% fileName="project.json" %}
+```json title="project.json"
 {
   "targets" {
     "component-test": {

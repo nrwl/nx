@@ -4,10 +4,9 @@ Removes the `experimentalFetchPolyfill` configuration option that was removed in
 
 #### Examples
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/app1-e2e/cypress.config.ts" %}
+```ts title="apps/app1-e2e/cypress.config.ts"
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
 
@@ -29,11 +28,9 @@ export default defineConfig({
 });
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```ts {% fileName="apps/app1-e2e/cypress.config.ts" %}
+```ts title="apps/app1-e2e/cypress.config.ts"
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
 
@@ -53,7 +50,3 @@ export default defineConfig({
   },
 });
 ```
-
-{% /tab %}
-
-{% /tabs %}

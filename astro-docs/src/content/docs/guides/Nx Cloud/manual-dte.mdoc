@@ -43,8 +43,6 @@ jobs:
         name: Checkout [Pull Request]
         if: ${{ github.event_name == 'pull_request' }}
         with:
-          # By default, PRs will be checked-out based on the Merge Commit, but we want the actual branch HEAD.
-          ref: ${{ github.event.pull_request.head.sha }}
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
           filter: tree:0

@@ -9,7 +9,7 @@ declare module '@remix-run/node' {
 }
 
 export default defineConfig({
-  root: __dirname,
+  root: import.meta.dirname,
   plugins: [
     remix({
       future: {

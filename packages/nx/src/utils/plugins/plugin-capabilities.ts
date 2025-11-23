@@ -9,7 +9,7 @@ import { getNxRequirePaths } from '../installation-directory';
 import { readPluginPackageJson } from '../../project-graph/plugins';
 import { loadNxPlugin } from '../../project-graph/plugins/in-process-loader';
 import { PackageJson } from '../package-json';
-import { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
+import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 
 export interface PluginCapabilities {
   name: string;

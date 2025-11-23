@@ -6,10 +6,9 @@ The data persistence operators (`fetch`, `navigation`, `optimisticUpdate`, and `
 
 If you import only data persistence operators from `@nx/angular`, the migration will update the import path to `@ngrx/router-store/data-persistence`.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/app1/src/app/users/users.effects.ts" highlightLines=[2] %}
+```ts title="apps/app1/src/app/users/users.effects.ts" {2}
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { fetch } from '@nx/angular';
 
@@ -19,11 +18,9 @@ export class UsersEffects {
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```ts {% fileName="apps/app1/src/app/users/users.effects.ts" highlightLines=[2] %}
+```ts title="apps/app1/src/app/users/users.effects.ts" {2}
 import { Injectable } from '@angular/core';
 import { fetch } from '@ngrx/router-store/data-persistence';
 
@@ -33,15 +30,11 @@ export class UsersEffects {
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 If you import multiple data persistence operators from `@nx/angular`, the migration will update the import path for all of them.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/app1/src/app/users/users.effects.ts" highlightLines=[2] %}
+```ts title="apps/app1/src/app/users/users.effects.ts" {2}
 import { Injectable } from '@angular/core';
 import { fetch, navigation } from '@nx/angular';
 
@@ -51,11 +44,9 @@ export class UsersEffects {
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```ts {% fileName="apps/app1/src/app/users/users.effects.ts" highlightLines=[2] %}
+```ts title="apps/app1/src/app/users/users.effects.ts" {2}
 import { Injectable } from '@angular/core';
 import { fetch, navigation } from '@ngrx/router-store/data-persistence';
 
@@ -65,17 +56,11 @@ export class UsersEffects {
 }
 ```
 
-{% /tab %}
-
-{% /tab %}
-{% /tabs %}
-
 If your imports mix data persistence operators with other utilities from `@nx/angular`, the migration will split them into separate import statements.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/app1/src/app/users/users.effects.ts" highlightLines=[2] %}
+```ts title="apps/app1/src/app/users/users.effects.ts" {2}
 import { Injectable } from '@angular/core';
 import { fetch, someExtraUtility, navigation } from '@nx/angular';
 
@@ -85,11 +70,9 @@ export class UsersEffects {
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```ts {% fileName="apps/app1/src/app/users/users.effects.ts" highlightLines=[2,3] %}
+```ts title="apps/app1/src/app/users/users.effects.ts" {2-3}
 import { Injectable } from '@angular/core';
 import { fetch, navigation } from '@ngrx/router-store/data-persistence';
 import { someExtraUtility } from '@nx/angular';
@@ -100,15 +83,11 @@ export class UsersEffects {
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 If you don't already have `@ngrx/router-store` in your dependencies, the migration will add it to your package.json.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```jsonc {% fileName="package.json" %}
+```jsonc title="package.json"
 {
   "dependencies": {
     "@nx/angular": "^21.0.0",
@@ -119,11 +98,9 @@ If you don't already have `@ngrx/router-store` in your dependencies, the migrati
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```jsonc {% fileName="package.json" highlightLines=[6] %}
+```jsonc title="package.json" {6}
 {
   "dependencies": {
     "@nx/angular": "^21.0.0",
@@ -134,6 +111,3 @@ If you don't already have `@ngrx/router-store` in your dependencies, the migrati
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

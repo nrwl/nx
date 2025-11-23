@@ -1,8 +1,8 @@
-{% tabs %}
-{% tab label="Including Dependencies" %}
+##### Including Dependencies
+
 To include dependencies in the output `package.json`, the dependencies must be installed as a **dependencies** in the root `package.json`
 
-```json {% fileName="package.json" %}
+```json title="package.json"
 {
   "dependencies": {
     "some-dependency": "^1.0.0"
@@ -10,9 +10,7 @@ To include dependencies in the output `package.json`, the dependencies must be i
 }
 ```
 
-{% /tab %}
-
-{% tab label="Using `babelUpwardRootMode`" %}
+##### Using `babelUpwardRootMode`
 
 Copying from the [Babel documentation](https://babeljs.io/docs/config-files#root-babelconfigjson-file):
 
@@ -64,7 +62,3 @@ All packages will use its own `.babelrc` file, thus you must ensure the right pr
 ```
 
 In workspace above, if `a` imports `b`, it will apply the config `packages/b/.babelrc` and not apply its own `packages/a/.babelrc` to `b`. Anything in `babel.config.json` will apply to all packages.
-
-{% /tab %}
-
-{% /tabs %}

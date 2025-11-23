@@ -35,7 +35,13 @@ export class ProjectGraphError extends Error {
     const messageFragments = ['Failed to process project graph.'];
     const mergeNodesErrors = [];
     const unknownErrors = [];
-    for (const e of errors) {
+    // Lets us throw aggregate errors without special handling,
+    // to avoid cases where users fix an error and get hit with another one
+    // which was already there but not reported.
+    let flat = errors.flatMap((e) =>
+      e instanceof AggregateError ? e.errors : e
+    );
+    for (const e of flat) {
       if (
         // Known errors that are self-explanatory
         isAggregateCreateNodesError(e) ||
@@ -199,6 +205,7 @@ export class ProjectConfigurationsError extends Error {
       | AggregateCreateNodesError
       | ProjectsWithNoNameError
       | MultipleProjectsWithSameNameError
+      | WorkspaceValidityError
     >,
     public readonly partialProjectConfigurationsResult: ConfigurationResult
   ) {
@@ -410,9 +417,13 @@ function isProcessDependenciesError(e: unknown): e is ProcessDependenciesError {
 
 export class WorkspaceValidityError extends Error {
   constructor(public message: string) {
-    message = `Configuration Error\n${message}`;
     super(message);
+    this.message = `[Configuration Error]:\n${message}`;
     this.name = this.constructor.name;
+  }
+
+  toString() {
+    return this.message;
   }
 }
 

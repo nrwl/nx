@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`component --style @emotion/styled should use @emotion/styled as the styled API library 1`] = `
 "import styled from '@emotion/styled';
@@ -70,7 +70,7 @@ export default Hello;
 exports[`component --style tailwind should not generate any style in component 1`] = `
 "export function Hello() {
   return (
-    <div className={styles['container']}>
+    <div>
       <h1>Welcome to Hello!</h1>
     </div>
   );

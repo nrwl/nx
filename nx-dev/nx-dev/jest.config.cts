@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Ignore @nx/jest dependency since it is the installed version not the one in the workspace
 // nx-ignore-next-line
-import nxPreset from '@nx/jest/preset';
+const { default: nxPreset } = require('@nx/jest/preset');
 
 module.exports = {
   ...nxPreset,

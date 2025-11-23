@@ -7,10 +7,9 @@
 
 The migration will move the `tsConfig` option for library build executors (`@nx/angular:ng-packagr-lite` and `@nx/angular:package`) from the `development` configuration to the target options if it's not already set:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="libs/lib1/project.json" highlightLines=["7"] %}
+```json title="libs/lib1/project.json" {7}
 {
   "targets": {
     "build": {
@@ -25,11 +24,9 @@ The migration will move the `tsConfig` option for library build executors (`@nx/
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="libs/lib1/project.json" highlightLines=["6","9"] %}
+```json title="libs/lib1/project.json" {6,9}
 {
   "targets": {
     "build": {
@@ -45,15 +42,11 @@ The migration will move the `tsConfig` option for library build executors (`@nx/
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 The migration will set the `tsConfig` option for the `@nx/jest:jest` executor when the `tsconfig.spec.json` file exists and the option is not already set:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="apps/app1/project.json" %}
+```json title="apps/app1/project.json"
 {
   "targets": {
     "test": {
@@ -63,11 +56,9 @@ The migration will set the `tsConfig` option for the `@nx/jest:jest` executor wh
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="apps/app1/project.json" highlightLines=["6"] %}
+```json title="apps/app1/project.json" {6}
 {
   "targets": {
     "test": {
@@ -80,15 +71,11 @@ The migration will set the `tsConfig` option for the `@nx/jest:jest` executor wh
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 If the `tsConfig` option is already set in the target options, the migration will not modify the configuration:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="libs/lib1/project.json" highlightLines=["6", "10"] %}
+```json title="libs/lib1/project.json" {6,10}
 {
   "targets": {
     "build": {
@@ -106,11 +93,9 @@ If the `tsConfig` option is already set in the target options, the migration wil
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="libs/lib1/project.json" highlightLines=["6", "10"] %}
+```json title="libs/lib1/project.json" {6,10}
 {
   "targets": {
     "build": {
@@ -127,6 +112,3 @@ If the `tsConfig` option is already set in the target options, the migration wil
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

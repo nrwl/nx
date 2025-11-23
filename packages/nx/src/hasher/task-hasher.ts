@@ -214,7 +214,7 @@ export type ExpandedDepsOutput = {
 export type ExpandedInput = ExpandedSelfInput | ExpandedDepsOutput;
 const DEFAULT_INPUTS: ReadonlyArray<InputDefinition> = [
   {
-    fileset: '{projectRoot}/**/*',
+    input: 'default',
   },
   {
     dependencies: true,

@@ -23,12 +23,12 @@ export default defineConfig({
 });
 `;
 
-    tree.write('vite.config.ts', initialConfig);
-    const result = updateViteConfigForServerEntry(tree, 'vite.config.ts');
+    tree.write('vite.config.mts', initialConfig);
+    const result = updateViteConfigForServerEntry(tree, 'vite.config.mts');
 
     expect(result).toBe(true);
 
-    const updatedConfig = tree.read('vite.config.ts', 'utf-8');
+    const updatedConfig = tree.read('vite.config.mts', 'utf-8');
     expect(updatedConfig).toContain("index: 'src/index.ts'");
     expect(updatedConfig).toContain("server: 'src/server.ts'");
     expect(updatedConfig).toContain('fileName: (format, entryName) =>');
@@ -49,12 +49,12 @@ export default defineConfig({
 });
 `;
 
-    tree.write('vite.config.ts', initialConfig);
-    const result = updateViteConfigForServerEntry(tree, 'vite.config.ts');
+    tree.write('vite.config.mts', initialConfig);
+    const result = updateViteConfigForServerEntry(tree, 'vite.config.mts');
 
     expect(result).toBe(true);
 
-    const updatedConfig = tree.read('vite.config.ts', 'utf-8');
+    const updatedConfig = tree.read('vite.config.mts', 'utf-8');
     expect(updatedConfig).toContain("index: 'src/index.ts'");
     expect(updatedConfig).toContain("server: 'src/server.ts'");
   });
@@ -76,14 +76,14 @@ export default defineConfig({
 });
 `;
 
-    tree.write('vite.config.ts', initialConfig);
-    const originalConfig = tree.read('vite.config.ts', 'utf-8');
-    const result = updateViteConfigForServerEntry(tree, 'vite.config.ts');
+    tree.write('vite.config.mts', initialConfig);
+    const originalConfig = tree.read('vite.config.mts', 'utf-8');
+    const result = updateViteConfigForServerEntry(tree, 'vite.config.mts');
 
     // Should still update fileName
     expect(result).toBe(true);
 
-    const updatedConfig = tree.read('vite.config.ts', 'utf-8');
+    const updatedConfig = tree.read('vite.config.mts', 'utf-8');
     // Entry should remain unchanged
     expect(updatedConfig).toContain("index: 'src/index.ts'");
     expect(updatedConfig).toContain("server: 'src/server.ts'");
@@ -105,13 +105,13 @@ export default defineConfig({
 });
 `;
 
-    tree.write('vite.config.ts', initialConfig);
-    const result = updateViteConfigForServerEntry(tree, 'vite.config.ts');
+    tree.write('vite.config.mts', initialConfig);
+    const result = updateViteConfigForServerEntry(tree, 'vite.config.mts');
 
     // Should still update entry
     expect(result).toBe(true);
 
-    const updatedConfig = tree.read('vite.config.ts', 'utf-8');
+    const updatedConfig = tree.read('vite.config.mts', 'utf-8');
     // Entry should be updated
     expect(updatedConfig).toContain("index: 'src/index.ts'");
     expect(updatedConfig).toContain("server: 'src/server.ts'");
@@ -136,13 +136,13 @@ export default defineConfig({
 });
 `;
 
-    tree.write('vite.config.ts', initialConfig);
-    const result = updateViteConfigForServerEntry(tree, 'vite.config.ts');
+    tree.write('vite.config.mts', initialConfig);
+    const result = updateViteConfigForServerEntry(tree, 'vite.config.mts');
 
     expect(result).toBe(false);
 
     const originalConfig = initialConfig;
-    const updatedConfig = tree.read('vite.config.ts', 'utf-8');
+    const updatedConfig = tree.read('vite.config.mts', 'utf-8');
     // Should remain unchanged
     expect(updatedConfig).toBe(originalConfig);
   });
@@ -150,7 +150,7 @@ export default defineConfig({
   it('should return false if file does not exist', () => {
     const result = updateViteConfigForServerEntry(
       tree,
-      'non-existent-vite.config.ts'
+      'non-existent-vite.config.mts'
     );
 
     expect(result).toBe(false);
@@ -170,13 +170,13 @@ export default defineConfig({
 });
 `;
 
-    tree.write('vite.config.ts', initialConfig);
-    const result = updateViteConfigForServerEntry(tree, 'vite.config.ts');
+    tree.write('vite.config.mts', initialConfig);
+    const result = updateViteConfigForServerEntry(tree, 'vite.config.mts');
 
     // Should still update fileName
     expect(result).toBe(true);
 
-    const updatedConfig = tree.read('vite.config.ts', 'utf-8');
+    const updatedConfig = tree.read('vite.config.mts', 'utf-8');
     // Entry should remain unchanged
     expect(updatedConfig).toContain("entry: 'src/main.ts'");
     // fileName should be updated
@@ -197,13 +197,13 @@ export default defineConfig({
 });
 `;
 
-    tree.write('vite.config.ts', initialConfig);
-    const result = updateViteConfigForServerEntry(tree, 'vite.config.ts');
+    tree.write('vite.config.mts', initialConfig);
+    const result = updateViteConfigForServerEntry(tree, 'vite.config.mts');
 
     // Should still update entry
     expect(result).toBe(true);
 
-    const updatedConfig = tree.read('vite.config.ts', 'utf-8');
+    const updatedConfig = tree.read('vite.config.mts', 'utf-8');
     // Entry should be updated
     expect(updatedConfig).toContain("index: 'src/index.ts'");
     expect(updatedConfig).toContain("server: 'src/server.ts'");
@@ -224,13 +224,13 @@ export default defineConfig({
 });
 `;
 
-    tree.write('vite.config.ts', initialConfig);
-    const originalConfig = tree.read('vite.config.ts', 'utf-8');
-    const result = updateViteConfigForServerEntry(tree, 'vite.config.ts');
+    tree.write('vite.config.mts', initialConfig);
+    const originalConfig = tree.read('vite.config.mts', 'utf-8');
+    const result = updateViteConfigForServerEntry(tree, 'vite.config.mts');
 
     expect(result).toBe(false);
 
-    const updatedConfig = tree.read('vite.config.ts', 'utf-8');
+    const updatedConfig = tree.read('vite.config.mts', 'utf-8');
     // Should remain unchanged
     expect(updatedConfig).toBe(originalConfig);
   });

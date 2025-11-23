@@ -6,10 +6,9 @@ Remove the deprecated 'tailwindConfig' option from ng-packagr executors. Tailwin
 
 Remove `tailwindConfig` from the `@nx/angular:ng-packagr-lite` or `@nx/angular:package` executor options in project configuration.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="libs/my-lib/project.json" %}
+```json title="libs/my-lib/project.json"
 {
   "targets": {
     "build": {
@@ -23,10 +22,9 @@ Remove `tailwindConfig` from the `@nx/angular:ng-packagr-lite` or `@nx/angular:p
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="libs/my-lib/project.json" %}
+```json title="libs/my-lib/project.json"
 {
   "targets": {
     "build": {
@@ -39,15 +37,11 @@ Remove `tailwindConfig` from the `@nx/angular:ng-packagr-lite` or `@nx/angular:p
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 Remove `tailwindConfig` from the `@nx/angular:ng-packagr-lite` or `@nx/angular:package` executor target defaults in `nx.json`.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "targetDefaults": {
     "@nx/angular:ng-packagr-lite": {
@@ -60,10 +54,9 @@ Remove `tailwindConfig` from the `@nx/angular:ng-packagr-lite` or `@nx/angular:p
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "targetDefaults": {
     "@nx/angular:ng-packagr-lite": {
@@ -74,6 +67,3 @@ Remove `tailwindConfig` from the `@nx/angular:ng-packagr-lite` or `@nx/angular:p
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

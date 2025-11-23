@@ -6,7 +6,7 @@ Add gitignore entry for temporary vitest config files.
 
 Adds the following entries to the `.gitignore` file.
 
-```text {% fileName=".gitignore" %}
+```text title=".gitignore"
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
 ```

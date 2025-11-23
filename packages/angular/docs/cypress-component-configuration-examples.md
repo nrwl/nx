@@ -1,4 +1,4 @@
-{% callout type="caution" title="Can I use component testing?" %}
+:::caution[Can I use component testing?]
 Angular component testing with Nx requires **Cypress version 10.7.0** and up.
 
 You can migrate with to v11 via the [migrate-to-cypress-11 generator](/nx-api/cypress/generators/migrate-to-cypress-11).
@@ -6,7 +6,7 @@ You can migrate with to v11 via the [migrate-to-cypress-11 generator](/nx-api/cy
 This generator is for Cypress based component testing.
 
 If you want to test components via Storybook with Cypress, then check out the [storybook-configuration generator docs](/nx-api/angular/generators/storybook-configuration). However, this functionality is deprecated, and will be removed on Nx version 18.
-{% /callout %}
+:::
 
 This generator is designed to get your Angular project up and running with Cypress Component Testing.
 
@@ -16,7 +16,7 @@ nx g @nx/angular:cypress-component-configuration --project=my-cool-angular-proje
 
 Running this generator, adds the required files to the specified project with a preconfigured `cypress.config.ts` designed for Nx workspaces.
 
-```ts {% fileName="cypress.config.ts" %}
+```ts title="cypress.config.ts"
 import { defineConfig } from 'cypress';
 import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
 
@@ -27,7 +27,7 @@ export default defineConfig({
 
 Here is an example on how to add custom options to the configuration
 
-```ts {% fileName="cypress.config.ts" %}
+```ts title="cypress.config.ts"
 import { defineConfig } from 'cypress';
 import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
 
@@ -59,10 +59,10 @@ Manually specifying the build target
 nx g @nx/angular:cypress-component-configuration --project=my-cool-angular-project --build-target:some-angular-app:build --generate-tests
 ```
 
-{% callout type="note" title="Build Target with Configuration" %}
+:::note[Build Target with Configuration]
 If you're wanting to use a build target with a specific configuration. i.e. `my-app:build:production`,
 then manually providing `--build-target=my-app:build:production` is the best way to do that.
-{% /callout %}
+:::
 
 ## Auto Generating Tests
 
@@ -82,7 +82,7 @@ nx g component-test my-cool-angular-project
 
 Here is an example of the project configuration that is generated. The `--build-target` option is added as the `devServerTarget` which can be changed as needed.
 
-```json {% fileName="project.json" %}
+```json title="project.json"
 {
   "targets" {
     "component-test": {
