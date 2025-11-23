@@ -13,6 +13,8 @@ jest.mock('../../../config/nx-json', () => ({
   readNxJson: jest.fn(),
 }));
 import { createVersionConfig } from './test/test-utils';
+import { createNxReleaseConfig, NxReleaseConfig } from '../config/config';
+import { createProjectFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
 
 describe('shared', () => {
   describe('createCommitMessageValues()', () => {
@@ -483,8 +485,9 @@ describe('shared', () => {
 
   describe(`getCommitsRelevantToProjects()`, () => {
     let mockProjectGraph: ProjectGraph;
+    let mockReleaseConfig: NxReleaseConfig | null;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       (readNxJson as jest.Mock).mockReturnValue({});
 
       mockProjectGraph = {
@@ -532,6 +535,19 @@ describe('shared', () => {
         },
         externalNodes: {},
       };
+
+      ({ nxReleaseConfig: mockReleaseConfig } = await createNxReleaseConfig(
+        mockProjectGraph,
+        await createProjectFileMapUsingProjectGraph(mockProjectGraph),
+        {
+          projects: Object.keys(mockProjectGraph.nodes),
+          changelog: {
+            git: {
+              commitMessage: 'chore(release): publish packages',
+            },
+          },
+        }
+      ));
     });
 
     it('should include commits that directly touch target projects', async () => {
@@ -544,7 +560,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a', 'lib-b']
+        ['lib-a', 'lib-b'],
+        mockReleaseConfig!
       );
 
       expect(result.size).toBe(2);
@@ -564,7 +581,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a']
+        ['lib-a'],
+        mockReleaseConfig!
       );
 
       // Both commits should be included - nx.json affects all, and lib-a is directly touched
@@ -584,7 +602,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a']
+        ['lib-a'],
+        mockReleaseConfig!
       );
 
       expect(result.size).toBe(1);
@@ -610,7 +629,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a']
+        ['lib-a'],
+        mockReleaseConfig!
       );
 
       // lib-a depends on lib-c, so commit touching lib-c should affect lib-a
@@ -631,7 +651,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a']
+        ['lib-a'],
+        mockReleaseConfig!
       );
 
       expect(result.size).toBe(1);
@@ -650,7 +671,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a', 'lib-b']
+        ['lib-a', 'lib-b'],
+        mockReleaseConfig!
       );
 
       // Same commit should appear for both projects
@@ -667,7 +689,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a', 'lib-b']
+        ['lib-a', 'lib-b'],
+        mockReleaseConfig!
       );
 
       // Global file should appear for all requested projects
@@ -686,7 +709,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a', 'lib-b']
+        ['lib-a', 'lib-b'],
+        mockReleaseConfig!
       );
 
       expect(result.has('lib-a')).toBe(false);
@@ -698,7 +722,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         [],
-        ['lib-a']
+        ['lib-a'],
+        mockReleaseConfig!
       );
 
       expect(result.size).toBe(0);
@@ -712,7 +737,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        []
+        [],
+        mockReleaseConfig!
       );
 
       expect(result.size).toBe(0);
@@ -727,7 +753,8 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a']
+        ['lib-a'],
+        mockReleaseConfig!
       );
 
       // Lock file changes typically affect all or many projects
@@ -743,19 +770,45 @@ describe('shared', () => {
       const result = await getCommitsRelevantToProjects(
         mockProjectGraph,
         commits,
-        ['lib-a']
+        ['lib-a'],
+        mockReleaseConfig!
       );
 
       // package.json changes typically affect projects
       expect(result.size).toBeGreaterThanOrEqual(0);
     });
 
+    it('should exclude automated version or changelog commits', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'abc123',
+          ['libs/deleted-lib-1/package.json'],
+          'chore(release): publish 1.0.0' // with version interpolated
+        ),
+        createMockCommit(
+          'def456',
+          ['libs/deleted-lib-2/package.json'],
+          'chore(release): publish packages'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a'],
+        mockReleaseConfig!
+      );
+
+      expect(result.size).toBe(0);
+    });
+
     function createMockCommit(
       shortHash: string,
-      affectedFiles: string[]
+      affectedFiles: string[],
+      message?: string
     ): GitCommit {
       return {
-        message: `feat: commit ${shortHash}`,
+        message: message || `feat: commit ${shortHash}`,
         body: '',
         shortHash,
         author: { name: 'Test Author', email: 'test@example.com' },
