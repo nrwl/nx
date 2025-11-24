@@ -17,7 +17,7 @@ export const moduleFederationNodeVersion = '^2.7.21';
 export const moduleFederationEnhancedVersion = '^0.21.2';
 export const webpackMergeVersion = '^5.8.0';
 
-export const angularEslintVersion = '^20.3.0';
+export const angularEslintVersion = '^21.0.1';
 export const typescriptEslintVersion = '^7.16.0';
 export const tailwindVersion = '^3.0.2';
 export const postcssVersion = '^8.4.5';
