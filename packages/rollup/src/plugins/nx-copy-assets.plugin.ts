@@ -19,14 +19,19 @@ export function nxCopyAssetsPlugin(options: NxCopyAssetsPluginOptions): Plugin {
   return {
     name: 'nx-copy-assets-plugin',
     async buildStart() {
-      const relativeProjectRoot = relative(workspaceRoot, options.projectRoot);
+      // Assets from normalizeOptions already have absolute paths in input field.
+      // CopyAssetsHandler expects paths relative to rootDir.
       const assets = options.assets.map((a) => {
         if (typeof a === 'string') {
+          const relativeProjectRoot = relative(
+            workspaceRoot,
+            options.projectRoot
+          );
           return joinPathFragments(relativeProjectRoot, a);
         } else {
           return {
             ...a,
-            input: joinPathFragments(relativeProjectRoot, a.input),
+            input: relative(workspaceRoot, a.input),
           };
         }
       });
