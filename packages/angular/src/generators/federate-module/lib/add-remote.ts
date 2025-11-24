@@ -17,7 +17,7 @@ export async function addRemote(tree: Tree, schema: Schema) {
       directory: schema.remoteDirectory,
       host: schema.host,
       standalone: schema.standalone,
-      unitTestRunner: schema.unitTestRunner ?? UnitTestRunner.Jest,
+      unitTestRunner: schema.unitTestRunner,
       e2eTestRunner: schema.e2eTestRunner ?? E2eTestRunner.Cypress,
       skipFormat: true,
     });
