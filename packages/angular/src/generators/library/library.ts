@@ -139,6 +139,7 @@ async function addUnitTestRunner(
         projectRoot: options.projectRoot,
         skipPackageJson: options.skipPackageJson,
         strict: options.strict,
+        runtimeTsconfigFileName: 'tsconfig.lib.json',
         zoneless,
       });
       break;
@@ -146,8 +147,15 @@ async function addUnitTestRunner(
       await addVitest(host, {
         name: options.name,
         projectRoot: options.projectRoot,
+        skipFormat: options.skipFormat,
         skipPackageJson: options.skipPackageJson,
         strict: options.strict,
+        // the unit-test builder requires a build target, force using analog
+        // if there's no build target
+        forceAnalog: !options.buildable && !options.publishable,
+        // use the nx unit-test runner executor if there's a build target
+        useNxUnitTestRunnerExecutor: options.buildable || options.publishable,
+        zoneless,
       });
       break;
   }

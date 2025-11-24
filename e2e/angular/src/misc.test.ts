@@ -20,7 +20,9 @@ describe('Move Angular Project', () => {
     app1 = uniq('app1');
     app2 = uniq('app2');
     newPath = `subfolder/${app2}`;
-    runCLI(`generate @nx/angular:app ${app1} --no-interactive`);
+    runCLI(
+      `generate @nx/angular:app ${app1} --unit-test-runner=jest --no-interactive`
+    );
   });
 
   afterAll(() => cleanupProject());
@@ -93,13 +95,17 @@ describe('Move Angular Project', () => {
   it('should work for libraries', () => {
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
-    runCLI(`generate @nx/angular:lib ${lib1} --no-standalone --no-interactive`);
+    runCLI(
+      `generate @nx/angular:lib ${lib1} --unit-test-runner=jest --no-standalone --no-interactive`
+    );
 
     /**
      * Create a library which imports the module from the other lib
      */
 
-    runCLI(`generate @nx/angular:lib ${lib2} --no-standalone --no-interactive`);
+    runCLI(
+      `generate @nx/angular:lib ${lib2} --unit-test-runner=jest --no-standalone --no-interactive`
+    );
 
     updateFile(
       `${lib2}/src/lib/${lib2}-module.ts`,

@@ -131,6 +131,19 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "22.2.0-analog": {
+      "version": "22.2.0-beta.2",
+      "packages": {
+        "@analogjs/vite-plugin-angular": {
+          "version": "^2.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@analogjs/vitest-angular": {
+          "version": "^2.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

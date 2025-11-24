@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   ensurePackage,
   joinPathFragments,
+  updateJson,
   type Tree,
 } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
@@ -12,6 +13,7 @@ export type AddJestOptions = {
   projectRoot: string;
   skipPackageJson: boolean;
   strict: boolean;
+  runtimeTsconfigFileName: 'tsconfig.app.json' | 'tsconfig.lib.json';
   zoneless: boolean;
   addPlugin?: boolean;
 };
@@ -69,6 +71,21 @@ export async function addJest(
     tree.write(setupFile, getZonelessSetupFile(options.strict));
   } else {
     tree.write(setupFile, getZoneSetupFile(options.strict));
+  }
+
+  const runtimeTsconfigPath = joinPathFragments(
+    options.projectRoot,
+    options.runtimeTsconfigFileName
+  );
+  if (tree.exists(runtimeTsconfigPath)) {
+    updateJson(tree, runtimeTsconfigPath, (json) => {
+      const excludeSet = new Set([
+        ...(json.exclude ?? []),
+        'src/test-setup.ts',
+      ]);
+      json.exclude = Array.from(excludeSet);
+      return json;
+    });
   }
 }
 

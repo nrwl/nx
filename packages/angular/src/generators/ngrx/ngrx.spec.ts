@@ -681,25 +681,25 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcome }];
 
       const packageJson = devkit.readJson(tree, 'package.json');
       expect(packageJson.dependencies['@ngrx/store']).toEqual(
-        backwardCompatibleVersions.angularV19.ngrxVersion
+        backwardCompatibleVersions[19].ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(
-        backwardCompatibleVersions.angularV19.ngrxVersion
+        backwardCompatibleVersions[19].ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(
-        backwardCompatibleVersions.angularV19.ngrxVersion
+        backwardCompatibleVersions[19].ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
-        backwardCompatibleVersions.angularV19.ngrxVersion
+        backwardCompatibleVersions[19].ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
-        backwardCompatibleVersions.angularV19.ngrxVersion
+        backwardCompatibleVersions[19].ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
-        backwardCompatibleVersions.angularV19.ngrxVersion
+        backwardCompatibleVersions[19].ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
-        backwardCompatibleVersions.angularV19.ngrxVersion
+        backwardCompatibleVersions[19].ngrxVersion
       );
       expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });
