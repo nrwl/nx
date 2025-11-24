@@ -119,8 +119,8 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "vitest", "none"],
-      "description": "Test runner to use for unit tests.",
+      "enum": ["vitest", "jest", "none"],
+      "description": "Test runner to use for unit tests. It defaults to `vitest` for Angular versions >= 21.0.0. Otherwise, it defaults to `jest`.",
       "x-prompt": "Which unit test runner would you like to use?",
       "default": "jest"
     },
