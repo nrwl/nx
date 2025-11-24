@@ -7,6 +7,7 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
@@ -34,15 +35,19 @@ export async function cypressComponentConfiguration(
   const { componentConfigurationGenerator: baseCyCTConfig } = ensurePackage<
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
-  const installTask = await baseCyCTConfig(tree, {
-    project: options.project,
-    skipFormat: true,
-    addPlugin: false,
-    addExplicitTargets: true,
-  });
+  const tasks: GeneratorCallback[] = [];
+  tasks.push(
+    await baseCyCTConfig(tree, {
+      project: options.project,
+      skipFormat: true,
+      addPlugin: false,
+      addExplicitTargets: true,
+      skipPackageJson: options.skipPackageJson,
+    })
+  );
 
   await configureCypressCT(tree, options);
-  await addFiles(tree, projectConfig, options);
+  tasks.push(await addFiles(tree, projectConfig, options));
 
   if (projectConfig.projectType === 'application') {
     updateAppEditorTsConfigExcludedFiles(tree, projectConfig);
@@ -52,14 +57,14 @@ export async function cypressComponentConfiguration(
     await formatFiles(tree);
   }
 
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 async function addFiles(
   tree: Tree,
   projectConfig: ProjectConfiguration,
   options: CypressComponentConfigSchema
-) {
+): Promise<GeneratorCallback> {
   const componentFile = joinPathFragments(
     projectConfig.root,
     'cypress',
@@ -77,40 +82,49 @@ async function addFiles(
     `import { mount } from 'cypress/angular';\n${updatedCmpContents}`
   );
 
-  if (options.generateTests) {
-    const entryPoints = getProjectEntryPoints(tree, options.project);
+  if (!options.generateTests) {
+    return () => {};
+  }
 
-    const componentInfo = [];
-    for (const entryPoint of entryPoints) {
-      const moduleFilePaths = getModuleFilePaths(tree, entryPoint);
-      componentInfo.push(
-        ...getComponentsInfo(
-          tree,
-          entryPoint,
-          moduleFilePaths,
-          options.project
-        ),
-        ...getStandaloneComponentsInfo(tree, entryPoint)
-      );
+  const entryPoints = getProjectEntryPoints(tree, options.project);
+
+  const componentInfo = [];
+  for (const entryPoint of entryPoints) {
+    const moduleFilePaths = getModuleFilePaths(tree, entryPoint);
+    componentInfo.push(
+      ...getComponentsInfo(tree, entryPoint, moduleFilePaths, options.project),
+      ...getStandaloneComponentsInfo(tree, entryPoint)
+    );
+  }
+
+  let ctTask: GeneratorCallback;
+  for (const info of componentInfo) {
+    if (info === undefined) {
+      continue;
     }
+    const componentDirFromProjectRoot = relative(
+      projectConfig.root,
+      joinPathFragments(info.moduleFolderPath, info.path)
+    );
 
-    for (const info of componentInfo) {
-      if (info === undefined) {
-        continue;
-      }
-      const componentDirFromProjectRoot = relative(
-        projectConfig.root,
-        joinPathFragments(info.moduleFolderPath, info.path)
-      );
-      await componentTestGenerator(tree, {
-        project: options.project,
-        componentName: info.name,
-        componentDir: componentDirFromProjectRoot,
-        componentFileName: info.componentFileName,
-        skipFormat: true,
-      });
+    const task = await componentTestGenerator(tree, {
+      project: options.project,
+      componentName: info.name,
+      componentDir: componentDirFromProjectRoot,
+      componentFileName: info.componentFileName,
+      skipFormat: true,
+      skipPackageJson: options.skipPackageJson,
+    });
+
+    // the ct generator only installs one dependency, which will only be installed
+    // if !skipPackageJson and not already installed, so only the first run can
+    // result in a generator callback that would actually install the dependency
+    if (!ctTask) {
+      ctTask = task;
     }
   }
+
+  return ctTask ?? (() => {});
 }
 
 async function configureCypressCT(
