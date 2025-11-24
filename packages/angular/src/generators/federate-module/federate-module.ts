@@ -5,13 +5,15 @@ import {
   stripIndents,
   type Tree,
 } from '@nx/devkit';
-import { type Schema } from './schema';
+import { UnitTestRunner } from '../../utils/test-runners';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import {
   addFileToRemoteTsconfig,
   addPathToExposes,
   addPathToTsConfig,
   addRemote,
 } from './lib';
+import type { Schema } from './schema';
 
 export async function federateModuleGenerator(tree: Tree, schema: Schema) {
   if (!tree.exists(schema.path)) {
@@ -21,6 +23,10 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
   }
 
   schema.standalone = schema.standalone ?? true;
+
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  schema.unitTestRunner ??=
+    angularMajorVersion >= 21 ? UnitTestRunner.Vitest : UnitTestRunner.Jest;
 
   const { tasks, projectRoot, remoteName } = await addRemote(tree, schema);
 

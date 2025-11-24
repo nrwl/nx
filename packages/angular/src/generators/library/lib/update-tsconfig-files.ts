@@ -126,9 +126,8 @@ function updateProjectConfig(
     json.exclude = [
       ...new Set([
         ...(json.exclude || []),
-        'jest.config.ts',
-        'src/**/*.test.ts',
         'src/**/*.spec.ts',
+        'src/**/*.test.ts',
       ]),
     ];
     return json;

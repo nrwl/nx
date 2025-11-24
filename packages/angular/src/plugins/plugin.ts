@@ -19,6 +19,7 @@ import { dirname, join, relative } from 'node:path';
 import * as posix from 'node:path/posix';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { targetFromTargetString } from '../utils/targets';
 
 export interface AngularPluginOptions {
   targetNamePrefix?: string;
@@ -765,26 +766,6 @@ function mergeInputs(
       ? [{ externalDependencies: Array.from(externalDependencies) }]
       : []),
   ];
-}
-
-// angular support abbreviated target specifiers, this is adapter from:
-// https://github.com/angular/angular-cli/blob/7d9ce246a33c60ec96eb4bf99520f5475716a910/packages/angular_devkit/architect/src/api.ts#L336
-function targetFromTargetString(
-  specifier: string,
-  abbreviatedProjectName?: string,
-  abbreviatedTargetName?: string
-) {
-  const tuple = specifier.split(':', 3);
-  if (tuple.length < 2) {
-    // invalid target, ignore
-    return undefined;
-  }
-
-  // we only care about project and target
-  return {
-    project: tuple[0] || abbreviatedProjectName || '',
-    target: tuple[1] || abbreviatedTargetName || '',
-  };
 }
 
 function getOutput(

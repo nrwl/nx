@@ -14,7 +14,7 @@ describe('angular.json v1 config', () => {
   beforeAll(() => {
     newProject({ packages: ['@nx/angular'] });
     runCLI(
-      `generate @nx/angular:app ${app1} --bundler=webpack --no-interactive`
+      `generate @nx/angular:app ${app1} --bundler=webpack --unit-test-runner=jest --no-interactive`
     );
     // reset workspace to use v1 config
     updateFile(`angular.json`, angularV1Json(app1));

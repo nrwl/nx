@@ -53,10 +53,10 @@ describe('ensureAngularDependencies', () => {
     const { devDependencies } = readJson(tree, 'package.json');
 
     expect(devDependencies['@angular/build']).toBe(
-      backwardCompatibleVersions.angularV19.angularDevkitVersion
+      backwardCompatibleVersions[19].angularDevkitVersion
     );
     expect(devDependencies['@angular-devkit/build-angular']).toBe(
-      backwardCompatibleVersions.angularV19.angularDevkitVersion
+      backwardCompatibleVersions[19].angularDevkitVersion
     );
   });
 

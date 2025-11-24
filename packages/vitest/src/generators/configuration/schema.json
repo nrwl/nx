@@ -59,6 +59,12 @@
       "enum": ["babel", "swc"],
       "default": "babel",
       "description": "The compiler to use"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
     }
   },
   "required": ["project"]
