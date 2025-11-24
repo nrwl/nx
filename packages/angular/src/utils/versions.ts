@@ -30,4 +30,7 @@ export const jestPresetAngularVersion = '~15.0.0';
 export const typesNodeVersion = '20.19.9';
 export const jasmineMarblesVersion = '^0.9.2';
 
+export const vitestVersion = '^4.0.8';
+export const jsdomVersion = '^27.1.0';
+
 export const jsoncEslintParserVersion = '^2.1.0';

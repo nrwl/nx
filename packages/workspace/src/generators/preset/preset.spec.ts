@@ -23,7 +23,6 @@ describe('preset', () => {
     expect(tree.children(`apps/${name}`).sort()).toMatchInlineSnapshot(`
       [
         ".eslintrc.json",
-        "jest.config.cts",
         "project.json",
         "public",
         "src",
@@ -38,7 +37,6 @@ describe('preset', () => {
         "index.html",
         "main.ts",
         "styles.css",
-        "test-setup.ts",
       ]
     `);
     expect(tree.children(`apps/${name}/src/app`).sort()).toMatchInlineSnapshot(`
