@@ -51,6 +51,11 @@ catalogs:
     '@schematics/angular': '>= 19.0.0 < 22.0.0'
     ng-packagr: '>= 19.0.0 < 22.0.0'
     rxjs: '^6.5.3 || ^7.5.0'
+  eslint:
+    '@angular-eslint/eslint-plugin': '^21.0.1'
+    '@angular-eslint/eslint-plugin-template': '^21.0.1'
+    '@angular-eslint/template-parser': '^21.0.1'
+    'angular-eslint': '^21.0.1'
   jest:
     '@jest/reporters': '^30.0.2'
     '@jest/test-result': '^30.0.2'
