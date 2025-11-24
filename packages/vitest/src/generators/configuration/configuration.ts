@@ -82,9 +82,13 @@ export async function configurationGeneratorInternal(
     addPlugin: schema.addPlugin,
     projectRoot: root,
     viteVersion: schema.viteVersion,
+    skipPackageJson: schema.skipPackageJson,
   });
   tasks.push(initTask);
-  tasks.push(await ensureDependencies(tree, { ...schema, uiFramework }));
+
+  if (!schema.skipPackageJson) {
+    tasks.push(await ensureDependencies(tree, { ...schema, uiFramework }));
+  }
 
   addOrChangeTestTarget(tree, schema, hasPlugin);
 
@@ -144,7 +148,8 @@ getTestBed().initTestEnvironment(
           setupFile: relativeTestSetupPath,
           useEsmExtension: true,
         },
-        true
+        true,
+        { skipPackageJson: schema.skipPackageJson }
       );
     } else if (uiFramework === 'react') {
       createOrEditViteConfig(
@@ -167,7 +172,8 @@ getTestBed().initTestEnvironment(
           plugins: ['react()'],
           coverageProvider: schema.coverageProvider,
         },
-        true
+        true,
+        { skipPackageJson: schema.skipPackageJson }
       );
     } else {
       createOrEditViteConfig(
@@ -177,7 +183,8 @@ getTestBed().initTestEnvironment(
           includeVitest: true,
           includeLib: getProjectType(tree, root, projectType) === 'library',
         },
-        true
+        true,
+        { skipPackageJson: schema.skipPackageJson }
       );
     }
   }
@@ -207,12 +214,14 @@ getTestBed().initTestEnvironment(
   );
   devDependencies['@types/node'] = typesNodeVersion;
 
-  const installDependenciesTask = addDependenciesToPackageJson(
-    tree,
-    {},
-    devDependencies
-  );
-  tasks.push(installDependenciesTask);
+  if (!schema.skipPackageJson) {
+    const installDependenciesTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      devDependencies
+    );
+    tasks.push(installDependenciesTask);
+  }
 
   // Setup workspace config file (https://vitest.dev/guide/workspace.html)
   if (
