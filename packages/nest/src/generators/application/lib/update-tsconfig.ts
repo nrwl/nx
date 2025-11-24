@@ -11,6 +11,17 @@ export function updateTsConfig(tree: Tree, options: NormalizedOptions): void {
       json.compilerOptions.experimentalDecorators = true;
       json.compilerOptions.emitDecoratorMetadata = true;
       json.compilerOptions.target = 'es2021';
+      // Fix for Angular workspaces: Force node resolution to avoid TS5095 error
+      // when root tsconfig uses "moduleResolution": "bundler" and module is "commonjs"
+      // Don't override if using TS solution setup (nodenext/node16) or other valid settings
+      if (
+        (!json.compilerOptions.moduleResolution ||
+          json.compilerOptions.moduleResolution === 'bundler') &&
+        json.compilerOptions.module !== 'nodenext' &&
+        json.compilerOptions.module !== 'node16'
+      ) {
+        json.compilerOptions.moduleResolution = 'node';
+      }
       if (options.strict) {
         json.compilerOptions = {
           ...json.compilerOptions,

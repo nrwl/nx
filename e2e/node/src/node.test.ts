@@ -18,6 +18,7 @@ import {
   runCLIAsync,
   runCommand,
   runCommandUntil,
+  runCreateWorkspace,
   tmpProjPath,
   uniq,
   updateFile,
@@ -340,6 +341,57 @@ module.exports = {
 
     expect(e2eRsult.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
   }, 120000);
+
+  it('should set moduleResolution to node in Angular workspace to avoid TS5095', async () => {
+    // Clean up and create a new Angular monorepo workspace
+    cleanupProject();
+
+    const wsName = uniq('angular');
+    const nestAppName = uniq('nestapp');
+
+    runCreateWorkspace(wsName, {
+      preset: 'angular-monorepo',
+      style: 'css',
+      appName: uniq('ng-app'),
+      packageManager: 'npm',
+      standaloneApi: true,
+      routing: false,
+      e2eTestRunner: 'none',
+      bundler: 'webpack',
+      ssr: false,
+    });
+
+    // Verify root tsconfig has moduleResolution: bundler (Angular default)
+    const rootTsConfig = JSON.parse(readFile('tsconfig.json'));
+    expect(rootTsConfig.compilerOptions.moduleResolution).toBe('bundler');
+
+    // Install nest plugin
+    runCLI('add @nx/nest');
+
+    // Generate a NestJS application
+    runCLI(
+      `generate @nx/nest:app apps/${nestAppName} --linter=eslint --unitTestRunner=jest`
+    );
+
+    // Assertion 1: Verify tsconfig.app.json has moduleResolution: node
+    const appTsConfig = JSON.parse(
+      readFile(`apps/${nestAppName}/tsconfig.app.json`)
+    );
+    expect(appTsConfig.compilerOptions.moduleResolution).toBe('node');
+
+    // Assertion 2: Verify the build succeeds without TS5095 error
+    const buildResult = runCLI(`build ${nestAppName}`);
+    expect(buildResult).toContain(
+      `Successfully ran target build for project ${nestAppName}`
+    );
+    checkFilesExist(`dist/apps/${nestAppName}/main.js`);
+
+    // Clean up for next test
+    cleanupProject();
+    newProject({
+      packages: ['@nx/node', '@nx/express', '@nx/nest', '@nx/webpack'],
+    });
+  }, 300000);
 
   it('should generate a nest application with docker', async () => {
     const nestapp = 'node-nest-docker-test';
