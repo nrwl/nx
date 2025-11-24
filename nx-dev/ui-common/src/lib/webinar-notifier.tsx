@@ -1,14 +1,15 @@
 'use client';
 
 import { MouseEvent, ReactElement, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import {
-  MegaphoneIcon,
-  VideoCameraIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+// import { motion } from 'framer-motion';
+// import {
+//   MegaphoneIcon,
+//   VideoCameraIcon,
+//   XMarkIcon,
+// } from '@heroicons/react/24/outline';
 
 export function WebinarNotifier(): ReactElement | null {
+  /*
   const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState<boolean>(true);
   const localStorageKey = 'webinar-november-19-2025--notifier-closed';
@@ -85,4 +86,7 @@ export function WebinarNotifier(): ReactElement | null {
       </div>
     </motion.div>
   );
+  */
+
+  return null;
 }
