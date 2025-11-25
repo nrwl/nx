@@ -37,8 +37,8 @@ export async function normalizeOptions(
     : [];
 
   // Detect workspace Nuxt version
-  const detectedMajor = getInstalledNuxtMajorVersion(host);
-  const nuxtMajorVersion: 3 | 4 = detectedMajor ?? 4; // Default to v4 if no existing Nuxt
+  const nuxtVersions = await getNuxtDependenciesVersionsToInstall(host);
+  const nuxtMajorVersion: 3 | 4 = nuxtVersions.nuxt.startsWith('^4') ? 4 : 3;
 
   // Set useAppDir default based on version (v4 defaults to true, v3 defaults to false)
   const useAppDir = options.useAppDir ?? nuxtMajorVersion >= 4;
