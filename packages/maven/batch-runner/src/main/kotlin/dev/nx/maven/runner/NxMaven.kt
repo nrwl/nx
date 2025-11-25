@@ -225,27 +225,11 @@ class NxMaven(
   private fun executeWithCachedGraph(request: MavenExecutionRequest): MavenExecutionResult {
     val result = DefaultMavenExecutionResult()
     sessionScope.enter()
+    val workspaceReader = MavenChainedWorkspaceReader(request.workspaceReader, ideWorkspaceReader)
 
-    // Add ReactorWorkspaceReader to provide artifacts from the reactor projects
-    // This is essential for consumer POM validation during install phase
-    log.info("📦 Creating ReactorWorkspaceReader with ${cachedProjectGraph!!.allProjects.size} reactor projects")
-    val reactorReader = ReactorWorkspaceReader(cachedProjectGraph!!.allProjects)
-    log.info("⛓️  Chaining workspace readers: ReactorWorkspaceReader → request.workspaceReader → ideWorkspaceReader")
-    val workspaceReader = MavenChainedWorkspaceReader(reactorReader, request.workspaceReader, ideWorkspaceReader)
-
-    // Rebuild RepositorySystemSession with ReactorWorkspaceReader while preserving the cache
-    // This is critical: the workspace reader must be embedded in the RepositorySystemSession for Maven Resolver to use it
-    // Using withRepositorySystemSession() creates a shallow copy that shares the cache with the original session
-    log.info("🔄 Rebuilding RepositorySystemSession to include ReactorWorkspaceReader...")
-    val updatedRepoSession = repositorySessionFactory
-      .newRepositorySessionBuilder(request)
-      .withRepositorySystemSession(cachedRepositorySession!!)  // Shallow copy - shares cache!
-      .setWorkspaceReader(workspaceReader)  // Override workspace reader with our ReactorWorkspaceReader
-      .build()
-    log.info("✅ RepositorySystemSession rebuilt with ReactorWorkspaceReader and preserved cache")
-
-    // Create a new MavenSession wrapper with the updated repository session
-    val session = MavenSession(updatedRepoSession, request, result)
+    // Reuse the cached RepositorySystemSession (holds artifact cache and metadata)
+    // Create a new MavenSession wrapper with the new request/result but same cached repository session
+    val session = MavenSession(cachedRepositorySession!!, request, result)
     session.session = cachedInternalSession  // Reuse cached InternalSession object to preserve ModelBuilderSession
 
     initializeModelBuilderSession(session)
@@ -258,7 +242,8 @@ class NxMaven(
       reseedSessionInScope(session)
 
       @Suppress("UNCHECKED_CAST")
-      // Use the updated repository session (with ReactorWorkspaceReader) for this invocation
+      // Use the CACHED request (which is stored in the session) not the new request
+      // This ensures doExecute sees consistent session/request state
       val executionResult = doExecuteMethod.invoke(
         this,
         request,
@@ -266,10 +251,6 @@ class NxMaven(
         result,
         workspaceReader
       ) as MavenExecutionResult
-
-      // Update cached session for next invocation - keeps any new artifacts resolved in this invocation
-      cachedRepositorySession = updatedRepoSession
-      log.debug("📝 Updated cachedRepositorySession with new artifacts from this invocation")
 
       executionResult
     } catch (e: Exception) {

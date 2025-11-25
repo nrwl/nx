@@ -414,18 +414,19 @@ object BuildStateManager {
                     log.debug("Attached artifact file does not exist: ${artifact.file.absolutePath}")
                     null
                 }
-                else -> {
-                    // Include ALL attached artifacts, including consumer POMs
-                    // Consumer POMs are critical for install:install validation in batch executor
-                    ArtifactInfo(
-                        file = PathUtils.toRelativePath(artifact.file.absolutePath, basedir, log),
-                        type = artifact.type,
-                        classifier = artifact.classifier,
-                        groupId = artifact.groupId,
-                        artifactId = artifact.artifactId,
-                        version = artifact.version
-                    )
+                // Skip temporary files (consumer POMs with random hash names)
+                artifact.file.name.startsWith("consumer-") && artifact.file.name.matches(Regex("consumer-\\d+\\.pom")) -> {
+                    log.debug("Skipping temporary consumer POM: ${artifact.file.name}")
+                    null
                 }
+                else -> ArtifactInfo(
+                    file = PathUtils.toRelativePath(artifact.file.absolutePath, basedir, log),
+                    type = artifact.type,
+                    classifier = artifact.classifier,
+                    groupId = artifact.groupId,
+                    artifactId = artifact.artifactId,
+                    version = artifact.version
+                )
             }
         }
     }
