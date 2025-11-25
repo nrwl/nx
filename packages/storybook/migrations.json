@@ -16,7 +16,7 @@
       "cli": "nx",
       "version": "22.1.0-beta.8",
       "requires": {
-        "storybook": ">=9.0.0 <10.0.0"
+        "storybook": ">=10.0.0"
       },
       "description": "Update workspace to use Storybook v10",
       "implementation": "./src/migrations/update-22-1-0/migrate-to-storybook-10"
