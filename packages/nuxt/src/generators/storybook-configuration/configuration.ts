@@ -17,12 +17,6 @@ export async function storybookConfigurationGenerator(
   tree: Tree,
   options: Schema
 ) {
-  const storybookConfigurationGenerator =
-    await vueStorybookConfigurationGenerator(tree, {
-      ...options,
-      addPlugin: true,
-    });
-
   const { root, sourceRoot } = readProjectConfiguration(tree, options.project);
 
   // Determine the source directory (app/ for Nuxt v4, src/ for Nuxt v3)
@@ -32,11 +26,22 @@ export async function storybookConfigurationGenerator(
     ? 'src'
     : 'src'; // default to src for backward compatibility
 
+  const storybookConfigurationGenerator =
+    await vueStorybookConfigurationGenerator(tree, {
+      ...options,
+      addPlugin: true,
+    });
+
+  // Default tsConfiguration to true to match schema default
+  const tsConfiguration = options.tsConfiguration ?? true;
+
+  // Write the preview file after the base storybook configuration is set up
+  // This ensures we overwrite any default content with our Nuxt-specific import
   tree.write(
     joinPathFragments(
       root,
       '.storybook',
-      'preview.' + (options.tsConfiguration ? 'ts' : 'js')
+      'preview.' + (tsConfiguration ? 'ts' : 'js')
     ),
     `import '../${sourceDir}/assets/css/styles.css';`
   );
