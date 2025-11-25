@@ -29,7 +29,10 @@ export default config;
 "
 `;
 
-exports[`nuxt:storybook-configuration should configure with vue3 framework and styles import 2`] = `"import '../src/assets/css/styles.css';"`;
+exports[`nuxt:storybook-configuration should configure with vue3 framework and styles import 2`] = `
+"import '../src/assets/css/styles.css';
+"
+`;
 
 exports[`nuxt:storybook-configuration should configure with vue3 framework and styles import 3`] = `
 "{
