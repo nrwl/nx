@@ -95,69 +95,46 @@ exports[`app generated files content - as-provided - my-app general application 
 `;
 
 exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config CJS) 1`] = `
-"const { FlatCompat } = require('@eslint/eslintrc');
-const js = require('@eslint/js');
+"const { createConfigForNuxt } = require('@nuxt/eslint-config/flat');
 const baseConfig = require('../eslint.config.cjs');
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-});
-
-module.exports = [
-  ...baseConfig,
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
-    // Override or add rules here
-    rules: {},
+module.exports = createConfigForNuxt({
+  features: {
+    typescript: true,
   },
-  ...compat.extends('@nuxt/eslint-config'),
-  {
-    files: ['**/*.vue'],
-    languageOptions: {
-      parserOptions: {
-        parser: require('@typescript-eslint/parser'),
-      },
+})
+  .prepend(...baseConfig)
+  .append(
+    {
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      rules: {},
     },
-  },
-  {
-    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
-  },
-];
+    {
+      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+    }
+  );
 "
 `;
 
 exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config ESM) 1`] = `
-"import { FlatCompat } from '@eslint/eslintrc';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import js from '@eslint/js';
+"import { createConfigForNuxt } from '@nuxt/eslint-config/flat';
 import baseConfig from '../eslint.config.mjs';
-const compat = new FlatCompat({
-  baseDirectory: dirname(fileURLToPath(import.meta.url)),
-  recommendedConfig: js.configs.recommended,
-});
 
-export default [
-  ...baseConfig,
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
-    // Override or add rules here
-    rules: {},
+export default createConfigForNuxt({
+  features: {
+    typescript: true,
   },
-  ...compat.extends('@nuxt/eslint-config'),
-  {
-    files: ['**/*.vue'],
-    languageOptions: {
-      parserOptions: {
-        parser: await import('@typescript-eslint/parser'),
-      },
+})
+  .prepend(...baseConfig)
+  .append(
+    {
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      rules: {},
     },
-  },
-  {
-    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
-  },
-];
+    {
+      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+    }
+  );
 "
 `;
 
@@ -487,69 +464,46 @@ exports[`app generated files content - as-provided - myApp general application s
 `;
 
 exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config CJS) 1`] = `
-"const { FlatCompat } = require('@eslint/eslintrc');
-const js = require('@eslint/js');
+"const { createConfigForNuxt } = require('@nuxt/eslint-config/flat');
 const baseConfig = require('../eslint.config.cjs');
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-});
-
-module.exports = [
-  ...baseConfig,
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
-    // Override or add rules here
-    rules: {},
+module.exports = createConfigForNuxt({
+  features: {
+    typescript: true,
   },
-  ...compat.extends('@nuxt/eslint-config'),
-  {
-    files: ['**/*.vue'],
-    languageOptions: {
-      parserOptions: {
-        parser: require('@typescript-eslint/parser'),
-      },
+})
+  .prepend(...baseConfig)
+  .append(
+    {
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      rules: {},
     },
-  },
-  {
-    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
-  },
-];
+    {
+      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+    }
+  );
 "
 `;
 
 exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config ESM) 1`] = `
-"import { FlatCompat } from '@eslint/eslintrc';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import js from '@eslint/js';
+"import { createConfigForNuxt } from '@nuxt/eslint-config/flat';
 import baseConfig from '../eslint.config.mjs';
-const compat = new FlatCompat({
-  baseDirectory: dirname(fileURLToPath(import.meta.url)),
-  recommendedConfig: js.configs.recommended,
-});
 
-export default [
-  ...baseConfig,
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
-    // Override or add rules here
-    rules: {},
+export default createConfigForNuxt({
+  features: {
+    typescript: true,
   },
-  ...compat.extends('@nuxt/eslint-config'),
-  {
-    files: ['**/*.vue'],
-    languageOptions: {
-      parserOptions: {
-        parser: await import('@typescript-eslint/parser'),
-      },
+})
+  .prepend(...baseConfig)
+  .append(
+    {
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      rules: {},
     },
-  },
-  {
-    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
-  },
-];
+    {
+      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+    }
+  );
 "
 `;
 

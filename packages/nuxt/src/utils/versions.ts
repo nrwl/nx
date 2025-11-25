@@ -15,5 +15,6 @@ export const h3Version = '^1.8.2';
 export const nuxtDevtoolsVersion = '1.0.0';
 export const nuxtUiTemplatesVersion = '^1.3.1';
 
-// linting deps
-export const nuxtEslintConfigVersion = '~0.5.6';
+// linting deps - version-aware for flat config vs legacy
+export const nuxtEslintConfigVersion = '^1.10.0'; // For flat config (Nuxt v4+) - uses createConfigForNuxt
+export const nuxtEslintConfigLegacyVersion = '~0.5.6'; // For legacy .eslintrc.json (Nuxt v3)

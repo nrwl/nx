@@ -5,7 +5,7 @@ import {
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema, Schema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getInstalledNuxtMajorVersion } from '../../../utils/version-utils';
+import { getNuxtDependenciesVersionsToInstall } from '../../../utils/version-utils';
 
 export async function normalizeOptions(
   host: Tree,
