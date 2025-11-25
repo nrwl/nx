@@ -16,6 +16,8 @@ export function nxCopyAssetsPlugin(options: NxCopyAssetsPluginOptions): Plugin {
 
   if (global.NX_GRAPH_CREATION) return { name: 'nx-copy-assets-plugin' };
 
+  const relativeProjectRoot = relative(workspaceRoot, options.projectRoot);
+
   return {
     name: 'nx-copy-assets-plugin',
     async buildStart() {
@@ -23,16 +25,11 @@ export function nxCopyAssetsPlugin(options: NxCopyAssetsPluginOptions): Plugin {
       // CopyAssetsHandler expects paths relative to rootDir.
       const assets = options.assets.map((a) => {
         if (typeof a === 'string') {
-          const relativeProjectRoot = relative(
-            workspaceRoot,
-            options.projectRoot
-          );
-          return joinPathFragments(relativeProjectRoot, a);
+          return isAbsolute(a) ? a : join(relativeProjectRoot, a);
         } else {
-          const relativeInput = relative(workspaceRoot, a.input);
           return {
             ...a,
-            input: relativeInput || '.',
+            input: isAbsolute(a.input) ? a.input : join(workspaceRoot, a.input),
           };
         }
       });
