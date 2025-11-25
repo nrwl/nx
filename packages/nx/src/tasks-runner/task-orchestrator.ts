@@ -85,6 +85,7 @@ export class TaskOrchestrator {
   private groups = [];
 
   private bailed = false;
+  private cleaningUp = false;
 
   private runningContinuousTasks = new Map<string, RunningTask>();
   private runningRunCommandsTasks = new Map<string, RunningTask>();
@@ -732,14 +733,22 @@ export class TaskOrchestrator {
       );
 
       this.runningContinuousTasks.set(task.id, runningTask);
-      runningTask.onExit(() => {
-        if (this.tuiEnabled) {
+      runningTask.onExit((code) => {
+        if (this.tuiEnabled && !this.completedTasks[task.id]) {
           this.options.lifeCycle.setTaskStatus(
             task.id,
             NativeTaskStatus.Stopped
           );
         }
         this.runningContinuousTasks.delete(task.id);
+
+        // we're not cleaning up, so this is an unexpected exit, fail the task
+        if (!this.cleaningUp) {
+          console.error(
+            `Task "${task.id}" is continuous but exited with code ${code}`
+          );
+          this.complete([{ taskId: task.id, status: 'failure' }]);
+        }
       });
 
       // task is already running by another process, we schedule the next tasks
@@ -802,12 +811,21 @@ export class TaskOrchestrator {
     this.runningTasksService.addRunningTask(task.id);
     this.runningContinuousTasks.set(task.id, childProcess);
 
-    childProcess.onExit(() => {
-      if (this.tuiEnabled) {
+    childProcess.onExit((code) => {
+      // Only set status to Stopped if task hasn't been completed yet
+      if (this.tuiEnabled && !this.completedTasks[task.id]) {
         this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Stopped);
       }
       if (this.runningContinuousTasks.delete(task.id)) {
         this.runningTasksService.removeRunningTask(task.id);
+      }
+
+      // we're not cleaning up, so this is an unexpected exit, fail the task
+      if (!this.cleaningUp) {
+        console.error(
+          `Task "${task.id}" is continuous but exited with code ${code}`
+        );
+        this.complete([{ taskId: task.id, status: 'failure' }]);
       }
     });
     await this.scheduleNextTasksAndReleaseThreads();
@@ -1025,6 +1043,7 @@ export class TaskOrchestrator {
   // endregion utils
 
   private async cleanup() {
+    this.cleaningUp = true;
     this.forkedProcessTaskRunner.cleanup();
     await Promise.all([
       ...Array.from(this.runningContinuousTasks).map(async ([taskId, t]) => {
@@ -1054,8 +1073,13 @@ export class TaskOrchestrator {
 
   private cleanUpUnneededContinuousTasks() {
     const incompleteTasks = this.tasksSchedule.getIncompleteTasks();
-    const neededContinuousTasks = new Set(this.initializingTaskIds);
+    const neededContinuousTasks = new Set<string>();
     for (const task of incompleteTasks) {
+      // Keep initiating tasks that are still incomplete
+      if (task.continuous && this.initializingTaskIds.has(task.id)) {
+        neededContinuousTasks.add(task.id);
+      }
+
       const continuousDependencies =
         this.taskGraph.continuousDependencies[task.id];
       for (const continuousDependency of continuousDependencies) {
