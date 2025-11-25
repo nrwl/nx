@@ -1113,7 +1113,7 @@ const docsToAstroRedirects = {
   '/technologies/test-tools/storybook/recipes/best-practices':
     '/docs/technologies/test-tools/storybook/guides/best-practices',
   '/technologies/test-tools/storybook/recipes/storybook-9-setup':
-    '/docs/technologies/test-tools/storybook/guides/storybook-9-setup',
+    '/docs/technologies/test-tools/storybook/guides/upgrading-storybook',
   '/technologies/test-tools/storybook/recipes/overview-react':
     '/docs/technologies/test-tools/storybook/guides/overview-react',
   '/technologies/test-tools/storybook/recipes/overview-angular':
