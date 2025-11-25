@@ -12,7 +12,7 @@ export default async function createAiInstructionsForExpo54(tree: Tree) {
     return;
   }
 
-  const contents = readFileSync(pathToAiInstructions);
+  const contents = readFileSync(pathToAiInstructions, 'utf-8');
   tree.write('ai-migrations/MIGRATE_EXPO_54.md', contents);
   return [
     `We created 'ai-migrations/MIGRATE_EXPO_54.md' with instructions for an AI Agent to help migrate your Expo projects to Expo SDK 54.`,
