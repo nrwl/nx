@@ -732,7 +732,7 @@ export class TaskOrchestrator {
       );
 
       this.runningContinuousTasks.set(task.id, runningTask);
-      runningTask.onExit(() => {
+      runningTask.onExit(async (code) => {
         if (this.tuiEnabled) {
           this.options.lifeCycle.setTaskStatus(
             task.id,
@@ -740,6 +740,11 @@ export class TaskOrchestrator {
           );
         }
         this.runningContinuousTasks.delete(task.id);
+
+        const status = code === 0 ? 'success' : 'failure';
+        await this.postRunSteps([task], [{ task, status }], false, {
+          groupId,
+        });
       });
 
       // task is already running by another process, we schedule the next tasks
@@ -802,13 +807,16 @@ export class TaskOrchestrator {
     this.runningTasksService.addRunningTask(task.id);
     this.runningContinuousTasks.set(task.id, childProcess);
 
-    childProcess.onExit(() => {
+    childProcess.onExit(async (code) => {
       if (this.tuiEnabled) {
         this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Stopped);
       }
       if (this.runningContinuousTasks.delete(task.id)) {
         this.runningTasksService.removeRunningTask(task.id);
       }
+
+      const status = code === 0 ? 'success' : 'failure';
+      await this.postRunSteps([task], [{ task, status }], false, { groupId });
     });
     await this.scheduleNextTasksAndReleaseThreads();
     if (this.initializingTaskIds.has(task.id)) {
@@ -851,7 +859,10 @@ export class TaskOrchestrator {
     const now = Date.now();
     for (const task of tasks) {
       task.endTime = now;
-      await this.recordOutputsHash(task);
+      // Continuous tasks don't have outputs to track
+      if (!task.continuous) {
+        await this.recordOutputsHash(task);
+      }
     }
 
     if (doNotSkipCache) {
