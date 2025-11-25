@@ -25,7 +25,8 @@
   "author": "Colum Ferry",
   "license": "MIT",
   "homepage": "https://nx.dev",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "typings": "./index.d.ts",
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
@@ -46,22 +47,44 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "default": "./index.js"
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./src/generators/*/schema.d.ts",
-    "./package.json": {
-      "default": "./package.json"
-    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
     "./generators": {
       "types": "./generators.d.ts",
-      "default": "./generators.js"
+      "@nx/nx-source": "./generators.ts",
+      "import": "./dist/generators.js",
+      "default": "./dist/generators.js"
     },
     "./config-utils": {
       "types": "./config-utils.d.ts",
-      "default": "./config-utils.js"
-    }
+      "@nx/nx-source": "./config-utils.ts",
+      "import": "./dist/config-utils.js",
+      "default": "./dist/config-utils.js"
+    },
+    "./src/generators/*": {
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts",
+      "import": "./dist/src/generators/*.js",
+      "default": "./dist/src/generators/*.js"
+    },
+    "./src/generators/**/*": {
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts",
+      "import": "./dist/src/generators/**/*.js",
+      "default": "./dist/src/generators/**/*.js"
+    },
+    "./src/utils/*": {
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
+    },
+    "./generators/*/schema.json": "./dist/src/generators/*/schema.json",
+    "./generators/*/schema": "./src/generators/*/schema.d.ts"
   }
 }

@@ -20,4 +20,5 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/packages/vite',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 };

@@ -34,7 +34,8 @@
               "eslint",
               "typescript",
               "@nx/cypress",
-              "@nx/playwright"
+              "@nx/playwright",
+              "jest-environment-node"
             ]
           }
         ]

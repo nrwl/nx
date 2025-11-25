@@ -34,7 +34,8 @@
               "typescript",
               "@playwright/test",
               "@nx/webpack",
-              "@nx/vite"
+              "@nx/vite",
+              "jest-environment-node"
             ]
           }
         ]

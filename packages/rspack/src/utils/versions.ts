@@ -1,4 +1,4 @@
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require('nx/package.json').version;
 export const rspackCoreVersion = '^1.5.0';
 export const rspackDevServerVersion = '^1.1.4';
 

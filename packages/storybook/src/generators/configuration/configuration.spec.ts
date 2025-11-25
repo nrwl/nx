@@ -14,7 +14,7 @@ import { libraryGenerator } from '@nx/js';
 import { TsConfig } from '../../utils/utilities';
 import { nxVersion, storybookVersion } from '../../utils/versions';
 import configurationGenerator from './configuration';
-import * as variousProjects from './test-configs/various-projects.json';
+import variousProjects from './test-configs/various-projects.json';
 
 // nested code imports graph from the repo, which might have inaccurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({

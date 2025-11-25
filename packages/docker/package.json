@@ -22,23 +22,54 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "homepage": "https://nx.dev",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "typings": "./index.d.ts",
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "default": "./index.js"
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./release/version-utils": {
       "types": "./src/release/version-utils.d.ts",
-      "default": "./src/release/version-utils.js"
+      "@nx/nx-source": "./src/release/version-utils.ts",
+      "import": "./dist/src/release/version-utils.js",
+      "default": "./dist/src/release/version-utils.js"
     },
     "./generators": {
       "types": "./generators.d.ts",
-      "default": "./generators.js"
+      "@nx/nx-source": "./generators.ts",
+      "import": "./dist/generators.js",
+      "default": "./dist/generators.js"
     },
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
+    "./src/release/*": {
+      "types": "./src/release/*.d.ts",
+      "@nx/nx-source": "./src/release/*.ts",
+      "import": "./dist/src/release/*.js",
+      "default": "./dist/src/release/*.js"
+    },
+    "./src/utils/*": {
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
+    },
+    "./src/plugins/*": {
+      "types": "./src/plugins/*.d.ts",
+      "@nx/nx-source": "./src/plugins/*.ts",
+      "import": "./dist/src/plugins/*.js",
+      "default": "./dist/src/plugins/*.js"
+    },
+    "./src/plugins/**/*": {
+      "types": "./src/plugins/**/*.d.ts",
+      "@nx/nx-source": "./src/plugins/**/*.ts",
+      "import": "./dist/src/plugins/**/*.js",
+      "default": "./dist/src/plugins/**/*.js"
+    },
+    "./executors/*/schema.json": "./dist/src/executors/*/schema.json",
     "./executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
+    "./generators/*/schema.json": "./dist/src/generators/*/schema.json",
     "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",

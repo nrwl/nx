@@ -4,22 +4,31 @@
   "sourceRoot": "packages/create-nx-workspace",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-commands",
+    "build-base": {
       "outputs": [
-        "{workspaceRoot}/dist/packages/create-nx-workspace/bin/create-nx-workspace.js",
-        "{workspaceRoot}/dist/packages/create-nx-workspace/README.md"
+        "{projectRoot}/dist/**/*.{js,cjs,mjs}",
+        "{projectRoot}/**/*.d.ts"
+      ]
+    },
+    "build": {
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
       ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "executor": "nx:run-commands",
       "options": {
         "commands": [
           {
-            "command": "node ./scripts/chmod dist/packages/create-nx-workspace/bin/create-nx-workspace.js"
+            "command": "node ./scripts/copy-readme.js create-nx-workspace packages/create-nx-workspace/readme-template.md packages/create-nx-workspace/README.md"
           },
           {
-            "command": "node ./scripts/copy-readme.js create-nx-workspace"
-          },
-          {
-            "command": "node ./scripts/replace-versions.js dist/packages/create-nx-workspace/bin/create-nx-workspace.js"
+            "command": "node ./scripts/cleanup-json-in-dist packages/create-nx-workspace/dist"
           }
         ],
         "parallel": false
@@ -28,8 +37,13 @@
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./index.js",
+        "types": "./index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
         "assets": [
           {
             "input": "packages/create-nx-workspace",
@@ -51,11 +65,6 @@
             "input": "packages/create-nx-workspace",
             "glob": "**/*.js",
             "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/create-nx-workspace",
-            "glob": "**/*.d.ts",
             "output": "/"
           },
           {

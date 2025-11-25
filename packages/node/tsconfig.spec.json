@@ -4,7 +4,10 @@
     "outDir": "../../dist/packages/node/spec",
     "module": "commonjs",
     "types": ["jest", "node"],
-    "composite": true
+    "composite": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": false,
+    "moduleResolution": "node"
   },
   "include": [
     "**/*.spec.ts",
@@ -19,6 +22,7 @@
     "**/*.test.jsx",
     "**/*.d.ts",
     "jest.config.cts",
+    "jest.setup.ts",
     "*.json"
   ],
   "references": [

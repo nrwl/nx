@@ -43,7 +43,8 @@
               "eslint-plugin-import",
               "eslint-plugin-jsx-a11y",
               "eslint-plugin-react",
-              "eslint-plugin-react-hooks"
+              "eslint-plugin-react-hooks",
+              "jest-environment-node"
             ]
           }
         ]

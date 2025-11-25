@@ -1,6 +1,17 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+const mockFormatFiles = jest
+  .fn()
+  .mockImplementation(jest.requireActual('@nx/devkit').formatFiles);
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  formatFiles: mockFormatFiles,
+  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+    return {
+      nodes: {},
+      dependencies: {},
+    };
+  }),
+}));
 
-import * as devkit from '@nx/devkit';
 import {
   getProjects,
   readJson,
@@ -21,8 +32,10 @@ describe('app', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+  });
 
-    jest.clearAllMocks();
+  afterEach(() => {
+    mockFormatFiles.mockRestore();
   });
 
   describe('not nested', () => {
@@ -504,10 +517,10 @@ describe('app', () => {
           preset: '../jest.preset.js',
           testEnvironment: 'node',
           transform: {
-            '^.+\\\\.[tj]s$': '@swc/jest',
+            '^.+\\\\.[tj]s$': '@swc/jest'
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: '../coverage/my-node-app',
+          coverageDirectory: '../coverage/my-node-app'
         };
         "
       `);
@@ -530,10 +543,10 @@ describe('app', () => {
           preset: '../jest.preset.js',
           testEnvironment: 'node',
           transform: {
-            '^.+\\\\.[tj]s$': 'babel-jest',
+            '^.+\\\\.[tj]s$': 'babel-jest'
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: '../coverage/my-node-app',
+          coverageDirectory: '../coverage/my-node-app'
         };
         "
       `);
@@ -594,26 +607,25 @@ describe('app', () => {
 
   describe('--skipFormat', () => {
     it('should format files by default', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
+      const formatFilesSpy = mockFormatFiles.mockResolvedValue(true);
       await applicationGenerator(tree, {
         directory: 'my-node-app',
         addPlugin: true,
+        skipFormat: false,
       });
 
-      expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(formatFilesSpy).toHaveBeenCalled();
     });
 
     it('should not format files when --skipFormat=true', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
+      const formatFilesSpy = mockFormatFiles.mockResolvedValue(true);
       await applicationGenerator(tree, {
         directory: 'my-node-app',
         skipFormat: true,
         addPlugin: true,
       });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+      expect(formatFilesSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -886,7 +898,7 @@ describe('app', () => {
       expect(tree.read('apps/my-app/jest.config.cts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/* eslint-disable */
-        const { readFileSync } = require('fs');
+        const { readFileSync } = require('fs')
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
@@ -901,10 +913,10 @@ describe('app', () => {
           preset: '../../jest.preset.js',
           testEnvironment: 'node',
           transform: {
-            '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+            '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig]
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: 'test-output/jest/coverage',
+          coverageDirectory: 'test-output/jest/coverage'
         };
         "
       `);

@@ -1,12 +1,38 @@
-import * as fs from 'fs';
+// Define all mocks FIRST - BEFORE any imports
+const mockReadNxJson = jest.fn();
+jest.mock('../config/configuration', () => ({
+  ...jest.requireActual('../config/configuration'),
+  readNxJson: mockReadNxJson,
+}));
+
+const mockExistsSync = jest.fn();
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  existsSync: mockExistsSync,
+}));
+
+const mockExecSync = jest.fn();
+jest.mock('child_process', () => ({
+  ...jest.requireActual('child_process'),
+  execSync: mockExecSync,
+}));
+
+const mockReadPackageJson = jest.fn();
+jest.mock('../project-graph/file-utils', () => ({
+  ...jest.requireActual('../project-graph/file-utils'),
+  readPackageJson: mockReadPackageJson,
+}));
+
+const mockReadJsonFile = jest.fn();
+jest.mock('../utils/fileutils', () => ({
+  ...jest.requireActual('../utils/fileutils'),
+  readJsonFile: mockReadJsonFile,
+}));
+
+// NOW import - mocks are already in place
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import * as childProcess from 'child_process';
 import { tmpdir } from 'os';
-
-import * as configModule from '../config/configuration';
-import * as projectGraphFileUtils from '../project-graph/file-utils';
-import * as fileUtils from '../utils/fileutils';
 import {
   addPackagePathToWorkspaces,
   detectPackageManager,
@@ -22,18 +48,20 @@ import {
 
 describe('package-manager', () => {
   describe('detectPackageManager', () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
+    beforeEach(() => {
+      mockReadNxJson.mockReset();
+      mockExistsSync.mockReset();
     });
+
     it('should detect package manager in nxJson', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
+      mockReadNxJson.mockReturnValueOnce({
         cli: {
           packageManager: 'pnpm',
         },
       });
       expect(detectPackageManager()).toEqual('pnpm');
 
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
+      mockReadNxJson.mockReturnValueOnce({
         cli: {
           packageManager: 'yarn',
         },
@@ -42,8 +70,8 @@ describe('package-manager', () => {
     });
 
     it('should detect yarn package manager from yarn.lock', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
-      jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
+      mockReadNxJson.mockReturnValueOnce({});
+      mockExistsSync.mockImplementation((p) => {
         switch (p) {
           case 'yarn.lock':
             return true;
@@ -61,12 +89,12 @@ describe('package-manager', () => {
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('yarn');
-      expect(fs.existsSync).toHaveBeenNthCalledWith(3, 'yarn.lock');
+      expect(mockExistsSync).toHaveBeenNthCalledWith(3, 'yarn.lock');
     });
 
     it('should detect pnpm package manager from pnpm-lock.yaml', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
-      jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
+      mockReadNxJson.mockReturnValueOnce({});
+      mockExistsSync.mockImplementation((p) => {
         switch (p) {
           case 'yarn.lock':
             return false;
@@ -84,12 +112,12 @@ describe('package-manager', () => {
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('pnpm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(4);
+      expect(mockExistsSync).toHaveBeenCalledTimes(4);
     });
 
     it('should detect bun package manager from bun.lockb', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
-      jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
+      mockReadNxJson.mockReturnValueOnce({});
+      mockExistsSync.mockImplementation((p) => {
         switch (p) {
           case 'yarn.lock':
             return false;
@@ -107,12 +135,12 @@ describe('package-manager', () => {
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('bun');
-      expect(fs.existsSync).toHaveBeenCalledTimes(1);
+      expect(mockExistsSync).toHaveBeenCalledTimes(1);
     });
 
     it('should detect bun package manager from bun.lock', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
-      jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
+      mockReadNxJson.mockReturnValueOnce({});
+      mockExistsSync.mockImplementation((p) => {
         switch (p) {
           case 'yarn.lock':
             return false;
@@ -130,12 +158,12 @@ describe('package-manager', () => {
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('bun');
-      expect(fs.existsSync).toHaveBeenCalledTimes(2);
+      expect(mockExistsSync).toHaveBeenCalledTimes(2);
     });
 
     it('should use npm package manager as default', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
-      jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
+      mockReadNxJson.mockReturnValueOnce({});
+      mockExistsSync.mockImplementation((p) => {
         switch (p) {
           case 'yarn.lock':
             return false;
@@ -153,17 +181,18 @@ describe('package-manager', () => {
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('npm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(4);
+      expect(mockExistsSync).toHaveBeenCalledTimes(4);
     });
   });
 
   describe('getPackageManagerVersion', () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
+    beforeEach(() => {
+      mockExecSync.mockReset();
+      mockReadJsonFile.mockReset();
     });
 
     it('should detect package manager from --version', () => {
-      jest.spyOn(childProcess, 'execSync').mockImplementation((p) => {
+      mockExecSync.mockImplementation((p) => {
         switch (p) {
           case 'yarn --version':
             return '1.22.10';
@@ -181,90 +210,84 @@ describe('package-manager', () => {
     });
 
     it('should detect pnpm package manager version from package.json packageManager', () => {
-      jest.spyOn(childProcess, 'execSync').mockImplementation(() => {
+      mockExecSync.mockImplementation(() => {
         throw new Error('Command failed');
       });
-      jest
-        .spyOn(fileUtils, 'readJsonFile')
-        .mockReturnValueOnce({ packageManager: 'pnpm@6.32.4' });
+      mockReadJsonFile.mockReturnValueOnce({ packageManager: 'pnpm@6.32.4' });
       expect(getPackageManagerVersion('pnpm')).toEqual('6.32.4');
     });
 
     it('should detect yarn package manager from package.json packageManager', () => {
-      jest.spyOn(childProcess, 'execSync').mockImplementation(() => {
+      mockExecSync.mockImplementation(() => {
         throw new Error('Command failed');
       });
-      jest
-        .spyOn(fileUtils, 'readJsonFile')
-        .mockReturnValueOnce({ packageManager: 'yarn@6.32.4' });
+      mockReadJsonFile.mockReturnValueOnce({ packageManager: 'yarn@6.32.4' });
       expect(getPackageManagerVersion('yarn')).toEqual('6.32.4');
     });
 
     it('should detect npm package manager from package.json packageManager', () => {
-      jest.spyOn(childProcess, 'execSync').mockImplementation(() => {
+      mockExecSync.mockImplementation(() => {
         throw new Error('Command failed');
       });
-      jest
-        .spyOn(fileUtils, 'readJsonFile')
-        .mockReturnValueOnce({ packageManager: 'npm@6.32.4' });
+      mockReadJsonFile.mockReturnValueOnce({ packageManager: 'npm@6.32.4' });
       expect(getPackageManagerVersion('npm')).toEqual('6.32.4');
     });
 
     it('should throw an error if packageManager does not exist in package.json', () => {
-      jest.spyOn(childProcess, 'execSync').mockImplementation(() => {
+      mockExecSync.mockImplementation(() => {
         throw new Error('Command failed');
       });
-      jest.spyOn(fileUtils, 'readJsonFile').mockReturnValueOnce({});
+      mockReadJsonFile.mockReturnValueOnce({});
       expect(() => getPackageManagerVersion('npm')).toThrow();
     });
 
     it('should throw an error if packageManager in package.json does not match detected pacakge manager', () => {
-      jest.spyOn(childProcess, 'execSync').mockImplementation(() => {
+      mockExecSync.mockImplementation(() => {
         throw new Error('Command failed');
       });
-      jest
-        .spyOn(fileUtils, 'readJsonFile')
-        .mockReturnValueOnce({ packageManager: 'npm@6.32.4' });
+      mockReadJsonFile.mockReturnValueOnce({ packageManager: 'npm@6.32.4' });
       expect(() => getPackageManagerVersion('yarn')).toThrow();
     });
   });
 
   describe('isWorkspacesEnabled', () => {
+    beforeEach(() => {
+      mockExistsSync.mockReset();
+      // Reset the mock but keep default implementation
+      const actualFileUtils = jest.requireActual('../project-graph/file-utils');
+      mockReadPackageJson.mockReset();
+      mockReadPackageJson.mockImplementation((path) =>
+        actualFileUtils.readPackageJson(path)
+      );
+    });
+
     it('should return true if package manager is pnpm and pnpm-workspace.yaml exists', () => {
-      jest.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
+      mockExistsSync.mockReturnValueOnce(true);
       expect(isWorkspacesEnabled('pnpm')).toEqual(true);
     });
 
     it('should return false if package manager is pnpm and pnpm-workspace.yaml does not exist', () => {
-      jest.spyOn(fs, 'existsSync').mockReturnValueOnce(false);
+      mockExistsSync.mockReturnValueOnce(false);
       expect(isWorkspacesEnabled('pnpm')).toEqual(false);
     });
 
     it('should return true if package manager is yarn and workspaces exists in package.json', () => {
-      jest
-        .spyOn(projectGraphFileUtils, 'readPackageJson')
-        .mockReturnValueOnce({ workspaces: ['packages/*'] });
+      mockReadPackageJson.mockReturnValueOnce({ workspaces: ['packages/*'] });
       expect(isWorkspacesEnabled('yarn')).toEqual(true);
     });
 
     it('should return false if package manager is yarn and workspaces does not exist in package.json', () => {
-      jest
-        .spyOn(projectGraphFileUtils, 'readPackageJson')
-        .mockReturnValueOnce({});
+      mockReadPackageJson.mockReturnValueOnce({});
       expect(isWorkspacesEnabled('yarn')).toEqual(false);
     });
 
     it('should return true if package manager is npm and workspaces exists in package.json', () => {
-      jest
-        .spyOn(projectGraphFileUtils, 'readPackageJson')
-        .mockReturnValueOnce({ workspaces: ['packages/*'] });
+      mockReadPackageJson.mockReturnValueOnce({ workspaces: ['packages/*'] });
       expect(isWorkspacesEnabled('npm')).toEqual(true);
     });
 
     it('should return false if package manager is npm and workspaces does not exist in package.json', () => {
-      jest
-        .spyOn(projectGraphFileUtils, 'readPackageJson')
-        .mockReturnValueOnce({});
+      mockReadPackageJson.mockReturnValueOnce({});
       expect(isWorkspacesEnabled('npm')).toEqual(false);
     });
   });
@@ -315,6 +338,20 @@ describe('package-manager', () => {
         mkdirSync(tempWorkspace, { recursive: true });
       }
     });
+
+    beforeEach(() => {
+      // For integration tests, mock readPackageJson to actually read the file
+      // Use real fs functions to avoid mock conflicts
+      const fs = jest.requireActual('fs');
+      mockReadPackageJson.mockImplementation((path) => {
+        const packageJsonPath = join(path, 'package.json');
+        if (fs.existsSync(packageJsonPath)) {
+          return JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+        }
+        return {};
+      });
+    });
+
     describe.each(['npm', 'yarn', 'bun'])('%s workspaces', (packageManager) => {
       it('should return workspaces from package.json', () => {
         writeFileSync(
@@ -340,6 +377,11 @@ describe('package-manager', () => {
 
     describe('pnpm workspaces', () => {
       beforeEach(() => {
+        // Delegate existsSync to real implementation for file operations
+        mockExistsSync.mockImplementation((path) =>
+          jest.requireActual('fs').existsSync(path)
+        );
+
         if (existsSync(join(tempWorkspace, 'pnpm-workspace.yaml'))) {
           rmSync(join(tempWorkspace, 'pnpm-workspace.yaml'));
         }
@@ -369,6 +411,19 @@ describe('package-manager', () => {
       if (!existsSync(tempWorkspace)) {
         mkdirSync(tempWorkspace, { recursive: true });
       }
+    });
+
+    beforeEach(() => {
+      // For integration tests, mock readPackageJson to actually read the file
+      // Use real fs functions to avoid mock conflicts
+      const fs = jest.requireActual('fs');
+      mockReadPackageJson.mockImplementation((path) => {
+        const packageJsonPath = join(path, 'package.json');
+        if (fs.existsSync(packageJsonPath)) {
+          return JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+        }
+        return {};
+      });
     });
 
     describe.each(['npm', 'yarn', 'bun'])('%s workspaces', (packageManager) => {
@@ -428,6 +483,11 @@ describe('package-manager', () => {
 
     describe('pnpm workspaces', () => {
       beforeEach(() => {
+        // Delegate existsSync to real implementation for file operations
+        mockExistsSync.mockImplementation((path) =>
+          jest.requireActual('fs').existsSync(path)
+        );
+
         if (existsSync(join(tempWorkspace, 'pnpm-workspace.yaml'))) {
           rmSync(join(tempWorkspace, 'pnpm-workspace.yaml'));
         }
@@ -556,8 +616,10 @@ describe('package-manager', () => {
       '@org:registry',
       'latest',
     ];
-    afterEach(() => {
-      jest.restoreAllMocks();
+
+    beforeEach(() => {
+      mockExecSync.mockReset();
+      mockReadJsonFile.mockReset();
     });
 
     it('should return npm publish command', () => {
@@ -575,7 +637,7 @@ describe('package-manager', () => {
     });
 
     it('should return pnpm publish command with scoped registry when provided for pnpm version >= 9.15.7 < 10.0.0 || >= 10.5.0', () => {
-      jest.spyOn(childProcess, 'execSync').mockImplementation((p) => {
+      mockExecSync.mockImplementation((p) => {
         switch (p) {
           case 'pnpm --version':
             return '9.15.7';
@@ -588,7 +650,7 @@ describe('package-manager', () => {
     });
 
     it('should return pnpm publish command without use scoped registry for pnpm version < 9.15.7', () => {
-      jest.spyOn(childProcess, 'execSync').mockImplementation((p) => {
+      mockExecSync.mockImplementation((p) => {
         switch (p) {
           case 'pnpm --version':
             return '9.10.1';
@@ -596,7 +658,7 @@ describe('package-manager', () => {
             throw new Error('Command failed');
         }
       });
-      jest.spyOn(fileUtils, 'readJsonFile').mockReturnValueOnce({});
+      mockReadJsonFile.mockReturnValueOnce({});
       const commands = getPackageManagerCommand('pnpm');
       expect(commands.publish(...publishCmdParam)).toEqual(
         'pnpm publish "dist/packages/my-pkg" --json --"registry=https://registry.npmjs.org/" --tag=latest --no-git-checks'

@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import { deduceDefaultBase } from './default-base';
 import { output } from '../output';
 import { execAndWait, spawnAndWait } from '../child-process-utils';
-import * as enquirer from 'enquirer';
+import enquirer from 'enquirer';
 
 export enum VcsPushStatus {
   PushedToVcs = 'PushedToVcs',

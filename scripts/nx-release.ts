@@ -123,10 +123,46 @@ const VALID_AUTHORS_FOR_LATEST = [
   }
 
   const packagesToReset = [
+    'packages/angular',
     'packages/angular-rspack',
     'packages/angular-rspack-compiler',
+    'packages/create-nx-plugin',
+    'packages/create-nx-workspace',
+    'packages/cypress',
+    'packages/detox',
+    'packages/devkit',
+    'packages/docker',
     'packages/dotnet',
+    'packages/esbuild',
+    'packages/eslint',
+    'packages/eslint-plugin',
+    'packages/expo',
+    'packages/express',
+    'packages/gradle',
+    'packages/jest',
+    'packages/js',
     'packages/maven',
+    'packages/module-federation',
+    'packages/nest',
+    'packages/next',
+    'packages/node',
+    'packages/nuxt',
+    'packages/nx',
+    'packages/playwright',
+    'packages/plugin',
+    'packages/react',
+    'packages/react-native',
+    'packages/remix',
+    'packages/rollup',
+    'packages/rsbuild',
+    'packages/rspack',
+    'packages/storybook',
+    'packages/vite',
+    'packages/vitest',
+    'packages/vue',
+    'packages/web',
+    'packages/webpack',
+    'packages/workspace',
   ];
 
   const packageSnapshots: { [key: string]: string } = {};
@@ -488,7 +524,7 @@ function determineDistTag(
 function hackFixForDevkitPeerDependencies() {
   const { readFileSync, writeFileSync } = require('fs');
   const devkitPackageJson = JSON.parse(
-    readFileSync('./dist/packages/devkit/package.json', 'utf-8')
+    readFileSync('./packages/devkit/package.json', 'utf-8')
   );
 
   const beforeVersion = devkitPackageJson.peerDependencies['nx'];
@@ -501,7 +537,7 @@ function hackFixForDevkitPeerDependencies() {
       majorVersion + 1
     } || ^${majorVersion}.0.0-0`;
     writeFileSync(
-      './dist/packages/devkit/package.json',
+      './packages/devkit/package.json',
       JSON.stringify(devkitPackageJson, null, 2)
     );
   }

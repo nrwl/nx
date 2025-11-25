@@ -1,28 +1,45 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/web",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": ".",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/web/tsconfig.tsbuildinfo"
+    "composite": true
   },
+  "include": [
+    "index.ts",
+    "babel.ts",
+    "src/**/*.ts",
+    "src/**/*.json",
+    "package.json",
+    "generators.json",
+    "executors.json"
+  ],
   "exclude": [
+    "node_modules",
+    "dist",
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/*_spec.ts",
     "**/*_test.ts",
-    "jest.config.ts"
+    "jest.config.ts",
+    "jest.config.cts",
+    "migrations.spec.ts",
+    "**/__fixtures__/**/*.*",
+    "**/__snapshots__/**/*.*"
   ],
-  "include": ["**/*.ts", "**/*.json"],
   "references": [
-    {
-      "path": "../vitest/tsconfig.lib.json"
-    },
     {
       "path": "../js/tsconfig.lib.json"
     },
     {
       "path": "../devkit/tsconfig.lib.json"
+    },
+    {
+      "path": "../vitest/tsconfig.lib.json"
     },
     {
       "path": "../nx/tsconfig.lib.json"

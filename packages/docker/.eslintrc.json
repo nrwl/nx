@@ -29,7 +29,12 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": ["nx", "eslint", "typescript"]
+            "ignoredDependencies": [
+              "nx",
+              "eslint",
+              "typescript",
+              "jest-environment-node"
+            ]
           }
         ]
       }

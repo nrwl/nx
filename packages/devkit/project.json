@@ -4,9 +4,35 @@
   "sourceRoot": "packages/devkit",
   "projectType": "library",
   "targets": {
+    "build-base": {
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,cjs,mjs}",
+        "{projectRoot}/**/*.d.ts"
+      ]
+    },
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/devkit/README.md"],
-      "command": "node ./scripts/copy-readme.js devkit",
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js devkit packages/devkit/readme-template.md packages/devkit/README.md"
+          },
+          {
+            "command": "node ./scripts/cleanup-json-in-dist packages/devkit/dist"
+          }
+        ],
+        "parallel": false
+      },
       "dependsOn": ["^build", "build-base", "legacy-post-build"]
     },
 
@@ -14,6 +40,8 @@
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
         "assets": [
           {
             "input": "packages/devkit",
@@ -28,18 +56,19 @@
           {
             "input": "packages/devkit",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "ignore": [
+              "**/tsconfig*.json",
+              "project.json",
+              ".eslintrc.json",
+              "migrations.json",
+              "package.json"
+            ],
             "output": "/"
           },
           {
             "input": "packages/devkit",
             "glob": "**/*.js",
             "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/devkit",
-            "glob": "**/*.d.ts",
             "output": "/"
           },
           {

@@ -1,6 +1,17 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+let mockFormatFiles = jest
+  .fn()
+  .mockImplementation(jest.requireActual('@nx/devkit').formatFiles);
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  formatFiles: mockFormatFiles,
+  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+    return {
+      nodes: {},
+      dependencies: {},
+    };
+  }),
+}));
 
-import * as devkit from '@nx/devkit';
 import {
   addProjectConfiguration,
   readJson,
@@ -228,7 +239,6 @@ describe('librarySecondaryEntryPoint generator', () => {
   });
 
   it('should format files', async () => {
-    jest.spyOn(devkit, 'formatFiles');
     addProjectConfiguration(tree, 'lib1', {
       root: 'libs/lib1',
       projectType: 'library',
@@ -243,7 +253,7 @@ describe('librarySecondaryEntryPoint generator', () => {
       library: 'lib1',
     });
 
-    expect(devkit.formatFiles).toHaveBeenCalled();
+    expect(mockFormatFiles).toHaveBeenCalled();
     expect(
       tree.read('libs/lib1/testing/src/index.ts', 'utf-8')
     ).toMatchSnapshot();

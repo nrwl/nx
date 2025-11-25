@@ -45,7 +45,8 @@
               "eslint",
               // we ensure it is installed and only use it when eslint is installed
               "@nx/eslint",
-              "ajv"
+              "ajv",
+              "jest-environment-node"
             ]
           }
         ]

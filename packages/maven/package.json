@@ -2,6 +2,7 @@
   "name": "@nx/maven",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "Nx plugin for Maven integration",
   "repository": {
     "type": "git",
@@ -17,6 +18,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./package.json": "./package.json",

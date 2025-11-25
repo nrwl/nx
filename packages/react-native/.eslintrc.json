@@ -40,7 +40,8 @@
               "@nx/detox",
               "@nx/cypress",
               "@nx/playwright",
-              "ajv"
+              "ajv",
+              "jest-environment-node"
             ]
           }
         ]

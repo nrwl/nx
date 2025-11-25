@@ -1,5 +1,5 @@
 // Adapted from https://raw.githubusercontent.com/babel/babel/4108524/packages/babel-code-frame/src/index.js
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 
 type Location = {
   column: number;

@@ -39,7 +39,12 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": ["nx", "typescript", "@nx/web"]
+            "ignoredDependencies": [
+              "nx",
+              "typescript",
+              "@nx/web",
+              "jest-environment-node"
+            ]
           }
         ]
       }

@@ -2,6 +2,7 @@
   "name": "nx",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
   "repository": {
     "type": "git",
@@ -9,7 +10,7 @@
     "directory": "packages/nx"
   },
   "scripts": {
-    "postinstall": "node ./bin/post-install || exit 0"
+    "postinstall": "node ./dist/bin/post-install || exit 0"
   },
   "keywords": [
     "Monorepo",
@@ -27,8 +28,8 @@
     "Mobile"
   ],
   "bin": {
-    "nx": "./bin/nx.js",
-    "nx-cloud": "./bin/nx-cloud.js"
+    "nx": "./dist/bin/nx.js",
+    "nx-cloud": "./dist/bin/nx-cloud.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -171,5 +172,187 @@
       "x86_64-unknown-linux-musl",
       "x86_64-unknown-freebsd"
     ]
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "@nx/nx-source": "./src/index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./presets/*.json": "./presets/*.json",
+    "./schemas/*.json": "./schemas/*.json",
+    "./bin/*": {
+      "types": "./bin/*.d.ts",
+      "@nx/nx-source": "./bin/*.ts",
+      "import": "./dist/bin/*.js",
+      "default": "./dist/bin/*.js"
+    },
+    "./plugins/*": {
+      "types": "./plugins/*.d.ts",
+      "@nx/nx-source": "./plugins/*.ts",
+      "import": "./dist/plugins/*.js",
+      "default": "./dist/plugins/*.js"
+    },
+    "./release": {
+      "types": "./release/index.d.ts",
+      "@nx/nx-source": "./release/index.ts",
+      "import": "./dist/release/index.js",
+      "default": "./dist/release/index.js"
+    },
+    "./release/*": {
+      "types": "./release/*.d.ts",
+      "@nx/nx-source": "./release/*.ts",
+      "import": "./dist/release/*.js",
+      "default": "./dist/release/*.js"
+    },
+    "./release/changelog-renderer/*": {
+      "types": "./release/changelog-renderer/*.d.ts",
+      "@nx/nx-source": "./release/changelog-renderer/*.ts",
+      "import": "./dist/release/changelog-renderer/*.js",
+      "default": "./dist/release/changelog-renderer/*.js"
+    },
+    "./tasks-runners/*": {
+      "types": "./tasks-runners/*.d.ts",
+      "@nx/nx-source": "./tasks-runners/*.ts",
+      "import": "./dist/tasks-runners/*.js",
+      "default": "./dist/tasks-runners/*.js"
+    },
+    "./src/utils/*": {
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
+    },
+    "./src/generators/*": {
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts",
+      "import": "./dist/src/generators/*.js",
+      "default": "./dist/src/generators/*.js"
+    },
+    "./src/executors/*": {
+      "types": "./src/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts",
+      "import": "./dist/src/executors/*.js",
+      "default": "./dist/src/executors/*.js"
+    },
+    "./src/internal-testing-utils/*": {
+      "types": "./src/internal-testing-utils/*.d.ts",
+      "@nx/nx-source": "./src/internal-testing-utils/*.ts",
+      "import": "./dist/src/internal-testing-utils/*.js",
+      "default": "./dist/src/internal-testing-utils/*.js"
+    },
+    "./src/devkit-exports": {
+      "types": "./src/devkit-exports.d.ts",
+      "@nx/nx-source": "./src/devkit-exports.ts",
+      "import": "./dist/src/devkit-exports.js",
+      "default": "./dist/src/devkit-exports.js"
+    },
+    "./src/devkit-internals": {
+      "types": "./src/devkit-internals.d.ts",
+      "@nx/nx-source": "./src/devkit-internals.ts",
+      "import": "./dist/src/devkit-internals.js",
+      "default": "./dist/src/devkit-internals.js"
+    },
+    "./src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud": {
+      "types": "./src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud.d.ts",
+      "@nx/nx-source": "./src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud.ts",
+      "import": "./dist/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud.js",
+      "default": "./dist/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud.js"
+    },
+    "./src/config/configuration": {
+      "types": "./src/config/configuration.d.ts",
+      "@nx/nx-source": "./src/config/configuration.ts",
+      "import": "./dist/src/config/configuration.js",
+      "default": "./dist/src/config/configuration.js"
+    },
+    "./src/config/nx-json": {
+      "types": "./src/config/nx-json.d.ts",
+      "@nx/nx-source": "./src/config/nx-json.ts",
+      "import": "./dist/src/config/nx-json.js",
+      "default": "./dist/src/config/nx-json.js"
+    },
+    "./src/config/misc-interfaces": {
+      "types": "./src/config/misc-interfaces.d.ts",
+      "@nx/nx-source": "./src/config/misc-interfaces.ts",
+      "import": "./dist/src/config/misc-interfaces.js",
+      "default": "./dist/src/config/misc-interfaces.js"
+    },
+    "./src/adapter/ngcli-adapter": {
+      "types": "./src/adapter/ngcli-adapter.d.ts",
+      "@nx/nx-source": "./src/adapter/ngcli-adapter.ts",
+      "import": "./dist/src/adapter/ngcli-adapter.js",
+      "default": "./dist/src/adapter/ngcli-adapter.js"
+    },
+    "./src/adapter/*": {
+      "types": "./src/adapter/*.d.ts",
+      "@nx/nx-source": "./src/adapter/*.ts",
+      "import": "./dist/src/adapter/*.js",
+      "default": "./dist/src/adapter/*.js"
+    },
+    "./src/config/project-graph": {
+      "types": "./src/config/project-graph.d.ts",
+      "@nx/nx-source": "./src/config/project-graph.ts",
+      "import": "./dist/src/config/project-graph.js",
+      "default": "./dist/src/config/project-graph.js"
+    },
+    "./src/hasher/task-hasher": {
+      "types": "./src/hasher/task-hasher.d.ts",
+      "@nx/nx-source": "./src/hasher/task-hasher.ts",
+      "import": "./dist/src/hasher/task-hasher.js",
+      "default": "./dist/src/hasher/task-hasher.js"
+    },
+    "./src/plugins/package-json": {
+      "types": "./src/plugins/package-json/index.d.ts",
+      "@nx/nx-source": "./src/plugins/package-json/index.ts",
+      "import": "./dist/src/plugins/package-json/index.js",
+      "default": "./dist/src/plugins/package-json/index.js"
+    },
+    "./src/plugins/package-json/*": {
+      "types": "./src/plugins/package-json/*.d.ts",
+      "@nx/nx-source": "./src/plugins/package-json/*.ts",
+      "import": "./dist/src/plugins/package-json/*.js",
+      "default": "./dist/src/plugins/package-json/*.js"
+    },
+    "./src/plugins/js/*": {
+      "types": "./src/plugins/js/*.d.ts",
+      "@nx/nx-source": "./src/plugins/js/*.ts",
+      "import": "./dist/src/plugins/js/*.js",
+      "default": "./dist/src/plugins/js/*.js"
+    },
+    "./src/daemon/*": {
+      "types": "./src/daemon/*.d.ts",
+      "@nx/nx-source": "./src/daemon/*.ts",
+      "import": "./dist/src/daemon/*.js",
+      "default": "./dist/src/daemon/*.js"
+    },
+    "./src/project-graph/*": {
+      "types": "./src/project-graph/*.d.ts",
+      "@nx/nx-source": "./src/project-graph/*.ts",
+      "import": "./dist/src/project-graph/*.js",
+      "default": "./dist/src/project-graph/*.js"
+    },
+    "./src/project-graph/**/*": {
+      "types": "./src/project-graph/**/*.d.ts",
+      "@nx/nx-source": "./src/project-graph/**/*.ts",
+      "import": "./dist/src/project-graph/**/*.js",
+      "default": "./dist/src/project-graph/**/*.js"
+    },
+    "./src/hasher/*": {
+      "types": "./src/hasher/*.d.ts",
+      "@nx/nx-source": "./src/hasher/*.ts",
+      "import": "./dist/src/hasher/*.js",
+      "default": "./dist/src/hasher/*.js"
+    },
+    "./src/devkit-testing-exports": {
+      "types": "./src/devkit-testing-exports.d.ts",
+      "@nx/nx-source": "./src/devkit-testing-exports.ts",
+      "import": "./dist/src/devkit-testing-exports.js",
+      "default": "./dist/src/devkit-testing-exports.js"
+    }
   }
 }

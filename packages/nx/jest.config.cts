@@ -1,12 +1,17 @@
-/* eslint-disable */
 module.exports = {
   transform: {
-    '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   globals: {},
   displayName: 'nx',
   preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   // Ensure cargo insta snapshots do not get picked up by jest
   testPathIgnorePatterns: ['<rootDir>/src/native/tui'],
 };

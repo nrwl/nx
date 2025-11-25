@@ -4,14 +4,45 @@
   "sourceRoot": "packages/react",
   "projectType": "library",
   "targets": {
+    "build-base": {
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,cjs,mjs}",
+        "{projectRoot}/**/*.d.ts"
+      ]
+    },
     "build": {
-      "command": "node ./scripts/copy-readme.js react",
-      "outputs": ["{workspaceRoot}/dist/packages/react/README.md"]
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js react packages/react/readme-template.md packages/react/README.md"
+          },
+          {
+            "command": "node ./scripts/cleanup-json-in-dist packages/react/dist"
+          }
+        ],
+        "parallel": false
+      },
+      "dependsOn": ["^build", "build-base", "legacy-post-build"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./index.js",
+        "types": "./index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
         "assets": [
           {
             "input": "packages/react",
@@ -37,11 +68,6 @@
             "input": "packages/react",
             "glob": "**/*.json",
             "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/react",
-            "glob": "**/*.d.ts",
             "output": "/"
           },
           {

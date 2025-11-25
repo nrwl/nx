@@ -1,6 +1,6 @@
 {
   "extends": "../../.eslintrc.json",
-  "ignorePatterns": ["!**/*", "node_modules"],
+  "ignorePatterns": ["!**/*", "**/*.d.ts", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -74,7 +74,8 @@
               "@angular-devkit/core",
               "@angular-devkit/architect",
               "@angular-devkit/schematics",
-              "webpack"
+              "webpack",
+              "jest-environment-node"
             ]
           }
         ]

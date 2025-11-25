@@ -1,4 +1,19 @@
-import { logger, Tree } from '@nx/devkit';
+const mockLoggerWarn = jest.fn();
+const mockLoggerDebug = jest.fn();
+jest.mock('@nx/devkit', () => {
+  const actual = jest.requireActual('@nx/devkit');
+  return {
+    ...actual,
+    logger: {
+      ...actual.logger,
+      warn: mockLoggerWarn,
+      debug: mockLoggerDebug,
+    },
+  };
+});
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
+import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from './component';
 import { createApp, createLib } from '../../utils/test-utils';
@@ -14,12 +29,10 @@ describe('component', () => {
     appTree = createTreeWithEmptyWorkspace();
     await createLib(appTree, libName);
     await createApp(appTree, appName);
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'debug').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
+    mockLoggerWarn.mockReset();
+    mockLoggerDebug.mockReset();
+    mockLoggerWarn.mockImplementation(() => {});
+    mockLoggerDebug.mockImplementation(() => {});
   });
 
   it('should generate files with vitest', async () => {

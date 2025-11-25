@@ -7,8 +7,6 @@
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": false,
     "types": ["node"],
-    "module": "commonjs",
-    "moduleResolution": "node",
     "noImplicitAny": false,
     "noUnusedLocals": false,
     "esModuleInterop": true,

@@ -2,7 +2,7 @@ import { ChildProcess, Serializable } from 'child_process';
 import { signalToCode } from '../../utils/exit-codes';
 import { RunningTask } from './running-task';
 import { Transform } from 'stream';
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { readFileSync } from 'fs';
 
 export class NodeChildProcessWithNonDirectOutput implements RunningTask {

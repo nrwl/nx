@@ -1,3 +1,13 @@
+// Mock devkit internals to prevent actual plugin loading during tests
+jest.mock('nx/src/devkit-internals', () => ({
+  ...jest.requireActual('nx/src/devkit-internals'),
+  retrieveProjectConfigurationsWithAngularProjects: jest
+    .fn()
+    .mockResolvedValue({
+      projects: {},
+    }),
+}));
+
 import { TempFs } from '../../internal-testing-utils';
 import { convertNxExecutor } from './convert-nx-executor';
 

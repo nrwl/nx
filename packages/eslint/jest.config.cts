@@ -7,4 +7,6 @@ module.exports = {
   globals: {},
   displayName: 'eslint',
   preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  coverageDirectory: '../../coverage/packages/eslint',
 };

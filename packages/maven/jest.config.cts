@@ -7,4 +7,5 @@ module.exports = {
   globals: {},
   displayName: 'maven',
   preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 };

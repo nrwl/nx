@@ -1,6 +1,6 @@
 import { getDependencyVersionFromPackageJson, Tree } from '@nx/devkit';
 
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require('nx/package.json').version;
 
 export const remixVersion = '^2.15.0';
 export const isbotVersion = '^4.4.0';

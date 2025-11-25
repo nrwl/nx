@@ -165,7 +165,7 @@ function parsePackageSpecifier(
 }
 
 export const coreNxPluginVersions = (
-  require('../../../package.json') as typeof import('../../../package.json')
+  require('nx/package.json') as typeof import('../../../package.json')
 )['nx-migrations'].packageGroup.reduce(
   (map, entry) => {
     const packageName = typeof entry === 'string' ? entry : entry.package;

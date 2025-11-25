@@ -3,49 +3,49 @@
   "version": "0.1",
   "generators": {
     "library": {
-      "factory": "./src/generators/library/library#libraryGeneratorInternal",
-      "schema": "./src/generators/library/schema.json",
+      "factory": "./dist/src/generators/library/library#libraryGeneratorInternal",
+      "schema": "./dist/src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
       "description": "Create a library"
     },
     "init": {
-      "factory": "./src/generators/init/init#initGeneratorInternal",
-      "schema": "./src/generators/init/schema.json",
+      "factory": "./dist/src/generators/init/init#initGeneratorInternal",
+      "schema": "./dist/src/generators/init/schema.json",
       "aliases": ["lib"],
       "x-type": "init",
       "description": "Initialize a TS/JS workspace.",
       "hidden": true
     },
     "convert-to-swc": {
-      "factory": "./src/generators/convert-to-swc/convert-to-swc#convertToSwcGenerator",
-      "schema": "./src/generators/convert-to-swc/schema.json",
+      "factory": "./dist/src/generators/convert-to-swc/convert-to-swc#convertToSwcGenerator",
+      "schema": "./dist/src/generators/convert-to-swc/schema.json",
       "aliases": ["swc"],
       "x-type": "library",
       "description": "Convert a TypeScript library to compile with SWC."
     },
     "setup-verdaccio": {
-      "factory": "./src/generators/setup-verdaccio/generator#setupVerdaccio",
-      "schema": "./src/generators/setup-verdaccio/schema.json",
+      "factory": "./dist/src/generators/setup-verdaccio/generator#setupVerdaccio",
+      "schema": "./dist/src/generators/setup-verdaccio/schema.json",
       "alias": ["verdaccio"],
       "description": "Setup Verdaccio for local package management."
     },
     "setup-build": {
-      "factory": "./src/generators/setup-build/generator",
-      "schema": "./src/generators/setup-build/schema.json",
+      "factory": "./dist/src/generators/setup-build/generator",
+      "schema": "./dist/src/generators/setup-build/schema.json",
       "alias": ["build"],
       "description": "setup-build generator"
     },
     "typescript-sync": {
-      "factory": "./src/generators/typescript-sync/typescript-sync",
-      "schema": "./src/generators/typescript-sync/schema.json",
+      "factory": "./dist/src/generators/typescript-sync/typescript-sync",
+      "schema": "./dist/src/generators/typescript-sync/schema.json",
       "description": "Synchronize TypeScript project references based on the project graph",
       "alias": ["sync"],
       "hidden": true
     },
     "setup-prettier": {
-      "factory": "./src/generators/setup-prettier/generator",
-      "schema": "./src/generators/setup-prettier/schema.json",
+      "factory": "./dist/src/generators/setup-prettier/generator",
+      "schema": "./dist/src/generators/setup-prettier/schema.json",
       "description": "Setup Prettier as the formatting tool."
     }
   }

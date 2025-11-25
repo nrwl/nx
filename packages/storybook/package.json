@@ -2,6 +2,7 @@
   "name": "@nx/storybook",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
   "repository": {
     "type": "git",
@@ -18,8 +19,68 @@
     "Front-end",
     "Testing"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "typings": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./plugin": {
+      "types": "./plugin.d.ts",
+      "@nx/nx-source": "./plugin.ts",
+      "import": "./dist/plugin.js",
+      "default": "./dist/plugin.js"
+    },
+    "./presets/*": {
+      "types": "./presets/*.d.ts",
+      "@nx/nx-source": "./presets/*.ts",
+      "import": "./dist/presets/*.js",
+      "default": "./dist/presets/*.js"
+    },
+    "./src/generators/*": {
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts",
+      "import": "./dist/src/generators/*.js",
+      "default": "./dist/src/generators/*.js"
+    },
+    "./src/generators/**/*": {
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts",
+      "import": "./dist/src/generators/**/*.js",
+      "default": "./dist/src/generators/**/*.js"
+    },
+    "./src/executors/*": {
+      "types": "./src/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts",
+      "import": "./dist/src/executors/*.js",
+      "default": "./dist/src/executors/*.js"
+    },
+    "./src/executors/**/*": {
+      "types": "./src/executors/**/*.d.ts",
+      "@nx/nx-source": "./src/executors/**/*.ts",
+      "import": "./dist/src/executors/**/*.js",
+      "default": "./dist/src/executors/**/*.js"
+    },
+    "./src/utils/*": {
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
+    },
+    "./src/utils/**/*": {
+      "types": "./src/utils/**/*.d.ts",
+      "@nx/nx-source": "./src/utils/**/*.ts",
+      "import": "./dist/src/utils/**/*.js",
+      "default": "./dist/src/utils/**/*.js"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json"
+  },
   "author": "Isaac Mann",
   "license": "MIT",
   "bugs": {

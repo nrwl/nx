@@ -1,1 +1,1 @@
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require(require.resolve('nx/package.json')).version;

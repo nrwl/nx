@@ -21,7 +21,7 @@
     "Testing",
     "Front-end"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -41,6 +41,7 @@
     "minimatch": "catalog:"
   },
   "devDependencies": {
+    "jest-environment-node": "catalog:jest",
     "nx": "workspace:*"
   },
   "peerDependencies": {
@@ -54,17 +55,62 @@
   "executors": "./executors.json",
   "generators": "./generators.json",
   "exports": {
-    ".": "./index.js",
+    ".": {
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./executors.json": "./executors.json",
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./plugin": "./plugin.js",
-    "./preset": "./src/utils/preset.js"
+    "./plugin": {
+      "types": "./plugin.d.ts",
+      "@nx/nx-source": "./plugin.ts",
+      "import": "./dist/plugin.js",
+      "default": "./dist/plugin.js"
+    },
+    "./preset": {
+      "types": "./preset.d.ts",
+      "@nx/nx-source": "./preset.ts",
+      "import": "./dist/preset.js",
+      "default": "./dist/preset.js"
+    },
+    "./src/generators/*": {
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts",
+      "import": "./dist/src/generators/*.js",
+      "default": "./dist/src/generators/*.js"
+    },
+    "./src/generators/**/*": {
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts",
+      "import": "./dist/src/generators/**/*.js",
+      "default": "./dist/src/generators/**/*.js"
+    },
+    "./src/executors/*": {
+      "types": "./src/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts",
+      "import": "./dist/src/executors/*.js",
+      "default": "./dist/src/executors/*.js"
+    },
+    "./src/executors/**/*": {
+      "types": "./src/executors/**/*.d.ts",
+      "@nx/nx-source": "./src/executors/**/*.ts",
+      "import": "./dist/src/executors/**/*.js",
+      "default": "./dist/src/executors/**/*.js"
+    },
+    "./src/utils/*": {
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
+    },
+    "./generators/*/schema.json": "./dist/src/generators/*/schema.json",
+    "./generators/*/schema": "./src/generators/*/schema.d.ts",
+    "./executors/*/schema.json": "./dist/src/executors/*/schema.json",
+    "./executors/*/schema": "./src/executors/*/schema.d.ts"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

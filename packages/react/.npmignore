@@ -1,0 +1,33 @@
+# Build artifacts to exclude
+dist/package.json
+dist/migrations.json
+dist/generators.json
+dist/executors.json
+dist/tsconfig.tsbuildinfo
+dist/.eslintrc.json
+dist/.babelrc
+
+# Source files (exclude TS, but keep declarations)
+**/*.ts
+**/*.d.ts.map
+!**/*.d.ts
+
+# Test files and fixtures
+src/**/__fixtures__/**
+src/**/__snapshots__/**
+src/**/*.snap
+src/**/*.spec.ts
+src/**/*.test.ts
+
+# Configuration files
+.eslintrc.json
+.babelrc
+jest.config.cts
+jest.config.ts
+tsconfig.json
+tsconfig.*.json
+project.json
+
+# Other source artifacts
+migrations.spec.ts
+readme-template.md

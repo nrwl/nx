@@ -4,14 +4,46 @@
   "sourceRoot": "packages/eslint",
   "projectType": "library",
   "targets": {
+    "build-base": {
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,cjs,mjs}",
+        "{projectRoot}/**/*.d.ts"
+      ]
+    },
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/eslint/README.md"],
-      "command": "node ./scripts/copy-readme.js eslint"
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js eslint packages/eslint/readme-template.md packages/eslint/README.md"
+          },
+          {
+            "command": "node ./scripts/cleanup-json-in-dist packages/eslint/dist"
+          }
+        ],
+        "parallel": false
+      },
+      "dependsOn": ["^build", "build-base", "legacy-post-build"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./index.js",
+        "types": "./index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
         "assets": [
           {
             "input": "packages/eslint",
@@ -33,11 +65,6 @@
             "input": "packages/eslint",
             "glob": "**/*.js",
             "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/eslint",
-            "glob": "**/*.d.ts",
             "output": "/"
           },
           {

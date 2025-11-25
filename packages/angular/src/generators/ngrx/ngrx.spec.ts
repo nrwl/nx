@@ -1,7 +1,18 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+let mockFormatFiles = jest
+  .fn()
+  .mockImplementation(jest.requireActual('@nx/devkit').formatFiles);
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  formatFiles: mockFormatFiles,
+  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+    return {
+      nodes: {},
+      dependencies: {},
+    };
+  }),
+}));
 
-import type { Tree } from '@nx/devkit';
-import * as devkit from '@nx/devkit';
+import { readJson, updateJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { dirname } from 'path';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
@@ -215,7 +226,7 @@ describe('ngrx', () => {
     it('should update package.json', async () => {
       await ngrxGenerator(tree, defaultOptions);
 
-      const packageJson = devkit.readJson(tree, 'package.json');
+      const packageJson = readJson(tree, 'package.json');
       expect(packageJson.dependencies['@ngrx/store']).toEqual(ngrxVersion);
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(ngrxVersion);
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(ngrxVersion);
@@ -237,7 +248,7 @@ describe('ngrx', () => {
     it('should not update package.json when skipPackageJson is true', async () => {
       await ngrxGenerator(tree, { ...defaultOptions, skipPackageJson: true });
 
-      const packageJson = devkit.readJson(tree, 'package.json');
+      const packageJson = readJson(tree, 'package.json');
       expect(packageJson.dependencies['@ngrx/store']).toBeUndefined();
       expect(packageJson.dependencies['@ngrx/effects']).toBeUndefined();
       expect(packageJson.dependencies['@ngrx/entity']).toBeUndefined();
@@ -420,11 +431,9 @@ describe('ngrx', () => {
     });
 
     it('should format files', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
       await ngrxGenerator(tree, { ...defaultOptions, skipFormat: false });
 
-      expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(mockFormatFiles).toHaveBeenCalled();
       expect(
         tree.read('myapp/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();
@@ -446,11 +455,9 @@ describe('ngrx', () => {
     });
 
     it('should not format files when skipFormat is true', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
       await ngrxGenerator(tree, { ...defaultOptions, skipFormat: true });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+      expect(mockFormatFiles).not.toHaveBeenCalled();
     });
 
     describe('generated unit tests', () => {
@@ -667,7 +674,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcome }];
         standalone: false,
         skipFormat: true,
       });
-      devkit.updateJson(tree, 'package.json', (json) => ({
+      updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
           ...json.dependencies,
@@ -679,7 +686,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcome }];
     it('should install the ngrx 18 packages', async () => {
       await ngrxGenerator(tree, defaultOptions);
 
-      const packageJson = devkit.readJson(tree, 'package.json');
+      const packageJson = readJson(tree, 'package.json');
       expect(packageJson.dependencies['@ngrx/store']).toEqual(
         backwardCompatibleVersions.angularV18.ngrxVersion
       );
@@ -713,7 +720,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcome }];
         standalone: false,
         skipFormat: true,
       });
-      devkit.updateJson(tree, 'package.json', (json) => ({
+      updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
           ...json.dependencies,

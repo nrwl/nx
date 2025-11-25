@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { ReleaseType, prerelease } from 'semver';

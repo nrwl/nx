@@ -1,11 +1,26 @@
+// Mock logger.warn function
+const mockLoggerWarn = jest.fn();
+jest.mock('nx/src/devkit-exports', () => ({
+  ...jest.requireActual('nx/src/devkit-exports'),
+  logger: {
+    warn: mockLoggerWarn,
+  },
+}));
+
 import { logger } from 'nx/src/devkit-exports';
 import { AggregatedLog } from './aggregate-log-util';
 
 describe(`aggregateLog utils`, () => {
+  let spyLog = '';
+
+  beforeEach(() => {
+    mockLoggerWarn.mockReset();
+    spyLog = '';
+    mockLoggerWarn.mockImplementation((log) => (spyLog = log));
+  });
+
   it('should aggregate similar logs to single log listing the affected projects', () => {
     // ARRANGE
-    let spyLog = '';
-    jest.spyOn(logger, 'warn').mockImplementation((log) => (spyLog = log));
     const aggregatedLogs = new AggregatedLog();
     aggregatedLogs.addLog({
       executorName: '@nx/vite:serve',
@@ -41,8 +56,6 @@ describe(`aggregateLog utils`, () => {
 
   it('should aggregate similar logs to single log and output different logs correctly', () => {
     // ARRANGE
-    let spyLog = '';
-    jest.spyOn(logger, 'warn').mockImplementation((log) => (spyLog = log));
     const aggregatedLogs = new AggregatedLog();
     aggregatedLogs.addLog({
       executorName: '@nx/vite:serve',
