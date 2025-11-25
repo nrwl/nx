@@ -279,6 +279,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     // Verbose and quiet flags
     if (options.verbose) {
       arguments.add("-X")
+      arguments.add("-e")
     }
 
     arguments.add("-nsu")
