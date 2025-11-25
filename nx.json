@@ -95,6 +95,11 @@
         "packageRoot": "dist/packages/{projectName}"
       }
     },
+    "mvn-*": {
+      "options": {
+        "forwardAllArgs": false
+      }
+    },
     "build": {
       "dependsOn": [
         "^build",
@@ -326,6 +331,12 @@
         "previewTargetName": "preview",
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps"
+      }
+    },
+    {
+      "plugin": "@nx/maven",
+      "options": {
+        "targetNamePrefix": "mvn-"
       }
     }
   ],

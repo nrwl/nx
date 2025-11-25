@@ -34,7 +34,6 @@
     <url>https://github.com/nrwl/nx/tree/master</url>
   </scm>
 
-
   <modules>
     <module>packages/maven/maven-plugin</module>
   </modules>
@@ -282,6 +281,7 @@
             </execution>
           </executions>
         </plugin>
+    
     </plugins>
     </pluginManagement>
 
