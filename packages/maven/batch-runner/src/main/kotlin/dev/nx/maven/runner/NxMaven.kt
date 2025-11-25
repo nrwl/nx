@@ -252,6 +252,14 @@ class NxMaven(
         workspaceReader
       ) as MavenExecutionResult
 
+      // Log exceptions with stack traces (Maven's context.options().showErrors() isn't reliable in parallel execution)
+      if (executionResult.hasExceptions()) {
+        log.error("Build completed with ${executionResult.exceptions.size} exception(s):")
+        for (e in executionResult.exceptions) {
+          log.error("Exception: ${e.message}", e)
+        }
+      }
+
       executionResult
     } catch (e: Exception) {
       log.error("   ❌ Error executing with cached session: ${e.message}", e)
