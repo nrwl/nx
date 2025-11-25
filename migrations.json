@@ -1,0 +1,12 @@
+{
+  "migrations": [
+    {
+      "cli": "nx",
+      "version": "22.2.0-beta.0",
+      "description": "Create AI Instructions to help migrate users workspaces to Next.js 16.",
+      "factory": "./src/migrations/update-22-2-0/create-ai-instructions-for-next-16",
+      "package": "@nx/next",
+      "name": "update-22-2-0-create-ai-instructions-for-next-16"
+    }
+  ]
+}
