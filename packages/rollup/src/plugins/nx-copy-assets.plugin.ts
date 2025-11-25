@@ -29,9 +29,10 @@ export function nxCopyAssetsPlugin(options: NxCopyAssetsPluginOptions): Plugin {
           );
           return joinPathFragments(relativeProjectRoot, a);
         } else {
+          const relativeInput = relative(workspaceRoot, a.input);
           return {
             ...a,
-            input: relative(workspaceRoot, a.input),
+            input: relativeInput || '.',
           };
         }
       });
