@@ -8,21 +8,42 @@ sidebar:
 
 The Nx Cloud + Bitbucket Integration lets you access the result of every run—with all its logs and build insights—straight from your PR.
 
-### Using an Access Token
+### Using an API Token
 
-Access tokens can be generated on a user account or repository level. Either will work with Nx Cloud.
+API tokens can be generated on a user account level and can be scoped to specific applications like Bitbucket. This is the recommended approach for Nx Cloud integration.
 
-The minimum required permissions are write access to PRs:
+An API token is a secure credential that allows scripts and other processes to authenticate with Bitbucket Cloud applications. You should treat API tokens as securely as any other password.
 
-![Create Access Token](../../../../../assets/nx-cloud/set-up/minimal-bitbucket-cloud-access-token.webp)
+#### Creating an API Token
 
-Once the Access Token is created, save it in a secure location and then head back to your workspace settings on NxCloud and let's set up a BitBucket integration:
+1. First, navigate to your [Bitbucket account settings](https://bitbucket.org/account/settings/) and select "API tokens" from the left menu
+2. Click "Create API token with scopes" to create a new token
+
+![Create API Token](../../../../../assets/nx-cloud/set-up/bitbucket-cloud-api-tokens-create.jpg)
+
+3. Give your token a name and proceed to the next step
+
+4. When prompted to select the app, choose **Bitbucket**. This ensures the API token can only access Bitbucket APIs and perform git operations:
+
+![Select Bitbucket App](../../../../../assets/nx-cloud/set-up/bitbucket-cloud-api-token-select-app.jpg)
+
+5. The required permissions for Nx Cloud are:
+   - `read:pullrequest:bitbucket` - to read pull request information
+   - `write:pullrequest:bitbucket` - to write comments on pull requests
+
+![Required Scopes](../../../../../assets/nx-cloud/set-up/bitbucket-cloud-api-token-required-scopes.jpg)
+
+6. Click "Create token" and copy your newly created API token to a secure location
+
+#### Configuring Nx Cloud with your API Token
+
+Once your API token is created, head back to your workspace settings on NxCloud to set up the Bitbucket integration:
 
 ![Access VCS Setup](../../../../../assets/nx-cloud/set-up/access-vcs-setup.webp)
 
 1. Fill-in all the required fields for selecting your Bitbucket repository
 2. Username is found on the [account settings](https://bitbucket.org/account/settings/) screen (it is not your email address)
-3. Paste your Access Token created earlier into the Access Token box
+3. Paste your API token created earlier into the API Token box
 4. That's it!
 
 ### Using an HTTP Access Token
