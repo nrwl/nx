@@ -3172,6 +3172,9 @@ importers:
       picocolors:
         specifier: 'catalog:'
         version: 1.1.1
+      semver:
+        specifier: 'catalog:'
+        version: 7.7.2
       tsconfig-paths:
         specifier: catalog:typescript
         version: 4.2.0

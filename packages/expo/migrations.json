@@ -17,6 +17,18 @@
       "cli": "nx",
       "description": "Add custom Jest resolver to handle Expo winter runtime issues",
       "factory": "./src/migrations/update-21-4-0/add-jest-resolver"
+    },
+    "update-22-0-0-create-ai-instructions-for-expo-54": {
+      "version": "22.0.0-beta.0",
+      "cli": "nx",
+      "description": "Create AI migration instructions for Expo SDK 54 upgrade",
+      "factory": "./src/migrations/update-22-0-0/create-ai-instructions-for-expo-54"
+    },
+    "update-22-0-0-add-expo-system-ui": {
+      "version": "22.0.0-beta.0",
+      "cli": "nx",
+      "description": "Add expo-system-ui dependency for Expo SDK 54",
+      "factory": "./src/migrations/update-22-0-0/add-expo-system-ui"
     }
   },
   "packageJsonUpdates": {
@@ -166,6 +178,91 @@
         },
         "@babel/runtime": {
           "version": "~7.27.6",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.0.0": {
+      "version": "22.0.0-beta.0",
+      "packages": {
+        "expo": {
+          "version": "~54.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-splash-screen": {
+          "version": "~0.31.0",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-status-bar": {
+          "version": "~3.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-system-ui": {
+          "version": "~6.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/cli": {
+          "version": "~0.26.0",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-preset-expo": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react": {
+          "version": "19.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-dom": {
+          "version": "19.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react": {
+          "version": "~19.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native": {
+          "version": "~0.81.4",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-web": {
+          "version": "~0.21.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/metro-config": {
+          "version": "~0.22.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/metro-runtime": {
+          "version": "~6.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg-transformer": {
+          "version": "~1.5.1",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg": {
+          "version": "15.12.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "~13.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-expo": {
+          "version": "~54.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@babel/runtime": {
+          "version": "~7.27.6",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-config": {
+          "version": "~0.83.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "~0.83.0",
           "alwaysAddToPackageJson": false
         }
       }
