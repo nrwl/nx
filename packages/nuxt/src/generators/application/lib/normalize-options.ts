@@ -5,6 +5,7 @@ import {
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema, Schema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getInstalledNuxtMajorVersion } from '../../../utils/version-utils';
 
 export async function normalizeOptions(
   host: Tree,
@@ -35,6 +36,13 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
+  // Detect workspace Nuxt version
+  const detectedMajor = getInstalledNuxtMajorVersion(host);
+  const nuxtMajorVersion: 3 | 4 = detectedMajor ?? 4; // Default to v4 if no existing Nuxt
+
+  // Set useAppDir default based on version (v4 defaults to true, v3 defaults to false)
+  const useAppDir = options.useAppDir ?? nuxtMajorVersion >= 4;
+
   const normalized = {
     ...options,
     name: projectNames.projectFileName,
@@ -47,6 +55,8 @@ export async function normalizeOptions(
     style: options.style ?? 'none',
     isUsingTsSolutionConfig,
     useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
+    useAppDir,
+    nuxtMajorVersion,
   } as NormalizedSchema;
 
   normalized.unitTestRunner ??= 'vitest';

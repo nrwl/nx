@@ -77,7 +77,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     onBoardingStatus === 'unclaimed' &&
     (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
 
-  tasks.push(ensureDependencies(tree, options));
+  tasks.push(await ensureDependencies(tree, options));
 
   const packageJson: PackageJson = {
     name: options.importPath,
@@ -94,10 +94,11 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       packageJson.nx.tags = options.parsedTags;
     }
   } else {
+    const sourceDir = options.useAppDir ? 'app' : 'src';
     addProjectConfiguration(tree, options.projectName, {
       root: options.appProjectRoot,
       projectType: 'application',
-      sourceRoot: `${options.appProjectRoot}/src`,
+      sourceRoot: `${options.appProjectRoot}/${sourceDir}`,
       tags: options.parsedTags?.length ? options.parsedTags : undefined,
       targets: {},
     });
@@ -111,24 +112,33 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
-  generateFiles(tree, join(__dirname, './files/base'), options.appProjectRoot, {
-    ...options,
-    offsetFromRoot: projectOffsetFromRoot,
-    relativePathToRootTsConfig: getRelativePathToRootTsConfig(
-      tree,
-      options.appProjectRoot
-    ),
-    title: options.projectName,
-    dot: '.',
-    tmpl: '',
-    style: options.style,
-    projectRoot: options.appProjectRoot,
-    hasVitest: options.unitTestRunner === 'vitest',
-  });
+  // Select template directory based on useAppDir
+  const templateDir = options.useAppDir ? 'app-dir' : 'base';
+  const nxWelcomeDir = options.useAppDir ? 'nx-welcome-app-dir' : 'nx-welcome';
 
   generateFiles(
     tree,
-    join(__dirname, './files/nx-welcome', onBoardingStatus),
+    join(__dirname, './files', templateDir),
+    options.appProjectRoot,
+    {
+      ...options,
+      offsetFromRoot: projectOffsetFromRoot,
+      relativePathToRootTsConfig: getRelativePathToRootTsConfig(
+        tree,
+        options.appProjectRoot
+      ),
+      title: options.projectName,
+      dot: '.',
+      tmpl: '',
+      style: options.style,
+      projectRoot: options.appProjectRoot,
+      hasVitest: options.unitTestRunner === 'vitest',
+    }
+  );
+
+  generateFiles(
+    tree,
+    join(__dirname, './files', nxWelcomeDir, onBoardingStatus),
     options.appProjectRoot,
     {
       ...options,
@@ -144,9 +154,10 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   );
 
   if (options.style === 'none') {
-    tree.delete(
-      joinPathFragments(options.appProjectRoot, `src/assets/css/styles.none`)
-    );
+    const stylesPath = options.useAppDir
+      ? `app/assets/css/styles.none`
+      : `src/assets/css/styles.none`;
+    tree.delete(joinPathFragments(options.appProjectRoot, stylesPath));
   }
 
   createTsConfig(
