@@ -23,7 +23,14 @@ export async function storybookConfigurationGenerator(
       addPlugin: true,
     });
 
-  const { root } = readProjectConfiguration(tree, options.project);
+  const { root, sourceRoot } = readProjectConfiguration(tree, options.project);
+
+  // Determine the source directory (app/ for Nuxt v4, src/ for Nuxt v3)
+  const sourceDir = sourceRoot?.endsWith('/app')
+    ? 'app'
+    : sourceRoot?.endsWith('/src')
+    ? 'src'
+    : 'src'; // default to src for backward compatibility
 
   tree.write(
     joinPathFragments(
@@ -31,7 +38,7 @@ export async function storybookConfigurationGenerator(
       '.storybook',
       'preview.' + (options.tsConfiguration ? 'ts' : 'js')
     ),
-    `import '../src/assets/css/styles.css';`
+    `import '../${sourceDir}/assets/css/styles.css';`
   );
 
   updateJson(tree, `${root}/tsconfig.storybook.json`, (json) => {
