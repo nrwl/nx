@@ -22,7 +22,7 @@ jest.mock('vitest/node', () => ({
     return {
       getRelevantTestSpecifications: jest.fn().mockResolvedValue([
         {
-          moduleId: 'src/test-1.ts',
+          moduleId: 'src/test.ts',
         },
         {
           moduleId: 'src/test-2.ts',
