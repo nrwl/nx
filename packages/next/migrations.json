@@ -8,7 +8,10 @@
     },
     "update-22-2-0-create-ai-instructions-for-next-16": {
       "cli": "nx",
-      "version": "22.2.0-beta.0",
+      "version": "22.2.0-beta.1",
+      "requires": {
+        "next": ">=16.0.0"
+      },
       "description": "Create AI Instructions to help migrate users workspaces to Next.js 16.",
       "factory": "./src/migrations/update-22-2-0/create-ai-instructions-for-next-16"
     }
@@ -45,6 +48,16 @@
           "version": "~15.2.4",
           "alwaysAddToPackageJson": false
         }
+      }
+    },
+    "22.2.0-beta.1": {
+      "version": "22.2.0-beta.1",
+      "requires": {
+        "next": "^15.0.0"
+      },
+      "packages": {
+        "next": "~16.0.1",
+        "eslint-config-next": "^16.0.1"
       }
     }
   }
