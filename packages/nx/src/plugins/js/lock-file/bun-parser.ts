@@ -489,7 +489,12 @@ function buildPackageIndex(lockFile: BunLockFile): PackageIndex {
           const prefix = packageKey.substring(0, lastSlash);
 
           // If the prefix is a workspace path or scoped package pattern
-          if (workspacePaths.has(prefix) || prefix.startsWith('@')) {
+          // For scoped packages, require prefix to contain '/' (e.g., "@scope/pkg")
+          // to avoid incorrectly matching just "@scope"
+          if (
+            workspacePaths.has(prefix) ||
+            (prefix.startsWith('@') && prefix.includes('/'))
+          ) {
             packagesWithWorkspaceVariants.add(possiblePackageName);
           }
         }
@@ -1195,13 +1200,22 @@ function isNestedPackageKey(packageKey: string, index: PackageIndex): boolean {
       return true;
     }
 
-    // Check for scoped workspace packages (e.g., "@quz/pkg1")
+    // Check for scoped workspace packages (e.g., "@quz/pkg1/lodash")
+    // The prefix must contain '/' to be a scoped package (e.g., "@scope/pkg")
+    // A prefix like just "@scope" without '/' is not a scoped package
     if (prefix.startsWith('@') && prefix.includes('/')) {
       return true;
     }
 
+    // If the key looks like a simple scoped package (e.g., "@custom/lodash")
+    // where parts.length === 2 and first part starts with '@', it's likely
+    // a scoped package alias, not a nested dependency
+    if (parts.length === 2 && parts[0].startsWith('@')) {
+      return false;
+    }
+
     // This could be dependency nesting (e.g., "is-even/is-odd")
-    // These should also be filtered out as they're not direct packages
+    // These should be filtered out as they're not direct packages
     return true;
   }
 
