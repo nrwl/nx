@@ -21,6 +21,10 @@
         "@nuxt/schema": {
           "version": "^4.0.0",
           "alwaysAddToPackageJson": false
+        },
+        "@nuxt/devtools": {
+          "version": "^3.0.0",
+          "alwaysAddToPackageJson": false
         }
       }
     }

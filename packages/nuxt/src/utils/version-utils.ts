@@ -7,6 +7,7 @@ import { clean, coerce, major } from 'semver';
 import {
   h3Version,
   nuxtDevtoolsVersion,
+  nuxtDevtoolsV3Version,
   nuxtKitV3Version,
   nuxtKitVersion,
   nuxtUiTemplatesVersion,
@@ -30,7 +31,7 @@ export async function getNuxtDependenciesVersionsToInstall(
       nuxt: nuxtV3Version,
       nuxtKit: nuxtKitV3Version,
       h3: h3Version,
-      nuxtDevtools: nuxtDevtoolsVersion,
+      nuxtDevtools: nuxtDevtoolsV3Version,
       nuxtUiTemplates: nuxtUiTemplatesVersion,
     };
   } else {

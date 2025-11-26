@@ -12,7 +12,9 @@ export const nuxtKitVersion = nuxtKitV4Version;
 
 // nuxt deps
 export const h3Version = '^1.8.2';
-export const nuxtDevtoolsVersion = '1.0.0';
+export const nuxtDevtoolsV4Version = '^3.0.0';
+export const nuxtDevtoolsV3Version = '^1.0.0';
+export const nuxtDevtoolsVersion = nuxtDevtoolsV4Version;
 export const nuxtUiTemplatesVersion = '^1.3.1';
 
 // linting deps - version-aware for flat config vs legacy
