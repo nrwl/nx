@@ -5,18 +5,33 @@ import { setupAiAgentsGenerator } from './set-up-ai-agents';
 import { SetupAiAgentsGeneratorSchema } from './schema';
 import { readJson } from '../../generators/utils/json';
 import { getAgentRulesWrapped } from '../constants';
+import * as packageJsonUtils from '../../utils/package-json';
+import * as fs from 'fs';
 
 describe('setup-ai-agents generator', () => {
   let tree: Tree;
+  let readModulePackageJsonSpy: jest.SpyInstance;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
     // Use local implementation instead of fetching from latest
     process.env.NX_AI_FILES_USE_LOCAL = 'true';
+
+    // Mock readModulePackageJson to return Nx 22+ by default
+    // This ensures existing tests pass by defaulting to the new format
+    readModulePackageJsonSpy = jest
+      .spyOn(packageJsonUtils, 'readModulePackageJson')
+      .mockReturnValue({
+        packageJson: { name: 'nx', version: '22.0.0' },
+        path: '/fake/path/package.json',
+      });
   });
 
   afterEach(() => {
     delete process.env.NX_AI_FILES_USE_LOCAL;
+    if (readModulePackageJsonSpy) {
+      readModulePackageJsonSpy.mockRestore();
+    }
   });
 
   it('should respect writeNxCloudRules option', async () => {
@@ -464,6 +479,102 @@ describe('setup-ai-agents generator', () => {
         expect(tree.exists('CLAUDE.md')).toBe(false);
         expect(tree.exists('.mcp.json')).toBe(false);
         expect(tree.exists('.gemini/settings.json')).toBe(false);
+      });
+    });
+
+    describe('Nx version-specific MCP configuration', () => {
+      it('should use "nx mcp" for Nx 22+', async () => {
+        readModulePackageJsonSpy.mockReturnValue({
+          packageJson: { name: 'nx', version: '22.0.0' },
+          path: '/fake/path/package.json',
+        });
+
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
+        expect(config.mcpServers['nx-mcp']).toEqual({
+          type: 'stdio',
+          command: 'npx',
+          args: ['nx', 'mcp'],
+        });
+      });
+
+      it('should use "nx-mcp" for Nx < 22', async () => {
+        readModulePackageJsonSpy.mockReturnValue({
+          packageJson: { name: 'nx', version: '21.0.0' },
+          path: '/fake/path/package.json',
+        });
+
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
+        expect(config.mcpServers['nx-mcp']).toEqual({
+          type: 'stdio',
+          command: 'npx',
+          args: ['nx-mcp'],
+        });
+      });
+
+      it('should use "nx mcp" as fallback when version cannot be determined', async () => {
+        readModulePackageJsonSpy.mockImplementation(() => {
+          throw new Error('Module not found');
+        });
+
+        // Also mock readFileSync to fail so it falls back to default version
+        const readFileSyncSpy = jest
+          .spyOn(fs, 'readFileSync')
+          .mockImplementation(() => {
+            throw new Error('File not found');
+          });
+
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(tree.read('.mcp.json')?.toString() ?? '{}');
+        expect(config.mcpServers['nx-mcp']).toEqual({
+          type: 'stdio',
+          command: 'npx',
+          args: ['nx', 'mcp'],
+        });
+
+        readFileSyncSpy.mockRestore();
+      });
+
+      it('should use "nx mcp" for Nx 23+', async () => {
+        readModulePackageJsonSpy.mockReturnValue({
+          packageJson: { name: 'nx', version: '23.1.0' },
+          path: '/fake/path/package.json',
+        });
+
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['gemini'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.gemini/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.mcpServers['nx-mcp']).toEqual({
+          type: 'stdio',
+          command: 'npx',
+          args: ['nx', 'mcp'],
+        });
       });
     });
   });

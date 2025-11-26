@@ -1,6 +1,9 @@
-import { execSync } from 'child_process';
+import { exec, execSync } from 'child_process';
+import { promisify } from 'util';
 import { existsSync, writeFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
+
+const execAsync = promisify(exec);
 import { dirSync } from 'tmp';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
@@ -348,13 +351,11 @@ export function readModulePackageJson(
   };
 }
 
-export function installPackageToTmp(
-  pkg: string,
-  requiredVersion: string
-): {
-  tempDir: string;
-  cleanup: () => void;
-} {
+/**
+ * Prepares all necessary information for installing a package to a temporary directory.
+ * This is used by both sync and async installation functions.
+ */
+function preparePackageInstallation(pkg: string, requiredVersion: string) {
   const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
     dir: dirSync().name,
     cleanup: () => {},
@@ -364,36 +365,83 @@ export function installPackageToTmp(
   const packageManager = detectPackageManager();
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
   generatePackageManagerFiles(tempDir, packageManager);
+
   const preInstallCommand = getPackageManagerCommand(packageManager).preInstall;
-  if (preInstallCommand) {
-    // ensure package.json and repo in tmp folder is set to a proper package manager state
-    execSync(preInstallCommand, {
-      cwd: tempDir,
-      stdio: isVerbose ? 'inherit' : 'ignore',
-      windowsHide: false,
-    });
-  }
   const pmCommands = getPackageManagerCommand(packageManager);
   let addCommand = pmCommands.addDev;
   if (packageManager === 'pnpm') {
     addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
   }
 
-  execSync(
-    `${addCommand} ${pkg}@${requiredVersion} ${
-      pmCommands.ignoreScriptsFlag ?? ''
-    }`,
-    {
-      cwd: tempDir,
-      stdio: isVerbose ? 'inherit' : 'ignore',
-      windowsHide: false,
-    }
-  );
+  const installCommand = `${addCommand} ${pkg}@${requiredVersion} ${
+    pmCommands.ignoreScriptsFlag ?? ''
+  }`;
+
+  const execOptions = {
+    cwd: tempDir,
+    stdio: isVerbose ? 'inherit' : 'ignore',
+    windowsHide: false,
+  } as const;
+
+  return {
+    tempDir,
+    cleanup,
+    preInstallCommand,
+    installCommand,
+    execOptions,
+  };
+}
+
+export function installPackageToTmp(
+  pkg: string,
+  requiredVersion: string
+): {
+  tempDir: string;
+  cleanup: () => void;
+} {
+  const { tempDir, cleanup, preInstallCommand, installCommand, execOptions } =
+    preparePackageInstallation(pkg, requiredVersion);
+
+  if (preInstallCommand) {
+    // ensure package.json and repo in tmp folder is set to a proper package manager state
+    execSync(preInstallCommand, execOptions);
+  }
+
+  execSync(installCommand, execOptions);
 
   return {
     tempDir,
     cleanup,
   };
+}
+
+export async function installPackageToTmpAsync(
+  pkg: string,
+  requiredVersion: string
+): Promise<{
+  tempDir: string;
+  cleanup: () => void;
+}> {
+  const { tempDir, cleanup, preInstallCommand, installCommand, execOptions } =
+    preparePackageInstallation(pkg, requiredVersion);
+
+  try {
+    if (preInstallCommand) {
+      // ensure package.json and repo in tmp folder is set to a proper package manager state
+      await execAsync(preInstallCommand, execOptions);
+    }
+
+    await execAsync(installCommand, execOptions);
+
+    return {
+      tempDir,
+      cleanup,
+    };
+  } catch (error) {
+    // Clean up on error
+    cleanup();
+    throw error;
+  }
 }
 
 /**

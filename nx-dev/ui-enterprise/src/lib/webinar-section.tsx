@@ -1,7 +1,8 @@
 import React from 'react';
-import { ChevronRightIcon } from '@heroicons/react/24/outline';
+// import { ChevronRightIcon } from '@heroicons/react/24/outline';
 
 export const WebinarSection: React.FC = () => {
+  /*
   return (
     <p>
       <a
@@ -22,4 +23,7 @@ export const WebinarSection: React.FC = () => {
       </a>
     </p>
   );
+  */
+
+  return null;
 };
