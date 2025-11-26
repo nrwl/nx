@@ -325,6 +325,99 @@ addTemplate({
 
 ---
 
+## Section 8: ESLint Configuration (Flat Config Only)
+
+> **Note:** This section only applies if your workspace uses ESLint flat config (`eslint.config.js`, `eslint.config.mjs`, or `eslint.config.cjs`). If you're using legacy `.eslintrc.json`, no changes are required.
+
+### 8.1 Migrate to `createConfigForNuxt`
+
+**Search Pattern**: Check for `eslint.config.js`, `eslint.config.mjs`, or `eslint.config.cjs` in Nuxt project directories
+
+For workspaces using ESLint flat config, Nuxt 4 requires updating to `@nuxt/eslint-config` version `^1.10.0` and using `createConfigForNuxt` from `@nuxt/eslint-config/flat`.
+
+**Before (Nuxt 3 flat config):**
+
+```javascript
+import baseConfig from '../../eslint.config.mjs';
+
+export default [
+  ...baseConfig,
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: { parser: '@typescript-eslint/parser' },
+    },
+  },
+  {
+    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+  },
+];
+```
+
+**After (Nuxt 4 flat config - eslint.config.mjs):**
+
+```javascript
+import { createConfigForNuxt } from '@nuxt/eslint-config/flat';
+import baseConfig from '../../eslint.config.mjs';
+
+export default createConfigForNuxt({
+  features: {
+    typescript: true,
+  },
+})
+  .prepend(...baseConfig)
+  .append(
+    {
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      rules: {},
+    },
+    {
+      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+    }
+  );
+```
+
+**For CJS (eslint.config.cjs):**
+
+```javascript
+const { createConfigForNuxt } = require('@nuxt/eslint-config/flat');
+const baseConfig = require('../../eslint.config.cjs');
+
+module.exports = createConfigForNuxt({
+  features: {
+    typescript: true,
+  },
+})
+  .prepend(...baseConfig)
+  .append(
+    {
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      rules: {},
+    },
+    {
+      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+    }
+  );
+```
+
+**Action Items (Flat Config Only):**
+
+- [ ] Update `@nuxt/eslint-config` to `^1.10.0` in `package.json`
+- [ ] Replace manual Vue/TypeScript parser config with `createConfigForNuxt`
+- [ ] Use `features.typescript: true` option for TypeScript support
+- [ ] Remove `@typescript-eslint/parser` from devDependencies (handled automatically)
+- [ ] Use `.prepend()` for base configs and `.append()` for project-specific rules/ignores
+
+### 8.2 Understanding the New Config Structure
+
+The `createConfigForNuxt` function returns a chainable config builder:
+
+- **`features.typescript: true`** - Enables TypeScript support with proper Vue file parsing
+- **`.prepend(...configs)`** - Adds configs at the beginning (useful for workspace base configs)
+- **`.append(...configs)`** - Adds configs at the end (for project-specific rules and ignores)
+
+---
+
 ## Post-Migration Validation
 
 After completing the migration, run these commands:
