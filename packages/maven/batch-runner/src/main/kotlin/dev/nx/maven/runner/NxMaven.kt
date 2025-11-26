@@ -21,6 +21,8 @@ import org.apache.maven.session.scope.internal.SessionScope
 import org.eclipse.aether.RepositorySystemSession
 import org.eclipse.aether.repository.WorkspaceReader
 import org.slf4j.LoggerFactory
+import java.io.OutputStream
+import java.io.PrintStream
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -70,6 +72,9 @@ class NxMaven(
 
   @Volatile
   private var cachedInternalSession: InternalSession? = null
+
+  @Volatile
+  private var cachedWorkspaceReader: MavenChainedWorkspaceReader? = null
 
   // Cache the doExecute method so we don't look it up every invocation
   private val doExecuteMethod by lazy {
@@ -153,10 +158,24 @@ class NxMaven(
         InternalMavenSession.from(graphSession.session)
       )
 
-      val graphBuildStartTime = System.currentTimeMillis()
-      val graphResult = graphBuilder.build(graphSession)
-      val graphBuildTimeMs = System.currentTimeMillis() - graphBuildStartTime
-      log.debug("   ✅ Graph build completed in ${graphBuildTimeMs}ms")
+      // Temporarily replace System.err during graph building to prevent logging recursion.
+      // Maven 4.x redirects System.err to LoggingOutputStream which calls stderr.warn(),
+      // which eventually calls MavenBaseLogger.write() -> System.err.println() -> infinite loop.
+      // Using a pass-through stream breaks this chain while preserving output.
+      val originalErr = System.err
+      val graphResult = try {
+        System.setErr(PrintStream(object : OutputStream() {
+          override fun write(b: Int) = originalErr.write(b)
+          override fun write(b: ByteArray, off: Int, len: Int) = originalErr.write(b, off, len)
+        }))
+        val graphBuildStartTime = System.currentTimeMillis()
+        val result = graphBuilder.build(graphSession)
+        val graphBuildTimeMs = System.currentTimeMillis() - graphBuildStartTime
+        log.debug("   ✅ Graph build completed in ${graphBuildTimeMs}ms")
+        result
+      } finally {
+        System.setErr(originalErr)
+      }
 
       if (graphResult.hasErrors()) {
         log.warn("   ⚠️  Graph build had errors, but continuing anyway")
@@ -164,6 +183,17 @@ class NxMaven(
 
       val graph = graphResult.get()
       cachedProjectGraph = graph
+
+      // Set allProjects on graphSession BEFORE looking up ReactorReader
+      // ReactorReader is @SessionScoped and caches project list from MavenSession.getAllProjects()
+      // If we lookup ReactorReader before setting allProjects, it will cache an empty list
+      graphSession.allProjects = graph.allProjects
+
+      // NOW add ReactorReader to workspace chain - it will see the projects we just set
+      val reactorReader = lookup.lookup(WorkspaceReader::class.java, "reactor")
+      workspaceReader.addReader(reactorReader)
+      cachedWorkspaceReader = workspaceReader
+      log.debug("   ✅ ReactorReader added to cached workspace chain")
 
       log.debug("   ✅ Graph cache setup complete with ${graph.allProjects.size} projects")
       graph.sortedProjects?.forEach { project ->
@@ -225,7 +255,9 @@ class NxMaven(
   private fun executeWithCachedGraph(request: MavenExecutionRequest): MavenExecutionResult {
     val result = DefaultMavenExecutionResult()
     sessionScope.enter()
-    val workspaceReader = MavenChainedWorkspaceReader(request.workspaceReader, ideWorkspaceReader)
+    // Reuse the cached workspace reader that has ReactorReader added
+    // This is critical for consumer POM building which needs to resolve reactor artifacts
+    val workspaceReader = cachedWorkspaceReader!!
 
     // Reuse the cached RepositorySystemSession (holds artifact cache and metadata)
     // Create a new MavenSession wrapper with the new request/result but same cached repository session
@@ -240,6 +272,7 @@ class NxMaven(
 
       // Re-seed the cached session into the current scope context for this invocation
       reseedSessionInScope(session)
+
 
       @Suppress("UNCHECKED_CAST")
       // Use the CACHED request (which is stored in the session) not the new request

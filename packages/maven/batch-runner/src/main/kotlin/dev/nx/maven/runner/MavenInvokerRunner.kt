@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -74,58 +75,71 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       repeat(numWorkers) {
         executor.submit {
           while (true) {
-            val taskId = taskQueue.poll() ?: break
+            // Use timed poll to avoid workers exiting prematurely
+            // Workers stay alive until all tasks are done (latch reaches 0)
+            val taskId = taskQueue.poll(100, TimeUnit.MILLISECONDS)
+            if (taskId == null) {
+              // Check if all tasks are done
+              if (completionLatch.count == 0L) break
+              continue
+            }
 
             if (processedTasks.containsKey(taskId)) {
               completionLatch.countDown()
               continue
             }
 
-            executeSingleTask(taskId, results)
-            processedTasks[taskId] = true
+            try {
+              executeSingleTask(taskId, results)
+              processedTasks[taskId] = true
 
-            // Determine if this task succeeded or failed
-            val success = results[taskId]?.success == true
-            if (success) {
-              successfulTasks[taskId] = true
-            } else {
-              failedTasks[taskId] = true
-            }
+              // Determine if this task succeeded or failed
+              val success = results[taskId]?.success == true
+              if (success) {
+                successfulTasks[taskId] = true
+              } else {
+                failedTasks[taskId] = true
+              }
 
-            // Update graph and find newly available tasks
-            synchronized(graphRef) {
-              val currentGraph = graphRef.get()
-              val newGraph = removeTasksFromTaskGraph(
-                currentGraph,
-                if (success) listOf(taskId) else emptyList(),
-                if (!success) listOf(taskId) else emptyList()
-              )
-              graphRef.set(newGraph)
+              // Update graph and find newly available tasks
+              synchronized(graphRef) {
+                val currentGraph = graphRef.get()
+                val newGraph = removeTasksFromTaskGraph(
+                  currentGraph,
+                  if (success) listOf(taskId) else emptyList(),
+                  if (!success) listOf(taskId) else emptyList()
+                )
+                graphRef.set(newGraph)
 
-              // Add newly available root tasks to queue
-              val previousRoots = currentGraph.roots.toSet()
-              val newRoots = newGraph.roots.filter { it !in previousRoots && !processedTasks.containsKey(it) }
-              newRoots.forEach { newTaskId ->
-                if (!processedTasks.containsKey(newTaskId)) {
-                  taskQueue.offer(newTaskId)
-                  log.debug("Added newly available task to queue: $newTaskId")
+                // Add newly available root tasks to queue
+                val previousRoots = currentGraph.roots.toSet()
+                val newRoots = newGraph.roots.filter { it !in previousRoots && !processedTasks.containsKey(it) }
+                newRoots.forEach { newTaskId ->
+                  if (!processedTasks.containsKey(newTaskId)) {
+                    taskQueue.offer(newTaskId)
+                    log.debug("Added newly available task to queue: $newTaskId")
+                  }
+                }
+
+                // Mark skipped tasks (those removed due to failed dependencies)
+                // Skipped tasks are omitted from results, not marked as failed
+                val oldTasks = currentGraph.tasks.keys
+                val newTasks = newGraph.tasks.keys
+                val skippedTasks = oldTasks - newTasks - processedTasks.keys - successfulTasks.keys - failedTasks.keys
+                skippedTasks.forEach { skippedTaskId ->
+                  log.debug("Task $skippedTaskId was skipped due to a failed dependency")
+                  processedTasks[skippedTaskId] = true
+                  // IMPORTANT: Count down skipped tasks too, or latch will never reach zero
+                  completionLatch.countDown()
                 }
               }
-
-              // Mark skipped tasks (those removed due to failed dependencies)
-              // Skipped tasks are omitted from results, not marked as failed
-              val oldTasks = currentGraph.tasks.keys
-              val newTasks = newGraph.tasks.keys
-              val skippedTasks = oldTasks - newTasks - processedTasks.keys - successfulTasks.keys - failedTasks.keys
-              skippedTasks.forEach { skippedTaskId ->
-                log.debug("Task $skippedTaskId was skipped due to a failed dependency")
-                processedTasks[skippedTaskId] = true
-                // IMPORTANT: Count down skipped tasks too, or latch will never reach zero
-                completionLatch.countDown()
-              }
+            } catch (e: Exception) {
+              log.error("Exception processing task $taskId: ${e.message}", e)
+              processedTasks[taskId] = true
+              failedTasks[taskId] = true
+            } finally {
+              completionLatch.countDown()
             }
-
-            completionLatch.countDown()
           }
         }
       }
