@@ -55,12 +55,11 @@ const docsToAstroRedirects = {
     '/docs/enterprise/single-tenant',
   '/ci/recipes/enterprise/single-tenant/custom-github-app':
     '/docs/enterprise/single-tenant/custom-github-app',
-  '/ci/recipes/enterprise/conformance':
-    '/docs/enterprise/powerpack/conformance',
+  '/ci/recipes/enterprise/conformance': '/docs/enterprise/conformance',
   '/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud':
-    '/docs/enterprise/powerpack/configure-conformance-rules-in-nx-cloud',
+    '/docs/enterprise/configure-conformance-rules-in-nx-cloud',
   '/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud':
-    '/docs/enterprise/powerpack/publish-conformance-rules-to-nx-cloud',
+    '/docs/enterprise/publish-conformance-rules-to-nx-cloud',
   '/ci/recipes/enterprise/polygraph': '/docs/enterprise/polygraph',
   '/ci/recipes/enterprise/metadata-only-workspace':
     '/docs/enterprise/metadata-only-workspace',
@@ -195,14 +194,15 @@ const docsToAstroRedirects = {
 
   // ========== NX-ENTERPRISE ==========
   '/nx-enterprise': '/docs/enterprise',
-  '/nx-enterprise/activate-powerpack': '/docs/enterprise/activate-powerpack',
-  '/nx-enterprise/powerpack/licenses-and-trials':
-    '/docs/enterprise/powerpack/licenses-and-trials',
-  '/nx-enterprise/powerpack/conformance':
-    '/docs/enterprise/powerpack/conformance',
-  '/nx-enterprise/powerpack/owners': '/docs/enterprise/powerpack/owners',
+  '/nx-enterprise/activate-powerpack': '/docs/enterprise/activate-license',
+  '/nx-enterprise/activate-license': '/docs/enterprise/activate-license',
+  '/nx-enterprise/powerpack/licenses-and-trials': '/docs/enterprise',
+  '/nx-enterprise/powerpack/conformance': '/docs/enterprise/conformance',
+  '/nx-enterprise/powerpack/owners': '/docs/enterprise/owners',
+  '/nx-enterprise/conformance': '/docs/enterprise/conformance',
+  '/nx-enterprise/owners': '/docs/enterprise/owners',
 
-  '/nx-enterprise/powerpack': '/docs/enterprise/powerpack',
+  '/nx-enterprise/powerpack': '/docs/enterprise',
 
   // ========== PLUGIN-REGISTRY ==========
   '/plugin-registry': '/docs/plugin-registry',
@@ -344,14 +344,13 @@ const docsToAstroRedirects = {
   '/reference/environment-variables': '/docs/reference/environment-variables',
   '/reference/glossary': '/docs/reference/glossary',
   '/reference/releases': '/docs/reference/releases',
-  '/reference/core-api/owners': '/docs/reference/powerpack/owners',
-  '/reference/core-api/owners/overview':
-    '/docs/reference/powerpack/owners/overview',
-  '/reference/core-api/conformance': '/docs/reference/powerpack/conformance',
+  '/reference/core-api/owners': '/docs/reference/owners',
+  '/reference/core-api/owners/overview': '/docs/reference/owners/overview',
+  '/reference/core-api/conformance': '/docs/reference/conformance',
   '/reference/core-api/conformance/overview':
-    '/docs/reference/powerpack/conformance/overview',
+    '/docs/reference/conformance/overview',
   '/reference/core-api/conformance/create-conformance-rule':
-    '/docs/reference/powerpack/conformance/create-conformance-rule',
+    '/docs/reference/conformance/create-conformance-rule',
   '/reference/core-api/azure-cache':
     '/docs/reference/remote-cache-plugins/azure-cache',
   '/reference/core-api/azure-cache/overview':
@@ -373,15 +372,14 @@ const docsToAstroRedirects = {
   '/reference/core-api/nx/documents/daemon': '/docs/reference/nx-commands',
   '/reference/core-api/nx/documents/affected': '/docs/reference/nx-commands',
   '/reference/core-api/workspace/documents/overview':
-    '/docs/reference/powerpack/conformance/overview',
+    '/docs/reference/conformance/overview',
   '/reference/core-api/conformance/documents/overview':
-    '/docs/reference/powerpack/conformance/overview',
+    '/docs/reference/conformance/overview',
   '/reference/core-api/conformance/documents/create-conformance-rule':
-    '/docs/reference/powerpack/conformance/create-conformance-rule',
+    '/docs/reference/conformance/create-conformance-rule',
   '/reference/core-api/conformance/executors':
-    '/docs/reference/powerpack/conformance/executors',
-  '/reference/core-api/owners/generators':
-    '/docs/reference/powerpack/owners/generators',
+    '/docs/reference/conformance/executors',
+  '/reference/core-api/owners/generators': '/docs/reference/owners/generators',
   '/reference/core-api/shared-fs-cache/generators':
     '/docs/reference/remote-cache-plugins/shared-fs-cache/generators',
   '/reference/core-api': '/docs/reference',
@@ -794,23 +792,21 @@ const docsToAstroRedirects = {
   '/reference/core-api/azure-cache/migrations':
     '/docs/reference/remote-cache-plugins/azure-cache/overview', // this was empty
   '/reference/core-api/conformance/documents':
-    '/docs/reference/powerpack/conformance/overview',
+    '/docs/reference/conformance/overview',
   '/reference/core-api/conformance/generators':
-    '/docs/reference/powerpack/conformance/generators',
+    '/docs/reference/conformance/generators',
   '/reference/core-api/conformance/generators/create-rule':
-    '/docs/reference/powerpack/conformance/generators',
+    '/docs/reference/conformance/generators',
   '/reference/core-api/conformance/generators/preset':
-    '/docs/reference/powerpack/conformance/generators',
+    '/docs/reference/conformance/generators',
   '/reference/core-api/conformance/migrations':
-    '/docs/reference/powerpack/conformance/overview',
-  '/reference/core-api/owners/executors':
-    '/docs/reference/powerpack/owners/overview', // this was empty
+    '/docs/reference/conformance/overview',
+  '/reference/core-api/owners/executors': '/docs/reference/owners/overview', // this was empty
   '/reference/core-api/owners/generators/init':
-    '/docs/reference/powerpack/owners/generators',
+    '/docs/reference/owners/generators',
   '/reference/core-api/owners/generators/sync-codeowners-file':
-    '/docs/reference/powerpack/owners/generators',
-  '/reference/core-api/owners/migrations':
-    '/docs/reference/powerpack/owners/overview',
+    '/docs/reference/owners/generators',
+  '/reference/core-api/owners/migrations': '/docs/reference/owners/overview',
   '/reference/core-api/gcs-cache/executors':
     '/docs/reference/remote-cache-plugins/gcs-cache',
   '/reference/core-api/gcs-cache/generators':
