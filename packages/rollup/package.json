@@ -42,7 +42,6 @@
     "picomatch": "4.0.2",
     "postcss": "^8.4.38",
     "rollup": "^4.14.0",
-    "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-typescript2": "^0.36.0",
     "tslib": "^2.3.0"
