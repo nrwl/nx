@@ -563,7 +563,7 @@ describe('lib', () => {
           "main": "./src/index.ts",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "19.1.0",
+            "react": "^19.1.0",
             "react-native": "0.81.5",
           },
           "types": "./src/index.ts",
@@ -696,7 +696,7 @@ describe('lib', () => {
           "module": "./dist/index.esm.js",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "19.1.0",
+            "react": "^19.1.0",
             "react-native": "0.81.5",
           },
           "types": "./dist/index.esm.d.ts",
