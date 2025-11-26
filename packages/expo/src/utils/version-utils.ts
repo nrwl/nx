@@ -129,11 +129,9 @@ export async function getExpoDependenciesVersionsToInstall(
  * Check if the workspace is using Expo v53.
  */
 export async function isExpoV53(tree: Tree): Promise<boolean> {
-  // Check package.json first (faster and works during workspace creation)
-  let installedExpoVersion = getInstalledExpoVersion(tree);
+  let installedExpoVersion = await getInstalledExpoVersionFromGraph();
   if (!installedExpoVersion) {
-    // Fallback to project graph if package.json doesn't have it
-    installedExpoVersion = await getInstalledExpoVersionFromGraph();
+    installedExpoVersion = getInstalledExpoVersion(tree);
   }
   if (!installedExpoVersion) {
     return false; // No Expo installed, default to latest
@@ -145,11 +143,9 @@ export async function isExpoV53(tree: Tree): Promise<boolean> {
  * Check if the workspace is using Expo v54.
  */
 export async function isExpoV54(tree: Tree): Promise<boolean> {
-  // Check package.json first (faster and works during workspace creation)
-  let installedExpoVersion = getInstalledExpoVersion(tree);
+  let installedExpoVersion = await getInstalledExpoVersionFromGraph();
   if (!installedExpoVersion) {
-    // Fallback to project graph if package.json doesn't have it
-    installedExpoVersion = await getInstalledExpoVersionFromGraph();
+    installedExpoVersion = getInstalledExpoVersion(tree);
   }
   if (!installedExpoVersion) {
     return true; // No Expo installed, default to latest (v54)

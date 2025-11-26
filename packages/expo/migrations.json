@@ -190,39 +190,39 @@
           "alwaysAddToPackageJson": false
         },
         "expo-splash-screen": {
-          "version": "~0.31.0",
+          "version": "~31.0.11",
           "alwaysAddToPackageJson": false
         },
         "expo-status-bar": {
-          "version": "~3.0.0",
+          "version": "~3.0.8",
           "alwaysAddToPackageJson": false
         },
         "expo-system-ui": {
-          "version": "~6.0.0",
+          "version": "~6.0.8",
           "alwaysAddToPackageJson": false
         },
         "@expo/cli": {
-          "version": "~0.26.0",
+          "version": "~54.0.16",
           "alwaysAddToPackageJson": false
         },
         "babel-preset-expo": {
-          "version": "~14.0.0",
+          "version": "~54.0.7",
           "alwaysAddToPackageJson": false
         },
         "react": {
-          "version": "19.1.0",
+          "version": "^19.1.0",
           "alwaysAddToPackageJson": false
         },
         "react-dom": {
-          "version": "19.1.0",
+          "version": "^19.1.0",
           "alwaysAddToPackageJson": false
         },
         "@types/react": {
-          "version": "~19.1.0",
+          "version": "^19.1.0",
           "alwaysAddToPackageJson": false
         },
         "react-native": {
-          "version": "~0.81.4",
+          "version": "~0.81.5",
           "alwaysAddToPackageJson": false
         },
         "react-native-web": {
@@ -230,11 +230,11 @@
           "alwaysAddToPackageJson": false
         },
         "@expo/metro-config": {
-          "version": "~0.22.0",
+          "version": "~54.0.9",
           "alwaysAddToPackageJson": false
         },
         "@expo/metro-runtime": {
-          "version": "~6.0.0",
+          "version": "~6.1.2",
           "alwaysAddToPackageJson": false
         },
         "react-native-svg-transformer": {
@@ -250,7 +250,7 @@
           "alwaysAddToPackageJson": false
         },
         "jest-expo": {
-          "version": "~54.0.0",
+          "version": "~54.0.13",
           "alwaysAddToPackageJson": false
         },
         "@babel/runtime": {

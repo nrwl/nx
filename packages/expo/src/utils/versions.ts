@@ -2,18 +2,18 @@ export const nxVersion = require('../../package.json').version;
 
 // Expo v54 versions (default for new projects)
 export const expoV54Version = '~54.0.0';
-export const expoV54SplashScreenVersion = '~0.31.0';
-export const expoV54StatusBarVersion = '~3.0.0';
-export const expoV54SystemUiVersion = '~6.0.0';
-export const expoV54CliVersion = '~0.26.0'; // @expo/cli
-export const babelPresetExpoV54Version = '~14.0.0';
-export const expoV54MetroConfigVersion = '~0.22.0';
-export const expoV54MetroRuntimeVersion = '~6.0.0';
-export const jestExpoV54Version = '~54.0.0';
+export const expoV54SplashScreenVersion = '~31.0.11';
+export const expoV54StatusBarVersion = '~3.0.8';
+export const expoV54SystemUiVersion = '~6.0.8';
+export const expoV54CliVersion = '~54.0.16';
+export const babelPresetExpoV54Version = '~54.0.7';
+export const expoV54MetroConfigVersion = '~54.0.9';
+export const expoV54MetroRuntimeVersion = '~6.1.2';
+export const jestExpoV54Version = '~54.0.13';
 export const reactV54Version = '^19.1.0';
 export const reactDomV54Version = '^19.1.0';
-export const typesReactV54Version = '~19.1.0';
-export const reactNativeV54Version = '0.81.4';
+export const typesReactV54Version = '^19.1.0';
+export const reactNativeV54Version = '0.81.5';
 export const metroV54Version = '~0.83.0';
 export const reactNativeWebV54Version = '~0.21.0';
 
