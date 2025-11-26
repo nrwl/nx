@@ -56,8 +56,14 @@
         "next": "^15.0.0"
       },
       "packages": {
-        "next": "~16.0.1",
-        "eslint-config-next": "^16.0.1"
+        "next": {
+          "version": "~16.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "^16.0.1",
+          "alwaysAddToPackageJson": false
+        }
       }
     }
   }
