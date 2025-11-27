@@ -57,8 +57,8 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["vitest", "jest", "none"],
-      "description": "Test runner to use for unit tests of the Producer (remote) if it needs to be created. It defaults to `vitest` for Angular versions >= 21.0.0. Otherwise, it defaults to `jest`.",
+      "enum": ["vitest-analog", "jest", "none"],
+      "description": "Test runner to use for unit tests of the Producer (remote) if it needs to be created. `vitest-analog` uses AnalogJS-based setup with `@nx/vitest`. It defaults to `vitest-analog` for Angular versions >= 21.0.0, otherwise `jest`.",
       "x-prompt": "Which unit test runner would you like to use?"
     },
     "e2eTestRunner": {

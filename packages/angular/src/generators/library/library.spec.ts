@@ -96,9 +96,10 @@ describe('lib', () => {
     expect(dependencies['zone.js']).toBeUndefined();
   });
 
-  it('should add @angular/build when using vitest', async () => {
+  it('should add @angular/build when using vitest-angular', async () => {
     await runLibraryGeneratorWithOpts({
-      unitTestRunner: UnitTestRunner.Vitest,
+      unitTestRunner: UnitTestRunner.VitestAngular,
+      buildable: true,
     });
 
     const { devDependencies } = readJson(tree, 'package.json');

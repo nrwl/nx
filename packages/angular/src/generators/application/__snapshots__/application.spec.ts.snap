@@ -689,7 +689,7 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 "
 `;
 
-exports[`app angular compat support vitest & angular < 21 should add tsconfig.spec.json 1`] = `
+exports[`app angular compat support vitest-analog & angular < 21 should add tsconfig.spec.json 1`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -724,7 +724,7 @@ exports[`app angular compat support vitest & angular < 21 should add tsconfig.sp
 "
 `;
 
-exports[`app angular compat support vitest & angular < 21 should generate src/test-setup.ts 1`] = `
+exports[`app angular compat support vitest-analog & angular < 21 should generate src/test-setup.ts 1`] = `
 "import '@angular/compiler';
 import '@analogjs/vitest-angular/setup-zone';
 import {
@@ -740,7 +740,7 @@ getTestBed().initTestEnvironment(
 "
 `;
 
-exports[`app angular compat support vitest & angular < 21 should generate vite.config.mts 1`] = `
+exports[`app angular compat support vitest-analog & angular < 21 should generate vite.config.mts 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import angular from '@analogjs/vite-plugin-angular';
