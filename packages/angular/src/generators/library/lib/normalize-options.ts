@@ -56,7 +56,11 @@ export async function normalizeOptions(
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
   const unitTestRunner =
     options.unitTestRunner ??
-    (angularMajorVersion >= 21 ? UnitTestRunner.Vitest : UnitTestRunner.Jest);
+    (angularMajorVersion >= 21 && (options.buildable || options.publishable)
+      ? UnitTestRunner.VitestAngular
+      : angularMajorVersion >= 21
+      ? UnitTestRunner.VitestAnalog
+      : UnitTestRunner.Jest);
 
   const ngCliSchematicLibRoot = projectName;
   const allNormalizedOptions = {
