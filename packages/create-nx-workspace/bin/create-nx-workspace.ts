@@ -352,10 +352,15 @@ async function normalizeArgsMiddleware(
         nxCloud === 'skip'
           ? undefined
           : messages.codeOfSelectedPromptMessage('setupNxCloudV2');
+      const completionMessageKey =
+        nxCloud === 'skip'
+          ? undefined
+          : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
       Object.assign(argv, {
         nxCloud,
         useGitHub: nxCloud !== 'skip',
         nxCloudPromptCode,
+        completionMessageKey,
         packageManager,
         defaultBase,
         aiAgents,
