@@ -124,7 +124,7 @@ async function load(path: string): Promise<any> {
     // Modules are CJS unless it is named `.mjs` or `package.json` sets type to "module".
     return await loadCommonJS(path);
   } catch (e: any) {
-    if (e.code === 'ERR_REQUIRE_ESM') {
+    if (['ERR_REQUIRE_ESM', 'ERR_REQUIRE_ASYNC_MODULE'].includes(e.code)) {
       // If `require` fails to load ESM, try dynamic `import()`. ESM requires file url protocol for handling absolute paths.
       return loadESM(path);
     }
