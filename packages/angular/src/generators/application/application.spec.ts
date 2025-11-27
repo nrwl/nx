@@ -750,10 +750,10 @@ describe('app', () => {
       });
     });
 
-    describe('vitest', () => {
+    describe('vitest-angular', () => {
       it('should setup test target with @angular/build:unit-test and configure target defaults', async () => {
         await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAngular,
         });
 
         const project = readProjectConfiguration(appTree, 'my-app');
@@ -772,7 +772,7 @@ describe('app', () => {
 
       it('should install vitest, jsdom and @angular/build packages', async () => {
         await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAngular,
         });
 
         const { devDependencies } = readJson(appTree, 'package.json');
@@ -788,7 +788,7 @@ describe('app', () => {
 
       it('should configure typescript correctly', async () => {
         await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAngular,
         });
 
         const tsconfigSpec = appTree.read('my-app/tsconfig.spec.json', 'utf-8');
@@ -1233,23 +1233,23 @@ describe('app', () => {
       expect(jestPlugin).toBeDefined();
     });
 
-    it('should generate test target with @angular/build:unit-test executor for vitest when --bundler=rspack', async () => {
+    it('should use crystal vitest when --bundler=rspack and vitest-analog with addPlugin', async () => {
       await generateApp(appTree, 'app1', {
         bundler: 'rspack',
-        unitTestRunner: UnitTestRunner.Vitest,
+        unitTestRunner: UnitTestRunner.VitestAnalog,
+        addPlugin: true,
       });
 
       const project = readProjectConfiguration(appTree, 'app1');
-      expect(project.targets.test).toStrictEqual({
-        executor: '@angular/build:unit-test',
-        options: {},
-      });
+      expect(project.targets.test).not.toBeDefined();
 
       const nxJson = readNxJson(appTree);
-      expect(nxJson.targetDefaults['@angular/build:unit-test']).toStrictEqual({
-        cache: true,
-        inputs: ['default', '^default'],
-      });
+      const vitestPlugin = nxJson.plugins.find(
+        (p) =>
+          (typeof p === 'string' && p === '@nx/vitest') ||
+          (typeof p !== 'string' && p.plugin === '@nx/vitest')
+      );
+      expect(vitestPlugin).toBeDefined();
     });
 
     it('should generate target options "browser" and "buildTarget"', async () => {
@@ -1732,7 +1732,7 @@ describe('app', () => {
       `);
     });
 
-    describe('vitest & angular < 21', () => {
+    describe('vitest-analog & angular < 21', () => {
       beforeEach(() => {
         updateJson(appTree, 'package.json', (json) => ({
           ...json,
@@ -1746,7 +1746,7 @@ describe('app', () => {
       it('should generate vite.config.mts', async () => {
         await generateApp(appTree, 'my-app', {
           skipFormat: false,
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAnalog,
         });
 
         expect(
@@ -1756,7 +1756,7 @@ describe('app', () => {
 
       it('should generate src/test-setup.ts', async () => {
         await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAnalog,
         });
 
         expect(
@@ -1766,7 +1766,7 @@ describe('app', () => {
 
       it('should exclude src/test-setup.ts in tsconfig.app.json', async () => {
         await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAnalog,
         });
 
         const tsConfig = readJson(appTree, 'my-app/tsconfig.app.json');
@@ -1775,7 +1775,7 @@ describe('app', () => {
 
       it('should add tsconfig.spec.json', async () => {
         await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAnalog,
         });
 
         expect(
@@ -1785,7 +1785,7 @@ describe('app', () => {
 
       it('should add a reference to tsconfig.spec.json in tsconfig.json', async () => {
         await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAnalog,
         });
 
         const { references } = readJson(appTree, 'my-app/tsconfig.json');
@@ -1796,7 +1796,7 @@ describe('app', () => {
 
       it('should add @nx/vitest dependency', async () => {
         await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAnalog,
         });
 
         const { devDependencies } = readJson(appTree, 'package.json');
@@ -1805,7 +1805,7 @@ describe('app', () => {
 
       it('should add vitest-angular', async () => {
         await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAnalog,
         });
 
         const { devDependencies } = readJson(appTree, 'package.json');
@@ -1813,26 +1813,27 @@ describe('app', () => {
         expect(devDependencies['@analogjs/vitest-angular']).toBeDefined();
       });
 
-      it('should not override build configuration when using vitest as a test runner', async () => {
+      it('should not override build configuration when using vitest-analog as a test runner', async () => {
         await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAnalog,
         });
         const { targets } = readProjectConfiguration(appTree, 'my-app');
         expect(targets.build.executor).toBe('@angular/build:application');
       });
 
-      it('should not override serve configuration when using vitest as a test runner', async () => {
+      it('should not override serve configuration when using vitest-analog as a test runner', async () => {
         await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAnalog,
         });
         const { targets } = readProjectConfiguration(appTree, 'my-app');
         expect(targets.serve.executor).toBe('@angular/build:dev-server');
       });
 
-      it('should use crystal vitest when --bundler=rspack', async () => {
+      it('should use crystal vitest when --bundler=rspack and addPlugin', async () => {
         await generateApp(appTree, 'app1', {
           bundler: 'rspack',
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAnalog,
+          addPlugin: true,
         });
 
         const project = readProjectConfiguration(appTree, 'app1');

@@ -419,6 +419,11 @@
       },
       "description": "Updates the 'lib' property in tsconfig files to use 'es2022' or a more modern version.",
       "factory": "./src/migrations/update-22-2-0/update-typescript-lib"
+    },
+    "update-unit-test-runner-option": {
+      "version": "22.2.0-beta.0",
+      "description": "Update 'vitest' unit test runner option to 'vitest-analog' in generator defaults.",
+      "factory": "./src/migrations/update-22-2-0/update-unit-test-runner-option"
     }
   },
   "packageJsonUpdates": {

@@ -54,7 +54,11 @@ export async function normalizeOptions(
   const zonelessDefaultValue = angularMajorVersion >= 21 ? true : false;
   const unitTestRunner =
     options.unitTestRunner ??
-    (angularMajorVersion >= 21 ? UnitTestRunner.Vitest : UnitTestRunner.Jest);
+    (angularMajorVersion >= 21 && bundler === 'esbuild'
+      ? UnitTestRunner.VitestAngular
+      : angularMajorVersion >= 21
+      ? UnitTestRunner.VitestAnalog
+      : UnitTestRunner.Jest);
 
   // Set defaults and then overwrite with user options
   return {

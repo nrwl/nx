@@ -17,7 +17,7 @@ export interface Schema {
   skipTests?: boolean;
   tags?: string;
   linter?: Linter | LinterType;
-  unitTestRunner?: UnitTestRunner;
+  unitTestRunner?: Exclude<UnitTestRunner, UnitTestRunner.VitestAngular>;
   e2eTestRunner?: E2eTestRunner;
   backendProject?: string;
   strict?: boolean;

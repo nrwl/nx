@@ -25,8 +25,11 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
   schema.standalone = schema.standalone ?? true;
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  // federate-module uses webpack/rspack bundlers, so vitest-angular is not available
   schema.unitTestRunner ??=
-    angularMajorVersion >= 21 ? UnitTestRunner.Vitest : UnitTestRunner.Jest;
+    angularMajorVersion >= 21
+      ? UnitTestRunner.VitestAnalog
+      : UnitTestRunner.Jest;
 
   const { tasks, projectRoot, remoteName } = await addRemote(tree, schema);
 
