@@ -1,7 +1,6 @@
 import { Tree } from 'nx/src/generators/tree';
 import type { Linter as EsLintLinter } from 'eslint';
 import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
-import { getTypeScriptEslintVersionToInstall } from '@nx/eslint/src/utils/version-utils';
 import { joinPathFragments } from 'nx/src/utils/path';
 import {
   addDependenciesToPackageJson,
@@ -11,16 +10,18 @@ import {
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
-  addOverrideToLintConfig,
+  findEslintFile,
   isEslintConfigSupported,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import { nuxtEslintConfigVersion } from './versions';
+import {
+  nuxtEslintConfigVersion,
+  nuxtEslintConfigLegacyVersion,
+} from './versions';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
-// TODO(colum): Look into the recommended set up using `withNuxt` inside eslint.config.mjs. https://eslint.nuxt.com/packages/config
 export async function addLinting(
   host: Tree,
   options: {
@@ -44,47 +45,112 @@ export async function addLinting(
     });
     tasks.push(lintTask);
 
-    const devDependencies = {
-      '@nuxt/eslint-config': nuxtEslintConfigVersion,
+    const isFlatConfig = useFlatConfig(host);
+
+    // Version-aware dependencies:
+    // - Flat config (v4+): use @nuxt/eslint-config ^1.10.0 with createConfigForNuxt
+    // - Legacy (.eslintrc.json): use @nuxt/eslint-config ~0.5.6 with extends
+    const devDependencies: Record<string, string> = {
+      '@nuxt/eslint-config': isFlatConfig
+        ? nuxtEslintConfigVersion
+        : nuxtEslintConfigLegacyVersion,
     };
 
     if (isEslintConfigSupported(host, options.projectRoot)) {
-      editEslintConfigFiles(host, options.projectRoot);
+      if (isFlatConfig) {
+        // For flat config: Generate eslint.config.mjs using createConfigForNuxt
+        generateNuxtFlatEslintConfig(host, options.projectRoot);
+      } else {
+        // For legacy: Use extends with the old @nuxt/eslint-config
+        editEslintConfigFiles(host, options.projectRoot);
 
-      const addExtendsTask = addExtendsToLintConfig(
-        host,
-        options.projectRoot,
-        ['@nuxt/eslint-config'],
-        true
-      );
-      tasks.push(addExtendsTask);
-
-      if (useFlatConfig(host)) {
-        addOverrideToLintConfig(
+        const addExtendsTask = addExtendsToLintConfig(
           host,
           options.projectRoot,
-          {
-            files: ['**/*.vue'],
-            languageOptions: {
-              parserOptions: { parser: '@typescript-eslint/parser' },
-            },
-          } as unknown // languageOptions is not in eslintrc format but for flat config
+          ['@nuxt/eslint-config'],
+          true
         );
-        devDependencies['@typescript-eslint/parser'] =
-          getTypeScriptEslintVersionToInstall(host);
-      }
+        tasks.push(addExtendsTask);
 
-      addIgnoresToLintConfig(host, options.projectRoot, [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-      ]);
+        addIgnoresToLintConfig(host, options.projectRoot, [
+          '.nuxt/**',
+          '.output/**',
+          'node_modules',
+        ]);
+      }
     }
 
     const installTask = addDependenciesToPackageJson(host, {}, devDependencies);
     tasks.push(installTask);
   }
   return runTasksInSerial(...tasks);
+}
+
+/**
+ * Generates a flat ESLint config for Nuxt using createConfigForNuxt from @nuxt/eslint-config/flat.
+ * This is the recommended approach for Nuxt v4+ and ESLint flat config.
+ */
+function generateNuxtFlatEslintConfig(tree: Tree, projectRoot: string) {
+  const eslintFile = findEslintFile(tree, projectRoot);
+  if (!eslintFile) return;
+
+  const configPath = joinPathFragments(projectRoot, eslintFile);
+  const isMjs = eslintFile.endsWith('.mjs');
+  const isCjs = eslintFile.endsWith('.cjs');
+
+  // Determine the relative path to root config
+  const depth = projectRoot.split('/').filter(Boolean).length;
+  const rootConfigRelativePath = depth > 0 ? '../'.repeat(depth) : './';
+
+  let configContent: string;
+
+  if (isCjs) {
+    // CJS flat config
+    configContent = `const { createConfigForNuxt } = require('@nuxt/eslint-config/flat');
+const baseConfig = require('${rootConfigRelativePath}eslint.config.cjs');
+
+module.exports = createConfigForNuxt({
+  features: {
+    typescript: true,
+  },
+})
+  .prepend(...baseConfig)
+  .append(
+    {
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      rules: {},
+    },
+    {
+      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+    }
+  );
+`;
+  } else {
+    // ESM flat config (default)
+    configContent = `import { createConfigForNuxt } from '@nuxt/eslint-config/flat';
+import baseConfig from '${rootConfigRelativePath}eslint.config.${
+      isMjs ? 'mjs' : 'js'
+    }';
+
+export default createConfigForNuxt({
+  features: {
+    typescript: true,
+  },
+})
+  .prepend(...baseConfig)
+  .append(
+    {
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      rules: {},
+    },
+    {
+      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+    }
+  );
+`;
+  }
+
+  tree.write(configPath, configContent);
 }
 
 function editEslintConfigFiles(tree: Tree, projectRoot: string) {
