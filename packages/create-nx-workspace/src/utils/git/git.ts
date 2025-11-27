@@ -178,7 +178,7 @@ export async function pushToGitHub(
     const { push } = await enquirer.prompt<{ push: 'Yes' | 'No' }>([
       {
         name: 'push',
-        message: 'Would you like to push this workspace to Github?',
+        message: 'Would you like to push this workspace to GitHub?',
         type: 'autocomplete',
         choices: [{ name: 'Yes' }, { name: 'No' }],
         initial: 0,
