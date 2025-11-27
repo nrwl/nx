@@ -1,6 +1,6 @@
 ---
-title: Overview of the Nx powerpack-owners Plugin
-description: The Nx Powerpack Owners plugin provides the ability to define code ownership based on projects in addition to files
+title: Overview of the Nx Owners Plugin
+description: The Nx Owners plugin provides the ability to define code ownership based on projects in addition to files
 sidebar:
   label: Overview
 weight: 2.1
@@ -11,13 +11,13 @@ The `@nx/owners` plugin extends the CODEOWNERS functionality to allow you to def
 
 With this plugin, you can specify code ownership using the same project matcher syntax as [`nx run-many`](/docs/reference/nx-commands#nx-run-many). This allows you to easily define rules for multiple projects that may not be located in the same directory. Also, the CODEOWNERS rules will not need to be revisited if a project location is changed or a new project is added.
 
-{% aside type="note" title="This plugin requires an active Nx Powerpack license" %}
-In order to use `@nx/owners`, you need to have an active Powerpack license. If you don't have a license or it has expired, the syncing process will stop working and you'll need to manually maintain your CODEOWNERS file.
+{% aside type="note" title="This plugin requires an active Nx Enterprise license" %}
+In order to use `@nx/owners`, you need to have an active Nx Enterprise license. If you don't have a license or it has expired, the syncing process will stop working and you'll need to manually maintain your CODEOWNERS file.
 {% /aside %}
 
 ## Set Up @nx/owners
 
-1. [Activate Powerpack](/docs/enterprise/activate-powerpack) if you haven't already
+1. [Activate your license](/docs/enterprise/activate-license) if you haven't already
 2. Install the package
 
    ```shell

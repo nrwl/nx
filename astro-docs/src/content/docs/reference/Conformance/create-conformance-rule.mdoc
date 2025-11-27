@@ -1,6 +1,6 @@
 ---
 title: Create a Conformance Rule
-description: Learn how to create custom conformance rules for Nx Powerpack and Nx Enterprise to enforce standards and best practices across your Nx workspace.
+description: Learn how to create custom conformance rules to enforce standards and best practices across your Nx workspace.
 sidebar:
   label: Create Conformance Rule
 filter: 'type:References'
@@ -69,7 +69,7 @@ Note that the severity of the error is defined by the rule author and can be adj
 
 The implementation function of the rule is passed a `context` object which contains:
 
-- **`tree`**: A `ReadOnlyConformanceTree` that can be used to read files from the workspace instead of directly from disk. Useful for unit testing rules as a test tree can be provided to the rule implementation (see [Testing Conformance Rules](/docs/reference/powerpack/conformance/test-conformance-rule)).
+- **`tree`**: A `ReadOnlyConformanceTree` that can be used to read files from the workspace instead of directly from disk. Useful for unit testing rules as a test tree can be provided to the rule implementation (see [Testing Conformance Rules](/docs/reference/conformance/test-conformance-rule)).
 - **`projectGraph`**: The Nx project graph
 - **`fileMapCache`**: The Nx file map cache
 - **`ruleOptions`**: The resolved rule configuration options based on the current workspace
@@ -447,5 +447,5 @@ export default createConformanceRule<RuleOptions>({
 
 If you have an Enterprise Nx Cloud contract, you can share your conformance rules across every repository in your organization. Read more in these articles:
 
-- [Publish Conformance Rules to Nx Cloud](/docs/enterprise/powerpack/publish-conformance-rules-to-nx-cloud)
-- [Configure Conformance Rules in Nx Cloud](/docs/enterprise/powerpack/configure-conformance-rules-in-nx-cloud)
+- [Publish Conformance Rules to Nx Cloud](/docs/enterprise/publish-conformance-rules-to-nx-cloud)
+- [Configure Conformance Rules in Nx Cloud](/docs/enterprise/configure-conformance-rules-in-nx-cloud)
