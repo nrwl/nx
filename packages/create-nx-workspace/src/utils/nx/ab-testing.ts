@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { isCI } from '../ci/is-ci';
 import { getPackageManagerCommand } from '../package-manager';
+import type { CompletionMessageKey } from './messages';
 
 export const NxCloudChoices = [
   'github',
@@ -32,6 +33,7 @@ const messageOptions: Record<string, MessageData[]> = {
       footer:
         '\nSelf-healing CI, remote caching, and task distribution are provided by Nx Cloud: https://nx.dev/nx-cloud',
       fallback: { value: 'skip', key: 'setupNxCloud' },
+      completionMessage: 'ci-setup',
     },
   ],
   /**
@@ -53,6 +55,7 @@ const messageOptions: Record<string, MessageData[]> = {
         '\nRead more about remote caching at https://nx.dev/ci/features/remote-cache',
       hint: `\n(can be disabled any time).`,
       fallback: undefined,
+      completionMessage: 'cache-setup',
     },
   ],
   /**
@@ -70,6 +73,7 @@ const messageOptions: Record<string, MessageData[]> = {
       footer:
         '\nRemote caching makes your builds faster for development and in CI: https://nx.dev/ci/features/remote-cache',
       fallback: undefined,
+      completionMessage: 'cache-setup',
     },
     {
       code: 'cloud-v2-fast-ci',
@@ -82,6 +86,7 @@ const messageOptions: Record<string, MessageData[]> = {
       footer:
         '\n70% faster CI, 60% less compute, Automatically fix broken PRs: https://nx.dev/nx-cloud',
       fallback: undefined,
+      completionMessage: 'ci-setup',
     },
     {
       code: 'cloud-v2-green-prs',
@@ -94,6 +99,7 @@ const messageOptions: Record<string, MessageData[]> = {
       footer:
         '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
       fallback: undefined,
+      completionMessage: 'ci-setup',
     },
     {
       code: 'cloud-v2-full-platform',
@@ -106,6 +112,7 @@ const messageOptions: Record<string, MessageData[]> = {
       footer:
         '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
       fallback: undefined,
+      completionMessage: 'platform-setup',
     },
   ],
 };
@@ -119,6 +126,7 @@ interface MessageData {
   footer: string;
   hint?: string;
   fallback?: { value: string; key: MessageKey };
+  completionMessage: CompletionMessageKey;
 }
 
 export class PromptMessages {
@@ -143,6 +151,15 @@ export class PromptMessages {
       return '';
     } else {
       return messageOptions[key][selected].code;
+    }
+  }
+
+  completionMessageOfSelectedPrompt(key: MessageKey): CompletionMessageKey {
+    const selected = this.selectedMessages[key];
+    if (selected === undefined) {
+      return 'ci-setup';
+    } else {
+      return messageOptions[key][selected].completionMessage;
     }
   }
 }

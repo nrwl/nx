@@ -1,6 +1,10 @@
 import { VcsPushStatus } from '../git/git';
 import { CLIOutput } from '../output';
-import { getMessageFactory } from './messages';
+import {
+  getCompletionMessage,
+  getSkippedCloudMessage,
+  CompletionMessageKey,
+} from './messages';
 import * as ora from 'ora';
 
 export type NxCloud =
@@ -11,16 +15,6 @@ export type NxCloud =
   | 'bitbucket-pipelines'
   | 'circleci'
   | 'skip';
-
-function getCloudMessageSource(
-  nxCloud: NxCloud
-):
-  | 'create-nx-workspace-success-cache-setup'
-  | 'create-nx-workspace-success-ci-setup' {
-  return nxCloud === 'yes'
-    ? 'create-nx-workspace-success-cache-setup'
-    : 'create-nx-workspace-success-ci-setup';
-}
 
 export async function connectToNxCloudForTemplate(
   directory: string,
@@ -80,7 +74,7 @@ export async function createNxCloudOnboardingUrl(
   directory: string,
   useGitHub?: boolean,
   promptCode?: string
-) {
+): Promise<string> {
   // nx-ignore-next-line
   const { createNxCloudOnboardingURL } = require(require.resolve(
     'nx/src/nx-cloud/utilities/url-shorten',
@@ -90,9 +84,13 @@ export async function createNxCloudOnboardingUrl(
     // nx-ignore-next-line
   )) as any;
 
-  const source = getCloudMessageSource(nxCloud);
+  // Source determines the onboarding flow type
+  const source =
+    nxCloud === 'yes'
+      ? 'create-nx-workspace-success-cache-setup'
+      : 'create-nx-workspace-success-ci-setup';
 
-  const resp = await createNxCloudOnboardingURL(
+  return await createNxCloudOnboardingURL(
     source,
     token,
     promptCode ?? '',
@@ -103,22 +101,22 @@ export async function createNxCloudOnboardingUrl(
 }
 
 export async function getNxCloudInfo(
-  nxCloud: NxCloud,
   connectCloudUrl: string,
   pushedToVcs: VcsPushStatus,
-  rawNxCloud?: NxCloud
+  completionMessageKey?: CompletionMessageKey
 ) {
-  const source = getCloudMessageSource(nxCloud);
-  const { createMessage } = getMessageFactory(source);
   const out = new CLIOutput(false);
-  const message = createMessage(
-    typeof rawNxCloud === 'string' ? null : connectCloudUrl,
+  const message = getCompletionMessage(
+    completionMessageKey,
+    connectCloudUrl,
     pushedToVcs
   );
-  if (message.type === 'success') {
-    out.success(message);
-  } else {
-    out.warn(message);
-  }
+  out.success(message);
+  return out.getOutput();
+}
+
+export function getSkippedNxCloudInfo() {
+  const out = new CLIOutput(false);
+  out.success(getSkippedCloudMessage());
   return out.getOutput();
 }

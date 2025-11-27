@@ -14,6 +14,7 @@ import {
   connectToNxCloudForTemplate,
   createNxCloudOnboardingUrl,
   getNxCloudInfo,
+  getSkippedNxCloudInfo,
   readNxCloudToken,
 } from './utils/nx/nx-cloud';
 import { output } from './utils/output';
@@ -170,11 +171,13 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   if (connectUrl) {
     nxCloudInfo = await getNxCloudInfo(
-      nxCloud,
       connectUrl,
       pushedToVcs,
-      rawArgs?.nxCloud
+      options.completionMessageKey
     );
+  } else if (isTemplate && nxCloud === 'skip') {
+    // Show nx connect message when user skips cloud in template flow
+    nxCloudInfo = getSkippedNxCloudInfo();
   }
 
   return {
