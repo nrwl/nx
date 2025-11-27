@@ -72,6 +72,9 @@ class NxMaven(
   @Volatile
   private var cachedInternalSession: InternalSession? = null
 
+  @Volatile
+  private var cachedWorkspaceReader: MavenChainedWorkspaceReader? = null
+
   private val getProjectMapMethod by lazy {
     DefaultMaven::class.java.getDeclaredMethod(
       "getProjectMap",
@@ -121,7 +124,8 @@ class NxMaven(
     val setupStartTime = System.currentTimeMillis()
     request.isRecursive = true
 
-    val workspaceReader = MavenChainedWorkspaceReader(request.workspaceReader, null)
+    val workspaceReader = MavenChainedWorkspaceReader(request.workspaceReader, ideWorkspaceReader)
+    cachedWorkspaceReader = workspaceReader  // Store reference for later updates
     val closeableSession = repositorySessionFactory
       .newRepositorySessionBuilder(request)
       .setWorkspaceReader(workspaceReader)
@@ -182,14 +186,17 @@ class NxMaven(
     session.allProjects = graph.allProjects
     session.projectDependencyGraph = graph
 
+    // Find the selected project(s) to build
     val selectedProjects = session.allProjects.filter {
       "${it.groupId}:${it.artifactId}" == request.selectedProjects.firstOrNull()
     }
 
+    // session.projects controls what lifecycleStarter builds - keep it to selected projects only
     session.projects = selectedProjects
     session.currentProject = selectedProjects.firstOrNull()
 
-    session.projectMap = getProjectMapMethod.invoke(this, session.projects) as Map<String?, MavenProject?>?
+    // Project map should match session.projects for consistency
+    session.projectMap = getProjectMapMethod.invoke(this, selectedProjects) as Map<String?, MavenProject?>?
   }
 
   override fun execute(request: MavenExecutionRequest): MavenExecutionResult {
@@ -225,8 +232,6 @@ class NxMaven(
     sessionScope.enter()
 
     try {
-      val workspaceReader = MavenChainedWorkspaceReader(request.workspaceReader, ideWorkspaceReader)
-
       // Reuse the cached RepositorySystemSession (holds artifact cache and metadata)
       // Create a new MavenSession wrapper with the new request/result but same cached repository session
       val session = MavenSession(cachedRepositorySession!!, request, result)
@@ -238,10 +243,41 @@ class NxMaven(
       // Re-seed the cached session into the current scope context for this invocation
       reseedSessionInScope(session)
 
-      // Add ReactorReader to workspace chain for artifact resolution
-      // ReactorReader.HINT is "reactor" but the class is package-private, so we use the string directly
+      // Prime ReactorReader's cache with all projects for dependency resolution
+      // ReactorReader lazily caches session.getProjects(), so we temporarily set it to all projects
+      val selectedProjects = session.projects  // Save selected project(s)
+      session.projects = session.allProjects   // Temporarily set to all projects
+
+      // Lookup ReactorReader - it will be created with access to our session (it's @SessionScoped)
       val reactorReader = lookup.lookup(WorkspaceReader::class.java, "reactor")
-      workspaceReader.addReader(reactorReader)
+
+      // Update the CACHED workspace reader to include this ReactorReader
+      // This is the same workspace reader that's in cachedRepositorySession, so artifact resolution will find it
+      val readers = LinkedHashSet<WorkspaceReader>()
+      readers.add(reactorReader)
+      request.workspaceReader?.let { readers.add(it) }
+      ideWorkspaceReader?.let { readers.add(it) }
+      cachedWorkspaceReader!!.setReaders(readers)
+
+      // Debug: verify workspace reader is properly connected
+      log.info("Workspace reader debug:")
+      log.info("  - cachedWorkspaceReader identity: ${System.identityHashCode(cachedWorkspaceReader)}")
+      log.info("  - cachedRepositorySession.workspaceReader identity: ${System.identityHashCode(cachedRepositorySession!!.workspaceReader)}")
+      log.info("  - Same object: ${cachedWorkspaceReader === cachedRepositorySession!!.workspaceReader}")
+      log.info("  - Readers in cachedWorkspaceReader: ${cachedWorkspaceReader!!.readers.map { it.javaClass.simpleName }}")
+
+      // Force ReactorReader to initialize its projects cache NOW while session.projects has all projects
+      // findVersions triggers the lazy initialization of the internal projects map
+      try {
+        val dummyArtifact = org.eclipse.aether.artifact.DefaultArtifact("__nx__:__prime__:1.0")
+        reactorReader.findVersions(dummyArtifact)
+        log.debug("ReactorReader cache primed with ${session.allProjects?.size} projects")
+      } catch (e: Exception) {
+        log.debug("ReactorReader cache priming completed (exception ignored): ${e.message}")
+      }
+
+      // Reset session.projects back to selected projects for lifecycle execution
+      session.projects = selectedProjects
 
       // Fire project discovery event (some plugins listen for this)
       eventCatapult.fire(ExecutionEvent.Type.ProjectDiscoveryStarted, session, null)

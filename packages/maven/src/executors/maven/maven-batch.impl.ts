@@ -195,20 +195,15 @@ export default async function mavenBatchExecutor(
       }
     }
 
-    // Ensure all tasks have results
-    for (const taskId of taskIds) {
-      if (!results[taskId]) {
-        if (process.env.NX_VERBOSE_LOGGING === 'true') {
-          console.log(`[Maven Batch] Missing result for task ID: "${taskId}"`);
-          console.log(
-            `[Maven Batch] Available task IDs in results:`,
-            Object.keys(results)
-          );
-        }
-        results[taskId] = {
-          success: false,
-          terminalOutput: 'No result returned from batch runner',
-        };
+    // Log skipped tasks (tasks not in results due to failed dependencies)
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      const missingTasks = taskIds.filter((id) => !results[id]);
+      if (missingTasks.length > 0) {
+        console.log(
+          `[Maven Batch] Tasks not in results (skipped): ${missingTasks.join(
+            ', '
+          )}`
+        );
       }
     }
 
