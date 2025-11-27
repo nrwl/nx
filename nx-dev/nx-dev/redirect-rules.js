@@ -1202,6 +1202,7 @@ const manualDTEUpdate = {
 };
 
 const powerpackRedirects = {
+  '/powerpack/:path*': '/enterprise',
   '/nx-enterprise/powerpack/custom-caching':
     '/recipes/running-tasks/self-hosted-caching',
   '/nx-enterprise/powerpack/free-licenses-and-trials': '/nx-enterprise',
