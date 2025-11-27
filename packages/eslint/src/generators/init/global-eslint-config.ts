@@ -117,7 +117,7 @@ export const getGlobalFlatEslintConfiguration = (
     content,
     generateFlatOverride(
       {
-        ignores: ['**/dist'],
+        ignores: ['**/dist', '**/out-tsc'],
       },
       format
     )
