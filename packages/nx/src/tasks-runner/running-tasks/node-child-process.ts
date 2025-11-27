@@ -1,9 +1,10 @@
-import { ChildProcess, Serializable } from 'child_process';
-import { signalToCode } from '../../utils/exit-codes';
-import { RunningTask } from './running-task';
-import { Transform } from 'stream';
 import * as chalk from 'chalk';
+import type { ChildProcess, Serializable } from 'child_process';
 import { readFileSync } from 'fs';
+import { Transform } from 'stream';
+import * as treeKill from 'tree-kill';
+import { signalToCode } from '../../utils/exit-codes';
+import type { RunningTask } from './running-task';
 
 export class NodeChildProcessWithNonDirectOutput implements RunningTask {
   private terminalOutput: string = '';
@@ -99,8 +100,10 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
     }
   }
   public kill(signal?: NodeJS.Signals) {
-    if (this.childProcess.connected) {
-      this.childProcess.kill(signal);
+    if (this.childProcess?.pid) {
+      treeKill(this.childProcess.pid, signal, () => {
+        // Ignore errors - process may have already exited
+      });
     }
   }
 }
@@ -222,8 +225,10 @@ export class NodeChildProcessWithDirectOutput implements RunningTask {
   }
 
   kill(signal?: NodeJS.Signals): void {
-    if (this.childProcess.connected) {
-      this.childProcess.kill(signal);
+    if (this.childProcess?.pid) {
+      treeKill(this.childProcess.pid, signal, () => {
+        // Ignore errors - process may have already exited
+      });
     }
   }
 }
