@@ -41,48 +41,6 @@ const outputMessages = {
       },
     },
   ],
-  'create-nx-workspace-template-cloud': [
-    {
-      code: 'template-cloud-connect-v1',
-      createMessage: (url: string | null, pushedToVcs: VcsPushStatus) => ({
-        title: 'Connect to Nx Cloud to complete setup',
-        type: 'success',
-        bodyLines: [
-          url || 'Run: nx connect',
-          '',
-          'Nx Cloud provides:',
-          '  • Remote caching across your team',
-          '  • Distributed task execution',
-          '  • Real-time build insights',
-        ],
-      }),
-    },
-    {
-      code: 'template-cloud-connect-v2',
-      createMessage: (url: string | null, pushedToVcs: VcsPushStatus) => ({
-        title: 'One more step: activate remote caching',
-        type: 'success',
-        bodyLines: [
-          'Visit the link below to connect your workspace:',
-          url || '',
-          '',
-          'This enables 10x faster builds by sharing cache across your team.',
-        ],
-      }),
-    },
-    {
-      code: 'template-cloud-connect-v3',
-      createMessage: (url: string | null, pushedToVcs: VcsPushStatus) => ({
-        title: 'Almost done! Finish Nx Cloud setup',
-        type: 'success',
-        bodyLines: [
-          url || 'Run: nx connect',
-          '',
-          'Takes 30 seconds. Makes your builds 10x faster.',
-        ],
-      }),
-    },
-  ],
 } as const;
 type OutputMessageKey = keyof typeof outputMessages;
 

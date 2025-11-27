@@ -13,15 +13,11 @@ export type NxCloud =
   | 'skip';
 
 function getCloudMessageSource(
-  isTemplate: boolean,
   nxCloud: NxCloud
 ):
-  | 'create-nx-workspace-template-cloud'
   | 'create-nx-workspace-success-cache-setup'
   | 'create-nx-workspace-success-ci-setup' {
-  return isTemplate
-    ? 'create-nx-workspace-template-cloud'
-    : nxCloud === 'yes'
+  return nxCloud === 'yes'
     ? 'create-nx-workspace-success-cache-setup'
     : 'create-nx-workspace-success-ci-setup';
 }
@@ -83,7 +79,6 @@ export async function createNxCloudOnboardingUrl(
   token: string,
   directory: string,
   useGitHub?: boolean,
-  isTemplate?: boolean,
   promptCode?: string
 ) {
   // nx-ignore-next-line
@@ -95,19 +90,12 @@ export async function createNxCloudOnboardingUrl(
     // nx-ignore-next-line
   )) as any;
 
-  const source = getCloudMessageSource(!!isTemplate, nxCloud);
-  const { code: successMessageCode } = getMessageFactory(source);
+  const source = getCloudMessageSource(nxCloud);
 
-  // Combine prompt code with success message code
-  // Format: "prompt-code:success-code" or just "success-code" if no prompt
-  const meta = promptCode
-    ? `${promptCode}:${successMessageCode}`
-    : successMessageCode;
-
-  return await createNxCloudOnboardingURL(
+  const resp = await createNxCloudOnboardingURL(
     source,
     token,
-    meta,
+    promptCode ?? '',
     false,
     useGitHub ??
       (nxCloud === 'yes' || nxCloud === 'github' || nxCloud === 'circleci')
@@ -118,10 +106,9 @@ export async function getNxCloudInfo(
   nxCloud: NxCloud,
   connectCloudUrl: string,
   pushedToVcs: VcsPushStatus,
-  rawNxCloud?: NxCloud,
-  isTemplate?: boolean
+  rawNxCloud?: NxCloud
 ) {
-  const source = getCloudMessageSource(!!isTemplate, nxCloud);
+  const source = getCloudMessageSource(nxCloud);
   const { createMessage } = getMessageFactory(source);
   const out = new CLIOutput(false);
   const message = createMessage(

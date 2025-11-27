@@ -131,7 +131,6 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       token,
       directory,
       useGitHub,
-      isTemplate,
       options.nxCloudPromptCode
     );
   }
@@ -174,8 +173,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       nxCloud,
       connectUrl,
       pushedToVcs,
-      rawArgs?.nxCloud,
-      isTemplate
+      rawArgs?.nxCloud
     );
   }
 
