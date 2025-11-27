@@ -341,19 +341,19 @@ export function PlansDisplay(): ReactElement {
                   />
                   <span>
                     <Link
-                      href="/powerpack"
+                      href="/enterprise"
                       target="_blank"
-                      title="Check our AI integrations and how to use them"
+                      title="Check our enterprise features"
                       onClick={() =>
                         sendCustomEvent(
-                          'learn-nx-powerpack-click',
+                          'learn-nx-enterprise-click',
                           'plans-table',
                           'pricing-plans'
                         )
                       }
                       className="font-medium underline decoration-dotted"
                     >
-                      Nx Powerpack
+                      Nx Enterprise
                     </Link>
                     : a suite of premium extensions for the Nx CLI
                   </span>

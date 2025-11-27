@@ -116,11 +116,11 @@ export const featuresItems: Record<string, MenuItem[]> = {
       isHighlight: false,
     },
   ],
-  'Nx Powerpack Features (Paid Enterprise Extensions)': [
+  'Nx Enterprise Features': [
     {
       name: 'Run Conformance Rules',
       description: null,
-      href: '/nx-enterprise/powerpack/conformance',
+      href: '/nx-enterprise/conformance',
       icon: CheckBadgeIcon,
       isNew: false,
       isHighlight: false,
@@ -128,7 +128,7 @@ export const featuresItems: Record<string, MenuItem[]> = {
     {
       name: 'Define Project Owners',
       description: null,
-      href: '/nx-enterprise/powerpack/owners',
+      href: '/nx-enterprise/owners',
       icon: UserGroupIcon,
       isNew: false,
       isHighlight: false,
