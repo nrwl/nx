@@ -22,7 +22,14 @@ import {
   versions,
 } from './version-utils';
 
-export type AddVitestOptions = {
+export type AddVitestAngularOptions = {
+  name: string;
+  projectRoot: string;
+  skipPackageJson: boolean;
+  useNxUnitTestRunnerExecutor?: boolean;
+};
+
+export type AddVitestAnalogOptions = {
   name: string;
   projectRoot: string;
   skipFormat: boolean;
@@ -30,25 +37,11 @@ export type AddVitestOptions = {
   strict: boolean;
   zoneless: boolean;
   addPlugin?: boolean;
-  forceAnalog?: boolean;
-  useNxUnitTestRunnerExecutor?: boolean;
 };
 
-export async function addVitest(
+export async function addVitestAngular(
   tree: Tree,
-  options: AddVitestOptions
-): Promise<void> {
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  if (angularMajorVersion >= 21 && !options.forceAnalog) {
-    await configureAngularUnitTestBuilderTarget(tree, options);
-  } else {
-    await configureVitestWithAnalog(tree, options, angularMajorVersion);
-  }
-}
-
-async function configureAngularUnitTestBuilderTarget(
-  tree: Tree,
-  options: AddVitestOptions
+  options: AddVitestAngularOptions
 ): Promise<void> {
   validateVitestVersion(tree);
 
@@ -71,7 +64,7 @@ async function configureAngularUnitTestBuilderTarget(
   };
   updateNxJson(tree, nxJson);
 
-  configureTypeScriptForVitest(tree, options);
+  configureTypeScriptForVitest(tree, options.projectRoot);
   addVitestScreenshotsToGitIgnore(tree);
 
   if (!options.skipPackageJson) {
@@ -94,10 +87,9 @@ async function configureAngularUnitTestBuilderTarget(
   }
 }
 
-async function configureVitestWithAnalog(
+export async function addVitestAnalog(
   tree: Tree,
-  options: AddVitestOptions,
-  angularMajorVersion: number
+  options: AddVitestAnalogOptions
 ): Promise<void> {
   ensurePackage('@nx/vitest', nxVersion);
   const { configurationGenerator } = await import('@nx/vitest/generators');
@@ -112,6 +104,7 @@ async function configureVitestWithAnalog(
     skipPackageJson: options.skipPackageJson,
   });
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   createAnalogSetupFile(tree, options, angularMajorVersion);
 
   if (!options.skipPackageJson) {
@@ -194,27 +187,17 @@ function validateVitestVersion(tree: Tree): void {
   }
 }
 
-function configureTypeScriptForVitest(
-  tree: Tree,
-  options: AddVitestOptions
-): void {
-  writeJson(
-    tree,
-    joinPathFragments(options.projectRoot, 'tsconfig.spec.json'),
-    {
-      extends: './tsconfig.json',
-      compilerOptions: {
-        outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc`,
-        types: ['vitest/globals'],
-      },
-      include: ['src/**/*.ts', 'src/**/*.d.ts'],
-    }
-  );
+function configureTypeScriptForVitest(tree: Tree, projectRoot: string): void {
+  writeJson(tree, joinPathFragments(projectRoot, 'tsconfig.spec.json'), {
+    extends: './tsconfig.json',
+    compilerOptions: {
+      outDir: `${offsetFromRoot(projectRoot)}dist/out-tsc`,
+      types: ['vitest/globals'],
+    },
+    include: ['src/**/*.ts', 'src/**/*.d.ts'],
+  });
 
-  const projectTsconfigPath = joinPathFragments(
-    options.projectRoot,
-    'tsconfig.json'
-  );
+  const projectTsconfigPath = joinPathFragments(projectRoot, 'tsconfig.json');
   updateJson(tree, projectTsconfigPath, (json) => {
     json.references ??= [];
     if (!json.references.some((ref) => ref.path === './tsconfig.spec.json')) {
@@ -240,7 +223,7 @@ function addVitestScreenshotsToGitIgnore(tree: Tree): void {
 
 function createAnalogSetupFile(
   tree: Tree,
-  options: AddVitestOptions,
+  options: AddVitestAnalogOptions,
   angularMajorVersion: number
 ): void {
   let setupFile: string;

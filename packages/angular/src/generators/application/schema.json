@@ -99,8 +99,8 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["vitest", "jest", "none"],
-      "description": "Test runner to use for unit tests. It defaults to `vitest` when using the `esbuild` bundler for Angular versions >= 21.0.0. Otherwise, it defaults to `jest`.",
+      "enum": ["vitest-angular", "vitest-analog", "jest", "none"],
+      "description": "Test runner to use for unit tests. `vitest-angular` uses the `@angular/build:unit-test` executor (requires Angular v21+ and the `esbuild` bundler). `vitest-analog` uses AnalogJS-based setup with `@nx/vitest`. It defaults to `vitest-angular` when using the `esbuild` bundler for Angular versions >= 21.0.0, `vitest-analog` when using other bundlers on Angular >= 21.0.0, otherwise `jest`.",
       "x-prompt": "Which unit test runner would you like to use?"
     },
     "e2eTestRunner": {
