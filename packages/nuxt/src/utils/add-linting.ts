@@ -101,20 +101,21 @@ function generateNuxtFlatEslintConfig(tree: Tree, projectRoot: string) {
   // Determine the relative path to root config
   const depth = projectRoot.split('/').filter(Boolean).length;
   const rootConfigRelativePath = depth > 0 ? '../'.repeat(depth) : './';
-
   let configContent: string;
 
   if (isCjs) {
     // CJS flat config
     configContent = `const { createConfigForNuxt } = require('@nuxt/eslint-config/flat');
-const baseConfig = require('${rootConfigRelativePath}eslint.config.cjs');
-
+${
+  projectRoot !== '.'
+    ? `const baseConfig = require('${rootConfigRelativePath}eslint.config.cjs');\n`
+    : ''
+}
 module.exports = createConfigForNuxt({
   features: {
     typescript: true,
   },
-})
-  .prepend(...baseConfig)
+})${projectRoot !== '.' ? `\n  .prepend(...baseConfig)` : ''}
   .append(
     {
       files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
@@ -128,16 +129,18 @@ module.exports = createConfigForNuxt({
   } else {
     // ESM flat config (default)
     configContent = `import { createConfigForNuxt } from '@nuxt/eslint-config/flat';
-import baseConfig from '${rootConfigRelativePath}eslint.config.${
-      isMjs ? 'mjs' : 'js'
-    }';
-
+${
+  projectRoot !== '.'
+    ? `import baseConfig from '${rootConfigRelativePath}eslint.config.${
+        isMjs ? 'mjs' : 'js'
+      }';\n`
+    : ''
+}
 export default createConfigForNuxt({
   features: {
     typescript: true,
   },
-})
-  .prepend(...baseConfig)
+})${projectRoot !== '.' ? `\n  .prepend(...baseConfig)` : ''}
   .append(
     {
       files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
