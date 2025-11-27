@@ -307,7 +307,7 @@ export function Header({
                 sendCustomEvent('enterprise-click', 'header-cta', 'page-header')
               }
             >
-              Nx Enterprise
+              Enterprise
             </Link>
           </nav>
         </div>
@@ -670,7 +670,7 @@ export function Header({
                                     'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
                                   )}
                                 >
-                                  <span>Nx Enterprise</span>
+                                  <span>Enterprise</span>
                                   <ChevronDownIcon
                                     aria-hidden="true"
                                     className={cx(

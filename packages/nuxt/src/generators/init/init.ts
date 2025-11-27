@@ -22,7 +22,7 @@ export async function nuxtInitGenerator(host: Tree, schema: InitSchema) {
 
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
-    installTask = updateDependencies(host, schema);
+    installTask = await updateDependencies(host, schema);
   }
 
   return installTask;
