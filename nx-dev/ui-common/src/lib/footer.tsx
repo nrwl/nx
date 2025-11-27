@@ -31,7 +31,7 @@ const navigation = {
       href: `${nxDevUrl}/nx-cloud`,
     },
     {
-      name: 'Nx Enterprise',
+      name: 'Enterprise',
       href: `${nxDevUrl}/enterprise`,
     },
   ],
