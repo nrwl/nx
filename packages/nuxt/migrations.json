@@ -14,6 +14,10 @@
           "version": "^4.0.0",
           "alwaysAddToPackageJson": false
         },
+        "@nuxt/eslint-config": {
+          "version": "^1.10.0",
+          "alwaysAddToPackageJson": false
+        },
         "@nuxt/kit": {
           "version": "^4.0.0",
           "alwaysAddToPackageJson": false

@@ -167,6 +167,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       rootProject: options.rootProject,
       unitTestRunner: options.unitTestRunner,
       isUsingTsSolutionConfig: options.isUsingTsSolutionConfig,
+      useAppDir: options.useAppDir,
     },
     getRelativePathToRootTsConfig(tree, options.appProjectRoot)
   );

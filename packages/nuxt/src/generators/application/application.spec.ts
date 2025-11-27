@@ -306,6 +306,29 @@ describe('app', () => {
       expect(projectConfig.sourceRoot).toBe('my-app/app');
     });
 
+    it('should configure tsconfig.app.json correctly when useAppDir is true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'vitest',
+        useAppDir: true,
+      });
+
+      const tsconfig = readJson(tree, 'my-app/tsconfig.app.json');
+
+      // Check rootDir
+      expect(tsconfig.compilerOptions.rootDir).toBe('app');
+
+      // Check include paths
+      expect(tsconfig.include).toContain('app/**/*');
+      expect(tsconfig.include).toContain('server/**/*');
+      expect(tsconfig.include).toContain('.nuxt/nuxt.d.ts');
+      expect(tsconfig.include).not.toContain('src/**/*');
+
+      // Check excludes include test patterns for both app and server
+      expect(tsconfig.exclude).toContain('app/**/*.spec.ts');
+      expect(tsconfig.exclude).toContain('server/**/*.spec.ts');
+    });
+
     it('should create all files in correct location with useAppDir', async () => {
       await applicationGenerator(tree, {
         directory: 'my-app',
@@ -370,6 +393,31 @@ describe('app', () => {
 
       const projectConfig = readProjectConfiguration(tree, 'my-app');
       expect(projectConfig.sourceRoot).toBe('my-app/src');
+    });
+
+    it('should configure tsconfig.app.json correctly when useAppDir is false', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'vitest',
+        useAppDir: false,
+      });
+
+      const tsconfig = readJson(tree, 'my-app/tsconfig.app.json');
+
+      // Check rootDir
+      expect(tsconfig.compilerOptions.rootDir).toBe('src');
+
+      // Check include paths
+      expect(tsconfig.include).toContain('src/**/*');
+      expect(tsconfig.include).toContain('.nuxt/nuxt.d.ts');
+      expect(tsconfig.include).not.toContain('app/**/*');
+      // server/**/* should NOT be included when useAppDir is false (server is inside src/)
+      expect(tsconfig.include).not.toContain('server/**/*');
+
+      // Check excludes
+      expect(tsconfig.exclude).toContain('src/**/*.spec.ts');
+      // server excludes should NOT be present when useAppDir is false
+      expect(tsconfig.exclude).not.toContain('server/**/*.spec.ts');
     });
   });
 
