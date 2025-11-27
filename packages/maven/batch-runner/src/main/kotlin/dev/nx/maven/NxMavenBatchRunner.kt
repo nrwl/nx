@@ -10,13 +10,14 @@ import kotlin.system.exitProcess
 private val log = LoggerFactory.getLogger("NxMavenBatchRunner")
 private val gson = Gson()
 
-fun printSummary(successCount: Int, failureCount: Int, durationMs: Long) {
+fun printSummary(successCount: Int, failureCount: Int, skippedCount: Int, durationMs: Long) {
   val durationSec = String.format("%.2f", durationMs / 1000.0)
-  val total = successCount + failureCount
+  val total = successCount + failureCount + skippedCount
 
   log.info("Nx Maven Summary")
   log.info("  ✅ Succeeded: $successCount")
   log.info("  ❌ Failed:    $failureCount")
+  log.info("  ⏭️ Skipped:   $skippedCount")
   log.info("  📦 Total:     $total")
   log.info("  ⏱️ Duration:  ${durationSec}s")
 }
@@ -74,12 +75,13 @@ fun main(args: Array<String>) {
         // Summary
         val successCount = results.count { it.value.success }
         val failureCount = results.size - successCount
+        val skippedCount = options.tasks.size - results.size
 
         // Log execution time
         val endTime = System.currentTimeMillis()
         val duration = endTime - startTime
 
-        printSummary(successCount, failureCount, duration)
+        printSummary(successCount, failureCount, skippedCount, duration)
 
         // Exit with appropriate code
         val hasFailures = results.any { !it.value.success }
