@@ -26,8 +26,8 @@ describe('create-nx-workspace --preset=nuxt', () => {
     checkFilesExist('package.json');
     checkFilesExist('project.json');
     checkFilesExist('nuxt.config.ts');
-    checkFilesExist('src/app.vue');
-    checkFilesExist('src/pages/index.vue');
+    checkFilesExist('app/app.vue');
+    checkFilesExist('app/pages/index.vue');
     expectCodeIsFormatted();
   });
 
