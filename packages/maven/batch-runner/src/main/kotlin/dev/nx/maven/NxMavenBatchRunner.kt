@@ -81,6 +81,25 @@ fun main(args: Array<String>) {
         val endTime = System.currentTimeMillis()
         val duration = endTime - startTime
 
+        // Print failed task outputs at the end for easy visibility
+        val failedResults = results.filter { !it.value.success }
+        if (failedResults.isNotEmpty()) {
+            log.info("")
+            log.info("═".repeat(80))
+            log.info("❌ FAILED TASKS")
+            log.info("═".repeat(80))
+            failedResults.forEach { (taskId, result) ->
+                log.info("")
+                log.info("Task: $taskId")
+                log.info("-".repeat(40))
+                if (result.terminalOutput.isNotBlank()) {
+                    log.info(result.terminalOutput)
+                }
+            }
+            log.info("═".repeat(80))
+            log.info("")
+        }
+
         printSummary(successCount, failureCount, skippedCount, duration)
 
         // Exit with appropriate code

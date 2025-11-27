@@ -55,7 +55,7 @@
     "@types/xmldom": "^0.1.34",
     "jest": "catalog:jest",
     "memfs": "^4.9.2",
-    "nx": "workspace:*",
+    "nx": "^22.1.2",
     "ts-jest": "catalog:jest",
     "typescript": "catalog:typescript"
   },
