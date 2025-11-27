@@ -12,6 +12,7 @@ import org.apache.maven.internal.impl.DefaultSessionFactory
 import org.apache.maven.internal.impl.InternalMavenSession
 import org.apache.maven.jline.JLineMessageBuilderFactory
 import org.apache.maven.lifecycle.internal.ExecutionEventCatapult
+import org.apache.maven.lifecycle.internal.LifecycleStarter
 import org.apache.maven.model.superpom.SuperPomProvider
 import org.apache.maven.plugin.LegacySupport
 import org.apache.maven.project.MavenProject
@@ -36,7 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class NxMaven(
   private val lookup: Lookup,
-  eventCatapult: ExecutionEventCatapult,
+  private val eventCatapult: ExecutionEventCatapult,
   private val legacySupport: LegacySupport,
   private val sessionScope: SessionScope,
   private val repositorySessionFactory: RepositorySystemSessionFactory,
@@ -71,17 +72,6 @@ class NxMaven(
   @Volatile
   private var cachedInternalSession: InternalSession? = null
 
-  // Cache the doExecute method so we don't look it up every invocation
-  private val doExecuteMethod by lazy {
-    DefaultMaven::class.java.getDeclaredMethod(
-      "doExecute",
-      MavenExecutionRequest::class.java,
-      MavenSession::class.java,
-      MavenExecutionResult::class.java,
-      MavenChainedWorkspaceReader::class.java
-    ).apply { isAccessible = true }
-  }
-
   private val getProjectMapMethod by lazy {
     DefaultMaven::class.java.getDeclaredMethod(
       "getProjectMap",
@@ -90,7 +80,7 @@ class NxMaven(
   }
 
   init {
-    log.info("NxMaven initialized - will use doExecute() with managed session")
+    log.info("NxMaven initialized - will use lifecycleStarter with cached graph")
     // Initialize BuildStateManager with Maven's lookup container
     BuildStateManager.initialize(lookup)
   }
@@ -217,53 +207,68 @@ class NxMaven(
   }
 
   /**
-   * Executes the build using our cached session via reflection-based doExecute() call.
-   * Reuses cached RepositorySystemSession and MavenSession to preserve artifact cache,
-   * repository metadata cache, and model builder cache across invocations.
-   * This ensures we maintain full control over the session lifecycle across all invocations.
+   * Executes the build using our cached graph and session.
+   * This is a streamlined version of DefaultMaven.doExecute() that skips redundant graph building.
+   *
+   * We reuse:
+   * - Cached RepositorySystemSession (holds artifact cache and metadata)
+   * - Cached ProjectDependencyGraph (avoids rebuilding the project graph)
+   * - Cached InternalSession (preserves ModelBuilderSession)
+   *
+   * We still run:
+   * - ReactorReader setup (for artifact resolution)
+   * - ProjectDiscoveryStarted event
+   * - lifecycleStarter.execute() (the actual build)
    */
   private fun executeWithCachedGraph(request: MavenExecutionRequest): MavenExecutionResult {
     val result = DefaultMavenExecutionResult()
     sessionScope.enter()
-    val workspaceReader = MavenChainedWorkspaceReader(request.workspaceReader, ideWorkspaceReader)
 
-    // Reuse the cached RepositorySystemSession (holds artifact cache and metadata)
-    // Create a new MavenSession wrapper with the new request/result but same cached repository session
-    val session = MavenSession(cachedRepositorySession!!, request, result)
-    session.session = cachedInternalSession  // Reuse cached InternalSession object to preserve ModelBuilderSession
+    try {
+      val workspaceReader = MavenChainedWorkspaceReader(request.workspaceReader, ideWorkspaceReader)
 
-    initializeModelBuilderSession(session)
+      // Reuse the cached RepositorySystemSession (holds artifact cache and metadata)
+      // Create a new MavenSession wrapper with the new request/result but same cached repository session
+      val session = MavenSession(cachedRepositorySession!!, request, result)
+      session.session = cachedInternalSession  // Reuse cached InternalSession object to preserve ModelBuilderSession
 
-    applyGraphToSession(session, cachedProjectGraph!!, request)
-
-    return try {
+      initializeModelBuilderSession(session)
+      applyGraphToSession(session, cachedProjectGraph!!, request)
 
       // Re-seed the cached session into the current scope context for this invocation
       reseedSessionInScope(session)
 
-      @Suppress("UNCHECKED_CAST")
-      // Use the CACHED request (which is stored in the session) not the new request
-      // This ensures doExecute sees consistent session/request state
-      val executionResult = doExecuteMethod.invoke(
-        this,
-        request,
-        session,
-        result,
-        workspaceReader
-      ) as MavenExecutionResult
+      // Add ReactorReader to workspace chain for artifact resolution
+      // ReactorReader.HINT is "reactor" but the class is package-private, so we use the string directly
+      val reactorReader = lookup.lookup(WorkspaceReader::class.java, "reactor")
+      workspaceReader.addReader(reactorReader)
 
-      // Log exceptions with stack traces (Maven's context.options().showErrors() isn't reliable in parallel execution)
-      if (executionResult.hasExceptions()) {
-        log.error("Build completed with ${executionResult.exceptions.size} exception(s):")
-        for (e in executionResult.exceptions) {
+      // Fire project discovery event (some plugins listen for this)
+      eventCatapult.fire(ExecutionEvent.Type.ProjectDiscoveryStarted, session, null)
+
+      // Set result properties
+      result.topologicallySortedProjects = session.projects
+      result.project = session.topLevelProject
+
+      // Execute the lifecycle - this is the main build work
+      val lifecycleStarter = lookup.lookupOptional(LifecycleStarter::class.java, request.builderId)
+        .orElseGet { lookup.lookup(LifecycleStarter::class.java) }
+
+      lifecycleStarter.execute(session)
+
+      // Log exceptions with stack traces
+      if (result.hasExceptions()) {
+        log.error("Build completed with ${result.exceptions.size} exception(s):")
+        for (e in result.exceptions) {
           log.error("Exception: ${e.message}", e)
         }
       }
 
-      executionResult
+      return result
     } catch (e: Exception) {
       log.error("   ❌ Error executing with cached session: ${e.message}", e)
-      throw RuntimeException("Failed to execute Maven with cached session", e)
+      result.addException(e)
+      return result
     } finally {
       sessionScope.exit()
     }

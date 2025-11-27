@@ -45,7 +45,7 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "dependencies": {
-    "@nx/devkit": "workspace:*",
+    "@nx/devkit": "^22.1.2",
     "@xmldom/xmldom": "^0.8.10",
     "tslib": "catalog:typescript"
   },
