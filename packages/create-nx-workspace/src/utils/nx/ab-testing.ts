@@ -1,7 +1,81 @@
 import { execSync } from 'node:child_process';
+import { existsSync, readFileSync, writeFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { isCI } from '../ci/is-ci';
 import { getPackageManagerCommand } from '../package-manager';
 import type { CompletionMessageKey } from './messages';
+
+// TODO(jack): Remove flow variant logic after A/B testing is complete
+const FLOW_VARIANT_CACHE_FILE = join(tmpdir(), 'nx-cnw-flow-variant');
+const FLOW_VARIANT_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// In-memory cache to ensure consistency within a single run
+let flowVariantCache: string | null = null;
+
+function readCachedFlowVariant(): string | null {
+  try {
+    if (!existsSync(FLOW_VARIANT_CACHE_FILE)) return null;
+    const stats = statSync(FLOW_VARIANT_CACHE_FILE);
+    if (Date.now() - stats.mtimeMs > FLOW_VARIANT_EXPIRY_MS) return null;
+    const value = readFileSync(FLOW_VARIANT_CACHE_FILE, 'utf-8').trim();
+    return value === '0' || value === '1' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedFlowVariant(variant: string): void {
+  try {
+    writeFileSync(FLOW_VARIANT_CACHE_FILE, variant, 'utf-8');
+  } catch {
+    // Ignore write errors
+  }
+}
+
+/**
+ * Determines whether to use the new template flow (1) or old preset flow (0).
+ * - NX_CNW_PROMPT_VARIANT=0 forces preset flow
+ * - NX_CNW_PROMPT_VARIANT=1 forces template flow
+ * - NX_GENERATE_DOCS_PROCESS=true forces preset flow (for docs generation)
+ * - Otherwise, uses cached value (24h) or randomly assigns
+ */
+export function shouldUseTemplateFlow(): boolean {
+  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
+    flowVariantCache = '0';
+    return false;
+  }
+
+  const variant =
+    process.env.NX_CNW_PROMPT_VARIANT ??
+    flowVariantCache ??
+    readCachedFlowVariant() ??
+    (Math.random() < 0.5 ? '0' : '1');
+
+  // Store in memory for consistency within this run
+  flowVariantCache = variant;
+
+  if (!process.env.NX_CNW_PROMPT_VARIANT) {
+    writeCachedFlowVariant(variant);
+  }
+
+  return variant === '1';
+}
+
+/**
+ * Returns the flow variant for tracking (0 = preset, 1 = template).
+ */
+export function getFlowVariant(): string {
+  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
+    return '0';
+  }
+  return (
+    process.env.NX_CNW_PROMPT_VARIANT ??
+    flowVariantCache ??
+    readCachedFlowVariant() ??
+    'unknown'
+  );
+}
 
 export const NxCloudChoices = [
   'github',
@@ -149,9 +223,8 @@ export class PromptMessages {
     const selected = this.selectedMessages[key];
     if (selected === undefined) {
       return '';
-    } else {
-      return messageOptions[key][selected].code;
     }
+    return messageOptions[key][selected].code;
   }
 
   completionMessageOfSelectedPrompt(key: MessageKey): CompletionMessageKey {

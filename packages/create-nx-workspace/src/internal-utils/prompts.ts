@@ -2,7 +2,11 @@ import * as yargs from 'yargs';
 import * as enquirer from 'enquirer';
 import * as chalk from 'chalk';
 
-import { MessageKey, messages } from '../utils/nx/ab-testing';
+import {
+  MessageKey,
+  messages,
+  shouldUseTemplateFlow,
+} from '../utils/nx/ab-testing';
 import { output } from '../utils/output';
 import { deduceDefaultBase } from '../utils/git/default-base';
 import {
@@ -123,6 +127,8 @@ export async function determineTemplate(
   if (parsedArgs.template) return parsedArgs.template;
   if (parsedArgs.preset) return 'skip';
   if (!parsedArgs.interactive || isCI()) return 'skip';
+  // A/B test: shouldUseTemplateFlow() determines if user sees template or preset flow
+  if (!shouldUseTemplateFlow()) return 'skip';
   const { template } = await enquirer.prompt<{ template: string }>([
     {
       name: 'template',

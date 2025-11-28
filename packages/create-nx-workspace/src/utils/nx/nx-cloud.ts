@@ -73,6 +73,7 @@ export async function createNxCloudOnboardingUrl(
   token: string,
   directory: string,
   useGitHub?: boolean,
+  flowVariant?: string,
   promptCode?: string
 ): Promise<string> {
   // nx-ignore-next-line
@@ -90,14 +91,27 @@ export async function createNxCloudOnboardingUrl(
       ? 'create-nx-workspace-success-cache-setup'
       : 'create-nx-workspace-success-ci-setup';
 
-  return await createNxCloudOnboardingURL(
+  // Meta: "start" or "start-v2" prefix, with prompt code
+  // For template flow: use specific prompt code (e.g., 'cloud-v2-remote-cache')
+  // For preset flow or Custom: use visit codes based on nxCloud value
+  const prefix = flowVariant === '1' ? 'start-v2' : 'start';
+  const code =
+    promptCode ?? (nxCloud === 'yes' ? 'remote-cache-visit' : 'ci-setup-visit');
+  const meta = `${prefix}-${code}`;
+
+  const x = await createNxCloudOnboardingURL(
     source,
     token,
-    promptCode ?? '',
+    meta,
     false,
     useGitHub ??
       (nxCloud === 'yes' || nxCloud === 'github' || nxCloud === 'circleci')
   );
+  require('fs').appendFileSync(
+    '/tmp/nx-cloud-onboarding-url.txt',
+    `${x} - ${meta}\n`
+  );
+  return x;
 }
 
 export async function getNxCloudInfo(

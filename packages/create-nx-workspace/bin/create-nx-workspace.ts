@@ -30,7 +30,11 @@ import {
   withPackageManager,
   withUseGitHub,
 } from '../src/internal-utils/yargs-options';
-import { messages, recordStat } from '../src/utils/nx/ab-testing';
+import {
+  getFlowVariant,
+  messages,
+  recordStat,
+} from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 import { isCI } from '../src/utils/ci/is-ci';
@@ -291,6 +295,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       parsedArgs.nxCloud,
       rawArgs.nxCloud,
       workspaceInfo.pushedToVcs,
+      `flow-variant-${getFlowVariant()}`,
     ],
     directory: workspaceInfo.directory,
   });
