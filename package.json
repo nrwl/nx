@@ -335,7 +335,7 @@
     "yaml": "^2.6.0",
     "yargs": "catalog:",
     "yargs-parser": "catalog:",
-    "zone.js": "~0.15.1"
+    "zone.js": "catalog:angular"
   },
   "author": "Victor Savkin",
   "license": "MIT",
