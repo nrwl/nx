@@ -49,9 +49,7 @@ export default async function convertJestConfigToCjs(tree: Tree) {
       '@nx/jest/plugin',
       configPath
     );
-    if (!pluginRegistration) {
-      continue;
-    }
+    if (!pluginRegistration) continue;
 
     const projectRoot = dirname(configPath);
     const packageJsonPath = joinPathFragments(projectRoot, 'package.json');
@@ -130,6 +128,7 @@ export default async function convertJestConfigToCjs(tree: Tree) {
 }
 
 function checkForTopLevelAwait(content: string, tsquery: any): boolean {
+  const ts = require('typescript');
   // Check for await expressions that are not inside a function
   const ast = tsquery.ast(content);
   const awaitExpressions = tsquery.query(ast, 'AwaitExpression');
@@ -139,12 +138,7 @@ function checkForTopLevelAwait(content: string, tsquery: any): boolean {
     let isInsideFunction = false;
 
     while (parent) {
-      if (
-        parent.kind === require('typescript').SyntaxKind.FunctionDeclaration ||
-        parent.kind === require('typescript').SyntaxKind.FunctionExpression ||
-        parent.kind === require('typescript').SyntaxKind.ArrowFunction ||
-        parent.kind === require('typescript').SyntaxKind.MethodDeclaration
-      ) {
+      if (ts.isFunctionLike(parent)) {
         isInsideFunction = true;
         break;
       }
