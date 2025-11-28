@@ -39,6 +39,7 @@ catalogs:
     '@angular/ssr': '~21.0.0'
     '@schematics/angular': '~21.0.0'
     ng-packagr: '~21.0.0'
+    zone.js: '~0.16.0'
   angular-supported-versions:
     '@angular-devkit/build-angular': '>= 19.0.0 < 22.0.0'
     '@angular-devkit/core': '>= 19.0.0 < 22.0.0'
@@ -51,6 +52,7 @@ catalogs:
     '@schematics/angular': '>= 19.0.0 < 22.0.0'
     ng-packagr: '>= 19.0.0 < 22.0.0'
     rxjs: '^6.5.3 || ^7.5.0'
+    zone.js: '~0.15.0 || ~0.16.0'
   eslint:
     '@angular-eslint/eslint-plugin': '^21.0.1'
     '@angular-eslint/eslint-plugin-template': '^21.0.1'
