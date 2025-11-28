@@ -1866,4 +1866,205 @@ describe('ReleaseGroupProcessor', () => {
       `);
     });
   });
+
+  describe('docker project filtering', () => {
+    beforeEach(() => {
+      // Set dry-run mode to avoid actual docker command execution in tests
+      process.env.NX_DRY_RUN = 'true';
+    });
+
+    afterEach(() => {
+      // Clean up dry-run mode
+      delete process.env.NX_DRY_RUN;
+    });
+
+    it('should only process projects with docker targets when group has docker config', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent", "docker": { "preVersionCommand": "npx nx run-many -t docker:build", "versionSchemes": { "production": "{currentDate|YYMM.DD}.{shortCommitSha}" } } }):
+            - api@1.0.0 [js] ({ "targets": { "nx-release-publish": { "executor": "@nx/docker:release-publish" } } })
+            - web-app@1.0.0 [js] ({ "targets": { "nx-release-publish": { "executor": "@nx/docker:release-publish" } } })
+            - shared-lib@1.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      const processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      // Check that only docker projects got dockerOptions
+      const apiConfig =
+        processor['releaseGraph'].finalConfigsByProject.get('api');
+      const webAppConfig =
+        processor['releaseGraph'].finalConfigsByProject.get('web-app');
+      const sharedLibConfig =
+        processor['releaseGraph'].finalConfigsByProject.get('shared-lib');
+
+      // api and web-app should have docker options
+      expect(apiConfig).toBeDefined();
+      expect(webAppConfig).toBeDefined();
+      expect(Object.keys(apiConfig!.dockerOptions).length).toBeGreaterThan(0);
+      expect(Object.keys(webAppConfig!.dockerOptions).length).toBeGreaterThan(
+        0
+      );
+
+      // shared-lib should NOT have docker options (empty object)
+      expect(sharedLibConfig).toBeDefined();
+      expect(Object.keys(sharedLibConfig!.dockerOptions).length).toBe(0);
+    });
+
+    it('should not apply docker options to projects without docker targets', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent", "docker": { "preVersionCommand": "npx nx run-many -t docker:build", "skipVersionActions": ["docker-app"] } }):
+            - docker-app@1.0.0 [js] ({ "targets": { "docker:build": { "executor": "@nx/docker:build" }, "nx-release-publish": { "executor": "@nx/docker:release-publish" } } })
+            - npm-package@1.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      const processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      // Check finalConfigsByProject to ensure npm-package doesn't have docker options
+      const dockerAppConfig =
+        processor['releaseGraph'].finalConfigsByProject.get('docker-app');
+      const npmPackageConfig =
+        processor['releaseGraph'].finalConfigsByProject.get('npm-package');
+
+      // docker-app should have docker options
+      expect(dockerAppConfig).toBeDefined();
+      expect(
+        Object.keys(dockerAppConfig!.dockerOptions).length
+      ).toBeGreaterThan(0);
+
+      // npm-package should NOT have docker options (empty object)
+      expect(npmPackageConfig).toBeDefined();
+      expect(Object.keys(npmPackageConfig!.dockerOptions).length).toBe(0);
+    });
+
+    it('should handle mixed release group with npm and docker projects correctly', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          backend-apps ({ "projectsRelationship": "fixed", "docker": { "preVersionCommand": "npx nx affected -t docker:build", "versionSchemes": { "production": "{currentDate|YYMM.DD}.{shortCommitSha}" } } }):
+            - api-gateway@1.0.0 [js] ({ "targets": { "docker:build": { "executor": "@nx/docker:build" }, "nx-release-publish": { "executor": "@nx/docker:release-publish" } } })
+            - auth-service@1.0.0 [js] ({ "targets": { "docker:build": { "executor": "@nx/docker:build" }, "nx-release-publish": { "executor": "@nx/docker:release-publish" } } })
+            - shared-utils@1.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      const processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      // Verify that only docker projects got dockerOptions
+      const apiGatewayConfig =
+        processor['releaseGraph'].finalConfigsByProject.get('api-gateway');
+      const authServiceConfig =
+        processor['releaseGraph'].finalConfigsByProject.get('auth-service');
+      const sharedUtilsConfig =
+        processor['releaseGraph'].finalConfigsByProject.get('shared-utils');
+
+      expect(apiGatewayConfig).toBeDefined();
+      expect(authServiceConfig).toBeDefined();
+      expect(sharedUtilsConfig).toBeDefined();
+
+      // Docker projects should have docker options
+      expect(
+        Object.keys(apiGatewayConfig!.dockerOptions).length
+      ).toBeGreaterThan(0);
+      expect(
+        Object.keys(authServiceConfig!.dockerOptions).length
+      ).toBeGreaterThan(0);
+
+      // shared-utils should NOT have docker options (empty object)
+      expect(Object.keys(sharedUtilsConfig!.dockerOptions).length).toBe(0);
+    });
+
+    it('should skip docker projects that have no new version (no changes)', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent", "docker": { "preVersionCommand": "npx nx run-many -t docker:build", "versionSchemes": { "production": "{currentDate|YYMM.DD}.{shortCommitSha}" } } }):
+            - app-with-changes@1.0.0 [js] ({ "targets": { "nx-release-publish": { "executor": "@nx/docker:release-publish" } } })
+            - app-no-changes@1.0.0 [js] ({ "targets": { "nx-release-publish": { "executor": "@nx/docker:release-publish" } } })
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+            },
+          },
+          mockResolveCurrentVersion
+        );
+
+      const processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+
+      // Simulate that only app-with-changes has a new version
+      // Set up mock BEFORE calling processGroups
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          if (projectName === 'app-with-changes') {
+            return 'patch';
+          }
+          return 'none'; // app-no-changes has no changes
+        }
+      );
+
+      await processor.processGroups();
+
+      // Verify that processDockerProjects doesn't throw when a project has no new version
+      await processor.processDockerProjects('production', '2024.10.test');
+
+      const versionData = processor.getVersionData();
+
+      // app-with-changes should have both semver and docker version
+      expect(versionData['app-with-changes'].newVersion).toBe('1.0.1');
+      expect(versionData['app-with-changes'].dockerVersion).toBe(
+        '2024.10.test'
+      );
+
+      // app-no-changes should have neither (newVersion is null, dockerVersion stays null)
+      expect(versionData['app-no-changes'].newVersion).toBeNull();
+      expect(versionData['app-no-changes'].dockerVersion).toBeNull();
+    });
+  });
 });
