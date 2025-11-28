@@ -24,6 +24,14 @@
       "version": "20.5.0-beta.3",
       "description": "Add vite config temporary files to the ESLint configuration ignore patterns if ESLint is used.",
       "implementation": "./src/migrations/update-20-5-0/eslint-ignore-vite-temp-files"
+    },
+    "update-22-2-0": {
+      "version": "22.2.0-beta.1",
+      "requires": {
+        "vitest": ">=4.0.0"
+      },
+      "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vitest 4.",
+      "implementation": "./src/migrations/update-22-2-0/create-ai-instructions-for-vitest-4"
     }
   },
   "packageJsonUpdates": {
@@ -98,6 +106,30 @@
       },
       "incompatibleWith": {
         "@remix-run/dev": "*"
+      }
+    },
+    "22.2.0": {
+      "version": "22.2.0-beta.1",
+      "requires": {
+        "vitest": ">=3.0.0"
+      },
+      "packages": {
+        "vitest": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-v8": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-istanbul": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/ui": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        }
       }
     }
   }

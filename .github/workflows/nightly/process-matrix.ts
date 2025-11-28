@@ -67,6 +67,7 @@ const matrixData: MatrixData = {
     { name: 'e2e-storybook', codeowners: 'S04SVQ8H0G5' },
     { name: 'e2e-nuxt', codeowners: 'S04SJ6PL98X' }
   ],
+  // TODO(v23): remove node 20 - EOL April 2026
   nodeTLS: 20,
   setup: [
     {
@@ -74,12 +75,12 @@ const matrixData: MatrixData = {
       os_name: 'Linux',
       os_timeout: 60,
       package_managers: ['npm', 'pnpm', 'yarn'],
-      node_versions: ['20.19.0', '22.12.0'],
+      node_versions: ['20.19.0', '22.12.0', '24.0.0'],
       excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo']
     },
-    { os: 'macos-latest', os_name: 'MacOS', os_timeout: 90, package_managers: ['npm'], node_versions: ['20.19.0'] }
-    // TODO (emily): Fix Windows support as gradle fails when running nx build https://staging.nx.app/runs/LgD4vxGn8w?utm_source=pull-request&utm_medium=comment
-    // { os: 'windows-latest', os_name: 'WinOS', os_timeout: 180, package_managers: ['npm'], node_versions: ['20.19.0'], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'] }
+    { os: 'macos-latest', os_name: 'MacOS', os_timeout: 90, package_managers: ['npm'], node_versions: ['24.0.0'] }
+    // TODO (Jack): Fix Windows support as gradle fails when running nx build https://staging.nx.app/runs/LgD4vxGn8w?utm_source=pull-request&utm_medium=comment
+    // { os: 'windows-latest', os_name: 'WinOS', os_timeout: 180, package_managers: ['npm'], node_versions: ['24.0.0'], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'] }
   ]
 };
 

@@ -142,23 +142,20 @@ export function ScaleYourOrganization(): ReactElement {
                       <i>
                         Included in{' '}
                         <Link
-                          href="/powerpack"
-                          title="Nx Powerpack"
+                          href="/enterprise"
+                          title="Nx Enterprise"
                           prefetch={false}
                           className="underline"
                         >
-                          Nx Powerpack
+                          Nx Enterprise
                         </Link>
-                        , and available complimentary to all Enterprise
-                        customers.
+                        .
                       </i>
                     </p>
                     <ul className="mt-6 space-y-2 pl-4">
                       <li>
                         <Link
-                          href={
-                            '/docs/reference/powerpack/conformance/overview'
-                          }
+                          href={'/docs/reference/conformance/overview'}
                           prefetch={false}
                           title="Learn More About Conformance"
                           className="text-sm/6 font-semibold"
@@ -209,14 +206,13 @@ export function ScaleYourOrganization(): ReactElement {
                       <i>
                         Included in{' '}
                         <Link
-                          href="/powerpack"
-                          title="Nx Powerpack"
+                          href="/enterprise"
+                          title="Nx Enterprise"
                           className="underline"
                         >
-                          Nx Powerpack
+                          Nx Enterprise
                         </Link>
-                        , and available complimentary to all Enterprise
-                        customers.
+                        .
                       </i>
                     </p>
                   </dd>

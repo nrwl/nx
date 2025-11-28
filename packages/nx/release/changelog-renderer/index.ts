@@ -408,42 +408,44 @@ export default class DefaultChangelogRenderer {
     return changeLine;
   }
 
-  protected formatBreakingChange(change: ChangelogChange): string {
-    const explanation = this.extractBreakingChangeExplanation(change.body);
-
-    if (!explanation) {
-      // No explanation found, use the regular formatChange which includes references
-      return this.formatChange(change);
-    }
-
-    // Build the breaking change line with scope, explanation, and references
+  protected formatBreakingChangeBase(change: ChangelogChange): string {
     let breakingLine = '- ';
 
     if (change.scope) {
       breakingLine += `**${change.scope.trim()}:** `;
     }
-    // Ensure first line of the breaking change contains the commit title
+
     if (change.description) {
-      breakingLine += `${change.description.trim()} `;
+      breakingLine += `${change.description.trim()}`;
     }
 
-    // Add PR/commit references
     if (
       this.remoteReleaseClient.getRemoteRepoData() &&
       this.changelogRenderOptions.commitReferences &&
       change.githubReferences
     ) {
-      breakingLine += `${this.remoteReleaseClient.formatReferences(
+      breakingLine += ` ${this.remoteReleaseClient.formatReferences(
         change.githubReferences
       )}`;
     }
 
+    return breakingLine;
+  }
+
+  protected formatBreakingChange(change: ChangelogChange): string {
+    const explanation = this.extractBreakingChangeExplanation(change.body);
+    const baseLine = this.formatBreakingChangeBase(change);
+
+    if (!explanation) {
+      return baseLine;
+    }
+
     const indentation = '  ';
-    breakingLine += `\n${indentation}`;
+    let breakingLine = baseLine + `\n${indentation}`;
 
     // Handle multi-line explanations
     let explanationText = explanation;
-    let extraLines = [];
+    let extraLines: string[] = [];
     if (explanation.includes('\n')) {
       [explanationText, ...extraLines] = explanation.split('\n');
     }

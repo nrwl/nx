@@ -708,20 +708,20 @@ describe('ChangelogRenderer', () => {
         }).render();
 
         expect(markdown).toMatchInlineSnapshot(`
-                  "## v1.1.0
+          "## v1.1.0
 
-                  ### 🚀 Features
+          ### 🚀 Features
 
-                  - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
+          - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
 
-                  ### ⚠️  Breaking Changes
+          ### ⚠️  Breaking Changes
 
-                  - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
+          - **WebSocketSubject:** no longer extends \`Subject\`.
 
-                  ### ❤️ Thank You
+          ### ❤️ Thank You
 
-                  - James Henry"
-              `);
+          - James Henry"
+        `);
       });
 
       it('should extract the explanation of a breaking change and render it preferentially with references', async () => {
