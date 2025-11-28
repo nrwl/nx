@@ -316,10 +316,7 @@ mod tests {
             file: format!("{}/file1.ts", proj_root),
             hash: hash(&b"content1"[..]),
         };
-        file_map.insert(
-            String::from(proj_name),
-            vec![file_data1.clone()],
-        );
+        file_map.insert(String::from(proj_name), vec![file_data1.clone()]);
 
         // File sets explicitly include the git-ignored .env file
         let file_sets = &[
@@ -332,15 +329,25 @@ mod tests {
         env::set_current_dir(&temp).unwrap();
 
         // Hash without git-ignored files
-        let hash_without_gitignored = hash_project_files(proj_name, proj_root, &[format!("{}/**/*.ts", proj_root)], &file_map).unwrap();
+        let hash_without_gitignored = hash_project_files(
+            proj_name,
+            proj_root,
+            &[format!("{}/**/*.ts", proj_root)],
+            &file_map,
+        )
+        .unwrap();
 
         // Hash with git-ignored files
-        let hash_with_gitignored = hash_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
+        let hash_with_gitignored =
+            hash_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
 
         // Restore the original directory
         env::set_current_dir(original_dir).unwrap();
 
         // The two hashes should be different because .env should be included in the second hash
-        assert_ne!(hash_without_gitignored, hash_with_gitignored, "Hash should change when git-ignored .env file is explicitly specified as an input");
+        assert_ne!(
+            hash_without_gitignored, hash_with_gitignored,
+            "Hash should change when git-ignored .env file is explicitly specified as an input"
+        );
     }
 }
