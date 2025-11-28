@@ -29,6 +29,15 @@
       "cli": "nx",
       "description": "Add expo-system-ui dependency for Expo SDK 54",
       "factory": "./src/migrations/update-22-0-0/add-expo-system-ui"
+    },
+    "update-22-0-0-update-jest-for-expo-54": {
+      "requires": {
+        "expo": ">= 54.0.0"
+      },
+      "version": "22.0.0-beta.2",
+      "cli": "nx",
+      "description": "Update Jest configuration for Expo SDK 54",
+      "factory": "./src/migrations/update-22-0-0/update-jest-for-expo-54"
     }
   },
   "packageJsonUpdates": {
@@ -183,7 +192,10 @@
       }
     },
     "22.0.0": {
-      "version": "22.0.0-beta.0",
+      "version": "22.0.0-beta.2",
+      "requires": {
+        "expo": ">= 53.0.0"
+      },
       "packages": {
         "expo": {
           "version": "~54.0.0",

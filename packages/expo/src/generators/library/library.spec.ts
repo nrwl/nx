@@ -135,7 +135,6 @@ describe('lib', () => {
             "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
-            "jest.resolver.js",
           ],
           "extends": "./tsconfig.json",
           "include": [
@@ -327,8 +326,7 @@ describe('lib', () => {
             "src/**/*.spec.js",
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
-            "src/**/*.d.ts",
-            "jest.resolver.js"
+            "src/**/*.d.ts"
           ]
         }
         "
@@ -339,7 +337,6 @@ describe('lib', () => {
         /// <reference types="node" />
         module.exports = {
           displayName: 'my-lib',
-          resolver: require.resolve('./jest.resolver.js'),
           preset: 'jest-expo',
           moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
@@ -629,7 +626,6 @@ describe('lib', () => {
             "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
-            "jest.resolver.js",
           ],
           "extends": "../tsconfig.base.json",
           "include": [
@@ -667,7 +663,6 @@ describe('lib', () => {
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
             "src/**/*.d.ts",
-            "jest.resolver.js",
           ],
         }
       `);

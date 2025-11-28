@@ -466,7 +466,6 @@ describe('app', () => {
             "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
-            "jest.resolver.js",
             "eslint.config.js",
             "eslint.config.cjs",
             "eslint.config.mjs",
@@ -515,7 +514,6 @@ describe('app', () => {
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
             "src/**/*.d.ts",
-            "jest.resolver.js",
           ],
           "references": [
             {
