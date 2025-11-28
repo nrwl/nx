@@ -17,6 +17,7 @@ import {
   getSkippedNxCloudInfo,
   readNxCloudToken,
 } from './utils/nx/nx-cloud';
+import { getFlowVariant } from './utils/nx/ab-testing';
 import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { Preset } from './utils/preset/preset';
@@ -132,6 +133,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       token,
       directory,
       useGitHub,
+      getFlowVariant(),
       options.nxCloudPromptCode
     );
   }
