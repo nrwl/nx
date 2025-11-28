@@ -336,6 +336,11 @@ export class TaskOrchestrator {
     // Wait for batch to be processed
     await this.processedBatches.get(batch);
 
+    this.options.lifeCycle.registerRunningBatch?.(batch.id, {
+      executorName: batch.executorName,
+      taskIds: Object.keys(batch.taskGraph.tasks),
+    });
+
     await this.preRunSteps(tasks, { groupId });
 
     let results: TaskResult[] = doNotSkipCache
@@ -344,23 +349,35 @@ export class TaskOrchestrator {
 
     // Run tasks that were not cached
     if (results.length !== taskEntries.length) {
+      await this.postRunSteps(tasks, results, doNotSkipCache, { groupId });
+
       const unrunTaskGraph = removeTasksFromTaskGraph(
         batch.taskGraph,
         results.map(({ task }) => task.id)
       );
 
-      const batchResults = await this.runBatch(
+      results = await this.runBatch(
         {
+          id: batch.id,
           executorName: batch.executorName,
           taskGraph: unrunTaskGraph,
         },
         this.batchEnv
       );
-
-      results.push(...batchResults);
     }
 
     await this.postRunSteps(tasks, results, doNotSkipCache, { groupId });
+
+    // Update batch status based on all task results
+    const hasFailures = taskEntries.some(([taskId]) => {
+      const status = this.completedTasks[taskId];
+      return status === 'failure' || status === 'skipped';
+    });
+    this.options.lifeCycle.setBatchStatus?.(
+      batch.id,
+      hasFailures ? 'failure' : 'success'
+    );
+
     this.forkedProcessTaskRunner.cleanUpBatchProcesses();
 
     const tasksCompleted = taskEntries.filter(
@@ -372,6 +389,7 @@ export class TaskOrchestrator {
       await this.applyFromCacheOrRunBatch(
         doNotSkipCache,
         {
+          id: batch.id,
           executorName: batch.executorName,
           taskGraph: removeTasksFromTaskGraph(
             batch.taskGraph,
@@ -406,8 +424,15 @@ export class TaskOrchestrator {
           this.taskGraph,
           env
         );
+
+      // Stream output from batch process to the batch
+      batchProcess.onOutput((output) => {
+        this.options.lifeCycle.appendBatchOutput?.(batch.id, output);
+      });
+
       const results = await batchProcess.getResults();
       const batchResultEntries = Object.entries(results);
+
       return batchResultEntries.map(([taskId, result]) => ({
         ...result,
         code: result.success ? 0 : 1,
