@@ -62,7 +62,8 @@ impl ChildProcess {
 
     #[napi(ts_args_type = "signal?: NodeJS.Signals")]
     pub fn kill(&mut self, signal: Option<&str>) -> anyhow::Result<()> {
-        self.process_killer.kill(signal)
+        self.process_killer.kill(signal);
+        Ok(())
     }
 
     #[napi]

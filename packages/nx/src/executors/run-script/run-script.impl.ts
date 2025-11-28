@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import * as path from 'path';
-import * as treeKill from 'tree-kill';
+import { killProcessTree } from '../../native';
 import type { ExecutorContext } from '../../config/misc-interfaces';
 import {
   createPseudoTerminal,
@@ -72,15 +72,8 @@ function nodeProcess(
 
     const exitHandler = (signal: NodeJS.Signals) => {
       if (cp && cp.pid && !cp.killed) {
-        treeKill(cp.pid, signal, (error) => {
-          // On Windows, tree-kill (which uses taskkill) may fail when the process or its child process is already terminated.
-          // Ignore the errors, otherwise we will log them unnecessarily.
-          if (error && process.platform !== 'win32') {
-            rej(error);
-          } else {
-            res();
-          }
-        });
+        killProcessTree(cp.pid, signal);
+        res();
       }
     };
 
