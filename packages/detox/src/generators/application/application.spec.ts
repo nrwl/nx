@@ -330,6 +330,14 @@ describe('detox application generator', () => {
         root: 'my-dir/my-app',
       });
 
+      // Add Expo 53 to package.json to allow expo framework tests to run
+      // Expo 54+ is not supported due to @config-plugins/detox being discontinued
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = json.dependencies || {};
+        json.dependencies['expo'] = '~53.0.0';
+        return json;
+      });
+
       await detoxApplicationGenerator(tree, {
         e2eDirectory: 'my-dir/my-app-e2e',
         appProject: 'my-dir-my-app',
@@ -403,6 +411,55 @@ describe('detox application generator', () => {
       const project = readProjectConfiguration(tree, 'my-app-e2e');
       expect(project.tags).toEqual([]);
       expect(project.implicitDependencies).toEqual(['my-dir-my-app']);
+    });
+  });
+
+  describe('expo 54+ (unsupported)', () => {
+    it('should throw error for Expo 54+ with framework expo', async () => {
+      addProjectConfiguration(tree, 'my-app', {
+        root: 'my-app',
+      });
+
+      // Add Expo 54 to package.json
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = json.dependencies || {};
+        json.dependencies['expo'] = '~54.0.0';
+        return json;
+      });
+
+      await expect(
+        detoxApplicationGenerator(tree, {
+          e2eDirectory: 'my-app-e2e',
+          appProject: 'my-app',
+          linter: 'none',
+          framework: 'expo',
+          addPlugin: true,
+        })
+      ).rejects.toThrow(/Detox with Expo 54\+ is not supported/);
+    });
+
+    it('should allow react-native framework with Expo 54+', async () => {
+      addProjectConfiguration(tree, 'my-app', {
+        root: 'my-app',
+      });
+
+      // Add Expo 54 to package.json
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = json.dependencies || {};
+        json.dependencies['expo'] = '~54.0.0';
+        return json;
+      });
+
+      // Should not throw - react-native framework works with any Expo version
+      await detoxApplicationGenerator(tree, {
+        e2eDirectory: 'my-app-e2e',
+        appProject: 'my-app',
+        linter: 'none',
+        framework: 'react-native',
+        addPlugin: true,
+      });
+
+      expect(tree.exists('my-app-e2e/.detoxrc.json')).toBeTruthy();
     });
   });
 

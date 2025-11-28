@@ -179,6 +179,15 @@ describe('app', () => {
   });
 
   describe('detox', () => {
+    beforeEach(() => {
+      // Expo 54+ does not support detox, so we test with Expo 53
+      updateJson(appTree, 'package.json', (json) => {
+        json.dependencies = json.dependencies || {};
+        json.dependencies['expo'] = '~53.0.0';
+        return json;
+      });
+    });
+
     it('should create e2e app with directory', async () => {
       await expoApplicationGenerator(appTree, {
         name: 'my-app',
