@@ -42,7 +42,7 @@ class MavenHomeDiscovery(
     if (mavenHomeEnv != null && mavenHomeEnv.isNotEmpty()) {
       val dir = File(mavenHomeEnv)
       if (dir.isDirectory) {
-        log.info("✓ Found Maven home from MAVEN_HOME env var: $mavenHomeEnv")
+        log.debug("✓ Found Maven home from MAVEN_HOME env var: $mavenHomeEnv")
         val version = detectMavenVersion(dir)
         return MavenDiscoveryResult(dir, version)
       }
@@ -54,7 +54,7 @@ class MavenHomeDiscovery(
     if (mavenHomeProp != null && mavenHomeProp.isNotEmpty()) {
       val dir = File(mavenHomeProp)
       if (dir.isDirectory) {
-        log.info("✓ Found Maven home from maven.home property: $mavenHomeProp")
+        log.debug("✓ Found Maven home from maven.home property: $mavenHomeProp")
         val version = detectMavenVersion(dir)
         return MavenDiscoveryResult(dir, version)
       }
@@ -172,7 +172,7 @@ class MavenHomeDiscovery(
         log.debug("  - lib exists: ${libDir.isDirectory}")
 
         if (mavenHome.isDirectory && libDir.isDirectory) {
-          log.info("✓ Found Maven home from ./mvnw --version: $mavenHomePath (version: $detectedVersion)")
+          log.debug("✓ Found Maven home from ./mvnw --version: $mavenHomePath (version: $detectedVersion)")
           return Pair(mavenHome, detectedVersion)
         } else {
           log.warn("❌ Maven home from ./mvnw does not exist or is invalid: $mavenHomePath")
@@ -234,7 +234,7 @@ class MavenHomeDiscovery(
         log.debug("  - lib exists: ${libDir.isDirectory}")
 
         if (mavenHome.isDirectory && libDir.isDirectory) {
-          log.info("✓ Found Maven home from ./mvnw --version: $mavenHomePath")
+          log.debug("✓ Found Maven home from ./mvnw --version: $mavenHomePath")
           return mavenHome
         } else {
           log.warn("❌ Maven home from ./mvnw does not exist or is invalid: $mavenHomePath")
@@ -277,7 +277,7 @@ class MavenHomeDiscovery(
           if (hashDirs != null && hashDirs.isNotEmpty()) {
             val mavenHome = hashDirs[0]
             if (File(mavenHome, "lib").isDirectory) {
-              log.info("Extracted Maven home from wrapper config: ${mavenHome.absolutePath}")
+              log.debug("Extracted Maven home from wrapper config: ${mavenHome.absolutePath}")
               return mavenHome
             }
           }

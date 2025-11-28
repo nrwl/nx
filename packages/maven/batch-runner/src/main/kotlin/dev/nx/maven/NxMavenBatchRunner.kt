@@ -7,6 +7,21 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.system.exitProcess
 
+// Configure logging BEFORE any logger is created
+// Maven 4 uses "maven.logger.*" properties (not "org.slf4j.simpleLogger.*")
+private val loggingConfigured = run {
+    // Maven 4 property names
+    System.setProperty("maven.logger.showThreadName", "false")
+    System.setProperty("maven.logger.showDateTime", "false")
+    System.setProperty("maven.logger.showLogName", "false")
+    System.setProperty("maven.logger.levelInBrackets", "true")
+    System.setProperty("maven.logger.defaultLogLevel", "info")
+    // Enable colored output (jansi.force needed when stdout isn't a TTY)
+    System.setProperty("style.color", "always")
+    System.setProperty("jansi.force", "true")
+    true
+}
+
 private val log = LoggerFactory.getLogger("NxMavenBatchRunner")
 private val gson = Gson()
 
@@ -42,9 +57,9 @@ fun main(args: Array<String>) {
 
         val startTime = System.currentTimeMillis()
 
-        log.info("🚀 Starting Maven batch execution")
-        log.info("   Workspace: ${workspaceRoot.absolutePath}")
-        log.info("   Tasks: ${options.tasks.size}")
+        log.info("🚀 Starting Nx Maven batch execution")
+        log.debug("   Workspace: ${workspaceRoot.absolutePath}")
+        log.debug("   Tasks: ${options.tasks.size}")
         log.debug("   Verbose: ${options.verbose}")
 
         // Run batch execution

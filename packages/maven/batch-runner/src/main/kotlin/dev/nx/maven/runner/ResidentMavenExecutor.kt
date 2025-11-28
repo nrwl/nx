@@ -14,8 +14,45 @@ import org.codehaus.plexus.classworlds.ClassWorld
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.OutputStream
 import java.io.PrintStream
 import java.util.function.Consumer
+
+/**
+ * OutputStream that writes to both a capture buffer and streams to stderr in real-time.
+ */
+class TeeOutputStream(
+  private val capture: OutputStream,
+  private val stream: OutputStream = System.err
+) : OutputStream() {
+  override fun write(b: Int) {
+    capture.write(b)
+    stream.write(b)
+    stream.flush()
+  }
+
+  override fun write(b: ByteArray) {
+    capture.write(b)
+    stream.write(b)
+    stream.flush()
+  }
+
+  override fun write(b: ByteArray, off: Int, len: Int) {
+    capture.write(b, off, len)
+    stream.write(b, off, len)
+    stream.flush()
+  }
+
+  override fun flush() {
+    capture.flush()
+    stream.flush()
+  }
+
+  override fun close() {
+    capture.close()
+    // Don't close stream (System.err)
+  }
+}
 
 /**
  * Custom ResidentMavenInvoker subclass that injects NxMaven to preserve session state across invocations.
@@ -125,6 +162,15 @@ class ResidentMavenExecutor(
    * Creates a resident Maven instance that persists across invocations.
    */
   private fun initializeMaven() {
+    // Configure Maven's logging BEFORE any Maven classes are loaded
+    // Maven 4 uses "maven.logger.*" properties
+    System.setProperty("maven.logger.showThreadName", "false")
+    System.setProperty("maven.logger.showDateTime", "false")
+    System.setProperty("maven.logger.showLogName", "false")
+    System.setProperty("maven.logger.levelInBrackets", "true")
+    System.setProperty("style.color", "always")
+    System.setProperty("jansi.force", "true")
+
     log.debug("Initializing Maven with ResidentMavenInvoker...")
 
     // Find and cache Maven home first
@@ -253,8 +299,8 @@ class ResidentMavenExecutor(
     log.debug("execute() Invocation #$invocationCount with goals: $goals")
     val startTime = System.currentTimeMillis()
 
-    // Prepare output capture streams
-    val captureErr = PrintStream(outputStream, true)
+    // Stream output to stderr in real-time while also capturing for results
+    val streamingOutput = TeeOutputStream(outputStream)
 
     return try {
       // Use invoker.invoke() to execute goals
@@ -278,8 +324,8 @@ class ResidentMavenExecutor(
       val parserRequestBuilder = ParserRequest.mvn(allArguments.toList(), messageBuilderFactory)
         .cwd(workingDir.toPath())
         .userHome(File(System.getProperty("user.home")).toPath())
-        .stdOut(outputStream)
-        .stdErr(outputStream)
+        .stdOut(streamingOutput)
+        .stdErr(streamingOutput)
         .embedded(true) // Running embedded, not as CLI
 
       // Set Maven home if available
@@ -304,7 +350,7 @@ class ResidentMavenExecutor(
         if (e.cause != null) {
           outputStream.write("Cause: ${e.cause?.message}\n".toByteArray())
         }
-        e.printStackTrace(captureErr)
+        e.printStackTrace(System.err)
         return 1
       }
 
@@ -398,10 +444,7 @@ class ResidentMavenExecutor(
       }
 
       val duration = System.currentTimeMillis() - startTime
-      val output = outputStream.toString()
-      if (output.isNotEmpty()) {
-        log.info("Maven output:\n$output")
-      }
+      // Output was already streamed in real-time via TeeOutputStream
 
       if (exitCode == 0) {
         log.debug("Maven completed in ${duration}ms")
@@ -412,12 +455,12 @@ class ResidentMavenExecutor(
     } catch (e: InvokerException) {
       log.error("Maven invocation failed: ${e.message}", e)
       outputStream.write("ERROR: Maven execution failed - ${e.message}\n".toByteArray())
-      e.printStackTrace(captureErr)
+      e.printStackTrace(System.err)
       1
     } catch (e: Exception) {
       log.error("Unexpected error executing Maven: ${e.message}", e)
       outputStream.write("ERROR: Unexpected error - ${e.message}\n".toByteArray())
-      e.printStackTrace(captureErr)
+      e.printStackTrace(System.err)
       1
     }
   }

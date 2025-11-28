@@ -83,7 +83,7 @@ class NxMaven(
   }
 
   init {
-    log.info("NxMaven initialized - will use lifecycleStarter with cached graph")
+    log.debug("NxMaven initialized - will use lifecycleStarter with cached graph")
     // Initialize BuildStateManager with Maven's lookup container
     BuildStateManager.initialize(lookup)
   }
@@ -260,11 +260,11 @@ class NxMaven(
       cachedWorkspaceReader!!.setReaders(readers)
 
       // Debug: verify workspace reader is properly connected
-      log.info("Workspace reader debug:")
-      log.info("  - cachedWorkspaceReader identity: ${System.identityHashCode(cachedWorkspaceReader)}")
-      log.info("  - cachedRepositorySession.workspaceReader identity: ${System.identityHashCode(cachedRepositorySession!!.workspaceReader)}")
-      log.info("  - Same object: ${cachedWorkspaceReader === cachedRepositorySession!!.workspaceReader}")
-      log.info("  - Readers in cachedWorkspaceReader: ${cachedWorkspaceReader!!.readers.map { it.javaClass.simpleName }}")
+      log.debug("Workspace reader debug:")
+      log.debug("  - cachedWorkspaceReader identity: ${System.identityHashCode(cachedWorkspaceReader)}")
+      log.debug("  - cachedRepositorySession.workspaceReader identity: ${System.identityHashCode(cachedRepositorySession!!.workspaceReader)}")
+      log.debug("  - Same object: ${cachedWorkspaceReader === cachedRepositorySession!!.workspaceReader}")
+      log.debug("  - Readers in cachedWorkspaceReader: ${cachedWorkspaceReader!!.readers.map { it.javaClass.simpleName }}")
 
       // Force ReactorReader to initialize its projects cache NOW while session.projects has all projects
       // findVersions triggers the lazy initialization of the internal projects map

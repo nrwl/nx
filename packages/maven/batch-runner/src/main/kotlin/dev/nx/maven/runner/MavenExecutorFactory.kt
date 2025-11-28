@@ -65,22 +65,22 @@ object MavenExecutorFactory {
             log.debug("🚀 Maven 4.x detected - attempting ResidentMavenExecutor (optimized batch executor)...")
             return try {
                 val executor = ResidentMavenExecutor(workspaceRoot)
-                log.info("✅ ResidentMavenExecutor created (Maven 4.x ResidentMavenInvoker available)")
-                log.info("   Maven version: $detectedVersion")
-                log.info("   Performance: ~75% faster via context caching")
+                log.debug("✅ ResidentMavenExecutor created (Maven 4.x ResidentMavenInvoker available)")
+                log.debug("   Maven version: $detectedVersion")
+                log.debug("   Performance: ~75% faster via context caching")
                 executor
             } catch (e: Exception) {
                 // Maven 4.x components not available, fall back to subprocess approach
                 log.warn("⚠️  Maven 4.x ResidentMavenInvoker failed to initialize")
                 log.warn("   Error: ${e.javaClass.simpleName}: ${e.message}")
-                log.info("   Falling back to ProcessBasedMavenExecutor for compatibility")
+                log.debug("   Falling back to ProcessBasedMavenExecutor for compatibility")
                 ProcessBasedMavenExecutor(workspaceRoot)
             }
         } else {
             // Maven 3.x: Use ProcessBasedMavenExecutor for compatibility
-            log.info("📦 Maven 3.x detected ($detectedVersion) - using ProcessBasedMavenExecutor")
-            log.info("   Note: Using subprocess execution for compatibility")
-            log.info("   Performance: ~35-50ms per task (slower than batch mode, but reliable)")
+            log.debug("📦 Maven 3.x detected ($detectedVersion) - using ProcessBasedMavenExecutor")
+            log.debug("   Note: Using subprocess execution for compatibility")
+            log.debug("   Performance: ~35-50ms per task (slower than batch mode, but reliable)")
             return ProcessBasedMavenExecutor(workspaceRoot)
         }
     }
