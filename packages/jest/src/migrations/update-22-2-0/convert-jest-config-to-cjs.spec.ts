@@ -27,8 +27,13 @@ describe('convert-jest-config-to-cjs', () => {
       await migration(tree);
 
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain('module.exports =');
-      expect(content).not.toContain('export default');
+      expect(content).toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'app1',
+          preset: '../../jest.preset.js',
+        };
+        "
+      `);
     });
 
     it('should preserve object content when converting export default', async () => {
@@ -45,9 +50,14 @@ describe('convert-jest-config-to-cjs', () => {
       await migration(tree);
 
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain("displayName: 'app1'");
-      expect(content).toContain("preset: '../../jest.preset.js'");
-      expect(content).toContain("testEnvironment: 'node'");
+      expect(content).toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'app1',
+          preset: '../../jest.preset.js',
+          testEnvironment: 'node',
+        };
+        "
+      `);
     });
   });
 
@@ -66,8 +76,14 @@ export default {
       await migration(tree);
 
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain("const { readFileSync } = require('fs')");
-      expect(content).not.toContain('import { readFileSync }');
+      expect(content).toMatchInlineSnapshot(`
+        "const { readFileSync } = require('fs');
+
+        module.exports = {
+          displayName: 'app1',
+        };
+        "
+      `);
     });
 
     it('should convert default imports to require', async () => {
@@ -84,8 +100,14 @@ export default {
       await migration(tree);
 
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain("const path = require('path')");
-      expect(content).not.toContain("import path from 'path'");
+      expect(content).toMatchInlineSnapshot(`
+        "const path = require('path').default ?? require('path');
+
+        module.exports = {
+          displayName: 'app1',
+        };
+        "
+      `);
     });
 
     it('should convert namespace imports to require', async () => {
@@ -102,8 +124,14 @@ export default {
       await migration(tree);
 
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain("const fs = require('fs')");
-      expect(content).not.toContain("import * as fs from 'fs'");
+      expect(content).toMatchInlineSnapshot(`
+        "const fs = require('fs');
+
+        module.exports = {
+          displayName: 'app1',
+        };
+        "
+      `);
     });
 
     it('should convert side-effect imports to require', async () => {
@@ -120,8 +148,14 @@ export default {
       await migration(tree);
 
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain("require('reflect-metadata')");
-      expect(content).not.toContain("import 'reflect-metadata'");
+      expect(content).toMatchInlineSnapshot(`
+        "require('reflect-metadata');
+
+        module.exports = {
+          displayName: 'app1',
+        };
+        "
+      `);
     });
 
     it('should handle renamed imports', async () => {
@@ -138,9 +172,14 @@ export default {
       await migration(tree);
 
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain(
-        "const { readFileSync: readFile } = require('fs')"
-      );
+      expect(content).toMatchInlineSnapshot(`
+        "const { readFileSync: readFile } = require('fs');
+
+        module.exports = {
+          displayName: 'app1',
+        };
+        "
+      `);
     });
   });
 
@@ -157,8 +196,13 @@ export default {
       await migration(tree);
 
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain('export default');
-      expect(content).toContain('import { readFileSync }');
+      expect(content).toMatchInlineSnapshot(`
+        "import { readFileSync } from 'fs';
+
+        export default {
+          displayName: 'app1',
+        };"
+      `);
     });
 
     it('should NOT convert when root package.json has type: module and no project package.json', async () => {
@@ -171,7 +215,11 @@ export default {
       await migration(tree);
 
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain('export default');
+      expect(content).toMatchInlineSnapshot(`
+        "export default {
+          displayName: 'app1',
+        };"
+      `);
     });
 
     it('should use project package.json type over root package.json type', async () => {
@@ -188,7 +236,11 @@ export default {
 
       // Should NOT convert because project-level type: module takes precedence
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain('export default');
+      expect(content).toMatchInlineSnapshot(`
+        "export default {
+          displayName: 'app1',
+        };"
+      `);
     });
   });
 
@@ -204,8 +256,11 @@ export default {
 
       // File should remain unchanged
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain('export default');
-      expect(content).toContain('import.meta');
+      expect(content).toMatchInlineSnapshot(`
+        "export default {
+          rootDir: import.meta.dirname,
+        };"
+      `);
     });
 
     it('should NOT convert files with top-level await and warn user', async () => {
@@ -222,8 +277,14 @@ export default {
 
       // File should remain unchanged
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain('export default');
-      expect(content).toContain('await import');
+      expect(content).toMatchInlineSnapshot(`
+        "const config = await import('./base-config.js');
+
+        export default {
+          ...config.default,
+          displayName: 'app1',
+        };"
+      `);
     });
 
     it('should convert files with await inside functions (not top-level)', async () => {
@@ -242,8 +303,16 @@ export default {
       await migration(tree);
 
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain('module.exports =');
-      expect(content).not.toContain('export default');
+      expect(content).toMatchInlineSnapshot(`
+        "module.exports = async () => {
+          const config = await import('./base-config.js');
+          return {
+            ...config.default,
+            displayName: 'app1',
+          };
+        };
+        "
+      `);
     });
   });
 
@@ -277,16 +346,32 @@ export default {
 
       // app1: should be converted
       const app1Content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(app1Content).toContain('module.exports =');
+      expect(app1Content).toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'app1',
+        };
+        "
+      `);
 
       // app2: should NOT be converted (type: module)
       const app2Content = tree.read('apps/app2/jest.config.ts', 'utf-8');
-      expect(app2Content).toContain('export default');
+      expect(app2Content).toMatchInlineSnapshot(`
+        "export default {
+          displayName: 'app2',
+        };
+        "
+      `);
 
       // lib1: should be converted
       const lib1Content = tree.read('libs/lib1/jest.config.ts', 'utf-8');
-      expect(lib1Content).toContain('module.exports =');
-      expect(lib1Content).toContain("const { readFileSync } = require('fs')");
+      expect(lib1Content).toMatchInlineSnapshot(`
+        "const { readFileSync } = require('fs');
+
+        module.exports = {
+          displayName: 'lib1',
+        };
+        "
+      `);
     });
   });
 
@@ -345,11 +430,24 @@ export default {
       await migration(tree);
 
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain("const { readFileSync } = require('fs')");
-      expect(content).toContain('module.exports =');
-      expect(content).toContain('swcJestConfig.swcrc = false');
-      expect(content).not.toContain('import { readFileSync }');
-      expect(content).not.toContain('export default');
+      expect(content).toMatchInlineSnapshot(`
+        "const { readFileSync } = require('fs');
+
+        const swcJestConfig = JSON.parse(
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+        );
+
+        swcJestConfig.swcrc = false;
+
+        module.exports = {
+          displayName: 'app1',
+          preset: '../../jest.preset.js',
+          transform: {
+            '^.+.[tj]s$': ['@swc/jest', swcJestConfig],
+          },
+        };
+        "
+      `);
     });
   });
 
@@ -370,7 +468,11 @@ export default {
 
       // File should remain unchanged
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain('export default');
+      expect(content).toMatchInlineSnapshot(`
+        "export default {
+          displayName: 'app1',
+        };"
+      `);
     });
 
     it('should run migration when @nx/jest/plugin is registered as object', async () => {
@@ -390,7 +492,12 @@ export default {
       await migration(tree);
 
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain('module.exports =');
+      expect(content).toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'app1',
+        };
+        "
+      `);
     });
 
     it('should NOT run migration when nx.json does not exist', async () => {
@@ -406,7 +513,11 @@ export default {
 
       // File should remain unchanged
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toContain('export default');
+      expect(content).toMatchInlineSnapshot(`
+        "export default {
+          displayName: 'app1',
+        };"
+      `);
     });
 
     it('should NOT convert files excluded from plugin via exclude pattern', async () => {
@@ -442,14 +553,24 @@ export default {
         'apps/excluded/jest.config.ts',
         'utf-8'
       );
-      expect(excludedContent).toContain('export default');
+      expect(excludedContent).toMatchInlineSnapshot(`
+        "export default {
+          displayName: 'excluded-app',
+        };
+        "
+      `);
 
       // Included file should be converted
       const includedContent = tree.read(
         'apps/included/jest.config.ts',
         'utf-8'
       );
-      expect(includedContent).toContain('module.exports =');
+      expect(includedContent).toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'included-app',
+        };
+        "
+      `);
     });
 
     it('should only convert files matching include pattern', async () => {
@@ -485,11 +606,21 @@ export default {
 
       // File outside include pattern should remain unchanged
       const appContent = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(appContent).toContain('export default');
+      expect(appContent).toMatchInlineSnapshot(`
+        "export default {
+          displayName: 'app1',
+        };
+        "
+      `);
 
       // File inside include pattern should be converted
       const libContent = tree.read('libs/lib1/jest.config.ts', 'utf-8');
-      expect(libContent).toContain('module.exports =');
+      expect(libContent).toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'lib1',
+        };
+        "
+      `);
     });
   });
 });

@@ -49,9 +49,7 @@ export default async function convertJestConfigToCjs(tree: Tree) {
       '@nx/jest/plugin',
       configPath
     );
-    if (!pluginRegistration) {
-      continue;
-    }
+    if (!pluginRegistration) continue;
 
     const projectRoot = dirname(configPath);
     const packageJsonPath = joinPathFragments(projectRoot, 'package.json');
