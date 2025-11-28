@@ -6,7 +6,8 @@ import {
   getRootTsConfigFileName,
 } from '@nx/js';
 import { getNeededCompilerOptionOverrides } from '@nx/js/src/utils/typescript/configuration';
-import { lt } from 'semver';
+import { gte } from 'semver';
+import { getDefinedCompilerOption } from '../../utils/tsconfig-utils';
 import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
@@ -30,6 +31,7 @@ export function updateTsConfigFiles(
     skipLibCheck: true,
     experimentalDecorators: true,
     importHelpers: true,
+    isolatedModules: true,
     target: 'es2022',
     moduleResolution: 'bundler',
     ...(options.strict
@@ -43,10 +45,25 @@ export function updateTsConfigFiles(
       : {}),
   };
 
+  const rootTsConfigPath = getRootTsConfigFileName(tree);
+
   const { major: angularMajorVersion, version: angularVersion } =
     getInstalledAngularVersionInfo(tree);
-  if (lt(angularVersion, '18.1.0')) {
-    compilerOptions.useDefineForClassFields = false;
+  if (gte(angularVersion, '19.1.0')) {
+    // Angular started warning about emitDecoratorMetadata and isolatedModules
+    // in v19.1.0. If enabled in the root tsconfig, we need to disable it.
+    if (
+      getDefinedCompilerOption(
+        tree,
+        rootTsConfigPath,
+        'emitDecoratorMetadata'
+      ) === true
+    ) {
+      compilerOptions.emitDecoratorMetadata = false;
+    }
+  }
+  if (angularMajorVersion >= 21) {
+    compilerOptions.moduleResolution = 'bundler';
   }
   if (angularMajorVersion >= 20) {
     compilerOptions.module = 'preserve';
@@ -63,7 +80,7 @@ export function updateTsConfigFiles(
     json.compilerOptions = getNeededCompilerOptionOverrides(
       tree,
       json.compilerOptions,
-      getRootTsConfigFileName(tree)
+      rootTsConfigPath
     );
 
     if (options.strict) {
@@ -71,7 +88,7 @@ export function updateTsConfigFiles(
         ...json.angularCompilerOptions,
         strictInjectionParameters: true,
         strictInputAccessModifiers: true,
-        typeCheckHostBindings: angularMajorVersion >= 20 ? true : undefined,
+        typeCheckHostBindings: angularMajorVersion === 20 ? true : undefined,
         strictTemplates: true,
       };
     }
@@ -109,9 +126,8 @@ function updateProjectConfig(
     json.exclude = [
       ...new Set([
         ...(json.exclude || []),
-        'jest.config.ts',
-        'src/**/*.test.ts',
         'src/**/*.spec.ts',
+        'src/**/*.test.ts',
       ]),
     ];
     return json;

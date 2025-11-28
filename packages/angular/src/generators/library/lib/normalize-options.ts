@@ -8,6 +8,7 @@ import {
   getComponentType,
   getModuleTypeSeparator,
 } from '../../utils/artifact-types';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 
@@ -22,7 +23,6 @@ export async function normalizeOptions(
     linter: 'eslint',
     publishable: false,
     skipFormat: false,
-    unitTestRunner: UnitTestRunner.Jest,
     // Publishable libs cannot use `full` yet, so if its false then use the passed value or default to `full`
     compilationMode: schema.publishable
       ? 'partial'
@@ -53,11 +53,20 @@ export async function normalizeOptions(
   const moduleTypeSeparator = getModuleTypeSeparator(host);
   const modulePath = `${projectRoot}/src/lib/${fileName}${moduleTypeSeparator}module.ts`;
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
+  const unitTestRunner =
+    options.unitTestRunner ??
+    (angularMajorVersion >= 21 && (options.buildable || options.publishable)
+      ? UnitTestRunner.VitestAngular
+      : angularMajorVersion >= 21
+      ? UnitTestRunner.VitestAnalog
+      : UnitTestRunner.Jest);
+
   const ngCliSchematicLibRoot = projectName;
   const allNormalizedOptions = {
     ...options,
     linter: options.linter ?? 'eslint',
-    unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
+    unitTestRunner,
     prefix: options.prefix ?? 'lib',
     name: projectName,
     projectRoot,
@@ -68,7 +77,7 @@ export async function normalizeOptions(
     fileName,
     importPath,
     ngCliSchematicLibRoot,
-    skipTests: options.unitTestRunner === 'none' ? true : options.skipTests,
+    skipTests: unitTestRunner === 'none' ? true : options.skipTests,
     standaloneComponentName: `${
       names(projectNames.projectSimpleName).className
     }Component`,

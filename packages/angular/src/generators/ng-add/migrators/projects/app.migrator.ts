@@ -17,6 +17,7 @@ import type {
 import { convertToNxProject } from '../../utilities';
 import type { BuilderMigratorClassType } from '../builders';
 import {
+  AngularBuildUnitTestMigrator,
   AngularDevkitKarmaMigrator,
   AngularEslintLintMigrator,
 } from '../builders';
@@ -76,6 +77,7 @@ const supportedTargets: Record<SupportedTargets, Target> = {
 
 // TODO(leo): this will replace `supportedTargets` once the full refactor is done.
 const supportedBuilderMigrators: BuilderMigratorClassType[] = [
+  AngularBuildUnitTestMigrator,
   AngularDevkitKarmaMigrator,
   AngularEslintLintMigrator,
 ];

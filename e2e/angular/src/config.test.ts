@@ -14,7 +14,7 @@ describe('angular.json v1 config', () => {
   beforeAll(() => {
     newProject({ packages: ['@nx/angular'] });
     runCLI(
-      `generate @nx/angular:app ${app1} --bundler=webpack --no-interactive`
+      `generate @nx/angular:app ${app1} --bundler=webpack --unit-test-runner=jest --no-interactive`
     );
     // reset workspace to use v1 config
     updateFile(`angular.json`, angularV1Json(app1));
@@ -66,7 +66,6 @@ const angularV1Json = (appName: string) => `{
             "outputPath": "dist${appName}",
             "index": "${appName}/src/index.html",
             "main": "${appName}/src/main.ts",
-            "polyfills": ["zone.js"],
             "tsConfig": "${appName}/tsconfig.app.json",
             "assets": ["${appName}/src/favicon.ico", "${appName}/src/assets"],
             "styles": ["${appName}/src/styles.css"],
@@ -124,7 +123,7 @@ const angularV1Json = (appName: string) => `{
           "builder": "@nx/jest:jest",
           "outputs": ["{workspaceRoot}/coverage${appName}"],
           "options": {
-            "jestConfig": "${appName}/jest.config.ts",
+            "jestConfig": "${appName}/jest.config.cts",
             "passWithNoTests": true
           }
         }
