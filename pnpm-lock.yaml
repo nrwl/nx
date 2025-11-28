@@ -3682,9 +3682,6 @@ importers:
       tmp:
         specifier: ~0.2.1
         version: 0.2.4
-      tree-kill:
-        specifier: ^1.2.2
-        version: 1.2.2
       tsconfig-paths:
         specifier: catalog:typescript
         version: 4.2.0
