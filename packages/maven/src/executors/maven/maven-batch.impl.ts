@@ -111,14 +111,10 @@ export default async function mavenBatchExecutor(
     // Prepare batch runner arguments - JSON output to stdout like Gradle
     const workspaceDataDir = join(workspaceRoot, '.nx');
 
-    // Add debug logging flags if verbose mode is enabled
-    let debugFlags = '';
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      debugFlags =
-        '-Dorg.slf4j.simpleLogger.defaultLogLevel=debug -Dorg.slf4j.simpleLogger.log.org.apache.maven=debug ';
-    }
+    const verboseFlag =
+      process.env.NX_VERBOSE_LOGGING === 'true' ? ' --verbose' : '';
 
-    const command = `java ${debugFlags}-jar "${batchRunnerJar}" --workspaceRoot="${workspaceRoot}" --workspaceDataDirectory="${workspaceDataDir}"`;
+    const command = `java -jar "${batchRunnerJar}" --workspaceRoot="${workspaceRoot}" --workspaceDataDirectory="${workspaceDataDir}"${verboseFlag}`;
 
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.log(`[Maven Batch] Executing: ${command}`);

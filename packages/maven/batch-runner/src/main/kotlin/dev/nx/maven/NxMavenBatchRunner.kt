@@ -23,6 +23,16 @@ private val loggingConfigured = run {
 }
 
 private val log = LoggerFactory.getLogger("NxMavenBatchRunner")
+
+/**
+ * Reconfigure log level based on verbose option.
+ * Must be called early in main() before heavy logging.
+ */
+fun configureLogLevel(verbose: Boolean) {
+    val level = if (verbose) "debug" else "info"
+    System.setProperty("maven.logger.defaultLogLevel", level)
+    log.debug("Verbose logging enabled")
+}
 private val gson = Gson()
 
 fun printSummary(successCount: Int, failureCount: Int, skippedCount: Int, durationMs: Long) {
@@ -41,6 +51,9 @@ fun main(args: Array<String>) {
     try {
         // Parse arguments
         val options = ArgParser.parseArgs(args)
+
+        // Configure log level based on verbose option
+        configureLogLevel(options.verbose)
 
         // Get workspace root from options
         val workspaceRoot = File(options.workspaceRoot)
