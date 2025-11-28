@@ -105,7 +105,7 @@ In a huge repository with hundreds of projects and hundreds of people, it's unde
 
 **The Reality**: Monorepo tools can provide better [code boundaries](/docs/features/enforce-module-boundaries) and source control than traditional multi-repo setups. You can use:
 
-- Path-based ownership and review rules (like [CODEOWNERS files](/docs/enterprise/powerpack/owners))
+- Path-based ownership and review rules (like [CODEOWNERS files](/docs/enterprise/owners))
 - Granular write controls enforced by branch protection or server-side policies
 - Automated checks for code requiring approvals from owners
 - [Cross-boundary change validation](/blog/mastering-the-project-boundaries-in-nx)

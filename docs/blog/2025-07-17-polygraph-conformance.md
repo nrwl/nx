@@ -28,7 +28,7 @@ This is where **Conformance** comes in.
 
 ## What Is Conformance?
 
-[Conformance](/docs/enterprise/powerpack/conformance) is part of Nx Cloud's Polygraph suite: a collection of features that extend the benefits of Nx workspaces to your entire organization. Conformance allows you to write **technology-agnostic rules** that you can enforce across your organization, no matter what technology you're using.
+[Conformance](/docs/enterprise/conformance) is part of Nx Cloud's Polygraph suite: a collection of features that extend the benefits of Nx workspaces to your entire organization. Conformance allows you to write **technology-agnostic rules** that you can enforce across your organization, no matter what technology you're using.
 
 Think of it as automated governance for your entire codebase. Platform teams can now:
 
@@ -59,11 +59,11 @@ You have two options for storing Conformance rules:
 
 **Add Conformance rules to an existing workspace**
 
-You can check out the [full details in our docs](/docs/enterprise/powerpack/publish-conformance-rules-to-nx-cloud), but here's an overview of adding Conformance rules to an existing workspace.
+You can check out the [full details in our docs](/docs/enterprise/publish-conformance-rules-to-nx-cloud), but here's an overview of adding Conformance rules to an existing workspace.
 
 1. Open your existing Nx workspace.
 2. Add the `@nx/conformance` plugin: `npx nx add @nx/conformance`.
-3. [Set up a new library project](/docs/enterprise/powerpack/publish-conformance-rules-to-nx-cloud) for your conformance rules.
+3. [Set up a new library project](/docs/enterprise/publish-conformance-rules-to-nx-cloud) for your conformance rules.
 4. Run `npx nx login` in your workspace.
 5. Be sure to bundle your rules using the `@nx/conformance:bundle-rules` executor (covered in the above docs).
 6. Publish the rules using the `nx-cloud` CLI: `npx nx-cloud publish-conformance-rules /path/to/rule-outputs`.
