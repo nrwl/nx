@@ -179,7 +179,8 @@ describe('preset', () => {
       style: 'css',
       linter: 'eslint',
     });
-    expect(tree.exists(`apps/${name}/src/app.vue`)).toBe(true);
+    // Nuxt v4 uses app directory structure by default
+    expect(tree.exists(`apps/${name}/app/app.vue`)).toBe(true);
     expect(readProjectConfiguration(tree, name)).toBeDefined();
   });
 
