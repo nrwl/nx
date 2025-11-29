@@ -70,6 +70,37 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
           }
         }
       }
+    } else if (
+      isJsonChange(c) &&
+      (c.path[0] === 'overrides' ||
+        c.path[0] === 'resolutions' ||
+        (c.path[0] === 'pnpm' && c.path[1] === 'overrides'))
+    ) {
+      // Changes to overrides, resolutions, or pnpm.overrides
+      // Find which package was changed and mark projects that depend on it as affected
+      const packageName = c.path[0] === 'pnpm' ? c.path[2] : c.path[1];
+
+      if (packageName) {
+        // Look for the npm package in external nodes
+        let npmPackage: ProjectGraphProjectNode | ProjectGraphExternalNode =
+          npmPackages.find((pkg) => pkg.data.packageName === packageName);
+
+        if (npmPackage) {
+          touched.push(npmPackage.name);
+
+          // If it's a global package, all projects are affected
+          if (
+            'packageName' in npmPackage.data &&
+            globalPackages.has(npmPackage.data.packageName)
+          ) {
+            return Object.keys(projectGraph.nodes);
+          }
+        } else {
+          // If the package isn't found in external nodes, it might affect all projects
+          // since overrides can affect transitive dependencies
+          return Object.keys(projectGraph.nodes);
+        }
+      }
     } else if (isWholeFileChange(c)) {
       // Whole file was touched, so all npm packages are touched.
       touched = npmPackages.map((pkg) => pkg.name);
