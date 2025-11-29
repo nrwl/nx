@@ -12,8 +12,9 @@ public record TargetDependency
     public required string Target { get; init; }
 
     /// <summary>
-    /// A list of projects that have the target.
-    /// Can be a specific project name or "self" for the current project.
+    /// A list of projects that have the target, or "self" for the current project.
+    /// When specified as a string, it can be a specific project name or "self".
+    /// When null, the dependency runs on the same project as the current target.
     /// </summary>
     public string? Projects { get; init; }
 
