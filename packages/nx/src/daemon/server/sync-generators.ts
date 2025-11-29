@@ -1,4 +1,4 @@
-import { readNxJson } from '../../config/nx-json';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import type { ProjectGraph } from '../../config/project-graph';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { FsTree, type Tree } from '../../generators/tree';
@@ -138,11 +138,12 @@ export function collectAndScheduleSyncGenerators(
 
     const { projects } =
       readProjectsConfigurationFromProjectGraph(projectGraph);
+    const nxJsonConfiguration = readNxJson();
 
     for (const generator of scheduledGenerators) {
       syncGeneratorsCacheResultPromises.set(
         generator,
-        runGenerator(generator, projects)
+        runGenerator(generator, projects, nxJsonConfiguration)
       );
     }
 
@@ -173,6 +174,7 @@ async function getFromCacheOrRunGenerators(
   generators: string[]
 ): Promise<SyncGeneratorRunResult[]> {
   let projects: Record<string, ProjectConfiguration> | null;
+  const nxJsonConfiguration = readNxJson();
   let errored = false;
   const getProjectsConfigurations = async () => {
     if (projects || errored) {
@@ -203,7 +205,7 @@ async function getFromCacheOrRunGenerators(
             log(generator, 'already scheduled or not cached, running it now');
             syncGeneratorsCacheResultPromises.set(
               generator,
-              runGenerator(generator, projects)
+              runGenerator(generator, projects, nxJsonConfiguration)
             );
           } else {
             log(
@@ -245,6 +247,7 @@ async function runConflictingGenerators(
   const projects = projectGraph
     ? readProjectsConfigurationFromProjectGraph(projectGraph).projects
     : null;
+  const nxJsonConfiguration = readNxJson();
 
   if (!projects) {
     /**
@@ -266,7 +269,9 @@ async function runConflictingGenerators(
   const results: SyncGeneratorRunResult[] = [];
   for (const generator of generators) {
     log(generator, 'running it now');
-    results.push(await runGenerator(generator, projects, tree));
+    results.push(
+      await runGenerator(generator, projects, nxJsonConfiguration, tree)
+    );
   }
 
   return results;
@@ -450,6 +455,7 @@ function collectAllRegisteredSyncGenerators(projectGraph: ProjectGraph): void {
 function runGenerator(
   generator: string,
   projects: Record<string, ProjectConfiguration>,
+  nxJsonConfiguration: NxJsonConfiguration,
   tree?: Tree
 ): Promise<SyncGeneratorRunResult> {
   log('running scheduled generator', generator);
@@ -461,14 +467,20 @@ function runGenerator(
     `running sync generator ${generator}`
   );
 
-  return runSyncGenerator(tree, generator, projects).then((result) => {
-    if ('error' in result) {
-      log(generator, 'error:', result.error.message);
-    } else {
-      log(generator, 'changes:', result.changes.map((c) => c.path).join(', '));
+  return runSyncGenerator(tree, generator, projects, nxJsonConfiguration).then(
+    (result) => {
+      if ('error' in result) {
+        log(generator, 'error:', result.error.message);
+      } else {
+        log(
+          generator,
+          'changes:',
+          result.changes.map((c) => c.path).join(', ')
+        );
+      }
+      return result;
     }
-    return result;
-  });
+  );
 }
 
 function hashProjectGraph(projectGraph: ProjectGraph): string {
