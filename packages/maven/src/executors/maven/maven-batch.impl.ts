@@ -1,13 +1,17 @@
 import { ExecutorContext, output, TaskGraph, workspaceRoot } from '@nx/devkit';
-import { execSync } from 'child_process';
+import { spawn } from 'child_process';
 import { existsSync } from 'fs';
 import { join, resolve } from 'path';
-import {
-  LARGE_BUFFER,
-  RunCommandsOptions,
-} from 'nx/src/executors/run-commands/run-commands.impl';
-import { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
+import { createInterface } from 'readline';
+import { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
 import { MavenExecutorSchema } from './schema';
+
+interface TaskResult {
+  success: boolean;
+  terminalOutput: string;
+  startTime?: number;
+  endTime?: number;
+}
 
 /**
  * Get path to the batch runner JAR
@@ -69,158 +73,118 @@ function buildTaskData(
 }
 
 /**
- * Maven batch executor using Kotlin batch runner with Maven Invoker API
+ * Maven batch executor using Kotlin batch runner with Maven Invoker API.
+ * Streams task results as they complete via async generator.
  */
-export default async function mavenBatchExecutor(
+export default async function* mavenBatchExecutor(
   taskGraph: TaskGraph,
   inputs: Record<string, MavenExecutorSchema>,
   overrides: RunCommandsOptions,
   context: ExecutorContext
-): Promise<BatchResults> {
-  try {
-    const batchStart = performance.mark('maven-batch:start');
+): AsyncGenerator<{ task: string; result: TaskResult }> {
+  // Get batch runner JAR path
+  const batchRunnerJar = getBatchRunnerJar();
 
-    // Get batch runner JAR path
-    const batchRunnerJar = getBatchRunnerJar();
+  // Build task map for batch runner
+  const tasks: Record<string, TaskData> = {};
+  const taskIds = Object.keys(taskGraph.tasks);
 
-    // Build task map for batch runner
-    const tasks: Record<string, TaskData> = {};
-    const taskIds = Object.keys(taskGraph.tasks);
-
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.log('[Maven Batch] Building tasks for execution:');
-    }
-
-    for (const taskId of taskIds) {
-      const task = taskGraph.tasks[taskId];
-      const projectName = task.target.project;
-      const options = inputs[taskId] || inputs[projectName];
-      tasks[taskId] = buildTaskData(options, projectName);
-
-      if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        console.log(`[Maven Batch]   Task ID: "${taskId}"`);
-      }
-    }
-
-    // Build arguments for batch runner
-    const args: string[] = [];
-    if (overrides.__overrides_unparsed__?.length) {
-      args.push(...overrides.__overrides_unparsed__);
-    }
-
-    // Prepare batch runner arguments - JSON output to stdout like Gradle
-    const workspaceDataDir = join(workspaceRoot, '.nx');
-
-    const verboseFlag =
-      process.env.NX_VERBOSE_LOGGING === 'true' ? ' --verbose' : '';
-
-    const command = `java -jar "${batchRunnerJar}" --workspaceRoot="${workspaceRoot}" --workspaceDataDirectory="${workspaceDataDir}"${verboseFlag}`;
-
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.log(`[Maven Batch] Executing: ${command}`);
-    }
-
-    // Create combined payload for stdin with taskGraph, tasks, and args
-    // This avoids command line argument size limits (E2BIG errors)
-    const stdinPayload = {
-      taskGraph,
-      tasks,
-      args,
-    };
-
-    let batchResults: string;
-    try {
-      // Execute batch runner - output goes to terminal in real-time
-      // We capture the result but the user sees Maven output on their terminal
-      const buffer = execSync(command, {
-        cwd: workspaceRoot,
-        input: JSON.stringify(stdinPayload),
-        windowsHide: true,
-        env: process.env,
-        maxBuffer: LARGE_BUFFER,
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'inherit'], // Capture stdout, inherit stderr so logs show
-      });
-      batchResults = buffer.toString();
-    } catch (e) {
-      // Batch runner may exit with non-zero code if tasks fail
-      // Try to extract JSON output from the error buffer
-      if (e.stdout) {
-        batchResults = e.stdout.toString();
-      } else if (e.message) {
-        console.error('[Maven Batch] Error:', e.message);
-        throw e;
-      }
-    }
-
-    // Parse JSON results from stdout
-    let results: BatchResults = {};
-    try {
-      // Extract JSON from output (may have logs before it)
-      const startIndex = batchResults.indexOf('{');
-      const endIndex = batchResults.lastIndexOf('}');
-
-      if (startIndex >= 0 && endIndex > startIndex) {
-        const jsonStr = batchResults.substring(startIndex, endIndex + 1);
-        const rawResults = JSON.parse(jsonStr);
-
-        if (process.env.NX_VERBOSE_LOGGING === 'true') {
-          console.log('[Maven Batch] Expected task IDs:', taskIds);
-        }
-
-        results = Object.entries(rawResults).reduce(
-          (acc, [taskId, taskResult]) => {
-            const result = taskResult as any;
-            acc[taskId] = {
-              success: result.success ?? false,
-              terminalOutput: result.terminalOutput ?? '',
-              startTime: result.startTime,
-              endTime: result.endTime,
-            };
-            return acc;
-          },
-          {} as BatchResults
-        );
-      } else {
-        throw new Error('No JSON found in batch runner output');
-      }
-    } catch (e) {
-      console.warn('Failed to parse batch runner results:', e);
-      if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        console.log('[Maven Batch] Output was:', batchResults);
-      }
-    }
-
-    // Log skipped tasks (tasks not in results due to failed dependencies)
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      const missingTasks = taskIds.filter((id) => !results[id]);
-      if (missingTasks.length > 0) {
-        console.log(
-          `[Maven Batch] Tasks not in results (skipped): ${missingTasks.join(
-            ', '
-          )}`
-        );
-      }
-    }
-
-    const batchEnd = performance.mark('maven-batch:end');
-    performance.measure('maven-batch', batchStart.name, batchEnd.name);
-
-    return results;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    output.error({
-      title: 'Maven batch execution failed',
-      bodyLines: [errorMessage],
-    });
-
-    const results: BatchResults = {};
-    for (const taskId of Object.keys(taskGraph.tasks)) {
-      results[taskId] = {
-        success: false,
-        terminalOutput: errorMessage,
-      };
-    }
-    return results;
+  if (process.env.NX_VERBOSE_LOGGING === 'true') {
+    console.log('[Maven Batch] Building tasks for execution:');
   }
+
+  for (const taskId of taskIds) {
+    const task = taskGraph.tasks[taskId];
+    const projectName = task.target.project;
+    const options = inputs[taskId] || inputs[projectName];
+    tasks[taskId] = buildTaskData(options, projectName);
+
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.log(`[Maven Batch]   Task ID: "${taskId}"`);
+    }
+  }
+
+  // Build arguments for batch runner
+  const args: string[] = [];
+  if (overrides.__overrides_unparsed__?.length) {
+    args.push(...overrides.__overrides_unparsed__);
+  }
+
+  // Prepare batch runner arguments
+  const workspaceDataDir = join(workspaceRoot, '.nx');
+
+  const javaArgs = [
+    '-jar',
+    batchRunnerJar,
+    `--workspaceRoot=${workspaceRoot}`,
+    `--workspaceDataDirectory=${workspaceDataDir}`,
+  ];
+
+  if (process.env.NX_VERBOSE_LOGGING === 'true') {
+    javaArgs.push('--verbose');
+  }
+
+  if (process.env.NX_VERBOSE_LOGGING === 'true') {
+    console.log(`[Maven Batch] Executing: java ${javaArgs.join(' ')}`);
+  }
+
+  // Create combined payload for stdin with taskGraph, tasks, and args
+  const stdinPayload = {
+    taskGraph,
+    tasks,
+    args,
+  };
+
+  // Spawn batch runner process
+  // stdin: pipe (send task data), stdout: inherit (Maven output), stderr: pipe (results)
+  const child = spawn('java', javaArgs, {
+    cwd: workspaceRoot,
+    env: process.env,
+    stdio: ['pipe', 'inherit', 'pipe'],
+    windowsHide: true,
+  });
+
+  // Send task data via stdin
+  child.stdin.write(JSON.stringify(stdinPayload));
+  child.stdin.end();
+
+  // Read stderr line by line for JSON results
+  const rl = createInterface({
+    input: child.stderr,
+    crlfDelay: Infinity,
+  });
+
+  // Yield results as they stream in
+  for await (const line of rl) {
+    if (line.startsWith('NX_RESULT:')) {
+      try {
+        const jsonStr = line.slice('NX_RESULT:'.length);
+        const data = JSON.parse(jsonStr);
+        yield {
+          task: data.task,
+          result: {
+            success: data.result.success ?? false,
+            terminalOutput: data.result.terminalOutput ?? '',
+            startTime: data.result.startTime,
+            endTime: data.result.endTime,
+          },
+        };
+      } catch (e) {
+        if (process.env.NX_VERBOSE_LOGGING === 'true') {
+          console.error('[Maven Batch] Failed to parse result line:', line, e);
+        }
+      }
+    }
+  }
+
+  // Wait for process to exit
+  await new Promise<void>((resolve, reject) => {
+    child.on('close', (code) => {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.log(`[Maven Batch] Process exited with code: ${code}`);
+      }
+      resolve();
+    });
+    child.on('error', reject);
+  });
 }

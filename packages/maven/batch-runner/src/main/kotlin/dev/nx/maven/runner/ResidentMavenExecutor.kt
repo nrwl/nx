@@ -19,11 +19,12 @@ import java.io.PrintStream
 import java.util.function.Consumer
 
 /**
- * OutputStream that writes to both a capture buffer and streams to stderr in real-time.
+ * OutputStream that writes to both a capture buffer and streams to stdout in real-time.
+ * (stdout is inherited by parent process, stderr is used for result JSON lines)
  */
 class TeeOutputStream(
   private val capture: OutputStream,
-  private val stream: OutputStream = System.err
+  private val stream: OutputStream = System.out
 ) : OutputStream() {
   override fun write(b: Int) {
     capture.write(b)
@@ -50,7 +51,7 @@ class TeeOutputStream(
 
   override fun close() {
     capture.close()
-    // Don't close stream (System.err)
+    // Don't close stream (System.out)
   }
 }
 

@@ -1,5 +1,6 @@
 package dev.nx.maven.runner
 
+import com.google.gson.Gson
 import dev.nx.maven.data.MavenBatchOptions
 import dev.nx.maven.data.MavenBatchTask
 import dev.nx.maven.data.TaskResult
@@ -27,6 +28,7 @@ import java.util.concurrent.atomic.AtomicReference
  */
 class MavenInvokerRunner(private val workspaceRoot: File, private val options: MavenBatchOptions) {
   private val log = LoggerFactory.getLogger(MavenInvokerRunner::class.java)
+  private val gson = Gson()
 
   // Maven executor - automatically selects best available strategy:
   // - Maven 4.x: ResidentMavenExecutor with context caching
@@ -81,8 +83,11 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
               continue
             }
 
-            executeSingleTask(taskId, results)
+            val result = executeSingleTask(taskId, results)
             processedTasks[taskId] = true
+
+            // Emit result to stderr for streaming to Nx
+            emitResult(taskId, result)
 
             // Determine if this task succeeded or failed
             val success = results[taskId]?.success == true
@@ -271,6 +276,25 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       results[taskId] = result
       result
     }
+  }
+
+  /**
+   * Emit a task result to stderr as JSON for streaming to Nx.
+   * Format: NX_RESULT:{"task":"taskId","result":{...}}
+   */
+  private fun emitResult(taskId: String, result: TaskResult) {
+    val resultData = mapOf(
+      "task" to taskId,
+      "result" to mapOf(
+        "success" to result.success,
+        "terminalOutput" to result.terminalOutput,
+        "startTime" to result.startTime,
+        "endTime" to result.endTime
+      )
+    )
+    val json = gson.toJson(resultData)
+    System.err.println("NX_RESULT:$json")
+    System.err.flush()
   }
 
   private fun buildArguments(mavenBatchTask: MavenBatchTask): List<String> {
