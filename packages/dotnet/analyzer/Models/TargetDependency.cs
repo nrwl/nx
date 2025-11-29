@@ -28,4 +28,10 @@ public record TargetDependency
     /// Use "forward" to pass --runtime and other CLI arguments to dependent targets.
     /// </summary>
     public string? Params { get; init; }
+
+    /// <summary>
+    /// Whether to forward task options to the dependency target.
+    /// Use "forward" to pass task options like --runtime to dependent targets.
+    /// </summary>
+    public string? Options { get; init; }
 }

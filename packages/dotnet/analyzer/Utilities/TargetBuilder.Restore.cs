@@ -21,7 +21,7 @@ public static partial class TargetBuilder
                 Cwd = "{projectRoot}",
                 Args = ["--no-dependencies"]
             },
-            DependsOn = [new TargetDependency { Target = $"^{targetName}", Params = "forward" }],
+            DependsOn = [new TargetDependency { Target = $"^{targetName}", Params = "forward", Options = "forward" }],
             Metadata = new TargetMetadata
             {
                 Description = "Restore .NET project dependencies",
