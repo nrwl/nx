@@ -53,7 +53,7 @@ public static partial class TargetBuilder
                     Args = [.. defaultFlags, "--configuration", "Release"]
                 }
             },
-            DependsOn = [$"^{targetName}"],
+            DependsOn = [new TargetDependency { Target = $"^{targetName}", Params = "forward" }],
             Cache = true,
             Inputs = [productionInput, $"^{productionInput}", new { workingDirectory = "absolute" }],
             Outputs =
