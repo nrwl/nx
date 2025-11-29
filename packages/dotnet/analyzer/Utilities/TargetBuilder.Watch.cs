@@ -19,7 +19,7 @@ public static partial class TargetBuilder
             {
                 Cwd = "{projectRoot}"
             },
-            DependsOn = [options.RestoreTargetName],
+            DependsOn = [new TargetDependency { Target = options.RestoreTargetName, Params = "forward" }],
             Cache = false,
             Continuous = true,
             Metadata = new TargetMetadata
