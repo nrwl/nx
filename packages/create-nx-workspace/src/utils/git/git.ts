@@ -178,7 +178,7 @@ export async function pushToGitHub(
     const { push } = await enquirer.prompt<{ push: 'Yes' | 'No' }>([
       {
         name: 'push',
-        message: 'Would you like to push this workspace to Github?',
+        message: 'Would you like to push this workspace to GitHub?',
         type: 'autocomplete',
         choices: [{ name: 'Yes' }, { name: 'No' }],
         initial: 0,
@@ -249,10 +249,7 @@ export async function pushToGitHub(
     const errorMessage = e instanceof Error ? e.message : String(e);
 
     // Error code 127 means gh wasn't installed
-    const title =
-      e instanceof GitHubPushSkippedError || (e as any)?.code === 127
-        ? 'Push your workspace to GitHub.'
-        : 'Failed to push workspace to GitHub.';
+    const title = 'Could not push. Push repo to complete setup.';
 
     const createRepoUrl = `https://github.com/new?name=${encodeURIComponent(
       options.name
@@ -261,11 +258,11 @@ export async function pushToGitHub(
       title,
       bodyLines: isVerbose
         ? [
-            `Please create a repo at ${createRepoUrl} and push this workspace.`,
+            `Go to ${createRepoUrl} and push this workspace.`,
             'Error details:',
             errorMessage,
           ]
-        : [`Please create a repo at ${createRepoUrl} and push this workspace.`],
+        : [`Go to ${createRepoUrl} and push this workspace.`],
     });
     return VcsPushStatus.FailedToPushToVcs;
   }

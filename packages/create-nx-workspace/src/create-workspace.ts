@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
 import { createSandbox } from './create-sandbox';
@@ -10,13 +11,22 @@ import {
   VcsPushStatus,
 } from './utils/git/git';
 import {
+  connectToNxCloudForTemplate,
   createNxCloudOnboardingUrl,
   getNxCloudInfo,
+  getSkippedNxCloudInfo,
   readNxCloudToken,
 } from './utils/nx/nx-cloud';
+import { getFlowVariant } from './utils/nx/ab-testing';
 import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { Preset } from './utils/preset/preset';
+import {
+  cleanupLockfiles,
+  cloneTemplate,
+} from './utils/template/clone-template';
+import { execAndWait } from './utils/child-process-utils';
+import { getPackageManagerCommand } from './utils/package-manager';
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
   preset: string,
@@ -40,37 +50,81 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     output.setCliName(cliName ?? 'NX');
   }
 
-  const tmpDir = await createSandbox(packageManager);
+  let directory: string;
 
-  const workspaceGlobs = getWorkspaceGlobsFromPreset(preset);
+  if (options.template) {
+    if (!options.template.startsWith('nrwl/'))
+      throw new Error(
+        `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
+      );
+    const templateUrl = `https://github.com/${options.template}`;
+    const workingDir = process.cwd().replace(/\\/g, '/');
+    directory = join(workingDir, name);
 
-  // nx new requires a preset currently. We should probably make it optional.
-  const directory = await createEmptyWorkspace<T>(
-    tmpDir,
-    name,
-    packageManager,
-    { ...options, preset, workspaceGlobs }
-  );
+    const ora = require('ora');
+    const workspaceSetupSpinner = ora(
+      `Creating workspace from template`
+    ).start();
 
-  // If the preset is a third-party preset, we need to call createPreset to install it
-  // For first-party presets, it will be created by createEmptyWorkspace instead.
-  // In createEmptyWorkspace, it will call `nx new` -> `@nx/workspace newGenerator` -> `@nx/workspace generatePreset`.
-  const thirdPartyPackageName = getPackageNameFromThirdPartyPreset(preset);
-  if (thirdPartyPackageName) {
-    await createPreset(
-      thirdPartyPackageName,
-      options,
-      packageManager,
-      directory
-    );
+    try {
+      await cloneTemplate(templateUrl, name);
+      await cleanupLockfiles(directory, packageManager);
+
+      // Install dependencies
+      const pmc = getPackageManagerCommand(packageManager);
+      await execAndWait(pmc.install, directory);
+
+      workspaceSetupSpinner.succeed(
+        `Successfully created the workspace: ${directory}`
+      );
+    } catch (e) {
+      workspaceSetupSpinner.fail();
+      throw e;
+    }
+
+    // Connect to Nx Cloud for template flow
+    if (nxCloud !== 'skip') {
+      await connectToNxCloudForTemplate(
+        directory,
+        'create-nx-workspace',
+        useGitHub
+      );
+    }
+  } else {
+    // Preset flow - existing behavior
+    const tmpDir = await createSandbox(packageManager);
+    const workspaceGlobs = getWorkspaceGlobsFromPreset(preset);
+
+    // nx new requires a preset currently. We should probably make it optional.
+    directory = await createEmptyWorkspace<T>(tmpDir, name, packageManager, {
+      ...options,
+      preset,
+      workspaceGlobs,
+    });
+
+    // If the preset is a third-party preset, we need to call createPreset to install it
+    // For first-party presets, it will be created by createEmptyWorkspace instead.
+    // In createEmptyWorkspace, it will call `nx new` -> `@nx/workspace newGenerator` -> `@nx/workspace generatePreset`.
+    const thirdPartyPackageName = getPackageNameFromThirdPartyPreset(preset);
+    if (thirdPartyPackageName) {
+      await createPreset(
+        thirdPartyPackageName,
+        options,
+        packageManager,
+        directory
+      );
+    }
   }
+
+  const isTemplate = !!options.template;
 
   let connectUrl: string | undefined;
   let nxCloudInfo: string | undefined;
   if (nxCloud !== 'skip') {
     const token = readNxCloudToken(directory) as string;
 
-    if (nxCloud !== 'yes') {
+    // Only generate CI for preset flow (not template)
+    if (!isTemplate && nxCloud !== 'yes') {
       await setupCI(directory, nxCloud, packageManager);
     }
 
@@ -78,7 +132,9 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       nxCloud,
       token,
       directory,
-      useGitHub
+      useGitHub,
+      getFlowVariant(),
+      options.nxCloudPromptCode
     );
   }
 
@@ -88,8 +144,14 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     try {
       await initializeGitRepo(directory, { defaultBase, commit, connectUrl });
 
-      // Push to GitHub if commit was made, GitHub push is not skipped, and CI provider is GitHub
-      if (commit && !skipGitHubPush && nxCloud === 'github') {
+      // Push to GitHub if commit was made, GitHub push is not skipped, and:
+      // - CI provider is GitHub (preset flow), OR
+      // - Using template flow with Nx Cloud enabled (yes)
+      if (
+        commit &&
+        !skipGitHubPush &&
+        (nxCloud === 'github' || (isTemplate && nxCloud === 'yes'))
+      ) {
         pushedToVcs = await pushToGitHub(directory, {
           skipGitHubPush,
           name,
@@ -111,11 +173,13 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   if (connectUrl) {
     nxCloudInfo = await getNxCloudInfo(
-      nxCloud,
       connectUrl,
       pushedToVcs,
-      rawArgs?.nxCloud
+      options.completionMessageKey
     );
+  } else if (isTemplate && nxCloud === 'skip') {
+    // Show nx connect message when user skips cloud in template flow
+    nxCloudInfo = getSkippedNxCloudInfo();
   }
 
   return {

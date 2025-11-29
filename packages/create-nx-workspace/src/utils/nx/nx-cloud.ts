@@ -1,6 +1,10 @@
 import { VcsPushStatus } from '../git/git';
 import { CLIOutput } from '../output';
-import { getMessageFactory } from './messages';
+import {
+  getCompletionMessage,
+  getSkippedCloudMessage,
+  CompletionMessageKey,
+} from './messages';
 import * as ora from 'ora';
 
 export type NxCloud =
@@ -11,6 +15,42 @@ export type NxCloud =
   | 'bitbucket-pipelines'
   | 'circleci'
   | 'skip';
+
+export async function connectToNxCloudForTemplate(
+  directory: string,
+  installationSource: string,
+  useGitHub?: boolean
+): Promise<string | null> {
+  // nx-ignore-next-line
+  const { connectToNxCloud } = require(require.resolve(
+    'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud',
+    {
+      paths: [directory],
+    }
+    // nx-ignore-next-line
+  )) as typeof import('nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud');
+
+  // nx-ignore-next-line
+  const { FsTree, flushChanges } = require(require.resolve(
+    'nx/src/generators/tree',
+    {
+      paths: [directory],
+      // nx-ignore-next-line
+    }
+  )) as typeof import('nx/src/generators/tree');
+
+  const tree = new FsTree(directory, false);
+  const result = await connectToNxCloud(tree, {
+    installationSource,
+    directory: '',
+    github: useGitHub,
+  });
+
+  // Flush the tree changes to disk
+  flushChanges(directory, tree.listChanges());
+
+  return result;
+}
 
 export function readNxCloudToken(directory: string) {
   const nxCloudSpinner = ora(`Checking Nx Cloud setup`).start();
@@ -32,8 +72,10 @@ export async function createNxCloudOnboardingUrl(
   nxCloud: NxCloud,
   token: string,
   directory: string,
-  useGitHub?: boolean
-) {
+  useGitHub?: boolean,
+  flowVariant?: string,
+  promptCode?: string
+): Promise<string> {
   // nx-ignore-next-line
   const { createNxCloudOnboardingURL } = require(require.resolve(
     'nx/src/nx-cloud/utilities/url-shorten',
@@ -43,41 +85,52 @@ export async function createNxCloudOnboardingUrl(
     // nx-ignore-next-line
   )) as any;
 
+  // Source determines the onboarding flow type
   const source =
     nxCloud === 'yes'
       ? 'create-nx-workspace-success-cache-setup'
       : 'create-nx-workspace-success-ci-setup';
-  const { code } = getMessageFactory(source);
-  return await createNxCloudOnboardingURL(
+
+  // Meta: "start" or "start-v2" prefix, with prompt code
+  // For template flow: use specific prompt code (e.g., 'cloud-v2-remote-cache')
+  // For preset flow or Custom: use visit codes based on nxCloud value
+  const prefix = flowVariant === '1' ? 'start-v2' : 'start';
+  const code =
+    promptCode ?? (nxCloud === 'yes' ? 'remote-cache-visit' : 'ci-setup-visit');
+  const meta = `${prefix}-${code}`;
+
+  const x = await createNxCloudOnboardingURL(
     source,
     token,
-    code,
+    meta,
     false,
     useGitHub ??
       (nxCloud === 'yes' || nxCloud === 'github' || nxCloud === 'circleci')
   );
+  require('fs').appendFileSync(
+    '/tmp/nx-cloud-onboarding-url.txt',
+    `${x} - ${meta}\n`
+  );
+  return x;
 }
 
 export async function getNxCloudInfo(
-  nxCloud: NxCloud,
   connectCloudUrl: string,
   pushedToVcs: VcsPushStatus,
-  rawNxCloud?: NxCloud
+  completionMessageKey?: CompletionMessageKey
 ) {
-  const source =
-    nxCloud === 'yes'
-      ? 'create-nx-workspace-success-cache-setup'
-      : 'create-nx-workspace-success-ci-setup';
-  const { createMessage } = getMessageFactory(source);
   const out = new CLIOutput(false);
-  const message = createMessage(
-    typeof rawNxCloud === 'string' ? null : connectCloudUrl,
+  const message = getCompletionMessage(
+    completionMessageKey,
+    connectCloudUrl,
     pushedToVcs
   );
-  if (message.type === 'success') {
-    out.success(message);
-  } else {
-    out.warn(message);
-  }
+  out.success(message);
+  return out.getOutput();
+}
+
+export function getSkippedNxCloudInfo() {
+  const out = new CLIOutput(false);
+  out.success(getSkippedCloudMessage());
   return out.getOutput();
 }
