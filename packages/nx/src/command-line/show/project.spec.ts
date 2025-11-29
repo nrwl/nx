@@ -4,7 +4,6 @@ import type {
 } from '../../config/project-graph';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { showProjectHandler } from './project';
-import * as workspaceRoot from '../../utils/workspace-root';
 
 let graph: ProjectGraph = {
   nodes: {},
