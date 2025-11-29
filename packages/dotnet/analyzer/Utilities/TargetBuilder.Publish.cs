@@ -52,7 +52,7 @@ public static partial class TargetBuilder
                     Args = [.. defaultFlags, "--configuration", "Release"]
                 }
             },
-            DependsOn = [buildReleaseTarget],
+            DependsOn = [new TargetDependency { Target = buildReleaseTarget, Params = "forward" }],
             Cache = true,
             Inputs =
             [
