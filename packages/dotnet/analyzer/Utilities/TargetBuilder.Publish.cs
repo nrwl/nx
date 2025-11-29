@@ -50,7 +50,7 @@ public static partial class TargetBuilder
                     Args = [.. defaultFlags, "--configuration", "Release"]
                 }
             },
-            DependsOn = [new TargetDependency { Target = buildReleaseTarget, Params = "forward" }],
+            DependsOn = [new TargetDependency { Target = buildReleaseTarget, Params = "forward", Options = "forward" }],
             Cache = true,
             Inputs = ["default", $"^{productionInput}", new { workingDirectory = "absolute" }],
             Outputs = [$"{outputPrefix}/{publishDir}"],

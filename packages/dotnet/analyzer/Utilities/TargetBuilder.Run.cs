@@ -33,7 +33,7 @@ public static partial class TargetBuilder
                     Args = [.. defaultFlags, "--configuration", "Release"]
                 }
             },
-            DependsOn = [new TargetDependency { Target = options.BuildTargetName, Params = "forward" }],
+            DependsOn = [new TargetDependency { Target = options.BuildTargetName, Params = "forward", Options = "forward" }],
             Cache = false,
             Metadata = new TargetMetadata
             {
