@@ -8,7 +8,7 @@ import type { CompletionMessageKey } from './messages';
 
 // TODO(jack): Remove flow variant logic after A/B testing is complete
 const FLOW_VARIANT_CACHE_FILE = join(tmpdir(), 'nx-cnw-flow-variant');
-const FLOW_VARIANT_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+const FLOW_VARIANT_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
 
 // In-memory cache to ensure consistency within a single run
 let flowVariantCache: string | null = null;
