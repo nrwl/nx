@@ -444,7 +444,7 @@ async function startPluginWorker(name: string) {
       name,
     ],
     {
-      stdio: 'pipe',
+      stdio: ['ignore', 'pipe', 'pipe'],
       env,
       detached: true,
       shell: false,
