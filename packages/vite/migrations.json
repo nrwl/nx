@@ -32,6 +32,11 @@
       },
       "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vitest 4.",
       "implementation": "./src/migrations/update-22-2-0/create-ai-instructions-for-vitest-4"
+    },
+    "migrate-vitest-to-vitest-package": {
+      "version": "22.2.0-beta.2",
+      "description": "Migrate Vitest usage from @nx/vite to @nx/vitest package.",
+      "implementation": "./src/migrations/update-22-2-0/migrate-vitest-to-vitest-package"
     }
   },
   "packageJsonUpdates": {
