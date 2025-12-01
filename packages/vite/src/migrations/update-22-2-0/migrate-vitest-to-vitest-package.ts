@@ -88,10 +88,12 @@ function migratePluginConfigurations(tree: Tree): void {
   }
 
   const newPlugins: typeof nxJson.plugins = [];
-  let needsVitestPlugin = false;
-  const vitestPluginOptions: Record<string, unknown> = {};
-  let vitestInclude: string[] | undefined;
-  let vitestExclude: string[] | undefined;
+  const vitestPluginsToAdd: Array<{
+    plugin: string;
+    options?: Record<string, unknown>;
+    include?: string[];
+    exclude?: string[];
+  }> = [];
 
   const hasVitestPlugin = nxJson.plugins.some((p) =>
     typeof p === 'string' ? p === '@nx/vitest' : p.plugin === '@nx/vitest'
@@ -116,28 +118,32 @@ function migratePluginConfigurations(tree: Tree): void {
 
     // Check if this plugin has test-related options
     if (testTargetName || ciTargetName || ciGroupName) {
-      // Only collect test options once (from first entry found)
-      if (!needsVitestPlugin) {
-        needsVitestPlugin = true;
-
-        if (testTargetName) {
-          vitestPluginOptions.testTargetName = testTargetName;
-        }
-        if (ciTargetName) {
-          vitestPluginOptions.ciTargetName = ciTargetName;
-        }
-        if (ciGroupName) {
-          vitestPluginOptions.ciGroupName = ciGroupName;
-        }
-
-        // Track include/exclude for vitest plugin
-        if (plugin.include) {
-          vitestInclude = plugin.include as string[];
-        }
-        if (plugin.exclude) {
-          vitestExclude = plugin.exclude as string[];
-        }
+      // Build vitest plugin for THIS specific vite plugin registration
+      const vitestPluginOptions: Record<string, unknown> = {};
+      if (testTargetName) {
+        vitestPluginOptions.testTargetName = testTargetName;
       }
+      if (ciTargetName) {
+        vitestPluginOptions.ciTargetName = ciTargetName;
+      }
+      if (ciGroupName) {
+        vitestPluginOptions.ciGroupName = ciGroupName;
+      }
+
+      const vitestPlugin: (typeof vitestPluginsToAdd)[0] = {
+        plugin: '@nx/vitest',
+      };
+      if (Object.keys(vitestPluginOptions).length > 0) {
+        vitestPlugin.options = vitestPluginOptions;
+      }
+      if (plugin.include) {
+        vitestPlugin.include = plugin.include as string[];
+      }
+      if (plugin.exclude) {
+        vitestPlugin.exclude = plugin.exclude as string[];
+      }
+
+      vitestPluginsToAdd.push(vitestPlugin);
 
       // Update the vite plugin to remove test options
       const updatedVitePlugin = { ...plugin };
@@ -152,26 +158,9 @@ function migratePluginConfigurations(tree: Tree): void {
     }
   }
 
-  // Add @nx/vitest plugin if needed and not already present
-  if (needsVitestPlugin && !hasVitestPlugin) {
-    const vitestPlugin: {
-      plugin: string;
-      options?: Record<string, unknown>;
-      include?: string[];
-      exclude?: string[];
-    } = { plugin: '@nx/vitest' };
-
-    if (Object.keys(vitestPluginOptions).length > 0) {
-      vitestPlugin.options = vitestPluginOptions;
-    }
-    if (vitestInclude) {
-      vitestPlugin.include = vitestInclude;
-    }
-    if (vitestExclude) {
-      vitestPlugin.exclude = vitestExclude;
-    }
-
-    newPlugins.push(vitestPlugin);
+  // Add all vitest plugins if @nx/vitest not already present
+  if (!hasVitestPlugin && vitestPluginsToAdd.length > 0) {
+    newPlugins.push(...vitestPluginsToAdd);
   }
 
   nxJson.plugins = newPlugins;

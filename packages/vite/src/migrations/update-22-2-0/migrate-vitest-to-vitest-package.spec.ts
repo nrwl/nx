@@ -313,6 +313,99 @@ describe('migrate-vitest-to-vitest-package', () => {
 
       expect(vitePlugin.options).toBeUndefined();
     });
+
+    it('should create multiple vitest plugins for multiple vite plugins with different test options', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.plugins = [
+        {
+          plugin: '@nx/vite/plugin',
+          include: ['apps/**'],
+          options: {
+            buildTargetName: 'build',
+            testTargetName: 'test',
+            ciTargetName: 'test-ci',
+          },
+        },
+        {
+          plugin: '@nx/vite/plugin',
+          include: ['libs/**'],
+          options: {
+            buildTargetName: 'build-lib',
+            testTargetName: 'unit-test',
+            ciTargetName: 'unit-test-ci',
+          },
+        },
+      ];
+      updateNxJson(tree, nxJson);
+
+      await migrateVitestToVitestPackage(tree);
+
+      const updatedNxJson = readNxJson(tree);
+
+      // Should have 4 plugins: 2 vite + 2 vitest
+      expect(updatedNxJson.plugins).toHaveLength(4);
+
+      const vitestPlugins = updatedNxJson.plugins.filter(
+        (p) => typeof p !== 'string' && p.plugin === '@nx/vitest'
+      ) as any[];
+
+      expect(vitestPlugins).toHaveLength(2);
+
+      // First vitest plugin for apps
+      const appsVitest = vitestPlugins.find((p) =>
+        p.include?.includes('apps/**')
+      );
+      expect(appsVitest).toBeDefined();
+      expect(appsVitest.options).toEqual({
+        testTargetName: 'test',
+        ciTargetName: 'test-ci',
+      });
+
+      // Second vitest plugin for libs
+      const libsVitest = vitestPlugins.find((p) =>
+        p.include?.includes('libs/**')
+      );
+      expect(libsVitest).toBeDefined();
+      expect(libsVitest.options).toEqual({
+        testTargetName: 'unit-test',
+        ciTargetName: 'unit-test-ci',
+      });
+    });
+
+    it('should handle mixed vite plugins - some with test options, some without', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.plugins = [
+        {
+          plugin: '@nx/vite/plugin',
+          include: ['apps/**'],
+          options: {
+            buildTargetName: 'build',
+            testTargetName: 'test',
+          },
+        },
+        {
+          plugin: '@nx/vite/plugin',
+          include: ['libs/**'],
+          options: {
+            buildTargetName: 'build-lib',
+            // No test options
+          },
+        },
+      ];
+      updateNxJson(tree, nxJson);
+
+      await migrateVitestToVitestPackage(tree);
+
+      const updatedNxJson = readNxJson(tree);
+
+      const vitestPlugins = updatedNxJson.plugins.filter(
+        (p) => typeof p !== 'string' && p.plugin === '@nx/vitest'
+      );
+
+      // Only one vitest plugin (for apps)
+      expect(vitestPlugins).toHaveLength(1);
+      expect((vitestPlugins[0] as any).include).toEqual(['apps/**']);
+    });
   });
 
   describe('targetDefaults migration', () => {
