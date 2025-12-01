@@ -34,7 +34,6 @@ import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
-import { major } from 'semver';
 import { getInstalledJestMajorVersion } from '../utils/versions';
 
 const pmc = getPackageManagerCommand();
@@ -240,23 +239,9 @@ async function buildJestTargets(
     customConditions: null,
   });
 
-  // Jest 30 + Node.js 24 can't parse TS configs with imports.
-  // This flag does not exist in Node 20/22.
-  // https://github.com/jestjs/jest/issues/15682
-  const nodeVersion = major(process.version);
-
   const env: Record<string, string> = {
     TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions,
   };
-
-  if (nodeVersion >= 24) {
-    const currentOptions = process.env.NODE_OPTIONS || '';
-    if (!currentOptions.includes('--no-experimental-strip-types')) {
-      env.NODE_OPTIONS = (
-        currentOptions + ' --no-experimental-strip-types'
-      ).trim();
-    }
-  }
 
   const target: TargetConfiguration = (targets[options.targetName] = {
     command: 'jest',
