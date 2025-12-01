@@ -25,6 +25,7 @@ alpha-lib@1.2.4
 alpha-lib@1.2.4-beta.1
 lib-only-pre-release@1.2.4-beta.1
 lib-only-pre-release@1.2.4-beta.1+build.1
+my-group@1.5.0
 `)
   ),
 }));
@@ -288,6 +289,14 @@ See merge request nx-release-test/nx-release-test!2`,
           expectedVersion: '1.2.4-beta.1',
           preid: 'alpha',
         },
+        {
+          pattern: '{releaseGroupName}@{version}',
+          releaseGroupName: 'my-group',
+          projectName: 'my-project',
+          expectedTag: 'my-group@1.5.0',
+          expectedVersion: '1.5.0',
+          requireSemver: true,
+        },
       ];
 
       it.each(releaseTagPatternTestCases)(
@@ -295,6 +304,7 @@ See merge request nx-release-test/nx-release-test!2`,
         async ({
           pattern,
           projectName,
+          releaseGroupName,
           expectedTag,
           expectedVersion,
           requireSemver,
@@ -304,6 +314,7 @@ See merge request nx-release-test/nx-release-test!2`,
             pattern,
             {
               projectName,
+              releaseGroupName,
             },
             {
               requireSemver,
