@@ -101,6 +101,13 @@ export async function loadRemoteNxPlugin(
 
   const cleanupFunction = () => {
     worker.off('exit', exitHandler);
+    // Unpipe streams to prevent hanging processes and release references
+    if (worker.stdout) {
+      worker.stdout.unpipe(process.stdout);
+    }
+    if (worker.stderr) {
+      worker.stderr.unpipe(process.stderr);
+    }
     socket.destroy();
     nxPluginWorkerCache.delete(cacheKey);
   };
@@ -338,6 +345,13 @@ function createWorkerExitHandler(
   pendingPromises: Map<string, PendingPromise>
 ) {
   return () => {
+    // Clean up piped streams when worker exits to prevent hanging
+    if (worker.stdout) {
+      worker.stdout.unpipe(process.stdout);
+    }
+    if (worker.stderr) {
+      worker.stderr.unpipe(process.stderr);
+    }
     for (const [_, pendingPromise] of pendingPromises) {
       pendingPromise.rejector(
         new Error(
