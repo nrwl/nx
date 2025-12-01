@@ -324,7 +324,7 @@ export class ExampleNonSemverVersionActions extends VersionActions {
 }
 
 export function parseGraphDefinition(definition: string) {
-  const graph = { projects: {} as any };
+  const graph = { projects: {} as any, groupConfigs: {} as any };
   const lines = definition.trim().split('\n');
   let currentGroup = '';
   let groupConfig = {};
@@ -340,11 +340,13 @@ export function parseGraphDefinition(definition: string) {
     }
 
     // Match group definitions with JSON config
-    const groupMatch = line.match(/^(\w+)\s*\(\s*(\{.*?\})\s*\):$/);
+    const groupMatch = line.match(/^([\w-]+)\s*\(\s*(\{.*\})\s*\):$/);
     if (groupMatch) {
       currentGroup = groupMatch[1];
       groupConfig = JSON.parse(groupMatch[2]);
       groupRelationship = groupConfig['projectsRelationship'] || 'independent';
+      // Store the full group config
+      graph.groupConfigs[currentGroup] = groupConfig;
       return;
     }
 
@@ -592,7 +594,10 @@ function setupGraph(tree: any, graph: any) {
 
     // Add to releaseGroups
     if (!groups[group]) {
+      // Use stored groupConfig if available, otherwise create default config
+      const storedGroupConfig = graph.groupConfigs?.[group] || {};
       groups[group] = {
+        ...storedGroupConfig,
         projectsRelationship: relationship,
         projects: [],
       } as any;
