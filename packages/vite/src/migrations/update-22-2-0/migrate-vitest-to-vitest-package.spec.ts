@@ -469,6 +469,55 @@ describe('migrate-vitest-to-vitest-package', () => {
         },
       });
     });
+
+    it('should migrate target-name-keyed targetDefaults with @nx/vite:test executor', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        test: {
+          executor: '@nx/vite:test',
+          cache: true,
+          inputs: ['default', '^production'],
+        },
+      };
+      updateNxJson(tree, nxJson);
+
+      await migrateVitestToVitestPackage(tree);
+
+      const updatedNxJson = readNxJson(tree);
+      expect(updatedNxJson.targetDefaults.test).toEqual({
+        executor: '@nx/vitest:test',
+        cache: true,
+        inputs: ['default', '^production'],
+      });
+    });
+
+    it('should handle both executor-keyed and target-name-keyed targetDefaults', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        '@nx/vite:test': {
+          cache: true,
+        },
+        test: {
+          executor: '@nx/vite:test',
+          inputs: ['default'],
+        },
+      };
+      updateNxJson(tree, nxJson);
+
+      await migrateVitestToVitestPackage(tree);
+
+      const updatedNxJson = readNxJson(tree);
+      // Executor-keyed should be migrated to new key
+      expect(updatedNxJson.targetDefaults['@nx/vite:test']).toBeUndefined();
+      expect(updatedNxJson.targetDefaults['@nx/vitest:test']).toEqual({
+        cache: true,
+      });
+      // Target-name-keyed should have executor updated in place
+      expect(updatedNxJson.targetDefaults.test).toEqual({
+        executor: '@nx/vitest:test',
+        inputs: ['default'],
+      });
+    });
   });
 
   describe('no-op scenarios', () => {

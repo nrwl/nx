@@ -169,14 +169,31 @@ function migratePluginConfigurations(tree: Tree): void {
 
 function migrateTargetDefaults(tree: Tree): void {
   const nxJson = readNxJson(tree);
-  if (!nxJson?.targetDefaults?.['@nx/vite:test']) {
+  if (!nxJson?.targetDefaults) {
     return;
   }
 
-  const viteTestDefaults = nxJson.targetDefaults['@nx/vite:test'];
-  nxJson.targetDefaults['@nx/vitest:test'] ??= {};
-  Object.assign(nxJson.targetDefaults['@nx/vitest:test'], viteTestDefaults);
-  delete nxJson.targetDefaults['@nx/vite:test'];
+  let hasChanges = false;
 
-  updateNxJson(tree, nxJson);
+  for (const [targetOrExecutor, targetConfig] of Object.entries(
+    nxJson.targetDefaults
+  )) {
+    // Pattern A: Executor-keyed (e.g., "@nx/vite:test": { ... })
+    if (targetOrExecutor === '@nx/vite:test') {
+      // Move config to new executor key
+      nxJson.targetDefaults['@nx/vitest:test'] ??= {};
+      Object.assign(nxJson.targetDefaults['@nx/vitest:test'], targetConfig);
+      delete nxJson.targetDefaults['@nx/vite:test'];
+      hasChanges = true;
+    }
+    // Pattern B: Target-name-keyed (e.g., "test": { "executor": "@nx/vite:test", ... })
+    else if (targetConfig.executor === '@nx/vite:test') {
+      targetConfig.executor = '@nx/vitest:test';
+      hasChanges = true;
+    }
+  }
+
+  if (hasChanges) {
+    updateNxJson(tree, nxJson);
+  }
 }
