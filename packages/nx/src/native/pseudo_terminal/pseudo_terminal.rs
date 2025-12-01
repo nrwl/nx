@@ -116,6 +116,8 @@ impl PseudoTerminal {
                                 trace!("Processing data via vt100 for use in tui");
                                 parser.process(&buf[..len]);
                             }
+                        } else {
+                            debug!("Failed to lock parser");
                         }
                     }
 
@@ -149,8 +151,6 @@ impl PseudoTerminal {
                             }
                         }
                         let _ = stdout.flush();
-                    } else {
-                        debug!("Failed to lock parser");
                     }
                 }
                 if !running_clone.load(Ordering::SeqCst) {
@@ -212,10 +212,16 @@ impl PseudoTerminal {
         self.stdout_tx.send(command_info.clone()).ok();
 
         if self.is_within_nx_tui {
+            // within the tui, update the parser directly so it is displayed in the tui
             self.parser
                 .write()
                 .expect("Failed to acquire parser write lock")
                 .process(command_info.as_bytes());
+        } else if !quiet {
+            // outside the tui, just print to stdout so the user can see it
+            std::io::stdout()
+                .write_all(command_info.as_bytes())
+                .expect("Failed to write command info to stdout");
         }
 
         trace!("Running {}", command_clone);
