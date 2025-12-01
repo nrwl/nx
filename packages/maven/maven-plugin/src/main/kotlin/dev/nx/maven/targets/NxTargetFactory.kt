@@ -122,7 +122,6 @@ class NxTargetFactory(
 
     // Inline analysis logic from PhaseAnalyzer
     val plugins = project.build.plugins
-    var isThreadSafe = true
     var isCacheable = true
     var isContinuous = false
     val inputs = objectMapper.createArrayNode()
@@ -153,10 +152,6 @@ class NxTargetFactory(
 
     // Aggregate analysis results
     analyses.forEach { analysis ->
-
-      if (!analysis.isThreadSafe) {
-        isThreadSafe = false
-      }
       if (!analysis.isCacheable) {
         isCacheable = false
       }
@@ -174,7 +169,7 @@ class NxTargetFactory(
       }
     }
 
-    log.info("Phase $phase analysis: thread safe: $isThreadSafe, cacheable: $isCacheable, inputs: $inputs, outputs: $outputs")
+    log.info("Phase $phase analysis: cacheable: $isCacheable, inputs: $inputs, outputs: $outputs")
 
     val options = objectMapper.createObjectNode()
 
@@ -209,7 +204,7 @@ class NxTargetFactory(
 
     log.info("Created phase target '$phase' with command: $command")
 
-    val target = NxTarget("nx:run-commands", options, isCacheable, isContinuous, isThreadSafe)
+    val target = NxTarget("nx:run-commands", options, isCacheable, isContinuous)
 
     // Copy caching info from analysis
     if (isCacheable) {
@@ -506,7 +501,7 @@ class NxTargetFactory(
     phase: String
   ): NxTarget {
     log.info("Creating noop target for phase '$phase' (no goals)")
-    return NxTarget("nx:noop", null, cache = true, false, parallelism = true)
+    return NxTarget("nx:noop", null, cache = true, continuous = false)
   }
 
   private fun createSimpleGoalTarget(
@@ -532,7 +527,7 @@ class NxTargetFactory(
     val analysis = mojoAnalyzer.analyzeMojo(pluginDescriptor, goalName, project)
       ?: return null
 
-    val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isContinuous, analysis.isThreadSafe)
+    val target = NxTarget("nx:run-commands", options, analysis.isCacheable, analysis.isContinuous)
 
     // Add inputs and outputs if cacheable
     if (analysis.isCacheable) {
@@ -593,7 +588,6 @@ class NxTargetFactory(
         options,
         analysis.isCacheable,
         analysis.isContinuous,
-        analysis.isThreadSafe,
         nxTargets["${applyPrefix("test")}-ci"].get("dependsOn").deepCopy() as ArrayNode,
         objectMapper.createArrayNode(),
         objectMapper.createArrayNode()
