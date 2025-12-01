@@ -19,7 +19,7 @@ export async function* vitestExecutor(
     '@nx/vitest/executors'
   );
 
-  yield* actualVitestExecutor(options, context);
+  return yield* actualVitestExecutor(options, context);
 }
 
 export default vitestExecutor;
