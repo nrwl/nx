@@ -1,0 +1,18 @@
+{
+  "migrations": [
+    {
+      "version": "22.2.0-beta.2",
+      "description": "Convert jest.config.ts files from ESM to CJS syntax (export default -> module.exports, import -> require) for projects using CommonJS resolution to ensure correct loading under Node.js type-stripping.",
+      "implementation": "./src/migrations/update-22-2-0/convert-jest-config-to-cjs",
+      "package": "@nx/jest",
+      "name": "convert-jest-config-to-cjs"
+    },
+    {
+      "version": "22.2.0-beta.2",
+      "description": "Migrate Vitest usage from @nx/vite to @nx/vitest package.",
+      "implementation": "./src/migrations/update-22-2-0/migrate-vitest-to-vitest-package",
+      "package": "@nx/vite",
+      "name": "migrate-vitest-to-vitest-package"
+    }
+  ]
+}
