@@ -219,8 +219,7 @@ impl PseudoTerminal {
                 .process(command_info.as_bytes());
         } else if !quiet {
             // outside the tui, just print to stdout so the user can see it
-            if let Err(e) = std::io::stdout()
-                .write_all(command_info.as_bytes()) {
+            if let Err(e) = std::io::stdout().write_all(command_info.as_bytes()) {
                 debug!("Failed to write command info to stdout: {}", e);
             }
         }
