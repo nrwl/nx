@@ -172,7 +172,9 @@ export default async function* mavenBatchExecutor(
       }
       // If process exited unexpectedly, print captured stderr
       if (code !== 0 && stderrLines.length > 0) {
-        console.error(`[Maven Batch] Process exited with code ${code}. Stderr output:`);
+        console.error(
+          `[Maven Batch] Process exited with code ${code}. Stderr output:`
+        );
         for (const line of stderrLines) {
           console.error(line);
         }

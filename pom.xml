@@ -4,7 +4,7 @@
 
   <groupId>dev.nx.maven</groupId>
   <artifactId>nx-parent</artifactId>
-  <version>0.0.11-SNAPSHOT</version>
+  <version>0.0.10</version>
   <packaging>pom</packaging>
 
   <name>Nx Parent</name>

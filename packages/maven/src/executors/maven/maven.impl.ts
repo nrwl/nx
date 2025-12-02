@@ -1,7 +1,10 @@
 import { ExecutorContext, workspaceRoot } from '@nx/devkit';
 import runCommandsImpl from 'nx/src/executors/run-commands/run-commands.impl';
 import { MavenExecutorSchema } from './schema';
-import { detectMavenExecutable } from '../../utils/detect-maven-executable';
+import {
+  detectMavenExecutable,
+  isMaven4,
+} from '../../utils/detect-maven-executable';
 
 const nxMavenApplyGoal = 'dev.nx.maven:nx-maven-plugin:apply';
 const nxMavenRecordGoal = 'dev.nx.maven:nx-maven-plugin:record';
@@ -9,13 +12,31 @@ const nxMavenRecordGoal = 'dev.nx.maven:nx-maven-plugin:record';
 /**
  * Build Maven command arguments
  */
-function buildMavenArgs(options: MavenExecutorSchema): string[] {
+function buildMavenArgs(
+  options: MavenExecutorSchema,
+  projectName: string,
+  useMaven4: boolean
+): string[] {
   const args: string[] = [];
 
-  if (options.phase) {
-    args.push(options.phase);
+  // Verbose flags
+  if (process.env.NX_VERBOSE_LOGGING === 'true') {
+    args.push('-X', '-e');
   }
 
+  // Never update snapshots (faster builds)
+  args.push('-nsu');
+
+  // Non-recursive - only build the specified project (Maven 4.x only)
+  // Maven 3.x needs to scan modules to find projects
+  if (useMaven4) {
+    args.push('-N');
+  }
+
+  // Project selector - always pass the project
+  args.push('-pl', projectName);
+
+  // Goals with apply/record wrappers
   if (options.goals) {
     const goals = Array.isArray(options.goals)
       ? options.goals
@@ -25,6 +46,7 @@ function buildMavenArgs(options: MavenExecutorSchema): string[] {
     args.push(nxMavenRecordGoal);
   }
 
+  // Additional args from options
   if (options.args) {
     const additionalArgs = Array.isArray(options.args)
       ? options.args
@@ -43,7 +65,9 @@ export default async function mavenExecutor(
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
   const mavenExecutable = detectMavenExecutable(workspaceRoot);
-  const args = buildMavenArgs(options);
+  const projectName = context.projectName;
+  const useMaven4 = isMaven4(workspaceRoot);
+  const args = buildMavenArgs(options, projectName, useMaven4);
 
   return runCommandsImpl(
     {
