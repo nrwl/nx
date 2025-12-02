@@ -243,11 +243,6 @@ overrides:
   minimist: ^1.2.6
   underscore: ^1.12.1
 
-patchedDependencies:
-  '@nx/angular':
-    hash: 6ab8e2aaadb1461587720df16cd47dd3f98ce9005c5fd33c9d6cf49a8a670b7d
-    path: patches/@nx__angular.patch
-
 importers:
 
   .:
@@ -594,7 +589,7 @@ importers:
         version: 3.17.6
       '@nx/angular':
         specifier: 22.2.0-beta.4
-        version: 22.2.0-beta.4(patch_hash=6ab8e2aaadb1461587720df16cd47dd3f98ce9005c5fd33c9d6cf49a8a670b7d)(e493ebb78dd5fe9d97d2d5e6657a2d2e)
+        version: 22.2.0-beta.4(e493ebb78dd5fe9d97d2d5e6657a2d2e)
       '@nx/conformance':
         specifier: 4.0.0
         version: 4.0.0(@nx/js@22.2.0-beta.4(@babel/traverse@7.28.5)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.9.2))(@swc/core@1.5.7(@swc/helpers@0.5.11))(nx@22.2.0-beta.4(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.9.2))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0)))(nx@22.2.0-beta.4(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.9.2))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
@@ -34115,7 +34110,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@nx/angular@22.2.0-beta.4(patch_hash=6ab8e2aaadb1461587720df16cd47dd3f98ce9005c5fd33c9d6cf49a8a670b7d)(e493ebb78dd5fe9d97d2d5e6657a2d2e)':
+  '@nx/angular@22.2.0-beta.4(e493ebb78dd5fe9d97d2d5e6657a2d2e)':
     dependencies:
       '@angular-devkit/core': 21.0.2(chokidar@3.6.0)
       '@angular-devkit/schematics': 21.0.2(chokidar@3.6.0)
