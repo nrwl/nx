@@ -1,6 +1,6 @@
 package dev.nx.maven.shared
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.google.gson.GsonBuilder
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.model.Resource
 import org.apache.maven.project.MavenProject
@@ -14,7 +14,7 @@ import java.io.File
 object BuildStateRecorder {
     private const val BUILD_STATE_FILE = "nx-build-state.json"
     private val log: Logger = LoggerFactory.getLogger(BuildStateRecorder::class.java)
-    private val objectMapper = ObjectMapper()
+    private val gson = GsonBuilder().setPrettyPrinting().create()
 
     /**
      * Record the build state of a Maven project to nx-build-state.json.
@@ -77,7 +77,7 @@ object BuildStateRecorder {
         // Write to file
         val outputFile = File(project.build.directory, BUILD_STATE_FILE)
         outputFile.parentFile?.mkdirs()
-        objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputFile, buildState)
+        outputFile.writeText(gson.toJson(buildState))
 
         val duration = System.currentTimeMillis() - startTime
         log.debug("    Recorded to ${outputFile.absolutePath} (took ${duration}ms)")
