@@ -1,6 +1,6 @@
 package dev.nx.maven.buildstate
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.google.gson.Gson
 import dev.nx.maven.shared.BuildState
 import dev.nx.maven.shared.BuildStateApplier
 import org.apache.maven.execution.MavenSession
@@ -28,7 +28,7 @@ class NxBuildStateApplyMojo : AbstractMojo() {
     }
 
     private val log: Logger = LoggerFactory.getLogger(NxBuildStateApplyMojo::class.java)
-    private val objectMapper = ObjectMapper()
+    private val gson = Gson()
 
     @Parameter(defaultValue = "\${project}", readonly = true, required = true)
     private lateinit var project: MavenProject
@@ -61,7 +61,7 @@ class NxBuildStateApplyMojo : AbstractMojo() {
             log.info("Applying build state to ${projectsToApply.size} projects...")
             projectsToApply.forEach { (depProject, stateFile) ->
                 try {
-                    val buildState = objectMapper.readValue(stateFile, BuildState::class.java)
+                    val buildState = gson.fromJson(stateFile.readText(), BuildState::class.java)
                     BuildStateApplier.applyBuildState(depProject, buildState, projectHelper)
                 } catch (e: Exception) {
                     log.warn("Failed to apply build state to ${depProject.artifactId}: ${e.message}")

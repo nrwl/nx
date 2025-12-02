@@ -1,11 +1,10 @@
 package dev.nx.maven
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import dev.nx.maven.targets.NxTargetFactory
 import dev.nx.maven.targets.TestClassDiscovery
-import dev.nx.maven.shared.MavenCommandResolver
 import dev.nx.maven.utils.MavenExpressionResolver
 import dev.nx.maven.utils.MojoAnalyzer
 import dev.nx.maven.utils.PathFormatter
@@ -49,7 +48,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
   @Parameter(property = "targetNamePrefix")
   private var targetNamePrefix: String? = null
 
-  private val objectMapper = ObjectMapper()
+  private val gson = GsonBuilder().setPrettyPrinting().create()
 
   @Throws(MojoExecutionException::class)
   override fun execute() {
@@ -99,7 +98,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
     val sharedTargetFactory = NxTargetFactory(
       lifecycles,
-      objectMapper,
       sharedTestClassDiscovery,
       pluginManager,
       session,
@@ -171,54 +169,54 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     outputPath.parentFile?.mkdirs()
 
     // Create JSON structure with both project analyses and createNodesResults
-    val rootNode = objectMapper.createObjectNode()
-    val projectsNode = objectMapper.createObjectNode()
+    val rootNode = JsonObject()
+    val projectsNode = JsonObject()
 
     // Skip project analyses section - all data is in createNodesResults
-    rootNode.set<JsonNode>("projects", projectsNode)
+    rootNode.add("projects", projectsNode)
 
     // Generate createNodesResults for Nx plugin consumption
     val createNodesResults = generateCreateNodesResults(inMemoryAnalyses)
-    rootNode.set<JsonNode>("createNodesResults", createNodesResults)
+    rootNode.add("createNodesResults", createNodesResults)
 
 
     val createDependenciesResults = generateCreateDependenciesResults(inMemoryAnalyses)
-    rootNode.set<JsonNode>("createDependenciesResults", createDependenciesResults)
+    rootNode.add("createDependenciesResults", createDependenciesResults)
 
     // Add metadata
-    rootNode.put("totalProjects", inMemoryAnalyses.size)
-    rootNode.put("workspaceRoot", workspaceRoot.absolutePath)
-    rootNode.put("analysisMethod", "optimized-parallel")
-    rootNode.put("analyzedProjects", inMemoryAnalyses.size)
+    rootNode.addProperty("totalProjects", inMemoryAnalyses.size)
+    rootNode.addProperty("workspaceRoot", workspaceRoot.absolutePath)
+    rootNode.addProperty("analysisMethod", "optimized-parallel")
+    rootNode.addProperty("analyzedProjects", inMemoryAnalyses.size)
 
-    objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputPath, rootNode)
+    outputPath.writeText(gson.toJson(rootNode))
     log.info("Generated project analyses with ${inMemoryAnalyses.size} projects: ${outputPath.absolutePath}")
   }
 
-  private fun generateCreateDependenciesResults(projectAnalyses: List<ProjectAnalysis>): ArrayNode {
-    val result = objectMapper.createArrayNode()
+  private fun generateCreateDependenciesResults(projectAnalyses: List<ProjectAnalysis>): JsonArray {
+    val result = JsonArray()
     projectAnalyses.forEach { analysis ->
       analysis.dependencies.forEach { dependency -> result.add(dependency) }
     }
     return result
   }
 
-  private fun generateCreateNodesResults(inMemoryAnalyses: List<ProjectAnalysis>): ArrayNode {
-    val createNodesResults = objectMapper.createArrayNode()
+  private fun generateCreateNodesResults(inMemoryAnalyses: List<ProjectAnalysis>): JsonArray {
+    val createNodesResults = JsonArray()
 
     inMemoryAnalyses.forEach { analysis ->
-      val resultTuple = objectMapper.createArrayNode()
+      val resultTuple = JsonArray()
       resultTuple.add(analysis.pomFile.canonicalFile.relativeTo(workspaceRoot).path) // Root path (workspace root)
 
       // Group projects by root directory (for now, assume all projects are at workspace root)
-      val projects = objectMapper.createObjectNode()
+      val projects = JsonObject()
 
       val root = analysis.root
       val project = analysis.project
 
-      val projectsWrapper = objectMapper.createObjectNode()
-      projects.set<JsonNode>(root, project)
-      projectsWrapper.set<JsonNode>("projects", projects)
+      val projectsWrapper = JsonObject()
+      projects.add(root, project)
+      projectsWrapper.add("projects", projects)
       resultTuple.add(projectsWrapper)
 
       createNodesResults.add(resultTuple)
