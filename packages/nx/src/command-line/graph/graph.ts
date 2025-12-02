@@ -23,6 +23,7 @@ import {
 } from 'node:path';
 import * as net from 'node:net';
 import { performance } from 'node:perf_hooks';
+import { emitKeypressEvents } from 'node:readline';
 import { readNxJson, workspaceLayout } from '../../config/configuration';
 import {
   FileData,
@@ -757,6 +758,7 @@ async function startServer(
   });
 
   const handleTermination = async (exitCode: number) => {
+    process.stdin.setRawMode(false);
     if (unregisterFileWatcher) {
       unregisterFileWatcher();
     }
@@ -764,6 +766,16 @@ async function startServer(
   };
   process.on('SIGINT', () => handleTermination(128 + 2));
   process.on('SIGTERM', () => handleTermination(128 + 15));
+  process.stdin.setRawMode(true);
+  emitKeypressEvents(process.stdin);
+  process.stdin.on('keypress', (str, key) => {
+    if (key.name === 'c' && key.ctrl) {
+      process.emit('SIGINT');
+    }
+    if (key.name === 'q') {
+      handleTermination(0);
+    }
+  });
 
   // Find an available port starting from the requested port
   const availablePort = await findAvailablePort(port, host);
