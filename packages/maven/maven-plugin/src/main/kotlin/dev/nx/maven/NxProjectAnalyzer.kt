@@ -1,8 +1,8 @@
 package dev.nx.maven
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ObjectNode
+import com.google.gson.JsonArray
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import dev.nx.maven.targets.NxTargetFactory
 import dev.nx.maven.utils.PathFormatter
 import org.apache.maven.project.MavenProject
@@ -21,7 +21,6 @@ class NxProjectAnalyzer(
   private val coordinatesMap: Map<String, String>,
   private val pathFormatter: PathFormatter,
 ) {
-  private val objectMapper = ObjectMapper()
   private val log: Logger = LoggerFactory.getLogger(NxProjectAnalyzer::class.java)
 
   /**
@@ -44,11 +43,11 @@ class NxProjectAnalyzer(
 
     // Create Nx project configuration
     val configCreationStart = System.currentTimeMillis()
-    val nxProject = objectMapper.createObjectNode()
-    nxProject.put("name", projectName)
-    nxProject.put("root", root)
-    nxProject.put("projectType", projectType)
-    nxProject.put("sourceRoot", "${root}/src/main/java")
+    val nxProject = JsonObject()
+    nxProject.addProperty("name", projectName)
+    nxProject.addProperty("root", root)
+    nxProject.addProperty("projectType", projectType)
+    nxProject.addProperty("sourceRoot", "${root}/src/main/java")
     val configCreationTime = System.currentTimeMillis() - configCreationStart
     log.info("Basic config creation took ${configCreationTime}ms for project: ${project.artifactId}")
 
@@ -57,19 +56,19 @@ class NxProjectAnalyzer(
     val targetAnalysisTime = System.currentTimeMillis() - targetAnalysisStart
     log.info("Target analysis took ${targetAnalysisTime}ms for project: ${project.artifactId}")
 
-    nxProject.set<ObjectNode>("targets", nxTargets)
+    nxProject.add("targets", nxTargets)
 
     // Project metadata including target groups
     val metadataStart = System.currentTimeMillis()
-    val projectMetadata = objectMapper.createObjectNode()
-    projectMetadata.put("targetGroups", targetGroups)
-    nxProject.put("metadata", projectMetadata)
+    val projectMetadata = JsonObject()
+    projectMetadata.add("targetGroups", targetGroups)
+    nxProject.add("metadata", projectMetadata)
 
     // Tags
-    val tags = objectMapper.createArrayNode()
+    val tags = JsonArray()
     tags.add("maven:${project.groupId}")
     tags.add("maven:${project.packaging}")
-    nxProject.put("tags", tags)
+    nxProject.add("tags", tags)
     val metadataTime = System.currentTimeMillis() - metadataStart
     log.info("Metadata and tags creation took ${metadataTime}ms for project: ${project.artifactId}")
 
@@ -103,12 +102,12 @@ class NxProjectAnalyzer(
     }
 
     val dependenciesJson = dependencies.map { nxDependency ->
-      val dependency = objectMapper.createObjectNode()
+      val dependency = JsonObject()
 
-      dependency.put("type", nxDependency.type.name.lowercase())
-      dependency.put("source", nxDependency.source)
-      dependency.put("target", nxDependency.target)
-      dependency.put("sourceFile", pathFormatter.normalizeRelativePath(nxDependency.sourceFile.canonicalFile.relativeTo(canonicalWorkspaceRoot).path))
+      dependency.addProperty("type", nxDependency.type.name.lowercase())
+      dependency.addProperty("source", nxDependency.source)
+      dependency.addProperty("target", nxDependency.target)
+      dependency.addProperty("sourceFile", pathFormatter.normalizeRelativePath(nxDependency.sourceFile.canonicalFile.relativeTo(canonicalWorkspaceRoot).path))
       dependency
     }
 
@@ -125,7 +124,7 @@ class NxProjectAnalyzer(
   }
 }
 
-data class ProjectAnalysis(val pomFile: File, val root: String, val project: JsonNode, val dependencies: List<JsonNode>)
+data class ProjectAnalysis(val pomFile: File, val root: String, val project: JsonElement, val dependencies: List<JsonElement>)
 
 data class NxDependency(val type: NxDependencyType, val source: String, val target: String, val sourceFile: File)
 

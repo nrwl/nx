@@ -1,8 +1,7 @@
 package dev.nx.maven.targets
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import dev.nx.maven.GitIgnoreClassifier
 import dev.nx.maven.utils.MojoAnalyzer
 import dev.nx.maven.utils.PathFormatter
@@ -32,7 +31,6 @@ data class GoalDescriptor(
  */
 class NxTargetFactory(
   private val lifecycles: DefaultLifecycles,
-  private val objectMapper: ObjectMapper,
   private val testClassDiscovery: TestClassDiscovery,
   private val pluginManager: MavenPluginManager,
   private val session: MavenSession,
@@ -46,8 +44,8 @@ class NxTargetFactory(
 
   fun createNxTargets(
     project: MavenProject
-  ): Pair<ObjectNode, ObjectNode> {
-    val nxTargets = objectMapper.createObjectNode()
+  ): Pair<JsonObject, JsonObject> {
+    val nxTargets = JsonObject()
     val targetGroups = mutableMapOf<String, List<String>>()
 
     val plugins = getExecutablePlugins(project)
@@ -75,14 +73,14 @@ class NxTargetFactory(
 
     val mavenPhasesGroup = mutableListOf<String>()
     phaseTargets.forEach { (phase, target) ->
-      nxTargets.set<ObjectNode>(phase, target.toJSON(objectMapper))
+      nxTargets.add(phase, target.toJSON())
       mavenPhasesGroup.add(phase)
     }
     targetGroups["Phases"] = mavenPhasesGroup
 
     val ciPhasesGroup = mutableListOf<String>()
     ciPhaseTargets.forEach { (phase, target) ->
-      nxTargets.set<ObjectNode>(phase, target.toJSON(objectMapper))
+      nxTargets.add(phase, target.toJSON())
       ciPhasesGroup.add(phase)
     }
     targetGroups["CI Phases"] = ciPhasesGroup
@@ -96,7 +94,7 @@ class NxTargetFactory(
       )
 
       atomizedTestTargets.forEach { (goal, target) ->
-        nxTargets.set<ObjectNode>(goal, target.toJSON(objectMapper))
+        nxTargets.add(goal, target.toJSON())
       }
       targetGroups["Test CI"] = atomizedTestTargets.keys.toList()
     } else {
@@ -121,7 +119,7 @@ class NxTargetFactory(
     val plugins = project.build.plugins
     var isCacheable = true
     var isContinuous = false
-    val inputs = objectMapper.createArrayNode()
+    val inputs = JsonArray()
     val outputs = mutableSetOf<String>()
 
     val analyses = plugins
@@ -159,27 +157,27 @@ class NxTargetFactory(
       analysis.inputs.forEach { input -> inputs.add(input) }
       analysis.outputs.forEach { output -> outputs.add(output) }
       analysis.dependentTaskOutputInputs.forEach { input ->
-        val obj = objectMapper.createObjectNode()
-        obj.put("dependentTasksOutputFiles", input.path)
-        if (input.transitive) obj.put("transitive", true)
+        val obj = JsonObject()
+        obj.addProperty("dependentTasksOutputFiles", input.path)
+        if (input.transitive) obj.addProperty("transitive", true)
         inputs.add(obj)
       }
     }
 
     log.info("Phase $phase batch analysis: cacheable: $isCacheable, inputs: $inputs, outputs: $outputs")
 
-    val options = objectMapper.createObjectNode()
+    val options = JsonObject()
 
     // Build phase and goals configuration for batch executor
-    options.put("phase", phase)
+    options.addProperty("phase", phase)
 
     // Add all goals for this phase (sorted by priority)
-    val goalsArray = objectMapper.createArrayNode()
+    val goalsArray = JsonArray()
     sortedGoals.forEach { goal -> goalsArray.add(goal.goalSpecifier) }
-    options.set<ArrayNode>("goals", goalsArray)
+    options.add("goals", goalsArray)
 
     // Add standard Maven arguments
-    options.put("project", "${project.groupId}:${project.artifactId}")
+    options.addProperty("project", "${project.groupId}:${project.artifactId}")
 
     log.info("Created batch phase target '$phase' with executor: @nx/maven:maven-batch")
 
@@ -188,13 +186,13 @@ class NxTargetFactory(
 
     // Copy caching info from analysis
     if (isCacheable) {
-      // Convert inputs to JsonNode array
-      val inputsArray = objectMapper.createArrayNode()
+      // Convert inputs to JsonArray
+      val inputsArray = JsonArray()
       inputs.forEach { input -> inputsArray.add(input) }
       target.inputs = inputsArray
 
-      // Convert outputs to JsonNode array
-      val outputsArray = objectMapper.createArrayNode()
+      // Convert outputs to JsonArray
+      val outputsArray = JsonArray()
       outputs.forEach { output -> outputsArray.add(output) }
       target.outputs = outputsArray
       addBuildStateJsonInputsAndOutputs(project, target)
@@ -257,22 +255,22 @@ class NxTargetFactory(
     val target = createPhaseBatchTarget(project, phase, goalsForPhase ?: emptyList())
 
 
-    target.dependsOn = target.dependsOn ?: objectMapper.createArrayNode()
+    target.dependsOn = target.dependsOn ?: JsonArray()
 
     if (hasInstall) {
-      val dependsOnNode = objectMapper.createObjectNode()
-      dependsOnNode.put("target", applyPrefix("install"))
-      dependsOnNode.put("dependencies", true)
-      dependsOnNode.put("params", "forward")
+      val dependsOnNode = JsonObject()
+      dependsOnNode.addProperty("target", applyPrefix("install"))
+      dependsOnNode.addProperty("dependencies", true)
+      dependsOnNode.addProperty("params", "forward")
       target.dependsOn?.add(dependsOnNode)
     }
 
     // Add dependency on immediate previous phase (if exists)
     val previousPhase = phases.getOrNull(index - 1)
     if (previousPhase != null) {
-      val dependsOnNode = objectMapper.createObjectNode()
-      dependsOnNode.put("target", applyPrefix(previousPhase))
-      dependsOnNode.put("params", "forward")
+      val dependsOnNode = JsonObject()
+      dependsOnNode.addProperty("target", applyPrefix(previousPhase))
+      dependsOnNode.addProperty("params", "forward")
       target.dependsOn?.add(dependsOnNode)
     }
 
@@ -313,24 +311,24 @@ class NxTargetFactory(
       createPhaseBatchTarget(project, phase, emptyList())
     }
     // Initialize dependsOn for all CI targets (for atomized tests or phase dependencies)
-    ciTarget.dependsOn = ciTarget.dependsOn ?: objectMapper.createArrayNode()
+    ciTarget.dependsOn = ciTarget.dependsOn ?: JsonArray()
 
     // Find the nearest previous phase that has a CI target
     val previousCiPhase = findPreviousCiPhase(phases, index, ciPhasesWithGoals)
 
     if (previousCiPhase != null) {
       log.info("CI phase '$phase' depends on previous CI phase: '$previousCiPhase'")
-      val dependsOnNode = objectMapper.createObjectNode()
-      dependsOnNode.put("target", "${applyPrefix(previousCiPhase)}-ci")
-      dependsOnNode.put("params", "forward")
+      val dependsOnNode = JsonObject()
+      dependsOnNode.addProperty("target", "${applyPrefix(previousCiPhase)}-ci")
+      dependsOnNode.addProperty("params", "forward")
       ciTarget.dependsOn?.add(dependsOnNode)
     }
 
     if (hasInstall) {
-      val dependsOnNode = objectMapper.createObjectNode()
-      dependsOnNode.put("target", "${applyPrefix("install")}-ci")
-      dependsOnNode.put("dependencies", true)
-      dependsOnNode.put("params", "forward")
+      val dependsOnNode = JsonObject()
+      dependsOnNode.addProperty("target", "${applyPrefix("install")}-ci")
+      dependsOnNode.addProperty("dependencies", true)
+      dependsOnNode.addProperty("params", "forward")
       ciTarget.dependsOn?.add(dependsOnNode)
     }
 
@@ -387,7 +385,7 @@ class NxTargetFactory(
   private fun createIndividualGoalTargets(
     plugins: List<Plugin>,
     project: MavenProject,
-    nxTargets: ObjectNode
+    nxTargets: JsonObject
   ) {
     plugins.forEach { plugin: Plugin ->
       val pluginDescriptor = runCatching { getPluginDescriptor(plugin, project) }
@@ -414,7 +412,7 @@ class NxTargetFactory(
             goal,
             execution
           ) ?: return@forEach
-          nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
+          nxTargets.add(goalTargetName, goalTarget.toJSON())
 
           log.info("Created individual goal target: $goalTargetName")
         }
@@ -432,7 +430,7 @@ class NxTargetFactory(
             goal,
             null
           ) ?: return@forEach
-          nxTargets.set<ObjectNode>(goalTargetName, goalTarget.toJSON(objectMapper))
+          nxTargets.add(goalTargetName, goalTarget.toJSON())
 
           log.info("Created unbound goal target: $goalTargetName")
         }
@@ -458,12 +456,12 @@ class NxTargetFactory(
     return hasGoals || phase == "verify"
   }
 
-  private fun buildTargetGroupsJson(targetGroups: Map<String, List<String>>): ObjectNode {
-    val targetGroupsJson = objectMapper.createObjectNode()
+  private fun buildTargetGroupsJson(targetGroups: Map<String, List<String>>): JsonObject {
+    val targetGroupsJson = JsonObject()
     targetGroups.forEach { (groupName, targets) ->
-      val targetsArray = objectMapper.createArrayNode()
+      val targetsArray = JsonArray()
       targets.forEach { target -> targetsArray.add(target) }
-      targetGroupsJson.set<ArrayNode>(groupName, targetsArray)
+      targetGroupsJson.add(groupName, targetsArray)
     }
     return targetGroupsJson
   }
@@ -482,24 +480,24 @@ class NxTargetFactory(
     goalName: String,
     execution: PluginExecution?
   ): NxTarget? {
-    val options = objectMapper.createObjectNode()
+    val options = JsonObject()
     val goalSpec = if (execution != null) "$goalPrefix:$goalName@${execution.id}" else "$goalPrefix:$goalName"
 
     // Use Maven executor with goal specifier
-    options.put("goals", goalSpec)
+    options.addProperty("goals", goalSpec)
 
     // Add standard arguments
     val args = mutableListOf<String>()
-    options.put("project", "${project.groupId}:${project.artifactId}")
+    options.addProperty("project", "${project.groupId}:${project.artifactId}")
 
     val mavenVersion = session.systemProperties.getProperty("maven.version") ?: ""
     if (mavenVersion.startsWith("4")) {
       args.add("-N")
     }
 
-    val argsArray = objectMapper.createArrayNode()
+    val argsArray = JsonArray()
     args.forEach { arg -> argsArray.add(arg) }
-    options.set<ArrayNode>("args", argsArray)
+    options.add("args", argsArray)
 
     val analysis = mojoAnalyzer.analyzeMojo(pluginDescriptor, goalName, project)
       ?: return null
@@ -508,19 +506,19 @@ class NxTargetFactory(
 
     // Add inputs and outputs if cacheable
     if (analysis.isCacheable) {
-      // Convert inputs to JsonNode array
-      val inputsArray = objectMapper.createArrayNode()
+      // Convert inputs to JsonArray
+      val inputsArray = JsonArray()
       analysis.inputs.forEach { input -> inputsArray.add(input) }
       analysis.dependentTaskOutputInputs.forEach { input ->
-        val obj = objectMapper.createObjectNode()
-        obj.put("dependentTasksOutputFiles", input.path)
-        if (input.transitive) obj.put("transitive", true)
+        val obj = JsonObject()
+        obj.addProperty("dependentTasksOutputFiles", input.path)
+        if (input.transitive) obj.addProperty("transitive", true)
         inputsArray.add(obj)
       }
       target.inputs = inputsArray
 
-      // Convert outputs to JsonNode array
-      val outputsArray = objectMapper.createArrayNode()
+      // Convert outputs to JsonArray
+      val outputsArray = JsonArray()
       analysis.outputs.forEach { output -> outputsArray.add(output) }
       target.outputs = outputsArray
     }
@@ -535,7 +533,7 @@ class NxTargetFactory(
 
   private fun generateAtomizedTestTargets(
     project: MavenProject,
-    nxTargets: ObjectNode,
+    nxTargets: JsonObject,
     testCiTarget: NxTarget,
     testGoals: MutableList<GoalDescriptor>
   ): Map<String, NxTarget> {
@@ -553,46 +551,46 @@ class NxTargetFactory(
 
       log.info("Generating target for test class: $targetName'")
 
-      val options = objectMapper.createObjectNode()
+      val options = JsonObject()
 
       // Use batch executor with structured options for test class filtering
-      val goalsArray = objectMapper.createArrayNode()
+      val goalsArray = JsonArray()
       goalsArray.add(goalDescriptor.goalSpecifier)
-      options.set<ArrayNode>("goals", goalsArray)
+      options.add("goals", goalsArray)
 
       // Add test class filtering arguments
-      val argsArray = objectMapper.createArrayNode()
+      val argsArray = JsonArray()
       argsArray.add("-Dtest=${testClass.packagePath}.${testClass.className}")
       argsArray.add("-Dsurefire.failIfNoSpecifiedTests=false")
-      options.set<ArrayNode>("args", argsArray)
+      options.add("args", argsArray)
 
-      options.put("project", "${project.groupId}:${project.artifactId}")
+      options.addProperty("project", "${project.groupId}:${project.artifactId}")
 
       val target = NxTarget(
         "@nx/maven:maven",
         options,
         analysis.isCacheable,
         analysis.isContinuous,
-        nxTargets["${applyPrefix("test")}-ci"].get("dependsOn").deepCopy() as ArrayNode,
-        objectMapper.createArrayNode(),
-        objectMapper.createArrayNode()
+        nxTargets.getAsJsonObject("${applyPrefix("test")}-ci").getAsJsonArray("dependsOn").deepCopy(),
+        JsonArray(),
+        JsonArray()
       )
 
       analysis.inputs.forEach { input -> target.inputs?.add(input) }
       analysis.outputs.forEach { output -> target.outputs?.add(output) }
       analysis.dependentTaskOutputInputs.forEach { input ->
-        val obj = objectMapper.createObjectNode()
-        obj.put("dependentTasksOutputFiles", input.path)
-        if (input.transitive) obj.put("transitive", true)
+        val obj = JsonObject()
+        obj.addProperty("dependentTasksOutputFiles", input.path)
+        if (input.transitive) obj.addProperty("transitive", true)
         target.inputs?.add(obj)
       }
 
       targets[targetName] = target
       testCiTargetGroup.add(targetName)
 
-      val dependsOnNode = objectMapper.createObjectNode()
-      dependsOnNode.put("target", targetName)
-      dependsOnNode.put("params", "forward")
+      val dependsOnNode = JsonObject()
+      dependsOnNode.addProperty("target", targetName)
+      dependsOnNode.addProperty("params", "forward")
       testCiTarget.dependsOn!!.add(dependsOnNode)
       addBuildStateJsonInputsAndOutputs(project, target)
     }
@@ -607,9 +605,9 @@ class NxTargetFactory(
     if (isIgnored) {
       log.warn("Input path is gitignored: ${buildJsonFile.path}")
       val input = pathFormatter.toDependentTaskOutputs(buildJsonFile, project.basedir)
-      val obj = objectMapper.createObjectNode()
-      obj.put("dependentTasksOutputFiles", input.path)
-      if (input.transitive) obj.put("transitive", true)
+      val obj = JsonObject()
+      obj.addProperty("dependentTasksOutputFiles", input.path)
+      if (input.transitive) obj.addProperty("transitive", true)
       target.inputs?.add(obj)
     } else {
       val input = pathFormatter.formatInputPath(buildJsonFile, projectRoot = project.basedir)

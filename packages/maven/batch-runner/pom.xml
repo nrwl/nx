@@ -229,6 +229,13 @@
                                         <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
                                 </filter>
+                                <!-- Exclude slf4j-simple's service provider to avoid conflict with Maven's MavenServiceProvider -->
+                                <filter>
+                                    <artifact>org.slf4j:slf4j-simple</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/services/org.slf4j.spi.SLF4JServiceProvider</exclude>
+                                    </excludes>
+                                </filter>
                             </filters>
                             <shadedArtifactAttached>false</shadedArtifactAttached>
                             <createDependencyReducedPom>true</createDependencyReducedPom>

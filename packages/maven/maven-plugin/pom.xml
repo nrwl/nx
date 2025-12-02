@@ -80,18 +80,10 @@
       <scope>provided</scope>
     </dependency>
 
-    <!-- JSON Processing -->
+    <!-- JSON Processing (Gson - used by shared module and plugin code) -->
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-
-    <!-- Jackson Kotlin Module -->
-    <dependency>
-      <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-kotlin</artifactId>
-      <version>${jackson.version}</version>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
     </dependency>
 
     <!-- Removed JavaParser - was causing StackOverflowError -->
