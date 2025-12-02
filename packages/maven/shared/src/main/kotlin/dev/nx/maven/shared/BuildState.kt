@@ -1,33 +1,31 @@
 package dev.nx.maven.shared
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
-
 /**
- * Data class representing the build state of a Maven project
+ * Data class representing the build state of a Maven project.
+ * Uses Gson for JSON serialization (no annotations needed for simple data classes).
  */
-data class BuildState @JsonCreator constructor(
-    @JsonProperty("compileSourceRoots") val compileSourceRoots: Set<String>,
-    @JsonProperty("testCompileSourceRoots") val testCompileSourceRoots: Set<String>,
-    @JsonProperty("resources") val resources: Set<String> = emptySet(),
-    @JsonProperty("testResources") val testResources: Set<String> = emptySet(),
-    @JsonProperty("outputDirectory") val outputDirectory: String? = null,
-    @JsonProperty("testOutputDirectory") val testOutputDirectory: String? = null,
-    @JsonProperty("compileClasspath") val compileClasspath: Set<String> = emptySet(),
-    @JsonProperty("testClasspath") val testClasspath: Set<String> = emptySet(),
-    @JsonProperty("mainArtifact") val mainArtifact: ArtifactInfo?,
-    @JsonProperty("attachedArtifacts") val attachedArtifacts: List<ArtifactInfo>,
-    @JsonProperty("outputTimestamp") val outputTimestamp: String? = null
+data class BuildState(
+    val compileSourceRoots: Set<String>,
+    val testCompileSourceRoots: Set<String>,
+    val resources: Set<String> = emptySet(),
+    val testResources: Set<String> = emptySet(),
+    val outputDirectory: String? = null,
+    val testOutputDirectory: String? = null,
+    val compileClasspath: Set<String> = emptySet(),
+    val testClasspath: Set<String> = emptySet(),
+    val mainArtifact: ArtifactInfo?,
+    val attachedArtifacts: List<ArtifactInfo>,
+    val outputTimestamp: String? = null
 )
 
 /**
  * Data class representing artifact information
  */
-data class ArtifactInfo @JsonCreator constructor(
-    @JsonProperty("file") val file: String,
-    @JsonProperty("type") val type: String,
-    @JsonProperty("classifier") val classifier: String?,
-    @JsonProperty("groupId") val groupId: String,
-    @JsonProperty("artifactId") val artifactId: String,
-    @JsonProperty("version") val version: String
+data class ArtifactInfo(
+    val file: String,
+    val type: String,
+    val classifier: String?,
+    val groupId: String,
+    val artifactId: String,
+    val version: String
 )

@@ -1,6 +1,6 @@
 package dev.nx.maven.runner
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.google.gson.Gson
 import dev.nx.maven.shared.BuildState
 import dev.nx.maven.shared.BuildStateApplier
 import dev.nx.maven.shared.BuildStateRecorder
@@ -16,7 +16,7 @@ import java.io.File
 object BuildStateManager {
     private const val BUILD_STATE_FILE = "nx-build-state.json"
     private val log = LoggerFactory.getLogger(BuildStateManager::class.java)
-    private val objectMapper = ObjectMapper()
+    private val gson = Gson()
     private var projectHelper: MavenProjectHelper? = null
 
     /**
@@ -57,7 +57,7 @@ object BuildStateManager {
         log.debug("Applying build states to ${projectsToApply.size} projects...")
         projectsToApply.forEach { (project, stateFile) ->
             try {
-                val buildState = objectMapper.readValue(stateFile, BuildState::class.java)
+                val buildState = gson.fromJson(stateFile.readText(), BuildState::class.java)
                 BuildStateApplier.applyBuildState(project, buildState, projectHelper)
                 log.debug("  Applied build state for ${project.groupId}:${project.artifactId}")
             } catch (e: Exception) {
