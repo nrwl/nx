@@ -52,7 +52,7 @@ export declare class AppLifeCycle {
 export declare class ChildProcess {
   getParserAndWriter(): ExternalObject<[ParserArc, WriterArc]>
   getPid(): number
-  kill(signal?: NodeJS.Signals): void
+  kill(signal?: NodeJS.Signals | number): void
   onExit(callback: (message: string) => void): void
   onOutput(callback: (message: string) => void): void
   cleanup(): void
@@ -490,7 +490,7 @@ export interface JsonInput {
 }
 
 /** Kill a process and all its descendants. */
-export declare function killProcessTree(rootPid: number, signal?: string | undefined | null): void
+export declare function killProcessTree(rootPid: number, signal?: string | number | undefined | null): void
 
 export declare function logDebug(message: string): void
 
