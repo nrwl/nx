@@ -7,6 +7,7 @@ import {
   joinPathFragments,
   formatFiles,
 } from '@nx/devkit';
+import { removePropertyFromJestConfig } from '@nx/jest';
 import { join } from 'path';
 
 /**
@@ -42,12 +43,8 @@ export default async function update(tree: Tree) {
       continue;
     }
 
-    // Remove resolver line from jest.config
-    const updatedJestConfig = jestConfigContent.replace(
-      /\s*resolver:\s*require\.resolve\(['"]\.\/jest\.resolver\.js['"]\),?\n?/,
-      '\n  '
-    );
-    tree.write(jestConfigPath, updatedJestConfig);
+    // Remove resolver property from jest.config using AST
+    removePropertyFromJestConfig(tree, jestConfigPath, 'resolver');
 
     // Delete jest.resolver.js file
     const resolverPath = join(config.root, 'jest.resolver.js');

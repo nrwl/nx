@@ -19,11 +19,35 @@ These instructions guide you through migrating an Nx workspace containing Expo p
    - Check `project.json` files for Expo-related configuration
 
 3. **Identify affected code**:
+
    - Files importing from `expo-av`
    - Files importing from `expo-file-system`
    - Files using `StatusBar` configuration
    - Android-specific layout code
    - Files importing from `@expo/vector-icons`
+
+4. **Check for Detox E2E testing projects**:
+   - Search for `detox` in package.json dependencies
+   - Look for `detox.config.js` or `.detoxrc.js` files
+
+## Important Warnings
+
+### Detox E2E Testing Not Supported
+
+**Expo SDK 54 does not currently support Detox for end-to-end testing.** If your workspace includes Detox projects, be aware of the following:
+
+1. **Impact**: E2E tests using Detox will not work after migrating to Expo SDK 54
+2. **Detection**: Check for `detox` in package.json dependencies or projects with `detox.config.js`
+
+**Action Required**: If Detox projects are detected, you MUST ask the user before proceeding:
+
+> "Your workspace contains Detox E2E tests. Detox is not currently supported in Expo SDK 54. Do you want to proceed with the migration knowing that Detox tests will not work until Detox adds SDK 54 support?"
+
+**Alternatives to consider**:
+
+- Stay on Expo SDK 53 if Detox E2E testing is critical for your workflow
+- Wait for Detox to add Expo SDK 54 support
+- Consider migrating to [Maestro](https://maestro.mobile.dev/) for E2E testing (has Expo SDK 54 support)
 
 ## Migration Steps by Category
 
