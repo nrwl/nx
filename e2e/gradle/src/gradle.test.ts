@@ -113,6 +113,49 @@ dependencies {
           runCLI('run list:test-ci--LinkedListTest', { verbose: true });
         }).not.toThrow();
       });
+
+      it('should support targetNamePrefix option', () => {
+        // Update nx.json to add targetNamePrefix
+        updateJson('nx.json', (nxJson) => {
+          // Find the Gradle plugin - it could be a string or an object
+          const pluginIndex = nxJson.plugins.findIndex(
+            (p: string | { plugin: string }) =>
+              p === '@nx/gradle' ||
+              (typeof p === 'object' && p.plugin === '@nx/gradle')
+          );
+
+          if (pluginIndex !== -1) {
+            // Convert string plugin to object with options, or update existing options
+            if (typeof nxJson.plugins[pluginIndex] === 'string') {
+              nxJson.plugins[pluginIndex] = {
+                plugin: '@nx/gradle',
+                options: {
+                  targetNamePrefix: 'gradle-',
+                },
+              };
+            } else {
+              nxJson.plugins[pluginIndex].options = {
+                ...nxJson.plugins[pluginIndex].options,
+                targetNamePrefix: 'gradle-',
+              };
+            }
+          }
+          return nxJson;
+        });
+
+        // Reset daemon to pick up nx.json changes
+        runCLI('reset');
+
+        // Verify prefixed targets exist
+        const output = runCLI('show project app --json=false');
+        expect(output).toContain('gradle-build');
+        expect(output).toContain('gradle-test');
+        expect(output).toContain('gradle-classes');
+
+        // Verify prefixed target works
+        const buildOutput = runCLI('run app:gradle-build');
+        expect(buildOutput).toContain('BUILD SUCCESSFUL');
+      });
     }
   );
 });
