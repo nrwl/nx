@@ -5,6 +5,7 @@ import {
   getSkippedCloudMessage,
   CompletionMessageKey,
 } from './messages';
+import { getFlowVariant, messages } from './ab-testing';
 import * as ora from 'ora';
 
 export type NxCloud =
@@ -72,9 +73,7 @@ export async function createNxCloudOnboardingUrl(
   nxCloud: NxCloud,
   token: string,
   directory: string,
-  useGitHub?: boolean,
-  flowVariant?: string,
-  promptCode?: string
+  useGitHub?: boolean
 ): Promise<string> {
   // nx-ignore-next-line
   const { createNxCloudOnboardingURL } = require(require.resolve(
@@ -92,14 +91,19 @@ export async function createNxCloudOnboardingUrl(
       : 'create-nx-workspace-success-ci-setup';
 
   // Meta: "start" or "start-v2" prefix, with prompt code
-  // For template flow: use specific prompt code (e.g., 'cloud-v2-remote-cache')
-  // For preset flow or Custom: use visit codes based on nxCloud value
+  // For template flow (variant 1): use specific prompt code from setupNxCloudV2
+  // For preset flow (variant 0): use visit codes based on nxCloud value
+  const flowVariant = getFlowVariant();
   const prefix = flowVariant === '1' ? 'start-v2' : 'start';
+  const promptCode =
+    flowVariant === '1'
+      ? messages.codeOfSelectedPromptMessage('setupNxCloudV2')
+      : '';
   const code =
-    promptCode ?? (nxCloud === 'yes' ? 'remote-cache-visit' : 'ci-setup-visit');
+    promptCode || (nxCloud === 'yes' ? 'remote-cache-visit' : 'ci-setup-visit');
   const meta = `${prefix}-${code}`;
 
-  const x = await createNxCloudOnboardingURL(
+  return createNxCloudOnboardingURL(
     source,
     token,
     meta,
@@ -107,11 +111,6 @@ export async function createNxCloudOnboardingUrl(
     useGitHub ??
       (nxCloud === 'yes' || nxCloud === 'github' || nxCloud === 'circleci')
   );
-  require('fs').appendFileSync(
-    '/tmp/nx-cloud-onboarding-url.txt',
-    `${x} - ${meta}\n`
-  );
-  return x;
 }
 
 export async function getNxCloudInfo(

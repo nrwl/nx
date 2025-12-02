@@ -3,7 +3,6 @@ import { existsSync, readFileSync, writeFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { isCI } from '../ci/is-ci';
-import { getPackageManagerCommand } from '../package-manager';
 import type { CompletionMessageKey } from './messages';
 
 // TODO(jack): Remove flow variant logic after A/B testing is complete
@@ -34,11 +33,36 @@ function writeCachedFlowVariant(variant: string): void {
 }
 
 /**
+ * Internal function to determine and cache the flow variant.
+ */
+function getFlowVariantInternal(): string {
+  if (flowVariantCache) return flowVariantCache;
+
+  const variant =
+    process.env.NX_CNW_FLOW_VARIANT ??
+    readCachedFlowVariant() ??
+    (Math.random() < 0.5 ? '0' : '1');
+
+  flowVariantCache = variant;
+
+  // Only write to cache if we randomly assigned a variant and no cache exists yet
+  // This ensures the cache expiry is based on original creation time, not last access
+  if (
+    !process.env.NX_CNW_FLOW_VARIANT &&
+    !existsSync(FLOW_VARIANT_CACHE_FILE)
+  ) {
+    writeCachedFlowVariant(variant);
+  }
+
+  return variant;
+}
+
+/**
  * Determines whether to use the new template flow (1) or old preset flow (0).
- * - NX_CNW_PROMPT_VARIANT=0 forces preset flow
- * - NX_CNW_PROMPT_VARIANT=1 forces template flow
+ * - NX_CNW_FLOW_VARIANT=0 forces preset flow
+ * - NX_CNW_FLOW_VARIANT=1 forces template flow
  * - NX_GENERATE_DOCS_PROCESS=true forces preset flow (for docs generation)
- * - Otherwise, uses cached value (24h) or randomly assigns
+ * - Otherwise, uses cached value (7 days) or randomly assigns
  */
 export function shouldUseTemplateFlow(): boolean {
   if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
@@ -46,20 +70,7 @@ export function shouldUseTemplateFlow(): boolean {
     return false;
   }
 
-  const variant =
-    process.env.NX_CNW_PROMPT_VARIANT ??
-    flowVariantCache ??
-    readCachedFlowVariant() ??
-    (Math.random() < 0.5 ? '0' : '1');
-
-  // Store in memory for consistency within this run
-  flowVariantCache = variant;
-
-  if (!process.env.NX_CNW_PROMPT_VARIANT) {
-    writeCachedFlowVariant(variant);
-  }
-
-  return variant === '1';
+  return getFlowVariantInternal() === '1';
 }
 
 /**
@@ -69,12 +80,7 @@ export function getFlowVariant(): string {
   if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
     return '0';
   }
-  return (
-    process.env.NX_CNW_PROMPT_VARIANT ??
-    flowVariantCache ??
-    readCachedFlowVariant() ??
-    'unknown'
-  );
+  return flowVariantCache ?? getFlowVariantInternal();
 }
 
 export const NxCloudChoices = [
@@ -291,14 +297,9 @@ export async function recordStat(opts: {
 }
 
 function shouldRecordStats(): boolean {
-  const pmc = getPackageManagerCommand();
-  if (!pmc.getRegistryUrl) {
-    // Fallback on true as Package management doesn't support reading config for registry.
-    // currently Bun doesn't support fetching config settings https://github.com/oven-sh/bun/issues/7140
-    return true;
-  }
   try {
-    const stdout = execSync(pmc.getRegistryUrl, {
+    // Use npm to check registry - this works regardless of which package manager invoked us
+    const stdout = execSync('npm config get registry', {
       encoding: 'utf-8',
       windowsHide: false,
     });

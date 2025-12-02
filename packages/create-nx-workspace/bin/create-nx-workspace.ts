@@ -242,11 +242,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
       await main(argv).catch((error) => {
         const { version } = require('../package.json');
         output.error({
-          title: `Failed to create workspace!`,
+          title: `Failed to create workspace (v${version})`,
           bodyLines: mapErrorToBodyLines(error),
         });
         process.exit(1);
-        throw error;
       });
     },
     [normalizeArgsMiddleware] as yargs.MiddlewareFunction<{}>[]
@@ -289,9 +288,11 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     command: 'create-nx-workspace',
     useCloud: parsedArgs.nxCloud !== 'skip',
     meta: [
+      // User sees one of: setupCI (preset flow) or setupNxCloudV2 (template flow)
       messages.codeOfSelectedPromptMessage('setupCI'),
-      messages.codeOfSelectedPromptMessage('setupNxCloud'),
-      messages.codeOfSelectedPromptMessage('setupNxCloudV2'),
+      // User sees one of: setupNxCloud (preset flow) or setupNxCloudV2 (template flow)
+      messages.codeOfSelectedPromptMessage('setupNxCloudV2') ||
+        messages.codeOfSelectedPromptMessage('setupNxCloud'),
       parsedArgs.nxCloud,
       rawArgs.nxCloud,
       workspaceInfo.pushedToVcs,
@@ -336,27 +337,25 @@ async function normalizeArgsMiddleware(
 
     const workingDir = process.cwd().replace(/\\/g, '/');
     const directory = require('path').join(workingDir, argv.name);
+
+    const template = await determineTemplate(argv);
+
+    // Record start stat with flow variant prefix
+    const startPrefix = template !== 'custom' ? 'start-v2' : 'start';
     await recordStat({
       nxVersion,
       command: 'create-nx-workspace',
-      meta: ['start'],
+      meta: [startPrefix],
       useCloud: argv.nxCloud !== 'skip',
       directory,
     });
 
-    const template = await determineTemplate(argv);
-
-    if (template !== 'skip') {
+    if (template !== 'custom') {
+      // Template flow - uses npm and 'main' branch by default
       argv.template = template;
-      const packageManager = await determinePackageManager(argv);
       const aiAgents = await determineAiAgents(argv);
-      const defaultBase = await determineDefaultBase(argv);
       const nxCloud =
         argv.skipGit === true ? 'skip' : await determineNxCloudV2(argv);
-      const nxCloudPromptCode =
-        nxCloud === 'skip'
-          ? undefined
-          : messages.codeOfSelectedPromptMessage('setupNxCloudV2');
       const completionMessageKey =
         nxCloud === 'skip'
           ? undefined
@@ -364,10 +363,9 @@ async function normalizeArgsMiddleware(
       Object.assign(argv, {
         nxCloud,
         useGitHub: nxCloud !== 'skip',
-        nxCloudPromptCode,
         completionMessageKey,
-        packageManager,
-        defaultBase,
+        packageManager: 'npm',
+        defaultBase: 'main',
         aiAgents,
       });
     } else {

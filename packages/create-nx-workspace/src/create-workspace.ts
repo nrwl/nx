@@ -17,16 +17,11 @@ import {
   getSkippedNxCloudInfo,
   readNxCloudToken,
 } from './utils/nx/nx-cloud';
-import { getFlowVariant } from './utils/nx/ab-testing';
 import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { Preset } from './utils/preset/preset';
-import {
-  cleanupLockfiles,
-  cloneTemplate,
-} from './utils/template/clone-template';
+import { cloneTemplate } from './utils/template/clone-template';
 import { execAndWait } from './utils/child-process-utils';
-import { getPackageManagerCommand } from './utils/package-manager';
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
   preset: string,
@@ -68,11 +63,9 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
     try {
       await cloneTemplate(templateUrl, name);
-      await cleanupLockfiles(directory, packageManager);
 
-      // Install dependencies
-      const pmc = getPackageManagerCommand(packageManager);
-      await execAndWait(pmc.install, directory);
+      // Install dependencies (template flow always uses npm)
+      await execAndWait('npm install --silent --ignore-scripts', directory);
 
       workspaceSetupSpinner.succeed(
         `Successfully created the workspace: ${directory}`
@@ -132,9 +125,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       nxCloud,
       token,
       directory,
-      useGitHub,
-      getFlowVariant(),
-      options.nxCloudPromptCode
+      useGitHub
     );
   }
 

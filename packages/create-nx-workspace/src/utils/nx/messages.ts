@@ -38,24 +38,21 @@ export function getCompletionMessage(
   completionMessageKey: CompletionMessageKey | undefined,
   url: string | null,
   pushedToVcs: VcsPushStatus
-): { title: string; type: 'success'; bodyLines: string[] } {
+): { title: string; bodyLines: string[] } {
   const key = completionMessageKey ?? 'ci-setup';
 
   return {
     title: completionMessages[key].title,
-    type: 'success',
     bodyLines: [getSetupMessage(url, pushedToVcs)],
   };
 }
 
 export function getSkippedCloudMessage(): {
   title: string;
-  type: 'success';
   bodyLines: string[];
 } {
   return {
     title: 'Next steps',
-    type: 'success',
     bodyLines: [
       'Run "nx connect" to enable remote caching and speed up your CI.',
       '',

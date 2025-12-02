@@ -172,6 +172,9 @@ export async function pushToGitHub(
       );
     }
 
+    // Note: This call can throw an error even if user hasn't opted in to push yet,
+    // which could be confusing as they haven't been asked about GitHub push at this point.
+    // We check gh authentication early to provide a better error message.
     const username = await getGitHubUsername(directory);
 
     // First prompt: Ask if they want to push to GitHub
@@ -249,7 +252,11 @@ export async function pushToGitHub(
     const errorMessage = e instanceof Error ? e.message : String(e);
 
     // Error code 127 means gh wasn't installed
-    const title = 'Could not push. Push repo to complete setup.';
+    // GitHubPushSkippedError means user hasn't opted in or we couldn't authenticate
+    const title =
+      e instanceof GitHubPushSkippedError || (e as any)?.code === 127
+        ? 'Push your workspace to GitHub.'
+        : 'Could not push. Push repo to complete setup.';
 
     const createRepoUrl = `https://github.com/new?name=${encodeURIComponent(
       options.name

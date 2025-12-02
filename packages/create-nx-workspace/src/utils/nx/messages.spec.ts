@@ -15,7 +15,6 @@ describe('Nx Cloud Messages', () => {
             "Go to Nx Cloud and finish the setup: https://nx.app/setup/123",
           ],
           "title": "Your CI setup is almost complete.",
-          "type": "success",
         }
       `);
     });
@@ -32,7 +31,6 @@ describe('Nx Cloud Messages', () => {
             "Return to Nx Cloud and finish the setup.",
           ],
           "title": "Your CI setup is almost complete.",
-          "type": "success",
         }
       `);
     });
@@ -49,7 +47,6 @@ describe('Nx Cloud Messages', () => {
             "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
           ],
           "title": "Your CI setup is almost complete.",
-          "type": "success",
         }
       `);
     });
@@ -66,7 +63,6 @@ describe('Nx Cloud Messages', () => {
             "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
           ],
           "title": "Your CI setup is almost complete.",
-          "type": "success",
         }
       `);
     });
@@ -83,7 +79,6 @@ describe('Nx Cloud Messages', () => {
             "Push your repo, then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your CI setup is almost complete.",
-          "type": "success",
         }
       `);
     });
@@ -100,7 +95,6 @@ describe('Nx Cloud Messages', () => {
             "Push your repo, then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your CI setup is almost complete.",
-          "type": "success",
         }
       `);
     });
@@ -119,7 +113,6 @@ describe('Nx Cloud Messages', () => {
             "Go to Nx Cloud and finish the setup: https://nx.app/setup/456",
           ],
           "title": "Your remote cache setup is almost complete.",
-          "type": "success",
         }
       `);
     });
@@ -136,7 +129,6 @@ describe('Nx Cloud Messages', () => {
             "Return to Nx Cloud and finish the setup.",
           ],
           "title": "Your remote cache setup is almost complete.",
-          "type": "success",
         }
       `);
     });
@@ -153,7 +145,6 @@ describe('Nx Cloud Messages', () => {
             "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
           ],
           "title": "Your remote cache setup is almost complete.",
-          "type": "success",
         }
       `);
     });
@@ -170,7 +161,6 @@ describe('Nx Cloud Messages', () => {
             "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
           ],
           "title": "Your remote cache setup is almost complete.",
-          "type": "success",
         }
       `);
     });
@@ -187,7 +177,6 @@ describe('Nx Cloud Messages', () => {
             "Push your repo, then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your remote cache setup is almost complete.",
-          "type": "success",
         }
       `);
     });
@@ -204,7 +193,6 @@ describe('Nx Cloud Messages', () => {
             "Push your repo, then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your remote cache setup is almost complete.",
-          "type": "success",
         }
       `);
     });
@@ -258,7 +246,6 @@ describe('Nx Cloud Messages', () => {
         expect(message.title).toBe(
           'Your remote cache setup is almost complete.'
         );
-        expect(message.type).toBe('success');
       });
     });
   });
@@ -271,7 +258,6 @@ describe('Nx Cloud Messages', () => {
         VcsPushStatus.PushedToVcs
       );
       expect(message.title).toBe('Your platform setup is almost complete.');
-      expect(message.type).toBe('success');
     });
   });
 
@@ -298,7 +284,6 @@ describe('Nx Cloud Messages', () => {
             "Learn more at https://nx.dev/nx-cloud",
           ],
           "title": "Next steps",
-          "type": "success",
         }
       `);
     });

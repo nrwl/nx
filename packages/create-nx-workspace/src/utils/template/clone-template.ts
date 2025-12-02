@@ -38,24 +38,3 @@ export async function cloneTemplate(
     process.exit(1);
   }
 }
-
-export async function cleanupLockfiles(
-  targetDirectory: string,
-  packageManager: string
-): Promise<void> {
-  const lockfiles = {
-    npm: 'package-lock.json',
-    yarn: 'yarn.lock',
-    pnpm: 'pnpm-lock.yaml',
-    bun: 'bun.lockb',
-  };
-
-  for (const [pm, lockfile] of Object.entries(lockfiles)) {
-    if (pm !== packageManager) {
-      const lockPath = join(targetDirectory, lockfile);
-      if (existsSync(lockPath)) {
-        await rm(lockPath, { force: true });
-      }
-    }
-  }
-}

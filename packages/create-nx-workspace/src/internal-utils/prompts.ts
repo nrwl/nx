@@ -123,12 +123,12 @@ export async function determineTemplate(
     preset?: string;
     interactive?: boolean;
   }>
-): Promise<string | 'skip'> {
+): Promise<string | 'custom'> {
   if (parsedArgs.template) return parsedArgs.template;
-  if (parsedArgs.preset) return 'skip';
-  if (!parsedArgs.interactive || isCI()) return 'skip';
+  if (parsedArgs.preset) return 'custom';
+  if (!parsedArgs.interactive || isCI()) return 'custom';
   // A/B test: shouldUseTemplateFlow() determines if user sees template or preset flow
-  if (!shouldUseTemplateFlow()) return 'skip';
+  if (!shouldUseTemplateFlow()) return 'custom';
   const { template } = await enquirer.prompt<{ template: string }>([
     {
       name: 'template',
@@ -156,7 +156,7 @@ export async function determineTemplate(
             'Angular           (fullstack monorepo with Angular and Express)',
         },
         {
-          name: 'skip',
+          name: 'custom',
           message:
             'Custom            (more options for frameworks, test runners, etc.)',
         },

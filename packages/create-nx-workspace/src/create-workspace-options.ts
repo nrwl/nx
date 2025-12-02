@@ -8,7 +8,6 @@ export interface CreateWorkspaceOptions {
   nxCloud: NxCloud; // Enable Nx Cloud
   useGitHub?: boolean; // Will you be using GitHub as your git hosting provider?
   template?: string; // GitHub template repository URL (e.g., https://github.com/nrwl/react-template)
-  nxCloudPromptCode?: string; // Prompt code for tracking in template flow (e.g., 'cloud-v2-remote-cache')
   completionMessageKey?: CompletionMessageKey; // Key for the completion message to show at the end
   /**
    * @description Enable interactive mode with presets
