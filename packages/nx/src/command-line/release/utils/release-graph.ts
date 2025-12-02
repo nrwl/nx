@@ -628,6 +628,7 @@ export class ReleaseGraph {
             releaseTagPattern,
             {
               projectName: projectGraphNode.name,
+              releaseGroupName: releaseGroupNode.group.name,
             },
             {
               checkAllBranchesWhen:
