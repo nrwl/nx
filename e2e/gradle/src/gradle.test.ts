@@ -156,6 +156,64 @@ dependencies {
         const buildOutput = runCLI('run app:gradle-build');
         expect(buildOutput).toContain('BUILD SUCCESSFUL');
       });
+
+      it('should not double-prefix CI test targets when using targetNamePrefix with ciTestTargetName', () => {
+        // Update nx.json to add both targetNamePrefix and ciTestTargetName
+        updateJson('nx.json', (nxJson) => {
+          const pluginIndex = nxJson.plugins.findIndex(
+            (p: string | { plugin: string }) =>
+              p === '@nx/gradle' ||
+              (typeof p === 'object' && p.plugin === '@nx/gradle')
+          );
+
+          if (pluginIndex !== -1) {
+            if (typeof nxJson.plugins[pluginIndex] === 'string') {
+              nxJson.plugins[pluginIndex] = {
+                plugin: '@nx/gradle',
+                options: {
+                  targetNamePrefix: 'gradle-',
+                  ciTestTargetName: 'test-ci',
+                },
+              };
+            } else {
+              nxJson.plugins[pluginIndex].options = {
+                ...nxJson.plugins[pluginIndex].options,
+                targetNamePrefix: 'gradle-',
+                ciTestTargetName: 'test-ci',
+              };
+            }
+          }
+          return nxJson;
+        });
+
+        // Reset daemon to pick up nx.json changes
+        runCLI('reset');
+
+        // Verify the CI test target has correct prefixing (not double-prefixed)
+        const appOutput = runCLI('show project app --json');
+        const appProject = JSON.parse(appOutput);
+
+        // The CI test target should be prefixed once: 'gradle-test-ci'
+        // NOT double-prefixed like 'gradle-test-ci-gradle-MessageUtilsTest'
+        const targetNames = Object.keys(appProject.targets);
+        const ciTestTargets = targetNames.filter((t) => t.includes('test-ci'));
+
+        // Should have gradle-test-ci target(s)
+        expect(ciTestTargets.some((t) => t.startsWith('gradle-test-ci'))).toBe(
+          true
+        );
+
+        // Should NOT have any double-prefixed targets
+        const doublePrefixed = ciTestTargets.filter((t) =>
+          t.includes('gradle-test-ci-gradle-')
+        );
+        expect(doublePrefixed).toEqual([]);
+
+        // Verify the correctly prefixed CI test target exists (e.g., gradle-test-ci--MessageUtilsTest)
+        expect(
+          targetNames.some((t) => t === 'gradle-test-ci--MessageUtilsTest')
+        ).toBe(true);
+      });
     }
   );
 });

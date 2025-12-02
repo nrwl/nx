@@ -173,7 +173,7 @@ fun processTargetsForProject(
               if (it.name == "test") {
                 ciTestTargetBaseName
               } else {
-                "$ciTestTargetBaseName-${applyPrefix(it.name)}"
+                "$ciTestTargetBaseName-${it.name}"
               }
 
           addTestCiTargets(
@@ -204,10 +204,9 @@ fun processTargetsForProject(
                   hasCiTestTarget && dependsOn.startsWith("${project.name}:") -> {
                     val taskName = dependsOn.removePrefix("${project.name}:")
                     // Check if it's a test task that's not the default test target
-                    val prefixedTaskName = applyPrefix(taskName)
                     if (testTasks.any { it.name == taskName } &&
-                        prefixedTaskName != testTargetName) {
-                      "${project.name}:$ciTestTargetBaseName-$prefixedTaskName"
+                        applyPrefix(taskName) != testTargetName) {
+                      "${project.name}:$ciTestTargetBaseName-$taskName"
                     } else {
                       dependency
                     }
