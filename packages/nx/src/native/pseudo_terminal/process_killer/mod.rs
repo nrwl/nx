@@ -1,7 +1,42 @@
+use napi::Either;
 use napi_derive::napi;
 use std::collections::{HashMap, HashSet, VecDeque};
 use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, Signal, System};
 use tracing::debug;
+
+/// Convert a numeric signal to its string representation.
+/// Based on standard POSIX signal numbers.
+fn signal_number_to_name(num: i32) -> &'static str {
+    match num {
+        1 => "SIGHUP",
+        2 => "SIGINT",
+        3 => "SIGQUIT",
+        9 => "SIGKILL",
+        15 => "SIGTERM",
+        _ => {
+            tracing::warn!("Unknown signal number {}, defaulting to SIGTERM", num);
+            "SIGTERM"
+        }
+    }
+}
+
+/// Normalize a signal that can be either a string or number to an Option<&str>.
+pub(crate) fn normalize_signal(signal: Option<&Either<String, i32>>) -> Option<&'static str> {
+    signal.map(|s| match s {
+        Either::A(string) => match string.as_str() {
+            "SIGHUP" => "SIGHUP",
+            "SIGINT" => "SIGINT",
+            "SIGQUIT" => "SIGQUIT",
+            "SIGKILL" => "SIGKILL",
+            "SIGTERM" => "SIGTERM",
+            _ => {
+                tracing::warn!("Unknown signal '{}', defaulting to SIGTERM", string);
+                "SIGTERM"
+            }
+        },
+        Either::B(num) => signal_number_to_name(*num),
+    })
+}
 
 /// Convert a Node.js signal string to sysinfo::Signal with platform-appropriate mapping.
 ///
@@ -21,6 +56,7 @@ fn map_signal(signal: Option<&str>) -> Signal {
             Some("SIGKILL") => Signal::Kill,
             Some("SIGTERM") | None => Signal::Term,
             Some("SIGINT") => Signal::Interrupt,
+            Some("SIGQUIT") => Signal::Quit,
             Some("SIGHUP") => Signal::Hangup,
             _ => Signal::Term,
         }
@@ -28,9 +64,10 @@ fn map_signal(signal: Option<&str>) -> Signal {
 }
 
 /// Kill a process and all its descendants.
-#[napi]
-pub fn kill_process_tree(root_pid: i32, signal: Option<String>) {
-    kill_process_tree_internal(root_pid, signal.as_deref());
+#[napi(ts_args_type = "rootPid: number, signal?: string | number | undefined | null")]
+pub fn kill_process_tree(root_pid: i32, signal: Option<Either<String, i32>>) {
+    let signal_str = normalize_signal(signal.as_ref());
+    kill_process_tree_internal(root_pid, signal_str);
 }
 
 /// Kill a process and all its descendants.

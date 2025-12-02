@@ -13,7 +13,7 @@ impl ProcessKiller {
         self.pid
     }
 
-    pub fn kill(&self, signal: Option<&str>) {
+    pub fn kill(&self, signal: Option<&'static str>) {
         kill_process_tree_internal(self.pid, signal);
     }
 }

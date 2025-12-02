@@ -17,7 +17,7 @@ impl ProcessKiller {
     ///
     /// On Windows, the signal parameter is ignored - all signals map to
     /// TerminateProcess via sysinfo's Signal::Kill.
-    pub fn kill(&self, signal: Option<&str>) {
+    pub fn kill(&self, signal: Option<&'static str>) {
         kill_process_tree_internal(self.pid, signal);
     }
 }
