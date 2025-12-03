@@ -49,6 +49,9 @@ const DURATION_NOT_YET_KNOWN: &str = "...";
 // This is just a fallback value, the real value will be set via start_command on the lifecycle
 const DEFAULT_MAX_PARALLEL: usize = 0;
 
+// Throbber animation characters for running batch status
+const THROBBER_CHARS: [char; 10] = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+
 // Constants for layout calculation
 const COLLAPSED_HELP_WIDTH: u16 = 19; // "quit: q help: ?"
 const FULL_HELP_WIDTH: u16 = 86; // Full help text width
@@ -195,82 +198,15 @@ pub fn parse_task_status(string_status: String) -> napi::Result<TaskStatus> {
         .map_err(napi::Error::from_reason)
 }
 
-/// Represents the status of a batch group.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum BatchStatus {
-    Running,
-    Success,
-    Failure,
-}
-
 /// Represents a batch group container that can hold multiple tasks.
 #[derive(Debug, Clone)]
 pub struct BatchGroupItem {
     pub batch_id: String,
     pub executor_name: String,
-    pub task_count: usize,
     pub is_expanded: bool,
-    pub status: BatchStatus,
-    pub terminal_output: String,
-    pub nested_tasks: Vec<String>, // Task IDs
-    pub start_time: Option<i64>,   // Timestamp for batch ordering
-}
-
-impl BatchGroupItem {
-    /// Creates a new batch group item with the given parameters.
-    pub fn new(batch_id: String, executor_name: String) -> Self {
-        Self {
-            batch_id,
-            executor_name,
-            task_count: 0,
-            is_expanded: false,
-            status: BatchStatus::Running,
-            terminal_output: String::new(),
-            nested_tasks: Vec::new(),
-            start_time: None,
-        }
-    }
-
-    /// Creates a new batch group item with timestamp for ordering.
-    pub fn new_with_timestamp(batch_id: String, executor_name: String, start_time: i64) -> Self {
-        Self {
-            batch_id,
-            executor_name,
-            task_count: 0,
-            is_expanded: false,
-            status: BatchStatus::Running,
-            terminal_output: String::new(),
-            nested_tasks: Vec::new(),
-            start_time: Some(start_time),
-        }
-    }
-
-    /// Adds a task to this batch group.
-    pub fn add_task(&mut self, task_id: String) {
-        self.nested_tasks.push(task_id);
-        self.task_count = self.nested_tasks.len();
-    }
-
-    /// Removes a task from this batch group.
-    pub fn remove_task(&mut self, task_id: &str) {
-        self.nested_tasks.retain(|id| id != task_id);
-        self.task_count = self.nested_tasks.len();
-    }
-
-    /// Updates the status of the batch group.
-    pub fn update_status(&mut self, status: BatchStatus) {
-        self.status = status;
-    }
-
-    /// Toggles the expanded state of the batch group.
-    pub fn toggle_expanded(&mut self) {
-        self.is_expanded = !self.is_expanded;
-    }
-
-    /// Appends output to the batch group's terminal output.
-    pub fn append_output(&mut self, output: &str) {
-        self.terminal_output.push_str(output);
-    }
+    pub nested_tasks: HashSet<String>, // Task IDs for O(1) contains
+    pub sorted_tasks: Vec<String>,     // Pre-sorted task IDs for iteration
+    pub start_time: Option<i64>,       // Timestamp for batch ordering
 }
 
 /// Represents a display item that can be either an individual task or a batch group.
@@ -303,6 +239,8 @@ pub struct TasksList {
     run_mode: RunMode,
     column_visibility: Option<ColumnVisibility>, // Cached column visibility result
     terminal_width: Option<u16>, // Cached terminal width for column visibility calculation
+    in_progress_tasks: Vec<String>, // Standalone in-progress tasks for selection (excludes batched)
+    needs_sort: bool,            // Deferred sort flag - sort once per render frame
 }
 
 impl TasksList {
@@ -348,6 +286,8 @@ impl TasksList {
             run_mode,
             column_visibility: None,
             terminal_width: None,
+            in_progress_tasks: Vec::new(),
+            needs_sort: false,
         };
 
         // Sort tasks to populate task selection list
@@ -438,7 +378,19 @@ impl TasksList {
         }
 
         // Apply the current filter to get filtered display items
-        self.apply_filter();
+        // Pass the mode so apply_filter doesn't override it
+        self.apply_filter_with_mode(Some(mode));
+    }
+
+    /// Flushes pending sort before rendering.
+    /// Call this before drawing to ensure display is up to date.
+    pub fn prepare_for_render(&mut self) {
+        if self.needs_sort {
+            // Use TrackByName mode because the current entries are stale.
+            // Position-based tracking would use incorrect indices from outdated entries.
+            self.sort_tasks_with_mode(Some(SelectionMode::TrackByName));
+            self.needs_sort = false;
+        }
     }
 
     /// Returns true if a task is nested under an expanded batch group
@@ -521,7 +473,7 @@ impl TasksList {
     pub fn expand_batch(&mut self, batch_id: &str) {
         if let Some(batch_group) = self.get_batch_group_mut(batch_id) {
             if !batch_group.is_expanded {
-                batch_group.toggle_expanded();
+                batch_group.is_expanded = true;
                 self.apply_filter(); // Refresh the display
             }
         }
@@ -553,7 +505,7 @@ impl TasksList {
 
         if let Some(batch_group) = self.get_batch_group_mut(batch_id) {
             if batch_group.is_expanded {
-                batch_group.toggle_expanded();
+                batch_group.is_expanded = false;
 
                 // If a nested task was selected, select the batch group instead
                 if should_select_batch {
@@ -568,24 +520,47 @@ impl TasksList {
         }
     }
 
-    /// Checks if collapsing the specified batch is allowed.
-    /// Returns false if a nested task within the batch is currently selected.
-    pub fn can_collapse_batch(&self, batch_id: &str) -> bool {
-        if let Some(selected_id) = self.get_selected_item() {
-            // Check if the selected task belongs to this batch and it's not a batch group selection
-            if self
-                .selection_manager
-                .lock()
-                .unwrap()
-                .get_selected_item_type()
-                == SelectedItemType::Task
-            {
-                if let Some(batch_group) = self.get_batch_group_by_id_filtered(batch_id) {
-                    return !batch_group.nested_tasks.contains(&selected_id);
-                }
+    /// Returns the batch ID for the current selection, if applicable.
+    /// - If a batch is selected, returns that batch ID
+    /// - If a task inside a batch is selected, returns the containing batch ID
+    /// - Otherwise returns None
+    fn get_selection_batch_id(&self) -> Option<String> {
+        let selected_id = self.get_selected_item()?;
+
+        match self.get_selected_item_type() {
+            SelectedItemType::BatchGroup => Some(selected_id),
+            SelectedItemType::Task => {
+                // Find batch containing this task
+                self.filtered_display_items.iter().find_map(|item| {
+                    if let DisplayItem::BatchGroup(batch) = item {
+                        if batch.nested_tasks.contains(&selected_id) {
+                            return Some(batch.batch_id.clone());
+                        }
+                    }
+                    None
+                })
+            }
+            SelectedItemType::None => None,
+        }
+    }
+
+    /// Attempts to expand the batch for the current selection.
+    /// Only triggers when a batch is selected (if a nested task is selected, the batch is already expanded).
+    pub fn try_expand_selected_batch(&mut self) {
+        if self.get_selected_item_type() == SelectedItemType::BatchGroup {
+            if let Some(batch_id) = self.get_selected_item() {
+                self.expand_batch(&batch_id);
             }
         }
-        true
+    }
+
+    /// Attempts to collapse the batch for the current selection.
+    /// Works if a batch or a task inside a batch is selected.
+    /// If a nested task is selected, selects the batch instead.
+    pub fn try_collapse_selected_batch(&mut self) {
+        if let Some(batch_id) = self.get_selection_batch_id() {
+            self.collapse_batch(&batch_id);
+        }
     }
 
     /// Scrolls the task list up with momentum support
@@ -613,10 +588,6 @@ impl TasksList {
             .unwrap()
             .scroll_down(lines.max(1));
     }
-
-    /// Creates a list of task entries with separators between different status groups.
-    /// Groups tasks into in-progress, (maybe) highlighted, completed, and pending, with None values as separators.
-    /// NEEDS ANALYSIS: Consider if this complex grouping logic should be moved to a dedicated type.
 
     /// Creates entries from hierarchical display items for the selection manager.
     /// Returns typed entries that preserve the distinction between tasks and batch groups,
@@ -733,7 +704,7 @@ impl TasksList {
                             }
                         }) {
                             // Add all nested tasks immediately after the batch group
-                            for task_id in &batch_group.nested_tasks {
+                            for task_id in &batch_group.sorted_tasks {
                                 entries.push(Some(SelectionEntry::Task(task_id.clone())));
                             }
                         }
@@ -1063,7 +1034,11 @@ impl TasksList {
     /// Applies the current filter text to the task list.
     /// Updates filtered tasks and selection manager entries.
     pub fn apply_filter(&mut self) {
-        let mode = self.determine_selection_mode();
+        self.apply_filter_with_mode(None);
+    }
+
+    fn apply_filter_with_mode(&mut self, mode_override: Option<SelectionMode>) {
+        let mode = mode_override.unwrap_or_else(|| self.determine_selection_mode());
 
         self.selection_manager
             .lock()
@@ -1088,28 +1063,32 @@ impl TasksList {
                             }
                         }
                         DisplayItem::BatchGroup(batch_group) => {
-                            // Check if batch group name matches filter
-                            let batch_matches =
-                                batch_group.batch_id.to_lowercase().contains(&filter_text);
-
-                            // Check if any nested task matches filter
-                            let has_matching_nested =
-                                batch_group.nested_tasks.iter().any(|task_id| {
+                            // Filter sorted_tasks - result maintains sorted order (no re-sort needed)
+                            let matching_sorted: Vec<String> = batch_group
+                                .sorted_tasks
+                                .iter()
+                                .filter(|task_id| {
                                     self.task_lookup
-                                        .get(task_id)
+                                        .get(*task_id)
                                         .map(|task| task.name.to_lowercase().contains(&filter_text))
                                         .unwrap_or(false)
-                                });
+                                })
+                                .cloned()
+                                .collect();
 
-                            if batch_matches || has_matching_nested {
-                                // If there are matching nested tasks, expand the batch group
-                                let mut batch_group = batch_group.clone();
-                                if has_matching_nested {
-                                    batch_group.is_expanded = true;
-                                }
-                                Some(DisplayItem::BatchGroup(batch_group))
-                            } else {
+                            if matching_sorted.is_empty() {
                                 None
+                            } else {
+                                let matching_nested: HashSet<String> =
+                                    matching_sorted.iter().cloned().collect();
+                                Some(DisplayItem::BatchGroup(BatchGroupItem {
+                                    batch_id: batch_group.batch_id.clone(),
+                                    executor_name: batch_group.executor_name.clone(),
+                                    is_expanded: true,
+                                    nested_tasks: matching_nested,
+                                    sorted_tasks: matching_sorted,
+                                    start_time: batch_group.start_time,
+                                }))
                             }
                         }
                     }
@@ -1328,20 +1307,19 @@ impl TasksList {
         header_cells
     }
 
-    /// Updates their status to InProgress and triggers a sort.
+    /// Updates their status to InProgress and marks for deferred sort.
     pub fn start_tasks(&mut self, tasks: Vec<Task>) {
         for task in &tasks {
             let task_id = &task.id;
+            let is_in_batch = self.is_task_nested_in_expanded_batch(task_id);
 
             // Update in task_lookup
             if let Some(task_item) = self.task_lookup.get_mut(task_id) {
                 task_item.update_status(TaskStatus::InProgress);
                 if task_item.start_time.is_none() {
-                    // It should be set, but just in case
                     let current_time = current_timestamp_millis();
                     task_item.start_time = Some(current_time);
                 }
-                // Update duration to show "..." initially for non-continuous tasks
                 if !task_item.continuous {
                     task_item.duration = DURATION_NOT_YET_KNOWN.to_string();
                 }
@@ -1363,10 +1341,14 @@ impl TasksList {
                     }
                 }
             }
+
+            // Add to in-progress list if standalone task
+            if !is_in_batch && !self.in_progress_tasks.iter().any(|id| id == task_id) {
+                self.in_progress_tasks.push(task_id.to_string());
+            }
         }
 
-        // Sort tasks to update entries
-        self.sort_tasks();
+        self.needs_sort = true;
     }
 
     /// Performs initial in-progress task selection if not yet done.
@@ -1443,53 +1425,43 @@ impl TasksList {
         }
     }
 
-    /// Handles an in-progress task finishing and moving to a different section.
-    ///
-    /// This is the most complex selection tracking scenario because:
-    /// 1. The task moves from InProgress section to Other section (requires re-sort)
-    /// 2. We need to decide if selection should switch to another task (position tracking)
-    /// 3. Terminal pane exception can override the normal behavior
-    ///
-    /// Steps:
-    /// 1. Sort while tracking by name (keeps the finished task selected)
-    /// 2. Check if terminal is showing this task's output (exception case)
-    /// 3. If no exception: switch selection to another task at same position
-    /// 4. Set the final mode based on the (possibly new) selected task
-    fn handle_in_progress_task_finished(
-        &mut self,
-        task_id: String,
-        old_in_progress_index: Option<usize>,
-    ) {
-        // Step 1: Sort while tracking by name to keep finished task selected
-        self.sort_tasks_with_mode(Some(SelectionMode::TrackByName));
+    /// Handles a standalone task finishing by switching selection to another in-progress task.
+    fn handle_standalone_task_finished(&mut self, task_id: &str, old_index: Option<usize>) {
+        // Check terminal pane exception
+        if self.is_terminal_showing_task(task_id) {
+            return; // Keep selection on finished task
+        }
 
-        // Step 2: Check if terminal pane exception applies
-        let terminal_showing_task = self.is_terminal_showing_task(&task_id);
+        let has_pending = self.has_pending_tasks();
 
-        // Step 3: If no exception, apply position-based selection switching
-        if !terminal_showing_task {
-            let has_pending_tasks = self.has_pending_tasks();
+        // No more in-progress tasks?
+        if self.in_progress_tasks.is_empty() {
+            if has_pending {
+                // Wait for next allocation
+                self.selection_manager.lock().unwrap().clear_selection();
+            }
+            // else: last task, keep selection (already on finished task)
+            return;
+        }
 
+        // Switch to task at same/lower position (clamped to valid range)
+        if let Some(old_idx) = old_index {
+            let clamped_idx = old_idx.min(self.in_progress_tasks.len().saturating_sub(1));
+            if let Some(next_task) = self.in_progress_tasks.get(clamped_idx) {
+                self.selection_manager
+                    .lock()
+                    .unwrap()
+                    .select_task(next_task.clone());
+            }
+        } else if let Some(first) = self.in_progress_tasks.first() {
             self.selection_manager
                 .lock()
                 .unwrap()
-                .handle_task_status_change(
-                    task_id,
-                    old_in_progress_index,
-                    false, // new_is_in_progress = false (task is no longer in progress)
-                    has_pending_tasks,
-                );
+                .select_task(first.clone());
         }
-
-        // Step 4: Set final mode based on current selection state
-        let final_mode = self.determine_selection_mode();
-        self.selection_manager
-            .lock()
-            .unwrap()
-            .set_selection_mode(final_mode);
     }
 
-    /// Updates a task's status and triggers a sort of the list.
+    /// Updates a task's status and marks the list for deferred sorting.
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
         // Get the old status and check if we're in a batch BEFORE updating
         let old_status = self
@@ -1500,13 +1472,9 @@ impl TasksList {
         let old_is_in_progress = matches!(old_status, TaskStatus::InProgress | TaskStatus::Shared);
         let is_in_batch = self.is_task_nested_in_expanded_batch(&task_id);
 
-        // Calculate old index BEFORE updating status (needed for position tracking)
-        // Only needed for standalone tasks (not in batches)
-        let old_in_progress_index = if old_is_in_progress && !is_in_batch {
-            self.selection_manager
-                .lock()
-                .unwrap()
-                .get_index_in_in_progress_section(&task_id)
+        // Get position BEFORE removing (for position-based selection switching)
+        let old_index = if old_is_in_progress && !is_in_batch {
+            self.in_progress_tasks.iter().position(|id| id == &task_id)
         } else {
             None
         };
@@ -1526,38 +1494,33 @@ impl TasksList {
                     }
                 }
                 DisplayItem::BatchGroup(batch_group) => {
-                    // If task is in a batch group, update the batch status if needed
                     if batch_group.nested_tasks.contains(&task_id) {
-                        // Update batch status based on task statuses
-                        // This could be extended to check all tasks in the batch
-                        // For now, just update the individual task in lookup
+                        break;
                     }
                 }
             }
         }
 
-        // Apply master's smart selection logic ONLY for standalone tasks (not in batches)
+        // Update in-progress list and handle selection for standalone tasks
         if !is_in_batch {
             let new_is_in_progress = matches!(status, TaskStatus::InProgress | TaskStatus::Shared);
-            let is_finishing = old_is_in_progress && !new_is_in_progress;
 
-            if is_finishing {
-                // Complex case: in-progress task finished, may need to switch selection
-                self.handle_in_progress_task_finished(task_id, old_in_progress_index);
-            } else {
-                // Simple case: just sort with appropriate mode
-                self.sort_tasks();
+            if old_is_in_progress && !new_is_in_progress {
+                // Task finished - remove and handle selection
+                if let Some(idx) = self.in_progress_tasks.iter().position(|id| id == &task_id) {
+                    self.in_progress_tasks.remove(idx);
+                }
+                self.handle_standalone_task_finished(&task_id, old_index);
+            } else if !old_is_in_progress && new_is_in_progress {
+                // Task started - add if not already present
+                if !self.in_progress_tasks.iter().any(|id| id == &task_id) {
+                    self.in_progress_tasks.push(task_id.to_string());
+                }
             }
-
-            // Ensure selected task is visible
-            self.selection_manager
-                .lock()
-                .unwrap()
-                .ensure_selected_visible();
-        } else {
-            // For tasks in batches: just sort (batch handles its own status updates)
-            self.sort_tasks();
         }
+
+        // Mark for deferred sort (no immediate sort!)
+        self.needs_sort = true;
     }
 
     /// Updates the live duration for all InProgress tasks that have a start_time.
@@ -1617,63 +1580,12 @@ impl TasksList {
                                 task_result.task.end_time.unwrap(),
                             );
                         }
-                        // Store terminal output if provided
-                        if let Some(ref terminal_output) = task_result.terminal_output {
-                            task.terminal_output = terminal_output.clone();
-                        }
                         break;
                     }
                 }
             }
         }
-        self.sort_tasks();
-        // Explicitly scroll to ensure selected task is visible after sort
-        self.selection_manager
-            .lock()
-            .unwrap()
-            .ensure_selected_visible();
-    }
-
-    /// Adds a new batch group to the display items with timestamp-based ordering.
-    pub fn add_batch_group(&mut self, batch_group: BatchGroupItem) {
-        // Insert batch group in timestamp order (newest first for running batches)
-        let batch_start_time = batch_group.start_time.unwrap_or(0);
-
-        // Find the right insertion point based on status and timestamp
-        let insert_index = self.display_items.iter().position(|item| {
-            match item {
-                DisplayItem::BatchGroup(existing_batch) => {
-                    let existing_start_time = existing_batch.start_time.unwrap_or(0);
-                    // If both are running, order by start time (newest first)
-                    if matches!(batch_group.status, BatchStatus::Running)
-                        && matches!(existing_batch.status, BatchStatus::Running)
-                    {
-                        batch_start_time > existing_start_time
-                    } else {
-                        // Running batches come before completed ones
-                        matches!(
-                            existing_batch.status,
-                            BatchStatus::Success | BatchStatus::Failure
-                        )
-                    }
-                }
-                DisplayItem::Task(existing_task) => {
-                    // Running batches come before individual tasks
-                    matches!(batch_group.status, BatchStatus::Running)
-                        && !matches!(existing_task.status, TaskStatus::InProgress)
-                }
-            }
-        });
-
-        if let Some(index) = insert_index {
-            self.display_items
-                .insert(index, DisplayItem::BatchGroup(batch_group));
-        } else {
-            self.display_items
-                .push(DisplayItem::BatchGroup(batch_group));
-        }
-
-        self.sort_tasks();
+        self.needs_sort = true;
     }
 
     /// Removes a batch group and ungroups its tasks back to individual display.
@@ -1688,7 +1600,7 @@ impl TasksList {
                         self.display_items.push(DisplayItem::Task(task));
                     }
                 }
-                self.sort_tasks();
+                self.needs_sort = true;
                 return Some(batch_group);
             }
         }
@@ -1707,9 +1619,55 @@ impl TasksList {
         None
     }
 
-    /// Groups individual tasks into a batch group.
-    /// Removes the individual task display items and adds them to the batch.
-    pub fn group_tasks_into_batch(&mut self, task_ids: Vec<String>, batch_group: BatchGroupItem) {
+    /// Creates and registers a new batch group with the given tasks.
+    /// Handles all display-related setup internally.
+    pub fn start_batch(
+        &mut self,
+        batch_id: String,
+        executor_name: String,
+        task_ids: Vec<String>,
+        start_time: i64,
+    ) {
+        if task_ids.is_empty() || batch_id.is_empty() {
+            return;
+        }
+
+        // Filter to valid task IDs
+        let valid_task_ids: Vec<String> = task_ids
+            .into_iter()
+            .filter(|id| self.task_lookup.contains_key(id))
+            .collect();
+
+        if valid_task_ids.is_empty() {
+            return;
+        }
+
+        // Create batch group with all tasks
+        let nested_tasks: HashSet<String> = valid_task_ids.iter().cloned().collect();
+        let mut sorted_tasks: Vec<String> = nested_tasks.iter().cloned().collect();
+        sorted_tasks.sort();
+
+        let batch_group = BatchGroupItem {
+            batch_id,
+            executor_name,
+            is_expanded: true,
+            nested_tasks,
+            sorted_tasks,
+            start_time: Some(start_time),
+        };
+
+        // Register for display
+        self.register_batch_for_display(valid_task_ids, batch_group);
+    }
+
+    /// Internal: Registers a batch group for display by removing individual task items
+    /// and adding the batch group. If the currently selected task is in the batch,
+    /// selects the batch instead.
+    fn register_batch_for_display(
+        &mut self,
+        task_ids: Vec<String>,
+        mut batch_group: BatchGroupItem,
+    ) {
         // Early validation
         if task_ids.is_empty() {
             return;
@@ -1726,6 +1684,13 @@ impl TasksList {
             return;
         }
 
+        // Capture current selection before grouping
+        let currently_selected = self
+            .selection_manager
+            .lock()
+            .ok()
+            .and_then(|sm| sm.get_selected_task_name().cloned());
+
         // Count how many tasks will actually be grouped
         let tasks_to_group = self
             .display_items
@@ -1737,9 +1702,8 @@ impl TasksList {
             return;
         }
 
-        if tasks_to_group != task_ids.len() {
-            // Some tasks were not found - this is expected if tasks have already been grouped
-        }
+        // Batches always start collapsed
+        batch_group.is_expanded = false;
 
         // Remove individual task display items
         self.display_items.retain(|item| match item {
@@ -1748,9 +1712,19 @@ impl TasksList {
         });
 
         // Add the batch group
+        let batch_id = batch_group.batch_id.clone();
         self.display_items
             .push(DisplayItem::BatchGroup(batch_group));
-        self.sort_tasks();
+        self.needs_sort = true;
+
+        // If selected task is now inside the collapsed batch, select the batch instead
+        if let Some(ref selected) = currently_selected {
+            if task_ids.iter().any(|id| id == selected) {
+                if let Ok(mut sm) = self.selection_manager.lock() {
+                    sm.select_batch_group(batch_id);
+                }
+            }
+        }
     }
 
     /// Ungroups batch tasks and moves them back to individual display.
@@ -1760,46 +1734,7 @@ impl TasksList {
             return;
         }
 
-        if let Some(_batch_group) = self.remove_batch_group(batch_id) {
-            // Tasks are already added back to display_items in remove_batch_group
-            // Just need to sort
-            self.sort_tasks();
-        }
-    }
-
-    /// Adds a task to an existing batch group.
-    pub fn add_task_to_batch(&mut self, task_id: String, batch_id: &str) -> Result<(), String> {
-        // Remove task from individual display if it exists
-        self.display_items.retain(|item| match item {
-            DisplayItem::Task(task) => task.name != task_id,
-            DisplayItem::BatchGroup(_) => true,
-        });
-
-        // Add to batch group
-        if let Some(batch_group) = self.get_batch_group_mut(batch_id) {
-            batch_group.add_task(task_id);
-            self.sort_tasks();
-            Ok(())
-        } else {
-            Err(format!("Batch group {} not found", batch_id))
-        }
-    }
-
-    /// Removes a task from a batch group and adds it back as individual display.
-    pub fn remove_task_from_batch(&mut self, task_id: &str, batch_id: &str) -> Result<(), String> {
-        if let Some(batch_group) = self.get_batch_group_mut(batch_id) {
-            batch_group.remove_task(task_id);
-
-            // Add task back as individual display item
-            if let Some(task) = self.task_lookup.get(task_id).cloned() {
-                self.display_items.push(DisplayItem::Task(task));
-            }
-
-            self.sort_tasks();
-            Ok(())
-        } else {
-            Err(format!("Batch group {} not found", batch_id))
-        }
+        self.remove_batch_group(batch_id);
     }
 
     fn generate_empty_row(&self, column_visibility: &ColumnVisibility) -> Row {
@@ -2323,9 +2258,9 @@ impl TasksList {
                 spans.push(Span::raw(" "));
             }
 
-            // Add batch status icon based on nested task status (status indicator first)
-            let status_char = self.get_batch_status_char(batch_group);
-            let status_style = self.get_batch_status_style(batch_group);
+            // Add batch status icon (always throbber - batches are only displayed while running)
+            let status_char = THROBBER_CHARS[self.throbber_counter % THROBBER_CHARS.len()];
+            let status_style = Style::default().fg(THEME.info).add_modifier(Modifier::BOLD);
             spans.push(Span::styled(format!("{} ", status_char), status_style));
 
             // Add expand/collapse indicator (expand indicator second)
@@ -2343,7 +2278,11 @@ impl TasksList {
         };
 
         let name = {
-            let batch_name = format!("{} ({})", batch_group.batch_id, batch_group.task_count);
+            let batch_name = format!(
+                "{} ({})",
+                batch_group.batch_id,
+                batch_group.nested_tasks.len()
+            );
             Cell::from(batch_name)
         };
 
@@ -2622,106 +2561,6 @@ impl TasksList {
         })
     }
 
-    /// Gets the status character for a batch group based on its nested tasks
-    fn get_batch_status_char(&self, batch_group: &BatchGroupItem) -> char {
-        let has_running = batch_group.nested_tasks.iter().any(|task_id| {
-            self.task_lookup
-                .get(task_id)
-                .map(|task| matches!(task.status, TaskStatus::InProgress))
-                .unwrap_or(false)
-        });
-
-        let has_failed = batch_group.nested_tasks.iter().any(|task_id| {
-            self.task_lookup
-                .get(task_id)
-                .map(|task| matches!(task.status, TaskStatus::Failure))
-                .unwrap_or(false)
-        });
-
-        let all_completed = !batch_group.nested_tasks.is_empty()
-            && batch_group.nested_tasks.iter().all(|task_id| {
-                self.task_lookup
-                    .get(task_id)
-                    .map(|task| {
-                        matches!(
-                            task.status,
-                            TaskStatus::Success
-                                | TaskStatus::Failure
-                                | TaskStatus::Skipped
-                                | TaskStatus::Stopped
-                                | TaskStatus::LocalCache
-                                | TaskStatus::LocalCacheKeptExisting
-                                | TaskStatus::RemoteCache
-                        )
-                    })
-                    .unwrap_or(false)
-            });
-
-        if has_running {
-            // Show running animation for running batches
-            let throbber_chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-            throbber_chars[self.throbber_counter % throbber_chars.len()]
-        } else if has_failed {
-            '✖'
-        } else if all_completed {
-            '✔'
-        } else {
-            '·'
-        }
-    }
-
-    /// Gets the status style for a batch group based on its nested tasks
-    fn get_batch_status_style(&self, batch_group: &BatchGroupItem) -> Style {
-        let has_running = batch_group.nested_tasks.iter().any(|task_id| {
-            self.task_lookup
-                .get(task_id)
-                .map(|task| matches!(task.status, TaskStatus::InProgress))
-                .unwrap_or(false)
-        });
-
-        let has_failed = batch_group.nested_tasks.iter().any(|task_id| {
-            self.task_lookup
-                .get(task_id)
-                .map(|task| matches!(task.status, TaskStatus::Failure))
-                .unwrap_or(false)
-        });
-
-        let all_completed = !batch_group.nested_tasks.is_empty()
-            && batch_group.nested_tasks.iter().all(|task_id| {
-                self.task_lookup
-                    .get(task_id)
-                    .map(|task| {
-                        matches!(
-                            task.status,
-                            TaskStatus::Success
-                                | TaskStatus::Failure
-                                | TaskStatus::Skipped
-                                | TaskStatus::Stopped
-                                | TaskStatus::LocalCache
-                                | TaskStatus::LocalCacheKeptExisting
-                                | TaskStatus::RemoteCache
-                        )
-                    })
-                    .unwrap_or(false)
-            });
-
-        if has_running {
-            Style::default().fg(THEME.info).add_modifier(Modifier::BOLD)
-        } else if has_failed {
-            Style::default()
-                .fg(THEME.error)
-                .add_modifier(Modifier::BOLD)
-        } else if all_completed {
-            Style::default()
-                .fg(THEME.success)
-                .add_modifier(Modifier::BOLD)
-        } else {
-            Style::default()
-                .fg(THEME.secondary_fg)
-                .add_modifier(Modifier::BOLD)
-        }
-    }
-
     /// Renders the help text component.
     fn render_help_text(
         &self,
@@ -2825,6 +2664,9 @@ impl Component for TasksList {
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
+        // Flush any pending sort before rendering
+        self.prepare_for_render();
+
         // Perform initial in-progress task selection if needed
         // This happens after sorting and entry creation, ensuring we select from the stable sorted order
         self.perform_initial_in_progress_selection_if_needed();
@@ -3188,12 +3030,7 @@ impl Component for TasksList {
                 self.unpin_all_tasks();
             }
             Action::SortTasks => {
-                self.sort_tasks();
-                // Explicitly scroll to ensure selected task is visible after sort
-                self.selection_manager
-                    .lock()
-                    .unwrap()
-                    .ensure_selected_visible();
+                self.needs_sort = true;
             }
             Action::UpdateTaskStatus(task_name, status) => {
                 self.update_task_status(task_name, status);
@@ -5301,18 +5138,18 @@ mod tests {
         insta::assert_snapshot!("batch_identity_standalone_context", terminal.backend());
 
         // Now create a batch group for app:build and lib:build
-        let mut batch_group = BatchGroupItem::new("batch1".to_string(), "executor".to_string());
-        batch_group.task_count = 2;
-        batch_group.nested_tasks = vec!["app:build".to_string(), "lib:build".to_string()];
-        batch_group.is_expanded = true; // Start expanded to see nested tasks
-
-        // Group the tasks into the batch
-        tasks_list.group_tasks_into_batch(
+        // Group the tasks into the batch (starts collapsed, selects batch since app:build was selected)
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "executor".to_string(),
             vec!["app:build".to_string(), "lib:build".to_string()],
-            batch_group,
+            0,
         );
 
-        // Re-select the app:build task after grouping (since grouping affects display items)
+        // Expand the batch to make nested tasks visible and selectable
+        tasks_list.expand_batch("batch1");
+
+        // Re-select the app:build task after expanding (nested tasks now visible)
         tasks_list
             .selection_manager
             .lock()
@@ -5394,17 +5231,16 @@ mod tests {
             ]))
             .unwrap();
 
-        // Create a batch group with multiple tasks
-        let mut batch_group = BatchGroupItem::new("batch1".to_string(), "executor".to_string());
-        batch_group.task_count = 2;
-        batch_group.nested_tasks = vec!["app:build".to_string(), "lib:build".to_string()];
-        batch_group.is_expanded = true; // Start expanded
-
-        // Group the tasks into the batch
-        tasks_list.group_tasks_into_batch(
+        // Create a batch group with multiple tasks (starts collapsed)
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "executor".to_string(),
             vec!["app:build".to_string(), "lib:build".to_string()],
-            batch_group,
+            0,
         );
+
+        // Expand the batch to test nested task selection
+        tasks_list.expand_batch("batch1");
 
         // Update task statuses to InProgress to show them as running
         tasks_list
@@ -5521,18 +5357,16 @@ mod tests {
             ))
             .unwrap();
 
-        // Now create a batch group for app:build and lib:build
-        let mut batch_group = BatchGroupItem::new("batch1".to_string(), "executor".to_string());
-        batch_group.task_count = 2;
-        batch_group.nested_tasks = vec!["app:build".to_string(), "lib:build".to_string()];
-        batch_group.is_expanded = true; // Start expanded to see nested tasks
-        batch_group.status = BatchStatus::Running;
-
-        // Group the tasks into the batch
-        tasks_list.group_tasks_into_batch(
+        // Now create a batch group for app:build and lib:build (starts collapsed)
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "executor".to_string(),
             vec!["app:build".to_string(), "lib:build".to_string()],
-            batch_group,
+            0,
         );
+
+        // Expand the batch to make nested tasks selectable
+        tasks_list.expand_batch("batch1");
 
         // Test 1: Select a task and verify selection type
         tasks_list
@@ -5697,18 +5531,16 @@ mod tests {
             ))
             .unwrap();
 
-        // Now create a batch group that includes app:build and lib:build
-        let mut batch_group = BatchGroupItem::new("batch1".to_string(), "executor".to_string());
-        batch_group.task_count = 2;
-        batch_group.nested_tasks = vec!["app:build".to_string(), "lib:build".to_string()];
-        batch_group.is_expanded = true; // Start expanded to see nested tasks
-        batch_group.status = BatchStatus::Running;
-
-        // Group the tasks into the batch
-        tasks_list.group_tasks_into_batch(
+        // Now create a batch group that includes app:build and lib:build (starts collapsed)
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "executor".to_string(),
             vec!["app:build".to_string(), "lib:build".to_string()],
-            batch_group,
+            0,
         );
+
+        // Expand the batch to make nested tasks selectable
+        tasks_list.expand_batch("batch1");
 
         // Select the same task (app:build) when it's displayed in batch context
         tasks_list
@@ -5798,17 +5630,12 @@ mod tests {
             ]))
             .unwrap();
 
-        // Create a batch group with multiple tasks
-        let mut batch_group = BatchGroupItem::new("batch1".to_string(), "executor".to_string());
-        batch_group.task_count = 2;
-        batch_group.nested_tasks = vec!["app:build".to_string(), "lib:build".to_string()];
-        batch_group.is_expanded = true; // Start expanded to show nested tasks
-        batch_group.status = BatchStatus::Running;
-
-        // Group the tasks into the batch
-        tasks_list.group_tasks_into_batch(
+        // Create a batch group with multiple tasks (starts collapsed)
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "executor".to_string(),
             vec!["app:build".to_string(), "lib:build".to_string()],
-            batch_group,
+            0,
         );
 
         // Update task statuses to InProgress to show them as running
@@ -5825,7 +5652,10 @@ mod tests {
             ))
             .unwrap();
 
-        // Test 1: Batch group starts expanded, shows nested tasks with proper indentation
+        // Expand the batch to test expanded view
+        tasks_list.expand_batch("batch1");
+
+        // Test 1: Batch group expanded, shows nested tasks with proper indentation
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!("expand_collapse_initial_expanded", terminal.backend());
 
@@ -5957,17 +5787,12 @@ mod tests {
             "Should be able to pre-select lib:build task"
         );
 
-        // Create a batch group with default collapsed state (is_expanded = false)
-        let mut batch_group = BatchGroupItem::new("batch1".to_string(), "executor".to_string());
-        batch_group.task_count = 2;
-        batch_group.nested_tasks = vec!["app:build".to_string(), "lib:build".to_string()];
-        batch_group.is_expanded = false; // Start collapsed by default
-        batch_group.status = BatchStatus::Running;
-
-        // Group the tasks into the batch
-        tasks_list.group_tasks_into_batch(
+        // Create a batch group with default collapsed state (start_batch always starts collapsed)
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "executor".to_string(),
             vec!["app:build".to_string(), "lib:build".to_string()],
-            batch_group,
+            0,
         );
 
         // Update task statuses to InProgress to show them as running
@@ -6001,47 +5826,26 @@ mod tests {
             "Batch should start collapsed by default"
         );
 
-        // Test 2: Re-select the nested task after grouping (simulating a previously selected task scenario)
-        tasks_list
+        // Test 2: After grouping, batch should be selected (since lib:build was selected and is now in batch)
+        let selected_batch = tasks_list
             .selection_manager
             .lock()
             .unwrap()
-            .select_task("lib:build".to_string());
-        let reselected_task = tasks_list
-            .selection_manager
-            .lock()
-            .unwrap()
-            .get_selected_task_name()
+            .get_selected_batch_id()
             .map(|s| s.to_string());
         assert_eq!(
-            reselected_task,
-            Some("lib:build".to_string()),
-            "Should be able to re-select lib:build task after grouping"
+            selected_batch,
+            Some("batch1".to_string()),
+            "Batch should be selected when previously selected task goes into it"
         );
 
-        // Test 3: Auto-expand behavior when batch contains a previously selected task
-        // In a real scenario, the batch would auto-expand if it contains a previously selected task
-        // For this test, we'll manually trigger the expansion to show the expected behavior
-        let has_selected_nested_task =
-            reselected_task.map_or(false, |selected| selected == "lib:build");
-
-        if has_selected_nested_task {
-            // Manually expand to simulate auto-expand behavior
-            for item in &mut tasks_list.display_items {
-                if let DisplayItem::BatchGroup(batch) = item {
-                    if batch.batch_id == "batch1" {
-                        batch.is_expanded = true; // Simulate auto-expand
-                        break;
-                    }
-                }
-            }
-            tasks_list.apply_filter(); // Refresh display after state change
-        }
+        // Test 3: Expand the batch to make nested tasks visible and selectable
+        tasks_list.expand_batch("batch1");
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!("default_collapsed_auto_expand", terminal.backend());
 
-        // Verify the batch is now expanded (simulating the auto-expand behavior)
+        // Verify the batch is now expanded
         let batch_is_expanded = tasks_list.display_items.iter().any(|item| {
             if let DisplayItem::BatchGroup(batch) = item {
                 batch.batch_id == "batch1" && batch.is_expanded
@@ -6051,11 +5855,10 @@ mod tests {
         });
         assert!(
             batch_is_expanded,
-            "Batch should be expanded when it contains a previously selected task"
+            "Batch should be expanded after expand_batch call"
         );
 
-        // Test 4: Verify the selected task can be maintained after auto-expansion
-        // Re-select to ensure it's still the intended task
+        // Test 4: Select a nested task after expanding
         tasks_list
             .selection_manager
             .lock()
@@ -6082,15 +5885,13 @@ mod tests {
         );
 
         // Test 5: Verify that without a previously selected task, batch would remain collapsed
-        // Create another batch without any pre-selected tasks
-        let mut batch_group2 = BatchGroupItem::new("batch2".to_string(), "executor2".to_string());
-        batch_group2.task_count = 1;
-        batch_group2.nested_tasks = vec!["standalone:test".to_string()];
-        batch_group2.is_expanded = false; // Start collapsed
-        batch_group2.status = BatchStatus::Running;
-
-        // Group standalone:test into batch2
-        tasks_list.group_tasks_into_batch(vec!["standalone:test".to_string()], batch_group2);
+        // Create another batch without any pre-selected tasks (starts collapsed)
+        tasks_list.start_batch(
+            "batch2".to_string(),
+            "executor2".to_string(),
+            vec!["standalone:test".to_string()],
+            0,
+        );
 
         tasks_list
             .update(Action::UpdateTaskStatus(
@@ -6235,31 +6036,24 @@ mod tests {
                 .unwrap();
         }
 
-        // Create first batch group: "build-batch" with app:build and shared:build
-        let mut build_batch =
-            BatchGroupItem::new("build-batch".to_string(), "executor".to_string());
-        build_batch.task_count = 2;
-        build_batch.nested_tasks = vec!["app:build".to_string(), "shared:build".to_string()];
-        build_batch.is_expanded = true; // Start expanded to show nested tasks
-        build_batch.status = BatchStatus::Running;
-
-        // Create second batch group: "test-batch" with app:test and shared:test
-        let mut test_batch = BatchGroupItem::new("test-batch".to_string(), "executor".to_string());
-        test_batch.task_count = 2;
-        test_batch.nested_tasks = vec!["app:test".to_string(), "shared:test".to_string()];
-        test_batch.is_expanded = false; // Start collapsed
-        test_batch.status = BatchStatus::Running;
-
-        // Group the tasks into their respective batches
-        tasks_list.group_tasks_into_batch(
+        // Create first batch group: "build-batch" with app:build and shared:build (starts collapsed)
+        tasks_list.start_batch(
+            "build-batch".to_string(),
+            "executor".to_string(),
             vec!["app:build".to_string(), "shared:build".to_string()],
-            build_batch,
+            0,
         );
 
-        tasks_list.group_tasks_into_batch(
+        // Create second batch group: "test-batch" with app:test and shared:test (starts collapsed)
+        tasks_list.start_batch(
+            "test-batch".to_string(),
+            "executor".to_string(),
             vec!["app:test".to_string(), "shared:test".to_string()],
-            test_batch,
+            0,
         );
+
+        // Expand build-batch to create mixed expand/collapse states
+        tasks_list.expand_batch("build-batch");
 
         // Test Snapshot 1: Multiple batches with mixed expand/collapse states and individual tasks
         // Expected layout:
@@ -6473,29 +6267,21 @@ mod tests {
             .update(Action::StartTasks(test_tasks.clone()))
             .unwrap();
 
-        // Create a running batch containing all 4 tasks
-        let mut mixed_batch =
-            BatchGroupItem::new("build-batch".to_string(), "executor".to_string());
-        mixed_batch.task_count = 4;
-        mixed_batch.nested_tasks = vec![
-            "app:build".to_string(),
-            "app:test".to_string(),
-            "shared:build".to_string(),
-            "shared:test".to_string(),
-        ];
-        mixed_batch.is_expanded = true; // Start expanded to show all nested tasks
-        mixed_batch.status = BatchStatus::Running; // CRITICAL: Batch is still running
-
-        // Group all tasks into the running batch
-        tasks_list.group_tasks_into_batch(
+        // Create a running batch containing all 4 tasks (starts collapsed)
+        tasks_list.start_batch(
+            "build-batch".to_string(),
+            "executor".to_string(),
             vec![
                 "app:build".to_string(),
                 "app:test".to_string(),
                 "shared:build".to_string(),
                 "shared:test".to_string(),
             ],
-            mixed_batch,
+            0,
         );
+
+        // Expand the batch to show nested tasks for this test
+        tasks_list.expand_batch("build-batch");
 
         // Set mixed completion statuses while batch is still running:
         // ✅ app:build → Success (completed successfully)
@@ -6578,10 +6364,6 @@ mod tests {
         assert!(
             batch_group.is_expanded,
             "Batch should be expanded to show nested tasks"
-        );
-        assert!(
-            matches!(batch_group.status, BatchStatus::Running),
-            "Batch should still be running"
         );
 
         // Test Snapshot 2: Verify collapse/expand still works with mixed statuses
@@ -6699,18 +6481,16 @@ mod tests {
         tasks_list.update_task_status("app:build".to_string(), TaskStatus::InProgress);
         tasks_list.update_task_status("lib:build".to_string(), TaskStatus::InProgress);
 
-        // Create and configure batch group (running batch)
-        let mut batch_group = BatchGroupItem::new("batch1".to_string(), "nx:run-many".to_string());
-        batch_group.task_count = 2;
-        batch_group.nested_tasks = vec!["app:build".to_string(), "lib:build".to_string()];
-        batch_group.is_expanded = true; // Start expanded to show nested tasks
-        batch_group.status = BatchStatus::Running; // Running batch
-
-        // Group the tasks into the running batch
-        tasks_list.group_tasks_into_batch(
+        // Create and configure batch group (running batch, starts collapsed)
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "nx:run-many".to_string(),
             vec!["app:build".to_string(), "lib:build".to_string()],
-            batch_group,
+            0,
         );
+
+        // Expand the batch to show nested tasks for this test
+        tasks_list.expand_batch("batch1");
 
         tasks_list.apply_filter(); // Refresh display
 
@@ -6745,10 +6525,6 @@ mod tests {
             batch_group_running.is_expanded,
             "Batch should be expanded to show nested tasks"
         );
-        assert!(
-            matches!(batch_group_running.status, BatchStatus::Running),
-            "Batch should be running"
-        );
 
         // Verify no standalone tasks exist while batch is running
         let standalone_count_before = tasks_list
@@ -6763,17 +6539,7 @@ mod tests {
 
         // --- SIMULATE BATCH COMPLETION ---
 
-        // Step 1: Update batch status to completed
-        for item in &mut tasks_list.display_items {
-            if let DisplayItem::BatchGroup(batch) = item {
-                if batch.batch_id == "batch1" {
-                    batch.status = BatchStatus::Success; // Mark batch as completed
-                    break;
-                }
-            }
-        }
-
-        // Step 2: Update individual task statuses to final states
+        // Step 1: Update individual task statuses to final states
         // First update with end times to simulate completion
         if let Some(task_item) = tasks_list.task_lookup.get_mut("app:build") {
             task_item.start_time = Some(1000);
@@ -6786,7 +6552,7 @@ mod tests {
         tasks_list.update_task_status("app:build".to_string(), TaskStatus::LocalCache);
         tasks_list.update_task_status("lib:build".to_string(), TaskStatus::RemoteCache);
 
-        // Step 3: Simulate batch completion ungrouping
+        // Step 2: Simulate batch completion ungrouping
         tasks_list.ungroup_batch_tasks("batch1");
 
         tasks_list.apply_filter(); // Refresh display after ungrouping
@@ -6911,26 +6677,20 @@ mod tests {
             ]))
             .unwrap();
 
-        // Create expanded batch group with multiple tasks for navigation testing
-        let mut batch_group =
-            BatchGroupItem::new("build-batch".to_string(), "executor".to_string());
-        batch_group.task_count = 3;
-        batch_group.nested_tasks = vec![
-            "app:build".to_string(),
-            "lib:build".to_string(),
-            "standalone:test".to_string(),
-        ];
-        batch_group.is_expanded = true; // Start expanded to show nested tasks
-
-        // Group the tasks into the batch
-        tasks_list.group_tasks_into_batch(
+        // Create batch group with multiple tasks for navigation testing (starts collapsed)
+        tasks_list.start_batch(
+            "build-batch".to_string(),
+            "executor".to_string(),
             vec![
                 "app:build".to_string(),
                 "lib:build".to_string(),
                 "standalone:test".to_string(),
             ],
-            batch_group,
+            0,
         );
+
+        // Expand the batch to show nested tasks for navigation testing
+        tasks_list.expand_batch("build-batch");
 
         // Update task statuses to InProgress to show them as running
         for task in &test_tasks {
@@ -7002,7 +6762,9 @@ mod tests {
         // Verify the batch group structure is maintained
         let batch_group_found = tasks_list.display_items.iter().any(|item| {
             if let DisplayItem::BatchGroup(batch) = item {
-                batch.batch_id == "build-batch" && batch.is_expanded && batch.task_count == 3
+                batch.batch_id == "build-batch"
+                    && batch.is_expanded
+                    && batch.nested_tasks.len() == 3
             } else {
                 false
             }
@@ -7032,7 +6794,11 @@ mod tests {
                 }
             })
             .expect("Batch group should exist");
-        assert_eq!(batch.task_count, 3, "Batch should contain 3 nested tasks");
+        assert_eq!(
+            batch.nested_tasks.len(),
+            3,
+            "Batch should contain 3 nested tasks"
+        );
         assert_eq!(
             batch.nested_tasks.len(),
             3,
