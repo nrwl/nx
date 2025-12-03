@@ -11,5 +11,6 @@
       "command": "node scripts/run-native-target.js install nx-maven-plugin"
     }
   },
+  "tags": ["maven:dev.nx.maven"],
   "implicitDependencies": ["maven-shared"]
 }
