@@ -23,6 +23,17 @@ import { Preset } from './utils/preset/preset';
 import { cloneTemplate } from './utils/template/clone-template';
 import { execAndWait } from './utils/child-process-utils';
 
+// State for SIGINT handler - only set after workspace is fully installed
+let workspaceDirectory: string | undefined;
+let cloudConnectUrl: string | undefined;
+
+export function getInterruptedWorkspaceState(): {
+  directory: string | undefined;
+  connectUrl: string | undefined;
+} {
+  return { directory: workspaceDirectory, connectUrl: cloudConnectUrl };
+}
+
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
   preset: string,
   options: T,
@@ -67,6 +78,9 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       // Install dependencies (template flow always uses npm)
       await execAndWait('npm install --silent --ignore-scripts', directory);
 
+      // Mark workspace as ready for SIGINT handler
+      workspaceDirectory = directory;
+
       workspaceSetupSpinner.succeed(
         `Successfully created the workspace: ${directory}`
       );
@@ -94,6 +108,9 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       preset,
       workspaceGlobs,
     });
+
+    // Mark workspace as ready for SIGINT handler
+    workspaceDirectory = directory;
 
     // If the preset is a third-party preset, we need to call createPreset to install it
     // For first-party presets, it will be created by createEmptyWorkspace instead.
@@ -127,6 +144,9 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       directory,
       useGitHub
     );
+
+    // Store for SIGINT handler
+    cloudConnectUrl = connectUrl;
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;

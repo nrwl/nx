@@ -6,7 +6,10 @@ import {
   CreateWorkspaceOptions,
   supportedAgents,
 } from '../src/create-workspace-options';
-import { createWorkspace } from '../src/create-workspace';
+import {
+  createWorkspace,
+  getInterruptedWorkspaceState,
+} from '../src/create-workspace';
 import { isKnownPreset, Preset } from '../src/utils/preset/preset';
 import { CLIErrorMessageConfig, output } from '../src/utils/output';
 import { nxVersion } from '../src/utils/nx/nx-version';
@@ -269,6 +272,29 @@ process.on('uncaughtException', (error: unknown) => {
   )
     return;
   throw error;
+});
+
+// Handle Ctrl+C gracefully - show helpful message if workspace was already created
+process.on('SIGINT', () => {
+  const { directory, connectUrl } = getInterruptedWorkspaceState();
+
+  if (directory) {
+    console.log(''); // New line after ^C
+    output.log({
+      title: 'Workspace creation interrupted',
+      bodyLines: [
+        `Your workspace was created at: ${directory}`,
+        '',
+        'To complete the setup:',
+        '  1. Ensure your repo is pushed (e.g. https://github.com/new)',
+        connectUrl
+          ? `  2. Connect to Nx Cloud: ${connectUrl}`
+          : '  2. Connect to Nx Cloud: Run "nx connect"',
+      ],
+    });
+  }
+
+  process.exit(130); // Standard exit code for SIGINT
 });
 
 let rawArgs: Arguments;
