@@ -143,7 +143,7 @@ const messageOptions: Record<string, MessageData[]> = {
    */
   setupNxCloudV2: [
     {
-      code: 'cloud-v2-remote-cache',
+      code: 'cloud-v2-remote-cache-visit',
       message: 'Enable remote caching with Nx Cloud?',
       initial: 0,
       choices: [
@@ -156,7 +156,7 @@ const messageOptions: Record<string, MessageData[]> = {
       completionMessage: 'cache-setup',
     },
     {
-      code: 'cloud-v2-fast-ci',
+      code: 'cloud-v2-fast-ci-visit',
       message: 'Speed up CI and reduce compute costs with Nx Cloud?',
       initial: 0,
       choices: [
@@ -169,7 +169,7 @@ const messageOptions: Record<string, MessageData[]> = {
       completionMessage: 'ci-setup',
     },
     {
-      code: 'cloud-v2-green-prs',
+      code: 'cloud-v2-green-prs-visit',
       message: 'Get to green PRs faster with Nx Cloud?',
       initial: 0,
       choices: [
@@ -182,7 +182,7 @@ const messageOptions: Record<string, MessageData[]> = {
       completionMessage: 'ci-setup',
     },
     {
-      code: 'cloud-v2-full-platform',
+      code: 'cloud-v2-full-platform-visit',
       message: 'Try the full Nx platform?',
       initial: 0,
       choices: [
