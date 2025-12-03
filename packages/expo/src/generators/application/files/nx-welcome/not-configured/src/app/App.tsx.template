@@ -1,7 +1,6 @@
 /* eslint-disable jsx-a11y/accessible-emoji */
 import React, { useRef, useState } from 'react';
 import {
-  SafeAreaView,
   StyleSheet,
   ScrollView,
   View,
@@ -17,14 +16,9 @@ export const App = () => {
   const scrollViewRef = useRef<null | ScrollView>(null);
 
   return (
-    <>
+    <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <SafeAreaView
-        style={{
-          flex: 1,
-        }}
-      >
-        <ScrollView
+      <ScrollView
           ref={(ref) => {
             scrollViewRef.current = ref;
           }}
@@ -592,11 +586,14 @@ export const App = () => {
             </View>
           </View>
         </ScrollView>
-      </SafeAreaView>
-    </>
+    </View>
   );
 };
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
   scrollView: {
     backgroundColor: '#ffffff',
   },

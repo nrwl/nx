@@ -2962,6 +2962,9 @@ importers:
       detox:
         specifier: ^20.9.0
         version: 20.40.1(@jest/environment@30.0.2)(@jest/types@30.0.1)(expect@30.0.4)(jest-environment-jsdom@30.0.2)(jest-environment-node@30.0.2)(jest@30.0.2(@types/node@20.19.19)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.25.9))(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.19.19)(typescript@5.9.2)))
+      semver:
+        specifier: 'catalog:'
+        version: 7.7.2
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -3175,6 +3178,9 @@ importers:
       picocolors:
         specifier: 'catalog:'
         version: 1.1.1
+      semver:
+        specifier: 'catalog:'
+        version: 7.7.2
       tsconfig-paths:
         specifier: catalog:typescript
         version: 4.2.0
