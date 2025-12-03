@@ -13,6 +13,6 @@
       "command": "node scripts/run-native-target.js package maven-batch-runner"
     }
   },
-  "tags": [],
+  "tags": ["maven:dev.nx.maven"],
   "implicitDependencies": ["maven-shared"]
 }

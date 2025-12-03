@@ -64,6 +64,6 @@
       "manifestRootsToUpdate": ["{projectRoot}"]
     }
   },
-  "tags": [],
+  "tags": ["maven:dev.nx.maven"],
   "implicitDependencies": ["maven-batch-runner", "nx-maven-plugin"]
 }
