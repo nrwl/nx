@@ -13,8 +13,8 @@ export default async function createAiInstructionsForNuxt(tree: Tree) {
   }
 
   const contents = readFileSync(pathToAiInstructions);
-  tree.write('ai-migrations/MIGRATE_NUXT_4.md', contents);
+  tree.write('tools/ai-migrations/MIGRATE_NUXT_4.md', contents);
   return [
-    `We created 'ai-migrations/MIGRATE_NUXT_4.md' with instructions for an AI Agent to help migrate your Nuxt projects to Nuxt 4.`,
+    `We created 'tools/ai-migrations/MIGRATE_NUXT_4.md' with instructions for an AI Agent to help migrate your Nuxt projects to Nuxt 4.`,
   ];
 }
