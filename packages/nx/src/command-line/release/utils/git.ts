@@ -58,6 +58,44 @@ const SEMVER_REGEX =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/g;
 
 /**
+ * Characters that are invalid in git ref names according to git-check-ref-format.
+ * Note: We don't include ':' here as we handle it specially (replace with '/').
+ */
+const GIT_INVALID_REF_CHARS_REGEX = /[\x00-\x1f\x7f ~^?*\[\\]/g;
+
+/**
+ * Sanitizes a project name to be valid for use in git tag names.
+ *
+ * Git tag names have specific restrictions per git-check-ref-format.
+ * This function handles:
+ * - Colons (:) - replaced with slashes (/) for Gradle-style module paths
+ * - Other invalid characters - replaced with hyphens (-)
+ * - Consecutive slashes - collapsed to single slash
+ * - Leading/trailing slashes - removed
+ * - Consecutive dots - replaced with single dot
+ *
+ * @param name - The project name to sanitize
+ * @returns The sanitized name suitable for git tags
+ */
+export function sanitizeProjectNameForGitTag(name: string): string {
+  return (
+    name
+      // Replace colons with slashes (for Gradle module paths like :common:lib)
+      .replace(/:/g, '/')
+      // Replace other git-invalid characters with hyphens
+      .replace(GIT_INVALID_REF_CHARS_REGEX, '-')
+      // Collapse consecutive slashes to single slash
+      .replace(/\/+/g, '/')
+      // Collapse consecutive dots (invalid in git refs)
+      .replace(/\.{2,}/g, '.')
+      // Remove leading slashes
+      .replace(/^\/+/, '')
+      // Remove trailing slashes
+      .replace(/\/+$/, '')
+  );
+}
+
+/**
  * Extract the tag and version from a tag string
  *
  * @param tag - The tag string to extract the tag and version from
