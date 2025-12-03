@@ -229,18 +229,18 @@
                                         <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
                                 </filter>
-                                <!-- Exclude Woodstox - use Maven's version to avoid classloader conflicts -->
+                                <!-- Include Woodstox - loaded via ServiceLoader at runtime -->
                                 <filter>
                                     <artifact>com.fasterxml.woodstox:woodstox-core</artifact>
-                                    <excludes>
-                                        <exclude>**</exclude>
-                                    </excludes>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
                                 </filter>
                                 <filter>
                                     <artifact>org.codehaus.woodstox:stax2-api</artifact>
-                                    <excludes>
-                                        <exclude>**</exclude>
-                                    </excludes>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
                                 </filter>
                                 <!-- Exclude slf4j-simple's service provider to avoid conflict with Maven's MavenServiceProvider -->
                                 <filter>
