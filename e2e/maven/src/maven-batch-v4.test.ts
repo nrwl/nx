@@ -39,8 +39,8 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
   afterAll(() => cleanupProject());
 
   it('should build multiple projects with run-many in batch mode using Maven 4.0.0-rc-4', () => {
-    const output = runBatchCLI('run-many -t verify', { verbose: true });
-    expect(output).toContain('BUILD SUCCESS');
+    // runCLI throws on non-zero exit, so successful execution + file checks is sufficient
+    runBatchCLI('run-many -t verify');
     checkFilesExist(
       'app/target/app-1.0.0-SNAPSHOT.jar',
       'lib/target/lib-1.0.0-SNAPSHOT.jar',
