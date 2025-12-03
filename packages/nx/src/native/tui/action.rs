@@ -2,7 +2,7 @@ use crate::native::tasks::types::{Task, TaskResult};
 
 use super::{
     app::{BatchInfo, Focus},
-    components::tasks_list::{BatchStatus, TaskStatus},
+    components::tasks_list::TaskStatus,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -40,7 +40,6 @@ pub enum Action {
     ConsoleMessengerAvailable(bool),
     EndCommand,
     StartBatch(String, BatchInfo),
-    UpdateBatchStatus(String, BatchStatus),
     ExpandBatch(String),
     CollapseBatch(String),
 }

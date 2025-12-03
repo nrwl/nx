@@ -357,6 +357,12 @@ impl TaskSelectionManager {
         self.ensure_selected_visible();
     }
 
+    /// Clears the current selection (enters waiting state)
+    pub fn clear_selection(&mut self) {
+        self.selection_state = SelectionState::NoSelection;
+        self.invalidate_selection_cache();
+    }
+
     /// Determine which section a task belongs to based on its position in entries
     /// Returns None for batch groups (they don't belong to a section)
     fn determine_task_section(&self, selection: &Selection) -> Option<TaskSection> {
@@ -712,7 +718,8 @@ impl TaskSelectionManager {
     /// Get the index of a task within the in-progress section
     /// Works for both tasks and batch groups (returns position among all entries in section)
     pub fn get_index_in_in_progress_section(&self, item_id: &str) -> Option<usize> {
-        self.entries[0..self.in_progress_section_size]
+        let safe_size = self.in_progress_section_size.min(self.entries.len());
+        self.entries[0..safe_size]
             .iter()
             .filter_map(|e| e.as_ref())
             .position(|entry| entry.id() == item_id)
@@ -720,7 +727,8 @@ impl TaskSelectionManager {
 
     /// Get all in-progress items (tasks and batch groups)
     pub fn get_in_progress_items(&self) -> Vec<Selection> {
-        self.entries[0..self.in_progress_section_size]
+        let safe_size = self.in_progress_section_size.min(self.entries.len());
+        self.entries[0..safe_size]
             .iter()
             .filter_map(|e| e.as_ref().map(|entry| entry.to_selection()))
             .collect()
