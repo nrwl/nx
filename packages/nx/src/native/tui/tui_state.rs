@@ -108,6 +108,47 @@ impl TuiState {
         &self.task_status_map
     }
 
+    /// Get the task ID of the first currently running task (if any)
+    ///
+    /// This is useful for inline mode which shows output for the current running task.
+    /// In multi-task scenarios, this returns an arbitrary running task.
+    pub fn get_current_running_task(&self) -> Option<String> {
+        self.task_status_map
+            .iter()
+            .find(|(_, status)| **status == TaskStatus::InProgress)
+            .map(|(id, _)| id.clone())
+    }
+
+    /// Get count of completed tasks (any terminal state)
+    ///
+    /// Counts tasks with status: Success, Failure, Skipped, LocalCache,
+    /// LocalCacheKeptExisting, RemoteCache
+    pub fn get_completed_task_count(&self) -> usize {
+        self.task_status_map
+            .values()
+            .filter(|status| {
+                matches!(
+                    status,
+                    TaskStatus::Success
+                        | TaskStatus::Failure
+                        | TaskStatus::Skipped
+                        | TaskStatus::LocalCache
+                        | TaskStatus::LocalCacheKeptExisting
+                        | TaskStatus::RemoteCache
+                )
+            })
+            .count()
+    }
+
+    /// Get names of tasks that failed
+    pub fn get_failed_task_names(&self) -> Vec<String> {
+        self.task_status_map
+            .iter()
+            .filter(|(_, status)| **status == TaskStatus::Failure)
+            .map(|(id, _)| id.clone())
+            .collect()
+    }
+
     // === PTY Management Methods ===
 
     /// Register a PTY instance for a task

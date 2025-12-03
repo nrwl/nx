@@ -49,6 +49,120 @@ pub fn normalize_newlines(input: &[u8]) -> Vec<u8> {
     output
 }
 
+use super::pty::PtyInstance;
+
+/// ANSI escape sequence to hide the cursor
+/// This is appended to output to prevent a confusing blinking cursor
+/// when viewing cache hits or completed task output.
+const HIDE_CURSOR_ESCAPE: &str = "\x1b[?25l";
+
+/// Writes output to a PTY instance, normalizing newlines and hiding the cursor.
+///
+/// This is the common implementation used by both App and InlineApp for
+/// processing terminal output from tasks.
+///
+/// # Arguments
+///
+/// * `pty` - The PTY instance to write output to
+/// * `output` - The raw output string to process
+pub fn write_output_to_pty(pty: &PtyInstance, output: &str) {
+    let output_with_hidden_cursor = format!("{}{}", output, HIDE_CURSOR_ESCAPE);
+    let normalized_output = normalize_newlines(output_with_hidden_cursor.as_bytes());
+    pty.process_output(&normalized_output);
+}
+
+use super::theme::THEME;
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::text::Span;
+
+/// Returns the base style (with foreground color) for a given task status.
+///
+/// This provides consistent color coding across different TUI components:
+/// - Success/Cache: Green
+/// - Failure: Red
+/// - Skipped: Yellow/Warning
+/// - InProgress/Shared: Blue/Info
+/// - NotStarted/Stopped: Gray/Secondary
+pub fn get_task_status_style(status: TaskStatus) -> Style {
+    Style::default().fg(match status {
+        TaskStatus::Success
+        | TaskStatus::LocalCacheKeptExisting
+        | TaskStatus::LocalCache
+        | TaskStatus::RemoteCache => THEME.success,
+        TaskStatus::Failure => THEME.error,
+        TaskStatus::Skipped => THEME.warning,
+        TaskStatus::InProgress | TaskStatus::Shared => THEME.info,
+        TaskStatus::NotStarted | TaskStatus::Stopped => THEME.secondary_fg,
+    })
+}
+
+/// Returns the foreground color for a given task status.
+///
+/// Use this when you only need the color, not a full Style.
+pub fn get_task_status_color(status: TaskStatus) -> Color {
+    match status {
+        TaskStatus::Success
+        | TaskStatus::LocalCacheKeptExisting
+        | TaskStatus::LocalCache
+        | TaskStatus::RemoteCache => THEME.success,
+        TaskStatus::Failure => THEME.error,
+        TaskStatus::Skipped => THEME.warning,
+        TaskStatus::InProgress | TaskStatus::Shared => THEME.info,
+        TaskStatus::NotStarted | TaskStatus::Stopped => THEME.secondary_fg,
+    }
+}
+
+/// Returns a styled icon Span for a given task status.
+///
+/// Icons:
+/// - ✔ for success/cache states
+/// - ✖ for failure
+/// - ⏭ for skipped
+/// - ● for in progress/shared
+/// - ◼ for stopped
+/// - · for not started
+pub fn get_task_status_icon(status: TaskStatus) -> Span<'static> {
+    match status {
+        TaskStatus::Success
+        | TaskStatus::LocalCacheKeptExisting
+        | TaskStatus::LocalCache
+        | TaskStatus::RemoteCache => Span::styled(
+            "  ✔  ",
+            Style::default()
+                .fg(THEME.success)
+                .add_modifier(Modifier::BOLD),
+        ),
+        TaskStatus::Failure => Span::styled(
+            "  ✖  ",
+            Style::default()
+                .fg(THEME.error)
+                .add_modifier(Modifier::BOLD),
+        ),
+        TaskStatus::Skipped => Span::styled(
+            "  ⏭  ",
+            Style::default()
+                .fg(THEME.warning)
+                .add_modifier(Modifier::BOLD),
+        ),
+        TaskStatus::InProgress | TaskStatus::Shared => Span::styled(
+            "  ●  ",
+            Style::default().fg(THEME.info).add_modifier(Modifier::BOLD),
+        ),
+        TaskStatus::Stopped => Span::styled(
+            "  ◼  ",
+            Style::default()
+                .fg(THEME.secondary_fg)
+                .add_modifier(Modifier::BOLD),
+        ),
+        TaskStatus::NotStarted => Span::styled(
+            "  ·  ",
+            Style::default()
+                .fg(THEME.secondary_fg)
+                .add_modifier(Modifier::BOLD),
+        ),
+    }
+}
+
 /// Sorts a list of TaskItems with a stable, total ordering.
 ///
 /// The sort order is:

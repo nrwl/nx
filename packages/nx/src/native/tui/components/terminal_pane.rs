@@ -17,7 +17,10 @@ use tui_term::widget::PseudoTerminal;
 use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use crate::native::tui::theme::THEME;
-use crate::native::tui::utils::{format_duration, format_duration_since, format_live_duration};
+use crate::native::tui::utils::{
+    format_duration, format_duration_since, format_live_duration, get_task_status_icon,
+    get_task_status_style,
+};
 use crate::native::tui::{action::Action, pty::PtyInstance};
 
 /// Configuration for terminal pane layout and display constants
@@ -264,59 +267,12 @@ impl<'a> TerminalPane<'a> {
         self
     }
 
-    fn get_status_icon(&self, status: TaskStatus) -> Span {
-        match status {
-            TaskStatus::Success
-            | TaskStatus::LocalCacheKeptExisting
-            | TaskStatus::LocalCache
-            | TaskStatus::RemoteCache => Span::styled(
-                "  ✔  ",
-                Style::default()
-                    .fg(THEME.success)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::Failure => Span::styled(
-                "  ✖  ",
-                Style::default()
-                    .fg(THEME.error)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::Skipped => Span::styled(
-                "  ⏭  ",
-                Style::default()
-                    .fg(THEME.warning)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::InProgress | TaskStatus::Shared => Span::styled(
-                "  ●  ",
-                Style::default().fg(THEME.info).add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::Stopped => Span::styled(
-                "  ◼  ",
-                Style::default()
-                    .fg(THEME.secondary_fg)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::NotStarted => Span::styled(
-                "  ·  ",
-                Style::default()
-                    .fg(THEME.secondary_fg)
-                    .add_modifier(Modifier::BOLD),
-            ),
-        }
+    fn get_status_icon(&self, status: TaskStatus) -> Span<'static> {
+        get_task_status_icon(status)
     }
 
     fn get_base_style(&self, status: TaskStatus) -> Style {
-        Style::default().fg(match status {
-            TaskStatus::Success
-            | TaskStatus::LocalCacheKeptExisting
-            | TaskStatus::LocalCache
-            | TaskStatus::RemoteCache => THEME.success,
-            TaskStatus::Failure => THEME.error,
-            TaskStatus::Skipped => THEME.warning,
-            TaskStatus::InProgress | TaskStatus::Shared => THEME.info,
-            TaskStatus::NotStarted | TaskStatus::Stopped => THEME.secondary_fg,
-        })
+        get_task_status_style(status)
     }
 
     /// Calculates appropriate pty dimensions by applying relevant borders and padding adjustments to the given area

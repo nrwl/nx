@@ -3,7 +3,7 @@ use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use parking_lot::Mutex;
 use std::sync::Arc;
-use tracing::{debug, trace};
+use tracing::debug;
 
 use crate::native::logger::enable_logger;
 use crate::native::tasks::types::{Task, TaskGraph, TaskResult};
@@ -185,6 +185,8 @@ impl AppLifeCycle {
             std::collections::HashMap::new(), // estimated_task_timings - will be set later
         )));
 
+        debug!("Creating AppLifeCycle in {:?} mode", tui_mode);
+
         // Create the appropriate app based on mode, passing the shared state
         let app = match &tui_mode {
             TuiMode::FullScreen => {
@@ -268,34 +270,15 @@ impl AppLifeCycle {
         done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
     ) -> napi::Result<()> {
         debug!("🚀 AppLifeCycle::__init called");
-        trace!("TUI Mode: {:?}", self.tui_mode);
 
-        match self.tui_mode {
-            TuiMode::FullScreen => {
-                debug!("📺 Initializing FULL-SCREEN TUI");
-                self.__init_fullscreen(done_callback)
-            }
-            TuiMode::Inline => {
-                debug!("📱 Initializing INLINE TUI");
-                self.__init_inline(done_callback)
-            }
-        }
-    }
-
-    // Unified initialization method for both modes
-    fn __init_unified(
-        &self,
-        done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
-        tui_mode: TuiMode,
-    ) -> napi::Result<()> {
         enable_logger();
-        debug!("🚀 Initializing Terminal UI - Mode: {:?}", tui_mode);
+        debug!("🚀 Initializing Terminal UI - Mode: {:?}", self.tui_mode);
 
         let app = self.app.clone();
         let workspace_root = self.workspace_root.clone();
 
         // Create Tui with appropriate viewport based on mode
-        let mut tui = match tui_mode {
+        let mut tui = match self.tui_mode {
             TuiMode::FullScreen => {
                 Tui::new().map_err(|e| napi::Error::from_reason(e.to_string()))?
             }
@@ -307,10 +290,8 @@ impl AppLifeCycle {
             }
         };
 
-        crossterm::terminal::enable_raw_mode()?;
-
         // Enter terminal with appropriate mode
-        tui.enter_with_mode(tui_mode)
+        tui.enter_with_mode(self.tui_mode)
             .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
         // Set panic hook (identical for both modes)
@@ -349,6 +330,8 @@ impl AppLifeCycle {
 
         debug!("✅ Initialized TUI App");
 
+        let tui_mode = self.tui_mode.clone();
+
         // Spawn unified async task (identical for both modes!)
         napi::tokio::spawn(async move {
             // Make variables mutable for mode switching
@@ -372,12 +355,12 @@ impl AppLifeCycle {
                     if let tui::Event::Key(key) = &event {
                         use crossterm::event::KeyCode;
 
-                        // Handle Q key in inline mode - switch back to full-screen instead of quitting
-                        if tui_mode == TuiMode::Inline && key.code == KeyCode::Char('q') {
-                            debug!("🔄 Q pressed in inline mode - switching to full-screen");
+                        // Handle ESC key in inline mode - switch back to full-screen instead of quitting
+                        if tui_mode == TuiMode::Inline && key.code == KeyCode::Esc {
+                            debug!("🔄 ESC pressed in inline mode - switching to full-screen");
 
                             // Get shared state and selected task from current app
-                            let (shared_state, selected_task) = app.with_app(|tui_app| {
+                            let (shared_state, _) = app.with_app(|tui_app| {
                                 (tui_app.get_shared_state(), tui_app.get_selected_task_name())
                             });
 
@@ -529,22 +512,6 @@ impl AppLifeCycle {
         });
 
         Ok(())
-    }
-
-    // Private method for full-screen TUI initialization
-    fn __init_fullscreen(
-        &self,
-        done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
-    ) -> napi::Result<()> {
-        self.__init_unified(done_callback, TuiMode::FullScreen)
-    }
-
-    // Private method for inline TUI initialization (updated to use unified logic)
-    fn __init_inline(
-        &self,
-        done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
-    ) -> napi::Result<()> {
-        self.__init_unified(done_callback, TuiMode::Inline)
     }
 
     #[napi]

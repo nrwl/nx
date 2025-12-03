@@ -5,9 +5,12 @@ use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use parking_lot::Mutex;
 use ratatui::layout::Size;
+use ratatui::style::Stylize;
+use ratatui::text::Span;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
+use tracing::debug;
 
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::{
@@ -25,7 +28,7 @@ use super::pty::PtyInstance;
 use super::tui;
 use super::tui_app::TuiApp;
 use super::tui_state::TuiState;
-use super::utils::normalize_newlines;
+use super::utils::{get_task_status_color, get_task_status_icon, write_output_to_pty};
 
 /// Simplified TUI application for inline viewport mode
 ///
@@ -159,32 +162,12 @@ impl InlineApp {
 
     /// Get the task ID of the currently running task (if any)
     fn get_current_running_task(&self) -> Option<String> {
-        let state = self.state.lock();
-        state
-            .get_task_status_map()
-            .iter()
-            .find(|(_, status)| **status == TaskStatus::InProgress)
-            .map(|(id, _)| id.clone())
+        self.state.lock().get_current_running_task()
     }
 
     /// Get count of completed tasks (any terminal state)
     fn get_completed_task_count(&self) -> usize {
-        let state = self.state.lock();
-        state
-            .get_task_status_map()
-            .values()
-            .filter(|status| {
-                matches!(
-                    status,
-                    TaskStatus::Success
-                        | TaskStatus::Failure
-                        | TaskStatus::Skipped
-                        | TaskStatus::LocalCache
-                        | TaskStatus::LocalCacheKeptExisting
-                        | TaskStatus::RemoteCache
-                )
-            })
-            .count()
+        self.state.lock().get_completed_task_count()
     }
 
     /// Calculate PTY dimensions for inline mode
@@ -195,7 +178,7 @@ impl InlineApp {
         // Get terminal size
         if let Ok((cols, rows)) = crossterm::terminal::size() {
             // Reserve space for status/progress bars (6 lines: 3+3 with borders)
-            let content_height = rows.saturating_sub(6);
+            let content_height = rows.saturating_sub(3);
             (content_height, cols)
         } else {
             // Fallback to reasonable defaults
@@ -205,13 +188,7 @@ impl InlineApp {
 
     /// Get names of tasks that failed
     fn get_failed_task_names(&self) -> Vec<String> {
-        let state = self.state.lock();
-        state
-            .get_task_status_map()
-            .iter()
-            .filter(|(_, status)| **status == TaskStatus::Failure)
-            .map(|(id, _)| id.clone())
-            .collect()
+        self.state.lock().get_failed_task_names()
     }
 
     /// Internal method to handle Action::EndCommand
@@ -327,6 +304,14 @@ impl InlineApp {
             }
         }
     }
+
+    fn dispatch_action(&self, action: Action) {
+        if let Some(tx) = &self.action_tx {
+            tx.send(action).unwrap_or_else(|e| {
+                debug!("Failed to dispatch action: {}", e);
+            });
+        }
+    }
 }
 
 impl TuiApp for InlineApp {
@@ -379,13 +364,57 @@ impl TuiApp for InlineApp {
                     }
                 }
 
-                // Normal key handling when countdown is not visible
-                match key.code {
-                    KeyCode::Char('c') if key.modifiers == KeyModifiers::CONTROL => {
-                        self.quit_immediately();
-                        return Ok(true);
+                if matches!(key.code, KeyCode::Char('q')) && key.modifiers.is_empty() {
+                    // Quit on 'q' or Esc when countdown is not active
+                    let state = self.state.lock();
+                    let all_tasks_completed = state.get_task_status_map().values().all(|status| {
+                        matches!(
+                            status,
+                            TaskStatus::Success
+                                | TaskStatus::Failure
+                                | TaskStatus::Skipped
+                                | TaskStatus::LocalCache
+                                | TaskStatus::LocalCacheKeptExisting
+                                | TaskStatus::RemoteCache
+                                | TaskStatus::Stopped // Consider stopped continuous tasks as completed for exit purposes
+                        )
+                    });
+                    drop(state);
+
+                    if all_tasks_completed {
+                        // If all tasks are done, quit immediately like Ctrl+C
+                        let mut state = self.state.lock();
+                        state.set_forced_shutdown(true);
+                        state.quit_immediately();
+                        drop(state);
+                    } else {
+                        // Otherwise, start the exit countdown to give the user the chance to change their mind in case of an accidental keypress
+                        self.state.lock().set_forced_shutdown(true);
+                        self.begin_exit_countdown();
                     }
-                    _ => {} // Ignore all other keys (including 'q' and Esc - handled by lifecycle)
+
+                    return Ok(true);
+                }
+
+                if matches!(key.code, KeyCode::Char('c')) && key.modifiers == KeyModifiers::CONTROL
+                {
+                    let mut state = self.state.lock();
+                    state
+                        .get_console_messenger()
+                        .as_ref()
+                        .and_then(|c| c.end_running_tasks());
+
+                    state.set_forced_shutdown(true);
+                    // Quit immediately
+                    state.quit_immediately();
+                    drop(state);
+                    return Ok(true);
+                }
+
+                if matches!(key.code, KeyCode::F(12)) {
+                    // Toggle debug mode on F12
+                    self.dispatch_action(Action::ToggleDebugMode);
+                    return Ok(false);
                 }
             }
             tui::Event::Render => action_tx.send(Action::Render)?,
@@ -548,13 +577,32 @@ impl TuiApp for InlineApp {
     }
 
     fn print_task_terminal_output(&mut self, task_id: String, output: String) {
+        // Check if a PTY instance already exists for this task
         let state = self.state.lock();
+        let has_pty = state.get_pty_instance(&task_id).is_some();
         if let Some(pty) = state.get_pty_instance(&task_id) {
-            // Add ANSI escape sequence to hide cursor at the end of output
-            let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
-            // Process output through PTY parser
-            let normalized_output = normalize_newlines(output_with_hidden_cursor.as_bytes());
-            pty.process_output(&normalized_output);
+            // Append output to the existing PTY instance to preserve scroll position
+            write_output_to_pty(&pty, &output);
+        }
+        drop(state); // Drop the lock before any mutable borrows
+
+        if !has_pty {
+            // Tasks run within a pseudo-terminal always have a pty instance and do not need a new one
+            // Tasks not run within a pseudo-terminal need a new pty instance to print output
+            let (rows, cols) = self.calculate_inline_pty_dimensions();
+            let pty = PtyInstance::non_interactive_with_dimensions(rows, cols);
+
+            write_output_to_pty(&pty, &output);
+
+            // Register the PTY instance in shared state
+            let pty = Arc::new(pty);
+            let mut state = self.state.lock();
+            state.register_pty_instance(task_id.clone(), pty);
+            drop(state);
+
+            // Initialize scrollback tracking for the new PTY
+            self.task_scrollback_lines.insert(task_id.clone(), 0);
+            self.task_last_rendered_scrollback.insert(task_id, 0);
         }
     }
 
@@ -703,9 +751,8 @@ impl InlineApp {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Min(10), // Terminal output (at least 10 lines, takes remaining space)
-                Constraint::Length(3), // Status bar (compact: 3 lines with border)
-                Constraint::Length(3), // Progress bar (compact: 3 lines with border)
+                Constraint::Fill(1), // Terminal output (at least 10 lines, takes remaining space)
+                Constraint::Length(1), // Status bar (compact: 3 lines with border)
             ])
             .split(area);
 
@@ -715,9 +762,6 @@ impl InlineApp {
         // Render status section below
         self.render_inline_status(f, chunks[1]);
 
-        // Render progress section at bottom
-        self.render_inline_progress(f, chunks[2]);
-
         // Render countdown popup as overlay if visible
         if self.countdown_popup.is_visible() {
             self.countdown_popup.render(f, area);
@@ -726,78 +770,47 @@ impl InlineApp {
 
     fn render_inline_status(&self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
         use crate::native::tui::theme::THEME;
-        use ratatui::layout::{Constraint, Direction, Layout};
-        use ratatui::style::Style;
-        use ratatui::widgets::{Block, Borders, Paragraph};
+        use ratatui::style::{Modifier, Style};
+        use ratatui::text::Line;
+        use ratatui::widgets::Paragraph;
 
+        // Get current task and its status for color coding
         let current_task = self
             .selected_task
             .clone()
             .or_else(|| self.get_current_running_task());
-        let status_text = if let Some(task_id) = current_task {
-            format!(" Running: {} ", task_id)
+
+        let (task_name, status, status_color) = if let Some(ref task_id) = current_task {
+            let state = self.state.lock();
+            let status = state
+                .get_task_status(task_id)
+                .unwrap_or(TaskStatus::NotStarted);
+            drop(state);
+            (task_id.clone(), status, get_task_status_color(status))
         } else {
-            " Idle ".to_string()
-        };
-
-        let chunks = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([
-                Constraint::Min(20),    // Status text
-                Constraint::Length(30), // Help text
-            ])
-            .split(area);
-
-        let status = Paragraph::new(status_text)
-            .style(Style::default().fg(THEME.primary_fg))
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(" Status ")
-                    .border_style(Style::default().fg(THEME.secondary_fg)),
-            );
-
-        let help = Paragraph::new(" Press 'q', Ctrl+C, or ESC to exit ")
-            .style(Style::default().fg(THEME.warning))
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(" Help ")
-                    .border_style(Style::default().fg(THEME.secondary_fg)),
-            );
-
-        f.render_widget(status, chunks[0]);
-        f.render_widget(help, chunks[1]);
-    }
-
-    fn render_inline_progress(&self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
-        use crate::native::tui::theme::THEME;
-        use ratatui::style::Style;
-        use ratatui::widgets::{Block, Borders, Gauge};
-
-        let completed_count = self.get_completed_task_count();
-        let state = self.state.lock();
-        let total_count = state.get_task_status_map().len();
-        drop(state);
-
-        let progress = if total_count > 0 {
-            (completed_count as f64 / total_count as f64) * 100.0
-        } else {
-            0.0
-        };
-
-        let gauge = Gauge::default()
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(" Progress ")
-                    .border_style(Style::default().fg(THEME.secondary_fg)),
+            (
+                String::from("Idle"),
+                TaskStatus::NotStarted,
+                THEME.secondary_fg,
             )
-            .gauge_style(Style::default().fg(THEME.success))
-            .percent(progress as u16)
-            .label(format!("{}/{} tasks", completed_count, total_count));
+        };
 
-        f.render_widget(gauge, area);
+        // Build status bar with NX logo and task name
+        let status_line = Line::from(vec![
+            Span::styled(
+                " NX ",
+                Style::default()
+                    .fg(THEME.primary_fg)
+                    .bg(status_color)
+                    .add_modifier(Modifier::BOLD),
+            )
+            .not_crossed_out(),
+            get_task_status_icon(status).not_crossed_out(),
+            Span::styled(task_name, Style::default().fg(status_color)).not_crossed_out(),
+        ]);
+
+        let status_bar = Paragraph::new(status_line).crossed_out();
+        f.render_widget(status_bar, area);
     }
 
     fn render_inline_main_content(&mut self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
