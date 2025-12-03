@@ -341,7 +341,7 @@ async function normalizeArgsMiddleware(
     const template = await determineTemplate(argv);
 
     // Old (start) vs new (start-v2) flows
-    const startPrefix = template === 'custom' ? 'start-v2' : 'start';
+    const startPrefix = getFlowVariant() === '1' ? 'start-v2' : 'start';
     await recordStat({
       nxVersion,
       command: 'create-nx-workspace',
