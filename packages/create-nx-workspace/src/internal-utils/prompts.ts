@@ -2,7 +2,11 @@ import * as yargs from 'yargs';
 import * as enquirer from 'enquirer';
 import * as chalk from 'chalk';
 
-import { MessageKey, messages } from '../utils/nx/ab-testing';
+import {
+  MessageKey,
+  messages,
+  shouldUseTemplateFlow,
+} from '../utils/nx/ab-testing';
 import { output } from '../utils/output';
 import { deduceDefaultBase } from '../utils/git/default-base';
 import {
@@ -29,6 +33,43 @@ export async function determineNxCloud(
   } else {
     return nxCloudPrompt('setupCI');
   }
+}
+
+export async function determineNxCloudV2(
+  parsedArgs: yargs.Arguments<{ nxCloud?: string; interactive?: boolean }>
+): Promise<'github' | 'skip'> {
+  // Provided via flag
+  if (parsedArgs.nxCloud) {
+    return parsedArgs.nxCloud === 'skip' ? 'skip' : 'github';
+  }
+
+  // Non-interactive mode
+  if (!parsedArgs.interactive || isCI()) {
+    return 'skip';
+  }
+
+  // Show simplified prompt
+  const { message, choices, initial, footer, hint } =
+    messages.getPrompt('setupNxCloudV2');
+
+  const promptConfig = {
+    name: 'nxCloud',
+    message,
+    type: 'autocomplete',
+    choices,
+    initial,
+  } as any; // types in enquirer are not up to date
+  if (footer) {
+    promptConfig.footer = () => footer;
+  }
+  if (hint) {
+    promptConfig.hint = () => hint;
+  }
+
+  const result = await enquirer.prompt<{ nxCloud: 'github' | 'skip' }>([
+    promptConfig,
+  ]);
+  return result.nxCloud;
 }
 
 export async function determineIfGitHubWillBeUsed(
@@ -74,6 +115,57 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
     }
     return a.NxCloud;
   });
+}
+
+export async function determineTemplate(
+  parsedArgs: yargs.Arguments<{
+    template?: string;
+    preset?: string;
+    interactive?: boolean;
+  }>
+): Promise<string | 'custom'> {
+  if (parsedArgs.template) return parsedArgs.template;
+  if (parsedArgs.preset) return 'custom';
+  if (!parsedArgs.interactive || isCI()) return 'custom';
+  // A/B test: shouldUseTemplateFlow() determines if user sees template or preset flow
+  if (!shouldUseTemplateFlow()) return 'custom';
+  const { template } = await enquirer.prompt<{ template: string }>([
+    {
+      name: 'template',
+      message: 'Which starter do you want to use?',
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'nrwl/empty-template',
+          message:
+            'TypeScript        (minimal TypeScript monorepo without projects)',
+        },
+        {
+          name: 'nrwl/typescript-template',
+          message:
+            'NPM Packages      (monorepo with TypeScript packages ready to publish)',
+        },
+        {
+          name: 'nrwl/react-template',
+          message:
+            'React             (fullstack monorepo with React and Express)',
+        },
+        {
+          name: 'nrwl/angular-template',
+          message:
+            'Angular           (fullstack monorepo with Angular and Express)',
+        },
+        {
+          name: 'custom',
+          message:
+            'Custom            (more options for frameworks, test runners, etc.)',
+        },
+      ],
+      initial: 0,
+    },
+  ]);
+
+  return template;
 }
 
 export async function determineAiAgents(
