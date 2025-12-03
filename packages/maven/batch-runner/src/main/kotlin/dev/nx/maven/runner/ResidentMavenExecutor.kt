@@ -186,9 +186,10 @@ class ResidentMavenExecutor(
 
     return try {
       // Build Maven CLI arguments: combine goals and other arguments
+      // Maven 4 parser requires goals BEFORE options
       val allArguments = ArrayList<String>()
-      allArguments.addAll(arguments)
       allArguments.addAll(goals)
+      allArguments.addAll(arguments)
 
       log.debug("Executing Maven with goals: $goals, arguments: $arguments from directory: $workingDir")
 
@@ -221,8 +222,11 @@ class ResidentMavenExecutor(
 
       // Check if parsing failed
       if (invokerRequest.parsingFailed()) {
-        log.error("Maven argument parsing failed")
+        val errorMessage = "Maven argument parsing failed for: ${allArguments.joinToString(" ")}"
+        log.error(errorMessage)
+        System.err.println("[ERROR] $errorMessage")
         outputStream.write("ERROR: Maven argument parsing failed\n".toByteArray())
+        outputStream.write("Arguments: ${allArguments.joinToString(" ")}\n".toByteArray())
         return 1
       }
 
@@ -243,6 +247,9 @@ class ResidentMavenExecutor(
         1
       } catch (e: Throwable) {
         log.error("EXCEPTION during invoker.invoke(): ${e.javaClass.simpleName}: ${e.message}", e)
+        // Also print to stderr so error is visible in test output
+        System.err.println("[ERROR] EXCEPTION during invoker.invoke(): ${e.javaClass.simpleName}: ${e.message}")
+        e.printStackTrace(System.err)
         e.printStackTrace(PrintStream(outputStream, true))
         1
       } finally {
