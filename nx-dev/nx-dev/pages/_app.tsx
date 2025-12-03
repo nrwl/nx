@@ -9,7 +9,7 @@ import '../styles/main.css';
 import Link from 'next/link';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 import GlobalScripts from '../app/global-scripts';
-import { WebinarNotifier } from 'nx-dev/ui-common/src';
+import { DynamicBanner } from '@nx/nx-dev-ui-common';
 
 export default function CustomApp({
   Component,
@@ -97,8 +97,7 @@ export default function CustomApp({
         Skip to content
       </Link>
       <Component {...pageProps} />
-      {/* <LiveStreamNotifier /> */}
-      <WebinarNotifier />
+      <DynamicBanner bannerUrl={process.env.NEXT_PUBLIC_BANNER_URL} />
 
       {/* All tracking scripts consolidated in GlobalScripts component */}
       <GlobalScripts

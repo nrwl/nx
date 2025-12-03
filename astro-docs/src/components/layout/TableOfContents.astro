@@ -1,7 +1,7 @@
 ---
 // recreated from https://github.com/withastro/starlight/blob/main/packages/starlight/components/TableOfContents.astro
 import TableOfContentsList from './TableOfContentsList.astro';
-import { GitHubStarWidget } from '@nx/nx-dev-ui-common';
+import { GitHubStarWidget } from '@nx/nx-dev-ui-common/src/lib/github-star-widget';
 
 const { toc } = Astro.locals.starlightRoute;
 const githubStarsCount = Astro.locals.githubStarsCount ?? 0;

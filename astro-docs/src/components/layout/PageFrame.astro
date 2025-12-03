@@ -1,11 +1,14 @@
 ---
 // Copied from https://github.com/withastro/starlight/blob/f14eb0c/packages/starlight/components/PageFrame.astro with modifications.
 import MobileMenuToggle from '@astrojs/starlight/components/MobileMenuToggle.astro';
-import { Footer, GitHubStarWidget  } from '@nx/nx-dev-ui-common';
-import { WebinarNotifier } from '@nx/nx-dev-ui-common/src/lib/webinar-notifier';
+import { Footer } from '@nx/nx-dev-ui-common/src/lib/footer';
+import { GitHubStarWidget } from '@nx/nx-dev-ui-common/src/lib/github-star-widget';
+import { DynamicBanner } from '@nx/nx-dev-ui-common/src/lib/banner/dynamic-banner';
 
 const { hasSidebar } = Astro.locals.starlightRoute;
 const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
+// Banner URL from environment - server-side access, passed as prop to client component
+const bannerUrl = import.meta.env.BANNER_URL;
 ---
 
 <div class="page sl-flex">
@@ -48,7 +51,7 @@ const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
   }
   <div class="main-frame"><slot /></div>
   <Footer disableThemeSwitcher={true} useDomainPrefix={true} className="dark:bg-slate-900" />
-  <WebinarNotifier client:load />
+  <DynamicBanner bannerUrl={bannerUrl} client:load />
 </div>
 
 <style>

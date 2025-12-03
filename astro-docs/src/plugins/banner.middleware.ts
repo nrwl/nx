@@ -2,7 +2,7 @@ import { defineRouteMiddleware } from '@astrojs/starlight/route-data';
 import { getCollection } from 'astro:content';
 
 export const onRequest = defineRouteMiddleware(async (context) => {
-  const { entry, sidebar } = context.locals.starlightRoute;
+  const { entry } = context.locals.starlightRoute;
   if (entry.data.banner) {
     return;
   }
