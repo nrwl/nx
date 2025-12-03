@@ -11,7 +11,6 @@ import {
   addProviderToAppConfig,
   addProviderToModule,
 } from '../../../utils/nx-devkit/ast-utils';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 
 let tsModule: typeof import('typescript');
@@ -72,29 +71,20 @@ export function addHydration(tree: Tree, options: NormalizedGeneratorOptions) {
     );
   };
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-
   sourceFile = addImport(
     sourceFile,
     'provideClientHydration',
     '@angular/platform-browser',
     pathToClientConfigFile
   );
+  sourceFile = addImport(
+    sourceFile,
+    'withEventReplay',
+    '@angular/platform-browser',
+    pathToClientConfigFile
+  );
 
-  if (angularMajorVersion >= 19) {
-    sourceFile = addImport(
-      sourceFile,
-      'withEventReplay',
-      '@angular/platform-browser',
-      pathToClientConfigFile
-    );
-  }
-
-  const provider =
-    angularMajorVersion >= 19
-      ? 'provideClientHydration(withEventReplay())'
-      : 'provideClientHydration()';
-
+  const provider = 'provideClientHydration(withEventReplay())';
   if (options.standalone) {
     addProviderToAppConfig(tree, pathToClientConfigFile, provider);
   } else {

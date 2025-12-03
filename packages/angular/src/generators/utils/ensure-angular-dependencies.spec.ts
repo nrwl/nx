@@ -13,7 +13,7 @@ describe('ensureAngularDependencies', () => {
 
   it('should add angular dependencies when not installed', () => {
     // ACT
-    ensureAngularDependencies(tree);
+    ensureAngularDependencies(tree, true);
 
     // ASSERT
     const { dependencies, devDependencies } = readJson(tree, 'package.json');
@@ -25,7 +25,6 @@ describe('ensureAngularDependencies', () => {
     expect(dependencies['@angular/router']).toBe(angularVersion);
     expect(dependencies['rxjs']).toBeDefined();
     expect(dependencies['tslib']).toBeDefined();
-    expect(dependencies['zone.js']).toBeDefined();
     expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
     expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
     expect(devDependencies['@angular/language-service']).toBe(angularVersion);
@@ -33,23 +32,31 @@ describe('ensureAngularDependencies', () => {
       angularDevkitVersion
     );
     expect(devDependencies['@schematics/angular']).toBe(angularDevkitVersion);
+    expect(dependencies['zone.js']).toBeUndefined();
+  });
+
+  it('should add zone.js when zoneless is false', () => {
+    ensureAngularDependencies(tree, false);
+
+    const { dependencies } = readJson(tree, 'package.json');
+    expect(dependencies['zone.js']).toBeDefined();
   });
 
   it('should add both packages for builders when angular version is less than 20', () => {
     updateJson(tree, 'package.json', (json) => ({
       ...json,
-      dependencies: { ...json.dependencies, '@angular/core': '~18.0.0' },
+      dependencies: { ...json.dependencies, '@angular/core': '~19.0.0' },
     }));
 
-    ensureAngularDependencies(tree);
+    ensureAngularDependencies(tree, true);
 
     const { devDependencies } = readJson(tree, 'package.json');
 
     expect(devDependencies['@angular/build']).toBe(
-      backwardCompatibleVersions.angularV18.angularDevkitVersion
+      backwardCompatibleVersions[19].angularDevkitVersion
     );
     expect(devDependencies['@angular-devkit/build-angular']).toBe(
-      backwardCompatibleVersions.angularV18.angularDevkitVersion
+      backwardCompatibleVersions[19].angularDevkitVersion
     );
   });
 
@@ -68,7 +75,7 @@ describe('ensureAngularDependencies', () => {
     }));
 
     // ACT
-    ensureAngularDependencies(tree);
+    ensureAngularDependencies(tree, true);
 
     // ASSERT
     const { devDependencies } = readJson(tree, 'package.json');
@@ -93,7 +100,7 @@ describe('ensureAngularDependencies', () => {
     }));
 
     // ACT
-    ensureAngularDependencies(tree);
+    ensureAngularDependencies(tree, true);
 
     // ASSERT
     const { dependencies, devDependencies } = readJson(tree, 'package.json');
@@ -114,10 +121,10 @@ describe('ensureAngularDependencies', () => {
     }));
 
     // ACT
-    ensureAngularDependencies(tree);
+    ensureAngularDependencies(tree, true);
 
     // ASSERT
-    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+    const { dependencies } = readJson(tree, 'package.json');
 
     expect(dependencies['@angular/core']).toBe('~15.0.0');
     expect(dependencies['@angular/common']).toBeUndefined();

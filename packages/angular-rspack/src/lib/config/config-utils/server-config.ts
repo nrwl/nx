@@ -79,6 +79,7 @@ export async function getServerConfig(
           ],
           options: {
             angularSSRInstalled: isPackageInstalled(root, '@angular/ssr'),
+            isZoneJsInstalled: isPackageInstalled(root, 'zone.js'),
           },
         },
         ...(defaultConfig.module?.rules ?? []),

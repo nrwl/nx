@@ -99,10 +99,9 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "vitest", "none"],
-      "description": "Test runner to use for unit tests.",
-      "x-prompt": "Which unit test runner would you like to use?",
-      "default": "jest"
+      "enum": ["vitest-angular", "vitest-analog", "jest", "none"],
+      "description": "Test runner to use for unit tests. `vitest-angular` uses the `@angular/build:unit-test` executor (requires Angular v21+ and the `esbuild` bundler). `vitest-analog` uses AnalogJS-based setup with `@nx/vitest`. It defaults to `vitest-angular` when using the `esbuild` bundler for Angular versions >= 21.0.0, `vitest-analog` when using other bundlers on Angular >= 21.0.0, otherwise `jest`.",
+      "x-prompt": "Which unit test runner would you like to use?"
     },
     "e2eTestRunner": {
       "type": "string",
@@ -178,6 +177,10 @@
     },
     "serverRouting": {
       "description": "Creates a server application using the Server Routing and App Engine APIs for application using the `application` builder (Developer Preview). _Note: this is only supported in Angular versions 19.x.x_. From Angular 20 onwards, SSR will always enable server routing when using the `application` builder.",
+      "type": "boolean"
+    },
+    "zoneless": {
+      "description": "Generate an application that does not use `zone.js`. It defaults to `true`. _Note: this is only supported in Angular versions >= 21.0.0_",
       "type": "boolean"
     }
   },

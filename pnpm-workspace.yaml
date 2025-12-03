@@ -9,78 +9,87 @@ packages:
   - 'examples/angular-rspack/module-federation/host'
   - 'examples/angular-rspack/module-federation/remote'
   - 'packages/nx/native-packages/*'
-
 catalog:
-  '@zkochan/js-yaml': 0.0.7
-  'chalk': ^4.1.0
-  'enquirer': ~2.3.6
-  'minimatch': 9.0.3
-  'picomatch': 4.0.2
-  'picocolors': ^1.1.0
-  'semver': ^7.6.3
-  'tinyglobby': ^0.2.12
-  'yargs': ^17.6.2
-  'yargs-parser': 21.1.1
-
+  '@zkochan/js-yaml': '0.0.7'
+  chalk: '^4.1.0'
+  enquirer: '~2.3.6'
+  minimatch: '9.0.3'
+  picomatch: '4.0.2'
+  picocolors: '^1.1.0'
+  semver: '^7.6.3'
+  tinyglobby: '^0.2.12'
+  yargs: '^17.6.2'
+  yargs-parser: '21.1.1'
 catalogs:
   angular:
-    '@angular-devkit/architect': ~0.2003.0
-    '@angular-devkit/build-angular': ~20.3.0
-    '@angular-devkit/core': ~20.3.0
-    '@angular-devkit/schematics': ~20.3.0
-    '@angular/build': ~20.3.0
-    '@angular/cli': ~20.3.0
-    '@angular/common': ~20.3.0
-    '@angular/compiler': ~20.3.0
-    '@angular/compiler-cli': ~20.3.0
-    '@angular/core': ~20.3.0
-    '@angular/localize': ~20.3.0
-    '@angular/platform-browser': ~20.3.0
-    '@angular/platform-server': ~20.3.0
-    '@angular/router': ~20.3.0
-    '@angular/ssr': ~20.3.0
-    '@schematics/angular': ~20.3.0
-    'ng-packagr': ~20.3.0
+    '@angular-devkit/architect': '~0.2100.0'
+    '@angular-devkit/build-angular': '~21.0.0'
+    '@angular-devkit/core': '~21.0.0'
+    '@angular-devkit/schematics': '~21.0.0'
+    '@angular/build': '~21.0.0'
+    '@angular/cli': '~21.0.0'
+    '@angular/common': '~21.0.0'
+    '@angular/compiler': '~21.0.0'
+    '@angular/compiler-cli': '~21.0.0'
+    '@angular/core': '~21.0.0'
+    '@angular/localize': '~21.0.0'
+    '@angular/platform-browser': '~21.0.0'
+    '@angular/platform-server': '~21.0.0'
+    '@angular/router': '~21.0.0'
+    '@angular/ssr': '~21.0.0'
+    '@schematics/angular': '~21.0.0'
+    ng-packagr: '~21.0.0'
+    zone.js: '~0.16.0'
   angular-supported-versions:
-    '@angular-devkit/build-angular': '>= 18.0.0 < 21.0.0'
-    '@angular-devkit/core': '>= 18.0.0 < 21.0.0'
-    '@angular-devkit/schematics': '>= 18.0.0 < 21.0.0'
-    '@angular/build': '>= 18.0.0 < 21.0.0'
-    '@schematics/angular': '>= 18.0.0 < 21.0.0'
-    'ng-packagr': '>= 18.0.0 < 21.0.0'
-    'rxjs': '^6.5.3 || ^7.5.0'
+    '@angular-devkit/build-angular': '>= 19.0.0 < 22.0.0'
+    '@angular-devkit/core': '>= 19.0.0 < 22.0.0'
+    '@angular-devkit/schematics': '>= 19.0.0 < 22.0.0'
+    '@angular/build': '>= 19.0.0 < 22.0.0'
+    '@angular/compiler-cli': '>= 19.0.0 < 22.0.0'
+    '@angular/localize': '>= 19.0.0 < 22.0.0'
+    '@angular/platform-server': '>= 19.0.0 < 22.0.0'
+    '@angular/ssr': '>= 19.0.0 < 22.0.0'
+    '@schematics/angular': '>= 19.0.0 < 22.0.0'
+    ng-packagr: '>= 19.0.0 < 22.0.0'
+    rxjs: '^6.5.3 || ^7.5.0'
+    zone.js: '~0.15.0 || ~0.16.0'
+  eslint:
+    '@angular-eslint/eslint-plugin': '^21.0.1'
+    '@angular-eslint/eslint-plugin-template': '^21.0.1'
+    '@angular-eslint/template-parser': '^21.0.1'
+    'angular-eslint': '^21.0.1'
   jest:
-    '@jest/reporters': ^30.0.2
-    '@jest/test-result': ^30.0.2
-    '@jest/types': ^30.0.1
-    '@types/jest': 30.0.0
-    'babel-jest': ^30.0.2
-    'identity-obj-proxy': 3.0.0
-    'jest': ^30.0.2
-    'jest-config': ^30.0.2
-    'jest-diff': ^30.0.2
-    'jest-environment-jsdom': ^30.0.2
-    'jest-environment-node': ^30.0.2
-    'jest-resolve': ^30.0.2
-    'jest-runtime': ^30.0.2
-    'jest-util': ^30.0.2
-    'ts-jest': ^29.4.0
+    '@jest/reporters': '^30.0.2'
+    '@jest/test-result': '^30.0.2'
+    '@jest/types': '^30.0.1'
+    '@types/jest': '30.0.0'
+    babel-jest: '^30.0.2'
+    identity-obj-proxy: '3.0.0'
+    jest: '^30.0.2'
+    jest-config: '^30.0.2'
+    jest-diff: '^30.0.2'
+    jest-environment-jsdom: '^30.0.2'
+    jest-environment-node: '^30.0.2'
+    jest-resolve: '^30.0.2'
+    jest-runtime: '^30.0.2'
+    jest-util: '^30.0.2'
+    ts-jest: '^29.4.0'
   react:
-    '@types/react': 18.3.1
-    '@types/react-dom': 18.3.1
-    react: 18.3.1
-    react-dom: 18.3.1
+    '@types/react': '18.3.1'
+    '@types/react-dom': '18.3.1'
+    react: '18.3.1'
+    react-dom: '18.3.1'
   rspack:
-    '@rspack/cli': ^1.5.2
-    '@rspack/core': ^1.5.2
-    '@rspack/dev-server': ^1.1.4
-    '@rspack/plugin-react-refresh': ^1.0.0
-    'ts-checker-rspack-plugin': ^1.1.1
+    '@rspack/cli': '^1.5.2'
+    '@rspack/core': '^1.5.2'
+    '@rspack/dev-server': '^1.1.4'
+    '@rspack/plugin-react-refresh': '^1.0.0'
+    ts-checker-rspack-plugin: '^1.1.1'
   typescript:
-    '@phenomnomnominal/tsquery': ~5.0.1
-    '@types/node': ^20.19.10
-    'ts-morph': ^24.0.0
-    'ts-node': 10.9.1
-    'tsconfig-paths': ^4.1.2
-    'tslib': ^2.3.0
-    'typescript': ~5.9.2
+    '@phenomnomnominal/tsquery': '~5.0.1'
+    '@types/node': '^20.19.10'
+    ts-morph: '^24.0.0'
+    ts-node: '10.9.1'
+    tsconfig-paths: '^4.1.2'
+    tslib: '^2.3.0'
+    typescript: '~5.9.2'
