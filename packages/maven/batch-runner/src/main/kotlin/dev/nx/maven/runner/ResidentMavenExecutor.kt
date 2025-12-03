@@ -189,9 +189,12 @@ class ResidentMavenExecutor(
       // Maven 4 parser requires goals BEFORE options
       val allArguments = ArrayList<String>()
       allArguments.addAll(goals)
-      allArguments.addAll(arguments)
+      // Filter out arguments incompatible with embedded mode in Maven 4
+      // -B (batch mode) and -q (quiet) are implicit/incompatible in embedded mode
+      val incompatibleArgs = setOf("-B", "--batch-mode", "-q", "--quiet")
+      allArguments.addAll(arguments.filter { it !in incompatibleArgs })
 
-      log.debug("Executing Maven with goals: $goals, arguments: $arguments from directory: $workingDir")
+      log.debug("Executing Maven with goals: $goals, arguments: $arguments (filtered: ${arguments.filter { it in incompatibleArgs }}) from directory: $workingDir")
 
       // Create a message builder factory for formatting output
       val messageBuilderFactory: MessageBuilderFactory = JLineMessageBuilderFactory()
