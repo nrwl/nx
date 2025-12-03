@@ -13,6 +13,7 @@ use tokio::sync::mpsc::UnboundedSender;
 use tracing::debug;
 
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
+use crate::native::tui::utils::get_task_status_style;
 use crate::native::{
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
     tasks::types::{Task, TaskGraph, TaskResult},
@@ -28,7 +29,7 @@ use super::pty::PtyInstance;
 use super::tui;
 use super::tui_app::TuiApp;
 use super::tui_state::TuiState;
-use super::utils::{get_task_status_color, get_task_status_icon, write_output_to_pty};
+use super::utils::{get_task_status_icon, write_output_to_pty};
 
 /// Simplified TUI application for inline viewport mode
 ///
@@ -780,33 +781,26 @@ impl InlineApp {
             .clone()
             .or_else(|| self.get_current_running_task());
 
-        let (task_name, status, status_color) = if let Some(ref task_id) = current_task {
+        let (task_name, status, status_style) = if let Some(ref task_id) = current_task {
             let state = self.state.lock();
             let status = state
                 .get_task_status(task_id)
                 .unwrap_or(TaskStatus::NotStarted);
             drop(state);
-            (task_id.clone(), status, get_task_status_color(status))
+            (task_id.clone(), status, get_task_status_style(status))
         } else {
             (
                 String::from("Idle"),
                 TaskStatus::NotStarted,
-                THEME.secondary_fg,
+                get_task_status_style(TaskStatus::NotStarted),
             )
         };
 
         // Build status bar with NX logo and task name
         let status_line = Line::from(vec![
-            Span::styled(
-                " NX ",
-                Style::default()
-                    .fg(THEME.primary_fg)
-                    .bg(status_color)
-                    .add_modifier(Modifier::BOLD),
-            )
-            .not_crossed_out(),
+            Span::styled(" NX ", status_style.add_modifier(Modifier::BOLD)).not_crossed_out(),
             get_task_status_icon(status).not_crossed_out(),
-            Span::styled(task_name, Style::default().fg(status_color)).not_crossed_out(),
+            Span::styled(task_name, status_style).not_crossed_out(),
         ]);
 
         let status_bar = Paragraph::new(status_line).crossed_out();

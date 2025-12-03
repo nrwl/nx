@@ -72,7 +72,7 @@ pub fn write_output_to_pty(pty: &PtyInstance, output: &str) {
 }
 
 use super::theme::THEME;
-use ratatui::style::{Color, Modifier, Style};
+use ratatui::style::{Modifier, Style};
 use ratatui::text::Span;
 
 /// Returns the base style (with foreground color) for a given task status.
@@ -94,22 +94,6 @@ pub fn get_task_status_style(status: TaskStatus) -> Style {
         TaskStatus::InProgress | TaskStatus::Shared => THEME.info,
         TaskStatus::NotStarted | TaskStatus::Stopped => THEME.secondary_fg,
     })
-}
-
-/// Returns the foreground color for a given task status.
-///
-/// Use this when you only need the color, not a full Style.
-pub fn get_task_status_color(status: TaskStatus) -> Color {
-    match status {
-        TaskStatus::Success
-        | TaskStatus::LocalCacheKeptExisting
-        | TaskStatus::LocalCache
-        | TaskStatus::RemoteCache => THEME.success,
-        TaskStatus::Failure => THEME.error,
-        TaskStatus::Skipped => THEME.warning,
-        TaskStatus::InProgress | TaskStatus::Shared => THEME.info,
-        TaskStatus::NotStarted | TaskStatus::Stopped => THEME.secondary_fg,
-    }
 }
 
 /// Returns a styled icon Span for a given task status.
