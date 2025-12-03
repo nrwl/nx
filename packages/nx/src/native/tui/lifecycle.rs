@@ -307,6 +307,8 @@ impl AppLifeCycle {
             }
         };
 
+        crossterm::terminal::enable_raw_mode()?;
+
         // Enter terminal with appropriate mode
         tui.enter_with_mode(tui_mode)
             .map_err(|e| napi::Error::from_reason(e.to_string()))?;

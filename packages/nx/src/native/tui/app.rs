@@ -255,14 +255,6 @@ impl App {
         is_task_continuous(state.task_graph(), task_id)
     }
 
-    fn should_set_interactive_by_default(&self, task_id: &str) -> bool {
-        let state = self.state.lock();
-        matches!(state.run_mode(), RunMode::RunOne)
-            && state
-                .get_pty_instance(task_id)
-                .is_some_and(|pty| pty.can_be_interactive())
-    }
-
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
         // Check if a PTY instance already exists for this task
         let state = self.state.lock();

@@ -16,8 +16,10 @@ use crate::native::{
 };
 
 use super::action::Action;
+use super::components::countdown_popup::CountdownPopup;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
+use super::graph_utils::get_task_count;
 use super::lifecycle::{RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
@@ -55,6 +57,8 @@ pub struct InlineApp {
     /// The task whose output should be displayed (required for inline mode)
     /// This is set during mode switching or defaults to the first running task
     selected_task: Option<String>,
+    /// Countdown popup for auto-exit (shared with full-screen mode)
+    countdown_popup: CountdownPopup,
 
     // === Scrollback Rendering ===
     /// Track scrollback line count per task for incremental rendering
@@ -106,6 +110,7 @@ impl InlineApp {
             state,
             action_tx: None,
             selected_task: None, // Will auto-select first running task on render
+            countdown_popup: CountdownPopup::new(),
             task_scrollback_lines: HashMap::new(),
             task_last_rendered_scrollback: HashMap::new(),
             scrollback_render_counter: 0,
@@ -129,6 +134,7 @@ impl InlineApp {
             state,
             action_tx: None,
             selected_task, // Use the provided selection from mode switch
+            countdown_popup: CountdownPopup::new(),
             task_scrollback_lines: HashMap::new(),
             task_last_rendered_scrollback: HashMap::new(),
             scrollback_render_counter: 0,
@@ -197,6 +203,106 @@ impl InlineApp {
         }
     }
 
+    /// Get names of tasks that failed
+    fn get_failed_task_names(&self) -> Vec<String> {
+        let state = self.state.lock();
+        state
+            .get_task_status_map()
+            .iter()
+            .filter(|(_, status)| **status == TaskStatus::Failure)
+            .map(|(id, _)| id.clone())
+            .collect()
+    }
+
+    /// Internal method to handle Action::EndCommand
+    ///
+    /// This checks whether auto-exit should happen and either starts the countdown
+    /// or does nothing (if user has interacted or auto-exit is disabled).
+    fn handle_end_command(&mut self) {
+        use tracing::debug;
+
+        debug!("📋 InlineApp::handle_end_command() called");
+
+        // If the user has interacted with the app or auto-exit is disabled, do nothing
+        let state = self.state.lock();
+        let user_has_interacted = state.has_user_interacted();
+        let should_exit_automatically = state.tui_config().auto_exit.should_exit_automatically();
+        let task_graph_ref = state.task_graph();
+        let task_count = get_task_count(task_graph_ref);
+        drop(state);
+
+        debug!(
+            "  user_has_interacted: {}, should_exit_automatically: {}, task_count: {}",
+            user_has_interacted, should_exit_automatically, task_count
+        );
+
+        if user_has_interacted || !should_exit_automatically {
+            debug!("  ❌ Auto-exit blocked: user interacted or auto-exit disabled");
+            return;
+        }
+
+        let failed_task_names = self.get_failed_task_names();
+        debug!("  failed_task_count: {}", failed_task_names.len());
+
+        // If there are more than 1 failed tasks, do not auto-exit
+        // (In inline mode, we can't focus a specific task, so just skip auto-exit)
+        if failed_task_names.len() > 1 {
+            debug!("  ❌ Auto-exit blocked: multiple failed tasks");
+            return;
+        }
+
+        if task_count > 1 {
+            debug!("  ⏱️  Starting countdown (multi-task)");
+            self.begin_exit_countdown()
+        } else {
+            debug!("  🚪 Quitting immediately (single task)");
+            self.quit();
+        }
+    }
+
+    /// Empty quit method (actual quit is handled by quit_immediately)
+    fn quit(&mut self) {
+        self.quit_immediately();
+    }
+
+    /// Start the exit countdown
+    ///
+    /// Shows the countdown popup and schedules the quit timer in shared state.
+    fn begin_exit_countdown(&mut self) {
+        use tracing::debug;
+
+        let countdown_duration = self.state.lock().tui_config().auto_exit.countdown_seconds();
+        debug!(
+            "⏱️  InlineApp::begin_exit_countdown() - duration: {:?}",
+            countdown_duration
+        );
+
+        // If countdown is disabled, exit immediately
+        if countdown_duration.is_none() {
+            debug!("  🚪 Countdown disabled, quitting immediately");
+            self.quit();
+            return;
+        }
+
+        // Otherwise, show the countdown popup for the configured duration
+        let countdown_duration = countdown_duration.unwrap() as u64;
+        debug!(
+            "  📊 Starting countdown popup for {} seconds",
+            countdown_duration
+        );
+        self.countdown_popup.start_countdown(countdown_duration);
+
+        debug!("  ⏰ Scheduling quit timer");
+        self.state
+            .lock()
+            .schedule_quit(std::time::Duration::from_secs(countdown_duration));
+
+        debug!(
+            "  ✅ Countdown started, popup visible: {}",
+            self.countdown_popup.is_visible()
+        );
+    }
+
     /// Resize all PTY instances to match current inline dimensions
     ///
     /// Called when switching to inline mode via init().
@@ -237,14 +343,49 @@ impl TuiApp for InlineApp {
                 return Ok(true);
             }
             tui::Event::Key(key) => {
-                // Simple quit handling - only Ctrl+C
-                // Note: 'q' is handled at the lifecycle level to switch back to full-screen
+                // If countdown popup is visible, handle countdown-specific keys
+                if self.countdown_popup.is_visible() {
+                    match key.code {
+                        KeyCode::Char('q') | KeyCode::Esc => {
+                            // Quit immediately on 'q' or Esc when countdown is active
+                            self.quit_immediately();
+                            return Ok(true);
+                        }
+                        KeyCode::Char('c') if key.modifiers == KeyModifiers::CONTROL => {
+                            // Quit immediately on Ctrl+C
+                            self.quit_immediately();
+                            return Ok(true);
+                        }
+                        KeyCode::Up | KeyCode::Char('k')
+                            if self.countdown_popup.is_scrollable() =>
+                        {
+                            // Scroll up in countdown popup if scrollable
+                            self.countdown_popup.scroll_up();
+                            return Ok(false);
+                        }
+                        KeyCode::Down | KeyCode::Char('j')
+                            if self.countdown_popup.is_scrollable() =>
+                        {
+                            // Scroll down in countdown popup if scrollable
+                            self.countdown_popup.scroll_down();
+                            return Ok(false);
+                        }
+                        _ => {
+                            // Any other key cancels the countdown
+                            self.countdown_popup.cancel_countdown();
+                            self.state.lock().cancel_quit();
+                            return Ok(false);
+                        }
+                    }
+                }
+
+                // Normal key handling when countdown is not visible
                 match key.code {
                     KeyCode::Char('c') if key.modifiers == KeyModifiers::CONTROL => {
                         self.quit_immediately();
                         return Ok(true);
                     }
-                    _ => {} // Ignore all other keys (including 'q' and Esc)
+                    _ => {} // Ignore all other keys (including 'q' and Esc - handled by lifecycle)
                 }
             }
             tui::Event::Render => action_tx.send(Action::Render)?,
@@ -284,10 +425,7 @@ impl TuiApp for InlineApp {
                 }
             }
             Action::EndCommand => {
-                // Handle auto-exit logic here if needed
-                // Call done callback
-                let state = self.state.lock();
-                state.call_done_callback();
+                self.handle_end_command();
             }
             _ => {} // Ignore other actions (including Resize - ratatui doesn't handle it properly for inline viewports)
         }
@@ -331,6 +469,11 @@ impl TuiApp for InlineApp {
             state.record_task_start(task.id.clone());
             state.update_task_status(task.id.clone(), TaskStatus::InProgress);
         }
+        drop(state);
+
+        // Auto-select the first task to display its output
+        // This ensures we show output even after the task completes
+        self.selected_task = Some(tasks[0].id.clone());
     }
 
     fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
@@ -353,9 +496,17 @@ impl TuiApp for InlineApp {
     }
 
     fn end_command(&mut self) {
-        // Call done callback
         let state = self.state.lock();
-        state.call_done_callback();
+        state
+            .get_console_messenger()
+            .as_ref()
+            .and_then(|c| c.end_running_tasks());
+        drop(state);
+
+        // Dispatch Action::EndCommand to trigger auto-exit logic
+        if let Some(action_tx) = &self.action_tx {
+            let _ = action_tx.send(Action::EndCommand);
+        }
     }
 
     // === PTY Registration ===
@@ -566,6 +717,11 @@ impl InlineApp {
 
         // Render progress section at bottom
         self.render_inline_progress(f, chunks[2]);
+
+        // Render countdown popup as overlay if visible
+        if self.countdown_popup.is_visible() {
+            self.countdown_popup.render(f, area);
+        }
     }
 
     fn render_inline_status(&self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
@@ -801,7 +957,7 @@ mod tests {
         )));
 
         // Create app with existing state
-        let app = InlineApp::with_state(existing_state.clone()).unwrap();
+        let app = InlineApp::with_state(existing_state.clone(), None).unwrap();
 
         // Verify it uses the same state
         assert!(Arc::ptr_eq(&app.state, &existing_state));
@@ -1218,8 +1374,8 @@ mod integration_tests {
         )));
 
         // Create two apps with same state
-        let mut app1 = InlineApp::with_state(state.clone()).unwrap();
-        let app2 = InlineApp::with_state(state.clone()).unwrap();
+        let mut app1 = InlineApp::with_state(state.clone(), None).unwrap();
+        let app2 = InlineApp::with_state(state.clone(), None).unwrap();
 
         // Modify through app1
         app1.update_task_status(String::from("shared"), TaskStatus::Success);

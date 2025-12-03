@@ -29,6 +29,12 @@ export const yargsRunManyCommand: CommandModule = {
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
         await import('./run-many').then((m) => m.runMany(withOverrides(args)));
+        await new Promise<void>((resolve, reject) => {
+          setTimeout(() => {
+            require('why-is-node-running')();
+            resolve();
+          }, 30_000);
+        });
       }
     );
     process.exit(exitCode);

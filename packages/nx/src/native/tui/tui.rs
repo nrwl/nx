@@ -8,8 +8,9 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 use futures::{FutureExt, StreamExt};
-use ratatui::backend::CrosstermBackend as Backend;
+use ratatui::{backend::CrosstermBackend as Backend, prelude::Backend as _};
 use std::{
+    io::Write,
     ops::{Deref, DerefMut},
     time::Duration,
 };
@@ -38,7 +39,7 @@ pub enum Event {
 }
 
 pub struct Tui {
-    pub terminal: ratatui::Terminal<Backend<std::io::Stderr>>,
+    pub terminal: Option<ratatui::Terminal<Backend<std::io::Stderr>>>,
     pub task: JoinHandle<()>,
     pub cancellation_token: CancellationToken,
     pub event_rx: UnboundedReceiver<Event>,
@@ -62,11 +63,11 @@ impl Tui {
         let tick_rate = 10.0;
         let frame_rate = 60.0;
         let backend = Backend::new(std::io::stderr());
-        let terminal = if let Some(opts) = options {
+        let terminal = Some(if let Some(opts) = options {
             ratatui::Terminal::with_options(backend, opts)?
         } else {
             ratatui::Terminal::new(backend)?
-        };
+        });
 
         let (event_tx, event_rx) = mpsc::unbounded_channel();
         let cancellation_token = CancellationToken::new();
@@ -106,18 +107,24 @@ impl Tui {
             _event_tx.send(Event::Init).unwrap();
             debug!("Start Listening for Crossterm Events");
             loop {
+                let tick_delay = tick_interval.tick();
+                let render_delay = render_interval.tick();
                 let crossterm_event = reader.next().fuse();
+                // if _cancellation_token.is_cancelled() {
+                //     debug!("Cancellation token triggered, exiting event loop");
+                //     break;
+                // }
                 tokio::select! {
                   _ = _cancellation_token.cancelled() => {
                     debug!("Got a cancellation token");
                     break;
                   }
-                  _ = tick_interval.tick() => {
-                      trace!("⏱️  Sending Tick event");
+                  _ = tick_delay => {
+                    //   trace!("⏱️  Sending Tick event");
                       _event_tx.send(Event::Tick).expect("cannot send event");
                   },
-                  _ = render_interval.tick() => {
-                      trace!("🎨 Sending Render event");
+                  _ = render_delay => {
+                    //   trace!("🎨 Sending Render event");
                       _event_tx.send(Event::Render).expect("cannot send event");
                   },
                   maybe_event = crossterm_event => {
@@ -155,7 +162,7 @@ impl Tui {
                       None => {
                         debug!("Crossterm Stream Stoped");
                         break;
-                    },
+                      },
                     }
                   },
                 }
@@ -168,16 +175,19 @@ impl Tui {
         debug!("🛑 Stopping TUI event loop");
         self.cancel();
         let mut counter = 0;
+        let mut warned = false;
         while !self.task.is_finished() {
             std::thread::sleep(Duration::from_millis(1));
             counter += 1;
             if counter > 50 {
-                debug!("⚠️  Event loop not finished after 50ms, aborting task");
+                if !warned {
+                    warned = true;
+                    debug!("⚠️  Event loop not finished after 50ms, aborting task");
+                }
                 self.task.abort();
             }
-            if counter > 500 {
-                // Increased from 100ms to 500ms to give more time
-                debug!("❌ Failed to stop event loop after 500ms - forcing break");
+            if counter > 100 {
+                debug!("❌ Failed to stop event loop after 100ms - forcing break");
                 break;
             }
         }
@@ -197,6 +207,7 @@ impl Tui {
         // Ensure the theme is set before entering raw mode because it won't work properly once we're in raw mode
         let _ = THEME.is_dark_mode;
         debug!("Enabling Raw Mode for {:?} mode", mode);
+
         crossterm::terminal::enable_raw_mode()?;
 
         match mode {
@@ -213,17 +224,7 @@ impl Tui {
         Ok(())
     }
 
-    pub fn exit(&mut self) -> Result<()> {
-        // Make exit idempotent - only run once
-        // swap returns the OLD value, so if it was already true, we've already exited
-        let was_already_exited = self.exited.swap(true, std::sync::atomic::Ordering::SeqCst);
-        if was_already_exited {
-            debug!("⚠️  exit() called but already exited - skipping");
-            return Ok(());
-        }
-
-        debug!("🚪 Exiting TUI");
-        self.stop()?;
+    pub fn restore_terminal(&mut self) -> Result<()> {
         if crossterm::terminal::is_raw_mode_enabled()? {
             self.flush()?;
 
@@ -235,11 +236,20 @@ impl Tui {
                 TuiMode::Inline => {
                     // For inline mode, just show cursor (no alternate screen to leave)
                     execute!(std::io::stderr(), cursor::Show)?;
+                    // Ensure cursor is actually shown by flushing stderr
+                    std::io::stderr().flush()?;
                 }
             }
 
             crossterm::terminal::disable_raw_mode()?;
         }
+        Ok(())
+    }
+
+    pub fn exit(&mut self) -> Result<()> {
+        debug!("🚪 Exiting TUI");
+        self.stop()?;
+
         debug!("✅ TUI exit complete");
         Ok(())
     }
@@ -261,96 +271,146 @@ impl Tui {
     /// # Returns
     /// * `Ok(())` if the switch was successful
     /// * `Err(...)` if there was an error during viewport creation
+    // pub fn switch_mode(&mut self, new_mode: TuiMode) -> Result<()> {
+    //     self.stop()?;
+    //     debug!("🔄 Switching terminal mode to {:?}", new_mode);
+
+    //     // Step 1: Flush current terminal state
+    //     self.flush()?;
+
+    //     // Step 2: Handle screen mode transitions while staying in raw mode
+    //     // Raw mode must stay enabled for cursor position queries to work
+    //     // The event loop keeps running - we're just changing the terminal backend
+    //     match new_mode {
+    //         TuiMode::FullScreen => {
+    //             // Switching TO full-screen: enter alternate screen
+    //             execute!(std::io::stderr(), EnterAlternateScreen)?;
+    //         }
+    //         TuiMode::Inline => {
+    //             // Switching TO inline: leave alternate screen
+    //             execute!(std::io::stderr(), LeaveAlternateScreen)?;
+    //         }
+    //     }
+
+    //     if self.terminal.is_some() {
+    //         drop(self.terminal.take());
+    //         self.terminal = None;
+    //     }
+
+    //     // Step 3: Create new terminal with appropriate viewport
+    //     // The event loop (EventStream, intervals, channels) continues unchanged
+    //     // Only the terminal backend/viewport changes
+    //     let terminal = match new_mode {
+    //         TuiMode::FullScreen => {
+    //             debug!("📺 Creating full-screen terminal (no viewport)");
+    //             let backend = Backend::new(std::io::stderr());
+    //             ratatui::Terminal::new(backend)?
+    //         }
+    //         TuiMode::Inline => {
+    //             debug!("📱 Creating inline terminal (inline viewport)");
+
+    //             // Retry logic for cursor position query with exponential backoff
+    //             // Terminal emulators need time to stabilize after leaving alternate screen
+    //             let delays = [50, 100, 150]; // Try with 50ms, 100ms, 150ms delays
+    //             let mut last_error = None;
+    //             let mut terminal = None;
+
+    //             for (attempt, delay_ms) in delays.iter().enumerate() {
+    //                 if attempt > 0 {
+    //                     debug!(
+    //                         "⏳ Retry attempt {} after {}ms delay",
+    //                         attempt + 1,
+    //                         delay_ms
+    //                     );
+    //                 }
+
+    //                 // Wait for terminal to stabilize
+    //                 std::thread::sleep(Duration::from_millis(*delay_ms));
+
+    //                 debug!("📏 Creating CrosstermBackend");
+
+    //                 // Try to create inline viewport
+    //                 let mut backend = Backend::new(std::io::stderr());
+
+    //                 debug!("📏 Querying terminal size");
+
+    //                 let inline_height = crossterm::terminal::size()
+    //                     .map(|(_cols, rows)| rows)
+    //                     .unwrap_or(24);
+
+    //                 debug!("📐 Creating inline viewport with height {}", inline_height);
+
+    //                 let viewport = ratatui::Viewport::Inline(inline_height);
+
+    //                 debug!("📐 after creating inline viewport with height");
+
+    //                 crossterm::terminal::enable_raw_mode()?;
+
+    //                 match backend.get_cursor_position() {
+    //                     Ok(cursor_position) => {
+    //                         debug!(
+    //                             "📍 Cursor position after creating backend: row {}, col {}",
+    //                             cursor_position.y, cursor_position.x
+    //                         );
+    //                     }
+    //                     Err(e) => {
+    //                         debug!(
+    //                             "❌ Failed to get cursor position on attempt {}: {}",
+    //                             attempt + 1,
+    //                             e
+    //                         );
+    //                     }
+    //                 }
+
+    //                 match ratatui::Terminal::with_options(
+    //                     backend,
+    //                     ratatui::TerminalOptions { viewport },
+    //                 ) {
+    //                     Ok(term) => {
+    //                         if attempt > 0 {
+    //                             debug!(
+    //                                 "✅ Successfully created inline viewport on attempt {}",
+    //                                 attempt + 1
+    //                             );
+    //                         }
+    //                         terminal = Some(term);
+    //                         break;
+    //                     }
+    //                     Err(e) => {
+    //                         debug!(
+    //                             "❌ Failed to create inline viewport on attempt {}: {}",
+    //                             attempt + 1,
+    //                             e
+    //                         );
+    //                         last_error = Some(e);
+    //                     }
+    //                 }
+    //             }
+
+    //             // If all retries failed, return the last error
+    //             terminal.ok_or_else(|| last_error.unwrap())?
+    //         }
+    //     };
+
+    //     self.terminal = Some(terminal);
+    //     self.current_mode = new_mode; // Track current mode
+
+    //     debug!("✅ Switched to {:?} mode", new_mode);
+    //     self.start();
+    //     Ok(())
+    // }
+
     pub fn switch_mode(&mut self, new_mode: TuiMode) -> Result<()> {
-        debug!("🔄 Switching terminal mode to {:?}", new_mode);
-
-        // Step 1: Flush current terminal state
-        self.flush()?;
-
-        // Step 2: Handle screen mode transitions while staying in raw mode
-        // Raw mode must stay enabled for cursor position queries to work
-        // The event loop keeps running - we're just changing the terminal backend
-        match new_mode {
-            TuiMode::FullScreen => {
-                // Switching TO full-screen: enter alternate screen
-                execute!(std::io::stderr(), EnterAlternateScreen)?;
-            }
-            TuiMode::Inline => {
-                // Switching TO inline: leave alternate screen
-                execute!(std::io::stderr(), LeaveAlternateScreen)?;
-            }
+        if new_mode == self.current_mode {
+            debug!(
+                "⚠️  Requested mode {:?} is already active - no switch needed",
+                new_mode
+            );
+            return Ok(());
         }
-
-        // Step 3: Create new terminal with appropriate viewport
-        // The event loop (EventStream, intervals, channels) continues unchanged
-        // Only the terminal backend/viewport changes
-        let terminal = match new_mode {
-            TuiMode::FullScreen => {
-                debug!("📺 Creating full-screen terminal (no viewport)");
-                let backend = Backend::new(std::io::stderr());
-                ratatui::Terminal::new(backend)?
-            }
-            TuiMode::Inline => {
-                debug!("📱 Creating inline terminal (inline viewport)");
-
-                // Retry logic for cursor position query with exponential backoff
-                // Terminal emulators need time to stabilize after leaving alternate screen
-                let delays = [50, 100, 150]; // Try with 50ms, 100ms, 150ms delays
-                let mut last_error = None;
-                let mut terminal = None;
-
-                for (attempt, delay_ms) in delays.iter().enumerate() {
-                    if attempt > 0 {
-                        debug!(
-                            "⏳ Retry attempt {} after {}ms delay",
-                            attempt + 1,
-                            delay_ms
-                        );
-                    }
-
-                    // Wait for terminal to stabilize
-                    std::thread::sleep(Duration::from_millis(*delay_ms));
-
-                    // Try to create inline viewport
-                    let backend = Backend::new(std::io::stderr());
-                    let inline_height = crossterm::terminal::size()
-                        .map(|(_cols, rows)| rows)
-                        .unwrap_or(24);
-
-                    let viewport = ratatui::Viewport::Inline(inline_height);
-                    match ratatui::Terminal::with_options(
-                        backend,
-                        ratatui::TerminalOptions { viewport },
-                    ) {
-                        Ok(term) => {
-                            if attempt > 0 {
-                                debug!(
-                                    "✅ Successfully created inline viewport on attempt {}",
-                                    attempt + 1
-                                );
-                            }
-                            terminal = Some(term);
-                            break;
-                        }
-                        Err(e) => {
-                            debug!(
-                                "❌ Failed to create inline viewport on attempt {}: {}",
-                                attempt + 1,
-                                e
-                            );
-                            last_error = Some(e);
-                        }
-                    }
-                }
-
-                // If all retries failed, return the last error
-                terminal.ok_or_else(|| last_error.unwrap())?
-            }
-        };
-
-        self.terminal = terminal;
-        self.current_mode = new_mode; // Track current mode
-
+        self.restore_terminal()?;
+        self.enter_with_mode(new_mode)?;
+        self.current_mode = new_mode;
         debug!("✅ Switched to {:?} mode", new_mode);
         Ok(())
     }
@@ -368,13 +428,13 @@ impl Deref for Tui {
     type Target = ratatui::Terminal<Backend<std::io::Stderr>>;
 
     fn deref(&self) -> &Self::Target {
-        &self.terminal
+        self.terminal.as_ref().unwrap()
     }
 }
 
 impl DerefMut for Tui {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.terminal
+        self.terminal.as_mut().unwrap()
     }
 }
 
