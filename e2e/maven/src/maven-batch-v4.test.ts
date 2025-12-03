@@ -47,4 +47,38 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
       'utils/target/utils-1.0.0-SNAPSHOT.jar'
     );
   });
+
+  it('should fail when unit test fails', () => {
+    // Add a failing unit test
+    updateFile(
+      'app/src/test/java/com/example/app/AppApplicationTests.java',
+      `package com.example.app;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import static org.junit.jupiter.api.Assertions.fail;
+
+@SpringBootTest
+class AppApplicationTests {
+    @Test
+    void contextLoads() {
+    }
+
+    @Test
+    void thisTestShouldFail() {
+        fail("This test is intentionally failing");
+    }
+}`
+    );
+
+    // Expect the command to throw due to test failure and verify error is printed
+    let error: Error | undefined;
+    try {
+      runBatchCLI('run-many -t verify');
+    } catch (e) {
+      error = e as Error;
+    }
+    expect(error).toBeDefined();
+    expect(error?.message).toContain('thisTestShouldFail');
+  });
 });
