@@ -21,7 +21,7 @@ import {
   type AfterAllProjectsVersioned,
   type VersionActions,
 } from '../version/version-actions';
-import { getLatestGitTagForPattern } from './git';
+import { getLatestGitTagForPattern, sanitizeProjectNameForGitTag } from './git';
 import { shouldSkipVersionActions, type VersionDataEntry } from './shared';
 
 /**
@@ -627,7 +627,7 @@ export class ReleaseGraph {
           latestMatchingGitTag = await getLatestGitTagForPattern(
             releaseTagPattern,
             {
-              projectName: projectGraphNode.name,
+              projectName: sanitizeProjectNameForGitTag(projectGraphNode.name),
               releaseGroupName: releaseGroupNode.group.name,
             },
             {
