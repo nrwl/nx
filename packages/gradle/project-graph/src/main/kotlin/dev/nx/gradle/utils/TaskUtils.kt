@@ -23,7 +23,8 @@ fun processTask(
     externalNodes: MutableMap<String, ExternalNode>,
     dependencies: MutableSet<Dependency>,
     targetNameOverrides: Map<String, String>,
-    gitIgnoreClassifier: GitIgnoreClassifier
+    gitIgnoreClassifier: GitIgnoreClassifier,
+    targetNamePrefix: String = ""
 ): MutableMap<String, Any?> {
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
@@ -46,7 +47,8 @@ fun processTask(
   }
 
   // process dependsOn
-  val dependsOn = getDependsOnForTask(dependsOnTasks, task, dependencies, targetNameOverrides)
+  val dependsOn =
+      getDependsOnForTask(dependsOnTasks, task, dependencies, targetNameOverrides, targetNamePrefix)
 
   if (!dependsOn.isNullOrEmpty()) {
     logger.info("${task}: processed ${dependsOn.size} total dependsOn")
@@ -256,11 +258,12 @@ fun getDependsOnTask(task: Task): Set<Task> {
 
 /**
  * Get dependsOn for task, handling configuration timing safely. Rewrites dependency task names
- * based on targetNameOverrides (e.g., test -> ci).
+ * based on targetNameOverrides (e.g., test -> ci) and applies targetNamePrefix.
  *
  * @param task task to process
  * @param dependencies optional set to collect inter-project Dependency objects
  * @param targetNameOverrides optional map of overrides (e.g., test -> ci)
+ * @param targetNamePrefix optional prefix to apply to all target names
  * @return list of dependsOn task names (possibly replaced), or null if none found or error occurred
  */
 // Add a thread-local cache to prevent infinite recursion in dependency resolution
@@ -270,8 +273,13 @@ fun getDependsOnForTask(
     dependsOnTasks: Set<Task>?,
     task: Task,
     dependencies: MutableSet<Dependency>? = null,
-    targetNameOverrides: Map<String, String> = emptyMap()
+    targetNameOverrides: Map<String, String> = emptyMap(),
+    targetNamePrefix: String = ""
 ): List<String>? {
+
+  // Helper function to apply prefix to target names
+  fun applyPrefix(name: String): String =
+      if (targetNamePrefix.isNotEmpty()) "$targetNamePrefix$name" else name
 
   // Check cache to prevent infinite recursion, but only if dependsOnTasks is null
   // When dependsOnTasks is provided, we should not use cache since dependencies might be different
@@ -300,11 +308,12 @@ fun getDependsOnForTask(
 
       if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
         val taskName =
-            if (depTask.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
-              targetNameOverrides["testTargetName"]!!
-            } else {
-              depTask.name
-            }
+            applyPrefix(
+                if (depTask.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
+                  targetNameOverrides["testTargetName"]!!
+                } else {
+                  depTask.name
+                })
         "${depProject.name}:${taskName}"
       } else {
         null
