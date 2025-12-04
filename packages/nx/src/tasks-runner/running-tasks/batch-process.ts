@@ -1,14 +1,18 @@
+import type { ChildProcess, Serializable } from 'child_process';
+import type { TaskResult } from '../../config/misc-interfaces';
+import { signalToCode } from '../../utils/exit-codes';
 import {
   BatchMessage,
   BatchMessageType,
   BatchResults,
 } from '../batch/batch-messages';
-import { ChildProcess, Serializable } from 'child_process';
-import { signalToCode } from '../../utils/exit-codes';
 
 export class BatchProcess {
   private exitCallbacks: Array<(code: number) => void> = [];
-  private resultsCallbacks: Array<(results: BatchResults) => void> = [];
+  private batchResultsCallbacks: Array<(results: BatchResults) => void> = [];
+  private taskResultsCallbacks: Array<
+    (task: string, result: TaskResult) => void
+  > = [];
   private outputCallbacks: Array<(output: string) => void> = [];
   private terminalOutput: string = '';
 
@@ -18,8 +22,14 @@ export class BatchProcess {
   ) {
     this.childProcess.on('message', (message: BatchMessage) => {
       switch (message.type) {
+        case BatchMessageType.CompleteTask: {
+          for (const cb of this.taskResultsCallbacks) {
+            cb(message.task, message.result);
+          }
+          break;
+        }
         case BatchMessageType.CompleteBatchExecution: {
-          for (const cb of this.resultsCallbacks) {
+          for (const cb of this.batchResultsCallbacks) {
             cb(message.results);
           }
           break;
@@ -81,8 +91,12 @@ export class BatchProcess {
     this.exitCallbacks.push(cb);
   }
 
-  onResults(cb: (results: BatchResults) => void) {
-    this.resultsCallbacks.push(cb);
+  onBatchResults(cb: (results: BatchResults) => void) {
+    this.batchResultsCallbacks.push(cb);
+  }
+
+  onTaskResults(cb: (task: string, result: TaskResult) => void) {
+    this.taskResultsCallbacks.push(cb);
   }
 
   onOutput(cb: (output: string) => void) {
@@ -103,7 +117,7 @@ export class BatchProcess {
         });
       }),
       new Promise((res) => {
-        this.onResults(res);
+        this.onBatchResults(res);
       }),
     ]);
   }
