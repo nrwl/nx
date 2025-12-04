@@ -18,6 +18,12 @@
       "version": "22.1.0-rc.3",
       "description": "Update Maven plugin version from 0.0.9 to 0.0.10 in pom.xml files",
       "factory": "./dist/migrations/0-0-10/update-pom-xml-version"
+    },
+    "update-0-0-11": {
+      "cli": "nx",
+      "version": "22.2.0-beta.4",
+      "description": "Update Maven plugin version from 0.0.10 to 0.0.11 in pom.xml files",
+      "factory": "./dist/migrations/0-0-11/update-pom-xml-version"
     }
   }
 }
