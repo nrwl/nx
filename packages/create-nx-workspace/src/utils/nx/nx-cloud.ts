@@ -109,7 +109,8 @@ export async function createNxCloudOnboardingUrl(
     meta,
     false,
     useGitHub ??
-      (nxCloud === 'yes' || nxCloud === 'github' || nxCloud === 'circleci')
+      (nxCloud === 'yes' || nxCloud === 'github' || nxCloud === 'circleci'),
+    directory
   );
 }
 

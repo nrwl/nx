@@ -23,6 +23,17 @@ import { Preset } from './utils/preset/preset';
 import { cloneTemplate } from './utils/template/clone-template';
 import { execAndWait } from './utils/child-process-utils';
 
+// State for SIGINT handler - only set after workspace is fully installed
+let workspaceDirectory: string | undefined;
+let cloudConnectUrl: string | undefined;
+
+export function getInterruptedWorkspaceState(): {
+  directory: string | undefined;
+  connectUrl: string | undefined;
+} {
+  return { directory: workspaceDirectory, connectUrl: cloudConnectUrl };
+}
+
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
   preset: string,
   options: T,
@@ -67,6 +78,9 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       // Install dependencies (template flow always uses npm)
       await execAndWait('npm install --silent --ignore-scripts', directory);
 
+      // Mark workspace as ready for SIGINT handler
+      workspaceDirectory = directory;
+
       workspaceSetupSpinner.succeed(
         `Successfully created the workspace: ${directory}`
       );
@@ -95,6 +109,9 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       workspaceGlobs,
     });
 
+    // Mark workspace as ready for SIGINT handler
+    workspaceDirectory = directory;
+
     // If the preset is a third-party preset, we need to call createPreset to install it
     // For first-party presets, it will be created by createEmptyWorkspace instead.
     // In createEmptyWorkspace, it will call `nx new` -> `@nx/workspace newGenerator` -> `@nx/workspace generatePreset`.
@@ -111,29 +128,16 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   const isTemplate = !!options.template;
 
-  let connectUrl: string | undefined;
-  let nxCloudInfo: string | undefined;
-  if (nxCloud !== 'skip') {
-    const token = readNxCloudToken(directory) as string;
-
-    // Only generate CI for preset flow (not template)
-    if (!isTemplate && nxCloud !== 'yes') {
-      await setupCI(directory, nxCloud, packageManager);
-    }
-
-    connectUrl = await createNxCloudOnboardingUrl(
-      nxCloud,
-      token,
-      directory,
-      useGitHub
-    );
+  // Only generate CI for preset flow (not template)
+  if (nxCloud !== 'skip' && !isTemplate && nxCloud !== 'yes') {
+    await setupCI(directory, nxCloud, packageManager);
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;
 
   if (!skipGit) {
     try {
-      await initializeGitRepo(directory, { defaultBase, commit, connectUrl });
+      await initializeGitRepo(directory, { defaultBase, commit });
 
       // Push to GitHub if commit was made, GitHub push is not skipped, and:
       // - CI provider is GitHub (preset flow), OR
@@ -162,7 +166,22 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
   }
 
-  if (connectUrl) {
+  // Create onboarding URL AFTER git operations so getVcsRemoteInfo() can detect the repo
+  let connectUrl: string | undefined;
+  let nxCloudInfo: string | undefined;
+  if (nxCloud !== 'skip') {
+    const token = readNxCloudToken(directory) as string;
+
+    connectUrl = await createNxCloudOnboardingUrl(
+      nxCloud,
+      token,
+      directory,
+      useGitHub
+    );
+
+    // Store for SIGINT handler
+    cloudConnectUrl = connectUrl;
+
     nxCloudInfo = await getNxCloudInfo(
       connectUrl,
       pushedToVcs,
