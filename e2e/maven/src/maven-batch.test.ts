@@ -64,13 +64,13 @@ class AppApplicationTests {
     );
 
     // Expect the command to throw due to test failure and verify error is printed
-    let error: Error | undefined;
+    let error: any;
     try {
       runBatchCLI('run-many -t verify');
     } catch (e) {
-      error = e as Error;
+      error = e;
     }
     expect(error).toBeDefined();
-    expect(error?.message).toContain('thisTestShouldFail');
+    expect(error.stdout || error.stderr).toContain('thisTestShouldFail');
   });
 });
