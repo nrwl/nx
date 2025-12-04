@@ -4,6 +4,7 @@ import {
   ensurePackage,
   formatFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   joinPathFragments,
   ProjectConfiguration,
   readProjectConfiguration,
@@ -12,6 +13,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { relative } from 'path';
+import { isZonelessApp } from '../../utils/zoneless';
 import { nxVersion } from '../../utils/versions';
 import { componentTestGenerator } from '../component-test/component-test';
 import {
@@ -32,6 +34,25 @@ export async function cypressComponentConfiguration(
   options: CypressComponentConfigSchema
 ): Promise<GeneratorCallback> {
   const projectConfig = readProjectConfiguration(tree, options.project);
+
+  // Cypress Component Testing requires Zone.js
+  let isZoneless: boolean;
+  if (projectConfig.projectType === 'application') {
+    // For applications, check the polyfills in the build target
+    isZoneless = isZonelessApp(projectConfig);
+  } else {
+    // For libraries, check if zone.js is installed in the workspace
+    isZoneless = getDependencyVersionFromPackageJson(tree, 'zone.js') === null;
+  }
+
+  if (isZoneless) {
+    throw new Error(
+      `Cypress Component Testing doesn't support Zoneless Angular projects yet. ` +
+        `The project "${options.project}" is configured without Zone.js. ` +
+        `See https://github.com/cypress-io/cypress/issues/31504.`
+    );
+  }
+
   const { componentConfigurationGenerator: baseCyCTConfig } = ensurePackage<
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
