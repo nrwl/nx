@@ -18,6 +18,10 @@
           "input": "production",
           "projects": ["tag:npm:public"]
         },
+        {
+          "input": "production",
+          "projects": ["tag:maven:dev.nx.maven"]
+        },
         "{workspaceRoot}/scripts/local-registry",
         "native"
       ],

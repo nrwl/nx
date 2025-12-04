@@ -1,4 +1,4 @@
-package dev.nx.maven.utils
+package dev.nx.maven.shared
 
 import org.slf4j.LoggerFactory
 import java.io.File
