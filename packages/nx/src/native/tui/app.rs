@@ -246,6 +246,8 @@ impl App {
     }
 
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+        // Get old status before updating to check for state transition
+        let old_status = self.task_status_map.get(&task_id).copied();
         self.task_status_map.insert(task_id.clone(), status);
 
         // Auto-switch pane to failed dependency when a task becomes skipped
@@ -255,8 +257,13 @@ impl App {
 
         self.dispatch_action(Action::UpdateTaskStatus(task_id.clone(), status));
 
-        // Update terminal progress indicator only when task reaches a completed state
-        if self.is_status_complete(status) {
+        // Update terminal progress indicator only when transitioning TO complete FROM non-complete
+        // This prevents double-decrement when status is updated multiple times
+        let was_complete = old_status
+            .map(|s| self.is_status_complete(s))
+            .unwrap_or(false);
+
+        if !was_complete && self.is_status_complete(status) {
             self.incomplete_task_count = self.incomplete_task_count.saturating_sub(1);
             self.update_terminal_progress();
         }
