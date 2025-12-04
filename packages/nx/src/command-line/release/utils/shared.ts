@@ -12,7 +12,12 @@ import { interpolate } from '../../../tasks-runner/utils';
 import type { NxArgs } from '../../../utils/command-line-utils';
 import { output } from '../../../utils/output';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { GitCommit, gitAdd, gitCommit } from './git';
+import {
+  GitCommit,
+  gitAdd,
+  gitCommit,
+  sanitizeProjectNameForGitTag,
+} from './git';
 import { NxReleaseConfig } from '../config/config';
 
 export const noDiffInChangelogMessage = chalk.yellow(
@@ -73,7 +78,9 @@ export class ReleaseVersion {
     this.rawVersion = version;
     this.gitTag = interpolate(releaseTagPattern, {
       version,
-      projectName,
+      projectName: projectName
+        ? sanitizeProjectNameForGitTag(projectName)
+        : projectName,
     });
     this.isPrerelease = isPrerelease(version);
   }
@@ -288,7 +295,7 @@ export function createGitTagValues(
               tags.push(
                 interpolate(releaseGroup.releaseTag.pattern, {
                   version: projectVersionData.dockerVersion,
-                  projectName: project,
+                  projectName: sanitizeProjectNameForGitTag(project),
                 })
               );
             }
@@ -296,7 +303,7 @@ export function createGitTagValues(
               tags.push(
                 interpolate(releaseGroup.releaseTag.pattern, {
                   version: projectVersionData.newVersion,
-                  projectName: project,
+                  projectName: sanitizeProjectNameForGitTag(project),
                 })
               );
             }
@@ -307,7 +314,7 @@ export function createGitTagValues(
                 version: preferDockerVersion
                   ? projectVersionData.dockerVersion
                   : projectVersionData.newVersion,
-                projectName: project,
+                projectName: sanitizeProjectNameForGitTag(project),
               })
             );
           }

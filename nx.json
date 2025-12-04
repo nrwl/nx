@@ -210,17 +210,11 @@
       "include": [
         "packages/angular-rspack-compiler/**",
         "packages/angular-rspack/**"
-      ],
-      "options": {
-        "testTargetName": "test"
-      }
+      ]
     },
     {
       "plugin": "@nx/vite/plugin",
-      "include": ["astro-docs/**"],
-      "options": {
-        "testTargetName": "vite:test"
-      }
+      "include": ["astro-docs/**"]
     },
     {
       "plugin": "@nx/js/typescript",
@@ -327,6 +321,23 @@
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps"
       }
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "test"
+      },
+      "include": [
+        "packages/angular-rspack-compiler/**",
+        "packages/angular-rspack/**"
+      ]
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "vite:test"
+      },
+      "include": ["astro-docs/**"]
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",

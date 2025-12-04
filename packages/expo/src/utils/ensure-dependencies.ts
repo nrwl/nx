@@ -4,53 +4,41 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import {
-  babelPresetExpoVersion,
-  babelRuntimeVersion,
-  expoMetroConfigVersion,
-  expoMetroRuntimeVersion,
-  expoSplashScreenVersion,
-  expoStatusBarVersion,
-  expoSystemUiVersion,
-  jestExpoVersion,
-  reactNativeSvgTransformerVersion,
-  reactNativeSvgVersion,
-  reactNativeWebVersion,
-  testingLibraryReactNativeVersion,
-  typesReactVersion,
-} from './versions';
+import { getExpoDependenciesVersionsToInstall } from './version-utils';
 
-export function ensureDependencies(
+export async function ensureDependencies(
   host: Tree,
   unitTestRunner: 'jest' | 'none'
-): GeneratorCallback {
+): Promise<GeneratorCallback> {
+  const versions = await getExpoDependenciesVersionsToInstall(host);
+
   const devDependencies: Record<string, string> = {
-    '@types/react': typesReactVersion,
-    'babel-preset-expo': babelPresetExpoVersion,
+    '@types/react': versions.typesReact,
+    'babel-preset-expo': versions.babelPresetExpo,
   };
 
   const isPnpm = detectPackageManager(host.root) === 'pnpm';
   if (isPnpm) {
-    devDependencies['@babel/runtime'] = babelRuntimeVersion; // @babel/runtime is used by react-native-svg
+    devDependencies['@babel/runtime'] = versions.babelRuntime; // @babel/runtime is used by react-native-svg
   }
 
   if (unitTestRunner === 'jest') {
     devDependencies['@testing-library/react-native'] =
-      testingLibraryReactNativeVersion;
-    devDependencies['jest-expo'] = jestExpoVersion;
+      versions.testingLibraryReactNative;
+    devDependencies['jest-expo'] = versions.jestExpo;
   }
 
   return addDependenciesToPackageJson(
     host,
     {
-      'expo-splash-screen': expoSplashScreenVersion,
-      'expo-status-bar': expoStatusBarVersion,
-      'expo-system-ui': expoSystemUiVersion,
-      'react-native-web': reactNativeWebVersion,
-      '@expo/metro-config': expoMetroConfigVersion,
-      '@expo/metro-runtime': expoMetroRuntimeVersion,
-      'react-native-svg-transformer': reactNativeSvgTransformerVersion,
-      'react-native-svg': reactNativeSvgVersion,
+      'expo-splash-screen': versions.expoSplashScreen,
+      'expo-status-bar': versions.expoStatusBar,
+      'expo-system-ui': versions.expoSystemUi,
+      'react-native-web': versions.reactNativeWeb,
+      '@expo/metro-config': versions.expoMetroConfig,
+      '@expo/metro-runtime': versions.expoMetroRuntime,
+      'react-native-svg-transformer': versions.reactNativeSvgTransformer,
+      'react-native-svg': versions.reactNativeSvg,
     },
     devDependencies
   );

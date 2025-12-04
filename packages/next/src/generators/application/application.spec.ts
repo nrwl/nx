@@ -817,7 +817,7 @@ describe('app', () => {
             ...nx.configs['flat/typescript'],
             ...nx.configs['flat/javascript'],
             {
-              ignores: ['**/dist', '.next/**/*'],
+              ignores: ['**/dist', '**/out-tsc', '.next/**/*'],
             },
             {
               files: [

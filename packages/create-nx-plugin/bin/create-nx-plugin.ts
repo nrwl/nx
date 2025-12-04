@@ -160,6 +160,7 @@ async function main(parsedArgs: yargs.Arguments<CreateNxPluginArguments>) {
       messages.codeOfSelectedPromptMessage('setupCI'),
       messages.codeOfSelectedPromptMessage('setupNxCloud'),
     ],
+    directory: workspaceInfo.directory,
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {

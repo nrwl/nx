@@ -136,6 +136,7 @@
       "@nx/web",
       "@nx/webpack",
       "@nx/docker",
+      "create-nx-workspace",
       {
         "package": "nx-cloud",
         "version": "latest"

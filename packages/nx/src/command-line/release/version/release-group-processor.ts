@@ -261,11 +261,14 @@ export class ReleaseGroupProcessor {
   ) {
     const dockerProjects = new Map<string, FinalConfigForProject>();
     for (const project of this.versionData.keys()) {
-      const finalConfigForProject =
-        this.releaseGraph.finalConfigsByProject.get(project);
-      if (Object.keys(finalConfigForProject.dockerOptions).length === 0) {
+      const hasDockerTechnology = Object.values(
+        this.projectGraph.nodes[project]?.data?.targets ?? []
+      ).some(({ metadata }) => metadata?.technologies?.includes('docker'));
+      if (!hasDockerTechnology) {
         continue;
       }
+      const finalConfigForProject =
+        this.releaseGraph.finalConfigsByProject.get(project);
       dockerProjects.set(project, finalConfigForProject);
     }
     // If no docker projects to process, exit early to avoid unnecessary loading of docker handling
