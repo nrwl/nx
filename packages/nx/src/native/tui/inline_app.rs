@@ -1,3 +1,4 @@
+use arboard::Clipboard;
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyModifiers};
 use hashbrown::HashSet;
@@ -377,6 +378,30 @@ impl TuiApp for InlineApp {
                 if matches!(key.code, KeyCode::F(12)) {
                     // Toggle debug mode on F12
                     self.dispatch_action(Action::ToggleDebugMode);
+                    return Ok(false);
+                }
+
+                // Handle 'c' for copying terminal output to clipboard (same as full-screen mode)
+                if matches!(key.code, KeyCode::Char('c')) && key.modifiers.is_empty() {
+                    // Get the task to display (selected or first running)
+                    let current_task = self
+                        .selected_task
+                        .clone()
+                        .or_else(|| self.get_current_running_task());
+
+                    if let Some(task_id) = current_task {
+                        let state = self.core.state().lock();
+                        if let Some(pty) = state.get_pty_instance(&task_id) {
+                            if let Some(screen) = pty.get_screen() {
+                                // Unformatted output (no ANSI escape codes)
+                                let output = screen.all_contents();
+                                drop(state); // Release lock before clipboard operations
+                                if let Ok(mut clipboard) = Clipboard::new() {
+                                    clipboard.set_text(output).ok();
+                                }
+                            }
+                        }
+                    }
                     return Ok(false);
                 }
             }
