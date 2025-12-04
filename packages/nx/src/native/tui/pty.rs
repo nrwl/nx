@@ -58,10 +58,25 @@ impl PtyInstance {
             // Calculate current scrollback: everything above the current visible screen
             let current_scrollback_lines = total_lines.saturating_sub(screen_rows as usize);
 
+            tracing::debug!(
+                "📊 PTY get_buffered_scrollback: screen_rows={}, total_lines={}, current_scrollback={}, last_rendered={}",
+                screen_rows,
+                total_lines,
+                current_scrollback_lines,
+                last_rendered_lines
+            );
+
             // Return buffered scrollback content since last render
             if current_scrollback_lines > last_rendered_lines {
                 let start_index = last_rendered_lines;
                 let end_index = current_scrollback_lines;
+
+                tracing::debug!(
+                    "📊 PTY returning scrollback lines from {} to {} ({} lines)",
+                    start_index,
+                    end_index,
+                    end_index - start_index
+                );
 
                 // Return the buffered scrollback content
                 all_lines[start_index..end_index]
@@ -69,6 +84,7 @@ impl PtyInstance {
                     .map(|line| line.to_string())
                     .collect()
             } else {
+                tracing::debug!("📊 PTY: no new scrollback to render");
                 Vec::new()
             }
         } else {
@@ -263,7 +279,7 @@ impl PtyInstance {
         }
     }
 
-    pub fn get_screen(&self) -> Option<PtyScreenRef> {
+    pub fn get_screen(&'_ self) -> Option<PtyScreenRef<'_>> {
         self.parser
             .read()
             .ok()

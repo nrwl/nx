@@ -31,6 +31,23 @@ pub fn format_live_duration(start_ms: i64) -> String {
     format_duration(current_ms.saturating_sub(start_ms))
 }
 
+/// Formats a duration with an optional estimated time.
+///
+/// Returns a string in the format "{actual} ({estimated} avg)" if estimated is provided,
+/// otherwise just "{actual}".
+///
+/// This is the shared formatting pattern used by both the terminal pane and inline app
+/// for displaying task durations.
+pub fn format_duration_with_estimate(actual_ms: i64, estimated_ms: Option<i64>) -> String {
+    let actual_formatted = format_duration(actual_ms);
+    if let Some(estimated) = estimated_ms {
+        let estimated_formatted = format_duration(estimated);
+        format!("{} ({} avg)", actual_formatted, estimated_formatted)
+    } else {
+        actual_formatted
+    }
+}
+
 /// Ensures that all newlines in the output are properly handled by converting
 /// lone \n to \r\n sequences. This mimics terminal driver behavior.
 pub fn normalize_newlines(input: &[u8]) -> Vec<u8> {
@@ -105,41 +122,41 @@ pub fn get_task_status_style(status: TaskStatus) -> Style {
 /// - ● for in progress/shared
 /// - ◼ for stopped
 /// - · for not started
-pub fn get_task_status_icon(status: TaskStatus) -> Span<'static> {
+pub fn get_task_status_icon(status: TaskStatus, padding: usize) -> Span<'static> {
     match status {
         TaskStatus::Success
         | TaskStatus::LocalCacheKeptExisting
         | TaskStatus::LocalCache
         | TaskStatus::RemoteCache => Span::styled(
-            "  ✔  ",
+            pad_symbol("✔", padding),
             Style::default()
                 .fg(THEME.success)
                 .add_modifier(Modifier::BOLD),
         ),
         TaskStatus::Failure => Span::styled(
-            "  ✖  ",
+            pad_symbol("✖", padding),
             Style::default()
                 .fg(THEME.error)
                 .add_modifier(Modifier::BOLD),
         ),
         TaskStatus::Skipped => Span::styled(
-            "  ⏭  ",
+            pad_symbol("⏭", padding),
             Style::default()
                 .fg(THEME.warning)
                 .add_modifier(Modifier::BOLD),
         ),
         TaskStatus::InProgress | TaskStatus::Shared => Span::styled(
-            "  ●  ",
+            pad_symbol("●", padding),
             Style::default().fg(THEME.info).add_modifier(Modifier::BOLD),
         ),
         TaskStatus::Stopped => Span::styled(
-            "  ◼  ",
+            pad_symbol("◼", padding),
             Style::default()
                 .fg(THEME.secondary_fg)
                 .add_modifier(Modifier::BOLD),
         ),
         TaskStatus::NotStarted => Span::styled(
-            "  ·  ",
+            pad_symbol("·", padding),
             Style::default()
                 .fg(THEME.secondary_fg)
                 .add_modifier(Modifier::BOLD),
@@ -225,6 +242,10 @@ pub fn sort_task_items(tasks: &mut [TaskItem], highlighted_names: &HashSet<Strin
         // For all other cases or as a tiebreaker, sort by name
         a.name.cmp(&b.name)
     });
+}
+
+fn pad_symbol(symbol: &str, padding: usize) -> String {
+    format!("{:^width$}", symbol, width = padding * 2 + 1)
 }
 
 #[cfg(test)]
@@ -595,7 +616,7 @@ mod tests {
             let b = &tasks[i];
 
             // Map status to category for comparison
-            let status_to_category = |status: &TaskStatus, name: &str| -> u8 {
+            let status_to_category = |status: &TaskStatus, _: &str| -> u8 {
                 // In this test we're using an empty highlighted list
                 match status {
                     TaskStatus::InProgress | TaskStatus::Shared => 0,

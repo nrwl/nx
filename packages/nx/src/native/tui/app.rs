@@ -1,6 +1,5 @@
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use parking_lot::Mutex;
@@ -21,7 +20,7 @@ use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetSta
 use crate::native::tui::tui::Tui;
 use crate::native::{
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
-    tasks::types::{Task, TaskGraph, TaskResult},
+    tasks::types::{Task, TaskResult},
 };
 
 use super::action::Action;
@@ -35,7 +34,6 @@ use super::components::layout_manager::{
 use super::components::task_selection_manager::{SelectionMode, TaskSelectionManager};
 use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
-use super::config::TuiConfig;
 use super::graph_utils::{get_task_count, is_task_continuous};
 use super::lifecycle::{RunMode, TuiMode};
 use super::pty::PtyInstance;
@@ -44,12 +42,14 @@ use super::tui;
 use super::utils::write_output_to_pty;
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::tui::graph_utils::get_failed_dependencies;
+use crate::native::tui::tui_core::{AutoExitDecision, QuitDecision, TuiCore};
 use crate::native::tui::tui_state::TuiState;
 use crate::native::utils::time::current_timestamp_millis;
 
 pub struct App {
-    // === Shared State (accessed via Arc<Mutex<>>) ===
-    state: Arc<Mutex<TuiState>>,
+    // === Shared Core ===
+    /// Shared core functionality (state management, callbacks, etc.)
+    core: TuiCore,
 
     // === Full-Screen UI State ===
     pub components: Vec<Box<dyn Component>>,
@@ -64,7 +64,6 @@ pub struct App {
     dependency_view_states: [Option<DependencyViewState>; 2],
     spacebar_mode: bool,
     pane_tasks: [Option<String>; 2], // Tasks assigned to panes 1 and 2 (0-indexed)
-    action_tx: Option<UnboundedSender<Action>>,
     resize_debounce_timer: Option<u128>, // Timer for debouncing resize events
     selection_manager: Arc<Mutex<TaskSelectionManager>>,
     debug_mode: bool,
@@ -89,7 +88,17 @@ impl App {
         let initial_focus = Focus::TaskList;
 
         // Get data from shared state to initialize UI components
-        let (tasks, initiating_tasks, run_mode, pinned_tasks, title_text, task_count) = {
+        let (
+            tasks,
+            initiating_tasks,
+            run_mode,
+            _,
+            title_text,
+            task_count,
+            task_status_map,
+            task_start_times,
+            task_end_times,
+        ) = {
             let state_lock = state.lock();
             (
                 state_lock.tasks().clone(),
@@ -98,10 +107,13 @@ impl App {
                 state_lock.pinned_tasks().clone(),
                 state_lock.title_text().to_string(),
                 get_task_count(state_lock.task_graph()),
+                state_lock.get_task_status_map().clone(),
+                state_lock.get_task_start_times().clone(),
+                state_lock.get_task_end_times().clone(),
             )
         };
 
-        let tasks_list = TasksList::new(
+        let mut tasks_list = TasksList::new(
             tasks.clone(),
             initiating_tasks,
             run_mode,
@@ -109,6 +121,21 @@ impl App {
             title_text,
             selection_manager.clone(),
         );
+
+        // Sync task status from shared state (important for mode switching)
+        // TasksList::new creates TaskItems with NotStarted status, but we need
+        // to restore the actual status from TuiState
+        for (task_id, status) in task_status_map {
+            tasks_list.update_task_status(task_id.clone(), status);
+
+            // Also sync timing data for this task
+            let start_time = task_start_times.get(&task_id).copied();
+            let end_time = task_end_times.get(&task_id).copied();
+            if start_time.is_some() || end_time.is_some() {
+                tasks_list.set_task_timing(task_id, start_time, end_time);
+            }
+        }
+
         let help_popup = HelpPopup::new();
         let countdown_popup = CountdownPopup::new();
 
@@ -123,7 +150,7 @@ impl App {
         debug!("🚀 App::with_state - Full-screen mode");
 
         Ok(Self {
-            state,
+            core: TuiCore::new(state),
             components,
             focus: initial_focus,
             previous_focus: Focus::TaskList,
@@ -134,7 +161,6 @@ impl App {
             dependency_view_states: [None, None],
             spacebar_mode: false,
             pane_tasks: [None, None],
-            action_tx: None,
             resize_debounce_timer: None,
             selection_manager,
             debug_mode: false,
@@ -144,49 +170,18 @@ impl App {
 
     /// Get the shared state Arc (for mode switching)
     pub fn get_state(&self) -> Arc<Mutex<TuiState>> {
-        self.state.clone()
-    }
-
-    /// Legacy constructor for backward compatibility
-    ///
-    /// This creates both the state and the app in one call.
-    /// Prefer using `with_state()` for new code, especially when mode switching is needed.
-    #[allow(dead_code)]
-    pub fn new(
-        tasks: Vec<Task>,
-        initiating_tasks: HashSet<String>,
-        run_mode: RunMode,
-        pinned_tasks: Vec<String>,
-        tui_config: TuiConfig,
-        title_text: String,
-        task_graph: TaskGraph,
-        tui_mode: TuiMode,
-    ) -> Result<Self> {
-        // Create shared state first
-        let state = Arc::new(Mutex::new(TuiState::new(
-            tasks,
-            initiating_tasks,
-            run_mode,
-            pinned_tasks,
-            tui_config,
-            title_text,
-            task_graph,
-            HashMap::new(), // estimated_task_timings
-        )));
-
-        // Use with_state() constructor
-        Self::with_state(state, tui_mode)
+        self.core.get_shared_state()
     }
 
     pub fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
-        self.action_tx = Some(tx);
+        self.core.register_action_handler(tx);
         Ok(())
     }
 
     pub fn init(&mut self, _area: Size) -> Result<()> {
         // Iterate over the pinned tasks and assign them to the terminal panes (up to the maximum of 2), focusing the first one as well
         let (pinned_tasks, run_mode, task_count) = {
-            let state = self.state.lock();
+            let state = self.core.state().lock();
             (
                 state.pinned_tasks().clone(),
                 state.run_mode(),
@@ -217,22 +212,15 @@ impl App {
     }
 
     pub fn start_tasks(&mut self, tasks: Vec<Task>) {
-        // Update task status map in shared state
-        {
-            let mut state = self.state.lock();
-            for task in &tasks {
-                state.update_task_status(task.id.clone(), TaskStatus::InProgress);
-            }
-        }
-
+        // Use TuiCore to record timing and update status
+        // This ensures task_start_times are recorded properly
+        self.core.start_tasks(&tasks);
         self.dispatch_action(Action::StartTasks(tasks));
     }
 
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
         // Update the task status map in shared state first
-        self.state
-            .lock()
-            .update_task_status(task_id.clone(), status);
+        self.core.update_task_status(task_id.clone(), status);
 
         // Auto-switch pane to failed dependency when a task becomes skipped
         if status == TaskStatus::Skipped {
@@ -244,19 +232,19 @@ impl App {
 
     /// Get task status efficiently from shared state HashMap
     pub fn get_task_status(&self, task_id: &str) -> Option<TaskStatus> {
-        let state = self.state.lock();
+        let state = self.core.state().lock();
         state.get_task_status(task_id)
     }
 
     /// Get task continuous flag efficiently from task graph in shared state
     pub fn is_task_continuous(&self, task_id: &str) -> bool {
-        let state = self.state.lock();
+        let state = self.core.state().lock();
         is_task_continuous(state.task_graph(), task_id)
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
         // Check if a PTY instance already exists for this task
-        let state = self.state.lock();
+        let state = self.core.state().lock();
         let has_pty = state.get_pty_instance(&task_id).is_some();
         if let Some(pty) = state.get_pty_instance(&task_id) {
             // Append output to the existing PTY instance to preserve scroll position
@@ -286,12 +274,17 @@ impl App {
     pub fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
         // When tasks finish ensure that pty instances are resized appropriately as they may be actively displaying output when they finish
         let _ = self.debounce_pty_resize();
+
+        // Use TuiCore to record end timing and update status
+        // This ensures task_end_times are recorded properly
+        self.core.end_tasks(&task_results);
+
         self.dispatch_action(Action::EndTasks(task_results));
     }
 
     // Show countdown popup for the configured duration (making sure the help popup is not open first)
     pub fn end_command(&mut self) {
-        let state = self.state.lock();
+        let state = self.core.state().lock();
         state
             .get_console_messenger()
             .as_ref()
@@ -303,52 +296,45 @@ impl App {
 
     // Internal method to handle Action::EndCommand
     fn handle_end_command(&mut self) {
-        // If the user has interacted with the app or auto-exit is disabled, do nothing
-        let state = self.state.lock();
-        let user_has_interacted = state.has_user_interacted();
-        let should_exit_automatically = state.tui_config().auto_exit.should_exit_automatically();
-        let task_graph_ref = state.task_graph();
-        let task_count = get_task_count(task_graph_ref);
-        drop(state);
-
-        if user_has_interacted || !should_exit_automatically {
-            return;
-        }
-
-        let failed_task_names = self.get_failed_task_names();
-        // If there are more than 1 failed tasks, do not auto-exit
-        if failed_task_names.len() > 1 {
-            // If there are no visible panes (e.g. run one would have a pane open by default), focus the first failed task
-            if !self.has_visible_panes() {
-                self.selection_manager
-                    .lock()
-                    .select_task(failed_task_names.first().unwrap().clone());
-
-                // Display the task logs but keep focus on the task list to allow the user to navigate the failed tasks
-                self.toggle_output_visibility();
+        // Use TuiCore to determine auto-exit behavior
+        match self.core.get_auto_exit_decision() {
+            AutoExitDecision::Stay => {
+                // User interacted or auto-exit disabled - do nothing
             }
-            return;
-        }
+            AutoExitDecision::StayWithFailures(failed_task_names) => {
+                // Multiple failures - show them to user
+                // If there are no visible panes, focus the first failed task
+                if !self.has_visible_panes() {
+                    self.selection_manager
+                        .lock()
+                        .select_task(failed_task_names.first().unwrap().clone());
 
-        if task_count > 1 {
-            self.begin_exit_countdown()
-        } else {
-            self.quit();
+                    // Display the task logs but keep focus on the task list
+                    self.toggle_output_visibility();
+                }
+            }
+            AutoExitDecision::ShowCountdown => {
+                self.begin_exit_countdown();
+            }
+            AutoExitDecision::ExitImmediately => {
+                self.quit();
+            }
         }
     }
 
-    fn quit(&mut self) {}
+    fn quit(&mut self) {
+        self.core.quit_immediately();
+    }
 
     fn begin_exit_countdown(&mut self) {
-        let countdown_duration = self.state.lock().tui_config().auto_exit.countdown_seconds();
-        // If countdown is disabled, exit immediately
-        if countdown_duration.is_none() {
+        // Use TuiCore to get countdown duration
+        let Some(countdown_duration) = self.core.get_countdown_duration() else {
+            // Countdown is disabled, exit immediately
             self.quit();
             return;
-        }
+        };
 
-        // Otherwise, show the countdown popup for the configured duration
-        let countdown_duration = countdown_duration.unwrap() as u64;
+        // Show the countdown popup for the configured duration
         if let Some(countdown_popup) = self
             .components
             .iter_mut()
@@ -356,8 +342,7 @@ impl App {
         {
             countdown_popup.start_countdown(countdown_duration);
             self.update_focus(Focus::CountdownPopup);
-            self.state
-                .lock()
+            self.core
                 .schedule_quit(std::time::Duration::from_secs(countdown_duration));
         }
     }
@@ -389,7 +374,7 @@ impl App {
     }
 
     pub fn append_task_output(&mut self, task_id: String, output: String) {
-        let state = self.state.lock();
+        let state = self.core.state().lock();
         let pty = state
             .get_pty_instance(&task_id)
             .unwrap_or_else(|| panic!("{} has not been registered yet.", task_id));
@@ -403,8 +388,8 @@ impl App {
     ) -> Result<bool> {
         match event {
             tui::Event::Quit => {
-                let _ = action_tx.send(Action::Quit);
-                return Ok(true);
+                self.core.state().lock().quit_immediately();
+                return Ok(false);
             }
             tui::Event::Tick => {
                 let _ = action_tx.send(Action::Tick);
@@ -431,7 +416,7 @@ impl App {
                 // the running task, not the app itself
                 if !self.is_interactive_mode() {
                     // Record that the user has interacted with the app
-                    self.state.lock().mark_user_interacted();
+                    self.core.mark_user_interacted();
                 }
 
                 // Handle Ctrl+C to quit, unless we're in interactive mode and the focus is on a terminal pane
@@ -440,17 +425,9 @@ impl App {
                     && !(matches!(self.focus, Focus::MultipleOutput(_))
                         && self.is_interactive_mode())
                 {
-                    let mut state = self.state.lock();
-                    state
-                        .get_console_messenger()
-                        .as_ref()
-                        .and_then(|c| c.end_running_tasks());
-
-                    state.set_forced_shutdown(true);
-                    // Quit immediately
-                    state.quit_immediately();
-                    drop(state);
-                    return Ok(true);
+                    // Use TuiCore to handle Ctrl+C (end command, set forced shutdown, quit)
+                    self.core.handle_ctrl_c();
+                    return Ok(false);
                 }
 
                 if matches!(self.focus, Focus::MultipleOutput(_)) && self.is_interactive_mode() {
@@ -511,14 +488,14 @@ impl App {
                             KeyCode::Char('q') => {
                                 // Quit immediately
                                 trace!("Confirming shutdown");
-                                self.state.lock().quit_immediately();
-                                return Ok(true);
+                                self.core.state().lock().quit_immediately();
+                                return Ok(false);
                             }
                             KeyCode::Char('c') if key.modifiers == KeyModifiers::CONTROL => {
                                 // Quit immediately
                                 trace!("Confirming shutdown");
-                                self.state.lock().quit_immediately();
-                                return Ok(true);
+                                self.core.state().lock().quit_immediately();
+                                return Ok(false);
                             }
                             KeyCode::Up | KeyCode::Char('k') if countdown_popup.is_scrollable() => {
                                 countdown_popup.scroll_up();
@@ -532,7 +509,7 @@ impl App {
                             }
                             _ => {
                                 countdown_popup.cancel_countdown();
-                                self.state.lock().cancel_quit();
+                                self.core.state().lock().cancel_quit();
                                 self.update_focus(self.previous_focus);
                             }
                         }
@@ -548,32 +525,8 @@ impl App {
                 {
                     // Handle Q to trigger countdown or immediate exit, depending on the tasks
                     if !tasks_list.filter_mode && key.code == KeyCode::Char('q') {
-                        // Check if all tasks are in a completed state using the task status map
-                        let state = self.state.lock();
-                        let all_tasks_completed =
-                            state.get_task_status_map().values().all(|status| {
-                                matches!(
-                                    status,
-                                    TaskStatus::Success
-                                        | TaskStatus::Failure
-                                        | TaskStatus::Skipped
-                                        | TaskStatus::LocalCache
-                                        | TaskStatus::LocalCacheKeptExisting
-                                        | TaskStatus::RemoteCache
-                                        | TaskStatus::Stopped // Consider stopped continuous tasks as completed for exit purposes
-                                )
-                            });
-                        drop(state);
-
-                        if all_tasks_completed {
-                            // If all tasks are done, quit immediately like Ctrl+C
-                            let mut state = self.state.lock();
-                            state.set_forced_shutdown(true);
-                            state.quit_immediately();
-                            drop(state);
-                        } else {
-                            // Otherwise, start the exit countdown to give the user the chance to change their mind in case of an accidental keypress
-                            self.state.lock().set_forced_shutdown(true);
+                        // Use TuiCore to handle quit request (sets forced_shutdown, checks completion)
+                        if self.core.handle_quit_request() == QuitDecision::StartCountdown {
                             self.begin_exit_countdown();
                         }
                         return Ok(false);
@@ -836,14 +789,14 @@ impl App {
         }
         match &action {
             Action::StartCommand(_) => {
-                let state = self.state.lock();
+                let state = self.core.state().lock();
                 state
                     .get_console_messenger()
                     .as_ref()
                     .and_then(|c| c.start_running_tasks());
             }
             Action::Tick => {
-                let state = self.state.lock();
+                let state = self.core.state().lock();
                 state
                     .get_console_messenger()
                     .as_ref()
@@ -859,11 +812,11 @@ impl App {
             }
             // Quit immediately
             Action::Quit => {
-                self.state.lock().quit_immediately();
+                self.core.state().lock().quit_immediately();
             }
             // Cancel quitting
             Action::CancelQuit => {
-                self.state.lock().cancel_quit();
+                self.core.state().lock().cancel_quit();
                 self.update_focus(self.previous_focus);
             }
             Action::Resize(w, h) => {
@@ -1009,7 +962,7 @@ impl App {
 
                     // Calculate minimal view context once for all panes
                     let is_minimal = self.is_task_list_hidden()
-                        && get_task_count(self.state.lock().task_graph()) == 1;
+                        && get_task_count(self.core.state().lock().task_graph()) == 1;
 
                     for (pane_idx, pane_area, relevant_pane_task) in terminal_panes_data {
                         if let Some(task_name) = relevant_pane_task {
@@ -1050,7 +1003,7 @@ impl App {
                 .ok();
             }
             Action::SendConsoleMessage(msg) => {
-                let state = self.state.lock();
+                let state = self.core.state().lock();
                 if let Some(connection) = state.get_console_messenger() {
                     connection.send_terminal_string(msg);
                 } else {
@@ -1075,23 +1028,25 @@ impl App {
         &mut self,
         done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
     ) {
-        self.state.lock().set_done_callback(done_callback);
+        self.core.set_done_callback(done_callback);
     }
 
     pub fn set_forced_shutdown_callback(
         &mut self,
         forced_shutdown_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
     ) {
-        self.state
-            .lock()
+        self.core
             .set_forced_shutdown_callback(forced_shutdown_callback);
     }
 
     pub fn call_done_callback(&self) {
-        self.state.lock().call_done_callback();
+        self.core.call_done_callback();
     }
 
     pub fn set_cloud_message(&mut self, message: Option<String>) {
+        // Store in state (for mode switching persistence)
+        self.core.set_cloud_message(message.clone());
+        // Dispatch to TasksList component for UI rendering
         if let Some(message) = message {
             self.dispatch_action(Action::UpdateCloudMessage(message));
         }
@@ -1099,11 +1054,7 @@ impl App {
 
     /// Dispatches an action to the action tx for other components to handle however they see fit
     fn dispatch_action(&self, action: Action) {
-        if let Some(tx) = &self.action_tx {
-            tx.send(action).unwrap_or_else(|e| {
-                debug!("Failed to dispatch action: {}", e);
-            });
-        }
+        self.core.dispatch_action(action);
     }
 
     fn recalculate_layout_areas(&mut self) {
@@ -1115,11 +1066,6 @@ impl App {
     /// Checks if the current view has any visible output panes.
     fn has_visible_panes(&self) -> bool {
         self.pane_tasks.iter().any(|t| t.is_some())
-    }
-
-    /// Returns the names of tasks that have failed.
-    fn get_failed_task_names(&self) -> Vec<String> {
-        self.state.lock().get_failed_task_names()
     }
 
     /// Clears PTY reference and related state for a specific pane
@@ -1535,7 +1481,8 @@ impl App {
     fn register_pty_instance(&mut self, task_id: &str, pty: PtyInstance) {
         // Wrap in Arc
         let pty = Arc::new(pty);
-        self.state
+        self.core
+            .state()
             .lock()
             .register_pty_instance(task_id.to_string(), pty);
     }
@@ -1607,7 +1554,7 @@ impl App {
             "🔗 Setting console messenger: is_connected={}",
             is_connected
         );
-        self.state.lock().set_console_messenger(messenger);
+        self.core.set_console_messenger(messenger);
 
         // ALWAYS dispatch ConsoleMessengerAvailable(true) regardless of connection status
         // The TUI should work even without Nx Console connection
@@ -1663,7 +1610,7 @@ impl App {
         } else {
             // Different task or no existing state - create a new one
             // This ensures we get fresh dependency analysis when task becomes SKIPPED
-            let state = self.state.lock();
+            let state = self.core.state().lock();
             let task_graph = state.task_graph();
             let new_state = DependencyViewState::new(
                 task_name.clone(),
@@ -1679,7 +1626,7 @@ impl App {
 
         // No need to update status in DependencyViewState - we pass the full map to the widget
         if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
-            let state = self.state.lock();
+            let state = self.core.state().lock();
             let task_status_map = state.get_task_status_map();
             let task_graph = state.task_graph();
             let dependency_view = DependencyView::new(task_status_map, task_graph, is_minimal);
@@ -1701,7 +1648,7 @@ impl App {
             .get_task_status(&task_name)
             .unwrap_or(TaskStatus::NotStarted);
         let task_continuous = self.is_task_continuous(&task_name);
-        let state = self.state.lock();
+        let state = self.core.state().lock();
         let has_pty = state.get_pty_instance(&task_name).is_some();
 
         let is_focused = match self.focus {
@@ -1793,7 +1740,7 @@ impl App {
     }
 
     pub fn set_estimated_task_timings(&mut self, timings: HashMap<String, i64>) {
-        self.state.lock().set_estimated_task_timings(timings);
+        self.core.set_estimated_task_timings(timings);
     }
 
     /// Handles automatic pane switching when a task becomes skipped.
@@ -1842,7 +1789,7 @@ impl App {
         self.dependency_view_states[pane_idx] = None;
 
         // Assign the PTY for the new task to this pane if available
-        let state = self.state.lock();
+        let state = self.core.state().lock();
         if let Some(pty_instance) = state.get_pty_instance(&task_id) {
             self.terminal_pane_data[pane_idx].pty = Some(pty_instance.clone());
 
@@ -1869,7 +1816,7 @@ impl App {
     /// Returns the task name of the first dependency that failed, causing this task to be skipped.
     /// This is used for automatic pane switching to show the root cause of failures.
     fn get_first_failed_dependency(&self, task_name: &str) -> Option<String> {
-        let state = self.state.lock();
+        let state = self.core.state().lock();
         let failed_deps =
             get_failed_dependencies(task_name, state.task_graph(), state.get_task_status_map());
         failed_deps.into_iter().next()
@@ -1888,12 +1835,23 @@ impl App {
 use crate::native::tui::tui_app::TuiApp;
 
 impl TuiApp for App {
+    // === Core Access ===
+
+    fn core(&self) -> &TuiCore {
+        &self.core
+    }
+
+    fn core_mut(&mut self) -> &mut TuiCore {
+        &mut self.core
+    }
+
+    // === Event Handling (delegates to App methods) ===
+
     fn handle_event(
         &mut self,
         event: tui::Event,
         action_tx: &UnboundedSender<Action>,
     ) -> Result<bool> {
-        // Delegate to existing handle_event method
         self.handle_event(event, action_tx)
     }
 
@@ -1903,111 +1861,73 @@ impl TuiApp for App {
         action: Action,
         action_tx: &UnboundedSender<Action>,
     ) {
-        // Delegate to existing handle_action method
         self.handle_action(tui, action, action_tx);
     }
 
-    fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
-        // Delegate to existing method
-        self.register_action_handler(tx)
-    }
+    // === Mode Identification ===
 
     fn get_tui_mode(&self) -> TuiMode {
-        // App is always full-screen mode
         TuiMode::FullScreen
     }
 
+    // === Initialization ===
+
     fn init(&mut self, area: Size) -> Result<()> {
-        // Delegate to existing init method
         self.init(area)
     }
 
+    // === Task Lifecycle (App has custom UI logic, so override defaults) ===
+
     fn start_command(&mut self, thread_count: Option<u32>) {
-        // Delegate to existing method
         self.start_command(thread_count);
     }
 
     fn start_tasks(&mut self, tasks: Vec<Task>) {
-        // Delegate to existing method
         self.start_tasks(tasks);
     }
 
     fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
-        // Delegate to existing method
         self.update_task_status(task_id, status);
     }
 
     fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
-        // Delegate to existing method
         self.end_tasks(task_results);
     }
 
     fn end_command(&mut self) {
-        // Delegate to existing method
         self.end_command();
     }
+
+    // === PTY Registration (mode-specific dimension calculations) ===
 
     fn register_running_interactive_task(
         &mut self,
         task_id: String,
         parser_and_writer: External<(ParserArc, WriterArc)>,
     ) {
-        // Delegate to existing method
         self.register_running_interactive_task(task_id, parser_and_writer);
     }
 
     fn register_running_non_interactive_task(&mut self, task_id: String) {
-        // Delegate to existing method
         self.register_running_non_interactive_task(task_id);
     }
 
     fn print_task_terminal_output(&mut self, task_id: String, output: String) {
-        // Delegate to existing method
         self.print_task_terminal_output(task_id, output);
     }
 
     fn append_task_output(&mut self, task_id: String, output: String) {
-        // Delegate to existing method
         self.append_task_output(task_id, output);
     }
 
-    fn set_done_callback(&mut self, callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>) {
-        // Delegate to existing method
-        self.set_done_callback(callback);
-    }
-
-    fn set_forced_shutdown_callback(
-        &mut self,
-        callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
-    ) {
-        // Delegate to existing method
-        self.set_forced_shutdown_callback(callback);
-    }
-
-    fn call_done_callback(&self) {
-        // Delegate to existing method
-        self.call_done_callback();
-    }
+    // === Mode-specific overrides ===
 
     fn set_cloud_message(&mut self, message: Option<String>) {
-        // Delegate to existing method
         self.set_cloud_message(message);
     }
 
-    fn set_console_messenger(&mut self, messenger: NxConsoleMessageConnection) {
-        // Delegate to existing method
-        self.set_console_messenger(messenger);
-    }
-
-    fn set_estimated_task_timings(&mut self, timings: HashMap<String, i64>) {
-        // Delegate to existing method
-        self.set_estimated_task_timings(timings);
-    }
-
     fn should_quit(&self) -> bool {
-        // Check if quit_at is set in shared state
-        let state = self.state.lock();
-        let result = state.should_quit();
+        let result = self.core.should_quit();
         if result {
             debug!("⏰ App::should_quit() = true - quit timer expired");
         }
@@ -2019,9 +1939,5 @@ impl TuiApp for App {
             .lock()
             .get_selected_task_name()
             .cloned()
-    }
-
-    fn get_shared_state(&self) -> Arc<Mutex<TuiState>> {
-        self.get_state()
     }
 }

@@ -1,7 +1,7 @@
 use napi::JsObject;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
-use parking_lot::Mutex;
+use parking_lot::{Mutex, MutexGuard};
 use std::sync::Arc;
 use tracing::debug;
 
@@ -11,8 +11,6 @@ use crate::native::{
     ide::nx_console::messaging::NxConsoleMessageConnection,
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
 };
-
-use crossterm::terminal;
 
 use super::action::Action;
 use super::app::App;
@@ -91,43 +89,52 @@ pub enum TuiAppInstance {
     Inline(Arc<Mutex<InlineApp>>),
 }
 
-impl TuiAppInstance {
-    /// Call a TuiApp trait method on whichever app is active
-    ///
-    /// This helper eliminates the need for match statements at every call site.
-    /// The closure receives a mutable reference to the TuiApp trait object.
-    ///
-    /// # Example
-    /// ```
-    /// app.with_app(|tui_app| {
-    ///     tui_app.start_command(None);
-    /// });
-    /// ```
-    fn with_app<F, R>(&self, f: F) -> R
-    where
-        F: FnOnce(&mut dyn TuiApp) -> R,
-    {
+/// A guard type that holds a MutexGuard for either App or InlineApp
+/// and provides transparent access to the TuiApp trait methods.
+///
+/// This eliminates the need for closures at call sites - you can
+/// directly call trait methods on the guard:
+///
+/// # Example
+/// ```
+/// app.lock().start_command(None);
+/// ```
+pub enum TuiAppGuard<'a> {
+    FullScreen(MutexGuard<'a, App>),
+    Inline(MutexGuard<'a, InlineApp>),
+}
+
+impl<'a> std::ops::Deref for TuiAppGuard<'a> {
+    type Target = dyn TuiApp + 'a;
+
+    fn deref(&self) -> &Self::Target {
         match self {
-            TuiAppInstance::FullScreen(app) => {
-                let mut app = app.lock();
-                f(&mut *app)
-            }
-            TuiAppInstance::Inline(app) => {
-                let mut app = app.lock();
-                f(&mut *app)
-            }
+            TuiAppGuard::FullScreen(guard) => &**guard,
+            TuiAppGuard::Inline(guard) => &**guard,
         }
     }
+}
 
-    /// Get shared state Arc from whichever app is active
-    ///
-    /// This is used for mode switching (Phase 4+), where we need to transfer
-    /// the TuiState from one app type to another.
-    #[allow(dead_code)] // Will be used in Phase 4
-    fn get_shared_state(&self) -> Arc<Mutex<TuiState>> {
+impl<'a> std::ops::DerefMut for TuiAppGuard<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
         match self {
-            TuiAppInstance::FullScreen(app) => app.lock().get_state(),
-            TuiAppInstance::Inline(app) => app.lock().get_state(),
+            TuiAppGuard::FullScreen(guard) => &mut **guard,
+            TuiAppGuard::Inline(guard) => &mut **guard,
+        }
+    }
+}
+
+impl TuiAppInstance {
+    /// Lock and get a guard that derefs to `&mut dyn TuiApp`
+    ///
+    /// This allows direct method calls on the trait without closures:
+    /// ```
+    /// app.lock().start_command(None);
+    /// ```
+    fn lock(&self) -> TuiAppGuard<'_> {
+        match self {
+            TuiAppInstance::FullScreen(app) => TuiAppGuard::FullScreen(app.lock()),
+            TuiAppInstance::Inline(app) => TuiAppGuard::Inline(app.lock()),
         }
     }
 }
@@ -139,6 +146,83 @@ impl Clone for TuiAppInstance {
             TuiAppInstance::Inline(app) => TuiAppInstance::Inline(app.clone()),
         }
     }
+}
+
+/// Result of a successful mode switch operation
+struct ModeSwitchResult {
+    new_app: TuiAppInstance,
+    new_mode: TuiMode,
+}
+
+/// Switches the TUI between FullScreen and Inline modes.
+///
+/// This function handles the complete mode transition:
+/// 1. Extracts shared state from the current app
+/// 2. Switches the terminal viewport
+/// 3. Creates a new app instance for the target mode
+/// 4. Initializes the new app with action handlers
+/// 5. Forces an immediate render
+///
+/// Returns `Some(ModeSwitchResult)` on success, `None` on failure.
+/// On failure, the caller should break out of the event loop.
+fn switch_mode(
+    current_app: &TuiAppInstance,
+    tui: &mut Tui,
+    target_mode: TuiMode,
+    action_tx: &tokio::sync::mpsc::UnboundedSender<Action>,
+) -> Option<ModeSwitchResult> {
+    debug!("🔄 Switching to {:?} mode", target_mode);
+
+    // Get shared state and selected task from current app
+    let (shared_state, selected_task) = {
+        let guard = current_app.lock();
+        (guard.get_shared_state(), guard.get_selected_task_name())
+    };
+
+    // Switch terminal viewport
+    if let Err(e) = tui.switch_mode(target_mode) {
+        debug!("❌ Failed to switch terminal mode: {}", e);
+        current_app
+            .lock()
+            .get_shared_state()
+            .lock()
+            .quit_immediately();
+        return None;
+    }
+
+    // Create new app instance with same state
+    let new_app = match target_mode {
+        TuiMode::FullScreen => {
+            let app_instance = App::with_state(shared_state, target_mode)
+                .expect("Failed to create full-screen app");
+            TuiAppInstance::FullScreen(Arc::new(Mutex::new(app_instance)))
+        }
+        TuiMode::Inline => {
+            debug!(
+                "Creating inline app with selected task: {:?}",
+                selected_task
+            );
+            let app_instance = InlineApp::with_state(shared_state, selected_task)
+                .expect("Failed to create inline app");
+            TuiAppInstance::Inline(Arc::new(Mutex::new(app_instance)))
+        }
+    };
+
+    // Initialize new app
+    {
+        let mut guard = new_app.lock();
+        guard.register_action_handler(action_tx.clone()).ok();
+        guard
+            .init(tui.size().unwrap_or(ratatui::layout::Size::new(80, 24)))
+            .ok();
+    }
+
+    debug!("✅ Switched to {:?} mode", target_mode);
+
+    Some(ModeSwitchResult {
+        new_app,
+        new_mode: target_mode,
+    })
 }
 
 #[napi]
@@ -209,9 +293,7 @@ impl AppLifeCycle {
 
     #[napi]
     pub fn start_command(&mut self, thread_count: Option<u32>) -> napi::Result<()> {
-        self.app.with_app(|tui_app| {
-            tui_app.start_command(thread_count);
-        });
+        self.app.lock().start_command(thread_count);
         Ok(())
     }
 
@@ -223,9 +305,7 @@ impl AppLifeCycle {
 
     #[napi]
     pub fn start_tasks(&mut self, tasks: Vec<Task>, _metadata: JsObject) -> napi::Result<()> {
-        self.app.with_app(|tui_app| {
-            tui_app.start_tasks(tasks);
-        });
+        self.app.lock().start_tasks(tasks);
         Ok(())
     }
 
@@ -237,9 +317,7 @@ impl AppLifeCycle {
         output: String,
     ) -> napi::Result<()> {
         debug!("Received task terminal output for {}", task.id);
-        self.app.with_app(|tui_app| {
-            tui_app.print_task_terminal_output(task.id, output);
-        });
+        self.app.lock().print_task_terminal_output(task.id, output);
         Ok(())
     }
 
@@ -249,17 +327,13 @@ impl AppLifeCycle {
         task_results: Vec<TaskResult>,
         _metadata: JsObject,
     ) -> napi::Result<()> {
-        self.app.with_app(|tui_app| {
-            tui_app.end_tasks(task_results);
-        });
+        self.app.lock().end_tasks(task_results);
         Ok(())
     }
 
     #[napi]
     pub fn end_command(&self) -> napi::Result<()> {
-        self.app.with_app(|tui_app| {
-            tui_app.end_command();
-        });
+        self.app.lock().end_command();
         Ok(())
     }
 
@@ -274,7 +348,7 @@ impl AppLifeCycle {
         enable_logger();
         debug!("🚀 Initializing Terminal UI - Mode: {:?}", self.tui_mode);
 
-        let app = self.app.clone();
+        let mut app = self.app.clone();
         let workspace_root = self.workspace_root.clone();
 
         // Create Tui with appropriate viewport based on mode
@@ -283,7 +357,9 @@ impl AppLifeCycle {
                 Tui::new().map_err(|e| napi::Error::from_reason(e.to_string()))?
             }
             TuiMode::Inline => {
-                let inline_height = terminal::size().map(|(_cols, rows)| rows).unwrap_or(24);
+                let inline_height = crossterm::terminal::size()
+                    .map(|(_cols, rows)| rows)
+                    .unwrap_or(24);
 
                 Tui::new_with_viewport(ratatui::Viewport::Inline(inline_height))
                     .map_err(|e| napi::Error::from_reason(e.to_string()))?
@@ -291,17 +367,15 @@ impl AppLifeCycle {
         };
 
         // Enter terminal with appropriate mode
-        tui.enter_with_mode(self.tui_mode)
+        tui.enter(self.tui_mode)
             .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
         // Set panic hook (identical for both modes)
         std::panic::set_hook(Box::new(move |panic_info| {
             // Only try to restore terminal if it's still in raw mode
-            if crossterm::terminal::is_raw_mode_enabled().unwrap_or(false) {
-                if let Ok(mut t) = Tui::new() {
-                    if let Err(r) = t.exit() {
-                        debug!("Unable to exit Terminal: {:?}", r);
-                    }
+            if let Ok(mut t) = Tui::new() {
+                if let Err(r) = t.exit() {
+                    debug!("Unable to exit Terminal: {:?}", r);
                 }
             }
             better_panic::Settings::auto()
@@ -310,6 +384,8 @@ impl AppLifeCycle {
                 .verbosity(better_panic::Verbosity::Full)
                 .create_panic_handler()(panic_info);
         }));
+
+        debug!("Initialized Terminal UI");
 
         // Set rates (identical for both modes)
         tui.tick_rate(10.0);
@@ -320,31 +396,25 @@ impl AppLifeCycle {
         debug!("✅ Initialized Action Channel");
 
         // Initialize app through TuiApp trait (works for both modes!)
-        app.with_app(|tui_app| {
-            tui_app.set_done_callback(done_callback);
-            tui_app.register_action_handler(action_tx.clone()).ok();
-            tui_app
+        {
+            let mut guard = app.lock();
+            guard.set_done_callback(done_callback);
+            guard.register_action_handler(action_tx.clone()).ok();
+            guard
                 .init(tui.size().unwrap_or(ratatui::layout::Size::new(80, 24)))
                 .ok();
-        });
+        }
 
         debug!("✅ Initialized TUI App");
 
-        let tui_mode = self.tui_mode.clone();
+        let mut tui_mode = self.tui_mode.clone();
 
         // Spawn unified async task (identical for both modes!)
         napi::tokio::spawn(async move {
-            // Make variables mutable for mode switching
-            let mut app = app;
-            let mut tui = tui;
-            let mut tui_mode = tui_mode;
-
             // Set up console messenger (identical for both modes)
             {
                 let connection = NxConsoleMessageConnection::new(&workspace_root).await;
-                app.with_app(|tui_app| {
-                    tui_app.set_console_messenger(connection);
-                });
+                app.lock().set_console_messenger(connection);
             }
 
             // UNIFIED EVENT LOOP - works for both modes!
@@ -357,135 +427,48 @@ impl AppLifeCycle {
 
                         // Handle ESC key in inline mode - switch back to full-screen instead of quitting
                         if tui_mode == TuiMode::Inline && key.code == KeyCode::Esc {
-                            debug!("🔄 ESC pressed in inline mode - switching to full-screen");
-
-                            // Get shared state and selected task from current app
-                            let (shared_state, _) = app.with_app(|tui_app| {
-                                (tui_app.get_shared_state(), tui_app.get_selected_task_name())
-                            });
-
-                            // Switch to full-screen mode
-                            if let Err(e) = tui.switch_mode(TuiMode::FullScreen) {
-                                debug!("❌ Failed to switch terminal mode: {}", e);
-                                app.with_app(|tui_app| {
-                                    tui_app.get_shared_state().lock().quit_immediately();
-                                });
-                                break;
+                            match switch_mode(&app, &mut tui, TuiMode::FullScreen, &action_tx) {
+                                Some(result) => {
+                                    app = result.new_app;
+                                    tui_mode = result.new_mode;
+                                    app.lock()
+                                        .handle_action(&mut tui, Action::Render, &action_tx);
+                                    continue;
+                                }
+                                None => break,
                             }
-
-                            // Create full-screen app instance
-                            let app_instance = App::with_state(shared_state, TuiMode::FullScreen)
-                                .expect("Failed to create full-screen app");
-                            let new_app =
-                                TuiAppInstance::FullScreen(Arc::new(Mutex::new(app_instance)));
-
-                            // Initialize new app
-                            new_app.with_app(|tui_app| {
-                                tui_app.register_action_handler(action_tx.clone()).ok();
-                                tui_app
-                                    .init(tui.size().unwrap_or(ratatui::layout::Size::new(80, 24)))
-                                    .ok();
-                            });
-
-                            // Replace app instance
-                            app = new_app;
-                            tui_mode = TuiMode::FullScreen;
-
-                            debug!("✅ Switched back to full-screen mode");
-
-                            // Force immediate render
-                            app.with_app(|tui_app| {
-                                tui_app.handle_action(&mut tui, Action::Render, &action_tx);
-                            });
-
-                            // Don't pass this event to the app
-                            continue;
                         }
 
                         if key.code == KeyCode::F(11) {
-                            // User pressed F11 - switch modes
-                            debug!("🔄 Mode switch requested");
-
-                            // Determine new mode
-                            let new_mode = match tui_mode {
+                            // User pressed F11 - toggle between modes
+                            let target_mode = match tui_mode {
                                 TuiMode::FullScreen => TuiMode::Inline,
                                 TuiMode::Inline => TuiMode::FullScreen,
                             };
 
-                            // Get shared state and selected task from current app
-                            let (shared_state, selected_task) = app.with_app(|tui_app| {
-                                (tui_app.get_shared_state(), tui_app.get_selected_task_name())
-                            });
-
-                            // Switch terminal viewport
-                            if let Err(e) = tui.switch_mode(new_mode) {
-                                debug!("❌ Failed to switch terminal mode: {}", e);
-                                // Terminal is in a broken state, we need to exit gracefully
-                                app.with_app(|tui_app| {
-                                    tui_app.get_shared_state().lock().quit_immediately();
-                                });
-                                break;
+                            match switch_mode(&app, &mut tui, target_mode, &action_tx) {
+                                Some(result) => {
+                                    app = result.new_app;
+                                    tui_mode = result.new_mode;
+                                    // Force an immediate render (PTY resizing happens in init())
+                                    // We call handle_action directly rather than sending Action::Render
+                                    // because the event loop would block waiting for the next event before
+                                    // processing actions, causing the UI to not appear until the user
+                                    // presses a key
+                                    app.lock()
+                                        .handle_action(&mut tui, Action::Render, &action_tx);
+                                    continue;
+                                }
+                                None => break,
                             }
-
-                            // Create new app instance with same state
-                            let new_app = match new_mode {
-                                TuiMode::FullScreen => {
-                                    let app_instance = App::with_state(shared_state, new_mode)
-                                        .expect("Failed to create full-screen app");
-                                    TuiAppInstance::FullScreen(Arc::new(Mutex::new(app_instance)))
-                                }
-                                TuiMode::Inline => {
-                                    debug!(
-                                        "Creating inline app with selected task: {:?}",
-                                        selected_task
-                                    );
-                                    let app_instance =
-                                        InlineApp::with_state(shared_state, selected_task)
-                                            .expect("Failed to create inline app");
-                                    TuiAppInstance::Inline(Arc::new(Mutex::new(app_instance)))
-                                }
-                            };
-
-                            // Initialize new app
-                            new_app.with_app(|tui_app| {
-                                tui_app.register_action_handler(action_tx.clone()).ok();
-                                tui_app
-                                    .init(tui.size().unwrap_or(ratatui::layout::Size::new(80, 24)))
-                                    .ok();
-                            });
-
-                            // Replace app instance
-                            app = new_app;
-                            tui_mode = new_mode;
-
-                            debug!("✅ Switched to {:?} mode", new_mode);
-
-                            // Force an immediate render (PTY resizing happens in init())
-                            // We call handle_action directly rather than sending Action::Render
-                            // because the event loop would block waiting for the next event before
-                            // processing actions, causing the UI to not appear until the user
-                            // presses a key
-                            app.with_app(|tui_app| {
-                                tui_app.handle_action(&mut tui, Action::Render, &action_tx);
-                            });
-
-                            // Don't pass this event to the app
-                            continue;
                         }
                     }
 
-                    // Normal event handling
-                    let should_quit = app.with_app(|tui_app| {
-                        tui_app.handle_event(event, &action_tx).unwrap_or(false)
-                    });
+                    // Handle event (return value ignored - quit is purely time-based)
+                    let _ = app.lock().handle_event(event, &action_tx);
 
-                    if should_quit {
-                        break;
-                    }
-
-                    // Check if we should quit
-                    let should_quit = app.with_app(|tui_app| tui_app.should_quit());
-                    if should_quit {
+                    // Check if we should quit (time-based, like master branch)
+                    if app.lock().should_quit() {
                         debug!("⏱️  should_quit() returned true - breaking event loop");
                         break;
                     }
@@ -493,9 +476,7 @@ impl AppLifeCycle {
 
                 // Process actions through TuiApp trait
                 while let Ok(action) = action_rx.try_recv() {
-                    app.with_app(|tui_app| {
-                        tui_app.handle_action(&mut tui, action, &action_tx);
-                    });
+                    app.lock().handle_action(&mut tui, action, &action_tx);
                 }
             }
 
@@ -505,9 +486,7 @@ impl AppLifeCycle {
             // The idempotent check in exit() will prevent double-exit when Drop runs
             tui.exit().ok();
             debug!("🏁 TUI exited, calling done callback");
-            app.with_app(|tui_app| {
-                tui_app.call_done_callback();
-            });
+            app.lock().call_done_callback();
             debug!("🏁 Done callback called");
         });
 
@@ -520,33 +499,29 @@ impl AppLifeCycle {
         task_id: String,
         parser_and_writer: External<(ParserArc, WriterArc)>,
     ) {
-        self.app.with_app(|tui_app| {
-            tui_app.register_running_interactive_task(task_id, parser_and_writer);
-        });
+        self.app
+            .lock()
+            .register_running_interactive_task(task_id, parser_and_writer);
     }
 
     #[napi]
     pub fn register_running_task_with_empty_parser(&mut self, task_id: String) {
-        self.app.with_app(|tui_app| {
-            tui_app.register_running_non_interactive_task(task_id);
-        });
+        self.app
+            .lock()
+            .register_running_non_interactive_task(task_id);
     }
 
     #[napi]
     pub fn append_task_output(&mut self, task_id: String, output: String, is_pty_output: bool) {
         // If its from a pty, we already have it in the parser, so we don't need to append it again
         if !is_pty_output {
-            self.app.with_app(|tui_app| {
-                tui_app.append_task_output(task_id, output);
-            });
+            self.app.lock().append_task_output(task_id, output);
         }
     }
 
     #[napi]
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
-        self.app.with_app(|tui_app| {
-            tui_app.update_task_status(task_id, status);
-        });
+        self.app.lock().update_task_status(task_id, status);
     }
 
     #[napi]
@@ -554,18 +529,16 @@ impl AppLifeCycle {
         &self,
         forced_shutdown_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
     ) -> napi::Result<()> {
-        self.app.with_app(|tui_app| {
-            tui_app.set_forced_shutdown_callback(forced_shutdown_callback);
-        });
+        self.app
+            .lock()
+            .set_forced_shutdown_callback(forced_shutdown_callback);
         Ok(())
     }
 
     // Rust-only lifecycle method
     #[napi(js_name = "__setCloudMessage")]
     pub async fn __set_cloud_message(&self, message: String) -> napi::Result<()> {
-        self.app.with_app(|tui_app| {
-            tui_app.set_cloud_message(Some(message));
-        });
+        self.app.lock().set_cloud_message(Some(message));
         Ok(())
     }
 
@@ -574,9 +547,7 @@ impl AppLifeCycle {
         &mut self,
         timings: std::collections::HashMap<String, i64>,
     ) -> napi::Result<()> {
-        self.app.with_app(|tui_app| {
-            tui_app.set_estimated_task_timings(timings);
-        });
+        self.app.lock().set_estimated_task_timings(timings);
         Ok(())
     }
 }

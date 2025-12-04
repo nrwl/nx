@@ -2,32 +2,31 @@ use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyModifiers};
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
-use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use parking_lot::Mutex;
-use ratatui::layout::Size;
-use ratatui::style::Stylize;
-use ratatui::text::Span;
+use ratatui::layout::{Constraint, Direction, Layout, Size};
+use ratatui::style::{Modifier, Stylize};
+use ratatui::text::{Line, Span};
+use ratatui::widgets::Paragraph;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::debug;
 
-use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
-use crate::native::tui::utils::get_task_status_style;
+use crate::native::tui::utils::{format_duration_with_estimate, get_task_status_style};
 use crate::native::{
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
-    tasks::types::{Task, TaskGraph, TaskResult},
+    tasks::types::{Task, TaskGraph},
 };
 
 use super::action::Action;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::graph_utils::get_task_count;
 use super::lifecycle::{RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_app::TuiApp;
+use super::tui_core::{AutoExitDecision, QuitDecision, TuiCore};
 use super::tui_state::TuiState;
 use super::utils::{get_task_status_icon, write_output_to_pty};
 
@@ -51,13 +50,11 @@ use super::utils::{get_task_status_icon, write_output_to_pty};
 /// is stored in the shared TuiState. InlineApp only maintains UI-specific state
 /// like scrollback tracking and render counters.
 pub struct InlineApp {
-    // === Shared State ===
-    /// Shared task execution state (accessed via lock)
-    state: Arc<Mutex<TuiState>>,
+    // === Shared Core ===
+    /// Shared core functionality (state management, callbacks, etc.)
+    core: TuiCore,
 
     // === Inline UI State ===
-    /// Channel for sending actions to the event loop
-    action_tx: Option<UnboundedSender<Action>>,
     /// The task whose output should be displayed (required for inline mode)
     /// This is set during mode switching or defaults to the first running task
     selected_task: Option<String>,
@@ -111,8 +108,7 @@ impl InlineApp {
         )));
 
         Ok(Self {
-            state,
-            action_tx: None,
+            core: TuiCore::new(state),
             selected_task: None, // Will auto-select first running task on render
             countdown_popup: CountdownPopup::new(),
             task_scrollback_lines: HashMap::new(),
@@ -135,13 +131,16 @@ impl InlineApp {
     /// * `selected_task` - Optional task to display (from full-screen selection)
     pub fn with_state(state: Arc<Mutex<TuiState>>, selected_task: Option<String>) -> Result<Self> {
         Ok(Self {
-            state,
-            action_tx: None,
+            core: TuiCore::new(state),
             selected_task, // Use the provided selection from mode switch
             countdown_popup: CountdownPopup::new(),
+            // Reset all scrollback tracking when mode switching
+            // PTYs will be resized in init(), which changes scrollback calculations
             task_scrollback_lines: HashMap::new(),
             task_last_rendered_scrollback: HashMap::new(),
-            scrollback_render_counter: 0,
+            // Start at 19 so the first render (increment to 20) will trigger scrollback rendering
+            // This ensures existing PTY content from full-screen mode is immediately displayed
+            scrollback_render_counter: 19,
             total_inserted_lines: 0,
         })
     }
@@ -150,25 +149,19 @@ impl InlineApp {
     ///
     /// Returns an Arc clone, which is cheap (just increments ref count).
     pub fn get_state(&self) -> Arc<Mutex<TuiState>> {
-        self.state.clone()
+        self.core.get_shared_state()
     }
 
     // === Helper Methods ===
 
     /// Immediately set quit flag in shared state
     fn quit_immediately(&mut self) {
-        let mut state = self.state.lock();
-        state.quit_immediately();
+        self.core.quit_immediately();
     }
 
     /// Get the task ID of the currently running task (if any)
     fn get_current_running_task(&self) -> Option<String> {
-        self.state.lock().get_current_running_task()
-    }
-
-    /// Get count of completed tasks (any terminal state)
-    fn get_completed_task_count(&self) -> usize {
-        self.state.lock().get_completed_task_count()
+        self.core.state().lock().get_current_running_task()
     }
 
     /// Calculate PTY dimensions for inline mode
@@ -183,13 +176,9 @@ impl InlineApp {
             (content_height, cols)
         } else {
             // Fallback to reasonable defaults
+            debug!("⚠️  Failed to get terminal size, using default PTY dimensions");
             (20, 80)
         }
-    }
-
-    /// Get names of tasks that failed
-    fn get_failed_task_names(&self) -> Vec<String> {
-        self.state.lock().get_failed_task_names()
     }
 
     /// Internal method to handle Action::EndCommand
@@ -201,40 +190,26 @@ impl InlineApp {
 
         debug!("📋 InlineApp::handle_end_command() called");
 
-        // If the user has interacted with the app or auto-exit is disabled, do nothing
-        let state = self.state.lock();
-        let user_has_interacted = state.has_user_interacted();
-        let should_exit_automatically = state.tui_config().auto_exit.should_exit_automatically();
-        let task_graph_ref = state.task_graph();
-        let task_count = get_task_count(task_graph_ref);
-        drop(state);
-
-        debug!(
-            "  user_has_interacted: {}, should_exit_automatically: {}, task_count: {}",
-            user_has_interacted, should_exit_automatically, task_count
-        );
-
-        if user_has_interacted || !should_exit_automatically {
-            debug!("  ❌ Auto-exit blocked: user interacted or auto-exit disabled");
-            return;
-        }
-
-        let failed_task_names = self.get_failed_task_names();
-        debug!("  failed_task_count: {}", failed_task_names.len());
-
-        // If there are more than 1 failed tasks, do not auto-exit
-        // (In inline mode, we can't focus a specific task, so just skip auto-exit)
-        if failed_task_names.len() > 1 {
-            debug!("  ❌ Auto-exit blocked: multiple failed tasks");
-            return;
-        }
-
-        if task_count > 1 {
-            debug!("  ⏱️  Starting countdown (multi-task)");
-            self.begin_exit_countdown()
-        } else {
-            debug!("  🚪 Quitting immediately (single task)");
-            self.quit();
+        // Use TuiCore to determine auto-exit behavior
+        match self.core.get_auto_exit_decision() {
+            AutoExitDecision::Stay => {
+                debug!("  ❌ Auto-exit blocked: user interacted or auto-exit disabled");
+            }
+            AutoExitDecision::StayWithFailures(failed_tasks) => {
+                // In inline mode, we can't focus a specific task, so just log
+                debug!(
+                    "  ❌ Auto-exit blocked: {} failed tasks",
+                    failed_tasks.len()
+                );
+            }
+            AutoExitDecision::ShowCountdown => {
+                debug!("  ⏱️  Starting countdown (multi-task)");
+                self.begin_exit_countdown();
+            }
+            AutoExitDecision::ExitImmediately => {
+                debug!("  🚪 Quitting immediately (single task)");
+                self.quit();
+            }
         }
     }
 
@@ -249,21 +224,21 @@ impl InlineApp {
     fn begin_exit_countdown(&mut self) {
         use tracing::debug;
 
-        let countdown_duration = self.state.lock().tui_config().auto_exit.countdown_seconds();
+        // Use TuiCore to get countdown duration
+        let countdown_duration = self.core.get_countdown_duration();
         debug!(
             "⏱️  InlineApp::begin_exit_countdown() - duration: {:?}",
             countdown_duration
         );
 
         // If countdown is disabled, exit immediately
-        if countdown_duration.is_none() {
+        let Some(countdown_duration) = countdown_duration else {
             debug!("  🚪 Countdown disabled, quitting immediately");
             self.quit();
             return;
-        }
+        };
 
-        // Otherwise, show the countdown popup for the configured duration
-        let countdown_duration = countdown_duration.unwrap() as u64;
+        // Show the countdown popup for the configured duration
         debug!(
             "  📊 Starting countdown popup for {} seconds",
             countdown_duration
@@ -271,8 +246,7 @@ impl InlineApp {
         self.countdown_popup.start_countdown(countdown_duration);
 
         debug!("  ⏰ Scheduling quit timer");
-        self.state
-            .lock()
+        self.core
             .schedule_quit(std::time::Duration::from_secs(countdown_duration));
 
         debug!(
@@ -289,33 +263,53 @@ impl InlineApp {
     fn resize_all_ptys(&mut self) {
         let (rows, cols) = self.calculate_inline_pty_dimensions();
 
-        let state = self.state.lock();
+        let mut state = self.core.state().lock();
 
-        // Resize each PTY instance
-        for pty in state.get_pty_instances().values() {
-            // Get current dimensions to avoid unnecessary resizes
-            let (current_rows, current_cols) = pty.get_dimensions();
+        // Collect task IDs to avoid holding immutable borrow during mutation
+        let task_ids: Vec<String> = state.get_pty_instances().keys().cloned().collect();
 
-            // Only resize if dimensions actually changed
-            if current_rows != rows || current_cols != cols {
-                // Clone the PTY instance (cheap - just Arc ref counts)
-                // so we can get mutable access for resize
-                let mut pty_clone = pty.as_ref().clone();
-                let _ = pty_clone.resize(rows, cols);
+        // Resize each PTY instance by replacing the Arc
+        for task_id in task_ids {
+            if let Some(pty_arc) = state.get_pty_instance(&task_id) {
+                let (current_rows, current_cols) = pty_arc.get_dimensions();
+
+                // Only resize if dimensions actually changed
+                if current_rows != rows || current_cols != cols {
+                    tracing::debug!(
+                        "📊 InlineApp resizing PTY for {} from {}x{} to {}x{}",
+                        task_id,
+                        current_cols,
+                        current_rows,
+                        cols,
+                        rows
+                    );
+
+                    // Clone the PTY instance, resize it, and replace the Arc
+                    let mut pty_clone = pty_arc.as_ref().clone();
+                    if let Ok(()) = pty_clone.resize(rows, cols) {
+                        state.register_pty_instance(task_id, Arc::new(pty_clone));
+                    }
+                }
             }
         }
     }
 
     fn dispatch_action(&self, action: Action) {
-        if let Some(tx) = &self.action_tx {
-            tx.send(action).unwrap_or_else(|e| {
-                debug!("Failed to dispatch action: {}", e);
-            });
-        }
+        self.core.dispatch_action(action);
     }
 }
 
 impl TuiApp for InlineApp {
+    // === Core Access ===
+
+    fn core(&self) -> &TuiCore {
+        &self.core
+    }
+
+    fn core_mut(&mut self) -> &mut TuiCore {
+        &mut self.core
+    }
+
     // === Event Handling ===
 
     fn handle_event(
@@ -325,8 +319,8 @@ impl TuiApp for InlineApp {
     ) -> Result<bool> {
         match event {
             tui::Event::Quit => {
-                action_tx.send(Action::Quit)?;
-                return Ok(true);
+                self.quit_immediately();
+                return Ok(false);
             }
             tui::Event::Key(key) => {
                 // If countdown popup is visible, handle countdown-specific keys
@@ -335,12 +329,12 @@ impl TuiApp for InlineApp {
                         KeyCode::Char('q') | KeyCode::Esc => {
                             // Quit immediately on 'q' or Esc when countdown is active
                             self.quit_immediately();
-                            return Ok(true);
+                            return Ok(false);
                         }
                         KeyCode::Char('c') if key.modifiers == KeyModifiers::CONTROL => {
                             // Quit immediately on Ctrl+C
                             self.quit_immediately();
-                            return Ok(true);
+                            return Ok(false);
                         }
                         KeyCode::Up | KeyCode::Char('k')
                             if self.countdown_popup.is_scrollable() =>
@@ -359,57 +353,25 @@ impl TuiApp for InlineApp {
                         _ => {
                             // Any other key cancels the countdown
                             self.countdown_popup.cancel_countdown();
-                            self.state.lock().cancel_quit();
+                            self.core.cancel_quit();
                             return Ok(false);
                         }
                     }
                 }
 
                 if matches!(key.code, KeyCode::Char('q')) && key.modifiers.is_empty() {
-                    // Quit on 'q' or Esc when countdown is not active
-                    let state = self.state.lock();
-                    let all_tasks_completed = state.get_task_status_map().values().all(|status| {
-                        matches!(
-                            status,
-                            TaskStatus::Success
-                                | TaskStatus::Failure
-                                | TaskStatus::Skipped
-                                | TaskStatus::LocalCache
-                                | TaskStatus::LocalCacheKeptExisting
-                                | TaskStatus::RemoteCache
-                                | TaskStatus::Stopped // Consider stopped continuous tasks as completed for exit purposes
-                        )
-                    });
-                    drop(state);
-
-                    if all_tasks_completed {
-                        // If all tasks are done, quit immediately like Ctrl+C
-                        let mut state = self.state.lock();
-                        state.set_forced_shutdown(true);
-                        state.quit_immediately();
-                        drop(state);
-                    } else {
-                        // Otherwise, start the exit countdown to give the user the chance to change their mind in case of an accidental keypress
-                        self.state.lock().set_forced_shutdown(true);
+                    // Use TuiCore to handle quit request (sets forced_shutdown, checks completion)
+                    if self.core.handle_quit_request() == QuitDecision::StartCountdown {
                         self.begin_exit_countdown();
                     }
-
-                    return Ok(true);
+                    return Ok(false);
                 }
 
                 if matches!(key.code, KeyCode::Char('c')) && key.modifiers == KeyModifiers::CONTROL
                 {
-                    let mut state = self.state.lock();
-                    state
-                        .get_console_messenger()
-                        .as_ref()
-                        .and_then(|c| c.end_running_tasks());
-
-                    state.set_forced_shutdown(true);
-                    // Quit immediately
-                    state.quit_immediately();
-                    drop(state);
-                    return Ok(true);
+                    // Use TuiCore to handle Ctrl+C (end command, set forced shutdown, quit)
+                    self.core.handle_ctrl_c();
+                    return Ok(false);
                 }
 
                 if matches!(key.code, KeyCode::F(12)) {
@@ -449,7 +411,7 @@ impl TuiApp for InlineApp {
             }
             Action::StartCommand(_) => {
                 // Notify console messenger if connected
-                let state = self.state.lock();
+                let state = self.core.state().lock();
                 if let Some(messenger) = state.get_console_messenger() {
                     messenger.start_running_tasks();
                 }
@@ -459,13 +421,6 @@ impl TuiApp for InlineApp {
             }
             _ => {} // Ignore other actions (including Resize - ratatui doesn't handle it properly for inline viewports)
         }
-    }
-
-    // === Action Channel ===
-
-    fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
-        self.action_tx = Some(tx);
-        Ok(())
     }
 
     // === Mode Identification ===
@@ -483,63 +438,28 @@ impl TuiApp for InlineApp {
         Ok(())
     }
 
-    // === Task Lifecycle ===
-
-    fn start_command(&mut self, _thread_count: Option<u32>) {
-        // Notify console messenger if connected
-        let state = self.state.lock();
-        if let Some(messenger) = state.get_console_messenger() {
-            messenger.start_running_tasks();
-        }
-    }
+    // === Task Lifecycle (overrides with custom logic) ===
 
     fn start_tasks(&mut self, tasks: Vec<Task>) {
-        let mut state = self.state.lock();
-        for task in &tasks {
-            state.record_task_start(task.id.clone());
-            state.update_task_status(task.id.clone(), TaskStatus::InProgress);
-        }
-        drop(state);
+        tracing::debug!(
+            "📊 InlineApp::start_tasks called with {} tasks: {:?}",
+            tasks.len(),
+            tasks.iter().map(|t| &t.id).collect::<Vec<_>>()
+        );
+
+        // Use TuiCore to handle timing and status
+        self.core.start_tasks(&tasks);
 
         // Auto-select the first task to display its output
         // This ensures we show output even after the task completes
         self.selected_task = Some(tasks[0].id.clone());
+        tracing::debug!(
+            "📊 InlineApp::start_tasks - selected_task set to {:?}",
+            self.selected_task
+        );
     }
 
-    fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
-        let mut state = self.state.lock();
-        state.update_task_status(task_id, status);
-    }
-
-    fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
-        let mut state = self.state.lock();
-        for result in task_results {
-            state.record_task_end(result.task.id.clone());
-            // Update status based on result (0 = success)
-            let status = if result.code == 0 {
-                TaskStatus::Success
-            } else {
-                TaskStatus::Failure
-            };
-            state.update_task_status(result.task.id, status);
-        }
-    }
-
-    fn end_command(&mut self) {
-        let state = self.state.lock();
-        state
-            .get_console_messenger()
-            .as_ref()
-            .and_then(|c| c.end_running_tasks());
-        drop(state);
-
-        // Dispatch Action::EndCommand to trigger auto-exit logic
-        if let Some(action_tx) = &self.action_tx {
-            let _ = action_tx.send(Action::EndCommand);
-        }
-    }
-
-    // === PTY Registration ===
+    // === PTY Registration (mode-specific dimension calculations) ===
 
     fn register_running_interactive_task(
         &mut self,
@@ -554,9 +474,10 @@ impl TuiApp for InlineApp {
         pty.resize(rows, cols).ok();
 
         let pty = Arc::new(pty);
-        let mut state = self.state.lock();
-        state.register_pty_instance(task_id.clone(), pty);
-        drop(state);
+        self.core
+            .state()
+            .lock()
+            .register_pty_instance(task_id.clone(), pty);
 
         // Initialize scrollback tracking
         self.task_scrollback_lines.insert(task_id.clone(), 0);
@@ -568,9 +489,10 @@ impl TuiApp for InlineApp {
         let pty = PtyInstance::non_interactive_with_dimensions(rows, cols);
 
         let pty = Arc::new(pty);
-        let mut state = self.state.lock();
-        state.register_pty_instance(task_id.clone(), pty);
-        drop(state);
+        self.core
+            .state()
+            .lock()
+            .register_pty_instance(task_id.clone(), pty);
 
         // Initialize scrollback tracking
         self.task_scrollback_lines.insert(task_id.clone(), 0);
@@ -579,7 +501,7 @@ impl TuiApp for InlineApp {
 
     fn print_task_terminal_output(&mut self, task_id: String, output: String) {
         // Check if a PTY instance already exists for this task
-        let state = self.state.lock();
+        let state = self.core.state().lock();
         let has_pty = state.get_pty_instance(&task_id).is_some();
         if let Some(pty) = state.get_pty_instance(&task_id) {
             // Append output to the existing PTY instance to preserve scroll position
@@ -597,9 +519,10 @@ impl TuiApp for InlineApp {
 
             // Register the PTY instance in shared state
             let pty = Arc::new(pty);
-            let mut state = self.state.lock();
-            state.register_pty_instance(task_id.clone(), pty);
-            drop(state);
+            self.core
+                .state()
+                .lock()
+                .register_pty_instance(task_id.clone(), pty);
 
             // Initialize scrollback tracking for the new PTY
             self.task_scrollback_lines.insert(task_id.clone(), 0);
@@ -612,56 +535,10 @@ impl TuiApp for InlineApp {
         self.print_task_terminal_output(task_id, output);
     }
 
-    // === Callback Management ===
-
-    fn set_done_callback(&mut self, callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>) {
-        let mut state = self.state.lock();
-        state.set_done_callback(callback);
-    }
-
-    fn set_forced_shutdown_callback(
-        &mut self,
-        callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
-    ) {
-        let mut state = self.state.lock();
-        state.set_forced_shutdown_callback(callback);
-    }
-
-    fn call_done_callback(&self) {
-        let state = self.state.lock();
-        state.call_done_callback();
-    }
-
-    // === Misc ===
-
-    fn set_cloud_message(&mut self, _message: Option<String>) {
-        // Cloud messages not displayed in inline mode
-        // Could store in state if needed for mode switching
-    }
-
-    fn set_console_messenger(&mut self, messenger: NxConsoleMessageConnection) {
-        let mut state = self.state.lock();
-        state.set_console_messenger(messenger);
-    }
-
-    fn set_estimated_task_timings(&mut self, timings: HashMap<String, i64>) {
-        let mut state = self.state.lock();
-        state.set_estimated_task_timings(timings);
-    }
-
-    // === Quit Check ===
-
-    fn should_quit(&self) -> bool {
-        let state = self.state.lock();
-        state.should_quit()
-    }
+    // === Mode-specific overrides ===
 
     fn get_selected_task_name(&self) -> Option<String> {
         self.selected_task.clone()
-    }
-
-    fn get_shared_state(&self) -> Arc<Mutex<TuiState>> {
-        self.get_state()
     }
 }
 
@@ -674,6 +551,13 @@ impl InlineApp {
         // Only render scrollback every 20th iteration to batch updates for VSCode
         let should_render_scrollback = self.scrollback_render_counter % 20 == 0;
 
+        tracing::debug!(
+            "📊 render_scrollback_above_tui: counter={}, should_render={}, selected_task={:?}",
+            self.scrollback_render_counter,
+            should_render_scrollback,
+            self.selected_task
+        );
+
         if !should_render_scrollback {
             return;
         }
@@ -684,8 +568,13 @@ impl InlineApp {
             .clone()
             .or_else(|| self.get_current_running_task());
 
+        tracing::debug!(
+            "📊 render_scrollback_above_tui: current_task={:?}",
+            current_task
+        );
+
         if let Some(current_task) = current_task {
-            let state = self.state.lock();
+            let state = self.core.state().lock();
             if let Some(pty) = state.get_pty_instance(&current_task) {
                 let pty = pty.clone();
                 drop(state);
@@ -703,42 +592,77 @@ impl InlineApp {
 
                 // Update tracking for next buffered render
                 let current_scrollback_lines = pty.get_scrollback_line_count();
+
+                tracing::debug!(
+                    "📊 render_scrollback_above_tui: task={}, last_rendered={}, current_scrollback={}, buffered_lines={}",
+                    current_task,
+                    last_rendered_lines,
+                    current_scrollback_lines,
+                    buffered_scrollback_lines.len()
+                );
+
                 self.task_scrollback_lines
                     .insert(current_task.clone(), current_scrollback_lines);
 
                 // Render buffered scrollback above TUI using terminal.insert_before
+                // Render in batches to avoid overwhelming the terminal
                 if !buffered_scrollback_lines.is_empty() {
+                    const MAX_LINES_PER_RENDER: usize = 250;
+
+                    // Calculate how many lines to render this cycle
+                    let lines_to_render = buffered_scrollback_lines.len().min(MAX_LINES_PER_RENDER);
+                    let batch = &buffered_scrollback_lines[0..lines_to_render];
+
+                    tracing::debug!(
+                        "📊 render_scrollback_above_tui: Rendering {} lines (out of {} total buffered)",
+                        lines_to_render,
+                        buffered_scrollback_lines.len()
+                    );
+
                     use crate::native::tui::theme::THEME;
                     use ratatui::style::Style;
                     use ratatui::text::Line;
                     use ratatui::widgets::Paragraph;
 
-                    let height = buffered_scrollback_lines.len() as u16;
-                    let _ = tui.insert_before(height, |buf| {
-                        // Convert buffered scrollback lines to ratatui Lines
-                        let mut lines: Vec<Line> = buffered_scrollback_lines
-                            .iter()
-                            .map(|line| Line::from(line.as_str()))
-                            .collect();
+                    let height = lines_to_render as u16;
 
-                        // Add a reset line at the end to ensure clean state for TUI below
-                        lines.push(Line::from("\x1b[0m"));
+                    // Call insert_before on the dereferenced Terminal
+                    // This only works with inline viewport
+                    if let Ok(()) = tui.insert_before(height, |buf| {
+                        // Convert batched scrollback lines to ratatui Lines
+                        let lines: Vec<Line> =
+                            batch.iter().map(|line| Line::from(line.as_str())).collect();
 
-                        // Create a paragraph with the buffered scrollback content + reset
+                        // Create a paragraph with the buffered scrollback content
                         let paragraph =
                             Paragraph::new(lines).style(Style::default().fg(THEME.secondary_fg));
 
                         // Render using the Widget trait
                         use ratatui::widgets::Widget;
                         paragraph.render(buf.area, buf);
-                    });
+                    }) {
+                        tracing::debug!("📊 insert_before succeeded for {} lines", lines_to_render);
 
-                    // Track total lines inserted for cleanup on exit
-                    self.total_inserted_lines += height as u32;
+                        // Track total lines inserted for cleanup on exit
+                        self.total_inserted_lines += height as u32;
 
-                    // Update last rendered count after successful render
-                    self.task_last_rendered_scrollback
-                        .insert(current_task.clone(), current_scrollback_lines);
+                        // Update last rendered count to reflect what we actually rendered
+                        // This is incremental - we only advance by the batch size
+                        let new_last_rendered = last_rendered_lines + lines_to_render;
+                        self.task_last_rendered_scrollback
+                            .insert(current_task.clone(), new_last_rendered);
+
+                        tracing::debug!(
+                            "📊 render_scrollback_above_tui: Updated last_rendered from {} to {} (remaining: {})",
+                            last_rendered_lines,
+                            new_last_rendered,
+                            current_scrollback_lines - new_last_rendered
+                        );
+                    } else {
+                        tracing::error!(
+                            "📊 insert_before FAILED - method may not exist on this terminal type"
+                        );
+                    }
                 }
             }
         }
@@ -771,9 +695,7 @@ impl InlineApp {
 
     fn render_inline_status(&self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
         use crate::native::tui::theme::THEME;
-        use ratatui::style::{Modifier, Style};
-        use ratatui::text::Line;
-        use ratatui::widgets::Paragraph;
+        use ratatui::style::Style;
 
         // Get current task and its status for color coding
         let current_task = self
@@ -781,30 +703,142 @@ impl InlineApp {
             .clone()
             .or_else(|| self.get_current_running_task());
 
-        let (task_name, status, status_style) = if let Some(ref task_id) = current_task {
-            let state = self.state.lock();
+        let (task_name, status, status_style, duration_text) = if let Some(ref task_id) =
+            current_task
+        {
+            let state = self.core.state().lock();
             let status = state
                 .get_task_status(task_id)
                 .unwrap_or(TaskStatus::NotStarted);
+
+            // Get timing information and format duration using shared utility
+            // Now both are in milliseconds since epoch
+            let (start_time, end_time) = state.get_task_timing(task_id);
+            let estimated_ms = state.estimated_task_timings().get(task_id).copied();
+
+            // Debug: Log timing data (now in millis)
+            tracing::debug!(
+                "📊 InlineApp timing for {}: status={:?}, start_time={:?}ms, end_time={:?}ms, estimated_ms={:?}",
+                task_id,
+                status,
+                start_time,
+                end_time,
+                estimated_ms
+            );
+
             drop(state);
-            (task_id.clone(), status, get_task_status_style(status))
+
+            let actual_ms = Self::calculate_actual_duration_ms(status, start_time, end_time);
+            tracing::debug!(
+                "📊 InlineApp calculated actual_ms={:?} for {}",
+                actual_ms,
+                task_id
+            );
+
+            let duration =
+                actual_ms.map(|actual_ms| format_duration_with_estimate(actual_ms, estimated_ms));
+
+            tracing::debug!(
+                "📊 InlineApp formatted duration={:?} for {}",
+                duration,
+                task_id
+            );
+
+            (
+                task_id.clone(),
+                status,
+                get_task_status_style(status),
+                duration,
+            )
         } else {
             (
                 String::from("Idle"),
                 TaskStatus::NotStarted,
                 get_task_status_style(TaskStatus::NotStarted),
+                None,
             )
         };
 
-        // Build status bar with NX logo and task name
-        let status_line = Line::from(vec![
-            Span::styled(" NX ", status_style.add_modifier(Modifier::BOLD)).not_crossed_out(),
-            get_task_status_icon(status).not_crossed_out(),
-            Span::styled(task_name, status_style).not_crossed_out(),
-        ]);
+        // Get cloud message from state
+        let cloud_message = self.core.get_cloud_message();
 
-        let status_bar = Paragraph::new(status_line).crossed_out();
-        f.render_widget(status_bar, area);
+        // Calculate sizes for layout
+        let duration_size = duration_text.as_ref().map(|d| d.len() + 2).unwrap_or(0);
+        let cloud_size = cloud_message.as_ref().map(|m| m.len() + 2).unwrap_or(0);
+        let right_size = duration_size + cloud_size;
+
+        let chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Fill(10),               // Left: task info
+                Constraint::Min(right_size as u16), // Right: cloud message + duration
+            ])
+            .split(area);
+
+        // Build left side: NX logo + status icon + task name
+        let left_spans = vec![
+            Span::styled(" NX", status_style.add_modifier(Modifier::BOLD)).not_crossed_out(),
+            get_task_status_icon(status, 1).not_crossed_out(),
+            Span::styled(task_name.clone(), status_style).not_crossed_out(),
+        ];
+
+        f.render_widget(
+            Paragraph::new(Line::from(left_spans).not_crossed_out()),
+            chunks[0],
+        );
+
+        // Build right side: cloud message (if any) + duration
+        let mut right_spans = Vec::new();
+
+        if let Some(ref message) = cloud_message {
+            right_spans.push(
+                Span::styled(format!("{} ", message), Style::default().fg(THEME.info))
+                    .not_crossed_out(),
+            );
+        }
+
+        if let Some(ref duration) = duration_text {
+            right_spans.push(
+                Span::styled(duration.clone(), Style::default().fg(THEME.secondary_fg))
+                    .not_crossed_out(),
+            );
+        } else if cloud_message.is_none() {
+            // Only show "??" if no cloud message and no duration
+            right_spans.push(Span::raw("??").not_crossed_out());
+        }
+
+        f.render_widget(
+            Paragraph::new(Line::from(right_spans).not_crossed_out()),
+            chunks[1],
+        );
+    }
+
+    /// Calculate actual duration in milliseconds from i64 epoch-based timing
+    fn calculate_actual_duration_ms(
+        status: TaskStatus,
+        start_time: Option<i64>,
+        end_time: Option<i64>,
+    ) -> Option<i64> {
+        use crate::native::utils::time::current_timestamp_millis;
+
+        let start = start_time?;
+        match status {
+            TaskStatus::InProgress => {
+                // For in-progress tasks, calculate duration from start to now
+                let now = current_timestamp_millis();
+                Some(now - start)
+            }
+            TaskStatus::Success
+            | TaskStatus::Failure
+            | TaskStatus::LocalCache
+            | TaskStatus::LocalCacheKeptExisting
+            | TaskStatus::RemoteCache => {
+                // For completed tasks, calculate duration from start to end
+                let end = end_time?;
+                Some(end - start)
+            }
+            _ => None,
+        }
     }
 
     fn render_inline_main_content(&mut self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
@@ -815,7 +849,7 @@ impl InlineApp {
             .or_else(|| self.get_current_running_task());
 
         if let Some(current_task) = current_task {
-            let state = self.state.lock();
+            let state = self.core.state().lock();
             if let Some(pty) = state.get_pty_instance(&current_task) {
                 let pty = pty.clone();
                 drop(state);
@@ -871,7 +905,7 @@ impl InlineApp {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::tasks::types::TaskTarget;
+    use crate::native::tasks::types::{TaskResult, TaskTarget};
     use crate::native::tui::config;
     use crossterm::event::KeyEvent;
     use tokio::sync::mpsc;
@@ -926,13 +960,13 @@ mod tests {
         let app = create_test_inline_app();
 
         // Verify state is initialized
-        let state = app.state.lock();
+        let state_ref = app.get_state();
+        let state = state_ref.lock();
         assert_eq!(state.tasks().len(), 2);
         assert_eq!(state.title_text(), "Test");
 
         // Verify UI state is initialized
         drop(state); // Release lock
-        assert!(app.action_tx.is_none());
         assert_eq!(app.scrollback_render_counter, 0);
         assert_eq!(app.total_inserted_lines, 0);
     }
@@ -967,10 +1001,11 @@ mod tests {
         let app = InlineApp::with_state(existing_state.clone(), None).unwrap();
 
         // Verify it uses the same state
-        assert!(Arc::ptr_eq(&app.state, &existing_state));
+        assert!(Arc::ptr_eq(&app.get_state(), &existing_state));
 
         // Verify state contents are preserved
-        let state = app.state.lock();
+        let state_ref = app.get_state();
+        let state = state_ref.lock();
         assert_eq!(state.tasks().len(), 1);
         assert_eq!(state.title_text(), "Existing");
     }
@@ -978,30 +1013,53 @@ mod tests {
     // === Event Handling Tests ===
 
     #[test]
-    fn test_quit_on_q_key() {
+    fn test_q_key_starts_countdown_when_tasks_not_complete() {
         let mut app = create_test_inline_app();
         let (tx, _rx) = mpsc::unbounded_channel();
+
+        // Tasks are NotStarted, so 'q' should start countdown, not quit immediately
+        let event = tui::Event::Key(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE));
+        let result = app.handle_event(event, &tx).unwrap();
+
+        // Return value is always false (quit is time-based)
+        assert!(!result);
+
+        // Countdown popup should be visible
+        assert!(app.countdown_popup.is_visible());
+    }
+
+    #[test]
+    fn test_q_key_quits_immediately_when_all_tasks_complete() {
+        let mut app = create_test_inline_app();
+        let (tx, _rx) = mpsc::unbounded_channel();
+
+        // Mark all tasks as completed
+        app.update_task_status(String::from("app1"), TaskStatus::Success);
+        app.update_task_status(String::from("app2"), TaskStatus::Success);
 
         let event = tui::Event::Key(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE));
         let result = app.handle_event(event, &tx).unwrap();
 
-        // Should signal quit
-        assert!(result);
+        // Return value is always false (quit is time-based)
+        assert!(!result);
 
-        // Should have set quit flag
+        // Should quit immediately via time-based mechanism
         assert!(app.should_quit());
     }
 
     #[test]
-    fn test_quit_on_esc_key() {
+    fn test_esc_key_not_handled_in_inline_app() {
+        // ESC in inline mode is handled by lifecycle.rs to switch to fullscreen
+        // InlineApp itself doesn't handle ESC outside of countdown popup
         let mut app = create_test_inline_app();
         let (tx, _rx) = mpsc::unbounded_channel();
 
         let event = tui::Event::Key(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
         let result = app.handle_event(event, &tx).unwrap();
 
-        assert!(result);
-        assert!(app.should_quit());
+        // Should not quit (ESC falls through)
+        assert!(!result);
+        assert!(!app.should_quit());
     }
 
     #[test]
@@ -1012,7 +1070,10 @@ mod tests {
         let event = tui::Event::Key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL));
         let result = app.handle_event(event, &tx).unwrap();
 
-        assert!(result);
+        // Return value is always false (quit is time-based)
+        assert!(!result);
+
+        // Should quit immediately via time-based mechanism
         assert!(app.should_quit());
     }
 
@@ -1086,7 +1147,8 @@ mod tests {
         assert_eq!(app.task_last_rendered_scrollback.get("app1"), Some(&0));
 
         // Verify PTY registered in state
-        let state = app.state.lock();
+        let state_ref = app.get_state();
+        let state = state_ref.lock();
         assert!(state.get_pty_instance("app1").is_some());
     }
 
@@ -1116,7 +1178,8 @@ mod tests {
         app.start_tasks(tasks);
 
         // Verify status updated in state
-        let state = app.state.lock();
+        let state_ref = app.get_state();
+        let state = state_ref.lock();
         assert_eq!(state.get_task_status("app1"), Some(TaskStatus::InProgress));
     }
 
@@ -1126,7 +1189,8 @@ mod tests {
 
         app.update_task_status(String::from("app1"), TaskStatus::Success);
 
-        let state = app.state.lock();
+        let state_ref = app.get_state();
+        let state = state_ref.lock();
         assert_eq!(state.get_task_status("app1"), Some(TaskStatus::Success));
     }
 
@@ -1147,7 +1211,8 @@ mod tests {
         app.end_tasks(results);
 
         // Verify timing recorded
-        let state = app.state.lock();
+        let state_ref = app.get_state();
+        let state = state_ref.lock();
         let (start, end) = state.get_task_timing("app1");
         assert!(start.is_some());
         assert!(end.is_some());
@@ -1167,21 +1232,6 @@ mod tests {
 
         // Should find running task
         assert_eq!(app.get_current_running_task(), Some(String::from("app1")));
-    }
-
-    #[test]
-    fn test_get_completed_task_count() {
-        let mut app = create_test_inline_app();
-
-        // No completed tasks initially
-        assert_eq!(app.get_completed_task_count(), 0);
-
-        // Complete tasks
-        app.update_task_status(String::from("app1"), TaskStatus::Success);
-        app.update_task_status(String::from("app2"), TaskStatus::Failure);
-
-        // Should count both
-        assert_eq!(app.get_completed_task_count(), 2);
     }
 
     #[test]
@@ -1208,12 +1258,14 @@ mod tests {
     #[test]
     fn test_register_action_handler() {
         let mut app = create_test_inline_app();
-        let (tx, _rx) = mpsc::unbounded_channel();
+        let (tx, mut rx) = mpsc::unbounded_channel();
 
         app.register_action_handler(tx.clone()).unwrap();
 
-        // Verify action_tx is set
-        assert!(app.action_tx.is_some());
+        // Verify action dispatch works after registration
+        app.dispatch_action(Action::Tick);
+        let action = rx.try_recv().unwrap();
+        assert!(matches!(action, Action::Tick));
     }
 
     // === State Access Tests ===
@@ -1251,7 +1303,8 @@ mod tests {
         app.register_running_non_interactive_task(String::from("app1"));
 
         // Should overwrite, not panic
-        let state = app.state.lock();
+        let state_ref = app.get_state();
+        let state = state_ref.lock();
         assert!(state.get_pty_instance("app1").is_some());
     }
 
@@ -1263,7 +1316,8 @@ mod tests {
         app.update_task_status(String::from("nonexistent"), TaskStatus::Success);
 
         // Status should be recorded anyway
-        let state = app.state.lock();
+        let state_ref = app.get_state();
+        let state = state_ref.lock();
         assert_eq!(
             state.get_task_status("nonexistent"),
             Some(TaskStatus::Success)
@@ -1274,7 +1328,7 @@ mod tests {
 #[cfg(test)]
 mod integration_tests {
     use super::*;
-    use crate::native::tasks::types::TaskTarget;
+    use crate::native::tasks::types::{TaskResult, TaskTarget};
     use crate::native::tui::config;
 
     fn create_test_task(id: &str) -> Task {
@@ -1349,7 +1403,8 @@ mod integration_tests {
         app.end_command();
 
         // Verify final state
-        let state = app.state.lock();
+        let state_ref = app.get_state();
+        let state = state_ref.lock();
         assert_eq!(state.get_task_status("app1"), Some(TaskStatus::Success));
         assert!(state.get_pty_instance("app1").is_some());
     }
@@ -1389,7 +1444,8 @@ mod integration_tests {
 
         // Verify visible through app2
         assert!(!app2.should_quit()); // Can access state without issues
-        let state2 = app2.state.lock();
+        let state2_ref = app2.get_state();
+        let state2 = state2_ref.lock();
         assert_eq!(state2.get_task_status("shared"), Some(TaskStatus::Success));
     }
 }

@@ -12,9 +12,11 @@ pub mod theme;
 #[allow(clippy::module_inception)]
 pub mod tui;
 pub mod tui_app;
+pub mod tui_core;
 pub mod tui_state;
 pub mod utils;
 
 pub use inline_app::InlineApp;
 pub use tui_app::TuiApp;
+pub use tui_core::TuiCore;
 pub use tui_state::TuiState;

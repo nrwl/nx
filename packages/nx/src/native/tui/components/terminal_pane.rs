@@ -18,8 +18,7 @@ use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use crate::native::tui::theme::THEME;
 use crate::native::tui::utils::{
-    format_duration, format_duration_since, format_live_duration, get_task_status_icon,
-    get_task_status_style,
+    format_duration_with_estimate, get_task_status_icon, get_task_status_style,
 };
 use crate::native::tui::{action::Action, pty::PtyInstance};
 
@@ -268,7 +267,7 @@ impl<'a> TerminalPane<'a> {
     }
 
     fn get_status_icon(&self, status: TaskStatus) -> Span<'static> {
-        get_task_status_icon(status)
+        get_task_status_icon(status, 2)
     }
 
     fn get_base_style(&self, status: TaskStatus) -> Style {
@@ -370,21 +369,23 @@ impl<'a> TerminalPane<'a> {
         let estimated = state.estimated_duration?;
         let start = state.start_time?;
 
-        let actual_duration = match state.task_status {
-            TaskStatus::InProgress => format_live_duration(start),
+        let actual_ms = match state.task_status {
+            TaskStatus::InProgress => {
+                let current_ms = crate::native::utils::time::current_timestamp_millis();
+                current_ms.saturating_sub(start)
+            }
             TaskStatus::Success
             | TaskStatus::Failure
             | TaskStatus::LocalCacheKeptExisting
             | TaskStatus::LocalCache
             | TaskStatus::RemoteCache => {
                 let end = state.end_time?;
-                format_duration_since(start, end)
+                end.saturating_sub(start)
             }
             _ => return None,
         };
 
-        let formatted_estimate = format_duration(estimated);
-        Some(format!("{} ({} avg)", actual_duration, formatted_estimate))
+        Some(format_duration_with_estimate(actual_ms, Some(estimated)))
     }
 }
 

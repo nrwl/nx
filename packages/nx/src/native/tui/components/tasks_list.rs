@@ -686,6 +686,28 @@ impl TasksList {
         }
     }
 
+    /// Set task timing information for a specific task
+    /// Used when syncing state during mode switching
+    pub fn set_task_timing(
+        &mut self,
+        task_name: String,
+        start_time: Option<i64>,
+        end_time: Option<i64>,
+    ) {
+        if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task_name) {
+            task_item.start_time = start_time;
+            task_item.end_time = end_time;
+
+            // Update the duration string if we have both times
+            if let (Some(start), Some(end)) = (start_time, end_time) {
+                task_item.duration = format_duration_since(start, end);
+            } else if start_time.is_some() && end_time.is_none() && !task_item.continuous {
+                // Task is in progress
+                task_item.duration = DURATION_NOT_YET_KNOWN.to_string();
+            }
+        }
+    }
+
     pub fn sort_tasks(&mut self) {
         self.sort_tasks_with_mode(None);
     }
@@ -827,7 +849,7 @@ impl TasksList {
 
     /// Creates header cells for the task list table.
     /// Shows either filter input or task status based on current state.
-    fn get_header_cells(&self, column_visibility: &ColumnVisibility) -> Vec<Cell> {
+    fn get_header_cells(&'_ self, column_visibility: &ColumnVisibility) -> Vec<Cell<'_>> {
         let status_style = if !self.is_task_list_focused() {
             Style::default().fg(THEME.secondary_fg).dim()
         } else {
@@ -1056,7 +1078,7 @@ impl TasksList {
         self.selection_manager.lock().ensure_selected_visible();
     }
 
-    fn generate_empty_row(&self, column_visibility: &ColumnVisibility) -> Row {
+    fn generate_empty_row(&'_ self, column_visibility: &ColumnVisibility) -> Row<'_> {
         let mut empty_cells = vec![
             Cell::from("   "), // Just spaces for indentation, no vertical line
             Cell::from(""),

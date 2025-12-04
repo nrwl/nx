@@ -6,6 +6,9 @@ use std::time::{Duration, Instant};
 
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::tasks::types::{Task, TaskGraph};
+use crate::native::utils::time::current_timestamp_millis;
+
+// Re-export for backward compatibility with places that use TuiState timing
 
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
@@ -26,9 +29,9 @@ pub struct TuiState {
     // === PTY Management ===
     pty_instances: HashMap<String, Arc<PtyInstance>>,
 
-    // === Task Timing ===
-    task_start_times: HashMap<String, Instant>,
-    task_end_times: HashMap<String, Instant>,
+    // === Task Timing (all in milliseconds since epoch) ===
+    task_start_times: HashMap<String, i64>,
+    task_end_times: HashMap<String, i64>,
     estimated_task_timings: HashMap<String, i64>,
 
     // === Configuration ===
@@ -48,6 +51,9 @@ pub struct TuiState {
     quit_at: Option<Instant>,
     is_forced_shutdown: bool,
     user_has_interacted: bool,
+
+    // === Cloud Message ===
+    cloud_message: Option<String>,
 }
 
 impl TuiState {
@@ -88,6 +94,7 @@ impl TuiState {
             quit_at: None,
             is_forced_shutdown: false,
             user_has_interacted: false,
+            cloud_message: None,
         }
     }
 
@@ -166,24 +173,54 @@ impl TuiState {
         &self.pty_instances
     }
 
+    /// Get a mutable reference to all PTY instances
+    /// Used for resizing PTYs when switching modes
+    pub fn get_pty_instances_mut(&mut self) -> &mut HashMap<String, Arc<PtyInstance>> {
+        &mut self.pty_instances
+    }
+
     // === Task Timing Methods ===
 
-    /// Record the start time of a task
+    /// Record the start time of a task (in milliseconds since epoch)
     pub fn record_task_start(&mut self, task_id: String) {
-        self.task_start_times.insert(task_id, Instant::now());
+        let now = current_timestamp_millis();
+        tracing::debug!("📊 TuiState::record_task_start - {} at {}ms", task_id, now);
+        self.task_start_times.insert(task_id, now);
+        tracing::debug!(
+            "📊 TuiState - task_start_times now has {} entries",
+            self.task_start_times.len()
+        );
     }
 
-    /// Record the end time of a task
+    /// Record the end time of a task (in milliseconds since epoch)
     pub fn record_task_end(&mut self, task_id: String) {
-        self.task_end_times.insert(task_id, Instant::now());
+        let now = current_timestamp_millis();
+        tracing::debug!("📊 TuiState::record_task_end - {} at {}ms", task_id, now);
+        self.task_end_times.insert(task_id, now);
     }
 
-    /// Get the start and end times of a task
-    pub fn get_task_timing(&self, task_id: &str) -> (Option<Instant>, Option<Instant>) {
-        (
-            self.task_start_times.get(task_id).copied(),
-            self.task_end_times.get(task_id).copied(),
-        )
+    /// Get the start and end times of a task (in milliseconds since epoch)
+    /// Returns (start_time, end_time) - both as Option<i64>
+    pub fn get_task_timing(&self, task_id: &str) -> (Option<i64>, Option<i64>) {
+        let start = self.task_start_times.get(task_id).copied();
+        let end = self.task_end_times.get(task_id).copied();
+        tracing::trace!(
+            "📊 TuiState::get_task_timing - {} => start={:?}, end={:?}",
+            task_id,
+            start,
+            end
+        );
+        (start, end)
+    }
+
+    /// Get all task start times (for mode switching sync)
+    pub fn get_task_start_times(&self) -> &HashMap<String, i64> {
+        &self.task_start_times
+    }
+
+    /// Get all task end times (for mode switching sync)
+    pub fn get_task_end_times(&self) -> &HashMap<String, i64> {
+        &self.task_end_times
     }
 
     /// Set estimated task timings
@@ -240,13 +277,21 @@ impl TuiState {
 
     /// Call the done callback if it exists
     /// Can be called multiple times safely
+    /// If is_forced_shutdown is true, also calls the forced_shutdown_callback first
     pub fn call_done_callback(&self) {
+        // Call forced shutdown callback first if this was a forced shutdown
+        if self.is_forced_shutdown {
+            if let Some(callback) = &self.forced_shutdown_callback {
+                callback.call((), ThreadsafeFunctionCallMode::Blocking);
+            }
+        }
+        // Then call the regular done callback
         if let Some(callback) = &self.done_callback {
             callback.call((), ThreadsafeFunctionCallMode::Blocking);
         }
     }
 
-    /// Call the forced shutdown callback if it exists
+    /// Call the forced shutdown callback if it exists (standalone, without done callback)
     pub fn call_forced_shutdown_callback(&self) {
         if let Some(callback) = &self.forced_shutdown_callback {
             callback.call((), ThreadsafeFunctionCallMode::Blocking);
@@ -324,6 +369,18 @@ impl TuiState {
     /// Check if this is a forced shutdown
     pub fn is_forced_shutdown(&self) -> bool {
         self.is_forced_shutdown
+    }
+
+    // === Cloud Message Methods ===
+
+    /// Set the cloud message to display
+    pub fn set_cloud_message(&mut self, message: Option<String>) {
+        self.cloud_message = message;
+    }
+
+    /// Get the cloud message (if any)
+    pub fn get_cloud_message(&self) -> Option<&str> {
+        self.cloud_message.as_deref()
     }
 }
 
@@ -529,20 +586,22 @@ mod tests {
 
     #[test]
     fn test_task_timing() {
+        use crate::native::utils::time::current_timestamp_millis;
+
         let mut state = create_test_state();
 
         // Record start
-        let before_start = Instant::now();
+        let before_start = current_timestamp_millis();
         state.record_task_start(String::from("app1"));
-        let after_start = Instant::now();
+        let after_start = current_timestamp_millis();
 
         // Small delay
         std::thread::sleep(Duration::from_millis(10));
 
         // Record end
-        let before_end = Instant::now();
+        let before_end = current_timestamp_millis();
         state.record_task_end(String::from("app1"));
-        let after_end = Instant::now();
+        let after_end = current_timestamp_millis();
 
         // Verify timings
         let (start, end) = state.get_task_timing("app1");
@@ -552,10 +611,10 @@ mod tests {
         let start = start.unwrap();
         let end = end.unwrap();
 
-        // Verify start is in expected range
+        // Verify start is in expected range (millis)
         assert!(start >= before_start && start <= after_start);
 
-        // Verify end is in expected range
+        // Verify end is in expected range (millis)
         assert!(end >= before_end && end <= after_end);
 
         // Verify end is after start
@@ -568,6 +627,20 @@ mod tests {
         let (start, end) = state.get_task_timing("nonexistent");
         assert!(start.is_none());
         assert!(end.is_none());
+    }
+
+    #[test]
+    fn test_get_task_start_and_end_times() {
+        let mut state = create_test_state();
+
+        state.record_task_start(String::from("app1"));
+        state.record_task_end(String::from("app1"));
+
+        let start_times = state.get_task_start_times();
+        let end_times = state.get_task_end_times();
+
+        assert!(start_times.contains_key("app1"));
+        assert!(end_times.contains_key("app1"));
     }
 
     // === Callback Tests ===

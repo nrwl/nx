@@ -8,7 +8,7 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 use futures::{FutureExt, StreamExt};
-use ratatui::{backend::CrosstermBackend as Backend, prelude::Backend as _};
+use ratatui::backend::CrosstermBackend;
 use std::{
     io::Write,
     ops::{Deref, DerefMut},
@@ -22,6 +22,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::{debug, trace};
 
 pub type Frame<'a> = ratatui::Frame<'a>;
+pub type Backend = CrosstermBackend<std::io::Stderr>;
 
 #[derive(Clone, Debug)]
 pub enum Event {
@@ -39,7 +40,10 @@ pub enum Event {
 }
 
 pub struct Tui {
-    pub terminal: Option<ratatui::Terminal<Backend<std::io::Stderr>>>,
+    /// Terminal configured for fullscreen mode (alternate screen)
+    pub fullscreen_terminal: ratatui::Terminal<Backend>,
+    /// Terminal configured for inline mode (viewport)
+    pub inline_terminal: ratatui::Terminal<Backend>,
     pub task: JoinHandle<()>,
     pub cancellation_token: CancellationToken,
     pub event_rx: UnboundedReceiver<Event>,
@@ -47,42 +51,71 @@ pub struct Tui {
     pub frame_rate: f64,
     pub tick_rate: f64,
     pub current_mode: TuiMode,
-    exited: std::sync::Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl Tui {
     pub fn new() -> Result<Self> {
-        Self::new_with_options(None)
+        Self::new_with_mode(TuiMode::FullScreen)
     }
 
     pub fn new_with_viewport(viewport: ratatui::Viewport) -> Result<Self> {
-        Self::new_with_options(Some(ratatui::TerminalOptions { viewport }))
+        // For backwards compatibility - if inline viewport requested, start in inline mode
+        let mode = match viewport {
+            ratatui::Viewport::Inline(_) => TuiMode::Inline,
+            _ => TuiMode::FullScreen,
+        };
+        Self::new_with_mode(mode)
     }
 
-    fn new_with_options(options: Option<ratatui::TerminalOptions>) -> Result<Self> {
+    fn new_with_mode(initial_mode: TuiMode) -> Result<Self> {
         let tick_rate = 10.0;
         let frame_rate = 60.0;
-        let backend = Backend::new(std::io::stderr());
-        let terminal = Some(if let Some(opts) = options {
-            ratatui::Terminal::with_options(backend, opts)?
-        } else {
-            ratatui::Terminal::new(backend)?
-        });
+
+        // Create fullscreen terminal with its own backend
+        let fullscreen_terminal = ratatui::Terminal::new(CrosstermBackend::new(std::io::stderr()))?;
+
+        // Create inline terminal with its own backend and viewport
+        let inline_height = crossterm::terminal::size()
+            .map(|(_cols, rows)| rows)
+            .unwrap_or(24);
+        let inline_terminal = ratatui::Terminal::with_options(
+            CrosstermBackend::new(std::io::stderr()),
+            ratatui::TerminalOptions {
+                viewport: ratatui::Viewport::Inline(inline_height),
+            },
+        )?;
 
         let (event_tx, event_rx) = mpsc::unbounded_channel();
         let cancellation_token = CancellationToken::new();
         let task = tokio::spawn(async {});
+
         Ok(Self {
-            terminal,
+            fullscreen_terminal,
+            inline_terminal,
             task,
             cancellation_token,
             event_rx,
             event_tx,
             frame_rate,
             tick_rate,
-            current_mode: TuiMode::FullScreen, // Default to full-screen
-            exited: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            current_mode: initial_mode,
         })
+    }
+
+    /// Returns a reference to the currently active terminal based on mode
+    pub fn terminal(&self) -> &ratatui::Terminal<Backend> {
+        match self.current_mode {
+            TuiMode::FullScreen => &self.fullscreen_terminal,
+            TuiMode::Inline => &self.inline_terminal,
+        }
+    }
+
+    /// Returns a mutable reference to the currently active terminal based on mode
+    pub fn terminal_mut(&mut self) -> &mut ratatui::Terminal<Backend> {
+        match self.current_mode {
+            TuiMode::FullScreen => &mut self.fullscreen_terminal,
+            TuiMode::Inline => &mut self.inline_terminal,
+        }
     }
 
     pub fn tick_rate(&mut self, tick_rate: f64) {
@@ -110,21 +143,16 @@ impl Tui {
                 let tick_delay = tick_interval.tick();
                 let render_delay = render_interval.tick();
                 let crossterm_event = reader.next().fuse();
-                // if _cancellation_token.is_cancelled() {
-                //     debug!("Cancellation token triggered, exiting event loop");
-                //     break;
-                // }
+
                 tokio::select! {
                   _ = _cancellation_token.cancelled() => {
                     debug!("Got a cancellation token");
                     break;
                   }
                   _ = tick_delay => {
-                    //   trace!("⏱️  Sending Tick event");
                       _event_tx.send(Event::Tick).expect("cannot send event");
                   },
                   _ = render_delay => {
-                    //   trace!("🎨 Sending Render event");
                       _event_tx.send(Event::Render).expect("cannot send event");
                   },
                   maybe_event = crossterm_event => {
@@ -187,7 +215,9 @@ impl Tui {
                 self.task.abort();
             }
             if counter > 100 {
-                debug!("❌ Failed to stop event loop after 100ms - forcing break");
+                // TODO: This seems to happen pretty frequently, but we've not noticed any ill effects yet...
+                // This should be investigated further.
+                debug!("❌ Failed to abort TUI event loop task after 100ms, moving on anyway");
                 break;
             }
         }
@@ -199,24 +229,26 @@ impl Tui {
         Ok(())
     }
 
-    pub fn enter(&mut self) -> Result<()> {
-        self.enter_with_mode(TuiMode::FullScreen)
-    }
-
-    pub fn enter_with_mode(&mut self, mode: TuiMode) -> Result<()> {
+    pub fn enter(&mut self, mode: TuiMode) -> Result<()> {
         // Ensure the theme is set before entering raw mode because it won't work properly once we're in raw mode
         let _ = THEME.is_dark_mode;
         debug!("Enabling Raw Mode for {:?} mode", mode);
 
         crossterm::terminal::enable_raw_mode()?;
 
+        self.current_mode = mode;
+
         match mode {
             TuiMode::FullScreen => {
                 execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide)?;
             }
             TuiMode::Inline => {
-                // For inline mode, just hide cursor - no alternate screen
                 execute!(std::io::stderr(), cursor::Hide)?;
+                execute!(std::io::stderr(), cursor::MoveTo(0, 0))?;
+                execute!(
+                    std::io::stderr(),
+                    crossterm::terminal::Clear(crossterm::terminal::ClearType::All)
+                )?;
             }
         }
 
@@ -249,7 +281,7 @@ impl Tui {
     pub fn exit(&mut self) -> Result<()> {
         debug!("🚪 Exiting TUI");
         self.stop()?;
-
+        self.restore_terminal()?;
         debug!("✅ TUI exit complete");
         Ok(())
     }
@@ -262,9 +294,46 @@ impl Tui {
             );
             return Ok(());
         }
-        self.restore_terminal()?;
-        self.enter_with_mode(new_mode)?;
+
+        debug!(
+            "🔄 Switching mode from {:?} to {:?}",
+            self.current_mode, new_mode
+        );
+
+        // Clean up current mode's terminal state (but stay in raw mode)
+        match self.current_mode {
+            TuiMode::FullScreen => {
+                // Leave alternate screen but stay in raw mode
+                execute!(std::io::stderr(), LeaveAlternateScreen)?;
+            }
+            TuiMode::Inline => {
+                // Just show cursor temporarily
+                execute!(std::io::stderr(), cursor::Show)?;
+            }
+        }
+
+        // Switch the mode - NO terminal recreation needed!
+        // Both terminals were created upfront, we just delegate to the right one via Deref
         self.current_mode = new_mode;
+
+        // Clear the new terminal's buffers to force a full redraw
+        self.terminal_mut().clear()?;
+
+        // Set up new mode's terminal state (we're still in raw mode)
+        match new_mode {
+            TuiMode::FullScreen => {
+                execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide)?;
+            }
+            TuiMode::Inline => {
+                execute!(std::io::stderr(), cursor::Hide)?;
+                execute!(std::io::stderr(), cursor::MoveTo(0, 0))?;
+                execute!(
+                    std::io::stderr(),
+                    crossterm::terminal::Clear(crossterm::terminal::ClearType::All)
+                )?;
+            }
+        }
+
         debug!("✅ Switched to {:?} mode", new_mode);
         Ok(())
     }
@@ -279,16 +348,16 @@ impl Tui {
 }
 
 impl Deref for Tui {
-    type Target = ratatui::Terminal<Backend<std::io::Stderr>>;
+    type Target = ratatui::Terminal<Backend>;
 
     fn deref(&self) -> &Self::Target {
-        self.terminal.as_ref().unwrap()
+        self.terminal()
     }
 }
 
 impl DerefMut for Tui {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.terminal.as_mut().unwrap()
+        self.terminal_mut()
     }
 }
 
