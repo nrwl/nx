@@ -139,6 +139,8 @@ export default async function* mavenBatchExecutor(
 
   // Collect non-result stderr lines for error reporting
   const stderrLines: string[] = [];
+  // Collect terminal output from failed tasks
+  const failedTaskOutputs: string[] = [];
 
   // Yield results as they stream in
   for await (const line of rl) {
@@ -146,14 +148,21 @@ export default async function* mavenBatchExecutor(
       try {
         const jsonStr = line.slice('NX_RESULT:'.length);
         const data = JSON.parse(jsonStr);
+        const result = {
+          success: data.result.success ?? false,
+          terminalOutput: data.result.terminalOutput ?? '',
+          startTime: data.result.startTime,
+          endTime: data.result.endTime,
+        };
+
+        // Collect terminal output from failed tasks
+        if (!result.success && result.terminalOutput) {
+          failedTaskOutputs.push(result.terminalOutput);
+        }
+
         yield {
           task: data.task,
-          result: {
-            success: data.result.success ?? false,
-            terminalOutput: data.result.terminalOutput ?? '',
-            startTime: data.result.startTime,
-            endTime: data.result.endTime,
-          },
+          result,
         };
       } catch (e) {
         console.error('[Maven Batch] Failed to parse result line:', line, e);
@@ -177,6 +186,13 @@ export default async function* mavenBatchExecutor(
         );
         for (const line of stderrLines) {
           console.error(line);
+        }
+      }
+      // Print failed task outputs to stderr so they appear in error.message
+      if (failedTaskOutputs.length > 0) {
+        console.error('\n[Maven Batch] Failed task outputs:');
+        for (const output of failedTaskOutputs) {
+          console.error(output);
         }
       }
       resolve();
