@@ -82,7 +82,7 @@ data class CacheConfig(
                 ),
                 "maven-compiler-plugin:testCompile" to MojoConfig(
                     inputParameters = setOf(
-                        Parameter("compileSourceRoots", "**/*.java"),
+                        Parameter("testCompileSourceRoots", "**/*.java"),
                     ),
                     outputParameters = setOf(
                         Parameter("outputDirectory", null),
