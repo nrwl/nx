@@ -239,7 +239,6 @@ impl TerminalPaneState {
 pub struct TerminalPane<'a> {
     pty_data: Option<&'a mut TerminalPaneData>,
     is_continuous: bool,
-    minimal: bool,
 }
 
 impl<'a> TerminalPane<'a> {
@@ -247,7 +246,6 @@ impl<'a> TerminalPane<'a> {
         Self {
             pty_data: None,
             is_continuous: false,
-            minimal: false,
         }
     }
 
@@ -258,11 +256,6 @@ impl<'a> TerminalPane<'a> {
 
     pub fn continuous(mut self, continuous: bool) -> Self {
         self.is_continuous = continuous;
-        self
-    }
-
-    pub fn minimal(mut self, minimal: bool) -> Self {
-        self.minimal = minimal;
         self
     }
 
@@ -436,17 +429,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
 
         let mut title = vec![];
 
-        if self.minimal {
-            title.push(Span::styled(
-                " NX ",
-                Style::default().fg(THEME.primary_fg).bold().bg(base_style
-                    .fg
-                    .expect("Base style should have foreground color")),
-            ));
-            title.push(Span::raw("  "));
-        } else {
-            title.push(status_icon.clone());
-        }
+        title.push(status_icon.clone());
         title.push(Span::styled(
             format!("{}  ", state.task_name),
             match state.is_focused {
@@ -508,11 +491,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
         let block = Block::default()
             .title(title)
             .title_alignment(Alignment::Left)
-            .borders(if self.minimal {
-                Borders::NONE
-            } else {
-                Borders::ALL
-            })
+            .borders(Borders::ALL)
             .border_type(if state.is_focused {
                 BorderType::Thick
             } else {
@@ -690,41 +669,10 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
 
                     let show_interactive_status = state.task_status == TaskStatus::InProgress
                         && state.is_focused
-                        && pty_data.can_be_interactive
-                        && !self.minimal;
+                        && pty_data.can_be_interactive;
 
                     // Show instructions to quit in minimal mode if somehow terminal became non-interactive
-                    if self.minimal && !self.is_currently_interactive() {
-                        let top_text = Line::from(vec![
-                            Span::styled("quit: ", Style::default().fg(THEME.primary_fg)),
-                            Span::styled("q ", Style::default().fg(THEME.info)),
-                        ]);
-
-                        let mode_width = top_text
-                            .spans
-                            .iter()
-                            .map(|span| span.content.len())
-                            .sum::<usize>();
-
-                        // Ensure text doesn't extend past safe area
-                        if mode_width as u16 + Self::CONFIG.right_margin < safe_area.width {
-                            let top_right_area = Rect {
-                                x: safe_area.x + safe_area.width
-                                    - mode_width as u16
-                                    - Self::CONFIG.right_margin,
-                                y: safe_area.y,
-                                width: mode_width as u16 + Self::CONFIG.width_padding,
-                                height: 1,
-                            };
-
-                            Paragraph::new(top_text)
-                                .alignment(Alignment::Right)
-                                .style(border_style)
-                                .render(top_right_area, buf);
-                        }
-
-                    // Show interactive/readonly status for focused, in progress tasks, when not in minimal mode
-                    } else if show_interactive_status {
+                    if show_interactive_status {
                         // Bottom right status
                         let bottom_text = if self.is_currently_interactive() {
                             Line::from(vec![
@@ -774,7 +722,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                     }
 
                     // Render scrollbar padding when needed, but not for minimal non-interactive panes
-                    if needs_scrollbar && !(self.minimal && !self.is_currently_interactive()) {
+                    if needs_scrollbar {
                         // Render padding for both top and bottom when scrollbar is present
                         let padding_text = Line::from(vec![Span::raw("  ")]);
                         let padding_width = 2;

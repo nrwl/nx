@@ -68,6 +68,8 @@ pub struct App {
     selection_manager: Arc<Mutex<TaskSelectionManager>>,
     debug_mode: bool,
     debug_state: TuiWidgetState,
+    /// Flag to indicate this App was restored from a mode switch and should skip init pane setup
+    restored_from_mode_switch: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -85,7 +87,6 @@ impl App {
     /// allowing state to be preserved during the transition.
     pub fn with_state(state: Arc<Mutex<TuiState>>, _tui_mode: TuiMode) -> Result<Self> {
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(5)));
-        let initial_focus = Focus::TaskList;
 
         // Get data from shared state to initialize UI components
         let (
@@ -98,6 +99,11 @@ impl App {
             task_status_map,
             task_start_times,
             task_end_times,
+            // UI state for restoration
+            saved_pane_tasks,
+            saved_spacebar_mode,
+            saved_focused_pane,
+            saved_selected_task,
         ) = {
             let state_lock = state.lock();
             (
@@ -110,7 +116,21 @@ impl App {
                 state_lock.get_task_status_map().clone(),
                 state_lock.get_task_start_times().clone(),
                 state_lock.get_task_end_times().clone(),
+                // Get saved UI state
+                state_lock.get_ui_pane_tasks().clone(),
+                state_lock.get_ui_spacebar_mode(),
+                state_lock.get_ui_focused_pane(),
+                state_lock.get_ui_selected_task().cloned(),
             )
+        };
+
+        // Determine initial focus based on saved state
+        let initial_focus = match saved_focused_pane {
+            Some(pane_idx) if saved_pane_tasks[pane_idx].is_some() => {
+                Focus::MultipleOutput(pane_idx)
+            }
+            _ if saved_pane_tasks[0].is_some() || saved_pane_tasks[1].is_some() => Focus::TaskList,
+            _ => Focus::TaskList,
         };
 
         let mut tasks_list = TasksList::new(
@@ -147,24 +167,56 @@ impl App {
 
         let main_terminal_pane_data = TerminalPaneData::new();
 
-        debug!("🚀 App::with_state - Full-screen mode");
+        // Create layout manager and configure based on saved state
+        let mut layout_manager = LayoutManager::new_with_run_mode(task_count, run_mode);
+
+        // Restore pane arrangement based on saved pane tasks
+        let has_pane0 = saved_pane_tasks[0].is_some();
+        let has_pane1 = saved_pane_tasks[1].is_some();
+        if has_pane0 && has_pane1 {
+            layout_manager.set_pane_arrangement(PaneArrangement::Double);
+        } else if has_pane0 || has_pane1 || saved_spacebar_mode {
+            layout_manager.set_pane_arrangement(PaneArrangement::Single);
+        }
+
+        // Restore selection in selection_manager
+        if let Some(ref selected) = saved_selected_task {
+            selection_manager.lock().select_task(selected.clone());
+        }
+
+        // Check if we're restoring from a mode switch (has saved UI state)
+        let has_restored_state = saved_pane_tasks[0].is_some()
+            || saved_pane_tasks[1].is_some()
+            || saved_spacebar_mode
+            || saved_selected_task.is_some();
+
+        debug!(
+            "🚀 App::with_state - Full-screen mode, restored panes: [{:?}, {:?}], focus: {:?}, spacebar: {}, selected: {:?}, has_restored_state: {}",
+            saved_pane_tasks[0],
+            saved_pane_tasks[1],
+            initial_focus,
+            saved_spacebar_mode,
+            saved_selected_task,
+            has_restored_state
+        );
 
         Ok(Self {
             core: TuiCore::new(state),
             components,
             focus: initial_focus,
             previous_focus: Focus::TaskList,
-            layout_manager: LayoutManager::new_with_run_mode(task_count, run_mode),
+            layout_manager,
             frame_area: None,
             layout_areas: None,
             terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::new()],
             dependency_view_states: [None, None],
-            spacebar_mode: false,
-            pane_tasks: [None, None],
+            spacebar_mode: saved_spacebar_mode,
+            pane_tasks: saved_pane_tasks,
             resize_debounce_timer: None,
             selection_manager,
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
+            restored_from_mode_switch: has_restored_state,
         })
     }
 
@@ -179,6 +231,13 @@ impl App {
     }
 
     pub fn init(&mut self, _area: Size) -> Result<()> {
+        // If we're restoring from a mode switch, skip the pinned tasks initialization
+        // because we've already restored the pane state from TuiState
+        if self.restored_from_mode_switch {
+            debug!("🚀 App::init - Skipping pinned task setup, restored from mode switch");
+            return Ok(());
+        }
+
         // Iterate over the pinned tasks and assign them to the terminal panes (up to the maximum of 2), focusing the first one as well
         let (pinned_tasks, run_mode, task_count) = {
             let state = self.core.state().lock();
@@ -960,10 +1019,6 @@ impl App {
                         })
                         .collect();
 
-                    // Calculate minimal view context once for all panes
-                    let is_minimal = self.is_task_list_hidden()
-                        && get_task_count(self.core.state().lock().task_graph()) == 1;
-
                     for (pane_idx, pane_area, relevant_pane_task) in terminal_panes_data {
                         if let Some(task_name) = relevant_pane_task {
                             let task_status = self
@@ -975,11 +1030,11 @@ impl App {
                                 || task_status == TaskStatus::Skipped
                             {
                                 self.render_dependency_view_internal(
-                                    f, pane_idx, pane_area, task_name, is_minimal,
+                                    f, pane_idx, pane_area, task_name,
                                 );
                             } else {
                                 self.render_terminal_pane_internal(
-                                    f, pane_idx, pane_area, task_name, is_minimal,
+                                    f, pane_idx, pane_area, task_name,
                                 );
                             }
                         } else {
@@ -1577,7 +1632,6 @@ impl App {
         pane_idx: usize,
         pane_area: Rect,
         task_name: String,
-        is_minimal: bool,
     ) {
         // Calculate values that were previously passed in
         let task_status = self
@@ -1629,7 +1683,7 @@ impl App {
             let state = self.core.state().lock();
             let task_status_map = state.get_task_status_map();
             let task_graph = state.task_graph();
-            let dependency_view = DependencyView::new(task_status_map, task_graph, is_minimal);
+            let dependency_view = DependencyView::new(task_status_map, task_graph);
             f.render_stateful_widget(dependency_view, pane_area, dep_state);
         }
     }
@@ -1641,7 +1695,6 @@ impl App {
         pane_idx: usize,
         pane_area: Rect,
         task_name: String,
-        is_minimal: bool,
     ) {
         // Calculate values that were previously passed in
         let task_status = self
@@ -1716,7 +1769,6 @@ impl App {
         );
 
         let terminal_pane = TerminalPane::new()
-            .minimal(is_minimal)
             .pty_data(terminal_pane_data)
             .continuous(task_continuous);
 
@@ -1939,5 +1991,48 @@ impl TuiApp for App {
             .lock()
             .get_selected_task_name()
             .cloned()
+    }
+
+    fn get_focused_pane_task(&self) -> Option<String> {
+        // If focus is on a terminal pane, return that pane's task
+        // In spacebar mode, return the selected task (it follows selection)
+        // Otherwise return the pinned task from that pane
+        match self.focus {
+            Focus::MultipleOutput(pane_idx) => {
+                if self.spacebar_mode {
+                    self.selection_manager
+                        .lock()
+                        .get_selected_task_name()
+                        .cloned()
+                } else {
+                    self.pane_tasks[pane_idx].clone()
+                }
+            }
+            _ => {
+                // Focus is on task list, but we might still have panes open
+                // Return the first pane's task if available
+                self.pane_tasks[0].clone()
+            }
+        }
+    }
+
+    fn save_ui_state_for_mode_switch(&self) {
+        let focused_pane = match self.focus {
+            Focus::MultipleOutput(pane_idx) => Some(pane_idx),
+            _ => None,
+        };
+
+        let selected_task = self
+            .selection_manager
+            .lock()
+            .get_selected_task_name()
+            .cloned();
+
+        self.core.state().lock().save_ui_state(
+            self.pane_tasks.clone(),
+            self.spacebar_mode,
+            focused_pane,
+            selected_task,
+        );
     }
 }

@@ -293,6 +293,24 @@ pub trait TuiApp: Send {
     /// For inline mode, this is the task currently being displayed.
     fn get_selected_task_name(&self) -> Option<String>;
 
+    /// Get the task that is currently focused in a terminal pane (for mode switching)
+    ///
+    /// Default implementation returns None (no panes in inline mode).
+    /// Full-screen mode overrides this to return the task in the focused pane.
+    ///
+    /// This is used when switching to inline mode to preserve which task output was being viewed.
+    fn get_focused_pane_task(&self) -> Option<String> {
+        None
+    }
+
+    /// Save UI state before switching to inline mode
+    ///
+    /// Default implementation is a no-op.
+    /// Full-screen mode overrides this to save pane_tasks, focus, spacebar_mode.
+    fn save_ui_state_for_mode_switch(&self) {
+        // Default: no-op for inline mode
+    }
+
     /// Get the shared state Arc (for mode switching)
     ///
     /// Default implementation delegates to TuiCore.

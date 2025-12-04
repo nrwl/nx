@@ -173,10 +173,17 @@ fn switch_mode(
 ) -> Option<ModeSwitchResult> {
     debug!("🔄 Switching to {:?} mode", target_mode);
 
-    // Get shared state and selected task from current app
-    let (shared_state, selected_task) = {
+    // Save UI state before switching (for full-screen mode persistence)
+    // and get the task to display in inline mode
+    let (shared_state, focused_task) = {
         let guard = current_app.lock();
-        (guard.get_shared_state(), guard.get_selected_task_name())
+        // Save the current UI state so it can be restored later
+        guard.save_ui_state_for_mode_switch();
+        // For inline mode, prefer the focused pane task over just the selected task
+        let task = guard
+            .get_focused_pane_task()
+            .or_else(|| guard.get_selected_task_name());
+        (guard.get_shared_state(), task)
     };
 
     // Switch terminal viewport
@@ -198,11 +205,8 @@ fn switch_mode(
             TuiAppInstance::FullScreen(Arc::new(Mutex::new(app_instance)))
         }
         TuiMode::Inline => {
-            debug!(
-                "Creating inline app with selected task: {:?}",
-                selected_task
-            );
-            let app_instance = InlineApp::with_state(shared_state, selected_task)
+            debug!("Creating inline app with focused task: {:?}", focused_task);
+            let app_instance = InlineApp::with_state(shared_state, focused_task)
                 .expect("Failed to create inline app");
             TuiAppInstance::Inline(Arc::new(Mutex::new(app_instance)))
         }

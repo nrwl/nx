@@ -54,6 +54,16 @@ pub struct TuiState {
 
     // === Cloud Message ===
     cloud_message: Option<String>,
+
+    // === UI State (for mode switching persistence) ===
+    /// Tasks assigned to terminal panes [pane0, pane1]
+    ui_pane_tasks: [Option<String>; 2],
+    /// Whether spacebar (follow) mode is active
+    ui_spacebar_mode: bool,
+    /// Index of focused pane (None = task list, Some(0) = pane 0, Some(1) = pane 1)
+    ui_focused_pane: Option<usize>,
+    /// Currently selected task in the task list
+    ui_selected_task: Option<String>,
 }
 
 impl TuiState {
@@ -95,6 +105,10 @@ impl TuiState {
             is_forced_shutdown: false,
             user_has_interacted: false,
             cloud_message: None,
+            ui_pane_tasks: [None, None],
+            ui_spacebar_mode: false,
+            ui_focused_pane: None,
+            ui_selected_task: None,
         }
     }
 
@@ -381,6 +395,59 @@ impl TuiState {
     /// Get the cloud message (if any)
     pub fn get_cloud_message(&self) -> Option<&str> {
         self.cloud_message.as_deref()
+    }
+
+    // === UI State Methods (for mode switching persistence) ===
+
+    /// Save the UI state from full-screen mode for later restoration
+    pub fn save_ui_state(
+        &mut self,
+        pane_tasks: [Option<String>; 2],
+        spacebar_mode: bool,
+        focused_pane: Option<usize>,
+        selected_task: Option<String>,
+    ) {
+        self.ui_pane_tasks = pane_tasks;
+        self.ui_spacebar_mode = spacebar_mode;
+        self.ui_focused_pane = focused_pane;
+        self.ui_selected_task = selected_task;
+    }
+
+    /// Get the saved pane tasks
+    pub fn get_ui_pane_tasks(&self) -> &[Option<String>; 2] {
+        &self.ui_pane_tasks
+    }
+
+    /// Get whether spacebar mode was active
+    pub fn get_ui_spacebar_mode(&self) -> bool {
+        self.ui_spacebar_mode
+    }
+
+    /// Get the focused pane index (None = task list)
+    pub fn get_ui_focused_pane(&self) -> Option<usize> {
+        self.ui_focused_pane
+    }
+
+    /// Get the saved selected task from the task list
+    pub fn get_ui_selected_task(&self) -> Option<&String> {
+        self.ui_selected_task.as_ref()
+    }
+
+    /// Get the task that should be shown in inline mode
+    /// Priority: focused pane task > first pane task > selected task
+    pub fn get_focused_task(&self) -> Option<String> {
+        // If we have a focused pane, use that pane's task
+        if let Some(pane_idx) = self.ui_focused_pane {
+            if let Some(task) = &self.ui_pane_tasks[pane_idx] {
+                return Some(task.clone());
+            }
+        }
+        // Otherwise try the first pane
+        if let Some(task) = &self.ui_pane_tasks[0] {
+            return Some(task.clone());
+        }
+        // No pane tasks available
+        None
     }
 }
 
