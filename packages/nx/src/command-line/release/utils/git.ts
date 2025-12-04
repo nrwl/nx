@@ -4,6 +4,7 @@
  */
 import { relative } from 'node:path';
 import { minimatch } from 'minimatch';
+import { coerce as semverCoerce, gte as semverGte } from 'semver';
 import { interpolate } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
@@ -257,8 +258,16 @@ export async function getLatestGitTagForPattern(
       return extractTagAndVersion(matchingTags[0], tagRegexp, options);
     }
 
+    // Find stable release tags
+    const stableReleaseTags = matchingTags.filter((tag) => {
+      const matches = tag.match(tagRegexp);
+      if (!matches) return false;
+      const [, version] = matches;
+      return version && !isPrerelease(version);
+    });
+
     if (preid && preid.length > 0) {
-      // When a preid is provided, first try to find a tag for it
+      // When a preid is provided, find tags matching that preid
       const preidReleaseTags = matchingTags.filter((tag) => {
         const match = tag.match(tagRegexp);
         if (!match) return false;
@@ -267,20 +276,47 @@ export async function getLatestGitTagForPattern(
         return version && version.includes(`-${preid}.`);
       });
 
+      // If both preid and stable tags exist, compare them to determine which is truly "latest"
+      if (preidReleaseTags.length > 0 && stableReleaseTags.length > 0) {
+        const preidResult = extractTagAndVersion(
+          preidReleaseTags[0],
+          tagRegexp,
+          options
+        );
+        const stableResult = extractTagAndVersion(
+          stableReleaseTags[0],
+          tagRegexp,
+          options
+        );
+
+        // Get the base version of the preid release (e.g., "1.2.4" from "1.2.4-alpha.1")
+        const preidBaseVersion = semverCoerce(
+          preidResult.extractedVersion
+        )?.version;
+        const stableVersion = stableResult.extractedVersion;
+
+        // If the stable version is >= the preid's base version, use the stable tag
+        // This handles the case where a stable release was made after the prerelease
+        // (e.g., 1.1.1 stable was released after 1.1.0-alpha.3)
+        if (
+          preidBaseVersion &&
+          stableVersion &&
+          semverGte(stableVersion, preidBaseVersion)
+        ) {
+          return stableResult;
+        }
+
+        // Otherwise, use the preid tag (prerelease's base is ahead of stable)
+        return preidResult;
+      }
+
+      // If only preid tags exist (no stable), use the latest preid tag
       if (preidReleaseTags.length > 0) {
         return extractTagAndVersion(preidReleaseTags[0], tagRegexp, options);
       }
+
+      // If no matching preid tags, fall through to find stable tags below
     }
-
-    // Then try to find the latest stable release tag
-    const stableReleaseTags = matchingTags.filter((tag) => {
-      const matches = tag.match(tagRegexp);
-
-      if (!matches) return false;
-
-      const [, version] = matches;
-      return version && !isPrerelease(version);
-    });
 
     // If there are stable release tags, use the latest one
     if (stableReleaseTags.length > 0) {
