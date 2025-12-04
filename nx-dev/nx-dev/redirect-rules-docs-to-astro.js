@@ -1163,6 +1163,7 @@ const docsToAstroRedirects = {
   '/reference/web/executors': '/docs/reference/web/executors',
   '/reference/web/generators': '/docs/reference/web/generators',
   '/ci/intro': '/docs/getting-started/nx-cloud',
+  '/features/self-healing-ci': '/docs/features/ci-features/self-healing-ci',
 };
 
 module.exports = docsToAstroRedirects;
