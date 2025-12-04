@@ -128,32 +128,16 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   const isTemplate = !!options.template;
 
-  let connectUrl: string | undefined;
-  let nxCloudInfo: string | undefined;
-  if (nxCloud !== 'skip') {
-    const token = readNxCloudToken(directory) as string;
-
-    // Only generate CI for preset flow (not template)
-    if (!isTemplate && nxCloud !== 'yes') {
-      await setupCI(directory, nxCloud, packageManager);
-    }
-
-    connectUrl = await createNxCloudOnboardingUrl(
-      nxCloud,
-      token,
-      directory,
-      useGitHub
-    );
-
-    // Store for SIGINT handler
-    cloudConnectUrl = connectUrl;
+  // Only generate CI for preset flow (not template)
+  if (nxCloud !== 'skip' && !isTemplate && nxCloud !== 'yes') {
+    await setupCI(directory, nxCloud, packageManager);
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;
 
   if (!skipGit) {
     try {
-      await initializeGitRepo(directory, { defaultBase, commit, connectUrl });
+      await initializeGitRepo(directory, { defaultBase, commit });
 
       // Push to GitHub if commit was made, GitHub push is not skipped, and:
       // - CI provider is GitHub (preset flow), OR
@@ -182,7 +166,22 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
   }
 
-  if (connectUrl) {
+  // Create onboarding URL AFTER git operations so getVcsRemoteInfo() can detect the repo
+  let connectUrl: string | undefined;
+  let nxCloudInfo: string | undefined;
+  if (nxCloud !== 'skip') {
+    const token = readNxCloudToken(directory) as string;
+
+    connectUrl = await createNxCloudOnboardingUrl(
+      nxCloud,
+      token,
+      directory,
+      useGitHub
+    );
+
+    // Store for SIGINT handler
+    cloudConnectUrl = connectUrl;
+
     nxCloudInfo = await getNxCloudInfo(
       connectUrl,
       pushedToVcs,
