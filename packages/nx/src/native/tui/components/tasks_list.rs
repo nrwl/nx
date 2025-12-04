@@ -1123,6 +1123,14 @@ impl TasksList {
         self.pinned_tasks[pane_idx] = None;
     }
 
+    fn pin_batch(&mut self, batch_id: String, pane_idx: usize) {
+        self.pinned_tasks[pane_idx] = Some(batch_id);
+    }
+
+    fn unpin_batch(&mut self, _batch_id: String, pane_idx: usize) {
+        self.pinned_tasks[pane_idx] = None;
+    }
+
     fn unpin_all_tasks(&mut self) {
         self.pinned_tasks = [None, None];
     }
@@ -2283,7 +2291,35 @@ impl TasksList {
                 batch_group.batch_id,
                 batch_group.nested_tasks.len()
             );
-            Cell::from(batch_name)
+
+            // Show output indicators if the batch is pinned to a pane (but not in spacebar mode)
+            let output_indicators = if !self.spacebar_mode {
+                self.pinned_tasks
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(idx, item)| {
+                        if item.as_deref() == Some(batch_group.batch_id.as_str()) {
+                            Some(format!("[{}]", idx + 1))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            } else {
+                String::new()
+            };
+
+            if !output_indicators.is_empty() {
+                let line = Line::from(vec![
+                    Span::raw(batch_name),
+                    Span::raw(" "),
+                    Span::styled(output_indicators, Style::default().dim()),
+                ]);
+                Cell::from(line)
+            } else {
+                Cell::from(batch_name)
+            }
         };
 
         let mut row_cells = vec![status_cell, name];
@@ -3025,6 +3061,12 @@ impl Component for TasksList {
             }
             Action::UnpinTask(task_name, pane_idx) => {
                 self.unpin_task(task_name, pane_idx);
+            }
+            Action::PinBatch(batch_id, pane_idx) => {
+                self.pin_batch(batch_id, pane_idx);
+            }
+            Action::UnpinBatch(batch_id, pane_idx) => {
+                self.unpin_batch(batch_id, pane_idx);
             }
             Action::UnpinAllTasks => {
                 self.unpin_all_tasks();

@@ -60,6 +60,14 @@ pub struct BatchState {
     pub start_time: i64, // Timestamp when batch was registered
 }
 
+/// Information preserved for completed batches that are pinned to panes
+#[derive(Debug, Clone)]
+pub struct CompletedBatchInfo {
+    pub display_name: String,     // Pre-computed "Batch: esbuild (5)"
+    pub completion_time: i64,     // When it finished
+    pub final_status: TaskStatus, // Success or Failure
+}
+
 /// Represents a selection pinned to a terminal pane (task or batch group)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PaneSelection {
@@ -115,6 +123,7 @@ pub struct App {
     estimated_task_timings: HashMap<String, i64>,
     // Batch tracking
     batch_states: HashMap<String, BatchState>, // batch_id → BatchState
+    completed_pinned_batches: HashMap<String, CompletedBatchInfo>, // Completed batches still pinned to panes
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -200,6 +209,7 @@ impl App {
             estimated_task_timings: HashMap::new(),
             // Initialize batch tracking
             batch_states: HashMap::new(),
+            completed_pinned_batches: HashMap::new(),
         })
     }
 
@@ -470,7 +480,12 @@ impl App {
         // Both success and failure trigger ungrouping
         // (batches are only displayed while running, then ungrouped on completion)
         if status_str == "success" || status_str == "failure" {
-            self.handle_batch_complete(batch_id);
+            let final_status = if status_str == "success" {
+                TaskStatus::Success
+            } else {
+                TaskStatus::Failure
+            };
+            self.handle_batch_complete(batch_id, final_status);
         }
     }
 
@@ -1287,6 +1302,12 @@ impl App {
 
     /// Clears all output panes and resets their associated state.
     fn clear_all_panes(&mut self) {
+        // Clean up all completed batches and their PTYs since we're clearing all panes
+        for batch_id in self.completed_pinned_batches.keys() {
+            self.pty_instances.remove(batch_id);
+        }
+        self.completed_pinned_batches.clear();
+
         self.pane_tasks = [None, None];
 
         // Clear PTY references for both panes
@@ -1489,16 +1510,17 @@ impl App {
     }
 
     fn assign_current_task_to_pane(&mut self, pane_idx: usize) {
-        // Extract task name first to end the immutable borrow
-        let task_name = match self
-            .selection_manager
-            .lock()
-            .unwrap()
-            .get_selected_task_name()
+        // Extract selected item (task or batch) to end the immutable borrow
+        let (item_id, item_type) = match self.selection_manager.lock().unwrap().get_selected_item()
         {
-            Some(name) => name.clone(),
+            Some((id, t)) => (id.clone(), t),
             None => return,
         };
+
+        // Skip if trying to pin a None type
+        if item_type == SelectedItemType::None {
+            return;
+        }
 
         // If we're in spacebar mode, clear the spacebar placeholder before pinning
         // In spacebar mode, pane_tasks[0] is a placeholder that may hold a stale task
@@ -1511,91 +1533,102 @@ impl App {
             // Exit spacebar mode first
             self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
 
-            // Pin the task to the requested pane
+            // Pin the item to the requested pane
             self.pane_tasks[pane_idx] = Some(PaneSelection {
-                id: task_name.clone(),
-                item_type: SelectedItemType::Task,
+                id: item_id.clone(),
+                item_type,
             });
             self.layout_manager
                 .set_pane_arrangement(PaneArrangement::Single);
-            self.dispatch_action(Action::PinTask(task_name.clone(), pane_idx));
+            self.dispatch_pin_action(item_id.clone(), item_type, pane_idx);
         } else {
-            // Check if the task is already pinned to the OTHER pane
+            // Check if the item is already pinned to the OTHER pane
             let other_pane_idx = 1 - pane_idx;
             if self.pane_tasks[other_pane_idx]
                 .as_ref()
                 .map(|sel| sel.id.as_str())
-                == Some(task_name.as_str())
+                == Some(item_id.as_str())
             {
-                // Clear the other pane - task is "moving" to the new pane
+                // Clear the other pane - item is "moving" to the new pane
                 self.pane_tasks[other_pane_idx] = None;
                 self.clear_pane_pty_reference(other_pane_idx);
                 self.dependency_view_states[other_pane_idx] = None;
-                self.dispatch_action(Action::UnpinTask(task_name.clone(), other_pane_idx));
+                self.dispatch_action(Action::UnpinTask(item_id.clone(), other_pane_idx));
 
                 // Adjust layout since we now only have one pane
                 self.layout_manager
                     .set_pane_arrangement(PaneArrangement::Single);
-            }
 
-            // Check if the task is already pinned to the pane
-            if self.pane_tasks[pane_idx]
-                .as_ref()
-                .map(|sel| sel.id.as_str())
-                == Some(task_name.as_str())
-            {
-                // Unpin the task if it's already pinned
-                self.pane_tasks[pane_idx] = None;
-
-                // Clear the PTY reference when unpinning
-                self.clear_pane_pty_reference(pane_idx);
-
-                // Set pane arrangement based on count of pinned tasks
-                let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
-                match pinned_count {
-                    0 => {
-                        self.update_focus(Focus::TaskList);
-                        // When all panes are cleared, use position-based selection
-                        self.set_spacebar_mode(false, Some(SelectionMode::TrackByPosition));
-                        self.layout_manager
-                            .set_pane_arrangement(PaneArrangement::None);
-                    }
-                    1 => self
-                        .layout_manager
-                        .set_pane_arrangement(PaneArrangement::Single),
-                    _ => self
-                        .layout_manager
-                        .set_pane_arrangement(PaneArrangement::Double),
-                }
-
-                self.dispatch_action(Action::UnpinTask(task_name.clone(), pane_idx));
+                // Dispatch appropriate action based on type (after moving from other pane)
+                self.dispatch_pin_action(item_id.clone(), item_type, pane_idx);
             } else {
-                // Pin the task to the specified pane
-                self.pane_tasks[pane_idx] = Some(PaneSelection {
-                    id: task_name.clone(),
-                    item_type: SelectedItemType::Task,
-                });
-                self.update_focus(Focus::TaskList);
+                // Check if the item is already pinned to the pane
+                if self.pane_tasks[pane_idx]
+                    .as_ref()
+                    .map(|sel| sel.id.as_str())
+                    == Some(item_id.as_str())
+                {
+                    // Unpin the item if it's already pinned
+                    // Cleanup completed batch if unpinning one
+                    self.cleanup_pane_completed_batch(pane_idx);
 
-                // Exit spacebar mode when pinning
-                // When pinning a task, use name-based selection
-                self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
+                    self.pane_tasks[pane_idx] = None;
 
-                // Set pane arrangement based on count of pinned tasks
-                let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
-                match pinned_count {
-                    0 => self
-                        .layout_manager
-                        .set_pane_arrangement(PaneArrangement::None),
-                    1 => self
-                        .layout_manager
-                        .set_pane_arrangement(PaneArrangement::Single),
-                    _ => self
-                        .layout_manager
-                        .set_pane_arrangement(PaneArrangement::Double),
+                    // Clear the PTY reference when unpinning
+                    self.clear_pane_pty_reference(pane_idx);
+
+                    // Set pane arrangement based on count of pinned tasks
+                    let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
+                    match pinned_count {
+                        0 => {
+                            self.update_focus(Focus::TaskList);
+                            // When all panes are cleared, use position-based selection
+                            self.set_spacebar_mode(false, Some(SelectionMode::TrackByPosition));
+                            self.layout_manager
+                                .set_pane_arrangement(PaneArrangement::None);
+                        }
+                        1 => self
+                            .layout_manager
+                            .set_pane_arrangement(PaneArrangement::Single),
+                        _ => self
+                            .layout_manager
+                            .set_pane_arrangement(PaneArrangement::Double),
+                    }
+
+                    // Dispatch appropriate action based on type
+                    self.dispatch_unpin_action(item_id.clone(), item_type, pane_idx);
+                } else {
+                    // Pin the item to the specified pane
+                    // Cleanup old completed batch before replacing
+                    self.cleanup_pane_completed_batch(pane_idx);
+
+                    self.pane_tasks[pane_idx] = Some(PaneSelection {
+                        id: item_id.clone(),
+                        item_type,
+                    });
+                    self.update_focus(Focus::TaskList);
+
+                    // Exit spacebar mode when pinning
+                    // When pinning an item, use name-based selection
+                    self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
+
+                    // Set pane arrangement based on count of pinned tasks
+                    let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
+                    match pinned_count {
+                        0 => self
+                            .layout_manager
+                            .set_pane_arrangement(PaneArrangement::None),
+                        1 => self
+                            .layout_manager
+                            .set_pane_arrangement(PaneArrangement::Single),
+                        _ => self
+                            .layout_manager
+                            .set_pane_arrangement(PaneArrangement::Double),
+                    }
+
+                    // Dispatch appropriate action based on type
+                    self.dispatch_pin_action(item_id.clone(), item_type, pane_idx);
                 }
-
-                self.dispatch_action(Action::PinTask(task_name.clone(), pane_idx));
             }
         }
 
@@ -2065,10 +2098,35 @@ impl App {
         is_focused: bool,
         is_next_tab_target: bool,
     ) {
-        let batch_name = self.get_batch_display_name(&batch_id);
+        // Determine batch state and display info
+        let (batch_name, status, start_time) =
+            if let Some(batch_state) = self.batch_states.get(&batch_id) {
+                // Running batch
+                (
+                    self.get_batch_display_name(&batch_id),
+                    TaskStatus::InProgress,
+                    Some(batch_state.start_time),
+                )
+            } else if let Some(completed) = self.completed_pinned_batches.get(&batch_id) {
+                // Completed but pinned batch
+                (
+                    format!("{} [completed]", completed.display_name),
+                    completed.final_status,
+                    None,
+                )
+            } else {
+                // Shouldn't happen, but fallback
+                (format!("Batch: {}", batch_id), TaskStatus::NotStarted, None)
+            };
 
         // Batches are always in progress (ungrouped on completion) and non-interactive
-        self.setup_pane_pty(pane_idx, &batch_id, pane_area, true, false);
+        self.setup_pane_pty(
+            pane_idx,
+            &batch_id,
+            pane_area,
+            status == TaskStatus::InProgress,
+            false,
+        );
 
         self.render_terminal_pane_widget(
             f,
@@ -2076,12 +2134,12 @@ impl App {
             pane_area,
             TerminalPaneContext {
                 display_name: batch_name,
-                status: TaskStatus::InProgress,
+                status,
                 is_continuous: false,
                 is_focused,
                 is_next_tab_target,
                 estimated_duration: None,
-                start_time: None,
+                start_time,
                 end_time: None,
             },
             is_minimal,
@@ -2242,10 +2300,35 @@ impl App {
 
     /// Handles batch completion by ungrouping tasks back to individual display.
     /// This is called when a batch reaches a terminal state (success or failure).
-    fn handle_batch_complete(&mut self, batch_id: String) {
+    fn handle_batch_complete(&mut self, batch_id: String, final_status: TaskStatus) {
         // Early validation
         if batch_id.is_empty() {
             return;
+        }
+
+        // Check if batch is truly pinned (not in spacebar mode)
+        let is_pinned = !self.spacebar_mode
+            && self.pane_tasks.iter().any(|sel| {
+                sel.as_ref().map(|s| &s.id) == Some(&batch_id)
+                    && sel.as_ref().map(|s| s.item_type) == Some(SelectedItemType::BatchGroup)
+            });
+
+        if is_pinned {
+            // Preserve state for pinned batch
+            let display_name = self.get_batch_display_name(&batch_id);
+            self.completed_pinned_batches.insert(
+                batch_id.clone(),
+                CompletedBatchInfo {
+                    display_name,
+                    completion_time: current_timestamp_millis(),
+                    final_status,
+                },
+            );
+            // Remove from batch_states but keep PTY
+            self.batch_states.remove(&batch_id);
+        } else {
+            // Full cleanup for non-pinned batches
+            self.cleanup_batch_pty(&batch_id);
         }
 
         if let Some(tasks_list) = self
@@ -2304,5 +2387,48 @@ impl App {
     fn cleanup_batch_pty(&mut self, batch_id: &str) {
         self.pty_instances.remove(batch_id);
         self.batch_states.remove(batch_id);
+    }
+
+    /// Cleans up completed batch from a pane if it exists
+    fn cleanup_pane_completed_batch(&mut self, pane_idx: usize) {
+        if let Some(sel) = &self.pane_tasks[pane_idx] {
+            if sel.item_type == SelectedItemType::BatchGroup {
+                let batch_id = sel.id.clone();
+                if self.completed_pinned_batches.contains_key(&batch_id) {
+                    // Check if still referenced by other pane
+                    let other_pane = 1 - pane_idx;
+                    let still_referenced =
+                        self.pane_tasks[other_pane].as_ref().map(|s| s.id.as_str())
+                            == Some(batch_id.as_str());
+
+                    if !still_referenced {
+                        self.pty_instances.remove(&batch_id);
+                        self.completed_pinned_batches.remove(&batch_id);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Dispatches the appropriate pin action based on item type
+    fn dispatch_pin_action(&self, item_id: String, item_type: SelectedItemType, pane_idx: usize) {
+        match item_type {
+            SelectedItemType::Task => self.dispatch_action(Action::PinTask(item_id, pane_idx)),
+            SelectedItemType::BatchGroup => {
+                self.dispatch_action(Action::PinBatch(item_id, pane_idx))
+            }
+            SelectedItemType::None => {}
+        }
+    }
+
+    /// Dispatches the appropriate unpin action based on item type
+    fn dispatch_unpin_action(&self, item_id: String, item_type: SelectedItemType, pane_idx: usize) {
+        match item_type {
+            SelectedItemType::Task => self.dispatch_action(Action::UnpinTask(item_id, pane_idx)),
+            SelectedItemType::BatchGroup => {
+                self.dispatch_action(Action::UnpinBatch(item_id, pane_idx))
+            }
+            SelectedItemType::None => {}
+        }
     }
 }

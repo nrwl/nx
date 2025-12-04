@@ -22,6 +22,8 @@ pub enum Action {
     ScrollDown,
     PinTask(String, usize),
     UnpinTask(String, usize),
+    PinBatch(String, usize),
+    UnpinBatch(String, usize),
     UnpinAllTasks,
     SortTasks,
     NextTask,
