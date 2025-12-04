@@ -350,7 +350,7 @@ export class TaskOrchestrator {
 
     // Run tasks that were not cached
     if (results.length !== taskEntries.length) {
-      await this.postRunSteps(tasks, results, doNotSkipCache, { groupId });
+      await this.postRunSteps(results, doNotSkipCache, { groupId });
 
       const unrunTaskGraph = removeTasksFromTaskGraph(
         batch.taskGraph,
@@ -363,11 +363,12 @@ export class TaskOrchestrator {
           executorName: batch.executorName,
           taskGraph: unrunTaskGraph,
         },
-        this.batchEnv
+        this.batchEnv,
+        groupId
       );
     }
 
-    await this.postRunSteps(tasks, results, doNotSkipCache, { groupId });
+    await this.postRunSteps(results, doNotSkipCache, { groupId });
 
     // Update batch status based on all task results
     const hasFailures = taskEntries.some(([taskId]) => {
@@ -414,7 +415,8 @@ export class TaskOrchestrator {
 
   private async runBatch(
     batch: Batch,
-    env: NodeJS.ProcessEnv
+    env: NodeJS.ProcessEnv,
+    groupId: number
   ): Promise<TaskResult[]> {
     const runBatchStart = performance.mark('TaskOrchestrator-run-batch:start');
     try {
@@ -429,6 +431,31 @@ export class TaskOrchestrator {
       // Stream output from batch process to the batch
       batchProcess.onOutput((output) => {
         this.options.lifeCycle.appendBatchOutput?.(batch.id, output);
+      });
+
+      // Stream task results to TUI as they complete (lightweight - just UI updates)
+      // Heavy operations (caching, scheduling, complete) happen at batch-end in postRunSteps
+      batchProcess.onTaskResults((taskId, result) => {
+        const task = this.taskGraph.tasks[taskId];
+        const status = result.success ? 'success' : 'failure';
+
+        this.options.lifeCycle.endTasks(
+          [
+            {
+              task: {
+                ...task,
+                startTime: result.startTime,
+                endTime: result.endTime,
+              },
+              status,
+              code: result.success ? 0 : 1,
+              terminalOutput: result.terminalOutput,
+            },
+          ],
+          { groupId }
+        );
+
+        this.options.lifeCycle.setTaskStatus(taskId, parseTaskStatus(status));
       });
 
       const results = await batchProcess.getResults();
@@ -531,7 +558,7 @@ export class TaskOrchestrator {
         terminalOutput,
       });
     }
-    await this.postRunSteps([task], results, doNotSkipCache, { groupId });
+    await this.postRunSteps(results, doNotSkipCache, { groupId });
     return results[0];
   }
 
@@ -884,7 +911,6 @@ export class TaskOrchestrator {
   }
 
   private async postRunSteps(
-    tasks: Task[],
     results: {
       task: Task;
       status: TaskStatus;
@@ -894,8 +920,9 @@ export class TaskOrchestrator {
     { groupId }: { groupId: number }
   ) {
     const now = Date.now();
-    for (const task of tasks) {
-      task.endTime = now;
+    for (const { task } of results) {
+      // Only set endTime as fallback (batch provides timing via result.task)
+      task.endTime ??= now;
       await this.recordOutputsHash(task);
     }
 
