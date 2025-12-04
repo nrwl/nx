@@ -11,8 +11,8 @@ Nx Cloud tracks CPU and memory usage for each task in your CI pipeline. Use this
 
 {% aside type="note" title="Requirements" %}
 Requires Nx 22.1 or higher.
-Task resource usage data collection is available on any plan.
-Task resource usage visualization in Nx Cloud requires an [Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=documentation-guide&utm_campaign=nx-cloud-task-metrics).
+
+The CI resource usage feature with Nx Cloud requires an [Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=documentation-guide&utm_campaign=nx-cloud-task-metrics).
 {% /aside %}
 
 ## Resource Usage with Nx Agents
@@ -90,7 +90,7 @@ export NX_CLOUD_ENABLE_METRICS_COLLECTION=true
 
 In future Nx versions, metrics collection will be enabled by default. You can use this same variable to disable it if needed.
 
-By default, Nx writes metrics to `/var/upload/metrics`. To use a different location, set the `NX_CLOUD_METRICS_DIRECTORY` environment variable:
+Set the `NX_CLOUD_METRICS_DIRECTORY` environment variable to a directory for the metrics to be written in e.g. `.nx/cache/metrics`.
 
 ```shell
 export NX_CLOUD_METRICS_DIRECTORY=/path/to/metrics
@@ -110,7 +110,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NX_CLOUD_ENABLE_METRICS_COLLECTION: true
-      NX_CLOUD_METRICS_DIRECTORY: ${{ github.workspace }}/.nx-metrics
+      NX_CLOUD_METRICS_DIRECTORY: ${{ github.workspace }}/.nx/cache/metrics
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -121,7 +121,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nx-metrics
-          path: ${{ github.workspace }}/.nx-metrics
+          path: ${{ github.workspace }}/.nx/cache/metrics
 ```
 
 {% /tabitem %}
@@ -132,13 +132,13 @@ jobs:
 build:
   variables:
     NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'
-    NX_CLOUD_METRICS_DIRECTORY: $CI_PROJECT_DIR/.nx-metrics
+    NX_CLOUD_METRICS_DIRECTORY: $CI_PROJECT_DIR/.nx/cache/metrics
   script:
     - npm ci
     - npx nx affected -t build test lint
   artifacts:
     paths:
-      - .nx-metrics
+      - .nx/cache/metrics
     when: always
 ```
 
@@ -153,13 +153,13 @@ jobs:
       - image: cimg/node:lts
     environment:
       NX_CLOUD_ENABLE_METRICS_COLLECTION: true
-      NX_CLOUD_METRICS_DIRECTORY: /home/circleci/project/.nx-metrics
+      NX_CLOUD_METRICS_DIRECTORY: /home/circleci/project/.nx/cache/metrics
     steps:
       - checkout
       - run: npm ci
       - run: npx nx affected -t build test lint
       - store_artifacts:
-          path: .nx-metrics
+          path: .nx/cache/metrics
           destination: nx-metrics
 ```
 
