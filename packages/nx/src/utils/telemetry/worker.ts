@@ -1,10 +1,15 @@
 import { parentPort } from 'worker_threads';
+import { appendFileSync } from 'fs';
+import { join } from 'path';
 import type {
   SerializedSpan,
   TraceExportPayload,
   WorkerMessage,
   WorkerResponse,
 } from './worker-types';
+
+// Log file path at repo root
+const LOG_FILE_PATH = join(__dirname, '../../../../../telemetry-traces.log');
 
 // Configuration (set via 'config' message)
 let endpoint: string | null = null;
@@ -23,6 +28,29 @@ let pendingExports: Promise<void>[] = [];
  */
 function respond(response: WorkerResponse): void {
   parentPort?.postMessage(response);
+}
+
+/**
+ * Log trace export to file.
+ */
+function logTraceExport(
+  spans: SerializedSpan[],
+  url: string,
+  success: boolean,
+  statusOrError?: number | string
+): void {
+  const timestamp = new Date().toISOString();
+  const spanNames = spans.map((s) => s.name).join(', ');
+  const status = success
+    ? `SUCCESS`
+    : `FAILED (${statusOrError ?? 'unknown'})`;
+  const logLine = `[${timestamp}] ${status} - Sent ${spans.length} span(s) to ${url} - Spans: [${spanNames}]\n`;
+
+  try {
+    appendFileSync(LOG_FILE_PATH, logLine);
+  } catch {
+    // Silently ignore logging errors
+  }
 }
 
 /**
@@ -61,14 +89,15 @@ async function exportSpans(spans: SerializedSpan[]): Promise<void> {
       console.warn(
         `[nx telemetry] Failed to export traces: HTTP ${response.status}`
       );
+      logTraceExport(spans, url, false, response.status);
+    } else {
+      logTraceExport(spans, url, true);
     }
   } catch (error) {
     // Log but don't throw - telemetry should not break main flow
-    console.warn(
-      `[nx telemetry] Failed to export traces: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.warn(`[nx telemetry] Failed to export traces: ${errorMessage}`);
+    logTraceExport(spans, url, false, errorMessage);
   }
 }
 
