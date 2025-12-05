@@ -17,6 +17,7 @@ import { readNxJson } from '../../config/configuration';
 import { output } from '../../utils/output';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
+import { withSpan } from '../../utils/telemetry';
 
 export async function runMany(
   args: { [k: string]: any },
@@ -48,7 +49,21 @@ export async function runMany(
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  const projects = projectsToRun(nxArgs, projectGraph);
+  const projects = await withSpan(
+    'nx.run_many.project_selection',
+    {
+      'nx.run_many.targets': nxArgs.targets.join(','),
+      'nx.run_many.all': nxArgs.all,
+    },
+    async (addAttributes) => {
+      const result = projectsToRun(nxArgs, projectGraph);
+      addAttributes({
+        'nx.run_many.project_count': result.length,
+        'nx.run_many.excluded_count': nxArgs.exclude?.length ?? 0,
+      });
+      return result;
+    }
+  );
 
   if (nxArgs.graph) {
     const file = readGraphFileFromGraphArg(nxArgs);

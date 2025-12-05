@@ -8,6 +8,7 @@ import {
   readNxJson,
   TargetDependencies,
 } from '../config/nx-json';
+import { withSpan } from '../utils/telemetry';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
@@ -612,13 +613,26 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   projectGraph: ProjectGraph;
   taskGraph: TaskGraph;
 }> {
-  let taskGraph = createTaskGraphAndRunValidations(
-    projectGraph,
-    extraTargetDependencies ?? {},
-    projectNames,
-    nxArgs,
-    overrides,
-    extraOptions
+  let taskGraph = await withSpan(
+    'nx.task_graph.create',
+    {
+      'nx.task_graph.project_count': projectNames.length,
+      'nx.task_graph.targets': nxArgs.targets.join(','),
+    },
+    async (addAttributes) => {
+      const graph = createTaskGraphAndRunValidations(
+        projectGraph,
+        extraTargetDependencies ?? {},
+        projectNames,
+        nxArgs,
+        overrides,
+        extraOptions
+      );
+      addAttributes({
+        'nx.task_graph.task_count': Object.keys(graph.tasks).length,
+      });
+      return graph;
+    }
   );
 
   if (nxArgs.skipSync || isCI()) {
@@ -626,10 +640,30 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   }
 
   // collect unique syncGenerators from the tasks
-  const uniqueSyncGenerators = collectEnabledTaskSyncGeneratorsFromTaskGraph(
-    taskGraph,
-    projectGraph,
-    nxJson
+  const { uniqueSyncGenerators, syncGeneratorResults } = await withSpan(
+    'nx.sync_generators.check',
+    {},
+    async (addAttributes) => {
+      const generators = collectEnabledTaskSyncGeneratorsFromTaskGraph(
+        taskGraph,
+        projectGraph,
+        nxJson
+      );
+      addAttributes({
+        'nx.sync_generators.count': generators.size,
+      });
+
+      if (!generators.size) {
+        return { uniqueSyncGenerators: generators, syncGeneratorResults: [] };
+      }
+
+      const syncGenerators = Array.from(generators);
+      const results = await getSyncGeneratorChanges(syncGenerators);
+      addAttributes({
+        'nx.sync_generators.changes_found': results.length > 0,
+      });
+      return { uniqueSyncGenerators: generators, syncGeneratorResults: results };
+    }
   );
 
   if (!uniqueSyncGenerators.size) {
@@ -638,7 +672,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   }
 
   const syncGenerators = Array.from(uniqueSyncGenerators);
-  const results = await getSyncGeneratorChanges(syncGenerators);
+  const results = syncGeneratorResults;
   if (!results.length) {
     // There are no changes to sync, workspace is up to date
     return { projectGraph, taskGraph };
@@ -777,13 +811,27 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
 
     // Re-create project graph and task graph
     projectGraph = await createProjectGraphAsync();
-    taskGraph = createTaskGraphAndRunValidations(
-      projectGraph,
-      extraTargetDependencies ?? {},
-      projectNames,
-      nxArgs,
-      overrides,
-      extraOptions
+    taskGraph = await withSpan(
+      'nx.task_graph.create',
+      {
+        'nx.task_graph.project_count': projectNames.length,
+        'nx.task_graph.targets': nxArgs.targets.join(','),
+        'nx.task_graph.after_sync': true,
+      },
+      async (addAttributes) => {
+        const graph = createTaskGraphAndRunValidations(
+          projectGraph,
+          extraTargetDependencies ?? {},
+          projectNames,
+          nxArgs,
+          overrides,
+          extraOptions
+        );
+        addAttributes({
+          'nx.task_graph.task_count': Object.keys(graph.tasks).length,
+        });
+        return graph;
+      }
     );
 
     const successTitle = anySyncGeneratorsFailed
@@ -971,87 +1019,100 @@ export async function invokeTasksRunner({
     taskResultsLifecycle,
   ]);
 
-  let promiseOrObservable:
-    | Observable<{ task: Task; success: boolean }>
-    | Promise<{ [id: string]: TaskStatus }> = tasksRunner(
-    tasks,
+  return withSpan(
+    'nx.tasks_runner.invoke',
     {
-      ...runnerOptions,
-      lifeCycle: compositedLifeCycle,
+      'nx.tasks_runner.task_count': tasks.length,
+      'nx.tasks_runner.parallel': nxArgs.parallel ?? 3,
     },
-    {
-      initiatingProject,
-      initiatingTasks,
-      projectGraph,
-      nxJson,
-      nxArgs,
-      taskGraph,
-      hasher: {
-        hashTask(task: Task, taskGraph_?: TaskGraph, env?: NodeJS.ProcessEnv) {
-          if (!taskGraph_) {
-            output.warn({
-              title: `TaskGraph is now required as an argument to hashTask`,
-              bodyLines: [
-                `The TaskGraph object can be retrieved from the context`,
-                'This will result in an error in Nx 20',
-              ],
-            });
-            taskGraph_ = taskGraph;
-          }
-          if (!env) {
-            output.warn({
-              title: `The environment variables are now required as an argument to hashTask`,
-              bodyLines: [
-                `Please pass the environment variables used when running the task`,
-                'This will result in an error in Nx 20',
-              ],
-            });
-            env = process.env;
-          }
-          return hasher.hashTask(task, taskGraph_, env);
+    async () => {
+      let promiseOrObservable:
+        | Observable<{ task: Task; success: boolean }>
+        | Promise<{ [id: string]: TaskStatus }> = tasksRunner(
+        tasks,
+        {
+          ...runnerOptions,
+          lifeCycle: compositedLifeCycle,
         },
-        hashTasks(
-          task: Task[],
-          taskGraph_?: TaskGraph,
-          env?: NodeJS.ProcessEnv
-        ) {
-          if (!taskGraph_) {
-            output.warn({
-              title: `TaskGraph is now required as an argument to hashTasks`,
-              bodyLines: [
-                `The TaskGraph object can be retrieved from the context`,
-                'This will result in an error in Nx 20',
-              ],
-            });
-            taskGraph_ = taskGraph;
-          }
-          if (!env) {
-            output.warn({
-              title: `The environment variables are now required as an argument to hashTasks`,
-              bodyLines: [
-                `Please pass the environment variables used when running the tasks`,
-                'This will result in an error in Nx 20',
-              ],
-            });
-            env = process.env;
-          }
+        {
+          initiatingProject,
+          initiatingTasks,
+          projectGraph,
+          nxJson,
+          nxArgs,
+          taskGraph,
+          hasher: {
+            hashTask(
+              task: Task,
+              taskGraph_?: TaskGraph,
+              env?: NodeJS.ProcessEnv
+            ) {
+              if (!taskGraph_) {
+                output.warn({
+                  title: `TaskGraph is now required as an argument to hashTask`,
+                  bodyLines: [
+                    `The TaskGraph object can be retrieved from the context`,
+                    'This will result in an error in Nx 20',
+                  ],
+                });
+                taskGraph_ = taskGraph;
+              }
+              if (!env) {
+                output.warn({
+                  title: `The environment variables are now required as an argument to hashTask`,
+                  bodyLines: [
+                    `Please pass the environment variables used when running the task`,
+                    'This will result in an error in Nx 20',
+                  ],
+                });
+                env = process.env;
+              }
+              return hasher.hashTask(task, taskGraph_, env);
+            },
+            hashTasks(
+              task: Task[],
+              taskGraph_?: TaskGraph,
+              env?: NodeJS.ProcessEnv
+            ) {
+              if (!taskGraph_) {
+                output.warn({
+                  title: `TaskGraph is now required as an argument to hashTasks`,
+                  bodyLines: [
+                    `The TaskGraph object can be retrieved from the context`,
+                    'This will result in an error in Nx 20',
+                  ],
+                });
+                taskGraph_ = taskGraph;
+              }
+              if (!env) {
+                output.warn({
+                  title: `The environment variables are now required as an argument to hashTasks`,
+                  bodyLines: [
+                    `Please pass the environment variables used when running the tasks`,
+                    'This will result in an error in Nx 20',
+                  ],
+                });
+                env = process.env;
+              }
 
-          return hasher.hashTasks(task, taskGraph_, env);
-        },
-      },
-      daemon: daemonClient,
+              return hasher.hashTasks(task, taskGraph_, env);
+            },
+          },
+          daemon: daemonClient,
+        }
+      );
+      if ((promiseOrObservable as any).subscribe) {
+        promiseOrObservable = convertObservableToPromise(
+          promiseOrObservable as Observable<{ task: Task; success: boolean }>
+        );
+      }
+
+      await (promiseOrObservable as Promise<{
+        [id: string]: TaskStatus;
+      }>);
+      return taskResultsLifecycle.getTaskResults();
     }
   );
-  if ((promiseOrObservable as any).subscribe) {
-    promiseOrObservable = convertObservableToPromise(
-      promiseOrObservable as Observable<{ task: Task; success: boolean }>
-    );
-  }
-
-  await (promiseOrObservable as Promise<{
-    [id: string]: TaskStatus;
-  }>);
-  return taskResultsLifecycle.getTaskResults();
 }
 
 export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {

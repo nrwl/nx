@@ -41,9 +41,16 @@ function logTraceExport(
   statusOrError?: number | string
 ): void {
   const timestamp = new Date().toISOString();
-  const spanNames = spans.map((s) => s.name).join(', ');
+  const spanDetails = spans
+    .map((s) => {
+      const parent = s.parentSpanId
+        ? ` (parent: ${s.parentSpanId.substring(0, 8)}...)`
+        : ' (root)';
+      return `${s.name}${parent}`;
+    })
+    .join(', ');
   const status = success ? `SUCCESS` : `FAILED (${statusOrError ?? 'unknown'})`;
-  const logLine = `[${timestamp}] ${status} - Sent ${spans.length} span(s) to ${url} - Spans: [${spanNames}]\n`;
+  const logLine = `[${timestamp}] ${status} - Sent ${spans.length} span(s) to ${url} - Spans: [${spanDetails}]\n`;
 
   try {
     appendFileSync(LOG_FILE_PATH, logLine);
