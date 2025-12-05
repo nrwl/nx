@@ -11,6 +11,13 @@ import {
   OssProjects,
 } from '@nx/nx-dev-ui-customers';
 import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import type { GetServerSideProps } from 'next';
+import { tryFramerProxy } from '../lib/framer-proxy';
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  if (await tryFramerProxy(ctx)) return { props: {} };
+  return { props: {} };
+};
 
 export function Customers(): JSX.Element {
   const router = useRouter();

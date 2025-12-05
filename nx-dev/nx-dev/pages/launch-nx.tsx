@@ -10,6 +10,13 @@ import {
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import type { GetServerSideProps } from 'next';
+import { tryFramerProxy } from '../lib/framer-proxy';
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  if (await tryFramerProxy(ctx)) return { props: {} };
+  return { props: {} };
+};
 
 export default function ConfPage(): JSX.Element {
   const router = useRouter();

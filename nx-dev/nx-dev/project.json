@@ -18,7 +18,9 @@
       "inputs": [
         "production",
         "^production",
-        { "env": "NEXT_PUBLIC_ASTRO_URL" }
+        { "env": "NEXT_PUBLIC_ASTRO_URL" },
+        { "env": "NEXT_PUBLIC_FRAMER_URL" },
+        { "env": "NEXT_PUBLIC_FRAMER_REWRITES" }
       ],
       "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev"]
     },
