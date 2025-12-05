@@ -53,7 +53,7 @@ function waitForResponse(
   responseType: WorkerResponse['type'],
   timeoutMs: number
 ): Promise<void> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (!worker) {
       resolve();
       return;

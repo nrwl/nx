@@ -53,6 +53,7 @@ import {
 import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
 import { output } from '../utils/output';
 import { yargsMcpCommand } from './mcp/command-object';
+import { startCommandRecording } from '../utils/handle-errors';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -72,6 +73,12 @@ export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
   .usage(chalk.bold('Smart Repos · Fast Builds'))
   .demandCommand(1, '')
+  .middleware((argv) => {
+    // Record command start for telemetry
+    // argv._ contains the command(s), e.g., ['build'] or ['run', 'myapp:build']
+    const command = Array.isArray(argv._) ? argv._[0]?.toString() : 'unknown';
+    startCommandRecording(command, process.argv.slice(2));
+  })
   .command(yargsRegisterCommand)
   .command(yargsAddCommand)
   .command(yargsConfigureAiAgentsCommand)

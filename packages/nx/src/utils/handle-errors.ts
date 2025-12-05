@@ -4,6 +4,30 @@ import type {
 } from '../project-graph/error-types';
 import { logger } from './logger';
 import { output } from './output';
+import {
+  recordCommandStart,
+  recordCommandEnd,
+  recordError,
+  type CommandContext,
+} from './telemetry';
+
+// Current command context for telemetry
+let currentCommandContext: CommandContext | null = null;
+
+/**
+ * Start recording a command for telemetry.
+ * Call this before handleErrors to associate the command with telemetry.
+ */
+export function startCommandRecording(command: string, argv: string[]): void {
+  currentCommandContext = recordCommandStart(command, argv);
+}
+
+/**
+ * Get the current command being executed (for error recording).
+ */
+export function getCurrentCommand(): string {
+  return currentCommandContext?.command ?? 'unknown';
+}
 
 export async function handleErrors(
   isVerbose: boolean,
@@ -11,6 +35,11 @@ export async function handleErrors(
 ): Promise<number> {
   try {
     const result = await fn();
+    // Record successful command completion
+    if (currentCommandContext) {
+      recordCommandEnd(currentCommandContext, true);
+      currentCommandContext = null;
+    }
     if (typeof result === 'number') {
       return result;
     }
@@ -66,6 +95,13 @@ export async function handleErrors(
         bodyLines,
       });
     }
+    // Record failed command completion and error
+    if (currentCommandContext) {
+      recordError(err, 'command-execution', currentCommandContext.command);
+      recordCommandEnd(currentCommandContext, false);
+      currentCommandContext = null;
+    }
+
     const { daemonClient } = await import('../daemon/client/client');
     if (daemonClient.enabled()) {
       daemonClient.reset();
