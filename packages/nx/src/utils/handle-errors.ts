@@ -8,6 +8,7 @@ import {
   recordCommandStart,
   recordCommandEnd,
   recordError,
+  flushTelemetry,
   type CommandContext,
 } from './telemetry';
 
@@ -107,6 +108,8 @@ export async function handleErrors(
       daemonClient.reset();
     }
     return 1;
+  } finally {
+    await flushTelemetry();
   }
 }
 

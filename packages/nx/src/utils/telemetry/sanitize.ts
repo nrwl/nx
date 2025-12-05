@@ -278,10 +278,7 @@ function parseArgv(argv: string[]): {
 /**
  * Sanitize positional arguments based on command context.
  */
-function sanitizePositional(
-  positional: string[],
-  command: string
-): string[] {
+function sanitizePositional(positional: string[], command: string): string[] {
   const result: string[] = [];
 
   for (let i = 0; i < positional.length; i++) {
@@ -367,7 +364,9 @@ export function sanitizeArgs(argv: string[]): SanitizedArgs {
       if (generatorSpec.safeArgs.has(key)) {
         // Safe to include as-is
         sanitizedFlags[key] =
-          typeof value === 'boolean' ? value : sanitizeValue(String(value), key);
+          typeof value === 'boolean'
+            ? value
+            : sanitizeValue(String(value), key);
       } else if (generatorSpec.presenceOnlyArgs.has(key)) {
         // Only record presence, not value
         sanitizedFlags[key] = true;
@@ -375,9 +374,7 @@ export function sanitizeArgs(argv: string[]): SanitizedArgs {
         // Value should be one of known categories
         const categories = generatorSpec.categorizedArgs.get(key)!;
         sanitizedFlags[key] =
-          typeof value === 'string' && categories.has(value)
-            ? value
-            : REDACTED;
+          typeof value === 'string' && categories.has(value) ? value : REDACTED;
       } else {
         // Unknown arg - redact value, keep presence
         sanitizedFlags[key] = REDACTED;
@@ -429,18 +426,15 @@ export function sanitizeErrorMessage(message: string): string {
   // Remove file paths (Unix) - but keep node_modules paths
   // Match absolute paths or relative paths with directory separators
   // Include @ for scoped npm packages like @nx/react
-  sanitized = sanitized.replace(
-    /\/(?:[@\w.-]+\/)+[@\w.-]+/g,
-    (match) => {
-      // Check if this is a node_modules path
-      const nodeModulesIndex = match.indexOf('node_modules');
-      if (nodeModulesIndex !== -1) {
-        // Keep everything from node_modules onward
-        return match.slice(nodeModulesIndex);
-      }
-      return REDACTED;
+  sanitized = sanitized.replace(/\/(?:[@\w.-]+\/)+[@\w.-]+/g, (match) => {
+    // Check if this is a node_modules path
+    const nodeModulesIndex = match.indexOf('node_modules');
+    if (nodeModulesIndex !== -1) {
+      // Keep everything from node_modules onward
+      return match.slice(nodeModulesIndex);
     }
-  );
+    return REDACTED;
+  });
 
   // Remove file paths (Windows)
   sanitized = sanitized.replace(/[A-Za-z]:\\[^\s:]+/g, (match) => {

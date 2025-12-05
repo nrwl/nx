@@ -162,11 +162,7 @@ const CHANGE_DETECTION_OPTIONS = new Set(['Default', 'OnPush']);
 /**
  * Angular view encapsulation options.
  */
-const VIEW_ENCAPSULATION_OPTIONS = new Set([
-  'Emulated',
-  'None',
-  'ShadowDom',
-]);
+const VIEW_ENCAPSULATION_OPTIONS = new Set(['Emulated', 'None', 'ShadowDom']);
 
 /**
  * Common categorized args with their allowed values.
@@ -203,21 +199,14 @@ const GENERATOR_SPECS: Record<string, Partial<GeneratorArgSpec>> = {
     ]),
   },
   '@nx/react:library': {
-    safeArgs: new Set([
-      ...COMMON_SAFE_ARGS,
-      'component',
-      'compiler',
-    ]),
+    safeArgs: new Set([...COMMON_SAFE_ARGS, 'component', 'compiler']),
     categorizedArgs: new Map([
       ...COMMON_CATEGORIZED_ARGS,
       ['compiler', new Set(['babel', 'swc'])],
     ]),
   },
   '@nx/react:application': {
-    safeArgs: new Set([
-      ...COMMON_SAFE_ARGS,
-      'compiler',
-    ]),
+    safeArgs: new Set([...COMMON_SAFE_ARGS, 'compiler']),
     categorizedArgs: new Map([
       ...COMMON_CATEGORIZED_ARGS,
       ['compiler', new Set(['babel', 'swc'])],
@@ -260,10 +249,7 @@ const GENERATOR_SPECS: Record<string, Partial<GeneratorArgSpec>> = {
 
   // Node generators
   '@nx/node:application': {
-    safeArgs: new Set([
-      ...COMMON_SAFE_ARGS,
-      'framework',
-    ]),
+    safeArgs: new Set([...COMMON_SAFE_ARGS, 'framework']),
     categorizedArgs: new Map([
       ...COMMON_CATEGORIZED_ARGS,
       ['framework', new Set(['express', 'fastify', 'koa', 'nest', 'none'])],
@@ -272,12 +258,7 @@ const GENERATOR_SPECS: Record<string, Partial<GeneratorArgSpec>> = {
 
   // Next.js generators
   '@nx/next:application': {
-    safeArgs: new Set([
-      ...COMMON_SAFE_ARGS,
-      'appDir',
-      'app-dir',
-      'src',
-    ]),
+    safeArgs: new Set([...COMMON_SAFE_ARGS, 'appDir', 'app-dir', 'src']),
   },
 
   // Plugin generators
@@ -289,11 +270,7 @@ const GENERATOR_SPECS: Record<string, Partial<GeneratorArgSpec>> = {
     ]),
   },
   '@nx/plugin:executor': {
-    safeArgs: new Set([
-      ...COMMON_SAFE_ARGS,
-      'includeHasher',
-      'include-hasher',
-    ]),
+    safeArgs: new Set([...COMMON_SAFE_ARGS, 'includeHasher', 'include-hasher']),
   },
 };
 

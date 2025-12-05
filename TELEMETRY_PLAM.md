@@ -6,15 +6,15 @@ Add OpenTelemetry-based telemetry to Nx for collecting anonymous usage data. The
 
 ## Key Decisions
 
-| Decision | Choice |
-|----------|--------|
-| Architecture | Simple helper functions (no provider abstraction) |
-| Exporter | JS worker thread |
-| User storage | `~/.nxrc` (JSON with namespace) |
-| Repo storage | `nx.json` telemetry section |
-| CI behavior | Auto opt-in unless repo explicitly opts out |
-| Prompt timing | First nx command (local interactive only) |
-| OTLP endpoint | Default Nx Cloud + optional custom endpoint |
+| Decision      | Choice                                             |
+| ------------- | -------------------------------------------------- |
+| Architecture  | Simple helper functions (no provider abstraction)  |
+| Exporter      | JS worker thread                                   |
+| User storage  | `~/.nxrc` (JSON with namespace)                    |
+| Repo storage  | `nx.json` telemetry section                        |
+| CI behavior   | Auto opt-in unless repo explicitly opts out        |
+| Prompt timing | First nx command (local interactive only)          |
+| OTLP endpoint | Default Nx Cloud + optional custom endpoint        |
 | Project names | Anonymized placeholders (`project-1`, `project-2`) |
 
 ## Settings Resolution Order
@@ -39,16 +39,19 @@ Add OpenTelemetry-based telemetry to Nx for collecting anonymous usage data. The
 ## Data Collected
 
 ### Command Invocations
+
 - Command name, sanitized args, duration, success/failure
 - Platform, arch, Node version, Nx version
 - isCI, CI provider, hasNxCloud
 - Workspace metadata (project count, known plugins, custom plugin count)
 
 ### Task Executions (non-continuous only)
+
 - Anonymized project reference, target name (standard or `[custom]`)
 - Duration, status, cache status (local-hit, remote-hit, miss, disabled)
 
 ### Errors
+
 - Error type/class name, phase
 - Sanitized stack trace (node_modules paths kept, user paths redacted)
 
@@ -59,6 +62,7 @@ Add OpenTelemetry-based telemetry to Nx for collecting anonymous usage data. The
 ### Phase 1: Core Infrastructure
 
 #### 1.1 Create Telemetry Types
+
 **File**: `packages/nx/src/utils/telemetry/types.ts`
 
 ```typescript
@@ -83,7 +87,7 @@ export interface CommandTelemetryEvent {
 }
 
 export interface TaskExecutionEvent {
-  project: string;  // anonymized
+  project: string; // anonymized
   target: string;
   durationMs: number;
   status: 'success' | 'failure' | 'skipped';
@@ -99,6 +103,7 @@ export interface ErrorEvent {
 ```
 
 #### 1.2 Create User Settings Storage
+
 **File**: `packages/nx/src/utils/telemetry/user-settings.ts`
 
 - Read/write `~/.nxrc` (JSON format)
@@ -106,9 +111,11 @@ export interface ErrorEvent {
 - Create directory if needed, handle missing file gracefully
 
 #### 1.3 Add Telemetry to NxJsonConfiguration
+
 **File**: `packages/nx/src/config/nx-json.ts`
 
 Add to `NxJsonConfiguration` interface:
+
 ```typescript
 telemetry?: {
   enabled?: boolean;
@@ -117,6 +124,7 @@ telemetry?: {
 ```
 
 #### 1.4 Create Settings Resolution
+
 **File**: `packages/nx/src/utils/telemetry/resolve-settings.ts`
 
 - Check `NX_TELEMETRY` env var
@@ -130,6 +138,7 @@ telemetry?: {
 ### Phase 2: Sanitization
 
 #### 2.1 Core Sanitization Utilities
+
 **File**: `packages/nx/src/utils/telemetry/sanitize.ts`
 
 - `sanitizeArgs(argv)` - Sanitize CLI arguments
@@ -138,23 +147,39 @@ telemetry?: {
 - `sanitizeStackTrace(stack)` - Keep node_modules, redact user paths
 
 #### 2.2 Generator Args Allowlist
+
 **File**: `packages/nx/src/utils/telemetry/generator-args.ts`
 
 - Define safe args per known generator
 - Categorize: `safeArgs`, `presenceOnlyArgs`, `categorizedArgs`
-- Default spec for unknown @nx/* generators
+- Default spec for unknown @nx/\* generators
 
 #### 2.3 Constants
+
 **File**: `packages/nx/src/utils/telemetry/constants.ts`
 
 ```typescript
 export const STANDARD_TARGETS = new Set([
-  'build', 'serve', 'test', 'lint', 'e2e', 'dev', 'start',
-  'preview', 'deploy', 'publish', 'typecheck', 'format'
+  'build',
+  'serve',
+  'test',
+  'lint',
+  'e2e',
+  'dev',
+  'start',
+  'preview',
+  'deploy',
+  'publish',
+  'typecheck',
+  'format',
 ]);
 
 export const STANDARD_CONFIGS = new Set([
-  'production', 'development', 'staging', 'test', 'ci'
+  'production',
+  'development',
+  'staging',
+  'test',
+  'ci',
 ]);
 
 export const KNOWN_PLUGINS_PREFIX = ['@nx/', '@nrwl/'];
@@ -165,6 +190,7 @@ export const KNOWN_PLUGINS_PREFIX = ['@nx/', '@nrwl/'];
 ### Phase 3: Worker Thread Exporter
 
 #### 3.1 Worker Implementation
+
 **File**: `packages/nx/src/utils/telemetry/worker.ts`
 
 - Receive events via `parentPort.on('message')`
@@ -174,6 +200,7 @@ export const KNOWN_PLUGINS_PREFIX = ['@nx/', '@nrwl/'];
 - Handle shutdown message for graceful flush
 
 #### 3.2 Worker Manager
+
 **File**: `packages/nx/src/utils/telemetry/exporter.ts`
 
 - Lazy worker initialization
@@ -186,11 +213,15 @@ export const KNOWN_PLUGINS_PREFIX = ['@nx/', '@nrwl/'];
 ### Phase 4: Public API (Helper Functions)
 
 #### 4.1 Main Entry Point
+
 **File**: `packages/nx/src/utils/telemetry/index.ts`
 
 ```typescript
 export function initTelemetry(workspaceRoot: string | null): void;
-export function recordCommandStart(command: string, argv: string[]): CommandContext;
+export function recordCommandStart(
+  command: string,
+  argv: string[]
+): CommandContext;
 export function recordCommandEnd(ctx: CommandContext, success: boolean): void;
 export function recordTaskExecution(task: TaskExecutionEvent): void;
 export function recordError(error: Error, phase: string, command: string): void;
@@ -204,6 +235,7 @@ All functions check `isTelemetryEnabled()` first and no-op if disabled.
 ### Phase 5: Opt-in Prompt
 
 #### 5.1 Prompt Implementation
+
 **File**: `packages/nx/src/utils/telemetry/prompt.ts`
 
 - Check if interactive (stdin.isTTY && stdout.isTTY && !isCI)
@@ -216,6 +248,7 @@ All functions check `isTelemetryEnabled()` first and no-op if disabled.
 ### Phase 6: Integration Points
 
 #### 6.1 CLI Entry Point
+
 **File**: `packages/nx/bin/nx.ts`
 
 - Import telemetry module
@@ -224,18 +257,21 @@ All functions check `isTelemetryEnabled()` first and no-op if disabled.
 - Hook `process.on('exit')` for `flushTelemetry()`
 
 #### 6.2 Command Execution
+
 **File**: `packages/nx/src/command-line/nx-commands.ts` (or appropriate location)
 
 - Wrap command execution with `recordCommandStart`/`recordCommandEnd`
 - Pass sanitized context through
 
 #### 6.3 Task Runner
+
 **File**: `packages/nx/src/tasks-runner/` (identify exact file)
 
 - Call `recordTaskExecution()` after each task completes
 - Skip continuous tasks (serve, watch, etc.)
 
 #### 6.4 Error Handling
+
 **File**: Various error handling locations
 
 - Call `recordError()` at top-level error boundaries
@@ -246,6 +282,7 @@ All functions check `isTelemetryEnabled()` first and no-op if disabled.
 ### Phase 7: Schema Updates
 
 #### 7.1 nx-schema.json
+
 **File**: `packages/nx/schemas/nx-schema.json`
 
 Add telemetry configuration schema matching the TypeScript interface.
@@ -255,6 +292,7 @@ Add telemetry configuration schema matching the TypeScript interface.
 ## File Summary
 
 ### New Files
+
 ```
 packages/nx/src/utils/telemetry/
 ├── index.ts              # Public API
@@ -270,6 +308,7 @@ packages/nx/src/utils/telemetry/
 ```
 
 ### Modified Files
+
 ```
 packages/nx/bin/nx.ts                    # Init + flush hooks
 packages/nx/src/config/nx-json.ts        # Add telemetry interface
@@ -283,6 +322,7 @@ packages/nx/src/tasks-runner/*.ts        # Task execution recording
 ## Dependencies
 
 ### New npm Dependencies
+
 ```json
 {
   "@opentelemetry/api": "^1.x",

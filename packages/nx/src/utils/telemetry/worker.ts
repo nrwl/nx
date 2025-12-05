@@ -7,9 +7,10 @@ import type {
   WorkerMessage,
   WorkerResponse,
 } from './worker-types';
+import { workspaceRoot } from '../workspace-root';
 
 // Log file path at repo root
-const LOG_FILE_PATH = join(__dirname, '../../../../../telemetry-traces.log');
+const LOG_FILE_PATH = join(workspaceRoot, 'telemetry-traces.log');
 
 // Configuration (set via 'config' message)
 let endpoint: string | null = null;
@@ -17,7 +18,7 @@ let accessToken: string | null = null;
 let aiFixId: string | null = null;
 
 // Buffering
-const BATCH_SIZE = 50;
+const BATCH_SIZE = 1;
 const FLUSH_INTERVAL_MS = 5000;
 let spanBuffer: SerializedSpan[] = [];
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -41,9 +42,7 @@ function logTraceExport(
 ): void {
   const timestamp = new Date().toISOString();
   const spanNames = spans.map((s) => s.name).join(', ');
-  const status = success
-    ? `SUCCESS`
-    : `FAILED (${statusOrError ?? 'unknown'})`;
+  const status = success ? `SUCCESS` : `FAILED (${statusOrError ?? 'unknown'})`;
   const logLine = `[${timestamp}] ${status} - Sent ${spans.length} span(s) to ${url} - Spans: [${spanNames}]\n`;
 
   try {
