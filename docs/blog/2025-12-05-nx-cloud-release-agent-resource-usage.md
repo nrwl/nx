@@ -104,7 +104,7 @@ Your platform team benefits from self-service debugging. Developers can investig
 
 ## Available Now for Enterprise Customers
 
-Agent Resource Usage is **available today for all Nx Enterprise customers**. You'll need Nx 22.2 or greater to take advantage of this feature.
+Agent Resource Usage is **available today for all Nx Enterprise customers**. You'll need Nx 22.1 or greater to take advantage of this feature.
 
 To get started, navigate to the Analysis section of any CI Pipeline Execution in your Nx Cloud dashboard. If you're using Nx Agents, the data is collected automatically. For manual DTE setups, refer to our documentation for upload instructions.
 
