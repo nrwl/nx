@@ -76,7 +76,8 @@ export const commandsObject = yargs
   .middleware((argv) => {
     // Record command start for telemetry
     // argv._ contains the command(s), e.g., ['build'] or ['run', 'myapp:build']
-    const command = Array.isArray(argv._) ? argv._[0]?.toString() : 'unknown';
+    const command =
+      (Array.isArray(argv._) ? argv._[0]?.toString() : undefined) ?? 'unknown';
     startCommandRecording(command, process.argv.slice(2));
   })
   .command(yargsRegisterCommand)

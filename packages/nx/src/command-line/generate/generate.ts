@@ -15,7 +15,7 @@ import {
   Options,
   Schema,
 } from '../../utils/params';
-import { handleErrors } from '../../utils/handle-errors';
+import { handleErrors, addCommandAttributes } from '../../utils/handle-errors';
 import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins';
 import { printHelp } from '../../utils/print-help';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -23,6 +23,7 @@ import { calculateDefaultProjectName } from '../../config/calculate-default-proj
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getGeneratorInformation } from './generator-utils';
 import { getCwd } from '../../utils/path';
+import { sanitizeGeneratorName, isKnownPlugin } from '../../utils/telemetry';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -329,6 +330,13 @@ export async function generate(args: { [k: string]: any }) {
       workspaceRoot,
       projectsConfigurations.projects
     );
+
+    // Add generator telemetry attributes
+    addCommandAttributes({
+      'nx.generator.collection': sanitizeGeneratorName(opts.collectionName),
+      'nx.generator.name': normalizedGeneratorName,
+      'nx.generator.is_known_plugin': isKnownPlugin(opts.collectionName),
+    });
 
     if (deprecated) {
       logger.warn(

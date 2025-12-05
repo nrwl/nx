@@ -1,6 +1,6 @@
 import { env as appendLocalEnv } from 'npm-run-path';
 import { combineOptionsForExecutor, Schema } from '../../utils/params';
-import { handleErrors } from '../../utils/handle-errors';
+import { handleErrors, addCommandAttributes } from '../../utils/handle-errors';
 import { printHelp } from '../../utils/print-help';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { relative } from 'path';
@@ -24,6 +24,11 @@ import {
   PseudoTerminal,
 } from '../../tasks-runner/pseudo-terminal';
 import { exec } from 'child_process';
+import {
+  withSpan,
+  anonymizeProjectName,
+  sanitizeTarget,
+} from '../../utils/telemetry';
 
 export interface Target {
   project: string;
@@ -158,22 +163,44 @@ async function runExecutorInternal<T extends { success: boolean }>(
 ): Promise<AsyncIterableIterator<T>> {
   validateProject(projectsConfigurations, project);
 
+  // Span: Parse executor and target configuration
   const { executor, implementationFactory, nodeModule, schema, targetConfig } =
-    await parseExecutorAndTarget(
-      { project, target, configuration },
-      root,
-      projectsConfigurations
+    await withSpan(
+      'nx.run.parse_executor',
+      {
+        'nx.run.project': anonymizeProjectName(project),
+        'nx.run.target': sanitizeTarget(target),
+      },
+      async () =>
+        parseExecutorAndTarget(
+          { project, target, configuration },
+          root,
+          projectsConfigurations
+        )
     );
   configuration ??= targetConfig.defaultConfiguration;
 
-  const combinedOptions = combineOptionsForExecutor(
-    overrides,
-    configuration,
-    targetConfig,
-    schema,
-    project,
-    relative(root, cwd),
-    isVerbose
+  // Add executor telemetry attributes to command span
+  addCommandAttributes({
+    'nx.run.project': anonymizeProjectName(project),
+    'nx.run.target': sanitizeTarget(target),
+    'nx.run.executor': `${nodeModule}:${executor}`,
+  });
+
+  // Span: Combine options for executor
+  const combinedOptions = await withSpan(
+    'nx.run.combine_options',
+    {},
+    async () =>
+      combineOptionsForExecutor(
+        overrides,
+        configuration,
+        targetConfig,
+        schema,
+        project,
+        relative(root, cwd),
+        isVerbose
+      )
   );
 
   if (
@@ -295,8 +322,18 @@ export function run(
   isVerbose: boolean,
   taskGraph: TaskGraph
 ) {
-  const projectGraph = readCachedProjectGraph();
   return handleErrors(isVerbose, async () => {
+    const projectGraph = await withSpan(
+      'nx.run.read_project_graph',
+      {},
+      async (addAttributes) => {
+        const graph = readCachedProjectGraph();
+        addAttributes({
+          'nx.run.project_count': Object.keys(graph.nodes).length,
+        });
+        return graph;
+      }
+    );
     const projectsConfigurations =
       readProjectsConfigurationFromProjectGraph(projectGraph);
     return iteratorToProcessStatusCode(

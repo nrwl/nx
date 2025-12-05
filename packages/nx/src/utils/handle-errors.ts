@@ -12,6 +12,7 @@ import {
   otelContext,
   type Span,
   type Context,
+  type AttributeValue,
 } from './telemetry';
 
 // Current command span for telemetry
@@ -39,6 +40,20 @@ export function startCommandRecording(command: string, argv: string[]): void {
  */
 export function getCurrentCommand(): string {
   return currentCommandName ?? 'unknown';
+}
+
+/**
+ * Add attributes to the current command span for telemetry.
+ * Call this to enrich the command span with additional context.
+ */
+export function addCommandAttributes(
+  attributes: Record<string, AttributeValue>
+): void {
+  if (currentCommandSpan) {
+    for (const [key, value] of Object.entries(attributes)) {
+      currentCommandSpan.setAttribute(key, value);
+    }
+  }
 }
 
 export async function handleErrors(

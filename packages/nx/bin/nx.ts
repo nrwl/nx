@@ -59,8 +59,8 @@ async function main() {
     });
   }
 
-  // Initialize telemetry early (fire-and-forget, non-blocking)
-  initTelemetry(workspace?.dir ?? null).catch(() => {
+  // Initialize telemetry early (must complete before command parsing so spans are captured)
+  await initTelemetry(workspace?.dir ?? null).catch(() => {
     // Silently ignore telemetry initialization errors
   });
 

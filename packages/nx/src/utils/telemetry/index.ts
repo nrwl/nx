@@ -93,7 +93,7 @@ export type { SerializedSpan, SerializedAttribute } from './worker-types';
 
 // Re-export OpenTelemetry types
 export { SpanStatusCode, context as otelContext };
-export type { Span, Tracer, Context };
+export type { Span, Tracer, Context, AttributeValue };
 
 let provider: BasicTracerProvider | null = null;
 let tracerInstance: Tracer | null = null;
