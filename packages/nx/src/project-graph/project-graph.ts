@@ -41,6 +41,7 @@ import { join } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { DelayedSpinner } from '../utils/delayed-spinner';
 import { getCallSites } from '../utils/call-sites';
+import { withSpan } from '../utils/telemetry';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -115,10 +116,10 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   let projectConfigurationsError: ProjectConfigurationsError;
   const plugins = await getPlugins();
   try {
-    configurationResult = await retrieveProjectConfigurations(
-      plugins,
-      workspaceRoot,
-      nxJson
+    configurationResult = await withSpan(
+      'nx.project_graph.retrieve_configs',
+      {},
+      async () => retrieveProjectConfigurations(plugins, workspaceRoot, nxJson)
     );
   } catch (e) {
     if (e instanceof ProjectConfigurationsError) {
@@ -133,8 +134,11 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   performance.mark('retrieve-project-configurations:end');
 
   performance.mark('retrieve-workspace-files:start');
-  const { allWorkspaceFiles, fileMap, rustReferences } =
-    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+  const { allWorkspaceFiles, fileMap, rustReferences } = await withSpan(
+    'nx.project_graph.retrieve_files',
+    {},
+    async () => retrieveWorkspaceFiles(workspaceRoot, projectRootMap)
+  );
   performance.mark('retrieve-workspace-files:end');
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
@@ -144,15 +148,27 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
     ReturnType<typeof buildProjectGraphUsingProjectFileMap>
   >;
   try {
-    projectGraphResult = await buildProjectGraphUsingProjectFileMap(
-      projects,
-      externalNodes,
-      fileMap,
-      allWorkspaceFiles,
-      rustReferences,
-      cacheEnabled ? readFileMapCache() : null,
-      plugins,
-      sourceMaps
+    projectGraphResult = await withSpan(
+      'nx.project_graph.build',
+      {},
+      async (addAttributes) => {
+        const result = await buildProjectGraphUsingProjectFileMap(
+          projects,
+          externalNodes,
+          fileMap,
+          allWorkspaceFiles,
+          rustReferences,
+          cacheEnabled ? readFileMapCache() : null,
+          plugins,
+          sourceMaps
+        );
+        addAttributes({
+          'nx.project_graph.project_count': Object.keys(
+            result.projectGraph.nodes
+          ).length,
+        });
+        return result;
+      }
     );
   } catch (e) {
     if (isAggregateProjectGraphError(e)) {
@@ -260,23 +276,38 @@ export async function createProjectGraphAsync(
     resetDaemonClient: false,
   }
 ): Promise<ProjectGraph> {
-  if (process.env.NX_FORCE_REUSE_CACHED_GRAPH === 'true') {
-    try {
-      // If no cached graph is found, we will fall through to the normal flow
-      const graph = await readCachedGraphAndHydrateFileMap();
-      return graph;
-    } catch (e) {
-      if (e instanceof ProjectGraphError) {
-        throw e;
+  return withSpan(
+    'nx.project_graph.create',
+    { 'nx.project_graph.daemon_enabled': daemonClient.enabled() },
+    async (addAttributes) => {
+      if (process.env.NX_FORCE_REUSE_CACHED_GRAPH === 'true') {
+        try {
+          // If no cached graph is found, we will fall through to the normal flow
+          const graph = await readCachedGraphAndHydrateFileMap();
+          addAttributes({
+            'nx.project_graph.cache_hit': true,
+            'nx.project_graph.project_count': Object.keys(graph.nodes).length,
+          });
+          return graph;
+        } catch (e) {
+          if (e instanceof ProjectGraphError) {
+            throw e;
+          }
+          logger.verbose('Unable to use cached project graph', e);
+        }
       }
-      logger.verbose('Unable to use cached project graph', e);
-    }
-  }
 
-  const projectGraphAndSourceMaps = await createProjectGraphAndSourceMapsAsync(
-    opts
+      const projectGraphAndSourceMaps =
+        await createProjectGraphAndSourceMapsAsync(opts);
+      addAttributes({
+        'nx.project_graph.cache_hit': false,
+        'nx.project_graph.project_count': Object.keys(
+          projectGraphAndSourceMaps.projectGraph.nodes
+        ).length,
+      });
+      return projectGraphAndSourceMaps.projectGraph;
+    }
   );
-  return projectGraphAndSourceMaps.projectGraph;
 }
 
 export async function createProjectGraphAndSourceMapsAsync(
@@ -300,7 +331,16 @@ export async function createProjectGraphAndSourceMapsAsync(
         'Waiting for graph construction in another process to complete'
       );
       const start = Date.now();
-      await lock.wait();
+      await withSpan(
+        'nx.project_graph.lock_wait',
+        {},
+        async (addAttributes) => {
+          await lock.wait();
+          addAttributes({
+            'nx.project_graph.lock_wait_ms': Date.now() - start,
+          });
+        }
+      );
       spinner.cleanup();
 
       // Note: This will currently throw if any of the caches are missing...

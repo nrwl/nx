@@ -10,9 +10,12 @@
 
 import {
   trace,
+  context,
   SpanStatusCode,
+  type Context,
   type Tracer,
   type Span,
+  type AttributeValue,
 } from '@opentelemetry/api';
 import {
   BasicTracerProvider,
@@ -89,8 +92,8 @@ import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json';
 export type { SerializedSpan, SerializedAttribute } from './worker-types';
 
 // Re-export OpenTelemetry types
-export { SpanStatusCode };
-export type { Span, Tracer };
+export { SpanStatusCode, context as otelContext };
+export type { Span, Tracer, Context };
 
 let provider: BasicTracerProvider | null = null;
 let tracerInstance: Tracer | null = null;
@@ -208,7 +211,9 @@ export function getTracer(): Tracer | null {
 
 /**
  * Record the start of a command execution.
- * Returns a Span that should be ended when the command completes.
+ * Returns a Span and the Context with that span active.
+ * The context should be used with `context.with()` to ensure child spans
+ * are properly connected to the command span.
  *
  * @param command The command name (e.g., 'build', 'test', 'run')
  * @param argv The command arguments (will be sanitized)
@@ -216,7 +221,7 @@ export function getTracer(): Tracer | null {
 export function recordCommandStart(
   command: string,
   argv: string[]
-): Span | null {
+): { span: Span; ctx: Context } | null {
   const tracer = getTracer();
   if (!tracer) {
     return null;
@@ -229,7 +234,10 @@ export function recordCommandStart(
     },
   });
 
-  return span;
+  // Create context with this span as active so child spans are connected
+  const ctx = trace.setSpan(context.active(), span);
+
+  return { span, ctx };
 }
 
 /**
@@ -326,6 +334,67 @@ export function recordError(
   });
 
   span.end();
+}
+
+/**
+ * Execute an async function within a telemetry span.
+ * Automatically handles:
+ * - Span creation with initial attributes
+ * - Context propagation for child spans
+ * - Success/error status based on execution result
+ * - Span cleanup on completion
+ *
+ * @param name The span name (e.g., 'nx.project_graph.create')
+ * @param attributes Initial span attributes
+ * @param fn The async function to execute. Receives a callback to add attributes after execution.
+ * @returns The result of the async function
+ *
+ * @example
+ * const result = await withSpan(
+ *   'nx.project_graph.create',
+ *   { 'nx.project_graph.daemon_enabled': true },
+ *   async (addAttributes) => {
+ *     const graph = await buildGraph();
+ *     addAttributes({ 'nx.project_graph.project_count': Object.keys(graph.nodes).length });
+ *     return graph;
+ *   }
+ * );
+ */
+export async function withSpan<T>(
+  name: string,
+  attributes: Record<string, AttributeValue>,
+  fn: (
+    addAttributes: (attrs: Record<string, AttributeValue>) => void
+  ) => Promise<T>
+): Promise<T> {
+  const tracer = getTracer();
+  if (!tracer) {
+    // If telemetry not enabled, just run the function
+    return fn(() => {});
+  }
+
+  const span = tracer.startSpan(name, { attributes });
+  const ctx = trace.setSpan(context.active(), span);
+
+  try {
+    const result = await context.with(ctx, () =>
+      fn((attrs) => {
+        for (const [key, value] of Object.entries(attrs)) {
+          span.setAttribute(key, value);
+        }
+      })
+    );
+    span.setStatus({ code: SpanStatusCode.OK });
+    return result;
+  } catch (e) {
+    span.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: e instanceof Error ? e.message : String(e),
+    });
+    throw e;
+  } finally {
+    span.end();
+  }
 }
 
 /**
