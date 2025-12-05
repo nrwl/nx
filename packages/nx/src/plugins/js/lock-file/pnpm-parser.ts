@@ -114,13 +114,19 @@ function matchedDependencyName(
   );
 }
 
-function createHashFromSnapshot(snapshot: PackageSnapshot) {
-  return (
+function createHashFromSnapshot(snapshot: PackageSnapshot, patchHash?: string) {
+  const baseHash =
     snapshot.resolution?.['integrity'] ||
     (snapshot.resolution?.['tarball']
       ? hashArray([snapshot.resolution['tarball']])
-      : undefined)
-  );
+      : undefined);
+
+  // If there's a patch hash, combine it with the base hash
+  if (patchHash && baseHash) {
+    return hashArray([baseHash, patchHash]);
+  }
+
+  return baseHash;
 }
 
 function isAliasVersion(depVersion: string) {
@@ -136,6 +142,18 @@ function getNodes(
 } {
   const keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
+
+  // Extract patch hashes from patchedDependencies section
+  const patchHashes = new Map<string, string>();
+  if (data.patchedDependencies) {
+    for (const [pkgName, patchInfo] of Object.entries(
+      data.patchedDependencies
+    )) {
+      if (patchInfo && typeof patchInfo === 'object' && 'hash' in patchInfo) {
+        patchHashes.set(pkgName, patchInfo.hash);
+      }
+    }
+  }
 
   const maybeAliasedPackageVersions = new Map<string, string>(); // <version, alias>
 
@@ -179,7 +197,11 @@ function getNodes(
     if (!originalPackageName) {
       continue;
     }
-    const hash = createHashFromSnapshot(snapshot);
+
+    // Compute hash once, including patch hash if available
+    const patchHash = patchHashes.get(originalPackageName);
+    const hash = createHashFromSnapshot(snapshot, patchHash);
+
     // snapshot already has a name
     if (snapshot.name) {
       packageNameObj = {
@@ -210,7 +232,7 @@ function getNodes(
       packageNameObj = {
         key,
         packageName: rootDependencyName,
-        hash: createHashFromSnapshot(snapshot),
+        hash,
       };
     }
 
@@ -218,7 +240,7 @@ function getNodes(
       packageNameObj = {
         key,
         packageName: originalPackageName,
-        hash: createHashFromSnapshot(snapshot),
+        hash,
       };
     }
 
