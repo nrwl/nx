@@ -87,7 +87,7 @@ Here's how Agent Resource Usage solves actual problems developers and platform t
 
 If you're using [Manual Distributed Task Execution](/docs/guides/nx-cloud/manual-dte) with your own runners, Agent Resource Usage works for you too. You'll need to upload metrics data manually, but once you do, you get the same detailed visibility into resource consumption.
 
-Check the [documentation](/docs/guides/nx-cloud/task-resource-usage) for details on retrieving metrics from the default file path and configuring custom paths for your setup.
+Check the [documentation](/docs/guides/nx-cloud/ci-resource-usage) for details on retrieving metrics from the default file path and configuring custom paths for your setup.
 
 ## Resource Optimization at Scale
 
@@ -116,7 +116,7 @@ Stop guessing what's happening on your CI agents. Get complete visibility into r
 
 ## Learn More
 
-- 👩‍💻 [Agent Resource Usage docs](/docs/guides/nx-cloud/task-resource-usage)
+- 👩‍💻 [Agent Resource Usage docs](/docs/guides/nx-cloud/ci-resource-usage)
 - 👩‍💻 [Nx Enterprise](/enterprise)
 - 🐦 [X/Twitter](https://twitter.com/nxdevtools)
 - 💼 [LinkedIn](https://www.linkedin.com/company/nrwl/)
