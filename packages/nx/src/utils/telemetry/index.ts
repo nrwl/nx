@@ -82,6 +82,8 @@ import {
   NxCloudSpanExporter,
   NoOpSpanExporter,
 } from './exporter';
+import { isTelemetryEnabled as checkTelemetryEnabled } from './resolve-settings';
+import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json';
 
 // Re-export types that consumers might need
 export type { SerializedSpan, SerializedAttribute } from './worker-types';
@@ -93,15 +95,18 @@ export type { Span, Tracer };
 let provider: BasicTracerProvider | null = null;
 let tracerInstance: Tracer | null = null;
 let isInitialized = false;
+let cachedNxJson: NxJsonConfiguration | null = null;
 
 /**
- * Check if telemetry is enabled.
- * TODO: This will be replaced with actual settings resolution from Phase 1/2.
+ * Check if telemetry is enabled based on resolved settings.
+ * Uses the settings resolution from resolve-settings.ts which checks:
+ * 1. NX_TELEMETRY environment variable
+ * 2. nx.json telemetry section
+ * 3. ~/.nxrc user settings (non-CI only)
+ * 4. Defaults based on environment (CI=enabled, interactive=prompt needed, non-interactive=disabled)
  */
 function isTelemetryEnabledInternal(): boolean {
-  // Placeholder - will be replaced with actual implementation
-  // For now, check if NX_CLOUD_ACCESS_TOKEN is set
-  return true; // !!process.env.NX_CLOUD_ACCESS_TOKEN;
+  return checkTelemetryEnabled(cachedNxJson);
 }
 
 /**
@@ -113,6 +118,22 @@ function getNxVersion(): string {
     return require('../../../package.json').version;
   } catch {
     return 'unknown';
+  }
+}
+
+/**
+ * Load nx.json from the workspace root.
+ * Returns null if the file doesn't exist or can't be parsed.
+ */
+function loadNxJson(workspaceRoot: string | null): NxJsonConfiguration | null {
+  if (!workspaceRoot) {
+    return null;
+  }
+
+  try {
+    return readNxJson(workspaceRoot);
+  } catch {
+    return null;
   }
 }
 
@@ -131,6 +152,9 @@ export async function initTelemetry(
   if (isInitialized) {
     return;
   }
+
+  // Load nx.json for settings resolution
+  cachedNxJson = loadNxJson(workspaceRoot);
 
   if (!isTelemetryEnabledInternal()) {
     return;

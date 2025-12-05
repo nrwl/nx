@@ -54,6 +54,7 @@ import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-on
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 import { getTasksHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
+import { TelemetryLifeCycle } from './life-cycles/telemetry-life-cycle';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-cycle';
@@ -1065,6 +1066,7 @@ export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
   }
   const historyLifeCycle = getTasksHistoryLifeCycle();
   lifeCycles.push(historyLifeCycle);
+  lifeCycles.push(new TelemetryLifeCycle());
   return lifeCycles;
 }
 

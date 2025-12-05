@@ -21,7 +21,11 @@ import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
-import { initTelemetry, flushTelemetry } from '../src/utils/telemetry';
+import {
+  initTelemetry,
+  flushTelemetry,
+  promptForTelemetryIfNeeded,
+} from '../src/utils/telemetry';
 
 async function main() {
   if (
@@ -46,6 +50,13 @@ async function main() {
       'loading dotenv files:start',
       'loading dotenv files:end'
     );
+  }
+
+  // Prompt user for telemetry opt-in if needed (only in interactive local sessions)
+  if (workspace) {
+    await promptForTelemetryIfNeeded(workspace.dir).catch(() => {
+      // Silently ignore prompt errors
+    });
   }
 
   // Initialize telemetry early (fire-and-forget, non-blocking)

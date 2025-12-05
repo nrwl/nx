@@ -1,5 +1,5 @@
 import { prompt } from 'enquirer';
-import type { NxJsonConfiguration } from '../../config/nx-json';
+import { readNxJson } from '../../config/nx-json';
 import { output } from '../output';
 import { setUserTelemetrySettings } from './user-settings';
 import { shouldPromptForTelemetry } from './resolve-settings';
@@ -13,11 +13,17 @@ import { shouldPromptForTelemetry } from './resolve-settings';
  * - No explicit telemetry setting from environment or repo config
  * - User hasn't been prompted before
  *
- * @param nxJson - The workspace nx.json configuration
+ * @param workspaceRoot - The workspace root path
  */
 export async function promptForTelemetryIfNeeded(
-  nxJson: NxJsonConfiguration | null
+  workspaceRoot: string
 ): Promise<void> {
+  let nxJson = null;
+  try {
+    nxJson = readNxJson(workspaceRoot);
+  } catch {
+    // Silently ignore errors reading nx.json
+  }
   if (!shouldPromptForTelemetry(nxJson)) {
     return;
   }
