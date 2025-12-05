@@ -6,7 +6,7 @@ tags: ['nx', 'nx cloud', 'release']
 cover_image: /blog/images/2025-12-05/header.avif
 description: 'Stop guessing why your CI agents fail. Agent Resource Usage in Nx Cloud delivers task-level CPU and memory visibility to debug issues and optimize infrastructure.'
 pinned: true
-youtubeUrl: https://youtu.be/liDYse4J30Q
+youtubeUrl: https://youtu.be/9_wcAGFJkeo
 ---
 
 Quick check: how many of you have seen a commit like this before?
