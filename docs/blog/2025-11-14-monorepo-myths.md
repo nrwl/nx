@@ -5,7 +5,6 @@ authors: ['Miroslav Jonaš', 'Philip Fulcher']
 tags: ['nx', 'monorepo']
 cover_image: /blog/images/2025-11-14/header.avif
 description: 'Explore the most common misconceptions about monorepos and learn the truth behind the myths. From performance concerns to scaling limitations, we tackle the biggest obstacles to monorepo adoption.'
-pinned: true
 ---
 
 We host monthly webinars where we share the latest on how Nx enables large organizations to ship quickly without compromising quality, at scale. Miroslav Jonaš recently presented these ten essential monorepo myths, and we thought they were too good to keep to ourselves! Read through the myths here, or you can register to view the full recording.
