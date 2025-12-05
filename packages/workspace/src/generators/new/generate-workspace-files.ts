@@ -167,7 +167,7 @@ export async function generateWorkspaceFiles(
     tree.root
   );
   options = normalizeOptions(options);
-  createFiles(tree, options);
+  createFiles(tree, options, packageManagerVersion);
   const nxJson = createNxJson(tree, options);
 
   const token =
@@ -266,7 +266,11 @@ function createNxJson(
   return nxJson;
 }
 
-function createFiles(tree: Tree, options: NormalizedSchema) {
+function createFiles(
+  tree: Tree,
+  options: NormalizedSchema,
+  packageManagerVersion: string
+) {
   const formattedNames = names(options.name);
   const filesDirName =
     options.preset === Preset.AngularStandalone ||
@@ -292,6 +296,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     ...(options as object),
     nxVersion,
     packageManager: options.packageManager,
+    packageManagerVersion,
   });
 }
 
