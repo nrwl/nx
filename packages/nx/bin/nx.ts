@@ -21,6 +21,7 @@ import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
+import { initTelemetry, flushTelemetry } from '../src/utils/telemetry';
 
 async function main() {
   if (
@@ -46,6 +47,11 @@ async function main() {
       'loading dotenv files:end'
     );
   }
+
+  // Initialize telemetry early (fire-and-forget, non-blocking)
+  initTelemetry(workspace?.dir ?? null).catch(() => {
+    // Silently ignore telemetry initialization errors
+  });
 
   // new is a special case because there is no local workspace to load
   if (
@@ -300,6 +306,11 @@ const getLatestVersionOfNx = ((fn: () => string) => {
 
 process.on('exit', () => {
   removeDbConnections();
+});
+
+// Flush telemetry before exit (async but we don't await in exit handler)
+process.on('beforeExit', async () => {
+  await flushTelemetry();
 });
 
 main().catch((error) => {
