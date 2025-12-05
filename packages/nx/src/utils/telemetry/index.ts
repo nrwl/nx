@@ -17,6 +17,7 @@ export type {
   CommandTelemetryEvent,
   TaskExecutionEvent,
   ErrorEvent,
+  CommandContext,
 } from './types';
 
 // Settings resolution
@@ -38,7 +39,29 @@ export {
 
 // Prompt
 export { promptForTelemetryIfNeeded } from './prompt';
+
+// Sanitization
+export {
+  sanitizeArgs,
+  sanitizeValue,
+  sanitizeTarget,
+  sanitizeConfiguration,
+  sanitizeGeneratorName,
+  sanitizeErrorMessage,
+  sanitizeStackTrace,
+  anonymizeProjectName,
+  resetProjectNameMap,
+  isKnownPlugin,
+} from './sanitize';
+
 import { performance } from 'perf_hooks';
+import {
+  sanitizeArgs,
+  sanitizeTarget,
+  anonymizeProjectName,
+  sanitizeErrorMessage,
+  sanitizeStackTrace,
+} from './sanitize';
 import {
   initWorker,
   sendSpans,
@@ -48,7 +71,7 @@ import {
   getAiFixId,
 } from './exporter';
 import type { SerializedSpan, SerializedAttribute } from './worker-types';
-import { CommandContext } from './types';
+import type { CommandContext } from './types';
 
 // Re-export types that consumers might need
 export type { SerializedSpan, SerializedAttribute } from './worker-types';
@@ -170,7 +193,7 @@ export async function initTelemetry(
  * Returns a context object that should be passed to recordCommandEnd.
  *
  * @param command The command name (e.g., 'build', 'test', 'run')
- * @param argv The command arguments (will be sanitized in Phase 2)
+ * @param argv The command arguments (will be sanitized)
  */
 export function recordCommandStart(
   command: string,
@@ -179,11 +202,7 @@ export function recordCommandStart(
   return {
     command,
     startTime: performance.now(),
-    // TODO; update this when sanitizeArgs is implemented
-    sanitizedArgs: {
-      positional: argv,
-      flags: {},
-    },
+    sanitizedArgs: sanitizeArgs(argv),
     spanId: generateSpanId(),
     traceId: currentTraceId ?? generateTraceId(),
   };
@@ -252,7 +271,7 @@ export function recordCommandEnd(ctx: CommandContext, success: boolean): void {
 
 /**
  * Record a task execution event.
- * TODO: Will be expanded in Phase 6 with task runner integration.
+ * Project names are anonymized and custom targets are sanitized.
  */
 export function recordTaskExecution(task: {
   project: string;
@@ -261,8 +280,6 @@ export function recordTaskExecution(task: {
   status: 'success' | 'failure' | 'skipped';
   cacheStatus: 'local-hit' | 'remote-hit' | 'miss' | 'disabled';
 }): void {
-  // TODO: Replace with actual isTelemetryEnabled() check
-  // if (!isTelemetryEnabled() || !isWorkerInitialized()) {
   if (!isTelemetryEnabled() || !isWorkerInitialized()) {
     return;
   }
@@ -278,10 +295,14 @@ export function recordTaskExecution(task: {
     return hrTimeToNano([seconds, nanoseconds]);
   })();
 
+  // Sanitize project name and target
+  const sanitizedProject = anonymizeProjectName(task.project);
+  const sanitizedTarget = sanitizeTarget(task.target);
+
   const span: SerializedSpan = {
     traceId: currentTraceId ?? generateTraceId(),
     spanId: generateSpanId(),
-    name: `nx.task.${task.target}`,
+    name: `nx.task.${sanitizedTarget}`,
     startTimeUnixNano: startTimeNano,
     endTimeUnixNano: now,
     status: {
@@ -289,8 +310,8 @@ export function recordTaskExecution(task: {
       message: task.status === 'failure' ? 'Task failed' : undefined,
     },
     attributes: toAttributes({
-      'nx.task.project': task.project,
-      'nx.task.target': task.target,
+      'nx.task.project': sanitizedProject,
+      'nx.task.target': sanitizedTarget,
       'nx.task.duration_ms': task.durationMs,
       'nx.task.status': task.status,
       'nx.task.cache_status': task.cacheStatus,
@@ -306,20 +327,26 @@ export function recordTaskExecution(task: {
 
 /**
  * Record an error event.
- * TODO: Will be expanded with sanitization in Phase 2.
+ * Error messages and stack traces are sanitized to remove sensitive information.
  */
 export function recordError(
   error: Error,
   phase: string,
   command: string
 ): void {
-  // TODO: Replace with actual isTelemetryEnabled() check
-  // if (!isTelemetryEnabled() || !isWorkerInitialized()) {
   if (!isTelemetryEnabled() || !isWorkerInitialized()) {
     return;
   }
 
   const now = nowNano();
+
+  // Sanitize error message and stack trace
+  const sanitizedMessage = error.message
+    ? sanitizeErrorMessage(error.message)
+    : undefined;
+  const sanitizedStack = error.stack
+    ? sanitizeStackTrace(error.stack)
+    : undefined;
 
   const span: SerializedSpan = {
     traceId: currentTraceId ?? generateTraceId(),
@@ -335,7 +362,8 @@ export function recordError(
       'nx.error.type': error.name || 'Error',
       'nx.error.phase': phase,
       'nx.error.command': command,
-      // TODO: Add sanitized stack trace in Phase 2
+      ...(sanitizedMessage && { 'nx.error.message': sanitizedMessage }),
+      ...(sanitizedStack && { 'nx.error.stack': sanitizedStack }),
     }),
     resourceAttributes: toAttributes({
       'service.name': 'nx-cli',

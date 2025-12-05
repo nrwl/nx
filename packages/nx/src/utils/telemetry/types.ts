@@ -188,11 +188,19 @@ export interface CommandContext {
    */
   command: string;
   /**
-   * Timestamp when the command started (from performance.now() or Date.now()).
+   * Timestamp when the command started (from performance.now()).
    */
   startTime: number;
   /**
    * Sanitized arguments for the command.
    */
   sanitizedArgs: SanitizedArgs;
+  /**
+   * The span ID for this command execution.
+   */
+  spanId: string;
+  /**
+   * The trace ID for this command execution.
+   */
+  traceId: string;
 }
