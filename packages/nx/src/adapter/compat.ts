@@ -86,6 +86,7 @@ export const allowedWorkspaceExtensions = [
   'useLegacyCache',
   'maxCacheSize',
   'tui',
+  'telemetry',
   'owners',
 ] as const;
 

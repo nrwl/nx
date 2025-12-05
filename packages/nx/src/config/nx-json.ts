@@ -877,6 +877,24 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
      */
     autoExit?: boolean | number;
   };
+
+  /**
+   * Configuration for anonymous telemetry collection.
+   */
+  telemetry?: {
+    /**
+     * Enable or disable telemetry. When not set:
+     * - CI: enabled by default
+     * - Local interactive: user will be prompted
+     * - Local non-interactive: disabled by default
+     */
+    enabled?: boolean;
+    /**
+     * Optional custom OTLP endpoint for telemetry data.
+     * Telemetry will be sent to both Nx Cloud and this endpoint.
+     */
+    customEndpoint?: string;
+  };
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

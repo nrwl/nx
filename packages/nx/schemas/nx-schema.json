@@ -101,6 +101,21 @@
       },
       "additionalProperties": false
     },
+    "telemetry": {
+      "type": "object",
+      "description": "Configuration for anonymous telemetry collection.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable telemetry. When not set: CI environments are enabled by default, local interactive sessions will prompt the user, and local non-interactive sessions are disabled by default."
+        },
+        "customEndpoint": {
+          "type": "string",
+          "description": "Optional custom OTLP endpoint for telemetry data. Telemetry will be sent to both Nx Cloud and this endpoint."
+        }
+      },
+      "additionalProperties": false
+    },
     "defaultProject": {
       "type": "string",
       "description": "Default project. When project isn't provided, the default project will be used."
