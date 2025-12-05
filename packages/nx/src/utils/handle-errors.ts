@@ -9,25 +9,28 @@ import {
   recordCommandEnd,
   recordError,
   flushTelemetry,
-  type CommandContext,
+  type Span,
 } from './telemetry';
 
-// Current command context for telemetry
-let currentCommandContext: CommandContext | null = null;
+// Current command span for telemetry
+let currentCommandSpan: Span | null = null;
+// Store the command name separately for error recording
+let currentCommandName: string | null = null;
 
 /**
  * Start recording a command for telemetry.
  * Call this before handleErrors to associate the command with telemetry.
  */
 export function startCommandRecording(command: string, argv: string[]): void {
-  currentCommandContext = recordCommandStart(command, argv);
+  currentCommandSpan = recordCommandStart(command, argv);
+  currentCommandName = command;
 }
 
 /**
  * Get the current command being executed (for error recording).
  */
 export function getCurrentCommand(): string {
-  return currentCommandContext?.command ?? 'unknown';
+  return currentCommandName ?? 'unknown';
 }
 
 export async function handleErrors(
@@ -37,9 +40,10 @@ export async function handleErrors(
   try {
     const result = await fn();
     // Record successful command completion
-    if (currentCommandContext) {
-      recordCommandEnd(currentCommandContext, true);
-      currentCommandContext = null;
+    if (currentCommandSpan) {
+      recordCommandEnd(currentCommandSpan, true);
+      currentCommandSpan = null;
+      currentCommandName = null;
     }
     if (typeof result === 'number') {
       return result;
@@ -97,10 +101,11 @@ export async function handleErrors(
       });
     }
     // Record failed command completion and error
-    if (currentCommandContext) {
-      recordError(err, 'command-execution', currentCommandContext.command);
-      recordCommandEnd(currentCommandContext, false);
-      currentCommandContext = null;
+    if (currentCommandSpan) {
+      recordError(err, 'command-execution', currentCommandName ?? 'unknown');
+      recordCommandEnd(currentCommandSpan, false);
+      currentCommandSpan = null;
+      currentCommandName = null;
     }
 
     const { daemonClient } = await import('../daemon/client/client');

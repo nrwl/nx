@@ -1,7 +1,10 @@
 import { Worker } from 'worker_threads';
 import { join } from 'path';
+import { ExportResultCode, type ExportResult } from '@opentelemetry/core';
+import type { ReadableSpan, SpanExporter } from '@opentelemetry/sdk-trace-base';
 import type {
   SerializedSpan,
+  SerializedAttribute,
   WorkerMessage,
   WorkerResponse,
 } from './worker-types';
@@ -211,7 +214,7 @@ export async function flush(): Promise<void> {
  * Shutdown the telemetry worker gracefully.
  * Flushes any remaining spans before terminating.
  */
-export async function shutdown(): Promise<void> {
+export async function shutdownWorker(): Promise<void> {
   if (!worker) {
     return;
   }
@@ -224,4 +227,130 @@ export async function shutdown(): Promise<void> {
   worker = null;
   isConfigured = false;
   currentAiFixId = null;
+}
+
+/**
+ * Custom SpanExporter that sends traces to Nx Cloud via a worker thread.
+ * Implements the OpenTelemetry SpanExporter interface.
+ */
+export class NxCloudSpanExporter implements SpanExporter {
+  private pendingExports: Set<Promise<void>> = new Set();
+
+  /**
+   * Export spans by serializing them and sending to the worker thread.
+   */
+  export(
+    spans: ReadableSpan[],
+    resultCallback: (result: ExportResult) => void
+  ): void {
+    if (!isWorkerInitialized()) {
+      // Worker not initialized, but don't fail - just succeed silently
+      resultCallback({ code: ExportResultCode.SUCCESS });
+      return;
+    }
+
+    const serializedSpans = spans.map((span) => this.serializeSpan(span));
+
+    // Send to worker (fire and forget from exporter's perspective)
+    sendSpans(serializedSpans);
+
+    // Always report success - worker handles failures internally
+    resultCallback({ code: ExportResultCode.SUCCESS });
+  }
+
+  /**
+   * Force flush any pending exports.
+   */
+  async forceFlush(): Promise<void> {
+    await flush();
+  }
+
+  /**
+   * Shutdown the exporter and worker.
+   */
+  async shutdown(): Promise<void> {
+    await shutdownWorker();
+  }
+
+  /**
+   * Serialize an OpenTelemetry ReadableSpan to the format expected by Nx Cloud.
+   */
+  private serializeSpan(span: ReadableSpan): SerializedSpan {
+    const spanContext = span.spanContext();
+
+    return {
+      traceId: spanContext.traceId,
+      spanId: spanContext.spanId,
+      parentSpanId: span.parentSpanId,
+      name: span.name,
+      startTimeUnixNano: this.hrTimeToNano(span.startTime),
+      endTimeUnixNano: this.hrTimeToNano(span.endTime),
+      status: {
+        code: span.status.code,
+        message: span.status.message,
+      },
+      attributes: this.serializeAttributes(span.attributes),
+      resourceAttributes: this.serializeAttributes(span.resource.attributes),
+      events: span.events.map((event) => ({
+        timeUnixNano: this.hrTimeToNano(event.time),
+        name: event.name,
+        attributes: this.serializeAttributes(event.attributes ?? {}),
+      })),
+    };
+  }
+
+  /**
+   * Convert hrTime [seconds, nanoseconds] to nanoseconds string.
+   */
+  private hrTimeToNano(hrTime: [number, number]): string {
+    const nanos = BigInt(hrTime[0]) * BigInt(1e9) + BigInt(hrTime[1]);
+    return nanos.toString();
+  }
+
+  /**
+   * Convert attributes object to serialized format.
+   */
+  private serializeAttributes(
+    attributes: Record<string, unknown>
+  ): SerializedAttribute[] {
+    return Object.entries(attributes).map(([key, value]) => {
+      if (typeof value === 'string') {
+        return { key, value: { stringValue: value } };
+      } else if (typeof value === 'number') {
+        // Use intValue for integers, doubleValue for floats
+        if (Number.isInteger(value)) {
+          return { key, value: { intValue: String(value) } };
+        } else {
+          return { key, value: { doubleValue: String(value) } };
+        }
+      } else if (typeof value === 'boolean') {
+        return { key, value: { boolValue: value } };
+      } else if (Array.isArray(value)) {
+        // Serialize arrays as JSON strings
+        return { key, value: { stringValue: JSON.stringify(value) } };
+      } else {
+        return { key, value: { stringValue: String(value) } };
+      }
+    });
+  }
+}
+
+/**
+ * No-op exporter for when tracing is disabled.
+ */
+export class NoOpSpanExporter implements SpanExporter {
+  export(
+    _spans: ReadableSpan[],
+    resultCallback: (result: ExportResult) => void
+  ): void {
+    resultCallback({ code: ExportResultCode.SUCCESS });
+  }
+
+  async forceFlush(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  async shutdown(): Promise<void> {
+    return Promise.resolve();
+  }
 }
