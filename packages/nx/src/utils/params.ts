@@ -922,8 +922,10 @@ async function promptForValues(
     .prompt(getPromptsForSchema(opts, schema, projectsConfigurations))
     .then((values) => ({ ...opts, ...values }))
     .catch((e) => {
-      console.error(e);
-      process.exit(0);
+      console.error(
+        `Could not properly parse prompts. Error:\n${e.message || e}`
+      );
+      process.exit(1);
     });
 }
 
