@@ -65,7 +65,7 @@ export function createLoaderFromCompiler(
         loader: path.join(__dirname, '../../../utils/web-babel-loader'),
         exclude: /node_modules/,
         options: {
-          cwd: path.join(options.root, options.sourceRoot),
+          cwd: path.join(options.root, options.sourceRoot ?? ''),
           emitDecoratorMetadata: tsConfig
             ? tsConfig.options.emitDecoratorMetadata
             : false,
