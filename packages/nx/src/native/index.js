@@ -1,5 +1,11 @@
 const { join, basename } = require('path');
-const { copyFileSync, existsSync, mkdirSync, renameSync } = require('fs');
+const {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  renameSync,
+  statSync,
+} = require('fs');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
 const { getNativeFileCacheLocation } = require('./native-file-cache-location');
@@ -56,6 +62,14 @@ const localNodeFiles = [
 
 const originalLoad = Module._load;
 
+function statsOrNull(path) {
+  try {
+    return statSync(path);
+  } catch {
+    return null;
+  }
+}
+
 // We override the _load function so that when a native file is required,
 // we copy it to a cache directory and require it from there.
 // This prevents the file being loaded from node_modules and causing file locking issues.
@@ -83,9 +97,11 @@ Module._load = function (request, parent, isMain) {
     );
     // This is the path that will get loaded
     const tmpFile = join(nativeFileCacheLocation, nxVersion + '-' + fileName);
+    const expectedFileSize = statSync(nativeLocation).size;
+    const existingFileStats = statsOrNull(tmpFile);
 
     // If the file to be loaded already exists, just load it
-    if (existsSync(tmpFile)) {
+    if (existingFileStats?.size === expectedFileSize) {
       return originalLoad.apply(this, [tmpFile, parent, isMain]);
     }
     if (!existsSync(nativeFileCacheLocation)) {
