@@ -758,9 +758,7 @@ export function convertSmartDefaultsIntoNamedParams(
   delete opts['__overrides_unparsed__'];
 }
 
-function getGeneratorDefaults(
-  projectName: string | null,
-  projectsConfigurations: ProjectsConfigurations,
+export function getNxJsonGeneratorDefaults(
   nxJsonConfiguration: NxJsonConfiguration,
   collectionName: string,
   generatorName: string
@@ -780,6 +778,16 @@ function getGeneratorDefaults(
       };
     }
   }
+  return defaults;
+}
+
+function getProjectConfigurationGeneratorDefaults(
+  projectName: string | null,
+  projectsConfigurations: ProjectsConfigurations,
+  collectionName: string,
+  generatorName: string
+) {
+  let defaults = {};
   if (
     projectName &&
     projectsConfigurations?.projects[projectName]?.generators
@@ -796,6 +804,28 @@ function getGeneratorDefaults(
     }
   }
   return defaults;
+}
+
+export function getGeneratorDefaults(
+  projectName: string | null,
+  projectsConfigurations: ProjectsConfigurations,
+  nxJsonConfiguration: NxJsonConfiguration,
+  collectionName: string,
+  generatorName: string
+) {
+  return {
+    ...getNxJsonGeneratorDefaults(
+      nxJsonConfiguration,
+      collectionName,
+      generatorName
+    ),
+    ...getProjectConfigurationGeneratorDefaults(
+      projectName,
+      projectsConfigurations,
+      collectionName,
+      generatorName
+    ),
+  };
 }
 
 type Prompt = ConstructorParameters<typeof import('enquirer').Prompt>[0] & {

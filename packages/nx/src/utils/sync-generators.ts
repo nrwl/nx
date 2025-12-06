@@ -2,16 +2,16 @@ import { performance } from 'perf_hooks';
 import { parseGeneratorString } from '../command-line/generate/generate';
 import { getGeneratorInformation } from '../command-line/generate/generator-utils';
 import type { GeneratorCallback } from '../config/misc-interfaces';
-import { readNxJson, type NxJsonConfiguration } from '../config/nx-json';
+import { type NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 import type { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import {
+  type FileChange,
   flushChanges,
   FsTree,
-  type FileChange,
   type Tree,
 } from '../generators/tree';
 import {
@@ -20,6 +20,14 @@ import {
 } from '../project-graph/project-graph';
 import { updateContextWithChangedFiles } from './workspace-context';
 import { workspaceRoot } from './workspace-root';
+import {
+  coerceTypesInOptions,
+  convertAliases,
+  convertSmartDefaultsIntoNamedParams,
+  getNxJsonGeneratorDefaults,
+  setDefaults,
+  validateOptsAgainstSchema,
+} from './params';
 import chalk = require('chalk');
 
 export type SyncGeneratorResult = void | {
@@ -28,8 +36,9 @@ export type SyncGeneratorResult = void | {
   outOfSyncDetails?: string[];
 };
 
-export type SyncGenerator = (
-  tree: Tree
+export type SyncGenerator<T = unknown> = (
+  tree: Tree,
+  schema: T
 ) => SyncGeneratorResult | Promise<SyncGeneratorResult>;
 
 export type SyncGeneratorRunSuccessResult = {
@@ -136,19 +145,34 @@ export async function collectAllRegisteredSyncGenerators(
 export async function runSyncGenerator(
   tree: Tree,
   generatorSpecifier: string,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
+  nxJsonConfiguration: NxJsonConfiguration
 ): Promise<SyncGeneratorRunResult> {
   try {
     performance.mark(`run-sync-generator:${generatorSpecifier}:start`);
     const { collection, generator } = parseGeneratorString(generatorSpecifier);
-    const { implementationFactory } = getGeneratorInformation(
+    const { implementationFactory, schema, normalizedGeneratorName } =
+      getGeneratorInformation(collection, generator, workspaceRoot, projects);
+
+    const generatorDefaults = getNxJsonGeneratorDefaults(
+      nxJsonConfiguration,
       collection,
-      generator,
-      workspaceRoot,
-      projects
+      normalizedGeneratorName
     );
+
+    let combined = convertAliases(
+      coerceTypesInOptions(generatorDefaults, schema),
+      schema,
+      false
+    );
+
+    convertSmartDefaultsIntoNamedParams(combined, schema, null, null);
+
+    setDefaults(combined, schema);
+    validateOptsAgainstSchema(combined, schema);
+
     const implementation = implementationFactory() as SyncGenerator;
-    const result = await implementation(tree);
+    const result = await implementation(tree, combined);
 
     let callback: GeneratorCallback | undefined;
     let outOfSyncMessage: string | undefined;
@@ -413,10 +437,16 @@ async function runSyncGenerators(
   const tree = new FsTree(workspaceRoot, false, 'running sync generators');
   const projectGraph = await createProjectGraphAsync();
   const { projects } = readProjectsConfigurationFromProjectGraph(projectGraph);
+  const nxJsonConfiguration = readNxJson();
 
   const results: SyncGeneratorRunResult[] = [];
   for (const generator of generators) {
-    const result = await runSyncGenerator(tree, generator, projects);
+    const result = await runSyncGenerator(
+      tree,
+      generator,
+      projects,
+      nxJsonConfiguration
+    );
     results.push(result);
   }
 
