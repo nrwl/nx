@@ -184,8 +184,197 @@ describe('js:node executor', () => {
       };
       return config;
     });
+  }, 240_000);
 
-    const output = runCLI(`run ${esbuildLib}:run-node`);
-    expect(output).toContain('Hello from my esbuild library!');
+  it('should execute library compiled with tsc using rootDir', async () => {
+    const tscLib = uniq('tsclib');
+
+    runCLI(`generate @nx/js:lib libs/${tscLib} --bundler=tsc --no-interactive`);
+
+    updateFile(`libs/${tscLib}/src/index.ts`, () => {
+      return `
+        console.log('Hello from my tsc library with rootDir!');
+        `;
+    });
+
+    // Configure rootDir in the build target
+    updateJson(join('libs', tscLib, 'project.json'), (config) => {
+      config.targets.build.options.rootDir = '{projectRoot}/src';
+      config.targets['run-node'] = {
+        executor: '@nx/js:node',
+        options: {
+          buildTarget: `${tscLib}:build`,
+          watch: false,
+        },
+      };
+      return config;
+    });
+
+    // Build first to ensure the output structure is correct
+    const buildOutput = runCLI(`build ${tscLib}`);
+    expect(buildOutput).toContain('Successfully ran target build');
+
+    // Run the node executor - it should find the file despite rootDir configuration
+    const output = runCLI(`run ${tscLib}:run-node`);
+    expect(output).toContain('Hello from my tsc library with rootDir!');
+  }, 240_000);
+
+  it('should execute library compiled with swc using rootDir', async () => {
+    const swcLib = uniq('swclib');
+
+    runCLI(`generate @nx/js:lib libs/${swcLib} --bundler=swc --no-interactive`);
+
+    updateFile(`libs/${swcLib}/src/index.ts`, () => {
+      return `
+        console.log('Hello from my swc library with rootDir!');
+        `;
+    });
+
+    // Configure rootDir in the build target
+    updateJson(join('libs', swcLib, 'project.json'), (config) => {
+      config.targets.build.options.rootDir = '{projectRoot}/src';
+      config.targets['run-node'] = {
+        executor: '@nx/js:node',
+        options: {
+          buildTarget: `${swcLib}:build`,
+          watch: false,
+        },
+      };
+      return config;
+    });
+
+    // Build first to ensure the output structure is correct
+    const buildOutput = runCLI(`build ${swcLib}`);
+    expect(buildOutput).toContain('Successfully ran target build');
+
+    // Run the node executor - it should find the file despite rootDir configuration
+    const output = runCLI(`run ${swcLib}:run-node`);
+    expect(output).toContain('Hello from my swc library with rootDir!');
+  }, 240_000);
+
+  // Regression test - ensure backward compatibility without rootDir
+  it('should execute library compiled with tsc without rootDir (regression)', async () => {
+    const tscLib = uniq('tsclib');
+
+    runCLI(`generate @nx/js:lib libs/${tscLib} --bundler=tsc --no-interactive`);
+
+    updateFile(`libs/${tscLib}/src/index.ts`, () => {
+      return `
+        console.log('Hello from tsc library without rootDir!');
+        `;
+    });
+
+    // Do NOT configure rootDir - test backward compatibility
+    updateJson(join('libs', tscLib, 'project.json'), (config) => {
+      config.targets['run-node'] = {
+        executor: '@nx/js:node',
+        options: {
+          buildTarget: `${tscLib}:build`,
+          watch: false,
+        },
+      };
+      return config;
+    });
+
+    // Build and run - should work with default behavior (src/ in output path)
+    const buildOutput = runCLI(`build ${tscLib}`);
+    expect(buildOutput).toContain('Successfully ran target build');
+
+    const output = runCLI(`run ${tscLib}:run-node`);
+    expect(output).toContain('Hello from tsc library without rootDir!');
+  }, 240_000);
+
+  // Test different rootDir path formats
+  it('should execute library with rootDir using relative path (no leading ./)', async () => {
+    const tscLib = uniq('tsclib');
+
+    runCLI(`generate @nx/js:lib libs/${tscLib} --bundler=tsc --no-interactive`);
+
+    updateFile(`libs/${tscLib}/src/index.ts`, () => {
+      return `
+        console.log('Hello with rootDir: src');
+        `;
+    });
+
+    // Configure rootDir as 'src' (without leading ./)
+    updateJson(join('libs', tscLib, 'project.json'), (config) => {
+      config.targets.build.options.rootDir = 'src';
+      config.targets['run-node'] = {
+        executor: '@nx/js:node',
+        options: {
+          buildTarget: `${tscLib}:build`,
+          watch: false,
+        },
+      };
+      return config;
+    });
+
+    const buildOutput = runCLI(`build ${tscLib}`);
+    expect(buildOutput).toContain('Successfully ran target build');
+
+    const output = runCLI(`run ${tscLib}:run-node`);
+    expect(output).toContain('Hello with rootDir: src');
+  }, 240_000);
+
+  it('should execute library with rootDir using ./ prefix', async () => {
+    const tscLib = uniq('tsclib');
+
+    runCLI(`generate @nx/js:lib libs/${tscLib} --bundler=tsc --no-interactive`);
+
+    updateFile(`libs/${tscLib}/src/index.ts`, () => {
+      return `
+        console.log('Hello with rootDir: ./src');
+        `;
+    });
+
+    // Configure rootDir as './src' (with leading ./)
+    updateJson(join('libs', tscLib, 'project.json'), (config) => {
+      config.targets.build.options.rootDir = './src';
+      config.targets['run-node'] = {
+        executor: '@nx/js:node',
+        options: {
+          buildTarget: `${tscLib}:build`,
+          watch: false,
+        },
+      };
+      return config;
+    });
+
+    const buildOutput = runCLI(`build ${tscLib}`);
+    expect(buildOutput).toContain('Successfully ran target build');
+
+    const output = runCLI(`run ${tscLib}:run-node`);
+    expect(output).toContain('Hello with rootDir: ./src');
+  }, 240_000);
+
+  it('should execute library with rootDir using {projectRoot} token', async () => {
+    const tscLib = uniq('tsclib');
+
+    runCLI(`generate @nx/js:lib libs/${tscLib} --bundler=tsc --no-interactive`);
+
+    updateFile(`libs/${tscLib}/src/index.ts`, () => {
+      return `
+        console.log('Hello with rootDir: {projectRoot}/src');
+        `;
+    });
+
+    // Configure rootDir with {projectRoot} token
+    updateJson(join('libs', tscLib, 'project.json'), (config) => {
+      config.targets.build.options.rootDir = '{projectRoot}/src';
+      config.targets['run-node'] = {
+        executor: '@nx/js:node',
+        options: {
+          buildTarget: `${tscLib}:build`,
+          watch: false,
+        },
+      };
+      return config;
+    });
+
+    const buildOutput = runCLI(`build ${tscLib}`);
+    expect(buildOutput).toContain('Successfully ran target build');
+
+    const output = runCLI(`run ${tscLib}:run-node`);
+    expect(output).toContain('Hello with rootDir: {projectRoot}/src');
   }, 240_000);
 });

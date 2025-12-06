@@ -465,8 +465,36 @@ function getFileToRun(
       buildTargetExecutor === '@nx/js:tsc' ||
       buildTargetExecutor === '@nx/js:swc'
     ) {
+      // Determine the source root to use for relative path calculation.
+      // By default, use the project root as the base directory.
+      let sourceRoot = project.data.root;
+
+      // If rootDir is configured, use it as the base for path calculation.
+      // This is crucial because TypeScript/SWC strip the rootDir from the output structure.
+      //
+      // Example: If main is 'libs/mylib/src/index.ts' and rootDir is 'libs/mylib/src',
+      // TypeScript outputs to 'dist/libs/mylib/index.js' (not 'dist/libs/mylib/src/index.js').
+      // So we need to use 'libs/mylib/src' as the sourceRoot instead of 'libs/mylib'.
+      if (buildOptions.rootDir) {
+        // Interpolate the rootDir value to resolve tokens like {projectRoot} or {workspaceRoot}
+        sourceRoot = interpolate(buildOptions.rootDir, {
+          projectName: project.name,
+          projectRoot: project.data.root,
+          workspaceRoot: context.root,
+        });
+
+        // Normalize the path to handle './', '../', and other path variations
+        sourceRoot = path.normalize(sourceRoot);
+
+        // If the path is absolute, make it relative to the workspace root
+        // This ensures consistency when calculating the relative output path
+        if (path.isAbsolute(sourceRoot)) {
+          sourceRoot = path.relative(context.root, sourceRoot);
+        }
+      }
+
       outputFileName = path.join(
-        getRelativeDirectoryToProjectRoot(buildOptions.main, project.data.root),
+        getRelativeDirectoryToProjectRoot(buildOptions.main, sourceRoot),
         fileName
       );
     } else {
