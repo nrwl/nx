@@ -1,6 +1,9 @@
 use crate::native::tasks::types::{Task, TaskResult};
 
-use super::{app::Focus, components::tasks_list::TaskStatus};
+use super::{
+    app::{BatchInfo, Focus},
+    components::tasks_list::TaskStatus,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
@@ -19,6 +22,8 @@ pub enum Action {
     ScrollDown,
     PinTask(String, usize),
     UnpinTask(String, usize),
+    PinBatch(String, usize),
+    UnpinBatch(String, usize),
     UnpinAllTasks,
     SortTasks,
     NextTask,
@@ -36,4 +41,7 @@ pub enum Action {
     SendConsoleMessage(String),
     ConsoleMessengerAvailable(bool),
     EndCommand,
+    StartBatch(String, BatchInfo),
+    ExpandBatch(String),
+    CollapseBatch(String),
 }
