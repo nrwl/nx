@@ -71,6 +71,9 @@ const projectGraphRecomputationListeners = new Set<
   (projectGraph: ProjectGraph, sourceMaps: ConfigurationSourceMaps) => void
 >();
 let storedWorkspaceConfigHash: string | undefined;
+// Cache per-project JSON strings to detect changes and skip re-hashing
+const projectConfigJsonCache = new Map<string, string>();
+let cachedComputedHash: string | undefined;
 let waitPeriod = 100;
 let scheduledTimeoutId;
 let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
@@ -212,15 +215,46 @@ export function registerProjectGraphRecomputationListener(
 function computeWorkspaceConfigHash(
   projectsConfigurations: Record<string, ProjectConfiguration>
 ) {
-  const projectConfigurationStrings = Object.entries(projectsConfigurations)
-    .sort(([projectNameA], [projectNameB]) =>
-      projectNameA.localeCompare(projectNameB)
-    )
-    .map(
-      ([projectName, projectConfig]) =>
-        `${projectName}:${JSON.stringify(projectConfig)}`
-    );
-  return hashArray(projectConfigurationStrings);
+  // Use Object.keys + sort instead of Object.entries to avoid creating tuples
+  const projectNames = Object.keys(projectsConfigurations).sort();
+  const parts: string[] = [];
+  let hasChanges = false;
+
+  // Check for removed projects first (size comparison is O(1))
+  if (projectConfigJsonCache.size !== projectNames.length) {
+    hasChanges = true;
+  }
+
+  for (const projectName of projectNames) {
+    const configJson = JSON.stringify(projectsConfigurations[projectName]);
+    const cachedJson = projectConfigJsonCache.get(projectName);
+
+    // Detect if this project's config changed
+    if (cachedJson !== configJson) {
+      hasChanges = true;
+      projectConfigJsonCache.set(projectName, configJson);
+    }
+
+    parts.push(projectName);
+    parts.push(configJson);
+  }
+
+  // Clean up cache entries for removed projects
+  if (hasChanges) {
+    for (const cachedName of projectConfigJsonCache.keys()) {
+      if (!(cachedName in projectsConfigurations)) {
+        projectConfigJsonCache.delete(cachedName);
+      }
+    }
+  }
+
+  // If nothing changed, return cached hash to skip hashArray call
+  if (!hasChanges && cachedComputedHash) {
+    return cachedComputedHash;
+  }
+
+  cachedComputedHash = hashArray(parts);
+  return cachedComputedHash;
 }
 
 async function processCollectedUpdatedAndDeletedFiles(
@@ -472,6 +506,8 @@ async function resetInternalState() {
   currentProjectGraph = undefined;
   collectedUpdatedFiles.clear();
   collectedDeletedFiles.clear();
+  projectConfigJsonCache.clear();
+  cachedComputedHash = undefined;
   resetWorkspaceContext();
   waitPeriod = 100;
 }
