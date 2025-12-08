@@ -509,21 +509,23 @@ export function calculateReverseDeps(
   taskGraph: TaskGraph
 ): Record<string, string[]> {
   const reverseTaskDeps: Record<string, string[]> = {};
-  Object.keys(taskGraph.tasks).forEach((t) => {
+
+  // Use for...in to avoid creating intermediate arrays from Object.keys()
+  for (const t in taskGraph.tasks) {
     reverseTaskDeps[t] = [];
-  });
+  }
 
-  Object.keys(taskGraph.dependencies).forEach((taskId) => {
-    taskGraph.dependencies[taskId].forEach((d) => {
+  for (const taskId in taskGraph.dependencies) {
+    for (const d of taskGraph.dependencies[taskId]) {
       reverseTaskDeps[d].push(taskId);
-    });
-  });
+    }
+  }
 
-  Object.keys(taskGraph.continuousDependencies).forEach((taskId) => {
-    taskGraph.continuousDependencies[taskId].forEach((d) => {
+  for (const taskId in taskGraph.continuousDependencies) {
+    for (const d of taskGraph.continuousDependencies[taskId]) {
       reverseTaskDeps[d].push(taskId);
-    });
-  });
+    }
+  }
 
   return reverseTaskDeps;
 }
