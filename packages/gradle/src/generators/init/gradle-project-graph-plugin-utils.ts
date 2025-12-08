@@ -144,30 +144,59 @@ function aliasToAccessorPath(alias: string): string {
 /**
  * Finds a version catalog file near the given build.gradle file and returns
  * the plugin alias if the Nx project graph plugin is defined in it.
+ * Searches in the following order:
+ * 1. Standard Gradle location: gradle/libs.versions.toml relative to the build.gradle file
+ * 2. Workspace root: gradle/libs.versions.toml at the workspace root
+ * 3. Any libs.versions.toml in subdirectories of the build.gradle file
  */
 async function findVersionCatalogPluginAlias(
   gradleFilePath: string,
   tree: Tree
 ): Promise<string | null> {
   const gradleDir = dirname(gradleFilePath);
+
+  // Check standard Gradle version catalog locations
+  const possibleCatalogPaths = [
+    // Standard location relative to the build.gradle file
+    join(gradleDir, 'gradle', 'libs.versions.toml'),
+    // Workspace root location (common in monorepos)
+    'gradle/libs.versions.toml',
+  ];
+
+  for (const catalogPath of possibleCatalogPaths) {
+    if (tree.exists(catalogPath)) {
+      const catalogContent = tree.read(catalogPath, 'utf-8');
+      if (catalogContent) {
+        const alias = getPluginAliasFromCatalogAst(
+          catalogContent,
+          gradleProjectGraphPluginName
+        );
+        if (alias) {
+          return alias;
+        }
+      }
+    }
+  }
+
+  // Fallback: search for any version catalog in subdirectories
   const versionCatalogFiles = await globAsync(tree, [
     join(gradleDir, '**/libs.versions.toml'),
   ]);
 
-  if (versionCatalogFiles.length === 0) {
-    return null;
+  for (const versionCatalogPath of versionCatalogFiles) {
+    const catalogContent = tree.read(versionCatalogPath, 'utf-8');
+    if (catalogContent) {
+      const alias = getPluginAliasFromCatalogAst(
+        catalogContent,
+        gradleProjectGraphPluginName
+      );
+      if (alias) {
+        return alias;
+      }
+    }
   }
 
-  const versionCatalogPath = versionCatalogFiles[0];
-  const catalogContent = tree.read(versionCatalogPath, 'utf-8');
-  if (!catalogContent) {
-    return null;
-  }
-
-  return getPluginAliasFromCatalogAst(
-    catalogContent,
-    gradleProjectGraphPluginName
-  );
+  return null;
 }
 
 /**
@@ -251,28 +280,34 @@ async function addNxProjectGraphPluginToBuildGradle(
     buildGradleContent = addPluginsBlock(buildGradleContent);
   }
 
-  // Check if plugin is already applied in allprojects (either via direct name or version catalog)
-  const applyPluginPattern = versionCatalogPluginAccessor
-    ? new RegExp(
-        `\\s*plugin\\(${versionCatalogPluginAccessor.replace(/\./g, '\\.')}\\)`
-      )
-    : new RegExp(`\\s*plugin\\(["']${gradleProjectGraphPluginName}["']\\)`);
+  // Skip allprojects handling if plugin was already correctly declared via version catalog alias
+  // In that case, the plugin is already applied and doesn't need to be propagated via allprojects
+  if (!hasPluginViaAlias) {
+    const applyPluginPattern = versionCatalogPluginAccessor
+      ? new RegExp(
+          `\\s*plugin\\(${versionCatalogPluginAccessor.replace(
+            /\./g,
+            '\\.'
+          )}\\)`
+        )
+      : new RegExp(`\\s*plugin\\(["']${gradleProjectGraphPluginName}["']\\)`);
 
-  if (buildGradleContent.includes('allprojects {')) {
-    if (!applyPluginPattern.test(buildGradleContent)) {
-      const applyPlugin = versionCatalogPluginAccessor
-        ? `plugin(${versionCatalogPluginAccessor})`
-        : isKotlinDsl
-        ? `plugin("${gradleProjectGraphPluginName}")`
-        : `plugin "${gradleProjectGraphPluginName}"`;
+    if (buildGradleContent.includes('allprojects {')) {
+      if (!applyPluginPattern.test(buildGradleContent)) {
+        const applyPlugin = versionCatalogPluginAccessor
+          ? `plugin(${versionCatalogPluginAccessor})`
+          : isKotlinDsl
+          ? `plugin("${gradleProjectGraphPluginName}")`
+          : `plugin "${gradleProjectGraphPluginName}"`;
 
-      buildGradleContent = buildGradleContent.replace(
-        /allprojects\s*\{/,
-        `allprojects {\n    apply ${applyPlugin}`
-      );
+        buildGradleContent = buildGradleContent.replace(
+          /allprojects\s*\{/,
+          `allprojects {\n    apply ${applyPlugin}`
+        );
+      }
+    } else {
+      buildGradleContent = addPluginToAllProjects(buildGradleContent);
     }
-  } else {
-    buildGradleContent = addPluginToAllProjects(buildGradleContent);
   }
 
   tree.write(gradleFilePath, buildGradleContent);
