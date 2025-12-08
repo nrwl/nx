@@ -28,7 +28,7 @@ import {
 import { workspaceRoot } from '../../utils/workspace-root';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
-import { serverLogger } from './logger';
+import { serverLogger } from '../logger';
 import { NxWorkspaceFilesExternals } from '../../native';
 import {
   ConfigurationResult,

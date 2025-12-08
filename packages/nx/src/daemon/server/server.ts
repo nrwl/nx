@@ -40,7 +40,7 @@ import {
 import { handleProcessInBackground } from './handle-process-in-background';
 import { handleRequestProjectGraph } from './handle-request-project-graph';
 import { handleRequestShutdown } from './handle-request-shutdown';
-import { serverLogger } from './logger';
+import { serverLogger } from '../logger';
 import {
   disableOutputsTracking,
   processFileChangesInOutputs,
