@@ -289,23 +289,16 @@ export class TargetProjectLocator {
       return [importExpr, this.paths[importExpr]];
     }
 
+    // Patterns are sorted by prefix length descending (see parsePaths),
+    // so first match is guaranteed to be the longest prefix match
     // https://github.com/microsoft/TypeScript/blob/29e6d6689dfb422e4f1395546c1917d07e1f664d/src/compiler/core.ts#L2410
-    let matchedValue: PathPattern | undefined;
-    let longestMatchPrefixLength = -1;
-    for (let i = 0; i < patterns.length; i++) {
-      const pattern = patterns[i];
-      if (
-        pattern.prefix.length > longestMatchPrefixLength &&
-        this.isPatternMatch(pattern, importExpr)
-      ) {
-        longestMatchPrefixLength = pattern.prefix.length;
-        matchedValue = pattern;
+    for (const pattern of patterns) {
+      if (this.isPatternMatch(pattern, importExpr)) {
+        return [pattern, this.paths[pattern.pattern]];
       }
     }
 
-    return matchedValue
-      ? [matchedValue, this.paths[matchedValue.pattern]]
-      : undefined;
+    return undefined;
   }
 
   findImportInWorkspaceProjects(importPath: string): string | null {
@@ -407,6 +400,12 @@ export class TargetProjectLocator {
         suffix: parts[1],
       });
     }
+
+    // Sort patterns by prefix length descending for early-exit optimization
+    // The longest prefix match wins, so checking longest first allows immediate return
+    this.parsedPathPatterns.patterns.sort(
+      (a, b) => b.prefix.length - a.prefix.length
+    );
   }
 
   private resolveImportWithTypescript(

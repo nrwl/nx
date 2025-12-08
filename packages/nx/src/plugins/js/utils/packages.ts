@@ -78,6 +78,20 @@ export function getWorkspacePackagesMetadata<
   };
 }
 
+// Pre-compiled pattern structure for efficient matching
+type CompiledWildcardPattern<T> = {
+  key: string;
+  prefix: string;
+  suffix: string;
+  project: T;
+};
+
+// Cache for compiled patterns keyed by the wildcardEntryPointsToProjectMap reference
+const compiledPatternCache = new WeakMap<
+  Record<string, any>,
+  CompiledWildcardPattern<any>[]
+>();
+
 // adapted from PACKAGE_IMPORTS_EXPORTS_RESOLVE at
 // https://nodejs.org/docs/latest-v22.x/api/esm.html#resolution-algorithm-specification
 export function matchImportToWildcardEntryPointsToProjectMap<
@@ -86,37 +100,44 @@ export function matchImportToWildcardEntryPointsToProjectMap<
   wildcardEntryPointsToProjectMap: Record<string, T>,
   importPath: string
 ): T | null {
-  if (!Object.keys(wildcardEntryPointsToProjectMap).length) {
-    return null;
+  // Get or create compiled patterns for this map
+  let patterns = compiledPatternCache.get(wildcardEntryPointsToProjectMap);
+  if (!patterns) {
+    patterns = [];
+    for (const key of Object.keys(wildcardEntryPointsToProjectMap)) {
+      const segments = key.split('*');
+      if (segments.length !== 2) {
+        continue;
+      }
+      patterns.push({
+        key,
+        prefix: segments[0],
+        suffix: segments[1],
+        project: wildcardEntryPointsToProjectMap[key],
+      });
+    }
+    // Sort by prefix length descending for longest-match-first
+    patterns.sort((a, b) => b.prefix.length - a.prefix.length);
+    compiledPatternCache.set(wildcardEntryPointsToProjectMap, patterns);
   }
 
-  const entryPoint = Object.keys(wildcardEntryPointsToProjectMap).find(
-    (key) => {
-      const segments = key.split('*');
-      if (segments.length > 2) {
-        return false;
-      }
-
-      const patternBase = segments[0];
-      if (patternBase === importPath) {
-        return false;
-      }
-
-      if (!importPath.startsWith(patternBase)) {
-        return false;
-      }
-
-      const patternTrailer = segments[1];
-      if (
-        patternTrailer?.length > 0 &&
-        (!importPath.endsWith(patternTrailer) || importPath.length < key.length)
-      ) {
-        return false;
-      }
-
-      return true;
+  // Find first matching pattern (guaranteed longest prefix due to sorting)
+  for (const pattern of patterns) {
+    if (pattern.prefix === importPath) {
+      continue;
     }
-  );
+    if (!importPath.startsWith(pattern.prefix)) {
+      continue;
+    }
+    if (
+      pattern.suffix.length > 0 &&
+      (!importPath.endsWith(pattern.suffix) ||
+        importPath.length < pattern.prefix.length + pattern.suffix.length)
+    ) {
+      continue;
+    }
+    return pattern.project;
+  }
 
-  return entryPoint ? wildcardEntryPointsToProjectMap[entryPoint] : null;
+  return null;
 }
