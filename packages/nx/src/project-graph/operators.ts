@@ -85,8 +85,9 @@ export function withDeps(
   subsetNodes: ProjectGraphProjectNode[]
 ): ProjectGraph {
   const res = { nodes: {}, dependencies: {} } as ProjectGraph;
-  const visitedNodes = [];
-  const visitedEdges = [];
+  // Use Set for O(1) visited lookup instead of O(n) indexOf
+  const visitedNodes = new Set<string>();
+  const visitedEdges = new Set<string>();
   Object.values(subsetNodes).forEach(recurNodes);
   Object.values(subsetNodes).forEach(recurEdges);
   return res;
@@ -94,12 +95,12 @@ export function withDeps(
   // ---------------------------------------------------------------------------
 
   function recurNodes(node) {
-    if (visitedNodes.indexOf(node.name) > -1) return;
+    if (visitedNodes.has(node.name)) return;
     res.nodes[node.name] = node;
     if (!res.dependencies[node.name]) {
       res.dependencies[node.name] = [];
     }
-    visitedNodes.push(node.name);
+    visitedNodes.add(node.name);
 
     original.dependencies[node.name].forEach((n) => {
       if (original.nodes[n.target]) {
@@ -109,8 +110,8 @@ export function withDeps(
   }
 
   function recurEdges(node) {
-    if (visitedEdges.indexOf(node.name) > -1) return;
-    visitedEdges.push(node.name);
+    if (visitedEdges.has(node.name)) return;
+    visitedEdges.add(node.name);
 
     const ds = original.dependencies[node.name];
     ds.forEach((n) => {

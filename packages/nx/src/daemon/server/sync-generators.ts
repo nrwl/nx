@@ -354,32 +354,43 @@ export function _getConflictingGeneratorGroups(
   }
 
   const conflicts: Set<string>[] = [];
+  // Map generator name -> index in conflicts array for O(1) lookup
+  const generatorToGroupIndex = new Map<string, number>();
+
   for (const generatorSet of changedFileToGeneratorMap.values()) {
     if (generatorSet.size === 1) {
       // no conflicts
       continue;
     }
 
-    if (conflicts.length === 0) {
-      // there are no conflicts yet, so we just add the first group
-      conflicts.push(new Set(generatorSet));
-      continue;
+    // Find if any generator in the set already belongs to a conflict group
+    let existingGroupIndex = -1;
+    for (const generator of generatorSet) {
+      const idx = generatorToGroupIndex.get(generator);
+      if (idx !== undefined) {
+        existingGroupIndex = idx;
+        break;
+      }
     }
 
-    // identify if any of the current generator sets intersect with any of the
-    // existing conflict groups
-    const generatorsArray = Array.from(generatorSet);
-    const existingConflictGroup = conflicts.find((group) =>
-      generatorsArray.some((generator) => group.has(generator))
-    );
-    if (existingConflictGroup) {
-      // there's an intersecting group, so we merge the two
-      for (const generator of generatorsArray) {
-        existingConflictGroup.add(generator);
+    if (existingGroupIndex === -1) {
+      // No existing group found, create a new one
+      const newGroupIndex = conflicts.length;
+      const newGroup = new Set(generatorSet);
+      conflicts.push(newGroup);
+      // Update the index map for all generators in the new group
+      for (const generator of generatorSet) {
+        generatorToGroupIndex.set(generator, newGroupIndex);
       }
     } else {
-      // there's no intersecting group, so we create a new one
-      conflicts.push(new Set(generatorsArray));
+      // Merge into the existing group
+      const existingGroup = conflicts[existingGroupIndex];
+      for (const generator of generatorSet) {
+        if (!existingGroup.has(generator)) {
+          existingGroup.add(generator);
+          generatorToGroupIndex.set(generator, existingGroupIndex);
+        }
+      }
     }
   }
 

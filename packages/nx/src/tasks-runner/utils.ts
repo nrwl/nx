@@ -429,19 +429,42 @@ export function getExecutorNameForTask(task: Task, projectGraph: ProjectGraph) {
   return getTargetConfigurationForTask(task, projectGraph)?.executor;
 }
 
+// WeakMap allows cache to be garbage collected when projectGraph is no longer referenced
+// Inner Map is keyed by executor name (e.g., "@nx/webpack:webpack")
+const executorCache = new WeakMap<
+  ProjectGraph,
+  Map<string, ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean }>
+>();
+
 export function getExecutorForTask(
   task: Task,
   projectGraph: ProjectGraph
 ): ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean } {
   const executor = getExecutorNameForTask(task, projectGraph);
+
+  // Check cache first
+  let graphCache = executorCache.get(projectGraph);
+  if (!graphCache) {
+    graphCache = new Map();
+    executorCache.set(projectGraph, graphCache);
+  }
+
+  const cached = graphCache.get(executor);
+  if (cached) {
+    return cached;
+  }
+
   const [nodeModule, executorName] = parseExecutor(executor);
 
-  return getExecutorInformation(
+  const result = getExecutorInformation(
     nodeModule,
     executorName,
     workspaceRoot,
     readProjectsConfigurationFromProjectGraph(projectGraph).projects
   );
+
+  graphCache.set(executor, result);
+  return result;
 }
 
 export function getCustomHasher(
