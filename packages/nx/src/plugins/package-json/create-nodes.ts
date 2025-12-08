@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import { Minimatch } from 'minimatch';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
@@ -103,8 +103,16 @@ export function buildPackageJsonWorkspacesMatcher(
     readJson
   );
 
-  const negativePatterns = patterns.filter((p) => p.startsWith('!'));
-  const positivePatterns = patterns.filter((p) => !p.startsWith('!'));
+  // Partition patterns into positive and negative in a single pass
+  const negativePatterns: string[] = [];
+  const positivePatterns: string[] = [];
+  for (const p of patterns) {
+    if (p.startsWith('!')) {
+      negativePatterns.push(p);
+    } else {
+      positivePatterns.push(p);
+    }
+  }
 
   if (
     // There are some negative patterns
@@ -117,8 +125,12 @@ export function buildPackageJsonWorkspacesMatcher(
     positivePatterns.push('**/package.json');
   }
 
+  // Pre-compile patterns once for O(1) matching instead of recompiling on every call
+  const compiledPositive = positivePatterns.map((p) => new Minimatch(p));
+  const compiledNegative = negativePatterns.map((p) => new Minimatch(p));
+
   return (p: string) =>
-    positivePatterns.some((positive) => minimatch(p, positive)) &&
+    compiledPositive.some((matcher) => matcher.match(p)) &&
     /**
      * minimatch will return true if the given p is NOT excluded by the negative pattern.
      *
@@ -128,7 +140,7 @@ export function buildPackageJsonWorkspacesMatcher(
      * Therefore, we need to ensure that every negative pattern returns true to validate that the given p is not
      * excluded by any of the negative patterns.
      */
-    negativePatterns.every((negative) => minimatch(p, negative));
+    compiledNegative.every((matcher) => matcher.match(p));
 }
 
 export function createNodeFromPackageJson(
