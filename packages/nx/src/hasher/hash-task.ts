@@ -1,4 +1,5 @@
 import { Task, TaskGraph } from '../config/task-graph';
+import { CustomHasher } from '../config/misc-interfaces';
 import { getCustomHasher } from '../tasks-runner/utils';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getInputs, TaskHasher } from './task-hasher';
@@ -139,33 +140,35 @@ export async function hashTasks(
   const tasks = Object.values(taskGraph.tasks).filter((task) => !task.hash);
 
   // Separate tasks with custom hashers from those without
-  const tasksWithCustomHashers: Task[] = [];
+  // Store [task, hasher] tuples to avoid calling getCustomHasher twice per task
+  const tasksWithCustomHashers: Array<[Task, CustomHasher]> = [];
   const tasksWithoutCustomHashers: Task[] = [];
 
   for (const task of tasks) {
     const customHasher = getCustomHasher(task, projectGraph);
     if (customHasher) {
-      tasksWithCustomHashers.push(task);
+      tasksWithCustomHashers.push([task, customHasher]);
     } else {
       tasksWithoutCustomHashers.push(task);
     }
   }
 
-  // Hash tasks with custom hashers individually
-  const customHasherPromises = tasksWithCustomHashers.map(async (task) => {
-    const customHasher = getCustomHasher(task, projectGraph);
-    const { value, details } = await customHasher(task, {
-      hasher,
-      projectGraph,
-      taskGraph,
-      workspaceConfig: projectsConfigurations,
-      projectsConfigurations,
-      nxJsonConfiguration: nxJson,
-      env,
-    } as any);
-    task.hash = value;
-    task.hashDetails = details;
-  });
+  // Hash tasks with custom hashers individually (reuse cached hasher)
+  const customHasherPromises = tasksWithCustomHashers.map(
+    async ([task, customHasher]) => {
+      const { value, details } = await customHasher(task, {
+        hasher,
+        projectGraph,
+        taskGraph,
+        workspaceConfig: projectsConfigurations,
+        projectsConfigurations,
+        nxJsonConfiguration: nxJson,
+        env,
+      } as any);
+      task.hash = value;
+      task.hashDetails = details;
+    }
+  );
 
   // Hash tasks without custom hashers in batch
   let batchHashPromise: Promise<void> = Promise.resolve();
