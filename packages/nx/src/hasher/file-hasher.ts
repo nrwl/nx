@@ -6,11 +6,39 @@ export function hashArray(content: string[]): string {
 
 export function hashObject(obj: object): string {
   const { hashArray } = require('../native');
-  const parts: string[] = [];
 
-  for (const key of Object.keys(obj ?? {}).sort()) {
-    parts.push(key);
-    parts.push(JSON.stringify(obj[key]));
+  if (!obj) {
+    return hashArray([]);
+  }
+
+  const keys = Object.keys(obj);
+  if (keys.length === 0) {
+    return hashArray([]);
+  }
+
+  // Sort keys for deterministic hashing
+  keys.sort();
+
+  // Pre-allocate array for better performance
+  const parts: string[] = new Array(keys.length * 2);
+  let idx = 0;
+
+  for (const key of keys) {
+    parts[idx++] = key;
+    const value = obj[key];
+    // Avoid JSON.stringify for primitive values (common case)
+    if (value === null) {
+      parts[idx++] = 'null';
+    } else if (value === undefined) {
+      parts[idx++] = 'undefined';
+    } else if (typeof value === 'string') {
+      parts[idx++] = value;
+    } else if (typeof value === 'number' || typeof value === 'boolean') {
+      parts[idx++] = String(value);
+    } else {
+      // Only use JSON.stringify for objects/arrays
+      parts[idx++] = JSON.stringify(value);
+    }
   }
 
   return hashArray(parts);

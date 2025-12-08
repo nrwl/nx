@@ -291,17 +291,22 @@ export function shouldRecomputeWholeGraph(
   }
 
   // a path mapping for an existing project has changed
+  // Optimize: compare arrays directly instead of JSON.stringify each one
+  const currentPaths = tsConfig?.compilerOptions?.paths;
   if (
     Object.keys(cache.pathMappings).some((t) => {
-      const cached =
-        cache.pathMappings && cache.pathMappings[t]
-          ? JSON.stringify(cache.pathMappings[t])
-          : undefined;
-      const notCached =
-        tsConfig?.compilerOptions?.paths && tsConfig?.compilerOptions?.paths[t]
-          ? JSON.stringify(tsConfig.compilerOptions.paths[t])
-          : undefined;
-      return cached !== notCached;
+      const cached = cache.pathMappings?.[t];
+      const current = currentPaths?.[t];
+      // Both undefined/null means equal
+      if (!cached && !current) return false;
+      // One exists, other doesn't
+      if (!cached || !current) return true;
+      // Compare arrays element by element (path mappings are string arrays)
+      if (cached.length !== current.length) return true;
+      for (let i = 0; i < cached.length; i++) {
+        if (cached[i] !== current[i]) return true;
+      }
+      return false;
     })
   ) {
     return true;

@@ -49,11 +49,15 @@ export function readTsConfigOptions(tsConfigPath: string): ts.CompilerOptions {
   return options;
 }
 
-let compilerHost: {
-  host: ts.CompilerHost;
-  options: ts.CompilerOptions;
-  moduleResolutionCache: ts.ModuleResolutionCache;
-};
+// Cache compiler hosts per tsconfig path to support monorepos with multiple tsconfigs
+const compilerHostCache = new Map<
+  string,
+  {
+    host: ts.CompilerHost;
+    options: ts.CompilerOptions;
+    moduleResolutionCache: ts.ModuleResolutionCache;
+  }
+>();
 
 /**
  * Find a module based on its import
@@ -67,7 +71,11 @@ export function resolveModuleByImport(
   filePath: string,
   tsConfigPath: string
 ) {
-  compilerHost = compilerHost || getCompilerHost(tsConfigPath);
+  let compilerHost = compilerHostCache.get(tsConfigPath);
+  if (!compilerHost) {
+    compilerHost = getCompilerHost(tsConfigPath);
+    compilerHostCache.set(tsConfigPath, compilerHost);
+  }
   const { options, host, moduleResolutionCache } = compilerHost;
 
   const { resolvedModule } = tsModule.resolveModuleName(
