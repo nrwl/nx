@@ -9,7 +9,9 @@ filter: 'type:References'
 
 This page provides a complete reference of all configuration settings available for Nx Console. Each setting shows how to configure it in both VSCode and JetBrains IDEs (IntelliJ IDEA, WebStorm, etc.).
 
-## VSCode Configuration
+## Editor Settings
+{% tabs syncKey="ide" %}
+{% tabitem label="VSCode" %}
 
 VSCode uses JSON files for configuration. Settings can be configured at different scopes:
 
@@ -28,13 +30,16 @@ VSCode uses JSON files for configuration. Settings can be configured at differen
 
 Learn more about VSCode settings in the [official VSCode documentation](https://code.visualstudio.com/docs/getstarted/settings).
 
-## JetBrains IDE Configuration
+{% /tabitem %}
+{% tabitem label="JetBrains" %}
 
-{% callout type="note" title="JetBrains IDE Configuration" %}
+{% aside type="note" title="JetBrains IDE Configuration" %}
 JetBrains IDEs configure Nx Console through the Settings/Preferences UI panel (**Settings > Tools > Nx Console**) rather than JSON configuration files. Only a subset of VSCode settings are available.
-{% /callout %}
+{% /aside %}
 
-### Common Nx Commands
+{% /tabitem %}
+{% /tabs  %}
+## Common Nx Commands
 
 Configure which Nx commands appear in the sidebar view.
 
@@ -43,11 +48,11 @@ Configure which Nx commands appear in the sidebar view.
 
 **Setting:** `nxConsole.commonNxCommands`
 
-**Type:** `array` of `string`
+
 
 **Default:** `["run", "run-many", "affected", "affected --graph", "list"]`
 
-**Configuration:**
+
 
 ```json
 {
@@ -60,14 +65,14 @@ This setting supports both arbitrary commands and UI-based commands that open de
 {% /tabitem %}
 {% tabitem label="JetBrains" %}
 
-{% callout type="warning" title="Not Available" %}
+{% aside type="caution" title="Not Available" %}
 This setting is not available in JetBrains IDEs. Command customization is not currently supported.
-{% /callout %}
+{% /aside %}
 
 {% /tabitem %}
 {% /tabs %}
 
-### Project Viewing Style
+## Project Viewing Style
 
 Defines how the Projects view displays entries in the sidebar.
 
@@ -76,13 +81,13 @@ Defines how the Projects view displays entries in the sidebar.
 
 **Setting:** `nxConsole.projectViewingStyle`
 
-**Type:** `string` (enum)
+
 
 **Options:** `"list"` | `"tree"` | `"automatic"`
 
 **Default:** `"automatic"`
 
-**Configuration:**
+
 
 ```json
 {
@@ -101,13 +106,13 @@ Defines how the Projects view displays entries in the sidebar.
 
 **Location:** Settings > Tools > Nx Console > Tool Window Style
 
-**Type:** Dropdown
+
 
 **Options:** List | Tree | Automatic
 
 **Default:** Automatic
 
-**Configuration:**
+
 
 Navigate to **Settings/Preferences > Tools > Nx Console** and select the desired style from the "Tool Window Style" dropdown.
 
@@ -117,14 +122,11 @@ Navigate to **Settings/Preferences > Tools > Nx Console** and select the desired
 - **Tree**: Displays projects in a folder/tree structure
 - **Automatic**: Adaptively switches between list and tree based on workspace structure
 
-{% callout type="note" title="Screenshots Needed" %}
-TODO: Add screenshot showing the Tool Window Style dropdown in JetBrains settings panel
-{% /callout %}
 
 {% /tabitem %}
 {% /tabs %}
 
-### Nx Workspace Path
+## Nx Workspace Path
 
 Specifies the relative path to the Nx workspace root directory.
 
@@ -133,11 +135,11 @@ Specifies the relative path to the Nx workspace root directory.
 
 **Setting:** `nxConsole.nxWorkspacePath`
 
-**Type:** `string`
+
 
 **Default:** `undefined`
 
-**Configuration:**
+
 
 ```json
 {
@@ -152,24 +154,21 @@ Useful when working in a monorepo where the Nx workspace is nested within a larg
 
 **Location:** Settings > Tools > Nx Console > Nx Workspace Path
 
-**Type:** Text field
+
 
 **Default:** Empty (uses project root)
 
-**Configuration:**
+
 
 Navigate to **Settings/Preferences > Tools > Nx Console** and enter the relative path in the "Nx Workspace Path" field.
 
 For example: `packages/workspace`
 
-{% callout type="note" title="Screenshots Needed" %}
-TODO: Add screenshot showing the Nx Workspace Path field in JetBrains settings panel
-{% /callout %}
 
 {% /tabitem %}
 {% /tabs %}
 
-### Enable CodeLens
+## Enable CodeLens
 
 Controls the visibility of CodeLens features for Nx-specific files.
 
@@ -178,11 +177,11 @@ Controls the visibility of CodeLens features for Nx-specific files.
 
 **Setting:** `nxConsole.enableCodeLens`
 
-**Type:** `boolean`
+
 
 **Default:** `true`
 
-**Configuration:**
+
 
 ```json
 {
@@ -195,14 +194,14 @@ CodeLens provides inline actionable commands directly in your editor for files l
 {% /tabitem %}
 {% tabitem label="JetBrains" %}
 
-{% callout type="warning" title="Not Available" %}
+{% aside type="caution" title="Not Available" %}
 This setting is not available in JetBrains IDEs. CodeLens is a VSCode-specific feature. JetBrains IDEs use their native intention actions and code inspections instead.
-{% /callout %}
+{% /aside %}
 
 {% /tabitem %}
 {% /tabs %}
 
-### Enable Library Imports
+## Enable Library Imports
 
 Configures the TypeScript language server plugin to include configured libraries.
 
@@ -211,11 +210,11 @@ Configures the TypeScript language server plugin to include configured libraries
 
 **Setting:** `nxConsole.enableLibraryImports`
 
-**Type:** `boolean`
+
 
 **Default:** `true`
 
-**Configuration:**
+
 
 ```json
 {
@@ -228,14 +227,14 @@ This enables better IntelliSense and autocompletion for library imports in your 
 {% /tabitem %}
 {% tabitem label="JetBrains" %}
 
-{% callout type="warning" title="Not Available" %}
+{% aside type="caution" title="Not Available" %}
 This setting is not available in JetBrains IDEs. TypeScript library imports are handled through JetBrains' native TypeScript language services.
-{% /callout %}
+{% /aside %}
 
 {% /tabitem %}
 {% /tabs %}
 
-### Generator Allowlist
+## Generator Allowlist
 
 Specifies generator names or wildcard patterns to show in the generator picker.
 
@@ -244,11 +243,11 @@ Specifies generator names or wildcard patterns to show in the generator picker.
 
 **Setting:** `nxConsole.generatorAllowlist`
 
-**Type:** `array` of `string`
+
 
 **Default:** `[]` (all generators shown)
 
-**Configuration:**
+
 
 ```json
 {
@@ -267,11 +266,11 @@ Use the format `@package:generator` or `@package:*` for wildcards. When this lis
 
 **Location:** Settings > Tools > Nx Console > Generator Allowlist
 
-**Type:** List field (one entry per line)
+
 
 **Default:** Empty (all generators shown)
 
-**Configuration:**
+
 
 Navigate to **Settings/Preferences > Tools > Nx Console** and add patterns in the "Generator Allowlist" field, one per line:
 
@@ -281,14 +280,11 @@ Navigate to **Settings/Preferences > Tools > Nx Console** and add patterns in th
 @nrwl/workspace:library
 ```
 
-{% callout type="note" title="Screenshots Needed" %}
-TODO: Add screenshot showing the Generator Allowlist field in JetBrains settings panel
-{% /callout %}
 
 {% /tabitem %}
 {% /tabs %}
 
-### Generator Blocklist
+## Generator Blocklist
 
 Specifies generator names or wildcard patterns to hide from the generator picker.
 
@@ -297,11 +293,11 @@ Specifies generator names or wildcard patterns to hide from the generator picker
 
 **Setting:** `nxConsole.generatorBlocklist`
 
-**Type:** `array` of `string`
+
 
 **Default:** `[]`
 
-**Configuration:**
+
 
 ```json
 {
@@ -316,11 +312,11 @@ Useful for removing generators that aren't relevant to your workflow.
 
 **Location:** Settings > Tools > Nx Console > Generator Blocklist
 
-**Type:** List field (one entry per line)
+
 
 **Default:** Empty
 
-**Configuration:**
+
 
 Navigate to **Settings/Preferences > Tools > Nx Console** and add patterns in the "Generator Blocklist" field, one per line:
 
@@ -329,14 +325,11 @@ Navigate to **Settings/Preferences > Tools > Nx Console** and add patterns in th
 *:stories
 ```
 
-{% callout type="note" title="Screenshots Needed" %}
-TODO: Add screenshot showing the Generator Blocklist field in JetBrains settings panel
-{% /callout %}
 
 {% /tabitem %}
 {% /tabs %}
 
-### Enable Dry Run on Change
+## Enable Dry Run on Change
 
 Enables automatic dry runs when using the Generate command.
 
@@ -345,11 +338,11 @@ Enables automatic dry runs when using the Generate command.
 
 **Setting:** `nxConsole.enableTaskExecutionDryRunOnChange`
 
-**Type:** `boolean`
+
 
 **Default:** `true`
 
-**Configuration:**
+
 
 ```json
 {
@@ -364,22 +357,19 @@ When enabled, changing generator options triggers a dry run to preview the chang
 
 **Location:** Settings > Tools > Nx Console > Enable Dry Run on Change
 
-**Type:** Checkbox
+
 
 **Default:** Checked (enabled)
 
-**Configuration:**
+
 
 Navigate to **Settings/Preferences > Tools > Nx Console** and toggle the "Enable Dry Run on Change" checkbox.
 
-{% callout type="note" title="Screenshots Needed" %}
-TODO: Add screenshot showing the Enable Dry Run on Change checkbox in JetBrains settings panel
-{% /callout %}
 
 {% /tabitem %}
 {% /tabs %}
 
-### Move Generator Patterns
+## Move Generator Patterns
 
 Controls which collections' move generators should be used based on project path patterns.
 
@@ -388,11 +378,11 @@ Controls which collections' move generators should be used based on project path
 
 **Setting:** `nxConsole.moveGeneratorPatterns`
 
-**Type:** `object`
+
 
 **Default:** `{}`
 
-**Configuration:**
+
 
 ```json
 {
@@ -408,14 +398,14 @@ This is useful when you have multiple generator collections and want to specify 
 {% /tabitem %}
 {% tabitem label="JetBrains" %}
 
-{% callout type="warning" title="Not Available" %}
+{% aside type="caution" title="Not Available" %}
 This setting is not available in JetBrains IDEs. Move generator pattern customization is not currently supported.
-{% /callout %}
+{% /aside %}
 
 {% /tabitem %}
 {% /tabs %}
 
-### Nx Cloud Notifications
+## Nx Cloud Notifications
 
 Controls which Nx Cloud notifications are displayed.
 
@@ -424,13 +414,13 @@ Controls which Nx Cloud notifications are displayed.
 
 **Setting:** `nxConsole.nxCloudNotifications`
 
-**Type:** `string` (enum)
+
 
 **Options:** `"all"` | `"errors"` | `"none"`
 
 **Default:** `"all"`
 
-**Configuration:**
+
 
 ```json
 {
@@ -449,24 +439,21 @@ Controls which Nx Cloud notifications are displayed.
 
 **Location:** Settings > Tools > Nx Console > Nx Cloud Notifications
 
-**Type:** Dropdown
+
 
 **Options:** All | Errors Only | None
 
 **Default:** All
 
-**Configuration:**
+
 
 Navigate to **Settings/Preferences > Tools > Nx Console** and select the desired notification level from the "Nx Cloud Notifications" dropdown.
 
-{% callout type="note" title="Screenshots Needed" %}
-TODO: Add screenshot showing the Nx Cloud Notifications dropdown in JetBrains settings panel
-{% /callout %}
 
 {% /tabitem %}
 {% /tabs %}
 
-### Show Node Version on Startup
+## Show Node Version on Startup
 
 Shows a notification with the Node.js version information when the IDE starts.
 
@@ -475,11 +462,11 @@ Shows a notification with the Node.js version information when the IDE starts.
 
 **Setting:** `nxConsole.showNodeVersionOnStartup`
 
-**Type:** `boolean`
+
 
 **Default:** `false`
 
-**Configuration:**
+
 
 ```json
 {
@@ -492,14 +479,14 @@ Useful for debugging version-related issues, especially when using nvm or simila
 {% /tabitem %}
 {% tabitem label="JetBrains" %}
 
-{% callout type="warning" title="Not Available" %}
+{% aside type="caution" title="Not Available" %}
 This setting is not available in JetBrains IDEs. Node version management is handled through the IDE's Node.js interpreter settings (**Settings > Languages & Frameworks > Node.js**).
-{% /callout %}
+{% /aside %}
 
 {% /tabitem %}
 {% /tabs %}
 
-### MCP Port
+## MCP Port
 
 Specifies a fixed port for the Nx MCP (Model Context Protocol) server.
 
@@ -508,11 +495,11 @@ Specifies a fixed port for the Nx MCP (Model Context Protocol) server.
 
 **Setting:** `nxConsole.mcpPort`
 
-**Type:** `number`
+
 
 **Default:** `undefined` (random port)
 
-**Configuration:**
+
 
 ```json
 {
@@ -525,21 +512,13 @@ Set to `0` to explicitly use a random available port. If not specified, a random
 {% /tabitem %}
 {% tabitem label="JetBrains" %}
 
-{% callout type="warning" title="Not Available" %}
+{% aside type="caution" title="Not Available" %}
 This setting is not available in JetBrains IDEs. MCP port configuration is not currently supported.
-{% /callout %}
+{% /aside %}
 
 {% /tabitem %}
 {% /tabs %}
 
-## JetBrains Settings Storage
-
-Settings are configured through the IDE's Settings/Preferences panel:
-
-- **macOS**: `Preferences > Tools > Nx Console` or `Cmd+,`
-- **Windows/Linux**: `Settings > Tools > Nx Console` or `Ctrl+Alt+S`
-
-Settings are stored per project in `.idea/workspace.xml` or globally in the IDE's configuration directory.
 
 ## Common Configuration Scenarios
 
@@ -641,23 +620,6 @@ To reduce notifications and automatic behaviors:
 
 {% /tabitem %}
 {% /tabs %}
-
-## Settings Availability Matrix
-
-| Setting                      | VSCode | JetBrains |
-| ---------------------------- | ------ | --------- |
-| Common Nx Commands           | ✅     | ❌        |
-| Project Viewing Style        | ✅     | ✅        |
-| Nx Workspace Path            | ✅     | ✅        |
-| Enable CodeLens              | ✅     | ❌        |
-| Enable Library Imports       | ✅     | ❌        |
-| Generator Allowlist          | ✅     | ✅        |
-| Generator Blocklist          | ✅     | ✅        |
-| Enable Dry Run on Change     | ✅     | ✅        |
-| Move Generator Patterns      | ✅     | ❌        |
-| Nx Cloud Notifications       | ✅     | ✅        |
-| Show Node Version on Startup | ✅     | ❌        |
-| MCP Port                     | ✅     | ❌        |
 
 ## See Also
 
