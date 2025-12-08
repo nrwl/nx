@@ -398,7 +398,7 @@ otherPlugin = { id = "com.other.plugin", version = "1.0.0" }`,
         await tempFs.createFiles({
           'proj/settings.gradle.kts': '',
           'proj/build.gradle.kts': `plugins {
-    alias(libs.plugins.nxProjectGraph)
+    alias(libs.plugins.nx.project.graph)
     id("java")
 }`,
           'proj/libs.versions.toml': `[plugins]
@@ -410,7 +410,7 @@ nx-project-graph = { id = "${gradleProjectGraphPluginName}", version = "1.0.0" }
         const content = tree.read('proj/build.gradle.kts', 'utf-8');
         // Should only have one occurrence of the plugin
         const aliasMatches = content.match(
-          /alias\(libs\.plugins\.nxProjectGraph\)/g
+          /alias\(libs\.plugins\.nx\.project\.graph\)/g
         );
         expect(aliasMatches).toHaveLength(1);
         // Should not add direct version syntax
