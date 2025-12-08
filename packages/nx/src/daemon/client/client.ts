@@ -28,6 +28,7 @@ import {
   Message,
   VersionMismatchError,
 } from './daemon-socket-messenger';
+import { clientLogger } from '../logger';
 import { getDaemonProcessIdSync, readDaemonProcessJsonCache } from '../cache';
 import { isNxVersionMismatch } from '../is-nx-version-mismatch';
 import { Hash } from '../../hasher/task-hasher';
@@ -372,30 +373,58 @@ export class DaemonClient {
 
     // Generate unique ID for this callback
     const callbackId = Math.random().toString(36).substring(2, 11);
-    let messenger: DaemonSocketMessenger;
+
+    // Store callback and config for reconnection
+    this.fileWatcherCallbacks.set(callbackId, callback);
+    this.fileWatcherConfigs.set(callbackId, config);
 
     await this.queue.sendToQueue(async () => {
       await this.startDaemonIfNecessary();
 
       const socketPath = this.getSocketPath();
 
-      messenger = new DaemonSocketMessenger(connect(socketPath)).listen(
+      this.fileWatcherMessenger = new DaemonSocketMessenger(
+        connect(socketPath)
+      ).listen(
         (message) => {
           try {
             const parsedMessage = isJsonMessage(message)
               ? JSON.parse(message)
               : deserialize(Buffer.from(message, 'binary'));
-            callback(null, parsedMessage);
+            // Notify all callbacks
+            for (const cb of this.fileWatcherCallbacks.values()) {
+              cb(null, parsedMessage);
+            }
           } catch (e) {
-            callback(e, null);
+            for (const cb of this.fileWatcherCallbacks.values()) {
+              cb(e, null);
+            }
           }
         },
         () => {
-          callback('closed', null);
+          // Connection closed - trigger reconnection
+          this.fileWatcherMessenger = undefined;
+          for (const cb of this.fileWatcherCallbacks.values()) {
+            cb('reconnecting', null);
+          }
+          this.reconnectFileWatcher();
         },
-        (err) => callback(err, null)
+        (err) => {
+          if (err instanceof VersionMismatchError) {
+            for (const cb of this.fileWatcherCallbacks.values()) {
+              cb('closed', null);
+            }
+            process.exit(1);
+          }
+          for (const cb of this.fileWatcherCallbacks.values()) {
+            cb(err, null);
+          }
+        }
       );
-      messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', config });
+      this.fileWatcherMessenger.sendMessage({
+        type: 'REGISTER_FILE_WATCHER',
+        config,
+      });
     });
 
     // Return unregister function
@@ -422,12 +451,16 @@ export class DaemonClient {
     }
 
     this.fileWatcherReconnecting = true;
+    clientLogger.log(
+      `[FileWatcher] Starting reconnection for ${this.fileWatcherCallbacks.size} callbacks`
+    );
 
     // Wait for daemon server to be available before trying to reconnect
     const serverAvailable = await this.waitForServerWithExponentialBackoff();
 
     if (!serverAvailable) {
       // Failed to reconnect after all attempts - notify as closed
+      clientLogger.log(`[FileWatcher] Failed to reconnect - server unavailable`);
       this.fileWatcherReconnecting = false;
       for (const cb of this.fileWatcherCallbacks.values()) {
         cb('closed', null);
@@ -456,13 +489,21 @@ export class DaemonClient {
           }
         },
         () => {
-          // Connection closed during reconnection - don't start new loop
-          // The current loop will retry automatically
+          // Connection closed - trigger reconnection again
           this.fileWatcherMessenger = undefined;
+          for (const cb of this.fileWatcherCallbacks.values()) {
+            cb('reconnecting', null);
+          }
+          this.reconnectFileWatcher();
         },
         (err) => {
-          // Silent during reconnection - errors are handled by the retry loop
-          // Only notify after all attempts exhausted
+          if (err instanceof VersionMismatchError) {
+            for (const cb of this.fileWatcherCallbacks.values()) {
+              cb('closed', null);
+            }
+            process.exit(1);
+          }
+          // Other errors during reconnection - let retry loop handle
         }
       );
 
@@ -475,12 +516,14 @@ export class DaemonClient {
       }
 
       // Successfully reconnected - notify callbacks
+      clientLogger.log(`[FileWatcher] Reconnected successfully`);
       for (const cb of this.fileWatcherCallbacks.values()) {
         cb('reconnected', null);
       }
       this.fileWatcherReconnecting = false;
     } catch (e) {
       // Failed to reconnect - notify as closed
+      clientLogger.log(`[FileWatcher] Reconnection failed: ${e.message}`);
       this.fileWatcherReconnecting = false;
       for (const cb of this.fileWatcherCallbacks.values()) {
         cb('closed', null);
@@ -931,6 +974,8 @@ export class DaemonClient {
   }
 
   private async handleConnectionError(error: Error) {
+    clientLogger.log(`[Reconnect] Connection error detected: ${error.message}`);
+
     // Create a new ready promise for new requests to wait on
     this._waitForDaemonReady = new Promise<void>(
       (resolve) => (this._daemonReady = resolve)
@@ -942,6 +987,7 @@ export class DaemonClient {
     const serverAvailable = await this.waitForServerWithExponentialBackoff();
 
     if (serverAvailable) {
+      clientLogger.log(`[Reconnect] Reconnection successful, re-establishing connection`);
       // Server is back up, establish connection and signal ready
       this.establishConnection();
 
@@ -976,17 +1022,30 @@ export class DaemonClient {
     let delayMs = config.initialDelayMs;
     let attempts = 0;
 
+    clientLogger.log(
+      `[Reconnect] Starting reconnection attempts (max: ${config.maxAttempts})`
+    );
+
     while (attempts < config.maxAttempts) {
       await new Promise((resolve) => setTimeout(resolve, delayMs));
       attempts++;
 
+      clientLogger.log(
+        `[Reconnect] Attempt ${attempts}/${config.maxAttempts}, delay: ${delayMs}ms`
+      );
+
       if (await this.isServerAvailable()) {
+        clientLogger.log(`[Reconnect] Server available after ${attempts} attempts`);
         return true;
       }
 
+      clientLogger.log(`[Reconnect] Server not available, will retry`);
       delayMs = Math.min(delayMs * config.backoffMultiplier, config.maxDelayMs);
     }
 
+    clientLogger.log(
+      `[Reconnect] Failed to reconnect after ${config.maxAttempts} attempts`
+    );
     return false;
   }
 
@@ -1030,10 +1089,6 @@ export class DaemonClient {
   }
 
   private handleMessage(serializedResult: string) {
-    console.log(
-      '[Client] handleMessage called, currentMessage type:',
-      this.currentMessage?.type
-    );
     try {
       performance.mark('result-parse-start-' + this.currentMessage.type);
       const parsedResult = isJsonMessage(serializedResult)

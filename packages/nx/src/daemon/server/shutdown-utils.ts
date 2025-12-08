@@ -1,6 +1,6 @@
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { Server, Socket } from 'net';
-import { serverLogger } from './logger';
+import { serverLogger } from '../logger';
 import { serializeResult } from '../socket-utils';
 import { deleteDaemonJsonProcessCache } from '../cache';
 import type { Watcher } from '../../native';

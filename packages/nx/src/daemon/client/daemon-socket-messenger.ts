@@ -5,20 +5,12 @@ import {
   MESSAGE_END_SEQ,
 } from '../../utils/consume-messages-from-socket';
 import { serialize } from '../socket-utils';
+import { clientLogger } from '../logger';
 
 export interface Message extends Record<string, any> {
   type: string;
   data?: any;
 }
-
-const isDaemonClientLoggingEnabled = () =>
-  process.env.NX_DAEMON_CLIENT_LOGGING === 'true';
-
-const daemonLog = (...args: any[]) => {
-  if (isDaemonClientLoggingEnabled()) {
-    console.log('[DaemonSocketMessenger]', ...args);
-  }
-};
 
 export class VersionMismatchError extends Error {
   constructor() {
@@ -35,7 +27,7 @@ export class DaemonSocketMessenger {
     if (!this.socket) {
       throw new Error('Socket not initialized.');
     }
-    daemonLog('Sending message type:', messageToDaemon.type);
+    clientLogger.log('[Messenger] Sending message type:', messageToDaemon.type);
     performance.mark(
       'daemon-message-serialization-start-' + messageToDaemon.type
     );
@@ -51,7 +43,7 @@ export class DaemonSocketMessenger {
     this.socket.write(serialized);
     // send EOT to indicate that the message has been fully written
     this.socket.write(MESSAGE_END_SEQ);
-    daemonLog('Message sent');
+    clientLogger.log('[Messenger] Message sent');
   }
 
   listen(
@@ -59,23 +51,23 @@ export class DaemonSocketMessenger {
     onClose: () => void = () => {},
     onError: (err: Error) => void = () => {}
   ): DaemonSocketMessenger {
-    daemonLog('Setting up socket listeners');
+    clientLogger.log('[Messenger] Setting up socket listeners');
 
     this.socket.on('close', onClose);
     this.socket.on('error', (err) => {
-      daemonLog('Socket error:', err.message);
+      clientLogger.log('[Messenger] Socket error:', err.message);
       onError(err);
     });
 
     this.socket.on(
       'data',
       consumeMessagesFromSocket(async (message) => {
-        daemonLog('Received message, length:', message.length);
+        clientLogger.log('[Messenger] Received message, length:', message.length);
         onData(message);
       })
     );
 
-    daemonLog('listen() complete');
+    clientLogger.log('[Messenger] listen() complete');
     return this;
   }
 
