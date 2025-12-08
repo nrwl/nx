@@ -17,6 +17,7 @@ import {
   writeJsonFile,
 } from '../utils/fileutils';
 import { nxVersion } from '../utils/versions';
+import { hashObject } from '../hasher/file-hasher';
 import { ConfigurationSourceMaps } from './utils/project-configuration-utils';
 import {
   ProjectGraphError,
@@ -34,6 +35,10 @@ export interface FileMapCache {
   pluginsConfig?: any;
   fileMap: FileMap;
   externalNodesHash?: string;
+  // Pre-computed hashes for fast comparison (added in 6.1)
+  pathMappingsHash?: string;
+  nxJsonPluginsHash?: string;
+  pluginsConfigHash?: string;
 }
 
 export const nxProjectGraph = join(
@@ -186,15 +191,22 @@ export function createProjectFileMapCache(
   externalNodesHash: string
 ) {
   const nxJsonPlugins = getNxJsonPluginsData(nxJson, packageJsonDeps);
+  const pathMappings = tsConfig?.compilerOptions?.paths || {};
+  const pluginsConfig = nxJson?.pluginsConfig;
+
   const newValue: FileMapCache = {
     version: '6.0',
     nxVersion: nxVersion,
     // compilerOptions may not exist, especially for package-based repos
-    pathMappings: tsConfig?.compilerOptions?.paths || {},
+    pathMappings,
     nxJsonPlugins,
-    pluginsConfig: nxJson?.pluginsConfig,
+    pluginsConfig,
     fileMap,
     externalNodesHash,
+    // Pre-compute hashes for fast comparison in shouldRecomputeWholeGraph
+    pathMappingsHash: hashObject(pathMappings),
+    nxJsonPluginsHash: hashObject(nxJsonPlugins as object),
+    pluginsConfigHash: pluginsConfig ? hashObject(pluginsConfig) : undefined,
   };
   return newValue;
 }
@@ -291,35 +303,67 @@ export function shouldRecomputeWholeGraph(
   }
 
   // a path mapping for an existing project has changed
-  if (
-    Object.keys(cache.pathMappings).some((t) => {
-      const cached =
-        cache.pathMappings && cache.pathMappings[t]
-          ? JSON.stringify(cache.pathMappings[t])
+  // Use pre-computed hash if available (faster), otherwise fall back to JSON.stringify comparison
+  const currentPathMappings = tsConfig?.compilerOptions?.paths || {};
+  if (cache.pathMappingsHash) {
+    // Fast path: compare pre-computed hashes
+    if (cache.pathMappingsHash !== hashObject(currentPathMappings)) {
+      return true;
+    }
+  } else {
+    // Legacy cache without hash: use original comparison logic
+    if (
+      Object.keys(cache.pathMappings).some((t) => {
+        const cached =
+          cache.pathMappings && cache.pathMappings[t]
+            ? JSON.stringify(cache.pathMappings[t])
+            : undefined;
+        const notCached = currentPathMappings[t]
+          ? JSON.stringify(currentPathMappings[t])
           : undefined;
-      const notCached =
-        tsConfig?.compilerOptions?.paths && tsConfig?.compilerOptions?.paths[t]
-          ? JSON.stringify(tsConfig.compilerOptions.paths[t])
-          : undefined;
-      return cached !== notCached;
-    })
-  ) {
-    return true;
+        return cached !== notCached;
+      })
+    ) {
+      return true;
+    }
   }
 
   // a new plugin has been added
-  if (
-    JSON.stringify(getNxJsonPluginsData(nxJson, packageJsonDeps)) !==
-    JSON.stringify(cache.nxJsonPlugins)
-  ) {
-    return true;
+  // Use pre-computed hash if available (faster), otherwise fall back to JSON.stringify comparison
+  const currentPluginsData = getNxJsonPluginsData(nxJson, packageJsonDeps);
+  if (cache.nxJsonPluginsHash) {
+    // Fast path: compare pre-computed hashes
+    if (cache.nxJsonPluginsHash !== hashObject(currentPluginsData as object)) {
+      return true;
+    }
+  } else {
+    // Legacy cache without hash: use original comparison logic
+    if (
+      JSON.stringify(currentPluginsData) !== JSON.stringify(cache.nxJsonPlugins)
+    ) {
+      return true;
+    }
   }
 
-  if (
-    JSON.stringify(nxJson?.pluginsConfig) !==
-    JSON.stringify(cache.pluginsConfig)
-  ) {
-    return true;
+  // Check plugins config
+  // Use pre-computed hash if available (faster), otherwise fall back to JSON.stringify comparison
+  const currentPluginsConfig = nxJson?.pluginsConfig;
+  if (cache.pluginsConfigHash !== undefined) {
+    // Fast path: compare pre-computed hashes
+    const currentHash = currentPluginsConfig
+      ? hashObject(currentPluginsConfig)
+      : undefined;
+    if (cache.pluginsConfigHash !== currentHash) {
+      return true;
+    }
+  } else {
+    // Legacy cache without hash: use original comparison logic
+    if (
+      JSON.stringify(currentPluginsConfig) !==
+      JSON.stringify(cache.pluginsConfig)
+    ) {
+      return true;
+    }
   }
 
   // Check if external nodes have changed
