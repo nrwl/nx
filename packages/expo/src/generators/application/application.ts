@@ -62,7 +62,7 @@ export async function expoApplicationGeneratorInternal(
   const initTask = await initGenerator(host, { ...options, skipFormat: true });
   tasks.push(initTask);
   if (!options.skipPackageJson) {
-    tasks.push(ensureDependencies(host, options.unitTestRunner));
+    tasks.push(await ensureDependencies(host, options.unitTestRunner));
   }
   initRootBabelConfig(host);
 

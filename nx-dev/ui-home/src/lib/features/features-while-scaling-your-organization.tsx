@@ -34,14 +34,14 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               and leverages monorepo concepts—shared tooling, atomic changes,
               and coordinated releases—so code stays easy to maintain.{' '}
               <TextLink
-                href={'/docs/enterprise/powerpack/owners'}
+                href={'/docs/enterprise/owners'}
                 className="decoration-2"
               >
                 Ownership
               </TextLink>{' '}
               is defined at the project level, while{' '}
               <TextLink
-                href={'/docs/enterprise/powerpack/conformance'}
+                href={'/docs/enterprise/conformance'}
                 className="decoration-2"
               >
                 conformance rules

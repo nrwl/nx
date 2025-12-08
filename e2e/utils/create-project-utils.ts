@@ -122,12 +122,10 @@ export function newProject({
         createNxWorkspaceEnd.name
       );
 
-      // Temporary hack to prevent installing with `--frozen-lockfile`
+      // Workaround: pnpm defaults to frozen-lockfile in CI, but e2e tests
+      // dynamically add packages after workspace creation
       if (isCI && packageManager === 'pnpm') {
-        updateFile(
-          '.npmrc',
-          'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
-        );
+        updateFile('.npmrc', 'prefer-frozen-lockfile=false');
       }
 
       let packagesToInstall: Array<NxPackage> = [];
@@ -224,14 +222,6 @@ ${
     logError(`Failed to set up project for e2e tests.`, e.message);
     throw e;
   }
-}
-
-// pnpm v7 sadly doesn't automatically install peer dependencies
-export function addPnpmRc() {
-  updateFile(
-    '.npmrc',
-    'strict-peer-dependencies=false\nauto-install-peers=true'
-  );
 }
 
 export function runCreateWorkspace(

@@ -28,19 +28,20 @@ jobs:
           # - windows-latest Windows fails to build gradle wrapper which always runs when we build nx.
           ## https://staging.nx.app/runs/LgD4vxGn8w?utm_source=pull-request&utm_medium=comment
         node_version:
+          # TODO(v23): remove node 20 - EOL April 2026
           - 20
           - 22
-          # - 23
+          - 24
         exclude:
-          # run just node v20 on macos and windows
+          # run just node v24 on macos and windows
+          - os: macos-latest
+            node_version: 20
           - os: macos-latest
             node_version: 22
-          # - os: macos-latest
-          #   node_version: 23
-          # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
-          # node_version: 22
-          # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
-          #   node_version: 23
+          # - os: windows-latest TODO(Jack): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
+          #   node_version: 20
+          # - os: windows-latest TODO (Jack): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
+          #   node_version: 22
 
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
     steps:

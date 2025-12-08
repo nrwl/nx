@@ -12,7 +12,6 @@ import { connect } from 'net';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { output } from '../../utils/output';
-import { getFullOsSocketPath, killSocketOrPath } from '../socket-utils';
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
@@ -25,10 +24,8 @@ import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import { DaemonSocketMessenger, Message } from './daemon-socket-messenger';
-import {
-  getDaemonProcessIdSync,
-  waitForDaemonToExitAndCleanupProcessJson,
-} from '../cache';
+import { getDaemonProcessIdSync, readDaemonProcessJsonCache } from '../cache';
+import { isNxVersionMismatch } from '../is-nx-version-mismatch';
 import { Hash } from '../../hasher/task-hasher';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
@@ -100,6 +97,14 @@ import {
   PRE_TASKS_EXECUTION,
 } from '../message-types/run-tasks-execution-hooks';
 import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
+import {
+  GET_NX_CONSOLE_STATUS,
+  type HandleGetNxConsoleStatusMessage,
+  type HandleSetNxConsolePreferenceAndInstallMessage,
+  type NxConsoleStatusResponse,
+  SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
+  type SetNxConsolePreferenceAndInstallResponse,
+} from '../message-types/nx-console';
 import { deserialize } from 'node:v8';
 import { isJsonMessage } from '../../utils/consume-messages-from-socket';
 import { isV8SerializerEnabled } from '../is-v8-serializer-enabled';
@@ -173,7 +178,9 @@ export class DaemonClient {
       // docker=true,env=false => no daemon
       // docker=true,env=true => daemon
       // WASM => no daemon because file watching does not work
+      // version mismatch => no daemon because the installed nx version differs from the running one
       if (
+        isNxVersionMismatch() ||
         ((isCI() || isDocker()) && env !== 'true') ||
         isDaemonDisabled() ||
         nxJsonIsNotPresent() ||
@@ -214,6 +221,18 @@ export class DaemonClient {
     this._waitForDaemonReady = new Promise<void>(
       (resolve) => (this._daemonReady = resolve)
     );
+  }
+
+  private getSocketPath(): string {
+    const daemonProcessJson = readDaemonProcessJsonCache();
+
+    if (daemonProcessJson?.socketPath) {
+      return daemonProcessJson.socketPath;
+    } else {
+      throw daemonProcessException(
+        'Unable to connect to daemon: no socket path available'
+      );
+    }
   }
 
   async requestShutdown(): Promise<void> {
@@ -300,10 +319,12 @@ export class DaemonClient {
     }
     let messenger: DaemonSocketMessenger | undefined;
 
-    await this.queue.sendToQueue(() => {
-      messenger = new DaemonSocketMessenger(
-        connect(getFullOsSocketPath())
-      ).listen(
+    await this.queue.sendToQueue(async () => {
+      await this.startDaemonIfNecessary();
+
+      const socketPath = this.getSocketPath();
+
+      messenger = new DaemonSocketMessenger(connect(socketPath)).listen(
         (message) => {
           try {
             const parsedMessage = isJsonMessage(message)
@@ -338,10 +359,12 @@ export class DaemonClient {
   ): Promise<UnregisterCallback> {
     let messenger: DaemonSocketMessenger | undefined;
 
-    await this.queue.sendToQueue(() => {
-      messenger = new DaemonSocketMessenger(
-        connect(getFullOsSocketPath())
-      ).listen(
+    await this.queue.sendToQueue(async () => {
+      await this.startDaemonIfNecessary();
+
+      const socketPath = this.getSocketPath();
+
+      messenger = new DaemonSocketMessenger(connect(socketPath)).listen(
         (message) => {
           try {
             const parsedMessage = isJsonMessage(message)
@@ -552,10 +575,32 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
+  getNxConsoleStatus(): Promise<NxConsoleStatusResponse> {
+    const message: HandleGetNxConsoleStatusMessage = {
+      type: GET_NX_CONSOLE_STATUS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  setNxConsolePreferenceAndInstall(
+    preference: boolean
+  ): Promise<SetNxConsolePreferenceAndInstallResponse> {
+    const message: HandleSetNxConsolePreferenceAndInstallMessage = {
+      type: SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
+      preference,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
   async isServerAvailable(): Promise<boolean> {
     return new Promise((resolve) => {
       try {
-        const socket = connect(getFullOsSocketPath(), () => {
+        const socketPath = this.getSocketPath();
+        if (!socketPath) {
+          resolve(false);
+          return;
+        }
+        const socket = connect(socketPath, () => {
           socket.destroy();
           resolve(true);
         });
@@ -568,6 +613,31 @@ export class DaemonClient {
     });
   }
 
+  private async startDaemonIfNecessary() {
+    if (this._daemonStatus == DaemonStatus.CONNECTED) {
+      return;
+    }
+    // Ensure daemon is running and socket path is available
+    if (this._daemonStatus == DaemonStatus.DISCONNECTED) {
+      this._daemonStatus = DaemonStatus.CONNECTING;
+
+      let daemonPid: number | null = null;
+      if (!(await this.isServerAvailable())) {
+        daemonPid = await this.startInBackground();
+      }
+      this.setUpConnection();
+      this._daemonStatus = DaemonStatus.CONNECTED;
+      this._daemonReady();
+
+      daemonPid ??= getDaemonProcessIdSync();
+      await this.registerDaemonProcessWithMetricsService(daemonPid);
+    } else if (this._daemonStatus == DaemonStatus.CONNECTING) {
+      await this._waitForDaemonReady;
+      const daemonPid = getDaemonProcessIdSync();
+      await this.registerDaemonProcessWithMetricsService(daemonPid);
+    }
+  }
+
   private async sendToDaemonViaQueue(
     messageToDaemon: Message,
     force?: 'v8' | 'json'
@@ -578,8 +648,10 @@ export class DaemonClient {
   }
 
   private setUpConnection() {
+    const socketPath = this.getSocketPath();
+
     this.socketMessenger = new DaemonSocketMessenger(
-      connect(getFullOsSocketPath())
+      connect(socketPath)
     ).listen(
       (message) => this.handleMessage(message),
       () => {
@@ -616,7 +688,6 @@ export class DaemonClient {
           error = daemonProcessException(
             `A server instance had not been fully shut down. Please try running the command again.`
           );
-          killSocketOrPath();
         } else if (err.message.startsWith('read ECONNRESET')) {
           error = daemonProcessException(
             `Unable to connect to the daemon process.`
@@ -633,24 +704,7 @@ export class DaemonClient {
     message: Message,
     force?: 'v8' | 'json'
   ): Promise<any> {
-    if (this._daemonStatus == DaemonStatus.DISCONNECTED) {
-      this._daemonStatus = DaemonStatus.CONNECTING;
-
-      let daemonPid: number | null = null;
-      if (!(await this.isServerAvailable())) {
-        daemonPid = await this.startInBackground();
-      }
-      this.setUpConnection();
-      this._daemonStatus = DaemonStatus.CONNECTED;
-      this._daemonReady();
-
-      daemonPid ??= getDaemonProcessIdSync();
-      await this.registerDaemonProcessWithMetricsService(daemonPid);
-    } else if (this._daemonStatus == DaemonStatus.CONNECTING) {
-      await this._waitForDaemonReady;
-      const daemonPid = getDaemonProcessIdSync();
-      await this.registerDaemonProcessWithMetricsService(daemonPid);
-    }
+    await this.startDaemonIfNecessary();
     // An open promise isn't enough to keep the event loop
     // alive, so we set a timeout here and clear it when we hear
     // back

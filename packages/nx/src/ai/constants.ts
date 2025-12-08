@@ -1,6 +1,6 @@
-import { readFileSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
+import { major } from 'semver';
 import { readJsonFile } from '../utils/fileutils';
 import { getAgentRules } from './set-up-ai-agents/get-agent-rules';
 
@@ -49,8 +49,18 @@ export const getAgentRulesWrapped = (writeNxCloudRules: boolean) => {
 };
 
 export const nxMcpTomlHeader = `[mcp_servers."nx-mcp"]`;
-export const nxMcpTomlConfig = `${nxMcpTomlHeader}
+
+/**
+ * Get the MCP TOML configuration based on the Nx version.
+ * For Nx 22+, uses 'nx mcp'
+ * For Nx < 22, uses 'nx-mcp'
+ */
+export function getNxMcpTomlConfig(nxVersion: string): string {
+  const majorVersion = major(nxVersion);
+  const args = majorVersion >= 22 ? '["nx", "mcp"]' : '["nx-mcp"]';
+  return `${nxMcpTomlHeader}
 type = "stdio"
 command = "npx"
-args = ["nx", "mcp"]
+args = ${args}
 `;
+}

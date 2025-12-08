@@ -399,7 +399,7 @@ describe('nx release conventional commits config', () => {
 
       ### ⚠️  Breaking Changes
 
-      - ⚠️  **{project-name}:** this is a breaking change
+      - **{project-name}:** this is a breaking change
     `);
 
     const pkg2Changelog = readFile(`${pkg2}/CHANGELOG.md`);

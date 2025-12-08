@@ -301,13 +301,13 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           }
         }
       });
+    });
 
-      compiler.hooks.afterDone.tap(PLUGIN_NAME, (stats) => {
-        rspackStatsLogger(stats, getStatsOptions(this.#_options.verbose));
-        if (stats.hasErrors()) {
-          process.exit(1);
-        }
-      });
+    compiler.hooks.afterDone.tap(PLUGIN_NAME, (stats) => {
+      rspackStatsLogger(stats, getStatsOptions(this.#_options.verbose));
+      if (stats.hasErrors()) {
+        process.exit(1);
+      }
     });
 
     compiler.hooks.normalModuleFactory.tap(

@@ -3,6 +3,7 @@ import { output } from '../../utils/output';
 import { join } from 'path';
 import {
   detectPackageManager,
+  getPackageManagerCommand,
   getPackageManagerVersion,
   PackageManager,
 } from '../../utils/package-manager';
@@ -23,6 +24,8 @@ import { getNxRequirePaths } from '../../utils/installation-directory';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { ProjectGraphError } from '../../project-graph/error-types';
+import { reverse } from '../../project-graph/operators';
+import { nxVersion } from '../../utils/versions';
 import {
   getNxKeyInformation,
   NxKeyNotInstalledError,
@@ -79,6 +82,7 @@ export async function reportHandler() {
     registeredPlugins,
     packageVersionsWeCareAbout,
     outOfSyncPackageGroup,
+    mismatchedNxVersions,
     projectGraphError,
     nativeTarget,
     cache,
@@ -221,6 +225,32 @@ export async function reportHandler() {
     );
   }
 
+  if (mismatchedNxVersions && mismatchedNxVersions.length > 0) {
+    bodyLines.push(LINE_SEPARATOR);
+    bodyLines.push(chalk.yellow('⚠️ Multiple Nx versions detected'));
+    bodyLines.push('');
+    bodyLines.push(
+      `Your workspace uses nx@${nxVersion}, but other packages depend on a different version:`
+    );
+    for (const { version, chain } of mismatchedNxVersions) {
+      if (chain.length === 0) {
+        bodyLines.push(`  - ${chalk.bold(`nx@${version}`)}`);
+      } else {
+        bodyLines.push(
+          `  - ${chain.reverse().join(' → ')} → ${chalk.bold(`nx@${version}`)}`
+        );
+      }
+    }
+    bodyLines.push('');
+    bodyLines.push(
+      'These packages should not have nx as a dependency. Please report this issue to the package maintainers.'
+    );
+    const whyCommand = getPackageManagerCommand(pm).why;
+    for (const { version } of mismatchedNxVersions) {
+      bodyLines.push(`Run \`${whyCommand} nx@${version}\` for more details.`);
+    }
+  }
+
   if (projectGraphError) {
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push('⚠️ Unable to construct project graph.');
@@ -255,12 +285,81 @@ export interface ReportData {
     }[];
     migrateTarget: string;
   };
+  mismatchedNxVersions?: Array<{
+    version: string;
+    chain: string[];
+  }>;
   projectGraphError?: Error | null;
   nativeTarget: string | null;
   cache: {
     max: number;
     used: number;
   } | null;
+}
+
+function findDependencyChain(
+  graph: ProjectGraph,
+  targetNode: string
+): string[] {
+  const reversedGraph = reverse(graph);
+
+  // BFS to find shortest path to root dependency
+  const queue: { node: string; path: string[] }[] = [
+    { node: targetNode, path: [] },
+  ];
+  const visited = new Set<string>();
+
+  while (queue.length > 0) {
+    const { node, path } = queue.shift()!;
+
+    if (visited.has(node)) continue;
+    visited.add(node);
+
+    const deps = reversedGraph.dependencies[node] || [];
+
+    // Check for unvisited dependents
+    const unvisitedDeps = deps.filter((dep) => !visited.has(dep.target));
+
+    // No unvisited dependents - this is our shortest path
+    if (unvisitedDeps.length === 0) {
+      return path;
+    }
+
+    for (const dep of unvisitedDeps) {
+      const depName =
+        graph.externalNodes?.[dep.target]?.data?.packageName ?? dep.target;
+      queue.push({
+        node: dep.target,
+        path: [...path, depName],
+      });
+    }
+  }
+
+  return [];
+}
+
+function findMismatchedNxVersions(
+  graph: ProjectGraph
+): Array<{ version: string; chain: string[] }> {
+  if (!graph || !graph.externalNodes) {
+    return [];
+  }
+
+  const result: Array<{ version: string; chain: string[] }> = [];
+
+  // Find all nx package versions that don't match the workspace version
+  for (const nodeName of Object.keys(graph.externalNodes)) {
+    const node = graph.externalNodes[nodeName];
+    if (node.data?.packageName === 'nx') {
+      const version = node.data.version || 'unknown';
+      if (version !== nxVersion) {
+        const chain = findDependencyChain(graph, nodeName);
+        result.push({ version, chain });
+      }
+    }
+  }
+
+  return result;
 }
 
 export async function getReportData(): Promise<ReportData> {
@@ -288,6 +387,8 @@ export async function getReportData(): Promise<ReportData> {
   }
 
   const outOfSyncPackageGroup = findMisalignedPackagesForPackage(nxPackageJson);
+
+  const mismatchedNxVersions = findMismatchedNxVersions(graph);
 
   const native = isNativeAvailable();
 
@@ -319,6 +420,7 @@ export async function getReportData(): Promise<ReportData> {
     registeredPlugins,
     packageVersionsWeCareAbout,
     outOfSyncPackageGroup,
+    mismatchedNxVersions,
     projectGraphError,
     nativeTarget: native ? native.getBinaryTarget() : null,
     cache,

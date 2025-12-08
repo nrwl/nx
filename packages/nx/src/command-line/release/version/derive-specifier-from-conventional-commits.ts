@@ -55,7 +55,7 @@ export async function deriveSpecifierFromConventionalCommits(
       previousVersionRef,
       projectGraph,
       affectedProjects,
-      nxReleaseConfig.conventionalCommits
+      nxReleaseConfig
     );
 
   const getHighestSemverChange = (

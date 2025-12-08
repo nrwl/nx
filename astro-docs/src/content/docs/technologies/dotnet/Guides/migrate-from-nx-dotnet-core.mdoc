@@ -303,7 +303,7 @@ If you previously set `inferProjects: false` in your @nx-dotnet/core config, thi
 
 ### Module Boundaries → Nx Conformance
 
-If you used `moduleBoundaries` in your @nx-dotnet/core config, you may want to migrate to [Nx Conformance rules](/docs/enterprise/powerpack/conformance)
+If you used `moduleBoundaries` in your @nx-dotnet/core config, you may want to migrate to [Nx Conformance rules](/docs/enterprise/conformance)
 
 The script used to evaluate module boundaries is missing several features from the eslint and conformance implementations, and is not present in the new plugin. If you wish to continue using it, you'll need to inline the implementation in your repository and update the path in `Directory.build.targets`. Otherwise, you should remove the target from `Directory.build.targets`.
 
@@ -415,5 +415,5 @@ After completing the migration:
 ## Additional Resources
 
 - [Nx .NET Plugin Documentation](/docs/technologies/dotnet/introduction)
-- [Nx Conformance](/docs/enterprise/powerpack/conformance)
+- [Nx Conformance](/docs/enterprise/conformance)
 - [Central Package Management](https://learn.microsoft.com/nuget/consume-packages/central-package-management)

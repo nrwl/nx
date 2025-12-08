@@ -6,7 +6,10 @@ import {
   CreateWorkspaceOptions,
   supportedAgents,
 } from '../src/create-workspace-options';
-import { createWorkspace } from '../src/create-workspace';
+import {
+  createWorkspace,
+  getInterruptedWorkspaceState,
+} from '../src/create-workspace';
 import { isKnownPreset, Preset } from '../src/utils/preset/preset';
 import { CLIErrorMessageConfig, output } from '../src/utils/output';
 import { nxVersion } from '../src/utils/nx/nx-version';
@@ -18,7 +21,9 @@ import {
   determineDefaultBase,
   determineIfGitHubWillBeUsed,
   determineNxCloud,
+  determineNxCloudV2,
   determinePackageManager,
+  determineTemplate,
 } from '../src/internal-utils/prompts';
 import {
   withAllPrompts,
@@ -28,7 +33,11 @@ import {
   withPackageManager,
   withUseGitHub,
 } from '../src/internal-utils/yargs-options';
-import { messages, recordStat } from '../src/utils/nx/ab-testing';
+import {
+  getFlowVariant,
+  messages,
+  recordStat,
+} from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 import { isCI } from '../src/utils/ci/is-ci';
@@ -236,9 +245,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
       await main(argv).catch((error) => {
         const { version } = require('../package.json');
         output.error({
-          title: `Something went wrong! v${version}`,
+          title: `Failed to create workspace (v${version})`,
+          bodyLines: mapErrorToBodyLines(error),
         });
-        throw error;
+        process.exit(1);
       });
     },
     [normalizeArgsMiddleware] as yargs.MiddlewareFunction<{}>[]
@@ -264,6 +274,29 @@ process.on('uncaughtException', (error: unknown) => {
   throw error;
 });
 
+// Handle Ctrl+C gracefully - show helpful message if workspace was already created
+process.on('SIGINT', () => {
+  const { directory, connectUrl } = getInterruptedWorkspaceState();
+
+  if (directory) {
+    console.log(''); // New line after ^C
+    output.log({
+      title: 'Workspace creation interrupted',
+      bodyLines: [
+        `Your workspace was created at: ${directory}`,
+        '',
+        'To complete the setup:',
+        '  1. Ensure your repo is pushed (e.g. https://github.com/new)',
+        connectUrl
+          ? `  2. Connect to Nx Cloud: ${connectUrl}`
+          : '  2. Connect to Nx Cloud: Run "nx connect"',
+      ],
+    });
+  }
+
+  process.exit(130); // Standard exit code for SIGINT
+});
+
 let rawArgs: Arguments;
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   output.log({
@@ -281,12 +314,17 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     command: 'create-nx-workspace',
     useCloud: parsedArgs.nxCloud !== 'skip',
     meta: [
+      // User sees one of: setupCI (preset flow) or setupNxCloudV2 (template flow)
       messages.codeOfSelectedPromptMessage('setupCI'),
-      messages.codeOfSelectedPromptMessage('setupNxCloud'),
+      // User sees one of: setupNxCloud (preset flow) or setupNxCloudV2 (template flow)
+      messages.codeOfSelectedPromptMessage('setupNxCloudV2') ||
+        messages.codeOfSelectedPromptMessage('setupNxCloud'),
       parsedArgs.nxCloud,
       rawArgs.nxCloud,
       workspaceInfo.pushedToVcs,
+      `flow-variant-${getFlowVariant()}`,
     ],
+    directory: workspaceInfo.directory,
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
@@ -317,55 +355,84 @@ async function normalizeArgsMiddleware(
       "Let's create a new workspace [https://nx.dev/getting-started/intro]",
   });
 
-  // Record stat for initial invocation before any prompts
-  await recordStat({
-    nxVersion,
-    command: 'create-nx-workspace',
-    meta: ['start'],
-    useCloud: argv.nxCloud !== 'skip',
-  });
-
   argv.workspaces ??= true;
   argv.useProjectJson ??= !argv.workspaces;
 
   try {
     argv.name = await determineFolder(argv);
-    if (!argv.preset || isKnownPreset(argv.preset)) {
-      argv.stack = await determineStack(argv);
-      const presetOptions = await determinePresetOptions(argv);
-      Object.assign(argv, presetOptions);
-    } else {
-      try {
-        getPackageNameFromThirdPartyPreset(argv.preset);
-      } catch (e) {
-        if (e instanceof Error) {
-          output.error({
-            title: `Could not find preset "${argv.preset}"`,
-            bodyLines: mapErrorToBodyLines(e),
-          });
-        } else {
-          console.error(e);
-        }
-        process.exit(1);
-      }
-    }
 
-    const packageManager = await determinePackageManager(argv);
-    const aiAgents = await determineAiAgents(argv);
-    const defaultBase = await determineDefaultBase(argv);
-    const nxCloud =
-      argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
-    const useGitHub =
-      nxCloud === 'skip'
-        ? undefined
-        : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
-    Object.assign(argv, {
-      nxCloud,
-      useGitHub,
-      packageManager,
-      defaultBase,
-      aiAgents,
+    const workingDir = process.cwd().replace(/\\/g, '/');
+    const directory = require('path').join(workingDir, argv.name);
+
+    const template = await determineTemplate(argv);
+
+    // Old (start) vs new (start-v2) flows
+    const startPrefix = getFlowVariant() === '1' ? 'start-v2' : 'start';
+    await recordStat({
+      nxVersion,
+      command: 'create-nx-workspace',
+      meta: [startPrefix],
+      useCloud: argv.nxCloud !== 'skip',
+      directory,
     });
+
+    if (template !== 'custom') {
+      // Template flow - uses npm and 'main' branch by default
+      argv.template = template;
+      const aiAgents = await determineAiAgents(argv);
+      const nxCloud =
+        argv.skipGit === true ? 'skip' : await determineNxCloudV2(argv);
+      const completionMessageKey =
+        nxCloud === 'skip'
+          ? undefined
+          : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
+      Object.assign(argv, {
+        nxCloud,
+        useGitHub: nxCloud !== 'skip',
+        completionMessageKey,
+        packageManager: 'npm',
+        defaultBase: 'main',
+        aiAgents,
+      });
+    } else {
+      // Preset flow - existing behavior
+      if (!argv.preset || isKnownPreset(argv.preset)) {
+        argv.stack = await determineStack(argv);
+        const presetOptions = await determinePresetOptions(argv);
+        Object.assign(argv, presetOptions);
+      } else {
+        try {
+          getPackageNameFromThirdPartyPreset(argv.preset);
+        } catch (e) {
+          if (e instanceof Error) {
+            output.error({
+              title: `Could not find preset "${argv.preset}"`,
+              bodyLines: mapErrorToBodyLines(e),
+            });
+          } else {
+            console.error(e);
+          }
+          process.exit(1);
+        }
+      }
+
+      const packageManager = await determinePackageManager(argv);
+      const aiAgents = await determineAiAgents(argv);
+      const defaultBase = await determineDefaultBase(argv);
+      const nxCloud =
+        argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
+      const useGitHub =
+        nxCloud === 'skip'
+          ? undefined
+          : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
+      Object.assign(argv, {
+        nxCloud,
+        useGitHub,
+        packageManager,
+        defaultBase,
+        aiAgents,
+      });
+    }
   } catch (e) {
     console.error(e);
     process.exit(1);

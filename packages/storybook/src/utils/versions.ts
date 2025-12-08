@@ -3,7 +3,7 @@ export const litVersion = '^2.6.1';
 export const tsNodeVersion = '10.9.1';
 export const tsLibVersion = '^2.3.0';
 
-export const storybookVersion = '^10.0.0';
+export const storybookVersion = '^10.1.0';
 export const reactVersion = '^18.2.0';
 export const viteVersion = '^6.0.0';
 

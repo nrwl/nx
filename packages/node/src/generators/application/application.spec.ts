@@ -967,7 +967,7 @@ describe('app', () => {
               assets: ["./src/assets"],
               optimization: false,
               outputHashing: 'none',
-              generatePackageJson: true,
+              generatePackageJson: false,
               sourceMaps: true,
             })
           ],

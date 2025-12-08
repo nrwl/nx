@@ -12,7 +12,13 @@ import { interpolate } from '../../../tasks-runner/utils';
 import type { NxArgs } from '../../../utils/command-line-utils';
 import { output } from '../../../utils/output';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { GitCommit, gitAdd, gitCommit } from './git';
+import {
+  GitCommit,
+  gitAdd,
+  gitCommit,
+  sanitizeProjectNameForGitTag,
+} from './git';
+import { NxReleaseConfig } from '../config/config';
 
 export const noDiffInChangelogMessage = chalk.yellow(
   `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
@@ -72,7 +78,9 @@ export class ReleaseVersion {
     this.rawVersion = version;
     this.gitTag = interpolate(releaseTagPattern, {
       version,
-      projectName,
+      projectName: projectName
+        ? sanitizeProjectNameForGitTag(projectName)
+        : projectName,
     });
     this.isPrerelease = isPrerelease(version);
   }
@@ -287,7 +295,7 @@ export function createGitTagValues(
               tags.push(
                 interpolate(releaseGroup.releaseTag.pattern, {
                   version: projectVersionData.dockerVersion,
-                  projectName: project,
+                  projectName: sanitizeProjectNameForGitTag(project),
                 })
               );
             }
@@ -295,7 +303,7 @@ export function createGitTagValues(
               tags.push(
                 interpolate(releaseGroup.releaseTag.pattern, {
                   version: projectVersionData.newVersion,
-                  projectName: project,
+                  projectName: sanitizeProjectNameForGitTag(project),
                 })
               );
             }
@@ -306,7 +314,7 @@ export function createGitTagValues(
                 version: preferDockerVersion
                   ? projectVersionData.dockerVersion
                   : projectVersionData.newVersion,
-                projectName: project,
+                projectName: sanitizeProjectNameForGitTag(project),
               })
             );
           }
@@ -387,10 +395,38 @@ export function handleDuplicateGitTags(gitTagValues: string[]): void {
   }
 }
 
+function isAutomatedReleaseCommit(
+  message: string,
+  nxReleaseConfig: NxReleaseConfig
+) {
+  // All possible commit message patterns based on config
+  const commitMessagePatterns = [
+    nxReleaseConfig.git.commitMessage,
+    nxReleaseConfig.version.git.commitMessage,
+    nxReleaseConfig.changelog.git.commitMessage,
+  ];
+  // Check if message matches any pattern
+  for (const pattern of commitMessagePatterns) {
+    if (!pattern) continue;
+    // Split on {version}, escape each part for regex, then join with version pattern
+    const parts = pattern.split('{version}');
+    const escapedParts = parts.map((part) =>
+      part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    );
+    const regexPattern = escapedParts.join('\\S+');
+    const regex = new RegExp(`^${regexPattern}$`);
+    if (regex.test(message)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function getCommitsRelevantToProjects(
   projectGraph: ProjectGraph,
   commits: GitCommit[],
-  projects: string[]
+  projects: string[],
+  nxReleaseConfig: NxReleaseConfig
 ): // Map of projectName to GitCommit[]
 Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
   const projectSet = new Set(projects);
@@ -400,6 +436,11 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
   > = new Map();
 
   for (const commit of commits) {
+    // Filter out automated release commits
+    if (isAutomatedReleaseCommit(commit.message, nxReleaseConfig)) {
+      continue;
+    }
+
     // Convert affectedFiles to FileChange[] format with proper diff computation
     const touchedFiles = calculateFileChanges(commit.affectedFiles, {
       base: `${commit.shortHash}^`,

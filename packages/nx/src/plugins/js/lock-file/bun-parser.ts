@@ -123,11 +123,31 @@ interface WorkspacePackageInfo {
   path: string;
 }
 
+/**
+ * Pre-computed index for O(1) lookups instead of O(n) scans
+ */
+interface PackageIndex {
+  // Map: packageName -> array of {version, packageKey, hash}
+  byName: Map<
+    string,
+    Array<{ version: string; packageKey: string; hash: string }>
+  >;
+  // Set of all workspace package names (from workspacePackages + workspace: deps)
+  workspaceNames: Set<string>;
+  // Set of all workspace paths
+  workspacePaths: Set<string>;
+  // Set of packages that have workspace-specific variants
+  packagesWithWorkspaceVariants: Set<string>;
+  // Set of patched package names
+  patchedPackages: Set<string>;
+}
+
 export const BUN_LOCK_FILE = 'bun.lockb';
 export const BUN_TEXT_LOCK_FILE = 'bun.lock';
 
 let currentLockFileHash: string;
 let cachedParsedLockFile: BunLockFile;
+let cachedPackageIndex: PackageIndex;
 
 const keyMap = new Map<string, ProjectGraphExternalNode>();
 const packageVersions = new Map<string, Set<string>>();
@@ -162,7 +182,7 @@ export function getBunTextLockfileDependencies(
   ctx: CreateDependenciesContext
 ): RawProjectGraphDependency[] {
   try {
-    const lockFile = parseLockFile(lockFileContent, lockFileHash);
+    const { lockFile, index } = parseLockFile(lockFileContent, lockFileHash);
 
     const dependencies: RawProjectGraphDependency[] = [];
     const workspacePackages = new Set(Object.keys(ctx.projects));
@@ -171,16 +191,11 @@ export function getBunTextLockfileDependencies(
       return dependencies;
     }
 
-    // Pre-compute workspace collections for performance
-    const workspacePackageNames = getWorkspacePackageNames(lockFile);
-    const workspacePaths = getWorkspacePaths(lockFile);
-
     const packageDeps = processPackageToPackageDependencies(
       lockFile,
+      index,
       ctx,
-      workspacePackages,
-      workspacePackageNames,
-      workspacePaths
+      workspacePackages
     );
     dependencies.push(...packageDeps);
 
@@ -199,6 +214,7 @@ export function getBunTextLockfileDependencies(
 export function clearCache(): void {
   currentLockFileHash = undefined;
   cachedParsedLockFile = undefined;
+  cachedPackageIndex = undefined;
   keyMap.clear();
   packageVersions.clear();
   specParseCache.clear();
@@ -211,12 +227,14 @@ function getCachedSpecInfo(resolvedSpec: string): {
   version: string;
   protocol: string;
 } {
-  if (!specParseCache.has(resolvedSpec)) {
+  let cached = specParseCache.get(resolvedSpec);
+  if (!cached) {
     const { name, version } = parseResolvedSpec(resolvedSpec);
     const protocol = getProtocolFromResolvedSpec(resolvedSpec);
-    specParseCache.set(resolvedSpec, { name, version, protocol });
+    cached = { name, version, protocol };
+    specParseCache.set(resolvedSpec, cached);
   }
-  return specParseCache.get(resolvedSpec);
+  return cached;
 }
 
 function getProtocolFromResolvedSpec(resolvedSpec: string): string {
@@ -382,12 +400,144 @@ function isAliasPackage(
   return packageKey !== resolvedPackageName;
 }
 
+/**
+ * Build a pre-computed index for O(1) lookups
+ * This is the key optimization - we do one pass through all packages
+ * and build indexes that can be queried in O(1) time later
+ */
+function buildPackageIndex(lockFile: BunLockFile): PackageIndex {
+  const byName = new Map<
+    string,
+    Array<{ version: string; packageKey: string; hash: string }>
+  >();
+  const workspaceNames = new Set<string>();
+  const workspacePaths = new Set<string>();
+  const packagesWithWorkspaceVariants = new Set<string>();
+  const patchedPackages = new Set<string>();
+
+  // Collect workspace paths
+  if (lockFile.workspaces) {
+    for (const workspacePath of Object.keys(lockFile.workspaces)) {
+      if (workspacePath !== '') {
+        workspacePaths.add(workspacePath);
+      }
+    }
+  }
+
+  // Collect workspace package names from workspacePackages field
+  if (lockFile.workspacePackages) {
+    for (const packageInfo of Object.values(lockFile.workspacePackages)) {
+      workspaceNames.add(packageInfo.name);
+    }
+  }
+
+  // Collect patched package names
+  if (lockFile.patches) {
+    for (const packageName of Object.keys(lockFile.patches)) {
+      patchedPackages.add(packageName);
+    }
+  }
+
+  // Collect workspace package names from workspace dependencies
+  if (lockFile.workspaces) {
+    for (const workspace of Object.values(lockFile.workspaces)) {
+      const allDeps = {
+        ...workspace.dependencies,
+        ...workspace.devDependencies,
+        ...workspace.optionalDependencies,
+        ...workspace.peerDependencies,
+      };
+      for (const [depName, depVersion] of Object.entries(allDeps)) {
+        if (
+          depVersion.startsWith('workspace:') ||
+          depVersion.startsWith('file:')
+        ) {
+          workspaceNames.add(depName);
+        }
+      }
+    }
+  }
+
+  // Single pass through all packages to build indexes
+  if (lockFile.packages) {
+    for (const [packageKey, packageData] of Object.entries(lockFile.packages)) {
+      if (!Array.isArray(packageData) || packageData.length < 1) {
+        continue;
+      }
+
+      const resolvedSpec = packageData[0];
+      if (typeof resolvedSpec !== 'string') {
+        continue;
+      }
+
+      const { name, version, protocol } = getCachedSpecInfo(resolvedSpec);
+      if (!name || !version) {
+        continue;
+      }
+
+      // Track workspace packages from packages section
+      if (protocol === 'workspace' || protocol === 'file') {
+        workspaceNames.add(name);
+      }
+
+      // Check if this is a workspace-specific variant (e.g., "@quz/pkg1/lodash")
+      if (packageKey.includes('/') && packageKey !== name) {
+        // Check if it ends with a package name pattern
+        const lastSlash = packageKey.lastIndexOf('/');
+        if (lastSlash > 0) {
+          const possiblePackageName = packageKey.substring(lastSlash + 1);
+          const prefix = packageKey.substring(0, lastSlash);
+
+          // If the prefix is a workspace path or scoped package pattern
+          // For scoped packages, require prefix to contain '/' (e.g., "@scope/pkg")
+          // to avoid incorrectly matching just "@scope"
+          if (
+            workspacePaths.has(prefix) ||
+            (prefix.startsWith('@') && prefix.includes('/'))
+          ) {
+            packagesWithWorkspaceVariants.add(possiblePackageName);
+          }
+        }
+      }
+
+      // Build the byName index
+      let entries = byName.get(name);
+      if (!entries) {
+        entries = [];
+        byName.set(name, entries);
+      }
+
+      // Calculate hash once
+      const hash = calculatePackageHash(
+        packageData as PackageTuple,
+        lockFile,
+        name,
+        version
+      );
+
+      entries.push({ version, packageKey, hash });
+    }
+  }
+
+  return {
+    byName,
+    workspaceNames,
+    workspacePaths,
+    packagesWithWorkspaceVariants,
+    patchedPackages,
+  };
+}
+
 function parseLockFile(
   lockFileContent: string,
   lockFileHash: string
-): BunLockFile {
-  if (currentLockFileHash === lockFileHash) {
-    return cachedParsedLockFile;
+): { lockFile: BunLockFile; index: PackageIndex } {
+  if (
+    currentLockFileHash === lockFileHash &&
+    cachedParsedLockFile &&
+    cachedPackageIndex
+  ) {
+    return { lockFile: cachedParsedLockFile, index: cachedPackageIndex };
   }
 
   clearCache();
@@ -487,7 +637,10 @@ function parseLockFile(
     cachedParsedLockFile = result;
     currentLockFileHash = lockFileHash;
 
-    return result;
+    // Build the optimized index
+    cachedPackageIndex = buildPackageIndex(result);
+
+    return { lockFile: result, index: cachedPackageIndex };
   } catch (error) {
     // Handle JSON parsing errors
     if (
@@ -520,18 +673,14 @@ export function getBunTextLockfileNodes(
   lockFileHash: string
 ): Record<string, ProjectGraphExternalNode> {
   try {
-    const lockFile = parseLockFile(lockFileContent, lockFileHash);
+    const { lockFile, index } = parseLockFile(lockFileContent, lockFileHash);
 
     const nodes: Record<string, ProjectGraphExternalNode> = {};
-    const packageVersions = new Map<string, Set<string>>();
+    const localPackageVersions = new Map<string, Set<string>>();
 
     if (!lockFile.packages || Object.keys(lockFile.packages).length === 0) {
       return nodes;
     }
-
-    // Pre-compute workspace collections for performance
-    const workspacePaths = getWorkspacePaths(lockFile);
-    const workspacePackageNames = getWorkspacePackageNames(lockFile);
 
     const packageEntries = Object.entries(lockFile.packages);
 
@@ -540,23 +689,17 @@ export function getBunTextLockfileNodes(
         packageKey,
         packageData,
         lockFile,
+        index,
         keyMap,
         nodes,
-        packageVersions
+        localPackageVersions
       );
       if (result.shouldContinue) {
         continue;
       }
     }
 
-    createHoistedNodes(
-      packageVersions,
-      lockFile,
-      keyMap,
-      nodes,
-      workspacePaths,
-      workspacePackageNames
-    );
+    createHoistedNodes(localPackageVersions, lockFile, index, keyMap, nodes);
 
     return nodes;
   } catch (error) {
@@ -569,13 +712,13 @@ export function getBunTextLockfileNodes(
 
 interface PackageProcessingResult {
   shouldContinue: boolean;
-  packageVersions?: Map<string, Set<string>>;
 }
 
 function processPackageEntry(
   packageKey: string,
   packageData: unknown,
   lockFile: BunLockFile,
+  index: PackageIndex,
   keyMap: Map<string, ProjectGraphExternalNode>,
   nodes: Record<string, ProjectGraphExternalNode>,
   packageVersions: Map<string, Set<string>>
@@ -612,11 +755,12 @@ function processPackageEntry(
       return { shouldContinue: true };
     }
 
-    if (isWorkspacePackage(name, lockFile)) {
+    // O(1) lookups using index
+    if (index.workspaceNames.has(name)) {
       return { shouldContinue: true };
     }
 
-    if (lockFile.patches && lockFile.patches[name]) {
+    if (index.patchedPackages.has(name)) {
       return { shouldContinue: true };
     }
 
@@ -624,7 +768,7 @@ function processPackageEntry(
       return { shouldContinue: true };
     }
 
-    const isWorkspaceSpecific = isNestedPackageKey(packageKey, lockFile);
+    const isWorkspaceSpecific = isNestedPackageKey(packageKey, index);
 
     if (!isWorkspaceSpecific && isAliasPackage(packageKey, name)) {
       const aliasName = packageKey;
@@ -727,15 +871,13 @@ function processPackageEntry(
 
 function isWorkspaceOrPatchedPackage(
   packageName: string,
-  lockFile: BunLockFile,
-  workspacePackages: Set<string>,
-  workspacePackageNames: Set<string>
+  index: PackageIndex,
+  workspacePackages: Set<string>
 ): boolean {
   return (
     workspacePackages.has(packageName) ||
-    workspacePackageNames.has(packageName) ||
-    isWorkspacePackage(packageName, lockFile) ||
-    (lockFile.patches && !!lockFile.patches[packageName])
+    index.workspaceNames.has(packageName) ||
+    index.patchedPackages.has(packageName)
   );
 }
 
@@ -752,23 +894,11 @@ function resolveAliasTarget(
   };
 }
 
-function getAllWorkspaceDependencies(
-  workspace: Workspace
-): Record<string, string> {
-  return {
-    ...workspace.dependencies,
-    ...workspace.devDependencies,
-    ...workspace.optionalDependencies,
-    ...workspace.peerDependencies,
-  };
-}
-
 function processPackageToPackageDependencies(
   lockFile: BunLockFile,
+  index: PackageIndex,
   ctx: CreateDependenciesContext,
-  workspacePackages: Set<string>,
-  workspacePackageNames: Set<string>,
-  workspacePaths: Set<string>
+  workspacePackages: Set<string>
 ): RawProjectGraphDependency[] {
   const dependencies: RawProjectGraphDependency[] = [];
 
@@ -783,10 +913,9 @@ function processPackageToPackageDependencies(
         packageKey,
         packageData,
         lockFile,
+        index,
         ctx,
-        workspacePackages,
-        workspacePackageNames,
-        workspacePaths
+        workspacePackages
       );
       dependencies.push(...packageDeps);
     } catch (error) {
@@ -801,19 +930,14 @@ function processPackageForDependencies(
   packageKey: string,
   packageData: unknown,
   lockFile: BunLockFile,
+  index: PackageIndex,
   ctx: CreateDependenciesContext,
-  workspacePackages: Set<string>,
-  workspacePackageNames: Set<string>,
-  workspacePaths: Set<string>
+  workspacePackages: Set<string>
 ): RawProjectGraphDependency[] {
+  // O(1) checks using index
   if (
-    isWorkspacePackage(packageKey, lockFile) ||
-    isNestedPackageKey(
-      packageKey,
-      lockFile,
-      workspacePaths,
-      workspacePackageNames
-    )
+    index.workspaceNames.has(packageKey) ||
+    isNestedPackageKey(packageKey, index)
   ) {
     return [];
   }
@@ -833,7 +957,7 @@ function processPackageForDependencies(
     return [];
   }
 
-  if (lockFile.patches && lockFile.patches[sourcePackageName]) {
+  if (index.patchedPackages.has(sourcePackageName)) {
     return [];
   }
 
@@ -855,10 +979,10 @@ function processPackageForDependencies(
     const depDependencies = processDependencyEntries(
       deps,
       sourceNodeName,
-      lockFile,
+      index,
       ctx,
       workspacePackages,
-      workspacePackageNames
+      lockFile.manifests
     );
     dependencies.push(...depDependencies);
   }
@@ -891,10 +1015,10 @@ function extractPackageDependencies(
 function processDependencyEntries(
   deps: Record<string, string>,
   sourceNodeName: string,
-  lockFile: BunLockFile,
+  index: PackageIndex,
   ctx: CreateDependenciesContext,
   workspacePackages: Set<string>,
-  workspacePackageNames: Set<string>
+  manifests?: BunLockFile['manifests']
 ): RawProjectGraphDependency[] {
   const dependencies: RawProjectGraphDependency[] = [];
   const depsEntries = Object.entries(deps);
@@ -905,10 +1029,10 @@ function processDependencyEntries(
         packageName,
         versionSpec,
         sourceNodeName,
-        lockFile,
+        index,
         ctx,
         workspacePackages,
-        workspacePackageNames
+        manifests
       );
 
       if (dependency) {
@@ -926,23 +1050,17 @@ function processSingleDependency(
   packageName: string,
   versionSpec: string,
   sourceNodeName: string,
-  lockFile: BunLockFile,
+  index: PackageIndex,
   ctx: CreateDependenciesContext,
   workspacePackages: Set<string>,
-  workspacePackageNames: Set<string>
+  manifests?: BunLockFile['manifests']
 ): RawProjectGraphDependency | null {
   if (typeof packageName !== 'string' || typeof versionSpec !== 'string') {
     return null;
   }
 
-  if (
-    isWorkspaceOrPatchedPackage(
-      packageName,
-      lockFile,
-      workspacePackages,
-      workspacePackageNames
-    )
-  ) {
+  // O(1) check using index
+  if (isWorkspaceOrPatchedPackage(packageName, index, workspacePackages)) {
     return null;
   }
 
@@ -958,11 +1076,12 @@ function processSingleDependency(
     targetPackageName = aliasTarget.packageName;
     targetVersion = aliasTarget.version;
   } else {
+    // O(1) lookup using index instead of O(n) scan
     const resolvedVersion = findResolvedVersion(
       packageName,
       versionSpec,
-      lockFile.packages,
-      lockFile.manifests
+      index,
+      manifests
     );
 
     if (!resolvedVersion) {
@@ -1015,98 +1134,20 @@ function resolveTargetNodeName(
   return null;
 }
 
-// ===== WORKSPACE-RELATED FUNCTIONS =====
-
-function getWorkspacePackageNames(lockFile: BunLockFile): Set<string> {
-  const workspacePackageNames = new Set<string>();
-  if (lockFile.workspacePackages) {
-    for (const packageInfo of Object.values(lockFile.workspacePackages)) {
-      workspacePackageNames.add(packageInfo.name);
-    }
-  }
-  return workspacePackageNames;
-}
-
-function getWorkspacePaths(lockFile: BunLockFile): Set<string> {
-  const workspacePaths = new Set<string>();
-  if (lockFile.workspaces) {
-    for (const workspacePath of Object.keys(lockFile.workspaces)) {
-      if (workspacePath !== '') {
-        workspacePaths.add(workspacePath);
-      }
-    }
-  }
-  return workspacePaths;
-}
-
-function isWorkspacePackage(
-  packageName: string,
-  lockFile: BunLockFile
-): boolean {
-  // Check if package is in workspacePackages field
-  if (lockFile.workspacePackages && lockFile.workspacePackages[packageName]) {
-    return true;
-  }
-
-  // Check if package is defined in any workspace dependencies with workspace: prefix
-  // or if it's a file dependency in workspace dependencies
-  if (lockFile.workspaces) {
-    for (const workspace of Object.values(lockFile.workspaces)) {
-      const allDeps = getAllWorkspaceDependencies(workspace);
-      if (allDeps[packageName]?.startsWith('workspace:')) {
-        return true;
-      }
-      // Check if this is a file dependency defined in workspace dependencies
-      // Always filter out file dependencies as they represent workspace packages
-      if (allDeps[packageName]?.startsWith('file:')) {
-        return true;
-      }
-    }
-  }
-
-  // Check if package appears in packages section with workspace: or file: protocol
-  if (lockFile.packages) {
-    for (const packageData of Object.values(lockFile.packages)) {
-      if (Array.isArray(packageData) && packageData.length > 0) {
-        const resolvedSpec = packageData[0];
-        if (typeof resolvedSpec === 'string') {
-          const { name, protocol } = getCachedSpecInfo(resolvedSpec);
-          if (
-            name === packageName &&
-            (protocol === 'workspace' || protocol === 'file')
-          ) {
-            return true;
-          }
-        }
-      }
-    }
-  }
-
-  return false;
-}
-
 // ===== HOISTING-RELATED FUNCTIONS =====
 
 function createHoistedNodes(
   packageVersions: Map<string, Set<string>>,
   lockFile: BunLockFile,
+  index: PackageIndex,
   keyMap: Map<string, ProjectGraphExternalNode>,
-  nodes: Record<string, ProjectGraphExternalNode>,
-  workspacePaths?: Set<string>,
-  workspacePackageNames?: Set<string>
+  nodes: Record<string, ProjectGraphExternalNode>
 ): void {
   for (const [packageName, versions] of packageVersions.entries()) {
     const hoistedNodeKey = `npm:${packageName}`;
 
-    if (
-      shouldCreateHoistedNode(
-        packageName,
-        lockFile,
-        workspacePaths,
-        workspacePackageNames
-      )
-    ) {
-      const hoistedVersion = getHoistedVersion(packageName, versions, lockFile);
+    if (shouldCreateHoistedNode(packageName, lockFile, index)) {
+      const hoistedVersion = getHoistedVersion(packageName, versions, index);
       if (hoistedVersion) {
         const versionedNodeKey = `npm:${packageName}@${hoistedVersion}`;
         const versionedNode = keyMap.get(versionedNodeKey);
@@ -1134,26 +1175,13 @@ function createHoistedNodes(
  * Checks if a package key represents a workspace-specific or nested dependency entry
  * These entries should not become external nodes, they are used only for resolution
  *
- * Examples of workspace-specific/nested entries:
- * - "@quz/pkg1/lodash" (workspace-specific)
- * - "is-even/is-odd" (dependency nesting)
- * - "@quz/pkg2/is-even/is-odd" (workspace-specific nested)
+ * O(1) lookup using pre-computed index
  */
-function isNestedPackageKey(
-  packageKey: string,
-  lockFile: BunLockFile,
-  workspacePaths?: Set<string>,
-  workspacePackageNames?: Set<string>
-): boolean {
+function isNestedPackageKey(packageKey: string, index: PackageIndex): boolean {
   // If the key doesn't contain '/', it's a direct package entry
   if (!packageKey.includes('/')) {
     return false;
   }
-
-  // Get workspace paths and package names for comparison
-  const computedWorkspacePaths = workspacePaths || getWorkspacePaths(lockFile);
-  const computedWorkspacePackageNames =
-    workspacePackageNames || getWorkspacePackageNames(lockFile);
 
   // Check if this looks like a workspace-specific or nested entry
   const parts = packageKey.split('/');
@@ -1162,23 +1190,32 @@ function isNestedPackageKey(
   if (parts.length >= 2) {
     const prefix = parts.slice(0, -1).join('/');
 
-    // Check against known workspace paths
-    if (computedWorkspacePaths.has(prefix)) {
+    // O(1) check against known workspace paths
+    if (index.workspacePaths.has(prefix)) {
       return true;
     }
 
-    // Check against workspace package names (scoped packages)
-    if (computedWorkspacePackageNames.has(prefix)) {
+    // O(1) check against workspace package names (scoped packages)
+    if (index.workspaceNames.has(prefix)) {
       return true;
     }
 
-    // Check for scoped workspace packages (e.g., "@quz/pkg1")
+    // Check for scoped workspace packages (e.g., "@quz/pkg1/lodash")
+    // The prefix must contain '/' to be a scoped package (e.g., "@scope/pkg")
+    // A prefix like just "@scope" without '/' is not a scoped package
     if (prefix.startsWith('@') && prefix.includes('/')) {
       return true;
     }
 
+    // If the key looks like a simple scoped package (e.g., "@custom/lodash")
+    // where parts.length === 2 and first part starts with '@', it's likely
+    // a scoped package alias, not a nested dependency
+    if (parts.length === 2 && parts[0].startsWith('@')) {
+      return false;
+    }
+
     // This could be dependency nesting (e.g., "is-even/is-odd")
-    // These should also be filtered out as they're not direct packages
+    // These should be filtered out as they're not direct packages
     return true;
   }
 
@@ -1186,68 +1223,13 @@ function isNestedPackageKey(
 }
 
 /**
- * Checks if a package has workspace-specific variants in the lockfile
- * Workspace-specific variants indicate the package should NOT be hoisted
- * Example: "@quz/pkg1/lodash" indicates lodash should not be hoisted for the @quz/pkg1 workspace
- *
- * This should NOT match dependency nesting like "is-even/is-odd" which represents
- * is-odd as a dependency of is-even, not a workspace-specific variant.
- */
-function hasWorkspaceSpecificVariant(
-  packageName: string,
-  lockFile: BunLockFile,
-  workspacePaths?: Set<string>,
-  workspacePackageNames?: Set<string>
-): boolean {
-  if (!lockFile.packages) return false;
-
-  // Get list of known workspace paths to distinguish workspace-specific variants
-  // from dependency nesting
-  const computedWorkspacePaths = workspacePaths || getWorkspacePaths(lockFile);
-  const computedWorkspacePackageNames =
-    workspacePackageNames || getWorkspacePackageNames(lockFile);
-
-  // Check if any package key follows pattern: "workspace/packageName"
-  for (const packageKey of Object.keys(lockFile.packages)) {
-    if (packageKey.includes('/') && packageKey.endsWith(`/${packageName}`)) {
-      const prefix = packageKey.substring(
-        0,
-        packageKey.lastIndexOf(`/${packageName}`)
-      );
-
-      // Check if prefix is a known workspace path or workspace package name
-      if (
-        computedWorkspacePaths.has(prefix) ||
-        computedWorkspacePackageNames.has(prefix)
-      ) {
-        return true;
-      }
-
-      // Also check for scoped workspace packages (e.g., "@quz/pkg1/lodash")
-      if (prefix.startsWith('@') && prefix.includes('/')) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-/**
  * Determines if a package should have a hoisted node created
- * A package should be hoisted if:
- * 1. It has a direct entry in the packages section (key matches package name exactly), OR
- * 2. It appears as a direct dependency in any workspace AND no workspace-specific variants exist
- *
- * This handles both cases:
- * - Packages with direct entries (like transitive deps) should be hoisted
- * - Packages in workspace deps without conflicts should be hoisted
- * - Packages with both direct entries and workspace-specific variants get both
+ * O(1) lookup using pre-computed index
  */
 function shouldCreateHoistedNode(
   packageName: string,
   lockFile: BunLockFile,
-  workspacePaths?: Set<string>,
-  workspacePackageNames?: Set<string>
+  index: PackageIndex
 ): boolean {
   if (!lockFile.workspaces || !lockFile.packages) return false;
 
@@ -1261,7 +1243,12 @@ function shouldCreateHoistedNode(
   // and don't have workspace-specific variants (which would cause conflicts)
   let appearsInWorkspace = false;
   for (const workspace of Object.values(lockFile.workspaces)) {
-    const allDeps = getAllWorkspaceDependencies(workspace);
+    const allDeps = {
+      ...workspace.dependencies,
+      ...workspace.devDependencies,
+      ...workspace.optionalDependencies,
+      ...workspace.peerDependencies,
+    };
 
     if (allDeps[packageName]) {
       appearsInWorkspace = true;
@@ -1269,16 +1256,12 @@ function shouldCreateHoistedNode(
     }
   }
 
+  // O(1) check using pre-computed index
   if (
     appearsInWorkspace &&
-    !hasWorkspaceSpecificVariant(
-      packageName,
-      lockFile,
-      workspacePaths,
-      workspacePackageNames
-    )
+    !index.packagesWithWorkspaceVariants.has(packageName)
   ) {
-    return true; // Found in workspace deps and no conflicts
+    return true;
   }
 
   return false;
@@ -1286,163 +1269,100 @@ function shouldCreateHoistedNode(
 
 /**
  * Gets the version that should be used for a hoisted package
- * For truly hoisted packages, we look up the version from the main package entry
+ * O(1) lookup using pre-computed index
  */
 function getHoistedVersion(
   packageName: string,
   availableVersions: Set<string>,
-  lockFile: BunLockFile
+  index: PackageIndex
 ): string | null {
-  if (!lockFile.packages) return null;
+  // Use the index to find the main package version
+  const candidates = index.byName.get(packageName);
+  if (!candidates || candidates.length === 0) {
+    return availableVersions.size > 0
+      ? availableVersions.values().next().value
+      : null;
+  }
 
-  // Look for the main package entry (not workspace-specific)
-  const mainPackageData = lockFile.packages[packageName];
-  if (
-    mainPackageData &&
-    Array.isArray(mainPackageData) &&
-    mainPackageData.length > 0
-  ) {
-    const resolvedSpec = mainPackageData[0];
-    if (typeof resolvedSpec === 'string') {
-      const { version } = getCachedSpecInfo(resolvedSpec);
-      if (version && availableVersions.has(version)) {
-        return version;
-      }
-    }
+  // Look for the main package entry (the one where packageKey === packageName)
+  const mainEntry = candidates.find((c) => c.packageKey === packageName);
+  if (mainEntry && availableVersions.has(mainEntry.version)) {
+    return mainEntry.version;
   }
 
   // Fallback: return the first available version
-  return availableVersions.size > 0 ? Array.from(availableVersions)[0] : null;
+  return availableVersions.size > 0
+    ? availableVersions.values().next().value
+    : null;
 }
 
 /**
  * Finds the resolved version for a package given its version specification
  *
- * 1. Fast path: Check manifests for exact version match
- * 2. Scan all packages to find candidates with matching names
- * 3. Include alias packages where the target matches our package name
- * 4. Fallback: Search manifests for any matching package entries
- * 5. Use findBestVersionMatch to select the optimal version from candidates
+ * O(1) lookup using pre-computed index instead of O(n) scan through all packages
  */
 function findResolvedVersion(
   packageName: string,
   versionSpec: string,
-  packages: BunLockFile['packages'],
+  index: PackageIndex,
   manifests?: BunLockFile['manifests']
 ): string | null {
-  // Look for matching packages and collect all versions
-  const candidateVersions: {
-    version: string;
-    packageKey: string;
-    manifest?: RegistryManifest;
-  }[] = [];
-  const packageEntries = Object.entries(packages);
-
-  // Early manifest lookup for exact matches
-  // Avoids expensive package scanning when exact version is available
-  if (manifests) {
-    const exactManifestKey = `${packageName}@${versionSpec}`;
-    if (manifests[exactManifestKey]) {
-      return versionSpec;
-    }
-  }
-
-  for (const [packageKey, packageData] of packageEntries) {
-    const [resolvedSpec] = packageData;
-
-    // Skip non-string specs early
-    if (typeof resolvedSpec !== 'string') {
-      continue;
-    }
-
-    // Use cached spec parsing to avoid repeated string operations
-    const { name, version } = getCachedSpecInfo(resolvedSpec);
-
-    if (name === packageName) {
-      // Include manifest information if available
-      const manifest = manifests?.[`${name}@${version}`];
-      candidateVersions.push({ version, packageKey, manifest });
-
-      // Early termination if we find an exact version match
-      if (version === versionSpec) {
-        return version;
-      }
-    }
-
-    // Check for alias packages where this package might be the target
-    if (isAliasPackage(packageKey, name) && name === packageName) {
-      // This alias points to the package we're looking for
-      const manifest = manifests?.[`${name}@${version}`];
-      candidateVersions.push({ version, packageKey, manifest });
-
-      // Early termination if we find an exact version match
-      if (version === versionSpec) {
-        return version;
-      }
-    }
-  }
-
-  if (candidateVersions.length === 0) {
+  // O(1) lookup
+  const candidates = index.byName.get(packageName);
+  if (!candidates || candidates.length === 0) {
     // Try to find in manifests as fallback
     if (manifests) {
+      const exactManifestKey = `${packageName}@${versionSpec}`;
+      if (manifests[exactManifestKey]) {
+        return versionSpec;
+      }
+
       const manifestKey = Object.keys(manifests).find((key) =>
         key.startsWith(`${packageName}@`)
       );
       if (manifestKey) {
         const manifest = manifests[manifestKey];
-        const version = manifest.version;
-        if (version) {
-          candidateVersions.push({
-            version,
-            packageKey: manifestKey,
-            manifest,
-          });
+        if (manifest.version) {
+          return manifest.version;
         }
       }
     }
-
-    if (candidateVersions.length === 0) {
-      return null;
-    }
+    return null;
   }
 
-  // Handle different version specification patterns with enhanced logic
-  const bestMatch = findBestVersionMatch(
-    packageName,
-    versionSpec,
-    candidateVersions
-  );
-  return bestMatch ? bestMatch.version : null;
+  // Check for exact version match first (most common case)
+  const exactMatch = candidates.find((c) => c.version === versionSpec);
+  if (exactMatch) {
+    return exactMatch.version;
+  }
+
+  // Handle different version specification patterns
+  return findBestVersionMatch(versionSpec, candidates);
 }
 
 /**
  * Find the best version match for a given version specification
- *
- * 1. Check for exact version matches first (highest priority)
- * 2. Handle union ranges (||) by recursively checking each range
- * 3. For non-semver versions (git, file, etc.), prefer exact matches or return first candidate
- * 4. For semver versions, use semver.satisfies() to find compatible versions
+ * Only operates on the pre-filtered candidates array (usually 1-3 items)
  */
 function findBestVersionMatch(
-  packageName: string,
   versionSpec: string,
-  candidates: {
-    version: string;
-    packageKey: string;
-    manifest?: RegistryManifest;
-  }[]
-): { version: string; packageKey: string; manifest?: RegistryManifest } | null {
-  // For exact matches, return immediately
+  candidates: Array<{ version: string; packageKey: string; hash: string }>
+): string | null {
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  // For exact matches, return immediately (already checked above but defensive)
   const exactMatch = candidates.find((c) => c.version === versionSpec);
   if (exactMatch) {
-    return exactMatch;
+    return exactMatch.version;
   }
 
   // Handle union ranges (||)
   if (versionSpec.includes('||')) {
     const ranges = versionSpec.split('||').map((r) => r.trim());
     for (const range of ranges) {
-      const match = findBestVersionMatch(packageName, range, candidates);
+      const match = findBestVersionMatch(range, candidates);
       if (match) {
         return match;
       }
@@ -1450,28 +1370,33 @@ function findBestVersionMatch(
     return null;
   }
 
+  // Separate semver and non-semver versions
+  const semverVersions: typeof candidates = [];
+  const nonSemverVersions: typeof candidates = [];
+
+  for (const c of candidates) {
+    if (/^\d+\.\d+\.\d+/.test(c.version)) {
+      semverVersions.push(c);
+    } else {
+      nonSemverVersions.push(c);
+    }
+  }
+
   // Handle non-semver versions (git, file, etc.)
-  const nonSemverVersions = candidates.filter(
-    (c) => !c.version.match(/^\d+\.\d+\.\d+/)
-  );
   if (nonSemverVersions.length > 0) {
-    // For non-semver versions, use the first match or exact match
     const nonSemverMatch = nonSemverVersions.find(
       (c) => c.version === versionSpec
     );
     if (nonSemverMatch) {
-      return nonSemverMatch;
+      return nonSemverMatch.version;
     }
-    // If no exact match, return the first non-semver candidate
-    return nonSemverVersions[0];
+    // If no exact match for non-semver, continue to semver matching
   }
 
   // Handle semver versions
-  const semverVersions = candidates.filter((c) =>
-    c.version.match(/^\d+\.\d+\.\d+/)
-  );
   if (semverVersions.length === 0) {
-    return candidates[0]; // Fallback to any available version
+    // No semver versions, return first non-semver if available
+    return nonSemverVersions.length > 0 ? nonSemverVersions[0].version : null;
   }
 
   // Find all versions that satisfy the spec
@@ -1485,18 +1410,15 @@ function findBestVersionMatch(
   });
 
   if (satisfyingVersions.length === 0) {
-    // No satisfying versions found, return the first candidate as fallback
-    return semverVersions[0];
+    // No satisfying versions found, return the first semver candidate as fallback
+    return semverVersions[0].version;
   }
 
   // Return the highest satisfying version (similar to npm behavior)
   // Sort versions in descending order and return the first one
   const sortedVersions = satisfyingVersions.sort((a, b) => {
     try {
-      // Use semver comparison if possible
-      const aVersion = a.version.match(/^\d+\.\d+\.\d+/) ? a.version : '0.0.0';
-      const bVersion = b.version.match(/^\d+\.\d+\.\d+/) ? b.version : '0.0.0';
-      return aVersion.localeCompare(bVersion, undefined, {
+      return b.version.localeCompare(a.version, undefined, {
         numeric: true,
         sensitivity: 'base',
       });
@@ -1506,5 +1428,5 @@ function findBestVersionMatch(
     }
   });
 
-  return sortedVersions[0];
+  return sortedVersions[0].version;
 }

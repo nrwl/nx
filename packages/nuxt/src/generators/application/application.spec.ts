@@ -25,6 +25,7 @@ describe('app', () => {
           await applicationGenerator(tree, {
             directory: name,
             unitTestRunner: 'vitest',
+            useAppDir: false,
           });
 
           const projectConfig = readProjectConfiguration(tree, name);
@@ -39,6 +40,7 @@ describe('app', () => {
           await applicationGenerator(tree, {
             directory: name,
             unitTestRunner: 'vitest',
+            useAppDir: false,
           });
 
           const newFiles = tree.listChanges().map((change) => change.path);
@@ -49,6 +51,7 @@ describe('app', () => {
           await applicationGenerator(tree, {
             directory: name,
             unitTestRunner: 'vitest',
+            useAppDir: false,
           });
 
           expect(tree.read('.gitignore', 'utf-8')).toMatchSnapshot();
@@ -58,6 +61,7 @@ describe('app', () => {
           await applicationGenerator(tree, {
             directory: name,
             unitTestRunner: 'vitest',
+            useAppDir: false,
           });
 
           expect(
@@ -71,6 +75,7 @@ describe('app', () => {
           await applicationGenerator(tree, {
             directory: name,
             unitTestRunner: 'vitest',
+            useAppDir: false,
           });
 
           expect(
@@ -84,6 +89,7 @@ describe('app', () => {
           await applicationGenerator(tree, {
             directory: name,
             unitTestRunner: 'vitest',
+            useAppDir: false,
           });
 
           expect(
@@ -95,6 +101,7 @@ describe('app', () => {
           await applicationGenerator(tree, {
             directory: name,
             unitTestRunner: 'vitest',
+            useAppDir: false,
           });
 
           expect(
@@ -106,6 +113,7 @@ describe('app', () => {
           await applicationGenerator(tree, {
             directory: name,
             unitTestRunner: 'vitest',
+            useAppDir: false,
           });
 
           expect(
@@ -123,6 +131,7 @@ describe('app', () => {
           await applicationGenerator(tree, {
             directory: name,
             unitTestRunner: 'vitest',
+            useAppDir: false,
           });
 
           expect(tree.read(`${name}/project.json`, 'utf-8')).toMatchSnapshot();
@@ -133,6 +142,7 @@ describe('app', () => {
           await applicationGenerator(tree, {
             directory: name,
             unitTestRunner: 'vitest',
+            useAppDir: false,
           });
 
           const nxJson = readJson(tree, 'nx.json');
@@ -175,6 +185,7 @@ describe('app', () => {
             directory: 'myapp1',
             unitTestRunner: 'none',
             style: 'css',
+            useAppDir: false,
           });
           expect(tree.exists('myapp1/src/assets/css/styles.css')).toBeTruthy();
           expect(tree.read('myapp1/nuxt.config.ts', 'utf-8')).toMatchSnapshot();
@@ -185,6 +196,7 @@ describe('app', () => {
             directory: 'myapp2',
             unitTestRunner: 'none',
             style: 'scss',
+            useAppDir: false,
           });
           expect(tree.exists('myapp2/src/assets/css/styles.scss')).toBeTruthy();
           expect(tree.read('myapp2/nuxt.config.ts', 'utf-8')).toMatchSnapshot();
@@ -195,6 +207,7 @@ describe('app', () => {
             directory: 'myapp3',
             unitTestRunner: 'none',
             style: 'less',
+            useAppDir: false,
           });
           expect(tree.exists('myapp3/src/assets/css/styles.less')).toBeTruthy();
           expect(tree.read('myapp3/nuxt.config.ts', 'utf-8')).toMatchSnapshot();
@@ -205,6 +218,7 @@ describe('app', () => {
             directory: 'myapp4',
             unitTestRunner: 'none',
             style: 'none',
+            useAppDir: false,
           });
           expect(tree.exists('myapp4/src/assets/css/styles.css')).toBeFalsy();
           expect(tree.read('myapp4/nuxt.config.ts', 'utf-8')).toMatchSnapshot();
@@ -212,6 +226,200 @@ describe('app', () => {
       });
     }
   );
+
+  describe('Nuxt v4 with app directory structure', () => {
+    beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace();
+    });
+
+    it('should create files in app/ directory when useAppDir is true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'vitest',
+        useAppDir: true,
+      });
+
+      // Verify app/ directory structure
+      expect(tree.exists('my-app/app/app.vue')).toBeTruthy();
+      expect(tree.exists('my-app/app/pages/index.vue')).toBeTruthy();
+      expect(tree.exists('my-app/app/pages/about.vue')).toBeTruthy();
+      // Verify src/ directory does NOT exist
+      expect(tree.exists('my-app/src/app.vue')).toBeFalsy();
+      expect(tree.exists('my-app/src/pages/index.vue')).toBeFalsy();
+    });
+
+    it('should configure nuxt.config.ts without srcDir for app directory', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'vitest',
+        useAppDir: true,
+      });
+
+      const nuxtConfig = tree.read('my-app/nuxt.config.ts', 'utf-8');
+      // Should NOT have srcDir when using app/ directory
+      expect(nuxtConfig).not.toContain("srcDir: 'src'");
+      expect(nuxtConfig).toMatchSnapshot();
+    });
+
+    it('should place styles in app/assets/css/ when useAppDir is true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'none',
+        style: 'css',
+        useAppDir: true,
+      });
+
+      expect(tree.exists('my-app/app/assets/css/styles.css')).toBeTruthy();
+      expect(tree.exists('my-app/src/assets/css/styles.css')).toBeFalsy();
+    });
+
+    it('should place scss in app/assets/css/ when useAppDir is true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'none',
+        style: 'scss',
+        useAppDir: true,
+      });
+
+      expect(tree.exists('my-app/app/assets/css/styles.scss')).toBeTruthy();
+    });
+
+    it('should place NxWelcome component in app/components/ when useAppDir is true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'vitest',
+        useAppDir: true,
+      });
+
+      expect(tree.exists('my-app/app/components/NxWelcome.vue')).toBeTruthy();
+      expect(tree.exists('my-app/src/components/NxWelcome.vue')).toBeFalsy();
+    });
+
+    it('should set sourceRoot to app/ in project.json when useAppDir is true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'vitest',
+        useAppDir: true,
+      });
+
+      const projectConfig = readProjectConfiguration(tree, 'my-app');
+      expect(projectConfig.sourceRoot).toBe('my-app/app');
+    });
+
+    it('should configure tsconfig.app.json correctly when useAppDir is true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'vitest',
+        useAppDir: true,
+      });
+
+      const tsconfig = readJson(tree, 'my-app/tsconfig.app.json');
+
+      // Check rootDir
+      expect(tsconfig.compilerOptions.rootDir).toBe('app');
+
+      // Check include paths
+      expect(tsconfig.include).toContain('app/**/*');
+      expect(tsconfig.include).toContain('server/**/*');
+      expect(tsconfig.include).toContain('.nuxt/nuxt.d.ts');
+      expect(tsconfig.include).not.toContain('src/**/*');
+
+      // Check excludes include test patterns for both app and server
+      expect(tsconfig.exclude).toContain('app/**/*.spec.ts');
+      expect(tsconfig.exclude).toContain('server/**/*.spec.ts');
+    });
+
+    it('should create all files in correct location with useAppDir', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'vitest',
+        useAppDir: true,
+      });
+
+      const newFiles = tree.listChanges().map((change) => change.path);
+      expect(newFiles).toMatchSnapshot();
+    });
+  });
+
+  describe('Nuxt v3 compatibility (src directory)', () => {
+    beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace();
+    });
+
+    it('should create files in src/ directory when useAppDir is false', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'vitest',
+        useAppDir: false,
+      });
+
+      // Verify src/ directory structure
+      expect(tree.exists('my-app/src/app.vue')).toBeTruthy();
+      expect(tree.exists('my-app/src/pages/index.vue')).toBeTruthy();
+      // Verify app/ directory does NOT exist
+      expect(tree.exists('my-app/app/app.vue')).toBeFalsy();
+    });
+
+    it('should configure nuxt.config.ts with srcDir for src directory', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'vitest',
+        useAppDir: false,
+      });
+
+      const nuxtConfig = tree.read('my-app/nuxt.config.ts', 'utf-8');
+      // Should have srcDir when using src/ directory
+      expect(nuxtConfig).toContain("srcDir: 'src'");
+    });
+
+    it('should place styles in src/assets/css/ when useAppDir is false', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'none',
+        style: 'css',
+        useAppDir: false,
+      });
+
+      expect(tree.exists('my-app/src/assets/css/styles.css')).toBeTruthy();
+      expect(tree.exists('my-app/app/assets/css/styles.css')).toBeFalsy();
+    });
+
+    it('should set sourceRoot to src/ in project.json when useAppDir is false', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'vitest',
+        useAppDir: false,
+      });
+
+      const projectConfig = readProjectConfiguration(tree, 'my-app');
+      expect(projectConfig.sourceRoot).toBe('my-app/src');
+    });
+
+    it('should configure tsconfig.app.json correctly when useAppDir is false', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-app',
+        unitTestRunner: 'vitest',
+        useAppDir: false,
+      });
+
+      const tsconfig = readJson(tree, 'my-app/tsconfig.app.json');
+
+      // Check rootDir
+      expect(tsconfig.compilerOptions.rootDir).toBe('src');
+
+      // Check include paths
+      expect(tsconfig.include).toContain('src/**/*');
+      expect(tsconfig.include).toContain('.nuxt/nuxt.d.ts');
+      expect(tsconfig.include).not.toContain('app/**/*');
+      // server/**/* should NOT be included when useAppDir is false (server is inside src/)
+      expect(tsconfig.include).not.toContain('server/**/*');
+
+      // Check excludes
+      expect(tsconfig.exclude).toContain('src/**/*.spec.ts');
+      // server excludes should NOT be present when useAppDir is false
+      expect(tsconfig.exclude).not.toContain('server/**/*.spec.ts');
+    });
+  });
 
   describe('TS solution setup', () => {
     beforeEach(() => {
@@ -240,6 +448,7 @@ describe('app', () => {
         unitTestRunner: 'vitest',
         linter: 'eslint',
         useProjectJson: false,
+        useAppDir: false,
       });
 
       expect(tree.read('myapp/vite.config.ts', 'utf-8')).toMatchInlineSnapshot(
@@ -396,6 +605,7 @@ describe('app', () => {
         unitTestRunner: 'vitest',
         linter: 'eslint',
         useProjectJson: false,
+        useAppDir: false,
       });
 
       const packageJson = readJson(tree, 'myapp/package.json');
@@ -420,6 +630,7 @@ describe('app', () => {
         linter: 'eslint',
         useProjectJson: true,
         skipFormat: true,
+        useAppDir: false,
       });
 
       expect(tree.exists('myapp/project.json')).toBeTruthy();

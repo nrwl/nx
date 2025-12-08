@@ -5,7 +5,6 @@ authors: ['Victor Savkin']
 tags: [nx, nx-cloud, self-healing, ai]
 cover_image: /blog/images/articles/self-healing-pr-bottleneck-hero-img.avif
 description: "AI speeds up code authoring, but PR validation becomes the bottleneck. Learn how Nx's Self-Healing CI automatically fixes broken PRs to keep teams moving."
-pinned: true
 ---
 
 Software engineering involves many activities, but developers spend most of their time on two: **authoring code** and **validating code**.
