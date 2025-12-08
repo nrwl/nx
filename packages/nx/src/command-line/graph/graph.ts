@@ -183,13 +183,13 @@ function hasPath(
   graph: ProjectGraph,
   target: string,
   node: string,
-  visited: string[]
+  visited: Set<string>
 ) {
   if (target === node) return true;
 
-  for (let d of graph.dependencies[node] || []) {
-    if (visited.indexOf(d.target) > -1) continue;
-    visited.push(d.target);
+  for (const d of graph.dependencies[node] || []) {
+    if (visited.has(d.target)) continue;
+    visited.add(d.target);
     if (hasPath(graph, target, d.target, visited)) return true;
   }
   return false;
@@ -210,7 +210,8 @@ function filterGraph(
     filteredProjectNames = new Set<string>();
     projectNames.forEach((p) => {
       const isInPath =
-        hasPath(graph, p, focus, []) || hasPath(graph, focus, p, []);
+        hasPath(graph, p, focus, new Set()) ||
+        hasPath(graph, focus, p, new Set());
 
       if (isInPath) {
         filteredProjectNames.add(p);

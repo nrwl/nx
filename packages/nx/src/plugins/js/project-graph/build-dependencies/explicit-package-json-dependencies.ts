@@ -1,5 +1,4 @@
 import { DependencyType } from '../../../../config/project-graph';
-import type { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
 import { defaultFileRead } from '../../../../project-graph/file-utils';
 import type { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import {
@@ -16,28 +15,22 @@ export function buildExplicitPackageJsonDependencies(
   targetProjectLocator: TargetProjectLocator
 ): RawProjectGraphDependency[] {
   const res: RawProjectGraphDependency[] = [];
-  const nodes = Object.values(ctx.projects);
-  Object.keys(ctx.filesToProcess.projectFileMap).forEach((source) => {
-    Object.values(ctx.filesToProcess.projectFileMap[source]).forEach((f) => {
-      if (isPackageJsonAtProjectRoot(nodes, f.file)) {
-        processPackageJson(source, f.file, ctx, targetProjectLocator, res);
-      }
-    });
-  });
-  return res;
-}
-
-function isPackageJsonAtProjectRoot(
-  nodes: ProjectConfiguration[],
-  fileName: string
-) {
-  return (
-    fileName.endsWith('package.json') &&
-    nodes.find(
-      (projectNode) =>
-        joinPathFragments(projectNode.root, 'package.json') === fileName
+  // Build Set of valid package.json paths once for O(1) lookup
+  // instead of O(n) find() per file
+  const projectPackageJsonPaths = new Set(
+    Object.values(ctx.projects).map((project) =>
+      joinPathFragments(project.root, 'package.json')
     )
   );
+
+  for (const source in ctx.filesToProcess.projectFileMap) {
+    for (const f of Object.values(ctx.filesToProcess.projectFileMap[source])) {
+      if (projectPackageJsonPaths.has(f.file)) {
+        processPackageJson(source, f.file, ctx, targetProjectLocator, res);
+      }
+    }
+  }
+  return res;
 }
 
 function processPackageJson(
