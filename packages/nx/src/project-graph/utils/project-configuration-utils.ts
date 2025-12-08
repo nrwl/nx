@@ -10,7 +10,7 @@ import { NX_PREFIX } from '../../utils/logger';
 import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
 
-import { minimatch } from 'minimatch';
+import { Minimatch, minimatch } from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { existsSync } from 'node:fs';
@@ -104,9 +104,12 @@ export function mergeProjectConfigurationIntoRootMap(
 
   // The next blocks handle properties that should be themselves merged (e.g. targets, tags, and implicit dependencies)
   if (project.tags) {
-    updatedProjectConfiguration.tags = Array.from(
-      new Set((matchingProject.tags ?? []).concat(project.tags))
-    );
+    // Use Set.add() for efficient deduplication without array concatenation
+    const tagsSet = new Set(matchingProject.tags);
+    for (const tag of project.tags) {
+      tagsSet.add(tag);
+    }
+    updatedProjectConfiguration.tags = Array.from(tagsSet);
 
     if (sourceMap) {
       sourceMap['tags'] ??= sourceInformation;
@@ -248,7 +251,8 @@ export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
     const existingValue = matchingMetadata?.[metadataKey];
 
     if (Array.isArray(value) && Array.isArray(existingValue)) {
-      for (const item of [...value]) {
+      // Iterate directly without unnecessary array copy
+      for (const item of value) {
         const newLength = result[metadataKey].push(item);
         if (sourceMap) {
           sourceMap[`${baseSourceMapPath}.${metadataKey}.${newLength - 1}`] =
@@ -588,23 +592,24 @@ export function findMatchingConfigFiles(
   include: string[],
   exclude: string[]
 ): string[] {
+  // Pre-compile all patterns once instead of recompiling on every file check
+  const mainMatcher = new Minimatch(pattern, { dot: true });
+  const includeMatchers = include?.map((p) => new Minimatch(p, { dot: true }));
+  const excludeMatchers = exclude?.map((p) => new Minimatch(p, { dot: true }));
+
   const matchingConfigFiles: string[] = [];
 
   for (const file of projectFiles) {
-    if (minimatch(file, pattern, { dot: true })) {
-      if (include) {
-        const included = include.some((includedPattern) =>
-          minimatch(file, includedPattern, { dot: true })
-        );
+    if (mainMatcher.match(file)) {
+      if (includeMatchers) {
+        const included = includeMatchers.some((matcher) => matcher.match(file));
         if (!included) {
           continue;
         }
       }
 
-      if (exclude) {
-        const excluded = exclude.some((excludedPattern) =>
-          minimatch(file, excludedPattern, { dot: true })
-        );
+      if (excludeMatchers) {
+        const excluded = excludeMatchers.some((matcher) => matcher.match(file));
         if (excluded) {
           continue;
         }
