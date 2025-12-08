@@ -138,6 +138,11 @@ export function createAPI(
       deleteVersionPlans: false,
     });
 
+    // Build Map for O(1) release group lookup by name
+    const releaseGroupsByName = new Map(
+      releaseGraph.releaseGroups.map((g) => [g.name, g])
+    );
+
     // Suppress the filter log for the changelog command as it would have already been printed by the version command
     process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG = 'true';
 
@@ -322,9 +327,7 @@ export function createAPI(
     }
 
     for (const releaseGroupName of releaseGraph.sortedReleaseGroups) {
-      const releaseGroup = releaseGraph.releaseGroups.find(
-        (g) => g.name === releaseGroupName
-      );
+      const releaseGroup = releaseGroupsByName.get(releaseGroupName);
       if (!releaseGroup) {
         continue;
       }

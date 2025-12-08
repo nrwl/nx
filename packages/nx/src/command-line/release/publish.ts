@@ -118,6 +118,11 @@ export function createAPI(
         skipVersionResolution: true,
       }));
 
+    // Build Map for O(1) release group lookup by name
+    const releaseGroupsByName = new Map(
+      releaseGraph.releaseGroups.map((g) => [g.name, g])
+    );
+
     // Display filter log if filters were applied
     if (
       releaseGraph.filterLog &&
@@ -143,9 +148,7 @@ export function createAPI(
        * in topological order
        */
       for (const releaseGroupName of releaseGraph.sortedReleaseGroups) {
-        const releaseGroup = releaseGraph.releaseGroups.find(
-          (g) => g.name === releaseGroupName
-        );
+        const releaseGroup = releaseGroupsByName.get(releaseGroupName);
         if (!releaseGroup) {
           // Release group was filtered out, skip
           continue;
@@ -175,9 +178,7 @@ export function createAPI(
      * Run publishing for all remaining release groups
      */
     for (const releaseGroupName of releaseGraph.sortedReleaseGroups) {
-      const releaseGroup = releaseGraph.releaseGroups.find(
-        (g) => g.name === releaseGroupName
-      );
+      const releaseGroup = releaseGroupsByName.get(releaseGroupName);
       if (!releaseGroup) {
         // Release group was filtered out, skip
         continue;
