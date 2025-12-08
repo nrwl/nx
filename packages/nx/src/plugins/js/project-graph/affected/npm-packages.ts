@@ -27,7 +27,16 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
   let touched = [];
   const changes = packageJsonChange.getChanges();
 
-  const npmPackages = Object.values(projectGraph.externalNodes);
+  // Build lookup maps once for O(1) access instead of O(n) .find() per change
+  const npmPackagesByPackageName = new Map<string, ProjectGraphExternalNode>();
+  for (const pkg of Object.values(projectGraph.externalNodes)) {
+    npmPackagesByPackageName.set(pkg.data.packageName, pkg);
+  }
+
+  const projectNodesByName = new Map<string, ProjectGraphProjectNode>();
+  for (const node of Object.values(projectGraph.nodes)) {
+    projectNodesByName.set(node.name, node);
+  }
 
   const missingTouchedNpmPackages: string[] = [];
 
@@ -42,12 +51,12 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         touched = Object.keys(projectGraph.nodes);
         break;
       } else {
+        // O(1) lookup instead of O(n) .find()
         let npmPackage: ProjectGraphProjectNode | ProjectGraphExternalNode =
-          npmPackages.find((pkg) => pkg.data.packageName === c.path[1]);
+          npmPackagesByPackageName.get(c.path[1] as string);
         if (!npmPackage) {
           // dependency can also point to a workspace project
-          const nodes = Object.values(projectGraph.nodes);
-          npmPackage = nodes.find((n) => n.name === c.path[1]);
+          npmPackage = projectNodesByName.get(c.path[1] as string);
         }
         if (!npmPackage) {
           missingTouchedNpmPackages.push(c.path[1]);
@@ -56,8 +65,9 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         touched.push(npmPackage.name);
         // If it was a type declarations package then also mark its corresponding implementation package as affected
         if (npmPackage.name.startsWith('npm:@types/')) {
-          const implementationNpmPackage = npmPackages.find(
-            (pkg) => pkg.data.packageName === c.path[1].substring(7)
+          // O(1) lookup instead of O(n) .find()
+          const implementationNpmPackage = npmPackagesByPackageName.get(
+            (c.path[1] as string).substring(7)
           );
           if (implementationNpmPackage) {
             touched.push(implementationNpmPackage.name);
@@ -72,7 +82,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
       }
     } else if (isWholeFileChange(c)) {
       // Whole file was touched, so all npm packages are touched.
-      touched = npmPackages.map((pkg) => pkg.name);
+      touched = Object.keys(projectGraph.externalNodes);
       break;
     }
   }

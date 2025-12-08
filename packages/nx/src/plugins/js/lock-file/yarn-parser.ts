@@ -217,19 +217,31 @@ function findHoistedNode(
   if (rootVersionSpecifier === '*') {
     return versionMap.get(versions[0]);
   }
-  // take version that satisfies the root version specifier
-  let version = versions.find((v) => satisfies(v, rootVersionSpecifier));
-  if (!version) {
-    // try to find alias version
-    version = versions.find(
-      (v) =>
-        versionMap.get(v).name === `npm:${packageName}@${rootVersionSpecifier}`
-    );
+  // Single pass through versions instead of multiple .find() calls
+  // Priority: 1) satisfies specifier, 2) alias match, 3) tarball package
+  let version: string | undefined;
+  let aliasVersion: string | undefined;
+  let tarballVersion: string | undefined;
+
+  for (const v of versions) {
+    if (satisfies(v, rootVersionSpecifier)) {
+      version = v;
+      break; // Highest priority match found
+    }
+    // Track lower priority matches as fallbacks
+    if (
+      !aliasVersion &&
+      versionMap.get(v).name === `npm:${packageName}@${rootVersionSpecifier}`
+    ) {
+      aliasVersion = v;
+    }
+    if (!tarballVersion && versionMap.get(v).data.version !== v) {
+      tarballVersion = v;
+    }
   }
-  if (!version) {
-    // try to find tarball package
-    version = versions.find((v) => versionMap.get(v).data.version !== v);
-  }
+
+  // Use first match found in priority order
+  version = version || aliasVersion || tarballVersion;
   if (version) {
     return versionMap.get(version);
   }
