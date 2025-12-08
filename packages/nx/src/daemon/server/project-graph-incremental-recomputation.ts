@@ -7,7 +7,7 @@ import {
   ProjectGraphExternalNode,
 } from '../../config/project-graph';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { hashArray } from '../../hasher/file-hasher';
+import { hashArray, hashObject } from '../../hasher/file-hasher';
 import { buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap } from '../../project-graph/build-project-graph';
 import { updateFileMap } from '../../project-graph/file-map-utils';
 import {
@@ -212,14 +212,14 @@ export function registerProjectGraphRecomputationListener(
 function computeWorkspaceConfigHash(
   projectsConfigurations: Record<string, ProjectConfiguration>
 ) {
-  const projectConfigurationStrings = Object.entries(projectsConfigurations)
-    .sort(([projectNameA], [projectNameB]) =>
-      projectNameA.localeCompare(projectNameB)
-    )
-    .map(
-      ([projectName, projectConfig]) =>
-        `${projectName}:${JSON.stringify(projectConfig)}`
-    );
+  // Sort keys once, then hash each config using optimized hashObject
+  // This avoids repeated JSON.stringify calls and leverages hashObject's
+  // primitive value optimization
+  const sortedNames = Object.keys(projectsConfigurations).sort();
+  const projectConfigurationStrings = sortedNames.map(
+    (projectName) =>
+      `${projectName}:${hashObject(projectsConfigurations[projectName] as any)}`
+  );
   return hashArray(projectConfigurationStrings);
 }
 

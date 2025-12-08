@@ -411,18 +411,18 @@ function processProjectNode(
     return;
   }
 
-  const fileDataFromCache = {} as any;
-  for (let f of cachedFileMap[projectName]) {
-    fileDataFromCache[f.file] = f;
-  }
+  // Use Map constructor for O(n) initialization instead of manual loop
+  const fileDataFromCache = new Map(
+    cachedFileMap[projectName].map((f) => [f.file, f])
+  );
 
   if (!cachedFileData[projectName]) {
     cachedFileData[projectName] = {};
   }
 
-  for (let f of projectFileMap[projectName]) {
-    const fromCache = fileDataFromCache[f.file];
-    if (fromCache && fromCache.hash == f.hash) {
+  for (const f of projectFileMap[projectName]) {
+    const fromCache = fileDataFromCache.get(f.file);
+    if (fromCache && fromCache.hash === f.hash) {
       cachedFileData[projectName][f.file] = fromCache;
     } else {
       if (!filesToProcess[projectName]) {
