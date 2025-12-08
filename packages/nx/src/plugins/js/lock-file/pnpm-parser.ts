@@ -34,6 +34,49 @@ let currentLockFileHash: string;
 
 let parsedLockFile: Lockfile;
 
+/**
+ * Index type for O(1) package lookup by name instead of O(n) iteration.
+ * Maps packageName -> array of [key, snapshot] entries for that package.
+ */
+type PackageIndex = Map<string, Array<[string, PackageSnapshot]>>;
+
+/**
+ * Pre-builds an index of packages by package name for O(1) lookup.
+ * This transforms findOriginalKeys from O(n*m) to O(n+m) where:
+ * - n = number of external nodes
+ * - m = number of packages
+ *
+ * Example impact: 500 nodes × 1000 packages = 500,000 iterations → 1,500 operations
+ */
+function buildPackageIndex(
+  packages: PackageSnapshots,
+  lockfileVersion: number
+): PackageIndex {
+  const isV5 = lockfileVersion < 6;
+  const index: PackageIndex = new Map();
+
+  for (const [key, snapshot] of Object.entries(packages)) {
+    let packageName: string;
+
+    // Tarball packages have a 'name' field in the snapshot and don't follow
+    // the standard key format (e.g., github.com/user/repo/commit)
+    if (snapshot.resolution?.['tarball'] && snapshot['name']) {
+      packageName = snapshot['name'] as string;
+    } else {
+      // Handle keys that may have leading / (v5 format in some cases)
+      const normalizedKey = key.startsWith('/') ? key.slice(1) : key;
+      packageName = extractNameFromKey(normalizedKey, isV5);
+    }
+
+    if (!index.has(packageName)) {
+      index.set(packageName, []);
+    }
+    index.get(packageName)!.push([key, snapshot]);
+  }
+
+  return index;
+}
+
 function parsePnpmLockFile(
   lockFileContent: string,
   lockFileHash: string
@@ -413,6 +456,10 @@ export function stringifyPnpmLockfile(
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
   const { lockfileVersion, packages, importers } = data;
 
+  // Pre-build package index once for O(1) lookups instead of O(n) per node
+  // This transforms O(n*m) to O(n+m) for findOriginalKeys calls
+  const packageIndex = buildPackageIndex(packages, +lockfileVersion);
+
   const { snapshot: rootSnapshot, importers: requiredImporters } =
     mapRootSnapshot(
       packageJson,
@@ -420,12 +467,14 @@ export function stringifyPnpmLockfile(
       packages,
       graph,
       +lockfileVersion,
-      workspaceRoot
+      workspaceRoot,
+      packageIndex
     );
   const snapshots = mapSnapshots(
     data.packages,
     graph.externalNodes,
-    +lockfileVersion
+    +lockfileVersion,
+    packageIndex
   );
 
   const workspaceDependencyImporters: Record<string, ProjectSnapshot> = {};
@@ -453,12 +502,14 @@ export function stringifyPnpmLockfile(
 function mapSnapshots(
   packages: PackageSnapshots,
   nodes: Record<string, ProjectGraphExternalNode>,
-  lockfileVersion: number
+  lockfileVersion: number,
+  packageIndex?: PackageIndex
 ): PackageSnapshots {
   const result: PackageSnapshots = {};
   Object.values(nodes).forEach((node) => {
     const matchedKeys = findOriginalKeys(packages, node, lockfileVersion, {
       returnFullKey: true,
+      packageIndex,
     });
 
     // the package manager doesn't check for types of dependencies
@@ -480,6 +531,20 @@ function mapSnapshots(
     });
   });
   return result;
+}
+
+/**
+ * Helper to check if a key matches a package name (for fallback path without index)
+ */
+function keyMatchesPackage(
+  key: string,
+  packageName: string,
+  lockfileVersion: number
+): boolean {
+  if (lockfileVersion < 6) {
+    return key.startsWith(`${packageName}/`);
+  }
+  return key.startsWith(`${packageName}@`);
 }
 
 function remapDependencies(snapshot: PackageSnapshot) {
@@ -509,18 +574,51 @@ function findOriginalKeys(
   packages: PackageSnapshots,
   { data: { packageName, version } }: ProjectGraphExternalNode,
   lockfileVersion: number,
-  { returnFullKey }: { returnFullKey?: boolean } = {}
+  {
+    returnFullKey,
+    packageIndex,
+  }: { returnFullKey?: boolean; packageIndex?: PackageIndex } = {}
 ): Array<[string, PackageSnapshot]> {
   const matchedKeys = [];
-  for (const key of Object.keys(packages)) {
-    const snapshot = packages[key];
 
-    // tarball package
+  // For alias packages (npm:realPkg@version), we need to look up by the real package name
+  let lookupName = packageName;
+  const PREFIX = 'npm:';
+  if (version.startsWith(PREFIX)) {
+    const indexOfVersionSeparator = version.indexOf('@', PREFIX.length + 1);
+    if (indexOfVersionSeparator > PREFIX.length) {
+      lookupName = version.slice(PREFIX.length, indexOfVersionSeparator);
+    }
+  }
+
+  // Use pre-built index for O(1) lookup if available, otherwise fall back to O(n) iteration
+  const entries = packageIndex
+    ? packageIndex.get(lookupName) || []
+    : Object.entries(packages).map(
+        ([key, snapshot]) => [key, snapshot] as [string, PackageSnapshot]
+      );
+
+  for (const [key, snapshot] of entries) {
+    // Skip entries that don't match the package name (only needed for fallback path)
     if (
-      key.startsWith(`${packageName}@${version}`) &&
-      snapshot.resolution?.['tarball']
+      !packageIndex &&
+      !keyMatchesPackage(key, packageName, lockfileVersion)
     ) {
-      matchedKeys.push([getVersion(key, packageName), snapshot]);
+      continue;
+    }
+
+    // tarball package - can match by key prefix OR by snapshot name field
+    if (snapshot.resolution?.['tarball']) {
+      if (key.startsWith(`${packageName}@${version}`)) {
+        matchedKeys.push([getVersion(key, packageName), snapshot]);
+        continue;
+      }
+      // GitHub tarballs have keys like 'github.com/user/repo/commit' with a 'name' field
+      if (snapshot['name'] === packageName) {
+        // Return the version (which is the tarball URL) as the key
+        matchedKeys.push([version, snapshot]);
+        continue;
+      }
     }
     // standard package
     if (lockfileVersion < 6 && key.startsWith(`${packageName}/${version}`)) {
@@ -592,7 +690,8 @@ function mapRootSnapshot(
   packages: PackageSnapshots,
   graph: ProjectGraph,
   lockfileVersion: number,
-  workspaceRoot: string
+  workspaceRoot: string,
+  packageIndex?: PackageIndex
 ) {
   const workspaceModules = getWorkspacePackagesFromGraph(graph);
   const snapshot: ProjectSnapshot = { specifiers: {} };
@@ -664,11 +763,12 @@ function mapRootSnapshot(
           let section =
             depType === 'peerDependencies' ? 'dependencies' : depType;
           snapshot[section] = snapshot[section] || {};
-          snapshot[section][packageName] = findOriginalKeys(
-            packages,
-            node,
-            lockfileVersion
-          )[0][0];
+          const foundKeys = findOriginalKeys(packages, node, lockfileVersion, {
+            packageIndex,
+          });
+          if (foundKeys.length > 0) {
+            snapshot[section][packageName] = foundKeys[0][0];
+          }
         }
       });
     }
