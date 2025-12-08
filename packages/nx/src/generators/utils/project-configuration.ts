@@ -267,11 +267,12 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
   ];
   const globbedFiles = globWithWorkspaceContextSync(tree.root, patterns);
   const createdFiles = findCreatedProjectFiles(tree, patterns);
-  const deletedFiles = findDeletedProjectFiles(tree, patterns);
+  // Convert to Set for O(1) lookup instead of O(n) indexOf
+  const deletedFiles = new Set(findDeletedProjectFiles(tree, patterns));
   // Ensure we don't duplicate files that are both globbed and in tree changes
   const allProjectFiles = new Set([...globbedFiles, ...createdFiles]);
   const projectFiles = Array.from(allProjectFiles).filter(
-    (r) => deletedFiles.indexOf(r) === -1
+    (r) => !deletedFiles.has(r)
   );
 
   const rootMap: Record<string, ProjectConfiguration> = {};
