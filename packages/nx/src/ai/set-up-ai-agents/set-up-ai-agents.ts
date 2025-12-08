@@ -383,9 +383,9 @@ export async function setupAiAgentsGeneratorImpl(
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
-  const expectedRules = getAgentRulesWrapped(writeNxCloudRules);
-
   if (!tree.exists(path)) {
+    // File doesn't exist - create with h1 header (standalone content)
+    const expectedRules = getAgentRulesWrapped(writeNxCloudRules, true);
     tree.write(path, expectedRules);
     return;
   }
@@ -396,6 +396,8 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
   const existingNxConfiguration = existing.match(regex);
 
   if (existingNxConfiguration) {
+    // Use h1 for comparison since we're replacing existing content
+    const expectedRules = getAgentRulesWrapped(writeNxCloudRules, true);
     const contentOnly = (str: string) =>
       str
         .replace(nxRulesMarkerCommentStart, '')
@@ -413,6 +415,8 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
     const updatedContent = existing.replace(regex, expectedRules);
     tree.write(path, updatedContent);
   } else {
+    // Appending to existing content - use h2 header and single blank line separator
+    const expectedRules = getAgentRulesWrapped(writeNxCloudRules, false);
     tree.write(path, existing + '\n\n' + expectedRules);
   }
 }

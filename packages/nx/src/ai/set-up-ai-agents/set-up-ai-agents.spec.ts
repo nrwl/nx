@@ -75,7 +75,10 @@ describe('setup-ai-agents generator', () => {
       await setupAiAgentsGenerator(tree, options);
 
       const content = tree.read('AGENTS.md')?.toString();
-      expect(content).toEqual(existing + '\n\n' + getAgentRulesWrapped(true));
+      // When appending to existing content, use h2 header
+      expect(content).toEqual(
+        existing + '\n\n' + getAgentRulesWrapped(true, false)
+      );
     });
 
     it('should NOT modify AGENTS.md when up-to-date nx rules exist', async () => {
@@ -85,7 +88,7 @@ describe('setup-ai-agents generator', () => {
         agents: ['codex'],
       };
 
-      const existing = getAgentRulesWrapped(true);
+      const existing = getAgentRulesWrapped(true, true);
 
       tree.write('AGENTS.md', existing);
 
@@ -102,7 +105,7 @@ describe('setup-ai-agents generator', () => {
         agents: ['codex'],
       };
 
-      const expected = getAgentRulesWrapped(true);
+      const expected = getAgentRulesWrapped(true, true);
       const existing = expected.replace(
         'nx_workspace',
         'nx_workspace_outdated'
@@ -122,7 +125,7 @@ describe('setup-ai-agents generator', () => {
         agents: ['codex'],
       };
 
-      const expected = getAgentRulesWrapped(true);
+      const expected = getAgentRulesWrapped(true, true);
       const existing = expected.replace('#', '\n#');
       tree.write('AGENTS.md', existing);
 

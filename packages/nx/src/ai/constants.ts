@@ -47,9 +47,12 @@ export const rulesRegex = new RegExp(
   'm'
 );
 
-export const getAgentRulesWrapped = (writeNxCloudRules: boolean) => {
-  const agentRulesString = getAgentRules(writeNxCloudRules);
-  return `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n${agentRulesString}\n${nxRulesMarkerCommentEnd}`;
+export const getAgentRulesWrapped = (
+  writeNxCloudRules: boolean,
+  useH1: boolean = true
+) => {
+  const agentRulesString = getAgentRules(writeNxCloudRules, useH1);
+  return `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n\n${agentRulesString}\n\n${nxRulesMarkerCommentEnd}`;
 };
 
 export const nxMcpTomlHeader = `[mcp_servers."nx-mcp"]`;
