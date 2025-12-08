@@ -1,5 +1,5 @@
-import { ExecutorContext, joinPathFragments } from '@nx/devkit';
-import { basename, dirname } from 'path';
+import { ExecutorContext, joinPathFragments, ProjectGraph } from '@nx/devkit';
+import { dirname } from 'path';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 
 export type StaticRemoteConfig = {
@@ -13,9 +13,15 @@ export type StaticRemotesConfig = {
   config: Record<string, StaticRemoteConfig> | undefined;
 };
 
-export function parseStaticRemotesConfig(
+/**
+ * Core implementation for parsing static remotes configuration.
+ * Used by both regular and SSR remote config parsers.
+ */
+function parseRemotesConfigCore(
   staticRemotes: string[] | undefined,
-  context: ExecutorContext
+  projectGraph: ProjectGraph,
+  workspaceRoot: string,
+  isServer: boolean
 ): StaticRemotesConfig {
   if (!staticRemotes?.length) {
     return { remotes: [], config: undefined };
@@ -23,66 +29,55 @@ export function parseStaticRemotesConfig(
 
   const config: Record<string, StaticRemoteConfig> = {};
   for (const app of staticRemotes) {
-    const projectGraph = context.projectGraph;
     const projectRoot = projectGraph.nodes[app].data.root;
     let outputPath = interpolate(
       projectGraph.nodes[app].data.targets?.['build']?.options?.outputPath ??
         projectGraph.nodes[app].data.targets?.['build']?.outputs?.[0] ??
-        `${context.root}/${projectGraph.nodes[app].data.root}/dist`,
+        `${workspaceRoot}/${projectGraph.nodes[app].data.root}/dist`,
       {
         projectName: projectGraph.nodes[app].data.name,
         projectRoot,
-        workspaceRoot: context.root,
+        workspaceRoot,
       }
     );
     if (outputPath.startsWith(projectRoot)) {
-      outputPath = joinPathFragments(context.root, outputPath);
+      outputPath = joinPathFragments(workspaceRoot, outputPath);
+    }
+    // For SSR, use parent directory as outputPath
+    if (isServer) {
+      outputPath = dirname(outputPath);
     }
     const basePath = ['', '/', '.'].some((p) => dirname(outputPath) === p)
       ? outputPath
       : dirname(outputPath); // dist || dist/checkout -> dist
     const urlSegment = app;
-    const port =
-      context.projectGraph.nodes[app].data.targets['serve'].options.port;
+    const port = projectGraph.nodes[app].data.targets['serve'].options.port;
     config[app] = { basePath, outputPath, urlSegment, port };
   }
 
   return { remotes: staticRemotes, config };
 }
 
+export function parseStaticRemotesConfig(
+  staticRemotes: string[] | undefined,
+  context: ExecutorContext
+): StaticRemotesConfig {
+  return parseRemotesConfigCore(
+    staticRemotes,
+    context.projectGraph,
+    context.root,
+    false
+  );
+}
+
 export function parseStaticSsrRemotesConfig(
   staticRemotes: string[] | undefined,
   context: ExecutorContext
 ): StaticRemotesConfig {
-  if (!staticRemotes?.length) {
-    return { remotes: [], config: undefined };
-  }
-  const config: Record<string, StaticRemoteConfig> = {};
-  for (const app of staticRemotes) {
-    const projectGraph = context.projectGraph;
-    const projectRoot = projectGraph.nodes[app].data.root;
-    let outputPath = interpolate(
-      projectGraph.nodes[app].data.targets?.['build']?.options?.outputPath ??
-        projectGraph.nodes[app].data.targets?.['build']?.outputs?.[0] ??
-        `${context.root}/${projectGraph.nodes[app].data.root}/dist`,
-      {
-        projectName: projectGraph.nodes[app].data.name,
-        projectRoot,
-        workspaceRoot: context.root,
-      }
-    );
-    if (outputPath.startsWith(projectRoot)) {
-      outputPath = joinPathFragments(context.root, outputPath);
-    }
-    outputPath = dirname(outputPath);
-    const basePath = ['', '/', '.'].some((p) => dirname(outputPath) === p)
-      ? outputPath
-      : dirname(outputPath); // dist || dist/checkout -> dist
-    const urlSegment = app;
-    const port =
-      context.projectGraph.nodes[app].data.targets['serve'].options.port;
-    config[app] = { basePath, outputPath, urlSegment, port };
-  }
-
-  return { remotes: staticRemotes, config };
+  return parseRemotesConfigCore(
+    staticRemotes,
+    context.projectGraph,
+    context.root,
+    true
+  );
 }

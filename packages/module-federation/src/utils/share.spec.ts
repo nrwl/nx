@@ -13,9 +13,14 @@ import {
   sharePackages,
   shareWorkspaceLibraries,
 } from './share';
+import { clearRootPackageJsonCache } from './package-json';
 
 describe('MF Share Utils', () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => {
+    jest.clearAllMocks();
+    // Clear cached root package.json to ensure fresh reads in each test
+    clearRootPackageJsonCache();
+  });
 
   describe('ShareWorkspaceLibraries', () => {
     it('should error when the tsconfig file does not exist', () => {

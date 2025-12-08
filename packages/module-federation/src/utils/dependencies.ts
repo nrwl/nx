@@ -4,8 +4,22 @@ import {
   parseTargetString,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import type { ParsedCommandLine } from 'typescript';
 import type { WorkspaceLibrary } from './models';
 import { readTsPathMappings } from './typescript';
+
+// Cache for getDependentPackagesForProject results
+// Uses WeakMap keyed by projectGraph so cache is automatically invalidated when graph changes
+const dependentPackagesCache = new WeakMap<
+  ProjectGraph,
+  Map<
+    string,
+    {
+      workspaceLibraries: WorkspaceLibrary[];
+      npmPackages: string[];
+    }
+  >
+>();
 
 export function getDependentPackagesForProject(
   projectGraph: ProjectGraph,
@@ -14,15 +28,38 @@ export function getDependentPackagesForProject(
   workspaceLibraries: WorkspaceLibrary[];
   npmPackages: string[];
 } {
+  // Check cache first
+  let graphCache = dependentPackagesCache.get(projectGraph);
+  if (graphCache) {
+    const cached = graphCache.get(name);
+    if (cached) {
+      return cached;
+    }
+  } else {
+    graphCache = new Map();
+    dependentPackagesCache.set(projectGraph, graphCache);
+  }
+
+  // Hoist tsConfigPathMappings read to avoid repeated calls in getLibraryImportPath
+  const tsConfigPathMappings = readTsPathMappings();
+
   const { npmPackages, workspaceLibraries } = collectDependencies(
     projectGraph,
-    name
+    name,
+    undefined,
+    undefined,
+    tsConfigPathMappings
   );
 
-  return {
+  const result = {
     workspaceLibraries: [...workspaceLibraries.values()],
     npmPackages: [...npmPackages],
   };
+
+  // Cache the result
+  graphCache.set(name, result);
+
+  return result;
 }
 
 function collectDependencies(
@@ -32,7 +69,8 @@ function collectDependencies(
     workspaceLibraries: new Map<string, WorkspaceLibrary>(),
     npmPackages: new Set<string>(),
   },
-  seen: Set<string> = new Set()
+  seen: Set<string> = new Set(),
+  tsConfigPathMappings: ParsedCommandLine['options']['paths'] = {}
 ): {
   workspaceLibraries: Map<string, WorkspaceLibrary>;
   npmPackages: Set<string>;
@@ -50,13 +88,18 @@ function collectDependencies(
         dependencies.workspaceLibraries.set(dependency.target, {
           name: dependency.target,
           root: projectGraph.nodes[dependency.target].data.root,
-          importKey: getLibraryImportPath(dependency.target, projectGraph),
+          importKey: getLibraryImportPath(
+            dependency.target,
+            projectGraph,
+            tsConfigPathMappings
+          ),
         });
         collectDependencies(
           projectGraph,
           dependency.target,
           dependencies,
-          seen
+          seen,
+          tsConfigPathMappings
         );
       }
     }
@@ -67,7 +110,8 @@ function collectDependencies(
 
 function getLibraryImportPath(
   library: string,
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
+  tsConfigPathMappings: ParsedCommandLine['options']['paths'] = {}
 ): string | undefined {
   let buildLibsFromSource = true;
   if (process.env.NX_BUILD_LIBS_FROM_SOURCE) {
@@ -87,8 +131,6 @@ function getLibraryImportPath(
       libraryNode
     );
   }
-
-  const tsConfigPathMappings = readTsPathMappings();
 
   for (const [key, value] of Object.entries(tsConfigPathMappings)) {
     for (const src of sourceRoots) {

@@ -113,7 +113,9 @@ export function shareWorkspaceLibraries(
     workspaceLibs.map((lib) => [lib.importKey, lib])
   );
 
-  const pathMappings: { name: string; path: string }[] = [];
+  // Pre-compute libFolder for each path mapping to avoid repeated dirname/normalize calls
+  // in the hot path of the module replacement plugin
+  const pathMappings: { name: string; path: string; libFolder: string }[] = [];
   for (const [key, paths] of Object.entries(sortedTsConfigPathAliases)) {
     const library = workspaceLibsByImportKey.get(key);
     if (!library) {
@@ -125,16 +127,20 @@ export function shareWorkspaceLibraries(
     collectWorkspaceLibrarySecondaryEntryPoints(
       library,
       sortedTsConfigPathAliases
-    ).forEach(({ name, path }) =>
+    ).forEach(({ name, path }) => {
+      const normalizedPath = normalize(path);
       pathMappings.push({
         name,
-        path,
-      })
-    );
+        path: normalizedPath,
+        libFolder: normalize(dirname(normalizedPath)),
+      });
+    });
 
+    const normalizedPath = normalize(join(workspaceRoot, paths[0]));
     pathMappings.push({
       name: key,
-      path: normalize(join(workspaceRoot, paths[0])),
+      path: normalizedPath,
+      libFolder: normalize(dirname(normalizedPath)),
     });
   }
 
@@ -261,8 +267,11 @@ export function shareWorkspaceLibraries(
         const to = normalize(join(req.context, req.request));
 
         for (const library of pathMappings) {
-          const libFolder = normalize(dirname(library.path));
-          if (!from.startsWith(libFolder) && to.startsWith(libFolder)) {
+          // Use pre-computed libFolder instead of computing it for every module request
+          if (
+            !from.startsWith(library.libFolder) &&
+            to.startsWith(library.libFolder)
+          ) {
             const newReq = library.name.endsWith('/*')
               ? /**
                  * req usually is in the form of "../../../path/to/file"

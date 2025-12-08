@@ -10,13 +10,13 @@ import {
   sharePackages,
   shareWorkspaceLibraries,
 } from '../../utils';
+import { createRemoteUrlResolver } from '../../utils/remote-url';
 
 import {
   createProjectGraphAsync,
   ProjectGraph,
   readCachedProjectGraph,
 } from '@nx/devkit';
-import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 
 export function applyDefaultEagerPackages(
   sharedConfig: Record<string, SharedLibraryConfig>,
@@ -59,64 +59,14 @@ export const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
   '@angular/common',
 ];
 
-// Cache for parsed static remotes environment variable to avoid repeated JSON.parse calls
-let cachedStaticRemotesFromEnv: Record<string, string> | undefined;
-let cachedStaticRemotesEnvValue: string | undefined;
-
-function getStaticRemotesFromEnv(): Record<string, string> | undefined {
-  const currentEnvValue = process.env.NX_MF_DEV_SERVER_STATIC_REMOTES;
-  // Only re-parse if the environment variable value has changed
-  if (currentEnvValue !== cachedStaticRemotesEnvValue) {
-    cachedStaticRemotesEnvValue = currentEnvValue;
-    cachedStaticRemotesFromEnv = currentEnvValue
-      ? JSON.parse(currentEnvValue)
-      : undefined;
-  }
-  return cachedStaticRemotesFromEnv;
-}
-
 export function getFunctionDeterminateRemoteUrl(
   isServer: boolean = false,
   useRspack = false
 ) {
-  const target = 'serve';
-  const remoteEntry = isServer
-    ? 'server/remoteEntry.js'
-    : useRspack
-    ? 'remoteEntry.js'
-    : 'remoteEntry.mjs';
-
-  return function (remote: string) {
-    const mappedStaticRemotesFromEnv = getStaticRemotesFromEnv();
-    if (mappedStaticRemotesFromEnv && mappedStaticRemotesFromEnv[remote]) {
-      return `${mappedStaticRemotesFromEnv[remote]}/${remoteEntry}`;
-    }
-
-    let remoteConfiguration = null;
-    try {
-      remoteConfiguration = readCachedProjectConfiguration(remote);
-    } catch (e) {
-      throw new Error(
-        `Cannot find remote "${remote}". Check that the remote name is correct in your module federation config file.\n`
-      );
-    }
-    const serveTarget = remoteConfiguration?.targets?.[target];
-
-    if (!serveTarget) {
-      throw new Error(
-        `Cannot automatically determine URL of remote (${remote}). Looked for property "host" in the project's "serve" target.\n
-      You can also use the tuple syntax in your webpack config to configure your remotes. e.g. \`remotes: [['remote1', 'http://localhost:4201']]\``
-      );
-    }
-
-    const host =
-      serveTarget.options?.host ??
-      `http${serveTarget.options.ssl ? 's' : ''}://localhost`;
-    const port = serveTarget.options?.port ?? 4201;
-    return `${
-      host.endsWith('/') ? host.slice(0, -1) : host
-    }:${port}/${remoteEntry}`;
-  };
+  return createRemoteUrlResolver({
+    isServer,
+    bundler: useRspack ? 'angular-rspack' : 'angular-webpack',
+  });
 }
 
 export async function getModuleFederationConfig(
