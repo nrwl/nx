@@ -238,15 +238,14 @@ export async function getLatestGitTagForPattern(
       .replace('%rg%', '(.+)')}`;
 
     const matchingTags = tags.filter((tag) => {
+      // Cache regex match result to avoid duplicate matching
+      const matches = tag.match(tagRegexp);
+      if (!matches) return false;
       if (requireSemver) {
         // Match against Semver Regex when using semverVersioning to ensure only valid semver tags are matched
-        return (
-          !!tag.match(tagRegexp) &&
-          tag.match(tagRegexp).some((r) => r.match(SEMVER_REGEX))
-        );
-      } else {
-        return !!tag.match(tagRegexp);
+        return matches.some((r) => r.match(SEMVER_REGEX));
       }
+      return true;
     });
 
     if (!matchingTags.length) {
