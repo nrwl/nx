@@ -5,6 +5,7 @@ import {
 } from '../../utils/versions';
 import { dirname, join } from 'path';
 import { execGradleAsync, findGradlewFile } from '../../utils/exec-gradle';
+import { getPluginAliasFromCatalogAst } from '../../utils/version-catalog-ast-utils';
 
 /**
  * Adds a `build.gradle(.kts)` file next to each `settings.gradle(.kts)` file found in the workspace.
@@ -121,14 +122,52 @@ export async function addNxProjectGraphPlugin(
 ) {
   const files = await addBuildGradleFileNextToSettingsGradle(tree);
 
-  files.forEach(({ filePath, content }) => {
-    addNxProjectGraphPluginToBuildGradle(
+  for (const { filePath, content } of files) {
+    await addNxProjectGraphPluginToBuildGradle(
       filePath,
       content,
       expectedVersion,
       tree
     );
-  });
+  }
+}
+
+/**
+ * Converts a version catalog alias to a Gradle accessor path.
+ * In Gradle, dashes in aliases become dots in the accessor.
+ * e.g., "nx-project-graph" -> "nx.project.graph"
+ */
+function aliasToAccessorPath(alias: string): string {
+  return alias.replace(/-/g, '.');
+}
+
+/**
+ * Finds a version catalog file near the given build.gradle file and returns
+ * the plugin alias if the Nx project graph plugin is defined in it.
+ */
+async function findVersionCatalogPluginAlias(
+  gradleFilePath: string,
+  tree: Tree
+): Promise<string | null> {
+  const gradleDir = dirname(gradleFilePath);
+  const versionCatalogFiles = await globAsync(tree, [
+    join(gradleDir, '**/libs.versions.toml'),
+  ]);
+
+  if (versionCatalogFiles.length === 0) {
+    return null;
+  }
+
+  const versionCatalogPath = versionCatalogFiles[0];
+  const catalogContent = tree.read(versionCatalogPath, 'utf-8');
+  if (!catalogContent) {
+    return null;
+  }
+
+  return getPluginAliasFromCatalogAst(
+    catalogContent,
+    gradleProjectGraphPluginName
+  );
 }
 
 /**
@@ -143,9 +182,28 @@ async function addNxProjectGraphPluginToBuildGradle(
   tree: Tree
 ): Promise<string> {
   const isKotlinDsl = gradleFilePath.endsWith('.kts');
-  const nxProjectGraphReportPlugin = isKotlinDsl
-    ? `id(\"${gradleProjectGraphPluginName}\") version(\"${expectedVersion}\")`
-    : `id \"${gradleProjectGraphPluginName}\" version \"${expectedVersion}\"`;
+
+  // Check if a version catalog exists with the plugin alias
+  const pluginAlias = await findVersionCatalogPluginAlias(gradleFilePath, tree);
+  const versionCatalogPluginAccessor = pluginAlias
+    ? `libs.plugins.${aliasToAccessorPath(pluginAlias)}`
+    : null;
+
+  // Determine the plugin declaration syntax based on whether we have a version catalog
+  const nxProjectGraphReportPlugin = versionCatalogPluginAccessor
+    ? `alias(${versionCatalogPluginAccessor})`
+    : isKotlinDsl
+    ? `id("${gradleProjectGraphPluginName}") version("${expectedVersion}")`
+    : `id "${gradleProjectGraphPluginName}" version "${expectedVersion}"`;
+
+  // Check if the plugin is already included (directly or via version catalog alias)
+  const hasPluginDirectly = buildGradleContent.includes(
+    gradleProjectGraphPluginName
+  );
+  const hasPluginViaAlias =
+    versionCatalogPluginAccessor &&
+    buildGradleContent.includes(versionCatalogPluginAccessor);
+  const hasPlugin = hasPluginDirectly || hasPluginViaAlias;
 
   // Helper to add plugin to plugins block
   function addPluginToPluginsBlock(content: string): string {
@@ -162,43 +220,49 @@ async function addNxProjectGraphPluginToBuildGradle(
 
   // Helper to add plugin application to allprojects
   function addPluginToAllProjects(content: string): string {
-    const applyPlugin = isKotlinDsl
-      ? `plugin(\"${gradleProjectGraphPluginName}\")`
-      : `plugin(\"${gradleProjectGraphPluginName}\")`;
+    const applyPlugin = versionCatalogPluginAccessor
+      ? `plugin(${versionCatalogPluginAccessor})`
+      : isKotlinDsl
+      ? `plugin("${gradleProjectGraphPluginName}")`
+      : `plugin("${gradleProjectGraphPluginName}")`;
     return `${content}\nallprojects {\n    apply {\n        ${applyPlugin}\n    }\n}`;
   }
 
-  // 1. Ensure plugins block and correct plugin version
+  // Add to plugins block if plugin not already present
   if (buildGradleContent.includes('plugins {')) {
-    if (buildGradleContent.includes(gradleProjectGraphPluginName)) {
-      // Update version if needed
-      const currentVersion = await extractNxPluginVersion(
-        gradleFilePath,
-        buildGradleContent
-      );
-      if (currentVersion && currentVersion !== expectedVersion) {
-        buildGradleContent = updateNxPluginVersion(
-          buildGradleContent,
-          expectedVersion
+    if (hasPlugin) {
+      // Plugin already exists - update version if needed (only for direct declarations)
+      if (hasPluginDirectly) {
+        const currentVersion = await extractNxPluginVersion(
+          gradleFilePath,
+          buildGradleContent
         );
+        if (currentVersion && currentVersion !== expectedVersion) {
+          buildGradleContent = updateNxPluginVersion(
+            buildGradleContent,
+            expectedVersion
+          );
+        }
       }
     } else {
-      // Add plugin to plugins block
       buildGradleContent = addPluginToPluginsBlock(buildGradleContent);
     }
   } else {
-    // Add plugins block if missing
     buildGradleContent = addPluginsBlock(buildGradleContent);
   }
 
-  // 2. Ensure plugin is applied to all projects
-  const applyPluginPattern = new RegExp(
-    `\\s*plugin\\(["']${gradleProjectGraphPluginName}["']\\)`
-  );
+  // Check if plugin is already applied in allprojects (either via direct name or version catalog)
+  const applyPluginPattern = versionCatalogPluginAccessor
+    ? new RegExp(
+        `\\s*plugin\\(${versionCatalogPluginAccessor.replace(/\./g, '\\.')}\\)`
+      )
+    : new RegExp(`\\s*plugin\\(["']${gradleProjectGraphPluginName}["']\\)`);
+
   if (buildGradleContent.includes('allprojects {')) {
     if (!applyPluginPattern.test(buildGradleContent)) {
-      // Add plugin to existing allprojects block
-      const applyPlugin = isKotlinDsl
+      const applyPlugin = versionCatalogPluginAccessor
+        ? `plugin(${versionCatalogPluginAccessor})`
+        : isKotlinDsl
         ? `plugin("${gradleProjectGraphPluginName}")`
         : `plugin "${gradleProjectGraphPluginName}"`;
 
@@ -211,7 +275,6 @@ async function addNxProjectGraphPluginToBuildGradle(
     buildGradleContent = addPluginToAllProjects(buildGradleContent);
   }
 
-  // 3. Write and return updated content
   tree.write(gradleFilePath, buildGradleContent);
   return buildGradleContent;
 }

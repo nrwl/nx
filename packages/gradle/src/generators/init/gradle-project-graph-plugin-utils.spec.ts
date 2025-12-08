@@ -320,5 +320,171 @@ allprojects {
         );
       });
     });
+
+    describe('Version catalog support', () => {
+      it('should use alias syntax when version catalog has the plugin (Kotlin DSL)', async () => {
+        await tempFs.createFiles({
+          'proj/settings.gradle.kts': '',
+          'proj/build.gradle.kts': `plugins {
+    id("java")
+}`,
+          'proj/libs.versions.toml': `[plugins]
+nxProjectGraph = { id = "${gradleProjectGraphPluginName}", version = "1.0.0" }`,
+        });
+
+        await addNxProjectGraphPlugin(tree);
+
+        const content = tree.read('proj/build.gradle.kts', 'utf-8');
+        expect(content).toContain('alias(libs.plugins.nxProjectGraph)');
+        expect(content).not.toContain('version(');
+        // allprojects should also use version catalog accessor
+        expect(content).toContain('plugin(libs.plugins.nxProjectGraph)');
+      });
+
+      it('should use alias syntax when version catalog has the plugin (Groovy DSL)', async () => {
+        await tempFs.createFiles({
+          'proj/settings.gradle': '',
+          'proj/build.gradle': `plugins {
+    id 'java'
+}`,
+          'proj/libs.versions.toml': `[plugins]
+nxProjectGraph = { id = "${gradleProjectGraphPluginName}", version = "1.0.0" }`,
+        });
+
+        await addNxProjectGraphPlugin(tree);
+
+        const content = tree.read('proj/build.gradle', 'utf-8');
+        expect(content).toContain('alias(libs.plugins.nxProjectGraph)');
+        expect(content).not.toContain('version "');
+        // allprojects should also use version catalog accessor
+        expect(content).toContain('plugin(libs.plugins.nxProjectGraph)');
+      });
+
+      it('should convert dashes in alias to dots in accessor path', async () => {
+        await tempFs.createFiles({
+          'proj/settings.gradle.kts': '',
+          'proj/build.gradle.kts': `plugins {
+    id("java")
+}`,
+          'proj/gradle/libs.versions.toml': `[plugins]
+nx-project-graph = { id = "${gradleProjectGraphPluginName}", version = "1.0.0" }`,
+        });
+
+        await addNxProjectGraphPlugin(tree);
+
+        const content = tree.read('proj/build.gradle.kts', 'utf-8');
+        expect(content).toContain('alias(libs.plugins.nx.project.graph)');
+      });
+
+      it('should fall back to direct version when version catalog does not have the plugin', async () => {
+        await tempFs.createFiles({
+          'proj/settings.gradle.kts': '',
+          'proj/build.gradle.kts': `plugins {
+    id("java")
+}`,
+          'proj/libs.versions.toml': `[plugins]
+otherPlugin = { id = "com.other.plugin", version = "1.0.0" }`,
+        });
+
+        await addNxProjectGraphPlugin(tree);
+
+        const content = tree.read('proj/build.gradle.kts', 'utf-8');
+        expect(content).toContain(`id("${gradleProjectGraphPluginName}")`);
+        expect(content).toContain('version(');
+        expect(content).not.toContain('alias(');
+      });
+
+      it('should not duplicate plugin when already added via version catalog alias', async () => {
+        await tempFs.createFiles({
+          'proj/settings.gradle.kts': '',
+          'proj/build.gradle.kts': `plugins {
+    alias(libs.plugins.nxProjectGraph)
+    id("java")
+}`,
+          'proj/libs.versions.toml': `[plugins]
+nx-project-graph = { id = "${gradleProjectGraphPluginName}", version = "1.0.0" }`,
+        });
+
+        await addNxProjectGraphPlugin(tree);
+
+        const content = tree.read('proj/build.gradle.kts', 'utf-8');
+        // Should only have one occurrence of the plugin
+        const aliasMatches = content.match(
+          /alias\(libs\.plugins\.nxProjectGraph\)/g
+        );
+        expect(aliasMatches).toHaveLength(1);
+        // Should not add direct version syntax
+        expect(content).not.toContain(`${gradleProjectGraphPluginName}`);
+      });
+
+      it('should handle version catalog with simple format', async () => {
+        await tempFs.createFiles({
+          'proj/settings.gradle.kts': '',
+          'proj/build.gradle.kts': `plugins {
+    id("java")
+}`,
+          'proj/libs.versions.toml': `[plugins]
+nxGraph = "${gradleProjectGraphPluginName}:1.0.0"`,
+        });
+
+        await addNxProjectGraphPlugin(tree);
+
+        const content = tree.read('proj/build.gradle.kts', 'utf-8');
+        expect(content).toContain('alias(libs.plugins.nxGraph)');
+      });
+
+      it('should create plugins block with alias syntax when missing (Kotlin DSL)', async () => {
+        await tempFs.createFiles({
+          'proj/settings.gradle.kts': '',
+          'proj/build.gradle.kts': 'apply(plugin = "java")',
+          'proj/libs.versions.toml': `[plugins]
+nxProjectGraph = { id = "${gradleProjectGraphPluginName}", version = "1.0.0" }`,
+        });
+
+        await addNxProjectGraphPlugin(tree);
+
+        const content = tree.read('proj/build.gradle.kts', 'utf-8');
+        expect(content).toMatch(
+          /^plugins\s*{\s*alias\(libs\.plugins\.nxProjectGraph\)\s*}/
+        );
+        expect(content).not.toContain('version(');
+      });
+
+      it('should create plugins block with alias syntax when missing (Groovy DSL)', async () => {
+        await tempFs.createFiles({
+          'proj/settings.gradle': '',
+          'proj/build.gradle': 'apply plugin: "java"',
+          'proj/libs.versions.toml': `[plugins]
+nxProjectGraph = { id = "${gradleProjectGraphPluginName}", version = "1.0.0" }`,
+        });
+
+        await addNxProjectGraphPlugin(tree);
+
+        const content = tree.read('proj/build.gradle', 'utf-8');
+        expect(content).toMatch(
+          /^plugins\s*{\s*alias\(libs\.plugins\.nxProjectGraph\)\s*}/
+        );
+        expect(content).not.toContain('version "');
+      });
+
+      it('should create allprojects block with version catalog accessor when missing', async () => {
+        await tempFs.createFiles({
+          'proj/settings.gradle.kts': '',
+          'proj/build.gradle.kts': `plugins {
+    id("java")
+}`,
+          'proj/libs.versions.toml': `[plugins]
+nxProjectGraph = { id = "${gradleProjectGraphPluginName}", version = "1.0.0" }`,
+        });
+
+        await addNxProjectGraphPlugin(tree);
+
+        const content = tree.read('proj/build.gradle.kts', 'utf-8');
+        expect(content).toContain('alias(libs.plugins.nxProjectGraph)');
+        expect(content).toMatch(
+          /allprojects\s*{\s*apply\s*{\s*plugin\(libs\.plugins\.nxProjectGraph\)\s*}\s*}/
+        );
+      });
+    });
   });
 });
