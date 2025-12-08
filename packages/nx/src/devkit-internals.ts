@@ -8,7 +8,10 @@ export {
   getExecutorInformation,
   parseExecutor,
 } from './command-line/run/executor-utils';
-export { readNxJson as readNxJsonFromDisk } from './config/nx-json';
+export {
+  readNxJson as readNxJsonFromDisk,
+  clearNxJsonCache,
+} from './config/nx-json';
 export { calculateDefaultProjectName } from './config/calculate-default-project-name';
 export { retrieveProjectConfigurationsWithAngularProjects } from './project-graph/utils/retrieve-workspace-files';
 export { mergeTargetConfigurations } from './project-graph/utils/project-configuration-utils';

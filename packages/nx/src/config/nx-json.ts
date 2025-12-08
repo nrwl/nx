@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type ChangelogRenderer from '../../release/changelog-renderer';
 import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
@@ -12,6 +12,36 @@ import type {
   TargetDependencyConfig,
 } from './workspace-json-project-json';
 import { getNxRequirePaths } from '../utils/installation-directory';
+
+/**
+ * Cache for readNxJson to avoid repeated filesystem reads.
+ * Keyed by root path, stores the parsed config and file modification times.
+ */
+interface NxJsonCache {
+  nxJsonConfig: NxJsonConfiguration;
+  nxJsonMtime: number;
+  extendedConfigPath?: string;
+  extendedConfigMtime?: number;
+}
+const nxJsonCache = new Map<string, NxJsonCache>();
+
+/**
+ * Clears the nx.json cache. Useful for testing or when you know the file has changed.
+ */
+export function clearNxJsonCache(): void {
+  nxJsonCache.clear();
+}
+
+/**
+ * Gets file mtime in milliseconds, returns -1 if file doesn't exist.
+ */
+function getFileMtime(filePath: string): number {
+  try {
+    return statSync(filePath).mtimeMs;
+  } catch {
+    return -1;
+  }
+}
 
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;
@@ -889,22 +919,62 @@ export type ExpandedPluginConfiguration<T = unknown> = {
 };
 
 export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
-  const nxJson = join(root, 'nx.json');
-  if (existsSync(nxJson)) {
-    const nxJsonConfiguration = readJsonFile<NxJsonConfiguration>(nxJson);
+  const nxJsonPath = join(root, 'nx.json');
+  const currentMtime = getFileMtime(nxJsonPath);
+
+  // Check if we have a valid cached entry
+  const cached = nxJsonCache.get(root);
+  if (cached && currentMtime !== -1) {
+    // File exists and we have cache - check if mtimes match
+    if (cached.nxJsonMtime === currentMtime) {
+      // If there's an extended config, check its mtime too
+      if (cached.extendedConfigPath) {
+        const extendedMtime = getFileMtime(cached.extendedConfigPath);
+        if (extendedMtime === cached.extendedConfigMtime) {
+          return cached.nxJsonConfig;
+        }
+      } else {
+        // No extended config, mtime matches - return cached
+        return cached.nxJsonConfig;
+      }
+    }
+  }
+
+  // Cache miss or invalid - read from disk
+  if (currentMtime !== -1) {
+    // nx.json exists
+    const nxJsonConfiguration = readJsonFile<NxJsonConfiguration>(nxJsonPath);
     if (nxJsonConfiguration.extends) {
       const extendedNxJsonPath = require.resolve(nxJsonConfiguration.extends, {
         paths: getNxRequirePaths(root),
       });
       const baseNxJson = readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
-      return {
+      const mergedConfig = {
         ...baseNxJson,
         ...nxJsonConfiguration,
       };
+
+      // Cache with extended config info
+      nxJsonCache.set(root, {
+        nxJsonConfig: mergedConfig,
+        nxJsonMtime: currentMtime,
+        extendedConfigPath: extendedNxJsonPath,
+        extendedConfigMtime: getFileMtime(extendedNxJsonPath),
+      });
+
+      return mergedConfig;
     } else {
+      // Cache without extended config
+      nxJsonCache.set(root, {
+        nxJsonConfig: nxJsonConfiguration,
+        nxJsonMtime: currentMtime,
+      });
+
       return nxJsonConfiguration;
     }
   } else {
+    // nx.json doesn't exist - return default and don't cache
+    // (user might create it later)
     try {
       return readJsonFile(join(__dirname, '..', '..', 'presets', 'core.json'));
     } catch (e) {
