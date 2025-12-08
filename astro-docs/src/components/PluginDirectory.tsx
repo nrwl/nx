@@ -331,12 +331,11 @@ export function PluginDirectory({
 
       result.sort((a, b) => {
         switch (modifiers.orderBy) {
-          case 'lastPublishDate':
-            return (
-              direction *
-              (new Date(a.lastPublishedDate || '').getTime() -
-                new Date(b.lastPublishedDate || '').getTime())
-            );
+          case 'lastPublishDate': {
+            const aTime = a.lastPublishedDate ? new Date(a.lastPublishedDate).getTime() : 0;
+            const bTime = b.lastPublishedDate ? new Date(b.lastPublishedDate).getTime() : 0;
+            return direction * (aTime - bTime);
+          }
           case 'npmDownloads':
             return direction * ((a.npmDownloads || 0) - (b.npmDownloads || 0));
           case 'githubStars':
