@@ -1,7 +1,7 @@
 import { prompt } from 'enquirer';
 import { output } from '../../utils/output';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 
 import {
   Agent,

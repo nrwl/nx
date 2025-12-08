@@ -2,6 +2,7 @@
   "name": "@nx/angular",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
   "repository": {
     "type": "git",
@@ -20,23 +21,87 @@
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
-    "./generators": "./generators.js",
-    "./executors": "./executors.js",
-    "./plugin": "./plugin.js",
-    "./tailwind": "./tailwind.js",
-    "./module-federation": "./module-federation/index.js",
-    "./src/utils": "./src/utils/index.js",
-    "./plugins/component-testing": "./plugins/component-testing.js",
-    "./src/generators/utils": "./src/generators/utils/index.js",
-    "./src/generators/move/move-impl": "./src/generators/move/move-impl.js",
-    "./src/builders/*/schema.json": "./src/builders/*/schema.json",
-    "./src/builders/*.impl": "./src/builders/*.impl.js",
-    "./src/builders/*/schema": "./src/builders/*/schema.d.ts",
-    "./src/executors/*/schema.json": "./src/executors/*/schema.json",
-    "./src/executors/*.impl": "./src/executors/*.impl.js",
-    "./src/executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./src/generators/*/schema.json": "./src/generators/*/schema.json",
-    "./src/generators/*/schema": "./src/generators/*/schema.d.ts"
+    "./generators": {
+      "types": "./generators.d.ts",
+      "@nx/nx-source": "./generators.ts",
+      "import": "./dist/generators.js",
+      "default": "./dist/generators.js"
+    },
+    "./executors": {
+      "types": "./executors.d.ts",
+      "@nx/nx-source": "./executors.ts",
+      "import": "./dist/executors.js",
+      "default": "./dist/executors.js"
+    },
+    "./plugin": {
+      "types": "./plugin.d.ts",
+      "@nx/nx-source": "./plugin.ts",
+      "import": "./dist/plugin.js",
+      "default": "./dist/plugin.js"
+    },
+    "./tailwind": {
+      "types": "./tailwind.d.ts",
+      "@nx/nx-source": "./tailwind.ts",
+      "import": "./dist/tailwind.js",
+      "default": "./dist/tailwind.js"
+    },
+    "./module-federation": {
+      "types": "./module-federation/index.d.ts",
+      "@nx/nx-source": "./module-federation/index.ts",
+      "import": "./dist/module-federation/index.js",
+      "default": "./dist/module-federation/index.js"
+    },
+    "./src/utils": {
+      "types": "./src/utils/index.d.ts",
+      "@nx/nx-source": "./src/utils/index.ts",
+      "import": "./dist/src/utils/index.js",
+      "default": "./dist/src/utils/index.js"
+    },
+    "./plugins/component-testing": {
+      "types": "./plugins/component-testing.d.ts",
+      "@nx/nx-source": "./plugins/component-testing.ts",
+      "import": "./dist/plugins/component-testing.js",
+      "default": "./dist/plugins/component-testing.js"
+    },
+    "./src/generators/utils": {
+      "types": "./src/generators/utils/index.d.ts",
+      "@nx/nx-source": "./src/generators/utils/index.ts",
+      "import": "./dist/src/generators/utils/index.js",
+      "default": "./dist/src/generators/utils/index.js"
+    },
+    "./src/generators/move/move-impl": {
+      "types": "./src/generators/move/move-impl.d.ts",
+      "@nx/nx-source": "./src/generators/move/move-impl.ts",
+      "import": "./dist/src/generators/move/move-impl.js",
+      "default": "./dist/src/generators/move/move-impl.js"
+    },
+    "./src/builders/*/schema.json": "./dist/src/builders/*/schema.json",
+    "./src/builders/*.impl": {
+      "types": "./src/builders/*.impl.d.ts",
+      "@nx/nx-source": "./src/builders/*.impl.ts",
+      "import": "./dist/src/builders/*.impl.js",
+      "default": "./dist/src/builders/*.impl.js"
+    },
+    "./src/builders/*/schema": {
+      "types": "./src/builders/*/schema.d.ts",
+      "@nx/nx-source": "./src/builders/*/schema.ts"
+    },
+    "./src/executors/*/schema.json": "./dist/src/executors/*/schema.json",
+    "./src/executors/*.impl": {
+      "types": "./src/executors/*.impl.d.ts",
+      "@nx/nx-source": "./src/executors/*.impl.ts",
+      "import": "./dist/src/executors/*.impl.js",
+      "default": "./dist/src/executors/*.impl.js"
+    },
+    "./src/executors/*/schema": {
+      "types": "./src/executors/*/schema.d.ts",
+      "@nx/nx-source": "./src/executors/*/schema.ts"
+    },
+    "./src/generators/*/schema.json": "./dist/src/generators/*/schema.json",
+    "./src/generators/*/schema": {
+      "types": "./src/generators/*/schema.d.ts",
+      "@nx/nx-source": "./src/generators/*/schema.ts"
+    }
   },
   "author": "Victor Savkin",
   "license": "MIT",

@@ -2,6 +2,7 @@
   "name": "@nx/devkit",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more. Learn more about [extending Nx by leveraging the Nx Devkit](https://nx.dev/extending-nx/intro/getting-started) on our docs.",
   "repository": {
     "type": "git",
@@ -19,8 +20,84 @@
     "Cypress",
     "CLI"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "typings": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./public-api": {
+      "types": "./public-api.d.ts",
+      "@nx/nx-source": "./public-api.ts",
+      "import": "./dist/public-api.js",
+      "default": "./dist/public-api.js"
+    },
+    "./internal": {
+      "types": "./internal.d.ts",
+      "@nx/nx-source": "./internal.ts",
+      "import": "./dist/internal.js",
+      "default": "./dist/internal.js"
+    },
+    "./testing": {
+      "types": "./testing.d.ts",
+      "@nx/nx-source": "./testing.ts",
+      "import": "./dist/testing.js",
+      "default": "./dist/testing.js"
+    },
+    "./ngcli-adapter": {
+      "types": "./ngcli-adapter.d.ts",
+      "@nx/nx-source": "./ngcli-adapter.ts",
+      "import": "./dist/ngcli-adapter.js",
+      "default": "./dist/ngcli-adapter.js"
+    },
+    "./src/executors/*": {
+      "types": "./src/executors/*.d.ts",
+      "@nx/nx-source": "./src/executors/*.ts",
+      "import": "./dist/src/executors/*.js",
+      "default": "./dist/src/executors/*.js"
+    },
+    "./src/generators/*": {
+      "types": "./src/generators/*.d.ts",
+      "@nx/nx-source": "./src/generators/*.ts",
+      "import": "./dist/src/generators/*.js",
+      "default": "./dist/src/generators/*.js"
+    },
+    "./src/generators/**/*": {
+      "types": "./src/generators/**/*.d.ts",
+      "@nx/nx-source": "./src/generators/**/*.ts",
+      "import": "./dist/src/generators/**/*.js",
+      "default": "./dist/src/generators/**/*.js"
+    },
+    "./src/tasks/*": {
+      "types": "./src/tasks/*.d.ts",
+      "@nx/nx-source": "./src/tasks/*.ts",
+      "import": "./dist/src/tasks/*.js",
+      "default": "./dist/src/tasks/*.js"
+    },
+    "./src/utils/*": {
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
+    },
+    "./src/utils/catalog": {
+      "types": "./src/utils/catalog/index.d.ts",
+      "@nx/nx-source": "./src/utils/catalog/index.ts",
+      "import": "./dist/src/utils/catalog/index.js",
+      "default": "./dist/src/utils/catalog/index.js"
+    },
+    "./src/utils/**/*": {
+      "types": "./src/utils/**/*.d.ts",
+      "@nx/nx-source": "./src/utils/**/*.ts",
+      "import": "./dist/src/utils/**/*.js",
+      "default": "./dist/src/utils/**/*.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json"
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -38,6 +115,7 @@
   },
   "devDependencies": {
     "jest": "catalog:jest",
+    "jest-environment-node": "catalog:jest",
     "nx": "workspace:*"
   },
   "peerDependencies": {

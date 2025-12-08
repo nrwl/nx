@@ -33,7 +33,7 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": ["nx"]
+            "ignoredDependencies": ["jest-environment-node", "nx"]
           }
         ]
       }

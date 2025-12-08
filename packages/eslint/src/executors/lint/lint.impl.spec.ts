@@ -1,7 +1,12 @@
+let mockExistsSync = jest.fn();
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  existsSync: mockExistsSync,
+}));
 import type { ExecutorContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import * as fs from 'fs';
 import { resolve } from 'path';
+import fs from 'fs';
 import type { Schema } from './schema';
 
 const formattedReports = 'formatted report 1';
@@ -24,6 +29,7 @@ class MockESLint {
   loadFormatter = mockLoadFormatter;
   isPathIgnored = mockIsPathIgnored;
   lintFiles = mockLintFiles;
+
   calculateConfigForFile(file: string) {
     return { file: file };
   }
@@ -80,6 +86,9 @@ function setupMocks() {
   console.warn = jest.fn();
   console.error = jest.fn();
   console.info = jest.fn();
+  mockExistsSync.mockImplementation((path) =>
+    jest.requireActual('fs').existsSync(path)
+  );
 }
 
 describe('Linter Builder', () => {
@@ -87,6 +96,7 @@ describe('Linter Builder', () => {
   let tempFs: TempFs;
 
   beforeEach(() => {
+    mockExistsSync.mockRestore();
     tempFs = new TempFs('eslint');
     MockESLint.version = VALID_ESLINT_VERSION;
     mockReports = [{ results: [], usedDeprecatedRules: [] }];
@@ -908,7 +918,7 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
 
   it('should pass path to eslint.config.cjs to resolveAndInstantiateESLint if it is unspecified and we are using flag configuration', async () => {
     setupMocks();
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    mockExistsSync.mockReturnValue(true);
     await lintExecutor(createValidRunBuilderOptions(), mockContext);
     expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
       `${mockContext.root}/apps/proj/eslint.config.cjs`,

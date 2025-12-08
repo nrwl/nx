@@ -23,7 +23,12 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": ["nx", "typescript", "detox"]
+            "ignoredDependencies": [
+              "nx",
+              "typescript",
+              "detox",
+              "jest-environment-node"
+            ]
           }
         ]
       }

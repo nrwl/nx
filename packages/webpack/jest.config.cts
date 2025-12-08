@@ -7,4 +7,6 @@ module.exports = {
   globals: {},
   displayName: 'webpack',
   preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  coverageDirectory: '../../coverage/packages/webpack',
 };

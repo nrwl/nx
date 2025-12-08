@@ -2,6 +2,7 @@
   "name": "create-nx-plugin",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "This package is used to scaffold a brand-new workspace used to develop an Nx plugin, and sets up a pre-configured plugin with the specified name. The new plugin is created with a default generator, executor, and e2e app.",
   "repository": {
     "type": "git",
@@ -20,7 +21,16 @@
     "CLI"
   ],
   "bin": {
-    "create-nx-plugin": "./bin/create-nx-plugin.js"
+    "create-nx-plugin": "./dist/bin/create-nx-plugin.js"
+  },
+  "exports": {
+    "./bin/create-nx-plugin": {
+      "types": "./bin/create-nx-plugin.d.ts",
+      "@nx/nx-source": "./bin/create-nx-plugin.ts",
+      "import": "./dist/bin/create-nx-plugin.js",
+      "default": "./dist/bin/create-nx-plugin.js"
+    },
+    "./package.json": "./package.json"
   },
   "author": "Victor Savkin",
   "license": "MIT",

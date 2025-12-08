@@ -1,6 +1,6 @@
 import * as yargs from 'yargs';
-import * as enquirer from 'enquirer';
-import * as chalk from 'chalk';
+import enquirer from 'enquirer';
+import chalk from 'chalk';
 
 import {
   MessageKey,

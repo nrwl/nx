@@ -21,8 +21,91 @@
   "author": "Colum Ferry",
   "license": "MIT",
   "homepage": "https://nx.dev",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "typings": "./index.d.ts",
   "executors": "./executors.json",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "@nx/nx-source": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./angular": {
+      "types": "./angular.d.ts",
+      "@nx/nx-source": "./angular.ts",
+      "import": "./dist/angular.js",
+      "default": "./dist/angular.js"
+    },
+    "./webpack": {
+      "types": "./webpack.d.ts",
+      "@nx/nx-source": "./webpack.ts",
+      "import": "./dist/webpack.js",
+      "default": "./dist/webpack.js"
+    },
+    "./rspack": {
+      "types": "./rspack.d.ts",
+      "@nx/nx-source": "./rspack.ts",
+      "import": "./dist/rspack.js",
+      "default": "./dist/rspack.js"
+    },
+    "./url-helpers": {
+      "types": "./url-helpers.d.ts",
+      "@nx/nx-source": "./url-helpers.ts",
+      "import": "./dist/url-helpers.js",
+      "default": "./dist/url-helpers.js"
+    },
+    "./src/*": {
+      "types": "./src/*.d.ts",
+      "@nx/nx-source": "./src/*.ts",
+      "import": "./dist/src/*.js",
+      "default": "./dist/src/*.js"
+    },
+    "./src/executors/utils": {
+      "types": "./src/executors/utils/index.d.ts",
+      "@nx/nx-source": "./src/executors/utils/index.ts",
+      "import": "./dist/src/executors/utils/index.js",
+      "default": "./dist/src/executors/utils/index.js"
+    },
+    "./src/executors/utils/*": {
+      "types": "./src/executors/utils/*.d.ts",
+      "@nx/nx-source": "./src/executors/utils/*.ts",
+      "import": "./dist/src/executors/utils/*.js",
+      "default": "./dist/src/executors/utils/*.js"
+    },
+    "./src/utils": {
+      "types": "./src/utils/index.d.ts",
+      "@nx/nx-source": "./src/utils/index.ts",
+      "import": "./dist/src/utils/index.js",
+      "default": "./dist/src/utils/index.js"
+    },
+    "./src/executors/utils/models": {
+      "types": "./src/executors/utils/models/index.d.ts",
+      "@nx/nx-source": "./src/executors/utils/models/index.ts",
+      "import": "./dist/src/executors/utils/models/index.js",
+      "default": "./dist/src/executors/utils/models/index.js"
+    },
+    "./src/utils/plugins/runtime-library-control.plugin": {
+      "types": "./src/plugins/runtime-library-control.plugin.d.ts",
+      "@nx/nx-source": "./src/plugins/runtime-library-control.plugin.ts",
+      "import": "./dist/src/plugins/runtime-library-control.plugin.js",
+      "default": "./dist/src/plugins/runtime-library-control.plugin.js"
+    },
+    "./src/utils/*": {
+      "types": "./src/utils/*.d.ts",
+      "@nx/nx-source": "./src/utils/*.ts",
+      "import": "./dist/src/utils/*.js",
+      "default": "./dist/src/utils/*.js"
+    },
+    "./src/**/*": {
+      "types": "./src/**/*.d.ts",
+      "@nx/nx-source": "./src/**/*.ts",
+      "import": "./dist/src/**/*.js",
+      "default": "./dist/src/**/*.js"
+    },
+    "./package.json": "./package.json",
+    "./executors.json": "./executors.json"
+  },
   "dependencies": {
     "@module-federation/enhanced": "^0.21.2",
     "@module-federation/node": "^2.7.21",
@@ -38,7 +121,8 @@
     "webpack": "^5.101.3"
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "jest-environment-node": "catalog:jest"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

@@ -75,9 +75,9 @@
         "tag": false
       },
       "currentVersionResolver": "registry",
-      "preserveLocalDependencyProtocols": false,
+      "preserveLocalDependencyProtocols": true,
       "preserveMatchingDependencyRanges": false,
-      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
+      "manifestRootsToUpdate": ["packages/{projectName}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true
       }
@@ -92,7 +92,7 @@
     },
     "nx-release-publish": {
       "options": {
-        "packageRoot": "dist/packages/{projectName}"
+        "packageRoot": "packages/{projectName}"
       }
     },
     "build": {
@@ -197,7 +197,7 @@
       "cache": true
     },
     "legacy-post-build": {
-      "dependsOn": ["build-base"],
+      "dependsOn": ["build-base", "workspace-plugin:build-base"],
       "cache": true,
       "inputs": ["production", "^production"],
       "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]

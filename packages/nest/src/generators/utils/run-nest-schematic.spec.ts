@@ -1,5 +1,18 @@
+const mockFormatFiles = jest
+  .fn()
+  .mockImplementation(jest.requireActual('@nx/devkit').formatFiles);
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  formatFiles: mockFormatFiles,
+  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+    return {
+      nodes: {},
+      dependencies: {},
+    };
+  }),
+}));
+
 import type { Tree } from '@nx/devkit';
-import * as devkit from '@nx/devkit';
 import { runNestSchematic } from './run-nest-schematic';
 import { createTreeWithNestApplication } from './testing';
 import type { NestSchematic, NormalizedOptions } from './types';
@@ -41,19 +54,15 @@ describe('runNestSchematic utility', () => {
 
   describe('--skipFormat', () => {
     it('should format files by default', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
       await runNestSchematic(tree, 'class', options);
 
-      expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(mockFormatFiles).toHaveBeenCalled();
     });
 
     it('should not format files when --skipFormat=true', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
       await runNestSchematic(tree, 'class', { ...options, skipFormat: true });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+      expect(mockFormatFiles).not.toHaveBeenCalled();
     });
   });
 });

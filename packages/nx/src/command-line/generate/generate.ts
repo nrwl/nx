@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { relative } from 'path';
 
@@ -408,7 +408,7 @@ export async function generate(args: { [k: string]: any }) {
       }
     } else {
       require('../../adapter/compat');
-      return (await import('../../adapter/ngcli-adapter')).generate(
+      return (await import('../../adapter/ngcli-adapter.js')).generate(
         workspaceRoot,
         {
           ...opts,

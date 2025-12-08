@@ -3,15 +3,15 @@
   "version": "0.1",
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init",
-      "schema": "./src/generators/init/schema.json",
+      "factory": "./dist/src/generators/init/init",
+      "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/vitest` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
     "configuration": {
-      "factory": "./src/generators/configuration/configuration",
-      "schema": "./src/generators/configuration/schema.json",
+      "factory": "./dist/src/generators/configuration/configuration",
+      "schema": "./dist/src/generators/configuration/schema.json",
       "description": "Add Vitest configuration to a project."
     }
   }

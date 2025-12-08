@@ -38,7 +38,9 @@ function validateMigration(m: MigrationsJsonEntry, root: string) {
     : [impl, null];
   let implModule;
   expect(() => {
-    implModule = require(path.join(root, `${implPath}.ts`));
+    // For local-dist builds, migration files are in src/ not dist/
+    const tsPath = implPath.replace(/^\.\/dist\/src\//, './src/');
+    implModule = require(path.join(root, `${tsPath}.ts`));
   }).not.toThrow();
   if (implMember) {
     expect(implModule).toHaveProperty(implMember);

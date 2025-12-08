@@ -1,0 +1,33 @@
+# Build artifacts
+dist/package.json
+dist/migrations.json
+dist/generators.json
+dist/executors.json
+dist/tsconfig.tsbuildinfo
+dist/.eslintrc.json
+
+# Source files
+**/*.ts
+**/*.d.ts.map
+!**/*.d.ts
+
+# Test files and fixtures
+src/**/__fixtures__/**
+src/**/__snapshots__/**
+**/*.spec.ts
+**/*.test.ts
+
+# Configuration
+.eslintrc.json
+jest.config.cts
+tsconfig*.json
+project.json
+ng-package.json
+
+# Templates and source artifacts
+readme-template.md
+migrations.spec.ts
+
+# ng-packagr specific
+mf/ng-package.json
+tsconfig.lib.runtime.json

@@ -35,11 +35,19 @@ const { zonePackage, serverBundlePath, outputPath, indexFile } =
   workerData as RoutesExtractorWorkerData;
 
 async function extract(): Promise<string[]> {
+  const normalizedServerBundlePath = require.resolve(serverBundlePath);
+  const resolvedServerBundle = await import(normalizedServerBundlePath);
+  const serverBundle = (
+    'default' in resolvedServerBundle &&
+    'default' in resolvedServerBundle.default
+      ? resolvedServerBundle.default
+      : resolvedServerBundle
+  ) as ServerBundleExports;
   const {
     AppServerModule,
     ɵgetRoutesFromAngularRouterConfig: getRoutesFromAngularRouterConfig,
     default: bootstrapAppFn,
-  } = (await import(serverBundlePath)) as ServerBundleExports;
+  } = serverBundle;
 
   const browserIndexInputPath = path.join(outputPath, indexFile);
   const document = await fs.promises.readFile(browserIndexInputPath, 'utf8');

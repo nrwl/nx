@@ -1,3 +1,4 @@
+// @ts-expect-error - Type definitions may be incomplete in @module-federation/enhanced
 import type { ModuleFederationRuntimePlugin } from '@module-federation/enhanced/runtime';
 
 const runtimeStore: {

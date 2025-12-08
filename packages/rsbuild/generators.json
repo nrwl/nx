@@ -3,14 +3,14 @@
   "version": "0.1",
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#initGeneratorInternal",
+      "factory": "./dist/src/generators/init/init#initGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the `@nx/rsbuild` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
     "configuration": {
-      "factory": "./src/generators/configuration/configuration",
+      "factory": "./dist/src/generators/configuration/configuration",
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add an Rsbuild configuration for the provided project."
     }

@@ -1,8 +1,31 @@
+// Define mocks FIRST - BEFORE any imports
+const mockLoggerWarn = jest.fn();
+const mockIsAiAgent = jest.fn();
+
+jest.mock('../utils/logger', () => ({
+  ...jest.requireActual('../utils/logger'),
+  logger: {
+    ...jest.requireActual('../utils/logger').logger,
+    warn: mockLoggerWarn,
+  },
+}));
+
+jest.mock('../native', () => ({
+  ...jest.requireActual('../native'),
+  isAiAgent: mockIsAiAgent,
+}));
+
+// NOW import - mocks are already in place
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 import { shouldUseTui } from './is-tui-enabled';
 import { logger } from '../utils/logger';
 
 describe('shouldUseTui', () => {
+  beforeEach(() => {
+    mockIsAiAgent.mockReturnValue(false);
+    mockLoggerWarn.mockReset();
+  });
+
   it('should return true by default', () =>
     withEnvironmentVariables(
       {
@@ -155,7 +178,7 @@ describe('shouldUseTui', () => {
   it('should warn if the env is not capable when tui flag is true', () => {
     const original = process.stderr.isTTY;
     process.stderr.isTTY = false;
-    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    mockLoggerWarn.mockImplementation(() => {});
     withEnvironmentVariables(
       {
         NX_TUI: null,
@@ -164,7 +187,7 @@ describe('shouldUseTui', () => {
       },
       () => {
         expect(shouldUseTui({}, { tui: true }, false)).toBe(false);
-        expect(warnSpy).toHaveBeenCalled();
+        expect(mockLoggerWarn).toHaveBeenCalled();
       }
     );
     process.stderr.isTTY = original;

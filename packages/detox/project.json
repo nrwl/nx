@@ -4,15 +4,46 @@
   "sourceRoot": "packages/detox/src",
   "projectType": "library",
   "targets": {
+    "build-base": {
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,cjs,mjs}",
+        "{projectRoot}/**/*.d.ts"
+      ]
+    },
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/detox/README.md"],
-      "command": "node ./scripts/copy-readme.js detox",
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js detox packages/detox/readme-template.md packages/detox/README.md"
+          },
+          {
+            "command": "node ./scripts/cleanup-json-in-dist packages/detox/dist"
+          }
+        ],
+        "parallel": false
+      },
       "dependsOn": ["^build", "build-base", "legacy-post-build"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "main": "./index.js",
+        "types": "./index.d.ts",
         "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
+        "sourceRoot": "./src",
         "assets": [
           {
             "input": "packages/detox",
@@ -37,7 +68,15 @@
           {
             "input": "./packages/detox",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json"],
+            "ignore": [
+              "**/tsconfig*.json",
+              "project.json",
+              ".eslintrc.json",
+              "generators.json",
+              "executors.json",
+              "migrations.json",
+              "package.json"
+            ],
             "output": "/"
           },
           {

@@ -4,34 +4,46 @@
   "sourceRoot": "packages/create-nx-plugin",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-commands",
+    "build-base": {
       "outputs": [
-        "{workspaceRoot}/dist/packages/create-nx-plugin/bin/create-nx-plugin.js",
-        "{workspaceRoot}/dist/packages/create-nx-plugin/README.md"
+        "{projectRoot}/dist/**/*.{js,cjs,mjs}",
+        "{projectRoot}/**/*.d.ts"
+      ]
+    },
+    "build": {
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
       ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "executor": "nx:run-commands",
       "options": {
         "commands": [
           {
-            "command": "node ./scripts/chmod dist/packages/create-nx-plugin/bin/create-nx-plugin.js"
+            "command": "node ./scripts/copy-readme.js create-nx-plugin packages/create-nx-plugin/readme-template.md packages/create-nx-plugin/README.md"
           },
           {
-            "command": "node ./scripts/copy-readme.js create-nx-plugin"
-          },
-          {
-            "command": "node ./scripts/replace-versions.js dist/packages/create-nx-plugin/bin/create-nx-plugin.js"
+            "command": "node ./scripts/cleanup-json-in-dist packages/create-nx-plugin/dist"
           }
         ],
         "parallel": false
-      }
+      },
+      "dependsOn": ["^build", "build-base", "legacy-post-build"]
     },
 
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
-        "tsConfig": "./tsconfig.lib.json",
         "main": "./bin/create-nx-plugin.js",
         "types": "./bin/create-nx-plugin.d.ts",
+        "tsConfig": "./tsconfig.lib.json",
+        "outputPath": "./dist",
         "assets": [
           {
             "input": "packages/create-nx-plugin",
@@ -53,11 +65,6 @@
             "input": "packages/create-nx-plugin",
             "glob": "**/*.js",
             "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/create-nx-plugin",
-            "glob": "**/*.d.ts",
             "output": "/"
           },
           {

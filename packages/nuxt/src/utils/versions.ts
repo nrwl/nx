@@ -1,4 +1,4 @@
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require('nx/package.json').version;
 
 // Nuxt versions
 export const nuxtV4Version = '^4.0.0';

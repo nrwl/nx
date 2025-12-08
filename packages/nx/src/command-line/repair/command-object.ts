@@ -16,5 +16,5 @@ export const yargsRepairCommand: CommandModule = {
   `,
   builder: (yargs) => linkToNxDevAndExamples(withVerbose(yargs), 'repair'),
   handler: async (args: ArgumentsCamelCase<{ verbose: boolean }>) =>
-    process.exit(await (await import('./repair')).repair(args)),
+    process.exit(await (await import('./repair.js')).repair(args)),
 };

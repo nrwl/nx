@@ -59,7 +59,8 @@
               "@nx/vite",
               "@nx/vitest",
               "@nx/webpack",
-              "@nx/jest"
+              "@nx/jest",
+              "jest-environment-node"
             ]
           }
         ]

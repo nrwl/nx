@@ -1,4 +1,4 @@
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require('nx/package.json').version;
 export const litVersion = '^2.6.1';
 export const tsNodeVersion = '10.9.1';
 export const tsLibVersion = '^2.3.0';

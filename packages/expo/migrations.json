@@ -4,31 +4,31 @@
       "version": "21.4.0-beta.0",
       "cli": "nx",
       "description": "Remove deprecated dependencies from package.json",
-      "factory": "./src/migrations/update-21-4-0/remove-deprecated-deps"
+      "factory": "./dist/src/migrations/update-21-4-0/remove-deprecated-deps"
     },
     "update-21-4-0-update-splash-screen-config": {
       "version": "21.4.0-beta.0",
       "cli": "nx",
       "description": "Update Expo splash screen configuration to use the new format",
-      "factory": "./src/migrations/update-21-4-0/update-splash-screen-config"
+      "factory": "./dist/src/migrations/update-21-4-0/update-splash-screen-config"
     },
     "update-21-4-0-add-jest-resolver": {
       "version": "21.4.0-beta.0",
       "cli": "nx",
       "description": "Add custom Jest resolver to handle Expo winter runtime issues",
-      "factory": "./src/migrations/update-21-4-0/add-jest-resolver"
+      "factory": "./dist/src/migrations/update-21-4-0/add-jest-resolver"
     },
     "update-22-2-0-create-ai-instructions-for-expo-54": {
       "version": "22.2.0-beta.3",
       "cli": "nx",
       "description": "Create AI migration instructions for Expo SDK 54 upgrade",
-      "factory": "./src/migrations/update-22-2-0/create-ai-instructions-for-expo-54"
+      "factory": "./dist/src/migrations/update-22-2-0/create-ai-instructions-for-expo-54"
     },
     "update-22-2-0-add-expo-system-ui": {
       "version": "22.2.0-beta.3",
       "cli": "nx",
       "description": "Add expo-system-ui dependency for Expo SDK 54",
-      "factory": "./src/migrations/update-22-2-0/add-expo-system-ui"
+      "factory": "./dist/src/migrations/update-22-2-0/add-expo-system-ui"
     },
     "update-22-2-0-update-jest-for-expo-54": {
       "requires": {
@@ -37,7 +37,7 @@
       "version": "22.2.0-beta.3",
       "cli": "nx",
       "description": "Update Jest configuration for Expo SDK 54",
-      "factory": "./src/migrations/update-22-2-0/update-jest-for-expo-54"
+      "factory": "./dist/src/migrations/update-22-2-0/update-jest-for-expo-54"
     }
   },
   "packageJsonUpdates": {

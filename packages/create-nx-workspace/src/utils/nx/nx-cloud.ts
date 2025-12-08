@@ -6,7 +6,7 @@ import {
   CompletionMessageKey,
 } from './messages';
 import { getFlowVariant, messages } from './ab-testing';
-import * as ora from 'ora';
+import ora from 'ora';
 
 export type NxCloud =
   | 'yes'

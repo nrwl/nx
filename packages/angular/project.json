@@ -11,12 +11,14 @@
         "project": "packages/angular/ng-package.json",
         "tsConfig": "packages/angular/tsconfig.lib.runtime.json"
       },
-      "outputs": ["{workspaceRoot}/dist/packages/angular"]
+      "outputs": ["{projectRoot}/dist"]
     },
 
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
+        "outputPath": "./dist",
         "tsConfig": "./tsconfig.lib.json",
         "addPackageJsonFields": false,
         "assets": [
@@ -48,11 +50,6 @@
             "output": "/"
           },
           {
-            "input": "packages/angular",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
             "input": "",
             "glob": "LICENSE",
             "output": "/"
@@ -68,8 +65,17 @@
         "typecheck",
         "build-base"
       ],
-      "outputs": ["{workspaceRoot}/dist/packages/angular/README.md"],
-      "command": "node ./scripts/copy-readme.js angular"
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,mjs,cjs}",
+        "{projectRoot}/README.md"
+      ],
+      "command": "node ./scripts/copy-readme.js angular packages/angular/readme-template.md packages/angular/README.md"
     }
   },
   "implicitDependencies": ["vite"]

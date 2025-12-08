@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 
 export const yargsDecorator = {
   'Options:': `${chalk.green`Options`}:`,

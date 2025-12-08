@@ -1,24 +1,62 @@
+// Mock all modules FIRST - BEFORE any imports
+const mockReadTargetOptions = jest.fn();
+const mockGetExecutorInformation = jest.fn();
+const mockRunExecutor = jest.fn();
+const mockStripIndents = jest.fn((s) => s);
+const mockParseTargetString = jest.fn((s) => {
+  const [project, target, configuration] = s.split(':');
+  return { project, target, configuration };
+});
+const mockLogger = {
+  warn: jest.fn(),
+  log: jest.fn(),
+  info: jest.fn(),
+};
+
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  readTargetOptions: mockReadTargetOptions,
+  runExecutor: mockRunExecutor,
+  stripIndents: mockStripIndents,
+  parseTargetString: mockParseTargetString,
+  logger: mockLogger,
+}));
+
+jest.mock('nx/src/command-line/run/executor-utils', () => ({
+  ...jest.requireActual('nx/src/command-line/run/executor-utils'),
+  getExecutorInformation: mockGetExecutorInformation,
+}));
+
+const mockDetectPort = jest.fn().mockResolvedValue(4200);
+jest.mock('detect-port', () => mockDetectPort);
+
+const mockGetInstalledCypressMajorVersion = jest.fn();
+jest.mock('../../utils/versions', () => ({
+  ...jest.requireActual('../../utils/versions'),
+  getInstalledCypressMajorVersion: mockGetInstalledCypressMajorVersion,
+}));
+
+const mockGetTempTailwindPath = jest.fn();
+jest.mock('../../utils/ct-helpers', () => ({
+  ...jest.requireActual('../../utils/ct-helpers'),
+  getTempTailwindPath: mockGetTempTailwindPath,
+}));
+
+const mockCypressRun = jest.fn().mockResolvedValue({});
+const mockCypressOpen = jest.fn().mockResolvedValue({});
+jest.mock('cypress', () => ({
+  run: mockCypressRun,
+  open: mockCypressOpen,
+}));
+
+// NOW import - mocks are already in place
 import { ExecutorContext } from '@nx/devkit';
-import * as detectPort from 'detect-port';
-import * as executorUtils from 'nx/src/command-line/run/executor-utils';
 import * as path from 'path';
 import { getTempTailwindPath } from '../../utils/ct-helpers';
 import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import cypressExecutor, { CypressExecutorOptions } from './cypress.impl';
 
-jest.mock('@nx/devkit');
-let devkit = require('@nx/devkit');
-jest.mock('detect-port', () => jest.fn().mockResolvedValue(4200));
-jest.mock('../../utils/versions', () => ({
-  ...jest.requireActual('../../utils/versions'),
-  getInstalledCypressMajorVersion: jest.fn(),
-}));
-jest.mock('../../utils/ct-helpers');
-const Cypress = require('cypress');
-
 describe('Cypress builder', () => {
-  let cypressRun: jest.SpyInstance;
-  let cypressOpen: jest.SpyInstance;
   const cypressOptions: CypressExecutorOptions = {
     cypressConfig: 'apps/my-app-e2e/cypress.json',
     parallel: false,
@@ -30,9 +68,7 @@ describe('Cypress builder', () => {
     skipServe: false,
   };
   let mockContext: ExecutorContext;
-  let mockedInstalledCypressMajorVersion: jest.Mock<
-    ReturnType<typeof getInstalledCypressMajorVersion>
-  > = getInstalledCypressMajorVersion as any;
+
   mockContext = {
     root: '/root',
     workspace: { projects: {} },
@@ -46,64 +82,45 @@ describe('Cypress builder', () => {
       },
     },
   } as any;
-  jest.spyOn(devkit, 'readTargetOptions').mockReturnValue({
-    watch: true,
-  });
-  jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
-    schema: { properties: {} },
-    hasherFactory: jest.fn(),
-    implementationFactory: jest.fn(),
-    batchImplementationFactory: jest.fn(),
-    isNgCompat: true,
-    isNxExecutor: true,
-  });
-  let runExecutor: any;
-  let mockGetTailwindPath: jest.Mock<ReturnType<typeof getTempTailwindPath>> =
-    getTempTailwindPath as any;
 
   beforeEach(async () => {
-    mockedInstalledCypressMajorVersion.mockReturnValue(15);
-    runExecutor = (devkit as any).runExecutor = jest.fn().mockReturnValue([
+    // Reset all mocks
+    jest.clearAllMocks();
+
+    // Set up default mock behavior
+    mockGetInstalledCypressMajorVersion.mockReturnValue(15);
+    mockReadTargetOptions.mockReturnValue({
+      watch: true,
+    });
+    mockGetExecutorInformation.mockReturnValue({
+      schema: { properties: {} },
+      hasherFactory: jest.fn(),
+      implementationFactory: jest.fn(),
+      batchImplementationFactory: jest.fn(),
+      isNgCompat: true,
+      isNxExecutor: true,
+    });
+    mockRunExecutor.mockReturnValue([
       {
         success: true,
         baseUrl: 'http://localhost:4200',
       },
     ]);
-    (devkit as any).stripIndents = (s) => s;
-    (devkit as any).parseTargetString = (s) => {
-      const [project, target, configuration] = s.split(':');
-      return {
-        project,
-        target,
-        configuration,
-      };
-    };
-    (devkit as any).logger = {
-      warn: jest.fn(),
-      log: jest.fn(),
-      info: jest.fn(),
-    };
-    cypressRun = jest
-      .spyOn(Cypress, 'run')
-      .mockReturnValue(Promise.resolve({}));
-    cypressOpen = jest
-      .spyOn(Cypress, 'open')
-      .mockReturnValue(Promise.resolve({}));
+    mockCypressRun.mockResolvedValue({});
+    mockCypressOpen.mockResolvedValue({});
   });
-
-  afterEach(() => jest.clearAllMocks());
 
   it('should call `Cypress.run` if headless mode is `true`', async () => {
     const { success } = await cypressExecutor(cypressOptions, mockContext);
     expect(success).toEqual(true);
 
-    expect(cypressRun).toHaveBeenCalledWith(
+    expect(mockCypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         config: expect.objectContaining({ baseUrl: 'http://localhost:4200' }),
         project: path.dirname(cypressOptions.cypressConfig),
       })
     );
-    expect(cypressOpen).not.toHaveBeenCalled();
+    expect(mockCypressOpen).not.toHaveBeenCalled();
   });
 
   it('should call `Cypress.open` if headless mode is `false`', async () => {
@@ -113,17 +130,17 @@ describe('Cypress builder', () => {
     );
     expect(success).toEqual(true);
 
-    expect(cypressOpen).toHaveBeenCalledWith(
+    expect(mockCypressOpen).toHaveBeenCalledWith(
       expect.objectContaining({
         config: expect.objectContaining({ baseUrl: 'http://localhost:4200' }),
         project: path.dirname(cypressOptions.cypressConfig),
       })
     );
-    expect(cypressRun).not.toHaveBeenCalled();
+    expect(mockCypressRun).not.toHaveBeenCalled();
   });
 
   it('should fail early if application build fails', async () => {
-    (devkit as any).runExecutor = jest.fn().mockReturnValue([
+    mockRunExecutor.mockReturnValue([
       {
         success: false,
       },
@@ -144,7 +161,7 @@ describe('Cypress builder', () => {
       mockContext
     );
     expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenCalledWith(
+    expect(mockCypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         config: expect.objectContaining({
           baseUrl: 'http://my-distant-host.com',
@@ -164,7 +181,7 @@ describe('Cypress builder', () => {
       mockContext
     );
     expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenCalledWith(
+    expect(mockCypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         ciBuildId: ciBuildId.toString(),
       })
@@ -182,7 +199,7 @@ describe('Cypress builder', () => {
       mockContext
     );
     expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenCalledWith(
+    expect(mockCypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         ciBuildId,
         project: path.dirname(cypressOptions.cypressConfig),
@@ -199,7 +216,7 @@ describe('Cypress builder', () => {
       mockContext
     );
     expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenCalledWith(
+    expect(mockCypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         browser: 'chrome',
         project: path.dirname(cypressOptions.cypressConfig),
@@ -223,7 +240,7 @@ describe('Cypress builder', () => {
       mockContext
     );
     expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenCalledWith(
+    expect(mockCypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         project: path.dirname(cypressOptions.cypressConfig),
       })
@@ -239,7 +256,7 @@ describe('Cypress builder', () => {
       mockContext
     );
     expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenCalledWith(
+    expect(mockCypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         config: expect.objectContaining({
           e2e: expect.objectContaining({
@@ -260,7 +277,7 @@ describe('Cypress builder', () => {
       mockContext
     );
     expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenCalledWith(
+    expect(mockCypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         reporter: 'junit',
         reporterOptions: 'mochaFile=reports/results-[hash].xml,toConsole=true',
@@ -277,7 +294,7 @@ describe('Cypress builder', () => {
       mockContext
     );
     expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenCalledWith(
+    expect(mockCypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         project: 'some/project',
         configFile: 'my-cypress.json',
@@ -294,7 +311,7 @@ describe('Cypress builder', () => {
       mockContext
     );
     expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenCalledWith(
+    expect(mockCypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         autoCancelAfterFailures: false,
       })
@@ -310,7 +327,7 @@ describe('Cypress builder', () => {
       mockContext
     );
     expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenLastCalledWith(
+    expect(mockCypressRun).toHaveBeenLastCalledWith(
       expect.objectContaining({
         config: expect.objectContaining({
           baseUrl: 'test-url-from-options',
@@ -322,7 +339,7 @@ describe('Cypress builder', () => {
   it('when devServerTarget option present and baseUrl option is absent, baseUrl should come from devServerTarget', async () => {
     const { success } = await cypressExecutor(cypressOptions, mockContext);
     expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenLastCalledWith(
+    expect(mockCypressRun).toHaveBeenLastCalledWith(
       expect.objectContaining({
         config: expect.objectContaining({
           baseUrl: 'http://localhost:4200',
@@ -341,8 +358,8 @@ describe('Cypress builder', () => {
       mockContext
     );
     expect(success).toEqual(true);
-    expect(runExecutor).not.toHaveBeenCalled();
-    expect(cypressRun).toHaveBeenCalledWith(
+    expect(mockRunExecutor).not.toHaveBeenCalled();
+    expect(mockCypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         config: expect.objectContaining({
           baseUrl: 'http://my-distant-host.com',
@@ -353,49 +370,47 @@ describe('Cypress builder', () => {
 
   it('should not forward watch option to devServerTarget when not supported', async () => {
     // Simulate a dev server target that does not support watch option.
-    (devkit as any).readTargetOptions = jest.fn().mockReturnValue({});
+    mockReadTargetOptions.mockReturnValue({});
 
     const { success } = await cypressExecutor(cypressOptions, mockContext);
 
     expect(success).toEqual(true);
-    expect((devkit as any).readTargetOptions.mock.calls[0][0]).toEqual(
+    expect(mockReadTargetOptions.mock.calls[0][0]).toEqual(
       expect.objectContaining({
         project: 'my-app',
         target: 'serve',
       })
     );
-    expect(Object.keys(runExecutor.mock.calls[0][1])).not.toContain('watch');
+    expect(Object.keys(mockRunExecutor.mock.calls[0][1])).not.toContain(
+      'watch'
+    );
   });
 
   it('should try to detectPort when a port option is provided', async () => {
-    (devkit as any).readTargetOptions = jest
-      .fn()
-      .mockReturnValue({ port: 4200 });
+    mockReadTargetOptions.mockReturnValue({ port: 4200 });
 
     const { success } = await cypressExecutor(
       { ...cypressOptions, port: 'cypress-auto' },
       mockContext
     );
     expect(success).toEqual(true);
-    expect(detectPort).toHaveBeenCalledWith(4200);
+    expect(mockDetectPort).toHaveBeenCalledWith(4200);
   });
 
   it('should forward watch option to devServerTarget when supported', async () => {
     // Simulate a dev server target that support watch option.
-    (devkit as any).readTargetOptions = jest
-      .fn()
-      .mockReturnValue({ watch: true });
+    mockReadTargetOptions.mockReturnValue({ watch: true });
 
     const { success } = await cypressExecutor(cypressOptions, mockContext);
 
     expect(success).toEqual(true);
-    expect((devkit as any).readTargetOptions.mock.calls[0][0]).toEqual(
+    expect(mockReadTargetOptions.mock.calls[0][0]).toEqual(
       expect.objectContaining({
         project: 'my-app',
         target: 'serve',
       })
     );
-    expect(Object.keys(runExecutor.mock.calls[0][1])).toContain('watch');
+    expect(Object.keys(mockRunExecutor.mock.calls[0][1])).toContain('watch');
   });
 
   it('should forward headed', async () => {
@@ -407,7 +422,7 @@ describe('Cypress builder', () => {
       mockContext
     );
     expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenCalledWith(
+    expect(mockCypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         headed: true,
       })
@@ -416,7 +431,7 @@ describe('Cypress builder', () => {
 
   describe('Component Testing', () => {
     beforeEach(() => {
-      mockGetTailwindPath.mockReturnValue(undefined);
+      mockGetTempTailwindPath.mockReturnValue(undefined);
     });
     it('should forward testingType', async () => {
       const { success } = await cypressExecutor(
@@ -427,7 +442,7 @@ describe('Cypress builder', () => {
         mockContext
       );
       expect(success).toEqual(true);
-      expect(cypressRun).toHaveBeenCalledWith(
+      expect(mockCypressRun).toHaveBeenCalledWith(
         expect.objectContaining({
           testingType: 'component',
         })

@@ -44,3 +44,8 @@ for (const possiblePath of possiblePaths) {
     });
   } catch {}
 }
+
+// Reset all module spies after each test file
+afterAll(() => {
+  jest.restoreAllMocks();
+});

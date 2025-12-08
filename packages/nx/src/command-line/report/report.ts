@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { output } from '../../utils/output';
 import { join } from 'path';
 import {
@@ -386,7 +386,9 @@ export async function getReportData(): Promise<ReportData> {
     });
   }
 
-  const outOfSyncPackageGroup = findMisalignedPackagesForPackage(nxPackageJson);
+  const outOfSyncPackageGroup = findMisalignedPackagesForPackage(
+    nxPackageJson as PackageJson
+  );
 
   const mismatchedNxVersions = findMismatchedNxVersions(graph);
 
