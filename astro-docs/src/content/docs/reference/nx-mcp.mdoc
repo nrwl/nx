@@ -1,0 +1,272 @@
+---
+title: Nx MCP Server Reference
+description: Complete reference for the Nx MCP (Model Context Protocol) server, including available tools, configuration options, and setup instructions for various AI clients.
+sidebar:
+  order: 5
+  label: Nx MCP Server
+filter: 'type:References'
+---
+
+The Nx MCP server is a [Model Context Protocol](https://modelcontextprotocol.io/introduction) implementation that gives LLMs deep access to your monorepo's structure: project relationships, file mappings, runnable tasks, ownership info, tech stacks, Nx generators, and Nx documentation.
+
+For an overview of how Nx enhances AI assistants and powerful use cases, see the [Enhance Your LLM](/docs/features/enhance-AI) guide.
+
+## Installation
+
+There are a few ways to setup the Nx MCP server:
+
+### Via the nx-mcp Package
+
+Invoke the MCP server via `npx` or your package manager's equivalent:
+
+```json
+// mcp.json
+{
+  "servers": {
+    "nx-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["nx-mcp@latest"]
+    }
+  }
+}
+```
+
+### Via Nx Console Extension
+
+If you're using Cursor, VS Code, or JetBrains IDEs, install the [Nx Console extension](/docs/getting-started/editor-setup) which automatically manages the MCP server for you.
+
+## Client-Specific Setup
+
+### Claude Code
+
+```shell
+claude mcp add nx-mcp npx nx-mcp@latest
+```
+
+### VS Code
+
+```shell
+code --add-mcp '{"name":"nx-mcp","command":"npx","args":["nx-mcp"]}'
+```
+
+Alternatively, configure it in your VS Code settings or use the Nx Console extension for automatic setup.
+
+### Cursor
+
+1. Install [Nx Console](/docs/getting-started/editor-setup) from the marketplace
+2. You'll receive a notification to "Improve Copilot/AI agent with Nx-specific context"
+3. Click "Yes" to configure the MCP server
+
+If you miss the notification, run the `nx.configureMcpServer` command from the command palette (`Ctrl/Cmd + Shift + P`).
+
+### JetBrains IDEs
+
+1. Install [Nx Console](/docs/getting-started/editor-setup) from the marketplace
+2. You'll receive a notification to "Improve Copilot/AI agent with Nx-specific context"
+3. Click "Yes" to configure the MCP server
+
+If you miss the notification, run the `Nx: Setup MCP Server` command from the command palette (`Ctrl/Cmd + Shift + A`).
+
+### Warp
+
+Go to `Settings` -> `AI` -> `Manage MCP Servers` -> `+ Add` to add an MCP Server. Alternatively, use the slash command `/add-mcp` in the Warp Agent prompt.
+
+```json
+{
+  "nx-mcp": {
+    "command": "npx",
+    "args": ["nx-mcp@latest"]
+  }
+}
+```
+
+### Claude Desktop
+
+Configure the MCP server in your Claude Desktop settings:
+
+```json
+// mcp.json
+{
+  "servers": {
+    "nx-mcp": {
+      "command": "npx",
+      "args": ["nx-mcp@latest"]
+    }
+  }
+}
+```
+
+## Command-Line Options
+
+The `nx-mcp` command accepts the following options:
+
+| Option                  | Alias | Description                                                                                                       |
+| ----------------------- | ----- | ----------------------------------------------------------------------------------------------------------------- |
+| `[workspacePath]`       | `-w`  | Path to the Nx workspace root. Defaults to the current working directory if not provided.                         |
+| `--transport <type>`    |       | Transport protocol to use: `stdio` (default), `sse`, or `http`                                                    |
+| `--port <port>`         | `-p`  | Port to use for the HTTP/SSE server (default: 9921). Only valid with `--transport sse` or `--transport http`.     |
+| `--tools <patterns...>` | `-t`  | Filter which tools are enabled. Accepts glob patterns including negation (e.g., `"*"`, `"!nx_docs"`, `"cloud_*"`) |
+| `--disableTelemetry`    |       | Disable sending of telemetry data                                                                                 |
+| `--debugLogs`           |       | Enable debug logging                                                                                              |
+| `--help`                |       | Display help information                                                                                          |
+
+### HTTP Transport
+
+If you want to host the server instead of communicating via `stdio`, use the `--transport` and `--port` flags:
+
+```shell
+npx nx-mcp@latest --transport sse --port 9921
+```
+
+The HTTP transport supports multiple concurrent connections, allowing different clients to connect simultaneously with independent sessions.
+
+### Filtering Tools
+
+You can limit which tools are available using the `--tools` option with glob patterns:
+
+```shell
+# Enable all tools (default)
+npx nx-mcp@latest --tools "*"
+
+# Disable specific tools
+npx nx-mcp@latest --tools "*" "!nx_docs"
+
+# Enable only cloud analytics tools
+npx nx-mcp@latest --tools "cloud_*"
+
+# Enable workspace tools only
+npx nx-mcp@latest --tools "nx_workspace" "nx_project_details" "nx_docs"
+```
+
+This is useful when you want to restrict the LLM's capabilities or reduce noise in the tool list.
+
+## Available Tools
+
+### Workspace Tools
+
+| Tool                   | Description                                                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `nx_workspace`         | Returns a readable representation of the project graph and nx.json configuration. Also returns any project graph errors if present. |
+| `nx_workspace_path`    | Returns the path to the Nx workspace root                                                                                           |
+| `nx_project_details`   | Returns complete project configuration in JSON format for a specific project, including targets, dependencies, and metadata         |
+| `nx_docs`              | Returns documentation sections relevant to user queries about Nx configuration and best practices                                   |
+| `nx_available_plugins` | Lists available Nx plugins from the core team and local workspace plugins                                                           |
+
+### Generator Tools
+
+| Tool                  | Description                                                                                               |
+| --------------------- | --------------------------------------------------------------------------------------------------------- |
+| `nx_generators`       | Returns a list of available code generators in your workspace                                             |
+| `nx_generator_schema` | Returns the detailed JSON schema for a specific Nx generator, including all available options             |
+| `nx_run_generator`    | Opens the Nx Console Generate UI with prefilled options (requires a running IDE instance with Nx Console) |
+
+### Task Monitoring Tools
+
+| Tool                               | Description                                                      |
+| ---------------------------------- | ---------------------------------------------------------------- |
+| `nx_current_running_tasks_details` | Lists currently running Nx TUI processes and their task statuses |
+| `nx_current_running_task_output`   | Returns terminal output for specific running tasks               |
+
+### Visualization Tools
+
+| Tool                 | Description                                                                                              |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
+| `nx_visualize_graph` | Opens interactive project or task graph visualizations (requires a running IDE instance with Nx Console) |
+
+### Nx Cloud Analytics Tools
+
+These tools are only available when connected to an Nx Cloud-enabled workspace. They provide analytics and insights into your CI/CD data:
+
+| Tool                                         | Description                                                                                      |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `cloud_analytics_pipeline_executions_search` | Analyzes historical pipeline execution data to identify trends and patterns in CI/CD workflows   |
+| `cloud_analytics_pipeline_execution_details` | Retrieves detailed data for a specific pipeline execution to investigate performance bottlenecks |
+| `cloud_analytics_runs_search`                | Analyzes historical run data to track performance trends and team productivity patterns          |
+| `cloud_analytics_run_details`                | Retrieves detailed data for a specific run to investigate command execution performance          |
+| `cloud_analytics_tasks_search`               | Analyzes aggregated task performance statistics including success rates and cache hit rates      |
+| `cloud_analytics_task_executions_search`     | Analyzes individual task execution data to investigate performance trends over time              |
+
+{% aside type="note" title="Limited Tools Without Workspace" %}
+When no workspace path is specified, only the `nx_docs` and `nx_available_plugins` tools will be available.
+{% /aside %}
+
+## Available Resources
+
+When connected to an Nx Cloud-enabled workspace, the Nx MCP server automatically exposes recent CI Pipeline Executions (CIPEs) as MCP resources. Resources appear in your AI tool's resource picker, allowing the LLM to access detailed information about CI runs including:
+
+- Failed tasks and their error messages
+- Terminal output from task executions
+- Affected files in the pipeline run
+- Build timing and performance data
+
+## Tool Usage Examples
+
+### Understanding Workspace Architecture
+
+Ask your AI assistant about your workspace structure:
+
+```text
+What is the structure of this workspace?
+How are the projects organized?
+```
+
+The `nx_workspace` tool provides:
+
+- All applications and libraries in your workspace
+- Project categorization through tags
+- Technology types (feature, UI, data-access)
+- Project ownership and team responsibilities
+
+### Getting Project Details
+
+To understand a specific project's configuration:
+
+```text
+Show me the details of the my-app project
+What targets are available for my-lib?
+```
+
+The `nx_project_details` tool returns:
+
+- Complete target configuration
+- Project dependencies
+- Source and output paths
+- Tags and metadata
+
+### Using Generators
+
+Ask your AI assistant to scaffold new code:
+
+```text
+Create a new React library in the packages/shared folder
+```
+
+The AI will use `nx_generators` to find available generators and `nx_generator_schema` to understand the options, then can invoke `nx_run_generator` to open the Generate UI with preset values.
+
+### Accessing Documentation
+
+Get accurate guidance without hallucinations:
+
+```text
+How do I configure Nx release for conventional commits?
+What are the caching options for tasks?
+```
+
+The `nx_docs` tool retrieves relevant, up-to-date documentation based on your query.
+
+### Analyzing CI Failures
+
+When a CI build fails, your AI assistant can:
+
+```text
+What failed in my last CI run?
+Help me fix the build error
+```
+
+Using the Nx Cloud tools, the AI can:
+
+1. Access detailed information about the failed build
+2. Retrieve terminal output from failed tasks
+3. Understand what changed and suggest fixes
+
