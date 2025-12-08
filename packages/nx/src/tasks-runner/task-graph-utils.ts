@@ -127,9 +127,12 @@ export function validateNoAtomizedTasks(
     return;
   }
 
-  const nonAtomizedTasks = atomizedRootTasks
-    .map((t) => `"${getNonAtomizedTargetForTask(t)}"`)
-    .filter((item, index, arr) => arr.indexOf(item) === index);
+  // Use Set for O(n) deduplication instead of O(n²) indexOf pattern
+  const nonAtomizedTasks = [
+    ...new Set(
+      atomizedRootTasks.map((t) => `"${getNonAtomizedTargetForTask(t)}"`)
+    ),
+  ];
 
   const moreInfoLines = [
     `Please enable Nx Cloud or use the slower ${nonAtomizedTasks.join(
