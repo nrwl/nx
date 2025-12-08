@@ -332,8 +332,12 @@ export function PluginDirectory({
       result.sort((a, b) => {
         switch (modifiers.orderBy) {
           case 'lastPublishDate': {
-            const aTime = a.lastPublishedDate ? new Date(a.lastPublishedDate).getTime() : 0;
-            const bTime = b.lastPublishedDate ? new Date(b.lastPublishedDate).getTime() : 0;
+            const aTime = a.lastPublishedDate
+              ? new Date(a.lastPublishedDate).getTime()
+              : 0;
+            const bTime = b.lastPublishedDate
+              ? new Date(b.lastPublishedDate).getTime()
+              : 0;
             return direction * (aTime - bTime);
           }
           case 'npmDownloads':
