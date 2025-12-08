@@ -40,6 +40,12 @@ export function shareWorkspaceLibraries(
     return getEmptySharedLibrariesConfig();
   }
 
+  // Build Map for O(1) library lookups instead of O(n) find() calls
+  const workspaceLibsMap = new Map<string, WorkspaceLibrary>();
+  for (const lib of workspaceLibs) {
+    workspaceLibsMap.set(lib.importKey, lib);
+  }
+
   const tsconfigPathAliases = readTsPathMappings(tsConfigPath);
 
   // Nested projects must come first, sort them as such
@@ -52,9 +58,11 @@ export function shareWorkspaceLibraries(
       (key) => (sortedTsConfigPathAliases[key] = tsconfigPathAliases[key])
     );
 
-  const pathMappings: { name: string; path: string }[] = [];
+  // Include pre-computed libFolder for O(1) lookup in getReplacementPlugin
+  const pathMappings: { name: string; path: string; libFolder: string }[] = [];
   for (const [key, paths] of Object.entries(sortedTsConfigPathAliases)) {
-    const library = workspaceLibs.find((lib) => lib.importKey === key);
+    // O(1) lookup instead of O(n) find()
+    const library = workspaceLibsMap.get(key);
     if (!library) {
       continue;
     }
@@ -64,16 +72,20 @@ export function shareWorkspaceLibraries(
     collectWorkspaceLibrarySecondaryEntryPoints(
       library,
       sortedTsConfigPathAliases
-    ).forEach(({ name, path }) =>
+    ).forEach(({ name, path }) => {
+      const normalizedPath = normalize(path);
       pathMappings.push({
         name,
-        path,
-      })
-    );
+        path: normalizedPath,
+        libFolder: normalize(dirname(normalizedPath)),
+      });
+    });
 
+    const normalizedPath = normalize(join(workspaceRoot, paths[0]));
     pathMappings.push({
       name: key,
-      path: normalize(join(workspaceRoot, paths[0])),
+      path: normalizedPath,
+      libFolder: normalize(dirname(normalizedPath)),
     });
   }
 
@@ -94,16 +106,16 @@ export function shareWorkspaceLibraries(
       : require('webpack').NormalModuleReplacementPlugin;
 
   return {
-    getAliases: () =>
-      pathMappings.reduce(
-        (aliases, library) => ({
-          ...aliases,
-          // If the library path ends in a wildcard, remove it as webpack/rspack can't handle this in resolve.alias
-          // e.g. path/to/my/lib/* -> path/to/my/lib
-          [library.name]: library.path.replace(/\/\*$/, ''),
-        }),
-        {}
-      ),
+    getAliases: () => {
+      // Build object directly without reduce+spread for O(n) instead of O(n²) allocations
+      const aliases: Record<string, string> = {};
+      for (const library of pathMappings) {
+        // If the library path ends in a wildcard, remove it as webpack/rspack can't handle this in resolve.alias
+        // e.g. path/to/my/lib/* -> path/to/my/lib
+        aliases[library.name] = library.path.replace(/\/\*$/, '');
+      }
+      return aliases;
+    },
     getLibraries: (
       projectRoot: string,
       eager?: boolean
@@ -119,7 +131,9 @@ export function shareWorkspaceLibraries(
           joinPathFragments(workspaceRoot, projectRoot, 'package.json')
         );
       }
-      const libraries = pathMappings.reduce((libraries, library) => {
+      // Build object directly without reduce+spread for O(n) instead of O(n²) allocations
+      const libraries: Record<string, SharedLibraryConfig> = {};
+      for (const library of pathMappings) {
         // Check to see if the library version is declared in the app's package.json
         let version = pkgJson
           ? getDependencyVersionFromPackageJson(
@@ -128,10 +142,9 @@ export function shareWorkspaceLibraries(
               pkgJson
             )
           : null;
-        if (!version && workspaceLibs.length > 0) {
-          const workspaceLib = workspaceLibs.find(
-            (lib) => lib.importKey === library.name
-          );
+        if (!version && workspaceLibsMap.size > 0) {
+          // O(1) lookup instead of O(n) find()
+          const workspaceLib = workspaceLibsMap.get(library.name);
 
           const libPackageJsonPath = workspaceLib
             ? join(workspaceLib.root, 'package.json')
@@ -145,19 +158,10 @@ export function shareWorkspaceLibraries(
           }
         }
 
-        return {
-          ...libraries,
-          [library.name]: {
-            ...(version
-              ? {
-                  requiredVersion: version,
-                  singleton: true,
-                }
-              : { requiredVersion: false }),
-            eager,
-          },
-        };
-      }, {} as Record<string, SharedLibraryConfig>);
+        libraries[library.name] = version
+          ? { requiredVersion: version, singleton: true, eager }
+          : { requiredVersion: false, eager };
+      }
 
       // Add workspace libs from package.json dependencies
       // This supports TS Solution + PM Workspaces
@@ -173,10 +177,8 @@ export function shareWorkspaceLibraries(
             version.startsWith('workspace:') ||
             version.startsWith('file:'))
         ) {
-          // Look up the actual version from the library's package.json
-          const workspaceLib = workspaceLibs.find(
-            (lib) => lib.importKey === libraryName
-          );
+          // O(1) lookup instead of O(n) find()
+          const workspaceLib = workspaceLibsMap.get(libraryName);
           if (workspaceLib) {
             const libPackageJsonPath = join(
               workspaceRoot,
@@ -221,8 +223,11 @@ export function shareWorkspaceLibraries(
         const to = normalize(join(req.context, req.request));
 
         for (const library of pathMappings) {
-          const libFolder = normalize(dirname(library.path));
-          if (!from.startsWith(libFolder) && to.startsWith(libFolder)) {
+          // Use pre-computed libFolder instead of calling normalize(dirname()) for every request
+          if (
+            !from.startsWith(library.libFolder) &&
+            to.startsWith(library.libFolder)
+          ) {
             const newReq = library.name.endsWith('/*')
               ? /**
                  * req usually is in the form of "../../../path/to/file"
