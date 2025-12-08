@@ -291,6 +291,13 @@ export async function detectPlugins(
   );
 
   const detectedPlugins = new Set<string>();
+
+  // Build plugin map once outside the loop instead of spreading on every iteration
+  const pluginMap = includeAngularCli
+    ? { ...npmPackageToPluginMap, '@angular/cli': '@nx/angular' }
+    : npmPackageToPluginMap;
+  const pluginMapEntries = Object.entries(pluginMap);
+
   for (const file of files) {
     if (!existsSync(file)) continue;
 
@@ -307,13 +314,7 @@ export async function detectPlugins(
       ...packageJson.devDependencies,
     };
 
-    const _npmPackageToPluginMap = {
-      ...npmPackageToPluginMap,
-    };
-    if (includeAngularCli) {
-      _npmPackageToPluginMap['@angular/cli'] = '@nx/angular';
-    }
-    for (const [dep, plugin] of Object.entries(_npmPackageToPluginMap)) {
+    for (const [dep, plugin] of pluginMapEntries) {
       if (deps[dep]) {
         detectedPlugins.add(plugin);
       }
