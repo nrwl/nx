@@ -95,19 +95,27 @@ export function shareWorkspaceLibraries(
 
   const tsconfigPathAliases = readTsPathMappings(tsConfigPath);
 
-  // Nested projects must come first, sort them as such
-  const sortedTsConfigPathAliases = {};
-  Object.keys(tsconfigPathAliases)
-    .sort((a, b) => {
-      return b.split('/').length - a.split('/').length;
-    })
-    .forEach(
-      (key) => (sortedTsConfigPathAliases[key] = tsconfigPathAliases[key])
-    );
+  // Nested projects must come first, sort them by path depth (descending)
+  // Pre-compute depths to avoid repeated string splits in sort comparator - O(n) vs O(n log n)
+  const keys = Object.keys(tsconfigPathAliases);
+  const keyDepths = new Map<string, number>(
+    keys.map((key) => [key, key.split('/').length])
+  );
+  const sortedKeys = keys.sort((a, b) => keyDepths.get(b)! - keyDepths.get(a)!);
+
+  const sortedTsConfigPathAliases: Record<string, string[]> = {};
+  for (const key of sortedKeys) {
+    sortedTsConfigPathAliases[key] = tsconfigPathAliases[key];
+  }
+
+  // Create a Map for O(1) library lookup instead of O(n) find() calls
+  const workspaceLibsByImportKey = new Map(
+    workspaceLibs.map((lib) => [lib.importKey, lib])
+  );
 
   const pathMappings: { name: string; path: string }[] = [];
   for (const [key, paths] of Object.entries(sortedTsConfigPathAliases)) {
-    const library = workspaceLibs.find((lib) => lib.importKey === key);
+    const library = workspaceLibsByImportKey.get(key);
     if (!library) {
       continue;
     }
@@ -190,9 +198,8 @@ export function shareWorkspaceLibraries(
         );
 
         if (!version && workspaceLibs.length > 0) {
-          const workspaceLib = workspaceLibs.find(
-            (lib) => lib.importKey === library.name
-          );
+          // Use Map for O(1) lookup instead of O(n) find()
+          const workspaceLib = workspaceLibsByImportKey.get(library.name);
 
           const libPackageJsonPath = workspaceLib
             ? join(workspaceLib.root, 'package.json')
@@ -426,14 +433,20 @@ function addStringDependencyToSharedConfig(
 
     sharedConfig[dependency] = config;
   } else {
-    const pkgJsonPath = require.resolve(`${dependency}/package.json`);
-    if (!pkgJsonPath) {
+    // require.resolve throws if the package is not found, so wrap in try-catch
+    let pkgJsonPath: string;
+    try {
+      pkgJsonPath = require.resolve(`${dependency}/package.json`);
+    } catch {
       throw new Error(
         `Could not find package ${dependency} when applying it as a shared package. Are you sure it has been installed?`
       );
     }
     const pkgJson = readJsonFile(pkgJsonPath);
     const config = getNpmPackageSharedConfig(dependency, pkgJson.version);
+    if (config) {
+      sharedConfig[dependency] = config;
+    }
   }
 }
 

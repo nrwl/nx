@@ -5,6 +5,12 @@ import { existsSync, lstatSync, readdirSync } from 'fs';
 import { readJsonFile, joinPathFragments, workspaceRoot } from '@nx/devkit';
 import { PackageJson, readModulePackageJson } from 'nx/src/utils/package-json';
 
+// Cache for secondary entry points to avoid repeated expensive directory scans
+const secondaryEntryPointsCache = new Map<
+  string,
+  { name: string; version: string }[]
+>();
+
 export function collectWorkspaceLibrarySecondaryEntryPoints(
   library: WorkspaceLibrary,
   tsconfigPathAliases: Record<string, string[]>
@@ -142,6 +148,22 @@ export function collectPackageSecondaryEntryPoints(
   pkgVersion: string,
   collectedPackages: { name: string; version: string }[]
 ): void {
+  // Check cache first to avoid expensive directory scanning
+  const cacheKey = `${pkgName}@${pkgVersion}`;
+  const cached = secondaryEntryPointsCache.get(cacheKey);
+  if (cached) {
+    // Add cached entries to the collection
+    for (const entry of cached) {
+      if (!collectedPackages.find((p) => p.name === entry.name)) {
+        collectedPackages.push(entry);
+      }
+    }
+    return;
+  }
+
+  // Track entries we find for this package to cache later
+  const originalLength = collectedPackages.length;
+
   let pathToPackage: string;
   let packageJsonPath: string;
   let packageJson: PackageJson;
@@ -156,6 +178,8 @@ export function collectPackageSecondaryEntryPoints(
     packageJsonPath = join(pathToPackage, 'package.json');
     if (!existsSync(packageJsonPath)) {
       // might not exist if it's nested in another package, just return here
+      // Cache empty result to avoid repeated lookups
+      secondaryEntryPointsCache.set(cacheKey, []);
       return;
     }
     packageJson = readJsonFile(packageJsonPath);
@@ -174,4 +198,11 @@ export function collectPackageSecondaryEntryPoints(
     subDirs,
     collectedPackages
   );
+
+  // Cache the newly collected entries for this package
+  const entriesForCache: { name: string; version: string }[] = [];
+  for (let i = originalLength; i < collectedPackages.length; i++) {
+    entriesForCache.push(collectedPackages[i]);
+  }
+  secondaryEntryPointsCache.set(cacheKey, entriesForCache);
 }

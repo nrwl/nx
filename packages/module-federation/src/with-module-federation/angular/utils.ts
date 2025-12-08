@@ -59,6 +59,22 @@ export const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
   '@angular/common',
 ];
 
+// Cache for parsed static remotes environment variable to avoid repeated JSON.parse calls
+let cachedStaticRemotesFromEnv: Record<string, string> | undefined;
+let cachedStaticRemotesEnvValue: string | undefined;
+
+function getStaticRemotesFromEnv(): Record<string, string> | undefined {
+  const currentEnvValue = process.env.NX_MF_DEV_SERVER_STATIC_REMOTES;
+  // Only re-parse if the environment variable value has changed
+  if (currentEnvValue !== cachedStaticRemotesEnvValue) {
+    cachedStaticRemotesEnvValue = currentEnvValue;
+    cachedStaticRemotesFromEnv = currentEnvValue
+      ? JSON.parse(currentEnvValue)
+      : undefined;
+  }
+  return cachedStaticRemotesFromEnv;
+}
+
 export function getFunctionDeterminateRemoteUrl(
   isServer: boolean = false,
   useRspack = false
@@ -71,10 +87,7 @@ export function getFunctionDeterminateRemoteUrl(
     : 'remoteEntry.mjs';
 
   return function (remote: string) {
-    const mappedStaticRemotesFromEnv = process.env
-      .NX_MF_DEV_SERVER_STATIC_REMOTES
-      ? JSON.parse(process.env.NX_MF_DEV_SERVER_STATIC_REMOTES)
-      : undefined;
+    const mappedStaticRemotesFromEnv = getStaticRemotesFromEnv();
     if (mappedStaticRemotesFromEnv && mappedStaticRemotesFromEnv[remote]) {
       return `${mappedStaticRemotesFromEnv[remote]}/${remoteEntry}`;
     }
