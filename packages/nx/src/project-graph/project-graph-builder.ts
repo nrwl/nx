@@ -355,19 +355,15 @@ export class ProjectGraphBuilder {
     // remove all source dependencies
     delete this.graph.dependencies[name];
 
-    // remove all target dependencies
-    for (const dependencies of Object.values(this.graph.dependencies)) {
-      for (const [index, { source, target }] of dependencies.entries()) {
-        if (target === name) {
-          const deps = this.graph.dependencies[source];
-          this.graph.dependencies[source] = [
-            ...deps.slice(0, index),
-            ...deps.slice(index + 1),
-          ];
-          if (this.graph.dependencies[source].length === 0) {
-            delete this.graph.dependencies[source];
-          }
-        }
+    // remove all target dependencies - O(n) single pass with filter
+    // Previous implementation was O(n²) due to nested loop and slice operations
+    for (const source of Object.keys(this.graph.dependencies)) {
+      const deps = this.graph.dependencies[source];
+      const filtered = deps.filter((d) => d.target !== name);
+      if (filtered.length === 0) {
+        delete this.graph.dependencies[source];
+      } else if (filtered.length !== deps.length) {
+        this.graph.dependencies[source] = filtered;
       }
     }
   }
