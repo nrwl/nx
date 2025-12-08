@@ -5,16 +5,18 @@ export function applyImplicitDependencies(
   projects: Record<string, ProjectConfiguration>,
   builder: ProjectGraphBuilder
 ) {
-  Object.keys(projects).forEach((source) => {
+  // Use for...in to avoid Object.keys() array creation
+  for (const source in projects) {
     const p = projects[source];
-    if (p.implicitDependencies && p.implicitDependencies.length > 0) {
-      p.implicitDependencies.forEach((target) => {
+    const deps = p.implicitDependencies;
+    if (deps && deps.length > 0) {
+      for (const target of deps) {
         if (target.startsWith('!')) {
           builder.removeDependency(source, target.slice(1));
         } else {
           builder.addImplicitDependency(source, target);
         }
-      });
+      }
     }
-  });
+  }
 }

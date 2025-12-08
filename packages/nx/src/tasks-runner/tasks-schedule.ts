@@ -296,11 +296,14 @@ export class TasksSchedule {
       return true;
     }
 
-    const runningTasksNotSupportParallelism = Array.from(
-      this.runningTasks
-    ).some((taskId) => {
-      return this.taskGraph.tasks[taskId].parallelism === false;
-    });
+    // Direct Set iteration avoids Array.from() allocation
+    let runningTasksNotSupportParallelism = false;
+    for (const taskId of this.runningTasks) {
+      if (this.taskGraph.tasks[taskId].parallelism === false) {
+        runningTasksNotSupportParallelism = true;
+        break;
+      }
+    }
     if (runningTasksNotSupportParallelism) {
       // if any running tasks do not support parallelism, no other tasks can be scheduled
       return false;

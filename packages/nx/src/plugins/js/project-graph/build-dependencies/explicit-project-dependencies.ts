@@ -47,7 +47,8 @@ export function buildExplicitTypeScriptDependencies(
 
   const filesToProcess: Record<string, string[]> = {};
 
-  const moduleExtensions = [
+  // Use Set for O(1) extension lookup instead of O(n) .some() per file
+  const moduleExtensions = new Set([
     '.ts',
     '.js',
     '.tsx',
@@ -56,11 +57,11 @@ export function buildExplicitTypeScriptDependencies(
     '.mjs',
     '.cjs',
     '.cts',
-  ];
+  ]);
 
   // TODO: This can be removed when vue is stable
   if (isVuePluginInstalled()) {
-    moduleExtensions.push('.vue');
+    moduleExtensions.add('.vue');
   }
 
   for (const [project, fileData] of Object.entries(
@@ -68,7 +69,9 @@ export function buildExplicitTypeScriptDependencies(
   )) {
     filesToProcess[project] ??= [];
     for (const { file } of fileData) {
-      if (moduleExtensions.some((ext) => file.endsWith(ext))) {
+      // Extract extension and check with O(1) Set lookup
+      const lastDot = file.lastIndexOf('.');
+      if (lastDot !== -1 && moduleExtensions.has(file.slice(lastDot))) {
         filesToProcess[project].push(join(workspaceRoot, file));
       }
     }
