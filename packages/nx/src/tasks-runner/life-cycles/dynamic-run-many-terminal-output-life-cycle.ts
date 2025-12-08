@@ -447,11 +447,13 @@ export async function createRunManyDynamicOutputRenderer({
   };
 
   lifeCycle.startTasks = (tasks: Task[]) => {
+    // Build Set for O(1) task lookup
+    const taskSet = new Set(tasks);
     for (const task of tasks) {
       tasksToProcessStartTimes[task.id] = process.hrtime();
     }
     for (const taskRow of taskRows) {
-      if (tasks.indexOf(taskRow.task) > -1) {
+      if (taskSet.has(taskRow.task)) {
         taskRow.status = 'running';
       }
     }

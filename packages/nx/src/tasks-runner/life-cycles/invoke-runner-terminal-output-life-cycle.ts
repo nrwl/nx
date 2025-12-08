@@ -5,8 +5,9 @@ import type { LifeCycle, TaskResult } from '../life-cycle';
 import { Task } from '../../config/task-graph';
 
 export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
-  failedTasks = [] as Task[];
-  cachedTasks = [] as Task[];
+  // Use Sets for O(1) membership checks
+  failedTasks = new Set<Task>();
+  cachedTasks = new Set<Task>();
 
   constructor(private readonly tasks: Task[]) {}
 
@@ -30,15 +31,15 @@ export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
   endCommand(): void {
     output.addNewline();
     const taskIds = this.tasks.map((task) => {
-      const cached = this.cachedTasks.indexOf(task) !== -1;
-      const failed = this.failedTasks.indexOf(task) !== -1;
+      const cached = this.cachedTasks.has(task);
+      const failed = this.failedTasks.has(task);
       return `- Task ${task.id} ${
         task.overrides.__overrides_unparsed__.length > 0
           ? `Overrides: ${task.overrides.__overrides_unparsed__.join(' ')}`
           : ''
       } ${cached ? 'CACHED' : ''} ${failed ? 'FAILED' : ''}`;
     });
-    if (this.failedTasks.length === 0) {
+    if (this.failedTasks.size === 0) {
       output.addVerticalSeparatorWithoutNewLines('green');
       output.success({
         title: `Successfully ran ${this.tasks.length} tasks:`,
@@ -56,13 +57,13 @@ export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
   endTasks(taskResults: TaskResult[]): void {
     for (let t of taskResults) {
       if (t.status === 'failure') {
-        this.failedTasks.push(t.task);
+        this.failedTasks.add(t.task);
       } else if (t.status === 'local-cache') {
-        this.cachedTasks.push(t.task);
+        this.cachedTasks.add(t.task);
       } else if (t.status === 'local-cache-kept-existing') {
-        this.cachedTasks.push(t.task);
+        this.cachedTasks.add(t.task);
       } else if (t.status === 'remote-cache') {
-        this.cachedTasks.push(t.task);
+        this.cachedTasks.add(t.task);
       }
     }
   }
