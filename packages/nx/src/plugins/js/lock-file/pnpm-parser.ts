@@ -367,17 +367,13 @@ function getHoistedVersion(
   hoistedDependencies: Record<string, any>,
   packageName: string,
   isV5: boolean,
-  hoistedKeysByPackage?: Map<string, string>
+  hoistedKeysByPackage: Map<string, string>
 ): string {
   let version = getHoistedPackageVersion(packageName);
 
   if (!version) {
-    // Use pre-built index for O(1) lookup if available, otherwise fallback to O(n) search
-    const key = hoistedKeysByPackage
-      ? hoistedKeysByPackage.get(packageName)
-      : Object.keys(hoistedDependencies).find((k) =>
-          k.startsWith(`/${packageName}/`)
-        );
+    // Use pre-built index for O(1) lookup
+    const key = hoistedKeysByPackage.get(packageName);
     if (key) {
       version = parseBaseVersion(getVersion(key.slice(1), packageName), isV5);
     } else {
