@@ -11,7 +11,7 @@ slf4j = "1.7.10"
 gradle-tooling-api = "8.13"
 shadow = "8.1.1"
 ktfmt = "0.52.0"
-nx-project-graph = "0.1.9"
+nx-project-graph = "0.1.10"
 gradle-plugin-publish = "1.2.1"
 jgit = "6.8.0.202311291450-r"
 
