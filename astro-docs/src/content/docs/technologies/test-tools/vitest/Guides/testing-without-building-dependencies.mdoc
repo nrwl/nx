@@ -29,7 +29,8 @@ When you create a new Nx workspace with workspaces enabled (the default), Nx aut
 
 ### tsconfig.base.json
 
-```json title="tsconfig.base.json"
+```json
+// tsconfig.base.json
 {
   "compilerOptions": {
     "customConditions": ["@myorg/source"]
@@ -40,7 +41,8 @@ When you create a new Nx workspace with workspaces enabled (the default), Nx aut
 
 ### Library package.json exports
 
-```json title="libs/my-lib/package.json"
+```json
+// libs/my-lib/package.json
 {
   "name": "@myorg/my-lib",
   "exports": {
@@ -60,7 +62,8 @@ The `@myorg/source` condition points to the source TypeScript file, while the ot
 
 Add `resolve.conditions` to your `vitest.config.mts` (or `vitest.config.ts`) file:
 
-```ts title="vitest.config.mts"
+```ts
+// vitest.config.mts
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -77,8 +80,8 @@ export default defineConfig({
 
 This tells Vite (which powers Vitest) to prefer the `@myorg/source` export condition when resolving imports. Now when your test imports `@myorg/my-lib`, it will resolve directly to `./src/index.ts` instead of requiring the built `./dist/index.js`.
 
-{% aside type="warning" title="Use a Separate Config for Testing" %}
-If you also use Vite to **build** your project, keep the `resolve.conditions` configuration in a separate `vitest.config.mts` file rather than in `vite.config.mts`. This ensures that your production build still resolves to built artifacts while tests resolve to source files.
+{% aside type="caution" title="Use a Separate Config for Testing" %}
+If you also use Vite to **build** your project, keep the `resolve.conditions` configuration in a separate `vitest.config.mts` file rather than in `vite.config.mts`. Vitest automatically merges configuration from both files, so you only need to add the test-specific settings (like `resolve.conditions` and `test` options) to your `vitest.config.mts`. This ensures that your production build still resolves to built artifacts while tests resolve to source files.
 {% /aside %}
 
 ## For Migrated Workspaces
@@ -89,7 +92,8 @@ If you migrated from an older Nx setup or TypeScript path aliases, you may need 
 
 Add the `customConditions` array to your `tsconfig.base.json`:
 
-```json title="tsconfig.base.json"
+```json
+// tsconfig.base.json
 {
   "compilerOptions": {
     "customConditions": ["@myorg/source"],
@@ -111,7 +115,8 @@ Update each library's `package.json` to include the custom condition in exports:
 {% tabs %}
 {% tabitem label="Before" %}
 
-```json title="libs/my-lib/package.json"
+```json
+// libs/my-lib/package.json
 {
   "name": "@myorg/my-lib",
   "exports": {
@@ -127,7 +132,8 @@ Update each library's `package.json` to include the custom condition in exports:
 {% /tabitem %}
 {% tabitem label="After" %}
 
-```json title="libs/my-lib/package.json"
+```json
+// libs/my-lib/package.json
 {
   "name": "@myorg/my-lib",
   "exports": {
@@ -157,7 +163,8 @@ If your test targets previously included `dependsOn: ["^build"]` to ensure depen
 {% tabs %}
 {% tabitem label="Before" %}
 
-```json title="project.json"
+```json
+// project.json
 {
   "targets": {
     "test": {
@@ -174,7 +181,8 @@ If your test targets previously included `dependsOn: ["^build"]` to ensure depen
 {% /tabitem %}
 {% tabitem label="After" %}
 
-```json title="project.json"
+```json
+// project.json
 {
   "targets": {
     "test": {
