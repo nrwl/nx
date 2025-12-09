@@ -14,14 +14,12 @@ export interface Plugin {
   nxVersion?: string;
 }
 
-
 type OrderByStatus =
   | 'lastPublishedDate'
   | 'npmDownloads'
   | 'githubStars'
   | 'nxVersion'
   | undefined;
-
 
 interface Modifiers {
   term: string;

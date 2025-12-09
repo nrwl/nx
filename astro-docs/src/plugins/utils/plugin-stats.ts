@@ -37,7 +37,7 @@ function delay(ms: number): Promise<void> {
 /**
  * Delay between npm API requests to avoid rate limiting (in ms)
  */
-const NPM_REQUEST_DELAY_MS = 2000;
+const NPM_REQUEST_DELAY_MS = 1000;
 
 /**
  * Track the last npm API request time for rate limiting
@@ -50,7 +50,7 @@ let lastNpmRequestTime = 0;
  * */
 export async function getNpmData(
   plugin: PluginRegistry,
-  skipNxVersion = false,
+  skipNxVersion = false
 ) {
   // Rate limit: wait if needed to ensure 1 second between npm requests
   const now = Date.now();
@@ -70,7 +70,7 @@ export async function getNpmData(
 
     if (!data.repository) {
       console.warn(
-        `- No repository defined in package.json for ${plugin.name}`,
+        `- No repository defined in package.json for ${plugin.name}`
       );
       return { lastPublishedDate, nxVersion, githubRepo: '' };
     }
@@ -114,7 +114,7 @@ export async function getNpmDownloads(plugin: PluginRegistry): Promise<number> {
   lastNpmRequestTime = Date.now();
 
   const url = `https://api.npmjs.org/downloads/point/${stringifyIntervalForUrl(
-    lastMonth,
+    lastMonth
   )}/${plugin.name}`;
   try {
     const response = await fetch(url);
@@ -124,7 +124,7 @@ export async function getNpmDownloads(plugin: PluginRegistry): Promise<number> {
   } catch (ex) {
     console.warn(
       'Failed to load npm downloads for ' + plugin.name + `(${url})`,
-      ex,
+      ex
     );
     return 0;
   }
@@ -177,7 +177,7 @@ async function findNxRange(devkitVersion: string) {
 }
 
 export async function getGithubStars(
-  repos: { owner: string; repo: string }[],
+  repos: { owner: string; repo: string }[]
 ): Promise<Map<string, GitHubRepoStarResult>> {
   if (!process.env.GITHUB_TOKEN) {
     console.warn('GITHUB_TOKEN not set. GitHub stars will not be fetched.');
@@ -185,7 +185,7 @@ export async function getGithubStars(
   }
 
   const validRepos = repos.filter(
-    ({ owner, repo }) => owner && repo && !owner.includes('.'),
+    ({ owner, repo }) => owner && repo && !owner.includes('.')
   );
 
   if (validRepos.length === 0) {
@@ -208,10 +208,10 @@ export async function getGithubStars(
         ({ owner, repo }) =>
           `${owner.replace(/[\-#]/g, '')}${repo.replace(
             /[\-#]/g,
-            '',
+            ''
           )}: repository(owner: "${owner}", name: "${repo}") {
       ...repoProperties
-    }`,
+    }`
       )
       .join('\n')}
   }`;
@@ -230,7 +230,7 @@ export async function getGithubStars(
 
     if (!response.ok) {
       console.error(
-        `GitHub API error: ${response.status} ${response.statusText}`,
+        `GitHub API error: ${response.status} ${response.statusText}`
       );
 
       try {
@@ -253,7 +253,7 @@ export async function getGithubStars(
       console.error(
         `GitHub GraphQL errors: ${result.errors
           .map((e) => e.message)
-          .join(', ')}`,
+          .join(', ')}`
       );
     }
 
@@ -339,7 +339,7 @@ export function isPluginStatsFetchingEnabled(): boolean {
 }
 
 export function shouldFetchStats(
-  existingEntry: CacheableEntry | undefined,
+  existingEntry: CacheableEntry | undefined
 ): boolean {
   if (!isPluginStatsFetchingEnabled()) {
     return false;
@@ -400,7 +400,7 @@ export interface StatsEntry {
  */
 export function getCachedOrDefaultStats(
   existingEntry: StatsEntry | undefined,
-  includeNxVersion = false,
+  includeNxVersion = false
 ): PluginStats {
   if (existingEntry?.data) {
     const stats: PluginStats = {
@@ -446,7 +446,7 @@ export async function fetchFreshStats(
   plugin: PluginRegistry,
   repoKey: string,
   ghStarMap: Map<string, GitHubRepoStarResult>,
-  includeNxVersion = false,
+  includeNxVersion = false
 ): Promise<PluginStats> {
   const [npmDownloads, npmMeta] = await Promise.all([
     getNpmDownloads(plugin),
