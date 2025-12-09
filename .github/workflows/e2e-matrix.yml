@@ -54,7 +54,12 @@ jobs:
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
         with:
-          version: ${{ matrix.node_version }}
+          mise_toml: |
+            [tools]
+            node = "${{ matrix.node_version }}"
+
+      - name: Enable corepack
+        run: corepack enable
 
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -150,7 +155,12 @@ jobs:
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
         with:
-          version: ${{ matrix.node_version }}
+          mise_toml: |
+            [tools]
+            node = "${{ matrix.node_version }}"
+
+      - name: Enable corepack
+        run: corepack enable
 
       - name: Install packages
         run: |
