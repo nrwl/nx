@@ -8,10 +8,10 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { hashArray } from './file-hasher';
 import { InputDefinition } from '../config/workspace-json-project-json';
-import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
 import { NxWorkspaceFilesExternals } from '../native';
+import { createCachedMatcher } from '../utils/globs';
 
 /**
  * A data structure returned by the default hasher.
@@ -407,8 +407,8 @@ export function filterUsingGlobPatterns(
       return r;
     });
 
-  const positive = [];
-  const negative = [];
+  const positive: string[] = [];
+  const negative: string[] = [];
   for (const p of filesetWithExpandedProjectRoot) {
     if (p.startsWith('!')) {
       negative.push(p);
@@ -421,19 +421,27 @@ export function filterUsingGlobPatterns(
     return files;
   }
 
+  // PERF: Pre-compile all patterns into cached matchers once, instead of
+  // compiling them for every file. For 10,000 files × 10 patterns, this
+  // reduces pattern compilations from 100,000 to just 10.
+  const positiveMatchers = positive.map((p) => createCachedMatcher(p));
+  const negativeMatchers = negative.map((p) => createCachedMatcher(p));
+
+  // Fast path: check if we're matching everything in the project root
+  const matchAllInRoot =
+    positive.length === 0 ||
+    (positive.length === 1 && positive[0] === `${root}/**/*`);
+
   return files.filter((f) => {
     let matchedPositive = false;
-    if (
-      positive.length === 0 ||
-      (positive.length === 1 && positive[0] === `${root}/**/*`)
-    ) {
+    if (matchAllInRoot) {
       matchedPositive = true;
     } else {
-      matchedPositive = positive.some((pattern) => minimatch(f.file, pattern));
+      matchedPositive = positiveMatchers.some((matcher) => matcher(f.file));
     }
 
     if (!matchedPositive) return false;
 
-    return negative.every((pattern) => minimatch(f.file, pattern));
+    return negativeMatchers.every((matcher) => matcher(f.file));
   });
 }

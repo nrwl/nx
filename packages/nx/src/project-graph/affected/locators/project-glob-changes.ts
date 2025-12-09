@@ -1,10 +1,9 @@
 import { TouchedProjectLocator } from '../affected-project-graph-models';
-import { minimatch } from 'minimatch';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { getGlobPatternsOfPlugins } from '../../utils/retrieve-workspace-files';
-import { combineGlobPatterns } from '../../../utils/globs';
+import { combineGlobPatterns, createCachedMatcher } from '../../../utils/globs';
 import { getPlugins } from '../../plugins/get-plugins';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
@@ -25,10 +24,12 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
     })();
 
     const touchedProjects = new Set<string>();
+    // PERF: Pre-compile the glob pattern once instead of for each file
+    const isProjectFileMatcher = createCachedMatcher(globPattern, {
+      dot: true,
+    });
     for (const touchedFile of touchedFiles) {
-      const isProjectFile = minimatch(touchedFile.file, globPattern, {
-        dot: true,
-      });
+      const isProjectFile = isProjectFileMatcher(touchedFile.file);
       if (isProjectFile) {
         // If the file no longer exists on disk, then it was deleted
         if (!existsSync(join(workspaceRoot, touchedFile.file))) {

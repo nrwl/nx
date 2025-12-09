@@ -1,10 +1,10 @@
-import { minimatch } from 'minimatch';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 import {
   createProjectRootMappings,
   findProjectForPath,
 } from '../../utils/find-project-for-path';
 import { InputDefinition } from '../../../config/workspace-json-project-json';
+import { createCachedMatcher } from '../../../utils/globs';
 
 export const getTouchedProjects: TouchedProjectLocator = (
   touchedFiles,
@@ -49,8 +49,10 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
   const touched = new Set<string>();
 
   for (const [pattern, projects] of Object.entries(implicits)) {
+    // PERF: Use cached matcher instead of compiling pattern for each file
+    const matcher = createCachedMatcher(pattern, { dot: true });
     const implicitDependencyWasChanged = fileChanges.some((f) =>
-      minimatch(f.file, pattern, { dot: true })
+      matcher(f.file)
     );
     if (!implicitDependencyWasChanged) {
       continue;

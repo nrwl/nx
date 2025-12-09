@@ -2,6 +2,19 @@ import { minimatch } from 'minimatch';
 import type { ProjectGraphProjectNode } from '../config/project-graph';
 import { isGlobPattern } from './globs';
 
+// PERF: Cache for custom word-boundary regex patterns used in project name matching.
+// These patterns match project names like "foo" against "foo_bar" but not "foo-e2e".
+const wordBoundaryRegexCache = new Map<string, RegExp>();
+
+function getWordBoundaryRegex(pattern: string): RegExp {
+  let regex = wordBoundaryRegexCache.get(pattern);
+  if (!regex) {
+    regex = new RegExp(`(?<![@a-zA-Z0-9-])${pattern}(?![@a-zA-Z0-9-])`, 'i');
+    wordBoundaryRegexCache.set(pattern, regex);
+  }
+  return regex;
+}
+
 const validPatternTypes = [
   'name', // Pattern is based on the project's name
   'tag', // Pattern is based on the project's tags
@@ -167,11 +180,10 @@ function addMatchingProjectsByName(
   }
 
   if (!isGlobPattern(pattern.value)) {
-    // Custom regex that is basically \b but includes hyphens (-) and excludes underscores (_), so "foo" pattern matches "foo_bar" but not "foo-e2e".
-    const regex = new RegExp(
-      `(?<![@a-zA-Z0-9-])${pattern.value}(?![@a-zA-Z0-9-])`,
-      'i'
-    );
+    // PERF: Use cached regex instead of creating new RegExp on every call
+    // Custom regex that is basically \b but includes hyphens (-) and excludes underscores (_),
+    // so "foo" pattern matches "foo_bar" but not "foo-e2e".
+    const regex = getWordBoundaryRegex(pattern.value);
     const matchingProjects = Object.keys(projects).filter((name) =>
       regex.test(name)
     );

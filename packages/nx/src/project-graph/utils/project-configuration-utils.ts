@@ -10,7 +10,6 @@ import { NX_PREFIX } from '../../utils/logger';
 import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
 
-import { minimatch } from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { existsSync } from 'node:fs';
@@ -34,7 +33,11 @@ import {
   WorkspaceValidityError,
 } from '../error-types';
 import { CreateNodesResult } from '../plugins/public-api';
-import { isGlobPattern } from '../../utils/globs';
+import {
+  isGlobPattern,
+  createCachedMatcher,
+  minimatchWithCache,
+} from '../../utils/globs';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import {
   getExecutorInformation,
@@ -207,9 +210,11 @@ export function mergeProjectConfigurationIntoRootMap(
       if (isGlobPattern(targetName)) {
         // find all targets matching the glob pattern
         // this will map atomized targets to the glob pattern same as it does for targetDefaults
+        // PERF: Use cached minimatch for glob pattern matching
+        const matcher = createCachedMatcher(targetName);
         matchingTargets = Object.keys(
           updatedProjectConfiguration.targets
-        ).filter((key) => minimatch(key, targetName));
+        ).filter((key) => matcher(key));
       }
       // If no matching targets were found, we can assume that the target name is not (meant to be) a glob pattern
       if (!matchingTargets.length) {
@@ -590,21 +595,27 @@ export function findMatchingConfigFiles(
 ): string[] {
   const matchingConfigFiles: string[] = [];
 
+  // PERF: Pre-compile all patterns once instead of for each file.
+  // This reduces pattern compilations from O(files × patterns) to O(patterns).
+  const patternMatcher = createCachedMatcher(pattern, { dot: true });
+  const includeMatchers = include?.map((p) =>
+    createCachedMatcher(p, { dot: true })
+  );
+  const excludeMatchers = exclude?.map((p) =>
+    createCachedMatcher(p, { dot: true })
+  );
+
   for (const file of projectFiles) {
-    if (minimatch(file, pattern, { dot: true })) {
-      if (include) {
-        const included = include.some((includedPattern) =>
-          minimatch(file, includedPattern, { dot: true })
-        );
+    if (patternMatcher(file)) {
+      if (includeMatchers) {
+        const included = includeMatchers.some((matcher) => matcher(file));
         if (!included) {
           continue;
         }
       }
 
-      if (exclude) {
-        const excluded = exclude.some((excludedPattern) =>
-          minimatch(file, excludedPattern, { dot: true })
-        );
+      if (excludeMatchers) {
+        const excluded = excludeMatchers.some((matcher) => matcher(file));
         if (excluded) {
           continue;
         }
@@ -1190,7 +1201,8 @@ export function readTargetDefaultsForTarget(
 
   let matchingTargetDefaultKey: string | null = null;
   for (const key in targetDefaults ?? {}) {
-    if (isGlobPattern(key) && minimatch(targetName, key)) {
+    // PERF: Use cached minimatch for glob pattern matching
+    if (isGlobPattern(key) && minimatchWithCache(targetName, key)) {
       if (
         !matchingTargetDefaultKey ||
         matchingTargetDefaultKey.length < key.length
