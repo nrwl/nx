@@ -343,41 +343,44 @@
       "factory": "./src/migrations/update-21-6-1/update-angular-cli"
     },
     "update-angular-cli-version-21-0-0": {
-      "version": "22.2.0-beta.3",
+      "version": "22.3.0-beta.0",
       "requires": {
         "@angular/core": ">=21.0.0"
       },
       "description": "Update the @angular/cli package version to ~21.0.0.",
-      "factory": "./src/migrations/update-22-2-0/update-angular-cli"
+      "factory": "./src/migrations/update-22-3-0/update-angular-cli"
     },
     "update-ssr-webpack-config-22-2-0": {
-      "version": "22.2.0-beta.3",
+      "version": "22.3.0-beta.0",
       "requires": {
         "@angular/core": ">=21.0.0"
       },
       "description": "Updates webpack-based SSR configuration to use preserve module format and bundler module resolution.",
-      "factory": "./src/migrations/update-22-2-0/update-ssr-webpack-config"
+      "factory": "./src/migrations/update-22-3-0/update-ssr-webpack-config"
     },
     "update-module-resolution-22-2-0": {
-      "version": "22.2.0-beta.3",
+      "version": "22.3.0-beta.0",
       "requires": {
         "@angular/core": ">=21.0.0-rc.3"
       },
       "description": "Update 'module' to 'preserve' and 'moduleResolution' to 'bundler' in TypeScript configurations for Angular projects.",
-      "factory": "./src/migrations/update-22-2-0/update-module-resolution"
+      "factory": "./src/migrations/update-22-3-0/update-module-resolution"
     },
     "update-typescript-lib-22-2-0": {
-      "version": "22.2.0-beta.3",
+      "version": "22.3.0-beta.0",
       "requires": {
         "@angular/core": ">=21.0.0"
       },
       "description": "Updates the 'lib' property in tsconfig files to use 'es2022' or a more modern version.",
-      "factory": "./src/migrations/update-22-2-0/update-typescript-lib"
+      "factory": "./src/migrations/update-22-3-0/update-typescript-lib"
     },
     "update-unit-test-runner-option": {
-      "version": "22.2.0-beta.3",
+      "version": "22.3.0-beta.0",
+      "requires": {
+        "@angular/core": ">=21.0.0"
+      },
       "description": "Update 'vitest' unit test runner option to 'vitest-analog' in generator defaults.",
-      "factory": "./src/migrations/update-22-2-0/update-unit-test-runner-option"
+      "factory": "./src/migrations/update-22-3-0/update-unit-test-runner-option"
     }
   },
   "packageJsonUpdates": {
@@ -1965,8 +1968,8 @@
         }
       }
     },
-    "22.2.0": {
-      "version": "22.2.0-beta.3",
+    "22.3.0": {
+      "version": "22.3.0-beta.0",
       "x-prompt": "Do you want to update the Angular version to v21?",
       "requires": {
         "@angular/core": ">=20.3.0 <21.0.0"
@@ -2034,8 +2037,8 @@
         }
       }
     },
-    "22.2.0-angular-eslint": {
-      "version": "22.2.0-beta.3",
+    "22.3.0-angular-eslint": {
+      "version": "22.3.0-beta.0",
       "requires": {
         "@angular/core": ">= 21.0.0 < 22.0.0",
         "typescript-eslint": "^8.0.0",
@@ -2080,8 +2083,8 @@
         }
       }
     },
-    "22.2.0-@angular-eslint": {
-      "version": "22.2.0-beta.3",
+    "22.3.0-@angular-eslint": {
+      "version": "22.3.0-beta.0",
       "requires": {
         "@angular/core": ">= 21.0.0 < 22.0.0",
         "eslint": "^8.57.0 || ^9.0.0"
@@ -2121,8 +2124,8 @@
         }
       }
     },
-    "22.2.0-jest": {
-      "version": "22.2.0-beta.3",
+    "22.3.0-jest": {
+      "version": "22.3.0-beta.0",
       "requires": {
         "@angular/compiler-cli": ">=19.0.0 <22.0.0",
         "@angular/core": ">=19.0.0 <22.0.0",

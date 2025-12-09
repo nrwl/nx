@@ -100,8 +100,8 @@
         }
       }
     },
-    "22.2.0": {
-      "version": "22.2.0-beta.3",
+    "22.3.0": {
+      "version": "22.3.0-beta.0",
       "x-prompt": "Do you want to update the Jest version to v30?",
       "requires": {
         "jest": ">= 29.0.0 < 30.0.0"
