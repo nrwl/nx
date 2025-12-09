@@ -269,6 +269,34 @@ export function writeCache(
   performance.measure('write cache', 'write cache:start', 'write cache:end');
 }
 
+/**
+ * Fast deep equality check that avoids JSON.stringify overhead.
+ * Uses structural comparison for arrays and objects.
+ */
+function deepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a === null || b === null) return a === b;
+  if (typeof a !== typeof b) return false;
+  if (typeof a !== 'object') return a === b;
+
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], b[i])) return false;
+    }
+    return true;
+  }
+
+  const keysA = Object.keys(a as object);
+  const keysB = Object.keys(b as object);
+  if (keysA.length !== keysB.length) return false;
+
+  for (const key of keysA) {
+    if (!deepEqual((a as any)[key], (b as any)[key])) return false;
+  }
+  return true;
+}
+
 export function shouldRecomputeWholeGraph(
   cache: FileMapCache,
   packageJsonDeps: Record<string, string>,
@@ -290,35 +318,28 @@ export function shouldRecomputeWholeGraph(
     return true;
   }
 
-  // a path mapping for an existing project has changed
+  // PERF: Use deepEqual instead of JSON.stringify for path mapping comparison
+  // JSON.stringify is called O(n) times per path mapping, this eliminates that overhead
+  const currentPaths = tsConfig?.compilerOptions?.paths;
   if (
     Object.keys(cache.pathMappings).some((t) => {
-      const cached =
-        cache.pathMappings && cache.pathMappings[t]
-          ? JSON.stringify(cache.pathMappings[t])
-          : undefined;
-      const notCached =
-        tsConfig?.compilerOptions?.paths && tsConfig?.compilerOptions?.paths[t]
-          ? JSON.stringify(tsConfig.compilerOptions.paths[t])
-          : undefined;
-      return cached !== notCached;
+      const cached = cache.pathMappings?.[t];
+      const current = currentPaths?.[t];
+      return !deepEqual(cached, current);
     })
   ) {
     return true;
   }
 
-  // a new plugin has been added
-  if (
-    JSON.stringify(getNxJsonPluginsData(nxJson, packageJsonDeps)) !==
-    JSON.stringify(cache.nxJsonPlugins)
-  ) {
+  // PERF: Use deepEqual instead of JSON.stringify for plugin data comparison
+  // Avoids serializing entire plugin configurations on every cache check
+  const currentPluginsData = getNxJsonPluginsData(nxJson, packageJsonDeps);
+  if (!deepEqual(currentPluginsData, cache.nxJsonPlugins)) {
     return true;
   }
 
-  if (
-    JSON.stringify(nxJson?.pluginsConfig) !==
-    JSON.stringify(cache.pluginsConfig)
-  ) {
+  // PERF: Use deepEqual instead of JSON.stringify for pluginsConfig comparison
+  if (!deepEqual(nxJson?.pluginsConfig, cache.pluginsConfig)) {
     return true;
   }
 

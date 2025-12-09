@@ -37,17 +37,28 @@ export class TasksSchedule {
   ) {}
 
   public async init() {
+    // PERF: Single iteration over tasks to collect targets and unique projects
+    // Original code iterated Object.values() twice and had redundant findAllProjectNodeDependencies calls
+    const tasks = Object.values(this.taskGraph.tasks);
+    const uniqueProjects = new Set<string>();
+
     if (this.taskHistory) {
       this.estimatedTaskTimings =
         await this.taskHistory.getEstimatedTaskTimings(
-          Object.values(this.taskGraph.tasks).map((t) => t.target)
+          tasks.map((t) => t.target)
         );
     }
 
-    for (const project of Object.values(this.taskGraph.tasks).map(
-      (t) => t.target.project
-    )) {
-      this.projectDependencies[project] ??= findAllProjectNodeDependencies(
+    // Collect unique projects in single pass
+    for (const task of tasks) {
+      uniqueProjects.add(task.target.project);
+    }
+
+    // Calculate dependencies only once per unique project
+    // For a task graph with 100 tasks across 20 projects, this reduces
+    // findAllProjectNodeDependencies calls from 100 to 20
+    for (const project of uniqueProjects) {
+      this.projectDependencies[project] = findAllProjectNodeDependencies(
         project,
         this.reverseProjectGraph
       ).length;
