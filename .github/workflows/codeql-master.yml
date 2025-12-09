@@ -68,8 +68,10 @@ jobs:
     - name: Setup Language Tooling
       uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
-    - name: Enable corepack
-      run: corepack enable
+    - name: Enable corepack and install pnpm
+      run: |
+        corepack enable
+        corepack prepare --activate
 
     # Add any setup steps before running the `github/codeql-action/init` action.
     # This includes steps like installing compilers or runtimes (`actions/setup-node`

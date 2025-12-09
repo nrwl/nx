@@ -58,8 +58,10 @@ jobs:
             [tools]
             node = "${{ matrix.node_version }}"
 
-      - name: Enable corepack
-        run: corepack enable
+      - name: Enable corepack and install pnpm
+        run: |
+          corepack enable
+          corepack prepare --activate
 
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -159,8 +161,10 @@ jobs:
             [tools]
             node = "${{ matrix.node_version }}"
 
-      - name: Enable corepack
-        run: corepack enable
+      - name: Enable corepack and install pnpm
+        run: |
+          corepack enable
+          corepack prepare --activate
 
       - name: Install packages
         run: |

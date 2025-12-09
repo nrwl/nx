@@ -307,9 +307,11 @@ jobs:
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
         if: ${{ !matrix.settings.docker }}
 
-      - name: Enable corepack
+      - name: Enable corepack and install pnpm
         if: ${{ !matrix.settings.docker }}
-        run: corepack enable
+        run: |
+          corepack enable
+          corepack prepare --activate
 
       - name: Cache cargo
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
@@ -515,8 +517,10 @@ jobs:
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
-      - name: Enable corepack
-        run: corepack enable
+      - name: Enable corepack and install pnpm
+        run: |
+          corepack enable
+          corepack prepare --activate
 
       - name: Use npm 11.5.2
         run: npm install -g npm@11.5.2
