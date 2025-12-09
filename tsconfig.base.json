@@ -16,6 +16,8 @@
     "allowJs": true,
     "composite": true,
     "declarationMap": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "customConditions": ["@nx/nx-source"]
   }
 }

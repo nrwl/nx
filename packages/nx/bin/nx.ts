@@ -167,13 +167,13 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
 
   // prefer Nx installed in .nx/installation
   try {
-    return require.resolve('nx/bin/nx.js', {
+    return require.resolve('nx/bin/nx', {
       paths: [getNxInstallationPath(workspace ? workspace.dir : globalsRoot)],
     });
   } catch {}
 
   // check for root install
-  return require.resolve('nx/bin/nx.js', {
+  return require.resolve('nx/bin/nx', {
     paths: [workspace ? workspace.dir : globalsRoot],
   });
 }

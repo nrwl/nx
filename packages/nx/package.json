@@ -229,6 +229,12 @@
       "import": "./dist/src/utils/*.js",
       "default": "./dist/src/utils/*.js"
     },
+    "./src/command-line/*": {
+      "@nx/nx-source": "./src/command-line/*.ts",
+      "types": "./src/command-line/*.d.ts",
+      "import": "./dist/src/command-line/*.js",
+      "default": "./dist/src/command-line/*.js"
+    },
     "./src/generators/*": {
       "types": "./src/generators/*.d.ts",
       "@nx/nx-source": "./src/generators/*.ts",
@@ -259,11 +265,29 @@
       "import": "./dist/src/devkit-internals.js",
       "default": "./dist/src/devkit-internals.js"
     },
+    "./src/ai/set-up-ai-agents/set-up-ai-agents": {
+      "types": "./src/ai/set-up-ai-agents/set-up-ai-agents.d.ts",
+      "@nx/nx-source": "./src/ai/set-up-ai-agents/set-up-ai-agents.ts",
+      "import": "./dist/src/ai/set-up-ai-agents/set-up-ai-agents.js",
+      "default": "./dist/src/ai/set-up-ai-agents/set-up-ai-agents.js"
+    },
     "./src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud": {
       "types": "./src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud.d.ts",
       "@nx/nx-source": "./src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud.ts",
       "import": "./dist/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud.js",
       "default": "./dist/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud.js"
+    },
+    "./src/nx-cloud/utilities/url-shorten": {
+      "types": "./src/nx-cloud/utilities/url-shorten.d.ts",
+      "@nx/nx-source": "./src/nx-cloud/utilities/url-shorten.ts",
+      "import": "./dist/src/nx-cloud/utilities/url-shorten.js",
+      "default": "./dist/src/nx-cloud/utilities/url-shorten.js"
+    },
+    "./src/nx-cloud/utilities/onboarding": {
+      "types": "./src/nx-cloud/utilities/onboarding.d.ts",
+      "@nx/nx-source": "./src/nx-cloud/utilities/onboarding.ts",
+      "import": "./dist/src/nx-cloud/utilities/onboarding.js",
+      "default": "./dist/src/nx-cloud/utilities/onboarding.js"
     },
     "./src/config/configuration": {
       "types": "./src/config/configuration.d.ts",

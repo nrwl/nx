@@ -7,8 +7,17 @@ export async function loadResolvedNxPluginAsync(
   pluginPath: string,
   name: string
 ) {
-  const plugin = await importPluginModule(pluginPath);
-  plugin.name ??= name;
+  const resolvedImportedPlugin = await importPluginModule(pluginPath);
+  // Prefer the default export if available, as ES module namespace objects are non-extensible
+  const importedPlugin =
+    'default' in resolvedImportedPlugin
+      ? resolvedImportedPlugin.default
+      : resolvedImportedPlugin;
+  // Create a shallow copy to ensure the object is extensible
+  const plugin: NxPlugin = {
+    name,
+    ...(importedPlugin as NxPlugin),
+  };
   return new LoadedNxPlugin(plugin, pluginConfiguration);
 }
 

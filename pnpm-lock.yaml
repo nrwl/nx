@@ -3984,6 +3984,9 @@ importers:
       '@nx/react':
         specifier: workspace:*
         version: link:../react
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../webpack
       ajv:
         specifier: ^8.12.0
         version: 8.17.1
@@ -4024,6 +4027,9 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
+      '@nx/eslint':
+        specifier: workspace:*
+        version: link:../eslint
       '@nx/js':
         specifier: workspace:*
         version: link:../js

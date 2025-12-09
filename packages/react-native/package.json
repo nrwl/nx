@@ -101,6 +101,7 @@
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/react": "workspace:*",
+    "@nx/webpack": "workspace:*",
     "ajv": "^8.12.0",
     "enhanced-resolve": "^5.8.3",
     "ignore": "^5.0.4",

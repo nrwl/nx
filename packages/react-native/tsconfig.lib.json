@@ -35,6 +35,9 @@
   ],
   "references": [
     {
+      "path": "../webpack/tsconfig.lib.json"
+    },
+    {
       "path": "../react/tsconfig.lib.json"
     },
     {

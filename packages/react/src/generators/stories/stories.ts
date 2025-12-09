@@ -86,7 +86,7 @@ export async function createAllStories(
   projectConfiguration: ProjectConfiguration
 ) {
   const { isTheFileAStory } = await import(
-    '@nx/storybook/src/utils/utilities.js'
+    '@nx/storybook/src/utils/utilities'
   );
 
   const sourceRoot = getProjectSourceRoot(projectConfiguration, tree);
@@ -157,7 +157,7 @@ export async function storiesGenerator(
 
 async function isNextJsProject(tree: Tree, config: ProjectConfiguration) {
   const { findStorybookAndBuildTargetsAndCompiler } = await import(
-    '@nx/storybook/src/utils/utilities.js'
+    '@nx/storybook/src/utils/utilities'
   );
 
   const { nextBuildTarget } = findStorybookAndBuildTargetsAndCompiler(

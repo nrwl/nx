@@ -262,7 +262,7 @@ export async function remixApplicationGeneratorInternal(
       nxVersion
     );
     const { addIgnoresToLintConfig } = await import(
-      '@nx/eslint/src/generators/utils/eslint-file.js'
+      '@nx/eslint/src/generators/utils/eslint-file'
     );
     const eslintTask = await lintProjectGenerator(tree, {
       linter: options.linter,

@@ -35,14 +35,22 @@ async function ignoreViteTempFilesInEslintConfig(
   }
 
   ensurePackage('@nx/eslint', nxVersion);
+
+  // Use require.resolve to get absolute path, then dynamic import
+  // This is necessary because ESM imports don't respect NODE_PATH which
+  // ensurePackage uses to make the package available
+  const eslintFilePath = require.resolve(
+    '@nx/eslint/src/generators/utils/eslint-file'
+  );
   const { addIgnoresToLintConfig, isEslintConfigSupported } = await import(
-    '@nx/eslint/src/generators/utils/eslint-file.js'
+    eslintFilePath
   );
   if (!isEslintConfigSupported(tree)) {
     return;
   }
 
-  const { useFlatConfig } = await import('@nx/eslint/src/utils/flat-config.js');
+  const flatConfigPath = require.resolve('@nx/eslint/src/utils/flat-config');
+  const { useFlatConfig } = await import(flatConfigPath);
   const isUsingFlatConfig = useFlatConfig(tree);
   if (!projectRoot && !isUsingFlatConfig) {
     // root eslintrc files ignore all files and the root eslintrc files add

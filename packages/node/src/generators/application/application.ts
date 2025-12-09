@@ -140,7 +140,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     tasks.push(webpackInitTask);
     if (!options.skipPackageJson) {
       const { ensureDependencies } = await import(
-        '@nx/webpack/src/utils/ensure-dependencies.js'
+        '@nx/webpack/src/utils/ensure-dependencies'
       );
       tasks.push(
         ensureDependencies(tree, {

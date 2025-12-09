@@ -75,7 +75,7 @@ export async function withModuleFederationForSSR(
                     ...(configOverride?.runtimePlugins ?? []),
                     require.resolve('@module-federation/node/runtimePlugin'),
                     require.resolve(
-                      '@nx/module-federation/src/utils/plugins/runtime-library-control.plugin.js'
+                      '@nx/module-federation/src/utils/plugins/runtime-library-control.plugin'
                     ),
                   ]
                 : [

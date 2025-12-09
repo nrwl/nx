@@ -2,7 +2,7 @@ import { logger } from './logger';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import type {
   ProjectsConfigurations,
-  TargetConfiguration,
+  TargetConfiguration
 } from '../config/workspace-json-project-json';
 
 type PropertyDescription = {
@@ -184,7 +184,7 @@ export function convertAliases(
       }
       acc['--'].push({
         name: k,
-        possible: [],
+        possible: []
       });
     } else {
       acc[k] = opts[k];
@@ -194,7 +194,8 @@ export function convertAliases(
 }
 
 export class SchemaError {
-  constructor(public readonly message: string) {}
+  constructor(public readonly message: string) {
+  }
 }
 
 export function validateOptsAgainstSchema(
@@ -357,7 +358,8 @@ function validateProperty(
         const rule = { type: schema.type, ...r };
         validateProperty(propName, value, rule, definitions);
         passes = true;
-      } catch (e) {}
+      } catch (e) {
+      }
     });
     if (!passes) throwInvalidSchema(propName, schema);
     return;
@@ -655,12 +657,12 @@ export async function combineOptionsForGenerator(
 ) {
   const generatorDefaults = projectsConfigurations
     ? getGeneratorDefaults(
-        defaultProjectName,
-        projectsConfigurations,
-        nxJsonConfiguration,
-        collectionName,
-        generatorName
-      )
+      defaultProjectName,
+      projectsConfigurations,
+      nxJsonConfiguration,
+      collectionName,
+      generatorName
+    )
     : {};
   let combined = convertAliases(
     coerceTypesInOptions({ ...generatorDefaults, ...commandLineOpts }, schema),
@@ -770,13 +772,13 @@ function getGeneratorDefaults(
     if (nxJsonConfiguration.generators[collectionName]?.[generatorName]) {
       defaults = {
         ...defaults,
-        ...nxJsonConfiguration.generators[collectionName][generatorName],
+        ...nxJsonConfiguration.generators[collectionName][generatorName]
       };
     }
     if (nxJsonConfiguration.generators[`${collectionName}:${generatorName}`]) {
       defaults = {
         ...defaults,
-        ...nxJsonConfiguration.generators[`${collectionName}:${generatorName}`],
+        ...nxJsonConfiguration.generators[`${collectionName}:${generatorName}`]
       };
     }
   }
@@ -791,7 +793,7 @@ function getGeneratorDefaults(
     if (g[`${collectionName}:${generatorName}`]) {
       defaults = {
         ...defaults,
-        ...g[`${collectionName}:${generatorName}`],
+        ...g[`${collectionName}:${generatorName}`]
       };
     }
   }
@@ -816,7 +818,7 @@ export function getPromptsForSchema(
   Object.entries(schema.properties).forEach(([k, v]) => {
     if (v['x-prompt'] && opts[k] === undefined) {
       const question: Prompt = {
-        name: k,
+        name: k
       } as any;
 
       if (v.default) {
@@ -829,18 +831,18 @@ export function getPromptsForSchema(
         if (v.type === 'boolean') {
           v['x-prompt'] = {
             type: 'confirm',
-            message,
+            message
           };
         } else if (v.type === 'array' && v.items?.enum) {
           v['x-prompt'] = {
             type: 'multiselect',
             items: v.items.enum,
-            message,
+            message
           };
         } else {
           v['x-prompt'] = {
             type: 'input',
-            message,
+            message
           };
         }
       }
@@ -894,7 +896,7 @@ export function getPromptsForSchema(
             } else {
               return {
                 message: item.label,
-                name: item.value,
+                name: item.value
               };
             }
           });
@@ -916,8 +918,10 @@ async function promptForValues(
   schema: Schema,
   projectsConfigurations: ProjectsConfigurations
 ) {
+  const resolvedEnquirer = await import('enquirer');
+  const enquirer = 'default' in resolvedEnquirer ? resolvedEnquirer.default : resolvedEnquirer;
   return await (
-    await import('enquirer')
+    enquirer
   )
     .prompt(getPromptsForSchema(opts, schema, projectsConfigurations))
     .then((values) => ({ ...opts, ...values }))
@@ -934,7 +938,7 @@ function findSchemaForProperty(
   if (propName in schema.properties) {
     return {
       name: propName,
-      description: schema.properties[propName],
+      description: schema.properties[propName]
     };
   }
   const found = Object.entries(schema.properties).find(

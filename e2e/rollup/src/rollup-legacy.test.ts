@@ -336,7 +336,7 @@ describe('Rollup Plugin', () => {
         import {
           calculateProjectBuildableDependencies,
           createTmpTsConfig,
-        } from '@nx/js/src/utils/buildable-libs-utils.js';
+        } from '@nx/js/src/utils/buildable-libs-utils';
         
         const __dirname = dirname(fileURLToPath(import.meta.url));
         
