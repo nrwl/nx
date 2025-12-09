@@ -3,10 +3,11 @@ title: Nx Devkit and Angular Devkit
 description: Compare Nx Devkit and Angular Devkit for creating generators and executors, understand key differences in implementation, and learn how to convert between the two approaches.
 sidebar:
   label: Nx Devkit and Angular Devkit
+filter: 'type:Guides'
 ---
 
 {% aside type="note" title="Nx & Angular" %}
-This document covers the difference between Nx Devkit and Angular Devkit. See the [Nx Devkit](/docs/reference/core-api/devkit/documents/nx_devkit) guide for more in-depth details about Nx Devkit.
+This document covers the difference between Nx Devkit and Angular Devkit. See the [Nx Devkit](/docs/reference/devkit) guide for more in-depth details about Nx Devkit.
 {% /aside %}
 
 Nx comes with a devkit to write generators and executors, but you can also use Angular devkit (schematics and builders). In other words, you can use an Angular schematic to implement a generator, and you can use an Angular builder to implement an executor.
@@ -93,7 +94,7 @@ export default function (options: Schema): Rule {
 
 The Nx CLI can invoke Nx Generator or Angular Schematics directly. When the user runs:
 
-```shell {% frame="none" %}
+```shell
 nx g mygenerator params
 nx g myschematic params
 ```

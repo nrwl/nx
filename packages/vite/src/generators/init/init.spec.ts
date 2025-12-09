@@ -135,10 +135,9 @@ describe('@nx/vite:init', () => {
   it('should ignore vite temp files in gitignore', async () => {
     await initGenerator(tree, {});
 
-    expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
-      "vite.config.*.timestamp*
-      vitest.config.*.timestamp*"
-    `);
+    expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(
+      `"vite.config.*.timestamp*"`
+    );
   });
 
   it(`should not add multiple instances of the same vite temp file glob to gitignore`, async () => {
@@ -171,7 +170,7 @@ vite.config.*.timestamp*`
     expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
       "export default [
         {
-          ignores: ['**/vite.config.*.timestamp*', '**/vitest.config.*.timestamp*'],
+          ignores: ['**/vite.config.*.timestamp*'],
         },
       ];
       "
@@ -197,11 +196,7 @@ vite.config.*.timestamp*`
     expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
       "export default [
         {
-          ignores: [
-            'dist',
-            '**/vite.config.*.timestamp*',
-            '**/vitest.config.*.timestamp*',
-          ],
+          ignores: ['dist', '**/vite.config.*.timestamp*'],
         },
       ];
       "
@@ -255,7 +250,6 @@ vite.config.*.timestamp*`
       {
         "ignorePatterns": [
           "**/vite.config.*.timestamp*",
-          "**/vitest.config.*.timestamp*",
         ],
       }
     `);
@@ -286,7 +280,6 @@ vite.config.*.timestamp*`
         "ignorePatterns": [
           "!**/*",
           "**/vite.config.*.timestamp*",
-          "**/vitest.config.*.timestamp*",
         ],
       }
     `);

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
       'Master Nx with expert-led video courses from the core team. Boost your skills and productivity.',
     images: [
       {
-        url: 'https://nx.dev/socials/nx-courses-media.png',
+        url: 'https://nx.dev/socials/nx-media.png',
         width: 800,
         height: 421,
         alt: 'Nx Video Courses',

@@ -12,12 +12,12 @@ import {
 } from '@nx/devkit';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { convertToRspack } from '../convert-to-rspack/convert-to-rspack';
 import { angularInitGenerator } from '../init/init';
 import { setupSsr } from '../setup-ssr/setup-ssr';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
+import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import {
   getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
@@ -41,7 +41,7 @@ export async function applicationGenerator(
   tree: Tree,
   schema: Partial<Schema>
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(tree, 'angular', 'application');
+  assertNotUsingTsSolutionSetup(tree, 'application');
   const isRspack = schema.bundler === 'rspack';
   if (isRspack) {
     schema.bundler = 'webpack';

@@ -42,7 +42,6 @@ export interface WebpackExecutorOptions {
   buildLibsFromSource?: boolean;
   commonChunk?: boolean;
   compiler?: 'babel' | 'swc' | 'tsc';
-  deleteOutputPath?: boolean;
   externalDependencies?: 'all' | 'none' | string[];
   extractLicenses?: boolean;
   fileReplacements?: FileReplacement[];
@@ -78,7 +77,6 @@ export interface WebpackExecutorOptions {
   index?: string;
   postcssConfig?: string;
   scripts?: Array<ExtraEntryPointClass | string>;
-  sassImplementation?: 'sass' | 'sass-embedded';
   stylePreprocessorOptions?: any;
   styles?: Array<ExtraEntryPointClass | string>;
   subresourceIntegrity?: boolean;

@@ -10,6 +10,7 @@ import {
   VattenfallIcon,
 } from '@nx/nx-dev-ui-icons';
 import { ReactElement } from 'react';
+import { motion } from 'framer-motion';
 
 export function Solution(): ReactElement {
   return (
@@ -53,51 +54,86 @@ export function Solution(): ReactElement {
 }
 
 function StatsSection(): ReactElement {
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.06, when: 'beforeChildren' },
+    },
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 12 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.25, ease: 'easeOut' },
+    },
+  };
+
   return (
-    <div className="mx-auto mt-20 grid max-w-[100rem] grid-cols-1 justify-center gap-4 px-6 py-8 sm:grid-cols-2 xl:grid-cols-6">
-      <StatCard
-        title="700+"
-        description="projects easily managed at scale"
-        company="Caseware"
-        link="https://youtu.be/lvS8HjjFwEM"
-        color="purple"
-      />
-      <StatCard
-        title="360x"
-        description="faster deployments from 5 days to 20 minutes"
-        company="PayFit"
-        link="/blog/payfit-success-story?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
-        color="violet"
-      />
-      <StatCard
-        title="60x"
-        description="faster testing from 20 minutes to seconds"
-        company="Hetzner"
-        link="/blog/hetzner-cloud-success-story?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
-        color="indigo"
-      />
-      <StatCard
-        title="5x"
-        description="faster scaling across teams with rapid iteration"
-        company="SiriusXM"
-        link="https://youtu.be/Q0ky-8oJcro"
-        color="blue"
-      />
-      <StatCard
-        title="Instant"
-        description="builds with unified codebase across web and mobile"
-        company="UKG"
-        link="/blog/ukg-success-story?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
-        color="sky"
-      />
-      <StatCard
-        title="44%"
-        description="faster CI with Nx Agents unlocking concurrency limits"
-        company="Vattenfall"
-        link="/blog/nx-agents-changes-the-math?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
-        color="cyan"
-      />
-    </div>
+    <motion.div
+      variants={container}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.2 }}
+      className="mx-auto mt-20 grid max-w-[100rem] grid-cols-1 justify-center gap-4 px-6 py-8 sm:grid-cols-2 xl:grid-cols-6"
+    >
+      <motion.div variants={item}>
+        <StatCard
+          title="700+"
+          description="projects easily managed at scale"
+          company="Caseware"
+          link="https://youtu.be/lvS8HjjFwEM"
+          color="purple"
+        />
+      </motion.div>
+      <motion.div variants={item}>
+        <StatCard
+          title="360x"
+          description="faster deployments from 5 days to 20 minutes"
+          company="PayFit"
+          link="/blog/payfit-success-story?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
+          color="violet"
+        />
+      </motion.div>
+      <motion.div variants={item}>
+        <StatCard
+          title="60x"
+          description="faster testing from 20 minutes to seconds"
+          company="Hetzner"
+          link="/blog/hetzner-cloud-success-story?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
+          color="indigo"
+        />
+      </motion.div>
+      <motion.div variants={item}>
+        <StatCard
+          title="5x"
+          description="faster scaling across teams with rapid iteration"
+          company="SiriusXM"
+          link="https://youtu.be/Q0ky-8oJcro"
+          color="blue"
+        />
+      </motion.div>
+      <motion.div variants={item}>
+        <StatCard
+          title="Instant"
+          description="builds with unified codebase across web and mobile"
+          company="UKG"
+          link="/blog/ukg-success-story?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
+          color="sky"
+        />
+      </motion.div>
+      <motion.div variants={item}>
+        <StatCard
+          title="44%"
+          description="faster CI with Nx Agents unlocking concurrency limits"
+          company="Vattenfall"
+          link="/blog/nx-agents-changes-the-math?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=solution_stats"
+          color="cyan"
+        />
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -130,7 +166,7 @@ function StatCard({
   return (
     <Link
       href={link}
-      className={`flex w-full transform flex-col rounded-lg bg-white bg-gradient-to-br p-6 transition duration-300 hover:scale-105 ${variants[color]}`}
+      className={`flex h-full w-full transform flex-col rounded-lg bg-white bg-gradient-to-br p-6 transition duration-300 hover:scale-105 ${variants[color]}`}
     >
       <SectionHeading as="h3" variant="title" className="mb-2">
         {title}

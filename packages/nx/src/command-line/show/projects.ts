@@ -110,9 +110,5 @@ function getAffectedGraph(
 }
 
 async function getTouchedFiles(nxArgs: NxArgs): Promise<FileChange[]> {
-  return calculateFileChanges(
-    parseFiles(nxArgs).files,
-    await allFileData(),
-    nxArgs
-  );
+  return calculateFileChanges(parseFiles(nxArgs).files, nxArgs);
 }

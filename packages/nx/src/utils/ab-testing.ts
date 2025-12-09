@@ -89,7 +89,7 @@ export async function recordStat(opts: {
         command: opts.command,
         isCI: isCI(),
         useCloud: opts.useCloud,
-        meta: opts.meta,
+        meta: `${opts.nxVersion}${opts.meta ? ',' + opts.meta : ''}`,
       });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {

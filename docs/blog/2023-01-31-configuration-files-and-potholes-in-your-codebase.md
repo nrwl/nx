@@ -47,9 +47,9 @@ The problem with both of these tools is that any code they generate for you is i
 
 Nx has an elegant solution to this dilemma. There are three key parts.
 
-1.  Use [code generators](/features/generate-code) to create configuration files that you can safely ignore
+1.  Use [code generators](/docs/features/generate-code) to create configuration files that you can safely ignore
 2.  Modify those configuration files whenever your application needs some custom setting
-3.  Run [migration generators](/features/automate-updating-dependencies) to maintain state of the art defaults
+3.  Run [migration generators](/docs/features/automate-updating-dependencies) to maintain state of the art defaults
 
 If you never think about a configuration file is it still technical debt? Some people are put off by the number of configuration files that Nx generates when creating a new application. Perhaps these developers have been burned by starter repos burdening them with instant technical debt that must be maintained. These config files are created only for the eventuality that some day you'll need to modify them.
 
@@ -65,11 +65,11 @@ While the generators that Nx provides work for most people, there will always be
 
 Nx provides the ability to define default configuration settings at the global level and have individual projects inherit those settings from the global defaults. If a lot of your projects have the same settings, adding Nx to your repo will actually reduce the lines of code in your codebase — thus negative configuration. This isn't convention over configuration or zero configuration, because the configuration settings are still explicitly defined. The configuration code is just better organized and defined in a predictable way.
 
-If you're ready to have Nx help you manage your infrastructure so that your developers can speed down the highway without needing to avoid configuration potholes, check out [nx.dev](/getting-started/intro) to get started.
+If you're ready to have Nx help you manage your infrastructure so that your developers can speed down the highway without needing to avoid configuration potholes, check out [nx.dev](/docs/getting-started/intro) to get started.
 
 ## Learn more
 
-- [🧠 Nx Docs](/getting-started/intro)
+- [🧠 Nx Docs](/docs/getting-started/intro)
 - [👩‍💻 Nx GitHub](https://github.com/nrwl/nx)
 - [💬 Nx Official Discord Server](https://go.nx.dev/community)
 - [📹 Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)

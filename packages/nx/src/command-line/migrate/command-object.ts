@@ -10,7 +10,7 @@ export const yargsMigrateCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(withMigrationOptions(yargs), 'migrate'),
   handler: async () => {
-    (await import('./migrate')).runMigration();
+    await (await import('./migrate')).runMigration();
     process.exit(0);
   },
 };

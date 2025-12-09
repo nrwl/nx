@@ -56,7 +56,6 @@ describe('getTouchedProjectsFromLockFile', () => {
           [
             {
               file: 'source.ts',
-              hash: 'some-hash',
               getChanges: () => [new WholeFileChange()],
             },
           ],
@@ -70,7 +69,6 @@ describe('getTouchedProjectsFromLockFile', () => {
           [
             {
               file: lockFile,
-              hash: 'some-hash',
               getChanges: () => [new WholeFileChange()],
             },
           ],
@@ -105,7 +103,6 @@ describe('getTouchedProjectsFromLockFile', () => {
           [
             {
               file: 'source.ts',
-              hash: 'some-hash',
               getChanges: () => [new WholeFileChange()],
             },
           ],
@@ -119,7 +116,6 @@ describe('getTouchedProjectsFromLockFile', () => {
           [
             {
               file: lockFile,
-              hash: 'some-hash',
               getChanges: () => [new WholeFileChange()],
             },
           ],
@@ -133,7 +129,6 @@ describe('getTouchedProjectsFromLockFile', () => {
           [
             {
               file: lockFile,
-              hash: 'some-hash',
               getChanges: () => [
                 {
                   type: JsonDiffType.Modified,

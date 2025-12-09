@@ -1,8 +1,12 @@
 import { major } from 'semver';
 import type { ChangelogChange } from '../../src/command-line/release/changelog';
 import type { NxReleaseConfig } from '../../src/command-line/release/config/config';
-import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from '../../src/command-line/release/config/conventional-commits';
 import type { RemoteReleaseClient } from '../../src/command-line/release/utils/remote-release-clients/remote-release-client';
+
+/**
+ * Re-export for ease of use in custom changelog renderers.
+ */
+export type { ChangelogChange };
 
 /**
  * The ChangelogRenderOptions are specific to each ChangelogRenderer implementation, and are taken
@@ -56,9 +60,7 @@ export default class DefaultChangelogRenderer {
   protected changelogRenderOptions: DefaultChangelogRenderOptions;
   protected isVersionPlans: boolean;
   protected dependencyBumps?: DependencyBump[];
-  protected conventionalCommitsConfig:
-    | NxReleaseConfig['conventionalCommits']
-    | null;
+  protected conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'];
   protected relevantChanges: ChangelogChange[];
   protected breakingChanges: string[];
   protected additionalChangesForAuthorsSection: ChangelogChange[];
@@ -76,7 +78,7 @@ export default class DefaultChangelogRenderer {
    * @param {boolean} config.isVersionPlans Whether or not Nx release version plans are the source of truth for the changelog entry
    * @param {ChangelogRenderOptions} config.changelogRenderOptions The options specific to the ChangelogRenderer implementation
    * @param {DependencyBump[]} config.dependencyBumps Optional list of additional dependency bumps that occurred as part of the release, outside of the change data
-   * @param {NxReleaseConfig['conventionalCommits'] | null} config.conventionalCommitsConfig The configuration for conventional commits, or null if version plans are being used
+   * @param {NxReleaseConfig['conventionalCommits']} config.conventionalCommitsConfig The configuration for conventional commits
    * @param {RemoteReleaseClient} config.remoteReleaseClient The remote release client to use for formatting references
    */
   constructor(config: {
@@ -87,7 +89,7 @@ export default class DefaultChangelogRenderer {
     isVersionPlans: boolean;
     changelogRenderOptions: DefaultChangelogRenderOptions;
     dependencyBumps?: DependencyBump[];
-    conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] | null;
+    conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'];
     remoteReleaseClient: RemoteReleaseClient<unknown>;
   }) {
     this.changes = this.filterChanges(config.changes, config.project);
@@ -179,13 +181,6 @@ export default class DefaultChangelogRenderer {
     }
 
     if (this.isVersionPlans) {
-      this.conventionalCommitsConfig = {
-        types: {
-          feat: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.feat,
-          fix: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.fix,
-        },
-      };
-
       for (let i = this.relevantChanges.length - 1; i >= 0; i--) {
         if (this.relevantChanges[i].isBreaking) {
           const change = this.relevantChanges[i];
@@ -198,15 +193,7 @@ export default class DefaultChangelogRenderer {
     } else {
       for (const change of this.relevantChanges) {
         if (change.isBreaking) {
-          const breakingChangeExplanation =
-            this.extractBreakingChangeExplanation(change.body);
-          this.breakingChanges.push(
-            breakingChangeExplanation
-              ? `- ${
-                  change.scope ? `**${change.scope.trim()}:** ` : ''
-                }${breakingChangeExplanation}`
-              : this.formatChange(change)
-          );
+          this.breakingChanges.push(this.formatBreakingChange(change));
         }
       }
     }
@@ -278,15 +265,7 @@ export default class DefaultChangelogRenderer {
             const line = this.formatChange(change);
             markdownLines.push(line);
             if (change.isBreaking && !this.isVersionPlans) {
-              const breakingChangeExplanation =
-                this.extractBreakingChangeExplanation(change.body);
-              this.breakingChanges.push(
-                breakingChangeExplanation
-                  ? `- ${
-                      change.scope ? `**${change.scope.trim()}:** ` : ''
-                    }${breakingChangeExplanation}`
-                  : line
-              );
+              this.breakingChanges.push(this.formatBreakingChange(change));
             }
           }
         }
@@ -296,15 +275,7 @@ export default class DefaultChangelogRenderer {
           const line = this.formatChange(change);
           markdownLines.push(line);
           if (change.isBreaking && !this.isVersionPlans) {
-            const breakingChangeExplanation =
-              this.extractBreakingChangeExplanation(change.body);
-            this.breakingChanges.push(
-              breakingChangeExplanation
-                ? `- ${
-                    change.scope ? `**${change.scope.trim()}:** ` : ''
-                  }${breakingChangeExplanation}`
-                : line
-            );
+            this.breakingChanges.push(this.formatBreakingChange(change));
           }
         }
       }
@@ -399,14 +370,19 @@ export default class DefaultChangelogRenderer {
 
   protected formatChange(change: ChangelogChange): string {
     let description = change.description;
-    let extraLines = [];
+    let extraLines: string[] = [];
     let extraLinesStr = '';
     if (description.includes('\n')) {
       [description, ...extraLines] = description.split('\n');
       const indentation = '  ';
-      extraLinesStr = extraLines
-        .filter((l) => l.trim().length > 0)
-        .map((l) => `${indentation}${l}`)
+      extraLinesStr = (
+        this.isVersionPlans
+          ? // Preserve newlines for version plan sources to allow author to maintain maximum control over final contents
+            extraLines
+          : extraLines.filter((l) => l.trim().length > 0)
+      )
+        // Only add indentation to lines with content
+        .map((l) => (l.trim().length > 0 ? `${indentation}${l}` : ''))
         .join('\n');
     }
 
@@ -419,16 +395,75 @@ export default class DefaultChangelogRenderer {
       description;
     if (
       this.remoteReleaseClient.getRemoteRepoData() &&
-      this.changelogRenderOptions.commitReferences
+      this.changelogRenderOptions.commitReferences &&
+      change.githubReferences
     ) {
       changeLine += this.remoteReleaseClient.formatReferences(
         change.githubReferences
       );
     }
     if (extraLinesStr) {
-      changeLine += '\n\n' + extraLinesStr;
+      changeLine += (this.isVersionPlans ? '\n' : '\n\n') + extraLinesStr;
     }
     return changeLine;
+  }
+
+  protected formatBreakingChangeBase(change: ChangelogChange): string {
+    let breakingLine = '- ';
+
+    if (change.scope) {
+      breakingLine += `**${change.scope.trim()}:** `;
+    }
+
+    if (change.description) {
+      breakingLine += `${change.description.trim()}`;
+    }
+
+    if (
+      this.remoteReleaseClient.getRemoteRepoData() &&
+      this.changelogRenderOptions.commitReferences &&
+      change.githubReferences
+    ) {
+      breakingLine += ` ${this.remoteReleaseClient.formatReferences(
+        change.githubReferences
+      )}`;
+    }
+
+    return breakingLine;
+  }
+
+  protected formatBreakingChange(change: ChangelogChange): string {
+    const explanation = this.extractBreakingChangeExplanation(change.body);
+    const baseLine = this.formatBreakingChangeBase(change);
+
+    if (!explanation) {
+      return baseLine;
+    }
+
+    const indentation = '  ';
+    let breakingLine = baseLine + `\n${indentation}`;
+
+    // Handle multi-line explanations
+    let explanationText = explanation;
+    let extraLines: string[] = [];
+    if (explanation.includes('\n')) {
+      [explanationText, ...extraLines] = explanation.split('\n');
+    }
+
+    breakingLine += explanationText;
+
+    // Add extra lines with indentation (matching formatChange behavior)
+    if (extraLines.length > 0) {
+      const extraLinesStr = extraLines
+        .filter((l) => l.trim().length > 0)
+        .map((l) => `${indentation}${l}`)
+        .join('\n');
+      if (extraLinesStr) {
+        breakingLine += '\n' + extraLinesStr;
+      }
+    }
+
+    return breakingLine;
   }
 
   protected groupChangesByType(): Record<string, ChangelogChange[]> {
@@ -465,10 +500,19 @@ export default class DefaultChangelogRenderer {
     }
 
     const startOfBreakingChange = startIndex + breakingChangeIdentifier.length;
-    const endOfBreakingChange = message.indexOf('\n', startOfBreakingChange);
 
-    if (endOfBreakingChange === -1) {
-      return message.substring(startOfBreakingChange).trim();
+    // Extract all text after BREAKING CHANGE: until we hit a Co-authored-by section or git metadata
+    let endOfBreakingChange = message.length;
+
+    const coAuthoredBySection = message.indexOf('---------\n\nCo-authored-by:');
+    if (coAuthoredBySection !== -1) {
+      endOfBreakingChange = coAuthoredBySection;
+    } else {
+      // Look for the git metadata delimiter (a line with just ")
+      const gitMetadataMarker = message.indexOf('"\n', startOfBreakingChange);
+      if (gitMetadataMarker !== -1) {
+        endOfBreakingChange = gitMetadataMarker;
+      }
     }
 
     return message.substring(startOfBreakingChange, endOfBreakingChange).trim();

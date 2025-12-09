@@ -17,9 +17,9 @@ description: 'Nx 21 introduces native support for Module Federation with Inferre
 
 {% /callout %}
 
-Nx 21 saw the introduction of many new and exciting features. [Continuous Tasks](/reference/project-configuration#continuous) was one such feature that I found particularly exciting because of what it could mean for the Developer Experience (DX) with Module Federation.
+Nx 21 saw the introduction of many new and exciting features. [Continuous Tasks](/docs/reference/project-configuration#continuous) was one such feature that I found particularly exciting because of what it could mean for the Developer Experience (DX) with Module Federation.
 
-However, before even being able to contemplate that, a different feature needed to be completed first: the ability to use Module Federation with Nx’s [Inferred Tasks](/concepts/inferred-tasks).
+However, before even being able to contemplate that, a different feature needed to be completed first: the ability to use Module Federation with Nx’s [Inferred Tasks](/docs/concepts/inferred-tasks).
 
 {% toc /%}
 
@@ -27,9 +27,9 @@ However, before even being able to contemplate that, a different feature needed 
 
 We have introduced three new [Rspack](https://rspack.dev) Plugins for Module Federation that can be used with Nx.
 
-- [NxModuleFederationPlugin](/technologies/module-federation/recipes/nx-module-federation-plugin): Gathers information from the Nx Workspace to correctly configure `rspack.ModuleFederationPlugin`
-- [NxModuleFederationDevServerPlugin](/technologies/module-federation/recipes/nx-module-federation-dev-server-plugin): Used to handle the static-serving of non-dev remotes for CSR applications
-- [NxModuleFederationSSRDevServerPlugin](/technologies/module-federation/recipes/nx-module-federation-dev-server-plugin#server-side-rendering): Used to handle the static-serving of non-dev remotes for SSR applications
+- [NxModuleFederationPlugin](/docs/technologies/module-federation/guides/create-a-host): Gathers information from the Nx Workspace to correctly configure `rspack.ModuleFederationPlugin`
+- [NxModuleFederationDevServerPlugin](/docs/technologies/module-federation/guides/nx-module-federation-dev-server-plugin): Used to handle the static-serving of non-dev remotes for CSR applications
+- [NxModuleFederationSSRDevServerPlugin](/docs/technologies/module-federation/guides/nx-module-federation-dev-server-plugin#server-side-rendering): Used to handle the static-serving of non-dev remotes for SSR applications
 
 These are true Rspack Plugins that should be added to the `plugins: []` of an `rspack.config` file.
 
@@ -63,7 +63,7 @@ The `NxModuleFederationDevServer` plugin for the `shell` application will check 
 
 ```plaintext {% command="npx create-nx-workspace@latest myorg" path="~/" %}
 
-NX   Let's create a new workspace [[https://nx.dev/getting-started/intro](/getting-started/intro)]
+NX   Let's create a new workspace [[https://nx.dev/getting-started/intro](/docs/getting-started/intro)]
 
 ✔ Which stack do you want to use? · none
 ✔ Would you like to use Prettier for code formatting? · Yes
@@ -129,13 +129,13 @@ CREATE …
 
 ![Module Federation with Continuous Tasks Output](/blog/images/2025-05-08/module-federation-continuous-tasks.avif)
 
-With the new [Terminal UI](/recipes/running-tasks/terminal-ui) you can very easily see the logs for each application in specific frames also.
+With the new [Terminal UI](/docs/guides/tasks--caching/terminal-ui) you can very easily see the logs for each application in specific frames also.
 
 ## Further Reading
 
-- [Module Federation and Nx](/technologies/module-federation/concepts/module-federation-and-nx)
-- [Nx Module Federation Technical Overview](/technologies/module-federation/concepts/nx-module-federation-technical-overview)
-- 🧠 [**Nx Docs**](/getting-started/intro)
+- [Module Federation and Nx](/docs/technologies/module-federation/concepts/module-federation-and-nx)
+- [Nx Module Federation Technical Overview](/docs/technologies/module-federation/concepts/nx-module-federation-technical-overview)
+- 🧠 [**Nx Docs**](/docs/getting-started/intro)
 - 👩‍💻 [**Nx GitHub**](https://github.com/nrwl/nx)
 - 💬 [**Nx Official Discord Server**](https://go.nx.dev/community)
 - 📹 [**Nx Youtube Channel**](https://www.youtube.com/@nxdevtools)

@@ -3,6 +3,7 @@ title: ESLint Plugin for Nx
 description: Learn how to set up and use the @nx/eslint plugin to integrate ESLint with Nx, enabling caching and providing code generators for ESLint configuration.
 sidebar:
   label: Introduction
+filter: 'type:References'
 ---
 
 The ESLint plugin integrates [ESLint](https://eslint.org/) with Nx. It allows you to run ESLint through Nx with caching enabled. It also includes code generators to help you set up ESLint in your workspace.
@@ -17,7 +18,7 @@ Make sure to install the `@nx/eslint` version that matches the version of `nx` i
 
 In any Nx workspace, you can install `@nx/eslint` by running the following command:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/eslint
 ```
 
@@ -70,7 +71,7 @@ The `@nx/eslint/plugin` is configured in the `plugins` array in `nx.json`.
 
 You can lint an application or a library with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx lint my-project
 ```
 

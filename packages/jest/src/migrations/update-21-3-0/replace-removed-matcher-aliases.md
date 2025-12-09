@@ -4,10 +4,9 @@ Replaces removed Jest matcher aliases in test files with their corresponding mat
 
 #### Examples
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```typescript {% fileName="apps/myapp/src/app.spec.ts" %}
+```typescript title="apps/myapp/src/app.spec.ts"
 describe('test', () => {
   it('should pass', async () => {
     expect(mockFn).toBeCalled();
@@ -28,11 +27,9 @@ describe('test', () => {
 });
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```typescript {% fileName="apps/myapp/src/app.spec.ts" %}
+```typescript title="apps/myapp/src/app.spec.ts"
 describe('test', () => {
   it('should pass', async () => {
     expect(mockFn).toHaveBeenCalled();
@@ -52,6 +49,3 @@ describe('test', () => {
   });
 });
 ```
-
-{% /tab %}
-{% /tabs %}

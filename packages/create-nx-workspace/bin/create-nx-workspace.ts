@@ -2,8 +2,14 @@ import * as enquirer from 'enquirer';
 import * as yargs from 'yargs';
 import * as chalk from 'chalk';
 
-import { CreateWorkspaceOptions } from '../src/create-workspace-options';
-import { createWorkspace } from '../src/create-workspace';
+import {
+  CreateWorkspaceOptions,
+  supportedAgents,
+} from '../src/create-workspace-options';
+import {
+  createWorkspace,
+  getInterruptedWorkspaceState,
+} from '../src/create-workspace';
 import { isKnownPreset, Preset } from '../src/utils/preset/preset';
 import { CLIErrorMessageConfig, output } from '../src/utils/output';
 import { nxVersion } from '../src/utils/nx/nx-version';
@@ -11,24 +17,30 @@ import { nxVersion } from '../src/utils/nx/nx-version';
 import { yargsDecorator } from './decorator';
 import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
 import {
+  determineAiAgents,
   determineDefaultBase,
   determineIfGitHubWillBeUsed,
   determineNxCloud,
+  determineNxCloudV2,
   determinePackageManager,
+  determineTemplate,
 } from '../src/internal-utils/prompts';
 import {
   withAllPrompts,
   withGitOptions,
-  withUseGitHub,
   withNxCloud,
   withOptions,
   withPackageManager,
+  withUseGitHub,
 } from '../src/internal-utils/yargs-options';
-import { messages, recordStat } from '../src/utils/nx/ab-testing';
+import {
+  getFlowVariant,
+  messages,
+  recordStat,
+} from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 import { isCI } from '../src/utils/ci/is-ci';
-import { printSocialInformation } from '../src/utils/social-information';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -216,6 +228,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('prefix', {
             describe: chalk.dim`Prefix to use for Angular component and directive selectors.`,
             type: 'string',
+          })
+          .option('aiAgents', {
+            describe: chalk.dim`List of AI agents to configure.`,
+            type: 'array',
+            choices: [...supportedAgents],
           }),
         withNxCloud,
         withUseGitHub,
@@ -228,9 +245,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
       await main(argv).catch((error) => {
         const { version } = require('../package.json');
         output.error({
-          title: `Something went wrong! v${version}`,
+          title: `Failed to create workspace (v${version})`,
+          bodyLines: mapErrorToBodyLines(error),
         });
-        throw error;
+        process.exit(1);
       });
     },
     [normalizeArgsMiddleware] as yargs.MiddlewareFunction<{}>[]
@@ -242,6 +260,42 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     chalk.dim`Show version`,
     nxVersion
   ) as yargs.Argv<Arguments>;
+
+// Node 24 has stricter readline behavior, and enquirer is not checking for closed state
+// when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
+process.on('uncaughtException', (error: unknown) => {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    error['code'] === 'ERR_USE_AFTER_CLOSE'
+  )
+    return;
+  throw error;
+});
+
+// Handle Ctrl+C gracefully - show helpful message if workspace was already created
+process.on('SIGINT', () => {
+  const { directory, connectUrl } = getInterruptedWorkspaceState();
+
+  if (directory) {
+    console.log(''); // New line after ^C
+    output.log({
+      title: 'Workspace creation interrupted',
+      bodyLines: [
+        `Your workspace was created at: ${directory}`,
+        '',
+        'To complete the setup:',
+        '  1. Ensure your repo is pushed (e.g. https://github.com/new)',
+        connectUrl
+          ? `  2. Connect to Nx Cloud: ${connectUrl}`
+          : '  2. Connect to Nx Cloud: Run "nx connect"',
+      ],
+    });
+  }
+
+  process.exit(130); // Standard exit code for SIGINT
+});
 
 let rawArgs: Arguments;
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
@@ -260,12 +314,17 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     command: 'create-nx-workspace',
     useCloud: parsedArgs.nxCloud !== 'skip',
     meta: [
+      // User sees one of: setupCI (preset flow) or setupNxCloudV2 (template flow)
       messages.codeOfSelectedPromptMessage('setupCI'),
-      messages.codeOfSelectedPromptMessage('setupNxCloud'),
+      // User sees one of: setupNxCloud (preset flow) or setupNxCloudV2 (template flow)
+      messages.codeOfSelectedPromptMessage('setupNxCloudV2') ||
+        messages.codeOfSelectedPromptMessage('setupNxCloud'),
       parsedArgs.nxCloud,
       rawArgs.nxCloud,
       workspaceInfo.pushedToVcs,
+      `flow-variant-${getFlowVariant()}`,
     ],
+    directory: workspaceInfo.directory,
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
@@ -301,40 +360,79 @@ async function normalizeArgsMiddleware(
 
   try {
     argv.name = await determineFolder(argv);
-    if (!argv.preset || isKnownPreset(argv.preset)) {
-      argv.stack = await determineStack(argv);
-      const presetOptions = await determinePresetOptions(argv);
-      Object.assign(argv, presetOptions);
-    } else {
-      try {
-        getPackageNameFromThirdPartyPreset(argv.preset);
-      } catch (e) {
-        if (e instanceof Error) {
-          output.error({
-            title: `Could not find preset "${argv.preset}"`,
-            bodyLines: mapErrorToBodyLines(e),
-          });
-        } else {
-          console.error(e);
-        }
-        process.exit(1);
-      }
-    }
 
-    const packageManager = await determinePackageManager(argv);
-    const defaultBase = await determineDefaultBase(argv);
-    const nxCloud =
-      argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
-    const useGitHub =
-      nxCloud === 'skip'
-        ? undefined
-        : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
-    Object.assign(argv, {
-      nxCloud,
-      useGitHub,
-      packageManager,
-      defaultBase,
+    const workingDir = process.cwd().replace(/\\/g, '/');
+    const directory = require('path').join(workingDir, argv.name);
+
+    const template = await determineTemplate(argv);
+
+    // Old (start) vs new (start-v2) flows
+    const startPrefix = getFlowVariant() === '1' ? 'start-v2' : 'start';
+    await recordStat({
+      nxVersion,
+      command: 'create-nx-workspace',
+      meta: [startPrefix],
+      useCloud: argv.nxCloud !== 'skip',
+      directory,
     });
+
+    if (template !== 'custom') {
+      // Template flow - uses npm and 'main' branch by default
+      argv.template = template;
+      const aiAgents = await determineAiAgents(argv);
+      const nxCloud =
+        argv.skipGit === true ? 'skip' : await determineNxCloudV2(argv);
+      const completionMessageKey =
+        nxCloud === 'skip'
+          ? undefined
+          : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
+      Object.assign(argv, {
+        nxCloud,
+        useGitHub: nxCloud !== 'skip',
+        completionMessageKey,
+        packageManager: 'npm',
+        defaultBase: 'main',
+        aiAgents,
+      });
+    } else {
+      // Preset flow - existing behavior
+      if (!argv.preset || isKnownPreset(argv.preset)) {
+        argv.stack = await determineStack(argv);
+        const presetOptions = await determinePresetOptions(argv);
+        Object.assign(argv, presetOptions);
+      } else {
+        try {
+          getPackageNameFromThirdPartyPreset(argv.preset);
+        } catch (e) {
+          if (e instanceof Error) {
+            output.error({
+              title: `Could not find preset "${argv.preset}"`,
+              bodyLines: mapErrorToBodyLines(e),
+            });
+          } else {
+            console.error(e);
+          }
+          process.exit(1);
+        }
+      }
+
+      const packageManager = await determinePackageManager(argv);
+      const aiAgents = await determineAiAgents(argv);
+      const defaultBase = await determineDefaultBase(argv);
+      const nxCloud =
+        argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
+      const useGitHub =
+        nxCloud === 'skip'
+          ? undefined
+          : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
+      Object.assign(argv, {
+        nxCloud,
+        useGitHub,
+        packageManager,
+        defaultBase,
+        aiAgents,
+      });
+    }
   } catch (e) {
     console.error(e);
     process.exit(1);
@@ -659,7 +757,7 @@ async function determineReactOptions(
       appName = await determineAppName(parsedArgs);
     }
 
-    if (framework === 'nextjs') {
+    if (framework === 'next') {
       if (isStandalone) {
         preset = Preset.NextJsStandalone;
       } else {
@@ -1232,9 +1330,17 @@ async function determineAppName(
 
 async function determineReactFramework(
   parsedArgs: yargs.Arguments<ReactArguments>
-): Promise<'none' | 'nextjs' | 'expo' | 'react-native'> {
+): Promise<'none' | 'next' | 'expo' | 'react-native'> {
+  if (parsedArgs.framework) {
+    return parsedArgs.framework;
+  }
+
+  if (!parsedArgs.interactive) {
+    return 'none';
+  }
+
   const reply = await enquirer.prompt<{
-    framework: 'none' | 'nextjs' | 'expo' | 'react-native';
+    framework: 'none' | 'next' | 'expo' | 'react-native';
   }>([
     {
       name: 'framework',
@@ -1247,7 +1353,7 @@ async function determineReactFramework(
           hint: '         I only want react, react-dom or react-router',
         },
         {
-          name: 'nextjs',
+          name: 'next',
           message: 'Next.js       [ https://nextjs.org/       ]',
         },
         {
@@ -1280,7 +1386,7 @@ async function determineReactBundler(
       choices: [
         {
           name: 'vite',
-          message: 'Vite    [ https://vitejs.dev/     ]',
+          message: 'Vite    [ https://vite.dev/     ]',
         },
         {
           name: 'webpack',

@@ -6,6 +6,7 @@ import {
   canInstallNxConsole,
   NxConsolePreferences,
 } from '../native';
+import { isCI } from './is-ci';
 
 export async function ensureNxConsoleInstalled() {
   const preferences = new NxConsolePreferences(homedir());
@@ -13,18 +14,33 @@ export async function ensureNxConsoleInstalled() {
 
   const canInstallConsole = canInstallNxConsole();
 
+  // If user previously opted in but extension is not installed,
+  // they must have manually uninstalled it - respect that choice
+  if (setting === true && canInstallConsole) {
+    // User had auto-install enabled but extension is missing
+    // This means they manually uninstalled it
+    preferences.setAutoInstallPreference(false);
+    return;
+  }
+
   // Noop
   if (!canInstallConsole) {
     return;
   }
 
-  if (process.stdout.isTTY && typeof setting !== 'boolean') {
+  // Only prompt if both stdin and stdout are TTY (interactive terminal)
+  // and we're not in a CI environment
+  const isInteractive = process.stdin.isTTY && process.stdout.isTTY && !isCI();
+  if (isInteractive && typeof setting !== 'boolean') {
     setting = await promptForNxConsoleInstallation();
     preferences.setAutoInstallPreference(setting);
   }
 
   if (setting) {
-    installNxConsole();
+    const installed = installNxConsole();
+    if (installed) {
+      output.log({ title: 'Successfully installed Nx Console!' });
+    }
   }
 }
 

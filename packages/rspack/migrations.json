@@ -11,43 +11,15 @@
       "version": "20.3.0-beta.2",
       "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
       "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package"
+    },
+    "remove-deprecated-rspack-options": {
+      "cli": "nx",
+      "version": "22.0.0-beta.1",
+      "description": "Remove deprecated deleteOutputPath and sassImplementation options from rspack configurations.",
+      "factory": "./src/migrations/update-22-0-0/remove-deprecated-options"
     }
   },
   "packageJsonUpdates": {
-    "19.3.0": {
-      "version": "19.3.0-beta.0",
-      "packages": {
-        "@rspack/core": {
-          "version": "^0.7.5",
-          "alwaysAddToPackageJson": false
-        },
-        "@rspack/dev-server": {
-          "version": "^0.7.5",
-          "alwaysAddToPackageJson": false
-        },
-        "@rspack/plugin-minify": {
-          "version": "^0.7.5",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "19.7.0": {
-      "version": "19.7.0-beta.1",
-      "packages": {
-        "@rspack/core": {
-          "version": "^1.0.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@rspack/dev-server": {
-          "version": "^1.0.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@rspack/plugin-react-refresh": {
-          "version": "^1.0.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "20.2.0": {
       "version": "20.2.0-beta.7",
       "packages": {
@@ -118,6 +90,27 @@
         },
         "@rspack/dev-server": {
           "version": "^1.1.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.2.0": {
+      "version": "22.2.0-beta.0",
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "^0.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/runtime": {
+          "version": "^0.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "^0.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "^2.7.21",
           "alwaysAddToPackageJson": false
         }
       }

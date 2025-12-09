@@ -1,0 +1,48 @@
+<p style="text-align: center;">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-dark.svg">
+    <img alt="Nx - Smart Repos · Fast Builds" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
+  </picture>
+</p>
+
+{{links}}
+
+<hr>
+
+# Nx: Smart Repos · Fast Builds
+
+Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.
+
+## Build Angular with Rspack
+
+The goal of `@nx/angular-rspack` is to make easy and straightforward to build Angular applications with [rspack](https://rspack.dev).
+
+### Getting Started
+
+#### Step 1: Create a new Nx Workspace with Angular Rspack Application
+
+```bash
+npx create-nx-workspace myorg
+
+NX   Let's create a new workspace [[https://nx.dev/getting-started/intro](https://nx.dev/getting-started/intro)]
+✔ Which stack do you want to use? · angular
+✔ Integrated monorepo, or standalone project? · integrated
+✔ Application name · myorg
+✔ Which bundler would you like to use? · rspack
+✔ Default stylesheet format · css
+✔ Do you want to enable Server-Side Rendering (SSR)? · No
+✔ Which unit test runner would you like to use? · vitest
+✔ Test runner to use for end to end (E2E) tests · playwright
+✔ Which CI provider would you like to use? · skip
+✔ Would you like remote caching to make your build faster? · skip
+NX   Creating your v20.8.0 workspace.
+```
+
+#### Step 2: Run Build and Serve commands
+
+```bash
+npx nx build myorg
+npx nx serve myorg
+```
+
+{{content}}

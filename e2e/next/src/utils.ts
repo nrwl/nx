@@ -15,6 +15,7 @@ export async function checkApp(
     checkLint: boolean;
     checkE2E: boolean;
     appsDir?: string;
+    useWebpack?: boolean;
   }
 ) {
   if (opts.checkLint) {
@@ -29,7 +30,9 @@ export async function checkApp(
     );
   }
 
-  const buildResult = runCLI(`build ${appName}`);
+  const buildResult = runCLI(
+    `build ${appName}${opts.useWebpack ? ' --webpack' : ''}`
+  );
   expect(buildResult).toContain(`Successfully ran target build`);
   // Executor will point to dist, whereas inferred build target will output to `<proj-root>/.next`
   try {

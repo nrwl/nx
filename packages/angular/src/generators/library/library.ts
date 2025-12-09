@@ -3,14 +3,12 @@ import {
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
-  logger,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { releaseTasks } from '@nx/js/src/generators/library/utils/add-release-config';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import init from '../../generators/init/init';
 import { UnitTestRunner } from '../../utils/test-runners';
 import addLintingGenerator from '../add-linting/add-linting';
@@ -19,6 +17,7 @@ import { addJest } from '../utils/add-jest';
 import { addVitest } from '../utils/add-vitest';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
+import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import { versions } from '../utils/version-utils';
 import { addModule } from './lib/add-module';
 import { addProject } from './lib/add-project';
@@ -35,7 +34,7 @@ export async function libraryGenerator(
   tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(tree, 'angular', 'library');
+  assertNotUsingTsSolutionSetup(tree, 'library');
 
   // Do some validation checks
   if (!schema.routing && schema.lazy) {
@@ -45,13 +44,6 @@ export async function libraryGenerator(
   if (schema.publishable === true && !schema.importPath) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
-    );
-  }
-
-  if (schema.simpleName !== undefined && schema.simpleName !== false) {
-    // TODO(v22): Remove simpleName as user should be using name.
-    logger.warn(
-      `The "--simpleName" option is deprecated and will be removed in Nx 22. Please use the "--name" option to provide the exact name you want for the library.`
     );
   }
 

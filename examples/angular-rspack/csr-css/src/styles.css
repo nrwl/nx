@@ -1,3 +1,5 @@
+@import 'jasmine-core/lib/jasmine-core/jasmine.css';
+
 div {
   color: red;
 }

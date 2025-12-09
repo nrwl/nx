@@ -35,8 +35,7 @@ nx run acme:build
 
 ### For Next.js Standalone projects
 
-{% tabs %}
-{% tab label="Default configuration" %}
+##### Default configuration
 
 This is the default configuration for Next.js standalone projects. Our `@nx/next:build` executor is integrated to use Next.js' CLI. You can read more about the build options at [Next.js CLI Options](https://nextjs.org/docs/app/api-reference/next-cli)
 
@@ -57,8 +56,7 @@ This is the default configuration for Next.js standalone projects. Our `@nx/next
     },
 ```
 
-{% /tab %}
-{% tab label="Enable debug" %}
+##### Enable debug
 
 You can create a debug build for more verbose output by:
 
@@ -92,9 +90,7 @@ Updating the build options to include `debug`.
 nx run acme:build:development
 ```
 
-{% /tab %}
-
-{% tab label="Adding profiling" %}
+##### Adding profiling
 
 You can enable profiing for React by
 
@@ -129,9 +125,7 @@ Updating the build options to include `profile`.
 nx run acme:build:production
 ```
 
-{% /tab %}
-
-{% tab label="Enable experimental app only" %}
+##### Enable experimental app only
 
 Since Next.js 13 the `app/` directory it is reserved.
 You can enable to build only `app/` routes by
@@ -165,7 +159,3 @@ Updating the build options to include `experimentalAppOnly`.
 ```shell
 nx run acme:build:production
 ```
-
-{% /tab %}
-
-{% /tabs %}

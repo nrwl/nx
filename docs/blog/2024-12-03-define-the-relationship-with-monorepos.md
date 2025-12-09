@@ -77,7 +77,7 @@ You might think that moving projects into a single repository changes the relati
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
+- [Nx Docs](/docs/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools)
 - [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Bluesky](https://bsky.app/profile/nx.dev)

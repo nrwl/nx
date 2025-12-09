@@ -5,7 +5,7 @@ import {
   useMotionValue,
   useTransform,
 } from 'framer-motion';
-import { memo, useEffect, useRef } from 'react';
+import { memo, ReactElement, useEffect, useRef } from 'react';
 import { usePrefersReducedMotion } from './prefers-reduced-motion';
 
 /**
@@ -29,7 +29,7 @@ function AnimateValueEngine({
   once?: boolean;
   suffix: string;
   decimals?: number;
-}): JSX.Element {
+}): ReactElement {
   const ref = useRef<HTMLSpanElement | null>(null);
   const isInView = useInView(ref);
   const shouldReduceMotion = usePrefersReducedMotion();

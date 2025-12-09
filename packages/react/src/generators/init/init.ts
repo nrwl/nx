@@ -41,7 +41,7 @@ export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
-  if (schema.addPlugin) {
+  if (schema.useReactRouterPlugin && schema.addPlugin) {
     await addPlugin(
       tree,
       await createProjectGraphAsync(),

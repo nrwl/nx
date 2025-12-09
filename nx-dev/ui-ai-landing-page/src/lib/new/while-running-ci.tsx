@@ -18,7 +18,7 @@ const features: FeatureCardProps[] = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/features/flaky-tasks"
+            href={'/docs/features/ci-features/flaky-tasks'}
             title="How to identify and rerun flaky tasks"
             className="text-sm/6 font-semibold"
           >
@@ -72,7 +72,7 @@ const features: FeatureCardProps[] = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/features/dynamic-agents"
+            href={'/docs/features/ci-features/dynamic-agents'}
             title="How to setup dynamic agents"
             className="text-sm/6 font-semibold"
           >

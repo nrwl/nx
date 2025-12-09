@@ -6,13 +6,9 @@ typealias NxTarget = MutableMap<String, Any?>
 
 typealias NxTargets = MutableMap<String, NxTarget>
 
-typealias GradleTaskName = String
+typealias TargetGroup = MutableList<String>
 
-typealias GradleGroupName = String
-
-typealias GradleTaskGroup = MutableList<GradleTaskName>
-
-typealias TargetGroups = MutableMap<GradleGroupName, GradleTaskGroup>
+typealias TargetGroups = MutableMap<String, TargetGroup>
 
 data class GradleTargets(
     val targets: NxTargets,

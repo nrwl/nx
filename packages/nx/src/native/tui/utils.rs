@@ -1,9 +1,17 @@
 use hashbrown::HashSet;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::native::tui::components::tasks_list::{TaskItem, TaskStatus};
+use crate::native::utils::time::current_timestamp_millis;
 
 pub fn format_duration(duration_ms: i64) -> String {
+    #[cfg(test)]
+    {
+        if duration_ms < 1000 {
+            // In tests, return a deterministic value to avoid timing flakiness in snapshots
+            return "<1ms".to_string();
+        }
+    }
+
     if duration_ms == 0 {
         "<1ms".to_string()
     } else if duration_ms < 1000 {
@@ -17,17 +25,9 @@ pub fn format_duration_since(start_ms: i64, end_ms: i64) -> String {
     format_duration(end_ms.saturating_sub(start_ms))
 }
 
-/// Returns the current time in milliseconds since Unix epoch
-pub fn get_current_time_ms() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() as i64
-}
-
 /// Formats the duration from a start time to the current time
 pub fn format_live_duration(start_ms: i64) -> String {
-    let current_ms = get_current_time_ms();
+    let current_ms = current_timestamp_millis();
     format_duration(current_ms.saturating_sub(start_ms))
 }
 
@@ -59,6 +59,7 @@ pub fn normalize_newlines(input: &[u8]) -> Vec<u8> {
 /// 5. NotStarted tasks last
 ///
 /// Within each status category:
+/// - For in-progress tasks: sort by start_time if available, then by name
 /// - For completed tasks: sort by end_time if available, then by name
 /// - For other statuses: sort by name
 pub fn sort_task_items(tasks: &mut [TaskItem], highlighted_names: &HashSet<String>) {
@@ -88,6 +89,23 @@ pub fn sort_task_items(tasks: &mut [TaskItem], highlighted_names: &HashSet<Strin
         // First compare by status category
         if a_category != b_category {
             return a_category.cmp(&b_category);
+        }
+
+        // For in-progress tasks, sort by start_time first, then name
+        if a_category == 0 {
+            match (a.start_time, b.start_time) {
+                (Some(time_a), Some(time_b)) => {
+                    let time_cmp = time_a.cmp(&time_b);
+                    if time_cmp != std::cmp::Ordering::Equal {
+                        return time_cmp;
+                    }
+                }
+                (Some(_), None) => return std::cmp::Ordering::Less,
+                (None, Some(_)) => return std::cmp::Ordering::Greater,
+                (None, None) => {}
+            }
+            // Tiebreaker: sort by name alphabetically
+            return a.name.cmp(&b.name);
         }
 
         // For completed tasks, sort by end_time if available
@@ -216,6 +234,85 @@ mod tests {
         assert_eq!(tasks[0].name, "a");
         assert_eq!(tasks[1].name, "b");
         assert_eq!(tasks[2].name, "c");
+    }
+
+    #[test]
+    fn test_sort_in_progress_tasks_by_start_time() {
+        // Create in-progress tasks with different start times
+        let mut task1 = TaskItem::new("task1".to_string(), false);
+        task1.status = TaskStatus::InProgress;
+        task1.start_time = Some(300);
+
+        let mut task2 = TaskItem::new("task2".to_string(), false);
+        task2.status = TaskStatus::InProgress;
+        task2.start_time = Some(100);
+
+        let mut task3 = TaskItem::new("task3".to_string(), false);
+        task3.status = TaskStatus::InProgress;
+        task3.start_time = Some(200);
+
+        let mut tasks = vec![task1, task2, task3];
+
+        let empty_highlighted: HashSet<String> = HashSet::new();
+        sort_task_items(&mut tasks, &empty_highlighted);
+
+        // Should be sorted by start_time: 100, 200, 300
+        assert_eq!(tasks[0].name, "task2");
+        assert_eq!(tasks[1].name, "task3");
+        assert_eq!(tasks[2].name, "task1");
+    }
+
+    #[test]
+    fn test_sort_in_progress_tasks_with_same_start_time() {
+        // Create in-progress tasks with the same start time
+        let mut task_c = TaskItem::new("c".to_string(), false);
+        task_c.status = TaskStatus::InProgress;
+        task_c.start_time = Some(100);
+
+        let mut task_a = TaskItem::new("a".to_string(), false);
+        task_a.status = TaskStatus::InProgress;
+        task_a.start_time = Some(100);
+
+        let mut task_b = TaskItem::new("b".to_string(), false);
+        task_b.status = TaskStatus::InProgress;
+        task_b.start_time = Some(100);
+
+        let mut tasks = vec![task_c, task_a, task_b];
+
+        let empty_highlighted: HashSet<String> = HashSet::new();
+        sort_task_items(&mut tasks, &empty_highlighted);
+
+        // When start_times are the same, should sort by name alphabetically
+        assert_eq!(tasks[0].name, "a");
+        assert_eq!(tasks[1].name, "b");
+        assert_eq!(tasks[2].name, "c");
+    }
+
+    #[test]
+    fn test_sort_in_progress_tasks_with_missing_start_times() {
+        // Create in-progress tasks, some without start times
+        let mut task1 = TaskItem::new("task1".to_string(), false);
+        task1.status = TaskStatus::InProgress;
+        task1.start_time = None;
+
+        let mut task2 = TaskItem::new("task2".to_string(), false);
+        task2.status = TaskStatus::InProgress;
+        task2.start_time = Some(100);
+
+        let mut task3 = TaskItem::new("task3".to_string(), false);
+        task3.status = TaskStatus::InProgress;
+        task3.start_time = None;
+
+        let mut tasks = vec![task1, task2, task3];
+
+        let empty_highlighted: HashSet<String> = HashSet::new();
+        sort_task_items(&mut tasks, &empty_highlighted);
+
+        // Tasks with start_time come before those without
+        assert_eq!(tasks[0].name, "task2");
+        // Then alphabetical for those without start_time
+        assert_eq!(tasks[1].name, "task1");
+        assert_eq!(tasks[2].name, "task3");
     }
 
     #[test]

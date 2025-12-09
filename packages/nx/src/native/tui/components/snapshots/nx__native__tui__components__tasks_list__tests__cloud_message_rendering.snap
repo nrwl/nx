@@ -16,4 +16,4 @@ expression: terminal.backend()
 "                                                                                                                        "
 "                                                                                                                        "
 "                                                                                                                        "
-"  ← 1/1 →   View logs and run details at https://nx.app/runs/KnGk4A47qk                                 quit: q  help: ?"
+"View logs and run details at https://nx.app/runs/KnGk4A47qk                                             quit: q  help: ?"

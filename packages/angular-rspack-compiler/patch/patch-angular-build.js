@@ -1,4 +1,6 @@
-const { readFileSync, writeFileSync } = require('fs');
+const { readFileSync, renameSync } = require('fs');
+const { gte, coerce } = require('semver');
+const { dirname, join } = require('path');
 
 function main() {
   const angularBuildPackageJson = require.resolve(
@@ -7,23 +9,19 @@ function main() {
   const fileContentsJson = JSON.parse(
     readFileSync(angularBuildPackageJson, 'utf8')
   );
-  fileContentsJson.exports[
-    './src/tools/angular/compilation/parallel-compilation'
-  ] = './src/tools/angular/compilation/parallel-compilation.js';
-  fileContentsJson.exports[
-    './src/tools/angular/compilation/angular-compilation'
-  ] = './src/tools/angular/compilation/angular-compilation.js';
-  fileContentsJson.exports['./src/tools/angular/compilation/jit-compilation'] =
-    './src/tools/angular/compilation/jit-compilation.js';
-  fileContentsJson.exports['./src/tools/angular/compilation/aot-compilation'] =
-    './src/tools/angular/compilation/aot-compilation.js';
-  fileContentsJson.exports[
-    './src/tools/esbuild/angular/component-stylesheets'
-  ] = './src/tools/esbuild/angular/component-stylesheets.js';
+  if (gte(coerce(fileContentsJson.version), '20.2.0')) {
+    return;
+  }
 
-  writeFileSync(
-    angularBuildPackageJson,
-    JSON.stringify(fileContentsJson, null, 2)
+  const angularBuildDirectory = dirname(angularBuildPackageJson);
+  const angularBuildSrcDirectory = join(angularBuildDirectory, 'src');
+  renameSync(
+    join(__dirname, 'files', 'private.d.ts.txt'),
+    join(angularBuildSrcDirectory, 'private.d.ts')
+  );
+  renameSync(
+    join(__dirname, 'files', 'private.js.txt'),
+    join(angularBuildSrcDirectory, 'private.js')
   );
 }
 

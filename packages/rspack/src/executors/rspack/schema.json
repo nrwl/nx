@@ -257,12 +257,6 @@
       },
       "additionalProperties": false
     },
-    "sassImplementation": {
-      "type": "string",
-      "description": "The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.",
-      "enum": ["sass", "sass-embedded"],
-      "default": "sass"
-    },
     "styles": {
       "type": "array",
       "description": "External Styles which will be included with the application",

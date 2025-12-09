@@ -42,7 +42,7 @@ describe('move', () => {
       destination: 'shared/my-lib-new',
     });
 
-    const jestConfigPath = 'shared/my-lib-new/jest.config.ts';
+    const jestConfigPath = 'shared/my-lib-new/jest.config.cts';
     const afterJestConfig = tree.read(jestConfigPath, 'utf-8');
     expect(tree.exists(jestConfigPath)).toBeTruthy();
     expect(afterJestConfig).toContain("preset: '../../jest.preset.js'");
@@ -110,7 +110,7 @@ describe('move', () => {
       destination: 'my-lib-new',
     });
 
-    const jestConfigPath = 'my-lib-new/jest.config.ts';
+    const jestConfigPath = 'my-lib-new/jest.config.cts';
     const afterJestConfig = tree.read(jestConfigPath, 'utf-8');
     expect(tree.exists(jestConfigPath)).toBeTruthy();
     expect(afterJestConfig).toContain("preset: '../jest.preset.js'");

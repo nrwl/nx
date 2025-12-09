@@ -25,6 +25,7 @@ interface NormalizedSchema {
   skipPackageJson?: boolean;
   addPlugin?: boolean;
   buildable?: boolean;
+  isTsSolutionSetup?: boolean;
 }
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
@@ -65,6 +66,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
             '@nx/rollup',
             '@rollup/plugin-url',
             '@svgr/rollup',
+            'jest-expo',
           ];
           for (const dep of ignoredDeps) {
             if (!rule[1].ignoredDependencies.includes(dep)) {
@@ -101,6 +103,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       'web-build',
       'cache',
       'dist',
+      ...(options.isTsSolutionSetup ? ['**/out-tsc'] : []),
     ]);
   }
 

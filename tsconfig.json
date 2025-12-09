@@ -95,6 +95,9 @@
       "path": "./packages/vite"
     },
     {
+      "path": "./packages/vitest"
+    },
+    {
       "path": "./packages/vue"
     },
     {
@@ -123,9 +126,6 @@
     },
     {
       "path": "./graph/ui-project-details"
-    },
-    {
-      "path": "./typedoc-theme"
     },
     {
       "path": "./tools/documentation/create-embeddings"
@@ -405,6 +405,21 @@
     },
     {
       "path": "./graph/ui-render-config"
+    },
+    {
+      "path": "./packages/dotnet"
+    },
+    {
+      "path": "./e2e/dotnet"
+    },
+    {
+      "path": "./packages/maven"
+    },
+    {
+      "path": "./e2e/maven"
+    },
+    {
+      "path": "./nx-dev/ui-resources"
     }
   ],
   "extends": "./tsconfig.base.json"

@@ -111,11 +111,7 @@ export async function getAffectedGraphNodes(
     ? projectGraph
     : await filterAffected(
         projectGraph,
-        calculateFileChanges(
-          parseFiles(nxArgs).files,
-          await allFileData(),
-          nxArgs
-        )
+        calculateFileChanges(parseFiles(nxArgs).files, nxArgs)
       );
 
   if (nxArgs.exclude) {

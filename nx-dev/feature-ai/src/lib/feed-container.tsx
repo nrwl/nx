@@ -116,7 +116,7 @@ export function FeedContainer(): JSX.Element {
         data-testid="wrapper"
         className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
       >
-        <div className="mx-auto w-full grow items-stretch px-4 sm:px-8 lg:max-w-4xl">
+        <div className="mx-auto w-full max-w-4xl grow items-stretch px-4 sm:px-8 ">
           <div
             id="content-wrapper"
             className="w-full flex-auto flex-grow flex-col"

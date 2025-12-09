@@ -9,22 +9,25 @@
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
   "references": [
     {
+      "path": "../vitest/tsconfig.lib.json"
+    },
+    {
       "path": "../web/tsconfig.lib.json"
     },
     {
       "path": "../vite/tsconfig.lib.json"
     },
     {
-      "path": "../eslint/tsconfig.lib.json"
-    },
-    {
       "path": "../js/tsconfig.lib.json"
     },
     {
-      "path": "../nx/tsconfig.lib.json"
+      "path": "../eslint/tsconfig.lib.json"
     },
     {
       "path": "../devkit/tsconfig.lib.json"
+    },
+    {
+      "path": "../nx/tsconfig.lib.json"
     }
   ]
 }

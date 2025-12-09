@@ -17,6 +17,7 @@ export default async function addJestResolver(tree: Tree) {
       // Check if this is an Expo project by looking for jest.config file with expo preset
       const jestConfigPath = join(config.root, 'jest.config.ts');
       const jestConfigJsPath = join(config.root, 'jest.config.js');
+      const jestConfigCtsPath = join(config.root, 'jest.config.cts');
 
       let jestConfigContent = '';
       let configPath = '';
@@ -24,6 +25,9 @@ export default async function addJestResolver(tree: Tree) {
       if (tree.exists(jestConfigPath)) {
         jestConfigContent = tree.read(jestConfigPath, 'utf-8');
         configPath = jestConfigPath;
+      } else if (tree.exists(jestConfigCtsPath)) {
+        jestConfigContent = tree.read(jestConfigCtsPath, 'utf-8');
+        configPath = jestConfigCtsPath;
       } else if (tree.exists(jestConfigJsPath)) {
         jestConfigContent = tree.read(jestConfigJsPath, 'utf-8');
         configPath = jestConfigJsPath;

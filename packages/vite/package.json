@@ -31,13 +31,14 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "@phenomnomnominal/tsquery": "~5.0.1",
-    "enquirer": "~2.3.6",
+    "@phenomnomnominal/tsquery": "catalog:typescript",
+    "enquirer": "catalog:",
     "@nx/js": "workspace:*",
-    "picomatch": "4.0.2",
-    "tsconfig-paths": "^4.1.2",
-    "semver": "^7.6.3",
-    "tslib": "^2.3.0",
+    "@nx/vitest": "workspace:*",
+    "picomatch": "catalog:",
+    "tsconfig-paths": "catalog:typescript",
+    "semver": "catalog:",
+    "tslib": "catalog:typescript",
     "ajv": "^8.0.0"
   },
   "devDependencies": {
@@ -45,7 +46,7 @@
   },
   "peerDependencies": {
     "vite": "^5.0.0 || ^6.0.0 || ^7.0.0",
-    "vitest": "^1.3.1 || ^2.0.0 || ^3.0.0"
+    "vitest": "^1.3.1 || ^2.0.0 || ^3.0.0 || ^4.0.0"
   },
   "publishConfig": {
     "access": "public"
@@ -60,7 +61,10 @@
     "./executors": "./executors.js",
     "./src/executors/*/schema.json": "./src/executors/*/schema.json",
     "./src/executors/*.impl": "./src/executors/*.impl.js",
+    "./src/executors/*/schema": "./src/executors/*/schema.d.ts",
     "./src/executors/*/compat": "./src/executors/*/compat.js",
+    "./src/generators/*/schema.json": "./src/generators/*/schema.json",
+    "./src/generators/*/schema": "./src/generators/*/schema.d.ts",
     "./plugins/nx-copy-assets.plugin": "./plugins/nx-copy-assets.plugin.js",
     "./plugins/nx-tsconfig-paths.plugin": "./plugins/nx-tsconfig-paths.plugin.js",
     "./plugins/rollup-replace-files.plugin": "./plugins/rollup-replace-files.plugin.js"

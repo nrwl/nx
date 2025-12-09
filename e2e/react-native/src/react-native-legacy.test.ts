@@ -28,7 +28,7 @@ describe('@nx/react-native (legacy)', () => {
     originalEnv = process.env.NX_ADD_PLUGINS;
     process.env.NX_ADD_PLUGINS = 'false';
 
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/react-native', '@nx/react'] });
     // we create empty preset above which skips creation of `production` named input
     updateJson('nx.json', (nxJson) => {
       nxJson.namedInputs = {

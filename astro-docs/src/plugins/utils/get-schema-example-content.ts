@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve as resolvePath } from 'node:path';
 import { type PluginSchemaWithExamples } from './plugin-schema-parser';
+
 const EXAMPLE_SCHEMA_KEY = 'examplesFile';
 
 /**

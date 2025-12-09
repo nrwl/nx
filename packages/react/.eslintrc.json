@@ -62,6 +62,7 @@
               "@nx/rspack",
               "@nx/storybook",
               "@nx/vite",
+              "@nx/vitest",
               "@nx/webpack",
               // These are brought in by the webpack, rollup, or vite packages via init generators.
               "@babel/preset-react",

@@ -9,7 +9,7 @@ end_of_line = lf
 insert_final_newline = true
 
 # 4 space indentation
-[*.{js,ts,jsx,tsx}]
+[*.{kts,kt,js,ts,jsx,tsx}]
 indent_style = space
 indent_size = 2
 

@@ -47,6 +47,12 @@ const variantClasses: Record<
     hoverText: 'hover:text-blue-100 dark:hover:text-sky-200 text-white',
     expandBg: 'group-hover:w-full',
   },
+  simple: {
+    container: 'bg-blue-600 dark:bg-blue-600',
+    accent: 'bg-transparent',
+    hoverText: 'text-white',
+    expandBg: '',
+  },
 };
 
 export type CallToActionProps = {
@@ -55,7 +61,7 @@ export type CallToActionProps = {
   description?: string;
   icon?: string;
   size?: 'sm' | 'md' | 'lg';
-  variant?: 'default' | 'gradient' | 'inverted' | 'gradient-alt';
+  variant?: 'default' | 'gradient' | 'inverted' | 'gradient-alt' | 'simple';
 };
 
 export function CallToAction({
@@ -68,6 +74,26 @@ export function CallToAction({
 }: CallToActionProps): JSX.Element {
   const iconClasses = iconSizeClasses[size];
   const colorClasses = variantClasses?.[variant] ?? variantClasses['default'];
+
+  if (variant === 'simple') {
+    return (
+      <div className="not-content not-prose mx-auto my-12 flex justify-center">
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className={classNames(
+            colorClasses.container,
+            colorClasses.hoverText,
+            'inline-flex items-center gap-2 rounded-md px-6 py-3 font-medium no-underline shadow-sm'
+          )}
+        >
+          {title}
+          <ChevronRightIcon className="h-5 w-5" />
+        </a>
+      </div>
+    );
+  }
 
   return (
     <div

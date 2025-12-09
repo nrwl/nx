@@ -5386,11 +5386,6 @@
             "deps": ["devkit"]
           },
           {
-            "file": "packages/workspace/src/migrations/update-13-10-0/update-decorate-cli.ts",
-            "hash": "9334b9a991673222b3ed0282b748a6de9eca2ced",
-            "deps": ["devkit"]
-          },
-          {
             "file": "packages/workspace/src/migrations/update-13-10-0/update-tasks-runner.ts",
             "hash": "37f930864bf0d5ff771eb4d691ab8cfcb9673802",
             "deps": ["devkit"]
@@ -5423,11 +5418,6 @@
           {
             "file": "packages/workspace/src/migrations/update-13-9-0/replace-tao-with-nx.ts",
             "hash": "addea9c1bc5a5eef2d856439b8f9bc4e4d0993e4",
-            "deps": ["devkit"]
-          },
-          {
-            "file": "packages/workspace/src/migrations/update-13-9-0/update-decorate-cli.ts",
-            "hash": "eae7efc8c2562ec1948245df2a84223d41e63bce",
             "deps": ["devkit"]
           },
           {
@@ -20657,11 +20647,6 @@
             "hash": "5a6bcdc5c0f2540e13206f7276ef09ccf886a305"
           },
           {
-            "file": "packages/cli/lib/decorate-cli.ts",
-            "hash": "fbb9636c447e0e8a3af4c1f6446ffd7103388431",
-            "deps": ["nx"]
-          },
-          {
             "file": "packages/cli/package.json",
             "hash": "9c5ad8ce7142606dc835b87ea36c40c649d5910f",
             "deps": ["nx"]
@@ -22579,10 +22564,6 @@
               "npm:@angular-devkit/build-angular",
               "npm:@angular-devkit/core"
             ]
-          },
-          {
-            "file": "packages/nx/src/adapter/decorate-cli.ts",
-            "hash": "7126a16e8c98f8cb4c2eec1b80a3f8db3c65bff0"
           },
           {
             "file": "packages/nx/src/adapter/ngcli-adapter.ts",

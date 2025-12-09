@@ -320,6 +320,7 @@ function parseGitOutput(command: string): string[] {
   return execSync(command, {
     maxBuffer: TEN_MEGABYTES,
     cwd: workspaceRoot,
+    stdio: 'pipe',
     windowsHide: false,
   })
     .toString('utf-8')

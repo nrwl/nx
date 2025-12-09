@@ -30,7 +30,17 @@ impl ScrollMomentum {
         const MOMENTUM_TIMEOUT_MS: u128 = 200; // Time window for momentum to build
         const ACCELERATION_FACTOR: f32 = 1.2; // Exponential growth factor
         const INITIAL_MOMENTUM: f32 = 1.0;
-        const SUSTAINED_SCROLL_THRESHOLD: u32 = 20; // After this many scrolls, increase max dramatically
+
+        // Momentum is based on the time since the last scroll event.
+        // NOTE: not linear, exponential steps.
+        //               __ <-- Upper max
+        //              /
+        //             /
+        //       _____/     <-- capped at max until user passes sustained scroll threshold.
+        //      /           <-- momentum builds over time
+        //     /            <-- initial momentum
+        const IGNORE_EVENTS_UNDER_MS: u32 = 50; // Ignore events that are too close together
+        const SUSTAINED_SCROLL_THRESHOLD: u32 = 2000 / IGNORE_EVENTS_UNDER_MS; // After approx 2s of sustained scrolling
 
         // Check if direction changed and reset momentum if it did
         if let Some(last_dir) = self.last_direction {
@@ -48,7 +58,10 @@ impl ScrollMomentum {
         if let Some(last_time) = self.last_scroll_time {
             let elapsed = now.duration_since(last_time).as_millis();
 
-            if elapsed < MOMENTUM_TIMEOUT_MS {
+            if elapsed < IGNORE_EVENTS_UNDER_MS as u128 {
+                // Ignore events that are too close together
+                return 0;
+            } else if elapsed < MOMENTUM_TIMEOUT_MS {
                 // Accelerate momentum exponentially
                 self.momentum *= ACCELERATION_FACTOR;
                 self.scroll_count += 1;

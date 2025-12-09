@@ -22,36 +22,6 @@
   "include": [],
   "references": [
     {
-      "path": "../feature-analytics"
-    },
-    {
-      "path": "../ui-common"
-    },
-    {
-      "path": "../ui-icons"
-    },
-    {
-      "path": "../ui-theme"
-    },
-    {
-      "path": "../ui-primitives"
-    },
-    {
-      "path": "../ui-fence"
-    },
-    {
-      "path": "../../graph/ui-icons"
-    },
-    {
-      "path": "../../graph/ui-common"
-    },
-    {
-      "path": "../../graph/ui-project-details"
-    },
-    {
-      "path": "../../packages/devkit"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ]

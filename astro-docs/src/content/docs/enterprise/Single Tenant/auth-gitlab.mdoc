@@ -1,5 +1,7 @@
 ---
 title: GitLab Auth
+description: Configure authentication for Nx Cloud using a GitLab app
+filter: 'type:Guides'
 ---
 
 Before creating your container, you'll need to create a GitLab app for your organisation.
@@ -16,7 +18,7 @@ Then "Applications" from the left-hand menu:
 
 Give the app a name. The authorization callback is the important bit. It needs to be in this form:
 
-```
+```text
 [your-nx-cloud-url]/auth-callback
 
 # for example

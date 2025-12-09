@@ -130,9 +130,45 @@ function statsToString(
       continue;
     }
 
-    const assets = json.assets?.filter((asset) =>
-      chunk.files?.includes(asset.name)
-    );
+    const assets = json.assets?.filter((asset) => {
+      // First try exact match with files array (for non-i18n builds)
+      if (chunk.files?.includes(asset.name)) {
+        return true;
+      }
+
+      // For i18n builds, chunk.files is often empty but we can match by chunk names
+      // Assets have locale prefixes (e.g., "fr/main.abc123.js")
+      if (!chunk.files?.length && chunk.names?.length) {
+        // Remove locale prefix and hash from asset name to get base name
+        const assetWithoutLocale = asset.name
+          .replace(/^[a-z]{2}(-[A-Z]{2})?\//, '') // Remove locale prefix
+          .replace(/\.[a-f0-9]{8,}\./, '.'); // Remove hash (e.g., main.abc123.js -> main.js)
+
+        // Check if any chunk name matches the base name of the asset
+        return chunk.names.some((chunkName) => {
+          // Match chunk name to asset base name (e.g., "main" matches "main.js")
+          return (
+            assetWithoutLocale.startsWith(chunkName + '.') ||
+            assetWithoutLocale === chunkName
+          );
+        });
+      }
+
+      // For i18n builds where chunk.files has values but without locale prefix
+      if (chunk.files?.length) {
+        // Check if any chunk file matches the asset name without locale prefix
+        return chunk.files.some((chunkFile) => {
+          // Remove potential locale prefix from asset name
+          const assetWithoutLocale = asset.name.replace(
+            /^[a-z]{2}(-[A-Z]{2})?\//,
+            ''
+          );
+          return chunkFile === assetWithoutLocale;
+        });
+      }
+
+      return false;
+    });
     let rawSize = 0;
     let estimatedTransferSize;
     if (assets) {

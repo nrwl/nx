@@ -10,9 +10,10 @@ export async function createNxCloudOnboardingURL(
   accessToken?: string,
   meta?: string,
   forceManual = false,
-  forceGithub = false
+  forceGithub = false,
+  directory?: string
 ) {
-  const remoteInfo = getVcsRemoteInfo();
+  const remoteInfo = getVcsRemoteInfo(directory);
   const apiUrl = getCloudUrl();
 
   const installationSupportsGitHub = await getInstallationSupportsGitHub(

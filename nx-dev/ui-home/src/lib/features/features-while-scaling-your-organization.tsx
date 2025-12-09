@@ -26,7 +26,7 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
             <p>
               Nx defines{' '}
               <TextLink
-                href="/features/enforce-module-boundaries"
+                href={'/docs/features/enforce-module-boundaries'}
                 className="decoration-2"
               >
                 clear project boundaries
@@ -34,14 +34,14 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               and leverages monorepo concepts—shared tooling, atomic changes,
               and coordinated releases—so code stays easy to maintain.{' '}
               <TextLink
-                href="/nx-enterprise/powerpack/owners"
+                href={'/docs/enterprise/owners'}
                 className="decoration-2"
               >
                 Ownership
               </TextLink>{' '}
               is defined at the project level, while{' '}
               <TextLink
-                href="/nx-enterprise/powerpack/conformance"
+                href={'/docs/enterprise/conformance'}
                 className="decoration-2"
               >
                 conformance rules
@@ -50,16 +50,19 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               <strong>entire codebase</strong>.
             </p>
             <p>
-              <TextLink href="/plugin-registry" className="decoration-2">
+              <TextLink href={'/docs/plugin-registry'} className="decoration-2">
                 Nx plugins
               </TextLink>{' '}
               and{' '}
-              <TextLink href="/features/generate-code" className="decoration-2">
+              <TextLink
+                href={'/docs/features/generate-code'}
+                className="decoration-2"
+              >
                 code generation
               </TextLink>{' '}
               standardize best practices and eliminate duplication, while{' '}
               <TextLink
-                href="/features/automate-updating-dependencies"
+                href={'/docs/features/automate-updating-dependencies'}
                 className="decoration-2"
               >
                 automated updates

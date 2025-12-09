@@ -74,20 +74,24 @@ export function DocViewer({
     });
   }
 
+  // The pages using `DocViewer` should no longer be reachable.
+  // We'll be removing the Next.js app later, but for now just make sure noindex is set so if we somehow missed a redirect, at least nothing should be indexing the page.
   return (
     <>
       <NextSeo
         title={vm.title + ' | Nx'}
         description={
           vm.description ??
-          'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.'
+          'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.'
         }
+        noindex={true}
+        nofollow={true}
         openGraph={{
           url: 'https://nx.dev' + currentPath,
           title: vm.title,
           description:
             vm.description ??
-            'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
+            'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.',
           images: [
             {
               url: `https://nx.dev/images/open-graph/${currentPath

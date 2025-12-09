@@ -1,8 +1,8 @@
 ---
 title: Release TypeScript/JavaScript Packages to NPM
 description: Learn how to use Nx Release to version, generate changelogs, and publish TypeScript/JavaScript packages to NPM in your monorepo.
+filter: 'type:Guides'
 ---
-
 
 This guide walks you through setting up Nx Release to version, generate changelogs, and publish TypeScript/JavaScript packages to NPM from your monorepo.
 
@@ -18,7 +18,7 @@ Ensure that Nx is installed in your monorepo. Check out the [Installation docs](
 
 The [`@nx/js` package](/docs/technologies/typescript/introduction) is required for Nx Release to manage and release JavaScript packages. Add it if it is not already installed:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/js
 ```
 
@@ -30,11 +30,11 @@ If you want to release all of the projects in your workspace, such as when deali
 
 If you have a mixed workspace in which you also have some applications, e2e testing projects or other things you don't want to release, you can configure `nx release` to target only the projects you want to release.
 
-Configure which projects to release by adding the `release.projects` property to nx.json. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s [projects filtering](/docs/reference/nx-commands#run-many), such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character.
+Configure which projects to release by adding the `release.projects` property to nx.json. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s [projects filtering](/docs/reference/nx-commands#nx-run-many), such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character.
 
 For example, to release just the projects in the `packages` directory:
 
-```json 
+```json
 // nx.json
 {
   "release": {
@@ -53,7 +53,7 @@ The `--dry-run` option is useful for testing your configuration without actually
 
 To preview your first release, run:
 
-```shell {% frame="none" %}
+```shell
 nx release --first-release --dry-run
 ```
 
@@ -156,7 +156,7 @@ Skipped publishing packages.
 
 If the preview looks good, run the command again without the `--dry-run` option to actually create the release.
 
-```shell {% frame="none" %}
+```shell
 nx release --first-release
 ```
 
@@ -255,11 +255,31 @@ By default, Nx Release will stage all changes it makes with git. This includes u
 
 The commit message created by Nx Release defaults to 'chore(release): publish {version}', where `{version}` will be dynamically interpolated with the relevant value based on your actual release, but can be customized with the `release.git.commitMessage` property in nx.json.
 
-The structure of the git tag defaults to `v{version}`. For example, if the version is `1.2.3`, the tag will be `v1.2.3`. This can be customized by setting the `release.releaseTagPattern` property in nx.json.
+The structure of the git tag defaults to `v{version}`. For example, if the version is `1.2.3`, the tag will be `v1.2.3`. This can be customized by setting the `release.releaseTag.pattern` property (Nx 22+) or `release.releaseTagPattern` property (Nx < 22) in nx.json.
 
 For this same example, if you want the commit message to be 'chore(release): 1.2.3' and the tag to be `release/1.2.3`, you would configure nx.json like this:
 
-```json 
+{% tabs syncKey="nx-release-configuration" %}
+{% tabitem label="Nx 22+" %}
+
+```json
+// nx.json
+{
+  "release": {
+    "releaseTag": {
+      "pattern": "release/{version}"
+    },
+    "git": {
+      "commitMessage": "chore(release): {version}"
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 22" %}
+
+```json
 // nx.json
 {
   "release": {
@@ -270,6 +290,9 @@ For this same example, if you want the commit message to be 'chore(release): 1.2
   }
 }
 ```
+
+{% /tabitem %}
+{% /tabs %}
 
 When using release groups in which the member projects are versioned together, you can also leverage `{releaseGroupName}` and it will be interpolated appropriately in the commit/tag that gets created for that release group.
 

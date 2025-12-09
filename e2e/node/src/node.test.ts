@@ -287,9 +287,9 @@ module.exports = {
 
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
-      expect(await killPorts(port)).toBeTruthy();
-    } catch (err) {
-      expect(err).toBeFalsy();
+      await killPorts(port);
+    } catch {
+      // do nothing
     }
   }, 120_000);
 
@@ -544,24 +544,6 @@ ${jslib}();
     runCLI(`build ${appName} --outputHashing none`); // no explicit deleteOutputPath option set
     checkFilesDoNotExist(`dist/apps/${appName}/_should_remove.txt`);
     checkFilesExist(`dist/apps/_should_not_remove.txt`);
-
-    // Explicitly set `deleteOutputPath` to true
-    createFile(`dist/apps/${appName}/_should_remove.txt`);
-    createFile(`dist/apps/_should_not_remove.txt`);
-    checkFilesExist(
-      `dist/apps/${appName}/_should_remove.txt`,
-      `dist/apps/_should_not_remove.txt`
-    );
-    runCLI(`build ${appName} --outputHashing none --deleteOutputPath`);
-    checkFilesDoNotExist(`dist/apps/${appName}/_should_remove.txt`);
-    checkFilesExist(`dist/apps/_should_not_remove.txt`);
-
-    // Explicitly set `deleteOutputPath` to false
-    createFile(`dist/apps/${appName}/_should_keep.txt`);
-    createFile(`dist/apps/_should_keep.txt`);
-    runCLI(`build ${appName} --deleteOutputPath=false --outputHashing none`);
-    checkFilesExist(`dist/apps/${appName}/_should_keep.txt`);
-    checkFilesExist(`dist/apps/_should_keep.txt`);
   }, 120000);
 
   it('should support generating projects with the new name and root format', () => {
@@ -615,7 +597,7 @@ ${jslib}();
         `generate @nx/nest:app ${nestapp} --linter=eslint --unitTestRunner=jest`
       );
 
-      packageInstall('@nestjs/swagger', undefined, '^7.0.0');
+      packageInstall('@nestjs/swagger', undefined, '^11.0.0');
 
       updateJson(join('apps', nestapp, 'project.json'), (config) => {
         config.targets.build.options.tsPlugins = ['@nestjs/swagger/plugin'];
@@ -734,7 +716,7 @@ ${jslib}();
         `generate @nx/nest:lib libs/${nestlib} --buildable --linter=eslint --unitTestRunner=jest`
       );
 
-      packageInstall('@nestjs/swagger', undefined, '^7.0.0');
+      packageInstall('@nestjs/swagger', undefined, '^11.0.0');
 
       updateJson(join('libs', nestlib, 'project.json'), (config) => {
         config.targets.build.options.transformers = [

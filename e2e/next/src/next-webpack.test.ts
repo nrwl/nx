@@ -87,7 +87,7 @@ describe('Next.js Webpack', () => {
     // by the time it reaches the build executor.
     // this simulates existing behaviour of running a next.js build executor via Nx
     delete process.env.NODE_ENV;
-    const result = runCLI(`build ${appName}`);
+    const result = runCLI(`build ${appName} --webpack`);
 
     checkFilesExist(`dist/${appName}/next.config.js`);
     expect(result).toContain('NODE_ENV is production');
@@ -103,7 +103,7 @@ describe('Next.js Webpack', () => {
       `
     );
     rmDist();
-    runCLI(`build ${appName}`);
+    runCLI(`build ${appName} --webpack`);
     checkFilesExist(`dist/${appName}/next.config.js`);
 
     // Make sure withNx works with run-commands.
@@ -118,7 +118,7 @@ describe('Next.js Webpack', () => {
       return json;
     });
     expect(() => {
-      runCLI(`build ${appName}`);
+      runCLI(`build ${appName} --webpack`);
     }).not.toThrow();
     checkFilesExist(`dist/${appName}/.next/build-manifest.json`);
   }, 300_000);

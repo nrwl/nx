@@ -2,8 +2,8 @@ import { execSync } from 'child_process';
 import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { prompt } from 'enquirer';
-import type { ProjectGraphProjectNode } from '@nx/devkit';
-import type { FinalConfigForProject } from 'nx/src/command-line/release/version/release-group-processor';
+import { ProjectGraphProjectNode, workspaceRoot } from '@nx/devkit';
+import type { FinalConfigForProject } from 'nx/src/command-line/release/utils/release-graph';
 import { interpolateVersionPattern } from './version-pattern-utils';
 
 const DEFAULT_VERSION_SCHEMES = {
@@ -23,38 +23,52 @@ export async function handleDockerVersion(
   projectGraphNode: ProjectGraphProjectNode,
   finalConfigForProject: FinalConfigForProject,
   dockerVersionScheme?: string,
-  dockerVersion?: string
+  dockerVersion?: string,
+  versionActionsVersion?: string
 ) {
+  // If the full docker image reference is provided, use it directly
+  const nxDockerImageRefEnvOverride =
+    process.env.NX_DOCKER_IMAGE_REF?.trim() || undefined;
   // If an explicit dockerVersion is provided, use it directly
-  let newVersion: string;
-  if (dockerVersion) {
-    newVersion = dockerVersion;
-  } else {
-    const availableVersionSchemes =
-      finalConfigForProject.dockerOptions.versionSchemes ??
-      DEFAULT_VERSION_SCHEMES;
-    const versionScheme =
-      dockerVersionScheme && dockerVersionScheme in availableVersionSchemes
-        ? dockerVersionScheme
-        : await promptForNewVersion(
-            availableVersionSchemes,
-            projectGraphNode.name
-          );
-    newVersion = calculateNewVersion(
-      projectGraphNode.name,
-      versionScheme,
-      availableVersionSchemes
-    );
+  let newVersion: string | undefined;
+
+  if (!nxDockerImageRefEnvOverride) {
+    if (dockerVersion) {
+      newVersion = dockerVersion;
+    } else {
+      const availableVersionSchemes =
+        finalConfigForProject.dockerOptions.versionSchemes ??
+        DEFAULT_VERSION_SCHEMES;
+      const versionScheme =
+        dockerVersionScheme && dockerVersionScheme in availableVersionSchemes
+          ? dockerVersionScheme
+          : Object.keys(availableVersionSchemes).length === 1
+          ? Object.keys(availableVersionSchemes)[0]
+          : await promptForNewVersion(
+              availableVersionSchemes,
+              projectGraphNode.name
+            );
+      newVersion = calculateNewVersion(
+        projectGraphNode.name,
+        versionScheme,
+        availableVersionSchemes,
+        versionActionsVersion
+      );
+    }
   }
+
   const logs = updateProjectVersion(
     newVersion,
+    nxDockerImageRefEnvOverride,
     workspaceRoot,
     projectGraphNode.data.root,
     finalConfigForProject.dockerOptions.repositoryName,
     finalConfigForProject.dockerOptions.registryUrl
   );
+
   return {
-    newVersion,
+    newVersion:
+      newVersion || process.env.NX_DOCKER_IMAGE_REF?.split(':')[1] || null,
     logs,
   };
 }
@@ -81,7 +95,8 @@ async function promptForNewVersion(
 function calculateNewVersion(
   projectName: string,
   versionScheme: string,
-  versionSchemes: Record<string, string>
+  versionSchemes: Record<string, string>,
+  versionActionsVersion?: string
 ): string {
   if (!(versionScheme in versionSchemes)) {
     throw new Error(
@@ -92,11 +107,13 @@ function calculateNewVersion(
   }
   return interpolateVersionPattern(versionSchemes[versionScheme], {
     projectName,
+    versionActionsVersion,
   });
 }
 
 function updateProjectVersion(
-  newVersion: string,
+  newVersion: string | undefined,
+  nxDockerImageRefEnvOverride: string | undefined,
   workspaceRoot: string,
   projectRoot: string,
   repositoryName?: string,
@@ -105,7 +122,8 @@ function updateProjectVersion(
   const isDryRun = process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false';
   const imageRef = getDefaultImageReference(projectRoot);
   const newImageRef = getImageReference(projectRoot, repositoryName, registry);
-  const fullImageRef = `${newImageRef}:${newVersion}`;
+  const fullImageRef =
+    nxDockerImageRefEnvOverride ?? `${newImageRef}:${newVersion}`;
   if (!isDryRun) {
     execSync(`docker tag ${imageRef} ${fullImageRef}`);
   }
@@ -136,5 +154,10 @@ function getImageReference(
 }
 
 function getDefaultImageReference(projectRoot: string) {
-  return projectRoot.replace(/^[\\/]/, '').replace(/[\\/\s]+/g, '-');
+  const root = projectRoot === '.' ? workspaceRoot : projectRoot;
+  const normalized = root
+    .replace(/^[\\/]/, '')
+    .replace(/[\\/\s]+/g, '-')
+    .toLowerCase();
+  return normalized.length > 128 ? normalized.slice(-128) : normalized;
 }

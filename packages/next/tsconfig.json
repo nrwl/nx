@@ -7,28 +7,10 @@
   "files": [],
   "references": [
     {
-      "path": "../webpack"
-    },
-    {
-      "path": "../web"
-    },
-    {
-      "path": "../react"
-    },
-    {
-      "path": "../eslint"
-    },
-    {
-      "path": "../js"
-    },
-    {
-      "path": "../nx"
-    },
-    {
-      "path": "../devkit"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
-  ]
+  ],
+  "nx": {
+    "addTypecheckTarget": false
+  }
 }

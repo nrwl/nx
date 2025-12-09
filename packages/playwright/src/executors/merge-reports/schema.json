@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Schema for Playwright Merge Reports Executor",
+  "description": "Merge Playwright blob reports to produce unified reports for the configured reporters (excluding the `blob` reporter).",
+  "type": "object",
+  "properties": {
+    "config": {
+      "description": "The Playwright configuration file path. Relative to the project root.",
+      "type": "string",
+      "x-completion-type": "file",
+      "x-completion-glob": "playwright?(*)@(.js|.cjs|.mjs|.ts|.cts|.mtx)",
+      "x-priority": "important"
+    },
+    "expectedSuites": {
+      "description": "The expected number of test suites to produce a report.",
+      "type": "number",
+      "x-priority": "important"
+    }
+  },
+  "required": ["config"]
+}

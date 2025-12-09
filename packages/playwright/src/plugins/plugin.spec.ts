@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { PlaywrightTestConfig } from '@playwright/test';
 import { join } from 'node:path';
@@ -6,7 +6,7 @@ import { createNodesV2 } from './plugin';
 
 describe('@nx/playwright/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let tempFs: TempFs;
   let cwd = process.cwd();
   let originalCacheProjectGraph: string | undefined;
@@ -26,7 +26,6 @@ describe('@nx/playwright/plugin', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
-      configFiles: [],
     };
 
     process.chdir(tempFs.tempDir);
@@ -61,6 +60,7 @@ describe('@nx/playwright/plugin', () => {
                   "targetGroups": {
                     "E2E (CI)": [
                       "e2e-ci",
+                      "e2e-ci--merge-reports",
                     ],
                   },
                 },
@@ -132,6 +132,30 @@ describe('@nx/playwright/plugin', () => {
                       "{projectRoot}/test-results",
                     ],
                     "parallelism": false,
+                  },
+                  "e2e-ci--merge-reports": {
+                    "cache": true,
+                    "executor": "@nx/playwright:merge-reports",
+                    "inputs": [
+                      "default",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "@playwright/test",
+                        ],
+                      },
+                    ],
+                    "metadata": {
+                      "description": "Merges Playwright blob reports from atomized tasks to produce unified reports for the configured reporters.",
+                      "technologies": [
+                        "playwright",
+                      ],
+                    },
+                    "options": {
+                      "config": "playwright.config.js",
+                      "expectedSuites": 0,
+                    },
+                    "outputs": [],
                   },
                 },
               },
@@ -174,6 +198,7 @@ describe('@nx/playwright/plugin', () => {
                   "targetGroups": {
                     "E2E (CI)": [
                       "e2e-ci",
+                      "e2e-ci--merge-reports",
                     ],
                   },
                 },
@@ -210,7 +235,6 @@ describe('@nx/playwright/plugin', () => {
                     },
                     "outputs": [
                       "{projectRoot}/test-results",
-                      "{projectRoot}/playwright-report",
                       "{projectRoot}/test-results/report.json",
                       "{projectRoot}/test-results/html",
                     ],
@@ -246,11 +270,37 @@ describe('@nx/playwright/plugin', () => {
                     },
                     "outputs": [
                       "{projectRoot}/test-results",
-                      "{projectRoot}/playwright-report",
                       "{projectRoot}/test-results/report.json",
                       "{projectRoot}/test-results/html",
                     ],
                     "parallelism": false,
+                  },
+                  "e2e-ci--merge-reports": {
+                    "cache": true,
+                    "executor": "@nx/playwright:merge-reports",
+                    "inputs": [
+                      "default",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "@playwright/test",
+                        ],
+                      },
+                    ],
+                    "metadata": {
+                      "description": "Merges Playwright blob reports from atomized tasks to produce unified reports for the configured reporters.",
+                      "technologies": [
+                        "playwright",
+                      ],
+                    },
+                    "options": {
+                      "config": "playwright.config.js",
+                      "expectedSuites": 0,
+                    },
+                    "outputs": [
+                      "{projectRoot}/test-results/report.json",
+                      "{projectRoot}/test-results/html",
+                    ],
                   },
                 },
               },
@@ -297,6 +347,7 @@ describe('@nx/playwright/plugin', () => {
           "e2e-ci--tests/run-me-2.spec.ts",
           "e2e-ci--tests/run-me.spec.ts",
           "e2e-ci",
+          "e2e-ci--merge-reports",
         ],
       }
     `);
@@ -305,11 +356,13 @@ describe('@nx/playwright/plugin', () => {
         "cache": true,
         "dependsOn": [
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",
@@ -439,6 +492,215 @@ describe('@nx/playwright/plugin', () => {
     expect(targets['e2e-ci--not-tests/run-me.spec.ts']).not.toBeDefined();
   });
 
+  it('should create nodes for distributed CI and merge reports', async () => {
+    await mockPlaywrightConfig(
+      tempFs,
+      `module.exports = {
+      testDir: 'tests',
+      reporter: [
+        ['html', { outputFolder: 'test-results/html' }],
+        ['junit', { outputFile: 'test-results/report.xml' }],
+        ['blob', { outputFile: 'blob-report/blob.zip' }],
+      ],
+    }`
+    );
+    await tempFs.createFiles({
+      'tests/run-me.spec.ts': '',
+      'tests/run-me-2.spec.ts': '',
+    });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+      },
+      context
+    );
+    const project = results[0][1].projects['.'];
+    const { targets } = project;
+    expect(project.metadata.targetGroups).toMatchInlineSnapshot(`
+      {
+        "E2E (CI)": [
+          "e2e-ci--tests/run-me-2.spec.ts",
+          "e2e-ci--tests/run-me.spec.ts",
+          "e2e-ci",
+          "e2e-ci--merge-reports",
+        ],
+      }
+    `);
+    expect(targets['e2e-ci']).toMatchInlineSnapshot(`
+      {
+        "cache": true,
+        "dependsOn": [
+          {
+            "options": "forward",
+            "params": "forward",
+            "projects": "self",
+            "target": "e2e-ci--tests/run-me-2.spec.ts",
+          },
+          {
+            "options": "forward",
+            "params": "forward",
+            "projects": "self",
+            "target": "e2e-ci--tests/run-me.spec.ts",
+          },
+        ],
+        "executor": "nx:noop",
+        "inputs": [
+          "default",
+          "^production",
+          {
+            "externalDependencies": [
+              "@playwright/test",
+            ],
+          },
+        ],
+        "metadata": {
+          "description": "Runs Playwright Tests in CI",
+          "help": {
+            "command": "npx playwright test --help",
+            "example": {
+              "options": {
+                "workers": 1,
+              },
+            },
+          },
+          "nonAtomizedTarget": "e2e",
+          "technologies": [
+            "playwright",
+          ],
+        },
+        "outputs": [
+          "{projectRoot}/test-results",
+          "{projectRoot}/test-results/html",
+          "{projectRoot}/test-results/report.xml",
+          "{projectRoot}/blob-report",
+        ],
+        "parallelism": false,
+      }
+    `);
+    expect(targets['e2e-ci--tests/run-me.spec.ts']).toMatchInlineSnapshot(`
+      {
+        "cache": true,
+        "command": "playwright test tests/run-me.spec.ts --output=test-results/tests-run-me-spec-ts",
+        "inputs": [
+          "default",
+          "^production",
+          {
+            "externalDependencies": [
+              "@playwright/test",
+            ],
+          },
+        ],
+        "metadata": {
+          "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
+          "help": {
+            "command": "npx playwright test --help",
+            "example": {
+              "options": {
+                "workers": 1,
+              },
+            },
+          },
+          "technologies": [
+            "playwright",
+          ],
+        },
+        "options": {
+          "cwd": "{projectRoot}",
+          "env": {
+            "PLAYWRIGHT_BLOB_OUTPUT_FILE": "blob-report/tests-run-me-spec-ts.zip",
+            "PLAYWRIGHT_HTML_OUTPUT_DIR": "test-results/html/tests-run-me-spec-ts",
+            "PLAYWRIGHT_HTML_REPORT": "test-results/html/tests-run-me-spec-ts",
+            "PLAYWRIGHT_JUNIT_OUTPUT_FILE": "test-results/tests-run-me-spec-ts/report.xml",
+          },
+        },
+        "outputs": [
+          "{projectRoot}/test-results/tests-run-me-spec-ts",
+          "{projectRoot}/test-results/html/tests-run-me-spec-ts",
+          "{projectRoot}/test-results/tests-run-me-spec-ts/report.xml",
+          "{projectRoot}/blob-report/tests-run-me-spec-ts.zip",
+        ],
+        "parallelism": false,
+      }
+    `);
+    expect(targets['e2e-ci--tests/run-me-2.spec.ts']).toMatchInlineSnapshot(`
+      {
+        "cache": true,
+        "command": "playwright test tests/run-me-2.spec.ts --output=test-results/tests-run-me-2-spec-ts",
+        "inputs": [
+          "default",
+          "^production",
+          {
+            "externalDependencies": [
+              "@playwright/test",
+            ],
+          },
+        ],
+        "metadata": {
+          "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",
+          "help": {
+            "command": "npx playwright test --help",
+            "example": {
+              "options": {
+                "workers": 1,
+              },
+            },
+          },
+          "technologies": [
+            "playwright",
+          ],
+        },
+        "options": {
+          "cwd": "{projectRoot}",
+          "env": {
+            "PLAYWRIGHT_BLOB_OUTPUT_FILE": "blob-report/tests-run-me-2-spec-ts.zip",
+            "PLAYWRIGHT_HTML_OUTPUT_DIR": "test-results/html/tests-run-me-2-spec-ts",
+            "PLAYWRIGHT_HTML_REPORT": "test-results/html/tests-run-me-2-spec-ts",
+            "PLAYWRIGHT_JUNIT_OUTPUT_FILE": "test-results/tests-run-me-2-spec-ts/report.xml",
+          },
+        },
+        "outputs": [
+          "{projectRoot}/test-results/tests-run-me-2-spec-ts",
+          "{projectRoot}/test-results/html/tests-run-me-2-spec-ts",
+          "{projectRoot}/test-results/tests-run-me-2-spec-ts/report.xml",
+          "{projectRoot}/blob-report/tests-run-me-2-spec-ts.zip",
+        ],
+        "parallelism": false,
+      }
+    `);
+    expect(targets['e2e-ci--merge-reports']).toMatchInlineSnapshot(`
+      {
+        "cache": true,
+        "executor": "@nx/playwright:merge-reports",
+        "inputs": [
+          "default",
+          "^production",
+          {
+            "externalDependencies": [
+              "@playwright/test",
+            ],
+          },
+        ],
+        "metadata": {
+          "description": "Merges Playwright blob reports from atomized tasks to produce unified reports for the configured reporters.",
+          "technologies": [
+            "playwright",
+          ],
+        },
+        "options": {
+          "config": "playwright.config.js",
+          "expectedSuites": 2,
+        },
+        "outputs": [
+          "{projectRoot}/test-results/html",
+          "{projectRoot}/test-results/report.xml",
+        ],
+      }
+    `);
+  });
+
   it('should infer dependsOn using the task run in the webServer.command and not set parallelism to false', async () => {
     await mockPlaywrightConfig(tempFs, {
       testDir: 'tests',
@@ -510,11 +772,13 @@ describe('@nx/playwright/plugin', () => {
         "cache": true,
         "dependsOn": [
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",
@@ -556,6 +820,7 @@ describe('@nx/playwright/plugin', () => {
           "e2e-ci--tests/run-me-2.spec.ts",
           "e2e-ci--tests/run-me.spec.ts",
           "e2e-ci",
+          "e2e-ci--merge-reports",
         ],
       }
     `);
@@ -729,11 +994,13 @@ describe('@nx/playwright/plugin', () => {
         "cache": true,
         "dependsOn": [
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",
@@ -775,6 +1042,7 @@ describe('@nx/playwright/plugin', () => {
           "e2e-ci--tests/run-me-2.spec.ts",
           "e2e-ci--tests/run-me.spec.ts",
           "e2e-ci",
+          "e2e-ci--merge-reports",
         ],
       }
     `);

@@ -92,15 +92,13 @@ export function DocumentationHeader({
   };
 
   // Use the new docs URL when Astro docs are enabled
-  const docsUrl = process.env.NEXT_PUBLIC_ASTRO_URL
-    ? '/docs/getting-started/intro'
-    : '/getting-started/intro';
+  const docsUrl = '/docs/getting-started/intro';
 
   const sections = [
     { name: 'Nx', href: docsUrl, current: isNx },
     {
       name: 'CI',
-      href: '/ci/features',
+      href: '/docs/features/ci-features',
       current: isCI,
     },
     {
@@ -110,7 +108,7 @@ export function DocumentationHeader({
     },
     {
       name: 'Plugins',
-      href: '/plugin-registry',
+      href: '/docs/plugin-registry',
       current: isPlugins,
     },
     {
@@ -241,9 +239,6 @@ export function DocumentationHeader({
           </button>
 
           {/*SEARCH*/}
-          <div className="mx-4 w-auto flex-grow">
-            <AlgoliaSearch />
-          </div>
         </div>
         {/*LOGO*/}
         <div className="flex items-center gap-4">
@@ -277,9 +272,6 @@ export function DocumentationHeader({
           <VersionPicker />
         </div>
         {/*SEARCH*/}
-        <div className="hidden w-full max-w-[14rem] lg:inline">
-          <AlgoliaSearch />
-        </div>
         {/*NAVIGATION*/}
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
@@ -355,7 +347,7 @@ export function DocumentationHeader({
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             <Link
               href="/enterprise"
-              title="Nx Enterprise"
+              title="Enterprise"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               prefetch={false}
             >
@@ -385,8 +377,8 @@ export function DocumentationHeader({
               Contact
             </ButtonLink>
             <ButtonLink
-              href="https://cloud.nx.app/?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
-              title="Login"
+              href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
+              title="Try Nx Cloud for free"
               variant="primary"
               size="small"
               onClick={() =>
@@ -397,7 +389,7 @@ export function DocumentationHeader({
                 )
               }
             >
-              Login
+              Try Nx Cloud for free
             </ButtonLink>
           </nav>
         </div>

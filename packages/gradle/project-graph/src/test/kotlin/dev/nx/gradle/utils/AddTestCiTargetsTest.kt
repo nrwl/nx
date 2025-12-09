@@ -46,6 +46,7 @@ class AddTestCiTargetsTest {
     val targets = mutableMapOf<String, MutableMap<String, Any?>>()
     val targetGroups = mutableMapOf<String, MutableList<String>>()
     val ciTestTargetName = "ci"
+    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
 
     addTestCiTargets(
         testFiles = testFiles,
@@ -55,7 +56,8 @@ class AddTestCiTargetsTest {
         targetGroups = targetGroups,
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
-        ciTestTargetName = ciTestTargetName)
+        ciTestTargetName = ciTestTargetName,
+        gitIgnoreClassifier = gitIgnoreClassifier)
 
     // Assert each test file created a CI target
     assertTrue(targets.containsKey("ci--MyFirstTest"))
@@ -64,7 +66,7 @@ class AddTestCiTargetsTest {
     // Assert test group contains individual targets and parent ci task
     val group = targetGroups[testCiTargetGroup]
     assertTrue(group != null)
-    assertTrue(group.contains("ci--MyFirstTest"))
+    assertTrue(group!!.contains("ci--MyFirstTest"))
     assertTrue(group.contains("ci--AnotherTest"))
     assertTrue(group.contains("ci"))
 
@@ -104,6 +106,7 @@ class AddTestCiTargetsTest {
     val targets = mutableMapOf<String, MutableMap<String, Any?>>()
     val targetGroups = mutableMapOf<String, MutableList<String>>()
     val ciTestTargetName = "ci"
+    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
 
     // Always tries compiled test analysis first, then falls back to regex
     addTestCiTargets(
@@ -114,7 +117,8 @@ class AddTestCiTargetsTest {
         targetGroups = targetGroups,
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
-        ciTestTargetName = ciTestTargetName)
+        ciTestTargetName = ciTestTargetName,
+        gitIgnoreClassifier = gitIgnoreClassifier)
 
     // Should create targets using regex-based approach since no compiled classes exist
     assertTrue(targets.containsKey("ci--DefaultTest"))
@@ -128,14 +132,14 @@ class AddTestCiTargetsTest {
           parentFile.mkdirs()
           writeText(
               """
-            package com.example;
-            import org.junit.jupiter.api.Test;
-            
-            abstract class AbstractTest {
-                @Test
-                void testMethod() {}
-            }
-          """
+              package com.example;
+              import org.junit.jupiter.api.Test;
+
+              abstract class AbstractTest {
+                  @Test
+                  void testMethod() {}
+              }
+              """
                   .trimIndent())
         }
 
@@ -144,14 +148,14 @@ class AddTestCiTargetsTest {
           parentFile.mkdirs()
           writeText(
               """
-            package com.example;
-            import org.junit.jupiter.api.Test;
-            
-            class ConcreteTest {
-                @Test
-                void testMethod() {}
-            }
-          """
+              package com.example;
+              import org.junit.jupiter.api.Test;
+
+              class ConcreteTest {
+                  @Test
+                  void testMethod() {}
+              }
+              """
                   .trimIndent())
         }
 
@@ -159,6 +163,7 @@ class AddTestCiTargetsTest {
     val targets = mutableMapOf<String, MutableMap<String, Any?>>()
     val targetGroups = mutableMapOf<String, MutableList<String>>()
     val ciTestTargetName = "ci"
+    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
 
     addTestCiTargets(
         testFiles = testFiles,
@@ -168,7 +173,8 @@ class AddTestCiTargetsTest {
         targetGroups = targetGroups,
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
-        ciTestTargetName = ciTestTargetName)
+        ciTestTargetName = ciTestTargetName,
+        gitIgnoreClassifier = gitIgnoreClassifier)
 
     // Abstract class should not create a CI target
     assertTrue(

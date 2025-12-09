@@ -23,7 +23,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/ci/features/remote-cache"
+            href={'/docs/features/ci-features/remote-cache'}
             title="Learn more about Nx Replay"
             className="text-sm/6 font-semibold"
           >

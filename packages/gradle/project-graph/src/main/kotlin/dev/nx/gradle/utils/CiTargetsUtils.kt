@@ -18,7 +18,8 @@ fun addTestCiTargets(
     targetGroups: TargetGroups,
     projectRoot: String,
     workspaceRoot: String,
-    ciTestTargetName: String
+    ciTestTargetName: String,
+    gitIgnoreClassifier: GitIgnoreClassifier
 ) {
   ensureTargetGroupExists(targetGroups, testCiTargetGroup)
 
@@ -33,7 +34,8 @@ fun addTestCiTargets(
       projectRoot,
       workspaceRoot,
       ciTestTargetName,
-      ciDependsOn)
+      ciDependsOn,
+      gitIgnoreClassifier)
 
   ensureParentCiTarget(
       targets,
@@ -43,7 +45,8 @@ fun addTestCiTargets(
       testTask,
       projectRoot,
       workspaceRoot,
-      ciDependsOn)
+      ciDependsOn,
+      gitIgnoreClassifier)
 }
 
 private fun processTestFiles(
@@ -55,7 +58,8 @@ private fun processTestFiles(
     projectRoot: String,
     workspaceRoot: String,
     ciTestTargetName: String,
-    ciDependsOn: MutableList<Map<String, String>>
+    ciDependsOn: MutableList<Map<String, String>>,
+    gitIgnoreClassifier: GitIgnoreClassifier
 ) {
   testFiles
       .filter { isTestFile(it, workspaceRoot) }
@@ -66,7 +70,12 @@ private fun processTestFiles(
           val targetName = "$ciTestTargetName--$className"
           targets[targetName] =
               buildTestCiTarget(
-                  projectBuildPath, testClassPackagePath, testTask, projectRoot, workspaceRoot)
+                  projectBuildPath,
+                  testClassPackagePath,
+                  testTask,
+                  projectRoot,
+                  workspaceRoot,
+                  gitIgnoreClassifier)
           targetGroups[testCiTargetGroup]?.add(targetName)
 
           ciDependsOn.add(
@@ -76,10 +85,14 @@ private fun processTestFiles(
 }
 
 private fun isTestFile(file: File, workspaceRoot: String): Boolean {
-  // Additional check for test files that might not have obvious annotations
-  // Could be extended with more sophisticated logic
   val content = file.takeIf { it.exists() }?.readText()
-  return content != null && containsEssentialTestAnnotations(content)
+  return if (content != null && containsEssentialTestAnnotations(content)) {
+    true
+  } else {
+    // Additional check for test files that might not have obvious annotations
+    // Could be extended with more sophisticated logic
+    false
+  }
 }
 
 fun ensureTargetGroupExists(targetGroups: TargetGroups, group: String) {
@@ -92,8 +105,10 @@ private fun buildTestCiTarget(
     testTask: Task,
     projectRoot: String,
     workspaceRoot: String,
+    gitIgnoreClassifier: GitIgnoreClassifier
 ): MutableMap<String, Any?> {
-  val taskInputs = getInputsForTask(null, testTask, projectRoot, workspaceRoot)
+  val taskInputs =
+      getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
 
   val target =
       mutableMapOf<String, Any?>(
@@ -103,8 +118,7 @@ private fun buildTestCiTarget(
                   "taskName" to "${projectBuildPath}:${testTask.name}",
                   "testClassName" to testClassPackagePath),
           "metadata" to
-              getMetadata(
-                  "Runs Gradle test $testClassPackagePath in CI", projectBuildPath, testTask.name),
+              getMetadata("Runs Gradle test $testClassPackagePath in CI", projectBuildPath, "test"),
           "cache" to true,
           "inputs" to taskInputs)
 
@@ -126,16 +140,17 @@ private fun ensureParentCiTarget(
     testTask: Task,
     projectRoot: String,
     workspaceRoot: String,
-    ciDependsOn: List<Map<String, String>>
+    ciDependsOn: List<Map<String, String>>,
+    gitIgnoreClassifier: GitIgnoreClassifier
 ) {
   if (ciDependsOn.isNotEmpty()) {
-    val taskInputs = getInputsForTask(null, testTask, projectRoot, workspaceRoot)
+    val taskInputs =
+        getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
 
     targets[ciTestTargetName] =
         mutableMapOf<String, Any?>(
             "executor" to "nx:noop",
-            "metadata" to
-                getMetadata("Runs all Gradle tests in CI", projectBuildPath, testTask.name),
+            "metadata" to getMetadata("Runs all Gradle tests in CI", projectBuildPath, "test"),
             "cache" to true,
             "inputs" to taskInputs,
             "dependsOn" to ciDependsOn)

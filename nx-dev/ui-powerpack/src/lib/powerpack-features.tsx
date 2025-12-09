@@ -78,7 +78,7 @@ export function PowerpackFeatures(): ReactElement {
                 storage, offering a flexible, self-managed solution for faster
                 builds. Nx Powerpack self-hosted cache storage is{' '}
                 <TextLink
-                  href="/nx-enterprise/powerpack/free-licenses-and-trials"
+                  href={"/docs/enterprise/powerpack/free-licenses-and-trials"}
                   title="Get a Powerpack license"
                 >
                   free for small teams
@@ -87,7 +87,7 @@ export function PowerpackFeatures(): ReactElement {
               </p>
               <div className="mt-16">
                 <ButtonLink
-                  href="/nx-enterprise/powerpack/custom-caching"
+                  href={"/docs/enterprise/powerpack/custom-caching"}
                   title="Learn more about self-hosted cache storage"
                   variant="secondary"
                   size="default"
@@ -128,7 +128,7 @@ export function PowerpackFeatures(): ReactElement {
             </div>
             <div className="flex">
               <ButtonLink
-                href="/nx-enterprise/powerpack/owners"
+                href={'/docs/enterprise/powerpack/owners'}
                 title="Learn more about codeowners"
                 variant="secondary"
                 size="default"
@@ -168,7 +168,7 @@ export function PowerpackFeatures(): ReactElement {
             </div>
             <div className="flex">
               <ButtonLink
-                href="/nx-enterprise/powerpack/conformance"
+                href={'/docs/enterprise/powerpack/conformance'}
                 title="Learn how to set up conformance rules"
                 variant="secondary"
                 size="default"

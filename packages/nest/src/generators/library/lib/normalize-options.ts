@@ -34,9 +34,7 @@ export async function normalizeOptions(
 
   options.addPlugin ??= addPlugin;
 
-  const fileName = options.simpleName
-    ? projectNames.projectSimpleName
-    : projectNames.projectFileName;
+  const fileName = projectNames.projectFileName;
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];

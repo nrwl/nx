@@ -17,7 +17,7 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
-import { logDebug, RunMode } from '../native';
+import { hashArray, logDebug, RunMode } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -94,6 +94,10 @@ async function getTerminalOutputLifeCycle(
 
   const isRunOne = initiatingProject != null;
 
+  if (tasks.length === 1) {
+    process.env.NX_TUI = 'false';
+  }
+
   if (isTuiEnabled()) {
     const interceptedNxCloudLogs: (string | Uint8Array<ArrayBufferLike>)[] = [];
 
@@ -133,8 +137,6 @@ async function getTerminalOutputLifeCycle(
     const isRunOne = initiatingProject != null;
 
     const pinnedTasks: string[] = [];
-    const taskText = tasks.length === 1 ? 'task' : 'tasks';
-    const projectText = projectNames.length === 1 ? 'project' : 'projects';
     let titleText = '';
 
     if (isRunOne) {
@@ -145,19 +147,24 @@ async function getTerminalOutputLifeCycle(
       if (mainContinuousDependencies.length > 0) {
         pinnedTasks.push(mainContinuousDependencies[0]);
       }
-      const [project, target] = mainTaskId.split(':');
-      titleText = `${target} ${project}`;
+      const [, target] = mainTaskId.split(':');
+      titleText = `1 ${target} task`;
       if (tasks.length > 1) {
-        titleText += `, and ${tasks.length - 1} requisite ${taskText}`;
+        const dependentTasksCount = tasks.length - 1;
+        const dependentTaskText =
+          dependentTasksCount === 1 ? 'other' : 'others';
+        titleText += `, and ${dependentTasksCount} ${dependentTaskText} they depend on`;
       }
     } else {
-      titleText =
-        nxArgs.targets.join(', ') +
-        ` for ${projectNames.length} ${projectText}`;
+      const mainTasksCount = projectNames.length;
+      const targetText = nxArgs.targets.join(', ');
+      const mainTaskText = mainTasksCount === 1 ? 'task' : 'tasks';
+      titleText = `${mainTasksCount} ${targetText} ${mainTaskText}`;
       if (tasks.length > projectNames.length) {
-        titleText += `, and ${
-          tasks.length - projectNames.length
-        } requisite ${taskText}`;
+        const dependentTasksCount = tasks.length - projectNames.length;
+        const dependentTaskText =
+          dependentTasksCount === 1 ? 'other' : 'others';
+        titleText += `, and ${dependentTasksCount} ${dependentTaskText} they depend on`;
       }
     }
 
@@ -434,12 +441,15 @@ export async function runCommand(
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
+      const id = hashArray([...process.argv, Date.now().toString()]);
       await runPreTasksExecution({
+        id,
         workspaceRoot,
         nxJsonConfiguration: nxJson,
         argv: process.argv,
       });
 
+      const startTime = Date.now();
       const { taskResults, completed } = await runCommandForTasks(
         projectsToRun,
         currentProjectGraph,
@@ -456,6 +466,7 @@ export async function runCommand(
         extraTargetDependencies,
         extraOptions
       );
+      const endTime = Date.now();
 
       const exitCode = !completed
         ? signalToCode('SIGINT')
@@ -467,10 +478,13 @@ export async function runCommand(
         : 0;
 
       await runPostTasksExecution({
+        id,
         taskResults,
         workspaceRoot,
         nxJsonConfiguration: nxJson,
         argv: process.argv,
+        startTime,
+        endTime,
       });
 
       return exitCode;
@@ -902,6 +916,7 @@ export function setEnvVarsBasedOnArgs(
   }
   if (nxArgs.outputStyle == 'stream-without-prefixes') {
     process.env.NX_STREAM_OUTPUT = 'true';
+    process.env.NX_PREFIX_OUTPUT = 'false';
   }
   if (loadDotEnvFiles) {
     process.env.NX_LOAD_DOT_ENV_FILES = 'true';
@@ -1090,7 +1105,12 @@ function shouldUseDynamicLifeCycle(
   }
   if (!process.stdout.isTTY) return false;
   if (isCI()) return false;
-  if (outputStyle === 'static' || outputStyle === 'stream') return false;
+  if (
+    outputStyle === 'static' ||
+    outputStyle === 'stream' ||
+    outputStyle === 'stream-without-prefixes'
+  )
+    return false;
 
   return !tasks.find((t) => shouldStreamOutput(t, null));
 }

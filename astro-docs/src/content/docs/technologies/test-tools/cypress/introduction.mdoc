@@ -3,6 +3,7 @@ title: Overview of the Nx Cypress Plugin
 description: The Nx Plugin for Cypress contains executors and generators that support e2e testing with Cypress. This page also explains how to configure Cypress on your Nx workspace.
 sidebar:
   label: Introduction
+filter: 'type:References'
 ---
 
 Cypress is a test runner built for the modern web. It has a lot of great features:
@@ -29,7 +30,7 @@ In any Nx workspace, you can install `@nx/cypress` by running the following comm
 {% tabs %}
 {% tabitem label="Nx 18+" %}
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/cypress
 ```
 
@@ -40,7 +41,7 @@ This will install the correct version of `@nx/cypress`.
 
 Install the `@nx/cypress` package with your package manager.
 
-```shell {% frame="none" %}
+```shell
 npm add -D @nx/cypress
 ```
 
@@ -78,6 +79,7 @@ The `@nx/cypress/plugin` is configured in the `plugins` array in `nx.json`.
         "targetName": "e2e",
         "ciTargetName": "e2e-ci",
         "componentTestingTargetName": "component-test",
+        "ciComponentTestingTargetName": "component-test-ci",
         "openTargetName": "open-cypress"
       }
     }
@@ -85,7 +87,15 @@ The `@nx/cypress/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-The `targetName`, `ciTargetName`, `componentTestingTargetName`, and `open-cypress` options control the names of the inferred Cypress tasks. The default names are `e2e`, `e2e-ci`, `component-test`, and `open-cypress`.
+The options shown above control the names of the inferred Cypress tasks. The following table shows the default values for each option:
+
+| Option                         | Default                                       |
+| ------------------------------ | --------------------------------------------- |
+| `targetName`                   | `"e2e"`                                       |
+| `ciTargetName`                 | `"e2e-ci"`                                    |
+| `componentTestingTargetName`   | `"component-test"`                            |
+| `ciComponentTestingTargetName` | `undefined` (task is not inferred by default) |
+| `openTargetName`               | `"open-cypress"`                              |
 
 ### Splitting E2E tasks by file
 
@@ -118,11 +128,37 @@ export default defineConfig({
 If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset`. See the recipe on [using `setupNodeEvents` with Cypress preset](/docs/technologies/test-tools/cypress/guides/cypress-setup-node-events) for more details.
 {% /aside %}
 
+### Splitting Component Testing Tasks by File
+
+{% aside type="note" title="Available since Nx 21.6.1" %}
+Splitting component testing tasks by file is available since Nx 21.6.1.
+{% /aside %}
+
+The `@nx/cypress/plugin` can also automatically split your component testing tasks by file. To enable it, set the `ciComponentTestingTargetName` option of the `@nx/cypress/plugin` in your `nx.json` file. It will look something like this:
+
+```json {% meta="{10}" %}
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/cypress/plugin",
+      "options": {
+        "targetName": "e2e",
+        "ciTargetName": "e2e-ci",
+        "componentTestingTargetName": "component-test",
+        "ciComponentTestingTargetName": "component-test-ci",
+        "openTargetName": "open-cypress"
+      }
+    }
+  ]
+}
+```
+
 ## E2E Testing
 
 By default, when creating a new frontend application, Nx will use Cypress to create the e2e tests project.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/web:app apps/frontend
 ```
 
@@ -130,13 +166,13 @@ nx g @nx/web:app apps/frontend
 
 To configure Cypress for an existing project, run the following generator:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/cypress:configuration --project=your-app-name
 ```
 
 Optionally, you can use the `--baseUrl` option if you don't want the Cypress plugin to serve `your-app-name`.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/cypress:configuration --project=your-app-name --baseUrl=http://localhost:4200
 ```
 
@@ -154,13 +190,13 @@ Run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
 
 You can run your e2e test against a production build by using the `production` [configuration](/docs/concepts/executors-and-configurations#use-task-configurations)
 
-```shell {% frame="none" %}
+```shell
 nx e2e frontend-e2e --configuration=production
 ```
 
 You can use the `--spec` flag to glob for test files.
 
-```shell {% frame="none" %}
+```shell
 # run the tests in the smoke/ directory
 nx e2e frontend-e2e --spec="**smoke/**"
 
@@ -179,7 +215,7 @@ running and Cypress will re-run those tests as you enhance and add to the suite.
 {% tabs %}
 {% tabitem label="Using inferred tasks" %}
 
-```shell {% frame="none" %}
+```shell
 nx open-cypress frontend-e2e
 ```
 
@@ -187,7 +223,7 @@ nx open-cypress frontend-e2e
 
 {% tabitem label="Using the @nx/cypress:cypress executor" %}
 
-```shell {% frame="none" %}
+```shell
 nx e2e frontend-e2e --watch
 ```
 
@@ -201,7 +237,7 @@ The `baseUrl` property provides you the ability to test an application hosted on
 {% tabs %}
 {% tabitem label="Using inferred tasks" %}
 
-```shell {% frame="none" %}
+```shell
 nx e2e frontend-e2e --config="baseUrl=https://frontend.com"
 ```
 
@@ -213,7 +249,7 @@ If `baseUrl` is not provided, Cypress will expect to have the `baseUrl` property
 
 {% tabitem label="Using the @nx/cypress:cypress executor" %}
 
-```shell {% frame="none" %}
+```shell
 nx e2e frontend-e2e --baseUrl=https://frontend.com
 ```
 
@@ -288,7 +324,7 @@ Finally, you can also pass environment variables via the command line with the `
 {% tabs %}
 {% tabitem label="Using inferred tasks" %}
 
-```shell {% frame="none" %}
+```shell
 nx e2e frontend-e2e -e=API_URL=https://api.my-nx-website.com,API_KEY=abc-123
 ```
 
@@ -296,7 +332,7 @@ nx e2e frontend-e2e -e=API_URL=https://api.my-nx-website.com,API_KEY=abc-123
 
 {% tabitem label="Using the @nx/cypress:cypress executor" %}
 
-```shell {% frame="none" %}
+```shell
 nx e2e frontend-e2e --env.API_URL="https://api.my-nx-website.com" --env.API_KEY="abc-123"
 ```
 

@@ -1,4 +1,4 @@
-import { workspaceRoot } from '@nx/devkit';
+import { workspaceRoot, type GeneratorsJson } from '@nx/devkit';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, extname, join } from 'node:path';
 import frontMatter from 'front-matter';
@@ -33,6 +33,8 @@ export const pluginToTechnology: Record<string, string> = {
   gradle: 'java',
   maven: 'java',
 
+  dotnet: 'dotnet',
+
   'module-federation': 'module-federation',
 
   eslint: 'eslint',
@@ -51,6 +53,7 @@ export const pluginToTechnology: Record<string, string> = {
   playwright: 'test-tools',
   storybook: 'test-tools',
   detox: 'test-tools',
+  vitest: 'test-tools',
 };
 
 /**
@@ -188,18 +191,17 @@ function hasValidConfig(
   const content = JSON.parse(readFileSync(configPath, 'utf-8'));
 
   if (type === 'executors') {
-    return (
+    const hasExecutors =
       content.executors &&
       typeof content.executors === 'object' &&
-      Object.keys(content.executors).length > 0
-    );
+      Object.keys(content.executors).length > 0;
+
+    return hasExecutors && hasVisibleImpls(content.executors);
   }
 
   // migrations can be generators or packageJsonUpdates
   const hasGenerators =
-    content.generators &&
-    typeof content.generators === 'object' &&
-    Object.keys(content.generators).length > 0;
+    isGeneratorsConfig(content) && hasVisibleImpls(content.generators);
 
   const hasPackageJsonUpdates =
     content.packageJsonUpdates &&
@@ -363,12 +365,30 @@ export function pluginSpecialCasePluginRemapping(pluginName: string) {
     // we call the js plugin `typescript` in the URLs technologies
     case 'js':
       return 'typescript';
-    // we make the default java pages be the gradle impl atm.
-    // this will probs change with maven
-    case 'gradle':
-    case 'java':
-      return 'java';
     default:
       return pluginName;
   }
+}
+
+function isGeneratorsConfig(
+  content: unknown
+): content is GeneratorsJson & Pick<Required<GeneratorsJson>, 'generators'> {
+  return !!(
+    content &&
+    typeof content === 'object' &&
+    'generators' in content &&
+    typeof content.generators === 'object'
+  );
+}
+
+/**
+ * validate that a generator/migration/executor config has at least 1 visible implmentation
+ **/
+function hasVisibleImpls(content: Record<string, unknown>): boolean {
+  return (
+    content &&
+    Object.values(content).some(
+      (impl: any) => typeof impl === 'object' && !impl.hidden
+    )
+  );
 }

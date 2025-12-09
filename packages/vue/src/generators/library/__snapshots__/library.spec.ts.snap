@@ -1,69 +1,6 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`library --publishable should add build targets 1`] = `
-"/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import dts from 'vite-plugin-dts';
-import * as path from 'path';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-
-export default defineConfig(() => ({
-  root: __dirname,
-  cacheDir: '../node_modules/.vite/my-lib',
-  plugins: [
-    vue(),
-    nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md']),
-    dts({
-      entryRoot: 'src',
-      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
-      pathsToAliases: false,
-    }),
-  ],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-  // Configuration for building your library.
-  // See: https://vitejs.dev/guide/build.html#library-mode
-  build: {
-    outDir: '../dist/my-lib',
-    emptyOutDir: true,
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-    lib: {
-      // Could also be a dictionary or array of multiple entry points.
-      entry: 'src/index.ts',
-      name: 'my-lib',
-      fileName: 'index',
-      // Change this to the formats you want to support.
-      // Don't forget to update your package.json as well.
-      formats: ['es' as const],
-    },
-    rollupOptions: {
-      // External packages that should not be bundled into your library.
-      external: [],
-    },
-  },
-  test: {
-    name: 'my-lib',
-    watch: false,
-    globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../coverage/my-lib',
-      provider: 'v8' as const,
-    },
-  },
-}));
-"
-`;
+exports[`library --publishable should add build targets 1`] = `null`;
 
 exports[`library --unit-test-runner none should not generate test configuration 1`] = `null`;
 
@@ -93,72 +30,9 @@ exports[`library nested should create a local tsconfig.json 1`] = `
 }
 `;
 
-exports[`library should add vite types to tsconfigs and generate correct vite.config.ts file 1`] = `
-"/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import dts from 'vite-plugin-dts';
-import * as path from 'path';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+exports[`library should add vite types to tsconfigs and generate correct vite.config.ts file 1`] = `null`;
 
-export default defineConfig(() => ({
-  root: __dirname,
-  cacheDir: '../node_modules/.vite/my-lib',
-  plugins: [
-    vue(),
-    nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md']),
-    dts({
-      entryRoot: 'src',
-      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
-      pathsToAliases: false,
-    }),
-  ],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-  // Configuration for building your library.
-  // See: https://vitejs.dev/guide/build.html#library-mode
-  build: {
-    outDir: '../dist/my-lib',
-    emptyOutDir: true,
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-    lib: {
-      // Could also be a dictionary or array of multiple entry points.
-      entry: 'src/index.ts',
-      name: 'my-lib',
-      fileName: 'index',
-      // Change this to the formats you want to support.
-      // Don't forget to update your package.json as well.
-      formats: ['es' as const],
-    },
-    rollupOptions: {
-      // External packages that should not be bundled into your library.
-      external: [],
-    },
-  },
-  test: {
-    name: 'my-lib',
-    watch: false,
-    globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../coverage/my-lib',
-      provider: 'v8' as const,
-    },
-  },
-}));
-"
-`;
-
-exports[`library should add vue, vite and vitest to package.json 1`] = `
+exports[`library should add vue and vitest to package.json when non-buildable 1`] = `
 {
   "dependencies": {
     "vue": "^3.5.13",
@@ -170,36 +44,35 @@ exports[`library should add vue, vite and vitest to package.json 1`] = `
     "@nx/js": "0.0.1",
     "@nx/rollup": "0.0.1",
     "@nx/vite": "0.0.1",
+    "@nx/vitest": "0.0.1",
     "@nx/vue": "0.0.1",
-    "@nx/web": "0.0.1",
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
     "@types/node": "20.19.9",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
-    "@vitejs/plugin-vue": "^5.2.3",
-    "@vitest/coverage-v8": "^3.0.5",
-    "@vitest/ui": "^3.0.0",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vitest/coverage-v8": "^4.0.0",
+    "@vitest/ui": "^4.0.0",
     "@vue/eslint-config-prettier": "7.1.0",
     "@vue/eslint-config-typescript": "^11.0.3",
     "@vue/test-utils": "^2.4.6",
     "eslint": "~8.57.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-vue": "^9.16.1",
-    "jiti": "2.4.2",
     "jsdom": "~22.1.0",
     "prettier": "^2.6.2",
     "typescript": "~5.9.2",
     "vite": "^7.0.0",
-    "vitest": "^3.0.0",
+    "vitest": "^4.0.0",
     "vue-tsc": "^2.2.8",
   },
   "name": "@proj/source",
 }
 `;
 
-exports[`library should add vue, vite and vitest to package.json 2`] = `
+exports[`library should add vue and vitest to package.json when non-buildable 2`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -245,7 +118,6 @@ exports[`library should generate files 1`] = `
   ],
   "ignorePatterns": [
     "!**/*",
-    "**/vite.config.*.timestamp*",
     "**/vitest.config.*.timestamp*",
   ],
   "overrides": [
