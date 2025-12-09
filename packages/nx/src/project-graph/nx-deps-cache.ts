@@ -35,7 +35,7 @@ export interface FileMapCache {
   pluginsConfig?: any;
   fileMap: FileMap;
   externalNodesHash?: string;
-  // Pre-computed hashes for fast comparison (added in 6.1)
+  // Pre-computed hashes for fast comparison
   pathMappingsHash?: string;
   nxJsonPluginsHash?: string;
   pluginsConfigHash?: string;
@@ -195,7 +195,7 @@ export function createProjectFileMapCache(
   const pluginsConfig = nxJson?.pluginsConfig;
 
   const newValue: FileMapCache = {
-    version: '6.0',
+    version: '6.1',
     nxVersion: nxVersion,
     // compilerOptions may not exist, especially for package-based repos
     pathMappings,
