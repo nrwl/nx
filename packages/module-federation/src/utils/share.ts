@@ -24,6 +24,59 @@ import type { PackageJson } from 'nx/src/utils/package-json';
 import { NormalModuleReplacementPlugin as RspackNormalModuleReplacementPlugin } from '@rspack/core';
 
 /**
+ * Checks if a version string is a workspace protocol version that needs normalization.
+ * This includes pnpm workspace protocol (workspace:*), file: protocol, or bare *.
+ */
+function isWorkspaceProtocolVersion(version: string | null): boolean {
+  if (!version) return false;
+  return (
+    version === '*' ||
+    version.startsWith('workspace:') ||
+    version.startsWith('file:')
+  );
+}
+
+/**
+ * Normalizes workspace protocol versions (workspace:*, workspace:^, *, file:) to actual semver versions
+ * by looking up the version from the library's package.json.
+ *
+ * @param version - The version string that may contain workspace protocol
+ * @param libraryName - The name of the library to look up
+ * @param workspaceLibs - The workspace libraries to search in
+ * @returns The normalized version string, or null if it cannot be resolved
+ */
+function normalizeWorkspaceProtocolVersion(
+  version: string | null,
+  libraryName: string,
+  workspaceLibs: WorkspaceLibrary[]
+): string | null {
+  if (!isWorkspaceProtocolVersion(version)) {
+    return version;
+  }
+
+  // Look up the actual version from the library's package.json
+  const workspaceLib = workspaceLibs.find(
+    (lib) => lib.importKey === libraryName
+  );
+  if (workspaceLib) {
+    const libPackageJsonPath = join(
+      workspaceRoot,
+      workspaceLib.root,
+      'package.json'
+    );
+    if (existsSync(libPackageJsonPath)) {
+      const libPkgJson = readJsonFile(libPackageJsonPath);
+      if (libPkgJson?.version) {
+        return libPkgJson.version;
+      }
+    }
+  }
+
+  // Can't resolve the actual version, return null to indicate no version requirement
+  return null;
+}
+
+/**
  * Build an object of functions to be used with the ModuleFederationPlugin to
  * share Nx Workspace Libraries between Hosts and Remotes.
  *
@@ -128,6 +181,14 @@ export function shareWorkspaceLibraries(
               pkgJson
             )
           : null;
+
+        // Normalize workspace protocol versions (workspace:*, workspace:^, *, file:)
+        version = normalizeWorkspaceProtocolVersion(
+          version,
+          library.name,
+          workspaceLibs
+        );
+
         if (!version && workspaceLibs.length > 0) {
           const workspaceLib = workspaceLibs.find(
             (lib) => lib.importKey === library.name
@@ -166,40 +227,12 @@ export function shareWorkspaceLibraries(
           pkgJson?.dependencies?.[libraryName] ??
           pkgJson?.devDependencies?.[libraryName];
 
-        // Normalize workspace protocol versions (workspace:*, workspace:^, *, etc.)
-        if (
-          version &&
-          (version === '*' ||
-            version.startsWith('workspace:') ||
-            version.startsWith('file:'))
-        ) {
-          // Look up the actual version from the library's package.json
-          const workspaceLib = workspaceLibs.find(
-            (lib) => lib.importKey === libraryName
-          );
-          if (workspaceLib) {
-            const libPackageJsonPath = join(
-              workspaceRoot,
-              workspaceLib.root,
-              'package.json'
-            );
-            if (existsSync(libPackageJsonPath)) {
-              const libPkgJson = readJsonFile(libPackageJsonPath);
-              if (libPkgJson?.version) {
-                version = libPkgJson.version;
-              } else {
-                // Library has no version, treat as no version requirement
-                version = null;
-              }
-            } else {
-              // Can't find library package.json, treat as no version requirement
-              version = null;
-            }
-          } else {
-            // Can't find workspace library, treat as no version requirement
-            version = null;
-          }
-        }
+        // Normalize workspace protocol versions (workspace:*, workspace:^, *, file:)
+        version = normalizeWorkspaceProtocolVersion(
+          version,
+          libraryName,
+          workspaceLibs
+        );
 
         libraries[libraryName] = {
           ...(version
@@ -260,6 +293,18 @@ export function getNpmPackageSharedConfig(
       `Could not find a version for "${pkgName}" in the root "package.json" ` +
         'when collecting shared packages for the Module Federation setup. ' +
         'The package will not be shared.'
+    );
+
+    return undefined;
+  }
+
+  // Warn if a workspace protocol version is passed - this indicates the package
+  // should be configured as a workspace library instead of using sharePackages
+  if (isWorkspaceProtocolVersion(version)) {
+    logger.warn(
+      `Package "${pkgName}" has a workspace protocol version "${version}" which cannot be used ` +
+        'for Module Federation. For workspace libraries, use the workspace library configuration ' +
+        'instead of sharePackages. The package will not be shared.'
     );
 
     return undefined;
