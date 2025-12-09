@@ -90,6 +90,8 @@ export class TaskOrchestrator {
   private runningContinuousTasks = new Map<string, RunningTask>();
   private runningRunCommandsTasks = new Map<string, RunningTask>();
 
+  private batchTaskResultsStreamed = new Set<string>();
+
   // endregion internal state
 
   constructor(
@@ -433,7 +435,7 @@ export class TaskOrchestrator {
         this.options.lifeCycle.appendBatchOutput?.(batch.id, output);
       });
 
-      // Stream task results to TUI as they complete (lightweight - just UI updates)
+      // Stream task results as they complete
       // Heavy operations (caching, scheduling, complete) happen at batch-end in postRunSteps
       batchProcess.onTaskResults((taskId, result) => {
         const task = this.taskGraph.tasks[taskId];
@@ -455,6 +457,7 @@ export class TaskOrchestrator {
           { groupId }
         );
 
+        this.batchTaskResultsStreamed.add(taskId);
         this.options.lifeCycle.setTaskStatus(taskId, parseTaskStatus(status));
       });
 
@@ -962,8 +965,10 @@ export class TaskOrchestrator {
         'cache-results-end'
       );
     }
-    await this.options.lifeCycle.endTasks(
-      results.map((result) => {
+
+    const resultsToReportEndTasks: TaskResult[] = [];
+    for (const result of results) {
+      if (!this.batchTaskResultsStreamed.has(result.task.id)) {
         const code =
           result.status === 'success' ||
           result.status === 'local-cache' ||
@@ -971,15 +976,23 @@ export class TaskOrchestrator {
           result.status === 'remote-cache'
             ? 0
             : 1;
-        return {
-          ...result,
-          task: result.task,
-          status: result.status,
+        resultsToReportEndTasks.push({
           code,
-        };
-      }),
-      { groupId }
-    );
+          status: result.status,
+          task: result.task,
+          terminalOutput: result.terminalOutput,
+        });
+      } else {
+        // clean up the task id from the set since we've already verified it
+        this.batchTaskResultsStreamed.delete(result.task.id);
+      }
+    }
+
+    if (resultsToReportEndTasks.length > 0) {
+      await this.options.lifeCycle.endTasks(resultsToReportEndTasks, {
+        groupId,
+      });
+    }
 
     this.complete(
       results.map(({ task, status }) => {
