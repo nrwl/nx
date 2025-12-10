@@ -42,6 +42,9 @@ import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 import { isCI } from '../src/utils/ci/is-ci';
 
+// For template-based CNW we want to know if user picked empty vs react vs angular etc.
+let chosenTemplate: string;
+
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
   linter?: 'none' | 'eslint';
@@ -322,9 +325,9 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       parsedArgs.nxCloud,
       rawArgs.nxCloud,
       workspaceInfo.pushedToVcs,
+      chosenTemplate,
       `flow-variant-${getFlowVariant()}`,
     ],
-    directory: workspaceInfo.directory,
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
@@ -358,23 +361,20 @@ async function normalizeArgsMiddleware(
   argv.workspaces ??= true;
   argv.useProjectJson ??= !argv.workspaces;
 
+  // Old (start) vs new (start-v2) flows
+  const startVariant = getFlowVariant() === '1' ? 'start-v2' : 'start';
+  await recordStat({
+    nxVersion,
+    command: 'create-nx-workspace',
+    meta: [startVariant],
+    useCloud: argv.nxCloud !== 'skip',
+  });
+
   try {
     argv.name = await determineFolder(argv);
 
-    const workingDir = process.cwd().replace(/\\/g, '/');
-    const directory = require('path').join(workingDir, argv.name);
-
     const template = await determineTemplate(argv);
-
-    // Old (start) vs new (start-v2) flows
-    const startPrefix = getFlowVariant() === '1' ? 'start-v2' : 'start';
-    await recordStat({
-      nxVersion,
-      command: 'create-nx-workspace',
-      meta: [startPrefix],
-      useCloud: argv.nxCloud !== 'skip',
-      directory,
-    });
+    chosenTemplate = template;
 
     if (template !== 'custom') {
       // Template flow - uses npm and 'main' branch by default
