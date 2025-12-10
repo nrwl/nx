@@ -12,6 +12,7 @@ import {
 } from './utils/pnpm-normalizer';
 import {
   getHoistedPackageVersion,
+  invertObject,
   NormalizedPackageJson,
 } from './utils/package-json';
 import { sortObjectByKeys } from '../../../utils/object-sort';
@@ -81,19 +82,22 @@ export function getPnpmLockfileDependencies(
   return getDependencies(data, keyMap, isV5, ctx);
 }
 
+const cachedInvertedRecords = new Map<string, Record<string, string>>();
 function matchPropValue(
   record: Record<string, string>,
   key: string,
-  originalPackageName: string
+  originalPackageName: string,
+  recordName: string
 ): string | undefined {
   if (!record) {
     return undefined;
   }
-  // Use Object.entries() for single-pass iteration instead of separate Object.values() + Object.keys()
-  for (const [name, version] of Object.entries(record)) {
-    if (version === key) {
-      return name;
-    }
+  if (!cachedInvertedRecords.has(recordName)) {
+    cachedInvertedRecords.set(recordName, invertObject(record));
+  }
+  const packageName = cachedInvertedRecords.get(recordName)[key];
+  if (packageName) {
+    return packageName;
   }
   // check if non-aliased name is found
   if (
@@ -110,9 +114,24 @@ function matchedDependencyName(
   originalPackageName: string
 ): string | undefined {
   return (
-    matchPropValue(importer.dependencies, key, originalPackageName) ||
-    matchPropValue(importer.optionalDependencies, key, originalPackageName) ||
-    matchPropValue(importer.peerDependencies, key, originalPackageName)
+    matchPropValue(
+      importer.dependencies,
+      key,
+      originalPackageName,
+      'dependencies'
+    ) ||
+    matchPropValue(
+      importer.optionalDependencies,
+      key,
+      originalPackageName,
+      'optionalDependencies'
+    ) ||
+    matchPropValue(
+      importer.peerDependencies,
+      key,
+      originalPackageName,
+      'peerDependencies'
+    )
   );
 }
 
@@ -201,12 +220,14 @@ function getNodes(
       matchPropValue(
         data.importers['.'].devDependencies,
         key,
-        originalPackageName
+        originalPackageName,
+        'devDependencies'
       ) ||
       matchPropValue(
         data.importers['.'].devDependencies,
         `/${key}`,
-        originalPackageName
+        originalPackageName,
+        'devDependencies'
       );
     if (rootDependencyName) {
       packageNameObj = {
@@ -345,7 +366,6 @@ function getNodes(
       hoistedNode = versionMap.values().next().value;
     } else {
       const hoistedVersion = getHoistedVersion(
-        hoistedDeps,
         packageName,
         isV5,
         hoistedKeysByPackage
@@ -364,7 +384,6 @@ function getNodes(
 }
 
 function getHoistedVersion(
-  hoistedDependencies: Record<string, any>,
   packageName: string,
   isV5: boolean,
   hoistedKeysByPackage: Map<string, string>
