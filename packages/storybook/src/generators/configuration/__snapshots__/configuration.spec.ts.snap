@@ -312,10 +312,7 @@ export default config;
 exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 2`] = `null`;
 
 exports[`@nx/storybook:configuration v10 basic functionalities should generate TS config for project by default 1`] = `
-"import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
-
-import type { StorybookConfig } from '@storybook/angular';
+"import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
   stories: ['../**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
@@ -335,10 +332,7 @@ export default config;
 `;
 
 exports[`@nx/storybook:configuration v10 basic functionalities should generate TypeScript Configuration files by default 1`] = `
-"import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
-
-import type { StorybookConfig } from '@storybook/angular';
+"import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
   stories: ['../**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],

@@ -134,6 +134,7 @@ export class TaskOrchestrator {
 
     process.stdout.setMaxListeners(threadCount + defaultMaxListeners);
     process.stderr.setMaxListeners(threadCount + defaultMaxListeners);
+    process.setMaxListeners(threadCount + defaultMaxListeners);
 
     // initial seeding of the queue
     for (let i = 0; i < threadCount; ++i) {
