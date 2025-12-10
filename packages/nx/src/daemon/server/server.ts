@@ -110,7 +110,11 @@ import {
   isHandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
 import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
-import { collectAndScheduleSyncGenerators } from './sync-generators';
+import {
+  clearSyncGeneratorsCache,
+  collectAndScheduleSyncGenerators,
+} from './sync-generators';
+import { registerFileChangeListener } from './file-watching/file-change-events';
 import {
   GET_REGISTERED_SYNC_GENERATORS,
   isHandleGetRegisteredSyncGeneratorsMessage,
@@ -720,6 +724,8 @@ export async function startServer(): Promise<Server> {
           registerProjectGraphRecomputationListener(
             collectAndScheduleSyncGenerators
           );
+          // register file change listener to invalidate sync generator cache
+          registerFileChangeListener(clearSyncGeneratorsCache);
           // trigger an initial project graph recomputation
           addUpdatedAndDeletedFiles([], [], []);
 
