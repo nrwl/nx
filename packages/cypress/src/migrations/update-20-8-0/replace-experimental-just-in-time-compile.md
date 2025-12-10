@@ -6,10 +6,9 @@ Replaces the `experimentalJustInTimeCompile` configuration option with the new `
 
 If the `experimentalJustInTimeCompile` configuration option is present and set to `true`, the migration will remove it. This is to account for the fact that JIT compilation is the default behavior in Cypress v14.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/app1/cypress.config.ts" %}
+```ts title="apps/app1/cypress.config.ts"
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
@@ -23,11 +22,9 @@ export default defineConfig({
 });
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```ts {% fileName="apps/app1/cypress.config.ts" %}
+```ts title="apps/app1/cypress.config.ts"
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
@@ -40,15 +37,11 @@ export default defineConfig({
 });
 ```
 
-{% /tab %}
-{% /tabs %}
-
 If the `experimentalJustInTimeCompile` configuration option is set to `false` and it is using webpack, the migration will rename it to `justInTimeCompile`.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/app1/cypress.config.ts" %}
+```ts title="apps/app1/cypress.config.ts"
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
@@ -62,11 +55,9 @@ export default defineConfig({
 });
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```ts {% fileName="apps/app1/cypress.config.ts" highlightLines=[9] %}
+```ts title="apps/app1/cypress.config.ts" {9}
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
@@ -80,15 +71,11 @@ export default defineConfig({
 });
 ```
 
-{% /tab %}
-{% /tabs %}
-
 If the `experimentalJustInTimeCompile` configuration is set to any value and it is using Vite, the migration will remove it. This is to account for the fact that JIT compilation no longer applies to Vite.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/app1/cypress.config.ts" %}
+```ts title="apps/app1/cypress.config.ts"
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
@@ -102,11 +89,9 @@ export default defineConfig({
 });
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```ts {% fileName="apps/app1/cypress.config.ts" %}
+```ts title="apps/app1/cypress.config.ts"
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
@@ -118,6 +103,3 @@ export default defineConfig({
   },
 });
 ```
-
-{% /tab %}
-{% /tabs %}

@@ -34,18 +34,19 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "@phenomnomnominal/tsquery": "~5.0.1",
-    "semver": "^7.5.3",
-    "tslib": "^2.3.0",
+    "@phenomnomnominal/tsquery": "catalog:typescript",
+    "semver": "catalog:",
+    "tslib": "catalog:typescript",
     "@nx/cypress": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*"
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "storybook": "9.0.6"
   },
   "peerDependencies": {
-    "storybook": ">=7.0.0 <10.0.0"
+    "storybook": ">=7.0.0 <11.0.0"
   },
   "publishConfig": {
     "access": "public"

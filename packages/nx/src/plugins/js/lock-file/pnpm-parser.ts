@@ -26,12 +26,10 @@ import {
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
 import { join } from 'path';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
-
-// we use key => node map to avoid duplicate work when parsing keys
-let keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
 let currentLockFileHash: string;
 
 let parsedLockFile: Lockfile;
@@ -44,7 +42,6 @@ function parsePnpmLockFile(
     return parsedLockFile;
   }
 
-  keyMap.clear();
   const results = parseAndNormalizePnpmLockfile(lockFileContent);
   parsedLockFile = results;
   currentLockFileHash = lockFileHash;
@@ -54,7 +51,10 @@ function parsePnpmLockFile(
 export function getPnpmLockfileNodes(
   lockFileContent: string,
   lockFileHash: string
-): Record<string, ProjectGraphExternalNode> {
+): {
+  nodes: Record<string, ProjectGraphExternalNode>;
+  keyMap: Map<string, Set<ProjectGraphExternalNode>>;
+} {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
   if (+data.lockfileVersion.toString() >= 10) {
     console.warn(
@@ -62,13 +62,14 @@ export function getPnpmLockfileNodes(
     );
   }
   const isV5 = isV5Syntax(data);
-  return getNodes(data, keyMap, isV5);
+  return getNodes(data, isV5);
 }
 
 export function getPnpmLockfileDependencies(
   lockFileContent: string,
   lockFileHash: string,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
+  keyMap: Map<string, Set<ProjectGraphExternalNode>>
 ) {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
   if (+data.lockfileVersion.toString() >= 10) {
@@ -128,9 +129,12 @@ function isAliasVersion(depVersion: string) {
 
 function getNodes(
   data: Lockfile,
-  keyMap: Map<string, Set<ProjectGraphExternalNode>>,
   isV5: boolean
-): Record<string, ProjectGraphExternalNode> {
+): {
+  nodes: Record<string, ProjectGraphExternalNode>;
+  keyMap: Map<string, Set<ProjectGraphExternalNode>>;
+} {
+  const keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
   const maybeAliasedPackageVersions = new Map<string, string>(); // <version, alias>
@@ -330,7 +334,7 @@ function getNodes(
       results[node.name] = node;
     });
   }
-  return results;
+  return { nodes: results, keyMap };
 }
 
 function getHoistedVersion(
@@ -403,13 +407,21 @@ function parseBaseVersion(rawVersion: string, isV5: boolean): string {
 export function stringifyPnpmLockfile(
   graph: ProjectGraph,
   rootLockFileContent: string,
-  packageJson: NormalizedPackageJson
+  packageJson: NormalizedPackageJson,
+  workspaceRoot: string
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
   const { lockfileVersion, packages, importers } = data;
 
   const { snapshot: rootSnapshot, importers: requiredImporters } =
-    mapRootSnapshot(packageJson, importers, packages, graph, +lockfileVersion);
+    mapRootSnapshot(
+      packageJson,
+      importers,
+      packages,
+      graph,
+      +lockfileVersion,
+      workspaceRoot
+    );
   const snapshots = mapSnapshots(
     data.packages,
     graph.externalNodes,
@@ -419,8 +431,10 @@ export function stringifyPnpmLockfile(
   const workspaceDependencyImporters: Record<string, ProjectSnapshot> = {};
   for (const [packageName, importerPath] of Object.entries(requiredImporters)) {
     const baseImporter = importers[importerPath];
-    workspaceDependencyImporters[`workspace_modules/${packageName}`] =
-      baseImporter;
+    if (baseImporter) {
+      workspaceDependencyImporters[`workspace_modules/${packageName}`] =
+        baseImporter;
+    }
   }
 
   const output: Lockfile = {
@@ -577,7 +591,8 @@ function mapRootSnapshot(
   rootImporters: Record<string, ProjectSnapshot>,
   packages: PackageSnapshots,
   graph: ProjectGraph,
-  lockfileVersion: number
+  lockfileVersion: number,
+  workspaceRoot: string
 ) {
   const workspaceModules = getWorkspacePackagesFromGraph(graph);
   const snapshot: ProjectSnapshot = { specifiers: {} };
@@ -590,7 +605,21 @@ function mapRootSnapshot(
   ].forEach((depType) => {
     if (packageJson[depType]) {
       Object.keys(packageJson[depType]).forEach((packageName) => {
-        const version = packageJson[depType][packageName];
+        let version = packageJson[depType][packageName];
+        const manager = getCatalogManager(workspaceRoot);
+        if (manager?.isCatalogReference(version)) {
+          version = manager.resolveCatalogReference(
+            workspaceRoot,
+            packageName,
+            version
+          );
+          if (!version) {
+            throw new Error(
+              `Could not resolve catalog reference for package ${packageName}@${version}.`
+            );
+          }
+        }
+
         if (workspaceModules.has(packageName)) {
           for (const [importerPath, importerSnapshot] of Object.entries(
             rootImporters

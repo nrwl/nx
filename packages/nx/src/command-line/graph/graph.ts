@@ -53,6 +53,7 @@ import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
 import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+import { findMatchingProjects } from '../../utils/find-matching-projects';
 
 import { createTaskHasher } from '../../hasher/create-task-hasher';
 import { ProjectGraphError } from '../../project-graph/error-types';
@@ -182,13 +183,13 @@ function hasPath(
   graph: ProjectGraph,
   target: string,
   node: string,
-  visited: string[]
+  visited: Set<string>
 ) {
   if (target === node) return true;
 
-  for (let d of graph.dependencies[node] || []) {
-    if (visited.indexOf(d.target) > -1) continue;
-    visited.push(d.target);
+  for (const d of graph.dependencies[node] || []) {
+    if (visited.has(d.target)) continue;
+    visited.add(d.target);
     if (hasPath(graph, target, d.target, visited)) return true;
   }
   return false;
@@ -209,7 +210,8 @@ function filterGraph(
     filteredProjectNames = new Set<string>();
     projectNames.forEach((p) => {
       const isInPath =
-        hasPath(graph, p, focus, []) || hasPath(graph, focus, p, []);
+        hasPath(graph, p, focus, new Set()) ||
+        hasPath(graph, focus, p, new Set());
 
       if (isInPath) {
         filteredProjectNames.add(p);
@@ -278,9 +280,7 @@ export async function generateGraph(
   let isPartial = false;
   try {
     const projectGraphAndSourceMaps =
-      await createProjectGraphAndSourceMapsAsync({
-        exitOnError: false,
-      });
+      await createProjectGraphAndSourceMapsAsync({ exitOnError: false });
     rawGraph = projectGraphAndSourceMaps.projectGraph;
     sourceMaps = projectGraphAndSourceMaps.sourceMaps;
   } catch (e) {
@@ -296,10 +296,7 @@ export async function generateGraph(
       const errors = e.getErrors();
       if (errors?.length > 0) {
         errors.forEach((e) => {
-          output.error({
-            title: e.message,
-            bodyLines: [e.stack],
-          });
+          output.error({ title: e.message, bodyLines: [e.stack] });
         });
       }
       output.warn({
@@ -328,33 +325,51 @@ export async function generateGraph(
     }
   }
 
-  if (args.affected) {
+  try {
     affectedProjects = (
       await getAffectedGraphNodes(
         splitArgsIntoNxArgsAndOverrides(
           args,
           'affected',
-          { printWarnings: !args.print && args.file !== 'stdout' },
+          {
+            printWarnings:
+              args.affected && !args.print && args.file !== 'stdout',
+          },
           readNxJson()
         ).nxArgs,
         rawGraph
       )
     ).map((n) => n.name);
+  } catch (e) {
+    // if `--affected` is explicitly passed in or
+    // resolved `args.affected` is true, then calculating affected projects
+    // is intended (and expected) so we rethrow the error here.
+    if (args.affected) {
+      throw e;
+    }
+
+    // if `affected` is falsy, and we calculate affected projects for default case
+    // and the operation might fail (i.e: in e2e tests), we fallback to empty array
+    affectedProjects = [];
   }
 
-  if (args.exclude) {
-    const invalidExcludes: string[] = [];
+  let excludePatterns: string[] = [];
+  if (args.exclude && args.exclude.length > 0) {
+    try {
+      // Use findMatchingProjects to expand patterns (supports globs, tags, directories, etc.)
+      excludePatterns = findMatchingProjects(args.exclude, prunedGraph.nodes);
 
-    args.exclude.forEach((project) => {
-      if (!projectExists(projects, project)) {
-        invalidExcludes.push(project);
+      // If no projects matched any of the exclude patterns, show a warning
+      if (excludePatterns.length === 0) {
+        output.warn({
+          title: `No projects matched the following exclude patterns:`,
+          bodyLines: args.exclude,
+        });
       }
-    });
-
-    if (invalidExcludes.length > 0) {
+    } catch (e) {
       output.error({
-        title: `The following projects provided to --exclude do not exist:`,
-        bodyLines: invalidExcludes,
+        title: `Invalid exclude pattern:`,
+        bodyLines: [e.message],
       });
       process.exit(1);
     }
@@ -365,11 +380,7 @@ export async function generateGraph(
     'utf-8'
   );
 
-  prunedGraph = filterGraph(
-    prunedGraph,
-    args.focus || null,
-    args.exclude || []
-  );
+  prunedGraph = filterGraph(prunedGraph, args.focus || null, excludePatterns);
 
   if (args.print || args.file === 'stdout') {
     console.log(
@@ -385,6 +396,7 @@ export async function generateGraph(
       )
     );
     await output.drain();
+    await new Promise((res) => setImmediate(res));
     process.exit(0);
   }
 
@@ -426,7 +438,7 @@ export async function generateGraph(
       );
 
       const environmentJs = buildEnvironmentJs(
-        args.exclude || [],
+        excludePatterns,
         args.watch,
         !!args.file && args.file.endsWith('html') ? 'build' : 'serve',
         projectGraphClientResponse,
@@ -469,10 +481,11 @@ export async function generateGraph(
       });
       process.exit(1);
     }
+    await new Promise((res) => setImmediate(res));
     process.exit(0);
   } else {
     const environmentJs = buildEnvironmentJs(
-      args.exclude || [],
+      excludePatterns,
       args.watch,
       !!args.file && args.file.endsWith('html') ? 'build' : 'serve'
     );
@@ -489,7 +502,7 @@ export async function generateGraph(
         affectedProjects,
         args.focus,
         args.groupByFolder,
-        args.exclude
+        excludePatterns
       );
       app = result.app;
       url = result.url;
@@ -501,10 +514,25 @@ export async function generateGraph(
       process.exit(1);
     }
 
+    // setting up `?graph=serialized-graph-state`
+    let graphState:
+      | {
+          config: Record<string, unknown>;
+          state?: Record<string, unknown>;
+        }
+      | undefined = undefined;
     url.pathname = args.view;
 
     if (args.focus) {
-      url.pathname += '/' + encodeURIComponent(args.focus);
+      if (args.view === 'project-details') {
+        url.pathname += '/' + encodeURIComponent(args.focus);
+      } else if (args.view === 'projects') {
+        graphState ??= { config: {} };
+        graphState.state = {
+          type: 'focused',
+          nodeId: encodeURIComponent(`project-${args.focus}`),
+        };
+      }
     }
 
     // Add targets as query parameters for tasks view
@@ -516,17 +544,22 @@ export async function generateGraph(
     }
 
     if (args.all) {
-      url.pathname += '/all';
+      if (args.view === 'tasks') {
+        url.pathname += '/all';
+      }
     } else if (args.projects) {
       url.searchParams.append(
         'projects',
         args.projects.map((projectName) => projectName).join(' ')
       );
     } else if (args.affected) {
-      url.pathname += '/affected';
+      graphState ??= { config: {} };
+      graphState.config = { ...graphState.config, showMode: 'affected' };
     }
-    if (args.groupByFolder) {
-      url.searchParams.append('groupByFolder', 'true');
+
+    if (graphState && args.view === 'projects') {
+      // only projects graph restore-able state  is relevant at the moment
+      url.searchParams.set('rawGraph', JSON.stringify(graphState));
     }
 
     output.success({
@@ -595,7 +628,11 @@ async function startServer(
   }
 
   const { projectGraphClientResponse, sourceMapResponse } =
-    await createProjectGraphAndSourceMapClientResponse(affected);
+    await createProjectGraphAndSourceMapClientResponse(
+      affected,
+      focus,
+      exclude
+    );
 
   currentProjectGraphClientResponse = projectGraphClientResponse;
   currentProjectGraphClientResponse.focus = focus;
@@ -795,7 +832,11 @@ function createFileWatcher() {
         output.note({ title: 'Recalculating project graph...' });
 
         const { projectGraphClientResponse, sourceMapResponse } =
-          await createProjectGraphAndSourceMapClientResponse();
+          await createProjectGraphAndSourceMapClientResponse(
+            [],
+            currentProjectGraphClientResponse.focus,
+            currentProjectGraphClientResponse.exclude
+          );
 
         if (
           projectGraphClientResponse.hash !==
@@ -832,7 +873,9 @@ function createFileWatcher() {
 }
 
 async function createProjectGraphAndSourceMapClientResponse(
-  affected: string[] = []
+  affected: string[] = [],
+  focus: string = null,
+  exclude: string[] = []
 ): Promise<{
   projectGraphClientResponse: ProjectGraphClientResponse;
   sourceMapResponse: ConfigurationSourceMaps;
@@ -876,6 +919,10 @@ async function createProjectGraphAndSourceMapClientResponse(
   }
 
   let graph = pruneExternalNodes(projectGraph);
+
+  // Apply focus and exclude filters
+  graph = filterGraph(graph, focus, exclude);
+
   const fileMap: ProjectFileMap =
     readFileMapCache()?.fileMap.projectFileMap || {};
   performance.mark('project graph watch calculation:end');

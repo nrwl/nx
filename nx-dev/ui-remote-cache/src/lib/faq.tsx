@@ -67,7 +67,9 @@ export function Faq(): ReactElement {
           thus giving you the flexibility to adapt it to your custom
           authentication requirements.{' '}
           <Link
-            href="/recipes/running-tasks/self-hosted-caching#build-your-own-caching-server"
+            href={
+              '/docs/guides/tasks--caching/self-hosted-caching#build-your-own-caching-server'
+            }
             title="Learn more"
             prefetch={false}
             className="font-semibold"

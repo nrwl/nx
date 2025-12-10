@@ -20,6 +20,9 @@
       "path": "../ui-icons/tsconfig.lib.json"
     },
     {
+      "path": "../feature-search/tsconfig.lib.json"
+    },
+    {
       "path": "../data-access-documents/tsconfig.lib.json"
     }
   ],

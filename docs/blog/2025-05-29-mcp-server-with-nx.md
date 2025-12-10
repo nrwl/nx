@@ -9,7 +9,7 @@ description: 'Learn how to build a Model Context Protocol (MCP) server using Nx 
 
 Since the Model Context Protocol (MCP) [was released by Anthropic in late 2024](https://www.anthropic.com/news/model-context-protocol), it has quickly become an important part of the AI ecosystem. The [MCP provides an open standard](https://modelcontextprotocol.io/introduction) for connecting AI agents to the rest of the world - the web, software systems and developer tools, just to name a few examples.
 
-We've been busy building the [Nx MCP server](/features/enhance-AI), which gives LLMs deep access to your monorepo's structure. It helps AI tools to better understand your workspace architecture, browse the Nx docs and even trigger actions in your IDE like executing generators or visualizing the graph.
+We've been busy building the [Nx MCP server](/docs/features/enhance-ai), which gives LLMs deep access to your monorepo's structure. It helps AI tools to better understand your workspace architecture, browse the Nx docs and even trigger actions in your IDE like executing generators or visualizing the graph.
 
 {% youtube
 src="https://www.youtube.com/watch?v=fPqPh4h8RJg"
@@ -155,7 +155,7 @@ Let's break it down:
 
 - the command runs the Inspector, pointing to the build output location of our MCP server
 - `"dependsOn": ["build"]` tells nx to always run the build before this target, making sure that the bundled javascript is available
-- `"continuous": true` marks the serve as a [continuous task](/recipes/running-tasks/defining-task-pipeline#continuous-task-dependencies) so that will work properly in more complex task pipelines
+- `"continuous": true` marks the serve as a [continuous task](/docs/guides/tasks--caching/defining-task-pipeline) so that will work properly in more complex task pipelines
 
 You can see the result by running `npx nx serve mcp-server` and looking at the website it spins up (usually on [`http://localhost:6274`](http://127.0.0.1:6274/) ).
 
@@ -299,7 +299,7 @@ On [`http://localhost:4873/`](http://localhost:4873/) , you'll see an instance o
 
 Now that everything is set up, let's configure `nx release` to actually version our package, generate changelogs and publish to npm.
 
-There are a couple of things we want to configure. Check out [the comprehensive release documentation](/features/manage-releases) to learn more about the different configuration options.
+There are a couple of things we want to configure. Check out [the comprehensive release documentation](/docs/features/manage-releases) to learn more about the different configuration options.
 
 - Since we're in a monorepo with different kinds of packages, we have to let `nx release` know which ones to configure releases for - in this case, only the `mcp-server` app
 - When releasing, we need to make sure that not only is the version in the repo's `package.json` is incremented, but also the version in the `dist` folder that we'll actually release from. We can do this by setting `manifestRootsToUpdate`.
@@ -363,7 +363,7 @@ The next post in this series will dive into implementing a different MCP transpo
 Learn more:
 
 - 📖️ [Blog: AI Series](/blog/nx-mcp-vscode-copilot)
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)

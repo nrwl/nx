@@ -1,8 +1,9 @@
 {
   "name": "gradle-batch-runner",
-  "$schema": "node_modules/nx/schemas/project-schema.json",
-  "projectRoot": "packages/gradle/batch-runner",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/gradle/batch-runner/src",
+  "projectType": "library",
+  "tags": [],
   "targets": {
     "assemble": {
       "executor": "@nx/gradle:gradle",

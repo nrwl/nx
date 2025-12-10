@@ -72,7 +72,10 @@ export function Filters({
   return (
     <>
       {/* DESKTOP */}
-      <ul className="hidden gap-1.5 lg:flex" aria-label="Filter blog posts">
+      <ul
+        className="hidden gap-1.5 text-sm lg:flex"
+        aria-label="Filter blog posts"
+      >
         {filters
           .filter((filter) => filter.value !== selectedFilter)
           .map((filter) => (

@@ -3,12 +3,10 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
+  ensurePackage,
 } from '@nx/devkit';
-import {
-  createOrEditViteConfig,
-  viteConfigurationGenerator,
-  vitestGenerator,
-} from '@nx/vite';
+import { createOrEditViteConfig, viteConfigurationGenerator } from '@nx/vite';
+import { nxVersion } from '../../../utils/versions';
 
 import { NormalizedSchema } from '../schema';
 
@@ -37,6 +35,7 @@ export async function addVite(
       inSourceTests: options.inSourceTests,
       imports: [`import vue from '@vitejs/plugin-vue'`],
       plugins: ['vue()'],
+      useEsmExtension: true,
     },
     false
   );
@@ -54,7 +53,10 @@ export async function addVite(
 
 export async function addVitest(tree: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
-  const vitestTask = await vitestGenerator(tree, {
+  ensurePackage('@nx/vitest', nxVersion);
+  const { configurationGenerator } = await import('@nx/vitest/generators');
+
+  const vitestTask = await configurationGenerator(tree, {
     uiFramework: 'none',
     project: options.projectName,
     coverageProvider: 'v8',
@@ -63,6 +65,7 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
     testEnvironment: 'jsdom',
     addPlugin: options.addPlugin,
     runtimeTsconfigFileName: 'tsconfig.app.json',
+    skipViteConfig: true,
   });
   tasks.push(vitestTask);
 
@@ -75,7 +78,10 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
       inSourceTests: options.inSourceTests,
       imports: [`import vue from '@vitejs/plugin-vue'`],
       plugins: ['vue()'],
+      useEsmExtension: true,
     },
+    true,
+    undefined,
     true
   );
 

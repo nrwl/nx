@@ -1,5 +1,4 @@
 import { DependencyType } from '../../../../config/project-graph';
-import type { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
 import { defaultFileRead } from '../../../../project-graph/file-utils';
 import type { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import {
@@ -16,49 +15,47 @@ export function buildExplicitPackageJsonDependencies(
   targetProjectLocator: TargetProjectLocator
 ): RawProjectGraphDependency[] {
   const res: RawProjectGraphDependency[] = [];
-  const nodes = Object.values(ctx.projects);
-  Object.keys(ctx.filesToProcess.projectFileMap).forEach((source) => {
-    Object.values(ctx.filesToProcess.projectFileMap[source]).forEach((f) => {
-      if (isPackageJsonAtProjectRoot(nodes, f.file)) {
-        processPackageJson(source, f.file, ctx, targetProjectLocator, res);
-      }
-    });
-  });
-  return res;
-}
-
-function isPackageJsonAtProjectRoot(
-  nodes: ProjectConfiguration[],
-  fileName: string
-) {
-  return (
-    fileName.endsWith('package.json') &&
-    nodes.find(
-      (projectNode) =>
-        joinPathFragments(projectNode.root, 'package.json') === fileName
+  // Build Set of valid package.json paths once for O(1) lookup
+  // instead of O(n) find() per file
+  const projectPackageJsonPaths = new Set(
+    Object.values(ctx.projects).map((project) =>
+      joinPathFragments(project.root, 'package.json')
     )
   );
+
+  for (const source in ctx.filesToProcess.projectFileMap) {
+    for (const f of Object.values(ctx.filesToProcess.projectFileMap[source])) {
+      if (projectPackageJsonPaths.has(f.file)) {
+        processPackageJson(source, f.file, ctx, targetProjectLocator, res);
+      }
+    }
+  }
+  return res;
 }
 
 function processPackageJson(
   sourceProject: string,
-  fileName: string,
+  packageJsonPath: string,
   ctx: CreateDependenciesContext,
   targetProjectLocator: TargetProjectLocator,
   collectedDeps: RawProjectGraphDependency[]
 ) {
   try {
-    const deps = readDeps(parseJson(defaultFileRead(fileName)));
+    const deps = readDeps(parseJson(defaultFileRead(packageJsonPath)));
 
-    for (const d of Object.keys(deps)) {
+    for (const [packageName, packageVersion] of Object.entries(deps)) {
       const localProject =
-        targetProjectLocator.findDependencyInWorkspaceProjects(d);
+        targetProjectLocator.findDependencyInWorkspaceProjects(
+          packageJsonPath,
+          packageName,
+          packageVersion
+        );
       if (localProject) {
         // package.json refers to another project in the monorepo
         const dependency: RawProjectGraphDependency = {
           source: sourceProject,
           target: localProject,
-          sourceFile: fileName,
+          sourceFile: packageJsonPath,
           type: DependencyType.static,
         };
         validateDependency(dependency, ctx);
@@ -67,8 +64,8 @@ function processPackageJson(
       }
 
       const externalNodeName = targetProjectLocator.findNpmProjectFromImport(
-        d,
-        fileName
+        packageName,
+        packageJsonPath
       );
       if (!externalNodeName) {
         continue;
@@ -77,7 +74,7 @@ function processPackageJson(
       const dependency: RawProjectGraphDependency = {
         source: sourceProject,
         target: externalNodeName,
-        sourceFile: fileName,
+        sourceFile: packageJsonPath,
         type: DependencyType.static,
       };
       validateDependency(dependency, ctx);

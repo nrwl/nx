@@ -292,7 +292,8 @@ describe('@nx/eslint:lint-project', () => {
           ...nx.configs["flat/javascript"],
           {
               ignores: [
-                  "**/dist"
+                  "**/dist",
+                  "**/out-tsc"
               ]
           },
           {
@@ -363,7 +364,8 @@ describe('@nx/eslint:lint-project', () => {
           ...nx.configs["flat/javascript"],
           {
               ignores: [
-                  "**/dist"
+                  "**/dist",
+                  "**/out-tsc"
               ]
           },
           {

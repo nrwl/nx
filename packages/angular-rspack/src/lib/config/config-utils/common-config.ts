@@ -4,6 +4,7 @@ import {
   JS_ALL_EXT_REGEX,
   TS_ALL_EXT_REGEX,
 } from '@nx/angular-rspack-compiler';
+import { workspaceRoot } from '@nx/devkit';
 import {
   HashFormat,
   I18nOptions,
@@ -74,7 +75,8 @@ export async function getCommonConfig(
     resolve: {
       extensions: ['.ts', '.tsx', '.mjs', '.js'],
       symlinks: !normalizedOptions.preserveSymlinks,
-      modules: ['node_modules'],
+      // Make sure we add the root node_modules directory to the node resolver
+      modules: ['node_modules', join(workspaceRoot, 'node_modules')],
       conditionNames: ['es2020', 'es2015', '...'],
       tsConfig: {
         configFile: normalizedOptions.tsConfig,

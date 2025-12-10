@@ -26,7 +26,7 @@ describe('Nx Plugin', () => {
   let workspaceName: string;
 
   beforeAll(() => {
-    workspaceName = newProject();
+    workspaceName = newProject({ packages: ['@nx/plugin'] });
   });
 
   afterAll(() => cleanupProject());

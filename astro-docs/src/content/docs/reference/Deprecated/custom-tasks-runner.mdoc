@@ -1,8 +1,11 @@
 ---
 title: 'Deprecating Custom Tasks Runner'
 description: 'Learn about the transition from Custom Tasks Runner to the new plugin-based API in Nx, including pre and post task execution hooks and self-hosted remote cache options.'
+sidebar:
+  hidden: true
+weight: .1
+filter: 'type:References'
 ---
-
 
 The Custom Task Runners API was created many years ago and has not been supported for several years. It was developed before we introduced a formal method for extending Nx through [plugins](/docs/extending-nx/intro). The API potentially allows modifications to the lifecycle of the Nx command execution, which breaks important invariants that Nx depends on. The new API leverages the plugins API for better performance and functionality.
 

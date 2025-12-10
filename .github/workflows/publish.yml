@@ -3,7 +3,14 @@ name: publish
 on:
   # Automated schedule - canary releases from master
   schedule:
-    - cron: "0 20 * * 1-5" # Monday - Friday, at 20:00 UTC (8pm UTC)
+    - cron: "0 19 * * 1-5" # Monday - Friday, at 19:00 UTC (7pm UTC)
+  # Manual trigger - PR releases or dry-runs (based on workflow inputs)
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "PR Number - If set, a real release will be created for the branch associated with the given PR number. If blank, a dry-run of the currently selected branch will be performed."
+        required: false
+        type: number
   release:
     types: [ published ]
 
@@ -30,7 +37,7 @@ jobs:
   #     ref resolution in actions/checkout. The exact version will be generated within scripts/nx-release.ts.
   #
   # - workflow_dispatch:
-  #   - We are either running a dry-run on the current branch, in which case the version will be statica and we can use
+  #   - We are either running a dry-run on the current branch, in which case the version will be static and we can use
   #     default ref resolution in actions/checkout, or we are creating a PR release for the given PR number, in which case
   #     we should generate an applicable version number within publish-resolve-data.js and use a custom ref of the PR branch name.
   resolve-required-data:
@@ -44,24 +51,23 @@ jobs:
       publish_branch: ${{ steps.script.outputs.publish_branch }}
       ref: ${{ steps.script.outputs.ref }}
       repo: ${{ steps.script.outputs.repo }}
+      pr_number: ${{ steps.script.outputs.pr_number }}
+      pr_author: ${{ steps.script.outputs.pr_author }}
     steps:
       # Default checkout on the triggering branch so that the latest publish-resolve-data.js script is available
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
           check-latest: true
+          package-manager-cache: false
 
       - name: Resolve and set checkout and version data to use for release
         id: script
-        uses: actions/github-script@v7
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           PR_NUMBER: ${{ github.event.inputs.pr }}
         with:
@@ -72,7 +78,7 @@ jobs:
 
       - name: (PR Release Only) Check out latest master
         if: ${{ steps.script.outputs.ref != '' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           # Check out the latest master branch to get its copy of nx-release.ts
           repository: nrwl/nx
@@ -81,24 +87,31 @@ jobs:
 
       - name: (PR Release Only) Check out PR branch
         if: ${{ steps.script.outputs.ref != '' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           # Check out the PR branch to get its copy of nx-release.ts
           repository: ${{ steps.script.outputs.repo }}
           ref: ${{ steps.script.outputs.ref }}
           path: pr-branch-checkout
 
-      - name: (PR Release Only) Ensure that nx-release.ts has not changed in the PR being released
+      - name: (PR Release Only) Ensure that release scripts have not changed in the PR being released
         if: ${{ steps.script.outputs.ref != '' }}
-        env:
-          FILE_TO_COMPARE: "scripts/nx-release.ts"
         run: |
-          if ! cmp -s "latest-master-checkout/${{ env.FILE_TO_COMPARE }}" "pr-branch-checkout/${{ env.FILE_TO_COMPARE }}"; then
-            echo "🛑 Error: The file ${{ env.FILE_TO_COMPARE }} is different on the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} vs latest master on nrwl/nx, cancelling workflow. If you did not modify the file, then you likely just need to rebase/merge latest master."
-            exit 1
-          else
-            echo "✅ The file ${{ env.FILE_TO_COMPARE }} is identical between the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} and latest master on nrwl/nx."
-          fi
+          # List of files that must not change in PR releases
+          FILES_TO_CHECK=(
+            "scripts/nx-release.ts"
+            "scripts/publish-resolve-data.js"
+          )
+
+          for FILE in "${FILES_TO_CHECK[@]}"; do
+            if ! cmp -s "latest-master-checkout/$FILE" "pr-branch-checkout/$FILE"; then
+              echo "🛑 Error: The file $FILE is different on the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} vs latest master on nrwl/nx, cancelling workflow."
+              echo "If you did not modify the file, then you likely just need to rebase/merge latest master."
+              exit 1
+            else
+              echo "✅ The file $FILE is identical between the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} and latest master on nrwl/nx."
+            fi
+          done
 
   build:
     needs: [ resolve-required-data ]
@@ -107,7 +120,7 @@ jobs:
       fail-fast: false
       matrix:
         settings:
-          - host: macos-13
+          - host: macos-latest
             target: x86_64-apple-darwin
             setup: |-
               rustup target add aarch64-apple-darwin
@@ -115,8 +128,13 @@ jobs:
               pnpm nx run-many --target=build-native -- --target=x86_64-apple-darwin
           - host: windows-latest
             setup: |-
+              choco install openjdk --version=21.0.0 -y
               rustup target add aarch64-pc-windows-msvc
-            build: pnpm nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
+            build: |
+              export JAVA_HOME="C:\Program Files\OpenJDK\jdk-21"
+              export PATH="$JAVA_HOME\bin:$PATH"
+              java -version
+              pnpm nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
           # Windows 32bit (not needed)
           # - host: windows-latest
@@ -130,16 +148,22 @@ jobs:
               set -e
               apt-get update
 
+              # Install Java 21
+              apt-get install -y openjdk-21-jdk
+              export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+              export PATH="$JAVA_HOME/bin:$PATH"
+              java --version
+
               curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
               apt-get install -y nodejs=22.16.0-1nodesource1
-            
+
               export PATH="/usr/local/bin:$PATH"
               node --version
               npm --version
-            
+
               npm i -g pnpm@${PNPM_VERSION} --force
               pnpm --version
-            
+
               pnpm install --frozen-lockfile
               rustup target add x86_64-unknown-linux-gnu
               pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-gnu
@@ -150,27 +174,32 @@ jobs:
               bash -c "
                 set -e
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl xz
+                apk add --no-cache curl xz openjdk21
+
+                # Set up Java 21
+                export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+                export PATH=\"\$JAVA_HOME/bin:\$PATH\"
+                java --version
 
                 curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
                 tar -xJf node.tar.xz
                 mv node-v22.16.0-linux-x64-musl /usr/local/node
-            
+
                 export PATH=\"/usr/local/node/bin:\$PATH\"
-            
+
                 echo Node: \$(node -v)
                 echo NPM: \$(npm -v)
-            
+
                 # Install PNPM
                 npm i -g pnpm@${PNPM_VERSION} --force
                 pnpm --version
-            
+
                 # Install deps and run native build
                 pnpm install --frozen-lockfile
                 rustup target add x86_64-unknown-linux-musl
                 pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-musl
               "
-          - host: macos-13
+          - host: macos-latest
             target: aarch64-apple-darwin
             setup: |-
               rustup target add aarch64-apple-darwin
@@ -187,17 +216,23 @@ jobs:
             build: |
               set -e
               apt-get update
-            
+
+              # Install Java 21
+              apt-get install -y openjdk-21-jdk
+              export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+              export PATH="$JAVA_HOME/bin:$PATH"
+              java --version
+
               curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
               apt-get install -y nodejs=22.16.0-1nodesource1
-            
+
               export PATH="/usr/local/bin:$PATH"
               node --version
               npm --version
-            
+
               npm i -g pnpm@${PNPM_VERSION} --force
               pnpm --version
-            
+
               pnpm install --frozen-lockfile
               rustup target add aarch64-unknown-linux-gnu
               pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-gnu
@@ -225,59 +260,61 @@ jobs:
               bash -c "
                 set -e
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl xz
-            
+                apk add --no-cache curl xz openjdk21
+
+                # Set up Java 21
+                export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+                export PATH=\"\$JAVA_HOME/bin:\$PATH\"
+                java --version
+
                 curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
                 tar -xJf node.tar.xz
                 mv node-v22.16.0-linux-x64-musl /usr/local/node
-            
+
                 export PATH=\"/usr/local/node/bin:\$PATH\"
-            
+
                 echo Node: \$(node -v)
                 echo NPM: \$(npm -v)
-            
+
                 # Install PNPM
                 npm i -g pnpm@${PNPM_VERSION} --force
                 pnpm --version
-            
+
                 # Install deps and run native build
                 pnpm install --frozen-lockfile
-                rustup target add aarch64-unknown-linux-musl  
-                pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl  
+                rustup target add aarch64-unknown-linux-musl
+                pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
               "
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             setup: |-
+              choco install openjdk --version=21.0.0 -y
               rustup target add aarch64-pc-windows-msvc
-            build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
+            build: |
+              export JAVA_HOME="C:\Program Files\OpenJDK\jdk-21"
+              export PATH="$JAVA_HOME\bin:$PATH"
+              java -version
+              pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@22.16.0
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
-          repository: ${{ needs.resolve-required-data.outputs.repo }}
-          ref: ${{ needs.resolve-required-data.outputs.ref }}
+          repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
+          ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup node
-        uses: actions/setup-node@v4
+      - name: Setup dev tools with mise
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
         if: ${{ !matrix.settings.docker }}
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          check-latest: true
-          cache: 'pnpm'
 
-      - name: Install
-        uses: dtolnay/rust-toolchain@stable
+      - name: Enable corepack and install pnpm
         if: ${{ !matrix.settings.docker }}
-        with:
-          targets: ${{ matrix.settings.target }}
+        run: |
+          corepack enable
+          corepack prepare --activate
 
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: |
             ~/.cargo/registry/index/
@@ -287,7 +324,7 @@ jobs:
             target/
           key: ${{ matrix.settings.target }}-cargo-registry
 
-      - uses: goto-bus-stop/setup-zig@v2
+      - uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
         if: ${{ matrix.settings.target == 'armv7-unknown-linux-gnueabihf' }}
         with:
           version: 0.10.0
@@ -308,7 +345,7 @@ jobs:
         timeout-minutes: 30
 
       - name: Setup node x86
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         if: matrix.settings.target == 'i686-pc-windows-msvc'
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -317,7 +354,7 @@ jobs:
           architecture: x86
 
       - name: Build in docker
-        uses: addnab/docker-run-action@v3
+        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
         if: ${{ matrix.settings.docker }}
         with:
           image: ${{ matrix.settings.docker }}
@@ -330,7 +367,7 @@ jobs:
         shell: bash
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: bindings-${{ matrix.settings.target }}
           path: |
@@ -345,14 +382,14 @@ jobs:
     name: Build FreeBSD
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
-          repository: ${{ needs.resolve-required-data.outputs.repo }}
-          ref: ${{ needs.resolve-required-data.outputs.ref }}
+          repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
+          ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
       - name: Build
         id: build
-        uses: cross-platform-actions/action@v0.25.0
+        uses: cross-platform-actions/action@462ed697694d2ac9aa49e1225f395f7bb6dd49fe # v0.29.0
         env:
           DEBUG: napi:*
           RUSTUP_IO_THREADS: 1
@@ -368,8 +405,12 @@ jobs:
           run: |
             env
             whoami
-            sudo pkg install -y -f node libnghttp2 www/npm git
+            sudo pkg install -y -f node libnghttp2 www/npm git openjdk17
             sudo npm install --location=global --ignore-scripts pnpm@10.11.1
+            # Set up Java 17
+            export JAVA_HOME=/usr/local/openjdk17
+            export PATH="$JAVA_HOME/bin:$PATH"
+            java --version
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
@@ -386,6 +427,54 @@ jobs:
             freebsd-version
             echo "Installing dependencies"
             pnpm install --frozen-lockfile --ignore-scripts
+            
+            echo "Checking disk space before cleanup"
+            df -h
+            echo "Removing unnecessary preinstalled packages"
+            # List all packages first to see what's installed
+            sudo pkg info -a
+            echo "Cleaning up to free disk space"
+            # Clean package caches
+            sudo pkg clean -a -y
+            sudo pkg autoremove -y
+            # Remove unnecessary system files
+            sudo rm -rf /usr/local/lib/*.a
+            sudo rm -rf /usr/local/share/doc/*
+            sudo rm -rf /usr/local/share/man/*
+            sudo rm -rf /usr/local/share/examples/*
+            sudo rm -rf /usr/local/share/locale/*
+            sudo rm -rf /usr/local/share/gtk-doc/*
+            sudo rm -rf /usr/local/share/info/*
+            sudo rm -rf /usr/src/*
+            sudo rm -rf /usr/obj/*
+            sudo rm -rf /usr/tests/*
+            sudo rm -rf /usr/lib/debug/*
+            # Clean var directories
+            sudo rm -rf /var/cache/pkg/*
+            sudo rm -rf /var/db/pkg/*.tbz
+            sudo rm -rf /var/log/*.log
+            sudo rm -rf /var/log/*.old
+            # Clean temporary files
+            sudo rm -rf /tmp/*
+            sudo rm -rf /var/tmp/*
+            # Remove Python cache if present
+            sudo find /usr/local -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+            sudo find /usr/local -name "*.pyc" -delete 2>/dev/null || true
+            sudo find /usr/local -name "*.pyo" -delete 2>/dev/null || true
+            # Clean npm/pnpm caches
+            npm cache clean --force || true
+            pnpm store prune || true
+            rm -rf ~/.npm || true
+            rm -rf ~/.pnpm-store || true
+            # Remove Rust build artifacts if any
+            rm -rf ~/.cargo/registry || true
+            rm -rf ~/.cargo/git || true
+            rm -rf ~/.rustup/toolchains/*/share || true
+            # Remove other development tool caches
+            rm -rf ~/.cache/* || true
+            echo "Checking disk space after cleanup"
+            df -h
+            
             echo "Building FreeBSD bindings"
             pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
             echo "Cleaning up"
@@ -397,7 +486,7 @@ jobs:
             echo "COMPLETE"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: bindings-freebsd
           path: |
@@ -420,23 +509,19 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
-          repository: ${{ needs.resolve-required-data.outputs.repo }}
-          ref: ${{ needs.resolve-required-data.outputs.ref }}
+          repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
+          ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
+      - name: Setup dev tools with mise
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org'
-          check-latest: true
-          cache: 'pnpm'
-     
+      - name: Enable corepack and install pnpm
+        run: |
+          corepack enable
+          corepack prepare --activate
+
       - name: Use npm 11.5.2
         run: npm install -g npm@11.5.2
 
@@ -444,7 +529,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           path: artifacts
 
@@ -480,11 +565,11 @@ jobs:
 
       - name: (PR Release Only) Create comment for successful PR release
         if: success() && github.event.inputs.pr
-        uses: actions/github-script@v7
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           SUCCESS_COMMENT: ${{ needs.resolve-required-data.outputs.success_comment }}
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # github-token defaults to ${{ github.token }} so we don't need to specify it
           script: |
             const successComment = JSON.parse(process.env.SUCCESS_COMMENT);
             await github.rest.issues.createComment({
@@ -494,22 +579,55 @@ jobs:
               body: successComment
             });
 
+  report-pending-publish:
+    name: Report Pending Publish to Slack
+    if: ${{ github.repository_owner == 'nrwl' }}
+    needs:
+      - resolve-required-data
+      - build-freebsd
+      - build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true  # Don't fail the workflow if notification fails
+    steps:
+      - name: Send Slack notification
+        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
+        with:
+          status: ${{ job.status }}
+          notification_title: >-
+            ${{ needs.resolve-required-data.outputs.pr_number &&
+                format('📦 PR #{0} Publish Pending Review', needs.resolve-required-data.outputs.pr_number) ||
+                '📦 Publish Pending Review' }}
+          message_format: >-
+            ${{ needs.resolve-required-data.outputs.pr_number &&
+                format('Version {0} from PR #{1} by @{2} is being published to NPM - manual review is required',
+                       needs.resolve-required-data.outputs.version,
+                       needs.resolve-required-data.outputs.pr_number,
+                       needs.resolve-required-data.outputs.pr_author) ||
+                format('Version {0} is being published to NPM - manual review is required',
+                       needs.resolve-required-data.outputs.version) }}
+          footer: '<{run_url}|View Workflow Run>'
+          mention_users: 'U9NPA6C90' # Jason
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+
   pr_failure_comment:
     # Run this job if it is a PR release, running on the nrwl origin, and any of the required jobs failed
     if: ${{ github.repository_owner == 'nrwl' && github.event.inputs.pr && always() && contains(needs.*.result, 'failure') }}
     needs: [ resolve-required-data, build, build-freebsd, publish ]
     name: (PR Release Failure Only) Create comment for failed PR release
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: Create comment for failed PR release
-        uses: actions/github-script@v7
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           # This script is intentionally kept inline (and e.g. not generated in publish-resolve-data.js)
           # to ensure that an error within the data generation itself is not missed.
           script: |
             const message = `
-              Failed to publish a PR release of this pull request, triggered by @${{ github.triggering_actor }}. 
+              Failed to publish a PR release of this pull request, triggered by @${{ github.triggering_actor }}.
               See the failed workflow run at: https://github.com/nrwl/nx/actions/runs/${{ github.run_id }}
             `;
             await github.rest.issues.createComment({
@@ -518,3 +636,4 @@ jobs:
               issue_number: ${{ github.event.inputs.pr }},
               body: message
             });
+

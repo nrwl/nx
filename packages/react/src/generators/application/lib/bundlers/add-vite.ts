@@ -11,7 +11,7 @@ export async function setupViteConfiguration(
     typeof import('@nx/vite')
   >('@nx/vite', nxVersion);
   // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
-  // See: https://vitejs.dev/guide/env-and-mode.html
+  // See: https://vite.dev/guide/env-and-mode.html
   if (
     tree.exists(joinPathFragments(options.appProjectRoot, 'src/environments'))
   ) {
@@ -55,6 +55,7 @@ export async function setupViteConfiguration(
       rollupOptionsExternal: ["'react'", "'react-dom'", "'react/jsx-runtime'"],
       port: options.port,
       previewPort: options.port,
+      useEsmExtension: true,
       ...(options.useReactRouter
         ? reactRouterFrameworkConfig
         : baseReactConfig),
@@ -68,11 +69,14 @@ export async function setupVitestConfiguration(
   options: NormalizedSchema<Schema>,
   tasks: any[]
 ) {
-  const { createOrEditViteConfig, vitestGenerator } = ensurePackage<
-    typeof import('@nx/vite')
-  >('@nx/vite', nxVersion);
+  const { createOrEditViteConfig } = ensurePackage<typeof import('@nx/vite')>(
+    '@nx/vite',
+    nxVersion
+  );
+  ensurePackage('@nx/vitest', nxVersion);
+  const { configurationGenerator } = await import('@nx/vitest/generators');
 
-  const vitestTask = await vitestGenerator(tree, {
+  const vitestTask = await configurationGenerator(tree, {
     uiFramework: 'react',
     coverageProvider: 'v8',
     project: options.projectName,
@@ -95,13 +99,14 @@ export async function setupVitestConfiguration(
           : `import react from '@vitejs/plugin-react'`,
       ],
       plugins: ['react()'],
+      useEsmExtension: true,
     },
     true
   );
   if (options.bundler === 'rsbuild') {
     tree.rename(
-      joinPathFragments(options.appProjectRoot, 'vite.config.ts'),
-      joinPathFragments(options.appProjectRoot, 'vitest.config.ts')
+      joinPathFragments(options.appProjectRoot, 'vite.config.mts'),
+      joinPathFragments(options.appProjectRoot, 'vitest.config.mts')
     );
   }
 }

@@ -13,7 +13,7 @@ import {
 } from '../../../config/project-graph';
 import {
   CreateDependenciesContext,
-  CreateNodesContext,
+  CreateNodesContextV2,
 } from '../../../project-graph/plugins';
 import { RawProjectGraphDependency } from '../../../project-graph/project-graph-builder';
 import { readJsonFile } from '../../../utils/fileutils';
@@ -73,8 +73,11 @@ export function getLockFileNodes(
   packageManager: PackageManager,
   contents: string,
   lockFileHash: string,
-  context: CreateNodesContext
-): Record<string, ProjectGraphExternalNode> {
+  context: CreateNodesContextV2
+): {
+  nodes: Record<string, ProjectGraphExternalNode>;
+  keyMap: Map<string, any>;
+} {
   try {
     if (packageManager === 'yarn') {
       const packageJson = readJsonFile(
@@ -92,7 +95,8 @@ export function getLockFileNodes(
       const lockFilePath = getLockFilePath(packageManager);
       if (lockFilePath.endsWith(BUN_TEXT_LOCK_FILE)) {
         // Use new text-based parser
-        return getBunTextLockfileNodes(contents, lockFileHash);
+        const nodes = getBunTextLockfileNodes(contents, lockFileHash);
+        return { nodes, keyMap: new Map() };
       } else {
         // Fallback to yarn parser for binary format
         const packageJson = readJsonFile(
@@ -120,25 +124,47 @@ export function getLockFileDependencies(
   packageManager: PackageManager,
   contents: string,
   lockFileHash: string,
-  context: CreateDependenciesContext
+  context: CreateDependenciesContext,
+  keyMap: Map<string, any>
 ): RawProjectGraphDependency[] {
   try {
     if (packageManager === 'yarn') {
-      return getYarnLockfileDependencies(contents, lockFileHash, context);
+      return getYarnLockfileDependencies(
+        contents,
+        lockFileHash,
+        context,
+        keyMap
+      );
     }
     if (packageManager === 'pnpm') {
-      return getPnpmLockfileDependencies(contents, lockFileHash, context);
+      return getPnpmLockfileDependencies(
+        contents,
+        lockFileHash,
+        context,
+        keyMap
+      );
     }
     if (packageManager === 'npm') {
-      return getNpmLockfileDependencies(contents, lockFileHash, context);
+      return getNpmLockfileDependencies(
+        contents,
+        lockFileHash,
+        context,
+        keyMap
+      );
     }
     if (packageManager === 'bun') {
       const lockFilePath = getLockFilePath(packageManager);
       if (lockFilePath.endsWith(BUN_TEXT_LOCK_FILE)) {
+        // Bun parser doesn't use keyMap
         return getBunTextLockfileDependencies(contents, lockFileHash, context);
       } else {
         // Fallback to yarn parser for binary format
-        return getYarnLockfileDependencies(contents, lockFileHash, context);
+        return getYarnLockfileDependencies(
+          contents,
+          lockFileHash,
+          context,
+          keyMap
+        );
       }
     }
   } catch (e) {
@@ -252,7 +278,12 @@ export function createLockFile(
     }
     if (packageManager === 'pnpm') {
       const prunedGraph = pruneProjectGraph(graph, packageJson);
-      return stringifyPnpmLockfile(prunedGraph, content, normalizedPackageJson);
+      return stringifyPnpmLockfile(
+        prunedGraph,
+        content,
+        normalizedPackageJson,
+        workspaceRoot
+      );
     }
     if (packageManager === 'npm') {
       const prunedGraph = pruneProjectGraph(graph, packageJson);

@@ -1,6 +1,7 @@
 ---
 title: Dependency Management Strategies
 description: Compare independently maintained dependencies versus single version policy approaches for monorepos, with guidance on choosing the right strategy for your team.
+filter: 'type:Concepts'
 ---
 
 When working with a monorepo, one of the key architectural decisions is how to manage dependencies across your projects. This document outlines two main strategies and helps you choose the right approach for your team.
@@ -43,6 +44,10 @@ This strategy centralizes all dependency definitions in the root `package.json` 
 For building and deployment, you'll need to ensure each project only includes its relevant dependencies. Nx helps manage this through its workspace dependency graph and the `@nx/dependency-checks` ESLint rule, which can automatically detect and fix dependency mismatches between project and root configurations.
 
 The main challenge with this approach is coordinating dependency updates across independent teams. When multiple teams work on different, or even the same, applications within the same repo, they need to align on dependency upgrades. While this requires more coordination, it often results in less total work - upgrading a dependency once across all projects is typically more efficient than managing multiple separate upgrades over time.
+
+{% aside type="tip" title="PNPM Catalog Support" %}
+When using PNPM, use [PNPM catalogs](https://pnpm.io/catalogs) to maintain single version policy. Define versions in `pnpm-workspace.yaml` and reference them as `"<package>": "catalog:"` in project `package.json` files (Nx 22+).
+{% /aside %}
 
 **Pros:**
 

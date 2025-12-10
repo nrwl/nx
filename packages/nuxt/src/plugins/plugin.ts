@@ -1,8 +1,7 @@
 import type { NuxtOptions } from '@nuxt/schema';
 import {
   CreateDependencies,
-  CreateNodes,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
@@ -51,12 +50,12 @@ export interface NuxtPluginOptions {
   watchDepsTargetName?: string;
 }
 
-export const createNodesV2: CreateNodesV2<NuxtPluginOptions> = [
+export const createNodes: CreateNodesV2<NuxtPluginOptions> = [
   '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
   async (files, options, context) => {
     //TODO(@nrwl/nx-vue-reviewers): This should batch hashing like our other plugins.
     const result = await createNodesFromFiles(
-      createNodes[1],
+      createNodesInternal,
       files,
       options,
       context
@@ -66,50 +65,53 @@ export const createNodesV2: CreateNodesV2<NuxtPluginOptions> = [
   },
 ];
 
-export const createNodes: CreateNodes<NuxtPluginOptions> = [
-  '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
-  async (configFilePath, options, context) => {
-    const projectRoot = dirname(configFilePath);
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
-    }
+export const createNodesV2 = createNodes;
 
-    options = normalizeOptions(options);
+async function createNodesInternal(
+  configFilePath: string,
+  options: NuxtPluginOptions,
+  context: CreateNodesContextV2
+) {
+  const projectRoot = dirname(configFilePath);
+  // Do not create a project if package.json and project.json isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return {};
+  }
 
-    const hash = await calculateHashForCreateNodes(
-      projectRoot,
-      options,
-      context,
-      [getLockFileName(detectPackageManager(context.workspaceRoot))]
-    );
-    targetsCache[hash] ??= await buildNuxtTargets(
-      configFilePath,
-      projectRoot,
-      options,
-      context
-    );
+  options = normalizeOptions(options);
 
-    return {
-      projects: {
-        [projectRoot]: {
-          root: projectRoot,
-          targets: targetsCache[hash],
-        },
+  const hash = await calculateHashForCreateNodes(
+    projectRoot,
+    options,
+    context,
+    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+  );
+  targetsCache[hash] ??= await buildNuxtTargets(
+    configFilePath,
+    projectRoot,
+    options,
+    context
+  );
+
+  return {
+    projects: {
+      [projectRoot]: {
+        root: projectRoot,
+        targets: targetsCache[hash],
       },
-    };
-  },
-];
+    },
+  };
+}
 
 async function buildNuxtTargets(
   configFilePath: string,
   projectRoot: string,
   options: NuxtPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ) {
   const nuxtConfig: {
     buildDir: string;
@@ -234,7 +236,7 @@ function buildStaticTarget(
 
 async function getInfoFromNuxtConfig(
   configFilePath: string,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   projectRoot: string
 ): Promise<{
   buildDir: string;

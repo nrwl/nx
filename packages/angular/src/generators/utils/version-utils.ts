@@ -1,4 +1,4 @@
-import { readJson, type Tree } from '@nx/devkit';
+import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
 import {
   backwardCompatibleVersions,
@@ -10,15 +10,18 @@ import { angularVersion } from '../../utils/versions';
 
 export function getInstalledAngularDevkitVersion(tree: Tree): string | null {
   return (
-    getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
-    getInstalledPackageVersion(tree, '@angular/build')
+    getDependencyVersionFromPackageJson(
+      tree,
+      '@angular-devkit/build-angular'
+    ) ?? getDependencyVersionFromPackageJson(tree, '@angular/build')
   );
 }
 
 export function getInstalledAngularVersion(tree: Tree): string {
-  const pkgJson = readJson(tree, 'package.json');
-  const installedAngularVersion =
-    pkgJson.dependencies && pkgJson.dependencies['@angular/core'];
+  const installedAngularVersion = getDependencyVersionFromPackageJson(
+    tree,
+    '@angular/core'
+  );
 
   if (
     !installedAngularVersion ||
@@ -46,18 +49,8 @@ export function getInstalledAngularVersionInfo(tree: Tree) {
   };
 }
 
-export function getInstalledPackageVersion(
-  tree: Tree,
-  pkgName: string
-): string | null {
-  const { dependencies, devDependencies } = readJson(tree, 'package.json');
-  const version = dependencies?.[pkgName] ?? devDependencies?.[pkgName];
-
-  return version;
-}
-
 export function getInstalledPackageVersionInfo(tree: Tree, pkgName: string) {
-  const version = getInstalledPackageVersion(tree, pkgName);
+  const version = getDependencyVersionFromPackageJson(tree, pkgName);
 
   return version ? { major: major(coerce(version)), version } : null;
 }

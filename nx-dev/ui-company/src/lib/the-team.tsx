@@ -39,7 +39,7 @@ const teamMembers = [
   },
   {
     name: 'Colum Ferry',
-    title: 'Senior Engineer',
+    title: 'Architect',
     imageUrl: 'colum-ferry.avif',
   },
   {
@@ -51,11 +51,6 @@ const teamMembers = [
     name: 'Craigory Coppola',
     title: 'Senior Engineer',
     imageUrl: 'craigory-coppola.avif',
-  },
-  {
-    name: 'Emily Xiong',
-    title: 'Senior Engineer',
-    imageUrl: 'emily-xiong.avif',
   },
   {
     name: 'Dillon Chanis',
@@ -71,11 +66,6 @@ const teamMembers = [
     name: 'Heidi Grütter',
     title: 'Director of Product Marketing',
     imageUrl: 'heidi-grutter.avif',
-  },
-  {
-    name: 'Isaac Mann',
-    title: 'Architect',
-    imageUrl: 'isaac-mann.avif',
   },
   {
     name: 'Jack Butler',
@@ -113,11 +103,6 @@ const teamMembers = [
     imageUrl: 'jonathan-cammisuli.avif',
   },
   {
-    name: 'Jordan Powell',
-    title: 'Developer Productivity Engineer',
-    imageUrl: 'jordan-powell.avif',
-  },
-  {
     name: 'Josh VanAllen',
     title: 'Developer Productivity Engineer',
     imageUrl: 'josh-vanallen.avif',
@@ -148,11 +133,6 @@ const teamMembers = [
     imageUrl: 'mark-lindsey.avif',
   },
   {
-    name: 'Mike Hartington',
-    title: 'Director of Developer Relations',
-    imageUrl: 'mike-hartington.avif',
-  },
-  {
     name: 'Miroslav Jonas',
     title: 'Developer Productivity Engineer',
     imageUrl: 'miroslav-jonas.avif',
@@ -163,11 +143,6 @@ const teamMembers = [
     imageUrl: 'nate-bohn.avif',
   },
   {
-    name: 'Nicholas Cunningham',
-    title: 'Senior Engineer',
-    imageUrl: 'nicholas-cunningham.avif',
-  },
-  {
     name: 'Nicole Oliver',
     title: 'Senior Engineer',
     imageUrl: 'nicole-oliver.avif',
@@ -176,11 +151,6 @@ const teamMembers = [
     name: 'Patrick Mariglia',
     title: 'Software Engineer',
     imageUrl: 'patrick-mariglia.avif',
-  },
-  {
-    name: 'Phillip Dacosta',
-    title: 'Software Engineer',
-    imageUrl: 'phillip-dacosta.avif',
   },
   {
     name: 'Philip Fulcher',
@@ -209,7 +179,7 @@ const teamMembers = [
   },
   {
     name: 'Zack DeRose',
-    title: 'Architect',
+    title: 'Developer Productivity Engineer',
     imageUrl: 'zack-derose.avif',
   },
 ];

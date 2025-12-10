@@ -80,6 +80,7 @@ describe('preset', () => {
       module.exports = {
         output: {
           path: join(__dirname, '../../dist/apps/react-preset-monorepo'),
+          clean: true,
         },
         devServer: {
           port: 4200,
@@ -121,7 +122,7 @@ describe('preset', () => {
       linter: 'eslint',
     });
     expect(tree.exists(`apps/${name}/src/main.ts`)).toBe(true);
-    expect(tree.read(`apps/${name}/vite.config.ts`, 'utf-8'))
+    expect(tree.read(`apps/${name}/vite.config.mts`, 'utf-8'))
       .toMatchInlineSnapshot(`
       "/// <reference types='vitest' />
       import { defineConfig } from 'vite';
@@ -130,7 +131,7 @@ describe('preset', () => {
       import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
       export default defineConfig(() => ({
-        root: __dirname,
+        root: import.meta.dirname,
         cacheDir: '../../node_modules/.vite/apps/vue-preset-monorepo',
         server: {
           port: 4200,
@@ -178,7 +179,8 @@ describe('preset', () => {
       style: 'css',
       linter: 'eslint',
     });
-    expect(tree.exists(`apps/${name}/src/app.vue`)).toBe(true);
+    // Nuxt v4 uses app directory structure by default
+    expect(tree.exists(`apps/${name}/app/app.vue`)).toBe(true);
     expect(readProjectConfiguration(tree, name)).toBeDefined();
   });
 
@@ -234,6 +236,7 @@ describe('preset', () => {
       module.exports = {
         output: {
           path: join(__dirname, 'dist/react-standalone-preset-webpack'),
+          clean: true,
         },
         devServer: {
           port: 4200,
@@ -275,8 +278,8 @@ describe('preset', () => {
       linter: 'eslint',
       bundler: 'vite',
     });
-    expect(tree.exists('vite.config.ts')).toBe(true);
-    expect(tree.read('vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.exists('vite.config.mts')).toBe(true);
+    expect(tree.read('vite.config.mts', 'utf-8')).toMatchInlineSnapshot(`
       "/// <reference types='vitest' />
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
@@ -284,7 +287,7 @@ describe('preset', () => {
       import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
       export default defineConfig(() => ({
-        root: __dirname,
+        root: import.meta.dirname,
         cacheDir: './node_modules/.vite/react-standalone-preset-vite',
         server: {
           port: 4200,
@@ -332,8 +335,8 @@ describe('preset', () => {
       style: 'css',
       e2eTestRunner: 'cypress',
     });
-    expect(tree.exists('vite.config.ts')).toBe(true);
-    expect(tree.read('vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.exists('vite.config.mts')).toBe(true);
+    expect(tree.read('vite.config.mts', 'utf-8')).toMatchInlineSnapshot(`
       "/// <reference types='vitest' />
       import { defineConfig } from 'vite';
       import vue from '@vitejs/plugin-vue';
@@ -341,7 +344,7 @@ describe('preset', () => {
       import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
       export default defineConfig(() => ({
-        root: __dirname,
+        root: import.meta.dirname,
         cacheDir: './node_modules/.vite/vue-standalone-preset',
         server: {
           port: 4200,

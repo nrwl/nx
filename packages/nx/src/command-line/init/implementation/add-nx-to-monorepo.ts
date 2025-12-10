@@ -1,6 +1,6 @@
 import { prompt } from 'enquirer';
 import { readdirSync, readFileSync, statSync } from 'fs';
-import ignore from 'ignore';
+import ignore = require('ignore');
 import { join, relative } from 'path';
 import { InitArgs } from '../init-v1';
 import { readJsonFile } from '../../../utils/fileutils';

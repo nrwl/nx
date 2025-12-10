@@ -215,3 +215,60 @@ export function addExperimentalSwcPlugin(
 
   tree.write(configFilePath, configContents);
 }
+
+export function addSourceDefine(
+  tree: Tree,
+  configFilePath: string,
+  key: string,
+  value: string
+) {
+  const SOURCE_CONFIG_SELECTOR =
+    'CallExpression:has(Identifier[name=defineConfig]) ObjectLiteralExpression PropertyAssignment:has(Identifier[name=source]) > ObjectLiteralExpression';
+  const DEFINE_OBJECT_SELECTOR =
+    'CallExpression:has(Identifier[name=defineConfig]) ObjectLiteralExpression PropertyAssignment:has(Identifier[name=source]) ObjectLiteralExpression PropertyAssignment:has(Identifier[name=define]) > ObjectLiteralExpression';
+
+  let configContents = tree.read(configFilePath, 'utf-8');
+  const ast = tsquery.ast(configContents);
+
+  const defineProperty = `'${key}': '${value}'`;
+
+  const sourceConfigNodes = tsquery(ast, SOURCE_CONFIG_SELECTOR);
+  if (sourceConfigNodes.length === 0) {
+    const defineConfigNodes = tsquery(ast, DEFINE_CONFIG_SELECTOR);
+    if (defineConfigNodes.length === 0) {
+      throw new Error(
+        `Could not find 'defineConfig' in the config file at ${configFilePath}.`
+      );
+    }
+    const defineConfigNode = defineConfigNodes[0];
+    configContents = `${configContents.slice(
+      0,
+      defineConfigNode.getStart() + 1
+    )}\n${indentBy(1)(
+      `source: {\n${indentBy(1)(
+        `define: {\n${indentBy(1)(defineProperty)},\n}`
+      )},\n}`
+    )},${configContents.slice(defineConfigNode.getStart() + 1)}`;
+  } else {
+    const sourceConfigNode = sourceConfigNodes[0];
+    const defineObjectNodes = tsquery(ast, DEFINE_OBJECT_SELECTOR);
+    if (defineObjectNodes.length === 0) {
+      configContents = `${configContents.slice(
+        0,
+        sourceConfigNode.getStart() + 1
+      )}\n${indentBy(2)(
+        `define: {\n${indentBy(1)(defineProperty)},\n},`
+      )}\n\t\t${configContents.slice(sourceConfigNode.getStart() + 1)}`;
+    } else {
+      const defineObjectNode = defineObjectNodes[0];
+      configContents = `${configContents.slice(
+        0,
+        defineObjectNode.getStart() + 1
+      )}\n${indentBy(3)(defineProperty)},\n\t\t\t${configContents.slice(
+        defineObjectNode.getStart() + 1
+      )}`;
+    }
+  }
+
+  tree.write(configFilePath, configContents);
+}

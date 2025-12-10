@@ -7,6 +7,19 @@ export const yargsInitCommand: CommandModule = {
     'Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up remote caching. For more info, check https://nx.dev/recipes/adopting-nx.',
   builder: (yargs) => withInitOptions(yargs),
   handler: async (args: any) => {
+    // Node 24 has stricter readline behavior, and enquirer is not checking for closed state
+    // when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
+    process.on('uncaughtException', (error) => {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error['code'] === 'ERR_USE_AFTER_CLOSE'
+      )
+        return;
+      throw error;
+    });
+
     try {
       const useV2 = await isInitV2();
       if (useV2) {
@@ -55,6 +68,12 @@ async function withInitOptions(yargs: Argv) {
           'Force the migration to continue and ignore custom webpack setup or uncommitted changes. Only for CRA projects.',
         type: 'boolean',
         default: false,
+      })
+      .option('aiAgents', {
+        type: 'array',
+        string: true,
+        description: 'List of AI agents to set up.',
+        choices: ['claude', 'codex', 'copilot', 'cursor', 'gemini'],
       });
   } else {
     return yargs

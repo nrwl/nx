@@ -1,10 +1,11 @@
 ---
 title: Adding Nx to NPM/Yarn/PNPM Workspace
 description: Learn how to integrate Nx into an existing NPM, Yarn, or PNPM workspace monorepo to gain task scheduling, caching, and improved CI performance.
+filter: 'type:Guides'
+weight: 6.4
 sidebar:
   label: NPM/Yarn/PNPM workspaces
 ---
-
 
 {% aside type="note" title="Migrating from Lerna?" %}
 Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Lerna v6 is
@@ -28,7 +29,7 @@ add an `nx.json` for configuring caching and task pipelines.
 
 Run the following command to automatically set up Nx:
 
-```shell {% frame="none" %}
+```shell
 npx nx@latest init
 ```
 
@@ -36,7 +37,7 @@ Running this command will ask you a few questions about your workspace and then 
 process detects tools which are used in your workspace and suggests installing Nx plugins to integrate the tools you use
 with Nx. Running those tools through Nx will have caching enabled when possible, providing you with a faster alternative
 for running those tools. You can start with a few to see how it works and then add more with
-the [`nx add`](/docs/reference/nx-commands#add) command later. You can also decide to add them all and get the full experience
+the [`nx add`](/docs/reference/nx-commands#nx-add) command later. You can also decide to add them all and get the full experience
 right
 away because adding plugins will not break your existing workflow.
 
@@ -111,12 +112,13 @@ configuring the plugins on the [`@nx/next/plugin`](/docs/technologies/react/next
 To view all available tasks, open the Project Details view with Nx Console or use the terminal to launch the project
 details in a browser window.
 
-```shell {% frame="none" %}
+```shell
 nx show project my-workspace --web
 ```
 
 {% project_details title="Project Details View" %}
 
+```json
 {
   "project": {
     "name": "my-workspace",
@@ -244,6 +246,7 @@ nx show project my-workspace --web
     ]
   }
 }
+```
 
 {% /project_details %}
 
@@ -298,14 +301,14 @@ initially using Nx just for a subset of your scripts and then gradually adding m
 
 For example, use Nx to run your builds:
 
-```shell {% frame="none" %}
+```shell
 npx nx run-many -t build
 ```
 
 But instead keep using NPM/Yarn/PNPM workspace commands for your tests and other scripts. Here's an example of using
 PNPM commands to run tests across packages
 
-```shell {% frame="none" %}
+```shell
 pnpm run -r test
 ```
 
@@ -320,7 +323,8 @@ This tutorial walked you through how Nx can improve the local development experi
 - Nx Agents [efficiently distribute tasks across machines](/docs/concepts/ci-concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/docs/features/ci-features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/docs/features/ci-features/flaky-tasks).
 
-### Connect to Nx Cloud 
+### Connect to Nx Cloud
+
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
 Now that we're working on the CI pipeline, it is important for your changes to be pushed to a GitHub repository.
@@ -331,7 +335,7 @@ Now that we're working on the CI pipeline, it is important for your changes to b
 
 Now connect your repository to Nx Cloud with the following command:
 
-```shell {% frame="none" %}
+```shell
 npx nx@latest connect
 ```
 
@@ -345,17 +349,17 @@ Once the PR is created, merge it into your main branch.
 
 And make sure you pull the latest changes locally:
 
-```shell {% frame="none" %}
+```shell
 git pull
 ```
 
 You should now have an `nxCloudId` property specified in the `nx.json` file.
 
-### Create a CI Workflow 
+### Create a CI Workflow
 
 Use the following command to generate a CI workflow file.
 
-```shell {% frame="none" %}
+```shell
 npx nx generate ci-workflow --ci=github
 ```
 
@@ -364,7 +368,7 @@ This generator creates a `.github/workflows/ci.yml` file that contains a CI pipe
 The key lines in the CI pipeline are:
 
 ```yml {% meta="{11-15,22-23}" %}
-// .github/workflows/ci.yml" 
+// .github/workflows/ci.yml"
 name: CI
 # ...
 jobs:
@@ -385,7 +389,7 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
       - uses: nrwl/nx-set-shas@v4
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
@@ -395,7 +399,7 @@ jobs:
 
 Commit the changes and open a new PR on GitHub.
 
-```shell {% frame="none" %}
+```shell
 git add .
 git commit -m 'add CI workflow file'
 git push origin add-workflow
@@ -410,7 +414,6 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 ![Run details](../../../../assets/guides/adopting-nx/nx-cloud-run-details.avif)
 
 For more information about how Nx can improve your CI pipeline, check out our [detailed tutorial for you CI provider](/docs/guides/nx-cloud/setup-ci).
-
 
 ## Learn More
 

@@ -40,7 +40,7 @@ If you haven't subscribed yet, please do 🙏: [https://www.youtube.com/@nxdevto
 
 Nx has been designed to be extensible from the ground up. Which is precisely why Nx Plugins are so powerful. They don't just come as part of an Nx integrated monorepo or standalone setup. Still, you can leverage them in the same way to automate your local workspace or even share them as proper Nx plugins with the community.
 
-Please have a look at our updated guide: [/extending-nx/tutorials/organization-specific-plugin](/extending-nx/tutorials/organization-specific-plugin)
+Please have a look at our updated guide: [/extending-nx/tutorials/organization-specific-plugin](/docs/extending-nx/organization-specific-plugin)
 
 ## Nx meets Node — First-Class Support landed
 
@@ -59,7 +59,7 @@ All the features Nx is known for also apply to backend development. That include
 - avoiding monolithic codebases via **modularizing it with local libraries** (with code generation support)
 - Ability to **automatically setup a Dockerfile** for packaging your app
 - **Optionally bundle** your Node app for easy deployment in the case of edge-functions
-- **Speed** via running building, linting, testing for only **(**[**affected**](/ci/features/affected)**) parts of your applications**, via [caching](/concepts/how-caching-works) and [optimized CI setups](/ci/features/distribute-task-execution)
+- **Speed** via running building, linting, testing for only **(**[**affected**](/docs/features/ci-features/affected)**) parts of your applications**, via [caching](/docs/concepts/how-caching-works) and [optimized CI setups](/docs/features/ci-features/distribute-task-execution)
 - the ability to use and/or expand to a monorepo
 
 This is the first iteration with first-class Node support. But we're already working on a whole set of improvements for the Nx + Node story. So stay tuned!
@@ -88,7 +88,7 @@ $ nx migrate latest --from=nx@<version>
 
 In particular, we're working on making that part more intuitive in upcoming versions.
 
-Also, have a look at our [updated docs](/recipes/tips-n-tricks/advanced-update) as well as our [Nx and Angular compatibility matrix](/technologies/angular/recipes/angular-nx-version-matrix) for more details.
+Also, have a look at our [updated docs](/docs/guides/tips-n-tricks/advanced-update) as well as our [Nx and Angular compatibility matrix](/docs/technologies/angular/guides/angular-nx-version-matrix) for more details.
 
 ## Bootstrapping a new Angular app with Standalone API support
 
@@ -145,13 +145,13 @@ Previously when you created a new React application with the Nx `@nrwl/react` pl
 
 ![](/blog/images/2023-02-16/1rWmKSybkBC8I-0O.avif)
 
-It was for a good reason, but at the same time, it is a thin line to walk between giving more flexibility and ensuring integrity and consistency (not to speak about features such as [automated code migrations](/features/automate-updating-dependencies)). We wrote a [blog post about it last week](/blog/configuration-files-and-potholes-in-your-codebase).
+It was for a good reason, but at the same time, it is a thin line to walk between giving more flexibility and ensuring integrity and consistency (not to speak about features such as [automated code migrations](/docs/features/automate-updating-dependencies)). We wrote a [blog post about it last week](/blog/configuration-files-and-potholes-in-your-codebase).
 
-Inspired by our new [Vite setup](/technologies/build-tools/vite/introduction), which allows for a more modular configuration in the `vite.config.ts`, we wanted to bring some of the same flexibility to our Webpack setup as well. As such, now every Nx Webpack setup (e.g. a new React + Webpack based app) have a `webpack.config.js` in the project root. Old project are automatically migrated to this new setup.
+Inspired by our new [Vite setup](/docs/technologies/build-tools/vite/introduction), which allows for a more modular configuration in the `vite.config.ts`, we wanted to bring some of the same flexibility to our Webpack setup as well. As such, now every Nx Webpack setup (e.g. a new React + Webpack based app) have a `webpack.config.js` in the project root. Old project are automatically migrated to this new setup.
 
 ![](/blog/images/2023-02-16/emRP2gF7umWc4UE-.avif)
 
-If you want to upgrade but still retain the previous behavior, we introduced an `isolatedConfig` mode that can be set to `false`. More details in our docs: [/technologies/build-tools/webpack/recipes/webpack-config-setup](/technologies/build-tools/webpack/recipes/webpack-config-setup)
+If you want to upgrade but still retain the previous behavior, we introduced an `isolatedConfig` mode that can be set to `false`. More details in our docs: [/technologies/build-tools/webpack/recipes/webpack-config-setup](/docs/technologies/build-tools/webpack/guides/webpack-config-setup)
 
 ## How to Update Nx
 
@@ -182,7 +182,7 @@ So keep an eye on our [Twitter](https://twitter.com/nxdevtools), [Youtube](https
 
 ## Learn more
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)

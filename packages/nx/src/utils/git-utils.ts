@@ -8,7 +8,7 @@ function execAsync(command: string, execOptions: ExecOptions) {
       if (err) {
         return rej(err);
       }
-      res(stdout);
+      res(stdout.toString());
     });
   });
 }
@@ -289,11 +289,12 @@ export function parseVcsRemoteUrl(url: string): VcsRemoteInfo | null {
   return null;
 }
 
-export function getVcsRemoteInfo(): VcsRemoteInfo | null {
+export function getVcsRemoteInfo(directory?: string): VcsRemoteInfo | null {
   try {
     const gitRemote = execSync('git remote -v', {
       stdio: 'pipe',
       windowsHide: false,
+      cwd: directory,
     })
       .toString()
       .trim();

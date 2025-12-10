@@ -19,9 +19,6 @@
     },
     "rename-test-path-pattern": {
       "version": "21.3.0-beta.3",
-      "requires": {
-        "jest": ">=30.0.0"
-      },
       "description": "Rename the CLI option `testPathPattern` to `testPathPatterns`.",
       "implementation": "./src/migrations/update-21-3-0/rename-test-path-pattern"
     },
@@ -32,54 +29,20 @@
       },
       "description": "Replace removed matcher aliases in Jest v30 with their corresponding matcher",
       "implementation": "./src/migrations/update-21-3-0/replace-removed-matcher-aliases"
+    },
+    "convert-jest-config-to-cjs": {
+      "version": "22.2.0-beta.2",
+      "description": "Convert jest.config.ts files from ESM to CJS syntax (export default -> module.exports, import -> require) for projects using CommonJS resolution to ensure correct loading under Node.js type-stripping.",
+      "implementation": "./src/migrations/update-22-2-0/convert-jest-config-to-cjs"
     }
   },
   "packageJsonUpdates": {
-    "19.2.0": {
-      "version": "19.2.0-beta.0",
-      "packages": {
-        "@swc/jest": {
-          "version": "~0.2.36",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "19.6.0": {
-      "version": "19.6.0-beta.1",
-      "packages": {
-        "jest": {
-          "version": "~29.7.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/jest": {
-          "version": "~29.5.12",
-          "alwaysAddToPackageJson": false
-        },
-        "expect": {
-          "version": "~29.7.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@jest/globals": {
-          "version": "~29.7.0",
-          "alwaysAddToPackageJson": false
-        },
-        "jest-jasmine2": {
-          "version": "~29.7.0",
-          "alwaysAddToPackageJson": false
-        },
-        "jest-environment-jsdom": {
-          "version": "~29.7.0",
-          "alwaysAddToPackageJson": false
-        },
-        "babel-jest": {
-          "version": "~29.7.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "21.3.0": {
       "version": "21.3.0-beta.3",
       "x-prompt": "Do you want to update the Jest version to v30?",
+      "incompatibleWith": {
+        "@angular-devkit/build-angular": "*"
+      },
       "packages": {
         "jest": {
           "version": "~30.0.0",

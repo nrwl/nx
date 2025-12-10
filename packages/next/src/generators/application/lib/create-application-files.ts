@@ -17,8 +17,12 @@ import {
   createStyleRules,
 } from './create-application-files.helpers';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isNext16 } from '../../../utils/version-utils';
 
-export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
+export async function createApplicationFiles(
+  host: Tree,
+  options: NormalizedSchema
+) {
   const offsetFromRoot = _offsetFromRoot(options.appProjectRoot);
   const layoutTypeSrcPath = joinPathFragments(
     offsetFromRoot,
@@ -59,6 +63,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     pageStyleContent: `.page {}`,
     stylesExt: options.style === 'less' ? options.style : 'css',
     isUsingTsSolutionSetup: isUsingTsSolutionSetup(host),
+    isNext16: await isNext16(host),
   };
 
   const generatedAppFilePath = options.src

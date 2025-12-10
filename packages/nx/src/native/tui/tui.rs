@@ -2,7 +2,7 @@ use crate::native::tui::theme::THEME;
 use color_eyre::eyre::Result;
 use crossterm::{
     cursor,
-    event::{Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent},
+    event::{Event as CrosstermEvent, KeyEvent, KeyEventKind},
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -33,7 +33,6 @@ pub enum Event {
     FocusLost,
     Paste(String),
     Key(KeyEvent),
-    Mouse(MouseEvent),
     Resize(u16, u16),
 }
 
@@ -109,9 +108,6 @@ impl Tui {
                           CrosstermEvent::Key(key) if key.kind == KeyEventKind::Press => {
                             trace!("Key: {:?}", key);
                             _event_tx.send(Event::Key(key)).unwrap();
-                          },
-                          CrosstermEvent::Mouse(mouse) => {
-                            _event_tx.send(Event::Mouse(mouse)).unwrap();
                           },
                           CrosstermEvent::Resize(x, y) => {
                             _event_tx.send(Event::Resize(x, y)).unwrap();

@@ -7,10 +7,10 @@
   "files": [],
   "references": [
     {
-      "path": "../nx"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
-  ]
+  ],
+  "nx": {
+    "addTypecheckTarget": false
+  }
 }

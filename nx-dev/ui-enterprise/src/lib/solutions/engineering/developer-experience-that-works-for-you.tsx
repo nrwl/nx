@@ -58,7 +58,7 @@ const features = [
         </p>
         <div className="mt-4">
           <Link
-            href="/features/enhance-AI"
+            href={'/docs/features/enhance-ai'}
             title="Learn about Enhancing your LLM"
             className="text-sm/6 font-semibold"
           >

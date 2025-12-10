@@ -1,6 +1,7 @@
 ---
 title: 'Reduce the Number of Affected Projects in a CI Pipeline Execution'
 description: 'Learn how to use the Affected Project Graph feature to optimize CI pipeline execution times'
+filter: 'type:Guides'
 ---
 
 When it comes to troubleshooting long-running CI pipeline executions, there are different tools available to help you identify the potential issues. One such tool is the **Affected Project Graph** feature on the CI Pipeline Execution page.
@@ -20,6 +21,7 @@ In this recipe, we will walk through a scenario where the affected project graph
 This is our repository structure:
 
 {% filetree %}
+
 - apps/
   - web/
   - web-e2e
@@ -33,6 +35,7 @@ This is our repository structure:
   - forms/
     - input/
   - tooltip/
+
 {% /filetree %}
 
 Our most recent CI pipeline execution affects everything in the repository.

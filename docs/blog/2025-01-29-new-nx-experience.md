@@ -50,7 +50,7 @@ npx create-nx-workspace tsmono --preset=ts
 
 This generates a NPM workspaces setup. The only traces of Nx are:
 
-- a `nx.json` at the root containing configuration about [caching](/features/cache-task-results) and [task pipelines](/concepts/task-pipeline-configuration)
+- a `nx.json` at the root containing configuration about [caching](/docs/features/cache-task-results) and [task pipelines](/docs/concepts/task-pipeline-configuration)
 - a `nx` dependency in the root-level `package.json`
 - a `@nx/js` dependency in the root-level `package.json`; this is because we created a TypeScript monorepo setup which ships with support for creating and managing TS based packages.
 
@@ -60,7 +60,7 @@ This generates a NPM workspaces setup. The only traces of Nx are:
 
 {% video-player src="/documentation/blog/media/02-tssetup-newteslib.mp4" alt="Using the @nx/js plugin generator to create a new TypeScript package" showDescription=true showControls=true autoPlay=true loop=false /%}
 
-Nx has always shipped with [code generators](/features/generate-code), allowing you to scaffold projects or integrate features into existing ones. These generators are part of [Nx plugins](/concepts/nx-plugins) and have been adapted to work seamlessly in NPM, Yarn, PNPM, or Bun workspaces.
+Nx has always shipped with [code generators](/docs/features/generate-code), allowing you to scaffold projects or integrate features into existing ones. These generators are part of [Nx plugins](/docs/concepts/nx-plugins) and have been adapted to work seamlessly in NPM, Yarn, PNPM, or Bun workspaces.
 
 While you could create a package manually, the generator simplifies the process by handling all the tedious setup. It automatically:
 
@@ -81,7 +81,7 @@ The generator configures the `package.json` file just as you would manually, ens
 
 ![](/blog/images/articles/tslib-packagejson.avif)
 
-**Where are the `package.json` scripts though?** Although you could define `package.json` scripts and Nx would use them, this isn't required. Nx can automatically detect the underlying tool that is being used - in this case TypeScript - and [infers](/concepts/inferred-tasks) a `typecheck` command. You can simply run the following and it would work:
+**Where are the `package.json` scripts though?** Although you could define `package.json` scripts and Nx would use them, this isn't required. Nx can automatically detect the underlying tool that is being used - in this case TypeScript - and [infers](/docs/concepts/inferred-tasks) a `typecheck` command. You can simply run the following and it would work:
 
 ```shell
 npx nx typecheck mytslib
@@ -245,7 +245,7 @@ The `watch-deps` target takes care of automatically watching all dependencies of
 
 ## Key Highlight - Locality and Minimalism
 
-Nx plugins have been essential for helping enterprises organize and scale monorepos, but their reliance on Nx-generated workspace structures made migrating existing setups difficult. To address this, we introduced [inferred tasks](/concepts/inferred-tasks), which allows plugins to read directly from underlying tool configurations, like `vite.config.ts`, enabling seamless integration with existing projects.
+Nx plugins have been essential for helping enterprises organize and scale monorepos, but their reliance on Nx-generated workspace structures made migrating existing setups difficult. To address this, we introduced [inferred tasks](/docs/concepts/inferred-tasks), which allows plugins to read directly from underlying tool configurations, like `vite.config.ts`, enabling seamless integration with existing projects.
 
 We further improved how plugins work by applying the locality principle. Originally, plugins made many assumptions about the workspace structure and relied heavily on global configuration files. We updated them to operate locally within the project whenever possible, minimizing changes to global configurations.
 
@@ -257,7 +257,7 @@ In addition, we are now focusing on creating a minimal setup that you can expand
 
 Nx is also much more versatile. It can directly run your `package.json` scripts or infer targets based on the tools you're using.
 
-You still also have the option to create Nx's `project.json` files ([see docs](/reference/project-configuration)) for declaring more complex configurations. However, you only use them if needed.
+You still also have the option to create Nx's `project.json` files ([see docs](/docs/reference/project-configuration)) for declaring more complex configurations. However, you only use them if needed.
 
 The key idea here is that **tooling shouldn't get in your way but should elevate your experience**.
 
@@ -277,7 +277,7 @@ This has two major implications:
 - It cannot be parallelized and distributed on CI, which makes it slow.
 - It is memory-intensive, requiring large CI machines (resulting in higher costs).
 
-By **leveraging the new Nx and TypeScript project references setup**, we now have fine-grained, individual type checking tasks at the project level. This allows you to run tasks in parallel and potentially distribute them across different [Nx Agents](/ci/features/distribute-task-execution) on CI.
+By **leveraging the new Nx and TypeScript project references setup**, we now have fine-grained, individual type checking tasks at the project level. This allows you to run tasks in parallel and potentially distribute them across different [Nx Agents](/docs/features/ci-features/distribute-task-execution) on CI.
 
 ![Running type checking on different agents on CI](/blog/images/articles/cipe-typecheck-distribution.avif)
 
@@ -286,7 +286,7 @@ As such, the new approach:
 - Has **fine-grained type checking tasks**, which can be run in parallel.
 - Is **distributable across multiple machines**, resulting in faster CI runs.
 - Each individual type check **requires less memory**, allowing the use of smaller machines.
-- Each **individual type check can be [cached](/features/cache-task-results)**, significantly speeding up follow-up runs.
+- Each **individual type check can be [cached](/docs/features/cache-task-results)**, significantly speeding up follow-up runs.
 
 {% video-player src="/documentation/blog/media/animation-tsrefs-splitting.mp4" alt="Moving from a single build + type check to fine-grained distributable type checks" showDescription=true autoPlay=true loop=true /%}
 
@@ -365,7 +365,7 @@ The TypeScript path alias-based setup inherently enforces a single version polic
 
 ### What About Angular? Does the New Setup Work with Angular?
 
-Currently, Angular and its underlying compiler don't support TypeScript project references. However, you can still use Nx and Angular within an NPM, Yarn, or PNPM workspaces-based setup. This can be especially useful when [migrating multiple Angular applications](/recipes/adopting-nx/import-project) into a single Nx monorepo.
+Currently, Angular and its underlying compiler don't support TypeScript project references. However, you can still use Nx and Angular within an NPM, Yarn, or PNPM workspaces-based setup. This can be especially useful when [migrating multiple Angular applications](/docs/guides/adopting-nx/import-project) into a single Nx monorepo.
 
 For now, we continue to use the TypeScript path alias-based setup for pure Angular monorepos, as it offers a better developer experience in the current context. That said, we're actively working on improving this. Large Angular applications stand to benefit significantly from the performance and memory optimizations enabled by TypeScript project references.
 
@@ -377,7 +377,7 @@ If you're working in a large monorepo and **struggling with the performance issu
 
 ---
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

@@ -1,0 +1,75 @@
+{
+  "name": "@nx/dotnet",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Nx Plugin for .NET containing graph support for working with .NET projects in an Nx workspace.",
+  "keywords": [
+    "Monorepo",
+    ".NET",
+    "C#",
+    "F#",
+    "VB.NET",
+    "MSBuild",
+    "CLI"
+  ],
+  "homepage": "https://nx.dev",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/dotnet"
+  },
+  "license": "MIT",
+  "author": "Victor Savkin",
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./plugin": {
+      "default": "./dist/plugin.js",
+      "types": "./dist/plugin.d.ts"
+    },
+    "./generators/*/schema.json": "./dist/generators/*/schema.json",
+    "./generators/*/schema": "./dist/generators/*/schema.d.ts",
+    "./generators.json": "./generators.json",
+    "./migrations.json": "./migrations.json",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typings": "./dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "generators.json",
+    "executors.json",
+    "migrations.json",
+    "!dist/tsconfig.lib.tsbuildinfo"
+  ],
+  "scripts": {},
+  "dependencies": {
+    "@nx/devkit": "workspace:*",
+    "tslib": "catalog:typescript",
+    "ignore": "^7.0.5"
+  },
+  "devDependencies": {
+    "@types/jest": "catalog:jest",
+    "@types/node": "catalog:typescript",
+    "jest": "catalog:jest",
+    "memfs": "^4.9.2",
+    "nx": "workspace:*",
+    "ts-jest": "catalog:jest",
+    "typescript": "catalog:typescript"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "executors": "./executors.json",
+  "generators": "./generators.json",
+  "nx-migrations": {
+    "migrations": "./migrations.json"
+  }
+}

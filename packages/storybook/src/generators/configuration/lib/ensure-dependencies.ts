@@ -25,16 +25,8 @@ export function ensureDependencies(
   tree: Tree,
   options: EnsureDependenciesOptions
 ) {
-  let storybookVersionToInstall = storybookVersion;
-  const installedStorybookMajorVersion = storybookMajorVersion();
-  if (
-    installedStorybookMajorVersion >= 7 &&
-    getInstalledStorybookVersion() &&
-    gte(getInstalledStorybookVersion(), '7.0.0')
-  ) {
-    storybookVersionToInstall = getInstalledStorybookVersion();
-  }
-
+  const storybookVersionToInstall = getInstalledStorybookVersion(tree);
+  const installedStorybookMajorVersion = storybookMajorVersion(tree);
   const dependencies: Record<string, string> = {};
   const devDependencies: Record<string, string> =
     installedStorybookMajorVersion < 9

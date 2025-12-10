@@ -2,10 +2,11 @@ import { dirname, extname, join, resolve } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 import type { ResolverOptions } from 'jest-resolve';
 import { getVersion } from 'jest';
+import { major } from 'semver';
 
 let compilerSetup;
 let ts;
-const jestMajorVersion = Number(getVersion().split('.')[0]);
+const jestMajorVersion = major(getVersion());
 
 function getCompilerSetup(rootDir: string) {
   const tsConfigPath =

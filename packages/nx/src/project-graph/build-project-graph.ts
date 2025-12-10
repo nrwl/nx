@@ -45,6 +45,7 @@ import {
   mergeMetadata,
 } from './utils/project-configuration-utils';
 import { DelayedSpinner } from '../utils/delayed-spinner';
+import { hashObject } from '../hasher/file-hasher';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -121,6 +122,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   }
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
+  const externalNodesHash = hashExternalNodes(externalNodes);
 
   let filesToProcess: FileMap;
   let cachedFileData: CachedFileData;
@@ -131,7 +133,8 @@ export async function buildProjectGraphUsingProjectFileMap(
       packageJsonDeps,
       projects,
       nxJson,
-      rootTsConfig
+      rootTsConfig,
+      externalNodesHash
     );
   if (useCacheData) {
     const fromCache = extractCachedFileData(fileMap, fileMapCache);
@@ -167,7 +170,8 @@ export async function buildProjectGraphUsingProjectFileMap(
       nxJson,
       packageJsonDeps,
       fileMap,
-      rootTsConfig
+      rootTsConfig,
+      externalNodesHash
     );
   } catch (e) {
     // we need to include the workspace validity errors in the final error
@@ -344,7 +348,7 @@ async function updateProjectGraphWithPlugins(
   }
 
   spinner = new DelayedSpinner(
-    `Creating project graph dependencies with ${plugins.length} plugins`
+    `Creating project graph dependencies with ${createDependencyPlugins.length} plugins`
   );
 
   await Promise.all(
@@ -464,29 +468,30 @@ export async function applyProjectMetadata(
     }
   }
 
+  const createMetadataPlugins = plugins.filter(
+    (plugin) => plugin.createMetadata
+  );
   spinner = new DelayedSpinner(
-    `Creating project metadata with ${plugins.length} plugins`
+    `Creating project metadata with ${createMetadataPlugins.length} plugins`
   );
 
-  const promises = plugins.map(async (plugin) => {
-    if (plugin.createMetadata) {
-      performance.mark(`${plugin.name}:createMetadata - start`);
-      inProgressPlugins.add(plugin.name);
-      try {
-        const metadata = await plugin.createMetadata(graph, context);
-        results.push({ metadata, pluginName: plugin.name });
-      } catch (e) {
-        errors.push(new CreateMetadataError(e, plugin.name));
-      } finally {
-        inProgressPlugins.delete(plugin.name);
-        updateSpinner();
-        performance.mark(`${plugin.name}:createMetadata - end`);
-        performance.measure(
-          `${plugin.name}:createMetadata`,
-          `${plugin.name}:createMetadata - start`,
-          `${plugin.name}:createMetadata - end`
-        );
-      }
+  const promises = createMetadataPlugins.map(async (plugin) => {
+    performance.mark(`${plugin.name}:createMetadata - start`);
+    inProgressPlugins.add(plugin.name);
+    try {
+      const metadata = await plugin.createMetadata(graph, context);
+      results.push({ metadata, pluginName: plugin.name });
+    } catch (e) {
+      errors.push(new CreateMetadataError(e, plugin.name));
+    } finally {
+      inProgressPlugins.delete(plugin.name);
+      updateSpinner();
+      performance.mark(`${plugin.name}:createMetadata - end`);
+      performance.measure(
+        `${plugin.name}:createMetadata`,
+        `${plugin.name}:createMetadata - start`,
+        `${plugin.name}:createMetadata - end`
+      );
     }
   });
 
@@ -518,4 +523,15 @@ export async function applyProjectMetadata(
   );
 
   return { errors, graph };
+}
+
+function hashExternalNodes(
+  externalNodes: Record<string, ProjectGraphExternalNode>
+): string {
+  return hashObject(
+    Object.entries(externalNodes).reduce((acc, [name, node]) => {
+      acc[name] = node.data.version;
+      return acc;
+    }, {})
+  );
 }

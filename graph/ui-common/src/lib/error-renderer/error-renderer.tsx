@@ -14,7 +14,7 @@ export function ErrorRenderer({ errors }: { errors: GraphError[] }) {
             ? `${error.fileName}:${error.cause.errors[0].location.line}:${error.cause.errors[0].location.column}`
             : error.fileName;
         return (
-          <div className="overflow-hidden pb-4">
+          <div className="overflow-hidden pb-4" key={index}>
             <span className="inline-flex max-w-full flex-col break-words font-bold font-normal text-gray-900 md:inline dark:text-slate-200">
               <span>{errorHeading}</span>
               {fileSpecifier && (

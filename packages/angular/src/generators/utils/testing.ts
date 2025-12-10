@@ -60,7 +60,6 @@ export async function createStorybookTestWorkspaceForLib(
     buildable: false,
     linter: 'eslint',
     publishable: false,
-    simpleName: false,
     skipFormat: true,
     unitTestRunner: UnitTestRunner.Jest,
     standalone: false,

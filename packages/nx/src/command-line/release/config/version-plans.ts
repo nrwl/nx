@@ -52,6 +52,18 @@ export interface ProjectsVersionPlan extends VersionPlan {
 
 const versionPlansDirectory = join('.nx', 'version-plans');
 
+const allowedAttributeValues = [
+  // Stable releases (with conventional-commit style aliases)
+  '"major" (aliases: "feat!" or "fix!")',
+  '"minor" (alias: "feat")',
+  '"patch" (alias: "fix")',
+  // Prereleases
+  '"premajor"',
+  '"preminor"',
+  '"prepatch"',
+  '"prerelease"',
+];
+
 export async function readRawVersionPlans(): Promise<RawVersionPlan[]> {
   const versionPlansPath = getVersionPlansAbsolutePath();
   if (!existsSync(versionPlansPath)) {
@@ -67,6 +79,28 @@ export async function readRawVersionPlans(): Promise<RawVersionPlan[]> {
     const versionPlanStats = await stat(filePath);
 
     const parsedContent = fm(versionPlanContent);
+
+    /**
+     * For convenience allow:
+     * - feat to be used as an alias of minor
+     * - fix to be used as an alias of patch
+     * - Either feat! or fix! to be used as an alias of major
+     */
+    for (const [key, value] of Object.entries(parsedContent.attributes)) {
+      switch (value) {
+        case 'feat':
+          parsedContent.attributes[key] = 'minor';
+          break;
+        case 'fix':
+          parsedContent.attributes[key] = 'patch';
+          break;
+        case 'feat!':
+        case 'fix!':
+          parsedContent.attributes[key] = 'major';
+          break;
+      }
+    }
+
     versionPlans.push({
       absolutePath: filePath,
       relativePath: join(versionPlansDirectory, versionPlanFile),
@@ -132,7 +166,7 @@ export async function setResolvedVersionPlansOnGroups(
             throw new Error(
               `Found a version bump in '${
                 rawVersionPlan.fileName
-              }' with an invalid release type. Please specify one of ${RELEASE_TYPES.join(
+              }' with an invalid release type. Please specify one of: ${allowedAttributeValues.join(
                 ', '
               )}.`
             );
@@ -140,7 +174,7 @@ export async function setResolvedVersionPlansOnGroups(
             throw new Error(
               `Found a version bump for group '${key}' in '${
                 rawVersionPlan.fileName
-              }' with an invalid release type. Please specify one of ${RELEASE_TYPES.join(
+              }' with an invalid release type. Please specify one of: ${allowedAttributeValues.join(
                 ', '
               )}.`
             );
@@ -216,7 +250,7 @@ export async function setResolvedVersionPlansOnGroups(
           throw new Error(
             `Found a version bump for project '${key}' in '${
               rawVersionPlan.fileName
-            }' with an invalid release type. Please specify one of ${RELEASE_TYPES.join(
+            }' with an invalid release type. Please specify one of: ${allowedAttributeValues.join(
               ', '
             )}.`
           );
@@ -266,7 +300,10 @@ export async function setResolvedVersionPlansOnGroups(
                 );
               }
             } else {
-              existingPlan.triggeredByProjects.push(key);
+              // Avoid duplicates when releaseGraph is reused and version plans are resolved multiple times
+              if (!existingPlan.triggeredByProjects.includes(key)) {
+                existingPlan.triggeredByProjects.push(key);
+              }
             }
           } else {
             groupForProject.resolvedVersionPlans.push(<GroupVersionPlan>{

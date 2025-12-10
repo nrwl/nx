@@ -28,21 +28,21 @@
     "@nx/js": "workspace:*",
     "@nx/module-federation": "workspace:*",
     "@nx/web": "workspace:*",
-    "@phenomnomnominal/tsquery": "~5.0.1",
-    "@rspack/core": "^1.5.0",
-    "@rspack/dev-server": "^1.1.4",
-    "@rspack/plugin-react-refresh": "^1.0.0",
+    "@phenomnomnominal/tsquery": "catalog:typescript",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/dev-server": "catalog:rspack",
+    "@rspack/plugin-react-refresh": "catalog:rspack",
     "autoprefixer": "^10.4.9",
-    "browserslist": "^4.21.4",
+    "browserslist": "^4.26.0",
     "css-loader": "^6.4.0",
-    "enquirer": "~2.3.6",
+    "enquirer": "catalog:",
     "express": "^4.21.2",
     "http-proxy-middleware": "^3.0.5",
     "less-loader": "^11.1.0",
     "license-webpack-plugin": "^4.0.2",
     "loader-utils": "^2.0.3",
     "parse5": "4.0.0",
-    "picocolors": "^1.1.0",
+    "picocolors": "catalog:",
     "postcss": "^8.4.38",
     "postcss-import": "~14.1.0",
     "postcss-loader": "^8.1.1",
@@ -51,8 +51,8 @@
     "sass-loader": "^16.0.4",
     "source-map-loader": "^5.0.0",
     "style-loader": "^3.3.0",
-    "ts-checker-rspack-plugin": "^1.1.1",
-    "tslib": "^2.3.0",
+    "ts-checker-rspack-plugin": "catalog:rspack",
+    "tslib": "catalog:typescript",
     "webpack": "^5.101.3",
     "webpack-node-externals": "^3.0.0"
   },
@@ -61,8 +61,8 @@
     "@nx/nest": "workspace:*"
   },
   "peerDependencies": {
-    "@module-federation/enhanced": "^0.18.0",
-    "@module-federation/node": "^2.7.11"
+    "@module-federation/enhanced": "^0.21.2",
+    "@module-federation/node": "^2.7.21"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

@@ -1,6 +1,7 @@
 ---
 title: Pass Args to Commands
 description: 'Recipe describing how to pass args to tasks running commands'
+filter: 'type:Guides'
 ---
 
 When you have an [inferred task](/docs/concepts/inferred-tasks) (or an explicitly defined task using the [`nx:run-commands` executor](/docs/guides/tasks--caching/run-commands-executor#2-update)) running a command, there'll come a time when you'll need to pass args to the underlying command being run. This recipe explains how you can achieve that.
@@ -22,6 +23,7 @@ And the following [final configuration](/docs/reference/project-configuration):
 
 {% project_details title="Project Details View" %}
 
+```json
 {
   "project": {
     "name": "my-app",
@@ -154,6 +156,7 @@ And the following [final configuration](/docs/reference/project-configuration):
     "tags": ["apps/my-app/project.json", "nx/core/project-json"]
   }
 }
+```
 
 {% /project_details %}
 
@@ -221,7 +224,7 @@ To provide the same args for all projects in the workspace, you need to update t
 {% tabs %}
 {% tabitem label="Setting args directly as options" %}
 
-```json 
+```json
 // nx.json
 {
   "targetDefaults": {
@@ -266,7 +269,7 @@ To pass args in a one-off manner when running a task, you can also provide them 
 {% tabs %}
 {% tabitem label="Providing args directly as options" %}
 
-```shell {% frame="none" %}
+```shell
 nx build my-app --assetsInlineLimit=2048 --assetsDir=static/assets
 ```
 
@@ -274,7 +277,7 @@ nx build my-app --assetsInlineLimit=2048 --assetsDir=static/assets
 
 {% tabitem label="Providing the \"--args\" option" %}
 
-```shell {% frame="none" %}
+```shell
 nx build my-app --args="--assetsInlineLimit=2048 --assetsDir=static/assets"
 ```
 
@@ -287,7 +290,7 @@ If you provide an arg with the same name as an Nx CLI option (e.g. `--configurat
 
 You can also provide an arg with the same name to both the Nx CLI and the underlying command. For example, to run the `ci` configuration of a `test` target that runs the command `detox test` and pass the `--configuration` arg to the command, you can run:
 
-```shell {% frame="none" %}
+```shell
 nx test mobile-e2e --configuration=ci --args="--configuration=ios.sim.release"
 ```
 

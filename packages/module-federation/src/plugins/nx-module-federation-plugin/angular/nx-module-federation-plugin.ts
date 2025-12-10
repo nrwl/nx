@@ -22,20 +22,22 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
 
     // This is required to ensure Module Federation will build the project correctly
     compiler.options.optimization ??= {};
-    compiler.options.optimization.runtimeChunk = false;
+    compiler.options.optimization.runtimeChunk =
+      process.env['WEBPACK_SERVE'] && !this._options.config.exposes
+        ? compiler.options.optimization?.runtimeChunk ?? undefined
+        : false;
+
     if (compiler.options.optimization.splitChunks) {
       compiler.options.optimization.splitChunks.cacheGroups ??= {};
       compiler.options.optimization.splitChunks.cacheGroups.default = false;
       compiler.options.optimization.splitChunks.cacheGroups.common = false;
     }
+
     compiler.options.output.publicPath = !compiler.options.output.publicPath
       ? 'auto'
       : compiler.options.output.publicPath;
     compiler.options.output.uniqueName = this._options.config.name;
-    if (compiler.options.output.scriptType === 'module') {
-      compiler.options.output.scriptType = undefined;
-      compiler.options.output.module = undefined;
-    }
+
     if (this._options.isServer) {
       compiler.options.target = 'async-node';
       compiler.options.output.library ??= {
@@ -80,7 +82,7 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
             },
             remoteType: 'script',
           }
-        : {}),
+        : { library: { type: 'module' } }),
       ...(this.configOverride ? this.configOverride : {}),
       runtimePlugins,
     }).apply(compiler);

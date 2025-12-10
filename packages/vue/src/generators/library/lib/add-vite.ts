@@ -38,6 +38,7 @@ export async function addVite(
         inSourceTests: options.inSourceTests,
         imports: [`import vue from '@vitejs/plugin-vue'`],
         plugins: ['vue()'],
+        useEsmExtension: true,
       },
       false
     );
@@ -48,11 +49,14 @@ export async function addVite(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // tests are already configured if bundler is vite
   ) {
-    const { vitestGenerator, createOrEditViteConfig } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
-    const vitestTask = await vitestGenerator(tree, {
-      uiFramework: 'none',
+    const { createOrEditViteConfig } = ensurePackage<typeof import('@nx/vite')>(
+      '@nx/vite',
+      nxVersion
+    );
+    ensurePackage('@nx/vitest', nxVersion);
+    const { configurationGenerator } = await import('@nx/vitest/generators');
+    const vitestTask = await configurationGenerator(tree, {
+      uiFramework: 'vue',
       project: options.projectName,
       coverageProvider: 'v8',
       inSourceTests: options.inSourceTests,
@@ -72,6 +76,7 @@ export async function addVite(
         inSourceTests: options.inSourceTests,
         imports: [`import vue from '@vitejs/plugin-vue'`],
         plugins: ['vue()'],
+        useEsmExtension: true,
       },
       true
     );

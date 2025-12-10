@@ -41,11 +41,6 @@
       "description": "Target platform for the build, same as the Webpack target option.",
       "enum": ["node", "web", "webworker"]
     },
-    "deleteOutputPath": {
-      "type": "boolean",
-      "description": "Delete the output path before building.",
-      "default": true
-    },
     "watch": {
       "type": "boolean",
       "description": "Enable re-building when files change."
@@ -143,12 +138,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "sassImplementation": {
-      "type": "string",
-      "description": "The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.",
-      "enum": ["sass", "sass-embedded"],
-      "default": "sass"
     },
     "optimization": {
       "description": "Enables optimization of the build output.",

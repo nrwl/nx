@@ -6,7 +6,6 @@ tags: ['nx-cloud', 'polygraph', 'enterprise']
 cover_image: /blog/images/2025-08-05/header.avif
 description: 'Discover how Workspace Graph in Nx Cloud reveals dependencies across your entire organization. See code structure and connections between repositories without cloning, installing, or switching contexts.'
 youtubeUrl: https://www.youtube.com/watch?v=raNYaIpHLOg
-pinned: true
 ---
 
 How well do you understand the structure of your code?
@@ -27,7 +26,7 @@ So how can we get back to that point where we make a change in the design system
 
 ## What Is Workspace Graph?
 
-[Workspace Graph](/ci/recipes/enterprise/polygraph#workspace-graph) is part of Nx Cloud's Polygraph suite that visualizes dependencies between all workspaces and repositories in your organization, **even repos that don't use Nx**. Instead of managing repositories in isolation, you can easily see the connections between repos and understand your organizational code structure at a glance.
+[Workspace Graph](/docs/enterprise/polygraph#workspace-graph) is part of Nx Cloud's Polygraph suite that visualizes dependencies between all workspaces and repositories in your organization, **even repos that don't use Nx**. Instead of managing repositories in isolation, you can easily see the connections between repos and understand your organizational code structure at a glance.
 
 This visibility helps you:
 
@@ -37,7 +36,7 @@ This visibility helps you:
 
 ## See Inside Any Repository Without the Overhead
 
-If you've used Nx before, you're probably familiar with the [graph visualization](/features/explore-graph) that allows you to look through the structure of the projects within your repository. But it does require cloning the repo, installing dependencies, and actually running the `graph` command.
+If you've used Nx before, you're probably familiar with the [graph visualization](/docs/features/explore-graph) that allows you to look through the structure of the projects within your repository. But it does require cloning the repo, installing dependencies, and actually running the `graph` command.
 
 ![Screenshot of Workspace Graph showing multiple repositories](/blog/images/2025-08-05/workspace-graph.avif)
 
@@ -55,9 +54,9 @@ With this Workspace Graph visualization, **we're able to see connections between
 
 ## Beyond Nx: Including Any Repository
 
-The workspace graph is already powerful when showing the graphs and connections of Nx-powered repos. But your company likely has repos that aren't using Nx. This is where **[metadata-only workspaces](/ci/recipes/enterprise/metadata-only-workspace)** come in.
+The workspace graph is already powerful when showing the graphs and connections of Nx-powered repos. But your company likely has repos that aren't using Nx. This is where **[metadata-only workspaces](/docs/enterprise/metadata-only-workspace)** come in.
 
-Metadata-only workspaces are workspaces that don't use Nx, but do upload information about themselves to Nx Cloud so we can include them in things like the Workspace Graph and Conformance Rules. [Connecting a metadata-only workspace](/ci/recipes/enterprise/metadata-only-workspace#connecting) is easy and can be done in bulk when using the GitHub integration. [Applying a custom workflow](/ci/recipes/enterprise/metadata-only-workspace#connecting) gathers the graph information on a daily basis so that your workspace graph is always up-to-date with no manual maintenance. With a few minutes of effort, your platform team can gain visibility into **any repository**, regardless of the underlying technology or build system.
+Metadata-only workspaces are workspaces that don't use Nx, but do upload information about themselves to Nx Cloud so we can include them in things like the Workspace Graph and Conformance Rules. [Connecting a metadata-only workspace](/docs/enterprise/metadata-only-workspace#connecting) is easy and can be done in bulk when using the GitHub integration. [Applying a custom workflow](/docs/enterprise/metadata-only-workspace#connecting) gathers the graph information on a daily basis so that your workspace graph is always up-to-date with no manual maintenance. With a few minutes of effort, your platform team can gain visibility into **any repository**, regardless of the underlying technology or build system.
 
 ## From Reactive to Proactive Architecture Management
 
@@ -91,7 +90,7 @@ Workspace Graph transforms how you understand and manage your organization's cod
 
 Learn more:
 
-- 📄 [Workspace Graph Documentation](/ci/recipes/enterprise/polygraph#workspace-graph)
+- 📄 [Workspace Graph Documentation](/docs/enterprise/polygraph#workspace-graph)
 - 📄 [More about Polygraph](/blog/nx-cloud-introducing-polygraph)
 - 🌩️ [Nx Cloud](/nx-cloud)
 - 👩‍💻 [Nx Enterprise](/enterprise)

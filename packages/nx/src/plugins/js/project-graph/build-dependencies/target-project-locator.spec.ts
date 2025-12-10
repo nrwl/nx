@@ -1116,8 +1116,11 @@ describe('TargetProjectLocator', () => {
           {},
           new Map()
         );
-        const result =
-          targetProjectLocator.findDependencyInWorkspaceProjects('@org/pkg1');
+        const result = targetProjectLocator.findDependencyInWorkspaceProjects(
+          '',
+          '@org/pkg1',
+          '*'
+        );
 
         expect(result).toEqual('pkg1');
       }
@@ -1145,8 +1148,11 @@ describe('TargetProjectLocator', () => {
         {},
         new Map()
       );
-      const result =
-        targetProjectLocator.findDependencyInWorkspaceProjects('@org/pkg2');
+      const result = targetProjectLocator.findDependencyInWorkspaceProjects(
+        '',
+        '@org/pkg2',
+        '*'
+      );
 
       expect(result).toBeFalsy();
     });
@@ -1284,8 +1290,13 @@ describe('TargetProjectLocator', () => {
 
 describe('isBuiltinModuleImport()', () => {
   const withExclusions = builtinModules
-    .concat(builtinModules.filter((a) => true).map((s) => 'node:' + s))
-    .concat(['node:test', 'node:sqlite', 'node:test']);
+    .concat(
+      builtinModules.map((s) =>
+        // Node 24 includes node:sea, node:sqlite, etc. that already prefixes with `node:`.
+        s.startsWith('node:') ? s : 'node:' + s
+      )
+    )
+    .concat(['node:test', 'node:sqlite']);
 
   it.each(withExclusions)(
     `should return true for %s builtin module`,

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { DiscordIcon } from './discord-icon';
 import { VersionPicker } from './version-picker';
 
+// Use NX_DEV_URL if set, otherwise default to empty string for relative URLs
+const nxDevUrl = process.env.NX_DEV_URL || '';
 const navigation = {
   nx: [
     { name: 'Status', href: 'https://status.nx.app' },
@@ -12,38 +14,62 @@ const navigation = {
   ],
   nxCloud: [
     { name: 'App', href: 'https://cloud.nx.app' },
-    { name: 'Docs', href: '/ci/features' },
-    { name: 'Pricing', href: '/pricing' },
+    {
+      name: 'Docs',
+      href: '/docs/features/ci-features',
+    },
+    {
+      name: 'Pricing',
+      href: `${nxDevUrl}/nx-cloud#plans`,
+    },
     { name: 'Terms', href: 'https://cloud.nx.app/terms' },
   ],
   solutions: [
-    { name: 'Nx', href: 'https://nx.dev' },
-    { name: 'Nx Cloud', href: '/nx-cloud' },
-    { name: 'Nx Enterprise', href: '/enterprise' },
+    { name: 'Nx', href: nxDevUrl || 'https://nx.dev' },
+    {
+      name: 'Nx Cloud',
+      href: `${nxDevUrl}/nx-cloud`,
+    },
+    {
+      name: 'Enterprise',
+      href: `${nxDevUrl}/enterprise`,
+    },
   ],
   resources: [
-    { name: 'Blog', href: '/blog' },
+    {
+      name: 'Blog',
+      href: `${nxDevUrl}/blog`,
+    },
     {
       name: 'Youtube',
       href: 'https://youtube.com/@nxdevtools',
     },
     {
       name: 'Community',
-      href: '/community',
+      href: `${nxDevUrl}/community`,
     },
     {
       name: 'Customers',
-      href: '/customers',
+      href: `${nxDevUrl}/customers`,
     },
   ],
   company: [
-    { name: 'About us', href: '/company' },
-    { name: 'Careers', href: '/careers' },
+    {
+      name: 'About us',
+      href: `${nxDevUrl}/company`,
+    },
+    {
+      name: 'Careers',
+      href: `${nxDevUrl}/careers`,
+    },
     {
       name: 'Brands & Guidelines',
-      href: '/brands',
+      href: `${nxDevUrl}/brands`,
     },
-    { name: 'Contact us', href: '/contact' },
+    {
+      name: 'Contact us',
+      href: `${nxDevUrl}/contact`,
+    },
   ],
   social: [
     {
@@ -166,7 +192,7 @@ export function Footer({
 } = {}): JSX.Element {
   const prefixHref = (href: string) => {
     if (useDomainPrefix && href.startsWith('/')) {
-      return `https://nx.dev${href}`;
+      return `${nxDevUrl}${href}`;
     }
     return href;
   };

@@ -69,9 +69,11 @@ describe('app', () => {
     expect(tsconfig.extends).toEqual('../tsconfig.base.json');
 
     expect(appTree.exists('my-app/.eslintrc.json')).toBe(true);
-    expect(appTree.read('my-app/jest.config.ts', 'utf-8'))
+    expect(appTree.read('my-app/jest.config.cts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "module.exports = {
+      "/// <reference types="jest" />
+      /// <reference types="node" />
+      module.exports = {
         displayName: 'my-app',
         preset: 'react-native',
         resolver: '@nx/jest/plugins/resolver',
@@ -108,7 +110,7 @@ describe('app', () => {
       bundler: 'vite',
     });
 
-    expect(appTree.exists('my-app/jest.config.ts')).toBeTruthy();
+    expect(appTree.exists('my-app/jest.config.cts')).toBeTruthy();
   });
 
   it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
@@ -126,6 +128,40 @@ describe('app', () => {
 
     const tsconfig = readJson(appTree, 'my-app/tsconfig.json');
     expect(tsconfig.extends).toEqual('../tsconfig.json');
+  });
+
+  it('should not ignore "out-tsc" from eslint', async () => {
+    await reactNativeApplicationGenerator(appTree, {
+      name: 'my-app',
+      directory: 'my-app',
+      linter: 'eslint',
+      e2eTestRunner: 'none',
+      install: false,
+      unitTestRunner: 'none',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(appTree, 'my-app/.eslintrc.json');
+    expect(eslintConfig.ignorePatterns).not.toContain('**/out-tsc');
+  });
+
+  it('should not ignore "out-tsc" from eslint with flat config', async () => {
+    appTree.write('eslint.config.mjs', 'export default [];');
+
+    await reactNativeApplicationGenerator(appTree, {
+      name: 'my-app',
+      directory: 'my-app',
+      linter: 'eslint',
+      e2eTestRunner: 'none',
+      install: false,
+      unitTestRunner: 'none',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+
+    const eslintConfig = appTree.read('my-app/eslint.config.mjs', 'utf-8');
+    expect(eslintConfig).not.toContain('**/out-tsc');
   });
 
   describe('detox', () => {
@@ -353,6 +389,7 @@ describe('app', () => {
             "src/**/*.spec.jsx",
             "src/test-setup.ts",
             "jest.config.ts",
+            "jest.config.cts",
             "eslint.config.js",
             "eslint.config.cjs",
             "eslint.config.mjs",
@@ -392,6 +429,7 @@ describe('app', () => {
           ],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -485,6 +523,42 @@ describe('app', () => {
         }
       `);
       expect(readJson(tree, 'my-app-e2e/package.json').nx).toBeUndefined();
+    });
+
+    it('should ignore "out-tsc" from eslint', async () => {
+      await reactNativeApplicationGenerator(tree, {
+        directory: 'my-app',
+        linter: 'eslint',
+        e2eTestRunner: 'none',
+        install: false,
+        unitTestRunner: 'none',
+        bundler: 'webpack',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const eslintConfig = readJson(tree, 'my-app/.eslintrc.json');
+      expect(eslintConfig.ignorePatterns).toContain('**/out-tsc');
+    });
+
+    it('should ignore "out-tsc" from eslint with flat config', async () => {
+      tree.write('eslint.config.mjs', 'export default [];');
+
+      await reactNativeApplicationGenerator(tree, {
+        directory: 'my-app',
+        linter: 'eslint',
+        e2eTestRunner: 'none',
+        install: false,
+        unitTestRunner: 'none',
+        bundler: 'webpack',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const eslintConfig = tree.read('my-app/eslint.config.mjs', 'utf-8');
+      expect(eslintConfig).toContain('**/out-tsc');
     });
   });
 });

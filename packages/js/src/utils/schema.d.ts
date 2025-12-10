@@ -15,8 +15,6 @@ export interface ExecutorOptions {
   watch: boolean;
   clean?: boolean;
   transformers: TransformerEntry[];
-  external?: 'all' | 'none' | string[];
-  externalBuildTargets?: string[];
   generateLockfile?: boolean;
   stripLeadingPaths?: boolean;
   generatePackageJson?: boolean;
@@ -58,6 +56,4 @@ export interface NormalizedSwcExecutorOptions
   tmpSwcrcPath: string;
   isTsSolutionSetup: boolean;
   sourceRoot?: string;
-  // TODO(v21): remove inline feature
-  inline?: boolean;
 }

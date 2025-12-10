@@ -96,8 +96,8 @@
 /* Custom font for code blocks */
 @font-face {
   font-family: 'Input Mono';
-  src: url('/fonts/InputMono-Regular.woff2') format('woff2'),
-    url('/fonts/InputMono-Regular.woff') format('woff');
+  src: url('/docs/fonts/InputMono-Regular.woff2') format('woff2'),
+    url('/docs/fonts/InputMono-Regular.woff') format('woff');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -192,6 +192,14 @@ pre {
   .caution,
   aside {
     border-radius: var(--radius-lg);
+  }
+
+  aside a {
+    color: var(--sl-color-accent);
+  }
+
+  aside a:hover {
+    color: var(--sl-color-accent-high);
   }
 
   /* Align TOC with sidebar styling */
@@ -329,14 +337,42 @@ pre {
     --sl-color-border-badge: theme('colors.slate.700');
     --sl-color-text-badge: theme('colors.slate.400');
   }
+
+  starlight-menu-button button {
+    color: theme('colors.slate.600');
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  [data-theme='dark'] starlight-menu-button button {
+    color: theme('colors.slate.200');
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  starlight-menu-button button[aria-expanded='true'] {
+    background-color: theme('colors.white');
+    box-shadow: none;
+  }
+
+  [data-theme='dark'] starlight-menu-button button[aria-expanded='true'] {
+    background-color: theme('colors.slate.900');
+    box-shadow: none;
+  }
 } /* end component layer */
 
 /* Additional custom styles can be added here */
 
 /* For deepdive callouts that are still used, need to space out content */
-.callout div:not(:last-child),
+.callout div:not(:last-child):not(.ec-line),
 .callout p:not(:last-child) {
   @apply mb-4;
+}
+.callout a {
+  color: var(--sl-color-accent);
+}
+.callout a:hover {
+  color: var(--sl-color-accent-high);
 }
 
 /* Align top with breadcrumbs */
@@ -364,7 +400,7 @@ h6:hover .anchor-link {
 }
 
 .anchor-link:hover {
-  color: var(--sl-color-accent);
+  color: var(--sl-color-accent-high);
 }
 
 .right-sidebar {
@@ -380,5 +416,10 @@ iframe[src*='youtube'] {
 }
 
 table code {
-  word-wrap: break-word;
+  white-space: nowrap;
+}
+
+[role='tablist'] {
+  font-size: var(--text-sm);
+  align-items: end; /* Fix tab alignment */
 }

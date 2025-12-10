@@ -14,12 +14,12 @@ fun addTestCiTargets(
     testFiles: FileCollection,
     projectBuildPath: String,
     testTask: Task,
-    testTargetName: String,
     targets: NxTargets,
     targetGroups: TargetGroups,
     projectRoot: String,
     workspaceRoot: String,
-    ciTestTargetName: String
+    ciTestTargetName: String,
+    gitIgnoreClassifier: GitIgnoreClassifier
 ) {
   ensureTargetGroupExists(targetGroups, testCiTargetGroup)
 
@@ -34,7 +34,8 @@ fun addTestCiTargets(
       projectRoot,
       workspaceRoot,
       ciTestTargetName,
-      ciDependsOn)
+      ciDependsOn,
+      gitIgnoreClassifier)
 
   ensureParentCiTarget(
       targets,
@@ -44,7 +45,8 @@ fun addTestCiTargets(
       testTask,
       projectRoot,
       workspaceRoot,
-      ciDependsOn)
+      ciDependsOn,
+      gitIgnoreClassifier)
 }
 
 private fun processTestFiles(
@@ -56,7 +58,8 @@ private fun processTestFiles(
     projectRoot: String,
     workspaceRoot: String,
     ciTestTargetName: String,
-    ciDependsOn: MutableList<Map<String, String>>
+    ciDependsOn: MutableList<Map<String, String>>,
+    gitIgnoreClassifier: GitIgnoreClassifier
 ) {
   testFiles
       .filter { isTestFile(it, workspaceRoot) }
@@ -67,35 +70,18 @@ private fun processTestFiles(
           val targetName = "$ciTestTargetName--$className"
           targets[targetName] =
               buildTestCiTarget(
-                  projectBuildPath, testClassPackagePath, testTask, projectRoot, workspaceRoot)
+                  projectBuildPath,
+                  testClassPackagePath,
+                  testTask,
+                  projectRoot,
+                  workspaceRoot,
+                  gitIgnoreClassifier)
           targetGroups[testCiTargetGroup]?.add(targetName)
 
           ciDependsOn.add(
               mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
         }
       }
-}
-
-internal fun processTestClasses(
-    testClassNames: Map<String, String>,
-    ciTestTargetName: String,
-    projectBuildPath: String,
-    testTask: Task,
-    projectRoot: String,
-    workspaceRoot: String,
-    targets: NxTargets,
-    targetGroups: TargetGroups,
-    ciDependsOn: MutableList<Map<String, String>>
-) {
-  testClassNames.forEach { (className, testClassPackagePath) ->
-    val targetName = "$ciTestTargetName--$className"
-    targets[targetName] =
-        buildTestCiTarget(
-            projectBuildPath, testClassPackagePath, testTask, projectRoot, workspaceRoot)
-    targetGroups[testCiTargetGroup]?.add(targetName)
-
-    ciDependsOn.add(mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
-  }
 }
 
 private fun isTestFile(file: File, workspaceRoot: String): Boolean {
@@ -119,8 +105,10 @@ private fun buildTestCiTarget(
     testTask: Task,
     projectRoot: String,
     workspaceRoot: String,
+    gitIgnoreClassifier: GitIgnoreClassifier
 ): MutableMap<String, Any?> {
-  val taskInputs = getInputsForTask(null, testTask, projectRoot, workspaceRoot)
+  val taskInputs =
+      getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
 
   val target =
       mutableMapOf<String, Any?>(
@@ -152,10 +140,12 @@ private fun ensureParentCiTarget(
     testTask: Task,
     projectRoot: String,
     workspaceRoot: String,
-    ciDependsOn: List<Map<String, String>>
+    ciDependsOn: List<Map<String, String>>,
+    gitIgnoreClassifier: GitIgnoreClassifier
 ) {
   if (ciDependsOn.isNotEmpty()) {
-    val taskInputs = getInputsForTask(null, testTask, projectRoot, workspaceRoot)
+    val taskInputs =
+        getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
 
     targets[ciTestTargetName] =
         mutableMapOf<String, Any?>(

@@ -1,7 +1,6 @@
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
 import type { Declaration } from 'postcss';
-import * as url from 'node:url';
 import { LoaderContext } from 'webpack';
 
 function wrapUrl(url: string): string {
@@ -13,6 +12,16 @@ function wrapUrl(url: string): string {
     wrappedUrl = `'${url}'`;
   }
   return `url(${wrappedUrl})`;
+}
+
+function resolveUrl(from: string, to: string) {
+  const resolvedUrl = new URL(to, new URL(from, 'resolve://'));
+  if (resolvedUrl.protocol === 'resolve:') {
+    // `from` is a relative URL.
+    const { pathname, search, hash } = resolvedUrl;
+    return pathname + search + hash;
+  }
+  return resolvedUrl.toString();
 }
 
 export interface PostcssCliResourcesOptions {
@@ -94,7 +103,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
       resourceCache.set(cacheKey, outputUrl);
       return outputUrl;
     }
-    const normalizedUrl = inputUrl.replace(/\\/g, '/');
+    const normalizedUrl = path.resolve(context, inputUrl.replace(/\\/g, '/'));
     const parsedUrl = new URL(normalizedUrl, 'file:///');
     const { pathname, hash, search } = parsedUrl;
     const resolver = (file: string, base: string) =>
@@ -131,7 +140,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
         }
         const loaderOptions: any = loader.loaders[loader.loaderIndex].options;
         if (deployUrl && loaderOptions.ident !== 'extracted') {
-          outputUrl = new URL(outputUrl, deployUrl).href;
+          outputUrl = resolveUrl(deployUrl, outputUrl);
         }
         resourceCache.set(cacheKey, outputUrl);
         resolve(outputUrl);

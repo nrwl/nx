@@ -9,6 +9,7 @@ import '../styles/main.css';
 import Link from 'next/link';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 import GlobalScripts from '../app/global-scripts';
+import { WebinarNotifier, GlobalSearchHandler } from '@nx/nx-dev-ui-common';
 
 export default function CustomApp({
   Component,
@@ -97,7 +98,8 @@ export default function CustomApp({
       </Link>
       <Component {...pageProps} />
       {/* <LiveStreamNotifier /> */}
-      {/* <WebinarNotifier /> */}
+      <WebinarNotifier />
+      <GlobalSearchHandler />
 
       {/* All tracking scripts consolidated in GlobalScripts component */}
       <GlobalScripts

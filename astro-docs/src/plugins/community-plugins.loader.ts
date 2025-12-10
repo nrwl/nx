@@ -4,12 +4,38 @@ import communityPlugins from '../content/approved-community-plugins.json';
 import type { CollectionEntry } from 'astro:content';
 import {
   getGithubStars,
-  getNpmData,
-  getNpmDownloads,
   shouldFetchStats,
+  isPluginStatsFetchingEnabled,
+  getCachedOrDefaultStats,
+  fetchFreshStats,
+  type PluginStats,
 } from './utils/plugin-stats';
 
 type DocEntry = CollectionEntry<'community-plugins'>;
+
+/**
+ * Create a community plugin entry with the given stats
+ */
+function createCommunityPluginEntry(
+  plugin: { name: string; url: string; description: string },
+  stats: PluginStats
+): DocEntry {
+  return {
+    id: plugin.name,
+    collection: 'community-plugins',
+    data: {
+      title: plugin.name,
+      slug: plugin.name,
+      description: plugin.description,
+      url: plugin.url,
+      githubStars: stats.githubStars,
+      npmDownloads: stats.npmDownloads,
+      lastPublishedDate: stats.lastPublishedDate,
+      nxVersion: stats.nxVersion ?? '',
+      lastFetched: stats.lastFetched,
+    },
+  };
+}
 
 async function loadCommunityPluginsData(
   logger: LoaderContext['logger'],
@@ -19,53 +45,48 @@ async function loadCommunityPluginsData(
 
   const failedProcessed = new Set<string>();
 
-  // NOTE: GH gql api allows us to get all plugin meta in one call
-  const ghPluginList = communityPlugins
-    .filter((p) => p.url.startsWith('https://github.com'))
-    .map((p) => {
-      const url = new URL(p.url);
-      const [_, owner, repo] = url.pathname.split('/');
-      return {
-        owner,
-        repo,
-      };
-    });
+  // Fetch GitHub stars for all plugins in one API call (only if fetching is enabled)
+  let ghStarsList = new Map<
+    string,
+    { nameWithOwner: string; stargazers: { totalCount: number } }
+  >();
 
-  const ghStarsList = await getGithubStars(ghPluginList);
+  if (isPluginStatsFetchingEnabled()) {
+    const ghPluginList = communityPlugins
+      .filter((p) => p.url.startsWith('https://github.com'))
+      .map((p) => {
+        const url = new URL(p.url);
+        const [_, owner, repo] = url.pathname.split('/');
+        return {
+          owner,
+          repo,
+        };
+      });
 
+    ghStarsList = await getGithubStars(ghPluginList);
+  }
+
+  // Process each plugin
   for (const plugin of communityPlugins) {
-    const existingEntry = store.get<DocEntry['data']>(plugin.name);
-    // re-hydrate if the plugins last publish date is > 1 week old, just to be safe
-    // we could use digests but those still require fetching the data to compare against.Date
-
-    if (!shouldFetchStats(existingEntry)) {
-      logger.debug(
-        `Skipping ${plugin.name} as it's data is already recently fetched`
-      );
-      continue;
-    }
-
     try {
-      const npmMeta = await getNpmData(plugin);
-      const npmDownloads = await getNpmDownloads(plugin);
-      const [_, owner, repo] = new URL(plugin.url).pathname.split('/');
+      const existingEntry = store.get<DocEntry['data']>(plugin.name);
 
-      const entry: DocEntry = {
-        id: plugin.name,
-        collection: 'community-plugins',
-        data: {
-          slug: plugin.name,
-          description: plugin.description,
-          url: plugin.url,
-          lastPublishedDate: npmMeta.lastPublishedDate,
-          npmDownloads: npmDownloads,
-          githubStars:
-            ghStarsList.get(`${owner}/${repo}`)?.stargazers?.totalCount ?? 0,
-          nxVersion: npmMeta.nxVersion,
-          lastFetched: new Date(),
-        },
-      };
+      // Determine which stats to use: fresh, cached, or defaults
+      let stats: PluginStats;
+      if (shouldFetchStats(existingEntry)) {
+        // Fetch fresh stats from external sources
+        const [_, owner, repo] = new URL(plugin.url).pathname.split('/');
+        const repoKey = `${owner}/${repo}`;
+        stats = await fetchFreshStats(plugin, repoKey, ghStarsList, true);
+        logger.debug(`Fetched fresh stats for ${plugin.name}`);
+      } else {
+        // Reuse cached stats if available, otherwise use defaults
+        stats = getCachedOrDefaultStats(existingEntry, true);
+        logger.debug(`Using cached/default stats for ${plugin.name}`);
+      }
 
+      // Create and store the plugin entry
+      const entry = createCommunityPluginEntry(plugin, stats);
       store.set(entry);
     } catch (err: any) {
       logger.error(`❌ Unable to process plugin ${plugin.name}`);
@@ -76,8 +97,14 @@ async function loadCommunityPluginsData(
 
   const successCount = communityPlugins.length - failedProcessed.size;
   logger.info(
-    `Successfully loaded ${successCount} community plugins into store`
+    `Successfully loaded ${successCount}/${communityPlugins.length} community plugins into store`
   );
+
+  if (!isPluginStatsFetchingEnabled()) {
+    logger.info(
+      '(Stats fetching disabled - using cached data or defaults. Set NX_DOCS_PLUGIN_STATS=true to fetch fresh stats.)'
+    );
+  }
 }
 
 export function CommunityPluginsLoader(): Loader {

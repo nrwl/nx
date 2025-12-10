@@ -31,6 +31,7 @@ describe('Convert webpack', () => {
         module.exports = {
           output: {
             path: join(__dirname, '../dist/demo'),
+            clean: true,
             ...(process.env.NODE_ENV !== 'production' && {
               devtoolModuleFilenameTemplate: '[absolute-resource-path]',
             }),
@@ -91,6 +92,7 @@ describe('Convert webpack', () => {
                 (config) => {
                   // Update the webpack config as needed here.
                   // e.g. \`config.plugins.push(new MyPlugin())\`
+                  config.output.clean = true;
                   return config;
                 }
               );

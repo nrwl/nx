@@ -2,6 +2,8 @@ package dev.nx.gradle.utils
 
 import dev.nx.gradle.data.Dependency
 import org.gradle.api.Project
+import org.gradle.api.artifacts.component.ProjectComponentSelector
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
 
 private val dependencyCache = mutableMapOf<Project, Set<Dependency>>()
 
@@ -14,23 +16,40 @@ fun getDependenciesForProject(project: Project): MutableSet<Dependency> {
 private fun buildDependenciesForProject(project: Project): Set<Dependency> {
   val dependencies = mutableSetOf<Dependency>()
 
-  // Include subprojects manually
-  project.subprojects.forEach { childProject ->
-    val buildFilePath = if (project.buildFile.exists()) project.buildFile.path else null
-    if (buildFilePath != null) {
-      dependencies.add(
-          Dependency(project.projectDir.path, childProject.projectDir.path, buildFilePath))
-    }
-  }
+  val sourcePath = project.projectDir.absolutePath
+  val sourceFilePath = project.buildFile.takeIf { it.exists() }?.absolutePath ?: ""
 
-  // Include included builds manually
-  project.gradle.includedBuilds.forEach { includedBuild ->
-    val buildFilePath = if (project.buildFile.exists()) project.buildFile.path else null
-    if (buildFilePath != null) {
-      dependencies.add(
-          Dependency(project.projectDir.path, includedBuild.projectDir.path, buildFilePath))
-    }
-  }
+  project.configurations
+      .matching { it.isCanBeResolved }
+      .forEach { conf ->
+        try {
+          conf.incoming.resolutionResult.allDependencies.forEach { dependency ->
+            if (dependency is ResolvedDependencyResult) {
+              val requested = dependency.requested
+              if (requested is ProjectComponentSelector) {
+                val dependentProject = project.findProject(requested.projectPath)
+
+                if (dependentProject != null &&
+                    dependentProject.projectDir.exists() &&
+                    dependentProject.buildFile.exists()) {
+
+                  val targetPath = dependentProject.projectDir.absolutePath
+
+                  dependencies.add(
+                      Dependency(
+                          source = sourcePath,
+                          target = targetPath,
+                          sourceFile = sourceFilePath,
+                      ))
+                }
+              }
+            }
+          }
+        } catch (e: Exception) {
+          // Log the error but don't fail the build
+          project.logger.debug("Error processing configuration ${conf.name}: ${e.message}")
+        }
+      }
 
   return dependencies
 }

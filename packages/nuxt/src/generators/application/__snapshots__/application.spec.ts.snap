@@ -1,5 +1,69 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`app Nuxt v4 with app directory structure should configure nuxt.config.ts without srcDir for app directory 1`] = `
+"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { defineNuxtConfig } from 'nuxt/config';
+
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  workspaceDir: '../',
+  devtools: { enabled: true },
+  devServer: {
+    host: 'localhost',
+    port: 4200,
+  },
+  typescript: {
+    typeCheck: true,
+    tsConfig: {
+      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+    },
+  },
+  imports: {
+    autoImport: true,
+  },
+  vite: {
+    plugins: [nxViteTsPaths()],
+  },
+});
+"
+`;
+
+exports[`app Nuxt v4 with app directory structure should create all files in correct location with useAppDir 1`] = `
+[
+  ".prettierrc",
+  "package.json",
+  "nx.json",
+  "tsconfig.base.json",
+  ".prettierignore",
+  "my-app/project.json",
+  "my-app/.npmrc",
+  "my-app/app/app.vue",
+  "my-app/app/pages/about.vue",
+  "my-app/app/pages/index.vue",
+  "my-app/nuxt.config.ts",
+  "my-app/public/.gitkeep",
+  "my-app/public/favicon.ico",
+  "my-app/server/api/greet.ts",
+  "my-app/server/tsconfig.json",
+  "my-app/app/components/NxWelcome.vue",
+  "my-app/tsconfig.app.json",
+  "my-app/tsconfig.json",
+  ".gitignore",
+  ".eslintrc.json",
+  ".eslintignore",
+  "my-app/.eslintrc.json",
+  "my-app/tsconfig.spec.json",
+  "vitest.workspace.ts",
+  "my-app/vitest.config.ts",
+  "my-app-e2e/project.json",
+  "my-app-e2e/src/example.spec.ts",
+  "my-app-e2e/playwright.config.ts",
+  "my-app-e2e/tsconfig.json",
+  "my-app-e2e/.eslintrc.json",
+  ".vscode/extensions.json",
+]
+`;
+
 exports[`app generated files content - as-provided - my-app general application should add nuxt entries in .gitignore 1`] = `
 "# Nuxt dev/build outputs
 .output
@@ -7,7 +71,6 @@ exports[`app generated files content - as-provided - my-app general application 
 .nuxt
 .nitro
 .cache
-vite.config.*.timestamp*
 vitest.config.*.timestamp*"
 `;
 
@@ -19,7 +82,6 @@ exports[`app generated files content - as-provided - my-app general application 
     ".nuxt/**",
     ".output/**",
     "node_modules",
-    "**/vite.config.*.timestamp*",
     "**/vitest.config.*.timestamp*"
   ],
   "overrides": [
@@ -33,69 +95,46 @@ exports[`app generated files content - as-provided - my-app general application 
 `;
 
 exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config CJS) 1`] = `
-"const { FlatCompat } = require('@eslint/eslintrc');
-const js = require('@eslint/js');
+"const { createConfigForNuxt } = require('@nuxt/eslint-config/flat');
 const baseConfig = require('../eslint.config.cjs');
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-});
-
-module.exports = [
-  ...baseConfig,
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
-    // Override or add rules here
-    rules: {},
+module.exports = createConfigForNuxt({
+  features: {
+    typescript: true,
   },
-  ...compat.extends('@nuxt/eslint-config'),
-  {
-    files: ['**/*.vue'],
-    languageOptions: {
-      parserOptions: {
-        parser: require('@typescript-eslint/parser'),
-      },
+})
+  .prepend(...baseConfig)
+  .append(
+    {
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      rules: {},
     },
-  },
-  {
-    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
-  },
-];
+    {
+      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+    }
+  );
 "
 `;
 
 exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config ESM) 1`] = `
-"import { FlatCompat } from '@eslint/eslintrc';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import js from '@eslint/js';
+"import { createConfigForNuxt } from '@nuxt/eslint-config/flat';
 import baseConfig from '../eslint.config.mjs';
-const compat = new FlatCompat({
-  baseDirectory: dirname(fileURLToPath(import.meta.url)),
-  recommendedConfig: js.configs.recommended,
-});
 
-export default [
-  ...baseConfig,
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
-    // Override or add rules here
-    rules: {},
+export default createConfigForNuxt({
+  features: {
+    typescript: true,
   },
-  ...compat.extends('@nuxt/eslint-config'),
-  {
-    files: ['**/*.vue'],
-    languageOptions: {
-      parserOptions: {
-        parser: await import('@typescript-eslint/parser'),
-      },
+})
+  .prepend(...baseConfig)
+  .append(
+    {
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      rules: {},
     },
-  },
-  {
-    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
-  },
-];
+    {
+      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+    }
+  );
 "
 `;
 
@@ -165,7 +204,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
   plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
@@ -401,7 +440,6 @@ exports[`app generated files content - as-provided - myApp general application s
 .nuxt
 .nitro
 .cache
-vite.config.*.timestamp*
 vitest.config.*.timestamp*"
 `;
 
@@ -413,7 +451,6 @@ exports[`app generated files content - as-provided - myApp general application s
     ".nuxt/**",
     ".output/**",
     "node_modules",
-    "**/vite.config.*.timestamp*",
     "**/vitest.config.*.timestamp*"
   ],
   "overrides": [
@@ -427,69 +464,46 @@ exports[`app generated files content - as-provided - myApp general application s
 `;
 
 exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config CJS) 1`] = `
-"const { FlatCompat } = require('@eslint/eslintrc');
-const js = require('@eslint/js');
+"const { createConfigForNuxt } = require('@nuxt/eslint-config/flat');
 const baseConfig = require('../eslint.config.cjs');
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-});
-
-module.exports = [
-  ...baseConfig,
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
-    // Override or add rules here
-    rules: {},
+module.exports = createConfigForNuxt({
+  features: {
+    typescript: true,
   },
-  ...compat.extends('@nuxt/eslint-config'),
-  {
-    files: ['**/*.vue'],
-    languageOptions: {
-      parserOptions: {
-        parser: require('@typescript-eslint/parser'),
-      },
+})
+  .prepend(...baseConfig)
+  .append(
+    {
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      rules: {},
     },
-  },
-  {
-    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
-  },
-];
+    {
+      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+    }
+  );
 "
 `;
 
 exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config ESM) 1`] = `
-"import { FlatCompat } from '@eslint/eslintrc';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import js from '@eslint/js';
+"import { createConfigForNuxt } from '@nuxt/eslint-config/flat';
 import baseConfig from '../eslint.config.mjs';
-const compat = new FlatCompat({
-  baseDirectory: dirname(fileURLToPath(import.meta.url)),
-  recommendedConfig: js.configs.recommended,
-});
 
-export default [
-  ...baseConfig,
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
-    // Override or add rules here
-    rules: {},
+export default createConfigForNuxt({
+  features: {
+    typescript: true,
   },
-  ...compat.extends('@nuxt/eslint-config'),
-  {
-    files: ['**/*.vue'],
-    languageOptions: {
-      parserOptions: {
-        parser: await import('@typescript-eslint/parser'),
-      },
+})
+  .prepend(...baseConfig)
+  .append(
+    {
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      rules: {},
     },
-  },
-  {
-    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
-  },
-];
+    {
+      ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+    }
+  );
 "
 `;
 
@@ -559,7 +573,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/myApp',
   plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.

@@ -6,6 +6,11 @@ import { ComponentStylesheetBundler } from '@angular/build/private';
 import { transformSupportedBrowsersToTargets } from '../utils/targets-from-browsers';
 import { getSupportedBrowsers } from '@angular/build/private';
 
+export interface StylesheetTransformResult {
+  contents: string;
+  outputFiles?: Array<{ path: string; text: string }>;
+}
+
 export interface SetupCompilationOptions {
   root: string;
   tsConfig: string;
@@ -94,7 +99,7 @@ export function styleTransform(
     styles: string,
     containingFile: string,
     stylesheetFile?: string
-  ) => {
+  ): Promise<StylesheetTransformResult> => {
     try {
       let stylesheetResult;
       if (stylesheetFile) {
@@ -116,13 +121,18 @@ export function styleTransform(
           );
         }
       }
-      return stylesheetResult.contents;
+
+      // Return both contents and outputFiles
+      return {
+        contents: stylesheetResult.contents,
+        outputFiles: stylesheetResult.outputFiles,
+      };
     } catch (e) {
       console.error(
         'Failed to compile styles. Continuing execution ignoring failing stylesheet...',
         e
       );
-      return '';
+      return { contents: '', outputFiles: undefined };
     }
   };
 }

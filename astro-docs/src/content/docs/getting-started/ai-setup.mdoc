@@ -4,20 +4,33 @@ description: Set up Nx MCP server to give AI assistants deep workspace context, 
 sidebar:
   order: 6
   label: AI Integration
+filter: 'type:Features'
 ---
 
-Nx provides deep integration with AI coding assistants through the **Nx Model Context Protocol (MCP) server**, giving your AI assistant comprehensive understanding of your monorepo structure, running processes, and development workflows.
+Nx provides deep integration with AI coding assistants through the **Nx Model Context Protocol (MCP) server**, giving your AI assistant comprehensive understanding of your monorepo structure, running processes, and development workflows. When you create a new Nx workspace, it includes AI agent configuration files (`CLAUDE.md` and `AGENTS.md`) that provide guidelines for working with Nx and the Nx MCP server.
 
-## Setup and Configuration
+## Configure Nx AI Integration
 
-### Automatic Setup with Nx Console
+{% youtube
+src="https://youtu.be/8gdvIz2r_QM"
+title="Set Up AI Agents in Nx"
+/%}
 
-Make sure you have **Nx Console** [installed in your editor](/docs/getting-started/editor-setup), as it automatically exposes the Nx MCP server. 
+### Automatic AI Setup
 
-In VSCode, the MCP server is registered automatically without any further steps required by you. In Cursor or JetBrains IDEs, you will receive a notification to configure the MCP server. Read more under [Setting up Nx MCP](/docs/features/enhance-ai#setting-up-nx-mcp).
-### Manual Setup for Other AI Clients
+To automatically configure your Nx workspace to work best with AI agents and assistants, run the following command:
 
-For MCP-compatible clients like **Claude Desktop**, **Cursor**, or other AI assistants, add the following configuration:
+```shell
+npx nx configure-ai-agents
+```
+
+This will prompt you for which AI agents/assistants to configure and make sure you are properly set up with both the [Nx MCP](/docs/features/enhance-ai) as well as corresponding AI agent configuration files (e.g. `AGENTS.md`, `CLAUDE.md` etc).
+
+Watch [our Youtube video](https://youtu.be/8gdvIz2r_QM) for a full walkthrough.
+
+### Manual AI Setup
+
+You can of course manually configure the Nx MCP for MCP-compatible clients using the following configuration:
 
 ```json
 // mcp.json
@@ -33,11 +46,11 @@ For MCP-compatible clients like **Claude Desktop**, **Cursor**, or other AI assi
 
 For Claude Code:
 
-```shell {% frame="none" %}
+```shell
 claude mcp add nx-mcp npx nx-mcp@latest
 ```
 
-## What This Integration Enables
+### What This Integration Enables
 
 The Nx AI integration provides your coding assistant with powerful capabilities:
 
@@ -47,5 +60,13 @@ The Nx AI integration provides your coding assistant with powerful capabilities:
 - **[Enhanced Code Generation](https://nx.dev/blog/nx-generators-ai-integration)** - AI-powered generator suggestions and custom scaffolding with intelligent defaults
 - **Cross-project Impact Analysis** - Understanding the implications of changes across your entire monorepo
 - **Autonomous Error Debugging** - AI independently accesses context to help fix development issues
+
+## Configure CI to Leverage AI Capabilities
+
+Nx also integrates AI directly into your CI runs to automatically detect failed tasks, analyze the errors, and propose fixes that can be reviewed and applied directly to your PR.
+
+Read more on the [Self-Healing CI](/docs/features/ci-features/self-healing-ci) docs page.
+
+## Learn More about Nx and AI
 
 Learn more about [why Nx and AI work so well together](https://nx.dev/blog/nx-and-ai-why-they-work-together).

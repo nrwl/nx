@@ -26,19 +26,26 @@ import { VitestIcon } from './technologies/vitest';
 import { VueIcon } from './technologies/vue';
 import { WebpackIcon } from './technologies/webpack';
 import { DockerIcon } from './technologies/docker';
+import { CSharpIcon } from './technologies/csharp';
+import { DotnetIcon } from './technologies/dotnet';
+import { FSharpIcon } from './technologies/fsharp';
+import { VisualBasicIcon } from './technologies/visualbasic';
 
 export const MonochromaticTechnologyIconsMap: Record<
   string,
   { icon: FunctionComponent<SVGProps<SVGSVGElement>> }
 > = {
   angular: { icon: AngularIcon },
+  'C#': { icon: CSharpIcon },
   cypress: { icon: CypressIcon },
   detox: { icon: ReactIcon },
   docker: { icon: DockerIcon },
+  dotnet: { icon: DotnetIcon },
   esbuild: { icon: EsbuildIcon },
   eslint: { icon: EslintIcon },
   expo: { icon: ExpoIcon },
   express: { icon: ExpressIcon },
+  'F#': { icon: FSharpIcon },
   gradle: { icon: GradleIcon },
   javascript: { icon: JavaScriptIcon },
   jest: { icon: JestIcon },
@@ -57,6 +64,7 @@ export const MonochromaticTechnologyIconsMap: Record<
   typescript: { icon: TypeScriptIcon },
   vite: { icon: ViteIcon },
   vitest: { icon: VitestIcon },
+  VB: { icon: VisualBasicIcon },
   vue: { icon: VueIcon },
   webcomponents: { icon: HTML5Icon },
   webpack: { icon: WebpackIcon },

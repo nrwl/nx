@@ -6,7 +6,6 @@ export interface Schema {
   name?: string;
   addTailwind?: boolean;
   skipFormat?: boolean;
-  simpleName?: boolean;
   addModuleSpec?: boolean;
   sourceDir?: string;
   buildable?: boolean;

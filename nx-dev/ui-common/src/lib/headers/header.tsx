@@ -50,9 +50,7 @@ export function Header({
   let [isOpen, setIsOpen] = useState(false);
 
   // Use the new docs URL when Astro docs are enabled
-  const docsUrl = process.env.NEXT_PUBLIC_ASTRO_URL
-    ? '/docs/getting-started/intro'
-    : '/getting-started/intro';
+  const docsUrl = '/docs/getting-started/intro';
   let [isScrolled, setIsScrolled] = useState(false);
 
   const router = useRouter();
@@ -105,25 +103,25 @@ export function Header({
         sendCustomEvent('contact-click', 'header-cta', 'page-header'),
     },
     {
-      href: 'https://cloud.nx.app?utm_source=nx-dev&utm_medium=header',
+      href: 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=header',
       variant: 'primary',
       size: 'small',
       target: '_blank',
-      title: 'Login to Nx Cloud',
-      children: 'Login',
+      title: 'Try Nx Cloud for free',
+      children: 'Try Nx Cloud for free',
       onClick: () =>
         sendCustomEvent('login-click', 'header-cta', 'page-header'),
     },
   ];
 
-  const getButtonsToRender = () => {
-    if (ctaButtons && ctaButtons.length > 0) return ctaButtons;
-    if (scrollCtaButtons && scrollCtaButtons.length > 0 && isScrolled)
-      return scrollCtaButtons;
-    return defaultCtaButtons;
-  };
+  // const getButtonsToRender = () => {
+  //   if (ctaButtons && ctaButtons.length > 0) return ctaButtons;
+  //   if (scrollCtaButtons && scrollCtaButtons.length > 0 && isScrolled)
+  //     return scrollCtaButtons;
+  //   return defaultCtaButtons;
+  // };
 
-  const buttonsToRender = getButtonsToRender();
+  // const buttonsToRender = getButtonsToRender();
 
   return (
     <div className="fixed inset-x-0 top-0 isolate z-[5] flex px-4 print:hidden">
@@ -270,6 +268,9 @@ export function Header({
               title="AI"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               prefetch={false}
+              onClick={() =>
+                sendCustomEvent('ai-click', 'header-cta', 'page-header')
+              }
             >
               AI
             </Link>
@@ -278,8 +279,22 @@ export function Header({
               title="Nx Cloud"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               prefetch={false}
+              onClick={() =>
+                sendCustomEvent('nx-cloud-click', 'header-cta', 'page-header')
+              }
             >
               Nx Cloud
+            </Link>
+            <Link
+              href="/nx-cloud#plans"
+              title="Nx Cloud Pricing"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+              onClick={() =>
+                sendCustomEvent('pricing-click', 'header-cta', 'page-header')
+              }
+            >
+              Pricing
             </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             {/*ENTERPRISE*/}
@@ -288,13 +303,12 @@ export function Header({
               title="Nx for Enterprises"
               className="hidden gap-2 px-3 py-2 font-semibold leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               prefetch={false}
+              onClick={() =>
+                sendCustomEvent('enterprise-click', 'header-cta', 'page-header')
+              }
             >
-              Nx Enterprise
+              Enterprise
             </Link>
-            <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
-            <div className="px-3 opacity-50 hover:opacity-100">
-              <AlgoliaSearch tiny={true} />
-            </div>
           </nav>
         </div>
         {/*SECONDARY NAVIGATION*/}
@@ -605,6 +619,13 @@ export function Header({
                             title="AI"
                             className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
                             prefetch={false}
+                            onClick={() =>
+                              sendCustomEvent(
+                                'ai-click',
+                                'mobile-header-cta',
+                                'page-header'
+                              )
+                            }
                           >
                             AI
                           </Link>
@@ -613,8 +634,30 @@ export function Header({
                             title="Nx Cloud"
                             className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
                             prefetch={false}
+                            onClick={() =>
+                              sendCustomEvent(
+                                'nx-cloud-click',
+                                'mobile-header-cta',
+                                'page-header'
+                              )
+                            }
                           >
                             Nx Cloud
+                          </Link>
+                          <Link
+                            href="/nx-cloud#plans"
+                            title="Nx Cloud Pricing"
+                            className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+                            prefetch={false}
+                            onClick={() =>
+                              sendCustomEvent(
+                                'pricing-click',
+                                'mobile-header-cta',
+                                'page-header'
+                              )
+                            }
+                          >
+                            Pricing
                           </Link>
                           <Disclosure as="div">
                             {({ open }) => (
@@ -627,7 +670,7 @@ export function Header({
                                     'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
                                   )}
                                 >
-                                  <span>Nx Enterprise</span>
+                                  <span>Enterprise</span>
                                   <ChevronDownIcon
                                     aria-hidden="true"
                                     className={cx(

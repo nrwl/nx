@@ -29,8 +29,7 @@ nx serve myapp
 
 ## Examples
 
-{% tabs %}
-{% tab label="Additional http-server options" %}
+##### Additional http-server options
 
 There are additional options from `http-server` that can be passed as CLI args. For example, to enable directory listing, pass `-d` as follows:
 
@@ -39,6 +38,3 @@ nx serve myapp -d
 ```
 
 Refer to the [`http-server`](https://www.npmjs.com/package/http-server) package for all available options.
-
-{% /tab %}
-{% /tabs %}

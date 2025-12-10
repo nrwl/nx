@@ -135,7 +135,7 @@ Bundlers handle these as well.
 
 Transpilation mainly refers to the process of transforming your Typescript files from Typescript (which a browser can't understand) to JavaScript (which a browser can understand!).
 
-Typescript serves as a way of placing typing assertions on our code to make sure we don't have errors in our code that violate our typing instructions. We can think of type-checking our code as a "lint step" - something that we should run before committing code into our codebase via [Continuous Integration](/ci), but this type-check step we can safely view as separate from our "build step." From the perspective of our "build step" we're usually looking at simply stripping out the types from your code to create valid JavaScript.
+Typescript serves as a way of placing typing assertions on our code to make sure we don't have errors in our code that violate our typing instructions. We can think of type-checking our code as a "lint step" - something that we should run before committing code into our codebase via [Continuous Integration](/docs/getting-started/nx-cloud), but this type-check step we can safely view as separate from our "build step." From the perspective of our "build step" we're usually looking at simply stripping out the types from your code to create valid JavaScript.
 
 Transpilation can also refer to adjusting the code we write in to code that browsers support. In prior days, tools like [Babel](https://babeljs.io/) were required to "transpile" down from ES6 javascript to ES5. Tools like Babel are still widely used, to support [esnext](https://developer.mozilla.org/en-US/docs/Web/JavaScript/JavaScript_technologies_overview#standardization_process) features that browsers don't support yet. This is also referred to as polyfilling sometimes - as in polyfilling a JS feature that is not supported yet by browsers, or sometimes for features that can be optionally loaded by specific browsers that are missing various features.
 
@@ -196,7 +196,7 @@ We have an input format we want to work with - and an output format that we want
 
 ## Learn More
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

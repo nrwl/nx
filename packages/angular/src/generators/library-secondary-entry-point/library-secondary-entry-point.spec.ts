@@ -207,6 +207,7 @@ describe('librarySecondaryEntryPoint generator', () => {
       'src/test-setup.ts',
       'jest.config.ts',
       'src/**/*.test.ts',
+      'jest.config.cts',
     ]);
 
     await librarySecondaryEntryPointGenerator(tree, {
@@ -222,6 +223,7 @@ describe('librarySecondaryEntryPoint generator', () => {
       'test-setup.ts',
       'jest.config.ts',
       '**/*.test.ts',
+      'jest.config.cts',
     ]);
   });
 
