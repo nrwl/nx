@@ -137,6 +137,13 @@
       },
       "x-priority": "important"
     },
+    "additionalEntryPointsRootDir": {
+      "type": "array",
+      "description": "Root dir for the additional entry-points. If provided, the paths in `additionalEntryPoints` are relative to this root dir.",
+      "items": {
+        "type": "string"
+      }
+    },
     "buildLibsFromSource": {
       "type": "boolean",
       "description": "Read buildable libraries from source instead of building them separately.",
