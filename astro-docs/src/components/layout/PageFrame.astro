@@ -3,12 +3,11 @@
 import MobileMenuToggle from '@astrojs/starlight/components/MobileMenuToggle.astro';
 import { Footer } from '@nx/nx-dev-ui-common/src/lib/footer';
 import { GitHubStarWidget } from '@nx/nx-dev-ui-common/src/lib/github-star-widget';
-import { DynamicBanner } from '@nx/nx-dev-ui-common/src/lib/banner/dynamic-banner';
+import { WebinarNotifier } from '@nx/nx-dev-ui-common/src/lib/webinar-notifier';
 
 const { hasSidebar } = Astro.locals.starlightRoute;
 const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
-// Banner URL from environment - server-side access, passed as prop to client component
-const bannerUrl = import.meta.env.BANNER_URL;
+const floatingBanner = Astro.locals.floatingBanner;
 ---
 
 <div class="page sl-flex">
@@ -51,7 +50,18 @@ const bannerUrl = import.meta.env.BANNER_URL;
   }
   <div class="main-frame"><slot /></div>
   <Footer disableThemeSwitcher={true} useDomainPrefix={true} className="dark:bg-slate-900" />
-  <DynamicBanner bannerUrl={bannerUrl} client:load />
+  {floatingBanner?.enabled && (
+    <WebinarNotifier
+      id={floatingBanner.id}
+      title={floatingBanner.title}
+      description={floatingBanner.description}
+      primaryCtaUrl={floatingBanner.primaryCtaUrl}
+      primaryCtaText={floatingBanner.primaryCtaText}
+      secondaryCtaUrl={floatingBanner.secondaryCtaUrl}
+      secondaryCtaText={floatingBanner.secondaryCtaText}
+      client:load
+    />
+  )}
 </div>
 
 <style>

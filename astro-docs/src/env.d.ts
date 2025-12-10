@@ -5,5 +5,15 @@
 declare namespace App {
   interface Locals {
     githubStarsCount?: number;
+    floatingBanner?: {
+      id: string;
+      title: string;
+      description: string;
+      primaryCtaUrl: string;
+      primaryCtaText: string;
+      secondaryCtaUrl?: string;
+      secondaryCtaText?: string;
+      enabled: boolean;
+    };
   }
 }

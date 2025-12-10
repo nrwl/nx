@@ -1,31 +1,68 @@
 import { defineRouteMiddleware } from '@astrojs/starlight/route-data';
 import { getCollection } from 'astro:content';
 
+export interface BannerConfig {
+  id: string;
+  title: string;
+  description: string;
+  primaryCtaUrl: string;
+  primaryCtaText: string;
+  secondaryCtaUrl?: string;
+  secondaryCtaText?: string;
+  enabled: boolean;
+}
+
+let cachedBannerPromise: Promise<BannerConfig | null> | null = null;
+
+async function getBannerConfig(): Promise<BannerConfig | null> {
+  if (cachedBannerPromise !== null) {
+    return cachedBannerPromise;
+  }
+
+  cachedBannerPromise = (async () => {
+    const bannerUrl = import.meta.env.BANNER_URL;
+
+    // If URL is set, fetch from remote
+    if (bannerUrl) {
+      try {
+        const response = await fetch(bannerUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return (await response.json()) as BannerConfig;
+      } catch (error) {
+        console.warn('Failed to fetch banner config:', error);
+        // Fall through to use committed config
+      }
+    }
+
+    // Use committed banner-config.json via content collection
+    const bannerCollection = await getCollection('banner');
+    if (bannerCollection.length > 0) {
+      return bannerCollection[0].data as BannerConfig;
+    }
+
+    return null;
+  })();
+
+  return cachedBannerPromise;
+}
+
 export const onRequest = defineRouteMiddleware(async (context) => {
-  const { entry } = context.locals.starlightRoute;
-  if (entry.data.banner) {
+  const bannerConfig = await getBannerConfig();
+
+  if (!bannerConfig) {
     return;
   }
 
-  const bannerContent = await getCollection('notifications');
+  // Set floating banner config for WebinarNotifier component
+  context.locals.floatingBanner = bannerConfig;
 
-  if (bannerContent.length) {
-    bannerContent.sort((a, b) =>
-      new Date(b.data.date) > new Date(a.data.date) ? -1 : 1
-    );
-
-    const nextEventToOccur = bannerContent.at(-1);
-    if (!nextEventToOccur || !nextEventToOccur.data.title) {
-      return;
-    }
-
-    const title = nextEventToOccur.data.title.split(':')[0];
-    // TODO(caleb): based on the 'type' we will render different markup for the banners
-    //  i.e. type=webinar => "Register for the {title} webinar"
-    //  type=event => "Join us for {title} on {date}"
-
+  // Set Starlight top banner (unless page already has one)
+  const { entry } = context.locals.starlightRoute;
+  if (!entry.data.banner && bannerConfig.enabled) {
     entry.data.banner = {
-      content: `<a href="${nextEventToOccur.data.registrationUrl}" title="${nextEventToOccur.data.title}">${title}</a>`,
+      content: `<a href="${bannerConfig.primaryCtaUrl}" title="${bannerConfig.title}">${bannerConfig.title}</a>`,
     };
   }
 });

@@ -3,9 +3,10 @@ import type { ReactNode } from 'react';
 import Script from 'next/script';
 import AppRouterAnalytics from './app-router-analytics';
 import GlobalScripts from './global-scripts';
-import { DynamicBanner } from '@nx/nx-dev-ui-common';
+import { WebinarNotifier } from '@nx/nx-dev-ui-common';
 import '../styles/main.css';
 import { FrontendObservability } from '../lib/components/frontend-observability';
+import bannerConfig from '../lib/banner-config.json';
 
 // Metadata for the entire site
 export const metadata: Metadata = {
@@ -120,7 +121,17 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body className="h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500">
         {children}
-        <DynamicBanner bannerUrl={process.env.NEXT_PUBLIC_BANNER_URL} />
+        {bannerConfig.enabled && (
+          <WebinarNotifier
+            id={bannerConfig.id}
+            title={bannerConfig.title}
+            description={bannerConfig.description}
+            primaryCtaUrl={bannerConfig.primaryCtaUrl}
+            primaryCtaText={bannerConfig.primaryCtaText}
+            secondaryCtaUrl={bannerConfig.secondaryCtaUrl}
+            secondaryCtaText={bannerConfig.secondaryCtaText}
+          />
+        )}
         <FrontendObservability />
         <GlobalScripts
           gaMeasurementId={gaMeasurementId}

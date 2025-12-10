@@ -1,0 +1,12 @@
+[
+  {
+    "id": "webinar-251217",
+    "title": "Bah humbug to slow builds and CI bottlenecks!",
+    "description": "Join us for a special year-end webinar on Dec. 17th. We'll take you on a journey through Nx's past, present, and future to explore the evolution of Nx and what's coming next.",
+    "primaryCtaUrl": "https://bit.ly/4q9sgzV",
+    "primaryCtaText": "Sign Up Now",
+    "secondaryCtaUrl": "",
+    "secondaryCtaText": "",
+    "enabled": true
+  }
+]

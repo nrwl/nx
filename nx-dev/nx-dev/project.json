@@ -50,7 +50,7 @@
     "build-base": {
       "parallelism": false,
       "executor": "@nx/next:build",
-      "dependsOn": ["copy-docs"],
+      "dependsOn": ["copy-docs", "prebuild-banner"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "root": "nx-dev/nx-dev",
@@ -71,6 +71,11 @@
         "cwd": "nx-dev/nx-dev"
       }
     },
+    "prebuild-banner": {
+      "inputs": [{ "env": "NEXT_PUBLIC_BANNER_URL" }],
+      "outputs": ["{projectRoot}/lib/banner-config.json"],
+      "command": "node scripts/documentation/prebuild-banner.mjs"
+    },
     "serve-docs": {
       "executor": "nx:run-commands",
       "options": {
@@ -87,7 +92,7 @@
     },
     "serve": {
       "executor": "@nx/next:server",
-      "dependsOn": ["copy-docs"],
+      "dependsOn": ["copy-docs", "prebuild-banner"],
       "options": {
         "buildTarget": "nx-dev:build-base",
         "dev": true

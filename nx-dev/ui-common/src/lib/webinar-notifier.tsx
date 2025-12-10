@@ -9,6 +9,8 @@ import {
 } from '@heroicons/react/24/outline';
 
 export interface WebinarNotifierProps {
+  /** Unique banner ID - changing this will show the banner again to users who dismissed it */
+  id: string;
   /** Banner title */
   title: string;
   /** Banner description */
@@ -21,41 +23,34 @@ export interface WebinarNotifierProps {
   secondaryCtaUrl?: string;
   /** Secondary CTA button text (optional) */
   secondaryCtaText?: string;
-  /** Storage key for dismiss state (defaults to title-based key) */
-  storageKey?: string;
-}
-
-/** Generate a stable key from title for localStorage */
-function getStorageKey(title: string): string {
-  return `banner-${title.toLowerCase().replace(/\s+/g, '-')}-closed`;
 }
 
 export function WebinarNotifier({
+  id,
   title,
   description,
   primaryCtaUrl,
   primaryCtaText,
   secondaryCtaUrl,
   secondaryCtaText,
-  storageKey,
 }: WebinarNotifierProps): ReactElement | null {
   const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState<boolean>(true);
 
-  const localStorageKey = storageKey || getStorageKey(title);
+  const storageKey = `banner-${id}-dismissed`;
 
   useEffect(() => {
     setIsMounted(true);
-    const isClosedSession = localStorage.getItem(localStorageKey);
-    if (isClosedSession === 'true') {
+    const isDismissed = localStorage.getItem(storageKey);
+    if (isDismissed === 'true') {
       setIsVisible(false);
     }
-  }, [localStorageKey]);
+  }, [storageKey]);
 
   const closeNotifier = (e: MouseEvent) => {
     e.stopPropagation();
     setIsVisible(false);
-    localStorage.setItem(localStorageKey, 'true');
+    localStorage.setItem(storageKey, 'true');
   };
 
   if (!isMounted || !isVisible) return null;

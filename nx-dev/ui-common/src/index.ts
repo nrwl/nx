@@ -1,5 +1,4 @@
 export * from './lib/announcement-banner';
-export * from './lib/banner';
 export * from './lib/headers/documentation-header';
 export * from './lib/breadcrumbs';
 export * from './lib/button';
