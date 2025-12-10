@@ -21,7 +21,7 @@ import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import * as autoprefixer from 'autoprefixer';
 import { existsSync } from 'node:fs';
-import { dirname, join, parse } from 'node:path';
+import { dirname, join, parse, relative } from 'node:path';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as rollup from 'rollup';
 import { analyze } from '../analyze';
@@ -356,7 +356,9 @@ function createInput(
     join(workspaceRoot, options.main)
   );
   options.additionalEntryPoints?.forEach((entry) => {
-    input[parse(entry).name] = normalizePath(join(workspaceRoot, entry));
+    const path = normalizePath(join(workspaceRoot, entry))
+    const inputName = options.additionalEntryPointsRootDir ? relative(options.additionalEntryPointsRootDir, entry) : parse(entry).name
+    input[inputName] = path;
   });
   return input;
 }

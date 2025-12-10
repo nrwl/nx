@@ -29,6 +29,7 @@ export function normalizeOptions(
       options.additionalEntryPoints,
       workspaceRoot
     ),
+    additionalEntryPointsRootDir: options.additionalEntryPointsRootDir ? resolve(workspaceRoot, options.additionalEntryPointsRootDir) : undefined,
     allowJs: options.allowJs ?? false,
     assets: options.assets
       ? normalizeAssets(options.assets, workspaceRoot, sourceRoot)
