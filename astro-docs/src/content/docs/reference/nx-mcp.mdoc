@@ -15,9 +15,13 @@ For an overview of how Nx enhances AI assistants and powerful use cases, see the
 
 There are a few ways to setup the Nx MCP server:
 
-### Via the nx-mcp Package
+{% aside type="note" title="Top level command" %}
+Starting with Nx v21.4.0, you can run the MCP server directly using the `nx mcp` command.
+You can still use the standalone `nx-mcp` package if you prefer.
+All args are passed through to the underlying MCP server.
+{% /aside %}
 
-Invoke the MCP server via `npx` or your package manager's equivalent:
+### via mcp.json
 
 ```json
 // mcp.json
