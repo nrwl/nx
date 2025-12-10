@@ -20,8 +20,8 @@ export function generatePackageJson(
 ): Plugin {
   return {
     name: pluginName,
-    writeBundle: () => {
-      updatePackageJson(options, packageJson);
+    writeBundle: (rollupOptions, bundle) => {
+      updatePackageJson(options, packageJson, bundle);
     },
   };
 }
