@@ -1,6 +1,8 @@
 package dev.nx.maven.runner
 
-import org.apache.maven.DefaultMaven
+import dev.nx.maven.reflection.MavenWrapper
+import dev.nx.maven.reflection.ReflectionHelper
+import org.apache.maven.Maven
 import org.apache.maven.api.Session
 import org.apache.maven.api.SessionData
 import org.apache.maven.api.services.Lookup
@@ -13,7 +15,6 @@ import org.apache.maven.internal.impl.InternalMavenSession
 import org.apache.maven.jline.JLineMessageBuilderFactory
 import org.apache.maven.lifecycle.internal.ExecutionEventCatapult
 import org.apache.maven.lifecycle.internal.LifecycleStarter
-import org.apache.maven.model.superpom.SuperPomProvider
 import org.apache.maven.plugin.LegacySupport
 import org.apache.maven.project.MavenProject
 import org.apache.maven.resolver.MavenChainedWorkspaceReader
@@ -25,41 +26,29 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Nx Maven service that extends DefaultMaven and preserves session state across invocations.
+ * Nx Maven service that wraps Maven and preserves session state across invocations.
  *
- * By extending DefaultMaven and reusing the same instance across batch invocations,
- * the internal MavenSession is preserved, ensuring:
+ * By wrapping a Maven instance (from user's installation) and reusing the same instance
+ * across batch invocations, the internal MavenSession is preserved, ensuring:
  * - Compiled artifacts from previous goals are visible to subsequent goals
  * - Project model state and cache are preserved
  * - Build session context and properties persist
  *
  * This allows sequential goals (jar:jar → install:install) to see each other's artifacts.
+ *
+ * Uses composition instead of inheritance to decouple from specific Maven versions.
  */
 class NxMaven(
+  delegateMaven: Maven,
   private val lookup: Lookup,
   private val eventCatapult: ExecutionEventCatapult,
   private val legacySupport: LegacySupport,
   private val sessionScope: SessionScope,
   private val repositorySessionFactory: RepositorySystemSessionFactory,
   private val graphBuilder: GraphBuilder,
-  buildResumptionAnalyzer: BuildResumptionAnalyzer,
-  buildResumptionDataRepository: BuildResumptionDataRepository,
-  superPomProvider: SuperPomProvider,
   private val defaultSessionFactory: DefaultSessionFactory,
   private val ideWorkspaceReader: WorkspaceReader?
-) : DefaultMaven(
-  lookup,
-  eventCatapult,
-  legacySupport,
-  sessionScope,
-  repositorySessionFactory,
-  graphBuilder,
-  buildResumptionAnalyzer,
-  buildResumptionDataRepository,
-  superPomProvider,
-  defaultSessionFactory,
-  ideWorkspaceReader
-) {
+) : MavenWrapper(delegateMaven) {
   private val log = LoggerFactory.getLogger(NxMaven::class.java)
   private val executionCount = AtomicInteger(0)
 
@@ -76,10 +65,14 @@ class NxMaven(
   private var cachedWorkspaceReader: MavenChainedWorkspaceReader? = null
 
   private val getProjectMapMethod by lazy {
-    DefaultMaven::class.java.getDeclaredMethod(
+    // Use reflection to access protected getProjectMap method from DefaultMaven
+    val method = ReflectionHelper.findMethod(
+      getDelegate().javaClass,
       "getProjectMap",
-      Collection::class.java
-    ).apply { isAccessible = true }
+      parameterCount = 1
+    )
+    method?.apply { isAccessible = true }
+      ?: throw RuntimeException("Could not find getProjectMap method on Maven instance")
   }
 
   init {
@@ -197,7 +190,8 @@ class NxMaven(
     session.currentProject = selectedProjects.firstOrNull()
 
     // Project map should match session.projects for consistency
-    session.projectMap = getProjectMapMethod.invoke(this, selectedProjects) as Map<String?, MavenProject?>?
+    // Call getProjectMap on the delegate Maven instance (not on this wrapper)
+    session.projectMap = getProjectMapMethod.invoke(getDelegate(), selectedProjects) as Map<String?, MavenProject?>?
   }
 
   override fun execute(request: MavenExecutionRequest): MavenExecutionResult {
