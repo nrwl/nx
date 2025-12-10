@@ -1,18 +1,48 @@
 'use client';
 
 import { MouseEvent, ReactElement, useEffect, useState } from 'react';
-// import { motion } from 'framer-motion';
-// import {
-//   MegaphoneIcon,
-//   VideoCameraIcon,
-//   XMarkIcon,
-// } from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
+import {
+  MegaphoneIcon,
+  XMarkIcon,
+  ArrowTopRightOnSquareIcon,
+} from '@heroicons/react/24/outline';
 
-export function WebinarNotifier(): ReactElement | null {
-  /*
+export interface WebinarNotifierProps {
+  /** Banner title */
+  title: string;
+  /** Banner description */
+  description: string;
+  /** Primary CTA URL */
+  primaryCtaUrl: string;
+  /** Primary CTA button text */
+  primaryCtaText: string;
+  /** Secondary CTA URL (optional) */
+  secondaryCtaUrl?: string;
+  /** Secondary CTA button text (optional) */
+  secondaryCtaText?: string;
+  /** Storage key for dismiss state (defaults to title-based key) */
+  storageKey?: string;
+}
+
+/** Generate a stable key from title for localStorage */
+function getStorageKey(title: string): string {
+  return `banner-${title.toLowerCase().replace(/\s+/g, '-')}-closed`;
+}
+
+export function WebinarNotifier({
+  title,
+  description,
+  primaryCtaUrl,
+  primaryCtaText,
+  secondaryCtaUrl,
+  secondaryCtaText,
+  storageKey,
+}: WebinarNotifierProps): ReactElement | null {
   const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState<boolean>(true);
-  const localStorageKey = 'webinar-november-19-2025--notifier-closed';
+
+  const localStorageKey = storageKey || getStorageKey(title);
 
   useEffect(() => {
     setIsMounted(true);
@@ -20,7 +50,7 @@ export function WebinarNotifier(): ReactElement | null {
     if (isClosedSession === 'true') {
       setIsVisible(false);
     }
-  }, []);
+  }, [localStorageKey]);
 
   const closeNotifier = (e: MouseEvent) => {
     e.stopPropagation();
@@ -62,23 +92,38 @@ export function WebinarNotifier(): ReactElement | null {
               aria-hidden="true"
               className="size-8 flex-shrink-0"
             />
-            <span>Unlock 3x More Performance From Your CI</span>
+            <span>{title}</span>
           </motion.h3>
-          <motion.div key="live-event" className="mt-4 space-y-4">
-            <p className="mb-2 text-sm">
-              Join Nx co-founder Jeff Cross and Madeline Hennessy on Nov. 19th.
-              See how Nx features compound to multiply your gains.
-            </p>
+          <motion.div key="banner-content" className="mt-4 space-y-4">
+            <p className="mb-2 text-sm">{description}</p>
             <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-4">
+              {secondaryCtaUrl && secondaryCtaText && (
+                <a
+                  href={secondaryCtaUrl}
+                  target="_blank"
+                  title={secondaryCtaText}
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-2 py-2 text-sm font-semibold text-white no-underline transition hover:bg-slate-700 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 md:px-4"
+                >
+                  <ArrowTopRightOnSquareIcon
+                    aria-hidden="true"
+                    className="size-4"
+                  />
+                  <span>{secondaryCtaText}</span>
+                </a>
+              )}
               <a
-                title="Signup"
-                href="https://bit.ly/496NV6n"
+                title={primaryCtaText}
+                href={primaryCtaUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-pink-600 px-2 py-2 text-sm font-semibold text-white no-underline transition hover:bg-pink-700 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:text-black/70 md:px-4"
               >
-                <VideoCameraIcon aria-hidden="true" className="size-4" />
-                <span>Sign Up Now</span>
+                <ArrowTopRightOnSquareIcon
+                  aria-hidden="true"
+                  className="size-4"
+                />
+                <span>{primaryCtaText}</span>
               </a>
             </div>
           </motion.div>
@@ -86,7 +131,4 @@ export function WebinarNotifier(): ReactElement | null {
       </div>
     </motion.div>
   );
-  */
-
-  return null;
 }
