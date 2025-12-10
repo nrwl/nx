@@ -1,4 +1,3 @@
-import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { RawProjectGraphDependency } from '../../../../project-graph/project-graph-builder';
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
@@ -19,16 +18,14 @@ export function buildExplicitDependencies(
   // TODO: TargetProjectLocator is a public API, so we can't change the shape of it
   // We should eventually let it accept Record<string, ProjectConfiguration> s.t. we
   // don't have to reshape the CreateDependenciesContext here.
-  const nodes: Record<string, ProjectGraphProjectNode> = Object.fromEntries(
-    Object.entries(ctx.projects).map(([key, config]) => [
-      key,
-      {
-        name: key,
-        type: null,
-        data: config,
-      },
-    ])
-  );
+  const nodes = {};
+  Object.keys(ctx.projects).forEach((key) => {
+    nodes[key] = {
+      name: key,
+      type: null,
+      data: ctx.projects[key],
+    };
+  });
   const targetProjectLocator = new TargetProjectLocator(
     nodes,
     ctx.externalNodes
