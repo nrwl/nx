@@ -19,17 +19,15 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
   private val log = LoggerFactory.getLogger(MavenInvokerRunner::class.java)
   private val gson = Gson()
 
-  // Detect Maven home and version once - used for argument building and executor selection
+  // Detect Maven home once - used for ResidentMavenExecutor initialization
   private val mavenDiscovery = MavenHomeDiscovery(workspaceRoot).discoverMavenHomeWithVersion()
   private val isMaven4 = mavenDiscovery?.version?.startsWith("4") == true
 
-  // Maven executor - automatically selects best available strategy:
-  // - Maven 4.x: ResidentMavenExecutor with context caching
-  // - Maven 3.9.x: ProcessBasedMavenExecutor (fallback via subprocess)
-  private val mavenExecutor = MavenExecutorFactory.create(
+  // Maven executor - uses ResidentMavenExecutor with context caching for Maven 4.x
+  // Works across all Maven 4.x versions (rc-4, rc-5, 4.1.x, etc.) via reflection
+  private val mavenExecutor: MavenExecutor = ResidentMavenExecutor(
     workspaceRoot = workspaceRoot,
-    mavenHome = mavenDiscovery?.mavenHome,
-    mavenVersion = mavenDiscovery?.version
+    mavenInstallationDir = mavenDiscovery?.mavenHome
   )
 
   fun runBatch(): Map<String, TaskResult> {
@@ -211,9 +209,8 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     return try {
       log.debug("Executing ${goals.joinToString(", ")} for task: $taskId")
 
-      // Execute using the appropriate Maven executor (auto-selected based on Maven version)
-      // Maven 4.x: ResidentMavenExecutor with context caching
-      // Maven 3.9.x: ProcessBasedMavenExecutor (subprocess fallback)
+      // Execute using ResidentMavenExecutor with context caching
+      // Works across all Maven 4.x versions via reflection-based implementation
       val exitCode = mavenExecutor.execute(
         goals = goals,
         arguments = arguments,
