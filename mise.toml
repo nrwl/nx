@@ -2,5 +2,5 @@
 bun = "1.3"
 dotnet = "9"
 java = "24"
-node = "24"
+node = "{{ env['NODE_VERSION'] | default(value='24') }}"
 rust = "1.90.0"
