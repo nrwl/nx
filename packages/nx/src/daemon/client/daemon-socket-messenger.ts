@@ -62,7 +62,10 @@ export class DaemonSocketMessenger {
     this.socket.on(
       'data',
       consumeMessagesFromSocket(async (message) => {
-        clientLogger.log('[Messenger] Received message, length:', message.length);
+        clientLogger.log(
+          '[Messenger] Received message, length:',
+          message.length
+        );
         onData(message);
       })
     );

@@ -20,6 +20,5 @@ pub fn get_mod_time(metadata: &Metadata) -> i64 {
 
 #[cfg(target_os = "wasi")]
 pub fn get_mod_time(metadata: &Metadata) -> i64 {
-    use std::os::wasi::fs::MetadataExt;
-    metadata.mtim() as i64
+    metadata.modified()
 }

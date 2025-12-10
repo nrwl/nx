@@ -133,11 +133,9 @@ enum DaemonStatus {
   CONNECTED,
 }
 
-const RECONNECT_CONFIG = {
-  initialDelayMs: 10,
-  maxDelayMs: 5000,
-  backoffMultiplier: 1.5,
-  maxAttempts: 30,
+const WAIT_FOR_SERVER_CONFIG = {
+  delayMs: 10,
+  maxAttempts: 6000, // 6000 * 10ms = 60 seconds
 };
 
 export class DaemonClient {
@@ -403,6 +401,9 @@ export class DaemonClient {
         },
         () => {
           // Connection closed - trigger reconnection
+          clientLogger.log(
+            `[FileWatcher] Socket closed, triggering reconnection`
+          );
           this.fileWatcherMessenger = undefined;
           for (const cb of this.fileWatcherCallbacks.values()) {
             cb('reconnecting', null);
@@ -456,11 +457,28 @@ export class DaemonClient {
     );
 
     // Wait for daemon server to be available before trying to reconnect
-    const serverAvailable = await this.waitForServerWithExponentialBackoff();
+    let serverAvailable: boolean;
+    try {
+      serverAvailable = await this.waitForServerToBeAvailable({
+        ignoreVersionMismatch: false,
+      });
+    } catch (err) {
+      // Version mismatch - pass error to callbacks so they can handle it
+      clientLogger.log(
+        `[FileWatcher] Error during reconnection: ${err.message}`
+      );
+      this.fileWatcherReconnecting = false;
+      for (const cb of this.fileWatcherCallbacks.values()) {
+        cb(err, null);
+      }
+      return;
+    }
 
     if (!serverAvailable) {
       // Failed to reconnect after all attempts - notify as closed
-      clientLogger.log(`[FileWatcher] Failed to reconnect - server unavailable`);
+      clientLogger.log(
+        `[FileWatcher] Failed to reconnect - server unavailable`
+      );
       this.fileWatcherReconnecting = false;
       for (const cb of this.fileWatcherCallbacks.values()) {
         cb('closed', null);
@@ -596,12 +614,33 @@ export class DaemonClient {
     }
 
     this.projectGraphListenerReconnecting = true;
+    clientLogger.log(
+      `[ProjectGraphListener] Starting reconnection for ${this.projectGraphListenerCallbacks.size} callbacks`
+    );
 
     // Wait for daemon server to be available before trying to reconnect
-    const serverAvailable = await this.waitForServerWithExponentialBackoff();
+    let serverAvailable: boolean;
+    try {
+      serverAvailable = await this.waitForServerToBeAvailable({
+        ignoreVersionMismatch: false,
+      });
+    } catch (err) {
+      // Version mismatch - pass error to callbacks so they can handle it
+      clientLogger.log(
+        `[ProjectGraphListener] Error during reconnection: ${err.message}`
+      );
+      this.projectGraphListenerReconnecting = false;
+      for (const cb of this.projectGraphListenerCallbacks.values()) {
+        cb(err, null);
+      }
+      return;
+    }
 
     if (!serverAvailable) {
       // Failed to reconnect after all attempts - notify as closed
+      clientLogger.log(
+        `[ProjectGraphListener] Failed to reconnect - server unavailable`
+      );
       this.projectGraphListenerReconnecting = false;
       for (const cb of this.projectGraphListenerCallbacks.values()) {
         cb('closed', null);
@@ -867,7 +906,7 @@ export class DaemonClient {
   }
 
   async isServerAvailable(): Promise<boolean> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       try {
         const socketPath = this.getSocketPath();
         if (!socketPath) {
@@ -882,6 +921,9 @@ export class DaemonClient {
           resolve(false);
         });
       } catch (err) {
+        if (err instanceof VersionMismatchError) {
+          reject(err); // Let version mismatch bubble up
+        }
         resolve(false);
       }
     });
@@ -896,7 +938,18 @@ export class DaemonClient {
       this._daemonStatus = DaemonStatus.CONNECTING;
 
       let daemonPid: number | null = null;
-      if (!(await this.isServerAvailable())) {
+      let serverAvailable: boolean;
+      try {
+        serverAvailable = await this.isServerAvailable();
+      } catch (err) {
+        // Version mismatch - treat as server not available, start new one
+        if (err instanceof VersionMismatchError) {
+          serverAvailable = false;
+        } else {
+          throw err;
+        }
+      }
+      if (!serverAvailable) {
         daemonPid = await this.startInBackground();
       }
       this.setUpConnection();
@@ -934,20 +987,13 @@ export class DaemonClient {
         if (this.queue.isEmpty()) {
           this.reset();
         } else {
-          output.error({
-            title: 'Daemon process terminated and closed the connection',
-            bodyLines: [
-              'Please rerun the command, which will restart the daemon.',
-              `If you get this error again, check for any errors in the daemon process logs found in: ${DAEMON_OUTPUT_LOG_FILE}`,
-            ],
-          });
+          // Connection closed while we had pending work - try to reconnect
           this._daemonStatus = DaemonStatus.DISCONNECTED;
-          this.currentReject?.(
+          this.handleConnectionError(
             daemonProcessException(
               'Daemon process terminated and closed the connection'
             )
           );
-          process.exit(1);
         }
       },
       (err) => {
@@ -984,10 +1030,26 @@ export class DaemonClient {
     // Set status to CONNECTING so new requests will wait for reconnection
     this._daemonStatus = DaemonStatus.CONNECTING;
 
-    const serverAvailable = await this.waitForServerWithExponentialBackoff();
+    let serverAvailable: boolean;
+    try {
+      serverAvailable = await this.waitForServerToBeAvailable({
+        ignoreVersionMismatch: false,
+      });
+    } catch (err) {
+      if (err instanceof VersionMismatchError) {
+        // New daemon has different version - reject with error so caller can handle
+        if (this.currentReject) {
+          this.currentReject(err);
+        }
+        return;
+      }
+      throw err;
+    }
 
     if (serverAvailable) {
-      clientLogger.log(`[Reconnect] Reconnection successful, re-establishing connection`);
+      clientLogger.log(
+        `[Reconnect] Reconnection successful, re-establishing connection`
+      );
       // Server is back up, establish connection and signal ready
       this.establishConnection();
 
@@ -1016,35 +1078,46 @@ export class DaemonClient {
     this._daemonReady();
   }
 
-  private async waitForServerWithExponentialBackoff(
-    config = RECONNECT_CONFIG
-  ): Promise<boolean> {
-    let delayMs = config.initialDelayMs;
+  /**
+   * Wait for daemon server to be available.
+   * Used for reconnection - throws VersionMismatchError if daemon version differs.
+   */
+  private async waitForServerToBeAvailable(options: {
+    ignoreVersionMismatch: boolean;
+  }): Promise<boolean> {
     let attempts = 0;
 
     clientLogger.log(
-      `[Reconnect] Starting reconnection attempts (max: ${config.maxAttempts})`
+      `[Client] Waiting for server (max: ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts, ${WAIT_FOR_SERVER_CONFIG.delayMs}ms interval)`
     );
 
-    while (attempts < config.maxAttempts) {
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    while (attempts < WAIT_FOR_SERVER_CONFIG.maxAttempts) {
+      await new Promise((resolve) =>
+        setTimeout(resolve, WAIT_FOR_SERVER_CONFIG.delayMs)
+      );
       attempts++;
 
-      clientLogger.log(
-        `[Reconnect] Attempt ${attempts}/${config.maxAttempts}, delay: ${delayMs}ms`
-      );
-
-      if (await this.isServerAvailable()) {
-        clientLogger.log(`[Reconnect] Server available after ${attempts} attempts`);
-        return true;
+      try {
+        if (await this.isServerAvailable()) {
+          clientLogger.log(
+            `[Client] Server available after ${attempts} attempts`
+          );
+          return true;
+        }
+      } catch (err) {
+        if (err instanceof VersionMismatchError) {
+          if (!options.ignoreVersionMismatch) {
+            throw err;
+          }
+          // Keep waiting - old cache file may exist
+        } else {
+          throw err;
+        }
       }
-
-      clientLogger.log(`[Reconnect] Server not available, will retry`);
-      delayMs = Math.min(delayMs * config.backoffMultiplier, config.maxDelayMs);
     }
 
     clientLogger.log(
-      `[Reconnect] Failed to reconnect after ${config.maxAttempts} attempts`
+      `[Client] Server not available after ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts`
     );
     return false;
   }
@@ -1146,6 +1219,8 @@ export class DaemonClient {
     this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
     this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
 
+    clientLogger.log(`[Client] Starting new daemon server in background`);
+
     const backgroundProcess = spawn(
       process.execPath,
       [join(__dirname, `../server/start.js`)],
@@ -1166,25 +1241,19 @@ export class DaemonClient {
     /**
      * Ensure the server is actually available to connect to via IPC before resolving
      */
-    let attempts = 0;
-    return new Promise((resolve, reject) => {
-      const id = setInterval(async () => {
-        if (await this.isServerAvailable()) {
-          clearInterval(id);
-          resolve(backgroundProcess.pid);
-        } else if (attempts > 6000) {
-          // daemon fails to start, the process probably exited
-          // we print the logs and exit the client
-          reject(
-            daemonProcessException(
-              'Failed to start or connect to the Nx Daemon process.'
-            )
-          );
-        } else {
-          attempts++;
-        }
-      }, 10);
+    const serverAvailable = await this.waitForServerToBeAvailable({
+      ignoreVersionMismatch: true,
     });
+    if (serverAvailable) {
+      clientLogger.log(
+        `[Client] Daemon server started, pid=${backgroundProcess.pid}`
+      );
+      return backgroundProcess.pid;
+    } else {
+      throw daemonProcessException(
+        'Failed to start or connect to the Nx Daemon process.'
+      );
+    }
   }
 
   async stop(): Promise<void> {

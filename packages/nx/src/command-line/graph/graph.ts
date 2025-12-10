@@ -8,6 +8,7 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
+import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenger';
 import * as http from 'node:http';
 import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
@@ -842,14 +843,19 @@ function createFileWatcher() {
     },
     debounce(async (error, changes) => {
       if (error === 'reconnecting') {
-        // Silent - daemon restarts automatically on lockfile changes
+        output.note({ title: 'Daemon restarting, reconnecting...' });
         return;
       } else if (error === 'reconnected') {
-        // Silent - reconnection succeeded
+        output.note({ title: 'Reconnected to daemon' });
         return;
       } else if (error === 'closed') {
         output.error({
           title: `Failed to reconnect to daemon after multiple attempts`,
+        });
+        process.exit(1);
+      } else if (error instanceof VersionMismatchError) {
+        output.error({
+          title: 'Nx version changed. Please restart your command.',
         });
         process.exit(1);
       } else if (error) {

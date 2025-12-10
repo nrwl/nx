@@ -226,35 +226,6 @@ async function handleMessage(socket: Socket, data: string) {
     );
   }
 
-  const outdated = daemonIsOutdated();
-  if (outdated) {
-    if (outdated === 'LOCK_FILES_CHANGED') {
-      // For lock file changes, restart daemon - clients will reconnect automatically
-      await handleServerProcessTerminationWithRestart({
-        server,
-        reason: outdated,
-        sockets: openSockets,
-      });
-    } else if (outdated === 'NX_VERSION_CHANGED') {
-      // For version changes, restart daemon - clients will reconnect automatically
-      serverLogger.log(
-        'Nx version changed, starting new daemon and shutting down'
-      );
-      await handleServerProcessTerminationWithRestart({
-        server,
-        reason: outdated,
-        sockets: openSockets,
-      });
-    } else {
-      // For other reasons, just exit normally
-      await respondWithErrorAndExit(
-        socket,
-        `Daemon outdated`,
-        new Error(outdated)
-      );
-    }
-  }
-
   resetInactivityTimeout(handleInactivityTimeout);
 
   const unparsedPayload = data;
@@ -597,7 +568,9 @@ function lockFileHashChanged(): boolean {
   const newHash = hashArray(lockHashes);
 
   if (existingLockHash && newHash != existingLockHash) {
-    serverLogger.log(`lock file hash changed! triggering daemon restart`);
+    serverLogger.log(
+      `[Server] lock file hash changed! old=${existingLockHash}, new=${newHash}`
+    );
     existingLockHash = newHash;
     return true;
   } else {
@@ -624,27 +597,6 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
 
   try {
     resetInactivityTimeout(handleInactivityTimeout);
-
-    const outdatedReason = daemonIsOutdated();
-    if (outdatedReason) {
-      if (
-        outdatedReason === 'LOCK_FILES_CHANGED' ||
-        outdatedReason === 'NX_VERSION_CHANGED'
-      ) {
-        await handleServerProcessTerminationWithRestart({
-          server,
-          reason: outdatedReason,
-          sockets: openSockets,
-        });
-      } else {
-        await handleServerProcessTermination({
-          server,
-          reason: outdatedReason,
-          sockets: openSockets,
-        });
-      }
-      return;
-    }
 
     if (err) {
       let error = typeof err === 'string' ? new Error(err) : err;
@@ -746,6 +698,8 @@ export async function startServer(): Promise<Server> {
     killSocketOrPath();
   }
 
+  serverLogger.log(`[Server] Starting outdated check interval (20ms)`);
+
   setInterval(() => {
     if (getDaemonProcessIdSync() !== process.pid) {
       return handleServerProcessTermination({
@@ -757,16 +711,18 @@ export async function startServer(): Promise<Server> {
 
     const outdated = daemonIsOutdated();
     if (outdated) {
-      if (
-        outdated === 'LOCK_FILES_CHANGED' ||
-        outdated === 'NX_VERSION_CHANGED'
-      ) {
+      serverLogger.log(`[Server] Daemon outdated: ${outdated}`);
+      if (outdated === 'LOCK_FILES_CHANGED') {
+        // Lock file changes - restart daemon, clients will reconnect
+        serverLogger.log('[Server] Restarting daemon...');
         handleServerProcessTerminationWithRestart({
           server,
           reason: outdated,
           sockets: openSockets,
         });
       } else {
+        // Version changes or other reasons - just shut down, don't restart
+        serverLogger.log('[Server] Shutting down daemon (no restart)...');
         handleServerProcessTermination({
           server,
           reason: outdated,
