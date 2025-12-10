@@ -55,8 +55,14 @@ class NxMavenFactory(private val lookup: Lookup) {
       ?: throw RuntimeException("RepositorySystemSessionFactory not available in lookup")
     val graphBuilder = lookup.lookup(GraphBuilder::class.java)
       ?: throw RuntimeException("GraphBuilder not available in lookup")
-    val defaultSessionFactory = lookup.lookup(DefaultSessionFactory::class.java)
-      ?: throw RuntimeException("DefaultSessionFactory not available in lookup")
+
+    // DefaultSessionFactory is only available in Maven 4.x
+    val defaultSessionFactory = try {
+      lookup.lookup(DefaultSessionFactory::class.java)
+    } catch (e: Exception) {
+      log.debug("DefaultSessionFactory not available (Maven 3.x)")
+      null
+    }
 
     // Optional dependency - workspace reader might not be available
     val ideWorkspaceReader = try {

@@ -46,7 +46,7 @@ class NxMaven(
   private val sessionScope: SessionScope,
   private val repositorySessionFactory: RepositorySystemSessionFactory,
   private val graphBuilder: GraphBuilder,
-  private val defaultSessionFactory: DefaultSessionFactory,
+  private val defaultSessionFactory: DefaultSessionFactory?,  // Optional - only in Maven 4.x
   private val ideWorkspaceReader: WorkspaceReader?
 ) : MavenWrapper(delegateMaven) {
   private val log = LoggerFactory.getLogger(NxMaven::class.java)
@@ -129,8 +129,16 @@ class NxMaven(
     // Cache the repository session and maven session for reuse across invocations
     // This preserves artifact cache, repository metadata, and model builder cache
     cachedRepositorySession = closeableSession
-    cachedInternalSession = defaultSessionFactory.newSession(graphSession)
-    graphSession.session = cachedInternalSession
+
+    // Create InternalSession (Maven 4.x only - uses DefaultSessionFactory)
+    // Maven 3.x doesn't have this, so we skip it and rely on MavenSession's built-in session
+    if (defaultSessionFactory != null) {
+      cachedInternalSession = defaultSessionFactory.newSession(graphSession)
+      graphSession.session = cachedInternalSession
+    } else {
+      log.debug("DefaultSessionFactory not available (Maven 3.x) - using MavenSession's built-in session")
+      cachedInternalSession = null
+    }
 
     sessionScope.enter()
     try {
@@ -230,7 +238,12 @@ class NxMaven(
       // Reuse the cached RepositorySystemSession (holds artifact cache and metadata)
       // Create a new MavenSession wrapper with the new request/result but same cached repository session
       val session = MavenSession(cachedRepositorySession!!, request, result)
-      session.session = cachedInternalSession  // Reuse cached InternalSession object to preserve ModelBuilderSession
+
+      // Reuse cached InternalSession if available (Maven 4.x)
+      // Maven 3.x doesn't have this, so session.session remains as created by MavenSession constructor
+      if (cachedInternalSession != null) {
+        session.session = cachedInternalSession
+      }
 
       initializeModelBuilderSession(session)
       applyGraphToSession(session, cachedProjectGraph!!, request)
