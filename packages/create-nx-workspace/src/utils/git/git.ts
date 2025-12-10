@@ -39,14 +39,22 @@ async function getGitHubUsername(directory: string): Promise<string> {
   return username;
 }
 
+// Module-level promise for background repo fetching
+let existingReposPromise: Promise<Set<string>> | undefined;
+
+function populateExistingRepos(directory: string): void {
+  existingReposPromise ??= getUserRepositories(directory);
+}
+
 async function getUserRepositories(directory: string): Promise<Set<string>> {
   try {
     const allRepos = new Set<string>();
 
     // Get user's personal repos and organizations concurrently
+    // Limit to 100 repos for faster response (covers most use cases)
     const [userRepos, orgsResult] = await Promise.all([
       execAndWait(
-        'gh repo list --limit 1000 --json nameWithOwner --jq ".[].nameWithOwner"',
+        'gh repo list --limit 100 --json nameWithOwner --jq ".[].nameWithOwner"',
         directory
       ),
       execAndWait('gh api user/orgs --jq ".[].login"', directory),
@@ -69,7 +77,7 @@ async function getUserRepositories(directory: string): Promise<Set<string>> {
     const orgRepoPromises = orgs.map(async (org) => {
       try {
         const orgRepos = await execAndWait(
-          `gh repo list ${org} --limit 1000 --json nameWithOwner --jq ".[].nameWithOwner"`,
+          `gh repo list ${org} --limit 100 --json nameWithOwner --jq ".[].nameWithOwner"`,
           directory
         );
         return orgRepos.stdout
@@ -172,13 +180,20 @@ export async function pushToGitHub(
       );
     }
 
+    // Note: This call can throw an error even if user hasn't opted in to push yet,
+    // which could be confusing as they haven't been asked about GitHub push at this point.
+    // We check gh authentication early to provide a better error message.
     const username = await getGitHubUsername(directory);
+
+    // Start fetching existing repositories in the background immediately
+    // This runs while user is answering prompts, so validation is usually instant
+    populateExistingRepos(directory);
 
     // First prompt: Ask if they want to push to GitHub
     const { push } = await enquirer.prompt<{ push: 'Yes' | 'No' }>([
       {
         name: 'push',
-        message: 'Would you like to push this workspace to Github?',
+        message: 'Would you like to push this workspace to GitHub?',
         type: 'autocomplete',
         choices: [{ name: 'Yes' }, { name: 'No' }],
         initial: 0,
@@ -189,11 +204,11 @@ export async function pushToGitHub(
       return VcsPushStatus.OptedOutOfPushingToVcs;
     }
 
-    // Preload existing repositories for validation
-    const existingRepos = await getUserRepositories(directory);
-
     // Create default repository name using the username we already have
     const defaultRepo = `${username}/${options.name}`;
+    const createRepoUrl = `https://github.com/new?name=${encodeURIComponent(
+      options.name
+    )}`;
 
     // Second prompt: Ask where to create the repository with validation
     const { repoName } = await enquirer.prompt<{ repoName: string }>([
@@ -207,8 +222,10 @@ export async function pushToGitHub(
             return 'Repository name must be in format: username/repo-name';
           }
 
-          if (existingRepos.has(value)) {
-            return `Repository '${value}' already exists. Please choose a different name.`;
+          // Wait for background fetch to complete before validating
+          const existingRepos = await existingReposPromise;
+          if (existingRepos?.has(value)) {
+            return `Repository '${value}' already exists. Choose a different name or create manually: ${createRepoUrl}`;
           }
 
           return true;
@@ -218,6 +235,10 @@ export async function pushToGitHub(
 
     // Create GitHub repository using gh CLI from the workspace directory
     // This will automatically add remote origin and push the current branch
+    output.log({
+      title:
+        'Creating GitHub repository and pushing (this may take a moment)...',
+    });
     await spawnAndWait(
       'gh',
       [
@@ -249,10 +270,11 @@ export async function pushToGitHub(
     const errorMessage = e instanceof Error ? e.message : String(e);
 
     // Error code 127 means gh wasn't installed
+    // GitHubPushSkippedError means user hasn't opted in or we couldn't authenticate
     const title =
       e instanceof GitHubPushSkippedError || (e as any)?.code === 127
         ? 'Push your workspace to GitHub.'
-        : 'Failed to push workspace to GitHub.';
+        : 'Could not push. Push repo to complete setup.';
 
     const createRepoUrl = `https://github.com/new?name=${encodeURIComponent(
       options.name
@@ -261,11 +283,11 @@ export async function pushToGitHub(
       title,
       bodyLines: isVerbose
         ? [
-            `Please create a repo at ${createRepoUrl} and push this workspace.`,
+            `Go to ${createRepoUrl} and push this workspace.`,
             'Error details:',
             errorMessage,
           ]
-        : [`Please create a repo at ${createRepoUrl} and push this workspace.`],
+        : [`Go to ${createRepoUrl} and push this workspace.`],
     });
     return VcsPushStatus.FailedToPushToVcs;
   }

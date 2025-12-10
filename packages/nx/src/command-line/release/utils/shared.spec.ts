@@ -457,6 +457,89 @@ describe('shared', () => {
       ]);
     });
 
+    it('should sanitize Gradle-style project names with colons in independent groups', () => {
+      const projects = [':common:iam-client'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'gradle-group',
+        projects,
+        projectsRelationship: 'independent',
+        releaseTag: {
+          pattern: 'release/{projectName}/{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: undefined,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+
+      const releaseGroupToFilteredProjects = new Map<
+        ReleaseGroupWithName,
+        Set<string>
+      >().set(releaseGroup, new Set(projects));
+
+      const versionData = {
+        ':common:iam-client': {
+          currentVersion: '1.0.0',
+          dependentProjects: [],
+          newVersion: '1.0.1',
+        },
+      };
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        versionData
+      );
+
+      // Colons should be replaced with slashes
+      expect(tags).toEqual(['release/common/iam-client/1.0.1']);
+    });
+
+    it('should sanitize nested Gradle-style project names', () => {
+      const projects = [':apps:backend:api-service'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'gradle-group',
+        projects,
+        projectsRelationship: 'independent',
+        releaseTag: {
+          pattern: '{projectName}@{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: undefined,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+
+      const releaseGroupToFilteredProjects = new Map<
+        ReleaseGroupWithName,
+        Set<string>
+      >().set(releaseGroup, new Set(projects));
+
+      const versionData = {
+        ':apps:backend:api-service': {
+          currentVersion: '2.0.0',
+          dependentProjects: [],
+          newVersion: '2.1.0',
+        },
+      };
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        versionData
+      );
+
+      expect(tags).toEqual(['apps/backend/api-service@2.1.0']);
+    });
+
     function setUpReleaseGroup() {
       const projects = ['a', 'b'];
       const releaseGroup: ReleaseGroupWithName = {

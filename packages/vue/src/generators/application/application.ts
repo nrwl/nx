@@ -143,10 +143,6 @@ export async function applicationGeneratorInternal(
   if (options.bundler === 'rsbuild') {
     tasks.push(...(await addRsbuild(tree, options)));
     tasks.push(...(await addVitest(tree, options)));
-    tree.rename(
-      joinPathFragments(options.appProjectRoot, 'vite.config.ts'),
-      joinPathFragments(options.appProjectRoot, 'vitest.config.ts')
-    );
   } else {
     tasks.push(await addVite(tree, options));
   }

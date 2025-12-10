@@ -9,7 +9,6 @@ data class NxTarget(
   val options: ObjectNode?,
   val cache: Boolean,
   val continuous: Boolean,
-  val parallelism: Boolean,
   var dependsOn: ArrayNode? = null,
   var outputs: ArrayNode? = null,
   var inputs: ArrayNode? = null
@@ -22,7 +21,6 @@ data class NxTarget(
     }
     node.put("cache", cache)
     node.put("continuous", continuous)
-    node.put("parallelism", parallelism)
 
     dependsOn?.let { node.set<ObjectNode>("dependsOn", it) }
     outputs?.let { node.set<ObjectNode>("outputs", it) }

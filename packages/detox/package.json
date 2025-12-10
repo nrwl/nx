@@ -32,6 +32,7 @@
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/react": "workspace:*",
+    "semver": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

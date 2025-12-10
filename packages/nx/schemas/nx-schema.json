@@ -1017,8 +1017,8 @@
         },
         "preserveMatchingDependencyRanges": {
           "type": ["boolean", "array"],
-          "description": "Whether to preserve matching dependency ranges when updating them during versioning. This is false by default. (e.g. The new version will be '1.2.0' and the current version range in dependents is already '^1.0.0'. Therefore, the manifest file is not updated.)",
-          "default": false,
+          "description": "Whether to preserve matching dependency ranges when updating them during versioning. This is true by default. (e.g. The new version will be '1.2.0' and the current version range in dependents is already '^1.0.0'. Therefore, the manifest file is not updated.)",
+          "default": true,
           "items": {
             "type": "string",
             "enum": [

@@ -24,7 +24,7 @@ When we have new ideas to make Nx better, we've always had two options: it could
 
 ## Introducing Nx Powerpack
 
-**[Nx Powerpack](/powerpack)** — our newest product designed to elevate the Nx CLI experience for enterprise environments. Powerpack offers advanced features like ~~self-hosted remote cache storage,~~ code ownership for monorepos, and workspace conformance, seamlessly integrating into sealed systems with strict security requirements. It's also designed for ease of implementation, helping enterprises bypass lengthy procurement processes and quickly access the tools they need.
+**[Nx Powerpack](/enterprise)** — our newest product designed to elevate the Nx CLI experience for enterprise environments. Powerpack offers advanced features like ~~self-hosted remote cache storage,~~ code ownership for monorepos, and workspace conformance, seamlessly integrating into sealed systems with strict security requirements. It's also designed for ease of implementation, helping enterprises bypass lengthy procurement processes and quickly access the tools they need.
 
 > If you want to get into the technical details, we wrote a separate blog post diving deeper into the technical details: [Introducing Nx Powerpack](/blog/introducing-nx-powerpack).
 
@@ -51,17 +51,17 @@ Open Source projects can:
 
 ## How to Get Nx Powerpack
 
-Powerpack can be easily purchased as a one-off license and is automatically included for all existing enterprise customers. If you're looking to purchase a license, you can [do so on this page](/powerpack).
+Powerpack can be easily purchased as a one-off license and is automatically included for all existing enterprise customers. If you're looking to purchase a license, you can [do so on this page](/enterprise).
 
 Are you a startup? If these features make sense for your team but the cost is a concern, reach out to our support team, and we'll work with you to find a solution that fits.
 
 ## Got Questions?
 
-If you're curious to learn more about these changes for Nx and how to get started, [check out our docs](/docs/enterprise/powerpack).
+If you're curious to learn more about these changes for Nx and how to get started, [check out our docs](/docs/enterprise).
 
 ## Learn more
 
-- [Nx Powerpack](/powerpack)
+- [Nx Powerpack](/enterprise)
 - [Blog: Introducing Nx Powerpack](/blog/introducing-nx-powerpack)
 - [Docs: Powerpack features](/docs/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)

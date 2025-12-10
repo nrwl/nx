@@ -268,7 +268,22 @@ ${
     return;
   }
 
-  const viteConfigContent = `/// <reference types='vitest' />
+  // When using vitest.config, use vitest/config import and skip vite-specific options
+  const viteConfigContent = vitestFileName
+    ? `import { defineConfig } from 'vitest/config';
+${imports.join(';\n')}${imports.length ? ';' : ''}
+
+export default defineConfig(() => ({
+  root: __dirname,
+  ${printOptions(
+    cacheDir,
+    plugins.length ? `  plugins: [${plugins.join(', ')}],` : '',
+    defineOption,
+    testOption
+  )}
+}));
+`.replace(/\s+(?=(\n|$))/gm, '\n')
+    : `/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 ${imports.join(';\n')}${imports.length ? ';' : ''}
 

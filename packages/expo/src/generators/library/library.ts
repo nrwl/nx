@@ -38,7 +38,7 @@ import { addRollupBuildTarget } from '@nx/react/src/generators/library/lib/add-r
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { expoComponentGenerator } from '../component/component';
 import { relative, join } from 'path';
-import { reactNativeVersion, reactVersion } from '../../utils/versions';
+import { getExpoDependenciesVersionsToInstall } from '../../utils/version-utils';
 
 export async function expoLibraryGenerator(
   host: Tree,
@@ -79,7 +79,7 @@ export async function expoLibraryGeneratorInternal(
   const initTask = await init(host, { ...options, skipFormat: true });
   tasks.push(initTask);
   if (!options.skipPackageJson) {
-    tasks.push(ensureDependencies(host, options.unitTestRunner));
+    tasks.push(await ensureDependencies(host, options.unitTestRunner));
   }
   initRootBabelConfig(host);
 
@@ -173,6 +173,8 @@ async function addProject(
   host: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  const versions = await getExpoDependenciesVersionsToInstall(host);
+
   const project: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
@@ -185,8 +187,8 @@ async function addProject(
     name: options.importPath,
     version: '0.0.1',
     peerDependencies: {
-      react: reactVersion,
-      'react-native': reactNativeVersion,
+      react: versions.react,
+      'react-native': versions.reactNative,
     },
   };
 
@@ -244,8 +246,8 @@ async function addProject(
     updateJson(host, `${options.projectRoot}/package.json`, (json) => {
       json.peerDependencies = {
         ...json.peerDependencies,
-        react: reactVersion,
-        'react-native': reactNativeVersion,
+        react: versions.react,
+        'react-native': versions.reactNative,
       };
       return json;
     });

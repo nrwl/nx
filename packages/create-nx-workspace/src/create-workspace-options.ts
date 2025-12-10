@@ -1,4 +1,5 @@
 import { NxCloud } from './utils/nx/nx-cloud';
+import type { CompletionMessageKey } from './utils/nx/messages';
 import { PackageManager } from './utils/package-manager';
 
 export interface CreateWorkspaceOptions {
@@ -6,6 +7,8 @@ export interface CreateWorkspaceOptions {
   packageManager: PackageManager; // Package manager to use
   nxCloud: NxCloud; // Enable Nx Cloud
   useGitHub?: boolean; // Will you be using GitHub as your git hosting provider?
+  template?: string; // GitHub template repository URL (e.g., https://github.com/nrwl/react-template)
+  completionMessageKey?: CompletionMessageKey; // Key for the completion message to show at the end
   /**
    * @description Enable interactive mode with presets
    * @default true

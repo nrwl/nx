@@ -68,7 +68,7 @@ npx nx g @nx/storybook:migrate-10 --autoAcceptAllPrompts
 
 ## AI-assisted migration for ESM conversion
 
-Storybook 10 requires configuration files to use ESM syntax. If you have CommonJS configuration files, Nx will generate an instructions file at `ai-migrations/MIGRATE_STORYBOOK_10.md` when running `nx migrate`. This file contains detailed instructions that an AI agent (Claude, ChatGPT, GitHub Copilot, etc.) can use to convert your CJS configs to ESM.
+Storybook 10 requires configuration files to use ESM syntax. If you have CommonJS configuration files, Nx will generate an instructions file at `tools/ai-migrations/MIGRATE_STORYBOOK_10.md` when running `nx migrate`. This file contains detailed instructions that an AI agent (Claude, ChatGPT, GitHub Copilot, etc.) can use to convert your CJS configs to ESM.
 
 See the [Upgrading Storybook guide](/docs/technologies/test-tools/storybook/guides/upgrading-storybook) for more details on AI-assisted migrations.
 

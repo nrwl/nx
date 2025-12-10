@@ -66,7 +66,8 @@ The `@nx/vitest` plugin is configured in the `plugins` array in `nx.json`.
     {
       "plugin": "@nx/vitest",
       "options": {
-        "testTargetName": "test"
+        "testTargetName": "test",
+        "testMode": "watch"
       }
     }
   ]
@@ -74,6 +75,9 @@ The `@nx/vitest` plugin is configured in the `plugins` array in `nx.json`.
 ```
 
 - The `testTargetName` option controls the name of the inferred Vitest tasks. The default name is `test`.
+- The `testMode` option controls whether Vitest runs in watch mode or single-run mode. Valid values are:
+  - `watch` (default): Uses `vitest` command, which runs in watch mode locally but auto-detects CI environments and runs once
+  - `run`: Uses `vitest run` command, which always runs tests once and exits
 
 #### Configuring @nx/vitest for both E2E and Unit Tests
 
@@ -87,7 +91,8 @@ While Vitest is most often used for unit tests, there are cases where it can be 
       "plugin": "@nx/vitest",
       "exclude": ["e2e/**/*"],
       "options": {
-        "testTargetName": "test"
+        "testTargetName": "test",
+        "testMode": "watch"
       }
     },
     {
@@ -95,7 +100,8 @@ While Vitest is most often used for unit tests, there are cases where it can be 
       "include": ["e2e/**/*"],
       "options": {
         "testTargetName": "e2e-local",
-        "ciTargetName": "e2e-ci"
+        "ciTargetName": "e2e-ci",
+        "testMode": "run"
       }
     }
   ]

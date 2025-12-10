@@ -5,6 +5,7 @@ import {
   updatePluginVersionInCatalogAst,
   extractPluginVersionFromCatalogAst,
   updateNxPluginVersionInCatalogsAst,
+  getPluginAliasFromCatalogAst,
 } from './version-catalog-ast-utils';
 import { gradleProjectGraphPluginName } from './versions';
 
@@ -101,6 +102,76 @@ nx-graph = { id = '${gradleProjectGraphPluginName}', version = '1.5.0' }
         gradleProjectGraphPluginName
       );
       expect(version).toBe('1.5.0');
+    });
+  });
+
+  describe('getPluginAliasFromCatalogAst', () => {
+    it('should return alias from plugin with direct version', () => {
+      const content = `
+[plugins]
+nxProjectGraph = { id = "${gradleProjectGraphPluginName}", version = "1.2.3" }
+`;
+
+      const alias = getPluginAliasFromCatalogAst(
+        content,
+        gradleProjectGraphPluginName
+      );
+      expect(alias).toBe('nxProjectGraph');
+    });
+
+    it('should return alias from plugin with simple format', () => {
+      const content = `
+[plugins]
+nx-graph = "${gradleProjectGraphPluginName}:3.4.5"
+`;
+
+      const alias = getPluginAliasFromCatalogAst(
+        content,
+        gradleProjectGraphPluginName
+      );
+      expect(alias).toBe('nx-graph');
+    });
+
+    it('should return alias from plugin with version.ref', () => {
+      const content = `
+[versions]
+nx-version = "2.3.4"
+
+[plugins]
+my-nx-plugin = { id = "${gradleProjectGraphPluginName}", version.ref = "nx-version" }
+`;
+
+      const alias = getPluginAliasFromCatalogAst(
+        content,
+        gradleProjectGraphPluginName
+      );
+      expect(alias).toBe('my-nx-plugin');
+    });
+
+    it('should return null if plugin not found', () => {
+      const content = `
+[plugins]
+other-plugin = "com.other:1.0.0"
+`;
+
+      const alias = getPluginAliasFromCatalogAst(
+        content,
+        gradleProjectGraphPluginName
+      );
+      expect(alias).toBeNull();
+    });
+
+    it('should return null if no plugins table exists', () => {
+      const content = `
+[versions]
+some-version = "1.0.0"
+`;
+
+      const alias = getPluginAliasFromCatalogAst(
+        content,
+        gradleProjectGraphPluginName
+      );
+      expect(alias).toBeNull();
     });
   });
 
