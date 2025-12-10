@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import { ChangedFile, daemonClient } from '../../daemon/client/client';
+import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenger';
 import { output } from '../../utils/output';
 
 export interface WatchArguments {
@@ -220,6 +221,11 @@ export async function watch(args: WatchArguments) {
         output.error({
           title: 'Failed to reconnect to daemon after multiple attempts',
           bodyLines: ['Please restart your watch command.'],
+        });
+        process.exit(1);
+      } else if (err instanceof VersionMismatchError) {
+        output.error({
+          title: 'Nx version changed. Please restart your command.',
         });
         process.exit(1);
       } else if (err !== null) {

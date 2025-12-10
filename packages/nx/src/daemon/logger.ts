@@ -63,7 +63,9 @@ class DaemonLogger {
   }
 
   private formatLogMessage(message: string) {
-    return `[NX v${nxVersion} Daemon ${this.source}] - ${this.getNow()} - ${message}`;
+    return `[NX v${nxVersion} Daemon ${
+      this.source
+    }] - ${this.getNow()} - ${message}`;
   }
 
   private getNow() {

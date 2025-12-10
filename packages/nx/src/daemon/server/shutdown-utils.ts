@@ -13,7 +13,7 @@ import { cleanupPlugins } from '../../project-graph/plugins/get-plugins';
 import { MESSAGE_END_SEQ } from '../../utils/consume-messages-from-socket';
 import { cleanupLatestNxInstallation } from './nx-console-operations';
 import { spawn } from 'child_process';
-import { dirname, join } from 'path';
+import { join } from 'path';
 import { mkdirSync, existsSync, writeFileSync } from 'node:fs';
 import { open } from 'fs/promises';
 import {
@@ -37,13 +37,9 @@ async function startNewDaemonInBackground() {
   // Resolve from workspace root to pick up the correct symlink target
   let startScriptPath: string;
   try {
-    // First resolve the nx package.json to find the package root
-    const nxPackageJsonPath = require.resolve('nx/package.json', {
+    startScriptPath = require.resolve('nx/src/daemon/server/start.js', {
       paths: [workspaceRoot],
     });
-    // Then build the path to start.js from the package root
-    const nxPackageRoot = dirname(nxPackageJsonPath);
-    startScriptPath = join(nxPackageRoot, 'src/daemon/server/start.js');
   } catch (e) {
     // Fall back to using __dirname if resolution fails
     serverLogger.log(
