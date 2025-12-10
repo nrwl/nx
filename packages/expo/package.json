@@ -34,6 +34,7 @@
     "@nx/react": "workspace:*",
     "enhanced-resolve": "^5.8.3",
     "picocolors": "catalog:",
+    "semver": "catalog:",
     "tsconfig-paths": "catalog:typescript",
     "tslib": "catalog:typescript"
   },

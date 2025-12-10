@@ -5,7 +5,7 @@ export const WebinarSection: React.FC = () => {
   return (
     <p>
       <a
-        href="https://bit.ly/496NV6n"
+        href="https://bit.ly/4q9sgzV"
         title="See live event in details"
         className="group/event-link inline-flex space-x-6"
       >

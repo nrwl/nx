@@ -1,4 +1,40 @@
 (function () {
+  // Open search modal if signaled via sessionStorage (e.g., from Cmd+K on non-docs pages)
+  var SEARCH_STORAGE_KEY = 'nx-open-search';
+  var SEARCH_EXPIRY_MS = 30000; // 30 seconds
+
+  function openSearchFromStorage() {
+    var timestamp = sessionStorage.getItem(SEARCH_STORAGE_KEY);
+    if (!timestamp) return;
+
+    // Clear immediately to prevent re-triggering
+    sessionStorage.removeItem(SEARCH_STORAGE_KEY);
+
+    // Check if expired (older than 30 seconds)
+    var age = Date.now() - parseInt(timestamp, 10);
+    if (age > SEARCH_EXPIRY_MS) return;
+
+    var openSearchBtn = document.querySelector('button[data-open-modal]');
+    if (openSearchBtn) {
+      openSearchBtn.click();
+      // Focus the search input after modal opens
+      setTimeout(function () {
+        var searchInput = document.querySelector('dialog[open] input');
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }, 100);
+    }
+  }
+
+  // Check on load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', openSearchFromStorage);
+  } else {
+    // Small delay to ensure search component is initialized
+    setTimeout(openSearchFromStorage, 100);
+  }
+
   const config = window.__CONFIG || {};
   if (!config.isProd) return;
 

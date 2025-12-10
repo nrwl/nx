@@ -7,7 +7,7 @@ authors: ['Jeff Cross', 'Madeline Hennessy']
 tags: [webinar]
 cover_image: /blog/images/2025-11-19/Nov-2025-Webinar-Card.avif
 time: 12pm ET/5pm UTC
-status: Upcoming
+status: Past - Gated
 registrationUrl: https://go.nx.dev/nov2025-webinar
 ---
 
@@ -21,4 +21,4 @@ Remote caching delivers such dramatic improvements that many teams stop there, t
 
 Join us on Nov. 19th to learn how to strategically leverage the capabilities you already have access to—and see exactly how much time your team is leaving on the table.
 
-{% call-to-action title="Register today!" url="https://go.nx.dev/nov2025-webinar" description="Save your spot" /%}
+{% call-to-action title="Download the recording!" url="https://go.nx.dev/nov2025-webinar" description="Sign up to gain access" /%}

@@ -103,7 +103,36 @@ export default defineConfig({
 "
 `;
 
-exports[`application generator should set up project correctly for rsbuild 1`] = `null`;
+exports[`application generator should set up project correctly for rsbuild 1`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: import.meta.dirname,
+  cacheDir: '../node_modules/.vite/test',
+  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+  test: {
+    name: 'test',
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../coverage/test',
+      provider: 'v8' as const,
+    },
+  },
+}));
+"
+`;
 
 exports[`application generator should set up project correctly for rsbuild 3`] = `
 [
@@ -133,7 +162,7 @@ exports[`application generator should set up project correctly for rsbuild 3`] =
   "test/tsconfig.app.json",
   "test/tsconfig.json",
   "test/tsconfig.spec.json",
-  "test/vite.config.mts",
+  "test/vitest.config.mts",
   "tsconfig.base.json",
   "vitest.workspace.ts",
 ]

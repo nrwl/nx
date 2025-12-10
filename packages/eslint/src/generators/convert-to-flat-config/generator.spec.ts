@@ -181,91 +181,91 @@ describe('convert-to-flat-config generator', () => {
       await convertToFlatConfigGenerator(tree, options);
 
       expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchInlineSnapshot(`
-              "const { FlatCompat } = require('@eslint/eslintrc');
-              const js = require('@eslint/js');
-              const nxEslintPlugin = require('@nx/eslint-plugin');
+        "const { FlatCompat } = require('@eslint/eslintrc');
+        const js = require('@eslint/js');
+        const nxEslintPlugin = require('@nx/eslint-plugin');
 
-              const compat = new FlatCompat({
-                baseDirectory: __dirname,
-                recommendedConfig: js.configs.recommended,
-              });
+        const compat = new FlatCompat({
+          baseDirectory: __dirname,
+          recommendedConfig: js.configs.recommended,
+        });
 
-              module.exports = [
+        module.exports = [
+          {
+            ignores: ['**/dist', '**/out-tsc'],
+          },
+          ...compat.extends('plugin:storybook/recommended'),
+          { plugins: { '@nx': nxEslintPlugin } },
+          {
+            files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+            rules: {
+              '@nx/enforce-module-boundaries': [
+                'error',
                 {
-                  ignores: ['**/dist'],
-                },
-                ...compat.extends('plugin:storybook/recommended'),
-                { plugins: { '@nx': nxEslintPlugin } },
-                {
-                  files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-                  rules: {
-                    '@nx/enforce-module-boundaries': [
-                      'error',
-                      {
-                        enforceBuildableLibDependency: true,
-                        allow: [],
-                        depConstraints: [
-                          {
-                            sourceTag: '*',
-                            onlyDependOnLibsWithTags: ['*'],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                },
-                ...compat
-                  .config({
-                    extends: ['plugin:@nx/typescript'],
-                  })
-                  .map((config) => ({
-                    ...config,
-                    files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
-                    rules: {
-                      ...config.rules,
+                  enforceBuildableLibDependency: true,
+                  allow: [],
+                  depConstraints: [
+                    {
+                      sourceTag: '*',
+                      onlyDependOnLibsWithTags: ['*'],
                     },
-                  })),
-                ...compat
-                  .config({
-                    extends: ['plugin:@nx/javascript'],
-                  })
-                  .map((config) => ({
-                    ...config,
-                    files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
-                    rules: {
-                      ...config.rules,
-                    },
-                  })),
-              ];
-              "
-          `);
+                  ],
+                },
+              ],
+            },
+          },
+          ...compat
+            .config({
+              extends: ['plugin:@nx/typescript'],
+            })
+            .map((config) => ({
+              ...config,
+              files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+              rules: {
+                ...config.rules,
+              },
+            })),
+          ...compat
+            .config({
+              extends: ['plugin:@nx/javascript'],
+            })
+            .map((config) => ({
+              ...config,
+              files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+              rules: {
+                ...config.rules,
+              },
+            })),
+        ];
+        "
+      `);
       expect(tree.read('libs/test-lib/eslint.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
-              "const baseConfig = require('../../eslint.config.cjs');
+        "const baseConfig = require('../../eslint.config.cjs');
 
-              module.exports = [
-                {
-                  ignores: ['**/dist'],
-                },
-                ...baseConfig,
-                {
-                  files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-                  // Override or add rules here
-                  rules: {},
-                },
-                {
-                  files: ['**/*.ts', '**/*.tsx'],
-                  // Override or add rules here
-                  rules: {},
-                },
-                {
-                  files: ['**/*.js', '**/*.jsx'],
-                  // Override or add rules here
-                  rules: {},
-                },
-              ];
-              "
-          `);
+        module.exports = [
+          {
+            ignores: ['**/dist', '**/out-tsc'],
+          },
+          ...baseConfig,
+          {
+            files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+            // Override or add rules here
+            rules: {},
+          },
+          {
+            files: ['**/*.ts', '**/*.tsx'],
+            // Override or add rules here
+            rules: {},
+          },
+          {
+            files: ['**/*.js', '**/*.jsx'],
+            // Override or add rules here
+            rules: {},
+          },
+        ];
+        "
+      `);
       expect(
         readJson(tree, 'package.json').devDependencies['@eslint/eslintrc']
       ).toEqual(eslintrcVersion);
@@ -451,68 +451,68 @@ describe('convert-to-flat-config generator', () => {
       await convertToFlatConfigGenerator(tree, options);
 
       expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchInlineSnapshot(`
-              "const { FlatCompat } = require('@eslint/eslintrc');
-              const js = require('@eslint/js');
-              const nxEslintPlugin = require('@nx/eslint-plugin');
+        "const { FlatCompat } = require('@eslint/eslintrc');
+        const js = require('@eslint/js');
+        const nxEslintPlugin = require('@nx/eslint-plugin');
 
-              const compat = new FlatCompat({
-                baseDirectory: __dirname,
-                recommendedConfig: js.configs.recommended,
-              });
+        const compat = new FlatCompat({
+          baseDirectory: __dirname,
+          recommendedConfig: js.configs.recommended,
+        });
 
-              module.exports = [
+        module.exports = [
+          {
+            ignores: ['**/dist', '**/out-tsc'],
+          },
+          { plugins: { '@nx': nxEslintPlugin } },
+          {
+            linterOptions: {
+              noInlineConfig: true,
+            },
+          },
+          {
+            files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+            rules: {
+              '@nx/enforce-module-boundaries': [
+                'error',
                 {
-                  ignores: ['**/dist'],
-                },
-                { plugins: { '@nx': nxEslintPlugin } },
-                {
-                  linterOptions: {
-                    noInlineConfig: true,
-                  },
-                },
-                {
-                  files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-                  rules: {
-                    '@nx/enforce-module-boundaries': [
-                      'error',
-                      {
-                        enforceBuildableLibDependency: true,
-                        allow: [],
-                        depConstraints: [
-                          {
-                            sourceTag: '*',
-                            onlyDependOnLibsWithTags: ['*'],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                },
-                ...compat
-                  .config({
-                    extends: ['plugin:@nx/typescript'],
-                  })
-                  .map((config) => ({
-                    ...config,
-                    files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
-                    rules: {
-                      ...config.rules,
+                  enforceBuildableLibDependency: true,
+                  allow: [],
+                  depConstraints: [
+                    {
+                      sourceTag: '*',
+                      onlyDependOnLibsWithTags: ['*'],
                     },
-                  })),
-                ...compat
-                  .config({
-                    extends: ['plugin:@nx/javascript'],
-                  })
-                  .map((config) => ({
-                    ...config,
-                    files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
-                    rules: {
-                      ...config.rules,
-                    },
-                  })),
-              ];
-              "
-          `);
+                  ],
+                },
+              ],
+            },
+          },
+          ...compat
+            .config({
+              extends: ['plugin:@nx/typescript'],
+            })
+            .map((config) => ({
+              ...config,
+              files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+              rules: {
+                ...config.rules,
+              },
+            })),
+          ...compat
+            .config({
+              extends: ['plugin:@nx/javascript'],
+            })
+            .map((config) => ({
+              ...config,
+              files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+              rules: {
+                ...config.rules,
+              },
+            })),
+        ];
+        "
+      `);
     });
 
     it('should convert project if target is defined via plugin as string', async () => {
@@ -622,39 +622,39 @@ describe('convert-to-flat-config generator', () => {
       expect(tree.exists('eslint.config.cjs')).toBeTruthy();
       expect(tree.read('apps/dx-assets-ui/eslint.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
-              "const baseConfig = require('../../eslint.config.cjs');
+        "const baseConfig = require('../../eslint.config.cjs');
 
-              module.exports = [
-                {
-                  ignores: ['**/dist'],
-                },
-                ...baseConfig,
-                {
-                  files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-                  // Override or add rules here
-                  rules: {},
-                  languageOptions: {
-                    parserOptions: {
-                      project: ['apps/dx-assets-ui/tsconfig.*?.json'],
-                    },
-                  },
-                },
-                {
-                  files: ['**/*.ts', '**/*.tsx'],
-                  // Override or add rules here
-                  rules: {},
-                },
-                {
-                  files: ['**/*.js', '**/*.jsx'],
-                  // Override or add rules here
-                  rules: {},
-                },
-                {
-                  ignores: ['__fixtures__/**/*'],
-                },
-              ];
-              "
-          `);
+        module.exports = [
+          {
+            ignores: ['**/dist', '**/out-tsc'],
+          },
+          ...baseConfig,
+          {
+            files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+            // Override or add rules here
+            rules: {},
+            languageOptions: {
+              parserOptions: {
+                project: ['apps/dx-assets-ui/tsconfig.*?.json'],
+              },
+            },
+          },
+          {
+            files: ['**/*.ts', '**/*.tsx'],
+            // Override or add rules here
+            rules: {},
+          },
+          {
+            files: ['**/*.js', '**/*.jsx'],
+            // Override or add rules here
+            rules: {},
+          },
+          {
+            ignores: ['__fixtures__/**/*'],
+          },
+        ];
+        "
+      `);
     });
   });
 
@@ -809,7 +809,7 @@ describe('convert-to-flat-config generator', () => {
 
         export default [
           {
-            ignores: ['**/dist'],
+            ignores: ['**/dist', '**/out-tsc'],
           },
           ...compat.extends('plugin:storybook/recommended'),
           { plugins: { '@nx': nxEslintPlugin } },
@@ -862,7 +862,7 @@ describe('convert-to-flat-config generator', () => {
 
         export default [
           {
-            ignores: ['**/dist'],
+            ignores: ['**/dist', '**/out-tsc'],
           },
           ...baseConfig,
           {
@@ -1081,7 +1081,7 @@ describe('convert-to-flat-config generator', () => {
 
         export default [
           {
-            ignores: ['**/dist'],
+            ignores: ['**/dist', '**/out-tsc'],
           },
           { plugins: { '@nx': nxEslintPlugin } },
           {
@@ -1245,7 +1245,7 @@ describe('convert-to-flat-config generator', () => {
 
         export default [
           {
-            ignores: ['**/dist'],
+            ignores: ['**/dist', '**/out-tsc'],
           },
           ...baseConfig,
           {

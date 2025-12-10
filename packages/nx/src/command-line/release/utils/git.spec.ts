@@ -1,4 +1,8 @@
-import { extractReferencesFromCommit, getLatestGitTagForPattern } from './git';
+import {
+  extractReferencesFromCommit,
+  getLatestGitTagForPattern,
+  sanitizeProjectNameForGitTag,
+} from './git';
 
 jest.mock('./exec-command', () => ({
   execCommand: jest.fn(() =>
@@ -23,8 +27,16 @@ my-lib-4@1.2.4-alpha.1
 my-lib-4@1.2.3
 alpha-lib@1.2.4
 alpha-lib@1.2.4-beta.1
+my-lib-5@1.1.1
+my-lib-5@1.1.0-alpha.3
+my-lib-5@1.1.0-alpha.2
+my-lib-5@1.1.0
 lib-only-pre-release@1.2.4-beta.1
 lib-only-pre-release@1.2.4-beta.1+build.1
+my-group@1.5.0
+release/common/iam-client/1.0.0
+release/apps/backend/api/2.0.0
+gradle/common/lib@1.5.0
 `)
   ),
 }));
@@ -288,6 +300,37 @@ See merge request nx-release-test/nx-release-test!2`,
           expectedVersion: '1.2.4-beta.1',
           preid: 'alpha',
         },
+        {
+          pattern: '{releaseGroupName}@{version}',
+          releaseGroupName: 'my-group',
+          projectName: 'my-project',
+          expectedTag: 'my-group@1.5.0',
+          expectedVersion: '1.5.0',
+          requireSemver: true,
+        },
+        // Gradle-style project names (sanitized before being passed to this function)
+        // The caller (e.g., release-graph.ts) is responsible for sanitizing project names
+        {
+          pattern: 'release/{projectName}/{version}',
+          projectName: sanitizeProjectNameForGitTag(':common:iam-client'), // Sanitized from Gradle-style
+          expectedTag: 'release/common/iam-client/1.0.0',
+          expectedVersion: '1.0.0',
+          requireSemver: true,
+        },
+        {
+          pattern: 'release/{projectName}/{version}',
+          projectName: sanitizeProjectNameForGitTag(':apps:backend:api'), // Sanitized from nested Gradle module
+          expectedTag: 'release/apps/backend/api/2.0.0',
+          expectedVersion: '2.0.0',
+          requireSemver: true,
+        },
+        {
+          pattern: 'gradle/{projectName}@{version}',
+          projectName: sanitizeProjectNameForGitTag(':common:lib'), // Sanitized
+          expectedTag: 'gradle/common/lib@1.5.0',
+          expectedVersion: '1.5.0',
+          requireSemver: true,
+        },
       ];
 
       it.each(releaseTagPatternTestCases)(
@@ -295,6 +338,7 @@ See merge request nx-release-test/nx-release-test!2`,
         async ({
           pattern,
           projectName,
+          releaseGroupName,
           expectedTag,
           expectedVersion,
           requireSemver,
@@ -304,6 +348,7 @@ See merge request nx-release-test/nx-release-test!2`,
             pattern,
             {
               projectName,
+              releaseGroupName,
             },
             {
               requireSemver,
@@ -344,8 +389,9 @@ See merge request nx-release-test/nx-release-test!2`,
         {
           pattern: '{projectName}@{version}',
           projectName: 'alpha-lib',
-          expectedTag: 'alpha-lib@1.2.4-beta.1',
-          expectedVersion: '1.2.4-beta.1',
+          // Alpha lib has a stable 1.2.4 release, so this should be returned regardless of preid
+          expectedTag: 'alpha-lib@1.2.4',
+          expectedVersion: '1.2.4',
           preid: 'beta',
         },
         {
@@ -378,6 +424,13 @@ See merge request nx-release-test/nx-release-test!2`,
           projectName: 'lib-only-pre-release',
           expectedTag: undefined,
           expectedVersion: undefined,
+          preid: 'alpha',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'my-lib-5',
+          expectedTag: 'my-lib-5@1.1.1',
+          expectedVersion: '1.1.1',
           preid: 'alpha',
         },
       ];
@@ -442,6 +495,72 @@ See merge request nx-release-test/nx-release-test!2`,
       );
 
       expect(result).toEqual(null);
+    });
+  });
+
+  describe('sanitizeProjectNameForGitTag', () => {
+    it('should replace colons with slashes for Gradle-style module paths', () => {
+      expect(
+        sanitizeProjectNameForGitTag(':common:iam-enterprise-directory-client')
+      ).toBe('common/iam-enterprise-directory-client');
+    });
+
+    it('should handle leading colon (Gradle root module indicator)', () => {
+      expect(sanitizeProjectNameForGitTag(':my-module')).toBe('my-module');
+    });
+
+    it('should handle multiple consecutive colons', () => {
+      expect(sanitizeProjectNameForGitTag('a::b:::c')).toBe('a/b/c');
+    });
+
+    it('should replace space with hyphen', () => {
+      expect(sanitizeProjectNameForGitTag('my project')).toBe('my-project');
+    });
+
+    it('should replace tilde with hyphen', () => {
+      expect(sanitizeProjectNameForGitTag('my~project')).toBe('my-project');
+    });
+
+    it('should replace caret with hyphen', () => {
+      expect(sanitizeProjectNameForGitTag('my^project')).toBe('my-project');
+    });
+
+    it('should replace question mark with hyphen', () => {
+      expect(sanitizeProjectNameForGitTag('my?project')).toBe('my-project');
+    });
+
+    it('should replace asterisk with hyphen', () => {
+      expect(sanitizeProjectNameForGitTag('my*project')).toBe('my-project');
+    });
+
+    it('should replace left bracket with hyphen', () => {
+      expect(sanitizeProjectNameForGitTag('my[project')).toBe('my-project');
+    });
+
+    it('should replace backslash with hyphen', () => {
+      expect(sanitizeProjectNameForGitTag('my\\project')).toBe('my-project');
+    });
+
+    it('should collapse consecutive dots', () => {
+      expect(sanitizeProjectNameForGitTag('my..project')).toBe('my.project');
+    });
+
+    it('should pass through valid project names unchanged', () => {
+      expect(sanitizeProjectNameForGitTag('my-valid-project')).toBe(
+        'my-valid-project'
+      );
+      expect(sanitizeProjectNameForGitTag('my_valid_project')).toBe(
+        'my_valid_project'
+      );
+      expect(sanitizeProjectNameForGitTag('my.valid.project')).toBe(
+        'my.valid.project'
+      );
+    });
+
+    it('should handle complex Gradle multi-module names', () => {
+      expect(sanitizeProjectNameForGitTag(':apps:backend:api-service')).toBe(
+        'apps/backend/api-service'
+      );
     });
   });
 });

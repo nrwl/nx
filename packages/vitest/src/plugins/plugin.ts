@@ -33,6 +33,12 @@ export interface VitestPluginOptions {
    * The name that should be used to group atomized tasks on CI
    */
   ciGroupName?: string;
+  /**
+   * Default mode for running tests.
+   * - 'watch': Tests run in watch mode locally, auto-run in CI (default)
+   * - 'run': Tests run once and exit
+   */
+  testMode?: 'watch' | 'run';
 }
 
 type VitestTargets = Pick<
@@ -204,7 +210,8 @@ async function buildVitestTargets(
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
-      projectRoot
+      projectRoot,
+      options.testMode
     );
 
     if (options.ciTargetName) {
@@ -303,10 +310,12 @@ async function testTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  projectRoot: string
+  projectRoot: string,
+  testMode: 'watch' | 'run' = 'watch'
 ) {
+  const command = testMode === 'run' ? 'vitest run' : 'vitest';
   return {
-    command: `vitest`,
+    command,
     options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
     inputs: [
@@ -386,6 +395,7 @@ function normalizeOutputPath(
 function normalizeOptions(options: VitestPluginOptions): VitestPluginOptions {
   options ??= {};
   options.testTargetName ??= 'test';
+  options.testMode ??= 'watch';
   return options;
 }
 

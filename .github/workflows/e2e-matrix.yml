@@ -28,19 +28,20 @@ jobs:
           # - windows-latest Windows fails to build gradle wrapper which always runs when we build nx.
           ## https://staging.nx.app/runs/LgD4vxGn8w?utm_source=pull-request&utm_medium=comment
         node_version:
+          # TODO(v23): remove node 20 - EOL April 2026
           - 20
           - 22
-          # - 23
+          - 24
         exclude:
-          # run just node v20 on macos and windows
+          # run just node v24 on macos and windows
+          - os: macos-latest
+            node_version: 20
           - os: macos-latest
             node_version: 22
-          # - os: macos-latest
-          #   node_version: 23
-          # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
-          # node_version: 22
-          # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
-          #   node_version: 23
+          # - os: windows-latest TODO(Jack): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
+          #   node_version: 20
+          # - os: windows-latest TODO (Jack): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
+          #   node_version: 22
 
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
     steps:
@@ -50,17 +51,17 @@ jobs:
           fetch-depth: 0
           filter: tree:0
 
-      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
-        name: Install pnpm
+      - name: Setup dev tools with mise
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
         with:
-          version: 10.11.1
-          run_install: false
+          mise_toml: |
+            [tools]
+            node = "${{ matrix.node_version }}"
 
-      - name: Set node
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        with:
-          node-version: ${{ matrix.node_version }}
-          cache: 'pnpm'
+      - name: Enable corepack and install pnpm
+        run: |
+          corepack enable
+          corepack prepare --activate
 
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -153,39 +154,17 @@ jobs:
       - name: Prepare dir for output
         run: mkdir -p outputs
 
-      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
-        name: Install pnpm
+      - name: Setup dev tools with mise
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
         with:
-          version: 10.11.1
-          run_install: false
+          mise_toml: |
+            [tools]
+            node = "${{ matrix.node_version }}"
 
-      - name: Use Node.js ${{ matrix.node_version }}
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        with:
-          node-version: ${{ matrix.node_version }}
-          cache: 'pnpm'
-
-      - name: Install Rust
-        if: ${{ matrix.os != 'windows-latest' }}
+      - name: Enable corepack and install pnpm
         run: |
-          curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
-          source "$HOME/.cargo/env"
-          rustup toolchain install 1.70.0
-
-      - name: Load Cargo Env
-        if: ${{ matrix.os != 'windows-latest' }}
-        run: echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Setup .NET 9
-        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
-        with:
-          dotnet-version: '9.0.x'
-
-      - name: Install bun
-        if: ${{ matrix.os != 'windows-latest' }}
-        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
-        with:
-          bun-version: latest
+          corepack enable
+          corepack prepare --activate
 
       - name: Install packages
         run: |

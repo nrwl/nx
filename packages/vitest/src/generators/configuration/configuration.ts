@@ -37,6 +37,33 @@ import {
 import { clean, coerce, major } from 'semver';
 
 /**
+ * Determines whether to use vitest.config.mts instead of vite.config.mts.
+ * Returns true for new non-framework projects that don't already have a vite.config.
+ */
+function shouldUseVitestConfig(
+  tree: Tree,
+  projectRoot: string,
+  uiFramework: string
+): boolean {
+  // Keep vite.config for framework projects (need vite plugins like react, angular, etc.)
+  if (uiFramework !== 'none') {
+    return false;
+  }
+
+  // Keep existing vite.config (backwards compatibility)
+  const extensions = ['ts', 'mts', 'js', 'mjs'];
+  const hasExistingViteConfig = extensions.some((ext) =>
+    tree.exists(joinPathFragments(projectRoot, `vite.config.${ext}`))
+  );
+  if (hasExistingViteConfig) {
+    return false;
+  }
+
+  // New non-framework project → use vitest.config.mts
+  return true;
+}
+
+/**
  * @param hasPlugin some frameworks (e.g. Nuxt) provide their own plugin. Their generators handle the plugin detection.
  */
 export function configurationGenerator(
@@ -171,6 +198,7 @@ getTestBed().initTestEnvironment(
         true
       );
     } else {
+      const useVitestConfig = shouldUseVitestConfig(tree, root, uiFramework);
       createOrEditViteConfig(
         tree,
         {
@@ -179,7 +207,9 @@ getTestBed().initTestEnvironment(
           includeLib: getProjectType(tree, root, projectType) === 'library',
           useEsmExtension: true,
         },
-        true
+        true,
+        undefined,
+        useVitestConfig
       );
     }
   }

@@ -32,10 +32,14 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
               project.properties
                   .filterKeys { it.endsWith("TargetName") }
                   .mapValues { it.value.toString() }
+
+          val targetNamePrefix: String = project.findProperty("targetNamePrefix")?.toString() ?: ""
+
           task.projectName.set(project.name)
           task.projectRef.set(project)
           task.hash.set(hashProperty)
           task.targetNameOverrides.set(targetNameOverrides)
+          task.targetNamePrefix.set(targetNamePrefix)
           task.workspaceRoot.set(workspaceRootProperty)
 
           val conflictingTargetNames =

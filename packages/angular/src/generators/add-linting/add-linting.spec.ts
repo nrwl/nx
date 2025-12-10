@@ -188,7 +188,8 @@ describe('addLinting generator', () => {
           ...nx.configs["flat/javascript"],
           {
               ignores: [
-                  "**/dist"
+                  "**/dist",
+                  "**/out-tsc"
               ]
           },
           {

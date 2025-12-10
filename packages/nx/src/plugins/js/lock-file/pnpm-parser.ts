@@ -89,9 +89,11 @@ function matchPropValue(
   if (!record) {
     return undefined;
   }
-  const index = Object.values(record).findIndex((version) => version === key);
-  if (index > -1) {
-    return Object.keys(record)[index];
+  // Use Object.entries() for single-pass iteration instead of separate Object.values() + Object.keys()
+  for (const [name, version] of Object.entries(record)) {
+    if (version === key) {
+      return name;
+    }
   }
   // check if non-aliased name is found
   if (
@@ -316,6 +318,25 @@ function getNodes(
   }
 
   const hoistedDeps = loadPnpmHoistedDepsDefinition();
+
+  // Pre-build packageName -> key index for O(1) lookup instead of O(n) find() per package
+  const hoistedKeysByPackage = new Map<string, string>();
+  for (const key of Object.keys(hoistedDeps)) {
+    if (key.startsWith('/')) {
+      // Extract package name from key format: /{packageName}/{version}... or /@scope/name/{version}...
+      const withoutSlash = key.slice(1);
+      const slashIndex = withoutSlash.startsWith('@')
+        ? withoutSlash.indexOf('/', withoutSlash.indexOf('/') + 1)
+        : withoutSlash.indexOf('/');
+      if (slashIndex > 0) {
+        const pkgName = withoutSlash.slice(0, slashIndex);
+        if (!hoistedKeysByPackage.has(pkgName)) {
+          hoistedKeysByPackage.set(pkgName, key);
+        }
+      }
+    }
+  }
+
   const results: Record<string, ProjectGraphExternalNode> = {};
 
   for (const [packageName, versionMap] of nodes.entries()) {
@@ -323,7 +344,12 @@ function getNodes(
     if (versionMap.size === 1) {
       hoistedNode = versionMap.values().next().value;
     } else {
-      const hoistedVersion = getHoistedVersion(hoistedDeps, packageName, isV5);
+      const hoistedVersion = getHoistedVersion(
+        hoistedDeps,
+        packageName,
+        isV5,
+        hoistedKeysByPackage
+      );
       hoistedNode = versionMap.get(hoistedVersion);
     }
     if (hoistedNode) {
@@ -340,14 +366,14 @@ function getNodes(
 function getHoistedVersion(
   hoistedDependencies: Record<string, any>,
   packageName: string,
-  isV5: boolean
+  isV5: boolean,
+  hoistedKeysByPackage: Map<string, string>
 ): string {
   let version = getHoistedPackageVersion(packageName);
 
   if (!version) {
-    const key = Object.keys(hoistedDependencies).find((k) =>
-      k.startsWith(`/${packageName}/`)
-    );
+    // Use pre-built index for O(1) lookup
+    const key = hoistedKeysByPackage.get(packageName);
     if (key) {
       version = parseBaseVersion(getVersion(key.slice(1), packageName), isV5);
     } else {
