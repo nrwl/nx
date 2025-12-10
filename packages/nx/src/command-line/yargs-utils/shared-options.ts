@@ -325,6 +325,15 @@ export function withOutputStyleOption<T>(
     })
     .middleware([
       (args) => {
+        if (
+          !args.outputStyle &&
+          process.env.NX_DEFAULT_OUTPUT_STYLE &&
+          choices.includes(process.env.NX_DEFAULT_OUTPUT_STYLE as OutputStyle)
+        ) {
+          args.outputStyle = process.env.NX_DEFAULT_OUTPUT_STYLE;
+        }
+      },
+      (args) => {
         const useTui = shouldUseTui(readNxJson(), args as NxArgs);
         if (useTui) {
           // We have to set both of these because `check` runs after the normalization that
