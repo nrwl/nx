@@ -1531,6 +1531,10 @@ const dockerReleaseRedirect = {
     '/recipes/nx-release/release-npm-packages',
 };
 
+const removeEvolvingNx = {
+  '/blog/evolving-nx': '/blog/introducing-nx-powerpack',
+};
+
 /**
  * Public export API
  */
@@ -1576,4 +1580,5 @@ module.exports = {
   dockerReleaseRedirect,
   contentDedupeRedirects,
   docsToAstroRedirects: docsToAstroRedirects,
+  removeEvolvingNx,
 };
