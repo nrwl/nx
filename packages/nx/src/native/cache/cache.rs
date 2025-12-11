@@ -1,10 +1,12 @@
 use std::fs::{create_dir_all, read_to_string, write};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicI64, Ordering};
 use std::time::Instant;
 use tracing::{debug, trace};
 
 use fs_extra::remove_items;
 use napi::bindgen_prelude::*;
+use rayon::prelude::*;
 use regex::Regex;
 use rusqlite::params;
 use sysinfo::Disks;
@@ -162,24 +164,41 @@ impl NxCache {
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
         trace!("Successfully expanded {} outputs", expanded_outputs.len());
 
-        // Copy the outputs to the cache
-        let mut copied_files = 0;
-        for expanded_output in expanded_outputs.iter() {
-            let p = self.workspace_root.join(expanded_output);
-            if p.exists() {
-                let cached_outputs_dir = task_dir.join(expanded_output);
-                trace!("Copying {:?} -> {:?}", &p, &cached_outputs_dir);
-                let copied_size = _copy(p, cached_outputs_dir)?;
-                total_size += copied_size;
-                copied_files += 1;
-                trace!(
-                    "Successfully copied {} ({} bytes)",
-                    expanded_output, copied_size
-                );
-            }
-        }
+        // Copy the outputs to the cache in parallel
+        // This provides significant speedup for tasks with many output files/directories
+        // by utilizing multiple CPU cores and overlapping I/O operations
+        let parallel_size = AtomicI64::new(0);
+        let workspace_root = &self.workspace_root;
+
+        // First, collect all valid outputs (paths that exist)
+        let valid_outputs: Vec<_> = expanded_outputs
+            .iter()
+            .filter_map(|expanded_output| {
+                let src = workspace_root.join(expanded_output);
+                if src.exists() {
+                    Some((src, task_dir.join(expanded_output), expanded_output.clone()))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let copied_files = valid_outputs.len();
+
+        // Copy all outputs in parallel
+        valid_outputs
+            .par_iter()
+            .try_for_each(|(src, dst, name)| -> anyhow::Result<()> {
+                trace!("Copying {:?} -> {:?}", src, dst);
+                let copied_size = _copy(src, dst)?;
+                parallel_size.fetch_add(copied_size, Ordering::Relaxed);
+                trace!("Successfully copied {} ({} bytes)", name, copied_size);
+                Ok(())
+            })?;
+
+        total_size += parallel_size.load(Ordering::Relaxed);
         trace!(
-            "Successfully copied {} files, total cache size: {} bytes",
+            "Successfully copied {} outputs in parallel, total cache size: {} bytes",
             copied_files, total_size
         );
 
