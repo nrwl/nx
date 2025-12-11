@@ -8,9 +8,11 @@ use crate::native::{
     project_graph::types::ProjectGraph,
     tasks::{inputs::SplitInputs, types::Task},
 };
+use dashmap::DashSet;
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
 use std::collections::HashMap;
+use std::sync::Arc;
 use tracing::trace;
 
 use crate::native::tasks::inputs::{
@@ -67,13 +69,17 @@ impl HashPlanner {
                     &external_deps_mapped,
                 )?;
 
+                // Use thread-safe DashSet for visited tracking to enable parallel processing
+                let visited = Arc::new(DashSet::new());
+                visited.insert(task.target.project.to_string());
+
                 let self_inputs = self.self_and_deps_inputs(
                     &task.target.project,
                     task,
                     &inputs,
                     &task_graph,
                     &external_deps_mapped,
-                    &mut Box::new(hashbrown::HashSet::from([task.target.project.to_string()])),
+                    &visited,
                 )?;
 
                 let mut inputs: Vec<HashInstruction> = target
@@ -253,7 +259,7 @@ impl HashPlanner {
         inputs: &SplitInputs,
         task_graph: &TaskGraph,
         external_deps_mapped: &hashbrown::HashMap<&String, Vec<&String>>,
-        visited: &mut Box<hashbrown::HashSet<String>>,
+        visited: &Arc<DashSet<String>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let project_deps = &self.project_graph.dependencies[project_name]
             .iter()
@@ -297,7 +303,16 @@ impl HashPlanner {
             .collect()
     }
 
-    // todo(jcammisuli): parallelize this more. This function takes the longest time to run
+    /// Gathers hash instructions for all project dependencies.
+    ///
+    /// This function has been optimized for parallelism using:
+    /// 1. Thread-safe DashSet for visited tracking (atomic insert_if_absent)
+    /// 2. Parallel iteration over dependencies using rayon
+    /// 3. Lock-free concurrent collection of results
+    ///
+    /// The key insight is that once a dependency is marked as visited (atomically),
+    /// no other thread will process it, preventing duplicate work while allowing
+    /// concurrent processing of independent branches.
     fn gather_dependency_inputs<'a>(
         &'a self,
         task: &Task,
@@ -305,16 +320,28 @@ impl HashPlanner {
         task_graph: &TaskGraph,
         project_deps: &[&'a String],
         external_deps_mapped: &hashbrown::HashMap<&String, Vec<&'a String>>,
-        visited: &mut Box<hashbrown::HashSet<String>>,
+        visited: &Arc<DashSet<String>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
-        let mut deps_inputs: Vec<HashInstruction> = vec![];
-
+        // Pre-filter dependencies that haven't been visited yet using atomic operations
+        // This prevents race conditions where two threads might both start processing
+        // the same dependency
+        let mut deps_to_process: Vec<(&String, &Input)> = Vec::new();
         for input in inputs {
             for dep in project_deps {
-                if visited.contains(*dep) {
-                    continue;
+                // Atomic check-and-insert: returns true if we inserted (weren't already present)
+                if visited.insert(dep.to_string()) {
+                    deps_to_process.push((*dep, input));
                 }
-                visited.insert(dep.to_string());
+            }
+        }
+
+        // Process dependencies in parallel using rayon
+        // Each dependency is guaranteed to be processed exactly once due to the atomic
+        // insert above
+        let results: Vec<anyhow::Result<Vec<HashInstruction>>> = deps_to_process
+            .par_iter()
+            .map(|(dep, input)| {
+                let mut local_instructions: Vec<HashInstruction> = vec![];
 
                 if self.project_graph.nodes.contains_key(*dep) {
                     let Some(dep_inputs) = get_inputs_for_dependency(
@@ -323,9 +350,9 @@ impl HashPlanner {
                         input,
                     )?
                     else {
-                        continue;
+                        return Ok(local_instructions);
                     };
-                    deps_inputs.extend(self.self_and_deps_inputs(
+                    local_instructions.extend(self.self_and_deps_inputs(
                         dep,
                         task,
                         &dep_inputs,
@@ -334,17 +361,25 @@ impl HashPlanner {
                         visited,
                     )?);
                 } else {
-                    // todo(jcammisuli): add a check to skip this when the new task hasher is ready, and when `AllExternalDependencies` is used
+                    // Handle external dependencies
                     if let Some(external_deps) = external_deps_mapped.get(dep) {
-                        deps_inputs.push(HashInstruction::External(dep.to_string()));
-                        deps_inputs.extend(
+                        local_instructions.push(HashInstruction::External(dep.to_string()));
+                        local_instructions.extend(
                             external_deps
                                 .iter()
                                 .map(|s| HashInstruction::External(s.to_string())),
                         );
                     }
                 }
-            }
+
+                Ok(local_instructions)
+            })
+            .collect();
+
+        // Combine all results, propagating any errors
+        let mut deps_inputs: Vec<HashInstruction> = vec![];
+        for result in results {
+            deps_inputs.extend(result?);
         }
 
         Ok(deps_inputs)
