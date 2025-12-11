@@ -7,62 +7,61 @@ use crate::native::hasher::hash;
 use crate::native::project_graph::types::Project;
 use crate::native::types::Input;
 
+/// Hashes project configuration for cache invalidation.
+///
+/// This function has been optimized to minimize allocations by:
+/// 1. Writing directly to a single byte buffer instead of creating intermediate strings
+/// 2. Avoiding .concat() calls which allocate new strings
+/// 3. Using write! macro to append directly to buffer
 pub fn hash_project_config(
     project_name: &str,
     projects: &HashMap<String, Project>,
 ) -> Result<String> {
+    use std::fmt::Write;
+
     let project = projects
         .get(project_name)
         .ok_or_else(|| anyhow!("Could not find project '{}'", project_name))?;
-    let targets = project
-        .targets
-        .iter()
-        .map(|(k, v)| (k, v))
-        .sorted_by(|a, b| a.0.cmp(b.0))
-        .map(|(k, v)| {
-            format!(
-                "{}{}{}{}{}{}",
-                k,
-                v.executor.as_deref().unwrap_or_default(),
-                v.outputs.as_deref().unwrap_or_default().concat(),
-                v.options.as_deref().unwrap_or_default(),
-                v.configurations.as_deref().unwrap_or_default(),
-                v.parallelism.unwrap_or_default()
-            )
-        })
-        .collect::<Vec<_>>()
-        .concat();
 
-    let tags = project.tags.as_deref().unwrap_or_default().concat();
-    let inputs = project
-        .named_inputs
-        .as_ref()
-        .map(|inputs| {
-            inputs
-                .iter()
-                .map(|(k, v)| (k, v))
-                .sorted_by(|a, b| a.0.cmp(b.0))
-                .map(|(_, v)| {
-                    v.iter()
-                        .map(Input::from)
-                        .map(|i| format!("{:?}", i))
-                        .collect::<Vec<_>>()
-                        .concat()
-                })
-                .collect::<Vec<_>>()
-                .concat()
-        })
-        .unwrap_or_default();
+    // Pre-allocate buffer with estimated capacity to avoid reallocations
+    // Average project config is ~500 bytes, allocate more to be safe
+    let mut buffer = String::with_capacity(1024);
 
-    Ok(hash(
-        &[
-            project.root.as_bytes(),
-            tags.as_bytes(),
-            targets.as_bytes(),
-            inputs.as_bytes(),
-        ]
-        .concat(),
-    ))
+    // Write root
+    buffer.push_str(&project.root);
+
+    // Write tags directly to buffer (avoiding .concat())
+    if let Some(tags) = &project.tags {
+        for tag in tags {
+            buffer.push_str(tag);
+        }
+    }
+
+    // Write targets in sorted order directly to buffer
+    for (k, v) in project.targets.iter().sorted_by(|a, b| a.0.cmp(b.0)) {
+        buffer.push_str(k);
+        buffer.push_str(v.executor.as_deref().unwrap_or_default());
+        // Write outputs directly instead of .concat()
+        if let Some(outputs) = &v.outputs {
+            for output in outputs {
+                buffer.push_str(output);
+            }
+        }
+        buffer.push_str(v.options.as_deref().unwrap_or_default());
+        buffer.push_str(v.configurations.as_deref().unwrap_or_default());
+        let _ = write!(buffer, "{}", v.parallelism.unwrap_or_default());
+    }
+
+    // Write named inputs in sorted order directly to buffer
+    if let Some(named_inputs) = &project.named_inputs {
+        for (_, v) in named_inputs.iter().sorted_by(|a, b| a.0.cmp(b.0)) {
+            for input in v {
+                let _ = write!(buffer, "{:?}", Input::from(input));
+            }
+        }
+    }
+
+    Ok(hash(buffer.as_bytes()))
 }
 
 #[cfg(test)]
