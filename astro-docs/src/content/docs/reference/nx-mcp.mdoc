@@ -13,7 +13,7 @@ For an overview of how Nx enhances AI assistants and powerful use cases, see the
 
 ## Installation
 
-There are a few ways to setup the Nx MCP server:
+There are a few ways to setup the Nx MCP server
 
 {% aside type="note" title="Top level command" %}
 Starting with Nx v21.4.0, you can run the MCP server directly using the `nx mcp` command.
@@ -41,6 +41,7 @@ All args are passed through to the underlying MCP server.
 If you're using Cursor, VS Code, or JetBrains IDEs, install the [Nx Console extension](/docs/getting-started/editor-setup) which automatically manages the MCP server for you.
 
 ## Client-Specific Setup
+> If your preferred client is not listed, then configure your client to run the `npx nx-mcp` command to start up the Nx MCP server.
 
 ### Claude Code
 
@@ -72,34 +73,6 @@ If you miss the notification, run the `nx.configureMcpServer` command from the c
 
 If you miss the notification, run the `Nx: Setup MCP Server` command from the command palette (`Ctrl/Cmd + Shift + A`).
 
-### Warp
-
-Go to `Settings` -> `AI` -> `Manage MCP Servers` -> `+ Add` to add an MCP Server. Alternatively, use the slash command `/add-mcp` in the Warp Agent prompt.
-
-```json
-{
-  "nx-mcp": {
-    "command": "npx",
-    "args": ["nx-mcp@latest"]
-  }
-}
-```
-
-### Claude Desktop
-
-Configure the MCP server in your Claude Desktop settings:
-
-```json
-// mcp.json
-{
-  "servers": {
-    "nx-mcp": {
-      "command": "npx",
-      "args": ["nx-mcp@latest"]
-    }
-  }
-}
-```
 
 ## Command-Line Options
 
