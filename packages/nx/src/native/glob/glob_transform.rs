@@ -24,35 +24,56 @@ fn convert_glob_segments(negated: bool, parsed: Vec<Vec<GlobGroup>>) -> Vec<Stri
         .map(|product| {
             let mut negative = false;
             let mut full_path = false;
-            let mut path = String::from("");
+            // Pre-allocate with estimated capacity to reduce reallocations
+            // Average glob segment is ~20 chars, estimate total path length
+            let estimated_len = product.len() * 20;
+            let mut path = String::with_capacity(estimated_len);
+
             for (index, glob) in product.iter().enumerate() {
                 full_path = index == product.len() - 1;
                 match glob {
                     GlobType::Negative(s) if index != product.len() - 1 => {
-                        path.push_str(&format!("{}/", s));
+                        // Avoid format! - use push_str and push for efficiency
+                        path.push_str(s);
+                        path.push('/');
                         negative = true;
                         break;
                     }
                     GlobType::Negative(s) => {
-                        path.push_str(&format!("{}/", s));
+                        path.push_str(s);
+                        path.push('/');
                         negative = true;
                     }
                     GlobType::Positive(s) => {
-                        path.push_str(&format!("{}/", s));
+                        path.push_str(s);
+                        path.push('/');
                     }
                 }
             }
 
-            let modified_path = if full_path {
-                &path[..path.len() - 1]
-            } else {
-                &path
-            };
-
+            // Build result string efficiently
             if negative || negated {
-                format!("!{}", modified_path)
+                // Pre-allocate for "!" prefix plus path content
+                let final_len = if full_path {
+                    path.len() // minus trailing slash, plus "!"
+                } else {
+                    path.len() + 1
+                };
+                let mut result = String::with_capacity(final_len);
+                result.push('!');
+                if full_path && !path.is_empty() {
+                    // Remove trailing slash
+                    result.push_str(&path[..path.len() - 1]);
+                } else {
+                    result.push_str(&path);
+                }
+                result
+            } else if full_path && !path.is_empty() {
+                // Remove trailing slash without extra allocation
+                path.truncate(path.len() - 1);
+                path
             } else {
-                modified_path.to_owned()
+                path
             }
         })
         .collect::<HashSet<_>>()
@@ -67,6 +88,17 @@ pub fn convert_glob(glob: &str) -> anyhow::Result<Vec<String>> {
     Ok(convert_glob_segments(negated, parsed))
 }
 
+/// Builds segment efficiently by avoiding format! macro allocations.
+/// Uses String::with_capacity and push_str for better performance.
+#[inline]
+fn concat_glob_parts(existing: &str, glob_part: &GlobGroup) -> String {
+    let glob_str = glob_part.to_string();
+    let mut result = String::with_capacity(existing.len() + glob_str.len());
+    result.push_str(existing);
+    result.push_str(&glob_str);
+    result
+}
+
 fn build_segment(
     existing: &str,
     group: &[GlobGroup],
@@ -74,7 +106,8 @@ fn build_segment(
     is_negative: bool,
 ) -> Vec<GlobType> {
     if let Some(glob_part) = group.iter().next() {
-        let built_glob = format!("{}{}", existing, glob_part);
+        // Avoid format! - use helper function for efficient concatenation
+        let built_glob = concat_glob_parts(existing, glob_part);
         match glob_part {
             GlobGroup::ZeroOrMore(_) | GlobGroup::ZeroOrOne(_) => {
                 let existing = if !is_last_segment { "*" } else { existing };
