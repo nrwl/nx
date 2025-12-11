@@ -14,6 +14,13 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
+/** Task execution state for tracking progress */
+enum class TaskState {
+  SUCCEEDED,
+  FAILED,
+  SKIPPED
+}
+
 /** Executes Maven tasks in parallel using a work-stealing scheduler. */
 class MavenInvokerRunner(private val workspaceRoot: File, private val options: MavenBatchOptions) {
   private val log = LoggerFactory.getLogger(MavenInvokerRunner::class.java)
@@ -58,9 +65,8 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     // Thread-safe queue of ready tasks and graph state
     val taskQueue = LinkedBlockingQueue<String>(initialGraph.roots)
     val graphRef = AtomicReference(initialGraph)
-    val successfulTasks = ConcurrentHashMap<String, Boolean>()
-    val failedTasks = ConcurrentHashMap<String, Boolean>()
-    val processedTasks = ConcurrentHashMap<String, Boolean>()
+    // Single map to track task states instead of three separate boolean maps
+    val taskStates = ConcurrentHashMap<String, TaskState>()
 
     // Latch to signal when all tasks are done
     val completionLatch = CountDownLatch(initialGraph.tasks.size)
@@ -72,24 +78,19 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
           while (true) {
             val taskId = taskQueue.poll() ?: break
 
-            if (processedTasks.containsKey(taskId)) {
+            if (taskStates.containsKey(taskId)) {
               completionLatch.countDown()
               continue
             }
 
             val result = executeSingleTask(taskId, results)
-            processedTasks[taskId] = true
 
             // Emit result to stderr for streaming to Nx
             emitResult(taskId, result)
 
-            // Determine if this task succeeded or failed
+            // Record task state
             val success = results[taskId]?.success == true
-            if (success) {
-              successfulTasks[taskId] = true
-            } else {
-              failedTasks[taskId] = true
-            }
+            taskStates[taskId] = if (success) TaskState.SUCCEEDED else TaskState.FAILED
 
             // Update graph and find newly available tasks
             synchronized(graphRef) {
@@ -103,9 +104,9 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
               // Add newly available root tasks to queue
               val previousRoots = currentGraph.roots.toSet()
-              val newRoots = newGraph.roots.filter { it !in previousRoots && !processedTasks.containsKey(it) }
+              val newRoots = newGraph.roots.filter { it !in previousRoots && !taskStates.containsKey(it) }
               newRoots.forEach { newTaskId ->
-                if (!processedTasks.containsKey(newTaskId)) {
+                if (!taskStates.containsKey(newTaskId)) {
                   taskQueue.offer(newTaskId)
                   log.debug("Added newly available task to queue: $newTaskId")
                 }
@@ -115,10 +116,10 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
               // Skipped tasks are omitted from results, not marked as failed
               val oldTasks = currentGraph.tasks.keys
               val newTasks = newGraph.tasks.keys
-              val skippedTasks = oldTasks - newTasks - processedTasks.keys - successfulTasks.keys - failedTasks.keys
+              val skippedTasks = oldTasks - newTasks - taskStates.keys
               skippedTasks.forEach { skippedTaskId ->
                 log.debug("Task $skippedTaskId was skipped due to a failed dependency")
-                processedTasks[skippedTaskId] = true
+                taskStates[skippedTaskId] = TaskState.SKIPPED
                 // IMPORTANT: Count down skipped tasks too, or latch will never reach zero
                 completionLatch.countDown()
               }
@@ -298,8 +299,6 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       arguments.add("-X")
       arguments.add("-e")
     }
-
-    arguments.add("-nsu")
 
     // Non-recursive (-N) tells Maven to only build the specified project, not modules
     // This prevents loading all projects in the reactor, significantly reducing overhead

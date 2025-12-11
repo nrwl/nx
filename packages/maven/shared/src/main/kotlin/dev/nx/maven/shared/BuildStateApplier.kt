@@ -9,6 +9,11 @@ import java.io.File
 
 /**
  * Utility for applying build state to Maven projects.
+ *
+ * Note on warnings: This class uses warnings (not errors) for missing files/artifacts
+ * because build state may reference files that don't exist yet in incremental builds,
+ * or were cleaned between builds. These conditions are recoverable - Maven will rebuild
+ * the missing artifacts as needed. Failing hard would break valid incremental build scenarios.
  */
 object BuildStateApplier {
     private val log: Logger = LoggerFactory.getLogger(BuildStateApplier::class.java)

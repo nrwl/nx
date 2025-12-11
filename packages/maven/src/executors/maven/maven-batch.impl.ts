@@ -100,9 +100,6 @@ export default async function* mavenBatchExecutor(
 
   if (process.env.NX_VERBOSE_LOGGING === 'true') {
     javaArgs.push('--verbose');
-  }
-
-  if (process.env.NX_VERBOSE_LOGGING === 'true') {
     console.log(`[Maven Batch] Executing: java ${javaArgs.join(' ')}`);
   }
 
