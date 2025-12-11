@@ -1106,7 +1106,7 @@ describe('app', () => {
           ],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //   plugins: () => [ nxViteTsPaths() ],
           // },
           build: {
             outDir: '../dist/my-app',
@@ -1904,7 +1904,7 @@ describe('app', () => {
           plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //   plugins: () => [ nxViteTsPaths() ],
           // },
           build: {
             outDir: '../dist/my-app',
@@ -2046,7 +2046,7 @@ describe('app', () => {
           plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //   plugins: () => [ nxViteTsPaths() ],
           // },
           build: {
             outDir: '../dist/my-app',
