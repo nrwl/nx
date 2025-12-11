@@ -1,5 +1,4 @@
 import { DependencyType } from '../../../../config/project-graph';
-import type { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
 import { defaultFileRead } from '../../../../project-graph/file-utils';
 import type { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import {
@@ -16,28 +15,31 @@ export function buildExplicitPackageJsonDependencies(
   targetProjectLocator: TargetProjectLocator
 ): RawProjectGraphDependency[] {
   const res: RawProjectGraphDependency[] = [];
-  const nodes = Object.values(ctx.projects);
-  Object.keys(ctx.filesToProcess.projectFileMap).forEach((source) => {
-    Object.values(ctx.filesToProcess.projectFileMap[source]).forEach((f) => {
-      if (isPackageJsonAtProjectRoot(nodes, f.file)) {
+
+  // Build a Set of valid package.json paths at project roots for O(1) lookup
+  // This replaces the O(n) array.find() that was called for every file
+  // Performance impact: For N files and M projects, reduces O(N*M) to O(N+M)
+  const projectRootPackageJsonPaths = new Set<string>();
+  for (const projectName in ctx.projects) {
+    const project = ctx.projects[projectName];
+    projectRootPackageJsonPaths.add(
+      joinPathFragments(project.root, 'package.json')
+    );
+  }
+
+  for (const source in ctx.filesToProcess.projectFileMap) {
+    const files = ctx.filesToProcess.projectFileMap[source];
+    for (const f of files) {
+      // O(1) Set lookup instead of O(n) array.find()
+      if (
+        f.file.endsWith('package.json') &&
+        projectRootPackageJsonPaths.has(f.file)
+      ) {
         processPackageJson(source, f.file, ctx, targetProjectLocator, res);
       }
-    });
-  });
+    }
+  }
   return res;
-}
-
-function isPackageJsonAtProjectRoot(
-  nodes: ProjectConfiguration[],
-  fileName: string
-) {
-  return (
-    fileName.endsWith('package.json') &&
-    nodes.find(
-      (projectNode) =>
-        joinPathFragments(projectNode.root, 'package.json') === fileName
-    )
-  );
 }
 
 function processPackageJson(
