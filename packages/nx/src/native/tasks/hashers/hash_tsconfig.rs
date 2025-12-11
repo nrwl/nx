@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::*;
+use rayon::prelude::*;
 
 use crate::native::hasher::hash;
 use crate::native::project_graph::utils::find_project_for_path;
@@ -16,27 +17,42 @@ pub fn hash_tsconfig_selectively(
     Ok(hash(&[project_path.as_bytes(), ts_config].concat()))
 }
 
+/// Filters tsconfig paths to only include those belonging to the specified project.
+///
+/// This function uses parallel iteration to speed up filtering in workspaces with
+/// many path mappings. Each path mapping can be filtered independently, making this
+/// embarrassingly parallel.
 fn remove_other_project_paths(
     project_name: &str,
     project_root_mappings: &HashMap<String, String>,
     paths: &HashMap<String, Vec<String>>,
 ) -> String {
-    let mut filtered_paths = paths
-        .iter()
+    // Convert to Vec for parallel iteration
+    let paths_vec: Vec<_> = paths.iter().collect();
+
+    // Use parallel iteration to filter paths belonging to this project
+    let mut filtered_paths: Vec<String> = paths_vec
+        .par_iter()
         .filter_map(|(key, files)| {
-            let project_files = files
+            let project_files: Vec<&str> = files
                 .iter()
-                .filter(|&file| {
+                .filter(|file| {
                     find_project_for_path(file, project_root_mappings)
-                        .map_or_else(|| false, |p| project_name == p)
+                        .map_or(false, |p| project_name == p)
                 })
                 .map(|file| file.as_str())
-                .collect::<Vec<_>>();
+                .collect();
 
-            (!project_files.is_empty()).then(|| format!("{}:{}", key, project_files.join(";")))
+            if project_files.is_empty() {
+                None
+            } else {
+                Some(format!("{}:{}", key, project_files.join(";")))
+            }
         })
-        .collect::<Vec<_>>();
-    filtered_paths.sort();
+        .collect();
+
+    // Sort for deterministic output
+    filtered_paths.par_sort();
     filtered_paths.join(";")
 }
 
