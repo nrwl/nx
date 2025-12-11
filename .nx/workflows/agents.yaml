@@ -23,6 +23,8 @@ common-init-steps: &common-init-steps
   # reads mise.toml and installs toolchains needed for repo
   - name: Setup toolchains
     uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-mise/main.yaml'
+    inputs:
+      mise-version: 'v2025.12.2'
 
   - name: Verify toolchain versions
     script: |
