@@ -452,12 +452,12 @@
   {
     "name": "@jnxplus/nx-gradle",
     "description": "Nx plugin to add Gradle multi-project builds support to Nx workspace",
-    "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-gradle"
+    "url": "https://github.com/gridatek/jnxplus/tree/main/packages/nx-gradle"
   },
   {
     "name": "@jnxplus/nx-maven",
     "description": "Nx plugin to add Maven multi-module project support to Nx workspace",
-    "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-maven"
+    "url": "https://github.com/gridatek/jnxplus/tree/main/packages/nx-maven"
   },
   {
     "name": "@naxodev/nx-cloudflare",

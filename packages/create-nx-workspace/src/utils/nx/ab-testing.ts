@@ -261,21 +261,11 @@ export async function recordStat(opts: {
   nxVersion: string;
   useCloud: boolean;
   meta: string[];
-  directory: string;
 }) {
   try {
     if (!shouldRecordStats()) {
       return;
     }
-
-    // nx-ignore-next-line
-    const { getCloudUrl } = require(require.resolve(
-      'nx/src/nx-cloud/utilities/get-cloud-options',
-      {
-        paths: [opts.directory],
-      }
-      // nx-ignore-next-line
-    )) as typeof import('nx/src/nx-cloud/utilities/get-cloud-options');
 
     const axios = require('axios');
     await (axios['default'] ?? axios)

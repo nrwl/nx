@@ -27,6 +27,10 @@ my-lib-4@1.2.4-alpha.1
 my-lib-4@1.2.3
 alpha-lib@1.2.4
 alpha-lib@1.2.4-beta.1
+my-lib-5@1.1.1
+my-lib-5@1.1.0-alpha.3
+my-lib-5@1.1.0-alpha.2
+my-lib-5@1.1.0
 lib-only-pre-release@1.2.4-beta.1
 lib-only-pre-release@1.2.4-beta.1+build.1
 my-group@1.5.0
@@ -385,8 +389,9 @@ See merge request nx-release-test/nx-release-test!2`,
         {
           pattern: '{projectName}@{version}',
           projectName: 'alpha-lib',
-          expectedTag: 'alpha-lib@1.2.4-beta.1',
-          expectedVersion: '1.2.4-beta.1',
+          // Alpha lib has a stable 1.2.4 release, so this should be returned regardless of preid
+          expectedTag: 'alpha-lib@1.2.4',
+          expectedVersion: '1.2.4',
           preid: 'beta',
         },
         {
@@ -419,6 +424,13 @@ See merge request nx-release-test/nx-release-test!2`,
           projectName: 'lib-only-pre-release',
           expectedTag: undefined,
           expectedVersion: undefined,
+          preid: 'alpha',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'my-lib-5',
+          expectedTag: 'my-lib-5@1.1.1',
+          expectedVersion: '1.1.1',
           preid: 'alpha',
         },
       ];
