@@ -15,24 +15,59 @@ pub fn full_files_hash(workspace_root: &Path) -> NxFileHashes {
     hash_files(files).into_iter().collect()
 }
 
-pub fn selective_files_hash(
-    workspace_root: &Path,
-    mut archived_files: NxFileHashes,
-) -> NxFileHashes {
+/// Selectively hashes workspace files, reusing cached hashes for unchanged files.
+///
+/// This function has been optimized to:
+/// 1. Parallelize the cache lookup phase (checking if files are in archive)
+/// 2. Pre-allocate vectors based on expected sizes
+/// 3. Minimize HashMap mutations during the hot path
+pub fn selective_files_hash(workspace_root: &Path, archived_files: NxFileHashes) -> NxFileHashes {
     let files = nx_walker(workspace_root, true).collect::<Vec<_>>();
-    let mut archived = vec![];
-    let mut not_archived = vec![];
     let now = std::time::Instant::now();
 
-    for file in files {
-        if let Some(archived_file) = archived_files.remove(&file.normalized_path) {
-            if archived_file.1 == file.mod_time {
-                archived.push((file.normalized_path, archived_file));
-                continue;
+    // Phase 1: Parallel lookup to determine which files need hashing
+    // Returns (index, is_cached, cached_data) for each file
+    // Using par_iter() allows concurrent HashMap lookups which are thread-safe for reads
+    let cache_status: Vec<(usize, bool, Option<NxFileHashed>)> = files
+        .par_iter()
+        .enumerate()
+        .map(|(idx, file)| -> (usize, bool, Option<NxFileHashed>) {
+            if let Some(archived_file) = archived_files.get(&file.normalized_path) {
+                if archived_file.1 == file.mod_time {
+                    // File is cached and unchanged - create a new NxFileHashed with same data
+                    // NxFileHashed doesn't implement Clone, so we construct it manually
+                    let cached = NxFileHashed(archived_file.0.clone(), archived_file.1);
+                    return (idx, true, Some(cached));
+                }
             }
+            // File needs to be hashed (not in cache or modified)
+            (idx, false, None)
+        })
+        .collect();
+
+    // Count cached vs not cached for pre-allocation
+    let cached_count = cache_status.iter().filter(|(_, cached, _)| *cached).count();
+    let not_cached_count = files.len() - cached_count;
+
+    let mut archived: Vec<(String, NxFileHashed)> = Vec::with_capacity(cached_count);
+    let mut not_archived: Vec<NxFile> = Vec::with_capacity(not_cached_count);
+
+    // Phase 2: Sequential distribution (O(n) single pass)
+    // Convert to allow ownership transfer
+    let mut files_vec: Vec<Option<NxFile>> = files.into_iter().map(Some).collect();
+
+    for (idx, is_cached, cached_data) in cache_status {
+        let file = files_vec[idx]
+            .take()
+            .expect("Each file should only be processed once");
+
+        if is_cached {
+            archived.push((file.normalized_path, cached_data.unwrap()));
+        } else {
+            not_archived.push(file);
         }
-        not_archived.push(file);
     }
+
     trace!("filtered archive files in {:?}", now.elapsed());
 
     if not_archived.is_empty() {
