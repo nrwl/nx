@@ -1,10 +1,10 @@
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
 
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
 use tracing::trace;
 
+use crate::native::project_graph::project_root_trie::ProjectRootTrie;
 use crate::native::types::FileData;
 use crate::native::workspace::types::{FileLocation, NxWorkspaceFiles, NxWorkspaceFilesExternals};
 
@@ -16,26 +16,23 @@ pub(super) fn get_files(
         return Ok(Default::default());
     };
 
-    let root_map = transform_root_map(project_root_map);
+    // Build the Trie-based index for ultra-fast file-to-project lookups
+    // This converts O(files × avg_depth × HashMap_overhead) to O(files × avg_depth)
+    // For 100,000 files with avg depth 5: ~500,000 HashMap lookups -> 0 HashMap lookups
+    let project_trie = ProjectRootTrie::from_roots(project_root_map);
 
-    trace!(?root_map);
+    trace!("Built ProjectRootTrie for file location mapping");
 
+    // Map files to their locations using the trie - single traversal per file path
     let file_locations = files
         .par_iter()
         .cloned()
-        .map(|file_data| {
-            let file_path = PathBuf::from(&file_data.file);
-            let mut parent = file_path.parent().unwrap_or_else(|| Path::new("."));
-
-            while root_map.get(parent).is_none() && parent != Path::new(".") {
-                parent = parent.parent().unwrap_or_else(|| Path::new("."));
-            }
-
-            match root_map.get(parent) {
+        .map(
+            |file_data| match project_trie.find_project_for_path(&file_data.file) {
                 Some(project_name) => (FileLocation::Project(project_name.into()), file_data),
                 None => (FileLocation::Global, file_data),
-            }
-        })
+            },
+        )
         .collect::<Vec<(FileLocation, FileData)>>();
 
     let mut project_file_map: HashMap<String, Vec<FileData>> = HashMap::with_capacity(
@@ -79,11 +76,4 @@ pub(super) fn get_files(
             all_workspace_files,
         }),
     })
-}
-
-fn transform_root_map(root_map: HashMap<String, String>) -> hashbrown::HashMap<PathBuf, String> {
-    root_map
-        .into_iter()
-        .map(|(project_root, project_name)| (PathBuf::from(project_root), project_name))
-        .collect()
 }
