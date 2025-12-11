@@ -35,8 +35,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
   // - Maven 3.x: Maven3ResidentExecutor (MavenCli via reflection)
   // Works across all Maven versions via reflection
   private val mavenExecutor: MavenExecutor = MavenExecutorFactory.create(
-    workspaceRoot = workspaceRoot,
-    mavenHome = mavenDiscovery?.mavenHome
+      mavenHome = mavenDiscovery?.mavenHome
   )
 
   fun runBatch(): Map<String, TaskResult> {

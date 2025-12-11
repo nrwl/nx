@@ -26,7 +26,6 @@ import java.io.PrintStream
  * Performance: ~75% faster on cached tasks (saves POM parsing + dependency resolution)
  */
 class ResidentMavenExecutor(
-  private val workspaceRoot: File,
   private val mavenInstallationDir: File? = null
 ) : MavenExecutor {
   private val log = LoggerFactory.getLogger(ResidentMavenExecutor::class.java)

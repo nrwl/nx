@@ -12,11 +12,11 @@ import kotlin.test.assertTrue
 
 /**
  * Integration test for ResidentMavenExecutor running on thread pool threads.
- * 
+ *
  * This test specifically reproduces the scenario where the batch-runner JAR
  * is invoked from a thread pool (like in MavenInvokerRunner), which is where
  * the NoSuchMethodError was occurring in production.
- * 
+ *
  * This test demonstrates how ResidentMavenExecutor works when invoked from a thread pool.
  * test executes the executor on thread pool threads, not the main test thread.
  */
@@ -36,7 +36,7 @@ class ResidentMavenExecutorThreadPoolTest {
     fun setup() {
         if (GS_MULTI_MODULE_PATH.exists()) {
             try {
-                executor = ResidentMavenExecutor(GS_MULTI_MODULE_PATH)
+                executor = ResidentMavenExecutor()
                 println("✅ ResidentMavenExecutor created successfully")
             } catch (e: Exception) {
                 println("⚠️  Could not create executor: ${e.message}")
@@ -82,7 +82,7 @@ class ResidentMavenExecutorThreadPoolTest {
                 threadPool.submit {
                     try {
                         println("► Task ${taskNum + 1}: Running on thread: ${Thread.currentThread().name}")
-                        
+
                         val output = ByteArrayOutputStream()
                         val goals = listOf("clean", "compile")
                         val arguments = listOf("-B", "-q")
@@ -94,7 +94,7 @@ class ResidentMavenExecutorThreadPoolTest {
                         synchronized(lock) {
                             results.add(Pair(taskNum + 1, Result.Success(exitCode, duration)))
                         }
-                        
+
                         println("  ✅ Task ${taskNum + 1}: Completed in ${duration}ms with exit code $exitCode")
                         if (exitCode != 0) {
                             println("  Output: ${output.toString()}")

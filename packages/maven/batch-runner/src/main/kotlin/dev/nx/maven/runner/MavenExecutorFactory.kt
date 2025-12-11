@@ -18,22 +18,20 @@ object MavenExecutorFactory {
   /**
    * Create the appropriate MavenExecutor for the detected Maven version.
    *
-   * @param workspaceRoot Maven workspace root directory
    * @param mavenHome Maven installation directory
    * @return MavenExecutor optimized for the detected version
    */
   fun create(
-    workspaceRoot: File,
     mavenHome: File?
   ): MavenExecutor {
     val isMaven4 = detectMaven4(mavenHome)
 
     return if (isMaven4) {
       log.debug("🚀 Detected Maven 4.x - using ResidentMavenExecutor")
-      ResidentMavenExecutor(workspaceRoot, mavenHome)
+      ResidentMavenExecutor(mavenHome)
     } else {
       log.debug("📦 Detected Maven 3.x - using Maven3ResidentExecutor")
-      Maven3ResidentExecutor(workspaceRoot, mavenHome)
+      Maven3ResidentExecutor(mavenHome)
     }
   }
 

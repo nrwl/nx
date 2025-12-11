@@ -22,7 +22,6 @@ import java.io.File
  * This would provide ~75% performance improvement vs current ~30-40%.
  */
 class Maven3ResidentExecutor(
-  private val workspaceRoot: File,
   private val mavenInstallationDir: File? = null
 ) : MavenExecutor {
   private val log = LoggerFactory.getLogger(Maven3ResidentExecutor::class.java)
