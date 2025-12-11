@@ -3,72 +3,52 @@ title: Compile TypeScript Libraries to Multiple Formats
 description: Learn how to use Nx with Rollup to compile TypeScript libraries to both ESM and CommonJS formats for maximum compatibility.
 sidebar:
   label: Compile Typescript Packages to Multiple Formats
+filter: 'type:Guides'
 ---
 
 {% youtube src="https://youtu.be/Vy4d0-SF5cY" title="Packaging Typescript Lbraries" /%}
 
-It can be difficult to set up a typescript library to compile to ESM and CommonJS. As of Nx 16.8, you can use the `@nx/rollup:rollup` executor to take care of it for you.
+It can be difficult to set up a TypeScript library to compile to ESM and CommonJS. You can use `@nx/rollup` to take care of it for you.
 
 ## Use Rollup to Compile your TypeScript Project
 
 If you do not use Rollup already, install the corresponding Nx plugin as follows:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/rollup
 ```
 
 Make sure the version of `@nx/rollup` matches your other `@nx/*` package versions.
 
-You can then configure Rollup to compile your library by adding a `build` target to your `project.json` or `package.json` file. Here's an example:
-
-{% tabs %}
-{% tabitem label="package.json" %}
-
-```jsonc
-// packages/my-awesome-lib/project.json
-{
-  "name": "my-awesome-lib",
-  "nx": {
-    "targets": {
-      "build": {
-        "executor": "@nx/rollup:rollup",
-        "options": {
-          "main": "packages/my-awesome-lib/src/index.ts"
-        }
-      }
-    }
-  }
-}
-```
-
-{% /tabitem %}
-{% tabitem label="project.json" %}
-
-```jsonc
-// packages/my-awesome-lib/project.json
-{
-  "name": "my-awesome-lib",
-  "targets": {
-    "build": {
-      "executor": "@nx/rollup:rollup",
-      "options": {
-        "main": "packages/my-awesome-lib/src/index.ts"
-      }
-    }
-  }
-}
-```
-
-{% /tabitem %}
-{% /tabs %}
-
-If you happen to use the `@nx/js:tsc` executor already, you can also use the [Rollup configuration](/docs/technologies/build-tools/rollup/generators#configuration) generator from the Nx Rollup plugin to automatically configure your project's build target.
-
 ## Configure Rollup to Create Multiple Formats
 
-You'll need to specify `format`, `additionalEntryPoints` and `generateExportsField` in the executor options. Here's an example:
+Create a `rollup.config.cjs` file in your project with the following configuration:
 
-```jsonc {% meta="{9-11}" %}
+```javascript {% meta="{10}" %}
+// packages/my-awesome-lib/rollup.config.cjs
+const { withNx } = require('@nx/rollup/with-nx');
+
+module.exports = withNx(
+  {
+    main: './src/index.ts',
+    outputPath: './dist',
+    tsConfig: './tsconfig.lib.json',
+    compiler: 'swc',
+    format: ['esm', 'cjs'],
+    additionalEntryPoints: ['./src/foo.ts'],
+  },
+  {
+    // Additional rollup configuration options
+  }
+);
+```
+
+The `@nx/rollup/plugin` will automatically infer a `build` target for any project with a `rollup.config.cjs` file.
+
+{% aside title="Using the Executor Directly" %}
+You can also configure the build using the `@nx/rollup:rollup` executor in your `project.json` or `package.json` instead of the inferred plugin approach:
+
+```jsonc
 // packages/my-awesome-lib/project.json
 {
   "name": "my-awesome-lib",
@@ -86,51 +66,87 @@ You'll need to specify `format`, `additionalEntryPoints` and `generateExportsFie
 }
 ```
 
+{% /aside %}
+
 After compiling our package using `nx build my-awesome-lib` we'll get the following output in our `dist` folder.
 
-```
-my-awesome-lib
-└─ .
-   ├─ README.md
-   ├─ foo.cjs.d.ts
-   ├─ foo.cjs.js
-   ├─ foo.esm.js
-   ├─ index.cjs.d.ts
-   ├─ index.cjs.js
-   ├─ index.esm.js
-   ├─ package.json
-   └─ src
-      ├─ foo.d.ts
-      ├─ index.d.ts
-      └─ lib
-         └─ my-awesome-lib.d.ts
-```
+{% filetree %}
 
-And our `package.json` will look like this:
+- my-awesome-lib/
+  - dist/
+    - foo.cjs.js
+    - foo.esm.js
+    - foo.d.ts
+    - index.cjs.js
+    - index.esm.js
+    - index.d.ts
+    - src/
+      - lib/
+        - my-awesome-lib.d.ts
+  - src/
+    - ...
+  - ...
+
+{% /filetree %}
+
+## Configure Package Exports
+
+To ensure your package works correctly with TypeScript's module resolution, you need to configure the `exports` field in your source `package.json` with proper `types` entries. This is critical for TypeScript 4.7+ which requires explicit type declarations for each export condition.
+
+{% callout type="warning" title="Types Must Be Specified for Each Condition" %}
+When using conditional exports with both ESM and CJS formats, you must include `types` entries for each condition. Without this, TypeScript may fail to resolve types correctly, causing compilation errors for consumers of your package. See the [TypeScript 4.7 release notes](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-7.html#packagejson-exports-imports-and-self-referencing) for more details.
+{% /callout %}
+
+Update your source `package.json` to include the exports configuration:
 
 ```json
-// dist/my-awesome-lib/package.json
+// packages/my-awesome-lib/package.json
 {
   "name": "my-awesome-lib",
   "version": "0.0.1",
-  ...
   "type": "commonjs",
-  "main": "./index.cjs.js",
-  "typings": "./src/index.d.ts",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.esm.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "import": "./index.esm.js",
-      "default": "./index.cjs.js"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.esm.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.cjs.js"
+      }
     },
     "./foo": {
-      "import": "./foo.esm.js",
-      "default": "./foo.cjs.js"
+      "import": {
+        "types": "./dist/foo.d.ts",
+        "default": "./dist/foo.esm.js"
+      },
+      "require": {
+        "types": "./dist/foo.d.ts",
+        "default": "./dist/foo.cjs.js"
+      }
     }
-  },
-  "module": "./index.esm.js"
+  }
 }
-
 ```
 
-Now consumers of your package can access the appropriate format for their codebase and you don't have to worry about maintaining the infrastructure to compile to both formats.
+Now consumers of your package can access the appropriate format for their codebase and TypeScript will correctly resolve types regardless of whether they're using ESM or CommonJS.
+
+## Verify Your Package
+
+After building your package, verify that the types are correctly configured. A common mistake is misconfiguring the `exports` field, which can cause TypeScript compilation errors for consumers of your package.
+
+Use [Are the types wrong?](https://arethetypeswrong.github.io/) to check your package:
+
+- **Web app**: Upload your built package or check a published npm package at [arethetypeswrong.github.io](https://arethetypeswrong.github.io/)
+- **CLI tool**: Install `@arethetypeswrong/cli` to check packages locally or in CI:
+
+```shell
+npx @arethetypeswrong/cli ./dist/my-awesome-lib
+```
+
+This tool will identify common issues like missing type declarations for specific export conditions, helping you catch problems before publishing.

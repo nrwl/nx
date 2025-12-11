@@ -1,58 +1,64 @@
 ---
-title: Upgrading Storybook using the Storybook CLI
-description: This guide shows you how to upgrade Storybook in your Nx workspace using the Storybook CLI.
+title: Upgrading Storybook
+description: This guide explains how to upgrade Storybook in your Nx workspace using Nx migrations or the Storybook CLI.
 sidebar:
-  label: Upgrading Storybook using the Storybook CLI
+  label: Upgrading Storybook
+  order: 1
+filter: 'type:Guides'
 ---
 
-[Storybook provides an upgrade command](https://storybook.js.org/docs/react/configure/upgrading) that allows you to upgrade your Storybook dependencies and configuration files.
+Nx provides migration support for major Storybook versions (8, 9, and 10). You can upgrade using Nx's built-in migration system or the Storybook CLI directly.
 
-## Using the Storybook CLI to upgrade
+## Upgrading with Nx
 
-### Upgrade Storybook
+You can run a migration generator for the specific Storybook version you want to upgrade to, or starting with Nx 22, run `nx migrate` to automatically upgrade to Storybook 10.
 
-In the root directory of your workspace, run:
+### Using migration generators
 
-```shell {% frame="none" %}
+Run the Storybook migration generator for your target version:
+
+| Generator                                                                   | Command                         | Description             |
+| --------------------------------------------------------------------------- | ------------------------------- | ----------------------- |
+| [migrate-8](/docs/technologies/test-tools/storybook/generators#migrate-8)   | `nx g @nx/storybook:migrate-8`  | Migrate to Storybook 8  |
+| [migrate-9](/docs/technologies/test-tools/storybook/generators#migrate-9)   | `nx g @nx/storybook:migrate-9`  | Migrate to Storybook 9  |
+| [migrate-10](/docs/technologies/test-tools/storybook/generators#migrate-10) | `nx g @nx/storybook:migrate-10` | Migrate to Storybook 10 |
+
+### Using `nx migrate` (Nx 22+)
+
+Starting with Nx 22, when you run `nx migrate`, Nx automatically migrates Storybook 9 to Storybook 10. If you're already on Storybook 10, no migration runs. If you're on Storybook 8 or earlier, you'll need to use the migration generators above first.
+
+```shell
+nx migrate latest
+nx migrate --run-migrations
+```
+
+#### AI-assisted migrations
+
+For Storybook 10, some changes cannot be fully automated. When this happens, Nx generates an instructions file at `ai-migrations/MIGRATE_STORYBOOK_10.md` that an AI agent (Claude, ChatGPT, GitHub Copilot, etc.) can use to complete the migration.
+
+For example, Storybook 10 requires configuration files to use ESM syntax instead of CommonJS. The AI migration instructions guide an agent to find and convert any CJS Storybook configs to ESM format.
+
+## Upgrading with Storybook CLI
+
+If you prefer to skip Nx migrations and use the Storybook CLI directly:
+
+```shell
 npx storybook@latest upgrade
 ```
 
-### Let Nx handle the migrations
+This runs Storybook's own upgrade command which updates dependencies and configuration files. See the [Storybook upgrade documentation](https://storybook.js.org/docs/react/configure/upgrading) for more details.
 
-After you run the Storybook CLI upgrade command, Nx will automatically run any necessary migrations to update your Storybook configuration files and dependencies.
+## After upgrading
 
-## Manual upgrade path
-
-If you prefer to upgrade manually, you can:
-
-1. Update your Storybook dependencies in your `package.json`
-2. Run `npm install` or your preferred package manager
-3. Update your Storybook configuration files according to the [Storybook migration guide](https://storybook.js.org/docs/react/migration-guide)
-
-## Nx Storybook migrations
-
-Nx provides migrations for major Storybook updates. These migrations are automatically triggered when you update your Nx version. The migrations help with:
-
-- Updating Storybook configuration files
-- Updating dependencies
-- Migrating to new Storybook features
-- Fixing breaking changes
-
-## Troubleshooting upgrades
-
-If you encounter issues during the upgrade:
-
-1. Check the [Storybook migration guide](https://storybook.js.org/docs/react/migration-guide) for framework-specific changes
-2. Review the [Nx Storybook documentation](/docs/technologies/test-tools/storybook/introduction) for Nx-specific configurations
-3. Check the console output for specific error messages and fix them accordingly
-
-## Upgrading to Storybook 7+
-
-For major version upgrades (like Storybook 6 to 7), make sure to:
-
-1. Review the breaking changes in the [Storybook release notes](https://storybook.js.org/blog/)
-2. Update your stories to use the new APIs if needed
-3. Test your Storybook instances after the upgrade
+1. Review breaking changes in the [Storybook release notes](https://storybook.js.org/blog/)
+2. Update your stories to use new APIs if needed
+3. Test your Storybook instances to ensure everything works
 4. Update any custom configurations or addons
 
-Remember to test your Storybook instances thoroughly after any upgrade to ensure everything works as expected.
+## Troubleshooting
+
+If you encounter issues:
+
+1. Check the [Storybook migration guide](https://storybook.js.org/docs/react/migration-guide) for framework-specific changes
+2. Review the [Nx Storybook documentation](/docs/technologies/test-tools/storybook/introduction)
+3. Report issues on the [Nx GitHub](https://github.com/nrwl/nx/issues/new/choose) or [Storybook GitHub](https://github.com/storybookjs/storybook/issues/new/choose)

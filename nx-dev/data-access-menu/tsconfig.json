@@ -4,9 +4,6 @@
   "include": [],
   "references": [
     {
-      "path": "../models-menu"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],

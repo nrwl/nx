@@ -34,6 +34,7 @@ const docTypeDisplay = docType.charAt(0).toUpperCase() + docType.slice(1);
 
 <StarlightPage
   frontmatter={{
+    ...doc.data,
     title: doc.data.title,
     description: doc.data.description,
   }}

@@ -17,7 +17,7 @@ import { readConfig } from 'jest-config';
 import { join, normalize, posix } from 'node:path';
 import { createNodesV2, type JestPluginOptions } from '../../plugins/plugin';
 import { jestConfigExtensions } from '../../utils/config/config-file';
-import { getInstalledJestMajorVersion } from '../../utils/version-utils';
+import { getInstalledJestMajorVersion } from '../../utils/versions';
 
 interface Schema {
   project?: string;
@@ -66,6 +66,7 @@ async function postTargetTransformer(
 
   if (target.options) {
     await updateOptionsObject(
+      tree,
       target.options,
       projectDetails.root,
       tree.root,
@@ -76,6 +77,7 @@ async function postTargetTransformer(
   if (target.configurations) {
     for (const [configName, config] of Object.entries(target.configurations)) {
       await updateConfigurationObject(
+        tree,
         config,
         projectDetails.root,
         tree.root,
@@ -113,6 +115,7 @@ async function postTargetTransformer(
 export default convertToInferred;
 
 async function updateOptionsObject(
+  tree: Tree,
   targetOptions: any,
   projectRoot: string,
   workspaceRoot: string,
@@ -125,6 +128,7 @@ async function updateOptionsObject(
   delete targetOptions.config;
 
   await updateOptions(
+    tree,
     targetOptions,
     projectRoot,
     workspaceRoot,
@@ -133,6 +137,7 @@ async function updateOptionsObject(
 }
 
 async function updateConfigurationObject(
+  tree: Tree,
   targetOptions: any,
   projectRoot: string,
   workspaceRoot: string,
@@ -154,6 +159,7 @@ async function updateConfigurationObject(
   }
 
   await updateOptions(
+    tree,
     targetOptions,
     projectRoot,
     workspaceRoot,
@@ -162,6 +168,7 @@ async function updateConfigurationObject(
 }
 
 async function updateOptions(
+  tree: Tree,
   targetOptions: any,
   projectRoot: string,
   workspaceRoot: string,
@@ -199,7 +206,7 @@ async function updateOptions(
       )
     );
   } else {
-    const jestMajorVersion = getInstalledJestMajorVersion();
+    const jestMajorVersion = getInstalledJestMajorVersion(tree);
     testPathPatternsOptionName =
       jestMajorVersion >= 30 ? 'testPathPatterns' : 'testPathPattern';
   }

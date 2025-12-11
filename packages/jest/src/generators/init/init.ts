@@ -15,7 +15,11 @@ import {
   getPresetExt,
   type JestPresetExtension,
 } from '../../utils/config/config-file';
-import { jestVersion, nxVersion } from '../../utils/versions';
+import {
+  getInstalledJestVersion,
+  validateInstalledJestVersion,
+  versions,
+} from '../../utils/versions';
 import type { JestInitSchema } from './schema';
 
 function updateProductionFileSet(tree: Tree) {
@@ -73,6 +77,8 @@ function addJestTargetDefaults(tree: Tree, presetExt: JestPresetExtension) {
 }
 
 function updateDependencies(tree: Tree, options: JestInitSchema) {
+  const { jestVersion, nxVersion } = versions(tree);
+
   return addDependenciesToPackageJson(
     tree,
     {},
@@ -93,6 +99,11 @@ export async function jestInitGeneratorInternal(
   tree: Tree,
   options: JestInitSchema
 ): Promise<GeneratorCallback> {
+  const installedJestVersion = getInstalledJestVersion(tree);
+  if (installedJestVersion) {
+    validateInstalledJestVersion(tree);
+  }
+
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&

@@ -67,7 +67,12 @@ impl HttpRemoteCache {
         let _guard = span.enter();
 
         let url: String = format!("{}/v1/cache/{}", self.url, hash);
-        let response = self.client.get(&url).send().await;
+        let response = self
+            .client
+            .get(&url)
+            .header("Accept", "application/octet-stream")
+            .send()
+            .await;
         if let Ok(resp) = response {
             trace!("HTTP response status: {}", resp.status());
             let status = resp.status();

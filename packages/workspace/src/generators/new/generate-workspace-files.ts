@@ -16,6 +16,7 @@ import { deduceDefaultBase } from '../../utilities/default-base';
 import { nxVersion } from '../../utils/versions';
 import { Preset } from '../utils/presets';
 import type { NormalizedSchema } from './new';
+import { setupAiAgentsGenerator } from 'nx/src/ai/set-up-ai-agents/set-up-ai-agents';
 
 type PresetInfo = {
   generateAppCmd?: string;
@@ -184,6 +185,16 @@ export async function generateWorkspaceFiles(
 
   await createReadme(tree, options, token);
 
+  let aiAgentsCallback: () => unknown | undefined = undefined;
+  if (options.aiAgents && options.aiAgents.length > 0) {
+    aiAgentsCallback = await setupAiAgentsGenerator(tree, {
+      directory: options.directory,
+      writeNxCloudRules: options.nxCloud !== 'skip',
+      packageVersion: 'latest',
+      agents: [...options.aiAgents],
+    });
+  }
+
   const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
     if (gte(packageManagerVersion, '10.6.0')) {
@@ -202,7 +213,7 @@ export async function generateWorkspaceFiles(
   addNpmScripts(tree, options);
   setUpWorkspacesInPackageJson(tree, options);
 
-  return token;
+  return { token, aiAgentsCallback };
 }
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {
@@ -329,7 +340,6 @@ function addPnpmSettings(tree: Tree, options: NormalizedSchema) {
   tree.write(
     join(options.directory, 'pnpm-workspace.yaml'),
     `autoInstallPeers: true
-strictPeerDependencies: false
 `
   );
 }

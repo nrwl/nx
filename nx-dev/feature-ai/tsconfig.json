@@ -16,21 +16,6 @@
   "include": [],
   "references": [
     {
-      "path": "../ui-markdoc"
-    },
-    {
-      "path": "../ui-common"
-    },
-    {
-      "path": "../ui-primitives"
-    },
-    {
-      "path": "../util-ai"
-    },
-    {
-      "path": "../feature-analytics"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ]

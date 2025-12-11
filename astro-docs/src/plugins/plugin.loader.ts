@@ -16,10 +16,11 @@ import type { CollectionEntry, RenderedContent } from 'astro:content';
 import { watchAndCall } from './utils/watch';
 import {
   getGithubStars,
-  getNpmData,
-  getNpmDownloads,
   PLUGIN_IGNORE_LIST,
   shouldFetchStats,
+  getCachedOrDefaultStats,
+  fetchFreshStats,
+  type PluginStats,
 } from './utils/plugin-stats';
 import {
   getTechnologyCategory,
@@ -71,6 +72,39 @@ function getPluginDescription(pluginPath: string, pluginName: string): string {
   return `The Nx Plugin for ${pluginName}`;
 }
 
+/**
+ * Create a plugin overview entry with the given stats
+ * Features and totalDocs start empty and are populated during processing
+ */
+function createPluginOverview(
+  pluginName: string,
+  packageName: string,
+  pluginDescription: string,
+  technologyCategory: string,
+  stats: PluginStats
+): DocEntry {
+  const slug = getPluginSlug(pluginName, 'introduction');
+
+  return {
+    id: `${pluginName}-overview`,
+    collection: 'plugin-docs',
+    data: {
+      description: pluginDescription,
+      packageName,
+      pluginName,
+      technologyCategory,
+      features: [],
+      totalDocs: 0,
+      docType: 'overview',
+      ...stats,
+      title: pluginName,
+      slug,
+      filter: 'type:References',
+      weight: 2.1,
+    },
+  };
+}
+
 export async function generateAllPluginDocs(
   logger: LoaderContext['logger'],
   watcher: LoaderContext['watcher'],
@@ -78,9 +112,9 @@ export async function generateAllPluginDocs(
   store: LoaderContext['store']
 ) {
   logger.info('Generating plugin documentation...');
-  const entries: DocEntry[] = [];
   let successCount = 0;
   let skipCount = 0;
+  const criticalErrors: Array<{ plugin: string; error: Error }> = [];
 
   const ghStarMap = await getGithubStars([{ owner: 'nrwl', repo: 'nx' }]);
 
@@ -122,39 +156,30 @@ export async function generateAllPluginDocs(
     // Get technology category for this plugin
     const technologyCategory = getTechnologyCategory(pluginName);
 
-    let pluginOverview = {} as DocEntry;
-
+    // Determine which stats to use: fresh, cached, or defaults
+    let stats: PluginStats;
     if (shouldFetchStats(existingOverviewEntry)) {
+      // Fetch fresh stats from external sources
       const npmPackage = {
         name: packageName,
         url: `https://github.com/nrwl/nx/tree/master/packages/${pluginName}`,
         description: pluginDescription,
       };
-      const npmDownloads = await getNpmDownloads(npmPackage);
-      const npmMeta = await getNpmData(npmPackage);
-      const slug = getPluginSlug(pluginName, 'introduction');
-      pluginOverview = {
-        id: `${pluginName}-overview`,
-        collection: 'plugin-docs',
-        data: {
-          description: pluginDescription,
-          packageName,
-          pluginName,
-          technologyCategory,
-          features: [],
-          totalDocs: 0,
-          docType: 'overview',
-          githubStars: ghStarMap.get('nrwl/nx')?.stargazers?.totalCount || 0,
-          npmDownloads: npmDownloads,
-          lastPublishedDate: npmMeta.lastPublishedDate,
-          lastFetched: new Date(),
-          title: pluginName,
-          slug,
-        },
-      };
+      stats = await fetchFreshStats(npmPackage, 'nrwl/nx', ghStarMap, false);
     } else {
-      pluginOverview = existingOverviewEntry as DocEntry;
+      // Reuse cached stats if available, otherwise use defaults
+      stats = getCachedOrDefaultStats(existingOverviewEntry, false);
     }
+
+    // Create plugin overview with the determined stats
+    // Features and totalDocs will be populated as we process generators/executors/migrations
+    const pluginOverview = createPluginOverview(
+      pluginName,
+      packageName,
+      pluginDescription,
+      technologyCategory,
+      stats
+    );
 
     try {
       // Process generators
@@ -175,6 +200,8 @@ export async function generateAllPluginDocs(
               docType: 'generators',
               description: pluginDescription,
               slug,
+              weight: 1.0,
+              filter: 'type:References',
             },
           });
         }
@@ -203,6 +230,8 @@ export async function generateAllPluginDocs(
               docType: 'executors',
               description: pluginDescription,
               slug,
+              weight: 1.1,
+              filter: 'type:References',
             },
           });
         }
@@ -214,7 +243,10 @@ export async function generateAllPluginDocs(
 
       // Process migrations
       const migrations = parseMigrations(pluginPath);
-      if (migrations && migrations.size > 0) {
+      // parseMigrations will return null if the plugin doesn't define migration.json
+      // if there are not migrations then getMigrationsMarkdown will render a custom message
+      // to check previous Nx version docs
+      if (migrations) {
         const markdown = getMigrationsMarkdown(pluginName, migrations);
         const slug = getPluginSlug(pluginName, 'migrations');
         if (slug) {
@@ -230,6 +262,8 @@ export async function generateAllPluginDocs(
               docType: 'migrations',
               description: pluginDescription,
               slug,
+              weight: 0.5,
+              filter: 'type:References',
             },
           });
         }
@@ -249,10 +283,35 @@ export async function generateAllPluginDocs(
         skipCount++;
       }
     } catch (error: any) {
-      logger.error(`❌ Error processing ${pluginName}: ${error.message}`);
+      // Determine if this is a critical error that should fail the build
+      const isCriticalError =
+        error.code === 'ENOENT' || // Missing file referenced in manifest files
+        error instanceof SyntaxError || // Malformed JSON
+        error.message?.includes('schema') || // Schema-related error
+        error.message?.includes('JSON'); // JSON parsing error
+
+      if (isCriticalError) {
+        logger.error(
+          `❌ Critical error processing ${pluginName}: ${error.message}`
+        );
+        criticalErrors.push({ plugin: pluginName, error });
+      } else {
+        logger.warn(`⚠️  Skipping ${pluginName}: ${error.message}`);
+      }
       skipCount++;
     }
     store.set(pluginOverview);
+  }
+
+  // After processing all plugins, fail the build if there were critical errors
+  if (criticalErrors.length > 0) {
+    const errorSummary = criticalErrors
+      .map(({ plugin, error }) => `  - ${plugin}: ${error.message}`)
+      .join('\n');
+
+    throw new Error(
+      `Failed to generate documentation for ${criticalErrors.length} plugin(s):\n${errorSummary}`
+    );
   }
 }
 

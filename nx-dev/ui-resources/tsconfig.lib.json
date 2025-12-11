@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc/nx-dev/ui-resources",
+    "declaration": true,
+    "composite": true,
+    "types": ["node"]
+  },
+  "references": [
+    {
+      "path": "../ui-common/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-primitives/tsconfig.lib.json"
+    }
+  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
+}

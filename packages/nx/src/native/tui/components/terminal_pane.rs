@@ -1,5 +1,5 @@
 use arboard::Clipboard;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Rect},
@@ -154,26 +154,6 @@ impl TerminalPaneData {
             }
         }
         Ok(None)
-    }
-
-    pub fn handle_mouse_event(&mut self, event: MouseEvent) -> io::Result<()> {
-        if let Some(pty) = &mut self.pty {
-            let mut pty_mut = pty.as_ref().clone();
-            if self.is_interactive {
-                pty_mut.send_mouse_event(event);
-            } else {
-                match event.kind {
-                    MouseEventKind::ScrollUp => {
-                        self.scroll(ScrollDirection::Up);
-                    }
-                    MouseEventKind::ScrollDown => {
-                        self.scroll(ScrollDirection::Down);
-                    }
-                    _ => {}
-                }
-            }
-        }
-        Ok(())
     }
 
     pub fn set_interactive(&mut self, interactive: bool) {

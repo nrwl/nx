@@ -41,6 +41,7 @@ import { logger } from '../../utils/logger';
 import { commitChanges } from '../../utils/git-utils';
 import {
   ArrayPackageGroup,
+  getDependencyVersionFromPackageJson,
   NxMigrationsConfiguration,
   PackageJson,
   readModulePackageJson,
@@ -63,7 +64,7 @@ import {
   onlyDefaultRunnerIsUsed,
 } from '../nx-cloud/connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
-import { existsSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { isCI } from '../../utils/is-ci';
 import {
@@ -83,6 +84,7 @@ import {
   ensurePackageHasProvenance,
   getNxPackageGroup,
 } from '../../utils/provenance';
+import { type CatalogManager, getCatalogManager } from '../../utils/catalog';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -926,6 +928,12 @@ function createFetcher() {
     packageVersion,
     setCache: (packageName: string, packageVersion: string) => void
   ): Promise<ResolvedMigrationConfiguration> {
+    if (process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH === 'true') {
+      // Skip registry fetch and use installation method directly
+      logger.info(`Fetching ${packageName}@${packageVersion}`);
+      return getPackageMigrationsUsingInstall(packageName, packageVersion);
+    }
+
     const cacheKey = packageName + '-' + packageVersion;
     return Promise.resolve(resolvedVersionCache[cacheKey])
       .then((cachedResolvedVersion) => {
@@ -1207,7 +1215,25 @@ async function updatePackageJson(
   const parseOptions: JsonReadOptions = {};
   const json = readJsonFile(packageJsonPath, parseOptions);
 
+  const manager = getCatalogManager(root);
+  const catalogUpdates = [];
+
   Object.keys(updatedPackages).forEach((p) => {
+    const existingVersion = json.dependencies?.[p] ?? json.devDependencies?.[p];
+
+    if (existingVersion && manager?.isCatalogReference(existingVersion)) {
+      const { catalogName } = manager.parseCatalogReference(existingVersion);
+      catalogUpdates.push({
+        packageName: p,
+        version: updatedPackages[p].version,
+        catalogName,
+      });
+
+      // don't overwrite the catalog reference with the new version
+      return;
+    }
+
+    // Update non-catalog packages in package.json
     if (json.devDependencies?.[p]) {
       json.devDependencies[p] = updatedPackages[p].version;
       return;
@@ -1228,6 +1254,42 @@ async function updatePackageJson(
   await writeFormattedJsonFile(packageJsonPath, json, {
     appendNewLine: parseOptions.endsWithNewline,
   });
+
+  // Update catalog definitions
+  if (catalogUpdates.length) {
+    // manager is guaranteed to be defined when there are catalog updates
+    manager!.updateCatalogVersions(root, catalogUpdates);
+    await formatCatalogDefinitionFiles(manager!, root);
+  }
+}
+
+async function formatCatalogDefinitionFiles(
+  manager: CatalogManager,
+  root: string
+) {
+  const catalogDefinitionFilePaths = manager.getCatalogDefinitionFilePaths();
+  const catalogDefinitionFiles = catalogDefinitionFilePaths.map((filePath) => {
+    const absolutePath = join(root, filePath);
+    return {
+      path: filePath,
+      absolutePath,
+      content: readFileSync(absolutePath, 'utf-8'),
+    };
+  });
+
+  const results = await formatFilesWithPrettierIfAvailable(
+    catalogDefinitionFiles.map(({ path, content }) => ({ path, content })),
+    root,
+    { silent: true }
+  );
+
+  for (const { path, absolutePath, content } of catalogDefinitionFiles) {
+    writeFileSync(
+      absolutePath,
+      results.has(path) ? results.get(path)! : content,
+      { encoding: 'utf-8' }
+    );
+  }
 }
 
 async function updateInstallationDetails(
@@ -1275,14 +1337,11 @@ async function isMigratingToNewMajor(from: string, to: string) {
   return major(from) < major(to);
 }
 
-function readNxVersion(packageJson: PackageJson) {
+function readNxVersion(packageJson: PackageJson, root: string) {
   return (
-    packageJson?.devDependencies?.['nx'] ??
-    packageJson?.dependencies?.['nx'] ??
-    packageJson?.devDependencies?.['@nx/workspace'] ??
-    packageJson?.dependencies?.['@nx/workspace'] ??
-    packageJson?.devDependencies?.['@nrwl/workspace'] ??
-    packageJson?.dependencies?.['@nrwl/workspace']
+    getDependencyVersionFromPackageJson('nx', root, packageJson) ??
+    getDependencyVersionFromPackageJson('@nx/workspace', root, packageJson) ??
+    getDependencyVersionFromPackageJson('@nrwl/workspace', root, packageJson)
   );
 }
 
@@ -1299,7 +1358,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     const originalNxJson = readNxJson();
     const from =
       originalNxJson.installation?.version ??
-      readNxVersion(originalPackageJson);
+      readNxVersion(originalPackageJson, root);
 
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
@@ -1471,10 +1530,6 @@ function runInstall(nxWorkspaceRoot?: string) {
     pmCommands = getPackageManagerCommand();
   }
 
-  // TODO: remove this
-  if (packageManager ?? detectPackageManager() === 'npm') {
-    process.env.npm_config_legacy_peer_deps ??= 'true';
-  }
   const installCommand = `${pmCommands.install} ${
     pmCommands.ignoreScriptsFlag ?? ''
   }`;
@@ -1812,7 +1867,10 @@ export async function runMigration() {
       stdio: ['inherit', 'inherit', 'inherit'],
     });
   };
-  if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
+  if (
+    process.env.NX_USE_LOCAL !== 'true' &&
+    process.env.NX_MIGRATE_USE_LOCAL === undefined
+  ) {
     const p = await nxCliPath();
     if (p === null) {
       runLocalMigrate();

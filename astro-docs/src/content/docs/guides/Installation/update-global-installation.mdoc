@@ -1,8 +1,8 @@
 ---
 title: Update Your Global Nx Installation
 description: Learn how to update your global Nx installation to avoid common errors when the workspace structure changes, including steps to identify and remove outdated installations.
+filter: 'type:Guides'
 ---
-
 
 There are some cases where an issue could arise when using an outdated global installation of Nx. If the structure of your Nx workspace no longer matches up with what the globally installed copy of Nx expects, it may fail to hand off to your local installation properly and instead error. This commonly results in errors such as:
 
@@ -18,7 +18,7 @@ If you cannot remember which package manager you installed Nx globally with or a
 {% tabs syncKey="install-type" %}
 {% tabitem label="npm" %}
 
-```shell {% frame="none" %}
+```shell
 npm list --global nx
 ```
 
@@ -27,20 +27,20 @@ npm list --global nx
 
 **yarn 2+**
 
-```shell {% frame="none" %}
+```shell
 yarn dlx list nx
 ```
 
 yarn 1.x
 
-```shell {% frame="none" %}
+```shell
 yarn global list nx
 ```
 
 {% /tabitem %}
 {% tabitem label="pnpm" %}
 
-```shell {% frame="none" %}
+```shell
 pnpm list --global nx
 ```
 
@@ -52,21 +52,21 @@ You can then remove the extra global installations by running the following comm
 {% tabs syncKey="install-type" %}
 {% tabitem label="npm" %}
 
-```shell {% frame="none" %}
+```shell
 npm rm --global nx
 ```
 
 {% /tabitem %}
 {% tabitem label="yarn" %}
 
-```shell {% frame="none" %}
+```shell
 yarn global remove nx
 ```
 
 {% /tabitem %}
 {% tabitem label="pnpm" %}
 
-```shell {% frame="none" %}
+```shell
 pnpm rm --global nx
 ```
 

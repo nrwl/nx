@@ -1,6 +1,6 @@
 plugins {
-    id("dev.nx.gradle.project-graph") version("0.1.7")
-    id("com.ncorti.ktfmt.gradle") version("+")
+    alias(libs.plugins.nx.project.graph)
+    alias(libs.plugins.ktfmt)
 }
 
 group = "dev.nx"

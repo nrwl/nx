@@ -1,13 +1,15 @@
 ---
 title: Dynamically Allocate Agents
+description: Configure Nx Agents to dynamically scale based on PR size for cost-effective CI
 sidebar:
   order: 14
+filter: 'type:Features'
 ---
 
 By default, when you set up [Nx Agents](/docs/features/ci-features/distribute-task-execution) you specify the number and type of agents to use.
 
 ```yaml {% meta="{9}" %}
-// .github/workflows/main.yaml" 
+// .github/workflows/main.yaml"
 ...
 jobs:
   - job: main

@@ -27,7 +27,7 @@ For example, when a cache hit needs to restore artifacts to some "dist" folder, 
 
 This is possible because we offload some of the computation to a daemon process. This runs in the background to compute heavy operations like ensuring the project graph is always in sync, watching cache output locations and more.
 
-You can read more about it here: [/concepts/nx-daemon](/concepts/nx-daemon)
+You can read more about it here: [/concepts/nx-daemon](/docs/concepts/nx-daemon)
 
 ## Package-based and Integrated Style Monorepos
 
@@ -50,10 +50,10 @@ There will be more content around choosing which style and even how to mix the t
 
 We also updated our docs to have two super short tutorials that illustrate the two approaches:
 
-- [/getting-started/tutorials/typescript-packages-tutorial](/getting-started/tutorials/typescript-packages-tutorial)
-- [/getting-started/tutorials/react-monorepo-tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+- [/docs/getting-started/tutorials/typescript-packages-tutorial](/docs/getting-started/tutorials/typescript-packages-tutorial)
+- [/docs/getting-started/tutorials/react-monorepo-tutorial](/docs/getting-started/tutorials/react-monorepo-tutorial)
 
-You can also read more about the concept here: [/deprecated/integrated-vs-package-based](/deprecated/integrated-vs-package-based)
+You can also read more about the concept here: [/docs/reference/deprecated/integrated-vs-package-based](/docs/reference/deprecated/integrated-vs-package-based)
 
 ## New Compact Syntax for Task Pipelines
 
@@ -81,7 +81,7 @@ Here's an example:
 }
 ```
 
-You can read more here: [/concepts/task-pipeline-configuration](/concepts/task-pipeline-configuration)
+You can read more here: [/concepts/task-pipeline-configuration](/docs/concepts/task-pipeline-configuration)
 
 ## Fine-tune Caching with Inputs
 
@@ -141,13 +141,13 @@ Here's an example of the defaults that a new Nx workspace comes with:
 }
 ```
 
-You can read more here: [/recipes/running-tasks/configure-inputs](/recipes/running-tasks/configure-inputs)
+You can read more here: [/recipes/running-tasks/configure-inputs](/docs/guides/tasks--caching/configure-inputs)
 
 ## Nx Console
 
 Nx Console has evolved to be a key part of Nx's mission to improve the life of developers when working with Nx (and now also Lerna) monorepos. There have been tremendous improvements over the last couple of months. Here are some highlights!
 
-The famous, so much loved [Nx Graph](/features/explore-graph) can now also be visualized within VSCode directly:
+The famous, so much loved [Nx Graph](/docs/features/explore-graph) can now also be visualized within VSCode directly:
 
 ![](/blog/images/2022-10-14/92hOex9StyREA608.avif)
 
@@ -179,9 +179,9 @@ It is an ongoing process, and we have a lot of content to cover! We follow the [
 - you want to learn something new ("Tutorial" section) or
 - you want a solution to a specific problem ("Recipes" section).
 
-Besides the two new [package-based](/getting-started/tutorials/typescript-packages-tutorial) and [integrated style tutorials](/getting-started/tutorials/react-monorepo-tutorial) we also have two brand new reworked tutorials
+Besides the two new [package-based](/docs/getting-started/tutorials/typescript-packages-tutorial) and [integrated style tutorials](/docs/getting-started/tutorials/react-monorepo-tutorial) we also have two brand new reworked tutorials
 
-- [/getting-started/tutorials](/getting-started/tutorials)
+- [/getting-started/tutorials](/docs/getting-started/tutorials)
 
 Stay tuned for more updates to come.
 
@@ -215,7 +215,7 @@ Cypress v10 also comes with [Component Testing](https://docs.cypress.io/guides/c
 npx nx g @nrwl/react:cypress-component-configuration --project=your-projectnpx nx g @nrwl/angular:cypress-component-configuration --project=your-project
 ```
 
-Read more here: [/technologies/test-tools/cypress/recipes/cypress-component-testing](/technologies/test-tools/cypress/recipes/cypress-component-testing)
+Read more here: [/technologies/test-tools/cypress/recipes/cypress-component-testing](/docs/technologies/test-tools/cypress/guides/cypress-component-testing)
 
 ## Angular: Improved Angular CLI Migrations and Standalone Components
 
@@ -223,7 +223,7 @@ We landed generators to support Angular developers in leveraging the new standal
 
 {% tweet url="https://twitter.com/NxDevTools/status/1567513106380894215" /%}
 
-In addition, we improved the migration support for moving projects from the Angular CLI to an Nx workspace. Whether for a single Angular CLI project or to consolidate multiple Angular CLI projects into a single Nx workspace. Please read all about it here: [/technologies/angular/migration/angular](/technologies/angular/migration/angular)
+In addition, we improved the migration support for moving projects from the Angular CLI to an Nx workspace. Whether for a single Angular CLI project or to consolidate multiple Angular CLI projects into a single Nx workspace. Please read all about it here: [/technologies/angular/migration/angular](/docs/technologies/angular/migration/angular)
 
 ## Easily add Nx to an existing repository
 
@@ -253,7 +253,7 @@ npx nx migrate --run-migrations
 
 ## Learn more
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)

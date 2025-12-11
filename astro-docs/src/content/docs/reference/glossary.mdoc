@@ -4,8 +4,9 @@ description: A comprehensive reference of Nx-specific terminology to help you un
 sidebar:
   order: 7
   label: Glossary
+weight: 2.1
+filter: 'type:References'
 ---
-
 
 This is a short list of Nx-specific terms that will help you understand the rest of the documentation.
 
@@ -91,6 +92,12 @@ A script that performs some action on your code. This can include building, lint
 
 > See: [Executors and Configurations](/docs/concepts/executors-and-configurations)
 
+### Flake Rate
+
+A metric that measures how often a task succeeds due to flakiness rather than reliable code. It represents the percentage of total successes that came from unreliable (flaky) task hashes: `flaky_successes / (flaky_successes + non_flaky_successes)`. This answers the question: "Of all the times this task succeeded, how many successes came from unreliable code?"
+
+> See: [Flaky Task Analytics](/docs/features/ci-features/flaky-tasks#flaky-task-analytics)
+
 ### Flaky Tasks
 
 Tasks that will sometimes succeed and sometimes fail without any change to the inputs. These tasks are often e2e tests and are particularly problematic in CI. Nx Cloud automatically detects flaky tasks and re-runs them.
@@ -108,6 +115,12 @@ A script that creates or modifies your code. Generators can be found in [plugins
 A computer science concept that consists of nodes connected by edges. In the Nx context, there are two graphs: the [project](#project) graph which describes dependencies between projects and the [task](#task) graph which describes dependencies between tasks.
 
 > See: [Explore the Graph](/docs/features/explore-graph)
+
+### Impact Score
+
+A metric used in [Flaky Task Analytics](#flaky-tasks) to prioritize which flaky tasks need attention. Calculated as `flake_rate × sample_size`, it weights frequently-run flaky tasks higher than rarely-run flaky tasks. For example, a task with 50% flake rate and 100 runs has an impact score of 50, the same as a task with 10% flake rate and 500 runs.
+
+> See: [Flaky Task Analytics](/docs/features/ci-features/flaky-tasks#flaky-task-analytics)
 
 ### Launch Template
 

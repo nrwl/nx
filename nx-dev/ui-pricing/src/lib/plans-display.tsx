@@ -110,11 +110,7 @@ export function PlansDisplay(): ReactElement {
                     <span>
                       Remote caching with{' '}
                       <Link
-                        href={
-                          process.env.NEXT_PUBLIC_ASTRO_URL
-                            ? '/docs/features/ci-features/remote-cache'
-                            : '/ci/features/remote-cache'
-                        }
+                        href={'/docs/features/ci-features/remote-cache'}
                         target="_blank"
                         title="Learn how Nx Replay easily reduces CI execution time"
                         onClick={() =>
@@ -139,9 +135,7 @@ export function PlansDisplay(): ReactElement {
                       Distributed task execution with{' '}
                       <Link
                         href={
-                          process.env.NEXT_PUBLIC_ASTRO_URL
-                            ? '/docs/features/ci-features/distribute-task-execution'
-                            : '/ci/features/distribute-task-execution'
+                          '/docs/features/ci-features/distribute-task-execution'
                         }
                         target="_blank"
                         title="Learn how Nx Agents easily scale your CI pipelines"
@@ -347,19 +341,19 @@ export function PlansDisplay(): ReactElement {
                   />
                   <span>
                     <Link
-                      href="/powerpack"
+                      href="/enterprise"
                       target="_blank"
-                      title="Check our AI integrations and how to use them"
+                      title="Check our enterprise features"
                       onClick={() =>
                         sendCustomEvent(
-                          'learn-nx-powerpack-click',
+                          'learn-nx-enterprise-click',
                           'plans-table',
                           'pricing-plans'
                         )
                       }
                       className="font-medium underline decoration-dotted"
                     >
-                      Nx Powerpack
+                      Nx Enterprise
                     </Link>
                     : a suite of premium extensions for the Nx CLI
                   </span>

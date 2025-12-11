@@ -239,6 +239,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '../dist/my-app'),
+    clean: true,
   },
   devServer: {
     port: 4200,
@@ -278,7 +279,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server:{
     port: 4200,
@@ -313,6 +314,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '../dist/my-app'),
+    clean: true,
   },
   devServer: {
     port: 4200,
@@ -352,7 +354,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server:{
     port: 4200,
@@ -421,7 +423,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server: {
     port: 4200,
@@ -485,7 +487,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server: {
     port: 4200,
@@ -534,6 +536,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '../dist/my-app'),
+    clean: true,
   },
   devServer: {
     port: 4200,
@@ -652,7 +655,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server:{
     port: 4200,
@@ -687,6 +690,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '../dist/my-app'),
+    clean: true,
   },
   devServer: {
     port: 4200,

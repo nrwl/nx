@@ -4,6 +4,7 @@ import Script from 'next/script';
 import AppRouterAnalytics from './app-router-analytics';
 import GlobalScripts from './global-scripts';
 // import { LiveStreamNotifier } from '@nx/nx-dev-ui-common';
+import { GlobalSearchHandler } from '@nx/nx-dev-ui-common';
 import '../styles/main.css';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 
@@ -45,6 +46,17 @@ export const metadata: Metadata = {
       'application/atom+xml': '/blog/atom.xml',
     },
   },
+  // Add robots directive when NEXT_PUBLIC_NO_INDEX is set
+  ...(process.env.NEXT_PUBLIC_NO_INDEX === 'true' && {
+    robots: {
+      index: false,
+      follow: false,
+      googleBot: {
+        index: false,
+        follow: false,
+      },
+    },
+  }),
 };
 
 // Viewport settings for the entire site
@@ -108,6 +120,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500">
+        <GlobalSearchHandler />
         {children}
         {/* <LiveStreamNotifier /> */}
         <FrontendObservability />

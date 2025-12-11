@@ -158,7 +158,7 @@ It uses Nx for running and building your project. Nx relies on the Angular Devki
 }
 ```
 
-If you have an existing Angular CLI project, you can also [add Nx support to it](/technologies/angular/migration/angular) by running:
+If you have an existing Angular CLI project, you can also [add Nx support to it](/docs/technologies/angular/migration/angular) by running:
 
 ```shell
 npx nx@latest init
@@ -402,7 +402,7 @@ These rules are enforced at build time through ESLint. If a developer tries to i
 
 Note that this tagging structure is just a suggestion - you can adapt it to your specific needs. The key is to have clear, enforceable boundaries that reflect both your technical architecture and your business domains.
 
-Read more about [Nx boundary rules in our documentation](/features/enforce-module-boundaries).
+Read more about [Nx boundary rules in our documentation](/docs/features/enforce-module-boundaries).
 
 ## Automate Your Standards
 
@@ -429,17 +429,17 @@ export default async function (tree: Tree, schema: any) {
 }
 ```
 
-Your team can then run these generators through the Nx CLI (via the `nx generate ...` command) or [Nx Console](/getting-started/editor-setup):
+Your team can then run these generators through the Nx CLI (via the `nx generate ...` command) or [Nx Console](/docs/getting-started/editor-setup):
 
-For more detailed information about creating custom generators, including how to add options, create files, and modify existing ones, check out the [Local Generators documentation](/extending-nx/recipes/local-generators).
+For more detailed information about creating custom generators, including how to add options, create files, and modify existing ones, check out the [Local Generators documentation](/docs/extending-nx/local-generators).
 
 ### Leverage Nx Console AI Integration
 
-If you use [Nx Console](/getting-started/editor-setup), Nx's editor extension for VSCode and IntelliJ, then you should already have the latest AI capabilities enabled.
+If you use [Nx Console](/docs/getting-started/editor-setup), Nx's editor extension for VSCode and IntelliJ, then you should already have the latest AI capabilities enabled.
 
 Nx Console [just got some enhancements](/blog/nx-made-cursor-smarter) with the goal of providing contextual information to editor integrated LLMs such as Copilot and Cursor. By providing Nx workspace metadata to these models they are able to provide much more valuable, context specific information and perform actions via the Nx CLI.
 
-You can find more detailed information [in our documentation](/features/enhance-AI) about how to enable and use the capabilities.
+You can find more detailed information [in our documentation](/docs/features/enhance-ai) about how to enable and use the capabilities.
 
 ## Single-app vs Multiple App Deployment
 
@@ -494,10 +494,10 @@ Similarly to how we now have two applications that can be deployed and scaled in
 
 Obviously as your codebase keeps growing you need to have the tooling support that helps keep it sustainable. In particular CI might become a concern as the number of projects grows. For that purpose Nx has several features to keep your CI fast and efficient:
 
-- **[Remote Caching (Nx Replay)](/ci/features/remote-cache)** ensures your code is never rebuilt or retested unnecessarily.
-- **[Distributed Task Execution (Nx Agents)](/ci/features/distribute-task-execution)** intelligently allocates tasks across multiple machines.
-- **[Atomizer](/ci/features/split-e2e-tasks)** helps manage growing test suites by automatically splitting them into more fine-grained runs and by leveraging Nx Agents to parallelize them across machines.
-- **[Flaky Task Detection](/ci/features/flaky-tasks)** identifies flaky tasks (often automated unit or e2e tests) and re-runs them automatically for you.
+- **[Remote Caching (Nx Replay)](/docs/features/ci-features/remote-cache)** ensures your code is never rebuilt or retested unnecessarily.
+- **[Distributed Task Execution (Nx Agents)](/docs/features/ci-features/distribute-task-execution)** intelligently allocates tasks across multiple machines.
+- **[Atomizer](/docs/features/ci-features/split-e2e-tasks)** helps manage growing test suites by automatically splitting them into more fine-grained runs and by leveraging Nx Agents to parallelize them across machines.
+- **[Flaky Task Detection](/docs/features/ci-features/flaky-tasks)** identifies flaky tasks (often automated unit or e2e tests) and re-runs them automatically for you.
 
 One of the key advantages of using Nx is that it's not limited to just Angular either. As your application grows, you might need to:
 
@@ -544,7 +544,7 @@ Remember that architecture is not a one-time decision but an evolving process - 
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

@@ -1,5 +1,5 @@
 import {
-  CreateNodes,
+  CreateNodesV2,
   glob,
   ProjectConfiguration,
   readNxJson,
@@ -15,7 +15,7 @@ export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   tree: Tree,
   rootMappings: Map<string, string>,
   pluginPath: string,
-  createNodes: CreateNodes<T>,
+  createNodes: CreateNodesV2<T>,
   pluginOptions: T
 ): Promise<void> {
   const nxJson = readNxJson(tree);
@@ -37,21 +37,26 @@ export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   const [pluginGlob, createNodesFunction] = createNodes;
   const configFiles = glob(tree, [pluginGlob]);
 
-  for (const configFile of configFiles) {
+  const results = await createNodesFunction(configFiles, pluginOptions, {
+    workspaceRoot: tree.root,
+    nxJsonConfiguration: readNxJson(tree),
+  });
+
+  for (const [configFile, nodes] of results) {
     try {
       const projectName = findProjectForPath(configFile, rootMappings);
       const projectConfig = readProjectConfiguration(tree, projectName);
-      const nodes = await createNodesFunction(configFile, pluginOptions, {
-        workspaceRoot: tree.root,
-        nxJsonConfiguration: readNxJson(tree),
-        configFiles,
-      });
       const node = nodes.projects[Object.keys(nodes.projects)[0]];
 
-      for (const [targetName, targetConfig] of Object.entries(node.targets)) {
+      for (const [targetName, targetConfig] of Object.entries(
+        node.targets ?? {}
+      )) {
         const targetFromProjectConfig = projectConfig.targets[targetName];
 
-        if (targetFromProjectConfig?.executor !== targetConfig.executor) {
+        if (
+          targetFromProjectConfig?.executor !==
+          (targetConfig as TargetConfiguration).executor
+        ) {
           continue;
         }
 

@@ -1,5 +1,5 @@
 use color_eyre::eyre::Result;
-use crossterm::event::{KeyEvent, MouseEvent};
+use crossterm::event::KeyEvent;
 use ratatui::layout::{Rect, Size};
 use std::any::Any;
 use tokio::sync::mpsc::UnboundedSender;
@@ -61,7 +61,6 @@ pub trait Component: Any + Send {
     fn handle_events(&mut self, event: Option<Event>) -> Result<Option<Action>> {
         let action = match event {
             Some(Event::Key(key_event)) => self.handle_key_event(key_event)?,
-            Some(Event::Mouse(mouse_event)) => self.handle_mouse_event(mouse_event)?,
             _ => None,
         };
         Ok(action)
@@ -77,19 +76,6 @@ pub trait Component: Any + Send {
     /// * `Result<Option<Action>>` - An action to be processed or none.
     fn handle_key_event(&mut self, key: KeyEvent) -> Result<Option<Action>> {
         let _ = key; // to appease clippy
-        Ok(None)
-    }
-    /// Handle mouse events and produce actions if necessary.
-    ///
-    /// # Arguments
-    ///
-    /// * `mouse` - A mouse event to be processed.
-    ///
-    /// # Returns
-    ///
-    /// * `Result<Option<Action>>` - An action to be processed or none.
-    fn handle_mouse_event(&mut self, mouse: MouseEvent) -> Result<Option<Action>> {
-        let _ = mouse; // to appease clippy
         Ok(None)
     }
     /// Update the state of the component based on a received action. (REQUIRED)

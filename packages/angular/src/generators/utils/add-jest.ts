@@ -20,8 +20,6 @@ export async function addJest(
   options: AddJestOptions
 ): Promise<void> {
   if (!options.skipPackageJson) {
-    process.env.npm_config_legacy_peer_deps ??= 'true';
-
     const pkgVersions = versions(tree);
     addDependenciesToPackageJson(
       tree,
@@ -29,7 +27,11 @@ export async function addJest(
         // TODO(leo): jest-preset-angular still needs this until https://github.com/thymikee/jest-preset-angular/pull/3079 is merged
         '@angular/platform-browser-dynamic': pkgVersions.angularVersion,
       },
-      { 'jest-preset-angular': pkgVersions.jestPresetAngularVersion },
+      {
+        // force jest v29.7.0, Angular doesn't support Jest v30 yet: https://github.com/angular/angular-cli/pull/30761
+        jest: '^29.7.0',
+        'jest-preset-angular': pkgVersions.jestPresetAngularVersion,
+      },
       undefined,
       true
     );

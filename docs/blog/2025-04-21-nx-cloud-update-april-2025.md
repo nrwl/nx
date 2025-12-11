@@ -18,9 +18,9 @@ In your CI pipeline, you've got some tasks of different sizes. Some tasks are qu
 
 But when you're spreading tasks across multiple agents, it's inefficient to increase the size of all the agents to accommodate your larger tasks. So ideally, you have smaller agents for small tasks and larger agents for your larger tasks. But how do you make sure tasks get assigned to the right agent?
 
-Many CI tools have ways of handling this, but we wanted to make things easier. That's why Nx Cloud now has [Assignment Rules](/ci/reference/assignment-rules). This configuration allows you to control which tasks are assigned to certain agents.
+Many CI tools have ways of handling this, but we wanted to make things easier. That's why Nx Cloud now has [Assignment Rules](/docs/reference/nx-cloud/assignment-rules). This configuration allows you to control which tasks are assigned to certain agents.
 
-Let's take a look at a quick example for [Nx Agents](/ci/features/distribute-task-execution):
+Let's take a look at a quick example for [Nx Agents](/docs/features/ci-features/distribute-task-execution):
 
 ```yaml {% fileName=".nx/workflows/distribution-config.yaml" /%}
 # Create five agents using the `linux-medium-js` launch template and five agents using `linux-large-js`
@@ -54,7 +54,7 @@ assignment-rules:
 
 As you can see, there's a lot of flexibility in the configuration here to fine-tune your agent assignments.
 
-We're so excited about this feature that we've built it to work with both [Agents](/ci/features/distribute-task-execution) and [Manual DTE](/ci/recipes/dte/github-dte). So, no matter how you're distributing tasks using Nx Cloud, you can use this new feature! Be sure to [check the docs](/ci/reference/assignment-rules) for more details.
+We're so excited about this feature that we've built it to work with both [Agents](/docs/features/ci-features/distribute-task-execution) and [Manual DTE](/docs/guides/nx-cloud/manual-dte). So, no matter how you're distributing tasks using Nx Cloud, you can use this new feature! Be sure to [check the docs](/docs/reference/nx-cloud/assignment-rules) for more details.
 
 We're also providing a new UI that tells you exactly what tasks are being run on which agents and the rules impacting them.
 
@@ -90,8 +90,8 @@ Using GitHub Enterprise and having a custom URL? Nx Agents now works with these 
 
 ## Learn more
 
-- [Nx Cloud Docs](/ci)
-- [Nx Docs](/getting-started/intro)
+- [Nx Cloud Docs](/docs/getting-started/nx-cloud)
+- [Nx Docs](/docs/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools)
 - [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)

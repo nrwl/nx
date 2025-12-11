@@ -3,6 +3,8 @@ title: Overview of the Nx Shared File System Cache Plugin
 description: The @nx/shared-fs-cache plugin enables you to use a shared file system directory to host your remote cache for efficient build caching across your team.
 sidebar:
   label: Overview
+weight: 2.1
+filter: 'type:References'
 ---
 
 The `@nx/shared-fs-cache` plugin enables you to host your remote cache on a shared file system directory. While you're responsible for implementing the actual directory sharing mechanism, the plugin configures Nx to read from both your local cache and the shared directory.
@@ -29,7 +31,7 @@ CREEP (CVE-2025-36852) is a critical vulnerability in bucket-based self-hosted r
 
 Run the following command:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/shared-fs-cache
 ```
 
@@ -37,7 +39,7 @@ This will add the `@nx/shared-fs-cache` NPM package and automatically configure 
 
 The key will be saved in your repository (`.nx/key/key.ini`) and should be committed so that every developer has access to it. If your repository is public (or in CI), you can also use an environment variable:
 
-```
+```dotenv
 // .env
 NX_KEY=YOUR_ACTIVATION_KEY
 ```

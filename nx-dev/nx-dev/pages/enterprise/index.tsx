@@ -21,6 +21,18 @@ import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 export function Enterprise(): ReactElement {
   const router = useRouter();
 
+  const ctaConfig: ButtonLinkProps[] = [
+    {
+      href: '/contact',
+      variant: 'secondary',
+      size: 'small',
+      title: 'Contact Us',
+      children: <span>Contact</span>,
+      onClick: () =>
+        sendCustomEvent('contact-click', 'header-cta', 'page-header'),
+    },
+  ];
+
   const scrollCTAConfig: ButtonLinkProps[] = [
     {
       href: '/enterprise/trial',
@@ -60,7 +72,10 @@ export function Enterprise(): ReactElement {
           type: 'website',
         }}
       />
-      <EnterpriseLayout scrollCTAConfig={scrollCTAConfig}>
+      <EnterpriseLayout
+        headerCTAConfig={ctaConfig}
+        scrollCTAConfig={scrollCTAConfig}
+      >
         <div>
           <Hero />
           <CustomerLogos />

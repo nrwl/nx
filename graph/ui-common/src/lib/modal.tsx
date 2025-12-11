@@ -55,7 +55,7 @@ export const Modal = forwardRef(
 
     return (
       <Transition show={open} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={setOpen}>
+        <Dialog as="div" className="relative z-[9999]" onClose={setOpen}>
           <TransitionChild
             as={Fragment}
             enter="ease-out duration-300"
@@ -68,7 +68,7 @@ export const Modal = forwardRef(
             <div className="fixed inset-0 bg-gray-500/75 transition-opacity" />
           </TransitionChild>
 
-          <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div className="fixed inset-0 z-[9999] w-screen overflow-y-auto">
             <div className="flex h-full min-h-full items-end items-center justify-center p-4 text-center sm:p-0">
               <TransitionChild
                 as={Fragment}

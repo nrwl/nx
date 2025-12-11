@@ -1,6 +1,7 @@
 ---
 title: 'Launch Templates'
 description: 'Define setup steps for Nx Agents with custom launch templates'
+filter: 'type:References'
 ---
 
 A launch template defines the setup steps Nx Agents will run before running tasks. A custom launch template isn't required to use Nx Agents.
@@ -36,7 +37,7 @@ launch-templates:
   template-two:
 ```
 
-```
+```shell
 nx-cloud start-ci-run --distribute-on="3 template-one"
 ```
 
@@ -207,7 +208,7 @@ launch-templates:
           paths: |
             ~/.npm
             # or ~/.cache/yarn
-            # or .pnpm-store
+            # or ~/.local/share/pnpm/store
           base-branch: 'main'
 ```
 
@@ -277,6 +278,7 @@ This can be useful if we have a set of quick enough steps, such as restoring fro
 grouped together logically. The below cache steps will also be collapsed together in the Agents UI, making the config look cleaner:
 
 ```yaml
+// ./nx/workflows/agents.yaml
 - group-name: Restore Cache
   steps:
     - name: Restore Node Modules Cache
@@ -304,7 +306,7 @@ This is an example of a launch template using all pre-built features:
 ```yaml
 // ./nx/workflows/agents.yaml
 # Define common setup steps that can be reused across templates
-common-init-steps: &common-init-steps
+common-js-init-steps: &common-js-init-steps
   # using a reusable step in an external GitHub repo,
   # this step is provided by Nx Cloud: https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps
   - name: Checkout
@@ -314,13 +316,13 @@ common-init-steps: &common-init-steps
     # the cache step requires configuration via env vars
     # https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/cache#options
     inputs:
-    # Include patches directories to ensure cache is busted when patches change
-    # If you use a custom patches directory, add it to the key as well
+      # Include patches directories to ensure cache is busted when patches change
+      # If you use a custom patches directory, add it to the key as well
       key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|patches/**|.yarn/patches/**'
       paths: |
         ~/.npm
         # or ~/.cache/yarn
-        # or .pnpm-store
+        # or ~/.local/share/pnpm/store
       base-branch: 'main'
   - name: Restore Browser Binary Cache
     uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
@@ -344,6 +346,18 @@ common-init-steps: &common-init-steps
     script: |
       echo "MY_STEP_ENV=step-env-var" >> $NX_CLOUD_ENV
 
+common-rust-init-steps: &common-rust-init-steps
+  - name: Checkout
+    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+
+  # add Rust-specific steps
+  - name: Install Rust
+    script: |
+      curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
+      source "$HOME/.cargo/env"
+      rustup toolchain install stable
+      # persist cargo bin into PATH
+      echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
 
 launch-templates:
   # Custom template name, the name is referenced via --distribute-on="3 my-linux-medium-js"
@@ -357,7 +371,7 @@ launch-templates:
     # list out steps to run on the agent before accepting tasks
     # the agent will need a copy of the source code and dependencies installed
     # note we are using yaml anchors to reduce duplication with the below launch-template (they have the same init-steps)
-    init-steps: *common-init-steps
+    init-steps: *common-js-init-steps
 
   # another template which does the same as above, but with a large resource class
   # You're not required to define a template for every resource class, only define what you need!
@@ -367,42 +381,26 @@ launch-templates:
     env:
       MY_ENV_VAR: shared
     # note we are using yaml anchors to reduce duplication with the above launch-template (they have the same init-steps)
-    init-steps: 
-      # use YAML anchor to include common init setup
-      <<: *common-init-steps
-      - name: Print Env Var from reusable step
-        script: |
-          echo $MY_STEP_ENV # prints "step-env-var"
+    init-steps: *common-js-init-steps
 
-
-  # template that installs rust (demonstrates extending base steps)
+  # template that installs rust
   my-linux-rust-large:
     resource-class: 'docker_linux_amd64/large'
     image: 'ubuntu22.04-node20.11-v9'
-    init-steps:
-      # use YAML anchor to include common init setup
-      <<: *common-init-steps
-      # add Rust-specific steps
-      - name: Install Rust
-        script: |
-          curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
-          source "$HOME/.cargo/env"
-          rustup toolchain install stable
-          # persist cargo bin into PATH
-          echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
+    init-steps: *common-rust-init-steps
 ```
 
 These templates can be used by passing the number of agents desired, and the template name via `--distribute-on` when starting your CI run.
 
-```
+```shell
 nx-cloud start-ci-run --distribute-on="4 my-linux-medium-js"
 ```
 
-```
+```shell
 nx-cloud start-ci-run --distribute-on="4 my-linux-large-js"
 ```
 
-```
+```shell
 nx-cloud start-ci-run --distribute-on="4 my-linux-large-rust"
 ```
 
@@ -418,7 +416,7 @@ within the launch template and all respective inputs within each step are approp
 
 To do this, run the `nx-cloud validate` command, with the path to the launch template:
 
-```shell {% frame="none" %}
+```shell
 nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
 ```
 
@@ -426,7 +424,7 @@ nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
 
 If you need to send environment variables to agents, you can use the [--with-env-vars](/docs/reference/nx-cloud-cli#withenvvars-nx-agents-only) flag on the `nx-cloud start-ci-run` command. You can pass a specific list of environment variables like this:
 
-```
+```shell
 nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="VAR1,VAR2"
 ```
 
@@ -446,12 +444,16 @@ launch-templates:
       - name: Check PATH
         script: |
           # now contains $HOME/.cargo/bin
-          echo $PATH 
-          # can invoke cargo directly because it's in the PATH now. 
+          echo $PATH
+          # can invoke cargo directly because it's in the PATH now.
           cargo --version
 ```
 
 ## Private NPM Registry
+
+{% aside type="caution" title="Protect sensitive values" %}
+To prevent any sensitive values from showing up in a `git diff`, we recommend using the `user` level location for the `.npmrc` or `.yarnrc` file.
+{% /aside %}
 
 If your project consumes packages from a private registry, you'll have to set up an authentication step in a custom launch template and authenticate like you normally would, usually this is via a `.npmrc` or `.yarnrc` file. You can pass the auth token from your main agent, so it's available to the agent machines.
 
@@ -466,16 +468,18 @@ launch-templates:
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
       - name: Auth to Registry
         script: |
+          # we recommend add to the 'user' level npmrc file
           # create .npmrc with @myorg scoped packages pointing to GH npm registry
-          echo "@myorg:registry=https://npm.pkg.github.com" >> .npmrc
-          echo "//npm.pkg.github.com/:_authToken=${SOME_AUTH_TOKEN}" >> .npmrc
+          # or yarn config set -l user if you use yarn
+          npm config set -L user "@myorg:registry" "https://npm.pkg.github.com"
+          npm config set -L user "//npm.pkg.github.com/:_authToken" "${SOME_AUTH_TOKEN}"
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
 ```
 
 Pass `SOME_AUTH_TOKEN` via `--with-env-vars`
 
-```
+```shell
 # this assumes SOME_AUTH_TOKEN is already defined on the main agent
 nx-cloud start-ci-run --distribute-on="5 my-linux-medium-js" --with-env-vars="SOME_AUTH_TOKEN"
 ```
@@ -642,7 +646,7 @@ launch-templates:
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
           # run installer, default location is already in the PATH
-          # if installing in a custom location, 
+          # if installing in a custom location,
           # then update the $PATH like `PATH=$PATH:[extra-path-items] >> $NX_CLOUD_ENV`
           sudo ./aws/install
           # print AWS CLI version to verify command is avaiable
@@ -670,7 +674,7 @@ distribute-on:
 
 Then you can pass the path to the file to the `--distribute-on` parameter.
 
-```
+```shell
 nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
 ```
 
@@ -731,7 +735,7 @@ launch-templates:
         script: |
           # !!! DO NOT RUN THIS IF YOU HAVE PASSWORD/ACCESS TOKENS IN YOUR ENV VARS !!!
           # this will print your env as plain text values to the terminal
-          env  
+          env
           # This is a safer approach to prevent leaking tokens/passwords
           echo "SOME_VALUE: $SOME_VALUE"
 ```

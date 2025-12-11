@@ -116,11 +116,7 @@ export function Pricing(): ReactElement {
                     <span>
                       Remote caching with{' '}
                       <Link
-                        href={
-                          process.env.NEXT_PUBLIC_ASTRO_URL
-                            ? '/docs/features/ci-features/remote-cache'
-                            : '/ci/features/remote-cache'
-                        }
+                        href={'/docs/features/ci-features/remote-cache'}
                         target="_blank"
                         title="Learn how Nx Replay easily reduces CI execution time"
                         onClick={() =>
@@ -145,9 +141,7 @@ export function Pricing(): ReactElement {
                       Distributed task execution with{' '}
                       <Link
                         href={
-                          process.env.NEXT_PUBLIC_ASTRO_URL
-                            ? '/docs/features/ci-features/distribute-task-execution'
-                            : '/ci/features/distribute-task-execution'
+                          '/docs/features/ci-features/distribute-task-execution'
                         }
                         target="_blank"
                         title="Learn how Nx Agents easily scale your CI pipelines"
@@ -289,7 +283,7 @@ export function Pricing(): ReactElement {
               </ul>
               <p className="mt-4 text-xs text-slate-500">
                 ¹Any person or actor that has triggered a CI Pipeline Execution
-                within the current billing cycle. Up to 30 active contributors.
+                within the current billing cycle. Up to 50 active contributors.
               </p>
             </div>
 
@@ -353,19 +347,19 @@ export function Pricing(): ReactElement {
                   />
                   <span>
                     <Link
-                      href="/powerpack"
+                      href="/enterprise"
                       target="_blank"
-                      title="Check our AI integrations and how to use them"
+                      title="Check our enterprise features"
                       onClick={() =>
                         sendCustomEvent(
-                          'learn-nx-powerpack-click',
+                          'learn-nx-enterprise-click',
                           'plans-table',
                           'pricing-plans'
                         )
                       }
                       className="font-medium underline decoration-dotted"
                     >
-                      Nx Powerpack
+                      Nx Enterprise
                     </Link>
                     : a suite of premium extensions for the Nx CLI
                   </span>
@@ -417,11 +411,7 @@ export function Pricing(): ReactElement {
             <p className="text-sm font-medium opacity-80">
               See{' '}
               <Link
-                href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/reference'
-                    : '/ci/reference/credits-pricing'
-                }
+                href={'/docs/reference/nx-cloud/credits-pricing'}
                 className="font-semibold underline"
               >
                 Credit Pricing

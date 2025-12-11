@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'fs';
+import { NX_VERSION } from '@nx/devkit';
 import { getExampleForSchema } from './get-schema-example-content';
 import {
   getPropertyDefault,
@@ -10,6 +11,7 @@ import {
 export function generateMigrationItem(name: string, item: any): string {
   const { config } = item;
   let markdown = `\n### \`${name}\`\n`;
+
   if (config.version) {
     markdown += `**Version**: ${config.version}\n\n`;
   }
@@ -30,7 +32,8 @@ export function generateMigrationItem(name: string, item: any): string {
   if (config.fullPath) {
     const maybeExampleMdFile = config.fullPath + '.md';
     if (existsSync(maybeExampleMdFile)) {
-      markdown += `${readFileSync(maybeExampleMdFile, 'utf-8')}\n\n`;
+      const rawContent = readFileSync(maybeExampleMdFile, 'utf-8');
+      markdown += `${rawContent}\n\n`;
     }
   }
 
@@ -73,8 +76,24 @@ export function getMigrationsMarkdown(
 ): string {
   const packageName = `@nx/${pluginName}`;
 
-  let markdown = `
-  The ${packageName} plugin provides various migrations to help you migrate to newer versions of ${pluginName} projects within your Nx workspace.
+  let markdown = ``;
+  if (items.size === 0) {
+    markdown += `No migrations found for \`${packageName}\`.
+Nx only retains migrations for the last 2 major versions of Nx.
+It's possible migrations existed in previous versions of \`${packageName}\`.\n\n`;
+    if (NX_VERSION) {
+      const majorVersion = Number(NX_VERSION.split('.')[0]);
+      const previousMajor = majorVersion - 1;
+      const twoMajorsAgo = previousMajor - 1;
+      markdown += `You can check the previous docs for [Nx v${previousMajor}](https://${previousMajor}.nx.dev/docs) or [Nx v${twoMajorsAgo}](https://${twoMajorsAgo}.nx.dev/docs).`;
+    } else {
+      markdown += `You can check previous versions of Nx documentations by using the version selector at the top of the page.`;
+    }
+
+    // early exit since there aren't any migration items to process anyway;
+    return markdown;
+  }
+  markdown += `The ${packageName} plugin provides various migrations to help you migrate to newer versions of ${pluginName} projects within your Nx workspace.
 Below is a complete reference for all available migrations.
 `;
 
@@ -148,7 +167,7 @@ export function getGeneratorsMarkdown(
   const packageName = `@nx/${pluginName}`;
 
   let markdown = `
-  The ${packageName} plugin provides various generators to help you create and configure ${pluginName} projects within your Nx workspace.
+The ${packageName} plugin provides various generators to help you create and configure ${pluginName} projects within your Nx workspace.
 Below is a complete reference for all available generators and their options.
 `;
 
@@ -268,6 +287,7 @@ nx generate ${fullItemName} ${positionalArgs
      nx generate ${packageName}:<generator> --help
      \`\`\`
      `;
+
   return markdown;
 }
 

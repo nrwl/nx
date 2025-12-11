@@ -755,6 +755,236 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should forward options when configured', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  verbose: true,
+                  outputPath: 'dist/app1',
+                  optimization: false,
+                },
+                configurations: {
+                  production: {
+                    optimization: true,
+                    sourceMap: false,
+                  },
+                },
+                dependsOn: [
+                  {
+                    target: 'compile',
+                    options: 'forward',
+                  },
+                ],
+              },
+              compile: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [],
+      },
+    };
+
+    const taskResult = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      'production',
+      {}
+    );
+
+    expect(taskResult.tasks['app1:compile'].overrides).toEqual({
+      verbose: true,
+      outputPath: 'dist/app1',
+      optimization: true,
+      sourceMap: false,
+      __overrides_unparsed__: [],
+    });
+  });
+
+  it('should forward both options and params when configured', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  verbose: true,
+                  outputPath: 'dist/app1',
+                },
+                dependsOn: [
+                  {
+                    target: 'compile',
+                    options: 'forward',
+                    params: 'forward',
+                  },
+                ],
+              },
+              compile: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [],
+      },
+    };
+
+    const taskResult = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      'development',
+      {
+        cliFlag: 'cli-value',
+        verbose: false, // CLI should override configured option
+      }
+    );
+
+    expect(taskResult.tasks['app1:compile'].overrides).toEqual({
+      verbose: false, // CLI value wins
+      outputPath: 'dist/app1', // From configured options
+      cliFlag: 'cli-value', // From CLI
+    });
+  });
+
+  it('should ignore options when configured to ignore', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  verbose: true,
+                  outputPath: 'dist/app1',
+                },
+                dependsOn: [
+                  {
+                    target: 'compile',
+                    options: 'ignore',
+                    params: 'forward',
+                  },
+                ],
+              },
+              compile: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [],
+      },
+    };
+
+    const taskResult = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      'development',
+      {
+        cliFlag: 'cli-value',
+      }
+    );
+
+    expect(taskResult.tasks['app1:compile'].overrides).toEqual({
+      cliFlag: 'cli-value', // Only CLI params forwarded
+    });
+  });
+
+  it('should forward options to dependencies with configurations', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  baseOption: 'base-value',
+                },
+                configurations: {
+                  production: {
+                    prodOption: 'prod-value',
+                    baseOption: 'overridden-base',
+                  },
+                },
+                dependsOn: [
+                  {
+                    dependencies: true,
+                    target: 'build',
+                    options: 'forward',
+                  },
+                ],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [{ source: 'app1', target: 'lib1', type: 'static' }],
+        lib1: [],
+      },
+    };
+
+    const taskResult = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      'production',
+      {}
+    );
+
+    expect(taskResult.tasks['lib1:build'].overrides).toEqual({
+      baseOption: 'overridden-base', // Configuration value wins over options
+      prodOption: 'prod-value', // From production configuration
+      __overrides_unparsed__: [],
+    });
+  });
+
   it('should create graphs with dependencies', () => {
     const taskGraph = createTaskGraph(
       projectGraph,

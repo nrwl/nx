@@ -66,12 +66,17 @@ function filterAffectedProjects(
     dependencies: {},
   };
   const reversed = reverse(graph);
-  ctx.touchedProjects.forEach((p) => {
-    addAffectedNodes(p, reversed, result, new Set());
-  });
-  ctx.touchedProjects.forEach((p) => {
-    addAffectedDependencies(p, reversed, result, new Set());
-  });
+  // Share visited Sets across all touched projects to avoid redundant traversal
+  // Previously, each touched project got its own Set, causing shared dependencies
+  // to be visited multiple times (O(touchedProjects × sharedDeps) → O(nodes))
+  const visitedNodes = new Set<string>();
+  const visitedDeps = new Set<string>();
+  for (const p of ctx.touchedProjects) {
+    addAffectedNodes(p, reversed, result, visitedNodes);
+  }
+  for (const p of ctx.touchedProjects) {
+    addAffectedDependencies(p, reversed, result, visitedDeps);
+  }
   return result;
 }
 

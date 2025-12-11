@@ -101,6 +101,7 @@ export async function loadCnwPackage(
       packageType: 'cnw',
       docType: 'cli',
       description: 'Create a new Nx workspace',
+      filter: 'type:References',
     },
     // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
     rendered: await renderMarkdown(markdown),

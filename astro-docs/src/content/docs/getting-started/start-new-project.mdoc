@@ -4,6 +4,7 @@ description: Create a new Nx workspace manually with your favorite CLI or use th
 sidebar:
   label: Start a new project
   order: 3
+filter: 'type:Guides'
 ---
 
 When you start a new project with Nx, you have two options: manual or guided.
@@ -26,7 +27,7 @@ Let's take the example of an NPM workspace. Create a new root-level `package.jso
 
 Then you can add Nx to it by using:
 
-```shell {% frame="none" %}
+```shell
 nx@latest init
 ```
 
@@ -34,7 +35,7 @@ nx@latest init
 Make sure you have [Nx installed globally](/docs/getting-started/installation) or use `npx` if you're in a JavaScript environment
 {% /aside %}
 
-Nx will detect the underlying workspace configuration, ask you a couple of questions and install itself into the workspace. As you keep going, you can incrementally add functionality, like:
+Nx will detect the underlying workspace configuration, ask you a couple of questions and install itself into the workspace. You can now [run tasks with Nx](/docs/features/run-tasks) and incrementally add functionality, like:
 
 - [Configure caching](/docs/features/cache-task-results)
 - [Adding Nx plugins to help refine your workflows](/docs/plugin-registry)
@@ -46,7 +47,7 @@ Alternatively, you can choose a more guided approach by leveraging some of the p
 
 Run the following command to get started:
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace@latest
 ```
 
@@ -54,12 +55,12 @@ This interactive command will guide you through the setup process, allowing you 
 
 - **Choose your workspace name** - This will be the name of your root directory
 - **Select your preferred package manager** - npm, yarn, or pnpm
-- **Pick a preset** - Choose from various technology stacks and configurations
+- **Pick a preset** - Choose from [various technology stacks and configurations](/docs/reference/create-nx-workspace#presets)
 - **Configure additional options** - Such as styling solutions, testing frameworks, and more
 
 Choose a preset that matches your technology stack. This gives you a fully configured workspace.
 
-You can also choose **an empty workspace preset** which sets up the bare minimum configuration including Nx itself. This allows you to add technologies and features incrementally over time as you need them.
+You can also choose **an empty workspace preset** (`--preset=ts`) which sets up the bare minimum configuration for TypeScript and Nx. This allows you to add technologies and features incrementally over time as you need them.
 
 ## Option 3: Get the complete Nx platform experience
 
@@ -67,11 +68,10 @@ You can also choose **an empty workspace preset** which sets up the bare minimum
 
 For the complete experience, you can also get [started directly from the Nx Cloud application](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=nx-cloud-onboarding&utm_campaign=start-new-project).
 
-This approach gives you a fully end-to-end development workflow right from the start, making it easy to get up and running when your project is in its initial phase. 
-You'll get a fully working CI configuration that includes Nx Cloud's AI-powered features like **AI-powered self-healing CI** that automatically fixes common CI failures. 
+This approach gives you a fully end-to-end development workflow right from the start, making it easy to get up and running when your project is in its initial phase.
+You'll get a fully working CI configuration that includes Nx Cloud's AI-powered features like **AI-powered self-healing CI** that automatically fixes common CI failures.
 This means you benefit from intelligent automation right from day one, without having to configure complex CI pipelines manually.
 
 As your project grows and scales, you'll have access to additional features like **remote caching** to speed up builds across your team, **distributed task execution with Nx Agents** to parallelize work across multiple machines, and **automatic test splitting** to optimize your CI pipeline performance.
 
 [Get started with the complete Nx platform experience →](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=nx-cloud-onboarding&utm_campaign=start-new-project)
-

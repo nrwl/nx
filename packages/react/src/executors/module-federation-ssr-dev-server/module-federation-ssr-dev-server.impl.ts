@@ -17,7 +17,8 @@ export default async function* moduleFederationSsrDevServer(
   context: ExecutorContext
 ) {
   const options = normalizeOptions(ssrDevServerOptions);
-  let iter: any = ssrDevServerExecutor(options, context);
+  // TODO(JamesHenry): remove type assertion once the nx repo is updated to use https://github.com/nrwl/nx/pull/33095
+  let iter: any = ssrDevServerExecutor(options, context as any);
   const projectConfig =
     context.projectsConfigurations.projects[context.projectName];
 

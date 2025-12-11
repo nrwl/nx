@@ -1,4 +1,4 @@
-import { type CreateNodesContext } from '@nx/devkit';
+import { type CreateNodesContextV2 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { createNodesV2 } from './plugin';
@@ -18,14 +18,13 @@ jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
 
 describe('@nx/rsbuild', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let tempFs: TempFs;
 
   beforeEach(() => {
     (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
     tempFs = new TempFs('rsbuild-test');
     context = {
-      configFiles: [],
       nxJsonConfiguration: {
         namedInputs: {
           default: ['{projectRoot}/**/*'],

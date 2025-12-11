@@ -163,10 +163,7 @@ export function applyWebConfig(
         {
           loader: require.resolve('sass-loader'),
           options: {
-            implementation:
-              options.sassImplementation === 'sass'
-                ? require.resolve('sass')
-                : require.resolve('sass-embedded'),
+            implementation: require.resolve('sass-embedded'),
             api: 'modern-compiler',
             sassOptions: {
               fiber: false,
@@ -211,10 +208,7 @@ export function applyWebConfig(
           loader: require.resolve('sass-loader'),
           options: {
             api: 'modern-compiler',
-            implementation:
-              options.sassImplementation === 'sass'
-                ? require.resolve('sass')
-                : require.resolve('sass-embedded'),
+            implementation: require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
@@ -262,10 +256,7 @@ export function applyWebConfig(
           loader: require.resolve('sass-loader'),
           options: {
             api: 'modern-compiler',
-            implementation:
-              options.sassImplementation === 'sass'
-                ? require.resolve('sass')
-                : require.resolve('sass-embedded'),
+            implementation: require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
@@ -309,7 +300,11 @@ export function applyWebConfig(
     plugins.push(
       // extract global css from js files into own css file
       new CssExtractRspackPlugin({
-        filename: `[name]${hashFormat.extract}.css`,
+        filename:
+          config.output?.cssFilename ??
+          (options.outputHashing
+            ? `[name]${hashFormat.extract}.css`
+            : '[name].css'),
       })
     );
   }

@@ -100,6 +100,21 @@ describe('shared-options', () => {
         }
       ));
 
+    it('should use NX_DEFAULT_OUTPUT_STYLE if not set', () =>
+      withEnvironmentVariables(
+        {
+          NX_TUI: false,
+          CI: 'false',
+          NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
+          NX_DEFAULT_OUTPUT_STYLE: 'stream-without-prefixes',
+        },
+        () => {
+          const command = withOutputStyleOption(argv);
+          const result = command.parseSync([]);
+          expect(result.outputStyle).toEqual('stream-without-prefixes');
+        }
+      ));
+
     it('should set NX_TUI if using not set', () =>
       withEnvironmentVariables(
         {

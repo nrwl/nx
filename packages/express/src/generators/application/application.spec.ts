@@ -100,6 +100,7 @@ describe('app', () => {
         },
         "exclude": [
           "jest.config.ts",
+          "jest.config.cts",
           "src/**/*.spec.ts",
           "src/**/*.test.ts",
         ],
@@ -283,7 +284,7 @@ describe('app', () => {
               "test": {
                 "executor": "@nx/jest:jest",
                 "options": {
-                  "jestConfig": "myapp/jest.config.ts",
+                  "jestConfig": "myapp/jest.config.cts",
                   "passWithNoTests": true,
                 },
                 "outputs": [
@@ -329,6 +330,7 @@ describe('app', () => {
             "out-tsc",
             "dist",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "eslint.config.js",
@@ -356,6 +358,7 @@ describe('app', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.d.ts",
@@ -494,7 +497,7 @@ describe('app', () => {
             "test": {
               "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "myapp/jest.config.ts",
+                "jestConfig": "myapp/jest.config.cts",
                 "passWithNoTests": true,
               },
               "outputs": [

@@ -26,23 +26,12 @@ export function Loading() {
   );
 }
 
-function getInitialPropsForAstro(children: ReactElement) {
-  if (!children || !children.hasOwnProperty('props') || !children.props.value)
-    return null;
+function safeParse(jsonString: string) {
   try {
-    return parseAstroHtmlWrappedJson(children.props.value.toString() as any);
+    return JSON.parse(jsonString);
   } catch {
     return null;
   }
-}
-
-function parseAstroHtmlWrappedJson(htmlString: string) {
-  const cleanedString = htmlString
-    .trim()
-    .replace(/^<\w>|<\/\w>$/g, '')
-    .trim()
-    .replace(/&quot;/g, '"');
-  return JSON.parse(cleanedString);
 }
 
 export type ProjectDetailsProps = {
@@ -51,7 +40,7 @@ export type ProjectDetailsProps = {
   jsonFile?: string;
   expandedTargets?: string[];
   children: ReactElement;
-  isAstro?: boolean;
+  astroRawData?: string;
 };
 
 export function ProjectDetails({
@@ -60,10 +49,10 @@ export function ProjectDetails({
   jsonFile,
   expandedTargets = [],
   children,
-  isAstro = false,
+  astroRawData,
 }: ProjectDetailsProps): JSX.Element {
   const [parsedProps, setParsedProps] = useState<any>(
-    isAstro ? getInitialPropsForAstro(children) : null
+    astroRawData ? safeParse(astroRawData) : null
   );
   const elementRef = createRef<HTMLDivElement>();
   const getData = async (path: string) => {
@@ -103,7 +92,7 @@ export function ProjectDetails({
   }, [elementRef, expandedTargets]);
 
   if (!jsonFile && !parsedProps) {
-    if (!children || !children.hasOwnProperty('props')) {
+    if (!astroRawData) {
       return (
         <div className="not-content no-prose my-6 block rounded-md bg-red-50 p-4 text-red-700 ring-1 ring-red-100 dark:bg-red-900/30 dark:text-red-600 dark:ring-red-900">
           <p className="mb-4">
@@ -114,13 +103,12 @@ export function ProjectDetails({
       );
     }
 
-    try {
-      setParsedProps(JSON.parse(children?.props.children as any));
-    } catch {
+    // If raw data is passed but props are not set, it must be invalid JSON
+    if (astroRawData && !parsedProps) {
       return (
         <div className="not-content not-prose my-6 block rounded-md bg-red-50 p-4 text-red-700 ring-1 ring-red-100 dark:bg-red-900/30 dark:text-red-600 dark:ring-red-900">
           <p className="mb-4">Could not parse JSON for graph:</p>
-          <pre className="p-4 text-sm">{children?.props.children as any}</pre>
+          <pre className="p-4 text-sm">{astroRawData}</pre>
         </div>
       );
     }

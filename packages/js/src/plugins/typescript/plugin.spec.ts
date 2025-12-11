@@ -1,4 +1,4 @@
-import { detectPackageManager, type CreateNodesContext } from '@nx/devkit';
+import { detectPackageManager, type CreateNodesContextV2 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import picomatch = require('picomatch');
 import { mkdirSync, rmdirSync } from 'node:fs';
@@ -13,13 +13,14 @@ jest.mock('nx/src/utils/cache-directory', () => ({
 }));
 
 describe(`Plugin: ${PLUGIN_NAME}`, () => {
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let cwd = process.cwd();
   let tempFs: TempFs;
   let originalCacheProjectGraph: string | undefined;
   let lockFileName: string;
+  let configFiles: string[];
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mkdirSync('tmp/project-graph-cache', { recursive: true });
     tempFs = new TempFs('typescript-plugin');
     context = {
@@ -30,13 +31,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
-      configFiles: [],
     };
     process.chdir(tempFs.tempDir);
     originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
     process.env.NX_CACHE_PROJECT_GRAPH = 'false';
     lockFileName = getLockFileName(detectPackageManager(context.workspaceRoot));
-    applyFilesToTempFsAndContext(tempFs, context, { [lockFileName]: '' });
+    await applyFilesToTempFsAndContext(tempFs, context, {
+      [lockFileName]: '',
+    });
   });
 
   afterEach(() => {
@@ -48,25 +50,25 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
   });
 
   it('should handle missing lock file', async () => {
-    await applyFilesToTempFsAndContext(tempFs, context, {
+    configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
       'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
       'libs/my-lib/package.json': `{}`,
     });
     tempFs.removeFileSync(lockFileName);
 
     await expect(
-      invokeCreateNodesOnMatchingFiles(context, {})
+      invokeCreateNodesOnMatchingFiles(configFiles, context, {})
     ).resolves.not.toThrow();
   });
 
   it('should not create nodes for root tsconfig.json files', async () => {
-    await applyFilesToTempFsAndContext(tempFs, context, {
+    configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
       'package.json': `{}`,
       'project.json': `{}`,
       'tsconfig.json': `{}`,
       'src/index.ts': `console.log('Hello World!');`,
     });
-    expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+    expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
       .toMatchInlineSnapshot(`
       {
         "projects": {},
@@ -77,11 +79,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
   describe('typecheck target', () => {
     it('should create a node with a typecheck target for a project level tsconfig.json file by default (when there is a sibling package.json or project.json)', async () => {
       // Sibling package.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
         'libs/my-lib/package.json': `{}`,
       });
-      expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+      expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
         .toMatchInlineSnapshot(`
         {
           "projects": {
@@ -96,11 +98,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -131,11 +128,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Sibling project.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
         'libs/my-lib/project.json': `{}`,
       });
-      expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+      expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
         .toMatchInlineSnapshot(`
         {
           "projects": {
@@ -150,11 +147,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -185,14 +177,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Other tsconfigs present
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/tsconfig.spec.json': `{}`,
         'libs/my-lib/project.json': `{}`,
       });
-      expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+      expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
         .toMatchInlineSnapshot(`
         {
           "projects": {
@@ -207,11 +199,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -244,12 +231,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should create a node with a typecheck target with "--verbose" flag when the "verboseOutput" plugin option is true', async () => {
       // Sibling package.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
         'libs/my-lib/package.json': `{}`,
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, { verboseOutput: true })
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          verboseOutput: true,
+        })
       ).toMatchInlineSnapshot(`
         {
           "projects": {
@@ -264,11 +253,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -299,12 +283,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Sibling project.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
         'libs/my-lib/project.json': `{}`,
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, { verboseOutput: true })
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          verboseOutput: true,
+        })
       ).toMatchInlineSnapshot(`
         {
           "projects": {
@@ -319,11 +305,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -354,7 +335,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Other tsconfigs present
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
@@ -362,7 +343,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         'libs/my-lib/project.json': `{}`,
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, { verboseOutput: true })
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          verboseOutput: true,
+        })
       ).toMatchInlineSnapshot(`
         {
           "projects": {
@@ -377,11 +360,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -414,12 +392,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should not create typecheck target for a project level tsconfig.json file if set to false in plugin options', async () => {
       // Sibling package.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/package.json': `{}`,
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
         })
       ).toMatchInlineSnapshot(`
@@ -433,12 +411,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Sibling project.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/project.json': `{}`,
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
         })
       ).toMatchInlineSnapshot(`
@@ -454,14 +432,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should not invoke `tsc --build` when `noEmit` is set in the tsconfig.json file', async () => {
       // set directly in tsconfig.json file
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({
           compilerOptions: { noEmit: true },
           files: [],
         }),
         'libs/my-lib/package.json': `{}`,
       });
-      expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+      expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
         .toMatchInlineSnapshot(`
         {
           "projects": {
@@ -476,11 +454,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -511,7 +484,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // set in extended tsconfig file
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'tsconfig.base.json': JSON.stringify({
           compilerOptions: { noEmit: true },
         }),
@@ -521,7 +494,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         }),
         'libs/my-lib/package.json': `{}`,
       });
-      expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+      expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
         .toMatchInlineSnapshot(`
         {
           "projects": {
@@ -536,11 +509,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -572,7 +540,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should not invoke `tsc --build` when `noEmit` is set in any of the referenced tsconfig.json files', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({
           files: [],
           references: [{ path: './tsconfig.lib.json' }],
@@ -583,7 +551,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         }),
         'libs/my-lib/package.json': `{}`,
       });
-      expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+      expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
         .toMatchInlineSnapshot(`
         {
           "projects": {
@@ -598,11 +566,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -634,7 +597,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should handle ts project references pointing to non-existing files and not throw', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({
           references: [{ path: '../my-lib-2' }],
         }),
@@ -642,12 +605,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       await expect(
-        invokeCreateNodesOnMatchingFiles(context, {})
+        invokeCreateNodesOnMatchingFiles(configFiles, context, {})
       ).resolves.not.toThrow();
     });
 
     it('should not infer typecheck target when nx.addTypecheckTarget is false in tsconfig.json', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({
           nx: { addTypecheckTarget: false },
         }),
@@ -659,7 +622,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       await expect(
-        invokeCreateNodesOnMatchingFiles(context, {
+        invokeCreateNodesOnMatchingFiles(configFiles, context, {
           build: {
             configName: 'tsconfig.lib.json',
           },
@@ -678,11 +641,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -718,7 +676,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     describe('inputs', () => {
       it('should add the config file and the `include` and `exclude` patterns', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             include: ['src/**/*.ts'],
             exclude: ['src/**/foo.ts'],
@@ -727,7 +685,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -745,11 +703,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/foo.ts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -784,7 +737,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add the config file and the `include` and `exclude` patterns using the "${configDir}" template', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             include: ['${configDir}/src/**/*.ts'],
             exclude: ['${configDir}/src/**/foo.ts'],
@@ -793,7 +746,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -811,11 +764,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/foo.ts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -850,7 +798,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should normalize and add directories in `include` with the ts extensions', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             include: ['src'],
             // set this to keep outputs smaller
@@ -859,7 +807,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{}`,
         });
 
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -882,11 +830,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -921,7 +864,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should normalize and add directories in `include` with the ts and js extensions when `allowJs` is true', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             include: ['src'],
             // set this to keep outputs smaller
@@ -930,7 +873,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{}`,
         });
 
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -957,11 +900,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.mjs",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -996,7 +934,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should normalize and add directories in `include` with the ts and json extensions when `resolveJsonModule` is true', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             include: ['src'],
             // set this to keep outputs smaller
@@ -1008,7 +946,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{}`,
         });
 
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -1032,11 +970,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.json",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1071,7 +1004,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should normalize and add directories in `include` with the ts, js and json extensions when `allowJs` and `resolveJsonModule` are true', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             include: ['src'],
             // set this to keep outputs smaller
@@ -1084,7 +1017,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{}`,
         });
 
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -1112,11 +1045,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mjs",
                       "{projectRoot}/src/**/*.json",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1151,7 +1079,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add extended config files', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'tsconfig.base.json': JSON.stringify({
             exclude: ['node_modules', 'tmp'],
           }),
@@ -1166,7 +1094,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -1187,11 +1115,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1226,7 +1149,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add extended config files when there are multiple extended config files', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'tsconfig.base.json': JSON.stringify({
             exclude: ['node_modules', 'tmp'],
           }),
@@ -1243,7 +1166,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -1265,11 +1188,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/dist",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1304,7 +1222,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add extended config files supporting node.js style resolution and local workspace packages', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'tsconfig.base.json': JSON.stringify({
             extends: '@tsconfig/strictest/tsconfig.json', // should be resolved and the package name should be included in inputs as an external dependency
             exclude: ['node_modules', 'tmp'],
@@ -1334,7 +1252,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'dir'
         );
 
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -1356,12 +1274,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                          "@tsconfig/strictest",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1396,7 +1308,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add files from internal project references', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             include: ['src/**/*.ts'],
             exclude: ['src/**/*.spec.ts'], // should be ignored because a referenced internal project includes this same pattern
@@ -1439,7 +1351,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             include: ['**/*.ts'], // different pattern that should not be included because it's an external project
           }),
         });
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -1464,11 +1376,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/**/*.cy.ts",
                       {
                         "dependentTasksOutputFiles": "**/*.d.ts",
-                      },
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
                       },
                     ],
                     "metadata": {
@@ -1513,11 +1420,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/lib/**/*.ts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1552,7 +1454,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should normalize and add directories in `include` from internal project references', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             files: [],
             include: [],
@@ -1580,7 +1482,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{}`,
         });
 
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -1610,11 +1512,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tests/**/*.d.mts",
                       "{projectRoot}/tests/**/*.mjs",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1650,7 +1547,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       it('should only add exclude paths that are not part of other tsconfig files include paths', async () => {
         // exact match
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             references: [
               { path: './tsconfig.lib.json' },
@@ -1668,7 +1565,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{}`,
         });
 
-        let result = await invokeCreateNodesOnMatchingFiles(context, {});
+        let result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
@@ -1679,16 +1580,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/src/**/*.spec.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
         // other file include pattern is a subset of exclude pattern
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             references: [
               { path: './tsconfig.lib.json' },
@@ -1705,7 +1601,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        result = await invokeCreateNodesOnMatchingFiles(context, {});
+        result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
@@ -1716,16 +1616,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/**/*.ts",
             "{projectRoot}/src/**/*.spec.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
         // exclude pattern is a subset of other file include pattern
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             references: [
               { path: './tsconfig.lib.json' },
@@ -1742,7 +1637,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        result = await invokeCreateNodesOnMatchingFiles(context, {});
+        result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
@@ -1753,16 +1652,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/**/*.spec.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
         // handles mismatches with leading `./`
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             references: [
               { path: './tsconfig.lib.json' },
@@ -1779,7 +1673,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        result = await invokeCreateNodesOnMatchingFiles(context, {});
+        result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
@@ -1790,16 +1688,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/**/*.spec.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
         // no matching pattern in the exclude list
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             references: [
               { path: './tsconfig.lib.json' },
@@ -1819,7 +1712,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        result = await invokeCreateNodesOnMatchingFiles(context, {});
+        result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
@@ -1831,21 +1728,16 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/**/*.spec.ts",
             "!{projectRoot}/src/**/foo.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
       });
 
       it('should fall back to named inputs when not using include', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({ files: ['main.ts'] }),
           'libs/my-lib/package.json': `{}`,
         });
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -1860,11 +1752,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1912,14 +1799,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     describe('outputs', () => {
       it('should add the `outFile`', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             compilerOptions: { outFile: '../../dist/libs/my-lib/index.js' },
             files: ['main.ts'],
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -1934,11 +1821,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1976,14 +1858,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add the `outDir`', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             compilerOptions: { outDir: '../../dist/libs/my-lib' },
             files: ['main.ts'],
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -1998,11 +1880,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2037,7 +1914,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should include tsbuildinfo file when outDir and rootDir at both set', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             files: [],
             references: [{ path: './tsconfig.lib.json' }],
@@ -2050,7 +1927,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         });
 
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             build: {
               configName: 'tsconfig.lib.json',
             },
@@ -2069,11 +1946,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -2110,11 +1982,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2149,13 +2016,13 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add the inline output files when `outDir` is not defined', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             files: ['main.ts'],
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -2170,11 +2037,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2220,7 +2082,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should collect outputs from all internal project references', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             files: [],
             references: [
@@ -2259,7 +2121,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
           }),
         });
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -2280,11 +2142,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.spec.ts",
                       {
                         "dependentTasksOutputFiles": "**/*.d.ts",
-                      },
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
                       },
                     ],
                     "metadata": {
@@ -2332,11 +2189,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2372,7 +2224,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       it('should respect the "tsBuildInfoFile" option', async () => {
         // outFile
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             compilerOptions: {
               outFile: '../../dist/libs/my-lib/index.js',
@@ -2382,7 +2234,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -2397,11 +2249,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2438,7 +2285,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
 
         // no outFile & no outDir
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             compilerOptions: {
               tsBuildInfoFile: '../../dist/libs/my-lib/my-lib.tsbuildinfo',
@@ -2447,7 +2294,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -2462,11 +2309,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2512,7 +2354,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should set the "tsBuildInfoFile" option when outside of the "outDir"', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             compilerOptions: {
               outDir: 'dist',
@@ -2523,7 +2365,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{}`,
         });
 
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -2538,11 +2380,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2577,7 +2414,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should not set the "tsBuildInfoFile" option when contained in the "outDir"', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             compilerOptions: {
               outDir: 'dist',
@@ -2588,7 +2425,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{}`,
         });
 
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -2603,11 +2440,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2642,14 +2474,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should support the "${configDir}" template', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             compilerOptions: { outDir: '${configDir}/dist' },
             files: ['main.ts'],
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+        expect(await invokeCreateNodesOnMatchingFiles(configFiles, context, {}))
           .toMatchInlineSnapshot(`
           {
             "projects": {
@@ -2664,11 +2496,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2707,14 +2534,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
   describe('build target', () => {
     it('should not create a node with a build target for a project level tsconfig files by default', async () => {
       // Sibling package.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/package.json': `{}`,
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           // Reduce noise in build snapshots by disabling default typecheck target
           typecheck: false,
         })
@@ -2729,14 +2556,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Sibling project.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/project.json': `{}`,
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           // Reduce noise in build snapshots by disabling default typecheck target
           typecheck: false,
         })
@@ -2753,14 +2580,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should not create build target for a project level tsconfig.json file if set to false in plugin options', async () => {
       // Sibling package.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/package.json': `{}`,
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           // Reduce noise in build snapshots by disabling default typecheck target
           typecheck: false,
           build: false,
@@ -2776,14 +2603,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Sibling project.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/project.json': `{}`,
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           // Reduce noise in build snapshots by disabling default typecheck target
           typecheck: false,
           build: false,
@@ -2801,7 +2628,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should not create build target when the entry points point to source files', async () => {
       // Sibling package.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/package.json': JSON.stringify({
@@ -2813,7 +2640,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         }),
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           // Reduce noise in build snapshots by disabling default typecheck target
           typecheck: false,
           build: true,
@@ -2831,7 +2658,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should create build target when the entry points point to dist files', async () => {
       // Sibling package.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/package.json': JSON.stringify({
@@ -2846,7 +2673,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         }),
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           // Reduce noise in build snapshots by disabling default typecheck target
           typecheck: false,
           build: true,
@@ -2865,11 +2692,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -2904,7 +2726,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should create a node with a build target when enabled, for a project level tsconfig.lib.json build file by default', async () => {
       // Sibling package.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
@@ -2923,7 +2745,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         }),
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           // Reduce noise in build snapshots by disabling default typecheck target
           typecheck: false,
           build: true, // shorthand for apply with default options
@@ -2942,11 +2764,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -2991,14 +2808,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Sibling project.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/project.json': `{}`,
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           // Reduce noise in build snapshots by disabling default typecheck target
           typecheck: false,
           build: {}, // apply with default options
@@ -3017,11 +2834,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3056,7 +2868,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should create a node with a build target with "--verbose" flag when the "verboseOutput" plugin option is true', async () => {
       // Sibling package.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
@@ -3075,7 +2887,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         }),
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           // Reduce noise in build snapshots by disabling default typecheck target
           typecheck: false,
           build: true, // shorthand for apply with default options
@@ -3095,11 +2907,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3144,14 +2951,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Sibling project.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/project.json': `{}`,
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           // Reduce noise in build snapshots by disabling default typecheck target
           typecheck: false,
           build: {}, // apply with default options
@@ -3171,11 +2978,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3210,14 +3012,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should create a node with a build target when enabled, using a custom configured target name', async () => {
       // Sibling package.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/package.json': `{ "main": "dist/index.js" }`,
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           // Reduce noise in build snapshots by disabling default typecheck target
           typecheck: false,
           build: {
@@ -3238,11 +3040,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3277,14 +3074,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should create a node with a build target when enabled, using a custom configured tsconfig file', async () => {
       // Sibling project.json
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/project.json': `{}`,
       });
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           // Reduce noise in build snapshots by disabling default typecheck target
           typecheck: false,
           build: {
@@ -3305,11 +3102,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3343,7 +3135,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should handle ts project references pointing to non-existing files and not throw', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({
           references: [{ path: '../my-lib-2' }],
         }),
@@ -3352,7 +3144,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       await expect(
-        invokeCreateNodesOnMatchingFiles(context, {
+        invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -3361,7 +3153,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     describe('inputs', () => {
       it('should add the config file and the `include` and `exclude` patterns', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
               outDir: 'dist',
@@ -3373,7 +3165,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
         });
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -3394,11 +3186,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/*.spec.ts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3432,7 +3219,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add the config file and the `include` and `exclude` patterns using the "${configDir}" template', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
               outDir: 'dist',
@@ -3444,7 +3231,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{"main": "./dist/index.js"}`,
         });
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -3465,11 +3252,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/*.spec.ts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3503,7 +3285,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should normalize and add directories in `include` with the ts extensions', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: { outDir: 'dist' },
             include: ['src'],
@@ -3513,7 +3295,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         });
 
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -3539,11 +3321,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3577,7 +3354,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should normalize and add directories in `include` with the ts and js extensions when `allowJs` is true', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: { outDir: 'dist', allowJs: true },
             include: ['src'],
@@ -3587,7 +3364,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         });
 
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -3617,11 +3394,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.mjs",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3655,7 +3427,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should normalize and add directories in `include` with the ts and json extensions when `resolveJsonModule` is true', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: { outDir: 'dist', resolveJsonModule: true },
             include: ['src'],
@@ -3665,7 +3437,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         });
 
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -3692,11 +3464,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.json",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3730,7 +3497,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should normalize and add directories in `include` with the ts, js and json extensions when `allowJs` and `resolveJsonModule` are true', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
               outDir: 'dist',
@@ -3744,7 +3511,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         });
 
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -3775,11 +3542,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mjs",
                       "{projectRoot}/src/**/*.json",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3813,7 +3575,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should be able to extended config files', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'tsconfig.base.json': JSON.stringify({
             exclude: ['node_modules', 'tmp'],
           }),
@@ -3831,7 +3593,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
         });
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -3855,11 +3617,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3893,7 +3650,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add extended config files when there are multiple extended config files', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'tsconfig.base.json': JSON.stringify({
             exclude: ['node_modules', 'tmp'],
           }),
@@ -3911,7 +3668,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
         });
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -3936,11 +3693,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/dist",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3974,7 +3726,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add extended config files supporting node.js style resolution and local workspace packages', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'tsconfig.base.json': JSON.stringify({
             extends: '@tsconfig/strictest/tsconfig.json', // should be resolved and the package name should be included in inputs as an external dependency
             exclude: ['node_modules', 'tmp'],
@@ -4007,7 +3759,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         );
 
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -4032,12 +3784,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                          "@tsconfig/strictest",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4071,7 +3817,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add files from internal project references', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: { outDir: 'dist' },
@@ -4093,7 +3839,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{"main": "dist/index.js"}`, // Should be defined so that the project is considered buildable
         });
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -4117,11 +3863,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/foo.ts",
                       {
                         "dependentTasksOutputFiles": "**/*.d.ts",
-                      },
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
                       },
                     ],
                     "metadata": {
@@ -4156,7 +3897,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should normalize and add directories in `include` from internal project references', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: { outDir: 'dist' },
@@ -4175,7 +3916,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         });
 
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -4205,11 +3946,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/other/**/*.json",
                       "{projectRoot}/src/**/foo.ts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4244,7 +3980,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       it('should only add exclude paths that are not part of other tsconfig files include paths', async () => {
         // exact match
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: { outDir: 'dist' }, // outDir is required to determine if the project is buildable
@@ -4258,10 +3994,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{"main": "dist/index.js" }`,
         });
 
-        let result = await invokeCreateNodesOnMatchingFiles(context, {
-          typecheck: false,
-          build: true,
-        });
+        let result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {
+            typecheck: false,
+            build: true,
+          }
+        );
         expect(result.projects['libs/my-lib'].targets.build.inputs)
           .toMatchInlineSnapshot(`
           [
@@ -4272,16 +4012,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/src/**/foo.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
         // other file include pattern is a subset of exclude pattern
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: { outDir: 'dist' },
@@ -4294,7 +4029,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
         });
-        result = await invokeCreateNodesOnMatchingFiles(context, {
+        result = await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         });
@@ -4308,16 +4043,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/src/**/foo.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
         // exclude pattern is a subset of other file include pattern
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: { outDir: 'dist' }, // outDir is required to determine if the project is buildable
@@ -4330,7 +4060,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{"main": "dist/index.js" }`, // Should be defined so that the project is considered buildable
         });
-        result = await invokeCreateNodesOnMatchingFiles(context, {
+        result = await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         });
@@ -4344,16 +4074,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/**/foo.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
         // handles mismatches with leading `./`
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: { outDir: 'dist' },
@@ -4366,7 +4091,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{"main": "dist/index.js" }`,
         });
-        result = await invokeCreateNodesOnMatchingFiles(context, {
+        result = await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         });
@@ -4380,16 +4105,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/**/foo.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
 
         // no matching pattern in the exclude list
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: { outDir: 'dist' },
@@ -4405,7 +4125,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{"main": "dist/index.js" }`,
         });
-        result = await invokeCreateNodesOnMatchingFiles(context, {
+        result = await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         });
@@ -4420,17 +4140,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/foo.ts",
             "!{projectRoot}/src/**/bar.ts",
             "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
-            },
           ]
         `);
       });
 
       it('should fall back to named inputs when not using include', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: { outDir: 'dist' },
             files: ['main.ts'],
@@ -4439,7 +4154,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
         });
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -4457,11 +4172,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4497,7 +4207,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     describe('outputs', () => {
       it('should add the `outFile`', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
               outFile: '../../dist/libs/my-lib/index.js',
@@ -4508,7 +4218,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{}`,
         });
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -4526,11 +4236,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4568,7 +4273,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add the `outDir`', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
               outDir: '../../dist/libs/my-lib',
@@ -4579,7 +4284,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{"main": "../../dist/libs/my-lib/index.js"}`,
         });
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -4597,11 +4302,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4635,7 +4335,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add the inline output files when `outDir` is not defined', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             files: ['main.ts'],
           }),
@@ -4643,7 +4343,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{}`,
         });
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -4661,11 +4361,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4711,7 +4406,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should collect outputs from all internal project references', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
@@ -4729,7 +4424,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{"main": "../../dist/libs/my-lib/lib.js"}`,
         });
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -4750,11 +4445,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.other.json",
                       "{projectRoot}/other/**/*.ts",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4794,7 +4484,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       it('should respect the "tsBuildInfoFile" option', async () => {
         // outFile
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
@@ -4806,7 +4496,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{"main": "../../dist/libs/my-lib/index.js"}`,
         });
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -4824,11 +4514,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4865,7 +4550,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
 
         // no outFile & no outDir
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
@@ -4876,7 +4561,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{"main": "dist/libs/my-lib/index.js"}`,
         });
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -4894,11 +4579,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4944,7 +4624,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should set the "tsBuildInfoFile" option when outside of the "outDir"', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
               outDir: 'dist',
@@ -4957,7 +4637,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         });
 
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -4975,11 +4655,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5014,7 +4689,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should not set the "tsBuildInfoFile" option when contained in the "outDir"', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
               outDir: 'dist',
@@ -5027,7 +4702,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         });
 
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -5045,11 +4720,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5083,7 +4753,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should support the "${configDir}" template', async () => {
-        await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
               outDir: '${configDir}/dist',
@@ -5094,7 +4764,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/package.json': `{"main": "./dist/index.js"}`,
         });
         expect(
-          await invokeCreateNodesOnMatchingFiles(context, {
+          await invokeCreateNodesOnMatchingFiles(configFiles, context, {
             typecheck: false,
             build: true,
           })
@@ -5112,11 +4782,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       "^production",
-                      {
-                        "externalDependencies": [
-                          "typescript",
-                        ],
-                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5153,7 +4818,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
   describe('isValidPackageJsonBuildConfig', () => {
     it('should consider a package buildable when main points to transpiled output outside source folder', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { outDir: 'src' },
@@ -5166,7 +4831,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -5186,11 +4851,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/typescript/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5224,7 +4884,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should consider a package buildable when main points to transpiled output with include patterns', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { outDir: 'lib' },
@@ -5237,7 +4897,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -5257,11 +4917,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5295,7 +4950,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should not consider a package buildable when main points to source file', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { outDir: 'dist' },
@@ -5308,7 +4963,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -5324,7 +4979,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should consider a package buildable when main points to source file when skipBuildCheck is true', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { outDir: 'dist' },
@@ -5337,7 +4992,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: {
             skipBuildCheck: true,
@@ -5359,11 +5014,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5397,7 +5047,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should handle relative paths correctly when main points to transpiled output', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { outDir: '../build/my-lib' },
@@ -5410,7 +5060,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -5430,11 +5080,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5468,7 +5113,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should handle absolute paths correctly when main points to transpiled output', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { outDir: 'dist' },
@@ -5481,7 +5126,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -5501,11 +5146,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/source/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5539,7 +5179,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should not consider package buildable when absolute path points to source file', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { outDir: 'dist' },
@@ -5552,7 +5192,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -5568,7 +5208,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should handle glob patterns with ** and single *', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { outDir: 'compiled' },
@@ -5582,7 +5222,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -5603,11 +5243,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/**/src/**/*.ts",
                     "{projectRoot}/utils/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5641,7 +5276,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should consider package buildable when outDir is outside project and main export points to outDir', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { outDir: '../../../external-build' },
@@ -5654,7 +5289,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -5674,11 +5309,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5712,7 +5342,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should consider package buildable when outDir is within project and main points to file inside outDir', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { outDir: 'dist' },
@@ -5725,7 +5355,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -5745,11 +5375,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5783,7 +5408,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should not consider package buildable when outDir is within project but main points to source file', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { outDir: 'dist' },
@@ -5796,7 +5421,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -5812,7 +5437,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should consider package buildable when main points to JS build output', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { outDir: 'build' },
@@ -5825,7 +5450,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -5843,11 +5468,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5881,7 +5501,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should not consider package buildable when main points to TS source file', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { outDir: 'build' },
@@ -5893,7 +5513,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -5909,7 +5529,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should consider package buildable when main points to build output even with TS extension', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { outDir: 'build' },
@@ -5922,7 +5542,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -5940,11 +5560,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5978,7 +5593,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should not consider package buildable when main matches include pattern', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: {},
@@ -5991,7 +5606,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -6007,7 +5622,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should consider package buildable when main does not match include pattern', async () => {
-      await applyFilesToTempFsAndContext(tempFs, context, {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': '{}',
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: {},
@@ -6021,7 +5636,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       expect(
-        await invokeCreateNodesOnMatchingFiles(context, {
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
           typecheck: false,
           build: true,
         })
@@ -6041,11 +5656,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/lib/**/*.ts",
                     "^production",
-                    {
-                      "externalDependencies": [
-                        "typescript",
-                      ],
-                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -6094,27 +5704,24 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
 async function applyFilesToTempFsAndContext(
   tempFs: TempFs,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   fileSys: Record<string, string>
-) {
+): Promise<string[]> {
   await tempFs.createFiles(fileSys);
-  // @ts-expect-error update otherwise readonly property for testing
-  context.configFiles = Object.keys(fileSys).filter((file) =>
+  const configFiles = Object.keys(fileSys).filter((file) =>
     picomatch(createNodesV2[0], { dot: true })(file)
   );
   setupWorkspaceContext(tempFs.tempDir);
+  return configFiles;
 }
 
 async function invokeCreateNodesOnMatchingFiles(
-  context: CreateNodesContext,
+  configFiles: string[],
+  context: CreateNodesContextV2,
   pluginOptions: TscPluginOptions
 ) {
   const aggregateProjects: Record<string, any> = {};
-  const results = await createNodesV2[1](
-    context.configFiles,
-    pluginOptions,
-    context
-  );
+  const results = await createNodesV2[1](configFiles, pluginOptions, context);
   for (const [, nodes] of results) {
     for (const [projectName, project] of Object.entries(nodes.projects ?? {})) {
       if (aggregateProjects[projectName]) {

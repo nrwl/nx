@@ -1,8 +1,8 @@
 ---
 title: Configure Outputs for Task Caching
 description: 'Learn how to optimize what Nx restores from the cache'
+filter: 'type:Guides'
 ---
-
 
 Whenever Nx runs a cacheable task, it will store the results of that task in the cache.
 When Nx runs the task again, if the [inputs for that task](/docs/guides/tasks--caching/configure-inputs) have not changed, it will restore the results from the cache instead of spending the time to run the task again.
@@ -42,7 +42,7 @@ If an output file or directory does not exist, it will be ignored.
 
 The outputs of a task can be viewed by adding the `--graph` flag to the command:
 
-```shell {% frame="none" %}
+```shell
 nx build myapp --graph
 ```
 

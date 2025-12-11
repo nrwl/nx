@@ -21,6 +21,7 @@ export function normalizeRollupExecutorOptions(
       .concat(options.rollupConfig)
       .filter(Boolean)
       .map((p) => normalizePluginPath(p, root)),
+    buildLibsFromSource: options.buildLibsFromSource ?? true,
     projectRoot: context.projectGraph.nodes[context.projectName].data.root,
     skipTypeCheck: skipTypeCheck || false,
   };

@@ -12,6 +12,7 @@ import {
 } from './utils/pnpm-normalizer';
 import {
   getHoistedPackageVersion,
+  invertObject,
   NormalizedPackageJson,
 } from './utils/package-json';
 import { sortObjectByKeys } from '../../../utils/object-sort';
@@ -26,12 +27,10 @@ import {
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
 import { join } from 'path';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
-
-// we use key => node map to avoid duplicate work when parsing keys
-let keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
 let currentLockFileHash: string;
 
 let parsedLockFile: Lockfile;
@@ -44,7 +43,6 @@ function parsePnpmLockFile(
     return parsedLockFile;
   }
 
-  keyMap.clear();
   const results = parseAndNormalizePnpmLockfile(lockFileContent);
   parsedLockFile = results;
   currentLockFileHash = lockFileHash;
@@ -54,7 +52,10 @@ function parsePnpmLockFile(
 export function getPnpmLockfileNodes(
   lockFileContent: string,
   lockFileHash: string
-): Record<string, ProjectGraphExternalNode> {
+): {
+  nodes: Record<string, ProjectGraphExternalNode>;
+  keyMap: Map<string, Set<ProjectGraphExternalNode>>;
+} {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
   if (+data.lockfileVersion.toString() >= 10) {
     console.warn(
@@ -62,13 +63,14 @@ export function getPnpmLockfileNodes(
     );
   }
   const isV5 = isV5Syntax(data);
-  return getNodes(data, keyMap, isV5);
+  return getNodes(data, isV5);
 }
 
 export function getPnpmLockfileDependencies(
   lockFileContent: string,
   lockFileHash: string,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
+  keyMap: Map<string, Set<ProjectGraphExternalNode>>
 ) {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
   if (+data.lockfileVersion.toString() >= 10) {
@@ -80,17 +82,22 @@ export function getPnpmLockfileDependencies(
   return getDependencies(data, keyMap, isV5, ctx);
 }
 
+const cachedInvertedRecords = new Map<string, Record<string, string>>();
 function matchPropValue(
   record: Record<string, string>,
   key: string,
-  originalPackageName: string
+  originalPackageName: string,
+  recordName: string
 ): string | undefined {
   if (!record) {
     return undefined;
   }
-  const index = Object.values(record).findIndex((version) => version === key);
-  if (index > -1) {
-    return Object.keys(record)[index];
+  if (!cachedInvertedRecords.has(recordName)) {
+    cachedInvertedRecords.set(recordName, invertObject(record));
+  }
+  const packageName = cachedInvertedRecords.get(recordName)[key];
+  if (packageName) {
+    return packageName;
   }
   // check if non-aliased name is found
   if (
@@ -107,9 +114,24 @@ function matchedDependencyName(
   originalPackageName: string
 ): string | undefined {
   return (
-    matchPropValue(importer.dependencies, key, originalPackageName) ||
-    matchPropValue(importer.optionalDependencies, key, originalPackageName) ||
-    matchPropValue(importer.peerDependencies, key, originalPackageName)
+    matchPropValue(
+      importer.dependencies,
+      key,
+      originalPackageName,
+      'dependencies'
+    ) ||
+    matchPropValue(
+      importer.optionalDependencies,
+      key,
+      originalPackageName,
+      'optionalDependencies'
+    ) ||
+    matchPropValue(
+      importer.peerDependencies,
+      key,
+      originalPackageName,
+      'peerDependencies'
+    )
   );
 }
 
@@ -128,9 +150,12 @@ function isAliasVersion(depVersion: string) {
 
 function getNodes(
   data: Lockfile,
-  keyMap: Map<string, Set<ProjectGraphExternalNode>>,
   isV5: boolean
-): Record<string, ProjectGraphExternalNode> {
+): {
+  nodes: Record<string, ProjectGraphExternalNode>;
+  keyMap: Map<string, Set<ProjectGraphExternalNode>>;
+} {
+  const keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
   const maybeAliasedPackageVersions = new Map<string, string>(); // <version, alias>
@@ -195,12 +220,14 @@ function getNodes(
       matchPropValue(
         data.importers['.'].devDependencies,
         key,
-        originalPackageName
+        originalPackageName,
+        'devDependencies'
       ) ||
       matchPropValue(
         data.importers['.'].devDependencies,
         `/${key}`,
-        originalPackageName
+        originalPackageName,
+        'devDependencies'
       );
     if (rootDependencyName) {
       packageNameObj = {
@@ -312,6 +339,25 @@ function getNodes(
   }
 
   const hoistedDeps = loadPnpmHoistedDepsDefinition();
+
+  // Pre-build packageName -> key index for O(1) lookup instead of O(n) find() per package
+  const hoistedKeysByPackage = new Map<string, string>();
+  for (const key of Object.keys(hoistedDeps)) {
+    if (key.startsWith('/')) {
+      // Extract package name from key format: /{packageName}/{version}... or /@scope/name/{version}...
+      const withoutSlash = key.slice(1);
+      const slashIndex = withoutSlash.startsWith('@')
+        ? withoutSlash.indexOf('/', withoutSlash.indexOf('/') + 1)
+        : withoutSlash.indexOf('/');
+      if (slashIndex > 0) {
+        const pkgName = withoutSlash.slice(0, slashIndex);
+        if (!hoistedKeysByPackage.has(pkgName)) {
+          hoistedKeysByPackage.set(pkgName, key);
+        }
+      }
+    }
+  }
+
   const results: Record<string, ProjectGraphExternalNode> = {};
 
   for (const [packageName, versionMap] of nodes.entries()) {
@@ -319,7 +365,11 @@ function getNodes(
     if (versionMap.size === 1) {
       hoistedNode = versionMap.values().next().value;
     } else {
-      const hoistedVersion = getHoistedVersion(hoistedDeps, packageName, isV5);
+      const hoistedVersion = getHoistedVersion(
+        packageName,
+        isV5,
+        hoistedKeysByPackage
+      );
       hoistedNode = versionMap.get(hoistedVersion);
     }
     if (hoistedNode) {
@@ -330,20 +380,19 @@ function getNodes(
       results[node.name] = node;
     });
   }
-  return results;
+  return { nodes: results, keyMap };
 }
 
 function getHoistedVersion(
-  hoistedDependencies: Record<string, any>,
   packageName: string,
-  isV5: boolean
+  isV5: boolean,
+  hoistedKeysByPackage: Map<string, string>
 ): string {
   let version = getHoistedPackageVersion(packageName);
 
   if (!version) {
-    const key = Object.keys(hoistedDependencies).find((k) =>
-      k.startsWith(`/${packageName}/`)
-    );
+    // Use pre-built index for O(1) lookup
+    const key = hoistedKeysByPackage.get(packageName);
     if (key) {
       version = parseBaseVersion(getVersion(key.slice(1), packageName), isV5);
     } else {
@@ -403,13 +452,21 @@ function parseBaseVersion(rawVersion: string, isV5: boolean): string {
 export function stringifyPnpmLockfile(
   graph: ProjectGraph,
   rootLockFileContent: string,
-  packageJson: NormalizedPackageJson
+  packageJson: NormalizedPackageJson,
+  workspaceRoot: string
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
   const { lockfileVersion, packages, importers } = data;
 
   const { snapshot: rootSnapshot, importers: requiredImporters } =
-    mapRootSnapshot(packageJson, importers, packages, graph, +lockfileVersion);
+    mapRootSnapshot(
+      packageJson,
+      importers,
+      packages,
+      graph,
+      +lockfileVersion,
+      workspaceRoot
+    );
   const snapshots = mapSnapshots(
     data.packages,
     graph.externalNodes,
@@ -419,8 +476,10 @@ export function stringifyPnpmLockfile(
   const workspaceDependencyImporters: Record<string, ProjectSnapshot> = {};
   for (const [packageName, importerPath] of Object.entries(requiredImporters)) {
     const baseImporter = importers[importerPath];
-    workspaceDependencyImporters[`workspace_modules/${packageName}`] =
-      baseImporter;
+    if (baseImporter) {
+      workspaceDependencyImporters[`workspace_modules/${packageName}`] =
+        baseImporter;
+    }
   }
 
   const output: Lockfile = {
@@ -577,7 +636,8 @@ function mapRootSnapshot(
   rootImporters: Record<string, ProjectSnapshot>,
   packages: PackageSnapshots,
   graph: ProjectGraph,
-  lockfileVersion: number
+  lockfileVersion: number,
+  workspaceRoot: string
 ) {
   const workspaceModules = getWorkspacePackagesFromGraph(graph);
   const snapshot: ProjectSnapshot = { specifiers: {} };
@@ -590,7 +650,21 @@ function mapRootSnapshot(
   ].forEach((depType) => {
     if (packageJson[depType]) {
       Object.keys(packageJson[depType]).forEach((packageName) => {
-        const version = packageJson[depType][packageName];
+        let version = packageJson[depType][packageName];
+        const manager = getCatalogManager(workspaceRoot);
+        if (manager?.isCatalogReference(version)) {
+          version = manager.resolveCatalogReference(
+            workspaceRoot,
+            packageName,
+            version
+          );
+          if (!version) {
+            throw new Error(
+              `Could not resolve catalog reference for package ${packageName}@${version}.`
+            );
+          }
+        }
+
         if (workspaceModules.has(packageName)) {
           for (const [importerPath, importerSnapshot] of Object.entries(
             rootImporters

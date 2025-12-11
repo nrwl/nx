@@ -10,7 +10,8 @@ const doc = await getEntry('nx-reference-packages', 'plugin-overview')!;
   frontmatter={{
     title: doc.data.title,
     description:doc.data.description,
-    tableOfContents: false
+    tableOfContents: false,
+    pagefind: false,
   }}
   headings={[]}
 >

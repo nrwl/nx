@@ -11,6 +11,7 @@ import { NormalizedSchema } from '../schema';
 import { extraEslintDependencies } from '../../../utils/lint';
 import {
   addExtendsToLintConfig,
+  addIgnoresToLintConfig,
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
@@ -56,6 +57,11 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
           }
         );
         tasks.push(addExtendsTask);
+      }
+
+      // Add out-tsc ignore pattern when using TS solution setup
+      if (options.isUsingTsSolutionConfig) {
+        addIgnoresToLintConfig(host, options.projectRoot, ['**/out-tsc']);
       }
     }
 

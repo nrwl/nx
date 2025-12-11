@@ -16,12 +16,16 @@ import { PropertyInfoTooltip } from '../tooltips/property-info-tooltip';
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
+  projectId?: string;
   sourceMap: Record<string, string[]>;
   errors?: GraphError[];
   variant?: 'default' | 'compact';
   connectedToCloud?: boolean;
   disabledTaskSyncGenerators?: string[];
-  onViewInProjectGraph?: (data: { projectName: string }) => void;
+  onViewInProjectGraph?: (data: {
+    projectName: string;
+    projectId?: string;
+  }) => void;
   onViewInTaskGraph?: (data: {
     projectName: string;
     targetName: string;
@@ -39,6 +43,7 @@ const typeToProjectType = {
 
 export const ProjectDetails = ({
   project,
+  projectId,
   sourceMap,
   variant,
   onViewInProjectGraph,
@@ -97,7 +102,7 @@ export const ProjectDetails = ({
           {onViewInProjectGraph && viewInProjectGraphPosition === 'top' && (
             <ViewInProjectGraphButton
               onClick={() =>
-                onViewInProjectGraph({ projectName: project.name })
+                onViewInProjectGraph({ projectName: project.name, projectId })
               }
             />
           )}

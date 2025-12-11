@@ -15,6 +15,7 @@ import { gte } from 'semver';
 import { createNodesV2 } from '../../plugins/plugin';
 import {
   getInstalledStorybookVersion,
+  getStorybookVersionToInstall,
   storybookMajorVersion,
 } from '../../utils/utilities';
 import { nxVersion, storybookVersion } from '../../utils/versions';
@@ -30,14 +31,7 @@ function checkDependenciesInstalled(
     '@nx/web': nxVersion,
   };
 
-  let storybookVersionToInstall = storybookVersion;
-  if (
-    storybookMajorVersion() >= 7 &&
-    getInstalledStorybookVersion() &&
-    gte(getInstalledStorybookVersion(), '7.0.0')
-  ) {
-    storybookVersionToInstall = getInstalledStorybookVersion();
-  }
+  const storybookVersionToInstall = getStorybookVersionToInstall(host);
   devDependencies['storybook'] = storybookVersionToInstall;
 
   return addDependenciesToPackageJson(
@@ -126,6 +120,16 @@ export async function initGeneratorInternal(tree: Tree, schema: Schema) {
           'static-storybook',
           'static:storybook',
           'storybook:static',
+        ],
+        buildDepsTargetName: [
+          'build-deps',
+          'storybook:build-deps',
+          'storybook-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'storybook:watch-deps',
+          'storybook-watch-deps',
         ],
       },
       schema.updatePackageScripts

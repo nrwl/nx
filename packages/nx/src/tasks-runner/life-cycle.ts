@@ -22,14 +22,6 @@ export interface TaskMetadata {
   groupId: number;
 }
 
-interface RustRunningTask extends RunningTask {
-  getResults(): Promise<{ code: number; terminalOutput: string }>;
-
-  onExit(cb: (code: number, terminalOutput: string) => void): void;
-
-  kill(signal?: NodeJS.Signals): Promise<void> | void;
-}
-
 export interface LifeCycle {
   startCommand?(parallel?: number): void | Promise<void>;
 

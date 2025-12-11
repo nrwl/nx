@@ -2,14 +2,17 @@ import { NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
   newProject,
-  readJson,
+  runCommandAsync,
   runCLI,
   tmpProjPath,
   uniq,
   updateJson,
+  getPackageManagerCommand,
+  detectPackageManager,
 } from '@nx/e2e-utils';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
+import { setupWorkspaces } from './utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -33,6 +36,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B\s+README.md/g, 'XXB README.md')
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         .replaceAll(/(\w+) lock file/g, 'PM lock file')
+        .replaceAll('NX   Updating PM lock file\n', '')
         // Normalize the version title date.
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
         // We trim each line to reduce the chances of snapshot flakiness
@@ -62,7 +66,7 @@ describe('nx release preserve matching dependency ranges', () => {
   /**
    * Initialize each test with a fresh workspace
    */
-  const initializeProject = () => {
+  const initializeProject = async () => {
     newProject({
       packages: ['@nx/js'],
     });
@@ -73,6 +77,8 @@ describe('nx release preserve matching dependency ranges', () => {
     runCLI(`generate @nx/workspace:npm-package ${pkg2}`);
     const pkg3 = uniq('my-pkg-3');
     runCLI(`generate @nx/workspace:npm-package ${pkg3}`);
+
+    setupWorkspaces(detectPackageManager(), pkg1, pkg2, pkg3);
 
     // Set up dependencies with various range types
     updateJson(join(pkg1, 'package.json'), (packageJson) => {
@@ -103,6 +109,9 @@ describe('nx release preserve matching dependency ranges', () => {
       return packageJson;
     });
 
+    const pmc = getPackageManagerCommand();
+    await runCommandAsync(pmc.install);
+
     // workaround for NXC-143
     runCLI('reset');
 
@@ -110,8 +119,8 @@ describe('nx release preserve matching dependency ranges', () => {
   };
 
   describe('when preserveMatchingDependencyRanges is set to false', () => {
-    it('should update all dependency ranges', () => {
-      const { workspacePath } = initializeProject();
+    it('should update all dependency ranges', async () => {
+      const { workspacePath } = await initializeProject();
 
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
@@ -184,8 +193,8 @@ describe('nx release preserve matching dependency ranges', () => {
   });
 
   describe('when preserveMatchingDependencyRanges is set to true', () => {
-    it('should preserve dependency ranges when new version satisfies them', () => {
-      const { workspacePath, pkg1, pkg3 } = initializeProject();
+    it('should preserve dependency ranges when new version satisfies them', async () => {
+      const { workspacePath, pkg1, pkg3 } = await initializeProject();
       updateJson(join(pkg1, 'package.json'), (packageJson) => {
         packageJson.dependencies[`@proj/${pkg3}`] = '^1.0.0';
         return packageJson;
@@ -244,8 +253,8 @@ describe('nx release preserve matching dependency ranges', () => {
   });
 
   describe('when preserveMatchingDependencyRanges is set to specific dependency types', () => {
-    it('should only preserve ranges for specified dependency types', () => {
-      const { workspacePath } = initializeProject();
+    it('should only preserve ranges for specified dependency types', async () => {
+      const { workspacePath } = await initializeProject();
 
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
@@ -311,8 +320,8 @@ describe('nx release preserve matching dependency ranges', () => {
       `);
     });
 
-    it('should handle empty array (no preservation)', () => {
-      const { workspacePath } = initializeProject();
+    it('should handle empty array (no preservation)', async () => {
+      const { workspacePath } = await initializeProject();
 
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
@@ -386,8 +395,8 @@ describe('nx release preserve matching dependency ranges', () => {
   });
 
   describe('with patch versions', () => {
-    it('should preserve ranges when patch version satisfies them', () => {
-      const { workspacePath } = initializeProject();
+    it('should preserve ranges when patch version satisfies them', async () => {
+      const { workspacePath } = await initializeProject();
 
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
@@ -443,8 +452,8 @@ describe('nx release preserve matching dependency ranges', () => {
   });
 
   describe('with exact version dependencies', () => {
-    it('should always update exact version dependencies', () => {
-      const { workspacePath, pkg1, pkg2 } = initializeProject();
+    it('should always update exact version dependencies', async () => {
+      const { workspacePath, pkg1, pkg2 } = await initializeProject();
 
       // Add exact version dependency
       updateJson(join(pkg1, 'package.json'), (packageJson) => {
@@ -512,8 +521,8 @@ describe('nx release preserve matching dependency ranges', () => {
   });
 
   describe('with wildcard ranges', () => {
-    it('should preserve wildcard ranges', () => {
-      const { workspacePath, pkg1, pkg2, pkg3 } = initializeProject();
+    it('should preserve wildcard ranges', async () => {
+      const { workspacePath, pkg1, pkg2, pkg3 } = await initializeProject();
 
       // Add wildcard dependency
       updateJson(join(pkg1, 'package.json'), (packageJson) => {

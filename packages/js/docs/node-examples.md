@@ -34,8 +34,7 @@ npx nx serve my-app
 
 ## Examples
 
-{% tabs %}
-{% tab label="Pass extra Node CLI arguments" %}
+##### Pass extra Node CLI arguments
 
 Using `runtimeArgs`, you can pass arguments to the underlying `node` command. For example, if you want to set [`--no-warnings`](https://nodejs.org/api/cli.html#--no-warnings) to silence all Node warnings, then add the following to the `project.json` file.
 
@@ -53,9 +52,7 @@ Using `runtimeArgs`, you can pass arguments to the underlying `node` command. Fo
 }
 ```
 
-{% /tab %}
-
-{% tab label="Run all task dependencies" %}
+##### Run all task dependencies
 
 If your application build depends on other tasks, and you want those tasks to also be executed, then set the `runBuildTargetDependencies` to `true`. For example, a library may have a task to generate GraphQL schemas, which is consume by the application. In this case, you want to run the generate task before building and running the application.
 
@@ -76,7 +73,3 @@ Note that this option will increase the build time, so use it only when necessar
   }
 }
 ```
-
-{% /tab %}
-
-{% /tabs %}

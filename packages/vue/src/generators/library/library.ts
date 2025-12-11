@@ -26,7 +26,6 @@ import {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { relative } from 'path';
 import { addLinting } from '../../utils/add-linting';
@@ -191,7 +190,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     } else {
       const nxJson = readJson(tree, 'nx.json');
       await addReleaseConfigForNonTsSolution(
-        shouldUseLegacyVersioning(nxJson.release),
         tree,
         options.projectName,
         projectConfig

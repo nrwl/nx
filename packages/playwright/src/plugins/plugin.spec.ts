@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { PlaywrightTestConfig } from '@playwright/test';
 import { join } from 'node:path';
@@ -6,7 +6,7 @@ import { createNodesV2 } from './plugin';
 
 describe('@nx/playwright/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let tempFs: TempFs;
   let cwd = process.cwd();
   let originalCacheProjectGraph: string | undefined;
@@ -26,7 +26,6 @@ describe('@nx/playwright/plugin', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
-      configFiles: [],
     };
 
     process.chdir(tempFs.tempDir);
@@ -357,11 +356,13 @@ describe('@nx/playwright/plugin', () => {
         "cache": true,
         "dependsOn": [
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",
@@ -533,11 +534,13 @@ describe('@nx/playwright/plugin', () => {
         "cache": true,
         "dependsOn": [
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",
@@ -769,11 +772,13 @@ describe('@nx/playwright/plugin', () => {
         "cache": true,
         "dependsOn": [
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",
@@ -989,11 +994,13 @@ describe('@nx/playwright/plugin', () => {
         "cache": true,
         "dependsOn": [
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
+            "options": "forward",
             "params": "forward",
             "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",

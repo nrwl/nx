@@ -39,6 +39,7 @@ describe('Next.js Styles', () => {
       checkUnitTest: false,
       checkLint: false,
       checkE2E: false,
+      useWebpack: true,
     });
 
     const scApp = uniq('app');

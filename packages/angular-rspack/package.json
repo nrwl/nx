@@ -70,7 +70,7 @@
     "sass-embedded": "^1.79.3",
     "sass-loader": "^16.0.2",
     "source-map-loader": "^5.0.0",
-    "tslib": "^2.3.0",
+    "tslib": "catalog:typescript",
     "webpack-merge": "^6.0.1",
     "ws": "^8.18.0"
   },
@@ -114,7 +114,12 @@
     },
     "targets": {
       "build": {
-        "command": "node ./scripts/copy-readme.js angular-rspack packages/angular-rspack/README.md__tpl__ packages/angular-rspack/README.md",
+        "command": "node ./scripts/copy-readme.js angular-rspack packages/angular-rspack/readme-template.md packages/angular-rspack/README.md",
+        "inputs": [
+          "{projectRoot}/readme-template.md",
+          "{workspaceRoot}/scripts/copy-readme.js",
+          "{workspaceRoot}/scripts/readme-fragments"
+        ],
         "outputs": [
           "{projectRoot}/README.md"
         ]

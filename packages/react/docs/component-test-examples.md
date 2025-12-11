@@ -1,4 +1,4 @@
-{% callout type="caution" title="Can I use component testing?" %}
+:::caution[Can I use component testing?]
 React component testing with Nx requires **Cypress version 10** and up.
 
 You can migrate with to v11 via the [migrate-to-cypress-11 generator](/nx-api/cypress/generators/migrate-to-cypress-11).
@@ -6,8 +6,7 @@ You can migrate with to v11 via the [migrate-to-cypress-11 generator](/nx-api/cy
 This generator is for Cypress based component testing.
 
 If you're wanting to create Storybook stories for a component, then check out the [stories generator docs](/nx-api/react/generators/stories)
-
-{% /callout %}
+:::
 
 This generator is used to create a Cypress component test file for a given React component.
 

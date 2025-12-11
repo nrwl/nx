@@ -33,13 +33,13 @@ class CompileTestCiTargetsTest {
           parentFile.mkdirs()
           writeText(
               """
-                package com.example
-                import org.junit.jupiter.api.Test
-                
-                class UserServiceTest {
-                  @Test
-                  fun testService() {}
-                }
+              package com.example
+              import org.junit.jupiter.api.Test
+
+              class UserServiceTest {
+                @Test
+                fun testService() {}
+              }
               """
                   .trimIndent())
         }
@@ -49,13 +49,13 @@ class CompileTestCiTargetsTest {
           parentFile.mkdirs()
           writeText(
               """
-                package com.example
-                import org.junit.jupiter.api.Test
-                
-                class UserRepositoryTest {
-                  @Test
-                  fun testRepository() {}
-                }
+              package com.example
+              import org.junit.jupiter.api.Test
+
+              class UserRepositoryTest {
+                @Test
+                fun testRepository() {}
+              }
               """
                   .trimIndent())
         }
@@ -64,17 +64,18 @@ class CompileTestCiTargetsTest {
     val targets = mutableMapOf<String, MutableMap<String, Any?>>()
     val targetGroups = mutableMapOf<String, MutableList<String>>()
     val ciTestTargetName = "ci"
+    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
 
     addTestCiTargets(
         testFiles = testFiles,
         projectBuildPath = ":project-a",
         testTask = testTask,
-        testTargetName = "test",
         targets = targets,
         targetGroups = targetGroups,
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
-        ciTestTargetName = ciTestTargetName)
+        ciTestTargetName = ciTestTargetName,
+        gitIgnoreClassifier = gitIgnoreClassifier)
 
     // Should generate targets based on JUnit discovery and AST parsing
     assertTrue(targets.containsKey("ci--UserServiceTest"))

@@ -142,45 +142,25 @@ export function ScaleYourOrganization(): ReactElement {
                       <i>
                         Included in{' '}
                         <Link
-                          href="/powerpack"
-                          title="Nx Powerpack"
+                          href="/enterprise"
+                          title="Nx Enterprise"
                           prefetch={false}
                           className="underline"
                         >
-                          Nx Powerpack
+                          Nx Enterprise
                         </Link>
-                        , and available complimentary to all Enterprise
-                        customers.
+                        .
                       </i>
                     </p>
                     <ul className="mt-6 space-y-2 pl-4">
                       <li>
                         <Link
-                          href={
-                            process.env.NEXT_PUBLIC_ASTRO_URL
-                              ? '/docs/enterprise/powerpack/configure-conformance-rules-in-nx-cloud'
-                              : '/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud'
-                          }
+                          href={'/docs/reference/conformance/overview'}
                           prefetch={false}
-                          title="Configure Conformance Rules"
+                          title="Learn More About Conformance"
                           className="text-sm/6 font-semibold"
                         >
-                          Configure Conformance Rules{' '}
-                          <span aria-hidden="true">→</span>
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href={
-                            process.env.NEXT_PUBLIC_ASTRO_URL
-                              ? '/docs/enterprise/powerpack/publish-conformance-rules-to-nx-cloud'
-                              : '/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud'
-                          }
-                          prefetch={false}
-                          title="Publish Conformance Rules"
-                          className="text-sm/6 font-semibold"
-                        >
-                          Publish Conformance Rules{' '}
+                          Learn More About Conformance
                           <span aria-hidden="true">→</span>
                         </Link>
                       </li>
@@ -226,14 +206,13 @@ export function ScaleYourOrganization(): ReactElement {
                       <i>
                         Included in{' '}
                         <Link
-                          href="/powerpack"
-                          title="Nx Powerpack"
+                          href="/enterprise"
+                          title="Nx Enterprise"
                           className="underline"
                         >
-                          Nx Powerpack
+                          Nx Enterprise
                         </Link>
-                        , and available complimentary to all Enterprise
-                        customers.
+                        .
                       </i>
                     </p>
                   </dd>

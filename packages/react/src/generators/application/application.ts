@@ -115,6 +115,7 @@ export async function applicationGeneratorInternal(
   const initTask = await reactInitGenerator(tree, {
     ...options,
     skipFormat: true,
+    useReactRouterPlugin: options.useReactRouter,
   });
   tasks.push(initTask);
 
@@ -216,6 +217,7 @@ export async function applicationGeneratorInternal(
       (json) => {
         const types = new Set(json.compilerOptions?.types || []);
         types.add('@react-router/node');
+        types.add('node');
         return {
           ...json,
           compilerOptions: {

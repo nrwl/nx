@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`app --minimal should generate a correct setup when --bundler=rspack and ssr 1`] = `
 "
@@ -1124,6 +1124,7 @@ exports[`app not nested should generate files: tsconfig.app.json 1`] = `
     "src/test-setup.ts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
+    "jest.config.cts",
   ],
   "extends": "./tsconfig.json",
   "include": [

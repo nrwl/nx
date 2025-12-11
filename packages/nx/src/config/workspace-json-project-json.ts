@@ -1,6 +1,5 @@
 import type { PackageJson } from '../utils/package-json';
 import type {
-  LegacyNxReleaseVersionConfiguration,
   NxJsonConfiguration,
   NxReleaseDockerConfiguration,
   NxReleaseVersionConfiguration,
@@ -109,23 +108,18 @@ export interface ProjectConfiguration {
    * Project specific configuration for `nx release`
    */
   release?: {
-    version?:
-      | Pick<
-          LegacyNxReleaseVersionConfiguration,
-          'generator' | 'generatorOptions'
-        >
-      | Pick<
-          // Expose a subset of version config options at the project level
-          NxReleaseVersionConfiguration,
-          | 'versionActions'
-          | 'versionActionsOptions'
-          | 'manifestRootsToUpdate'
-          | 'currentVersionResolver'
-          | 'currentVersionResolverMetadata'
-          | 'fallbackCurrentVersionResolver'
-          | 'versionPrefix'
-          | 'preserveLocalDependencyProtocols'
-        >;
+    version?: Pick<
+      // Expose a subset of version config options at the project level
+      NxReleaseVersionConfiguration,
+      | 'versionActions'
+      | 'versionActionsOptions'
+      | 'manifestRootsToUpdate'
+      | 'currentVersionResolver'
+      | 'currentVersionResolverMetadata'
+      | 'fallbackCurrentVersionResolver'
+      | 'versionPrefix'
+      | 'preserveLocalDependencyProtocols'
+    >;
     docker?: NxReleaseDockerConfiguration | true;
   };
 
@@ -157,6 +151,7 @@ export interface ProjectMetadata {
   };
   js?: {
     packageName: string;
+    packageVersion?: string;
     packageExports?: PackageJson['exports'];
     packageMain?: string;
     isInPackageManagerWorkspaces?: boolean;
@@ -198,9 +193,14 @@ export interface TargetDependencyConfig {
   target: string;
 
   /**
-   * Configuration for params handling.
+   * Whether to forward CLI params to the dependency target.
    */
   params?: 'ignore' | 'forward';
+
+  /**
+   * Whether to forward task options to the dependency target.
+   */
+  options?: 'ignore' | 'forward';
 }
 
 export type InputDefinition =

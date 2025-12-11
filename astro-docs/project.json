@@ -7,7 +7,7 @@
       "continuous": true,
       "dependsOn": [
         {
-          "projects": ["devkit", "create-nx-workspace"],
+          "projects": ["devkit", "create-nx-workspace", "dotnet", "maven"],
           "target": "build"
         }
       ],
@@ -19,7 +19,7 @@
     "build": {
       "dependsOn": [
         {
-          "projects": ["devkit", "create-nx-workspace"],
+          "projects": ["devkit", "create-nx-workspace", "dotnet", "maven"],
           "target": "build"
         }
       ],
@@ -48,8 +48,8 @@
       }
     },
     "test": {
-      "dependsOn": ["validate-links"],
-      "command": "echo done"
+      "executor": "nx:noop",
+      "dependsOn": ["vite:test", "validate-links", "format"]
     },
     "pw-e2e": {
       "dependsOn": ["serve"],
@@ -57,7 +57,10 @@
     },
     "e2e-ci--**/*": {
       "dependsOn": ["preview"],
-      "parallelism": true
+      "parallelism": true,
+      "options": {
+        "args": []
+      }
     },
     "show-report": {
       "command": "playwright show-report dist/astro-docs/playwright-report"
@@ -73,10 +76,18 @@
         "{projectRoot}/tsconfig.json",
         "{projectRoot}/package.json"
       ],
-      "command": "npx tsx validate-links.ts",
+      "command": "tsx validate-links.ts",
       "options": {
         "cwd": "astro-docs"
       }
+    },
+    "format": {
+      "cache": true,
+      "//": "nx format doesn't respect overrides, so we manually run prettier for mdoc files",
+      "command": "prettier **/*.mdoc --check"
+    },
+    "format:write": {
+      "command": "prettier **/*.mdoc --write"
     }
   }
 }

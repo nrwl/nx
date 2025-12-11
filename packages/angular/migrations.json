@@ -1915,21 +1915,6 @@
         }
       }
     },
-    "21.3.5-jest": {
-      "version": "21.3.5-beta.0",
-      "requires": {
-        "@angular/compiler-cli": ">=18.0.0 <21.0.0",
-        "@angular/core": ">=18.0.0 <21.0.0",
-        "@angular/platform-browser-dynamic": ">=18.0.0 <21.0.0",
-        "jest": "^30.0.0"
-      },
-      "packages": {
-        "jest-preset-angular": {
-          "version": "~15.0.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "21.4.0-ngrx": {
       "version": "21.4.0-beta.3",
       "requires": {
@@ -2242,6 +2227,27 @@
         },
         "@angular-eslint/bundled-angular-compiler": {
           "version": "^20.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.2.0": {
+      "version": "22.2.0-beta.0",
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "^0.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/runtime": {
+          "version": "^0.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "^0.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "^2.7.21",
           "alwaysAddToPackageJson": false
         }
       }

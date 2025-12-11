@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`@nx/eslint:workspace-rules-project should generate the required files 1`] = `
 "/**
@@ -72,13 +72,19 @@ exports[`@nx/eslint:workspace-rules-project should generate the required files 4
     "outDir": "../../dist/out-tsc",
     "types": ["jest", "node"]
   },
-  "include": ["jest.config.ts", "**/*.test.ts", "**/*.spec.ts", "**/*.d.ts"]
+  "include": [
+    "jest.config.ts",
+    "jest.config.cts",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.d.ts"
+  ]
 }
 "
 `;
 
 exports[`@nx/eslint:workspace-rules-project should generate the required files 5`] = `
-"export default {
+"module.exports = {
   displayName: 'eslint-rules',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',

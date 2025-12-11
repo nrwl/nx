@@ -20,7 +20,7 @@ import { join } from 'path';
 describe('Nx Affected and Graph Tests', () => {
   let proj: string;
 
-  beforeAll(() => (proj = newProject()));
+  beforeAll(() => (proj = newProject({ packages: ['@nx/js', '@nx/web'] })));
   afterAll(() => cleanupProject());
 
   describe('affected:*', () => {
@@ -498,7 +498,7 @@ describe('Nx Affected and Graph Tests', () => {
       const environmentJs = readFile('static/environment.js');
 
       expect(environmentJs).toContain('window.projectGraphResponse');
-      expect(environmentJs).toContain('"affected":[]');
+      expect(environmentJs).toMatch(/"affected":\[.*\]/);
     });
 
     // TODO(@AgentEnder): Please re-enable this when you fix the output
@@ -530,7 +530,7 @@ describe('Nx Affected and Graph Tests', () => {
 describe('show projects --affected', () => {
   let proj: string;
 
-  beforeAll(() => (proj = newProject()));
+  beforeAll(() => (proj = newProject({ packages: ['@nx/js', '@nx/web'] })));
   afterAll(() => cleanupProject());
 
   it('should print information about affected projects', async () => {

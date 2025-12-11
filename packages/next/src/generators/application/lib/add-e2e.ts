@@ -11,6 +11,7 @@ import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-in
 import { webStaticServeGenerator } from '@nx/web';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { nxVersion } from '../../../utils/versions';
+import { isNext16 } from '../../../utils/version-utils';
 import { NormalizedSchema } from './normalize-options';
 
 export async function addE2e(
@@ -31,6 +32,7 @@ export async function addE2e(
     options.addPlugin
   );
 
+  const forceWebpack = options.style === 'less' && (await isNext16(host));
   if (options.e2eTestRunner === 'cypress') {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
@@ -84,7 +86,9 @@ export async function addE2e(
       baseUrl: e2eWebServerInfo.e2eWebServerAddress,
       jsx: true,
       webServerCommands: {
-        default: e2eWebServerInfo.e2eWebServerCommand,
+        default: `${e2eWebServerInfo.e2eWebServerCommand}${
+          forceWebpack ? ' --webpack' : ''
+        }`,
       },
       ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
       ciBaseUrl: e2eWebServerInfo.e2eCiBaseUrl,
@@ -135,7 +139,9 @@ export async function addE2e(
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
       webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
-      webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      webServerCommand: `${e2eWebServerInfo.e2eWebServerCommand}${
+        forceWebpack ? ' --webpack' : ''
+      }`,
       addPlugin: options.addPlugin,
     });
 

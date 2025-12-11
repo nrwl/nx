@@ -48,7 +48,7 @@ src="https://youtu.be/0YxcxIR7QU0"
 title="10x Faster e2e Tests!"
 width="100%" /%}
 
-For more granular control over test distribution, Nx offers the [Atomizer](/ci/features/split-e2e-tasks). This feature allows you to split tasks per file. This splitting further allows us to distribute long-running tasks across a larger number of agents, providing detailed insights into flaky tests and enabling automatic re-runs. If one of the flaky tests fails, we will still cache the results of all the other task slices and can even have a successful run if the flaky test re-run succeeded.
+For more granular control over test distribution, Nx offers the [Atomizer](/docs/features/ci-features/split-e2e-tasks). This feature allows you to split tasks per file. This splitting further allows us to distribute long-running tasks across a larger number of agents, providing detailed insights into flaky tests and enabling automatic re-runs. If one of the flaky tests fails, we will still cache the results of all the other task slices and can even have a successful run if the flaky test re-run succeeded.
 
 ![The `nx-e2e` task atomized to 13 e2e sub-tasks](/blog/images/articles/atomized-nx-e2e-ci.avif)
 
@@ -103,7 +103,7 @@ Or more generically:
 
 - `{ciTargetName}--{path/to/test/file}`
 
-You can find more information on how to configure the Atomizer on the respective [Jest](/technologies/test-tools/jest/introduction#splitting-e2e-tests), [Cypress](/technologies/test-tools/cypress/introduction#nxcypress-configuration), [Playwright](/technologies/test-tools/playwright/introduction#nxplaywright-configuration), [Gradle](/technologies/java/introduction#nxgradle-configuration) or follow [this recipe](/extending-nx/recipes/project-graph-plugins) to create your own inferred plugin.
+You can find more information on how to configure the Atomizer on the respective [Jest](/docs/technologies/test-tools/jest/introduction#splitting-e2e-tests), [Cypress](/docs/technologies/test-tools/cypress/introduction#nxcypress-configuration), [Playwright](/docs/technologies/test-tools/playwright/introduction#nxplaywright-configuration), [Gradle](/docs/technologies/java/introduction#nxgradle-configuration) or follow [this recipe](/docs/extending-nx/project-graph-plugins) to create your own inferred plugin.
 
 ## Manual E2E Project Splitting
 

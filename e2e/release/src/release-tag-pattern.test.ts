@@ -71,8 +71,8 @@ describe('nx release releaseTagPattern', () => {
     // Tag the existing commit as a prerelease
     await runCommandAsync(`git tag -a v1.0.0-beta.1 -m "v1.0.0-beta.1"`);
 
-    // Resolve that prerelease as the current version
-    expect(runCLI(`release version -d`)).toContain(
+    // With strict preid enabled by default, we need to provide beta as preid to ensure tag is found
+    expect(runCLI(`release version --preid=beta -d`)).toContain(
       `Resolved the current version as 1.0.0-beta.1 from git tag "v1.0.0-beta.1"`
     );
 

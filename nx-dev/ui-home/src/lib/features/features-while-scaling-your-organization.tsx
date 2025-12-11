@@ -26,11 +26,7 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
             <p>
               Nx defines{' '}
               <TextLink
-                href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/features/enforce-module-boundaries'
-                    : '/features/enforce-module-boundaries'
-                }
+                href={'/docs/features/enforce-module-boundaries'}
                 className="decoration-2"
               >
                 clear project boundaries
@@ -38,22 +34,14 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               and leverages monorepo concepts—shared tooling, atomic changes,
               and coordinated releases—so code stays easy to maintain.{' '}
               <TextLink
-                href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/enterprise/powerpack/owners'
-                    : '/nx-enterprise/powerpack/owners'
-                }
+                href={'/docs/enterprise/owners'}
                 className="decoration-2"
               >
                 Ownership
               </TextLink>{' '}
               is defined at the project level, while{' '}
               <TextLink
-                href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/enterprise/powerpack/conformance'
-                    : '/nx-enterprise/powerpack/conformance'
-                }
+                href={'/docs/enterprise/conformance'}
                 className="decoration-2"
               >
                 conformance rules
@@ -62,34 +50,19 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               <strong>entire codebase</strong>.
             </p>
             <p>
-              <TextLink
-                href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/plugin-registry'
-                    : '/plugin-registry'
-                }
-                className="decoration-2"
-              >
+              <TextLink href={'/docs/plugin-registry'} className="decoration-2">
                 Nx plugins
               </TextLink>{' '}
               and{' '}
               <TextLink
-                href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/features/generate-code'
-                    : '/features/generate-code'
-                }
+                href={'/docs/features/generate-code'}
                 className="decoration-2"
               >
                 code generation
               </TextLink>{' '}
               standardize best practices and eliminate duplication, while{' '}
               <TextLink
-                href={
-                  process.env.NEXT_PUBLIC_ASTRO_URL
-                    ? '/docs/features/automate-updating-dependencies'
-                    : '/features/automate-updating-dependencies'
-                }
+                href={'/docs/features/automate-updating-dependencies'}
                 className="decoration-2"
               >
                 automated updates

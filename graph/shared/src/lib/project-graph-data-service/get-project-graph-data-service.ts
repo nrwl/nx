@@ -1,10 +1,12 @@
 // nx-ignore-next-line
-import type { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
+import type {
+  ProjectGraphClientResponse,
+  TaskGraphClientResponse,
+} from 'nx/src/command-line/graph/graph';
 import { FetchProjectGraphService } from './fetch-project-graph-service';
 import { LocalProjectGraphService } from './local-project-graph-service';
 import { MockProjectGraphService } from './mock-project-graph-service';
 import { NxConsoleProjectGraphService } from './nx-console-project-graph-service';
-import type { TaskGraphClientResponse } from '../task-graph-client-response';
 
 let projectGraphService: ProjectGraphService;
 

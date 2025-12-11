@@ -1,4 +1,8 @@
-import { defineMarkdocConfig, component } from '@astrojs/markdoc/config';
+import {
+  defineMarkdocConfig,
+  component,
+  Markdoc,
+} from '@astrojs/markdoc/config';
 import starlightMarkdoc from '@astrojs/starlight-markdoc';
 
 export default defineMarkdocConfig({
@@ -143,7 +147,6 @@ export default defineMarkdocConfig({
     },
     graph: {
       render: component('./src/components/markdoc/Graph.astro'),
-      children: [],
       attributes: {
         jsonFile: {
           type: 'String',
@@ -160,6 +163,24 @@ export default defineMarkdocConfig({
           type: 'String',
           required: true,
         },
+      },
+      transform(node, config) {
+        const attributes = node.transformAttributes(config);
+        let rawContent = null;
+        for (const child of node.children) {
+          if (child.type === 'fence') {
+            rawContent = child.attributes.content;
+            break;
+          }
+        }
+        return new Markdoc.Tag(
+          this.render,
+          {
+            ...attributes,
+            astroRawData: rawContent,
+          },
+          []
+        );
       },
     },
     iframe: {
@@ -284,6 +305,24 @@ export default defineMarkdocConfig({
           type: 'Array',
         },
       },
+      transform(node, config) {
+        const attributes = node.transformAttributes(config);
+        let rawContent = null;
+        for (const child of node.children) {
+          if (child.type === 'fence') {
+            rawContent = child.attributes.content;
+            break;
+          }
+        }
+        return new Markdoc.Tag(
+          this.render,
+          {
+            ...attributes,
+            astroRawData: rawContent,
+          },
+          []
+        );
+      },
     },
     stackblitz_button: {
       render: component('./src/components/markdoc/StackblitzButton.astro'),
@@ -381,15 +420,6 @@ export default defineMarkdocConfig({
         caption: {
           type: 'String',
           required: false,
-        },
-      },
-    },
-    side_by_side: {
-      render: component('./src/components/markdoc/SideBySide.astro'),
-      attributes: {
-        align: {
-          type: 'String',
-          default: 'center',
         },
       },
     },

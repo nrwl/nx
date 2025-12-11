@@ -3,6 +3,7 @@ title: 'Building and Testing React Apps in Nx'
 sidebar:
   label: 'React Monorepo'
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
+filter: 'type:Guides'
 ---
 
 This tutorial walks you through creating a React monorepo with Nx. You'll build a small example application to understand the core concepts and workflows.
@@ -48,6 +49,7 @@ This is important for using remote caching and self-healing in CI later in the t
 Let's take a look at the structure of our new Nx workspace:
 
 {%filetree%}
+
 - acme/
   - .github/
     - workflows/
@@ -64,6 +66,7 @@ Let's take a look at the structure of our new Nx workspace:
   - vitest.workspace.ts
 
 {%/filetree%}
+
 Here are some files that might jump to your eyes:
 
 - The `.nx` folder is where Nx stores local metadata about your workspaces using the [Nx Daemon](/docs/concepts/nx-daemon).
@@ -76,7 +79,7 @@ Now, let's build some features and see how Nx helps get us to production faster.
 
 To serve your new React app, run:
 
-```shell {% frame="none" %}
+```shell
 npx nx serve demo
 ```
 
@@ -117,12 +120,13 @@ In `nx.json` there's already the `@nx/vite` plugin registered which automaticall
 
 To view the tasks that Nx has detected, look in the [Nx Console](/docs/getting-started/editor-setup) project detail view or run:
 
-```shell {% frame="none" %}
+```shell
 npx nx show project demo
 ```
 
 {% project_details title="Project Details View (Simplified)" %}
 
+```json
 {
   "project": {
     "name": "@acme/demo",
@@ -178,6 +182,7 @@ npx nx show project demo
     "tags": ["apps/demo/project.json", "nx/core/project-json"]
   }
 }
+```
 
 {% /project_details %}
 
@@ -205,6 +210,7 @@ You can override the options for inferred tasks by modifying the [`targetDefault
 When you develop your React application, usually all your logic sits in the app's `src` folder. Ideally separated by various folder names which represent your domains or features. As your app grows, however, the app becomes more and more monolithic, which makes building and testing it harder and slower.
 
 {%filetree%}
+
 - acme/
   - apps/
     - demo/
@@ -229,7 +235,7 @@ Nx allows you to separate this logic into "local libraries." The main benefits i
 
 Let's create a reusable design system library called `ui` that we can use across our workspace. This library will contain reusable components such as buttons, inputs, and other UI elements.
 
-```shell {% frame="none" %}
+```shell
 npx nx g @nx/react:library packages/ui --unitTestRunner=vitest --bundler=none
 ```
 
@@ -238,6 +244,7 @@ Note how we type out the full path in the `directory` flag to place the library 
 Running the above commands should lead to the following directory structure:
 
 {% filetree %}
+
 - acme/
   - apps/
     - demo/
@@ -250,17 +257,18 @@ Running the above commands should lead to the following directory structure:
   - tsconfig.base.json
   - tsconfig.json
   - vitest.workspace.ts
+
 {% /filetree %}
 
 Just as with the `demo` app, Nx automatically infers the tasks for the `ui` library from its configuration files. You can view them by running:
 
-```shell {% frame="none" %}
+```shell
 npx nx show project ui
 ```
 
 In this case, we have the `lint` and `test` tasks available, among other inferred tasks.
 
-```shell {% frame="none" %}
+```shell
 npx nx lint ui
 npx nx test ui
 ```
@@ -383,7 +391,7 @@ Nx automatically detects the dependencies between the various parts of your work
 
 Just run:
 
-```shell {% frame="none" %}
+```shell
 npx nx graph
 ```
 
@@ -391,6 +399,7 @@ You should be able to see something similar to the following in your browser.
 
 {% graph height="450px" %}
 
+```json
 {
   "projects": [
     {
@@ -418,12 +427,13 @@ You should be able to see something similar to the following in your browser.
   "focus": null,
   "groupByFolder": false
 }
+```
 
 {% /graph %}
 
 Let's create a git branch with the new hero component so we can open a pull request later:
 
-```shell {% frame="none" %}
+```shell
 git checkout -b add-hero-component
 git add .
 git commit -m 'add hero component'
@@ -433,14 +443,14 @@ git commit -m 'add hero component'
 
 Our current setup doesn't just come with targets for serving and building the React application, but also has targets for testing and linting. We can use the same syntax as before to run these tasks:
 
-```shell {% frame="none" %}
+```shell
 npx nx test demo # runs the tests for demo
 npx nx lint ui   # runs the linter on ui
 ```
 
 More conveniently, we can also run tasks in parallel using the following syntax:
 
-```shell {% frame="none" %}
+```shell
 npx nx run-many -t test lint
 ```
 
@@ -481,7 +491,7 @@ In this section, we'll explore how Nx Cloud can help your pull request get to gr
 
 The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
-```yaml {32,33}
+```yaml {% meta="{32,33}" %}
 # .github/workflows/ci.yml
 name: CI
 
@@ -509,7 +519,7 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
 
       - run: npx nx run-many -t lint test build
 
@@ -523,7 +533,7 @@ You will also need to install the [Nx Console](/docs/getting-started/editor-setu
 
 Now, let's push the `add-hero-component` branch to GitHub and open a new pull request.
 
-```shell {% frame="none" %}
+```shell
 git push origin add-hero-component
 # Don't forget to open a pull request on GitHub
 ```

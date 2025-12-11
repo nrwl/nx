@@ -3,6 +3,7 @@ import {
   joinPathFragments,
   readNxJson,
   readProjectConfiguration,
+  updateJson,
   updateNxJson,
   writeJson,
   type ExpandedPluginConfiguration,
@@ -149,6 +150,13 @@ function createTestProject(
     `${projectOpts.appRoot}/project.json`,
     JSON.stringify(project)
   );
+
+  updateJson(tree, `package.json`, (json) => {
+    json.devDependencies ??= {};
+    json.devDependencies.jest = '^30.0.0';
+    return json;
+  });
+
   return project;
 }
 
