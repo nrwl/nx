@@ -344,6 +344,7 @@ async function buildJestTargets(
           target: targetName,
           projects: 'self',
           params: 'forward',
+          options: 'forward',
         });
 
         targets[targetName] = {
@@ -485,6 +486,7 @@ async function buildJestTargets(
             target: targetName,
             projects: 'self',
             params: 'forward',
+            options: 'forward',
           });
           targets[targetName] = {
             command: `jest ${relativePath}`,
