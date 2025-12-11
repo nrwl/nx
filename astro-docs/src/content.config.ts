@@ -113,6 +113,7 @@ const banner = defineCollection({
     secondaryCtaUrl: z.string().optional(),
     secondaryCtaText: z.string().optional(),
     enabled: z.boolean(),
+    activeUntil: z.string().optional(),
   }),
 });
 

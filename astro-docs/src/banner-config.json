@@ -7,6 +7,7 @@
     "primaryCtaText": "Sign Up Now",
     "secondaryCtaUrl": "",
     "secondaryCtaText": "",
-    "enabled": true
+    "enabled": true,
+    "activeUntil": "2025-12-17T23:59:59.000Z"
   }
 ]

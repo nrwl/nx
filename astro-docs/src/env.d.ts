@@ -14,6 +14,7 @@ declare namespace App {
       secondaryCtaUrl?: string;
       secondaryCtaText?: string;
       enabled: boolean;
+      activeUntil?: string;
     };
   }
 }

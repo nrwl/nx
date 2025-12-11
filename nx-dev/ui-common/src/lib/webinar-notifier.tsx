@@ -9,20 +9,14 @@ import {
 } from '@heroicons/react/24/outline';
 
 export interface WebinarNotifierProps {
-  /** Unique banner ID - changing this will show the banner again to users who dismissed it */
   id: string;
-  /** Banner title */
   title: string;
-  /** Banner description */
   description: string;
-  /** Primary CTA URL */
   primaryCtaUrl: string;
-  /** Primary CTA button text */
   primaryCtaText: string;
-  /** Secondary CTA URL (optional) */
   secondaryCtaUrl?: string;
-  /** Secondary CTA button text (optional) */
   secondaryCtaText?: string;
+  activeUntil?: string; // e.g. new Date.toISOString() '2025-12-11T13:33:35.695Z'
 }
 
 export function WebinarNotifier({
@@ -33,6 +27,7 @@ export function WebinarNotifier({
   primaryCtaText,
   secondaryCtaUrl,
   secondaryCtaText,
+  activeUntil,
 }: WebinarNotifierProps): ReactElement | null {
   const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState<boolean>(true);
@@ -52,6 +47,9 @@ export function WebinarNotifier({
     setIsVisible(false);
     localStorage.setItem(storageKey, 'true');
   };
+
+  // Check if banner has expired
+  if (activeUntil && new Date() > new Date(activeUntil)) return null;
 
   if (!isMounted || !isVisible) return null;
 

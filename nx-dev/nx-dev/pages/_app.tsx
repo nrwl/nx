@@ -107,6 +107,7 @@ export default function CustomApp({
           primaryCtaText={bannerConfig.primaryCtaText}
           secondaryCtaUrl={bannerConfig.secondaryCtaUrl}
           secondaryCtaText={bannerConfig.secondaryCtaText}
+          activeUntil={bannerConfig.activeUntil}
         />
       )}
 

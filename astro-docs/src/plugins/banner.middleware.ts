@@ -10,6 +10,7 @@ export interface BannerConfig {
   secondaryCtaUrl?: string;
   secondaryCtaText?: string;
   enabled: boolean;
+  activeUntil?: string;
 }
 
 let cachedBannerPromise: Promise<BannerConfig | null> | null = null;
@@ -58,9 +59,13 @@ export const onRequest = defineRouteMiddleware(async (context) => {
   // Set floating banner config for WebinarNotifier component
   context.locals.floatingBanner = bannerConfig;
 
-  // Set Starlight top banner (unless page already has one)
+  // Check if banner has expired
+  const isExpired =
+    bannerConfig.activeUntil && new Date() > new Date(bannerConfig.activeUntil);
+
+  // Set Starlight top banner (unless page already has one or banner expired)
   const { entry } = context.locals.starlightRoute;
-  if (!entry.data.banner && bannerConfig.enabled) {
+  if (!entry.data.banner && bannerConfig.enabled && !isExpired) {
     entry.data.banner = {
       content: `<a href="${bannerConfig.primaryCtaUrl}" title="${bannerConfig.title}">${bannerConfig.title}</a>`,
     };

@@ -130,6 +130,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             primaryCtaText={bannerConfig.primaryCtaText}
             secondaryCtaUrl={bannerConfig.secondaryCtaUrl}
             secondaryCtaText={bannerConfig.secondaryCtaText}
+            activeUntil={bannerConfig.activeUntil}
           />
         )}
         <FrontendObservability />
