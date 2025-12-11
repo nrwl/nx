@@ -143,6 +143,9 @@ impl FilesWorker {
         }
     }
 
+    /// Updates the file cache with new/modified files and removes deleted files/directories.
+    ///
+    /// Optimized to perform a single O(n) pass for deletions instead of O(n × d) where d = deleted items.
     pub fn update_files(
         &self,
         workspace_root_path: &Path,
@@ -160,16 +163,30 @@ impl FilesWorker {
             .expect("Should always be able to update files");
         let mut map: HashMap<PathBuf, String> = files.drain(..).collect();
 
-        for deleted_path in deleted_files_and_directories {
-            // If the path is a file, this removes it.
-            let removal = map.remove(&PathBuf::from(deleted_path));
-            if removal.is_none() {
-                // If the path is a directory, this retains only files not in the directory.
-                map.retain(|path, _| {
-                    let owned_deleted_path = deleted_path.to_owned();
-                    !path.starts_with(owned_deleted_path + "/")
-                });
-            };
+        // Optimization: Separate files from directories and collect deleted file paths
+        // This allows a single O(n) pass instead of O(n × d) for directory deletions
+        let mut deleted_files: HashSet<PathBuf> = HashSet::new();
+        let mut deleted_dirs: Vec<&str> = Vec::new();
+
+        for deleted_path in &deleted_files_and_directories {
+            let path_buf = PathBuf::from(deleted_path);
+            if map.remove(&path_buf).is_some() {
+                // It was a file, already removed
+                deleted_files.insert(path_buf);
+            } else {
+                // It's a directory, collect for batch processing
+                deleted_dirs.push(deleted_path);
+            }
+        }
+
+        // Single O(n) pass to remove all files under deleted directories
+        if !deleted_dirs.is_empty() {
+            map.retain(|path, _| {
+                let path_str = path.to_string_lossy();
+                !deleted_dirs
+                    .iter()
+                    .any(|dir| path_str.starts_with(&format!("{}/", dir)))
+            });
         }
 
         let updated_files_hashes: HashMap<String, String> = updated_files
