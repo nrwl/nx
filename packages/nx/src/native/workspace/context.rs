@@ -327,18 +327,24 @@ impl WorkspaceContext {
             updated_files.len()
         );
 
+        // Phase 1: Parallel project lookup for all updated files
+        // find_project_for_path is pure and thread-safe for reads
+        let updated_files_vec: Vec<_> = updated_files.into_iter().collect();
+        let file_projects: Vec<Option<&str>> = updated_files_vec
+            .par_iter()
+            .map(|(file, _)| find_project_for_path(file, &project_root_mappings))
+            .collect();
+
+        // Phase 2: Sequential mutation with pre-computed project mappings
         let mut updated_projects = HashSet::<&str>::new();
-        for updated_file in updated_files.into_iter() {
-            let file = updated_file.0;
-            let hash = updated_file.1;
-            let project = find_project_for_path(&file, &project_root_mappings);
+        for ((file, hash), project) in updated_files_vec.into_iter().zip(file_projects) {
             if let Some(project_files) =
                 project.and_then(|project| project_files_map.get_mut(project))
             {
                 trace!("{file:?} was found in a project");
-                if let Some(file) = project_files.iter_mut().find(|f| f.file == file) {
+                if let Some(existing_file) = project_files.iter_mut().find(|f| f.file == file) {
                     trace!("updating hash for file");
-                    file.hash = hash;
+                    existing_file.hash = hash;
                 } else {
                     trace!("{file:?} was not part of a project, adding to project files");
                     project_files.push(FileData { file, hash });
@@ -357,9 +363,17 @@ impl WorkspaceContext {
             "removing {} deleted files from project files",
             deleted_files.len()
         );
-        for deleted_file in deleted_files.into_iter() {
-            if let Some(project_files) = find_project_for_path(deleted_file, &project_root_mappings)
-                .and_then(|project| project_files_map.get_mut(project))
+
+        // Phase 1: Parallel project lookup for deleted files
+        let deleted_file_projects: Vec<Option<&str>> = deleted_files
+            .par_iter()
+            .map(|file| find_project_for_path(*file, &project_root_mappings))
+            .collect();
+
+        // Phase 2: Sequential removal with pre-computed project mappings
+        for (deleted_file, project) in deleted_files.into_iter().zip(deleted_file_projects) {
+            if let Some(project_files) =
+                project.and_then(|project| project_files_map.get_mut(project))
             {
                 if let Some(pos) = project_files.iter().position(|f| f.file == deleted_file) {
                     trace!("removing file: {deleted_file:?} from project");
