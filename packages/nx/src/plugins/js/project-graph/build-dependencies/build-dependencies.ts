@@ -1,3 +1,4 @@
+import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { RawProjectGraphDependency } from '../../../../project-graph/project-graph-builder';
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
