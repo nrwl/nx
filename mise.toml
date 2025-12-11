@@ -1,6 +1,11 @@
 [tools]
 bun = "1.3"
-dotnet = "9"
 java = "24"
-node = "24"
+node = "{{ env['NODE_VERSION'] | default(value='24') }}"
 rust = "1.90.0"
+
+# dotnet via mise only works on Linux/macOS.
+# On Windows, the vfox plugin is buggy: https://github.com/jdx/mise/discussions/4738
+[tools.dotnet]
+version = "9"
+os = ["linux", "macos"]

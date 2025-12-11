@@ -22,7 +22,7 @@
     "preinstall": "node ./scripts/preinstall.js",
     "test": "nx run-many -t test",
     "e2e": "nx run-many -t e2e --projects ./e2e/*",
-    "build:wasm": "rustup override set nightly-2025-05-09 && rustup target add wasm32-wasip1-threads && WASI_SDK_PATH=\"$(pwd)/wasi-sdk-23.0-x86_64-linux\" CMAKE_BUILD_PARALLEL_LEVEL=2 LIBSQLITE3_FLAGS=\"-DLONGDOUBLE_TYPE=double\" pnpm exec nx run-many -t build-native-wasm && rustup override unset",
+    "build:wasm": "RUSTUP_TOOLCHAIN=nightly-2025-05-09 rustup target add wasm32-wasip1-threads && RUSTUP_TOOLCHAIN=nightly-2025-05-09 WASI_SDK_PATH=\"$(pwd)/wasi-sdk-23.0-x86_64-linux\" CMAKE_BUILD_PARALLEL_LEVEL=2 LIBSQLITE3_FLAGS=\"-DLONGDOUBLE_TYPE=double\" pnpm exec nx run-many -t build-native-wasm",
     "lint-pnpm-lock": "eslint pnpm-lock.yaml",
     "migrate-to-pnpm-version": "node ./scripts/migrate-to-pnpm-version.js",
     "analyze-docs": "node tools/scripts/analyze-docs.mjs",

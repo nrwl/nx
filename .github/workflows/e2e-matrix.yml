@@ -53,10 +53,8 @@ jobs:
 
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
-        with:
-          mise_toml: |
-            [tools]
-            node = "${{ matrix.node_version }}"
+        env:
+          NODE_VERSION: ${{ matrix.node_version }}
 
       - name: Enable corepack and install pnpm
         run: |
@@ -156,10 +154,8 @@ jobs:
 
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
-        with:
-          mise_toml: |
-            [tools]
-            node = "${{ matrix.node_version }}"
+        env:
+          NODE_VERSION: ${{ matrix.node_version }}
 
       - name: Enable corepack and install pnpm
         run: |
