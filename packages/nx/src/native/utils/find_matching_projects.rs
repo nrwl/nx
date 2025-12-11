@@ -150,29 +150,34 @@ fn add_matching_projects_by_name<'a>(
     pattern: &ProjectPattern,
     matched_projects: &mut HashSet<&'a str>,
 ) -> anyhow::Result<()> {
-    let keys = projects.keys().map(|k| k.as_str()).collect::<Vec<_>>();
-    if let Some(project_name) = keys.iter().find(|k| *k == &pattern.value) {
+    // Fast path: O(1) HashMap lookup instead of O(n) linear search
+    // Check if the pattern value is an exact project name
+    if projects.contains_key(pattern.value) {
         if pattern.exclude {
             matched_projects.remove(pattern.value);
         } else {
-            matched_projects.insert(project_name);
+            // Find the matching key in project_names to get the correct lifetime
+            if let Some(project_name) = project_names.iter().find(|k| *k == &pattern.value) {
+                matched_projects.insert(project_name);
+            }
         }
         return Ok(());
     }
 
-    get_matching_strings(
-        pattern.value,
-        &build_glob_set(&[pattern.value])?,
-        project_names,
-    )
-    .iter()
-    .for_each(|item| {
-        if pattern.exclude {
-            matched_projects.remove(item);
-        } else {
-            matched_projects.insert(item);
+    // Slow path: pattern is a glob, need to compile and match
+    // Note: build_glob_set uses global caching to avoid redundant compilation
+    let glob = build_glob_set(&[pattern.value])?;
+
+    // Avoid collecting into intermediate Vec - iterate directly
+    for item in project_names {
+        if *item == pattern.value || glob.is_match(item) {
+            if pattern.exclude {
+                matched_projects.remove(item);
+            } else {
+                matched_projects.insert(item);
+            }
         }
-    });
+    }
 
     Ok(())
 }
@@ -182,13 +187,17 @@ fn add_matching_projects_by_directory<'a>(
     pattern: &ProjectPattern,
     matched_projects: &mut HashSet<&'a str>,
 ) -> anyhow::Result<()> {
+    // Note: build_glob_set uses global caching to avoid redundant compilation
     let glob = build_glob_set(&[pattern.value])?;
+
     for project_name in project_names {
         let Some(root) = projects.get(*project_name).map(|p| p.root.as_str()) else {
             continue;
         };
 
-        if !get_matching_strings(pattern.value, &glob, &[root]).is_empty() {
+        // Direct check instead of creating intermediate Vec via get_matching_strings
+        let is_match = root == pattern.value || glob.is_match(root);
+        if is_match {
             if pattern.exclude {
                 matched_projects.remove(project_name);
             } else {
@@ -206,26 +215,28 @@ fn add_matching_projects_by_tag<'a>(
     pattern: &ProjectPattern,
     matched_projects: &mut HashSet<&'a str>,
 ) -> anyhow::Result<()> {
+    // Note: build_glob_set uses global caching to avoid redundant compilation
     let glob = build_glob_set(&[pattern.value])?;
+
     for project_name in project_names {
-        let project_tags = projects
-            .get(*project_name)
-            .and_then(|p| p.tags.as_ref())
-            .map(|tags| tags.iter().map(|tag| tag.as_str()).collect::<Vec<_>>());
-        let Some(tags) = project_tags else {
+        let Some(project) = projects.get(*project_name) else {
             continue;
         };
 
-        if tags.contains(&pattern.value) {
-            if pattern.exclude {
-                matched_projects.remove(project_name);
-            } else {
-                matched_projects.insert(project_name);
-            }
+        let Some(tags) = project.tags.as_ref() else {
             continue;
-        }
+        };
 
-        if !get_matching_strings(pattern.value, &glob, &tags).is_empty() {
+        // Check for exact match first (fast path)
+        let has_exact_match = tags.iter().any(|tag| tag == pattern.value);
+
+        // If no exact match, check glob pattern matching
+        let is_match = has_exact_match
+            || tags
+                .iter()
+                .any(|tag| tag == pattern.value || glob.is_match(tag.as_str()));
+
+        if is_match {
             if pattern.exclude {
                 matched_projects.remove(project_name);
             } else {
@@ -237,6 +248,9 @@ fn add_matching_projects_by_tag<'a>(
     Ok(())
 }
 
+/// Utility function for matching strings against a pattern and glob set.
+/// Currently unused after optimization but kept for potential future use.
+#[allow(dead_code)]
 fn get_matching_strings<'a>(pattern: &str, glob: &NxGlobSet, items: &[&'a str]) -> Vec<&'a str> {
     items
         .iter()
