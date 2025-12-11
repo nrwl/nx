@@ -280,13 +280,21 @@ impl HashPlanner {
             .collect())
     }
 
+    /// Sets up external dependency mappings by computing transitive dependencies for each external node.
+    ///
+    /// This function uses parallel iteration to speed up the process in large workspaces
+    /// with many external dependencies (npm packages). Each external node's dependencies
+    /// are computed independently, making this embarrassingly parallel.
     fn setup_external_deps(&self) -> hashbrown::HashMap<&String, Vec<&String>> {
-        self.project_graph
-            .external_nodes
-            .keys()
+        let external_nodes: Vec<_> = self.project_graph.external_nodes.keys().collect();
+
+        // Use parallel iteration for computing dependencies of each external node
+        // This can significantly speed up workspaces with hundreds of npm packages
+        external_nodes
+            .par_iter()
             .map(|external_node| {
                 (
-                    external_node,
+                    *external_node,
                     utils::find_all_project_node_dependencies(
                         external_node,
                         &self.project_graph,
