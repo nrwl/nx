@@ -13,7 +13,7 @@ export default defineConfig(() => ({
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), ],
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //   plugins: () => [ nxViteTsPaths() ],
   // },
   test: {
     'name': 'my-lib',
@@ -110,7 +110,7 @@ export default defineConfig(() => ({
   ],
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //   plugins: () => [ nxViteTsPaths() ],
   // },
   // Configuration for building your library.
   // See: https://vite.dev/guide/build.html#library-mode
