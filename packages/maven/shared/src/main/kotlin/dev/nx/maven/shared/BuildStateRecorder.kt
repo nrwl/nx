@@ -59,6 +59,18 @@ object BuildStateRecorder {
         val mainArtifact = captureMainArtifact(project, basedir)
         val attachedArtifacts = captureAttachedArtifacts(project, basedir)
 
+        // Capture pomFile if it differs from the default pom.xml
+        // This is important for plugins like flatten-maven-plugin that modify the pom file path
+        val defaultPomFile = File(basedir, "pom.xml")
+        val currentPomFile = project.file
+        val pomFile = if (currentPomFile != null && currentPomFile.canonicalPath != defaultPomFile.canonicalPath) {
+            val relativePath = PathUtils.toRelativePath(currentPomFile.absolutePath, basedir, log)
+            log.info("Captured non-default pomFile: $relativePath (modified by a plugin like flatten-maven-plugin)")
+            relativePath
+        } else {
+            null
+        }
+
         // Create build state (skip outputTimestamp - causes cache invalidation)
         val buildState = BuildState(
             compileSourceRoots = compileSourceRoots,
@@ -71,7 +83,8 @@ object BuildStateRecorder {
             testClasspath = testClasspath,
             mainArtifact = mainArtifact,
             attachedArtifacts = attachedArtifacts,
-            outputTimestamp = null
+            outputTimestamp = null,
+            pomFile = pomFile
         )
 
         // Write to file
