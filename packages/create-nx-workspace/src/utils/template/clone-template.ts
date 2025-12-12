@@ -2,15 +2,15 @@ import { execAndWait } from '../child-process-utils';
 import { existsSync } from 'fs';
 import { rm } from 'fs/promises';
 import { join } from 'path';
-import { output } from '../output';
-import { mapErrorToBodyLines } from '../error-utils';
+import { CnwError } from '../error-utils';
 
 export async function cloneTemplate(
   templateUrl: string,
   targetDirectory: string
 ): Promise<void> {
   if (existsSync(targetDirectory)) {
-    throw new Error(
+    throw new CnwError(
+      'DIRECTORY_EXISTS',
       `The directory '${targetDirectory}' already exists and is not empty. Choose a different name or remove the existing directory.`
     );
   }
@@ -27,14 +27,10 @@ export async function cloneTemplate(
       await rm(gitDir, { recursive: true, force: true });
     }
   } catch (e) {
-    if (e instanceof Error) {
-      output.error({
-        title: 'Failed to create starter workspace',
-        bodyLines: mapErrorToBodyLines(e),
-      });
-    } else {
-      console.error(e);
-    }
-    process.exit(1);
+    const message = e instanceof Error ? e.message : String(e);
+    throw new CnwError(
+      'TEMPLATE_CLONE_FAILED',
+      `Failed to create starter workspace: ${message}`
+    );
   }
 }
