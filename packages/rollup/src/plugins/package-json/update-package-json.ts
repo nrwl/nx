@@ -168,7 +168,7 @@ function getExports(
   if (options.additionalEntryPoints) {
     for (const file of options.additionalEntryPoints) {
       const mapping = exportMapping.get(file);
-      if (mapping != null) {
+      if (mapping != null && mapping.path.endsWith(options.fileExt)) {
         exports['./' + mapping.name] = './' + mapping.path;
       } else {
         const { name: fileName } = parse(file);
