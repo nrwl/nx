@@ -129,6 +129,13 @@ impl TerminalPaneData {
                     self.set_interactive(true);
                     return Ok(None);
                 }
+                // Show hint when 'i' is pressed but task can't be interactive
+                KeyCode::Char('i') if !self.can_be_interactive => {
+                    return Ok(Some(Action::ShowHint(
+                        "This task does not support interactive mode. Only in-progress tasks that accept input can be interactive."
+                            .to_string(),
+                    )));
+                }
                 KeyCode::Char('a')
                     if key.modifiers.contains(KeyModifiers::CONTROL) && !self.is_interactive =>
                 {
