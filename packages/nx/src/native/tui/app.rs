@@ -1086,13 +1086,16 @@ impl App {
                 self.handle_end_command();
             }
             Action::ShowHint(message) => {
-                if let Some(hint_popup) = self
-                    .components
-                    .iter_mut()
-                    .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
-                {
-                    hint_popup.show(message.clone());
-                    self.update_focus(Focus::HintPopup);
+                // Only show hints if not suppressed by config
+                if !self.tui_config.suppress_hints {
+                    if let Some(hint_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+                    {
+                        hint_popup.show(message.clone());
+                        self.update_focus(Focus::HintPopup);
+                    }
                 }
             }
             _ => {}
