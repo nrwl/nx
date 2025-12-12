@@ -25,6 +25,20 @@ import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
 import { updateAppEditorTsConfigExcludedFiles } from '../utils/update-app-editor-tsconfig-excluded-files';
 import { CypressComponentConfigSchema } from './schema';
 
+const webpackExecutors = new Set<string>([
+  '@nx/angular:webpack-browser',
+  '@nrwl/angular:webpack-browser',
+  '@angular-devkit/build-angular:browser',
+]);
+
+const esbuildExecutors = new Set<string>([
+  '@angular/build:application',
+  '@angular-devkit/build-angular:application',
+  '@nx/angular:application',
+  '@angular-devkit/build-angular:browser-esbuild',
+  '@nx/angular:browser-esbuild',
+]);
+
 /**
  * This is for cypress built in component testing, if you want to test with
  * storybook + cypress then use the componentCypressGenerator instead.
@@ -161,14 +175,36 @@ async function configureCypressCT(
     found = await findBuildConfig(tree, {
       project: options.project,
       buildTarget: options.buildTarget,
-      validExecutorNames: new Set<string>([
-        '@nx/angular:webpack-browser',
-        '@nrwl/angular:webpack-browser',
-        '@angular-devkit/build-angular:browser',
-      ]),
+      validExecutorNames: webpackExecutors,
     });
 
-    assertValidConfig(found?.config);
+    if (!found?.config) {
+      // Check if the project uses an esbuild-based executor
+      const esbuildTarget = await findBuildConfig(tree, {
+        project: options.project,
+        validExecutorNames: esbuildExecutors,
+        skipGetOptions: true,
+      });
+
+      if (esbuildTarget?.target) {
+        const projectConfig = readProjectConfiguration(
+          tree,
+          esbuildTarget.target.split(':')[0]
+        );
+        const targetName = esbuildTarget.target.split(':')[1];
+        const executor = projectConfig.targets?.[targetName]?.executor;
+
+        throw new Error(
+          `Cypress Component Testing for Angular requires a webpack-based build target, ` +
+            `but the project "${options.project}" uses an esbuild-based executor (${executor}).\n\n` +
+            `Cypress only supports webpack as the bundler for Angular component testing.`
+        );
+      }
+
+      throw new Error(
+        'Unable to find a valid build configuration. Try passing in a target for an Angular app (e.g. --build-target=<project>:<target>[:<configuration>]).'
+      );
+    }
   }
 
   const ctConfigOptions: NxComponentTestingOptions = {};
@@ -202,14 +238,6 @@ async function configureCypressCT(
     cypressConfigPath,
     `import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';\n${updatedCyConfig}`
   );
-}
-
-function assertValidConfig(config: unknown) {
-  if (!config) {
-    throw new Error(
-      'Unable to find a valid build configuration. Try passing in a target for an Angular app. --build-target=<project>:<target>[:<configuration>]'
-    );
-  }
 }
 
 export default cypressComponentConfiguration;
