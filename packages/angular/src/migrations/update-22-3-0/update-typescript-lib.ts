@@ -1,4 +1,9 @@
-import { formatFiles, type Tree, updateJson } from '@nx/devkit';
+import {
+  formatFiles,
+  joinPathFragments,
+  type Tree,
+  updateJson,
+} from '@nx/devkit';
 import { readCompilerOptionsFromTsConfig } from '../../generators/utils/tsconfig-utils';
 import { allProjectTargets, allTargetOptions } from '../../utils/targets';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
@@ -9,6 +14,13 @@ type TsConfig = {
   };
 };
 
+// Common tsconfig file names to account for non-buildable libraries
+const KNOWN_TSCONFIG_FILES = [
+  'tsconfig.json',
+  'tsconfig.lib.json',
+  'tsconfig.spec.json',
+];
+
 export default async function (tree: Tree) {
   const uniqueTsConfigs = new Set<string>();
 
@@ -17,6 +29,16 @@ export default async function (tree: Tree) {
   ]);
 
   for (const graphNode of projects) {
+    const projectRoot = graphNode.data.root;
+
+    // Add existing known tsconfig files
+    for (const tsconfigName of KNOWN_TSCONFIG_FILES) {
+      const tsconfigPath = joinPathFragments(projectRoot, tsconfigName);
+      if (tree.exists(tsconfigPath)) {
+        uniqueTsConfigs.add(tsconfigPath);
+      }
+    }
+
     for (const [, target] of allProjectTargets(graphNode.data)) {
       for (const [, options] of allTargetOptions<{ tsConfig?: string }>(
         target

@@ -229,12 +229,19 @@ export async function scheduleTarget(
     opts.projects
   );
 
-  const builderName = workspace.projects
-    .get(opts.project)
-    ?.targets?.get(opts.target)?.builder;
-  if (!builderName) {
+  const project = workspace.projects.get(opts.project);
+  if (!project) {
+    throw new Error(`Cannot find project '${opts.project}' in the workspace`);
+  }
+  if (!project.targets?.get(opts.target)) {
     throw new Error(
       `Cannot find target '${opts.target}' for project '${opts.project}'`
+    );
+  }
+  const builderName = project.targets.get(opts.target).builder;
+  if (!builderName) {
+    throw new Error(
+      `Cannot find the builder for the target '${opts.target}' of project '${opts.project}'`
     );
   }
 

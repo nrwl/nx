@@ -1,5 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { dirname } from 'node:path';
 import type * as ts from 'typescript';
 
 /**
@@ -35,7 +36,7 @@ export function readCompilerOptionsFromTsConfig(
   const parsed = ts.parseJsonConfigFileContent(
     ts.readConfigFile(tsConfigPath, tsSysFromTree.readFile).config,
     tsSysFromTree,
-    tree.root
+    dirname(tsConfigPath)
   );
 
   return parsed.options;

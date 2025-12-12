@@ -1968,6 +1968,27 @@
         }
       }
     },
+    "22.2.0": {
+      "version": "22.2.0-beta.0",
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "^0.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/runtime": {
+          "version": "^0.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "^0.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "^2.7.21",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "22.3.0": {
       "version": "22.3.0-beta.0",
       "x-prompt": "Do you want to update the Angular version to v21?",

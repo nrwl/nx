@@ -352,9 +352,7 @@ describe('setupSSR', () => {
             "outDir": "../out-tsc/server",
             "types": [
               "node"
-            ],
-            "module": "preserve",
-            "moduleResolution": "bundler"
+            ]
           },
           "files": [
             "src/main.server.ts",
@@ -460,9 +458,7 @@ describe('setupSSR', () => {
             "outDir": "../out-tsc/server",
             "types": [
               "node"
-            ],
-            "module": "preserve",
-            "moduleResolution": "bundler"
+            ]
           },
           "files": [
             "src/main.server.ts",

@@ -213,6 +213,85 @@ describe('update-module-resolution migration', () => {
     expect(specConfig.compilerOptions.moduleResolution).toBe('bundler');
   });
 
+  it('should update known tsconfig files for non-buildable libraries without tsConfig in targets', async () => {
+    addProject('lib1', {
+      root: 'libs/lib1',
+      sourceRoot: 'libs/lib1/src',
+      targets: {},
+    });
+    writeJson(tree, 'libs/lib1/tsconfig.json', {
+      compilerOptions: {
+        module: 'es2020',
+      },
+    });
+    writeJson(tree, 'libs/lib1/tsconfig.lib.json', {
+      extends: './tsconfig.json',
+      compilerOptions: {
+        moduleResolution: 'node',
+      },
+    });
+    writeJson(tree, 'libs/lib1/tsconfig.spec.json', {
+      extends: './tsconfig.json',
+      compilerOptions: {},
+    });
+
+    await migration(tree);
+
+    const baseConfig = readJson(tree, 'libs/lib1/tsconfig.json');
+    const libConfig = readJson(tree, 'libs/lib1/tsconfig.lib.json');
+    const specConfig = readJson(tree, 'libs/lib1/tsconfig.spec.json');
+    expect(baseConfig.compilerOptions.module).toBe('preserve');
+    expect(baseConfig.compilerOptions.moduleResolution).toBe('bundler');
+    expect(libConfig.compilerOptions.module).toBe('preserve');
+    expect(libConfig.compilerOptions.moduleResolution).toBe('bundler');
+    expect(specConfig.compilerOptions.module).toBeUndefined(); // inherited from tsconfig.json
+    expect(specConfig.compilerOptions.moduleResolution).toBeUndefined(); // inherited from tsconfig.json
+  });
+
+  it('should not update tsconfig.server.json - handled by update-ssr-webpack-config migration', async () => {
+    addProject('app1', {
+      root: 'apps/app1',
+      sourceRoot: 'apps/app1/src',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:application',
+          options: {
+            tsConfig: 'apps/app1/tsconfig.app.json',
+          },
+        },
+        server: {
+          executor: '@angular-devkit/build-angular:server',
+          options: {
+            tsConfig: 'apps/app1/tsconfig.server.json',
+          },
+        },
+      },
+    });
+    writeJson(tree, 'apps/app1/tsconfig.app.json', {
+      compilerOptions: {
+        module: 'es2020',
+        moduleResolution: 'node',
+      },
+    });
+    writeJson(tree, 'apps/app1/tsconfig.server.json', {
+      compilerOptions: {
+        module: 'es2020',
+        moduleResolution: 'node',
+      },
+    });
+
+    await migration(tree);
+
+    // tsconfig.app.json should be updated
+    const appConfig = readJson(tree, 'apps/app1/tsconfig.app.json');
+    expect(appConfig.compilerOptions.module).toBe('preserve');
+    expect(appConfig.compilerOptions.moduleResolution).toBe('bundler');
+    // tsconfig.server.json should NOT be updated - left for update-ssr-webpack-config migration
+    const serverConfig = readJson(tree, 'apps/app1/tsconfig.server.json');
+    expect(serverConfig.compilerOptions.module).toBe('es2020');
+    expect(serverConfig.compilerOptions.moduleResolution).toBe('node');
+  });
+
   function addProject(
     projectName: string,
     config: ProjectConfiguration,

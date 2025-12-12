@@ -627,6 +627,38 @@ describe('update-typescript-lib migration', () => {
     expect(config.compilerOptions.lib).toEqual(['es2022']);
   });
 
+  it('should update known tsconfig files for non-buildable libraries without tsConfig in targets', async () => {
+    addProject('lib1', {
+      root: 'libs/lib1',
+      sourceRoot: 'libs/lib1/src',
+      targets: {},
+    });
+    writeJson(tree, 'libs/lib1/tsconfig.json', {
+      compilerOptions: {
+        lib: ['es2020', 'dom'],
+      },
+    });
+    writeJson(tree, 'libs/lib1/tsconfig.lib.json', {
+      extends: './tsconfig.json',
+      compilerOptions: {},
+    });
+    writeJson(tree, 'libs/lib1/tsconfig.spec.json', {
+      extends: './tsconfig.json',
+      compilerOptions: {},
+    });
+
+    await migration(tree);
+
+    const baseConfig = readJson(tree, 'libs/lib1/tsconfig.json');
+    const libConfig = readJson(tree, 'libs/lib1/tsconfig.lib.json');
+    const specConfig = readJson(tree, 'libs/lib1/tsconfig.spec.json');
+    expect(baseConfig.compilerOptions.lib).toEqual(['dom', 'es2022']);
+    // tsconfig.lib.json and tsconfig.spec.json inherit from tsconfig.json
+    // so they should not have explicit lib set
+    expect(libConfig.compilerOptions.lib).toBeUndefined();
+    expect(specConfig.compilerOptions.lib).toBeUndefined();
+  });
+
   function addProject(
     projectName: string,
     config: ProjectConfiguration,

@@ -23,7 +23,7 @@ const nxAngularLegacyVersionMap: Record<number, string> = {
   15: '~19.0.0',
   16: '~20.1.0',
   17: '~21.1.0',
-  18: '~22.1.0',
+  18: '~22.2.0',
 };
 // min major angular version supported in latest Nx
 const minMajorAngularVersionSupported =

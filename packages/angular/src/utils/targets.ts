@@ -7,8 +7,8 @@ import type {
 export function* allProjectTargets<T>(
   project: ProjectConfiguration
 ): Iterable<[name: string, target: TargetConfiguration<T>]> {
-  for (const [name, target] of Object.entries(project.targets ?? {})) {
-    yield [name, target];
+  for (const name of Object.keys(project.targets ?? {})) {
+    yield [name, project.targets[name]];
   }
 }
 
@@ -23,7 +23,8 @@ export function* allTargetOptions<T>(
     return;
   }
 
-  for (const [name, options] of Object.entries(target.configurations)) {
+  for (const name of Object.keys(target.configurations)) {
+    const options = target.configurations[name];
     if (options !== undefined) {
       yield [name, options];
     }
