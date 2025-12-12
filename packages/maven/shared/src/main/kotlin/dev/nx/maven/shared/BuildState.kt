@@ -15,7 +15,8 @@ data class BuildState(
     val testClasspath: Set<String> = emptySet(),
     val mainArtifact: ArtifactInfo?,
     val attachedArtifacts: List<ArtifactInfo>,
-    val outputTimestamp: String? = null
+    val outputTimestamp: String? = null,
+    val pomFile: String? = null
 )
 
 /**
