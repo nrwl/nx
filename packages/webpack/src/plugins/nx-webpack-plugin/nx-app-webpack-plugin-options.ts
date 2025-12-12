@@ -92,7 +92,7 @@ export interface NxAppWebpackPluginOptions {
    */
   externalDependencies?: 'all' | 'none' | string[];
   /**
-   * Weather to combine plugin externals config with the existing webpack external config.
+   * Whether to combine plugin externals config with the existing webpack external config.
    * Default is `false`.
    */
   mergeExternals?: boolean;
