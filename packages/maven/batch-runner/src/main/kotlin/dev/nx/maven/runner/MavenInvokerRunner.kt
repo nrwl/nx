@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 /** Task execution state for tracking progress */
@@ -69,19 +70,35 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
     // Latch to signal when all tasks are done
     val completionLatch = CountDownLatch(initialGraph.tasks.size)
+    val totalTasks = initialGraph.tasks.size
+    val workerIdCounter = AtomicInteger(0)
+
+    println("[DEBUG] Total tasks: $totalTasks, Workers: $numWorkers, Initial queue size: ${taskQueue.size}")
 
     try {
       // Submit worker tasks that pull from the queue
       repeat(numWorkers) {
         executor.submit {
+          val workerId = workerIdCounter.incrementAndGet()
+          println("[DEBUG] Worker $workerId starting")
+
           while (true) {
-            val taskId = taskQueue.poll() ?: break
+            val taskId = taskQueue.poll()
+            println("[DEBUG] Worker $workerId poll result: $taskId, queue size: ${taskQueue.size}, taskStates: ${taskStates.size}/$totalTasks")
+
+            if (taskId == null) {
+              println("[DEBUG] Worker $workerId exiting loop (poll returned null)")
+              break
+            }
 
             if (taskStates.containsKey(taskId)) {
+              println("[DEBUG] Worker $workerId: task $taskId already processed, counting down")
               completionLatch.countDown()
               continue
             }
 
+            val taskOptions = options.taskOptions[taskId]
+            println("[DEBUG] Worker $workerId executing task: $taskId, goals: ${taskOptions?.goals}, project: ${taskOptions?.project}")
             val result = executeSingleTask(taskId, results)
 
             // Emit result to stderr for streaming to Nx
@@ -90,6 +107,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
             // Record task state
             val success = results[taskId]?.success == true
             taskStates[taskId] = if (success) TaskState.SUCCEEDED else TaskState.FAILED
+            println("[DEBUG] Worker $workerId: task $taskId done (success=$success), taskStates: ${taskStates.size}/$totalTasks")
 
             // Update graph and find newly available tasks
             synchronized(graphRef) {
@@ -107,7 +125,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
               newRoots.forEach { newTaskId ->
                 if (!taskStates.containsKey(newTaskId)) {
                   taskQueue.offer(newTaskId)
-                  log.debug("Added newly available task to queue: $newTaskId")
+                  println("[DEBUG] Worker $workerId added newly available task to queue: $newTaskId, queue size now: ${taskQueue.size}")
                 }
               }
 
@@ -117,23 +135,28 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
               val newTasks = newGraph.tasks.keys
               val skippedTasks = oldTasks - newTasks - taskStates.keys
               skippedTasks.forEach { skippedTaskId ->
-                log.debug("Task $skippedTaskId was skipped due to a failed dependency")
+                println("[DEBUG] Task $skippedTaskId was skipped due to a failed dependency")
                 taskStates[skippedTaskId] = TaskState.SKIPPED
                 // IMPORTANT: Count down skipped tasks too, or latch will never reach zero
                 completionLatch.countDown()
               }
             }
 
+            println("[DEBUG] Worker $workerId counting down latch, current count: ${completionLatch.count}")
             completionLatch.countDown()
           }
         }
       }
 
+      println("[DEBUG] All workers submitted, waiting for completion latch (count: ${completionLatch.count})...")
       // Wait for all tasks to complete
       completionLatch.await()
+      println("[DEBUG] Latch completed!")
 
       // Record build states for all projects that had tasks executed
+      println("[DEBUG] Starting recordBuildStatesForExecutedTasks...")
       recordBuildStatesForExecutedTasks()
+      println("[DEBUG] recordBuildStatesForExecutedTasks completed")
     } finally {
       // Threads are daemon threads, so they won't prevent JVM exit
       // Just try to shutdown gracefully without waiting
@@ -202,7 +225,12 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
         results[taskId] = it
       }
     }
-    val goals = mavenBatchTask.goals
+    // Strip execution ID suffix (e.g., "install:install@default-install" -> "install:install")
+    // The @executionId suffix is used for Nx target naming but not valid for Maven CLI
+    val goals = mavenBatchTask.goals.map { goal ->
+      val atIndex = goal.indexOf('@')
+      if (atIndex > 0) goal.substring(0, atIndex) else goal
+    }
     val arguments = buildArguments(mavenBatchTask)
 
     // Capture Maven output
@@ -210,6 +238,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
     return try {
       log.debug("Executing ${goals.joinToString(", ")} for task: $taskId")
+      println("[DEBUG] Maven execution: goals=${goals}, args=${arguments}")
 
       // Execute using ResidentMavenExecutor with context caching
       // Works across all Maven 4.x versions via reflection-based implementation
@@ -233,10 +262,15 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       } else {
         // Log at ERROR level when task fails so user can see what went wrong
         log.error("Task $taskId FAILED with exit code: $exitCode (${duration}ms)")
+        // Also print to stdout since SLF4J may be NOP with Maven 3.x
+        println("[ERROR] Task $taskId FAILED with exit code: $exitCode (${duration}ms)")
+        println("[ERROR] Output size: ${outputText.length} bytes")
         if (outputText.isNotEmpty()) {
           log.error("Maven output for failed task $taskId:\n$outputText")
+          println("[ERROR] Maven output for failed task $taskId:\n$outputText")
         } else {
           log.error("Task $taskId had no output from Maven")
+          println("[ERROR] Task $taskId had no output from Maven")
         }
       }
 
@@ -293,10 +327,12 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
   private fun buildArguments(mavenBatchTask: MavenBatchTask): List<String> {
     val arguments = mutableListOf<String>()
 
-    // Verbose and quiet flags
+    // Always add -e to show errors
+    arguments.add("-e")
+
+    // Verbose flag for debug output
     if (options.verbose) {
       arguments.add("-X")
-      arguments.add("-e")
     }
 
     // Non-recursive (-N) tells Maven to only build the specified project, not modules

@@ -113,6 +113,7 @@ class Maven3ResidentExecutor(
       allArguments.addAll(arguments)
 
       log.debug("Executing Maven 3.x with cached MavenCli: ${allArguments.joinToString(" ")}")
+      println("[DEBUG] Maven3ResidentExecutor: args=${allArguments}, workingDir=$workingDir")
 
       // Call MavenCli.doMain() - reusing the same MavenCli instance across invocations
       // This keeps the PlexusContainer and Maven components in memory
@@ -135,9 +136,12 @@ class Maven3ResidentExecutor(
       ) as Int
 
       log.debug("Maven 3.x execution completed with exit code: $exitCode")
+      println("[DEBUG] Maven3ResidentExecutor: exitCode=$exitCode, outputSize=${outputStream.size()}")
       return exitCode
     } catch (e: Exception) {
       log.error("Maven 3.x execution failed: ${e.message}", e)
+      println("[ERROR] Maven3ResidentExecutor exception: ${e.message}")
+      e.printStackTrace()
       return 1
     }
   }
