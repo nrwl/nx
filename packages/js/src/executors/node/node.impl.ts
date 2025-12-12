@@ -490,6 +490,11 @@ function getFileToRun(
         // This ensures consistency when calculating the relative output path
         if (path.isAbsolute(sourceRoot)) {
           sourceRoot = path.relative(context.root, sourceRoot);
+        } else {
+          // If rootDir is a relative path (e.g., 'src' or './src'),
+          // it should be resolved relative to the project root.
+          // Join with project root to get the full path from workspace root.
+          sourceRoot = path.join(project.data.root, sourceRoot);
         }
       }
 
