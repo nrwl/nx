@@ -1494,10 +1494,11 @@ impl App {
                 if matches!(task_status, TaskStatus::NotStarted | TaskStatus::Skipped) {
                     // Task is pending - handle keys in dependency view
                     if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
-                        if dep_state.handle_key_event(key) {
-                            return Ok(()); // Key was handled by dependency view
+                        if let Some(action) = dep_state.handle_key_event(key) {
+                            self.dispatch_action(action);
                         }
                     }
+                    return Ok(());
                 } else {
                     // Task is running/completed - handle keys in terminal pane
                     let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
