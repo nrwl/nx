@@ -11,6 +11,10 @@ import java.io.File
  * - Maven 3.x: Use Maven3ResidentExecutor (MavenCli via reflection)
  *
  * Version detection is done by checking for Maven 4.x specific classes.
+ *
+ * IMPORTANT: ResidentMavenExecutor is loaded via reflection to avoid loading Maven 4.x
+ * classes when running with Maven 3.x. The JVM would otherwise try to resolve Maven 4
+ * imports (like InvokerException) at class load time, causing NoClassDefFoundError.
  */
 object MavenExecutorFactory {
   private val log = LoggerFactory.getLogger(MavenExecutorFactory::class.java)
@@ -28,10 +32,26 @@ object MavenExecutorFactory {
 
     return if (isMaven4) {
       log.debug("🚀 Detected Maven 4.x - using ResidentMavenExecutor")
-      ResidentMavenExecutor(mavenHome)
+      createResidentMavenExecutor(mavenHome)
     } else {
       log.debug("📦 Detected Maven 3.x - using Maven3ResidentExecutor")
       Maven3ResidentExecutor(mavenHome)
+    }
+  }
+
+  /**
+   * Create ResidentMavenExecutor using reflection to avoid loading Maven 4.x classes
+   * when running with Maven 3.x. This is necessary because the JVM resolves all class
+   * references at class load time, not at instantiation time.
+   */
+  private fun createResidentMavenExecutor(mavenHome: File?): MavenExecutor {
+    return try {
+      val clazz = Class.forName("dev.nx.maven.runner.ResidentMavenExecutor")
+      val constructor = clazz.getConstructor(File::class.java)
+      constructor.newInstance(mavenHome) as MavenExecutor
+    } catch (e: Exception) {
+      log.error("Failed to create ResidentMavenExecutor: ${e.message}", e)
+      throw RuntimeException("Could not create ResidentMavenExecutor. Is Maven 4.x installed?", e)
     }
   }
 

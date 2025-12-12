@@ -140,15 +140,46 @@ class MavenHomeDiscovery(
         return Pair(null, null)
       }
 
-      log.debug("✓ Found mvnw script, running ./mvnw --version to detect Maven home and version...")
+      if (!mvnwFile.canExecute()) {
+        log.debug("❌ mvnw script exists but is not executable: ${mvnwFile.absolutePath}")
+        return Pair(null, null)
+      }
 
-      val processBuilder = ProcessBuilder("./mvnw", "--version")
+      log.debug("✓ Found executable mvnw script, running ./mvnw --version to detect Maven home and version...")
+
+      // Use absolute path to mvnw to avoid PATH issues
+      val processBuilder = ProcessBuilder(mvnwFile.absolutePath, "--version")
         .directory(workspaceRoot)
         .redirectErrorStream(true)
 
       val process = processBuilder.start()
-      val output = process.inputStream.bufferedReader().readText()
-      val exitCode = process.waitFor()
+
+      // Read output with timeout to prevent hanging
+      val output = StringBuilder()
+      val reader = process.inputStream.bufferedReader()
+      val startTime = System.currentTimeMillis()
+      val timeoutMs = 30000L  // 30 second timeout
+
+      while (System.currentTimeMillis() - startTime < timeoutMs) {
+        if (reader.ready()) {
+          val line = reader.readLine() ?: break
+          output.appendLine(line)
+        } else if (!process.isAlive) {
+          // Process finished, read remaining output
+          output.append(reader.readText())
+          break
+        } else {
+          Thread.sleep(10)
+        }
+      }
+
+      val exitCode = if (process.isAlive) {
+        log.warn("❌ ./mvnw --version timed out after ${timeoutMs}ms")
+        process.destroyForcibly()
+        -1
+      } else {
+        process.waitFor()
+      }
 
       log.debug("./mvnw --version exit code: $exitCode")
       log.debug("./mvnw --version output:\n$output")
@@ -158,16 +189,18 @@ class MavenHomeDiscovery(
         return Pair(null, null)
       }
 
+      val outputStr = output.toString()
+
       // Parse Maven version first: "Apache Maven 3.6.3" or "Apache Maven 4.0.0-rc-4"
       var detectedVersion: String? = null
-      val versionMatcher = Regex("""Apache Maven ([0-9.]+[a-zA-Z0-9-]*)""").find(output)
+      val versionMatcher = Regex("""Apache Maven ([0-9.]+[a-zA-Z0-9-]*)""").find(outputStr)
       if (versionMatcher != null) {
         detectedVersion = versionMatcher.groupValues[1].trim()
         log.debug("Parsed Maven version: $detectedVersion")
       }
 
       // Parse "Maven home: /path/to/maven" from output
-      val matcher = Regex("""Maven home:\s*(.+)""").find(output)
+      val matcher = Regex("""Maven home:\s*(.+)""").find(outputStr)
       if (matcher != null) {
         val mavenHomePath = matcher.groupValues[1].trim()
         log.debug("Parsed Maven home path: $mavenHomePath")
@@ -262,6 +295,10 @@ class MavenHomeDiscovery(
    * Extract Maven home from wrapper configuration if available.
    * Reads the maven-wrapper.properties to find the Maven distribution version
    * and infers the installation path from wrapper cache.
+   *
+   * Handles both standard and -bin distribution formats:
+   * - Standard: ~/.m2/wrapper/dists/apache-maven-3.9.11/<hash>/ (lib/ directly inside hash dir)
+   * - Binary:   ~/.m2/wrapper/dists/apache-maven-3.9.11-bin/<hash>/apache-maven-3.9.11/ (extra nested dir)
    */
   private fun extractMavenHomeFromWrapperConfig(): File? {
     return try {
@@ -274,22 +311,49 @@ class MavenHomeDiscovery(
           .associate { it[0].trim() to it[1].trim() }
 
         val distributionUrl = props["distributionUrl"] ?: return null
-        val matcher = Regex("""apache-maven-([0-9.]+)""").find(distributionUrl)
-        val version = matcher?.groupValues?.get(1) ?: return null
+        val matcher = Regex("""apache-maven-([0-9a-zA-Z.-]+)""").find(distributionUrl)
+        val versionWithSuffix = matcher?.groupValues?.get(1) ?: return null
+        // Extract base version without -bin suffix for nested directory name
+        val baseVersion = versionWithSuffix.removeSuffix("-bin")
 
-        // Find in wrapper cache
+        log.debug("Parsed Maven version from wrapper config: $versionWithSuffix (base: $baseVersion)")
+
+        // Find in wrapper cache - try both standard and -bin directory names
         val wrapperBaseDir = File(userHome, ".m2/wrapper/dists")
-        val versionDir = File(wrapperBaseDir, "apache-maven-$version")
-        if (versionDir.exists()) {
+        val candidateDirs = listOf(
+          File(wrapperBaseDir, "apache-maven-$versionWithSuffix"),  // Try with suffix first (e.g., apache-maven-3.9.11-bin)
+          File(wrapperBaseDir, "apache-maven-$baseVersion")          // Then without suffix (e.g., apache-maven-3.9.11)
+        )
+
+        for (versionDir in candidateDirs) {
+          if (!versionDir.exists()) {
+            log.debug("Version directory does not exist: ${versionDir.absolutePath}")
+            continue
+          }
+
           val hashDirs = versionDir.listFiles { file -> file.isDirectory }
-          if (hashDirs != null && hashDirs.isNotEmpty()) {
-            val mavenHome = hashDirs[0]
-            if (File(mavenHome, "lib").isDirectory) {
-              log.debug("Extracted Maven home from wrapper config: ${mavenHome.absolutePath}")
-              return mavenHome
+          if (hashDirs == null || hashDirs.isEmpty()) {
+            log.debug("No hash directories found in: ${versionDir.absolutePath}")
+            continue
+          }
+
+          for (hashDir in hashDirs) {
+            // Try direct structure: <hash>/lib/
+            if (File(hashDir, "lib").isDirectory) {
+              log.debug("Found Maven home (direct structure): ${hashDir.absolutePath}")
+              return hashDir
+            }
+
+            // Try -bin structure: <hash>/apache-maven-<version>/lib/
+            val nestedDir = File(hashDir, "apache-maven-$baseVersion")
+            if (nestedDir.isDirectory && File(nestedDir, "lib").isDirectory) {
+              log.debug("Found Maven home (nested structure): ${nestedDir.absolutePath}")
+              return nestedDir
             }
           }
         }
+
+        log.debug("Could not find Maven home for version $versionWithSuffix in wrapper cache")
       }
       null
     } catch (e: Exception) {

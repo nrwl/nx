@@ -102,6 +102,10 @@ class Maven3ResidentExecutor(
     invocationCount++
     log.debug("execute() Invocation #$invocationCount with goals: $goals")
 
+    // Set maven.multiModuleProjectDirectory - required by Maven 3.3+
+    // This tells Maven where the root of the multi-module project is
+    System.setProperty("maven.multiModuleProjectDirectory", workingDir.absolutePath)
+
     try {
       // Build Maven CLI arguments
       val allArguments = ArrayList<String>()

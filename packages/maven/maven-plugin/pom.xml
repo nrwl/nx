@@ -5,7 +5,7 @@
   <parent>
     <groupId>dev.nx.maven</groupId>
     <artifactId>nx-maven-parent</artifactId>
-    <version>0.0.10</version>
+    <version>0.0.11</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -253,6 +253,12 @@
           <dependency>
             <groupId>org.apache.maven.surefire</groupId>
             <artifactId>surefire-junit4</artifactId>
+            <version>3.2.5</version>
+          </dependency>
+          <!-- Support for JUnit 5 tests -->
+          <dependency>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-junit-platform</artifactId>
             <version>3.2.5</version>
           </dependency>
         </dependencies>

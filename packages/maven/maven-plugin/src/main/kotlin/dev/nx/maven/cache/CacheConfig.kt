@@ -84,6 +84,10 @@ data class CacheConfig(
                     inputParameters = setOf(
                         Parameter("testCompileSourceRoots", "**/*.java"),
                     ),
+                    inputProperties = setOf(
+                        "project.build.outputDirectory",  // Main compiled classes that tests depend on
+                        "project.build.testSourceDirectory",  // Test source files
+                    ),
                     outputParameters = setOf(
                         Parameter("outputDirectory", null),
                     )
