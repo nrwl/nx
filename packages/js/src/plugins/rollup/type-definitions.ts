@@ -46,7 +46,9 @@ export function typeDefinitions(options: { projectRoot: string }) {
           '.d.ts'
         );
 
-        const relativeSourceDtsName = JSON.stringify('./' + relative(dirname(file.name), entrySourceDtsName));
+        const relativeSourceDtsName = JSON.stringify(
+          './' + relative(dirname(file.name), entrySourceDtsName)
+        );
         const dtsFileSource = hasDefaultExport
           ? stripIndents`
               export * from ${relativeSourceDtsName};

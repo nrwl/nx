@@ -356,8 +356,10 @@ function createInput(
     join(workspaceRoot, options.main)
   );
   options.additionalEntryPoints?.forEach((entry) => {
-    const path = normalizePath(join(workspaceRoot, entry))
-    const inputName = options.additionalEntryPointsRootDir ? relative(options.additionalEntryPointsRootDir, entry) : parse(entry).name
+    const path = normalizePath(join(workspaceRoot, entry));
+    const inputName = options.additionalEntryPointsRootDir
+      ? relative(options.additionalEntryPointsRootDir, entry)
+      : parse(entry).name;
     input[inputName] = path;
   });
   return input;

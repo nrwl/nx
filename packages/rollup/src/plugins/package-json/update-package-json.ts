@@ -29,10 +29,13 @@ export function updatePackageJson(
   }
 
   if (hasEsmFormat) {
-    const esmExports = getExports({
-      ...options,
-      fileExt: '.esm.js',
-    }, bundle);
+    const esmExports = getExports(
+      {
+        ...options,
+        fileExt: '.esm.js',
+      },
+      bundle
+    );
 
     packageJson.module = esmExports['.'];
 
@@ -56,10 +59,13 @@ export function updatePackageJson(
   }
 
   if (hasCjsFormat) {
-    const cjsExports = getExports({
-      ...options,
-      fileExt: '.cjs.js',
-    }, bundle);
+    const cjsExports = getExports(
+      {
+        ...options,
+        fileExt: '.cjs.js',
+      },
+      bundle
+    );
 
     packageJson.main = cjsExports['.'];
 
@@ -128,17 +134,28 @@ interface Exports {
   [name: string]: string;
 }
 
-function getExports(options: {
-  main?: string;
-  fileExt: string;
-  outputFileName?: string;
-  additionalEntryPoints?: string[];
-}, bundle: OutputBundle): Exports {
+function getExports(
+  options: {
+    main?: string;
+    fileExt: string;
+    outputFileName?: string;
+    additionalEntryPoints?: string[];
+  },
+  bundle: OutputBundle
+): Exports {
   const exports: Exports = {};
 
-  const exportMapping = new Map(Object.entries(bundle)
-    .filter((entry): entry is [string, OutputChunk] => entry[1].type === 'chunk' && entry[1].facadeModuleId != null)
-    .map(([key, value]) => [relative(workspaceRoot, value.facadeModuleId), { path: key, name: value.name }]))
+  const exportMapping = new Map(
+    Object.entries(bundle)
+      .filter(
+        (entry): entry is [string, OutputChunk] =>
+          entry[1].type === 'chunk' && entry[1].facadeModuleId != null
+      )
+      .map(([key, value]) => [
+        relative(workspaceRoot, value.facadeModuleId),
+        { path: key, name: value.name },
+      ])
+  );
 
   // Users may provide custom input option and skip the main field.
   if (options.main) {
@@ -150,7 +167,7 @@ function getExports(options: {
 
   if (options.additionalEntryPoints) {
     for (const file of options.additionalEntryPoints) {
-      const mapping = exportMapping.get(file)
+      const mapping = exportMapping.get(file);
       if (mapping != null) {
         exports['./' + mapping.name] = './' + mapping.path;
       } else {
