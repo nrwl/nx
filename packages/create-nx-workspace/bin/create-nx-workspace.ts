@@ -16,6 +16,7 @@ import { nxVersion } from '../src/utils/nx/nx-version';
 
 import { yargsDecorator } from './decorator';
 import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
+import { detectInvokedPackageManager } from '../src/utils/package-manager';
 import {
   determineAiAgents,
   determineDefaultBase,
@@ -377,7 +378,7 @@ async function normalizeArgsMiddleware(
     chosenTemplate = template;
 
     if (template !== 'custom') {
-      // Template flow - uses npm and 'main' branch by default
+      // Template flow - uses detected package manager (from invoking command) and 'main' branch by default
       argv.template = template;
       const aiAgents = await determineAiAgents(argv);
       const nxCloud =
@@ -390,7 +391,7 @@ async function normalizeArgsMiddleware(
         nxCloud,
         useGitHub: nxCloud !== 'skip',
         completionMessageKey,
-        packageManager: 'npm',
+        packageManager: detectInvokedPackageManager(),
         defaultBase: 'main',
         aiAgents,
       });

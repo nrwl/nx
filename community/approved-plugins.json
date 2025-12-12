@@ -533,5 +533,10 @@
     "name": "nx-oxlint",
     "description": "Nx plugin for oxlint - a fast linter written in Rust",
     "url": "https://github.com/Nas3nmann/nx-oxlint"
+  },
+  {
+    "name": "@gridatek/nx-supabase",
+    "description": "Nx plugin for managing multiple Supabase projects and environments",
+    "url": "https://github.com/gridatek/nx-supabase"
   }
 ]
