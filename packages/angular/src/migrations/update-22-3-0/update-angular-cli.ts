@@ -2,10 +2,10 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   readJson,
-  Tree,
+  type Tree,
 } from '@nx/devkit';
 
-export const angularCliVersion = '~16.1.0';
+export const angularCliVersion = '~21.0.0';
 
 export default async function (tree: Tree) {
   const { devDependencies, dependencies } = readJson(tree, 'package.json');

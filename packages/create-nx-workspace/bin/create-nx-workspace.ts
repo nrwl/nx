@@ -107,6 +107,7 @@ interface AngularArguments extends BaseArguments {
   bundler: 'webpack' | 'rspack' | 'esbuild';
   ssr: boolean;
   prefix: string;
+  zoneless: boolean;
 }
 
 interface VueArguments extends BaseArguments {
@@ -251,6 +252,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('prefix', {
             describe: chalk.dim`Prefix to use for Angular component and directive selectors.`,
             type: 'string',
+          })
+          .option('zoneless', {
+            describe: chalk.dim`Generate an application that does not use 'zone.js'.`,
+            type: 'boolean',
+            default: true,
           })
           .option('aiAgents', {
             describe: chalk.dim`List of AI agents to configure.`,
@@ -1061,6 +1067,7 @@ async function determineAngularOptions(
   const standaloneApi = parsedArgs.standaloneApi;
   const routing = parsedArgs.routing;
   const prefix = parsedArgs.prefix;
+  const zoneless = parsedArgs.zoneless;
 
   if (prefix) {
     // https://github.com/angular/angular-cli/blob/main/packages/schematics/angular/utility/validation.ts#L11-L14
@@ -1188,6 +1195,7 @@ async function determineAngularOptions(
     bundler,
     ssr,
     prefix,
+    zoneless,
   };
 }
 
