@@ -31,6 +31,7 @@ import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
 import { join } from 'path';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import { satisfies, validRange } from 'semver';
 let currentLockFileHash: string;
 
 let parsedLockFile: Lockfile;
@@ -154,6 +155,62 @@ function isAliasVersion(depVersion: string) {
   return depVersion.startsWith('/') || depVersion.includes('@');
 }
 
+/**
+ * Finds the appropriate patch hash for a package based on its name and version.
+ * Follows PNPM's priority order (https://pnpm.io/settings#patcheddependencies):
+ * 1. Exact version match (e.g., "vitest@3.2.4") - highest priority
+ * 2. Version range match (e.g., "vitest@^3.0.0")
+ * 3. Name-only match (e.g., "vitest") - lowest priority
+ */
+function findPatchHash(
+  patchEntries: Array<{
+    packageName: string;
+    versionSpecifier: string | null;
+    hash: string;
+  }>,
+  packageName: string,
+  version: string
+): string | undefined {
+  // Check for exact version match first (highest priority)
+  const exactMatch = patchEntries.find(
+    (entry) =>
+      entry.packageName === packageName && entry.versionSpecifier === version
+  );
+  if (exactMatch) {
+    return exactMatch.hash;
+  }
+
+  // Check for version range matches
+  for (const entry of patchEntries) {
+    // Skip name-only entries (will be handled at the end with lowest priority)
+    if (entry.packageName === packageName && entry.versionSpecifier === null) {
+      continue;
+    }
+
+    // Check if this entry matches our package and the version satisfies the range
+    if (
+      entry.packageName === packageName &&
+      entry.versionSpecifier &&
+      validRange(entry.versionSpecifier)
+    ) {
+      try {
+        if (satisfies(version, entry.versionSpecifier)) {
+          return entry.hash;
+        }
+      } catch {
+        // Invalid semver range, skip
+      }
+    }
+  }
+
+  // Fall back to name-only match (lowest priority)
+  const nameOnlyMatch = patchEntries.find(
+    (entry) =>
+      entry.packageName === packageName && entry.versionSpecifier === null
+  );
+  return nameOnlyMatch?.hash;
+}
+
 function getNodes(
   data: Lockfile,
   isV5: boolean
@@ -164,14 +221,29 @@ function getNodes(
   const keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
-  // Extract patch hashes from patchedDependencies section
-  const patchHashes = new Map<string, string>();
+  // Extract and pre-parse patch information from patchedDependencies section
+  const patchEntries: Array<{
+    packageName: string;
+    versionSpecifier: string | null; // null for name-only patches
+    hash: string;
+  }> = [];
   if (data.patchedDependencies) {
-    for (const [pkgName, patchInfo] of Object.entries(
+    for (const [specifier, patchInfo] of Object.entries(
       data.patchedDependencies
     )) {
       if (patchInfo && typeof patchInfo === 'object' && 'hash' in patchInfo) {
-        patchHashes.set(pkgName, patchInfo.hash);
+        // Extract package name (works for all cases now)
+        // patchedDependencies always use @ syntax (never v5 / syntax)
+        const packageName = extractNameFromKey(specifier, false);
+
+        // If specifier has a version, extract it using the helper
+        const versionSpecifier = getVersion(specifier, packageName) || null;
+
+        patchEntries.push({
+          packageName,
+          versionSpecifier,
+          hash: patchInfo.hash,
+        });
       }
     }
   }
@@ -219,8 +291,18 @@ function getNodes(
       continue;
     }
 
-    // Compute hash once, including patch hash if available
-    const patchHash = patchHashes.get(originalPackageName);
+    // Extract version from the key to match against patch specifiers
+    const versionFromKey = getVersion(key, originalPackageName);
+    // Parse the base version (without peer dependency info, etc.)
+    const baseVersion = parseBaseVersion(versionFromKey, isV5);
+
+    // Find the appropriate patch hash using PNPM's priority order:
+    // 1. Exact version match, 2. Version range match, 3. Name-only match
+    const patchHash = findPatchHash(
+      patchEntries,
+      originalPackageName,
+      baseVersion
+    );
     const hash = createHashFromSnapshot(snapshot, patchHash);
 
     // snapshot already has a name
@@ -779,21 +861,18 @@ function getVersion(key: string, packageName: string): string {
 }
 
 function extractNameFromKey(key: string, isV5: boolean): string {
-  // if package name contains org e.g. "@babel/runtime@7.12.5"
+  const versionSeparator = isV5 ? '/' : '@';
+
   if (key.startsWith('@')) {
-    if (isV5) {
-      const startFrom = key.indexOf('/');
-      return key.slice(0, key.indexOf('/', startFrom + 1));
-    } else {
-      // find the position of the '@'
-      return key.slice(0, key.indexOf('@', 1));
-    }
-  }
-  if (isV5) {
-    // if package has just a name e.g. "react/7.12.5..."
-    return key.slice(0, key.indexOf('/', 1));
+    // Scoped package (e.g., "@babel/core@7.12.5" or "@babel/core/7.12.5")
+    // Find the end of scope, then look for the first version separator after that
+    const scopeEnd = key.indexOf('/');
+    const sepIndex =
+      scopeEnd === -1 ? -1 : key.indexOf(versionSeparator, scopeEnd + 1);
+    return sepIndex === -1 ? key : key.slice(0, sepIndex);
   } else {
-    // if package has just a name e.g. "react@7.12.5..."
-    return key.slice(0, key.indexOf('@', 1));
+    // Non-scoped package (e.g., "react@7.12.5" or "react/7.12.5")
+    const sepIndex = key.indexOf(versionSeparator);
+    return sepIndex === -1 ? key : key.slice(0, sepIndex);
   }
 }

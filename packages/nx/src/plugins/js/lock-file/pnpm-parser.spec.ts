@@ -1982,5 +1982,269 @@ snapshots:
         'sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==|patch456'
       );
     });
+
+    it('should handle patch with exact version (v9)', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+patchedDependencies:
+  vitest@3.2.4:
+    hash: exact-version-patch-hash
+    path: patches/vitest@3.2.4.patch
+
+importers:
+
+  .:
+    dependencies:
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4
+
+packages:
+
+  vitest@3.2.4:
+    resolution: {integrity: sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==}
+
+snapshots:
+
+  vitest@3.2.4: {}`;
+
+      const { nodes: externalNodes } = getPnpmLockfileNodes(
+        lockFile,
+        'test-lockfile-hash-exact-version'
+      );
+
+      expect(externalNodes['npm:vitest']).toMatchObject({
+        type: 'npm',
+        name: 'npm:vitest',
+        data: {
+          version: '3.2.4',
+          packageName: 'vitest',
+          hash: 'sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==|exact-version-patch-hash',
+        },
+      });
+    });
+
+    it('should handle scoped packages with patches (v9)', () => {
+      const fileSys = {
+        'node_modules/.modules.yaml': `hoistedDependencies: {}`,
+        'node_modules/@babel/core/package.json': '{"version": "7.23.0"}',
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const lockFile = `lockfileVersion: '9.0'
+
+patchedDependencies:
+  '@babel/core@7.23.0':
+    hash: babel-core-patch-hash
+    path: patches/@babel+core@7.23.0.patch
+
+importers:
+
+  .:
+    dependencies:
+      '@babel/core':
+        specifier: 7.23.0
+        version: 7.23.0
+
+packages:
+
+  '@babel/core@7.23.0':
+    resolution: {integrity: sha512-babelcorehash==}
+
+snapshots:
+
+  '@babel/core@7.23.0': {}`;
+
+      const { nodes: externalNodes } = getPnpmLockfileNodes(
+        lockFile,
+        'test-lockfile-hash-scoped'
+      );
+
+      // @babel/core should have the patch hash
+      expect(externalNodes['npm:@babel/core']).toMatchObject({
+        type: 'npm',
+        name: 'npm:@babel/core',
+        data: {
+          version: '7.23.0',
+          packageName: '@babel/core',
+          hash: 'sha512-babelcorehash==|babel-core-patch-hash',
+        },
+      });
+    });
+
+    it('should prioritize exact version patch over name-only patch (v9)', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+patchedDependencies:
+  vitest:
+    hash: name-only-patch-hash
+    path: patches/vitest.patch
+  vitest@3.2.4:
+    hash: exact-version-patch-hash
+    path: patches/vitest@3.2.4.patch
+
+importers:
+
+  .:
+    dependencies:
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4
+
+packages:
+
+  vitest@3.2.4:
+    resolution: {integrity: sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==}
+
+snapshots:
+
+  vitest@3.2.4: {}`;
+
+      const { nodes: externalNodes } = getPnpmLockfileNodes(
+        lockFile,
+        'test-lockfile-hash-prioritize'
+      );
+
+      // Should use the exact version patch (vitest@3.2.4) instead of the name-only (vitest)
+      expect(externalNodes['npm:vitest']).toMatchObject({
+        type: 'npm',
+        name: 'npm:vitest',
+        data: {
+          version: '3.2.4',
+          packageName: 'vitest',
+          hash: 'sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==|exact-version-patch-hash',
+        },
+      });
+    });
+
+    it('should handle version range patches with caret (v9)', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+patchedDependencies:
+  vitest@^3.0.0:
+    hash: version-range-patch-hash
+    path: patches/vitest@^3.0.0.patch
+
+importers:
+
+  .:
+    dependencies:
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4
+
+packages:
+
+  vitest@3.2.4:
+    resolution: {integrity: sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==}
+
+snapshots:
+
+  vitest@3.2.4: {}`;
+
+      const { nodes: externalNodes } = getPnpmLockfileNodes(
+        lockFile,
+        'test-lockfile-hash-version-range-caret'
+      );
+
+      // Version 3.2.4 should match ^3.0.0 range
+      expect(externalNodes['npm:vitest']).toMatchObject({
+        type: 'npm',
+        name: 'npm:vitest',
+        data: {
+          version: '3.2.4',
+          packageName: 'vitest',
+          hash: 'sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==|version-range-patch-hash',
+        },
+      });
+    });
+
+    it('should prioritize exact version over range match (v9)', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+patchedDependencies:
+  vitest@^3.0.0:
+    hash: range-patch-hash
+    path: patches/vitest@^3.0.0.patch
+  vitest@3.2.4:
+    hash: exact-patch-hash
+    path: patches/vitest@3.2.4.patch
+
+importers:
+
+  .:
+    dependencies:
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4
+
+packages:
+
+  vitest@3.2.4:
+    resolution: {integrity: sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==}
+
+snapshots:
+
+  vitest@3.2.4: {}`;
+
+      const { nodes: externalNodes } = getPnpmLockfileNodes(
+        lockFile,
+        'test-lockfile-hash-exact-over-range'
+      );
+
+      // Should prioritize exact version patch over range patch per PNPM's priority order
+      expect(externalNodes['npm:vitest']).toMatchObject({
+        type: 'npm',
+        name: 'npm:vitest',
+        data: {
+          version: '3.2.4',
+          packageName: 'vitest',
+          hash: 'sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==|exact-patch-hash',
+        },
+      });
+    });
+
+    it('should not apply patch when version does not match range (v9)', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+patchedDependencies:
+  vitest@^2.0.0:
+    hash: v2-patch-hash
+    path: patches/vitest@^2.0.0.patch
+
+importers:
+
+  .:
+    dependencies:
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4
+
+packages:
+
+  vitest@3.2.4:
+    resolution: {integrity: sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==}
+
+snapshots:
+
+  vitest@3.2.4: {}`;
+
+      const { nodes: externalNodes } = getPnpmLockfileNodes(
+        lockFile,
+        'test-lockfile-hash-no-match'
+      );
+
+      // Version 3.2.4 should NOT match ^2.0.0, so no patch should be applied
+      expect(externalNodes['npm:vitest']).toMatchObject({
+        type: 'npm',
+        name: 'npm:vitest',
+        data: {
+          version: '3.2.4',
+          packageName: 'vitest',
+          // Only the integrity hash, no patch hash
+          hash: 'sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==',
+        },
+      });
+    });
   });
 });
