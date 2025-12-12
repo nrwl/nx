@@ -31,7 +31,7 @@ import {
   mergeCustomWebpackConfig,
   resolveIndexHtmlTransformer,
 } from '../utilities/webpack';
-import { normalizeOptions } from './lib';
+import { normalizeOptions, validateOptions } from './lib';
 import type { NormalizedSchema, Schema } from './schema';
 
 type BuildTargetOptions = {
@@ -48,6 +48,8 @@ export function executeDevServerBuilder(
   rawOptions: Schema,
   context: import('@angular-devkit/architect').BuilderContext
 ) {
+  validateOptions(rawOptions);
+
   process.env.NX_TSCONFIG_PATH = getRootTsConfigPath();
 
   const options = normalizeOptions(rawOptions);
