@@ -132,8 +132,8 @@ export async function* swcExecutor(
 
   if (options.watch) {
     let disposeFn: () => void;
-    process.on('SIGINT', () => disposeFn());
-    process.on('SIGTERM', () => disposeFn());
+    process.on('SIGINT', () => disposeFn?.());
+    process.on('SIGTERM', () => disposeFn?.());
 
     return yield* compileSwcWatch(context, options, async () => {
       const assetResult = await copyAssets(options, context);
