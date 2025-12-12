@@ -268,14 +268,21 @@ export interface RecordStatMetaComplete {
 export interface RecordStatMetaError {
   type: 'error';
   errorCode: string;
+  flowVariant?: string;
   errorMessage?: string;
   errorFile?: string;
+}
+
+export interface RecordStatMetaCancel {
+  type: 'cancel';
+  flowVariant?: string;
 }
 
 export type RecordStatMeta =
   | RecordStatMetaStart
   | RecordStatMetaComplete
-  | RecordStatMetaError;
+  | RecordStatMetaError
+  | RecordStatMetaCancel;
 
 /**
  * We are incrementing a counter to track how often create-nx-workspace is used in CI

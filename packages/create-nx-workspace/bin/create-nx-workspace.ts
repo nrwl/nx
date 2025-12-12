@@ -62,6 +62,8 @@ function extractErrorFile(error: Error): string | undefined {
 
 // For template-based CNW we want to know if user picked empty vs react vs angular etc.
 let chosenTemplate: string;
+// Track whether user opted into cloud or not for SIGINT handler.
+let useCloud: boolean;
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -273,15 +275,18 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         const errorFile =
           error instanceof Error ? extractErrorFile(error) : undefined;
 
+        useCloud = argv.nxCloud !== 'skip';
+
         await recordStat({
           nxVersion,
           command: 'create-nx-workspace',
-          useCloud: argv.nxCloud !== 'skip',
+          useCloud,
           meta: {
             type: 'error',
+            flowVariant: getFlowVariant(),
             errorCode,
-            errorMessage: errorCode === 'UNKNOWN' ? errorMessage : undefined,
-            errorFile: errorCode === 'UNKNOWN' ? errorFile : undefined,
+            errorMessage,
+            errorFile,
           },
         });
 
@@ -323,7 +328,7 @@ process.on('uncaughtException', (error: unknown) => {
 });
 
 // Handle Ctrl+C gracefully - show helpful message if workspace was already created
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   const { directory, connectUrl } = getInterruptedWorkspaceState();
 
   if (directory) {
@@ -341,6 +346,16 @@ process.on('SIGINT', () => {
       ],
     });
   }
+
+  await recordStat({
+    nxVersion,
+    command: 'create-nx-workspace',
+    useCloud,
+    meta: {
+      type: 'cancel',
+      flowVariant: getFlowVariant(),
+    },
+  });
 
   process.exit(130); // Standard exit code for SIGINT
 });
