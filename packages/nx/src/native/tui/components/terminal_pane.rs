@@ -10,7 +10,7 @@ use ratatui::{
         ScrollbarState, StatefulWidget, Widget,
     },
 };
-use std::{io, sync::Arc};
+use std::{io, sync::Arc, time::Instant};
 use tracing::debug;
 use tui_term::widget::PseudoTerminal;
 
@@ -48,6 +48,8 @@ pub struct TerminalPaneData {
     pub can_be_interactive: bool,
     // Momentum scrolling state
     scroll_momentum: ScrollMomentum,
+    // Transient status message with timestamp for auto-clear
+    pub status_message: Option<(String, Instant)>,
 }
 
 impl TerminalPaneData {
@@ -58,6 +60,7 @@ impl TerminalPaneData {
             is_continuous: false,
             can_be_interactive: false,
             scroll_momentum: ScrollMomentum::new(),
+            status_message: None,
         }
     }
 
@@ -99,17 +102,25 @@ impl TerminalPaneData {
                 }
                 // Handle 'c' for copying when not in interactive mode
                 KeyCode::Char('c') if !self.is_interactive => {
-                    if let Some(screen) = pty.get_screen() {
+                    let status_message = if let Some(screen) = pty.get_screen() {
                         // Unformatted output (no ANSI escape codes)
                         let output = screen.all_contents();
                         match Clipboard::new() {
                             Ok(mut clipboard) => {
-                                clipboard.set_text(output).ok();
+                                if clipboard.set_text(output).is_ok() {
+                                    Some("Output copied")
+                                } else {
+                                    Some("Copy failed")
+                                }
                             }
-                            Err(_) => {
-                                // TODO: Is there a way to handle this error? Maybe a new kind of error popup?
-                            }
+                            Err(_) => Some("Copy failed"),
                         }
+                    } else {
+                        None
+                    };
+                    // Set status message outside the pty borrow
+                    if let Some(msg) = status_message {
+                        self.status_message = Some((msg.to_string(), Instant::now()));
                     }
                     return Ok(None);
                 }
@@ -124,7 +135,10 @@ impl TerminalPaneData {
                     let Some(screen) = pty.get_screen() else {
                         return Ok(None);
                     };
-                    return Ok(Some(Action::SendConsoleMessage(screen.all_contents())));
+                    let contents = screen.all_contents();
+                    // Set status message outside the pty borrow scope
+                    self.status_message = Some(("Sent to assistant".to_string(), Instant::now()));
+                    return Ok(Some(Action::SendConsoleMessage(contents)));
                 }
                 // Only send input to PTY if we're in interactive mode
                 _ if self.is_interactive => match key.code {
@@ -150,6 +164,16 @@ impl TerminalPaneData {
                     }
                     _ => {}
                 },
+                // Show hint popup for unhandled character keys when not in interactive mode
+                // but only if the task can be made interactive
+                KeyCode::Char(_) | KeyCode::Enter | KeyCode::Backspace
+                    if !self.is_interactive && self.can_be_interactive =>
+                {
+                    return Ok(Some(Action::ShowHint(
+                        "This key is not handled by the TUI. To send input to the terminal, press 'i' to enter interactive mode."
+                            .to_string(),
+                    )));
+                }
                 _ => {}
             }
         }
@@ -766,30 +790,91 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                 .render(top_right_area, buf);
                         }
 
-                    // Show interactive/readonly status for focused, in progress tasks, when not in minimal mode
-                    } else if show_interactive_status {
-                        // Bottom right status
-                        let bottom_text = if self.is_currently_interactive() {
-                            Line::from(vec![
-                                Span::styled(
-                                    "  INTERACTIVE ",
-                                    Style::default().fg(THEME.primary_fg),
-                                ),
-                                Span::styled("<ctrl>+z", Style::default().fg(THEME.info)),
-                                Span::styled(" to toggle  ", Style::default().fg(THEME.primary_fg)),
-                            ])
+                    // Show status message and/or interactive status for focused, in progress tasks, when not in minimal mode
+                    } else if show_interactive_status || pty_data.status_message.is_some() {
+                        // Get status message if present
+                        let status_msg = pty_data
+                            .status_message
+                            .as_ref()
+                            .map(|(msg, _)| msg.as_str());
+
+                        // Determine mode text
+                        let mode_text = if self.is_currently_interactive() {
+                            "INTERACTIVE"
                         } else {
-                            Line::from(vec![
-                                Span::styled(
-                                    "  NON-INTERACTIVE ",
-                                    Style::default().fg(THEME.secondary_fg),
-                                ),
-                                Span::styled("i", Style::default().fg(THEME.info)),
-                                Span::styled(
-                                    " to toggle  ",
-                                    Style::default().fg(THEME.secondary_fg),
-                                ),
-                            ])
+                            "NON-INTERACTIVE"
+                        };
+
+                        let mode_style = if self.is_currently_interactive() {
+                            Style::default().fg(THEME.primary_fg)
+                        } else {
+                            Style::default().fg(THEME.secondary_fg)
+                        };
+
+                        // Build the bottom text based on what we need to display
+                        let bottom_text = if let Some(msg) = status_msg {
+                            if show_interactive_status {
+                                // Both status and interactive mode to show
+                                let combined_text = format!("  {} │ {}  ", msg, mode_text);
+                                let combined_width = combined_text.len();
+
+                                // Check if we have enough space for both
+                                if combined_width as u16 + Self::CONFIG.right_margin
+                                    < safe_area.width
+                                {
+                                    // Enough space: show both with separator
+                                    Line::from(vec![
+                                        Span::styled(
+                                            format!("  {} ", msg),
+                                            Style::default().fg(THEME.info),
+                                        ),
+                                        Span::styled("│", Style::default().fg(THEME.secondary_fg)),
+                                        Span::styled(format!(" {}  ", mode_text), mode_style),
+                                    ])
+                                } else {
+                                    // Limited space: status message takes priority
+                                    Line::from(vec![Span::styled(
+                                        format!("  {}  ", msg),
+                                        Style::default().fg(THEME.info),
+                                    )])
+                                }
+                            } else {
+                                // Only status message (no interactive status)
+                                Line::from(vec![Span::styled(
+                                    format!("  {}  ", msg),
+                                    Style::default().fg(THEME.info),
+                                )])
+                            }
+                        } else if show_interactive_status {
+                            // No status message, show full interactive status with toggle hint
+                            if self.is_currently_interactive() {
+                                Line::from(vec![
+                                    Span::styled(
+                                        "  INTERACTIVE ",
+                                        Style::default().fg(THEME.primary_fg),
+                                    ),
+                                    Span::styled("<ctrl>+z", Style::default().fg(THEME.info)),
+                                    Span::styled(
+                                        " to toggle  ",
+                                        Style::default().fg(THEME.primary_fg),
+                                    ),
+                                ])
+                            } else {
+                                Line::from(vec![
+                                    Span::styled(
+                                        "  NON-INTERACTIVE ",
+                                        Style::default().fg(THEME.secondary_fg),
+                                    ),
+                                    Span::styled("i", Style::default().fg(THEME.info)),
+                                    Span::styled(
+                                        " to toggle  ",
+                                        Style::default().fg(THEME.secondary_fg),
+                                    ),
+                                ])
+                            }
+                        } else {
+                            // Nothing to show (shouldn't reach here due to outer condition)
+                            Line::from(vec![])
                         };
 
                         let text_width = bottom_text
@@ -799,7 +884,9 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                             .sum::<usize>();
 
                         // Ensure status text doesn't extend past safe area
-                        if text_width as u16 + Self::CONFIG.right_margin < safe_area.width {
+                        if text_width > 0
+                            && text_width as u16 + Self::CONFIG.right_margin < safe_area.width
+                        {
                             let bottom_right_area = Rect {
                                 x: safe_area.x + safe_area.width
                                     - text_width as u16

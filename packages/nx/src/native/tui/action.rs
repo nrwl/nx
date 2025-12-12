@@ -36,4 +36,5 @@ pub enum Action {
     SendConsoleMessage(String),
     ConsoleMessengerAvailable(bool),
     EndCommand,
+    ShowHint(String),
 }
