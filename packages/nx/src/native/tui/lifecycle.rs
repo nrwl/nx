@@ -44,6 +44,7 @@ impl From<TuiCliArgs> for RustTuiCliArgs {
 pub struct TuiConfig {
     #[napi(ts_type = "boolean | number | undefined")]
     pub auto_exit: Option<Either<bool, u32>>,
+    pub suppress_hints: Option<bool>,
 }
 
 impl From<(TuiConfig, &RustTuiCliArgs)> for RustTuiConfig {
@@ -53,7 +54,11 @@ impl From<(TuiConfig, &RustTuiCliArgs)> for RustTuiConfig {
             Either::B(int_value) => AutoExit::Integer(int_value),
         });
         // Pass the converted JSON config value(s) and cli_args to instantiate the config with
-        RustTuiConfig::new(js_auto_exit, rust_tui_cli_args)
+        RustTuiConfig::new(
+            js_auto_exit,
+            js_tui_config.suppress_hints,
+            rust_tui_cli_args,
+        )
     }
 }
 
