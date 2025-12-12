@@ -10,6 +10,9 @@ import { Preset } from '../utils/presets';
 import { newGenerator, NormalizedSchema } from './new';
 import * as getNpmPackageVersion from './../utils/get-npm-package-version';
 import * as generatePreset from './generate-preset';
+import { packageManagerSnapshotSerializer } from './test-utils/package-manager-snapshot-serializer';
+
+expect.addSnapshotSerializer(packageManagerSnapshotSerializer);
 
 const DEFAULT_PACKAGE_VERSION = '1.0.0';
 
@@ -90,6 +93,7 @@ describe('new', () => {
         directory: 'my-workspace',
         appName: 'app',
         preset: Preset.Apps,
+        packageManager: 'npm',
       });
 
       expect(readJson(tree, 'my-workspace/package.json')).toMatchSnapshot();
