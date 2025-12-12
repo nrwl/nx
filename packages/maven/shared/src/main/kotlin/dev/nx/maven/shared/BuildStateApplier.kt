@@ -147,5 +147,17 @@ object BuildStateApplier {
         }
 
         // Skip outputTimestamp - it causes cache invalidation issues
+
+        // Apply pomFile if it was modified (e.g., by flatten-maven-plugin)
+        buildState.pomFile?.let {
+            val absPath = PathUtils.toAbsolutePath(it, basedir, log)
+            val pomFile = File(absPath)
+            if (pomFile.exists()) {
+                log.info("Applying modified pomFile: ${pomFile.absolutePath}")
+                project.file = pomFile
+            } else {
+                log.warn("Modified pomFile does not exist, skipping: ${pomFile.absolutePath}")
+            }
+        }
     }
 }
