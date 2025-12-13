@@ -50,3 +50,73 @@ To see information about the running Nx Daemon (such as its background process I
 
 The Nx Daemon uses a unix socket to communicate between the daemon and the Nx processes. By default this socket gets placed in a temp directory. If you are using Nx in a docker-compose environment, however, you may want to run the daemon manually
 and control its location to enable sharing the daemon among your docker containers. To do so, simply set the NX_DAEMON_SOCKET_DIR environment variable to a shared directory.
+
+## Running Nx in Docker
+
+Docker containers present unique challenges for the Nx Daemon due to their ephemeral nature and filesystem behavior.
+
+### Why the daemon often fails in Docker
+
+The daemon relies on stable host conditions that containers typically do not provide:
+
+- Containers have **ephemeral filesystems** that reset on restart
+- Volume mounts create **inode/mtime changes** that confuse file watching
+- Containers **restart frequently** during development
+- No stable **inter-process communication channel** between container restarts
+- Node processes inside Docker may have **different permissions**
+
+As a result, the daemon may fail to start, restart repeatedly, or provide inconsistent results.
+
+### Recommended: Disable the daemon in Docker
+
+For most container-based workflows, the simplest and most reliable approach is to disable the daemon:
+
+```shell
+NX_DAEMON=false nx build myapp
+```
+
+You can set this in your Dockerfile:
+
+```dockerfile
+ENV NX_DAEMON=false
+```
+
+Or in docker-compose:
+
+```yaml
+services:
+  dev:
+    environment:
+      - NX_DAEMON=false
+```
+
+This switches Nx into a fully deterministic, stateless mode.
+
+### Example: docker-compose setup for local development
+
+```yaml
+services:
+  dev:
+    image: node:20
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - /workspace/node_modules
+    environment:
+      - NX_DAEMON=false
+    command: sh -c "npm install && nx serve myapp"
+```
+
+This approach ensures consistent builds even when containers restart or mounts change.
+
+### CI/CD: Prefer stateless builds
+
+Most CI environments (GitHub Actions, GitLab CI, etc.) use fresh containers on every run. In these workflows:
+
+- The daemon offers little benefit since containers are ephemeral
+- Stateless, content-based builds are more reliable
+- Use [Nx Cloud remote caching](/ci/features/remote-cache) for faster builds instead of relying on daemon caching
+
+{% aside type="note" title="Rule of thumb" %}
+Use the daemon on stable hosts (local machines without containers). Disable it (`NX_DAEMON=false`) in ephemeral or container-based environments.
+{% /aside %}
