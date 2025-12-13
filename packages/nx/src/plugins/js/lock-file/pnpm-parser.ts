@@ -412,13 +412,15 @@ function getDependencies(
   ctx: CreateDependenciesContext
 ): RawProjectGraphDependency[] {
   const results: RawProjectGraphDependency[] = [];
-  Object.entries(data.packages).forEach(([key, snapshot]) => {
+  Object.keys(data.packages).forEach((key) => {
+    const snapshot = data.packages[key];
     const nodes = keyMap.get(key);
     nodes.forEach((node) => {
       [snapshot.dependencies, snapshot.optionalDependencies].forEach(
         (section) => {
           if (section) {
-            Object.entries(section).forEach(([name, versionRange]) => {
+            Object.keys(section).forEach((name) => {
+              const versionRange = section[name];
               const version = parseBaseVersion(
                 findVersion(versionRange, name, isV5),
                 isV5
