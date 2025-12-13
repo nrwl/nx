@@ -16,6 +16,7 @@ import { nxVersion } from '../src/utils/nx/nx-version';
 
 import { yargsDecorator } from './decorator';
 import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
+import { detectInvokedPackageManager } from '../src/utils/package-manager';
 import {
   determineAiAgents,
   determineDefaultBase,
@@ -38,12 +39,31 @@ import {
   messages,
   recordStat,
 } from '../src/utils/nx/ab-testing';
-import { mapErrorToBodyLines } from '../src/utils/error-utils';
+import {
+  CnwError,
+  CnwErrorCode,
+  mapErrorToBodyLines,
+} from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 import { isCI } from '../src/utils/ci/is-ci';
 
+function extractErrorFile(error: Error): string | undefined {
+  if (!error.stack) return undefined;
+  const lines = error.stack.split('\n');
+  // Find the first line with a file path (typically line 1 after the error message)
+  const fileLine = lines.find(
+    (line) => line.includes('at ') && line.includes('/')
+  );
+  if (!fileLine) return undefined;
+  // Extract just the file path portion
+  const match = fileLine.match(/\(([^)]+)\)/) || fileLine.match(/at\s+(.+)/);
+  return match?.[1]?.trim();
+}
+
 // For template-based CNW we want to know if user picked empty vs react vs angular etc.
 let chosenTemplate: string;
+// Track whether user opted into cloud or not for SIGINT handler.
+let useCloud: boolean;
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -87,6 +107,7 @@ interface AngularArguments extends BaseArguments {
   bundler: 'webpack' | 'rspack' | 'esbuild';
   ssr: boolean;
   prefix: string;
+  zoneless: boolean;
 }
 
 interface VueArguments extends BaseArguments {
@@ -232,6 +253,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Prefix to use for Angular component and directive selectors.`,
             type: 'string',
           })
+          .option('zoneless', {
+            describe: chalk.dim`Generate an application that does not use 'zone.js'.`,
+            type: 'boolean',
+            default: true,
+          })
           .option('aiAgents', {
             describe: chalk.dim`List of AI agents to configure.`,
             type: 'array',
@@ -245,12 +271,42 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
       ),
 
     async function handler(argv: yargs.ArgumentsCamelCase<Arguments>) {
-      await main(argv).catch((error) => {
+      await main(argv).catch(async (error) => {
         const { version } = require('../package.json');
-        output.error({
-          title: `Failed to create workspace (v${version})`,
-          bodyLines: mapErrorToBodyLines(error),
+
+        // Record error stat for telemetry
+        const errorCode = error instanceof CnwError ? error.code : 'UNKNOWN';
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        const errorFile =
+          error instanceof Error ? extractErrorFile(error) : undefined;
+
+        useCloud = argv.nxCloud !== 'skip';
+
+        await recordStat({
+          nxVersion,
+          command: 'create-nx-workspace',
+          useCloud,
+          meta: {
+            type: 'error',
+            flowVariant: getFlowVariant(),
+            errorCode,
+            errorMessage,
+            errorFile,
+          },
         });
+
+        if (error instanceof CnwError) {
+          output.error({
+            title: `Failed to create workspace`,
+            bodyLines: error.message.split('\n').filter((line) => line.trim()),
+          });
+        } else {
+          output.error({
+            title: `Failed to create workspace (v${version})`,
+            bodyLines: mapErrorToBodyLines(error),
+          });
+        }
         process.exit(1);
       });
     },
@@ -278,7 +334,7 @@ process.on('uncaughtException', (error: unknown) => {
 });
 
 // Handle Ctrl+C gracefully - show helpful message if workspace was already created
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   const { directory, connectUrl } = getInterruptedWorkspaceState();
 
   if (directory) {
@@ -296,6 +352,16 @@ process.on('SIGINT', () => {
       ],
     });
   }
+
+  await recordStat({
+    nxVersion,
+    command: 'create-nx-workspace',
+    useCloud,
+    meta: {
+      type: 'cancel',
+      flowVariant: getFlowVariant(),
+    },
+  });
 
   process.exit(130); // Standard exit code for SIGINT
 });
@@ -316,18 +382,18 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     nxVersion,
     command: 'create-nx-workspace',
     useCloud: parsedArgs.nxCloud !== 'skip',
-    meta: [
-      // User sees one of: setupCI (preset flow) or setupNxCloudV2 (template flow)
-      messages.codeOfSelectedPromptMessage('setupCI'),
-      // User sees one of: setupNxCloud (preset flow) or setupNxCloudV2 (template flow)
-      messages.codeOfSelectedPromptMessage('setupNxCloudV2') ||
+    meta: {
+      type: 'complete',
+      flowVariant: getFlowVariant(),
+      setupCIPrompt: messages.codeOfSelectedPromptMessage('setupCI'),
+      setupCloudPrompt:
+        messages.codeOfSelectedPromptMessage('setupNxCloudV2') ||
         messages.codeOfSelectedPromptMessage('setupNxCloud'),
-      parsedArgs.nxCloud,
-      rawArgs.nxCloud,
-      workspaceInfo.pushedToVcs,
-      chosenTemplate,
-      `flow-variant-${getFlowVariant()}`,
-    ],
+      nxCloudArg: parsedArgs.nxCloud ?? '',
+      nxCloudArgRaw: rawArgs.nxCloud ?? '',
+      pushedToVcs: workspaceInfo.pushedToVcs ?? '',
+      template: chosenTemplate ?? '',
+    },
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
@@ -361,13 +427,14 @@ async function normalizeArgsMiddleware(
   argv.workspaces ??= true;
   argv.useProjectJson ??= !argv.workspaces;
 
-  // Old (start) vs new (start-v2) flows
-  const startVariant = getFlowVariant() === '1' ? 'start-v2' : 'start';
   await recordStat({
     nxVersion,
     command: 'create-nx-workspace',
-    meta: [startVariant],
     useCloud: argv.nxCloud !== 'skip',
+    meta: {
+      type: 'start',
+      flowVariant: getFlowVariant(),
+    },
   });
 
   try {
@@ -377,7 +444,7 @@ async function normalizeArgsMiddleware(
     chosenTemplate = template;
 
     if (template !== 'custom') {
-      // Template flow - uses npm and 'main' branch by default
+      // Template flow - uses detected package manager (from invoking command) and 'main' branch by default
       argv.template = template;
       const aiAgents = await determineAiAgents(argv);
       const nxCloud =
@@ -390,7 +457,7 @@ async function normalizeArgsMiddleware(
         nxCloud,
         useGitHub: nxCloud !== 'skip',
         completionMessageKey,
-        packageManager: 'npm',
+        packageManager: detectInvokedPackageManager(),
         defaultBase: 'main',
         aiAgents,
       });
@@ -404,15 +471,11 @@ async function normalizeArgsMiddleware(
         try {
           getPackageNameFromThirdPartyPreset(argv.preset);
         } catch (e) {
-          if (e instanceof Error) {
-            output.error({
-              title: `Could not find preset "${argv.preset}"`,
-              bodyLines: mapErrorToBodyLines(e),
-            });
-          } else {
-            console.error(e);
-          }
-          process.exit(1);
+          const message = e instanceof Error ? e.message : String(e);
+          throw new CnwError(
+            'INVALID_PRESET',
+            `Could not find preset "${argv.preset}": ${message}`
+          );
         }
       }
 
@@ -434,18 +497,21 @@ async function normalizeArgsMiddleware(
       });
     }
   } catch (e) {
-    console.error(e);
-    process.exit(1);
+    if (e instanceof CnwError) {
+      throw e;
+    }
+    const message = e instanceof Error ? e.message : String(e);
+    throw new CnwError('UNKNOWN', message);
   }
 }
 
 function invariant(
   predicate: string | number | boolean,
-  message: CLIErrorMessageConfig
+  errorCode: CnwErrorCode,
+  message: string
 ): asserts predicate is NonNullable<string | number> | true {
   if (!predicate) {
-    output.error(message);
-    process.exit(1);
+    throw new CnwError(errorCode, message);
   }
 }
 
@@ -485,16 +551,19 @@ async function determineFolder(
     },
   ]);
 
-  invariant(reply.folderName, {
-    title: 'Invalid folder name',
-    bodyLines: [`Folder name cannot be empty`],
-  });
+  invariant(
+    reply.folderName,
+    'INVALID_FOLDER_NAME',
+    'Folder name cannot be empty'
+  );
 
   validateWorkspaceName(reply.folderName);
 
-  invariant(!existsSync(reply.folderName), {
-    title: 'That folder is already taken',
-  });
+  invariant(
+    !existsSync(reply.folderName),
+    'DIRECTORY_EXISTS',
+    `The folder '${reply.folderName}' already exists`
+  );
 
   return reply.folderName;
 }
@@ -998,6 +1067,7 @@ async function determineAngularOptions(
   const standaloneApi = parsedArgs.standaloneApi;
   const routing = parsedArgs.routing;
   const prefix = parsedArgs.prefix;
+  const zoneless = parsedArgs.zoneless;
 
   if (prefix) {
     // https://github.com/angular/angular-cli/blob/main/packages/schematics/angular/utility/validation.ts#L11-L14
@@ -1006,14 +1076,10 @@ async function determineAngularOptions(
 
     // validate whether component/directive selectors will be valid with the provided prefix
     if (!htmlSelectorRegex.test(`${prefix}-placeholder`)) {
-      output.error({
-        title: `Failed to create a workspace.`,
-        bodyLines: [
-          `The provided "${prefix}" prefix is invalid. It must be a valid HTML selector.`,
-        ],
-      });
-
-      process.exit(1);
+      throw new CnwError(
+        'ANGULAR_PREFIX_INVALID',
+        `The provided "${prefix}" prefix is invalid. It must be a valid HTML selector.`
+      );
     }
   }
 
@@ -1129,6 +1195,7 @@ async function determineAngularOptions(
     bundler,
     ssr,
     prefix,
+    zoneless,
   };
 }
 
@@ -1259,12 +1326,11 @@ async function determinePackageBasedOrIntegratedOrStandalone(): Promise<
     },
   ]);
 
-  invariant(workspaceType, {
-    title: 'Invalid workspace type',
-    bodyLines: [
-      `It must be one of the following: standalone, integrated. Got ${workspaceType}`,
-    ],
-  });
+  invariant(
+    workspaceType,
+    'INVALID_WORKSPACE_TYPE',
+    `Invalid workspace type. It must be one of the following: standalone, integrated. Got ${workspaceType}`
+  );
 
   return workspaceType;
 }
@@ -1295,12 +1361,11 @@ async function determineStandaloneOrMonorepo(): Promise<
     },
   ]);
 
-  invariant(workspaceType, {
-    title: 'Invalid workspace type',
-    bodyLines: [
-      `It must be one of the following: standalone, integrated. Got ${workspaceType}`,
-    ],
-  });
+  invariant(
+    workspaceType,
+    'INVALID_WORKSPACE_TYPE',
+    `Invalid workspace type. It must be one of the following: standalone, integrated. Got ${workspaceType}`
+  );
 
   return workspaceType;
 }
@@ -1321,10 +1386,7 @@ async function determineAppName(
       skip: !parsedArgs.interactive || isCI(),
     },
   ]);
-  invariant(appName, {
-    title: 'Invalid name',
-    bodyLines: [`Name cannot be empty`],
-  });
+  invariant(appName, 'INVALID_APP_NAME', 'App name cannot be empty');
   return appName;
 }
 

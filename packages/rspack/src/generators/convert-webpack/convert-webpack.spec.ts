@@ -46,7 +46,7 @@ describe('Convert webpack', () => {
               optimization: false,
               outputHashing: 'none',
               generatePackageJson: true,
-              sourceMaps: true,
+              sourceMap: true,
             }),
           ],
         };

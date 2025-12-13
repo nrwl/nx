@@ -98,13 +98,16 @@ export function createOrEditViteConfig(
   tree: Tree,
   options: ViteConfigFileOptions,
   onlyVitest: boolean,
-  projectAlreadyHasViteTargets?: TargetFlags,
-  vitestFileName?: boolean
+  extraOptions: {
+    projectAlreadyHasViteTargets?: TargetFlags;
+    skipPackageJson?: boolean;
+    vitestFileName?: boolean;
+  } = {}
 ) {
   const { root: projectRoot } = readProjectConfiguration(tree, options.project);
 
   const extension = options.useEsmExtension ? 'mts' : 'ts';
-  const viteConfigPath = vitestFileName
+  const viteConfigPath = extraOptions.vitestFileName
     ? `${projectRoot}/vitest.config.${extension}`
     : `${projectRoot}/vite.config.${extension}`;
 
@@ -166,7 +169,9 @@ export function createOrEditViteConfig(
       `import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'`
     );
     plugins.push(`nxViteTsPaths()`, `nxCopyAssetsPlugin(['*.md'])`);
-    addDependenciesToPackageJson(tree, {}, { '@nx/vite': nxVersion });
+    if (!extraOptions.skipPackageJson) {
+      addDependenciesToPackageJson(tree, {}, { '@nx/vite': nxVersion });
+    }
   }
 
   if (!onlyVitest && options.includeLib) {
@@ -239,7 +244,7 @@ ${
   // },`
     : `  // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //   plugins: () => [ nxViteTsPaths() ],
   // },`;
 
   const cacheDir = `cacheDir: '${normalizedJoinPaths(
@@ -263,13 +268,13 @@ ${
       cacheDir,
       projectRoot,
       offsetFromRoot(projectRoot),
-      projectAlreadyHasViteTargets
+      extraOptions.projectAlreadyHasViteTargets
     );
     return;
   }
 
   // When using vitest.config, use vitest/config import and skip vite-specific options
-  const viteConfigContent = vitestFileName
+  const viteConfigContent = extraOptions.vitestFileName
     ? `import { defineConfig } from 'vitest/config';
 ${imports.join(';\n')}${imports.length ? ';' : ''}
 

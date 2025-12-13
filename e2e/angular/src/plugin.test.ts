@@ -102,14 +102,10 @@ describe('Angular Crystal Plugin', () => {
 
     // test
     expect(
-      runCLI(
-        `run-many -t test -p ${ngOrg1App1},${ngOrg1Lib1} --no-watch --browsers=ChromeHeadless`
-      )
+      runCLI(`run-many -t test -p ${ngOrg1App1},${ngOrg1Lib1} --no-watch`)
     ).toContain('Successfully ran target test for 2 projects');
     expect(
-      runCLI(
-        `run-many -t test -p ${ngOrg1App1},${ngOrg1Lib1} --no-watch --browsers=ChromeHeadless`
-      )
+      runCLI(`run-many -t test -p ${ngOrg1App1},${ngOrg1Lib1} --no-watch`)
     ).toContain(
       'Nx read the output from the cache instead of running the command for 2 out of 2 tasks'
     );
@@ -134,14 +130,10 @@ describe('Angular Crystal Plugin', () => {
 
     // test
     expect(
-      runCLI(
-        `run-many -t test -p ${ngOrg2App1},${ngOrg2Lib1} --no-watch --browsers=ChromeHeadless`
-      )
+      runCLI(`run-many -t test -p ${ngOrg2App1},${ngOrg2Lib1} --no-watch`)
     ).toContain('Successfully ran target test for 2 projects');
     expect(
-      runCLI(
-        `run-many -t test -p ${ngOrg2App1},${ngOrg2Lib1} --no-watch --browsers=ChromeHeadless`
-      )
+      runCLI(`run-many -t test -p ${ngOrg2App1},${ngOrg2Lib1} --no-watch`)
     ).toContain(
       'Nx read the output from the cache instead of running the command for 2 out of 2 tasks'
     );
