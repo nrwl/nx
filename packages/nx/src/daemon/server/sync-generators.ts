@@ -110,11 +110,11 @@ export function collectAndScheduleSyncGenerators(
     return;
   }
 
-  const uniqueSyncGenerators = new Set<string>([
-    ...registeredSyncGenerators.globalGenerators,
-    ...registeredSyncGenerators.taskGenerators,
-  ]);
-  for (const generator of uniqueSyncGenerators) {
+  // Iterate directly instead of creating intermediate Set
+  for (const generator of registeredSyncGenerators.globalGenerators) {
+    scheduledGenerators.add(generator);
+  }
+  for (const generator of registeredSyncGenerators.taskGenerators) {
     scheduledGenerators.add(generator);
   }
 
@@ -319,11 +319,13 @@ async function processConflictingGenerators(
    * generators, and then add the initial results that were not from a
    * conflicting generator.
    */
+  // Use Set for O(1) lookup instead of O(n) .every() check
+  const conflictGeneratorNames = new Set(
+    conflictRunResults.map((r) => r.generatorName)
+  );
   const results = [...conflictRunResults];
   for (const result of initialResults) {
-    if (
-      conflictRunResults.every((r) => r.generatorName !== result.generatorName)
-    ) {
+    if (!conflictGeneratorNames.has(result.generatorName)) {
       // this result is not from a conflicting generator, so we add it to the
       // results
       results.push(result);
