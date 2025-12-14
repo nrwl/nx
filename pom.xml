@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0          http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>dev.nx</groupId>
+  <groupId>dev.nx.maven</groupId>
   <artifactId>nx-parent</artifactId>
   <version>0.0.11</version>
   <packaging>pom</packaging>
@@ -34,9 +34,8 @@
     <url>https://github.com/nrwl/nx/tree/master</url>
   </scm>
 
-
   <modules>
-    <module>packages/maven/maven-plugin</module>
+    <module>packages/maven</module>
   </modules>
 
   <properties>
@@ -282,6 +281,23 @@
             </execution>
           </executions>
         </plugin>
+
+      <plugin>
+        <groupId>dev.nx.maven</groupId>
+        <artifactId>nx-maven-plugin</artifactId>
+        <version>{project.version}</version>
+      </plugin>
+
+      <!-- Central Publishing Plugin for snapshots and releases -->
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
+        <version>0.9.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <publishingServerId>central</publishingServerId>
+        </configuration>
+      </plugin>
     </plugins>
     </pluginManagement>
 
@@ -290,6 +306,12 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>flatten-maven-plugin</artifactId>
+      </plugin>
+
+      <!-- Activate central publishing plugin -->
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>
@@ -314,15 +336,6 @@
                   </goals>
                 </execution>
               </executions>
-            </plugin>
-            <plugin>
-              <groupId>org.sonatype.central</groupId>
-              <artifactId>central-publishing-maven-plugin</artifactId>
-              <version>0.9.0</version>
-              <extensions>true</extensions>
-              <configuration>
-                <publishingServerId>central</publishingServerId>
-              </configuration>
             </plugin>
           </plugins>
         </pluginManagement>
