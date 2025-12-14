@@ -66,7 +66,6 @@
     "string-width": "^4.2.3",
     "tar-stream": "~2.2.0",
     "tmp": "~0.2.1",
-    "tree-kill": "^1.2.2",
     "tsconfig-paths": "catalog:typescript",
     "tslib": "catalog:typescript",
     "yaml": "^2.6.0",
