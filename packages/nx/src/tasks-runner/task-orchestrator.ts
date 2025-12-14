@@ -735,7 +735,7 @@ export class TaskOrchestrator {
       );
 
       this.runningContinuousTasks.set(task.id, runningTask);
-      runningTask.onExit((code) => {
+      runningTask.onExit(() => {
         if (this.tuiEnabled && !this.completedTasks[task.id]) {
           this.options.lifeCycle.setTaskStatus(
             task.id,
@@ -746,9 +746,6 @@ export class TaskOrchestrator {
 
         // we're not cleaning up, so this is an unexpected exit, fail the task
         if (!this.cleaningUp) {
-          console.error(
-            `Task "${task.id}" is continuous but exited with code ${code}`
-          );
           this.complete([{ taskId: task.id, status: 'failure' }]);
         }
       });
@@ -813,7 +810,7 @@ export class TaskOrchestrator {
     this.runningTasksService.addRunningTask(task.id);
     this.runningContinuousTasks.set(task.id, childProcess);
 
-    childProcess.onExit((code) => {
+    childProcess.onExit(() => {
       // Only set status to Stopped if task hasn't been completed yet
       if (this.tuiEnabled && !this.completedTasks[task.id]) {
         this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Stopped);
@@ -824,9 +821,6 @@ export class TaskOrchestrator {
 
       // we're not cleaning up, so this is an unexpected exit, fail the task
       if (!this.cleaningUp) {
-        console.error(
-          `Task "${task.id}" is continuous but exited with code ${code}`
-        );
         this.complete([{ taskId: task.id, status: 'failure' }]);
       }
     });
