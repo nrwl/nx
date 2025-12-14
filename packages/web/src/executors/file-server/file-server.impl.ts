@@ -130,8 +130,16 @@ function createFileWatcher(
       includeDependentProjects: true,
     },
     async (error, val) => {
-      if (error === 'closed') {
-        throw new Error('Watch error: Daemon closed the connection');
+      if (error === 'reconnecting') {
+        // Silent - daemon restarts automatically on lockfile changes
+        return;
+      } else if (error === 'reconnected') {
+        // Silent - reconnection succeeded
+        return;
+      } else if (error === 'closed') {
+        throw new Error(
+          'Failed to reconnect to daemon after multiple attempts'
+        );
       } else if (error) {
         throw new Error(`Watch error: ${error?.message ?? 'Unknown'}`);
       } else if (val?.changedFiles.length > 0) {

@@ -24,7 +24,7 @@ import {
   StaleProjectGraphCacheError,
 } from './error-types';
 import { isOnDaemon } from '../daemon/is-on-daemon';
-import { serverLogger } from '../daemon/server/logger';
+import { serverLogger } from '../daemon/logger';
 
 export interface FileMapCache {
   version: string;

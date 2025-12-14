@@ -5,7 +5,7 @@ import {
   installNxConsole,
   NxConsolePreferences,
 } from '../../native';
-import { serverLogger } from './logger';
+import { serverLogger } from '../logger';
 
 // Module-level state - persists across invocations within daemon lifecycle
 let latestNxTmpPath: string | null = null;

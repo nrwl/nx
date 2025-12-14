@@ -154,6 +154,33 @@ describe('Nx Watch', () => {
 
     expect(results).toEqual([proj1, proj3]);
   }, 50000);
+
+  it('should reconnect after daemon restart', async () => {
+    const getOutput = await runWatchWithReconnect(
+      `--projects=${proj1} -- echo \\$NX_PROJECT_NAME`
+    );
+
+    // Write file before daemon restart
+    await writeFileForWatcher(`libs/${proj1}/before-restart.txt`, 'content');
+    await wait(1000);
+
+    // Kill the daemon
+    runCLI('daemon --stop', {
+      env: {
+        NX_DAEMON: 'true',
+        NX_PROJECT_GRAPH_CACHE_DIRECTORY: cacheDirectory,
+      },
+    });
+
+    // Wait for reconnection to happen (exponential backoff)
+    await wait(3000);
+
+    // Write file after daemon restart - watch should reconnect and receive this
+    await writeFileForWatcher(`libs/${proj1}/after-restart.txt`, 'content');
+
+    const output = await getOutput();
+    expect(output).toContain(proj1);
+  }, 60000);
 });
 
 async function wait(timeout = 200) {
@@ -194,6 +221,49 @@ async function runWatch(command: string) {
             .filter((line) => line.length > 0 && !line.includes('NX'));
         });
       }
+    });
+  });
+}
+
+async function runWatchWithReconnect(command: string) {
+  const runCommand = `npx -c 'nx watch --verbose ${command}'`;
+  isVerboseE2ERun() && console.log(runCommand);
+  return new Promise<(timeout?: number) => Promise<string[]>>((resolve) => {
+    const p = spawn(runCommand, {
+      cwd: tmpProjPath(),
+      env: {
+        CI: 'true',
+        ...getStrippedEnvironmentVariables(),
+        FORCE_COLOR: 'false',
+        NX_DAEMON: 'true',
+        NX_PROJECT_GRAPH_CACHE_DIRECTORY: cacheDirectory,
+      },
+      shell: true,
+      stdio: 'pipe',
+    });
+
+    let output = '';
+    let resolved = false;
+    p.stdout?.on('data', (data) => {
+      output += data;
+      const s = data.toString().trim();
+      isVerboseE2ERun() && console.log(s);
+      // Resolve once we see the watch is ready, but don't kill the process yet
+      if (s.includes('watch process waiting') && !resolved) {
+        resolved = true;
+        resolve(async (timeout = 8000) => {
+          await wait(timeout);
+          p.kill();
+          return output
+            .split('\n')
+            .filter((line) => line.length > 0 && !line.includes('NX'));
+        });
+      }
+    });
+
+    p.stderr?.on('data', (data) => {
+      const s = data.toString().trim();
+      isVerboseE2ERun() && console.log('stderr:', s);
     });
   });
 }
