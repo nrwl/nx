@@ -7,9 +7,11 @@ cover_image: /blog/images/evolving-nx/thumbnail.avif
 description: Nx's journey from a side project to a tool for millions, including Nx Cloud and Nx Powerpack developments.
 ---
 
-{% callout type="info" title="Update - March 31st, 2025" %}
+{% callout type="info" title="Update - December 10, 2025" %}
 
-Self-hosted caching is now free for everyone. Read more [in our blog post](/blog/custom-runners-and-self-hosted-caching) and in our documentation about [remote caching options with Nx](/remote-cache).
+Self-hosted caching is free for everyone. Read more [in our blog post](/blog/custom-runners-and-self-hosted-caching) and in our documentation about [remote caching options with Nx](/remote-cache).
+
+The other features of Nx Powerpack are no longer available as a standalone product. All the packages, including Conformance and Nx Owners, are still maintained and come included with the [Nx Enterprise](/enterprise) plan.
 
 {% /callout %}
 
