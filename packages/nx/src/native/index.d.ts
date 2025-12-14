@@ -69,7 +69,7 @@ export declare class ImportResult {
 
 export declare class NxCache {
   cacheDirectory: string
-  constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<NxDbConnection>, linkTaskDetails?: boolean | undefined | null, maxCacheSize?: number | undefined | null)
+  constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<NxDbConnection>, maxCacheSize?: number | undefined | null)
   get(hash: string): CachedResult | null
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): void
   applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void

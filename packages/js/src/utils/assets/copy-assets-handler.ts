@@ -57,7 +57,7 @@ export const defaultFileEventHandler = (events: FileEvent[]) => {
     }
     const eventDir = path.dirname(event.src);
     const relativeDest = path.relative(eventDir, event.dest);
-    logger.log(`\n${dim(relativeDest)}`);
+    logger.verbose(`\n${dim(relativeDest)}`);
   });
 };
 

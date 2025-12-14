@@ -10,7 +10,5 @@ platformBrowserDynamic()
 <%_ } else { _%>
 platformBrowser()
 <%_ } _%>
-  .bootstrapModule(AppModule, {
-    ngZoneEventCoalescing: true
-  })
+  .bootstrapModule(AppModule<% if (!zoneless) { %>, { ngZoneEventCoalescing: true }<% } %>)
   .catch((err) => console.error(err));

@@ -205,11 +205,19 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
               )
             ) {
               console.error('npm dist-tag add error:');
+              // npm returns error.summary and error.detail
               if (stdoutData.error?.summary) {
                 console.error(stdoutData.error.summary);
               }
               if (stdoutData.error?.detail) {
                 console.error(stdoutData.error.detail);
+              }
+              // pnpm returns error.code and error.message
+              if (stdoutData.error?.code && !stdoutData.error?.summary) {
+                console.error(`Error code: ${stdoutData.error.code}`);
+              }
+              if (stdoutData.error?.message && !stdoutData.error?.summary) {
+                console.error(stdoutData.error.message);
               }
 
               if (context.isVerbose) {
@@ -375,11 +383,19 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
 
       console.error(`${pm} publish error:`);
+      // npm returns error.summary and error.detail
       if (stdoutData.error?.summary) {
         console.error(stdoutData.error.summary);
       }
       if (stdoutData.error?.detail) {
         console.error(stdoutData.error.detail);
+      }
+      // pnpm returns error.code and error.message
+      if (stdoutData.error?.code && !stdoutData.error?.summary) {
+        console.error(`Error code: ${stdoutData.error.code}`);
+      }
+      if (stdoutData.error?.message && !stdoutData.error?.summary) {
+        console.error(stdoutData.error.message);
       }
 
       if (context.isVerbose) {

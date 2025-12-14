@@ -1,4 +1,4 @@
-import { UnitTestRunner, E2eTestRunner } from '../utils/testing';
+import type { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 
 export interface Schema {
   name: string;
@@ -6,7 +6,7 @@ export interface Schema {
   remote: string;
   remoteDirectory?: string;
   host?: string;
-  unitTestRunner?: UnitTestRunner;
+  unitTestRunner?: Exclude<UnitTestRunner, UnitTestRunner.VitestAngular>;
   e2eTestRunner?: E2eTestRunner;
   standalone?: boolean;
   skipFormat?: boolean;

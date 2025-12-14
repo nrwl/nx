@@ -7,8 +7,8 @@ import {
 } from '@nx/devkit';
 import { getRootTsConfigFileName } from '@nx/js';
 import { getNeededCompilerOptionOverrides } from '@nx/js/src/utils/typescript/configuration';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { gte, lt } from 'semver';
+import { gte } from 'semver';
+import { getDefinedCompilerOption } from '../../utils/tsconfig-utils';
 import { updateAppEditorTsConfigExcludedFiles } from '../../utils/update-app-editor-tsconfig-excluded-files';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import { enableStrictTypeChecking } from './enable-strict-type-checking';
@@ -29,6 +29,7 @@ export function updateTsconfigFiles(tree: Tree, options: NormalizedSchema) {
     skipLibCheck: true,
     experimentalDecorators: true,
     importHelpers: true,
+    isolatedModules: true,
     target: 'es2022',
     moduleResolution: 'bundler',
   };
@@ -37,18 +38,21 @@ export function updateTsconfigFiles(tree: Tree, options: NormalizedSchema) {
 
   const { major: angularMajorVersion, version: angularVersion } =
     getInstalledAngularVersionInfo(tree);
-  if (lt(angularVersion, '18.1.0')) {
-    compilerOptions.useDefineForClassFields = false;
-  }
-  if (gte(angularVersion, '18.2.0')) {
-    compilerOptions.isolatedModules = true;
-  }
   if (gte(angularVersion, '19.1.0')) {
     // Angular started warning about emitDecoratorMetadata and isolatedModules
     // in v19.1.0. If enabled in the root tsconfig, we need to disable it.
-    if (shouldDisableEmitDecoratorMetadata(tree, rootTsConfigPath)) {
+    if (
+      getDefinedCompilerOption(
+        tree,
+        rootTsConfigPath,
+        'emitDecoratorMetadata'
+      ) === true
+    ) {
       compilerOptions.emitDecoratorMetadata = false;
     }
+  }
+  if (angularMajorVersion >= 21) {
+    compilerOptions.moduleResolution = 'bundler';
   }
   if (angularMajorVersion >= 20) {
     compilerOptions.module = 'preserve';
@@ -126,23 +130,4 @@ function updateEditorTsConfig(tree: Tree, options: NormalizedSchema) {
 
   const project = readProjectConfiguration(tree, options.name);
   updateAppEditorTsConfigExcludedFiles(tree, project);
-}
-
-function shouldDisableEmitDecoratorMetadata(
-  tree: Tree,
-  tsConfigPath: string
-): boolean {
-  const ts = ensureTypescript();
-  const tsSysFromTree: import('typescript').System = {
-    ...ts.sys,
-    readFile: (path) => tree.read(path, 'utf-8'),
-  };
-
-  const parsed = ts.parseJsonConfigFileContent(
-    ts.readConfigFile(tsConfigPath, tsSysFromTree.readFile).config,
-    tsSysFromTree,
-    tree.root
-  );
-
-  return parsed.options.emitDecoratorMetadata === true;
 }

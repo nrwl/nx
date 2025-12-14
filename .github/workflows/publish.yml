@@ -123,7 +123,7 @@ jobs:
           - host: macos-latest
             target: x86_64-apple-darwin
             setup: |-
-              rustup target add aarch64-apple-darwin
+              rustup target add x86_64-apple-darwin
             build: |
               pnpm nx run-many --target=build-native -- --target=x86_64-apple-darwin
           - host: windows-latest

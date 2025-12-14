@@ -46,7 +46,7 @@
   },
   {
     "name": "@berenddeboer/nx-aws-cdk",
-    "description": "Nx plugin to generate a CDK stack with support for the vitest runner. Supports all CDK commands.",
+    "description": "A self-inferring Nx plugin for developing AWS CDK applications. Supports all CDK commands.",
     "url": "https://github.com/berenddeboer/nx-plugins/tree/main/packages/nx-aws-cdk"
   },
   {
@@ -533,5 +533,10 @@
     "name": "nx-oxlint",
     "description": "Nx plugin for oxlint - a fast linter written in Rust",
     "url": "https://github.com/Nas3nmann/nx-oxlint"
+  },
+  {
+    "name": "@gridatek/nx-supabase",
+    "description": "Nx plugin for managing multiple Supabase projects and environments",
+    "url": "https://github.com/gridatek/nx-supabase"
   }
 ]

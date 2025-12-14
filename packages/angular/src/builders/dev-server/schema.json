@@ -83,6 +83,13 @@
         "type": "string"
       }
     },
+    "define": {
+      "description": "Defines global identifiers that will be replaced with a specified constant value when found in any JavaScript or TypeScript code including libraries. The value will be used directly. String values must be put in quotes. Identifiers within Angular metadata such as Component Decorators will not be replaced. _Note: this is only supported in Angular versions >= 21.0.0 and it's only applicable for the Vite-based development server._",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
     "servePath": {
       "type": "string",
       "description": "The pathname where the app will be served."
@@ -94,7 +101,7 @@
     },
     "hmr": {
       "type": "boolean",
-      "description": "Enable hot module replacement. It defaults to `false` in Angular versions < 19.0.0. Otherwise, the value will be `undefined`."
+      "description": "Enable hot module replacement."
     },
     "watch": {
       "type": "boolean",
@@ -112,7 +119,7 @@
     },
     "inspect": {
       "default": false,
-      "description": "Activate debugging inspector. This option only has an effect when 'SSR' or 'SSG' are enabled. _Note: this is only supported in Angular versions >= 18.1.0_.",
+      "description": "Activate debugging inspector. This option only has an effect when 'SSR' or 'SSG' are enabled.",
       "oneOf": [
         {
           "type": "string",

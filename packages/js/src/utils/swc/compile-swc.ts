@@ -89,9 +89,12 @@ export async function compileSwc(
     });
     logger.log(swcCmdLog.replace(/\n/, ''));
   } catch (error) {
-    logger.error('SWC compilation failed');
-    if (error.stderr) {
+    logger.error(`SWC compilation failed: ${error?.message ?? error}`);
+    if (error?.stderr) {
       logger.error(error.stderr.toString());
+    }
+    if (error?.stdout) {
+      logger.error(error.stdout.toString());
     }
     return { success: false };
   }
