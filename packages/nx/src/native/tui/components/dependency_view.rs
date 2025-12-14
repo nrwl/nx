@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::native::tasks::types::TaskGraph;
+use crate::native::tui::action::Action;
 use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::graph_utils::{get_dependency_chain_failures, is_task_continuous};
 use crate::native::tui::status_icons;
@@ -108,8 +109,9 @@ impl DependencyViewState {
         (pane_area.height as usize).saturating_sub(4) // 2 for borders, 2 for padding
     }
 
-    /// Handle key event with automatic viewport height calculation from stored pane area
-    pub fn handle_key_event(&mut self, key: crossterm::event::KeyEvent) -> bool {
+    /// Handle key event with automatic viewport height calculation from stored pane area.
+    /// Returns Some(Action) if an action should be dispatched, None otherwise.
+    pub fn handle_key_event(&mut self, key: crossterm::event::KeyEvent) -> Option<Action> {
         let viewport_height = Self::calculate_viewport_height(self.pane_area);
         self.handle_key_event_with_viewport(key, viewport_height)
     }
@@ -118,7 +120,7 @@ impl DependencyViewState {
         &mut self,
         key: crossterm::event::KeyEvent,
         viewport_height: usize,
-    ) -> bool {
+    ) -> Option<Action> {
         use crossterm::event::{KeyCode, KeyModifiers};
 
         // Only handle keys if there's actually content to scroll
@@ -130,40 +132,41 @@ impl DependencyViewState {
             KeyCode::Up | KeyCode::Char('k') => {
                 if has_scrollable_content && self.scroll_offset > 0 {
                     self.scroll_up();
-                    true
-                } else {
-                    false
                 }
+                None
             }
             KeyCode::Down | KeyCode::Char('j') => {
                 if has_scrollable_content && self.scroll_offset < max_scroll {
                     self.scroll_down(viewport_height);
-                    true
-                } else {
-                    false
                 }
+                None
             }
             KeyCode::Char('u') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 if has_scrollable_content && self.scroll_offset > 0 {
                     for _ in 0..12 {
                         self.scroll_up();
                     }
-                    true
-                } else {
-                    false
                 }
+                None
             }
             KeyCode::Char('d') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 if has_scrollable_content && self.scroll_offset < max_scroll {
                     for _ in 0..12 {
                         self.scroll_down(viewport_height);
                     }
-                    true
-                } else {
-                    false
                 }
+                None
             }
-            _ => false,
+            // Show hint for keys that users might expect to work but don't in dependency view
+            KeyCode::Char('i') | KeyCode::Char('c') => Some(Action::ShowHint(
+                "This task hasn't started yet. Keyboard shortcuts will be available once the task begins running.".to_string(),
+            )),
+            KeyCode::Char('a') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                Some(Action::ShowHint(
+                    "This task hasn't started yet. Keyboard shortcuts will be available once the task begins running.".to_string(),
+                ))
+            }
+            _ => None,
         }
     }
 }

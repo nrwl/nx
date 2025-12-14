@@ -876,6 +876,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
      * - If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits.
      */
     autoExit?: boolean | number;
+    /**
+     * Whether to suppress hint popups that provide guidance for unhandled keys.
+     * Defaults to `false` (hints are shown).
+     */
+    suppressHints?: boolean;
   };
 }
 
