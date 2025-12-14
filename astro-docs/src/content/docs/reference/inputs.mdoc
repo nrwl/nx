@@ -43,6 +43,25 @@ Source file inputs are defined like this:
 
 Source file inputs must be prefixed with either `{projectRoot}` or `{workspaceRoot}` to distinguish where the paths should be resolved from. `{workspaceRoot}` should only appear in the beginning of an input but `{projectRoot}` and `{projectName}` can be specified later in the input to interpolate the root or name of the project into the input location.
 
+#### Directory Paths
+
+When specifying a directory as an input, you must use a trailing slash or a glob pattern. A path without a trailing slash or glob pattern will be treated as a file path and will not match any files within the directory.
+
+```jsonc
+// nx.json
+{
+  "inputs": [
+    "{projectRoot}/src/", // ✓ Matches all files in src (note the trailing slash)
+    "{projectRoot}/src/**/*", // ✓ Matches all files in src using glob
+    "{projectRoot}/src" // ✗ Does NOT match files - treated as a file path
+  ]
+}
+```
+
+{% aside type="note" title="Difference from Outputs" %}
+This behavior differs from `outputs`, which support naked directory paths without a trailing slash. For example, `{projectRoot}/dist` works as an output but would not work as an input.
+{% /aside %}
+
 #### Token Behavior with Nested Projects
 
 These tokens behave differently when dealing with nested projects:
