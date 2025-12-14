@@ -72,10 +72,11 @@ fun main(args: Array<String>) {
         System.out.flush()
 
         // IMPORTANT: The Maven executor may have hanging threads or resource locks
-        // that prevent normal JVM exit. Use Runtime.halt() to force termination.
-        // This bypasses waitForNonDaemonThreads() and ensures immediate exit.
-        log.debug("Forcing JVM termination with exit code: $exitCode")
-        Runtime.getRuntime().halt(exitCode)
+        // that prevent normal JVM exit. Use exitProcess() which calls System.exit()
+        // internally but ensures proper cleanup. This is more reliable than halt()
+        // for detecting exit codes in parent processes.
+        log.debug("Exiting with code: $exitCode")
+        exitProcess(exitCode)
 
     } catch (e: Exception) {
         log.error("💥 Fatal error: ${e.message}", e)
@@ -84,8 +85,8 @@ fun main(args: Array<String>) {
         System.err.flush()
         System.out.flush()
 
-        // Force JVM termination to avoid hanging on resources
-        Runtime.getRuntime().halt(1)
+        // Exit with error code
+        exitProcess(1)
     }
 }
 
