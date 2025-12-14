@@ -540,6 +540,92 @@ describe('shared', () => {
       expect(tags).toEqual(['apps/backend/api-service@2.1.0']);
     });
 
+    it('should interpolate {releaseGroupName} in tag pattern for fixed groups', () => {
+      const projects = ['a', 'b'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'forge',
+        projects,
+        projectsRelationship: 'fixed',
+        releaseTag: {
+          pattern: '{releaseGroupName}@{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: undefined,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+      const releaseGroupToFilteredProjects = new Map().set(
+        releaseGroup,
+        new Set(projects)
+      );
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+        }
+      );
+
+      expect(tags).toEqual(['forge@1.1.0']);
+    });
+
+    it('should interpolate {releaseGroupName} in tag pattern for independent groups', () => {
+      const projects = ['a', 'b'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'my-group',
+        projects,
+        projectsRelationship: 'independent',
+        releaseTag: {
+          pattern: '{releaseGroupName}/{projectName}@{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: undefined,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+      const releaseGroupToFilteredProjects = new Map().set(
+        releaseGroup,
+        new Set(projects)
+      );
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.2.0',
+          },
+        }
+      );
+
+      expect(tags).toEqual(['my-group/a@1.1.0', 'my-group/b@1.2.0']);
+    });
+
     function setUpReleaseGroup() {
       const projects = ['a', 'b'];
       const releaseGroup: ReleaseGroupWithName = {
