@@ -17,7 +17,7 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
-import { hashArray, logDebug, RunMode } from '../native';
+import { hashArray, logDebug, RunMode, TuiMode } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -208,7 +208,8 @@ async function getTerminalOutputLifeCycle(
         nxJson.tui ?? {},
         titleText,
         workspaceRoot,
-        taskGraph
+        taskGraph,
+        TuiMode.FullScreen
       );
       lifeCycles.unshift(appLifeCycle);
 

@@ -1,5 +1,6 @@
 use color_eyre::eyre::Result;
 use hashbrown::HashSet;
+use parking_lot::Mutex;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -10,10 +11,8 @@ use ratatui::{
     },
 };
 use serde::{Deserialize, Serialize};
-use std::{
-    any::Any,
-    sync::{Arc, Mutex},
-};
+use std::any::Any;
+use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
 use super::help_text::HelpText;
@@ -275,12 +274,12 @@ impl TasksList {
 
     /// Moves the selection to the next task in the list.
     fn next_task(&mut self) {
-        self.selection_manager.lock().unwrap().next();
+        self.selection_manager.lock().next();
     }
 
     /// Moves the selection to the previous task in the list.
     fn previous_task(&mut self) {
-        self.selection_manager.lock().unwrap().previous();
+        self.selection_manager.lock().previous();
     }
 
     /// Scrolls the task list up with momentum support
@@ -289,10 +288,7 @@ impl TasksList {
             return;
         }
         let lines = self.scroll_momentum.calculate_momentum(ScrollDirection::Up) as usize;
-        self.selection_manager
-            .lock()
-            .unwrap()
-            .scroll_up(lines.max(1));
+        self.selection_manager.lock().scroll_up(lines.max(1));
     }
 
     /// Scrolls the task list down with momentum support
@@ -303,10 +299,7 @@ impl TasksList {
         let lines = self
             .scroll_momentum
             .calculate_momentum(ScrollDirection::Down) as usize;
-        self.selection_manager
-            .lock()
-            .unwrap()
-            .scroll_down(lines.max(1));
+        self.selection_manager.lock().scroll_down(lines.max(1));
     }
 
     /// Creates a list of task entries with separators between different status groups.
@@ -417,7 +410,7 @@ impl TasksList {
 
         // Only get viewport entries if we know we need them
         let viewport_entries = {
-            let manager = self.selection_manager.lock().unwrap();
+            let manager = self.selection_manager.lock();
             manager.get_viewport_entries()
         };
 
@@ -590,7 +583,7 @@ impl TasksList {
     /// - If no pinned tasks → TrackByName only if spacebar mode (terminal open)
     /// - Otherwise → TrackByPosition
     fn determine_selection_mode(&self) -> SelectionMode {
-        let selection_manager = self.selection_manager.lock().unwrap();
+        let selection_manager = self.selection_manager.lock();
         let selected_task_name = selection_manager.get_selected_task_name();
 
         // EXCEPTION: Terminal pane showing selected task → always track by name
@@ -636,10 +629,7 @@ impl TasksList {
     pub fn apply_filter(&mut self) {
         let mode = self.determine_selection_mode();
 
-        self.selection_manager
-            .lock()
-            .unwrap()
-            .set_selection_mode(mode);
+        self.selection_manager.lock().set_selection_mode(mode);
 
         // Apply filter
         if self.filter_text.is_empty() {
@@ -659,7 +649,7 @@ impl TasksList {
 
         // Update entries in selection manager with separator
         let (entries, in_progress_size) = self.create_entries_with_separator(&self.filtered_names);
-        let mut manager = self.selection_manager.lock().unwrap();
+        let mut manager = self.selection_manager.lock();
         manager.update_entries_with_size(entries, in_progress_size);
         // Explicitly scroll to ensure selected task is visible
         manager.ensure_selected_visible();
@@ -696,6 +686,28 @@ impl TasksList {
         }
     }
 
+    /// Set task timing information for a specific task
+    /// Used when syncing state during mode switching
+    pub fn set_task_timing(
+        &mut self,
+        task_name: String,
+        start_time: Option<i64>,
+        end_time: Option<i64>,
+    ) {
+        if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task_name) {
+            task_item.start_time = start_time;
+            task_item.end_time = end_time;
+
+            // Update the duration string if we have both times
+            if let (Some(start), Some(end)) = (start_time, end_time) {
+                task_item.duration = format_duration_since(start, end);
+            } else if start_time.is_some() && end_time.is_none() && !task_item.continuous {
+                // Task is in progress
+                task_item.duration = DURATION_NOT_YET_KNOWN.to_string();
+            }
+        }
+    }
+
     pub fn sort_tasks(&mut self) {
         self.sort_tasks_with_mode(None);
     }
@@ -703,10 +715,7 @@ impl TasksList {
     fn sort_tasks_with_mode(&mut self, mode_override: Option<SelectionMode>) {
         let mode = mode_override.unwrap_or_else(|| self.determine_selection_mode());
 
-        self.selection_manager
-            .lock()
-            .unwrap()
-            .set_selection_mode(mode);
+        self.selection_manager.lock().set_selection_mode(mode);
 
         // If we're in run one mode, and there are initiating tasks, sort them as highlighted tasks
         let highlighted_tasks =
@@ -740,7 +749,6 @@ impl TasksList {
         let (entries, in_progress_size) = self.create_entries_with_separator(&self.filtered_names);
         self.selection_manager
             .lock()
-            .unwrap()
             .update_entries_with_size(entries, in_progress_size);
     }
 
@@ -841,7 +849,7 @@ impl TasksList {
 
     /// Creates header cells for the task list table.
     /// Shows either filter input or task status based on current state.
-    fn get_header_cells(&self, column_visibility: &ColumnVisibility) -> Vec<Cell> {
+    fn get_header_cells(&'_ self, column_visibility: &ColumnVisibility) -> Vec<Cell<'_>> {
         let status_style = if !self.is_task_list_focused() {
             Style::default().fg(THEME.secondary_fg).dim()
         } else {
@@ -939,7 +947,7 @@ impl TasksList {
     /// This should be called after tasks have been sorted to ensure entries are up-to-date.
     /// Returns true if a task was auto-selected, false otherwise.
     fn auto_select_first_in_progress_if_needed(&mut self) -> bool {
-        let mut selection_manager = self.selection_manager.lock().unwrap();
+        let mut selection_manager = self.selection_manager.lock();
 
         // Don't override existing selection
         if selection_manager.get_selected_task_name().is_some() {
@@ -989,23 +997,17 @@ impl TasksList {
                 .iter()
                 .any(|t| t.status == TaskStatus::NotStarted);
 
-            self.selection_manager
-                .lock()
-                .unwrap()
-                .handle_task_status_change(
-                    task_id,
-                    old_in_progress_index,
-                    false, // new_is_in_progress = false
-                    has_pending_tasks,
-                );
+            self.selection_manager.lock().handle_task_status_change(
+                task_id,
+                old_in_progress_index,
+                false, // new_is_in_progress = false
+                has_pending_tasks,
+            );
         }
 
         // Step 4: Set final mode based on current selection state
         let final_mode = self.determine_selection_mode();
-        self.selection_manager
-            .lock()
-            .unwrap()
-            .set_selection_mode(final_mode);
+        self.selection_manager.lock().set_selection_mode(final_mode);
     }
 
     /// Updates a task's status and triggers a sort of the list.
@@ -1019,7 +1021,6 @@ impl TasksList {
             let old_in_progress_index = if old_is_in_progress {
                 self.selection_manager
                     .lock()
-                    .unwrap()
                     .get_index_in_in_progress_section(&task_id)
             } else {
                 None
@@ -1040,10 +1041,7 @@ impl TasksList {
             }
 
             // Ensure selected task is visible
-            self.selection_manager
-                .lock()
-                .unwrap()
-                .ensure_selected_visible();
+            self.selection_manager.lock().ensure_selected_visible();
         }
     }
 
@@ -1077,13 +1075,10 @@ impl TasksList {
         }
         self.sort_tasks();
         // Explicitly scroll to ensure selected task is visible after sort
-        self.selection_manager
-            .lock()
-            .unwrap()
-            .ensure_selected_visible();
+        self.selection_manager.lock().ensure_selected_visible();
     }
 
-    fn generate_empty_row(&self, column_visibility: &ColumnVisibility) -> Row {
+    fn generate_empty_row(&'_ self, column_visibility: &ColumnVisibility) -> Row<'_> {
         let mut empty_cells = vec![
             Cell::from("   "), // Just spaces for indentation, no vertical line
             Cell::from(""),
@@ -1145,7 +1140,7 @@ impl TasksList {
     fn will_need_scrollbar(&self, table_height: u16) -> bool {
         let header_and_spacing_rows = 4;
         let dynamic_viewport_height = table_height.saturating_sub(header_and_spacing_rows) as usize;
-        let total_entries = self.selection_manager.lock().unwrap().get_total_entries();
+        let total_entries = self.selection_manager.lock().get_total_entries();
         total_entries > dynamic_viewport_height
     }
 
@@ -1158,11 +1153,7 @@ impl TasksList {
         needs_scrollbar: bool,
         scroll_metrics: &ScrollMetrics,
     ) {
-        let visible_entries = self
-            .selection_manager
-            .lock()
-            .unwrap()
-            .get_viewport_entries();
+        let visible_entries = self.selection_manager.lock().get_viewport_entries();
         let selected_style = Style::default()
             .fg(THEME.primary_fg)
             .add_modifier(Modifier::BOLD);
@@ -1336,11 +1327,7 @@ impl TasksList {
             if let Some(task_name) = entry {
                 // Find the task in the filtered list
                 if let Some(task) = self.tasks.iter().find(|t| &t.name == task_name) {
-                    let is_selected = self
-                        .selection_manager
-                        .lock()
-                        .unwrap()
-                        .is_selected(task_name);
+                    let is_selected = self.selection_manager.lock().is_selected(task_name);
 
                     // Calculate absolute position to determine if the task is in the parallel section
                     let absolute_idx = scroll_metrics.scroll_offset + row_idx;
@@ -1917,7 +1904,7 @@ impl Component for TasksList {
         // --- 6. Render Table ---
         // Compute scroll metrics once here to reduce lock contention in render_task_table
         let scroll_metrics = {
-            let mut manager = self.selection_manager.lock().unwrap();
+            let mut manager = self.selection_manager.lock();
             manager.update_viewport_and_get_metrics(table_area.height.saturating_sub(4) as usize)
         };
         self.render_task_table(
@@ -2101,10 +2088,7 @@ impl Component for TasksList {
             Action::SortTasks => {
                 self.sort_tasks();
                 // Explicitly scroll to ensure selected task is visible after sort
-                self.selection_manager
-                    .lock()
-                    .unwrap()
-                    .ensure_selected_visible();
+                self.selection_manager.lock().ensure_selected_visible();
             }
             Action::UpdateTaskStatus(task_name, status) => {
                 self.update_task_status(task_name, status);
