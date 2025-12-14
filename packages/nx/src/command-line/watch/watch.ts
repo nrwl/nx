@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
 import { ChangedFile, daemonClient } from '../../daemon/client/client';
 import { output } from '../../utils/output';
 
@@ -13,6 +13,20 @@ export interface WatchArguments {
 
   projectNameEnvName?: string;
   fileChangesEnvName?: string;
+
+  /**
+   * Execution strategy for running commands.
+   * - 'batch': Run and wait for completion before processing next batch (default)
+   * - 'persistent': Lazy-start processes and keep them alive, with FIFO eviction
+   */
+  executionStrategy?: 'batch' | 'persistent';
+
+  /**
+   * Maximum number of concurrent persistent processes.
+   * Only applies when `executionStrategy` is 'persistent'.
+   * Default: 3
+   */
+  maxParallel?: number;
 }
 
 const DEFAULT_PROJECT_NAME_ENV = 'NX_PROJECT_NAME';
@@ -49,6 +63,8 @@ export class BatchFunctionRunner {
 
     return this.process();
   }
+
+  cleanUp() {}
 
   private async process() {
     if (!this.running && this.hasPending) {
@@ -151,6 +167,180 @@ class BatchCommandRunner extends BatchFunctionRunner {
   }
 }
 
+class PersistentCommandRunner extends BatchFunctionRunner {
+  // Track active processes in insertion order (for FIFO eviction)
+  private activeProcesses = new Map<string, ChildProcess>();
+  private maxParallel: number;
+
+  constructor(
+    private command: string,
+    maxParallel: number = 3,
+    private projectNameEnv: string = DEFAULT_PROJECT_NAME_ENV,
+    private fileChangesEnv: string = DEFAULT_FILE_CHANGES_ENV
+  ) {
+    super((projects, files) => {
+      // Handle persistent processes
+      return this.manageProcesses(projects, files);
+    });
+
+    this.maxParallel = Math.max(1, maxParallel);
+  }
+
+  override cleanUp() {
+    super.cleanUp();
+    this.killAll();
+  }
+
+  private async manageProcesses(
+    projects: Set<string>,
+    files: Set<string>
+  ): Promise<void> {
+    const filesArray = Array.from(files);
+
+    if (projects.size === 0) {
+      // No projects specified, handle as single global process
+      const processKey = this.createProcessKey('__global__');
+
+      if (!this.activeProcesses.has(processKey)) {
+        this.startProcess(processKey, '', filesArray);
+      } else {
+        // Process already running, move to end (most recently used)
+        this.touchProcess(processKey);
+      }
+    } else {
+      projects.forEach((projectName) => {
+        const processKey = this.createProcessKey(projectName);
+
+        if (this.activeProcesses.has(processKey)) {
+          // Process already running, move to end (most recently used)
+          this.touchProcess(processKey);
+
+          this._verbose &&
+            output.logSingleLine(
+              `Process for project "${projectName}" is already running`
+            );
+        } else {
+          this.startProcess(processKey, projectName, filesArray);
+        }
+      });
+    }
+
+    // Resolve immediately - don't wait for processes to exit
+    return Promise.resolve();
+  }
+
+  private createProcessKey(projectName: string): string {
+    // Create a composite key from project name and command to allow
+    // multiple different commands per project (e.g., serve, build --watch, test --watch)
+    return `${projectName}::${this.command}`;
+  }
+
+  private enforceMaxParallel() {
+    while (this.activeProcesses.size >= this.maxParallel) {
+      // Kill oldest (first entry in Map)
+      const [oldestKey, oldestProcess] = this.activeProcesses.entries().next()
+        .value as [string, ChildProcess];
+
+      this._verbose &&
+        output.logSingleLine(
+          `Killing process for "${oldestKey}" (max parallel limit of ${this.maxParallel} reached)`
+        );
+
+      try {
+        oldestProcess.kill('SIGTERM');
+      } catch (e) {
+        // Process might already be dead
+      }
+
+      this.activeProcesses.delete(oldestKey);
+    }
+  }
+
+  private touchProcess(key: string) {
+    // Move process to end of Map (most recently used)
+    const process = this.activeProcesses.get(key);
+    if (process) {
+      this.activeProcesses.delete(key);
+      this.activeProcesses.set(key, process);
+    }
+  }
+
+  private startProcess(key: string, projectName: string, filesArray: string[]) {
+    this.enforceMaxParallel();
+
+    this._verbose &&
+      output.logSingleLine(
+        `Starting persistent process for "${key}" with command: ${this.command}`
+      );
+
+    const childProcess = spawn(this.command, {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: true,
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        [this.projectNameEnv]: projectName,
+        [this.fileChangesEnv]: filesArray.join(' '),
+      },
+      windowsHide: false,
+    });
+
+    childProcess.stdout.on('data', (data) => {
+      const lines = data.toString().split('\n');
+      lines.forEach((line) => {
+        if (line.trim()) {
+          process.stdout.write(
+            `${projectName ? `[${projectName}] ` : ''}${line}\n`
+          );
+        }
+      });
+    });
+
+    childProcess.stderr.on('data', (data) => {
+      const lines = data.toString().split('\n');
+      lines.forEach((line) => {
+        if (line.trim()) {
+          process.stderr.write(
+            `${projectName ? `[${projectName}] ` : ''}${line}\n`
+          );
+        }
+      });
+    });
+
+    this.activeProcesses.set(key, childProcess);
+
+    // Clean up when process exits
+    childProcess.on('exit', (code) => {
+      this._verbose &&
+        output.logSingleLine(`Process for "${key}" exited with code ${code}`);
+      this.activeProcesses.delete(key);
+    });
+
+    childProcess.on('error', (error) => {
+      output.error({
+        title: `Process error for "${key}"`,
+        bodyLines: [error.message],
+      });
+      this.activeProcesses.delete(key);
+    });
+  }
+
+  private killAll() {
+    this._verbose &&
+      output.logSingleLine('Killing all persistent processes...');
+
+    for (const [key, childProcess] of this.activeProcesses.entries()) {
+      try {
+        childProcess.kill('SIGTERM');
+      } catch (e) {
+        // Process might already be dead
+      }
+    }
+
+    this.activeProcesses.clear();
+  }
+}
+
 export async function watch(args: WatchArguments) {
   const projectReplacementRegex = new RegExp(
     args.projectNameEnvName ?? DEFAULT_PROJECT_NAME_ENV,
@@ -185,11 +375,31 @@ export async function watch(args: WatchArguments) {
 
   const whatToWatch = args.all ? 'all' : args.projects;
 
-  const batchQueue = new BatchCommandRunner(
-    args.command ?? '',
-    args.projectNameEnvName,
-    args.fileChangesEnvName
-  );
+  const executionStrategy = args.executionStrategy ?? 'batch';
+  const runner =
+    executionStrategy === 'persistent'
+      ? new PersistentCommandRunner(
+          args.command ?? '',
+          args.maxParallel ?? 3,
+          args.projectNameEnvName,
+          args.fileChangesEnvName
+        )
+      : new BatchCommandRunner(
+          args.command ?? '',
+          args.projectNameEnvName,
+          args.fileChangesEnvName
+        );
+
+  args.verbose &&
+    output.logSingleLine(`Using ${executionStrategy} execution strategy`);
+
+  const cleanupHandler = () => {
+    args.verbose && output.logSingleLine('Cleaning up before exit...');
+    runner.cleanUp();
+    process.exit(0);
+  };
+  process.on('SIGINT', cleanupHandler);
+  process.on('SIGTERM', cleanupHandler);
 
   // Run the command initially if requested
   if (args.initialRun) {
@@ -200,7 +410,7 @@ export async function watch(args: WatchArguments) {
       : args.projects || [];
 
     // Execute the initial run
-    await batchQueue.enqueue(initialProjects, []);
+    await runner.enqueue(initialProjects, []);
   }
 
   await daemonClient.registerFileWatcher(
@@ -231,9 +441,9 @@ export async function watch(args: WatchArguments) {
 
       // Only pass the projects to the queue if the command has a replacement for projects
       if (args.command.match(projectReplacementRegex)) {
-        batchQueue.enqueue(data.changedProjects, data.changedFiles);
+        runner.enqueue(data.changedProjects, data.changedFiles);
       } else {
-        batchQueue.enqueue([], data.changedFiles);
+        runner.enqueue([], data.changedFiles);
       }
     }
   );
