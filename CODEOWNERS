@@ -118,6 +118,7 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 # Nx-Plugin
 /packages/plugin/** @nrwl/nx-devkit-reviewers
 /e2e/plugin/** @nrwl/nx-devkit-reviewers
+/packages/create-nx-plugin/** @nrwl/nx-devkit-reviewers
 
 ## Core
 /packages/nx/** @nrwl/nx-core-reviewers
@@ -132,7 +133,10 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /e2e/nx*/** @nrwl/nx-core-reviewers
 /packages/workspace/** @nrwl/nx-core-reviewers
 /e2e/workspace-create/** @nrwl/nx-core-reviewers
-/e2e/release/** @nrwl/nx-core-reviewers
+/packages/create-nx-workspace/** @nrwl/nx-core-reviewers
+/packages/nx/src/command-line/release/** @nrwl/nx-core-reviewers @Coly010
+/packages/nx/src/plugins/js/** @nrwl/nx-core-reviewers @nrwl/nx-js-reviewers
+/e2e/release/** @nrwl/nx-core-reviewers @Coly010
 
 # .NET
 /packages/dotnet/** @FrozenPandaz @AgentEnder
@@ -159,9 +163,9 @@ mise.toml @nrwl/nx-pipelines-reviewers @FrozenPandaz
 /packages/workspace/src/generators/ci-workflow/** @nrwl/nx-pipelines-reviewers
 
 # Claude AI Integration
-CLAUDE.md @FrozenPandaz
-.claude/** @FrozenPandaz
-.mcp.json @FrozenPandaz
+CLAUDE.md @FrozenPandaz @Coly010
+.claude/** @FrozenPandaz @Coly010
+.mcp.json @FrozenPandaz @Coly010
 
 # Global Files
 project.json @FrozenPandaz @vsavkin
