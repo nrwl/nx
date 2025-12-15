@@ -13,6 +13,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import {
@@ -2020,6 +2021,50 @@ describe('lib', () => {
         export class MyLibModule {}
         "
       `);
+    });
+
+    it('should install vitest v3 when using vitest-analog with Angular v20', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~20.3.0',
+        },
+      }));
+
+      await runLibraryGeneratorWithOpts({
+        unitTestRunner: UnitTestRunner.VitestAnalog,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['vitest']).toBe(
+        backwardCompatibleVersions[20].vitestVersion
+      );
+      expect(devDependencies['jsdom']).toBe(
+        backwardCompatibleVersions[20].jsdomVersion
+      );
+    });
+
+    it('should install vitest v3 when using vitest-analog with Angular v19', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        },
+      }));
+
+      await runLibraryGeneratorWithOpts({
+        unitTestRunner: UnitTestRunner.VitestAnalog,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['vitest']).toBe(
+        backwardCompatibleVersions[19].vitestVersion
+      );
+      expect(devDependencies['jsdom']).toBe(
+        backwardCompatibleVersions[19].jsdomVersion
+      );
     });
   });
 

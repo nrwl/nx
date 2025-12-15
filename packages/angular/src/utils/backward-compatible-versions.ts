@@ -9,15 +9,8 @@ export type PackageVersionNames = Exclude<
 >;
 export type VersionMap = {
   21: Record<PackageVersionNames, string>;
-  20: Record<
-    Exclude<PackageVersionNames, 'jsdomVersion' | 'vitestVersion'>,
-    string
-  >;
-  19: Record<
-    | Exclude<PackageVersionNames, 'jsdomVersion' | 'vitestVersion'>
-    | 'angularRspackVersion',
-    string
-  >;
+  20: Record<PackageVersionNames, string>;
+  19: Record<PackageVersionNames | 'angularRspackVersion', string>;
 };
 
 export type PackageCompatVersions = VersionMap[SupportedVersion];
@@ -52,6 +45,8 @@ export const backwardCompatibleVersions: VersionMap = {
     jasmineMarblesVersion: '^0.9.2',
     jsoncEslintParserVersion: '^2.1.0',
     webpackMergeVersion: '^5.8.0',
+    vitestVersion: '^3.1.1',
+    jsdomVersion: '~22.1.0',
   },
   19: {
     angularVersion: '~19.2.0',
@@ -82,5 +77,7 @@ export const backwardCompatibleVersions: VersionMap = {
     jasmineMarblesVersion: '^0.9.2',
     jsoncEslintParserVersion: '^2.1.0',
     webpackMergeVersion: '^5.8.0',
+    vitestVersion: '^3.1.1',
+    jsdomVersion: '~22.1.0',
   },
 };
