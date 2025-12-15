@@ -560,7 +560,6 @@ export class DaemonClient {
   ): Promise<UnregisterCallback> {
     // Generate unique ID for this callback
     const callbackId = Math.random().toString(36).substring(2, 11);
-    let messenger: DaemonSocketMessenger;
 
     // Store callback
     this.projectGraphListenerCallbacks.set(callbackId, callback);
@@ -570,23 +569,48 @@ export class DaemonClient {
 
       const socketPath = this.getSocketPath();
 
-      messenger = new DaemonSocketMessenger(connect(socketPath)).listen(
+      this.projectGraphListenerMessenger = new DaemonSocketMessenger(
+        connect(socketPath)
+      ).listen(
         (message) => {
           try {
             const parsedMessage = isJsonMessage(message)
               ? JSON.parse(message)
               : deserialize(Buffer.from(message, 'binary'));
-            callback(null, parsedMessage);
+            // Notify all callbacks
+            for (const cb of this.projectGraphListenerCallbacks.values()) {
+              cb(null, parsedMessage);
+            }
           } catch (e) {
-            callback(e, null);
+            for (const cb of this.projectGraphListenerCallbacks.values()) {
+              cb(e, null);
+            }
           }
         },
         () => {
-          callback('closed', null);
+          // Connection closed - trigger reconnection
+          clientLogger.log(
+            `[ProjectGraphListener] Socket closed, triggering reconnection`
+          );
+          this.projectGraphListenerMessenger = undefined;
+          for (const cb of this.projectGraphListenerCallbacks.values()) {
+            cb('reconnecting', null);
+          }
+          this.reconnectProjectGraphListener();
         },
-        (err) => callback(err, null)
+        (err) => {
+          if (err instanceof VersionMismatchError) {
+            for (const cb of this.projectGraphListenerCallbacks.values()) {
+              cb('closed', null);
+            }
+            process.exit(1);
+          }
+          for (const cb of this.projectGraphListenerCallbacks.values()) {
+            cb(err, null);
+          }
+        }
       );
-      messenger.sendMessage({
+      this.projectGraphListenerMessenger.sendMessage({
         type: REGISTER_PROJECT_GRAPH_LISTENER,
       });
     });
@@ -670,14 +694,18 @@ export class DaemonClient {
           }
         },
         () => {
-          // Connection closed - trigger reconnect
+          // Connection closed - trigger reconnection again
           this.projectGraphListenerMessenger = undefined;
+          for (const cb of this.projectGraphListenerCallbacks.values()) {
+            cb('reconnecting', null);
+          }
           this.reconnectProjectGraphListener();
         },
         (err) => {
           if (err instanceof VersionMismatchError) {
-            this.projectGraphListenerReconnecting = false;
-            this.projectGraphListenerMessenger = undefined;
+            for (const cb of this.projectGraphListenerCallbacks.values()) {
+              cb('closed', null);
+            }
             process.exit(1);
           }
           // Other errors during reconnection - let retry loop handle
@@ -690,12 +718,16 @@ export class DaemonClient {
       });
 
       // Successfully reconnected - notify callbacks
+      clientLogger.log(`[ProjectGraphListener] Reconnected successfully`);
       for (const cb of this.projectGraphListenerCallbacks.values()) {
         cb('reconnected', null);
       }
       this.projectGraphListenerReconnecting = false;
     } catch (e) {
       // Failed to reconnect - notify as closed
+      clientLogger.log(
+        `[ProjectGraphListener] Reconnection failed: ${e.message}`
+      );
       this.projectGraphListenerReconnecting = false;
       for (const cb of this.projectGraphListenerCallbacks.values()) {
         cb('closed', null);
