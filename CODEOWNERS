@@ -110,10 +110,13 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 # Gradle
 /packages/gradle/** @FrozenPandaz @MaxKless @lourw
 /e2e/gradle/** @FrozenPandaz @MaxKless @lourw
+/build.gradle.kts @FrozenPandaz @MaxKless @lourw
+/settings.gradle.kts @FrozenPandaz @MaxKless @lourw
 
 # Maven
 /packages/maven/** @FrozenPandaz @MaxKless @lourw
 /e2e/maven/** @FrozenPandaz @MaxKless @lourw
+/pom.xml @FrozenPandaz @MaxKless @lourw
 
 # Nx-Plugin
 /packages/plugin/** @nrwl/nx-devkit-reviewers
