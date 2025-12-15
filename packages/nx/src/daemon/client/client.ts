@@ -286,6 +286,12 @@ export class DaemonClient {
     }
   }
 
+  private parseMessage(message: string): any {
+    return isJsonMessage(message)
+      ? JSON.parse(message)
+      : deserialize(Buffer.from(message, 'binary'));
+  }
+
   async requestShutdown(): Promise<void> {
     return this.sendToDaemonViaQueue({ type: 'REQUEST_SHUTDOWN' });
   }
@@ -395,9 +401,7 @@ export class DaemonClient {
       ).listen(
         (message) => {
           try {
-            const parsedMessage = isJsonMessage(message)
-              ? JSON.parse(message)
-              : deserialize(Buffer.from(message, 'binary'));
+            const parsedMessage = this.parseMessage(message);
             // Notify all callbacks
             for (const cb of this.fileWatcherCallbacks.values()) {
               cb(null, parsedMessage);
@@ -503,9 +507,7 @@ export class DaemonClient {
       ).listen(
         (message) => {
           try {
-            const parsedMessage = isJsonMessage(message)
-              ? JSON.parse(message)
-              : deserialize(Buffer.from(message, 'binary'));
+            const parsedMessage = this.parseMessage(message);
             for (const cb of this.fileWatcherCallbacks.values()) {
               cb(null, parsedMessage);
             }
@@ -593,9 +595,7 @@ export class DaemonClient {
       ).listen(
         (message) => {
           try {
-            const parsedMessage = isJsonMessage(message)
-              ? JSON.parse(message)
-              : deserialize(Buffer.from(message, 'binary'));
+            const parsedMessage = this.parseMessage(message);
             // Notify all callbacks
             for (const cb of this.projectGraphListenerCallbacks.values()) {
               cb(null, parsedMessage);
@@ -700,9 +700,7 @@ export class DaemonClient {
       ).listen(
         (message) => {
           try {
-            const parsedMessage = isJsonMessage(message)
-              ? JSON.parse(message)
-              : deserialize(Buffer.from(message, 'binary'));
+            const parsedMessage = this.parseMessage(message);
             for (const cb of this.projectGraphListenerCallbacks.values()) {
               cb(null, parsedMessage);
             }
