@@ -149,7 +149,8 @@ When a task depends on another task, it is possible that the outputs of the depe
 }
 ```
 
-The pattern will be matched with outputs of tasks which this task depends on. Setting `transitive` to `true` will also include outputs of all task dependencies of this task in the [task pipeline](/docs/concepts/task-pipeline-configuration).
+The glob pattern is matched against the file paths resolved from workspace root. For example, if a dependent task has `outputs: ["{workspaceRoot}/dist/{projectRoot}"]` and the project root is `libs/my-lib`, the output path becomes `dist/libs/my-lib`.
+Files such as `dist/libs/my-lib/index.d.ts` would be matched by patterns `**/*.d.ts`, `dist/**/*.d.ts`, or `dist/libs/my-lib/**/*.d.ts`. Setting `transitive` to `true` will also include outputs of all task dependencies of this task in the [task pipeline](/docs/concepts/task-pipeline-configuration). It's possible the dependent tasks can change over time, so be careful to not overly scope the matching glob to prevent accidental false cache hits.
 
 ### A subset of the root `tsconfig.json` or `tsconfig.base.json`
 
