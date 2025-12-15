@@ -110,6 +110,7 @@ export async function configurationGeneratorInternal(
     projectRoot: root,
     viteVersion: schema.viteVersion,
     skipPackageJson: schema.skipPackageJson,
+    keepExistingVersions: true,
   });
   tasks.push(initTask);
 
