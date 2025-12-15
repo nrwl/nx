@@ -1732,6 +1732,42 @@ describe('app', () => {
       `);
     });
 
+    it('should install vitest v3 when using vitest-analog with Angular v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~20.3.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', {
+        unitTestRunner: UnitTestRunner.VitestAnalog,
+      });
+
+      const { devDependencies } = readJson(appTree, 'package.json');
+      expect(devDependencies['vitest']).toBe(
+        backwardCompatibleVersions[20].vitestVersion
+      );
+      expect(devDependencies['jsdom']).toBe(
+        backwardCompatibleVersions[20].jsdomVersion
+      );
+    });
+
+    it('should install vitest v3 when using vitest-analog with Angular v19', async () => {
+      await generateApp(appTree, 'my-app', {
+        unitTestRunner: UnitTestRunner.VitestAnalog,
+      });
+
+      const { devDependencies } = readJson(appTree, 'package.json');
+      expect(devDependencies['vitest']).toBe(
+        backwardCompatibleVersions[19].vitestVersion
+      );
+      expect(devDependencies['jsdom']).toBe(
+        backwardCompatibleVersions[19].jsdomVersion
+      );
+    });
+
     describe('vitest-analog & angular < 21', () => {
       beforeEach(() => {
         updateJson(appTree, 'package.json', (json) => ({

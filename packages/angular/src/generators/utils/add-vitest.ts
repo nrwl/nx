@@ -91,6 +91,27 @@ export async function addVitestAnalog(
   tree: Tree,
   options: AddVitestAnalogOptions
 ): Promise<void> {
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+
+  if (!options.skipPackageJson) {
+    const angularDevkitVersion =
+      getInstalledAngularDevkitVersion(tree) ??
+      versions(tree).angularDevkitVersion;
+    const devDependencies: Record<string, string> = {
+      '@angular/build': angularDevkitVersion,
+    };
+
+    // Add compatible vitest/jsdom versions BEFORE calling configurationGenerator
+    // so that @nx/vitest respects existing versions
+    if (angularMajorVersion < 21) {
+      const pkgVersions = versions(tree);
+      devDependencies['vitest'] = pkgVersions.vitestVersion;
+      devDependencies['jsdom'] = pkgVersions.jsdomVersion;
+    }
+
+    addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true);
+  }
+
   ensurePackage('@nx/vitest', nxVersion);
   const { configurationGenerator } = await import('@nx/vitest/generators');
 
@@ -104,22 +125,7 @@ export async function addVitestAnalog(
     skipPackageJson: options.skipPackageJson,
   });
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   createAnalogSetupFile(tree, options, angularMajorVersion);
-
-  if (!options.skipPackageJson) {
-    const angularDevkitVersion =
-      getInstalledAngularDevkitVersion(tree) ??
-      versions(tree).angularDevkitVersion;
-
-    addDependenciesToPackageJson(
-      tree,
-      {},
-      { '@angular/build': angularDevkitVersion },
-      undefined,
-      true
-    );
-  }
 }
 
 function validateVitestVersion(tree: Tree): void {
