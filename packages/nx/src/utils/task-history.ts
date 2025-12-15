@@ -4,7 +4,14 @@ import { IS_WASM, NxTaskHistory, TaskRun, TaskTarget } from '../native';
 import { getDbConnection } from './db-connection';
 
 export class TaskHistory {
-  taskHistory = new NxTaskHistory(getDbConnection());
+  private _taskHistory?: NxTaskHistory;
+
+  private get taskHistory(): NxTaskHistory {
+    if (!this._taskHistory) {
+      this._taskHistory = new NxTaskHistory(getDbConnection());
+    }
+    return this._taskHistory;
+  }
 
   /**
    * This function returns estimated timings per task
@@ -17,14 +24,14 @@ export class TaskHistory {
     if (isOnDaemon() || !daemonClient.enabled()) {
       return this.taskHistory.getEstimatedTaskTimings(targets);
     }
-    return await daemonClient.getEstimatedTaskTimings(targets);
+    return daemonClient.getEstimatedTaskTimings(targets);
   }
 
   async getFlakyTasks(hashes: string[]) {
     if (isOnDaemon() || !daemonClient.enabled()) {
       return this.taskHistory.getFlakyTasks(hashes);
     }
-    return await daemonClient.getFlakyTasks(hashes);
+    return daemonClient.getFlakyTasks(hashes);
   }
 
   async recordTaskRuns(taskRuns: TaskRun[]) {

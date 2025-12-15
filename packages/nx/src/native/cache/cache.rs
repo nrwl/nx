@@ -204,11 +204,13 @@ impl NxCache {
         let mut size = terminal_output.len() as i64;
         if let Some(outputs) = outputs {
             if outputs.len() > 0 && result.code == 0 {
-                size +=
-                    try_and_retry(|| self.copy_files_from_cache(result.clone(), outputs.clone()))?;
+                let workspace_root = self.workspace_root.to_normalized_string();
+                size += try_and_retry(|| {
+                    copy_files_from_cache(workspace_root.clone(), result.clone(), outputs.clone())
+                })?;
             };
         }
-        write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
+        write(self.get_task_outputs_path_internal(&hash), terminal_output)?;
 
         let code: i16 = result.code;
         self.record_to_cache(hash, code, size)?;
@@ -217,12 +219,6 @@ impl NxCache {
 
     fn get_task_outputs_path_internal(&self, hash: &str) -> PathBuf {
         self.cache_path.join("terminalOutputs").join(hash)
-    }
-
-    #[napi]
-    pub fn get_task_outputs_path(&self, hash: String) -> String {
-        self.get_task_outputs_path_internal(&hash)
-            .to_normalized_string()
     }
 
     fn record_to_cache(&self, hash: String, code: i16, size: i64) -> anyhow::Result<()> {
@@ -296,51 +292,6 @@ impl NxCache {
     }
 
     #[napi]
-    pub fn copy_files_from_cache(
-        &self,
-        cached_result: CachedResult,
-        outputs: Vec<String>,
-    ) -> anyhow::Result<i64> {
-        let outputs_path = Path::new(&cached_result.outputs_path);
-
-        let expanded_outputs = _expand_outputs(outputs_path, outputs)?;
-
-        trace!("Removing expanded outputs: {:?}", &expanded_outputs);
-        remove_items(
-            expanded_outputs
-                .iter()
-                .map(|p| self.workspace_root.join(p))
-                .collect::<Vec<_>>()
-                .as_slice(),
-        )?;
-
-        trace!(
-            "Copying Files from Cache {:?} -> {:?}",
-            &outputs_path, &self.workspace_root
-        );
-        let sz = _copy(outputs_path, &self.workspace_root);
-
-        match sz {
-            Err(e) => {
-                let kind = underlying_io_error_kind(&e);
-                match kind {
-                    Some(std::io::ErrorKind::NotFound) => {
-                        trace!("No artifacts to copy: {:?}", e);
-                        Ok(0)
-                    }
-                    _ => {
-                        return Err(anyhow::anyhow!("Error copying files from cache: {:?}", e));
-                    }
-                }
-            }
-            Ok(sz) => {
-                trace!("Copied {} bytes from cache", sz);
-                Ok(sz)
-            }
-        }
-    }
-
-    #[napi]
     pub fn remove_old_cache_records(&self) -> anyhow::Result<()> {
         let outdated_cache = self
             .db
@@ -397,6 +348,58 @@ impl NxCache {
             Ok(true)
         } else {
             Ok(true)
+        }
+    }
+}
+
+#[napi]
+pub fn get_task_outputs_path(cache_path: String, hash: String) -> String {
+    PathBuf::from(cache_path)
+        .join("terminalOutputs")
+        .join(hash)
+        .to_normalized_string()
+}
+
+#[napi]
+pub fn copy_files_from_cache(
+    workspace_root: String,
+    cached_result: CachedResult,
+    outputs: Vec<String>,
+) -> anyhow::Result<i64> {
+    let workspace_root = PathBuf::from(workspace_root);
+    let outputs_path = Path::new(&cached_result.outputs_path);
+
+    let expanded_outputs = _expand_outputs(outputs_path, outputs)?;
+
+    trace!("Removing expanded outputs: {:?}", &expanded_outputs);
+    remove_items(
+        expanded_outputs
+            .iter()
+            .map(|p| workspace_root.join(p))
+            .collect::<Vec<_>>()
+            .as_slice(),
+    )?;
+
+    trace!(
+        "Copying Files from Cache {:?} -> {:?}",
+        &outputs_path, &workspace_root
+    );
+    let sz = _copy(outputs_path, &workspace_root);
+
+    match sz {
+        Err(e) => {
+            let kind = underlying_io_error_kind(&e);
+            match kind {
+                Some(std::io::ErrorKind::NotFound) => {
+                    trace!("No artifacts to copy: {:?}", e);
+                    Ok(0)
+                }
+                _ => Err(anyhow::anyhow!("Error copying files from cache: {:?}", e)),
+            }
+        }
+        Ok(sz) => {
+            trace!("Copied {} bytes from cache", sz);
+            Ok(sz)
         }
     }
 }
