@@ -1,6 +1,7 @@
 import {
   extractReferencesFromCommit,
   getLatestGitTagForPattern,
+  RepoGitTags,
   sanitizeProjectNameForGitTag,
 } from './git';
 
@@ -152,6 +153,7 @@ See merge request nx-release-test/nx-release-test!2`,
   describe('getLatestGitTagForPattern', () => {
     afterEach(() => {
       jest.clearAllMocks();
+      RepoGitTags.instance.clean();
     });
 
     describe('when releaseTagPatternStrictPreid is false', () => {

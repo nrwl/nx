@@ -125,6 +125,140 @@ export function extractTagAndVersion(
 }
 
 /**
+ * Singleton class that caches git tags to avoid redundant git fetch operations.
+ * Tags are cached per branch strategy (merged branches vs all branches).
+ */
+export class RepoGitTags {
+  #tagsMap = new Map<boolean, Array<string>>();
+  static #instance: RepoGitTags;
+  /**
+   * Gets the singleton instance of RepoGitTags.
+   */
+  public static get instance(): RepoGitTags {
+    if (!this.#instance) {
+      this.#instance = new RepoGitTags();
+    }
+    return this.#instance;
+  }
+
+  private constructor() {}
+
+  /**
+   * Resolves git tags with caching. Fetches from git on cache miss, returns cached tags on hit.
+   * Cache key is determined by whether to check all branches or only merged branches.
+   *
+   * @param checkAllBranchesWhen - Strategy for checking branches (boolean, array of patterns, or undefined)
+   * @returns Promise resolving to array of git tags
+   */
+  async resolveTags(
+    checkAllBranchesWhen?: GetLatestGitTagForPatternOptions['checkAllBranchesWhen']
+  ) {
+    const alwaysCheckAllBranches = await this.#alwaysCheckAllBranches(
+      checkAllBranchesWhen
+    );
+
+    let tags = this.#tagsMap.get(alwaysCheckAllBranches);
+    if (!tags) {
+      tags = await this.#getTags(checkAllBranchesWhen, alwaysCheckAllBranches);
+    }
+
+    this.#tagsMap.set(alwaysCheckAllBranches, tags);
+
+    return tags;
+  }
+
+  /**
+   * Clears the tag cache. Useful for testing or forcing a fresh fetch.
+   */
+  clean(): void {
+    this.#tagsMap.clear();
+  }
+
+  async #getTags(
+    checkAllBranchesWhen: GetLatestGitTagForPatternOptions['checkAllBranchesWhen'],
+    alwaysCheckAllBranches: boolean
+  ) {
+    const defaultGitArgs = [
+      // Apply git config to take version suffixes into account when sorting, e.g. 1.0.0 is newer than 1.0.0-beta.1
+      '-c',
+      'versionsort.suffix=-',
+      'tag',
+      '--sort',
+      '-v:refname',
+    ];
+
+    try {
+      let tags: string[] = [];
+      tags = await execCommand('git', [
+        ...defaultGitArgs,
+        ...(alwaysCheckAllBranches ? [] : ['--merged']),
+      ]).then((r) =>
+        r
+          .trim()
+          .split('\n')
+          .map((t) => t.trim())
+          .filter(Boolean)
+      );
+
+      if (
+        // Do not run this fallback if the user explicitly set checkAllBranchesWhen to false
+        checkAllBranchesWhen !== false &&
+        !tags.length &&
+        // There is no point in running this fallback if we already checked against all branches
+        !alwaysCheckAllBranches
+      ) {
+        // try again, but include all tags on the repo instead of just --merged ones
+        tags = await execCommand('git', defaultGitArgs).then((r) =>
+          r
+            .trim()
+            .split('\n')
+            .map((t) => t.trim())
+            .filter(Boolean)
+        );
+      }
+
+      return tags;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  async #alwaysCheckAllBranches(
+    checkAllBranchesWhen?: GetLatestGitTagForPatternOptions['checkAllBranchesWhen']
+  ) {
+    let alwaysCheckAllBranches = false;
+    if (typeof checkAllBranchesWhen !== 'undefined') {
+      if (typeof checkAllBranchesWhen === 'boolean') {
+        alwaysCheckAllBranches = checkAllBranchesWhen;
+      } else if (Array.isArray(checkAllBranchesWhen)) {
+        /**
+         * Get the current git branch and determine whether to check all branches based on the checkAllBranchesWhen parameter
+         */
+        const currentBranch = await execCommand('git', [
+          'rev-parse',
+          '--abbrev-ref',
+          'HEAD',
+        ]).then((r) => r.trim());
+        // Check exact match first
+        alwaysCheckAllBranches = checkAllBranchesWhen.includes(currentBranch);
+        // Check if any glob pattern matches next
+        if (!alwaysCheckAllBranches) {
+          alwaysCheckAllBranches = checkAllBranchesWhen.some((pattern) => {
+            const r = minimatch.makeRe(pattern, { dot: true });
+            if (!r) {
+              return false;
+            }
+            return r.test(currentBranch);
+          });
+        }
+      }
+    }
+
+    return alwaysCheckAllBranches;
+  }
+}
+
+/**
  * Get the latest git tag for the configured release tag pattern.
  *
  * This function will:
@@ -144,82 +278,11 @@ export async function getLatestGitTagForPattern(
   additionalInterpolationData = {},
   options: GetLatestGitTagForPatternOptions
 ): Promise<GitTagAndVersion | null> {
-  const { checkAllBranchesWhen, requireSemver, strictPreid, preid } = options;
-
-  /**
-   * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
-   * falling back to all branches if no match is found on the current branch.
-   *
-   * - If checkAllBranchesWhen is true it will cause us to ALWAYS check all branches for the latest match.
-   * - If checkAllBranchesWhen is explicitly set to false it will cause us to ONLY check the current branch for the latest match.
-   * - If checkAllBranchesWhen is an array of strings it will cause us to check all branches WHEN the current branch is one of the strings in the array.
-   */
-  let alwaysCheckAllBranches = false;
-  if (typeof checkAllBranchesWhen !== 'undefined') {
-    if (typeof checkAllBranchesWhen === 'boolean') {
-      alwaysCheckAllBranches = checkAllBranchesWhen;
-    } else if (Array.isArray(checkAllBranchesWhen)) {
-      /**
-       * Get the current git branch and determine whether to check all branches based on the checkAllBranchesWhen parameter
-       */
-      const currentBranch = await execCommand('git', [
-        'rev-parse',
-        '--abbrev-ref',
-        'HEAD',
-      ]).then((r) => r.trim());
-      // Check exact match first
-      alwaysCheckAllBranches = checkAllBranchesWhen.includes(currentBranch);
-      // Check if any glob pattern matches next
-      if (!alwaysCheckAllBranches) {
-        alwaysCheckAllBranches = checkAllBranchesWhen.some((pattern) => {
-          const r = minimatch.makeRe(pattern, { dot: true });
-          if (!r) {
-            return false;
-          }
-          return r.test(currentBranch);
-        });
-      }
-    }
-  }
-
-  const defaultGitArgs = [
-    // Apply git config to take version suffixes into account when sorting, e.g. 1.0.0 is newer than 1.0.0-beta.1
-    '-c',
-    'versionsort.suffix=-',
-    'tag',
-    '--sort',
-    '-v:refname',
-  ];
+  const { requireSemver, strictPreid, preid, checkAllBranchesWhen } = options;
+  const repoTags = RepoGitTags.instance;
 
   try {
-    let tags: string[];
-    tags = await execCommand('git', [
-      ...defaultGitArgs,
-      ...(alwaysCheckAllBranches ? [] : ['--merged']),
-    ]).then((r) =>
-      r
-        .trim()
-        .split('\n')
-        .map((t) => t.trim())
-        .filter(Boolean)
-    );
-
-    if (
-      // Do not run this fallback if the user explicitly set checkAllBranchesWhen to false
-      checkAllBranchesWhen !== false &&
-      !tags.length &&
-      // There is no point in running this fallback if we already checked against all branches
-      !alwaysCheckAllBranches
-    ) {
-      // try again, but include all tags on the repo instead of just --merged ones
-      tags = await execCommand('git', defaultGitArgs).then((r) =>
-        r
-          .trim()
-          .split('\n')
-          .map((t) => t.trim())
-          .filter(Boolean)
-      );
-    }
+    let tags: string[] = await repoTags.resolveTags(checkAllBranchesWhen);
 
     if (!tags.length) {
       return null;
