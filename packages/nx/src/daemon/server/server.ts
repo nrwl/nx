@@ -252,19 +252,6 @@ async function handleMessage(socket: Socket, data: string) {
   }
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
 
-  // Handle version check handshake
-  if (payload.type === 'VERSION_CHECK') {
-    await respondToClient(
-      socket,
-      JSON.stringify({
-        type: 'VERSION_CHECK_RESPONSE',
-        serverVersion: nxVersion,
-      }),
-      'VERSION_CHECK_RESPONSE'
-    );
-    return;
-  }
-
   if (payload.type === 'PING') {
     await handleResult(
       socket,
