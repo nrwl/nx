@@ -20,6 +20,8 @@ jobs:
     if: ${{ github.repository_owner == 'nrwl' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    env:
+      NODE_VERSION: ${{ matrix.node_version }}
     strategy:
       matrix:
         os:
@@ -53,11 +55,10 @@ jobs:
 
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
-        env:
-          NODE_VERSION: ${{ matrix.node_version }}
 
       - name: Enable corepack and install pnpm
         run: |
+          npm install -g corepack@latest
           corepack enable
           corepack prepare --activate
 
@@ -137,6 +138,8 @@ jobs:
       contents: read
     runs-on: ${{ matrix.os }}
     timeout-minutes: 200 # <- cap each job to 200 minutes
+    env:
+      NODE_VERSION: ${{ matrix.node_version }}
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix)}} # Load matrix from previous job
       fail-fast: false
@@ -154,11 +157,10 @@ jobs:
 
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
-        env:
-          NODE_VERSION: ${{ matrix.node_version }}
 
       - name: Enable corepack and install pnpm
         run: |
+          npm install -g corepack@latest
           corepack enable
           corepack prepare --activate
 
