@@ -625,7 +625,7 @@ async function startServer(
   }
 
   if (watchForChanges && daemonClient.enabled()) {
-    unregisterFileWatcher = await createFileWatcher();
+    unregisterFileWatcher = await createProjectGraphListener();
   }
 
   const { projectGraphClientResponse, sourceMapResponse } =
@@ -834,14 +834,9 @@ function debounce(fn: (...args) => void, time: number) {
   };
 }
 
-function createFileWatcher() {
-  return daemonClient.registerFileWatcher(
-    {
-      watchProjects: 'all',
-      includeGlobalWorkspaceFiles: true,
-      allowPartialGraph: true,
-    },
-    debounce(async (error, changes) => {
+function createProjectGraphListener() {
+  return daemonClient.registerProjectGraphRecomputationListener(
+    debounce(async (error, data) => {
       if (error === 'reconnecting') {
         output.note({ title: 'Daemon restarting, reconnecting...' });
         return;
@@ -860,12 +855,13 @@ function createFileWatcher() {
         process.exit(1);
       } else if (error) {
         output.error({ title: `Watch error: ${error?.message ?? 'Unknown'}` });
-      } else if (changes !== null && changes.changedFiles.length > 0) {
-        output.note({ title: 'Recalculating project graph...' });
+      } else if (data !== null) {
+        output.note({ title: 'Project graph recomputed, updating...' });
 
         const { projectGraphClientResponse, sourceMapResponse } =
-          await createProjectGraphAndSourceMapClientResponse(
-            [],
+          transformProjectGraphToClientResponse(
+            data.projectGraph,
+            data.sourceMaps,
             isFilteredGraph ? currentProjectGraphClientResponse.focus : null,
             isFilteredGraph ? currentProjectGraphClientResponse.exclude : []
           );
@@ -875,21 +871,6 @@ function createFileWatcher() {
             currentProjectGraphClientResponse.hash &&
           sourceMapResponse
         ) {
-          if (projectGraphClientResponse.errors?.length > 0) {
-            projectGraphClientResponse.errors.forEach((e) => {
-              output.error({
-                title: e.message,
-                bodyLines: [e.stack],
-              });
-            });
-            output.warn({
-              title: `${
-                projectGraphClientResponse.errors.length > 1
-                  ? `${projectGraphClientResponse.errors.length} errors`
-                  : `An error`
-              } occured while processing the project graph. Showing partial graph.`,
-            });
-          }
           output.note({ title: 'Graph changes updated.' });
 
           currentProjectGraphClientResponse = projectGraphClientResponse;
@@ -902,6 +883,72 @@ function createFileWatcher() {
       }
     }, 500)
   );
+}
+
+function transformProjectGraphToClientResponse(
+  projectGraph: ProjectGraph,
+  sourceMaps: ConfigurationSourceMaps,
+  focus: string = null,
+  exclude: string[] = []
+): {
+  projectGraphClientResponse: ProjectGraphClientResponse;
+  sourceMapResponse: ConfigurationSourceMaps;
+} {
+  performance.mark('project graph transform:start');
+
+  let graph = pruneExternalNodes(projectGraph);
+
+  // Apply focus and exclude filters
+  graph = filterGraph(graph, focus, exclude);
+
+  const fileMap: ProjectFileMap =
+    readFileMapCache()?.fileMap.projectFileMap || {};
+
+  const layout = workspaceLayout();
+  const projects: ProjectGraphProjectNode[] = Object.values(graph.nodes);
+  const dependencies = graph.dependencies;
+
+  const nxJson = readNxJson();
+  const connectedToCloud = isNxCloudUsed(nxJson);
+  const disabledTaskSyncGenerators = nxJson.sync?.disabledTaskSyncGenerators;
+
+  const hasher = createHash('sha256');
+  hasher.update(
+    JSON.stringify({
+      layout,
+      projects,
+      dependencies,
+      sourceMaps,
+      connectedToCloud,
+      disabledTaskSyncGenerators,
+    })
+  );
+
+  const hash = hasher.digest('hex');
+
+  performance.mark('project graph transform:end');
+  performance.measure(
+    'project graph transform',
+    'project graph transform:start',
+    'project graph transform:end'
+  );
+
+  return {
+    projectGraphClientResponse: {
+      ...currentProjectGraphClientResponse,
+      hash,
+      layout,
+      projects,
+      dependencies,
+      affected: [],
+      fileMap,
+      isPartial: false,
+      errors: undefined,
+      connectedToCloud,
+      disabledTaskSyncGenerators,
+    },
+    sourceMapResponse: sourceMaps,
+  };
 }
 
 async function createProjectGraphAndSourceMapClientResponse(
