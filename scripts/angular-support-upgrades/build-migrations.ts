@@ -229,7 +229,6 @@ export async function buildMigrations(
   }
 
   angularPackageMigrations.generators[generatorName] = {
-    cli: 'nx',
     version: targetNxMigrationVersion,
     requires: {
       '@angular/core': `>=${angularCoreVersion}`,

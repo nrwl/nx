@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`app --minimal should generate a correct setup when --bundler=rspack and ssr 1`] = `
 "
@@ -14,9 +14,6 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack and
   },
   "index": "./src/index.html",
   "browser": "./src/main.ts",
-  "polyfills": [
-    "zone.js"
-  ],
   "tsConfig": "./tsconfig.app.json",
   "assets": [
     {
@@ -85,11 +82,9 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack and
 `;
 
 exports[`app --minimal should generate a correct setup when --bundler=rspack and ssr 2`] = `
-"import 'zone.js/node';
-
-import { APP_BASE_HREF } from '@angular/common';
+"import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
+import express from 'express';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import bootstrap from './main.server';
@@ -174,9 +169,6 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack inc
   },
   "index": "./src/index.html",
   "browser": "./src/main.ts",
-  "polyfills": [
-    "zone.js"
-  ],
   "tsConfig": "./tsconfig.app.json",
   "assets": [
     {
@@ -272,9 +264,9 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome plain'
@@ -332,9 +324,9 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome plain'
@@ -374,9 +366,9 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome plain'
@@ -416,9 +408,9 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome plain'
@@ -445,14 +437,13 @@ bootstrapApplication(App, appConfig).catch((err) =>
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 2`] = `
-"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes)
   ]
 };
@@ -495,9 +486,9 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome standalone'
@@ -519,12 +510,11 @@ bootstrapApplication(App, appConfig).catch((err) =>
 `;
 
 exports[`app --standalone should generate a standalone app correctly without routing 2`] = `
-"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true })
   ]
 };
 "
@@ -558,9 +548,9 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome standalone'
@@ -577,7 +567,6 @@ exports[`app --strict should enable strict type checking: app tsconfig.json 1`] 
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true,
-    "typeCheckHostBindings": true,
   },
   "compilerOptions": {
     "experimentalDecorators": true,
@@ -634,88 +623,6 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
     "**/*.d.ts",
   ],
 }
-`;
-
-exports[`app --unit-test-runner vitest should add tsconfig.spec.json 1`] = `
-"{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "outDir": "../dist/out-tsc",
-    "types": [
-      "vitest/globals",
-      "vitest/importMeta",
-      "vite/client",
-      "node",
-      "vitest"
-    ]
-  },
-  "include": [
-    "vite.config.ts",
-    "vite.config.mts",
-    "vitest.config.ts",
-    "vitest.config.mts",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-    "src/**/*.test.tsx",
-    "src/**/*.spec.tsx",
-    "src/**/*.test.js",
-    "src/**/*.spec.js",
-    "src/**/*.test.jsx",
-    "src/**/*.spec.jsx",
-    "src/**/*.d.ts"
-  ],
-  "files": ["src/test-setup.ts"]
-}
-"
-`;
-
-exports[`app --unit-test-runner vitest should generate src/test-setup.ts 1`] = `
-"import '@angular/compiler';
-import '@analogjs/vitest-angular/setup-zone';
-
-import {
-  BrowserTestingModule,
-  platformBrowserTesting,
-} from '@angular/platform-browser/testing';
-import { getTestBed } from '@angular/core/testing';
-
-getTestBed().initTestEnvironment(
-  BrowserTestingModule,
-  platformBrowserTesting()
-);
-"
-`;
-
-exports[`app --unit-test-runner vitest should generate vite.config.mts 1`] = `
-"/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import angular from '@analogjs/vite-plugin-angular';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-
-export default defineConfig(() => ({
-  root: __dirname,
-  cacheDir: '../node_modules/.vite/my-app',
-  plugins: [angular(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
-  // },
-  test: {
-    name: 'my-app',
-    watch: false,
-    globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    setupFiles: ['src/test-setup.ts'],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../coverage/my-app',
-      provider: 'v8' as const,
-    },
-  },
-}));
-"
 `;
 
 exports[`app angular compat support should generate components with the "component" type for versions lower than v20 1`] = `
@@ -782,6 +689,89 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 "
 `;
 
+exports[`app angular compat support vitest-analog & angular < 21 should add tsconfig.spec.json 1`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "types": [
+      "vitest/globals",
+      "vitest/importMeta",
+      "vite/client",
+      "node",
+      "vitest"
+    ]
+  },
+  "include": [
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx",
+    "src/**/*.d.ts"
+  ],
+  "files": [
+    "src/test-setup.ts"
+  ]
+}
+"
+`;
+
+exports[`app angular compat support vitest-analog & angular < 21 should generate src/test-setup.ts 1`] = `
+"import '@angular/compiler';
+import '@analogjs/vitest-angular/setup-zone';
+import {
+  BrowserTestingModule,
+  platformBrowserTesting,
+} from '@angular/platform-browser/testing';
+import { getTestBed } from '@angular/core/testing';
+
+getTestBed().initTestEnvironment(
+  BrowserTestingModule,
+  platformBrowserTesting(),
+);
+"
+`;
+
+exports[`app angular compat support vitest-analog & angular < 21 should generate vite.config.mts 1`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import angular from '@analogjs/vite-plugin-angular';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../node_modules/.vite/my-app',
+  plugins: [angular(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  // Uncomment this if you are using workers.
+  // worker: {
+  //   plugins: () => [ nxViteTsPaths() ],
+  // },
+  test: {
+    name: 'my-app',
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    setupFiles: ['src/test-setup.ts'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../coverage/my-app',
+      provider: 'v8' as const,
+    },
+  },
+}));
+"
+`;
+
 exports[`app at the root should accept numbers in the path 1`] = `"src/9-websites/my-app"`;
 
 exports[`app format files should format files 1`] = `
@@ -831,9 +821,9 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome my-app'
@@ -894,9 +884,6 @@ exports[`app nested should create project configs 1`] = `
         ],
         "browser": "my-dir/my-app/src/main.ts",
         "outputPath": "dist/my-dir/my-app",
-        "polyfills": [
-          "zone.js",
-        ],
         "styles": [
           "my-dir/my-app/src/styles.css",
         ],
@@ -905,12 +892,6 @@ exports[`app nested should create project configs 1`] = `
       "outputs": [
         "{options.outputPath}",
       ],
-    },
-    "extract-i18n": {
-      "executor": "@angular/build:extract-i18n",
-      "options": {
-        "buildTarget": "my-app:build",
-      },
     },
     "lint": {
       "executor": "@nx/eslint:lint",
@@ -941,7 +922,7 @@ exports[`app nested should create project configs 1`] = `
     "test": {
       "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "my-dir/my-app/jest.config.ts",
+        "jestConfig": "my-dir/my-app/jest.config.cts",
         "tsConfig": "my-dir/my-app/tsconfig.spec.json",
       },
       "outputs": [
@@ -1011,9 +992,6 @@ exports[`app not nested should create project configs 1`] = `
         ],
         "browser": "my-app/src/main.ts",
         "outputPath": "dist/my-app",
-        "polyfills": [
-          "zone.js",
-        ],
         "styles": [
           "my-app/src/styles.css",
         ],
@@ -1022,12 +1000,6 @@ exports[`app not nested should create project configs 1`] = `
       "outputs": [
         "{options.outputPath}",
       ],
-    },
-    "extract-i18n": {
-      "executor": "@angular/build:extract-i18n",
-      "options": {
-        "buildTarget": "my-app:build",
-      },
     },
     "lint": {
       "executor": "@nx/eslint:lint",
@@ -1058,7 +1030,7 @@ exports[`app not nested should create project configs 1`] = `
     "test": {
       "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "my-app/jest.config.ts",
+        "jestConfig": "my-app/jest.config.cts",
         "tsConfig": "my-app/tsconfig.spec.json",
       },
       "outputs": [
@@ -1120,11 +1092,11 @@ exports[`app not nested should generate files: tsconfig.app.json 1`] = `
     "types": [],
   },
   "exclude": [
-    "jest.config.ts",
-    "src/test-setup.ts",
-    "src/**/*.test.ts",
     "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "jest.config.ts",
     "jest.config.cts",
+    "src/test-setup.ts",
   ],
   "extends": "./tsconfig.json",
   "include": [
@@ -1140,7 +1112,6 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true,
-    "typeCheckHostBindings": true,
   },
   "compilerOptions": {
     "experimentalDecorators": true,
@@ -1205,9 +1176,9 @@ describe('AppComponent', () => {
     }).compileComponents();
   });
 
-  it('should render title', () => {
+  it('should render title', async () => {
     const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
+    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome myapp'

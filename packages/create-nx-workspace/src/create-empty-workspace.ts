@@ -2,8 +2,7 @@ import * as ora from 'ora';
 import { join } from 'path';
 import { CreateWorkspaceOptions } from './create-workspace-options';
 import { execAndWait } from './utils/child-process-utils';
-import { mapErrorToBodyLines } from './utils/error-utils';
-import { output } from './utils/output';
+import { CnwError } from './utils/error-utils';
 import {
   getPackageManagerCommand,
   getPackageManagerVersion,
@@ -76,15 +75,11 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
     );
   } catch (e) {
     workspaceSetupSpinner.fail();
-    if (e instanceof Error) {
-      output.error({
-        title: `Failed to create a workspace.`,
-        bodyLines: mapErrorToBodyLines(e),
-      });
-    } else {
-      console.error(e);
-    }
-    process.exit(1);
+    const message = e instanceof Error ? e.message : String(e);
+    throw new CnwError(
+      'WORKSPACE_CREATION_FAILED',
+      `Failed to create a workspace: ${message}`
+    );
   } finally {
     workspaceSetupSpinner.stop();
   }

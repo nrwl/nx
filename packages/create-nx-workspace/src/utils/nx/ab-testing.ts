@@ -253,6 +253,38 @@ function getCloudUrl(): string {
 }
 
 /**
+ * Meta payload types for recordStat telemetry.
+ */
+export interface RecordStatMetaStart {
+  type: 'start';
+  [key: string]: string;
+}
+
+export interface RecordStatMetaComplete {
+  type: 'complete';
+  [key: string]: string;
+}
+
+export interface RecordStatMetaError {
+  type: 'error';
+  errorCode: string;
+  flowVariant?: string;
+  errorMessage?: string;
+  errorFile?: string;
+}
+
+export interface RecordStatMetaCancel {
+  type: 'cancel';
+  flowVariant?: string;
+}
+
+export type RecordStatMeta =
+  | RecordStatMetaStart
+  | RecordStatMetaComplete
+  | RecordStatMetaError
+  | RecordStatMetaCancel;
+
+/**
  * We are incrementing a counter to track how often create-nx-workspace is used in CI
  * vs dev environments. No personal information is collected.
  */
@@ -260,7 +292,7 @@ export async function recordStat(opts: {
   command: string;
   nxVersion: string;
   useCloud: boolean;
-  meta: string[];
+  meta: RecordStatMeta;
 }) {
   try {
     if (!shouldRecordStats()) {
@@ -277,7 +309,7 @@ export async function recordStat(opts: {
         command: opts.command,
         isCI: isCI(),
         useCloud: opts.useCloud,
-        meta: [opts.nxVersion, ...opts.meta].filter((v) => !!v).join(','),
+        meta: JSON.stringify({ nxVersion: opts.nxVersion, ...opts.meta }),
       });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {

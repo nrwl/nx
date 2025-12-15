@@ -957,6 +957,7 @@ async function generateChangelogForWorkspace({
   const releaseVersion = new ReleaseVersion({
     version: workspaceChangelogVersion,
     releaseTagPattern: nxReleaseConfig.releaseTag.pattern,
+    releaseGroupName: Object.keys(nxReleaseConfig.groups)[0],
   });
 
   if (interpolatedTreePath) {
@@ -1124,6 +1125,7 @@ async function generateChangelogForProjects({
           : projectsVersionData[project.name].newVersion,
       releaseTagPattern: releaseGroup.releaseTag.pattern,
       projectName: project.name,
+      releaseGroupName: releaseGroup.name,
     });
 
     if (interpolatedTreePath) {

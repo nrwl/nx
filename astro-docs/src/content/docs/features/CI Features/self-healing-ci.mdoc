@@ -15,14 +15,14 @@ title="Introducing Self-Healing CI for Nx and Nx Cloud"
 Nx Cloud Self-Healing CI is an **AI-powered system that automatically detects, analyzes, and proposes fixes for CI failures**, offering several key advantages:
 
 - **Improves Time to Green (TTG):** Automatically proposes fixes when tasks fail, significantly reducing the time to get your PR merge-ready. No more babysitting PRs.
-- **Keeps You in the Flow:** Get notified about failed PRs and proposed fixes via GitHub PR comments or directly in your editor with Nx Console (VS Code, Cursor, or WebStorm). Review, approve, and keep working while AI handles the rest.
+- **Keeps You in the Flow:** Get notified about failed PRs and proposed fixes via PR/MR comments or directly in your editor with Nx Console (VS Code, Cursor, or WebStorm). Review, approve, and keep working while AI handles the rest.
 - **Leverages Deep Context:** AI agents understand your workspace structure, project relationships, and build configurations through Nx's project graph and metadata.
 - **Non-Invasive Integration:** Works with your existing CI provider without overhauling your current setup.
 
 ## Enable Self-Healing CI
 
-{% aside title="VCS Integration Support" type="note" %}
-Currently, your Nx Cloud workspace needs to have the [GitHub VCS integration enabled](/docs/guides/nx-cloud/source-control-integration) to use self-healing ci. We are working on supporting more VCS providers!
+{% aside title="VCS Integration Required" type="note" %}
+Your Nx Cloud workspace needs to have a [VCS integration enabled](/docs/guides/nx-cloud/source-control-integration) to use Self-Healing CI. Self-Healing CI supports GitHub, GitLab, and Azure DevOps.
 {% /aside %}
 
 To enable Self-Healing CI in your workspace, you'll need to connect to Nx Cloud and configure your CI pipeline.
@@ -39,6 +39,10 @@ Next, check the [Nx Cloud workspace settings](https://cloud.nx.app/go/workspace/
 
 To enable Self-Healing CI, add the `npx nx fix-ci` command to your CI configuration:
 
+{% tabs syncKey="ci-provider" %}
+
+{% tabitem label="GitHub Actions" %}
+
 ```yaml {% meta="{11,12}" %}
 # .github/workflows/ci.yml
 name: CI
@@ -54,6 +58,49 @@ jobs:
         if: always()
 ```
 
+{% /tabitem %}
+
+{% tabitem label="GitLab CI" %}
+
+```yaml {% meta="{9,10,11}" %}
+# .gitlab-ci.yml
+stages:
+  - build
+
+main:
+  stage: build
+  script:
+    - npx nx affected -t lint test build
+  after_script:
+    # after_script runs regardless of job success/failure
+    - npx nx fix-ci
+```
+
+{% /tabitem %}
+
+{% tabitem label="Azure DevOps" %}
+
+```yaml {% meta="{14,15,16}" %}
+# azure-pipelines.yml
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - script: npx nx affected -t lint test build
+    displayName: 'Run affected tasks'
+
+  - script: npx nx fix-ci
+    displayName: 'Fix CI'
+    condition: always()
+```
+
+{% /tabitem %}
+
+{% /tabs %}
+
 ### Enable Auto-fixing
 
 {% youtube
@@ -64,6 +111,10 @@ title="Enable Auto-fixing"
 By default, Self-Healing CI proposes a fix for you to review and only applies it automatically to your PR after you confirm it. However, for some tasks, it makes sense to have them be auto-fixed without waiting for manual approval. Auto-fixes are only applied if the verification phase passes.
 
 Below is an example of enabling auto-fixing for the Nx `format` command and `lint` tasks using the [`--auto-apply-fixes`](/docs/reference/nx-cloud-cli#--auto-apply-fixes) flag:
+
+{% tabs syncKey="ci-provider" %}
+
+{% tabitem label="GitHub Actions" %}
 
 ```yaml
 # .github/workflows/ci.yml
@@ -79,6 +130,44 @@ jobs:
       ...
 ```
 
+{% /tabitem %}
+
+{% tabitem label="GitLab CI" %}
+
+```yaml
+# .gitlab-ci.yml
+stages:
+  - build
+
+main:
+  stage: build
+  script:
+    - npx nx start-ci-run --auto-apply-fixes="*format*,*lint*" --no-distribution
+    ...
+```
+
+{% /tabitem %}
+
+{% tabitem label="Azure DevOps" %}
+
+```yaml
+# azure-pipelines.yml
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - script: npx nx start-ci-run --auto-apply-fixes="*format*,*lint*" --no-distribution
+    displayName: 'Start CI Run'
+  ...
+```
+
+{% /tabitem %}
+
+{% /tabs %}
+
 Tasks are passed to the `--auto-apply-fixes` as `<project>:<task-name>:<configuration>`. Commands like `nx format` which you configure with `nx-cloud record --` are passed as `nx-cloud record -- <params>`.
 
 ### Specify Which Tasks to Fix
@@ -89,6 +178,10 @@ title="Specify Which Tasks to Fix"
 /%}
 
 By using the [`--fix-tasks`](/docs/reference/nx-cloud-cli#--fix-tasks) flag you can fine-tune which tasks should be considered by the Nx Cloud self-healing CI. Below is an example of running self-healing on all tasks except `deploy` and `test` tasks.
+
+{% tabs syncKey="ci-provider" %}
+
+{% tabitem label="GitHub Actions" %}
 
 ```yaml
 # .github/workflows/ci.yml
@@ -101,9 +194,46 @@ jobs:
       ...
       - name: Start CI Run
         run: npx nx start-ci-run --fix-tasks="!*deploy,!*test" --no-distribution
-
       ...
 ```
+
+{% /tabitem %}
+
+{% tabitem label="GitLab CI" %}
+
+```yaml
+# .gitlab-ci.yml
+stages:
+  - build
+
+main:
+  stage: build
+  script:
+    - npx nx start-ci-run --fix-tasks="!*deploy,!*test" --no-distribution
+    ...
+```
+
+{% /tabitem %}
+
+{% tabitem label="Azure DevOps" %}
+
+```yaml
+# azure-pipelines.yml
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - script: npx nx start-ci-run --fix-tasks="!*deploy,!*test" --no-distribution
+    displayName: 'Start CI Run'
+  ...
+```
+
+{% /tabitem %}
+
+{% /tabs %}
 
 Similarly, if you only want to self-heal linting tasks you'd use `--fix-tasks="*lint*"`.
 
@@ -174,9 +304,9 @@ Once the fix is available, you'll be notified immediately based on where you're 
 
 {% tabs syncKey="notification-self-healing-fix" %}
 
-{% tabitem label="GitHub Comments" %}
+{% tabitem label="PR Comments" %}
 
-You will see the notification about an available fix from Nx Cloud directly in your GitHub PR comments:
+You will see the notification about an available fix from Nx Cloud directly in your VCS PR comments:
 
 ![Self-healing CI fix showing up in GitHub comments](../../../../assets/features/self-healing-fix-gh-comment.avif)
 
@@ -210,7 +340,7 @@ You can review the fix and decide whether to apply or reject it. If you apply th
 
 {% tabs syncKey="apply-self-healing-fix" %}
 
-{% tabitem label="GitHub Comments" %}
+{% tabitem label="PR Comments" %}
 
 Review the Git diff directly in the comment and click "Apply fix" or "Reject fix". For a more detailed view, click "View interactive diff" to open the Nx Cloud app's advanced diff viewer.
 
@@ -242,7 +372,7 @@ If you want to tweak a fix before committing it, you can **apply it locally** ra
 
 #### Revert Changes
 
-If you accidentally applied a fix or it turns out to be incorrect, you can easily revert it by clicking the link in the GitHub PR comment, which opens the Nx Cloud webapp where you can revert the fix.
+If you accidentally applied a fix or it turns out to be incorrect, you can easily revert it by clicking the link in the VCS PR comment, which opens the Nx Cloud webapp where you can revert the fix.
 
 ![Nx Cloud Self-healing CI page showing the revert action](../../../../assets/features/self-healing-ci-revert-changes.avif)
 

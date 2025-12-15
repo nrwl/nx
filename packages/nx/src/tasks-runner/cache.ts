@@ -78,7 +78,6 @@ export class DbCache {
     workspaceRoot,
     cacheDir,
     getDbConnection(),
-    undefined,
     resolveMaxCacheSize(this.nxJson)
   );
 

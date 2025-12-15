@@ -185,7 +185,7 @@ describe('Angular AST Utils', () => {
       expect(isStandalone(tree, tsSourceFile, 'Component')).toBeTruthy();
     });
 
-    it('should return true for a component when the "standalone" prop is not set and the angular version is 19 or above', () => {
+    it('should return true for a component when the "standalone" prop is not set', () => {
       const tree = createTreeWithEmptyWorkspace({});
       updateJson(tree, 'package.json', (json) => {
         json.dependencies['@angular/core'] = '^19.0.0';
@@ -233,27 +233,6 @@ describe('Angular AST Utils', () => {
       expect(isStandalone(tree, tsSourceFile, 'Component')).not.toBeTruthy();
     });
 
-    it('should return false for a component when the "standalone" prop is not set and the angular version is 18 or below', () => {
-      const tree = createTreeWithEmptyWorkspace({});
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies['@angular/core'] = '^18.0.0';
-        return json;
-      });
-      const componentSourceText = `import { Component } from '@angular/core';
-      
-      @Component({})
-      export class MyComponent {}
-      `;
-      const tsSourceFile = createSourceFile(
-        'my.component.ts',
-        componentSourceText,
-        ScriptTarget.Latest,
-        true
-      );
-
-      expect(isStandalone(tree, tsSourceFile, 'Component')).toBe(false);
-    });
-
     it('should return true for a directive when "standalone: true" is set', () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
@@ -281,7 +260,7 @@ describe('Angular AST Utils', () => {
       expect(isStandalone(tree, tsSourceFile, 'Directive')).toBeTruthy();
     });
 
-    it('should return true for a directive when the "standalone" prop is not set and the angular version is 19 or above', () => {
+    it('should return true for a directive when the "standalone" prop is not set', () => {
       const tree = createTreeWithEmptyWorkspace({});
       updateJson(tree, 'package.json', (json) => {
         json.dependencies['@angular/core'] = '^19.0.0';
@@ -321,27 +300,6 @@ describe('Angular AST Utils', () => {
       expect(isStandalone(tree, tsSourceFile, 'Directive')).toBe(false);
     });
 
-    it('should return false for a directive when the "standalone" prop is not set and the angular version is 18 or below', () => {
-      const tree = createTreeWithEmptyWorkspace({});
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies['@angular/core'] = '^18.0.0';
-        return json;
-      });
-      const directiveSourceText = `import { Directive } from '@angular/core';
-      
-      @Directive({})
-      export class MyDirective {}
-      `;
-      const tsSourceFile = createSourceFile(
-        'my.component.ts',
-        directiveSourceText,
-        ScriptTarget.Latest,
-        true
-      );
-
-      expect(isStandalone(tree, tsSourceFile, 'Directive')).toBe(false);
-    });
-
     it('should return true for a pipe when "standalone: true" is set', () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
@@ -369,7 +327,7 @@ describe('Angular AST Utils', () => {
       expect(isStandalone(tree, tsSourceFile, 'Pipe')).toBeTruthy();
     });
 
-    it('should return true for a pipe when the "standalone" prop is not set and the angular version is 19 or above', () => {
+    it('should return true for a pipe when the "standalone" prop is not set', () => {
       const tree = createTreeWithEmptyWorkspace({});
       updateJson(tree, 'package.json', (json) => {
         json.dependencies['@angular/core'] = '^19.0.0';
@@ -397,27 +355,6 @@ describe('Angular AST Utils', () => {
       @Pipe({
         standalone: false
       })
-      export class MyPipe {}
-      `;
-      const tsSourceFile = createSourceFile(
-        'my.pipe.ts',
-        pipeSourceText,
-        ScriptTarget.Latest,
-        true
-      );
-
-      expect(isStandalone(tree, tsSourceFile, 'Pipe')).toBe(false);
-    });
-
-    it('should return false for a pipe when the "standalone" prop is not set and the angular version is 18 or below', () => {
-      const tree = createTreeWithEmptyWorkspace({});
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies['@angular/core'] = '^18.0.0';
-        return json;
-      });
-      const pipeSourceText = `import { Pipe } from '@angular/core';
-      
-      @Pipe({})
       export class MyPipe {}
       `;
       const tsSourceFile = createSourceFile(

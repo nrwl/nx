@@ -17,17 +17,17 @@ export function readTsPathMappings(
   if (!tsConfig.has(tsConfigPath)) {
     tsConfig.set(tsConfigPath, readTsConfiguration(tsConfigPath));
   }
-  tsPathMappings.set(tsConfigPath, {});
-  Object.entries(tsConfig.get(tsConfigPath).options?.paths ?? {}).forEach(
-    ([alias, paths]) => {
-      tsPathMappings.set(tsConfigPath, {
-        ...tsPathMappings.get(tsConfigPath),
-        [alias]: paths.map((path) => path.replace(/^\.\//, '')),
-      });
-    }
-  );
+  // Build the processed paths object in a single pass instead of
+  // spreading on each iteration, which was O(n²) for n path aliases
+  const processedPaths: Record<string, string[]> = {};
+  for (const [alias, aliasPaths] of Object.entries(
+    tsConfig.get(tsConfigPath).options?.paths ?? {}
+  )) {
+    processedPaths[alias] = aliasPaths.map((path) => path.replace(/^\.\//, ''));
+  }
+  tsPathMappings.set(tsConfigPath, processedPaths);
 
-  return tsPathMappings.get(tsConfigPath);
+  return processedPaths;
 }
 
 function readTsConfiguration(tsConfigPath: string): ParsedCommandLine {

@@ -12,7 +12,10 @@ import {
   versions,
 } from './version-utils';
 
-export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
+export function ensureAngularDependencies(
+  tree: Tree,
+  zoneless: boolean
+): GeneratorCallback {
   const dependencies: Record<string, string> = {};
   const devDependencies: Record<string, string> = {};
   const pkgVersions = versions(tree);
@@ -37,9 +40,6 @@ export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
     const tsLibVersion =
       getDependencyVersionFromPackageJson(tree, 'tslib', packageJson) ??
       pkgVersions.tsLibVersion;
-    const zoneJsVersion =
-      getDependencyVersionFromPackageJson(tree, 'zone.js', packageJson) ??
-      pkgVersions.zoneJsVersion;
 
     dependencies['@angular/common'] = angularVersion;
     dependencies['@angular/compiler'] = angularVersion;
@@ -49,7 +49,13 @@ export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
     dependencies['@angular/router'] = angularVersion;
     dependencies.rxjs = rxjsVersion;
     dependencies.tslib = tsLibVersion;
-    dependencies['zone.js'] = zoneJsVersion;
+
+    if (!zoneless) {
+      const zoneJsVersion =
+        getDependencyVersionFromPackageJson(tree, 'zone.js', packageJson) ??
+        pkgVersions.zoneJsVersion;
+      dependencies['zone.js'] = zoneJsVersion;
+    }
   }
 
   const installedAngularDevkitVersion = getInstalledAngularDevkitVersion(tree);
