@@ -126,16 +126,15 @@ The context object includes an `argv` property that contains the original CLI ar
 Both `preTasksExecution` and `postTasksExecution` hooks receive a context object with the following properties:
 
 ```typescript
-// preTasksExecution context
-{
+type PreTaskExecutionContext = {
   id: string;
   workspaceRoot: string;
   nxJsonConfiguration: NxJsonConfiguration;
   argv: string[];  // Original CLI arguments
 }
 
-// postTasksExecution context (includes additional properties)
-{
+
+type PostTaskExecutionContext = {
   id: string;
   workspaceRoot: string;
   nxJsonConfiguration: NxJsonConfiguration;
