@@ -48,6 +48,8 @@ impl NxCache {
         workspace_root: String,
         cache_path: String,
         db_connection: External<NxDbConnection>,
+        // Unused parameter kept for backwards compatibility with Nx Cloud
+        _link_task_details: Option<bool>,
         max_cache_size: Option<i64>,
     ) -> anyhow::Result<Self> {
         let cache_path = PathBuf::from(&cache_path);
