@@ -386,6 +386,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       pushedToVcs: workspaceInfo.pushedToVcs ?? '',
       template: chosenTemplate ?? '',
       preset: chosenPreset ?? '',
+      connectUrl: workspaceInfo.connectUrl ?? '',
     },
   });
 
