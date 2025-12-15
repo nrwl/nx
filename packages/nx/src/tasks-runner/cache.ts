@@ -120,6 +120,8 @@ export class DbCache {
   }
 
   async get(task: Task): Promise<CachedResult | null> {
+    performance.mark('db:cache.get:start');
+
     let res: NativeCacheResult | null;
 
     if (this.shouldDelegateToDaemon()) {
@@ -127,6 +129,13 @@ export class DbCache {
     } else {
       res = this.cache.get(task.hash);
     }
+
+    performance.mark('db:cache.get:end');
+    performance.measure(
+      'db:cache.get',
+      'db:cache.get:start',
+      'db:cache.get:end'
+    );
 
     if (res) {
       return {
@@ -157,10 +166,28 @@ export class DbCache {
   }
 
   getUsedCacheSpace(): number | Promise<number> {
+    performance.mark('db:cache.getUsedCacheSpace:start');
+
     if (this.shouldDelegateToDaemon()) {
-      return daemonClient.cacheGetSize();
+      return daemonClient.cacheGetSize().then((size) => {
+        performance.mark('db:cache.getUsedCacheSpace:end');
+        performance.measure(
+          'db:cache.getUsedCacheSpace',
+          'db:cache.getUsedCacheSpace:start',
+          'db:cache.getUsedCacheSpace:end'
+        );
+        return size;
+      });
     }
-    return this.cache.getCacheSize();
+
+    const result = this.cache.getCacheSize();
+    performance.mark('db:cache.getUsedCacheSpace:end');
+    performance.measure(
+      'db:cache.getUsedCacheSpace',
+      'db:cache.getUsedCacheSpace:start',
+      'db:cache.getUsedCacheSpace:end'
+    );
+    return result;
   }
 
   private applyRemoteCacheResults(
@@ -181,11 +208,20 @@ export class DbCache {
     code: number
   ) {
     return tryAndRetry(async () => {
+      performance.mark('db:cache.put:start');
+
       if (this.shouldDelegateToDaemon()) {
         await daemonClient.cachePut(task.hash, terminalOutput, outputs, code);
       } else {
         this.cache.put(task.hash, terminalOutput, outputs, code);
       }
+
+      performance.mark('db:cache.put:end');
+      performance.measure(
+        'db:cache.put',
+        'db:cache.put:start',
+        'db:cache.put:end'
+      );
 
       if (this.remoteCache) {
         await this.remoteCache.store(task.hash, cacheDir, terminalOutput, code);
@@ -200,10 +236,28 @@ export class DbCache {
   }
 
   removeOldCacheRecords(): void | Promise<void> {
+    performance.mark('db:cache.removeOldRecords:start');
+
     if (this.shouldDelegateToDaemon()) {
-      return daemonClient.cacheRemoveOldRecords();
+      return daemonClient.cacheRemoveOldRecords().then((result) => {
+        performance.mark('db:cache.removeOldRecords:end');
+        performance.measure(
+          'db:cache.removeOldRecords',
+          'db:cache.removeOldRecords:start',
+          'db:cache.removeOldRecords:end'
+        );
+        return result;
+      });
     }
-    return this.cache.removeOldCacheRecords();
+
+    const result = this.cache.removeOldCacheRecords();
+    performance.mark('db:cache.removeOldRecords:end');
+    performance.measure(
+      'db:cache.removeOldRecords',
+      'db:cache.removeOldRecords:start',
+      'db:cache.removeOldRecords:end'
+    );
+    return result;
   }
 
   temporaryOutputPath(task: Task): string {
