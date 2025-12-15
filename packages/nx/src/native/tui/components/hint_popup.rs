@@ -14,7 +14,7 @@ use crate::native::tui::theme::THEME;
 use super::Component;
 
 /// Default duration before the hint popup auto-dismisses
-const AUTO_DISMISS_DURATION: Duration = Duration::from_secs(5);
+const AUTO_DISMISS_DURATION: Duration = Duration::from_secs(2);
 /// Default popup dimensions
 const POPUP_HEIGHT: u16 = 7;
 const POPUP_WIDTH: u16 = 80;
