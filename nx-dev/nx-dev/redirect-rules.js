@@ -457,10 +457,6 @@ const nxCloudUrls = {
     'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
-  '/ci/recipes/on-premise/auth-single-admin':
-    'https://github.com/nrwl/nx-cloud-helm',
-  '/ci/recipes/enterprise/on-premise/auth-single-admin':
-    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/ami-setup':
     'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/advanced-config':
