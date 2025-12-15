@@ -17,6 +17,6 @@
     "src/**/*.mts",
     "../../../docs/map.json",
     "../../../docs/generated/manifests/*.json",
-    "../../../community/approved-plugins.json"
+    "../../../astro-docs/src/content/approved-community-plugins.json"
   ]
 }

@@ -256,11 +256,11 @@ async function generateEmbeddings() {
     ...(await createMarkdownForCommunityPlugins()).map((content, index) => {
       return new MarkdownEmbeddingSource(
         'community-plugins',
-        '/community/approved-plugins.json#' + index,
+        '/astro-docs/src/content/approved-community-plugins.json#' + index,
         content.url,
         content.text
       );
-    })
+    }),
   ];
 
   console.log(`Discovered ${embeddingSources.length} pages`);
@@ -648,11 +648,13 @@ async function createMarkdownForCommunityPlugins(): Promise<{
   text: string;
   url: string;
 }[]> {
-  const communityPlugins = await import( '../../../../community/approved-plugins.json' ).then(m => m.default);
+  const communityPlugins = await import(
+    '../../../../astro-docs/src/content/approved-community-plugins.json'
+  ).then((m) => m.default);
   return communityPlugins.map((plugin) => {
     return {
       text: `## ${plugin.name} plugin\n\nThere is a ${plugin.name} community plugin.\n\nHere is the description for it: ${plugin.description}\n\nHere is the link to it: [${plugin.url}](${plugin.url})\n\nHere is the list of all the plugins that exist for Nx: https://nx.dev/plugin-registry`,
-      url: plugin.url
+      url: plugin.url,
     };
   });
 }
