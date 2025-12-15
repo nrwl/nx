@@ -1,5 +1,6 @@
 import { exec, execSync } from 'node:child_process';
 import * as path from 'node:path';
+import { major } from 'semver';
 import * as yargs from 'yargs';
 import { calculateFileChanges, FileData } from '../../project-graph/file-utils';
 import {
@@ -208,9 +209,12 @@ function write(patterns: string[]) {
       [[], []] as [swcrcPatterns: string[], regularPatterns: string[]]
     );
     const prettierPath = getPrettierPath();
+    const listDifferentArg = shouldUseListDifferent()
+      ? '--list-different '
+      : '';
 
     execSync(
-      `node "${prettierPath}" --write --list-different ${regularPatterns.join(
+      `node "${prettierPath}" --write ${listDifferentArg}${regularPatterns.join(
         ' '
       )}`,
       {
@@ -221,7 +225,7 @@ function write(patterns: string[]) {
 
     if (swcrcPatterns.length > 0) {
       execSync(
-        `node "${prettierPath}" --write --list-different ${swcrcPatterns.join(
+        `node "${prettierPath}" --write ${listDifferentArg}${swcrcPatterns.join(
           ' '
         )} --parser json`,
         {
@@ -285,4 +289,23 @@ function getPrettierPath() {
   prettierPath = require.resolve(path.join('prettier', bin as string));
 
   return prettierPath;
+}
+
+let useListDifferent: boolean | undefined;
+
+/**
+ * Determines if --list-different should be used with --write.
+ * Prettier 4+ and 3.6.x with experimental CLI don't support combining these flags.
+ */
+function shouldUseListDifferent(): boolean {
+  if (useListDifferent !== undefined) {
+    return useListDifferent;
+  }
+
+  const prettierMajor = major(require('prettier').version);
+  const isExperimentalCli = process.env.PRETTIER_EXPERIMENTAL_CLI === '1';
+
+  useListDifferent = prettierMajor < 4 && !isExperimentalCli;
+
+  return useListDifferent;
 }

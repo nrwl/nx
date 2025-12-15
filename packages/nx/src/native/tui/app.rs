@@ -17,6 +17,7 @@ use tokio::sync::mpsc::UnboundedSender;
 use tracing::{debug, trace};
 use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetState};
 
+use crate::native::tui::escape_sequences::EscapeSequence;
 use crate::native::tui::tui::Tui;
 use crate::native::{
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
@@ -246,10 +247,8 @@ impl App {
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
         // Check if a PTY instance already exists for this task
         if let Some(pty) = self.pty_instances.get(&task_id) {
-            // Append output to the existing PTY instance to preserve scroll position
-            // Add ANSI escape sequence to hide cursor at the end of output
-            let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
-            Self::write_output_to_parser(pty, output_with_hidden_cursor);
+            // Hide cursor in the output to avoid confusion
+            Self::write_escape_sequence_to_parser(pty, crossterm::cursor::Hide);
         } else {
             // Tasks run within a pseudo-terminal always have a pty instance and do not need a new one
             // Tasks not run within a pseudo-terminal need a new pty instance to print output
@@ -1535,6 +1534,10 @@ impl App {
     fn write_output_to_parser(parser: &PtyInstance, output: String) {
         let normalized_output = normalize_newlines(output.as_bytes());
         parser.process_output(&normalized_output);
+    }
+
+    fn write_escape_sequence_to_parser(parser: &PtyInstance, sequence: impl Into<EscapeSequence>) {
+        parser.process_output(sequence.into().as_bytes());
     }
 
     fn display_and_focus_current_task_in_terminal_pane(&mut self, force_spacebar_mode: bool) {

@@ -62,6 +62,8 @@ function extractErrorFile(error: Error): string | undefined {
 
 // For template-based CNW we want to know if user picked empty vs react vs angular etc.
 let chosenTemplate: string;
+// Also track old custom presets so we know which ones users want.
+let chosenPreset: string;
 // Track whether user opted into cloud or not for SIGINT handler.
 let useCloud: boolean;
 
@@ -353,16 +355,6 @@ process.on('SIGINT', async () => {
     });
   }
 
-  await recordStat({
-    nxVersion,
-    command: 'create-nx-workspace',
-    useCloud,
-    meta: {
-      type: 'cancel',
-      flowVariant: getFlowVariant(),
-    },
-  });
-
   process.exit(130); // Standard exit code for SIGINT
 });
 
@@ -393,6 +385,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       nxCloudArgRaw: rawArgs.nxCloud ?? '',
       pushedToVcs: workspaceInfo.pushedToVcs ?? '',
       template: chosenTemplate ?? '',
+      preset: chosenPreset ?? '',
     },
   });
 
@@ -495,6 +488,8 @@ async function normalizeArgsMiddleware(
         defaultBase,
         aiAgents,
       });
+
+      chosenPreset = argv.preset;
     }
   } catch (e) {
     if (e instanceof CnwError) {
