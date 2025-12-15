@@ -377,6 +377,15 @@ export class DaemonClient {
     this.fileWatcherConfigs.set(callbackId, config);
 
     await this.queue.sendToQueue(async () => {
+      // If we already have a connection, just register the new config
+      if (this.fileWatcherMessenger) {
+        this.fileWatcherMessenger.sendMessage({
+          type: 'REGISTER_FILE_WATCHER',
+          config,
+        });
+        return;
+      }
+
       await this.startDaemonIfNecessary();
 
       const socketPath = this.getSocketPath();
@@ -565,6 +574,14 @@ export class DaemonClient {
     this.projectGraphListenerCallbacks.set(callbackId, callback);
 
     await this.queue.sendToQueue(async () => {
+      // If we already have a connection, just send the registration
+      if (this.projectGraphListenerMessenger) {
+        this.projectGraphListenerMessenger.sendMessage({
+          type: REGISTER_PROJECT_GRAPH_LISTENER,
+        });
+        return;
+      }
+
       await this.startDaemonIfNecessary();
 
       const socketPath = this.getSocketPath();
@@ -1047,6 +1064,7 @@ export class DaemonClient {
         } else {
           error = daemonProcessException(err.toString());
         }
+        this.currentReject(error);
       }
     );
   }
