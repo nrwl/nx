@@ -71,8 +71,12 @@ export function getTuiTerminalSummaryLifeCycle({
   lifeCycle.printTaskTerminalOutput = (task, taskStatus, output) => {
     tasksToTaskStatus[task.id] = taskStatus;
     // Store the complete output for display in the summary
-    // This is called with the full output for cached and executed tasks
-    if (output) {
+    // This is called with the full output for cached tasks. For non-cached tasks,
+    // the output doesn't include the portion of the output that prints the command that was being ran.
+    if (
+      output &&
+      !(['failure', 'success'] as Array<TaskStatus>).includes(taskStatus)
+    ) {
       tasksToTerminalOutputs[task.id] = output;
     }
   };
