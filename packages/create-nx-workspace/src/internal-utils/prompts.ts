@@ -137,8 +137,7 @@ export async function determineTemplate(
       choices: [
         {
           name: 'nrwl/empty-template',
-          message:
-            'Minimal           (empty monorepo without projects)',
+          message: 'Minimal           (empty monorepo without projects)',
         },
         {
           name: 'nrwl/react-template',
