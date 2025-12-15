@@ -311,7 +311,8 @@ class MavenHomeDiscovery(
           .associate { it[0].trim() to it[1].trim() }
 
         val distributionUrl = props["distributionUrl"] ?: return null
-        val matcher = Regex("""apache-maven-([0-9a-zA-Z.-]+)""").find(distributionUrl)
+        // Match version pattern like 3.9.11, 3.9.11-bin, 4.0.0-rc-4, etc. but NOT .zip extension
+        val matcher = Regex("""apache-maven-(\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?)(?:\.zip|/)""").find(distributionUrl)
         val versionWithSuffix = matcher?.groupValues?.get(1) ?: return null
         // Extract base version without -bin suffix for nested directory name
         val baseVersion = versionWithSuffix.removeSuffix("-bin")
