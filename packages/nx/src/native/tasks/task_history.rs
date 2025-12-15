@@ -6,6 +6,18 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use tracing::trace;
 
+pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS task_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    hash TEXT NOT NULL,
+    status TEXT NOT NULL,
+    code INTEGER NOT NULL,
+    start TIMESTAMP NOT NULL,
+    end TIMESTAMP NOT NULL,
+    FOREIGN KEY (hash) REFERENCES task_details (hash)
+);
+CREATE INDEX IF NOT EXISTS hash_idx ON task_history (hash);
+CREATE INDEX IF NOT EXISTS status_idx ON task_history (status);";
+
 #[napi(object)]
 pub struct TaskRun {
     pub hash: String,
@@ -24,33 +36,7 @@ pub struct NxTaskHistory {
 impl NxTaskHistory {
     #[napi(constructor)]
     pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
-        let s = Self { db };
-
-        s.setup()?;
-
-        Ok(s)
-    }
-
-    fn setup(&self) -> anyhow::Result<()> {
-        self.db
-            .execute_batch(
-                "
-            BEGIN IMMEDIATE;
-            CREATE TABLE IF NOT EXISTS task_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                hash TEXT NOT NULL,
-                status TEXT NOT NULL,
-                code INTEGER NOT NULL,
-                start TIMESTAMP NOT NULL,
-                end TIMESTAMP NOT NULL,
-                FOREIGN KEY (hash) REFERENCES task_details (hash)
-            );
-            CREATE INDEX IF NOT EXISTS hash_idx ON task_history (hash);
-            CREATE INDEX IF NOT EXISTS status_idx ON task_history (status);
-            COMMIT;
-            ",
-            )
-            .map_err(anyhow::Error::from)
+        Ok(Self { db })
     }
 
     #[napi]

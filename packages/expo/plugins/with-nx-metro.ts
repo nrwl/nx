@@ -74,6 +74,9 @@ export function withNxMetro(userConfig: MetroConfig, opts: WithNxOptions = {}) {
   );
 
   const nxConfig: MetroConfig = {
+    // Set projectRoot to workspaceRoot to ensure originModulePath is
+    // workspace-relative. This is required for Expo SDK 54+ compatibility.
+    projectRoot: workspaceRoot,
     resolver: {
       resolveRequest: getResolveRequest(
         extensions,

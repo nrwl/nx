@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, sep } from 'node:path';
 
 /*
@@ -98,6 +98,10 @@ export function generatePackageManagerFiles(
 ) {
   const [pmMajor] = getPackageManagerVersion(packageManager).split('.');
   switch (packageManager) {
+    case 'pnpm':
+      // pnpm doesn't support "workspaces" in package.json, needs pnpm-workspace.yaml
+      convertToWorkspaceYaml(root);
+      break;
     case 'yarn':
       if (+pmMajor >= 2) {
         writeFileSync(
@@ -109,6 +113,81 @@ export function generatePackageManagerFiles(
       }
       break;
   }
+}
+
+/**
+ * Converts an array of workspace globs to pnpm-workspace.yaml content.
+ */
+export function workspacesToPnpmYaml(workspaces: string[]): string {
+  return `packages:\n${workspaces.map((p) => `  - '${p}'`).join('\n')}\n`;
+}
+
+/**
+ * Converts package.json "workspaces" field to pnpm-workspace.yaml
+ * and removes the workspaces field from package.json.
+ * Also adds workspace packages as devDependencies since pnpm doesn't
+ * automatically symlink workspace packages like npm/yarn.
+ */
+function convertToWorkspaceYaml(root: string): void {
+  const packageJsonPath = join(root, 'package.json');
+  if (!existsSync(packageJsonPath)) {
+    return;
+  }
+
+  const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+  const workspaces: string[] | undefined = packageJson.workspaces;
+
+  if (!workspaces || workspaces.length === 0) {
+    return;
+  }
+
+  writeFileSync(
+    join(root, 'pnpm-workspace.yaml'),
+    workspacesToPnpmYaml(workspaces)
+  );
+
+  // Find all workspace packages and add as devDependencies
+  const workspacePackages = findWorkspacePackages(root);
+  if (workspacePackages.length > 0) {
+    packageJson.devDependencies = packageJson.devDependencies || {};
+    for (const pkg of workspacePackages) {
+      packageJson.devDependencies[pkg] = 'workspace:*';
+    }
+  }
+
+  // Remove workspaces from package.json
+  delete packageJson.workspaces;
+  writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
+}
+
+/**
+ * Finds all package names from packages, libs, and apps directories.
+ */
+export function findWorkspacePackages(root: string): string[] {
+  const packages: string[] = [];
+
+  for (const dir of ['packages', 'libs', 'apps']) {
+    const fullPath = join(root, dir);
+    if (!existsSync(fullPath)) continue;
+
+    const entries = readdirSync(fullPath, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const pkgJsonPath = join(fullPath, entry.name, 'package.json');
+      if (existsSync(pkgJsonPath)) {
+        try {
+          const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'));
+          if (pkgJson.name) {
+            packages.push(pkgJson.name);
+          }
+        } catch {
+          // Skip invalid package.json files
+        }
+      }
+    }
+  }
+
+  return packages.sort();
 }
 
 const pmVersionCache = new Map<PackageManager, string>();

@@ -38,6 +38,7 @@ interface Schema {
   e2eTestRunner?: string;
   ssr?: boolean;
   prefix?: string;
+  zoneless?: boolean;
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
   formatter?: string;

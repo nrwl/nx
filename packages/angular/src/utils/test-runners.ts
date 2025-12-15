@@ -1,7 +1,8 @@
 export enum UnitTestRunner {
   Jest = 'jest',
   None = 'none',
-  Vitest = 'vitest',
+  VitestAngular = 'vitest-angular',
+  VitestAnalog = 'vitest-analog',
 }
 
 export enum E2eTestRunner {

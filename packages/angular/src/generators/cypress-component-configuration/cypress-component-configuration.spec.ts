@@ -60,8 +60,10 @@ describe('Cypress Component Testing Configuration', () => {
     it('should add project config with --target=<project>:<target>', async () => {
       await generateTestApplication(tree, {
         directory: 'fancy-app',
+        zoneless: false,
         skipFormat: true,
       });
+
       await generateTestLibrary(tree, {
         directory: 'fancy-lib',
         skipFormat: true,
@@ -126,8 +128,10 @@ describe('Cypress Component Testing Configuration', () => {
     it('should add project config with --target=<project>:<target>:<config>', async () => {
       await generateTestApplication(tree, {
         directory: 'fancy-app',
+        zoneless: false,
         skipFormat: true,
       });
+
       await generateTestLibrary(tree, {
         directory: 'fancy-lib',
         skipFormat: true,
@@ -192,8 +196,10 @@ describe('Cypress Component Testing Configuration', () => {
     it('should not throw with invalid --build-target', async () => {
       await generateTestApplication(tree, {
         directory: 'fancy-app',
+        zoneless: false,
         skipFormat: true,
       });
+
       await generateTestLibrary(tree, {
         directory: 'fancy-lib',
         skipFormat: true,
@@ -252,6 +258,7 @@ describe('Cypress Component Testing Configuration', () => {
       await generateTestApplication(tree, {
         directory: 'fancy-app',
         bundler: 'webpack',
+        zoneless: false,
         skipFormat: true,
       });
       await componentGenerator(tree, {
@@ -296,8 +303,10 @@ describe('Cypress Component Testing Configuration', () => {
       await generateTestApplication(tree, {
         directory: 'fancy-app',
         bundler: 'webpack',
+        zoneless: false,
         skipFormat: true,
       });
+
       await generateTestLibrary(tree, {
         directory: 'fancy-lib',
         skipFormat: true,
@@ -361,6 +370,13 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   it('should setup angular specific configs', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        'zone.js': '~0.16.0',
+      };
+      return json;
+    });
     await generateTestLibrary(tree, {
       directory: 'my-lib',
       skipFormat: true,
@@ -432,6 +448,7 @@ describe('Cypress Component Testing Configuration', () => {
     await generateTestApplication(tree, {
       directory: 'fancy-app',
       bundler: 'webpack',
+      zoneless: false,
       skipFormat: true,
     });
     await componentGenerator(tree, {
@@ -473,6 +490,13 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   it('should work with simple components', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        'zone.js': '~0.16.0',
+      };
+      return json;
+    });
     await generateTestLibrary(tree, {
       directory: 'my-lib',
       skipFormat: true,
@@ -527,6 +551,13 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   it('should work with standalone component', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        'zone.js': '~0.16.0',
+      };
+      return json;
+    });
     await generateTestLibrary(tree, {
       directory: 'my-lib-standalone',
       skipFormat: true,
@@ -580,6 +611,13 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   it('should work with complex component', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        'zone.js': '~0.16.0',
+      };
+      return json;
+    });
     await generateTestLibrary(tree, {
       directory: 'with-inputs-cmp',
       skipFormat: true,
@@ -636,6 +674,13 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   it('should work with complex standalone component', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        'zone.js': '~0.16.0',
+      };
+      return json;
+    });
     await generateTestLibrary(tree, {
       directory: 'with-inputs-standalone-cmp',
       skipFormat: true,
@@ -693,6 +738,7 @@ describe('Cypress Component Testing Configuration', () => {
   it('should work with secondary entry point libs', async () => {
     await generateTestApplication(tree, {
       directory: 'my-cool-app',
+      zoneless: false,
       skipFormat: true,
     });
     await generateTestLibrary(tree, {
@@ -755,6 +801,13 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   it('should not overwrite existing component test', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        'zone.js': '~0.16.0',
+      };
+      return json;
+    });
     await generateTestLibrary(tree, {
       directory: 'cool-lib',
       flat: true,
@@ -813,6 +866,60 @@ describe('Cypress Component Testing Configuration', () => {
     expect(three.cy).toMatchInlineSnapshot(
       `"const msg = 'should not overwrite abc-three';"`
     );
+  });
+
+  it('should throw an error when the application is zoneless', async () => {
+    await generateTestApplication(tree, {
+      directory: 'zoneless-app',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+    // Apps are zoneless by default in v21+, no need to modify
+
+    projectGraph = {
+      nodes: {
+        'zoneless-app': {
+          name: 'zoneless-app',
+          type: 'app',
+          data: { ...readProjectConfiguration(tree, 'zoneless-app') } as any,
+        },
+      },
+      dependencies: {},
+    };
+
+    await expect(
+      cypressComponentConfiguration(tree, {
+        project: 'zoneless-app',
+        generateTests: false,
+        skipFormat: true,
+      })
+    ).rejects.toThrow(/zoneless/i);
+  });
+
+  it('should throw an error when the library is in a zoneless workspace', async () => {
+    await generateTestLibrary(tree, {
+      directory: 'zoneless-lib',
+      skipFormat: true,
+    });
+
+    projectGraph = {
+      nodes: {
+        'zoneless-lib': {
+          name: 'zoneless-lib',
+          type: 'lib',
+          data: { ...readProjectConfiguration(tree, 'zoneless-lib') } as any,
+        },
+      },
+      dependencies: {},
+    };
+
+    await expect(
+      cypressComponentConfiguration(tree, {
+        project: 'zoneless-lib',
+        generateTests: false,
+        skipFormat: true,
+      })
+    ).rejects.toThrow(/zoneless/i);
   });
 
   // TODO: should we support this?

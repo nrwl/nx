@@ -28,6 +28,23 @@ export function stringifyDate(date: Date) {
 }
 
 /**
+ * Delay utility for throttling API requests
+ */
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Delay between npm API requests to avoid rate limiting (in ms)
+ */
+const NPM_REQUEST_DELAY_MS = 1000;
+
+/**
+ * Track the last npm API request time for rate limiting
+ */
+let lastNpmRequestTime = 0;
+
+/**
  * Publish date (and github directory, readme content)
  * i.e. https://registry.npmjs.org/@nxkit/playwright
  * */
@@ -35,6 +52,14 @@ export async function getNpmData(
   plugin: PluginRegistry,
   skipNxVersion = false
 ) {
+  // Rate limit: wait if needed to ensure 1 second between npm requests
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastNpmRequestTime;
+  if (timeSinceLastRequest < NPM_REQUEST_DELAY_MS) {
+    await delay(NPM_REQUEST_DELAY_MS - timeSinceLastRequest);
+  }
+  lastNpmRequestTime = Date.now();
+
   try {
     const response = await fetch(`https://registry.npmjs.org/${plugin.name}`);
     const data = (await response.json()) as NpmRegistryResponse;
@@ -79,16 +104,28 @@ export async function getNpmData(
  **/
 export async function getNpmDownloads(plugin: PluginRegistry): Promise<number> {
   const lastMonth = getLastMonth();
+
+  // Rate limit: wait if needed to ensure 1 second between requests
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastNpmRequestTime;
+  if (timeSinceLastRequest < NPM_REQUEST_DELAY_MS) {
+    await delay(NPM_REQUEST_DELAY_MS - timeSinceLastRequest);
+  }
+  lastNpmRequestTime = Date.now();
+
+  const url = `https://api.npmjs.org/downloads/point/${stringifyIntervalForUrl(
+    lastMonth
+  )}/${plugin.name}`;
   try {
-    const response = await fetch(
-      `https://api.npmjs.org/downloads/point/${stringifyIntervalForUrl(
-        lastMonth
-      )}/${plugin.name}`
-    );
+    const response = await fetch(url);
     const data = (await response.json()) as NpmDownloadRequest;
-    return data.downloads;
+    console.log(`Loaded npm stats for ${plugin.name}`);
+    return data.downloads ?? 0;
   } catch (ex) {
-    console.warn('Failed to load npm downloads for ' + plugin.name, ex);
+    console.warn(
+      'Failed to load npm downloads for ' + plugin.name + `(${url})`,
+      ex
+    );
     return 0;
   }
 }
@@ -121,6 +158,15 @@ async function findNxRange(devkitVersion: string) {
     .replace('^', '')
     .replace('>=', '')
     .replace('>', '');
+
+  // Rate limit: wait if needed to ensure 1 second between npm requests
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastNpmRequestTime;
+  if (timeSinceLastRequest < NPM_REQUEST_DELAY_MS) {
+    await delay(NPM_REQUEST_DELAY_MS - timeSinceLastRequest);
+  }
+  lastNpmRequestTime = Date.now();
+
   const response = await fetch(`https://registry.npmjs.org/@nx/devkit`);
   const devkitData = (await response.json()) as NpmRegistryResponse;
   if (!devkitData.versions[devkitVersion]?.peerDependencies) {

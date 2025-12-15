@@ -291,9 +291,11 @@ function applyNxDependentConfig(
 
     // When using TS solution setup, enable build mode to generate declaration files
     // This prevents TS6305 errors when declaration files are expected but missing
-    // from module federation remote imports
+    // from module federation remote imports but disable emitting tsbuildinfo files
+    // so that tsc builds are not affected.
     if (isUsingTsSolution) {
       pluginConfig.typescript.build = true;
+      pluginConfig.typescript.mode = 'readonly';
     }
 
     plugins.push(new TsCheckerRspackPlugin(pluginConfig));

@@ -1,3 +1,4 @@
+import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'path';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
@@ -22,6 +23,10 @@ import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-par
 import { Preset } from './utils/preset/preset';
 import { cloneTemplate } from './utils/template/clone-template';
 import { execAndWait } from './utils/child-process-utils';
+import {
+  generatePackageManagerFiles,
+  getPackageManagerCommand,
+} from './utils/package-manager';
 
 // State for SIGINT handler - only set after workspace is fully installed
 let workspaceDirectory: string | undefined;
@@ -75,8 +80,21 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     try {
       await cloneTemplate(templateUrl, name);
 
-      // Install dependencies (template flow always uses npm)
-      await execAndWait('npm install --silent --ignore-scripts', directory);
+      // Remove npm lockfile from template since we'll generate the correct one
+      const npmLockPath = join(directory, 'package-lock.json');
+      if (existsSync(npmLockPath)) {
+        unlinkSync(npmLockPath);
+      }
+
+      // Generate package manager specific files (e.g., .yarnrc.yml for Yarn Berry)
+      generatePackageManagerFiles(directory, packageManager);
+
+      // Install dependencies with the user's package manager
+      const pmc = getPackageManagerCommand(packageManager);
+      if (pmc.preInstall) {
+        await execAndWait(pmc.preInstall, directory);
+      }
+      await execAndWait(pmc.install, directory);
 
       // Mark workspace as ready for SIGINT handler
       workspaceDirectory = directory;

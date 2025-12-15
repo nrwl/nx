@@ -300,7 +300,11 @@ export function applyWebConfig(
     plugins.push(
       // extract global css from js files into own css file
       new CssExtractRspackPlugin({
-        filename: `[name]${hashFormat.extract}.css`,
+        filename:
+          config.output?.cssFilename ??
+          (options.outputHashing
+            ? `[name]${hashFormat.extract}.css`
+            : '[name].css'),
       })
     );
   }
@@ -417,12 +421,15 @@ function getClientEnvironment(mode?: string) {
     }, {});
 
   // Stringify all values so we can feed into rspack DefinePlugin
-  const stringified = {
-    'process.env': Object.keys(raw).reduce((env, key) => {
-      env[key] = JSON.stringify(raw[key]);
+  const stringified = Object.keys(raw).reduce(
+    (env, key) => {
+      env[`process.env.${key}`] = JSON.stringify(raw[key]);
       return env;
-    }, {}),
-  };
+    },
+    // Provide a fallback for process.env itself to handle cases where code
+    // accesses process.env directly (e.g., in Cypress component testing)
+    { 'process.env': '{}' } as Record<string, string>
+  );
 
   return { stringified };
 }

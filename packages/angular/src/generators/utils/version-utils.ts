@@ -3,7 +3,9 @@ import { clean, coerce, major } from 'semver';
 import {
   backwardCompatibleVersions,
   type PackageCompatVersions,
-  type PackageLatestVersions,
+  type SupportedVersion,
+  supportedVersions,
+  type VersionMap,
 } from '../../utils/backward-compatible-versions';
 import * as latestVersions from '../../utils/versions';
 import { angularVersion } from '../../utils/versions';
@@ -55,36 +57,57 @@ export function getInstalledPackageVersionInfo(tree: Tree, pkgName: string) {
   return version ? { major: major(coerce(version)), version } : null;
 }
 
+export function versions(tree: Tree): PackageCompatVersions;
+export function versions<V extends SupportedVersion>(
+  tree: Tree,
+  options: { minAngularMajorVersion: V }
+): MinVersionReturnType<V>;
 export function versions(
-  tree: Tree
-): PackageLatestVersions | PackageCompatVersions {
+  tree: Tree,
+  options?: { minAngularMajorVersion: SupportedVersion }
+): PackageCompatVersions {
   const majorAngularVersion = getInstalledAngularMajorVersion(tree);
-  switch (majorAngularVersion) {
-    case 18:
-      return backwardCompatibleVersions.angularV18;
-    case 19:
-      return backwardCompatibleVersions.angularV19;
-    default:
-      return latestVersions;
+
+  if (
+    options?.minAngularMajorVersion &&
+    majorAngularVersion < options.minAngularMajorVersion
+  ) {
+    throw new Error(
+      `This operation requires Angular ${options.minAngularMajorVersion}+, but found version ${majorAngularVersion}. ` +
+        `This shouldn't happen. Please report it as a bug and include the stack trace.`
+    );
   }
+
+  return backwardCompatibleVersions[majorAngularVersion] ?? latestVersions;
 }
 
 /**
  * Temporary helper to abstract away the version of angular-rspack to be installed
  * until we stop supporting Angular 19.
  */
-export function getAngularRspackVersion(tree: Tree): string | null {
+export function getAngularRspackVersion(tree: Tree): string {
   const majorAngularVersion = getInstalledAngularMajorVersion(tree);
 
-  if (majorAngularVersion === 19) {
-    return backwardCompatibleVersions.angularV19.angularRspackVersion;
-  }
-  if (majorAngularVersion >= 20) {
-    // Starting with Angular 20, we can use an Angular Rspack version that is
-    // aligned with the Nx version
-    return latestVersions.nxVersion;
-  }
-
-  // Lower versions of Angular are not supported
-  return null;
+  // Starting with Angular 20, we can use an Angular Rspack version that is
+  // aligned with the Nx version
+  return majorAngularVersion === 19
+    ? backwardCompatibleVersions[19].angularRspackVersion
+    : latestVersions.nxVersion;
 }
+
+// Helper types
+
+type TakeUntil<Arr extends readonly any[], Target> = Arr extends readonly [
+  infer Head,
+  ...infer Rest
+]
+  ? Head extends Target
+    ? [Head]
+    : [Head, ...TakeUntil<Rest, Target>]
+  : [];
+type VersionsAtLeast<MinV extends SupportedVersion> = Extract<
+  SupportedVersion,
+  TakeUntil<typeof supportedVersions, MinV>[number]
+>;
+type MinVersionReturnType<MinV extends SupportedVersion> =
+  VersionMap[VersionsAtLeast<MinV>];

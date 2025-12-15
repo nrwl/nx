@@ -923,7 +923,7 @@ async function promptForValues(
     .then((values) => ({ ...opts, ...values }))
     .catch((e) => {
       console.error(e);
-      process.exit(0);
+      process.exit(1);
     });
 }
 
