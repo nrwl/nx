@@ -22,7 +22,7 @@ These functions are the exact functions used behind the scenes by the CLI, and s
 import { releaseChangelog, releasePublish, releaseVersion } from 'nx/release';
 ```
 
-The functions are all asynchronous and return data relevant to their specific phase of the release process. They all support `dryRun` and `verbose` boolean options to control the level of detail of the output and allow you to preview changes before they are applied. You can inspect their types to see what each one supports in terms of additional config options.
+The functions are all asynchronous and return data relevant to their specific phase of the release process. They all support `dryRun` and `verbose` boolean options. For `releaseVersion` and `releaseChangelog`, `dryRun` prevents changes from being applied. For `releasePublish`, `dryRun` is forwarded to the underlying executor (see the [releasePublish section](#releasepublish) for important details). You can inspect their types to see what each one supports in terms of additional config options.
 
 {% aside type="caution" title="Project or Group Filtering" %}
 If you apply project or group filtering to the programmatic API via the `projects` or `groups` options that each function supports, be sure to pass the same filters to all three functions.
@@ -92,6 +92,12 @@ const { workspaceChangelog, projectChangelogs } = await releaseChangelog({
 ### releasePublish
 
 `releasePublish` will return a `PublishProjectsResult` object, which is a map of project names to their publish result which is a simple object with a `code` property representing the exit code of the publish operation for the project.
+
+{% aside type="caution" title="dryRun Behavior" %}
+Unlike `releaseVersion` and `releaseChangelog`, the `dryRun` option for `releasePublish` does **not** prevent the underlying commands from being executed. Instead, the `dryRun` flag is forwarded to the `nx-release-publish` executor as an option, and the `NX_DRY_RUN` environment variable is set to `'true'`.
+
+The built-in `@nx/js:release-publish` executor handles this correctly and will skip actual publishing when `dryRun` is `true`. However, **custom `nx-release-publish` executors must implement `dryRun` support themselves** by checking either the `dryRun` option or the `NX_DRY_RUN` environment variable.
+{% /aside %}
 
 ```ts
 const publishResults = await releasePublish({
