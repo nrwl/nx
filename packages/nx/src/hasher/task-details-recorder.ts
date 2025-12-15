@@ -1,3 +1,4 @@
+import { performance } from 'perf_hooks';
 import type { HashedTask } from '../native';
 import { IS_WASM, TaskDetails } from '../native';
 import { getDbConnection } from '../utils/db-connection';
@@ -17,6 +18,8 @@ class TaskDetailsRecorder {
   async recordTaskDetails(tasks: HashedTask[]): Promise<void> {
     if (tasks.length === 0) return;
 
+    performance.mark('db:taskDetails.record:start');
+
     if (
       isOnDaemon() ||
       !daemonClient.enabled() ||
@@ -26,6 +29,13 @@ class TaskDetailsRecorder {
     } else {
       await daemonClient.recordTaskDetails(tasks);
     }
+
+    performance.mark('db:taskDetails.record:end');
+    performance.measure(
+      'db:taskDetails.record',
+      'db:taskDetails.record:start',
+      'db:taskDetails.record:end'
+    );
   }
 }
 

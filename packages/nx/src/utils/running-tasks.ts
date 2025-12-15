@@ -1,3 +1,4 @@
+import { performance } from 'perf_hooks';
 import {
   IS_WASM,
   RunningTasksService as NxRunningTasksService,
@@ -17,36 +18,90 @@ export class RunningTasksService {
   }
 
   getRunningTasks(ids: string[]): string[] | Promise<string[]> {
+    performance.mark('db:runningTasks.get:start');
+
     if (
       isOnDaemon() ||
       !daemonClient.enabled() ||
       !shouldDelegateDbToDaemon()
     ) {
-      return this.service.getRunningTasks(ids);
+      const result = this.service.getRunningTasks(ids);
+      performance.mark('db:runningTasks.get:end');
+      performance.measure(
+        'db:runningTasks.get',
+        'db:runningTasks.get:start',
+        'db:runningTasks.get:end'
+      );
+      return result;
     }
-    return daemonClient.getRunningTasks(ids);
+
+    return daemonClient.getRunningTasks(ids).then((result) => {
+      performance.mark('db:runningTasks.get:end');
+      performance.measure(
+        'db:runningTasks.get',
+        'db:runningTasks.get:start',
+        'db:runningTasks.get:end'
+      );
+      return result;
+    });
   }
 
   addRunningTask(taskId: string): void | Promise<void> {
+    performance.mark('db:runningTasks.add:start');
+
     if (
       isOnDaemon() ||
       !daemonClient.enabled() ||
       !shouldDelegateDbToDaemon()
     ) {
-      return this.service.addRunningTask(taskId);
+      const result = this.service.addRunningTask(taskId);
+      performance.mark('db:runningTasks.add:end');
+      performance.measure(
+        'db:runningTasks.add',
+        'db:runningTasks.add:start',
+        'db:runningTasks.add:end'
+      );
+      return result;
     }
-    return daemonClient.addRunningTask(taskId);
+
+    return daemonClient.addRunningTask(taskId).then((result) => {
+      performance.mark('db:runningTasks.add:end');
+      performance.measure(
+        'db:runningTasks.add',
+        'db:runningTasks.add:start',
+        'db:runningTasks.add:end'
+      );
+      return result;
+    });
   }
 
   removeRunningTask(taskId: string): void | Promise<void> {
+    performance.mark('db:runningTasks.remove:start');
+
     if (
       isOnDaemon() ||
       !daemonClient.enabled() ||
       !shouldDelegateDbToDaemon()
     ) {
-      return this.service.removeRunningTask(taskId);
+      const result = this.service.removeRunningTask(taskId);
+      performance.mark('db:runningTasks.remove:end');
+      performance.measure(
+        'db:runningTasks.remove',
+        'db:runningTasks.remove:start',
+        'db:runningTasks.remove:end'
+      );
+      return result;
     }
-    return daemonClient.removeRunningTask(taskId);
+
+    return daemonClient.removeRunningTask(taskId).then((result) => {
+      performance.mark('db:runningTasks.remove:end');
+      performance.measure(
+        'db:runningTasks.remove',
+        'db:runningTasks.remove:start',
+        'db:runningTasks.remove:end'
+      );
+      return result;
+    });
   }
 }
 
