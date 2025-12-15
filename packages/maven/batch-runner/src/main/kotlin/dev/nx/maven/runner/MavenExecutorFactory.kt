@@ -4,13 +4,13 @@ import org.slf4j.LoggerFactory
 import java.io.File
 
 /**
- * Factory for creating the appropriate MavenExecutor based on detected Maven version.
+ * Factory for creating the appropriate MavenExecutor based on Maven version.
  *
  * Strategy:
  * - Maven 4.x: Use ResidentMavenExecutor (ResidentMavenInvoker + NxMaven caching)
  * - Maven 3.x: Use Maven3ResidentExecutor (MavenCli via reflection)
  *
- * Version detection is done by checking for Maven 4.x specific classes.
+ * Version detection is done by MavenHomeDiscovery and passed to this factory.
  *
  * IMPORTANT: ResidentMavenExecutor is loaded via reflection to avoid loading Maven 4.x
  * classes when running with Maven 3.x. The JVM would otherwise try to resolve Maven 4
@@ -23,18 +23,33 @@ object MavenExecutorFactory {
    * Create the appropriate MavenExecutor for the detected Maven version.
    *
    * @param mavenHome Maven installation directory
+   * @param isMaven4 Whether Maven 4.x was detected (from MavenHomeDiscovery)
    * @return MavenExecutor optimized for the detected version
    */
   fun create(
-    mavenHome: File?
+    mavenHome: File?,
+    isMaven4: Boolean
   ): MavenExecutor {
-    val isMaven4 = detectMaven4(mavenHome)
-
     return if (isMaven4) {
-      log.debug("🚀 Detected Maven 4.x - using ResidentMavenExecutor")
+      log.debug("🚀 Using Maven 4.x - ResidentMavenExecutor")
       createResidentMavenExecutor(mavenHome)
     } else {
-      log.debug("📦 Detected Maven 3.x - using Maven3ResidentExecutor")
+      log.debug("📦 Using Maven 3.x - Maven3CachingExecutor")
+      createMaven3CachingExecutor(mavenHome)
+    }
+  }
+
+  /**
+   * Create Maven3CachingExecutor with fallback to Maven3ResidentExecutor.
+   * Uses reflection to avoid loading classes that may not exist in older Maven versions.
+   */
+  private fun createMaven3CachingExecutor(mavenHome: File?): MavenExecutor {
+    return try {
+      val clazz = Class.forName("dev.nx.maven.runner.Maven3CachingExecutor")
+      val constructor = clazz.getConstructor(File::class.java)
+      constructor.newInstance(mavenHome) as MavenExecutor
+    } catch (e: Exception) {
+      log.warn("Failed to create Maven3CachingExecutor: ${e.message}, falling back to Maven3ResidentExecutor")
       Maven3ResidentExecutor(mavenHome)
     }
   }
@@ -55,37 +70,4 @@ object MavenExecutorFactory {
     }
   }
 
-  /**
-   * Detect Maven version by checking for Maven 4.x specific classes.
-   *
-   * Checks for ResidentMavenInvoker which only exists in Maven 4.x.
-   */
-  private fun detectMaven4(mavenHome: File?): Boolean {
-    if (mavenHome == null) {
-      log.warn("Maven home not available, defaulting to Maven 4.x detection via classpath")
-      return try {
-        Class.forName("org.apache.maven.cling.invoker.mvn.resident.ResidentMavenInvoker")
-        true
-      } catch (e: ClassNotFoundException) {
-        false
-      }
-    }
-
-    // Check for maven-cli JAR which contains ResidentMavenInvoker
-    val libDir = File(mavenHome, "lib")
-    if (!libDir.isDirectory) {
-      log.warn("Maven lib directory not found: ${libDir.absolutePath}")
-      return false
-    }
-
-    val hasMavenCli = libDir.listFiles()?.any { it.name.startsWith("maven-cli-4") } ?: false
-
-    return if (hasMavenCli) {
-      log.debug("✅ Found maven-cli-4.x JAR - Maven 4.x detected")
-      true
-    } else {
-      log.debug("❌ maven-cli-4.x JAR not found - Maven 3.x detected")
-      false
-    }
-  }
 }

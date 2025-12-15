@@ -125,15 +125,33 @@ class Maven3ResidentExecutor(
         java.io.PrintStream::class.java
       )
 
-      val printStream = java.io.PrintStream(outputStream, true)
+      // Maven 3.x uses SLF4J which writes directly to System.out/System.err,
+      // ignoring the PrintStreams passed to doMain(). We must redirect System streams.
+      val originalOut = System.out
+      val originalErr = System.err
 
-      val exitCode = doMainMethod.invoke(
-        mavenCli,
-        allArguments.toTypedArray(),
-        workingDir.absolutePath,
-        printStream,
-        printStream
-      ) as Int
+      // Create TeeOutputStream that captures AND streams to original stdout
+      val streamingOutput = TeeOutputStream(outputStream, originalOut)
+      val printStream = java.io.PrintStream(streamingOutput, true)
+
+      val exitCode = try {
+        // Redirect System.out/err to our capturing stream
+        System.setOut(printStream)
+        System.setErr(printStream)
+
+        doMainMethod.invoke(
+          mavenCli,
+          allArguments.toTypedArray(),
+          workingDir.absolutePath,
+          printStream,
+          printStream
+        ) as Int
+      } finally {
+        // Restore original streams
+        System.setOut(originalOut)
+        System.setErr(originalErr)
+        printStream.flush()
+      }
 
       log.debug("Maven 3.x execution completed with exit code: $exitCode")
       log.debug("Maven3ResidentExecutor: exitCode=$exitCode, outputSize=${outputStream.size()}")

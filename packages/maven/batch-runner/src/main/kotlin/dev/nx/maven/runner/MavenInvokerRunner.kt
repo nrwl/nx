@@ -34,9 +34,10 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
   // Maven executor - automatically selects appropriate implementation:
   // - Maven 4.x: ResidentMavenExecutor (ResidentMavenInvoker + NxMaven caching)
   // - Maven 3.x: Maven3ResidentExecutor (MavenCli via reflection)
-  // Works across all Maven versions via reflection
+  // Pass isMaven4 from discovery to avoid re-detection which could give wrong result
   private val mavenExecutor: MavenExecutor = MavenExecutorFactory.create(
-      mavenHome = mavenDiscovery?.mavenHome
+      mavenHome = mavenDiscovery?.mavenHome,
+      isMaven4 = isMaven4
   )
 
   fun runBatch(): Map<String, TaskResult> {
