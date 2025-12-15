@@ -73,9 +73,7 @@ export declare class NxCache {
   get(hash: string): CachedResult | null
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): void
   applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
-  getTaskOutputsPath(hash: string): string
   getCacheSize(): number
-  copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): number
   removeOldCacheRecords(): void
   checkCacheFsInSync(): boolean
 }
@@ -210,6 +208,8 @@ export declare export declare function connectToNxDb(cacheDir: string, nxVersion
 
 export declare export declare function copy(src: string, dest: string): number
 
+export declare export declare function copyFilesFromCache(workspaceRoot: string, cachedResult: CachedResult, outputs: Array<string>): number
+
 export interface DepsOutputsInput {
   dependentTasksOutputFiles: string
   transitive?: boolean
@@ -262,6 +262,8 @@ export declare export declare function getDefaultMaxCacheSize(cachePath: string)
  * This is used when hashing outputs
  */
 export declare export declare function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
+
+export declare export declare function getTaskOutputsPath(cachePath: string, hash: string): string
 
 export declare export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 

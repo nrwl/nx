@@ -18,10 +18,14 @@ import {
   IS_WASM,
   getDefaultMaxCacheSize,
   HttpRemoteCache,
+  getTaskOutputsPath,
+  copyFilesFromCache as nativeCopyFilesFromCache,
 } from '../native';
 import { getDbConnection } from '../utils/db-connection';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
+import { isOnDaemon, shouldDelegateDbToDaemon } from '../daemon/is-on-daemon';
+import { daemonClient } from '../daemon/client/client';
 import {
   NxCloudClientUnavailableError,
   verifyOrUpdateNxCloudClient,
@@ -74,13 +78,20 @@ export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
 
 export class DbCache {
   private nxJson = readNxJson();
-  private cache = new NxCache(
-    workspaceRoot,
-    cacheDir,
-    getDbConnection(),
-    undefined,
-    resolveMaxCacheSize(this.nxJson)
-  );
+  private _cache?: NxCache;
+
+  private get cache(): NxCache {
+    if (!this._cache) {
+      this._cache = new NxCache(
+        workspaceRoot,
+        cacheDir,
+        getDbConnection(),
+        undefined,
+        resolveMaxCacheSize(this.nxJson)
+      );
+    }
+    return this._cache;
+  }
 
   private remoteCache: RemoteCacheV2 | null;
   private remoteCachePromise: Promise<RemoteCacheV2>;
@@ -94,16 +105,28 @@ export class DbCache {
     }
   ) {}
 
+  private shouldDelegateToDaemon(): boolean {
+    return (
+      !isOnDaemon() && daemonClient.enabled() && shouldDelegateDbToDaemon()
+    );
+  }
+
   async init() {
     // This should be cheap because we've already loaded
     this.remoteCache = await this.getRemoteCache();
     if (!this.remoteCache) {
-      this.assertCacheIsValid();
+      await this.assertCacheIsValid();
     }
   }
 
   async get(task: Task): Promise<CachedResult | null> {
-    const res = this.cache.get(task.hash);
+    let res: NativeCacheResult | null;
+
+    if (this.shouldDelegateToDaemon()) {
+      res = await daemonClient.cacheGet(task.hash);
+    } else {
+      res = this.cache.get(task.hash);
+    }
 
     if (res) {
       return {
@@ -115,13 +138,10 @@ export class DbCache {
     if (this.remoteCache) {
       // didn't find it locally but we have a remote cache
       // attempt remote cache
-      const res = await this.remoteCache.retrieve(
-        task.hash,
-        this.cache.cacheDirectory
-      );
+      const res = await this.remoteCache.retrieve(task.hash, cacheDir);
 
       if (res) {
-        this.applyRemoteCacheResults(task.hash, res, task.outputs);
+        await this.applyRemoteCacheResults(task.hash, res, task.outputs);
 
         return {
           ...res,
@@ -136,7 +156,10 @@ export class DbCache {
     }
   }
 
-  getUsedCacheSpace() {
+  getUsedCacheSpace(): number | Promise<number> {
+    if (this.shouldDelegateToDaemon()) {
+      return daemonClient.cacheGetSize();
+    }
     return this.cache.getCacheSize();
   }
 
@@ -144,7 +167,10 @@ export class DbCache {
     hash: string,
     res: NativeCacheResult,
     outputs: string[]
-  ) {
+  ): void | Promise<void> {
+    if (this.shouldDelegateToDaemon()) {
+      return daemonClient.cacheApplyRemoteResults(hash, res, outputs);
+    }
     return this.cache.applyRemoteCacheResults(hash, res, outputs);
   }
 
@@ -155,31 +181,33 @@ export class DbCache {
     code: number
   ) {
     return tryAndRetry(async () => {
-      this.cache.put(task.hash, terminalOutput, outputs, code);
+      if (this.shouldDelegateToDaemon()) {
+        await daemonClient.cachePut(task.hash, terminalOutput, outputs, code);
+      } else {
+        this.cache.put(task.hash, terminalOutput, outputs, code);
+      }
 
       if (this.remoteCache) {
-        await this.remoteCache.store(
-          task.hash,
-          this.cache.cacheDirectory,
-          terminalOutput,
-          code
-        );
+        await this.remoteCache.store(task.hash, cacheDir, terminalOutput, code);
       }
     });
   }
 
   copyFilesFromCache(_: string, cachedResult: CachedResult, outputs: string[]) {
-    return tryAndRetry(async () =>
-      this.cache.copyFilesFromCache(cachedResult, outputs)
-    );
+    return tryAndRetry(async () => {
+      nativeCopyFilesFromCache(workspaceRoot, cachedResult, outputs);
+    });
   }
 
-  removeOldCacheRecords() {
+  removeOldCacheRecords(): void | Promise<void> {
+    if (this.shouldDelegateToDaemon()) {
+      return daemonClient.cacheRemoveOldRecords();
+    }
     return this.cache.removeOldCacheRecords();
   }
 
-  temporaryOutputPath(task: Task) {
-    return this.cache.getTaskOutputsPath(task.hash);
+  temporaryOutputPath(task: Task): string {
+    return getTaskOutputsPath(cacheDir, task.hash);
   }
 
   private async getRemoteCache(): Promise<RemoteCacheV2 | null> {
@@ -293,14 +321,21 @@ export class DbCache {
     });
   }
 
-  private assertCacheIsValid() {
+  private async assertCacheIsValid() {
     // User has customized the cache directory - this could be because they
     // are using a shared cache in the custom directory. The db cache is not
     // stored in the cache directory, and is keyed by machine ID so they would
     // hit issues. If we detect this, we can create a fallback db cache in the
     // custom directory, and check if the entries are there when the main db
     // cache misses.
-    if (isCI() && !this.cache.checkCacheFsInSync()) {
+    let isInSync: boolean;
+    if (this.shouldDelegateToDaemon()) {
+      isInSync = await daemonClient.cacheCheckFsInSync();
+    } else {
+      isInSync = this.cache.checkCacheFsInSync();
+    }
+
+    if (isCI() && !isInSync) {
       const warningLines = [
         `Nx found unrecognized artifacts in the cache directory and will not be able to use them.`,
         `Nx can only restore artifacts it has metadata about.`,
