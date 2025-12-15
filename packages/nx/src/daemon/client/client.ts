@@ -518,6 +518,8 @@ export class DaemonClient {
         () => {
           // Connection closed - trigger reconnection again
           this.fileWatcherMessenger = undefined;
+          // Reset reconnection flag before triggering reconnection
+          this.fileWatcherReconnecting = false;
           for (const cb of this.fileWatcherCallbacks.values()) {
             cb('reconnecting', null);
           }
@@ -713,6 +715,8 @@ export class DaemonClient {
         () => {
           // Connection closed - trigger reconnection again
           this.projectGraphListenerMessenger = undefined;
+          // Reset reconnection flag before triggering reconnection
+          this.projectGraphListenerReconnecting = false;
           for (const cb of this.projectGraphListenerCallbacks.values()) {
             cb('reconnecting', null);
           }
