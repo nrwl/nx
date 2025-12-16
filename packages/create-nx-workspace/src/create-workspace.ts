@@ -146,9 +146,11 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   const isTemplate = !!options.template;
 
-  // Only generate CI for preset flow (not template)
-  if (nxCloud !== 'skip' && !isTemplate && nxCloud !== 'yes') {
-    await setupCI(directory, nxCloud, packageManager);
+  // Generate CI for preset flow (not template)
+  // When nxCloud === 'yes' (from simplified prompt), use GitHub as the CI provider
+  if (nxCloud !== 'skip' && !isTemplate) {
+    const ciProvider = nxCloud === 'yes' ? 'github' : nxCloud;
+    await setupCI(directory, ciProvider, packageManager);
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;

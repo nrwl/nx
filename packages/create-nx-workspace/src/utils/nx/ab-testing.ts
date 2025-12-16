@@ -279,11 +279,21 @@ export interface RecordStatMetaCancel {
   flowVariant?: string;
 }
 
+export interface RecordStatMetaPrecreate {
+  type: 'precreate';
+  flowVariant: string;
+  template: string;
+  preset: string;
+  nodeVersion: string;
+  packageManager: string;
+}
+
 export type RecordStatMeta =
   | RecordStatMetaStart
   | RecordStatMetaComplete
   | RecordStatMetaError
-  | RecordStatMetaCancel;
+  | RecordStatMetaCancel
+  | RecordStatMetaPrecreate;
 
 /**
  * We are incrementing a counter to track how often create-nx-workspace is used in CI

@@ -465,6 +465,20 @@ async function normalizeArgsMiddleware(
         defaultBase: 'main',
         aiAgents,
       });
+
+      await recordStat({
+        nxVersion,
+        command: 'create-nx-workspace',
+        useCloud: nxCloud !== 'skip',
+        meta: {
+          type: 'precreate',
+          flowVariant: getFlowVariant(),
+          template: chosenTemplate,
+          preset: '',
+          nodeVersion: process.versions.node ?? '',
+          packageManager,
+        },
+      });
     } else {
       // Preset flow - existing behavior
       if (!argv.preset || isKnownPreset(argv.preset)) {
@@ -524,6 +538,20 @@ async function normalizeArgsMiddleware(
       });
 
       chosenPreset = argv.preset;
+
+      await recordStat({
+        nxVersion,
+        command: 'create-nx-workspace',
+        useCloud: nxCloud !== 'skip',
+        meta: {
+          type: 'precreate',
+          flowVariant: getFlowVariant(),
+          template: '',
+          preset: chosenPreset ?? '',
+          nodeVersion: process.versions.node ?? '',
+          packageManager,
+        },
+      });
     }
   } catch (e) {
     if (e instanceof CnwError) {
