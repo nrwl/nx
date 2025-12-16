@@ -9,6 +9,25 @@ When responding to queries about this repository:
 Always strive to provide accurate, helpful responses that align with the best practices and workflows described in this
 file.
 
+## Documentation Contributions
+
+When working on Nx documentation, all documentation content lives in the `astro-docs/` folder. This is the new Astro-based documentation site built with Starlight.
+
+**Important**: Before making any documentation changes, read the `astro-docs/README.md` file for detailed guidance on:
+
+- Project structure and architecture
+- Content types (regular docs, dynamic plugin docs, CLI docs)
+- Available Markdoc tags for rich content
+- Development workflow and commands
+- Sidebar management
+
+### Quick Reference
+
+- Documentation content: `astro-docs/src/content/docs/`
+- Use `.mdoc` (Markdoc) or `.mdx` format for documentation files
+- Run `nx serve astro-docs` to start the local dev server
+- Sidebar structure is defined in `astro-docs/sidebar.mts`
+
 ## GitHub Issue Response Mode
 
 When responding to GitHub issues, determine your approach based on how the request is phrased:
