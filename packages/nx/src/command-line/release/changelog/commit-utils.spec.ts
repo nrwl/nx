@@ -69,6 +69,7 @@ describe('commit-utils', () => {
 
   describe('filterHiddenChanges', () => {
     const conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] = {
+      useCommitScope: true,
       types: {
         fix: {
           semverBump: 'patch',
@@ -369,6 +370,7 @@ describe('commit-utils', () => {
 
       const conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] =
         {
+          useCommitScope: true,
           types: {
             fix: {
               semverBump: 'patch',
