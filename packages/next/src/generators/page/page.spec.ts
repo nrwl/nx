@@ -50,7 +50,7 @@ describe('component', () => {
         tree.exists('my-app/pages/posts/[dynamic]/index.module.css')
       ).toBeTruthy();
     });
-  
+
     it('should generate component in pages directory using fileName', async () => {
       await pageGenerator(tree, {
         name: 'hello',
