@@ -480,8 +480,12 @@ async function startPluginWorker(name: string) {
   // Instead, they would print things like `^[[A`/`^[[B` to the terminal.
   const stdoutMaxListeners = process.stdout.getMaxListeners();
   const stderrMaxListeners = process.stderr.getMaxListeners();
-  process.stdout.setMaxListeners(stdoutMaxListeners + 1);
-  process.stderr.setMaxListeners(stderrMaxListeners + 1);
+  if (stdoutMaxListeners !== 0) {
+    process.stdout.setMaxListeners(stdoutMaxListeners + 1);
+  }
+  if (stderrMaxListeners !== 0) {
+    process.stderr.setMaxListeners(stderrMaxListeners + 1);
+  }
   worker.stdout.pipe(process.stdout);
   worker.stderr.pipe(process.stderr);
 
