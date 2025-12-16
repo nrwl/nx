@@ -12,9 +12,5 @@
   ],
   "nx": {
     "addTypecheckTarget": false
-  },
-  "compilerOptions": {
-    "module": "preserve",
-    "moduleResolution": "bundler"
   }
 }
