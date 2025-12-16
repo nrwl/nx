@@ -28,7 +28,7 @@
         {
           "const": false,
           "type": "boolean",
-          "description": "Indicates that a server entry point is not provided. _Note: this is only supported in Angular versions >= 19.0.0_."
+          "description": "Indicates that a server entry point is not provided."
         }
       ]
     },
@@ -50,19 +50,21 @@
       "description": "Customize the base path for the URLs of resources in 'index.html' and component stylesheets. This option is only necessary for specific deployment scenarios, such as with Angular Elements or when utilizing different CDN locations."
     },
     "security": {
-      "description": "Security features to protect against XSS and other common attacks. _Note: this is only supported in Angular versions >= 19.0.0_.",
+      "description": "Security features to protect against XSS and other common attacks",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "autoCsp": {
-          "description": "Enables automatic generation of a hash-based Strict Content Security Policy (https://web.dev/articles/strict-csp#choose-hash) based on scripts in index.html. Will default to true once we are out of experimental/preview phases. It defaults to `false`.",
+          "description": "Enables automatic generation of a hash-based Strict Content Security Policy (https://web.dev/articles/strict-csp#choose-hash) based on scripts in index.html. Will default to true once we are out of experimental/preview phases.",
+          "default": false,
           "oneOf": [
             {
               "type": "object",
               "properties": {
                 "unsafeEval": {
                   "type": "boolean",
-                  "description": "Include the `unsafe-eval` directive (https://web.dev/articles/strict-csp#remove-eval) in the auto-CSP. Please only enable this if you are absolutely sure that you need to, as allowing calls to eval will weaken the XSS defenses provided by the auto-CSP. It default to `false`."
+                  "description": "Include the `unsafe-eval` directive (https://web.dev/articles/strict-csp#remove-eval) in the auto-CSP. Please only enable this if you are absolutely sure that you need to, as allowing calls to eval will weaken the XSS defenses provided by the auto-CSP.",
+                  "default": false
                 }
               },
               "additionalProperties": false
@@ -164,7 +166,7 @@
           "default": []
         },
         "sass": {
-          "description": "Options to pass to the sass preprocessor. _Note: this is only supported in Angular versions >= 19.0.0_.",
+          "description": "Options to pass to the sass preprocessor.",
           "type": "object",
           "properties": {
             "fatalDeprecations": {
@@ -557,7 +559,7 @@
       "default": []
     },
     "prerender": {
-      "description": "Prerender (SSG) pages of your application during build time. It defaults to `false` in Angular versions < 19.0.0. Otherwise, the value will be `undefined`.",
+      "description": "Prerender (SSG) pages of your application during build time.",
       "oneOf": [
         {
           "type": "boolean",
@@ -596,7 +598,7 @@
               "description": "The server entry-point that when executed will spawn the web server."
             },
             "experimentalPlatform": {
-              "description": "Specifies the platform for which the server bundle is generated. This affects the APIs and modules available in the server-side code. \n\n- `node`:  (Default) Generates a bundle optimized for Node.js environments. \n- `neutral`: Generates a platform-neutral bundle suitable for environments like edge workers, and other serverless platforms. This option avoids using Node.js-specific APIs, making the bundle more portable. \n\nPlease note that this feature does not provide polyfills for Node.js modules. Additionally, it is experimental, and the feature may undergo changes in future versions. _Note: this is only supported in Angular versions >= 19.0.0_.",
+              "description": "Specifies the platform for which the server bundle is generated. This affects the APIs and modules available in the server-side code. \n\n- `node`:  (Default) Generates a bundle optimized for Node.js environments. \n- `neutral`: Generates a platform-neutral bundle suitable for environments like edge workers, and other serverless platforms. This option avoids using Node.js-specific APIs, making the bundle more portable. \n\nPlease note that this feature does not provide polyfills for Node.js modules. Additionally, it is experimental, and the feature may undergo changes in future versions.",
               "default": "node",
               "enum": ["node", "neutral"]
             }
@@ -607,11 +609,11 @@
     },
     "appShell": {
       "type": "boolean",
-      "description": "Generates an application shell during build time. It defaults to `false` in Angular versions < 19.0.0. Otherwise, the value will be `undefined`."
+      "description": "Generates an application shell during build time."
     },
     "outputMode": {
       "type": "string",
-      "description": "Defines the build output target. 'static': Generates a static site for deployment on any static hosting service. 'server': Produces an application designed for deployment on a server that supports server-side rendering (SSR). _Note: this is only supported in Angular versions >= 19.0.0_.",
+      "description": "Defines the build output target. 'static': Generates a static site for deployment on any static hosting service. 'server': Produces an application designed for deployment on a server that supports server-side rendering (SSR).",
       "enum": ["static", "server"]
     },
     "buildLibsFromSource": {

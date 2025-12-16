@@ -63,7 +63,9 @@ export async function componentConfigurationGeneratorInternal(
 
   const projectConfig = readProjectConfiguration(tree, opts.project);
 
-  tasks.push(updateDeps(tree, opts));
+  if (!opts.skipPackageJson) {
+    tasks.push(updateDeps(tree, opts));
+  }
 
   addProjectFiles(tree, projectConfig, opts);
   if (!hasPlugin || opts.addExplicitTargets) {

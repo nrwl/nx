@@ -142,45 +142,45 @@ const messageOptions: Record<string, MessageData[]> = {
    * Simplified Cloud prompt for template flow
    */
   setupNxCloudV2: [
-    {
-      code: 'cloud-v2-remote-cache-visit',
-      message: 'Enable remote caching with Nx Cloud?',
-      initial: 0,
-      choices: [
-        { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip' },
-      ],
-      footer:
-        '\nRemote caching makes your builds faster for development and in CI: https://nx.dev/ci/features/remote-cache',
-      fallback: undefined,
-      completionMessage: 'cache-setup',
-    },
-    {
-      code: 'cloud-v2-fast-ci-visit',
-      message: 'Speed up CI and reduce compute costs with Nx Cloud?',
-      initial: 0,
-      choices: [
-        { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip' },
-      ],
-      footer:
-        '\n70% faster CI, 60% less compute, Automatically fix broken PRs: https://nx.dev/nx-cloud',
-      fallback: undefined,
-      completionMessage: 'ci-setup',
-    },
-    {
-      code: 'cloud-v2-green-prs-visit',
-      message: 'Get to green PRs faster with Nx Cloud?',
-      initial: 0,
-      choices: [
-        { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip' },
-      ],
-      footer:
-        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
-      fallback: undefined,
-      completionMessage: 'ci-setup',
-    },
+    //{
+    //  code: 'cloud-v2-remote-cache-visit',
+    //  message: 'Enable remote caching with Nx Cloud?',
+    //  initial: 0,
+    //  choices: [
+    //    { value: 'yes', name: 'Yes' },
+    //    { value: 'skip', name: 'Skip' },
+    //  ],
+    //  footer:
+    //    '\nRemote caching makes your builds faster for development and in CI: https://nx.dev/ci/features/remote-cache',
+    //  fallback: undefined,
+    //  completionMessage: 'cache-setup',
+    //},
+    //{
+    //  code: 'cloud-v2-fast-ci-visit',
+    //  message: 'Speed up CI and reduce compute costs with Nx Cloud?',
+    //  initial: 0,
+    //  choices: [
+    //    { value: 'yes', name: 'Yes' },
+    //    { value: 'skip', name: 'Skip' },
+    //  ],
+    //  footer:
+    //    '\n70% faster CI, 60% less compute, Automatically fix broken PRs: https://nx.dev/nx-cloud',
+    //  fallback: undefined,
+    //  completionMessage: 'ci-setup',
+    //},
+    //{
+    //  code: 'cloud-v2-green-prs-visit',
+    //  message: 'Get to green PRs faster with Nx Cloud?',
+    //  initial: 0,
+    //  choices: [
+    //    { value: 'yes', name: 'Yes' },
+    //    { value: 'skip', name: 'Skip' },
+    //  ],
+    //  footer:
+    //    '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
+    //  fallback: undefined,
+    //  completionMessage: 'ci-setup',
+    //},
     {
       code: 'cloud-v2-full-platform-visit',
       message: 'Try the full Nx platform?',
@@ -268,14 +268,21 @@ export interface RecordStatMetaComplete {
 export interface RecordStatMetaError {
   type: 'error';
   errorCode: string;
+  flowVariant?: string;
   errorMessage?: string;
   errorFile?: string;
+}
+
+export interface RecordStatMetaCancel {
+  type: 'cancel';
+  flowVariant?: string;
 }
 
 export type RecordStatMeta =
   | RecordStatMetaStart
   | RecordStatMetaComplete
-  | RecordStatMetaError;
+  | RecordStatMetaError
+  | RecordStatMetaCancel;
 
 /**
  * We are incrementing a counter to track how often create-nx-workspace is used in CI

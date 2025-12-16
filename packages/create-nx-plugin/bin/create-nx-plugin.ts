@@ -163,6 +163,7 @@ async function main(parsedArgs: yargs.Arguments<CreateNxPluginArguments>) {
       nxCloudArg: parsedArgs.nxCloud ?? '',
       nxCloudArgRaw: rawArgs.nxCloud ?? '',
       pushedToVcs: '',
+      connectUrl: workspaceInfo.connectUrl ?? '',
     },
   });
 

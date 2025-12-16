@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`setupSSR with application builder should create the files correctly for ssr 1`] = `
 {
@@ -36,9 +36,6 @@ exports[`setupSSR with application builder should create the files correctly for
     "browser": "app1/src/main.ts",
     "outputMode": "server",
     "outputPath": "dist/app1",
-    "polyfills": [
-      "zone.js",
-    ],
     "server": "app1/src/main.server.ts",
     "ssr": {
       "entry": "app1/src/server.ts",
@@ -107,10 +104,10 @@ app.use('/**', (req, res, next) => {
 });
 
 /**
- * Start the server if this module is the main entry point.
+ * Start the server if this module is the main entry point, or it is ran via PM2.
  * The server listens on the port defined by the \`PORT\` environment variable, or defaults to 4000.
  */
-if (isMainModule(import.meta.url)) {
+if (isMainModule(import.meta.url) || process.env['pm_id']) {
   const port = process.env['PORT'] || 4000;
   app.listen(port, () => {
     console.log(\`Node Express server listening on http://localhost:\${port}\`);
@@ -160,9 +157,6 @@ exports[`setupSSR with application builder should create the files correctly for
     "browser": "app1/src/main.ts",
     "outputMode": "server",
     "outputPath": "dist/app1",
-    "polyfills": [
-      "zone.js",
-    ],
     "server": "app1/src/main.server.ts",
     "ssr": {
       "entry": "app1/src/server.ts",
@@ -231,10 +225,10 @@ app.use('/**', (req, res, next) => {
 });
 
 /**
- * Start the server if this module is the main entry point.
+ * Start the server if this module is the main entry point, or it is ran via PM2.
  * The server listens on the port defined by the \`PORT\` environment variable, or defaults to 4000.
  */
-if (isMainModule(import.meta.url)) {
+if (isMainModule(import.meta.url) || process.env['pm_id']) {
   const port = process.env['PORT'] || 4000;
   app.listen(port, () => {
     console.log(\`Node Express server listening on http://localhost:\${port}\`);
@@ -276,11 +270,9 @@ exports[`setupSSR with browser builder should create the files correctly for ssr
 `;
 
 exports[`setupSSR with browser builder should create the files correctly for ssr 2`] = `
-"import 'zone.js/node';
-
-import { APP_BASE_HREF } from '@angular/common';
+"import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
+import express from 'express';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import AppServerModule from './main.server';
@@ -376,11 +368,9 @@ exports[`setupSSR with browser builder should create the files correctly for ssr
 `;
 
 exports[`setupSSR with browser builder should create the files correctly for ssr when app is standalone 2`] = `
-"import 'zone.js/node';
-
-import { APP_BASE_HREF } from '@angular/common';
+"import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr/node';
-import * as express from 'express';
+import express from 'express';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import bootstrap from './main.server';

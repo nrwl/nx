@@ -70,10 +70,16 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
               workspaceRoot,
               this._options.devServerConfig.staticRemotesPort
             );
-            startRemoteProxies(staticRemotesConfig, mappedLocationOfRemotes, {
-              pathToCert: this._options.devServerConfig.sslCert,
-              pathToKey: this._options.devServerConfig.sslCert,
-            });
+            await startRemoteProxies(
+              staticRemotesConfig,
+              mappedLocationOfRemotes,
+              {
+                pathToCert: this._options.devServerConfig.sslCert,
+                pathToKey: this._options.devServerConfig.sslCert,
+              },
+              false,
+              this._options.devServerConfig.host
+            );
 
             new DefinePlugin({
               'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,

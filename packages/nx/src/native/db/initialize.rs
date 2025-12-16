@@ -1,4 +1,7 @@
 use crate::native::db::connection::NxDbConnection;
+use crate::native::tasks::details::SCHEMA as TASK_DETAILS_SCHEMA;
+use crate::native::tasks::running_tasks_service::SCHEMA as RUNNING_TASKS_SCHEMA;
+use crate::native::tasks::task_history::SCHEMA as TASK_HISTORY_SCHEMA;
 use rusqlite::vtab::array;
 use rusqlite::{Connection, OpenFlags};
 use std::fs::{File, remove_file};
@@ -57,6 +60,7 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
                 Err(s) if s.to_string().contains("metadata") => {
                     configure_database(&c)?;
                     create_metadata_table(&mut c, &nx_version)?;
+                    create_all_tables(&mut c)?;
                     c
                 }
                 reason => {
@@ -102,6 +106,24 @@ fn create_metadata_table(c: &mut NxDbConnection, nx_version: &str) -> anyhow::Re
             "INSERT INTO metadata (key, value) VALUES ('NX_VERSION', ?)",
             [nx_version],
         )?;
+        Ok(())
+    })?;
+
+    Ok(())
+}
+
+fn create_all_tables(c: &mut NxDbConnection) -> anyhow::Result<()> {
+    debug!("Creating all database tables");
+
+    c.transaction(|conn| {
+        // Order matters: tables with no FK dependencies first
+        conn.execute_batch(TASK_DETAILS_SCHEMA)?;
+        conn.execute_batch(RUNNING_TASKS_SCHEMA)?;
+
+        // Tables with FK dependencies
+        conn.execute_batch(TASK_HISTORY_SCHEMA)?;
+        // TODO: cache_outputs table is created by NxCache with conditional FK constraint
+
         Ok(())
     })?;
 

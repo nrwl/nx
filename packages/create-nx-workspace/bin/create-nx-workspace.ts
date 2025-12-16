@@ -62,6 +62,10 @@ function extractErrorFile(error: Error): string | undefined {
 
 // For template-based CNW we want to know if user picked empty vs react vs angular etc.
 let chosenTemplate: string;
+// Also track old custom presets so we know which ones users want.
+let chosenPreset: string;
+// Track whether user opted into cloud or not for SIGINT handler.
+let useCloud: boolean;
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -105,6 +109,7 @@ interface AngularArguments extends BaseArguments {
   bundler: 'webpack' | 'rspack' | 'esbuild';
   ssr: boolean;
   prefix: string;
+  zoneless: boolean;
 }
 
 interface VueArguments extends BaseArguments {
@@ -250,6 +255,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Prefix to use for Angular component and directive selectors.`,
             type: 'string',
           })
+          .option('zoneless', {
+            describe: chalk.dim`Generate an application that does not use 'zone.js'.`,
+            type: 'boolean',
+            default: true,
+          })
           .option('aiAgents', {
             describe: chalk.dim`List of AI agents to configure.`,
             type: 'array',
@@ -273,15 +283,18 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         const errorFile =
           error instanceof Error ? extractErrorFile(error) : undefined;
 
+        useCloud = argv.nxCloud !== 'skip';
+
         await recordStat({
           nxVersion,
           command: 'create-nx-workspace',
-          useCloud: argv.nxCloud !== 'skip',
+          useCloud,
           meta: {
             type: 'error',
+            flowVariant: getFlowVariant(),
             errorCode,
-            errorMessage: errorCode === 'UNKNOWN' ? errorMessage : undefined,
-            errorFile: errorCode === 'UNKNOWN' ? errorFile : undefined,
+            errorMessage,
+            errorFile,
           },
         });
 
@@ -323,7 +336,7 @@ process.on('uncaughtException', (error: unknown) => {
 });
 
 // Handle Ctrl+C gracefully - show helpful message if workspace was already created
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   const { directory, connectUrl } = getInterruptedWorkspaceState();
 
   if (directory) {
@@ -372,6 +385,8 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       nxCloudArgRaw: rawArgs.nxCloud ?? '',
       pushedToVcs: workspaceInfo.pushedToVcs ?? '',
       template: chosenTemplate ?? '',
+      preset: chosenPreset ?? '',
+      connectUrl: workspaceInfo.connectUrl ?? '',
     },
   });
 
@@ -474,6 +489,8 @@ async function normalizeArgsMiddleware(
         defaultBase,
         aiAgents,
       });
+
+      chosenPreset = argv.preset;
     }
   } catch (e) {
     if (e instanceof CnwError) {
@@ -1046,6 +1063,7 @@ async function determineAngularOptions(
   const standaloneApi = parsedArgs.standaloneApi;
   const routing = parsedArgs.routing;
   const prefix = parsedArgs.prefix;
+  const zoneless = parsedArgs.zoneless;
 
   if (prefix) {
     // https://github.com/angular/angular-cli/blob/main/packages/schematics/angular/utility/validation.ts#L11-L14
@@ -1173,6 +1191,7 @@ async function determineAngularOptions(
     bundler,
     ssr,
     prefix,
+    zoneless,
   };
 }
 

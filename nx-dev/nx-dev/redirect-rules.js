@@ -457,10 +457,6 @@ const nxCloudUrls = {
     'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
-  '/ci/recipes/on-premise/auth-single-admin':
-    'https://github.com/nrwl/nx-cloud-helm',
-  '/ci/recipes/enterprise/on-premise/auth-single-admin':
-    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/ami-setup':
     'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/advanced-config':
@@ -1535,6 +1531,10 @@ const dockerReleaseRedirect = {
     '/recipes/nx-release/release-npm-packages',
 };
 
+const removeEvolvingNx = {
+  '/blog/evolving-nx': '/blog/introducing-nx-powerpack',
+};
+
 /**
  * Public export API
  */
@@ -1580,4 +1580,5 @@ module.exports = {
   dockerReleaseRedirect,
   contentDedupeRedirects,
   docsToAstroRedirects: docsToAstroRedirects,
+  removeEvolvingNx,
 };

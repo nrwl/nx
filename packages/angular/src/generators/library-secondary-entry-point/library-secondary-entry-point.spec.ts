@@ -204,10 +204,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     expect(tsConfig.include).toStrictEqual(['src/**/*.ts']);
     expect(tsConfig.exclude).toStrictEqual([
       'src/**/*.spec.ts',
-      'src/test-setup.ts',
-      'jest.config.ts',
       'src/**/*.test.ts',
-      'jest.config.cts',
     ]);
 
     await librarySecondaryEntryPointGenerator(tree, {
@@ -218,13 +215,7 @@ describe('librarySecondaryEntryPoint generator', () => {
 
     tsConfig = readJson(tree, 'libs/lib1/tsconfig.lib.json');
     expect(tsConfig.include).toStrictEqual(['**/*.ts']);
-    expect(tsConfig.exclude).toStrictEqual([
-      '**/*.spec.ts',
-      'test-setup.ts',
-      'jest.config.ts',
-      '**/*.test.ts',
-      'jest.config.cts',
-    ]);
+    expect(tsConfig.exclude).toStrictEqual(['**/*.spec.ts', '**/*.test.ts']);
   });
 
   it('should format files', async () => {

@@ -41,7 +41,7 @@
       "version": "21.3.0-beta.3",
       "x-prompt": "Do you want to update the Jest version to v30?",
       "incompatibleWith": {
-        "@angular-devkit/build-angular": "*"
+        "@angular-devkit/build-angular": "< 21.0.0"
       },
       "packages": {
         "jest": {
@@ -97,6 +97,54 @@
         "jest-util": {
           "version": "~30.0.0",
           "addToPackageJson": "devDependencies"
+        }
+      }
+    },
+    "22.3.0": {
+      "version": "22.3.0-beta.0",
+      "x-prompt": "Do you want to update the Jest version to v30?",
+      "incompatibleWith": {
+        "@angular-devkit/build-angular": "< 21.0.0"
+      },
+      "requires": {
+        "jest": ">= 29.0.0 < 30.0.0"
+      },
+      "packages": {
+        "jest": {
+          "version": "^30.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jest": {
+          "version": "^30.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "expect": {
+          "version": "^30.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@jest/globals": {
+          "version": "^30.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-jasmine2": {
+          "version": "^30.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-environment-jsdom": {
+          "version": "^30.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-util": {
+          "version": "^30.0.0",
+          "addToPackageJson": "devDependencies"
+        },
+        "babel-jest": {
+          "version": "^30.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@swc/jest": {
+          "version": "~0.2.38",
+          "alwaysAddToPackageJson": false
         }
       }
     }
