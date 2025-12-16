@@ -1,4 +1,4 @@
-import { Sass } from '@nx/angular-rspack-compiler/src/models/style-preprocessor-options';
+import { Sass } from '@nx/angular-rspack-compiler';
 import { workspaceRoot } from '@nx/devkit';
 import {
   CssExtractRspackPlugin,
