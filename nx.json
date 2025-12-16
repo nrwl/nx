@@ -218,12 +218,7 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "exclude": [
-        "examples/angular-rspack/**/*",
-        "nx-dev/**/*",
-        "e2e/**/*",
-        "tools/documentation/**/*"
-      ],
+      "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
       "options": {
         "typecheck": true,
         "build": {

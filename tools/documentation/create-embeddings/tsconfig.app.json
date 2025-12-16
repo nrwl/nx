@@ -16,12 +16,6 @@
     "src/**/*.ts",
     "src/**/*.mts",
     "../../../docs/map.json",
-    "../../../docs/generated/manifests/*.json",
-    "../../../astro-docs/src/content/approved-community-plugins.json"
-  ],
-  "references": [
-    {
-      "path": "../../../astro-docs"
-    }
+    "../../../docs/generated/manifests/*.json"
   ]
 }

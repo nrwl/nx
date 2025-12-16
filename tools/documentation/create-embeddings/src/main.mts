@@ -21,6 +21,7 @@ import rehypeRemark from 'rehype-remark';
 import remarkStringify from 'remark-stringify';
 import remarkGfm from 'remark-gfm';
 import { workspaceRoot } from '@nx/devkit';
+import { readFileSync } from 'fs';
 
 let identityMap = {};
 
@@ -648,9 +649,9 @@ async function createMarkdownForCommunityPlugins(): Promise<{
   text: string;
   url: string;
 }[]> {
-  const communityPlugins = await import(
-    '../../../../astro-docs/src/content/approved-community-plugins.json'
-  ).then((m) => m.default);
+  const communityPlugins =  JSON.parse(readFileSync(
+    '../../../../astro-docs/src/content/approved-community-plugins.json', 'utf-8'
+  ))
   return communityPlugins.map((plugin) => {
     return {
       text: `## ${plugin.name} plugin\n\nThere is a ${plugin.name} community plugin.\n\nHere is the description for it: ${plugin.description}\n\nHere is the link to it: [${plugin.url}](${plugin.url})\n\nHere is the list of all the plugins that exist for Nx: https://nx.dev/plugin-registry`,
