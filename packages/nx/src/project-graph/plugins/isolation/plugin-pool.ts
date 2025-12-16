@@ -1,23 +1,23 @@
 import { ChildProcess, spawn } from 'child_process';
-import path = require('path');
 import { Socket, connect } from 'net';
+import path = require('path');
 
 import { PluginConfiguration } from '../../../config/nx-json';
 
 // TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
 // import { logger } from '../../utils/logger';
 
-import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 
+import { getNxRequirePaths } from '../../../utils/installation-directory';
+import { resolveNxPlugin } from '../resolve-plugin';
 import {
   consumeMessage,
   isPluginWorkerResult,
   sendMessageOverSocket,
 } from './messaging';
-import { getNxRequirePaths } from '../../../utils/installation-directory';
-import { resolveNxPlugin } from '../resolve-plugin';
 
 const cleanupFunctions = new Set<() => void>();
 
@@ -483,12 +483,41 @@ async function startPluginWorker(name: string) {
   // Instead, they would print things like `^[[A`/`^[[B` to the terminal.
   const stdoutMaxListeners = process.stdout.getMaxListeners();
   const stderrMaxListeners = process.stderr.getMaxListeners();
-  process.stdout.setMaxListeners(stdoutMaxListeners + 1);
-  process.stderr.setMaxListeners(stderrMaxListeners + 1);
+  if (stdoutMaxListeners !== 0) {
+    process.stdout.setMaxListeners(stdoutMaxListeners + 1);
+  }
+  if (stderrMaxListeners !== 0) {
+    process.stderr.setMaxListeners(stderrMaxListeners + 1);
+  }
   worker.stdout.pipe(process.stdout);
   worker.stderr.pipe(process.stderr);
 
+  // Unref the worker process so it doesn't prevent the parent from exiting.
+  // IMPORTANT: We must also unref the stdout/stderr streams. When streams are
+  // piped, they maintain internal references in Node's event loop. Without
+  // unreferencing them, the parent process will wait for the worker to exit
+  // even after worker.unref() is called. This causes e2e tests to hang on CI
+  // where test frameworks wait for all handles to be released.
+  //
+  // Although TypeScript types these as Readable/Writable, they are actually
+  // net.Socket instances at runtime. Node.js internally creates sockets for
+  // stdio pipes (see lib/internal/child_process.js createSocket function).
+  // Socket.unref() allows the event loop to exit if these are the only handles.
   worker.unref();
+  if (worker.stdout instanceof Socket) {
+    worker.stdout.unref();
+  } else {
+    throw new Error(
+      `Expected worker.stdout to be an instance of Socket, but got ${getTypeName(worker.stdout)}`
+    );
+  }
+  if (worker.stderr instanceof Socket) {
+    worker.stderr.unref();
+  } else {
+    throw new Error(
+      `Expected worker.stderr to be an instance of Socket, but got ${getTypeName(worker.stderr)}`
+    );
+  }
 
   let attempts = 0;
   return new Promise<{
@@ -528,4 +557,15 @@ function isServerAvailable(ipcPath: string): Promise<Socket | false> {
       resolve(false);
     }
   });
+}
+
+function getTypeName(u: unknown): string {
+  if (u === null) return 'null';
+  if (u === undefined) return 'undefined';
+  if (typeof u !== 'object') return typeof u;
+  if (Array.isArray(u)) {
+    const innerTypes = u.map((el) => getTypeName(el));
+    return `Array<${Array.from(new Set(innerTypes)).join('|')}>`;
+  }
+  return u.constructor?.name ?? 'unknown object';
 }
