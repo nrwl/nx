@@ -146,9 +146,11 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   const isTemplate = !!options.template;
 
-  // Only generate CI for preset flow (not template)
-  if (nxCloud !== 'skip' && !isTemplate && nxCloud !== 'yes') {
-    await setupCI(directory, nxCloud, packageManager);
+  // Generate CI for preset flow (not template)
+  // When nxCloud === 'yes' (from simplified prompt), use GitHub as the CI provider
+  if (nxCloud !== 'skip' && !isTemplate) {
+    const ciProvider = nxCloud === 'yes' ? 'github' : nxCloud;
+    await setupCI(directory, ciProvider, packageManager);
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;
@@ -158,12 +160,12 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       await initializeGitRepo(directory, { defaultBase, commit });
 
       // Push to GitHub if commit was made, GitHub push is not skipped, and:
-      // - CI provider is GitHub (preset flow), OR
-      // - Using template flow with Nx Cloud enabled (yes)
+      // - CI provider is GitHub (preset flow with CLI arg), OR
+      // - Nx Cloud enabled via simplified prompt (nxCloud === 'yes')
       if (
         commit &&
         !skipGitHubPush &&
-        (nxCloud === 'github' || (isTemplate && nxCloud === 'yes'))
+        (nxCloud === 'github' || nxCloud === 'yes')
       ) {
         pushedToVcs = await pushToGitHub(directory, {
           skipGitHubPush,
