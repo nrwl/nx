@@ -759,10 +759,28 @@ export class TaskOrchestrator {
         }
         this.runningContinuousTasks.delete(task.id);
 
-        const status = this.cleaningUp || code === 0 ? 'success' : 'failure';
-        await this.postRunSteps([task], [{ task, status }], false, {
-          groupId,
-        });
+        if (!this.cleaningUp) {
+          console.error(
+            `Task "${task.id}" is continuous but exited with code ${code}`
+          );
+          await this.postRunSteps(
+            [task],
+            [{ task, status: 'failure' }],
+            false,
+            {
+              groupId,
+            }
+          );
+        } else {
+          await this.postRunSteps(
+            [task],
+            [{ task, status: 'success' }],
+            false,
+            {
+              groupId,
+            }
+          );
+        }
       });
 
       // task is already running by another process, we schedule the next tasks
@@ -822,8 +840,18 @@ export class TaskOrchestrator {
         this.runningTasksService.removeRunningTask(task.id);
       }
 
-      const status = this.cleaningUp || code === 0 ? 'success' : 'failure';
-      await this.postRunSteps([task], [{ task, status }], false, { groupId });
+      if (!this.cleaningUp) {
+        console.error(
+          `Task "${task.id}" is continuous but exited with code ${code}`
+        );
+        await this.postRunSteps([task], [{ task, status: 'failure' }], false, {
+          groupId,
+        });
+      } else {
+        await this.postRunSteps([task], [{ task, status: 'success' }], false, {
+          groupId,
+        });
+      }
     });
     await this.scheduleNextTasksAndReleaseThreads();
 
