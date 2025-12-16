@@ -7,7 +7,7 @@ use ratatui::layout::{Alignment, Rect, Size};
 use ratatui::style::Modifier;
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::widgets::Paragraph;
 use std::collections::HashMap;
 use std::io;
 use std::io::Write;
@@ -858,7 +858,7 @@ impl App {
                     }
 
                     let frame_area = self.frame_area.unwrap();
-                    let layout_areas = self.layout_areas.as_mut().unwrap();
+                    let layout_areas = self.layout_areas.as_ref().unwrap();
 
                     if self.debug_mode {
                         let debug_widget = TuiLoggerSmartWidget::default().state(&self.debug_state);
@@ -952,49 +952,87 @@ impl App {
                         }
                     }
 
-                    // Render terminal panes - first collect necessary data
-                    let terminal_panes_data: Vec<(usize, Rect, Option<String>)> = layout_areas
-                        .terminal_panes
-                        .iter()
-                        .enumerate()
-                        .map(|(pane_idx, pane_area)| {
-                            let relevant_pane_task: Option<String> = if self.spacebar_mode {
-                                self.selection_manager
-                                    .lock()
-                                    .unwrap()
-                                    .get_selected_task_name()
-                                    .cloned()
-                            } else {
-                                self.pane_tasks[pane_idx].clone()
-                            };
-                            (pane_idx, *pane_area, relevant_pane_task)
-                        })
-                        .collect();
-
                     // Calculate minimal view context once for all panes
                     let is_minimal =
                         self.is_task_list_hidden() && get_task_count(&self.task_graph) == 1;
 
-                    for (pane_idx, pane_area, relevant_pane_task) in terminal_panes_data {
-                        if let Some(task_name) = relevant_pane_task {
-                            let task_status = self
-                                .get_task_status(&task_name)
-                                .unwrap_or(TaskStatus::NotStarted);
+                    // Clone terminal pane areas upfront to avoid borrow conflicts with self
+                    // This is a small vec (at most 2 elements), so the clone cost is minimal
+                    let terminal_panes: Vec<Rect> = layout_areas.terminal_panes.clone();
+                    let num_visible_panes = terminal_panes.len();
 
-                            // If task is pending or skipped, show dependency view
-                            if task_status == TaskStatus::NotStarted
-                                || task_status == TaskStatus::Skipped
-                            {
-                                self.render_dependency_view_internal(
-                                    f, pane_idx, pane_area, task_name, is_minimal,
+                    // Clone pane_tasks upfront to avoid borrow conflicts when calling render methods
+                    // This is a small fixed-size array (2 elements), so the clone cost is minimal
+                    let pane_tasks_snapshot: [Option<String>; 2] = if self.spacebar_mode {
+                        // In spacebar mode, use the selected task in pane 0
+                        let task = self
+                            .selection_manager
+                            .lock()
+                            .unwrap()
+                            .get_selected_task_name()
+                            .cloned();
+                        [task, None]
+                    } else {
+                        self.pane_tasks.clone()
+                    };
+
+                    // Capture focus state before mutable borrows
+                    let current_focus = self.focus;
+
+                    // Iterate over panes in order, mapping to physical positions
+                    // Physical position 0 gets the first pinned task, position 1 gets the second
+                    let mut physical_idx = 0;
+                    for (pane_idx, task_opt) in pane_tasks_snapshot.iter().enumerate() {
+                        if let Some(task_name) = task_opt {
+                            if physical_idx < terminal_panes.len() {
+                                let pane_area = terminal_panes[physical_idx];
+
+                                // Compute focus state based on pane index
+                                let is_focused = matches!(
+                                    current_focus,
+                                    Focus::MultipleOutput(focused) if focused == pane_idx
                                 );
-                            } else {
-                                self.render_terminal_pane_internal(
-                                    f, pane_idx, pane_area, task_name, is_minimal,
-                                );
+
+                                // Compute next-tab-target based on physical position
+                                let is_next_tab_target = !is_focused
+                                    && match current_focus {
+                                        Focus::TaskList => physical_idx == 0,
+                                        Focus::MultipleOutput(_) => {
+                                            physical_idx == 1 && num_visible_panes > 1
+                                        }
+                                        _ => false,
+                                    };
+
+                                let task_status = self
+                                    .get_task_status(task_name)
+                                    .unwrap_or(TaskStatus::NotStarted);
+
+                                // If task is pending or skipped, show dependency view
+                                if task_status == TaskStatus::NotStarted
+                                    || task_status == TaskStatus::Skipped
+                                {
+                                    self.render_dependency_view_internal(
+                                        f,
+                                        pane_idx,
+                                        pane_area,
+                                        task_name.clone(),
+                                        is_minimal,
+                                        is_focused,
+                                    );
+                                } else {
+                                    self.render_terminal_pane_internal(
+                                        f,
+                                        pane_idx,
+                                        pane_area,
+                                        task_name.clone(),
+                                        is_minimal,
+                                        is_focused,
+                                        is_next_tab_target,
+                                    );
+                                }
+
+                                physical_idx += 1;
                             }
-                        } else {
-                            self.render_pane_placeholder(f, pane_idx, pane_area);
                         }
                     }
 
@@ -1327,22 +1365,37 @@ impl App {
             None => return,
         };
 
-        // If we're in spacebar mode and this is pane 0, convert to pinned mode
-        if self.spacebar_mode && pane_idx == 0 {
-            // Clear the PTY reference when converting from spacebar to pinned mode
-            self.clear_pane_pty_reference(pane_idx);
+        // If we're in spacebar mode, clear the spacebar placeholder before pinning
+        // In spacebar mode, pane_tasks[0] is a placeholder that may hold a stale task
+        if self.spacebar_mode {
+            // Clear the spacebar placeholder in pane 0
+            self.pane_tasks[0] = None;
+            self.clear_pane_pty_reference(0);
+            self.dependency_view_states[0] = None;
 
-            // Pin the currently selected task to the pane
-            self.pane_tasks[pane_idx] = Some(task_name.clone());
-
-            // When converting from spacebar to pinned, stay in name-tracking mode
+            // Exit spacebar mode
             self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
-            if self.layout_manager.get_pane_arrangement() == PaneArrangement::None {
+
+            // Pin the task to the requested pane
+            self.pane_tasks[pane_idx] = Some(task_name.clone());
+            self.layout_manager
+                .set_pane_arrangement(PaneArrangement::Single);
+            self.dispatch_action(Action::PinTask(task_name.clone(), pane_idx));
+        } else {
+            // Check if the task is already pinned to the OTHER pane
+            let other_pane_idx = 1 - pane_idx;
+            if self.pane_tasks[other_pane_idx].as_deref() == Some(task_name.as_str()) {
+                // Clear the other pane - task is "moving" to the new pane
+                self.pane_tasks[other_pane_idx] = None;
+                self.clear_pane_pty_reference(other_pane_idx);
+                self.dependency_view_states[other_pane_idx] = None;
+                self.dispatch_action(Action::UnpinTask(task_name.clone(), other_pane_idx));
+
+                // Adjust layout since we now only have one pane
                 self.layout_manager
                     .set_pane_arrangement(PaneArrangement::Single);
             }
-            self.dispatch_action(Action::PinTask(task_name.clone(), pane_idx));
-        } else {
+
             // Check if the task is already pinned to the pane
             if self.pane_tasks[pane_idx].as_deref() == Some(task_name.as_str()) {
                 // Unpin the task if it's already pinned
@@ -1351,20 +1404,22 @@ impl App {
                 // Clear the PTY reference when unpinning
                 self.clear_pane_pty_reference(pane_idx);
 
-                // If this was previously pane 2 and its now unpinned and pane 1 is still set, set the pane arrangement to single
-                if pane_idx == 1 && self.pane_tasks[0].is_some() {
-                    self.layout_manager
-                        .set_pane_arrangement(PaneArrangement::Single);
-                }
-
-                // Adjust focused pane if necessary
-                if !self.has_visible_panes() {
-                    self.update_focus(Focus::TaskList);
-                    // When all panes are cleared, use position-based selection
-                    self.set_spacebar_mode(false, Some(SelectionMode::TrackByPosition));
-                    // If no visible panes are left, set the pane arrangement to none
-                    self.layout_manager
-                        .set_pane_arrangement(PaneArrangement::None);
+                // Set pane arrangement based on count of pinned tasks
+                let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
+                match pinned_count {
+                    0 => {
+                        self.update_focus(Focus::TaskList);
+                        // When all panes are cleared, use position-based selection
+                        self.set_spacebar_mode(false, Some(SelectionMode::TrackByPosition));
+                        self.layout_manager
+                            .set_pane_arrangement(PaneArrangement::None);
+                    }
+                    1 => self
+                        .layout_manager
+                        .set_pane_arrangement(PaneArrangement::Single),
+                    _ => self
+                        .layout_manager
+                        .set_pane_arrangement(PaneArrangement::Double),
                 }
 
                 self.dispatch_action(Action::UnpinTask(task_name.clone(), pane_idx));
@@ -1377,14 +1432,18 @@ impl App {
                 // When pinning a task, use name-based selection
                 self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
 
-                if self.layout_manager.get_pane_arrangement() == PaneArrangement::None {
-                    if pane_idx == 0 && self.pane_tasks[1].is_none() {
-                        self.layout_manager
-                            .set_pane_arrangement(PaneArrangement::Single);
-                    } else if pane_idx == 1 || pane_idx == 0 && self.pane_tasks[1].is_some() {
-                        self.layout_manager
-                            .set_pane_arrangement(PaneArrangement::Double);
-                    }
+                // Set pane arrangement based on count of pinned tasks
+                let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
+                match pinned_count {
+                    0 => self
+                        .layout_manager
+                        .set_pane_arrangement(PaneArrangement::None),
+                    1 => self
+                        .layout_manager
+                        .set_pane_arrangement(PaneArrangement::Single),
+                    _ => self
+                        .layout_manager
+                        .set_pane_arrangement(PaneArrangement::Double),
                 }
 
                 self.dispatch_action(Action::PinTask(task_name.clone(), pane_idx));
@@ -1614,6 +1673,7 @@ impl App {
         pane_area: Rect,
         task_name: String,
         is_minimal: bool,
+        is_focused: bool,
     ) {
         // Calculate values that were previously passed in
         let task_status = self
@@ -1625,11 +1685,6 @@ impl App {
             .find_map(|c| c.as_any().downcast_ref::<TasksList>())
             .map(|tasks_list| tasks_list.throbber_counter)
             .unwrap_or(0);
-
-        let is_focused = match self.focus {
-            Focus::MultipleOutput(focused_pane_idx) => pane_idx == focused_pane_idx,
-            _ => false,
-        };
 
         // Create or update dependency view state for this pane
         let should_update = self.dependency_view_states[pane_idx]
@@ -1673,6 +1728,8 @@ impl App {
         pane_area: Rect,
         task_name: String,
         is_minimal: bool,
+        is_focused: bool,
+        is_next_tab_target: bool,
     ) {
         // Calculate values that were previously passed in
         let task_status = self
@@ -1681,17 +1738,6 @@ impl App {
         let task_continuous = self.is_task_continuous(&task_name);
         let has_pty = self.pty_instances.contains_key(&task_name);
 
-        let is_focused = match self.focus {
-            Focus::MultipleOutput(focused_pane_idx) => pane_idx == focused_pane_idx,
-            _ => false,
-        };
-
-        let is_next_tab_target = !is_focused
-            && match self.focus {
-                Focus::TaskList => pane_idx == 0,
-                Focus::MultipleOutput(0) => pane_idx == 1,
-                _ => false,
-            };
         let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
         terminal_pane_data.is_continuous = task_continuous;
         let in_progress = task_status == TaskStatus::InProgress;
@@ -1749,22 +1795,6 @@ impl App {
             .continuous(task_continuous);
 
         f.render_stateful_widget(terminal_pane, pane_area, &mut state);
-    }
-
-    /// Renders a placeholder for an empty pane
-    fn render_pane_placeholder(&self, f: &mut ratatui::Frame, pane_idx: usize, pane_area: Rect) {
-        let placeholder =
-            Paragraph::new(format!("Press {} on a task to show it here", pane_idx + 1))
-                .block(
-                    Block::default()
-                        .title(format!("  Output {}  ", pane_idx + 1))
-                        .borders(Borders::ALL)
-                        .border_style(Style::default().fg(THEME.secondary_fg)),
-                )
-                .style(Style::default().fg(THEME.secondary_fg))
-                .alignment(Alignment::Center);
-
-        f.render_widget(placeholder, pane_area);
     }
 
     pub fn set_estimated_task_timings(&mut self, timings: HashMap<String, i64>) {
