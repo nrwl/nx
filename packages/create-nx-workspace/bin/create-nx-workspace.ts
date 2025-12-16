@@ -66,6 +66,8 @@ let chosenTemplate: string;
 let chosenPreset: string;
 // Track whether user opted into cloud or not for SIGINT handler.
 let useCloud: boolean;
+// For stats
+let packageManager: string;
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -294,7 +296,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             flowVariant: getFlowVariant(),
             errorCode,
             errorMessage,
-            errorFile,
+            errorFile: errorFile ?? '',
+            template: chosenTemplate ?? '',
+            preset: chosenPreset ?? '',
+            nodeVersion: process.versions.node ?? '',
+            packageManager: packageManager ?? '',
           },
         });
 
@@ -387,6 +393,8 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       template: chosenTemplate ?? '',
       preset: chosenPreset ?? '',
       connectUrl: workspaceInfo.connectUrl ?? '',
+      nodeVersion: process.versions.node,
+      packageManager: packageManager ?? '',
     },
   });
 
@@ -428,6 +436,7 @@ async function normalizeArgsMiddleware(
     meta: {
       type: 'start',
       flowVariant: getFlowVariant(),
+      nodeVersion: process.versions.node,
     },
   });
 
@@ -447,13 +456,28 @@ async function normalizeArgsMiddleware(
         nxCloud === 'skip'
           ? undefined
           : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
+      packageManager = detectInvokedPackageManager();
       Object.assign(argv, {
         nxCloud,
         useGitHub: nxCloud !== 'skip',
         completionMessageKey,
-        packageManager: detectInvokedPackageManager(),
+        packageManager,
         defaultBase: 'main',
         aiAgents,
+      });
+
+      await recordStat({
+        nxVersion,
+        command: 'create-nx-workspace',
+        useCloud: nxCloud !== 'skip',
+        meta: {
+          type: 'precreate',
+          flowVariant: getFlowVariant(),
+          template: chosenTemplate,
+          preset: '',
+          nodeVersion: process.versions.node ?? '',
+          packageManager,
+        },
       });
     } else {
       // Preset flow - existing behavior
@@ -473,24 +497,61 @@ async function normalizeArgsMiddleware(
         }
       }
 
-      const packageManager = await determinePackageManager(argv);
+      packageManager = await determinePackageManager(argv);
       const aiAgents = await determineAiAgents(argv);
       const defaultBase = await determineDefaultBase(argv);
-      const nxCloud =
-        argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
-      const useGitHub =
-        nxCloud === 'skip'
-          ? undefined
-          : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
+
+      // Check if CLI arg was provided (use rawArgs to check original input)
+      const cliNxCloudArgProvided = rawArgs.nxCloud !== undefined;
+
+      let nxCloud: string;
+      let useGitHub: boolean | undefined;
+      let completionMessageKey: string | undefined;
+
+      if (argv.skipGit === true) {
+        nxCloud = 'skip';
+        useGitHub = undefined;
+      } else if (cliNxCloudArgProvided) {
+        // CLI arg provided: use existing flow (CI provider selection if needed)
+        nxCloud = await determineNxCloud(argv);
+        useGitHub =
+          nxCloud === 'skip'
+            ? undefined
+            : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
+      } else {
+        // No CLI arg: use simplified prompt (same as template flow)
+        nxCloud = await determineNxCloudV2(argv);
+        useGitHub = nxCloud !== 'skip';
+        completionMessageKey =
+          nxCloud === 'skip'
+            ? undefined
+            : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
+      }
+
       Object.assign(argv, {
         nxCloud,
         useGitHub,
+        completionMessageKey,
         packageManager,
         defaultBase,
         aiAgents,
       });
 
       chosenPreset = argv.preset;
+
+      await recordStat({
+        nxVersion,
+        command: 'create-nx-workspace',
+        useCloud: nxCloud !== 'skip',
+        meta: {
+          type: 'precreate',
+          flowVariant: getFlowVariant(),
+          template: '',
+          preset: chosenPreset ?? '',
+          nodeVersion: process.versions.node ?? '',
+          packageManager,
+        },
+      });
     }
   } catch (e) {
     if (e instanceof CnwError) {
@@ -535,8 +596,30 @@ async function determineFolder(
 
   if (folderName) {
     validateWorkspaceName(folderName);
+
+    // If directory exists, either re-prompt (interactive) or error (non-interactive)
+    if (existsSync(folderName)) {
+      if (parsedArgs.interactive && !isCI()) {
+        output.warn({
+          title: `Directory ${folderName} already exists.`,
+        });
+        // Re-prompt for a new folder name
+        return promptForFolder(parsedArgs);
+      }
+      throw new CnwError(
+        'DIRECTORY_EXISTS',
+        `The directory '${folderName}' already exists. Choose a different name or remove the existing directory.`
+      );
+    }
     return folderName;
   }
+
+  return promptForFolder(parsedArgs);
+}
+
+async function promptForFolder(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<string> {
   const reply = await enquirer.prompt<{ folderName: string }>([
     {
       name: 'folderName',
@@ -544,9 +627,22 @@ async function determineFolder(
       initial: 'org',
       type: 'input',
       skip: !parsedArgs.interactive || isCI(),
+      validate: (value: string): string | true => {
+        if (!value) {
+          return 'Folder name cannot be empty';
+        }
+        if (!/^[a-zA-Z]/.test(value)) {
+          return 'Workspace name must start with a letter';
+        }
+        if (existsSync(value)) {
+          return `The directory '${value}' already exists`;
+        }
+        return true;
+      },
     },
   ]);
 
+  // Fallback invariants in case validate is bypassed (e.g., in CI or non-interactive mode)
   invariant(
     reply.folderName,
     'INVALID_FOLDER_NAME',
@@ -558,7 +654,7 @@ async function determineFolder(
   invariant(
     !existsSync(reply.folderName),
     'DIRECTORY_EXISTS',
-    `The folder '${reply.folderName}' already exists`
+    `The directory '${reply.folderName}' already exists. Choose a different name or remove the existing directory.`
   );
 
   return reply.folderName;
