@@ -130,19 +130,18 @@ type PreTaskExecutionContext = {
   id: string;
   workspaceRoot: string;
   nxJsonConfiguration: NxJsonConfiguration;
-  argv: string[];  // Original CLI arguments
-}
-
+  argv: string[]; // Original CLI arguments
+};
 
 type PostTasksExecutionContext = {
   id: string;
   workspaceRoot: string;
   nxJsonConfiguration: NxJsonConfiguration;
   taskResults: TaskResults;
-  argv: string[];  // Original CLI arguments
+  argv: string[]; // Original CLI arguments
   startTime: number;
   endTime: number;
-}
+};
 ```
 
 ### Example: Detecting Command Types
@@ -168,14 +167,16 @@ function isAffectedCommand(argv) {
 }
 
 function getTargetName(argv) {
-  const targetIndex = argv.findIndex(arg => arg === '-t' || arg === '--target');
+  const targetIndex = argv.findIndex(
+    (arg) => arg === '-t' || arg === '--target'
+  );
   return targetIndex !== -1 ? argv[targetIndex + 1] : undefined;
 }
 
 export async function postTasksExecution(options, context) {
   const isAffected = isAffectedCommand(context.argv);
   const target = getTargetName(context.argv);
-  
+
   // Send analytics with command context
   await sendAnalytics({
     executionId: context.id,
@@ -202,7 +203,9 @@ When working with `context.argv`, parse it defensively:
 const target = context.argv[2];
 
 // Good - searches for the flag
-const targetIndex = context.argv.findIndex(arg => arg === '-t' || arg === '--target');
+const targetIndex = context.argv.findIndex(
+  (arg) => arg === '-t' || arg === '--target'
+);
 const target = targetIndex !== -1 ? context.argv[targetIndex + 1] : undefined;
 ```
 
