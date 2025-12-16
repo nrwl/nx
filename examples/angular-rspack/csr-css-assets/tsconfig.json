@@ -10,7 +10,8 @@
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
     "moduleResolution": "bundler",
-    "module": "preserve"
+    "module": "preserve",
+    "lib": ["dom", "es2022"]
   },
   "files": [],
   "include": [],
