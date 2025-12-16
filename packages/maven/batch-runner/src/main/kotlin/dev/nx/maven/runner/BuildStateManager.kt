@@ -33,6 +33,19 @@ object BuildStateManager {
     }
 
     /**
+     * Initialize the BuildStateManager with a Plexus container (for Maven 3.x)
+     */
+    fun initialize(container: org.codehaus.plexus.PlexusContainer) {
+        try {
+            projectHelper = container.lookup(MavenProjectHelper::class.java)
+            log.debug("MavenProjectHelper initialized successfully (via PlexusContainer)")
+        } catch (e: Exception) {
+            log.warn("Failed to lookup MavenProjectHelper: ${e.message}")
+            projectHelper = null
+        }
+    }
+
+    /**
      * Apply build states to all projects that have nx-build-state.json files.
      */
     fun applyBuildStates(allProjects: List<MavenProject>) {

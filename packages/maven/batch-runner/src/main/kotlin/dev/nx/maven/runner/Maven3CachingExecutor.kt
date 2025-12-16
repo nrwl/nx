@@ -2,7 +2,6 @@ package dev.nx.maven.runner
 
 import dev.nx.maven.reflection.ReflectionHelper
 import org.apache.maven.Maven
-import org.apache.maven.api.services.Lookup
 import org.apache.maven.execution.*
 import org.apache.maven.graph.GraphBuilder
 import org.apache.maven.lifecycle.internal.LifecycleStarter
@@ -31,7 +30,7 @@ import java.io.File
  * 4. Provides ~75% performance improvement over Maven3ResidentExecutor
  *
  * Architecture:
- * - Uses PlexusLookupAdapter to bridge PlexusContainer to Lookup interface
+ * - Uses PlexusContainer directly for dependency lookups
  * - Extracts Maven, GraphBuilder, LifecycleStarter from container
  * - Caches ProjectDependencyGraph and RepositorySystemSession
  * - Applies cached state to each new MavenSession
@@ -44,7 +43,6 @@ class Maven3CachingExecutor(
   // Plexus container - kept alive across invocations
   private lateinit var container: PlexusContainer
   private lateinit var classWorld: ClassWorld
-  private lateinit var lookup: Lookup
 
   // Maven components extracted from container
   private lateinit var maven: Maven
@@ -102,9 +100,6 @@ class Maven3CachingExecutor(
       val plexusContainer = DefaultPlexusContainer(cc)
       container = plexusContainer
       plexusContainer.loggerManager.threshold = org.codehaus.plexus.logging.Logger.LEVEL_WARN
-
-      // Create Lookup adapter
-      lookup = PlexusLookupAdapter(container)
 
       // Extract Maven components
       extractComponents()
@@ -304,8 +299,8 @@ class Maven3CachingExecutor(
         log.debug("      - ${project.groupId}:${project.artifactId}")
       }
 
-      // Initialize BuildStateManager
-      BuildStateManager.initialize(lookup)
+      // Initialize BuildStateManager with PlexusContainer directly (Maven 3.x)
+      BuildStateManager.initialize(container)
 
       // Apply existing build states
       log.debug("   🔄 Applying existing build states to ${graph.allProjects.size} projects...")

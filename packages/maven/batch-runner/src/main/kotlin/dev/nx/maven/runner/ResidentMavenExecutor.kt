@@ -1,17 +1,11 @@
 package dev.nx.maven.runner
 
-import org.apache.maven.api.cli.InvokerException
-import org.apache.maven.api.cli.ParserRequest
-import org.apache.maven.api.services.Lookup
-import org.apache.maven.api.services.MessageBuilderFactory
-import org.apache.maven.cling.invoker.mvn.MavenParser
-import org.apache.maven.cling.invoker.mvn.resident.ResidentMavenInvoker
-import org.apache.maven.jline.JLineMessageBuilderFactory
 import org.codehaus.plexus.classworlds.ClassWorld
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
+import java.lang.reflect.Method
 
 /**
  * Maven Executor using ResidentMavenInvoker for efficient batch execution.
@@ -24,21 +18,30 @@ import java.io.PrintStream
  * 5. Eliminates project rescanning on subsequent invocations
  *
  * Performance: ~75% faster on cached tasks (saves POM parsing + dependency resolution)
+ *
+ * IMPORTANT: This class uses reflection for ALL Maven 4 API to avoid class loading issues.
+ * Maven 4 classes are loaded dynamically after Maven libs are on the classpath.
  */
 class ResidentMavenExecutor(
   private val mavenInstallationDir: File? = null
 ) : MavenExecutor {
   private val log = LoggerFactory.getLogger(ResidentMavenExecutor::class.java)
 
-  // Resident invoker and parser - kept in memory for reuse
-  private lateinit var invoker: ResidentMavenInvoker
-  private lateinit var parser: MavenParser
+  // Resident invoker and parser - kept in memory for reuse (loaded via reflection)
+  private var invoker: Any? = null
+  private var parser: Any? = null
   private lateinit var classWorld: ClassWorld
   private var initialized = false
   private var invocationCount = 0
 
   // Cached Maven home - found once during initialization and reused
   private var cachedMavenHome: File? = null
+
+  // Cached reflection methods
+  private var parseInvocationMethod: Method? = null
+  private var invokeMethod: Method? = null
+  private var parsingFailedMethod: Method? = null
+  private var closeMethod: Method? = null
 
   init {
     initializeMaven()
@@ -78,22 +81,40 @@ class ResidentMavenExecutor(
     // This prevents old embedded classes in sisu.plexus from taking precedence
     addMavenLibJarsToClassRealm()
 
-    // Create a basic Lookup for the invoker
-    // ResidentMavenInvoker expects a Lookup that it will use to populate the MavenContext
+    // Create a basic Lookup for the invoker using reflection
     val lookup = createBasicLookup(classWorld)
 
     log.debug("ProtoLookup configured with ClassWorld")
 
-    // Create the resident invoker - this will cache contexts and repository cache across invocations
-    invoker = CachingResidentMavenInvoker(lookup, null)
-
-    // Create the Maven parser for parsing command-line arguments
-    parser = MavenParser()
+    // Get the ClassRealm for loading Maven 4 classes
+    val classRealm = classWorld.getClassRealm("plexus.core")
 
     // Set TCCL to plexus.core ClassRealm globally for the entire JVM
     // This ensures all threads (including thread pool threads) can load Maven/Plexus classes
-    val plexusCoreRealm = classWorld.getClassRealm("plexus.core")
-    Thread.currentThread().contextClassLoader = plexusCoreRealm
+    Thread.currentThread().contextClassLoader = classRealm
+
+    // Create the resident invoker using reflection - this will cache contexts and repository cache across invocations
+    val cachingInvokerClass = classRealm.loadClass("dev.nx.maven.runner.CachingResidentMavenInvoker")
+    val lookupClass = classRealm.loadClass("org.apache.maven.api.services.Lookup")
+    val consumerClass = Class.forName("java.util.function.Consumer")
+    val invokerConstructor = cachingInvokerClass.getConstructor(lookupClass, consumerClass)
+    invoker = invokerConstructor.newInstance(lookup, null)
+
+    // Get the invoke method
+    val invokerRequestClass = classRealm.loadClass("org.apache.maven.api.cli.InvokerRequest")
+    invokeMethod = invoker!!.javaClass.getMethod("invoke", invokerRequestClass)
+    closeMethod = invoker!!.javaClass.getMethod("close")
+
+    // Create the Maven parser for parsing command-line arguments using reflection
+    val parserClass = classRealm.loadClass("org.apache.maven.cling.invoker.mvn.MavenParser")
+    parser = parserClass.getDeclaredConstructor().newInstance()
+
+    // Get the parseInvocation method
+    val parserRequestClass = classRealm.loadClass("org.apache.maven.api.cli.ParserRequest")
+    parseInvocationMethod = parser!!.javaClass.getMethod("parseInvocation", parserRequestClass)
+
+    // Get parsingFailed method from InvokerRequest
+    parsingFailedMethod = invokerRequestClass.getMethod("parsingFailed")
 
     initialized = true
   }
@@ -146,12 +167,13 @@ class ResidentMavenExecutor(
   }
 
   /**
-   * Create a Lookup for the invoker with ClassWorld mapping.
+   * Create a Lookup for the invoker with ClassWorld mapping using reflection.
    * This follows the same pattern as Maven's own test code.
    */
-  private fun createBasicLookup(classWorld: ClassWorld): Lookup {
+  private fun createBasicLookup(classWorld: ClassWorld): Any {
     return try {
-      val protoLookupClass = Class.forName("org.apache.maven.cling.invoker.ProtoLookup")
+      val classRealm = classWorld.getClassRealm("plexus.core")
+      val protoLookupClass = classRealm.loadClass("org.apache.maven.cling.invoker.ProtoLookup")
       val builderMethod = protoLookupClass.getMethod("builder")
       val builder = builderMethod.invoke(null)
 
@@ -159,7 +181,7 @@ class ResidentMavenExecutor(
       addMappingMethod.invoke(builder, ClassWorld::class.java, classWorld)
 
       val buildMethod = builder.javaClass.getMethod("build")
-      buildMethod.invoke(builder) as Lookup
+      buildMethod.invoke(builder)
     } catch (e: Exception) {
       log.error("Failed to create ProtoLookup with ClassWorld mapping: ${e.message}", e)
       throw RuntimeException("Could not create ProtoLookup: ${e.message}", e)
@@ -189,38 +211,61 @@ class ResidentMavenExecutor(
       val allArguments = ArrayList<String>()
       allArguments.addAll(goals)
       allArguments.addAll(arguments)
+      // Enable raw-streams so System.out/err are not redirected to logging
+      // This ensures plugin output (like test failures) is captured in our output stream
+      if (!allArguments.contains("--raw-streams")) {
+        allArguments.add("--raw-streams")
+      }
 
       log.debug("Executing Maven with goals: $goals, arguments: $arguments from directory: $workingDir")
-
-      // Create a message builder factory for formatting output
-      val messageBuilderFactory: MessageBuilderFactory = JLineMessageBuilderFactory()
 
       // Use cached Maven home (found during initialization)
       val mavenHome = cachedMavenHome
 
-      // Create ParserRequest from our arguments
-      val parserRequestBuilder = ParserRequest.mvn(allArguments.toList(), messageBuilderFactory)
-        .cwd(workingDir.toPath())
-        .userHome(File(System.getProperty("user.home")).toPath())
-        .stdOut(streamingOutput)
-        .stdErr(streamingOutput)
-        .embedded(true)
+      // Create ParserRequest using reflection
+      val classRealm = classWorld.getClassRealm("plexus.core")
+      val messageBuilderFactoryClass = classRealm.loadClass("org.apache.maven.api.services.MessageBuilderFactory")
+      val jlineMessageBuilderFactoryClass = classRealm.loadClass("org.apache.maven.jline.JLineMessageBuilderFactory")
+      val messageBuilderFactory = jlineMessageBuilderFactoryClass.getDeclaredConstructor().newInstance()
+
+      val parserRequestClass = classRealm.loadClass("org.apache.maven.api.cli.ParserRequest")
+      val mvnMethod = parserRequestClass.getMethod("mvn", List::class.java, messageBuilderFactoryClass)
+      val parserRequestBuilder = mvnMethod.invoke(null, allArguments.toList(), messageBuilderFactory)
+
+      // Set builder properties
+      val cwdMethod = parserRequestBuilder.javaClass.getMethod("cwd", java.nio.file.Path::class.java)
+      cwdMethod.invoke(parserRequestBuilder, workingDir.toPath())
+
+      val userHomeMethod = parserRequestBuilder.javaClass.getMethod("userHome", java.nio.file.Path::class.java)
+      userHomeMethod.invoke(parserRequestBuilder, File(System.getProperty("user.home")).toPath())
+
+      val stdOutMethod = parserRequestBuilder.javaClass.getMethod("stdOut", java.io.OutputStream::class.java)
+      stdOutMethod.invoke(parserRequestBuilder, streamingOutput)
+
+      val stdErrMethod = parserRequestBuilder.javaClass.getMethod("stdErr", java.io.OutputStream::class.java)
+      stdErrMethod.invoke(parserRequestBuilder, streamingOutput)
+
+      val embeddedMethod = parserRequestBuilder.javaClass.getMethod("embedded", Boolean::class.java)
+      embeddedMethod.invoke(parserRequestBuilder, true)
 
       // Set Maven home if available
       if (mavenHome != null) {
-        parserRequestBuilder.mavenHome(mavenHome.toPath())
+        val mavenHomeMethod = parserRequestBuilder.javaClass.getMethod("mavenHome", java.nio.file.Path::class.java)
+        mavenHomeMethod.invoke(parserRequestBuilder, mavenHome.toPath())
       }
 
-      val parserRequest = parserRequestBuilder.build()
+      val buildMethod = parserRequestBuilder.javaClass.getMethod("build")
+      val parserRequest = buildMethod.invoke(parserRequestBuilder)
 
       // Parse the request to get InvokerRequest
       val parseTime = System.currentTimeMillis()
-      val invokerRequest = parser.parseInvocation(parserRequest)
+      val invokerRequest = parseInvocationMethod!!.invoke(parser, parserRequest)
       val parseDuration = System.currentTimeMillis() - parseTime
       log.debug("parser.parseInvocation() took ${parseDuration}ms")
 
       // Check if parsing failed
-      if (invokerRequest.parsingFailed()) {
+      val parsingFailed = parsingFailedMethod!!.invoke(invokerRequest) as Boolean
+      if (parsingFailed) {
         val errorMessage = "Maven argument parsing failed for: ${allArguments.joinToString(" ")}"
         log.error(errorMessage)
         System.err.println("[ERROR] $errorMessage")
@@ -235,7 +280,7 @@ class ResidentMavenExecutor(
 
       val exitCode = try {
         val invokeStartTime = System.currentTimeMillis()
-        val result = invoker.invoke(invokerRequest)
+        val result = invokeMethod!!.invoke(invoker, invokerRequest) as Int
         val invokeDuration = System.currentTimeMillis() - invokeStartTime
         log.debug("invoker.invoke() completed in ${invokeDuration}ms, returned: $result")
         result
@@ -243,6 +288,13 @@ class ResidentMavenExecutor(
         log.error("Maven version incompatibility: ${e.message}", e)
         outputStream.write("EXCEPTION: Maven version incompatibility - ${e.message}\n".toByteArray())
         e.printStackTrace(PrintStream(outputStream, true))
+        1
+      } catch (e: java.lang.reflect.InvocationTargetException) {
+        val cause = e.cause ?: e
+        log.error("EXCEPTION during invoker.invoke(): ${cause.javaClass.simpleName}: ${cause.message}", cause)
+        System.err.println("[ERROR] EXCEPTION during invoker.invoke(): ${cause.javaClass.simpleName}: ${cause.message}")
+        cause.printStackTrace(System.err)
+        cause.printStackTrace(PrintStream(outputStream, true))
         1
       } catch (e: Throwable) {
         log.error("EXCEPTION during invoker.invoke(): ${e.javaClass.simpleName}: ${e.message}", e)
@@ -262,10 +314,6 @@ class ResidentMavenExecutor(
         log.debug("Maven failed with exit code $exitCode in ${duration}ms")
       }
       exitCode
-    } catch (e: InvokerException) {
-      log.error("Maven invocation failed: ${e.message}", e)
-      outputStream.write("ERROR: Maven execution failed - ${e.message}\n".toByteArray())
-      1
     } catch (e: Exception) {
       log.error("Unexpected error executing Maven: ${e.message}", e)
       outputStream.write("ERROR: Unexpected error - ${e.message}\n".toByteArray())
@@ -278,16 +326,26 @@ class ResidentMavenExecutor(
    * Returns null if the executor is not initialized or NxMaven is not available.
    */
   fun getNxMaven(): NxMaven? {
-    return if (initialized && this::invoker.isInitialized) {
-      (invoker as? CachingResidentMavenInvoker)?.getNxMaven()
+    return if (initialized && invoker != null) {
+      try {
+        val getNxMavenMethod = invoker!!.javaClass.getMethod("getNxMaven")
+        getNxMavenMethod.invoke(invoker) as? NxMaven
+      } catch (e: Exception) {
+        log.warn("Could not get NxMaven: ${e.message}")
+        null
+      }
     } else {
       null
     }
   }
 
   override fun shutdown() {
-    if (initialized) {
-      invoker.close()
+    if (initialized && invoker != null) {
+      try {
+        closeMethod?.invoke(invoker)
+      } catch (e: Exception) {
+        log.warn("Error closing invoker: ${e.message}")
+      }
       log.info("ResidentMavenExecutor shutdown complete")
     }
   }
