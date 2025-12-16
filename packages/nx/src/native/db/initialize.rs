@@ -1,4 +1,3 @@
-use crate::native::cache::cache::SCHEMA as CACHE_SCHEMA;
 use crate::native::db::connection::NxDbConnection;
 use crate::native::tasks::details::SCHEMA as TASK_DETAILS_SCHEMA;
 use crate::native::tasks::running_tasks_service::SCHEMA as RUNNING_TASKS_SCHEMA;
@@ -123,7 +122,7 @@ fn create_all_tables(c: &mut NxDbConnection) -> anyhow::Result<()> {
 
         // Tables with FK dependencies
         conn.execute_batch(TASK_HISTORY_SCHEMA)?;
-        conn.execute_batch(CACHE_SCHEMA)?;
+        // TODO: cache_outputs table is created by NxCache with conditional FK constraint
 
         Ok(())
     })?;
