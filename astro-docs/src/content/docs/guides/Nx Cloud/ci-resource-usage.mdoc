@@ -82,15 +82,13 @@ Nx writes resource metrics to a local directory during task execution. To view t
 
 ### Configuration
 
-Metrics collection is currently opt-in. To enable it, set the `NX_CLOUD_ENABLE_METRICS_COLLECTION` environment variable:
+Metrics collection is currently on by default for enterprise users with Nx version 22.1 or higher. To disable it, set the `NX_CLOUD_DISABLE_METRICS_COLLECTION` environment variable:
 
 ```shell
-export NX_CLOUD_ENABLE_METRICS_COLLECTION=true
+export NX_CLOUD_DISABLE_METRICS_COLLECTION=true
 ```
 
-In future Nx versions, metrics collection will be enabled by default. You can use this same variable to disable it if needed.
-
-Set the `NX_CLOUD_METRICS_DIRECTORY` environment variable to a directory for the metrics to be written in e.g. `.nx/cache/metrics`.
+Metrics are written to the local Nx cache directory by default (`.nx/cache/metrics` unless manually overridden). You can change this directory by setting the `NX_CLOUD_METRICS_DIRECTORY` environment variable.
 
 ```shell
 export NX_CLOUD_METRICS_DIRECTORY=/path/to/metrics
@@ -98,7 +96,7 @@ export NX_CLOUD_METRICS_DIRECTORY=/path/to/metrics
 
 ### Saving Metrics as CI Artifacts
 
-Set up your CI to save the metrics directory as an artifact so you can download it later.
+Set up your CI to save the metrics directory as an artifact so you can download it later. The following examples assume that the default cache directory (`.nx/cache/metrics`) is used. If you overwrite the metrics directory, adjust the paths in the artifact upload step accordingly.
 
 {% tabs syncKey="ci-provider" %}
 {% tabitem label="GitHub Actions" %}
@@ -108,9 +106,6 @@ Set up your CI to save the metrics directory as an artifact so you can download 
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      NX_CLOUD_ENABLE_METRICS_COLLECTION: true
-      NX_CLOUD_METRICS_DIRECTORY: ${{ github.workspace }}/.nx/cache/metrics
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -130,9 +125,6 @@ jobs:
 ```yaml
 # .gitlab-ci.yml
 build:
-  variables:
-    NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'
-    NX_CLOUD_METRICS_DIRECTORY: $CI_PROJECT_DIR/.nx/cache/metrics
   script:
     - npm ci
     - npx nx affected -t build test lint
@@ -151,9 +143,6 @@ jobs:
   build:
     docker:
       - image: cimg/node:lts
-    environment:
-      NX_CLOUD_ENABLE_METRICS_COLLECTION: true
-      NX_CLOUD_METRICS_DIRECTORY: /home/circleci/project/.nx/cache/metrics
     steps:
       - checkout
       - run: npm ci
