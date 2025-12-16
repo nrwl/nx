@@ -148,7 +148,7 @@ function createHashFromSnapshot(snapshot: PackageSnapshot, patchHash?: string) {
     return hashArray([baseHash, patchHash]);
   }
 
-  return baseHash;
+  return baseHash ?? patchHash;
 }
 
 function isAliasVersion(depVersion: string) {
@@ -163,36 +163,33 @@ function isAliasVersion(depVersion: string) {
  * 3. Name-only match (e.g., "vitest") - lowest priority
  */
 function findPatchHash(
-  patchEntries: Array<{
-    packageName: string;
-    versionSpecifier: string | null;
-    hash: string;
-  }>,
+  patchEntriesByPackage: Map<
+    string,
+    Array<{ versionSpecifier: string | null; hash: string }>
+  >,
   packageName: string,
   version: string
 ): string | undefined {
+  const entries = patchEntriesByPackage.get(packageName);
+  if (!entries) {
+    return undefined; // No patches for this package
+  }
+
   // Check for exact version match first (highest priority)
-  const exactMatch = patchEntries.find(
-    (entry) =>
-      entry.packageName === packageName && entry.versionSpecifier === version
+  const exactMatch = entries.find(
+    (entry) => entry.versionSpecifier === version
   );
   if (exactMatch) {
     return exactMatch.hash;
   }
 
   // Check for version range matches
-  for (const entry of patchEntries) {
+  for (const entry of entries) {
     // Skip name-only entries (will be handled at the end with lowest priority)
-    if (entry.packageName === packageName && entry.versionSpecifier === null) {
+    if (entry.versionSpecifier === null) {
       continue;
     }
-
-    // Check if this entry matches our package and the version satisfies the range
-    if (
-      entry.packageName === packageName &&
-      entry.versionSpecifier &&
-      validRange(entry.versionSpecifier)
-    ) {
+    if (validRange(entry.versionSpecifier)) {
       try {
         if (satisfies(version, entry.versionSpecifier)) {
           return entry.hash;
@@ -204,9 +201,8 @@ function findPatchHash(
   }
 
   // Fall back to name-only match (lowest priority)
-  const nameOnlyMatch = patchEntries.find(
-    (entry) =>
-      entry.packageName === packageName && entry.versionSpecifier === null
+  const nameOnlyMatch = entries.find(
+    (entry) => entry.versionSpecifier === null
   );
   return nameOnlyMatch?.hash;
 }
@@ -222,25 +218,23 @@ function getNodes(
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
   // Extract and pre-parse patch information from patchedDependencies section
-  const patchEntries: Array<{
-    packageName: string;
-    versionSpecifier: string | null; // null for name-only patches
-    hash: string;
-  }> = [];
+  const patchEntriesByPackage = new Map<
+    string,
+    Array<{
+      versionSpecifier: string | null; // null for name-only patches
+      hash: string;
+    }>
+  >();
   if (data.patchedDependencies) {
-    for (const [specifier, patchInfo] of Object.entries(
-      data.patchedDependencies
-    )) {
+    for (const specifier of Object.keys(data.patchedDependencies)) {
+      const patchInfo = data.patchedDependencies[specifier];
       if (patchInfo && typeof patchInfo === 'object' && 'hash' in patchInfo) {
-        // Extract package name (works for all cases now)
-        // patchedDependencies always use @ syntax (never v5 / syntax)
         const packageName = extractNameFromKey(specifier, false);
-
-        // If specifier has a version, extract it using the helper
         const versionSpecifier = getVersion(specifier, packageName) || null;
-
-        patchEntries.push({
-          packageName,
+        if (!patchEntriesByPackage.has(packageName)) {
+          patchEntriesByPackage.set(packageName, []);
+        }
+        patchEntriesByPackage.get(packageName).push({
           versionSpecifier,
           hash: patchInfo.hash,
         });
@@ -299,7 +293,7 @@ function getNodes(
     // Find the appropriate patch hash using PNPM's priority order:
     // 1. Exact version match, 2. Version range match, 3. Name-only match
     const patchHash = findPatchHash(
-      patchEntries,
+      patchEntriesByPackage,
       originalPackageName,
       baseVersion
     );
