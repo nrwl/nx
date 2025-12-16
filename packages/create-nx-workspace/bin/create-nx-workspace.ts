@@ -535,8 +535,30 @@ async function determineFolder(
 
   if (folderName) {
     validateWorkspaceName(folderName);
+
+    // If directory exists, either re-prompt (interactive) or error (non-interactive)
+    if (existsSync(folderName)) {
+      if (parsedArgs.interactive && !isCI()) {
+        output.warn({
+          title: `Directory ${folderName} already exists.`,
+        });
+        // Re-prompt for a new folder name
+        return promptForFolder(parsedArgs);
+      }
+      throw new CnwError(
+        'DIRECTORY_EXISTS',
+        `The directory '${folderName}' already exists. Choose a different name or remove the existing directory.`
+      );
+    }
     return folderName;
   }
+
+  return promptForFolder(parsedArgs);
+}
+
+async function promptForFolder(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<string> {
   const reply = await enquirer.prompt<{ folderName: string }>([
     {
       name: 'folderName',
@@ -544,9 +566,22 @@ async function determineFolder(
       initial: 'org',
       type: 'input',
       skip: !parsedArgs.interactive || isCI(),
+      validate: (value: string): string | true => {
+        if (!value) {
+          return 'Folder name cannot be empty';
+        }
+        if (!/^[a-zA-Z]/.test(value)) {
+          return 'Workspace name must start with a letter';
+        }
+        if (existsSync(value)) {
+          return `The directory '${value}' already exists`;
+        }
+        return true;
+      },
     },
   ]);
 
+  // Fallback invariants in case validate is bypassed (e.g., in CI or non-interactive mode)
   invariant(
     reply.folderName,
     'INVALID_FOLDER_NAME',
@@ -558,7 +593,7 @@ async function determineFolder(
   invariant(
     !existsSync(reply.folderName),
     'DIRECTORY_EXISTS',
-    `The folder '${reply.folderName}' already exists`
+    `The directory '${reply.folderName}' already exists. Choose a different name or remove the existing directory.`
   );
 
   return reply.folderName;

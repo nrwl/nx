@@ -11,7 +11,7 @@ export async function cloneTemplate(
   if (existsSync(targetDirectory)) {
     throw new CnwError(
       'DIRECTORY_EXISTS',
-      `The directory '${targetDirectory}' already exists and is not empty. Choose a different name or remove the existing directory.`
+      `The directory '${targetDirectory}' already exists. Choose a different name or remove the existing directory.`
     );
   }
 
