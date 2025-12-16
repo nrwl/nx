@@ -165,10 +165,12 @@ mise.toml @nrwl/nx-pipelines-reviewers @FrozenPandaz
 /.husky/** @nrwl/nx-pipelines-reviewers
 /packages/workspace/src/generators/ci-workflow/** @nrwl/nx-pipelines-reviewers
 
-# Claude AI Integration
+# AI Agent Integration
 CLAUDE.md @FrozenPandaz @Coly010
 .claude/** @FrozenPandaz @Coly010
 .mcp.json @FrozenPandaz @Coly010
+AGENTS.md @FrozenPandaz @Coly010
+.gemini @FrozenPandaz @Coly010
 
 # Global Files
 project.json @FrozenPandaz @vsavkin
