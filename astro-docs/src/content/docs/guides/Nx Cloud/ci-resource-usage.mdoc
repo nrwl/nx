@@ -82,10 +82,10 @@ Nx writes resource metrics to a local directory during task execution. To view t
 
 ### Configuration
 
-Metrics collection is currently opt-in. To enable it, set the `NX_CLOUD_ENABLE_METRICS_COLLECTION` environment variable:
+Metrics collection is currently on by default for enterprise users with Nx version 22.1 or higher. To disable it, set the `NX_CLOUD_DISABLE_METRICS_COLLECTION` environment variable:
 
 ```shell
-export NX_CLOUD_ENABLE_METRICS_COLLECTION=true
+export NX_CLOUD_DISABLE_METRICS_COLLECTION=true
 ```
 
 In future Nx versions, metrics collection will be enabled by default. You can use this same variable to disable it if needed.
@@ -109,7 +109,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      NX_CLOUD_ENABLE_METRICS_COLLECTION: true
       NX_CLOUD_METRICS_DIRECTORY: ${{ github.workspace }}/.nx/cache/metrics
     steps:
       - uses: actions/checkout@v4
@@ -131,7 +130,6 @@ jobs:
 # .gitlab-ci.yml
 build:
   variables:
-    NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'
     NX_CLOUD_METRICS_DIRECTORY: $CI_PROJECT_DIR/.nx/cache/metrics
   script:
     - npm ci
@@ -152,7 +150,6 @@ jobs:
     docker:
       - image: cimg/node:lts
     environment:
-      NX_CLOUD_ENABLE_METRICS_COLLECTION: true
       NX_CLOUD_METRICS_DIRECTORY: /home/circleci/project/.nx/cache/metrics
     steps:
       - checkout
