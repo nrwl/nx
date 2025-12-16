@@ -30,6 +30,19 @@ export async function checkGitVersion(): Promise<string | null | undefined> {
   }
 }
 
+/**
+ * Synchronously checks if git is available on the system.
+ * Returns true if git command can be executed, false otherwise.
+ */
+export function isGitAvailable(): boolean {
+  try {
+    execSync('git --version', { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function getGitHubUsername(directory: string): Promise<string> {
   const result = await execAndWait('gh api user --jq .login', directory);
   const username = result.stdout.trim();

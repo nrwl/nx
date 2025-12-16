@@ -228,6 +228,7 @@ export function runCreateWorkspace(
   name: string,
   {
     preset,
+    template,
     appName,
     style,
     base,
@@ -249,7 +250,8 @@ export function runCreateWorkspace(
     framework,
     prefix,
   }: {
-    preset: string;
+    preset?: string;
+    template?: string;
     appName?: string;
     style?: string;
     base?: string;
@@ -272,6 +274,15 @@ export function runCreateWorkspace(
     prefix?: string;
   }
 ) {
+  if (preset && template) {
+    throw new Error(
+      'Cannot specify both preset and template. Use one or the other.'
+    );
+  }
+  if (!preset && !template) {
+    throw new Error('Must specify either preset or template.');
+  }
+
   projName = name;
 
   const pm = getPackageManagerCommand({ packageManager });
@@ -279,7 +290,14 @@ export function runCreateWorkspace(
   // Needed for bun workarounds, see below
   const registry = execSync('npm config get registry').toString().trim();
 
-  let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
+  let command = `${pm.createWorkspace} ${name} --nxCloud=skip --no-interactive`;
+
+  if (preset) {
+    command += ` --preset=${preset}`;
+  }
+  if (template) {
+    command += ` --template=${template}`;
+  }
 
   if (appName) {
     command += ` --appName=${appName}`;
@@ -618,8 +636,8 @@ export function newLernaWorkspace({
         packageManager === 'pnpm'
           ? ' --workspace-root'
           : packageManager === 'yarn'
-          ? ' -W'
-          : ''
+            ? ' -W'
+            : ''
       }`,
       {
         cwd: tmpProjPath(),
