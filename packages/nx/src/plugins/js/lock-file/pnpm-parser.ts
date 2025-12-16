@@ -31,6 +31,7 @@ import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
 import { join } from 'path';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import { satisfies, validRange } from 'semver';
 let currentLockFileHash: string;
 
 let parsedLockFile: Lockfile;
@@ -135,17 +136,75 @@ function matchedDependencyName(
   );
 }
 
-function createHashFromSnapshot(snapshot: PackageSnapshot) {
-  return (
+function createHashFromSnapshot(snapshot: PackageSnapshot, patchHash?: string) {
+  const baseHash =
     snapshot.resolution?.['integrity'] ||
     (snapshot.resolution?.['tarball']
       ? hashArray([snapshot.resolution['tarball']])
-      : undefined)
-  );
+      : undefined);
+
+  // If there's a patch hash, combine it with the base hash
+  if (patchHash && baseHash) {
+    return hashArray([baseHash, patchHash]);
+  }
+
+  return baseHash ?? patchHash;
 }
 
 function isAliasVersion(depVersion: string) {
   return depVersion.startsWith('/') || depVersion.includes('@');
+}
+
+/**
+ * Finds the appropriate patch hash for a package based on its name and version.
+ * Follows PNPM's priority order (https://pnpm.io/settings#patcheddependencies):
+ * 1. Exact version match (e.g., "vitest@3.2.4") - highest priority
+ * 2. Version range match (e.g., "vitest@^3.0.0")
+ * 3. Name-only match (e.g., "vitest") - lowest priority
+ */
+function findPatchHash(
+  patchEntriesByPackage: Map<
+    string,
+    Array<{ versionSpecifier: string | null; hash: string }>
+  >,
+  packageName: string,
+  version: string
+): string | undefined {
+  const entries = patchEntriesByPackage.get(packageName);
+  if (!entries) {
+    return undefined; // No patches for this package
+  }
+
+  // Check for exact version match first (highest priority)
+  const exactMatch = entries.find(
+    (entry) => entry.versionSpecifier === version
+  );
+  if (exactMatch) {
+    return exactMatch.hash;
+  }
+
+  // Check for version range matches
+  for (const entry of entries) {
+    // Skip name-only entries (will be handled at the end with lowest priority)
+    if (entry.versionSpecifier === null) {
+      continue;
+    }
+    if (validRange(entry.versionSpecifier)) {
+      try {
+        if (satisfies(version, entry.versionSpecifier)) {
+          return entry.hash;
+        }
+      } catch {
+        // Invalid semver range, skip
+      }
+    }
+  }
+
+  // Fall back to name-only match (lowest priority)
+  const nameOnlyMatch = entries.find(
+    (entry) => entry.versionSpecifier === null
+  );
+  return nameOnlyMatch?.hash;
 }
 
 function getNodes(
@@ -157,6 +216,31 @@ function getNodes(
 } {
   const keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
+
+  // Extract and pre-parse patch information from patchedDependencies section
+  const patchEntriesByPackage = new Map<
+    string,
+    Array<{
+      versionSpecifier: string | null; // null for name-only patches
+      hash: string;
+    }>
+  >();
+  if (data.patchedDependencies) {
+    for (const specifier of Object.keys(data.patchedDependencies)) {
+      const patchInfo = data.patchedDependencies[specifier];
+      if (patchInfo && typeof patchInfo === 'object' && 'hash' in patchInfo) {
+        const packageName = extractNameFromKey(specifier, false);
+        const versionSpecifier = getVersion(specifier, packageName) || null;
+        if (!patchEntriesByPackage.has(packageName)) {
+          patchEntriesByPackage.set(packageName, []);
+        }
+        patchEntriesByPackage.get(packageName).push({
+          versionSpecifier,
+          hash: patchInfo.hash,
+        });
+      }
+    }
+  }
 
   const maybeAliasedPackageVersions = new Map<string, string>(); // <version, alias>
 
@@ -200,7 +284,21 @@ function getNodes(
     if (!originalPackageName) {
       continue;
     }
-    const hash = createHashFromSnapshot(snapshot);
+
+    // Extract version from the key to match against patch specifiers
+    const versionFromKey = getVersion(key, originalPackageName);
+    // Parse the base version (without peer dependency info, etc.)
+    const baseVersion = parseBaseVersion(versionFromKey, isV5);
+
+    // Find the appropriate patch hash using PNPM's priority order:
+    // 1. Exact version match, 2. Version range match, 3. Name-only match
+    const patchHash = findPatchHash(
+      patchEntriesByPackage,
+      originalPackageName,
+      baseVersion
+    );
+    const hash = createHashFromSnapshot(snapshot, patchHash);
+
     // snapshot already has a name
     if (snapshot.name) {
       packageNameObj = {
@@ -233,7 +331,7 @@ function getNodes(
       packageNameObj = {
         key,
         packageName: rootDependencyName,
-        hash: createHashFromSnapshot(snapshot),
+        hash,
       };
     }
 
@@ -241,7 +339,7 @@ function getNodes(
       packageNameObj = {
         key,
         packageName: originalPackageName,
-        hash: createHashFromSnapshot(snapshot),
+        hash,
       };
     }
 
@@ -757,21 +855,18 @@ function getVersion(key: string, packageName: string): string {
 }
 
 function extractNameFromKey(key: string, isV5: boolean): string {
-  // if package name contains org e.g. "@babel/runtime@7.12.5"
+  const versionSeparator = isV5 ? '/' : '@';
+
   if (key.startsWith('@')) {
-    if (isV5) {
-      const startFrom = key.indexOf('/');
-      return key.slice(0, key.indexOf('/', startFrom + 1));
-    } else {
-      // find the position of the '@'
-      return key.slice(0, key.indexOf('@', 1));
-    }
-  }
-  if (isV5) {
-    // if package has just a name e.g. "react/7.12.5..."
-    return key.slice(0, key.indexOf('/', 1));
+    // Scoped package (e.g., "@babel/core@7.12.5" or "@babel/core/7.12.5")
+    // Find the end of scope, then look for the first version separator after that
+    const scopeEnd = key.indexOf('/');
+    const sepIndex =
+      scopeEnd === -1 ? -1 : key.indexOf(versionSeparator, scopeEnd + 1);
+    return sepIndex === -1 ? key : key.slice(0, sepIndex);
   } else {
-    // if package has just a name e.g. "react@7.12.5..."
-    return key.slice(0, key.indexOf('@', 1));
+    // Non-scoped package (e.g., "react@7.12.5" or "react/7.12.5")
+    const sepIndex = key.indexOf(versionSeparator);
+    return sepIndex === -1 ? key : key.slice(0, sepIndex);
   }
 }
