@@ -141,7 +141,7 @@ export async function* compileSwcWatch(
   return yield* createAsyncIterable<{ success: boolean; outfile: string }>(
     async ({ next, done }) => {
       let processOnExit: () => void;
-      let handleCallback: () => void;
+      let handleCallback: (type: string, data?: string) => void;
       let stdoutOnData: () => void;
       let stderrOnData: () => void;
       let watcherOnExit: () => void;
@@ -164,12 +164,12 @@ export async function* compileSwcWatch(
           process.stdout.write(data);
           if (!data.startsWith('Watching')) {
             const swcStatus = data.includes('Successfully');
-  
+
             if (initialPostCompile) {
               await postCompilationCallback();
               initialPostCompile = false;
             }
-  
+
             if (
               normalizedOptions.skipTypeCheck ||
               normalizedOptions.isTsSolutionSetup
@@ -177,11 +177,11 @@ export async function* compileSwcWatch(
               next(getResult(swcStatus));
               return;
             }
-  
+
             if (!typeCheckOptions) {
               typeCheckOptions = getTypeCheckOptions(normalizedOptions);
             }
-  
+
             const delayed = delay(5000);
             next(
               getResult(
@@ -189,22 +189,24 @@ export async function* compileSwcWatch(
                   delayed
                     .start()
                     .then(() => ({ tscStatus: false, type: 'timeout' })),
-                  runTypeCheck(typeCheckOptions).then(({ errors, warnings }) => {
-                    const hasErrors = errors.length > 0;
-                    if (hasErrors) {
-                      printDiagnostics(errors, warnings);
+                  runTypeCheck(typeCheckOptions).then(
+                    ({ errors, warnings }) => {
+                      const hasErrors = errors.length > 0;
+                      if (hasErrors) {
+                        printDiagnostics(errors, warnings);
+                      }
+                      return {
+                        tscStatus: !hasErrors,
+                        type: 'tsc',
+                      };
                     }
-                    return {
-                      tscStatus: !hasErrors,
-                      type: 'tsc',
-                    };
-                  }),
+                  ),
                 ]).then(({ type, tscStatus }) => {
                   if (type === 'tsc') {
                     delayed.cancel();
                     return tscStatus && swcStatus;
                   }
-  
+
                   return swcStatus;
                 })
               )
@@ -217,8 +219,8 @@ export async function* compileSwcWatch(
           }
           next(getResult(false));
         }
-      }
-      
+      };
+
       stdoutOnData = async (data?: string) => {
         handleCallback('stdout', data);
       };
