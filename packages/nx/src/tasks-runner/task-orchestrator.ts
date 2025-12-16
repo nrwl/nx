@@ -997,6 +997,12 @@ export class TaskOrchestrator {
         return true;
       }
 
+      // When TUI is enabled, we need to use pipe output capture to support
+      // progressive output streaming via the onOutput callback
+      if (this.tuiEnabled) {
+        return true;
+      }
+
       const { schema } = getExecutorForTask(task, this.projectGraph);
 
       return (
