@@ -190,7 +190,7 @@ dependencies {
         runCLI('reset');
 
         // Verify the CI test target has correct prefixing (not double-prefixed)
-        const appOutput = runCLI('show project app --json');
+        const appOutput = runCLI('show project app --json', { verbose: false });
         const appProject = JSON.parse(appOutput);
 
         // The CI test target should be prefixed once: 'gradle-test-ci'
