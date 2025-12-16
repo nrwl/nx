@@ -192,7 +192,12 @@ export default async function* mavenBatchExecutor(
           console.error(output);
         }
       }
-      resolve();
+      // Reject promise if exit code is non-zero to propagate error to caller
+      if (code !== 0) {
+        reject(new Error(`Maven batch process exited with code ${code}`));
+      } else {
+        resolve();
+      }
     });
     child.on('error', reject);
   });
