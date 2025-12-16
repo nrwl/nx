@@ -139,8 +139,10 @@ export class CopyAssetsHandler {
           cwd: this.rootDir,
           dot: true, // enable hidden files
           expandDirectories: false,
-          // Ignore common directories that should not be copied or processed
-          ignore: ['**/.git/**'],
+          // Only ignore node_modules when the pattern doesn't explicitly reference it.
+          // This allows copying generated files from node_modules (e.g., Prisma client)
+          // while avoiding performance issues from scanning all node_modules for other patterns.
+          ignore: this.getIgnorePatternsForAsset(ag),
         });
 
         this.callback(this.filesToEvent(files, ag));
@@ -157,11 +159,24 @@ export class CopyAssetsHandler {
         cwd: this.rootDir,
         dot: true, // enable hidden files
         expandDirectories: false,
-        ignore: ['**/node_modules/**', '**/.git/**'],
+        ignore: this.getIgnorePatternsForAsset(ag),
       });
 
       this.callback(this.filesToEvent(files, ag));
     });
+  }
+
+  private getIgnorePatternsForAsset(ag: AssetEntry): string[] {
+    // If the asset input path starts with 'node_modules', allow traversing node_modules
+    // for that specific pattern. This enables copying generated files like Prisma client.
+    const inputStartsWithNodeModules =
+      ag.input.startsWith('node_modules/') || ag.input === 'node_modules';
+
+    if (inputStartsWithNodeModules) {
+      return ['**/.git/**'];
+    }
+
+    return ['**/node_modules/**', '**/.git/**'];
   }
 
   async watchAndProcessOnAssetChange(): Promise<() => void> {
