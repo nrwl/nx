@@ -93,13 +93,13 @@ describe('NxPlugin Plugin Generator', () => {
         name: 'my-plugin',
         directory: 'packages/my-plugin',
         e2eTestRunner: 'jest',
-        e2eProjectDirectory: 'e2e',
+        e2eProjectDirectory: 'my-plugin',
       })
     );
     const project = readProjectConfiguration(tree, 'my-plugin');
     const projectE2e = readProjectConfiguration(tree, 'my-plugin-e2e');
     expect(project.root).toEqual('packages/my-plugin');
-    expect(projectE2e.root).toEqual('e2e/my-plugin-e2e');
+    expect(projectE2e.root).toEqual('my-plugin-e2e');
   });
 
   describe('asset paths', () => {
