@@ -14,15 +14,6 @@ use crate::native::cache::file_ops::_copy;
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
 
-pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS cache_outputs (
-    hash    TEXT PRIMARY KEY NOT NULL,
-    code   INTEGER NOT NULL,
-    size   INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (hash) REFERENCES task_details (hash)
-);";
-
 #[napi(object)]
 #[derive(Default, Clone, Debug)]
 pub struct CachedResult {
@@ -38,6 +29,7 @@ pub struct NxCache {
     workspace_root: PathBuf,
     cache_path: PathBuf,
     db: External<NxDbConnection>,
+    link_task_details: bool,
     max_cache_size: i64,
 }
 
@@ -48,8 +40,8 @@ impl NxCache {
         workspace_root: String,
         cache_path: String,
         db_connection: External<NxDbConnection>,
-        // Unused parameter kept for backwards compatibility with Nx Cloud
-        _link_task_details: Option<bool>,
+        // TODO: this is unused by Nx but still required by Nx Cloud
+        link_task_details: Option<bool>,
         max_cache_size: Option<i64>,
     ) -> anyhow::Result<Self> {
         let cache_path = PathBuf::from(&cache_path);
@@ -59,13 +51,44 @@ impl NxCache {
 
         let max_cache_size = max_cache_size.unwrap_or(0);
 
-        Ok(Self {
+        let r = Self {
             db: db_connection,
             workspace_root: PathBuf::from(workspace_root),
             cache_directory: cache_path.to_normalized_string(),
             cache_path,
+            link_task_details: link_task_details.unwrap_or(true),
             max_cache_size,
-        })
+        };
+
+        r.setup()?;
+
+        Ok(r)
+    }
+
+    fn setup(&self) -> anyhow::Result<()> {
+        let query = if self.link_task_details {
+            "CREATE TABLE IF NOT EXISTS cache_outputs (
+                hash    TEXT PRIMARY KEY NOT NULL,
+                code   INTEGER NOT NULL,
+                size   INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (hash) REFERENCES task_details (hash)
+            );
+            "
+        } else {
+            "CREATE TABLE IF NOT EXISTS cache_outputs (
+                hash    TEXT PRIMARY KEY NOT NULL,
+                code   INTEGER NOT NULL,
+                size   INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            "
+        };
+
+        self.db.execute(query, []).map_err(anyhow::Error::from)?;
+        Ok(())
     }
 
     #[napi]
