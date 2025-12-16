@@ -296,7 +296,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             flowVariant: getFlowVariant(),
             errorCode,
             errorMessage,
-            errorFile,
+            errorFile: errorFile ?? '',
             template: chosenTemplate ?? '',
             preset: chosenPreset ?? '',
             nodeVersion: process.versions.node ?? '',
@@ -486,15 +486,38 @@ async function normalizeArgsMiddleware(
       packageManager = await determinePackageManager(argv);
       const aiAgents = await determineAiAgents(argv);
       const defaultBase = await determineDefaultBase(argv);
-      const nxCloud =
-        argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
-      const useGitHub =
-        nxCloud === 'skip'
-          ? undefined
-          : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
+
+      // Check if CLI arg was provided (use rawArgs to check original input)
+      const cliNxCloudArgProvided = rawArgs.nxCloud !== undefined;
+
+      let nxCloud: string;
+      let useGitHub: boolean | undefined;
+      let completionMessageKey: string | undefined;
+
+      if (argv.skipGit === true) {
+        nxCloud = 'skip';
+        useGitHub = undefined;
+      } else if (cliNxCloudArgProvided) {
+        // CLI arg provided: use existing flow (CI provider selection if needed)
+        nxCloud = await determineNxCloud(argv);
+        useGitHub =
+          nxCloud === 'skip'
+            ? undefined
+            : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
+      } else {
+        // No CLI arg: use simplified prompt (same as template flow)
+        nxCloud = await determineNxCloudV2(argv);
+        useGitHub = nxCloud !== 'skip';
+        completionMessageKey =
+          nxCloud === 'skip'
+            ? undefined
+            : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
+      }
+
       Object.assign(argv, {
         nxCloud,
         useGitHub,
+        completionMessageKey,
         packageManager,
         defaultBase,
         aiAgents,

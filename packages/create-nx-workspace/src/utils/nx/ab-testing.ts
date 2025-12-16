@@ -268,9 +268,9 @@ export interface RecordStatMetaComplete {
 export interface RecordStatMetaError {
   type: 'error';
   errorCode: string;
-  flowVariant?: string;
-  errorMessage?: string;
-  errorFile?: string;
+  flowVariant: string;
+  errorMessage: string;
+  errorFile: string;
   [key: string]: string;
 }
 
