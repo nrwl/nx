@@ -3167,6 +3167,18 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "@nx/js:typescript-sync",
                   ],
                 },
+                "build-deps": {
+                  "dependsOn": [
+                    "^build",
+                  ],
+                },
+                "watch-deps": {
+                  "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                  "continuous": true,
+                  "dependsOn": [
+                    "build-deps",
+                  ],
+                },
               },
             },
           },
@@ -3309,6 +3321,18 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
+                  ],
+                },
+                "build-deps": {
+                  "dependsOn": [
+                    "^build",
+                  ],
+                },
+                "watch-deps": {
+                  "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                  "continuous": true,
+                  "dependsOn": [
+                    "build-deps",
                   ],
                 },
               },
