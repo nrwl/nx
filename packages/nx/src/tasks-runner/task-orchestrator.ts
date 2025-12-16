@@ -519,9 +519,7 @@ export class TaskOrchestrator {
         terminalOutput,
       });
     }
-
     await this.postRunSteps([task], results, doNotSkipCache, { groupId });
-
     return results[0];
   }
 
@@ -759,28 +757,16 @@ export class TaskOrchestrator {
         }
         this.runningContinuousTasks.delete(task.id);
 
+        // we're not cleaning up, so this is an unexpected exit, fail the task
         if (!this.cleaningUp) {
           console.error(
             `Task "${task.id}" is continuous but exited with code ${code}`
           );
-          await this.postRunSteps(
-            [task],
-            [{ task, status: 'failure' }],
-            false,
-            {
-              groupId,
-            }
-          );
-        } else {
-          await this.postRunSteps(
-            [task],
-            [{ task, status: 'success' }],
-            false,
-            {
-              groupId,
-            }
-          );
         }
+        const status = this.cleaningUp ? 'success' : 'failure';
+        await this.postRunSteps([task], [{ task, status }], false, {
+          groupId,
+        });
       });
 
       // task is already running by another process, we schedule the next tasks
@@ -840,18 +826,16 @@ export class TaskOrchestrator {
         this.runningTasksService.removeRunningTask(task.id);
       }
 
+      // we're not cleaning up, so this is an unexpected exit, fail the task
       if (!this.cleaningUp) {
         console.error(
           `Task "${task.id}" is continuous but exited with code ${code}`
         );
-        await this.postRunSteps([task], [{ task, status: 'failure' }], false, {
-          groupId,
-        });
-      } else {
-        await this.postRunSteps([task], [{ task, status: 'success' }], false, {
-          groupId,
-        });
       }
+      const status = this.cleaningUp ? 'success' : 'failure';
+      await this.postRunSteps([task], [{ task, status }], false, {
+        groupId,
+      });
     });
     await this.scheduleNextTasksAndReleaseThreads();
 
