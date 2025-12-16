@@ -15,6 +15,7 @@ function getCacheInstance(): NxCache {
       workspaceRoot,
       cacheDir,
       getDbConnection(),
+      undefined,
       resolveMaxCacheSize(nxJson)
     );
   }
