@@ -87,7 +87,8 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   tasks.push(
     await jsLibraryGenerator(tree, {
       ...schema,
-      bundler: schema.buildable || schema.publishable ? 'tsc' : 'none',
+      bundler:
+        schema.buildable || schema.publishable ? schema.compiler : 'none',
       includeBabelRc: schema.babelJest,
       importPath: schema.importPath,
       testEnvironment: 'node',
@@ -113,7 +114,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   }
   updateProject(tree, options);
 
-  tasks.push(ensureDependencies(tree));
+  tasks.push(ensureDependencies(tree, options.compiler));
 
   // Always run install to link packages.
   if (options.isUsingTsSolutionConfig) {
@@ -252,12 +253,16 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
   updateProjectConfiguration(tree, options.projectName, project);
 }
 
-function ensureDependencies(tree: Tree): GeneratorCallback {
-  return addDependenciesToPackageJson(
-    tree,
-    { tslib: tslibVersion },
-    { '@types/node': typesNodeVersion }
-  );
+function ensureDependencies(
+  tree: Tree,
+  compiler: 'swc' | 'tsc'
+): GeneratorCallback {
+  // Only add tslib when using tsc compiler
+  // When using swc, @swc/helpers is added by addSwcDependencies()
+  const dependencies = compiler === 'tsc' ? { tslib: tslibVersion } : {};
+  return addDependenciesToPackageJson(tree, dependencies, {
+    '@types/node': typesNodeVersion,
+  });
 }
 
 function updatePackageJson(tree: Tree, options: NormalizedSchema) {

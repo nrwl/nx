@@ -28,7 +28,7 @@ export function convertScamToStandalone(
   newComponentContents = `${componentFileContents.slice(
     0,
     componentDecoratorMetadataNode.getStart() - 1
-  )}({${angularMajorVersion < 19 ? `\nstandalone: true,` : ''}
+  )}({
     imports: [${importsArray.join(',')}],${
     providersArray.length > 0 ? `providers: [${providersArray.join(',')}],` : ''
   }${componentFileContents.slice(

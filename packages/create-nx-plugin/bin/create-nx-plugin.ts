@@ -154,13 +154,17 @@ async function main(parsedArgs: yargs.Arguments<CreateNxPluginArguments>) {
 
   await recordStat({
     nxVersion,
-    command: 'create-nx-workspace',
+    command: 'create-nx-plugin',
     useCloud: parsedArgs.nxCloud !== 'skip',
-    meta: [
-      messages.codeOfSelectedPromptMessage('setupCI'),
-      messages.codeOfSelectedPromptMessage('setupNxCloud'),
-    ],
-    directory: workspaceInfo.directory,
+    meta: {
+      type: 'complete',
+      setupCIPrompt: messages.codeOfSelectedPromptMessage('setupCI'),
+      setupCloudPrompt: messages.codeOfSelectedPromptMessage('setupNxCloud'),
+      nxCloudArg: parsedArgs.nxCloud ?? '',
+      nxCloudArgRaw: rawArgs.nxCloud ?? '',
+      pushedToVcs: '',
+      connectUrl: workspaceInfo.connectUrl ?? '',
+    },
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
@@ -179,6 +183,15 @@ async function normalizeArgsMiddleware(
 ): Promise<void> {
   rawArgs = { ...argv };
   try {
+    await recordStat({
+      nxVersion,
+      command: 'create-nx-plugin',
+      meta: {
+        type: 'start',
+      },
+      useCloud: argv.nxCloud !== 'skip',
+    });
+
     const pluginName = await determinePluginName(argv);
     const createPackageName = await determineCreatePackageName(argv);
     const packageManager = await determinePackageManager(argv);

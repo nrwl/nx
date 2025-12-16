@@ -215,7 +215,7 @@ function applyNxIndependentConfig(
     warnings: true,
     errors: true,
     colors: !options.verbose && !options.statsJson,
-    chunks: !options.verbose,
+    chunks: !!options.verbose,
     assets: !!options.verbose,
     chunkOrigins: !!options.verbose,
     chunkModules: !!options.verbose,
@@ -370,7 +370,10 @@ function applyNxDependentConfig(
     plugins.push(new StatsJsonPlugin());
   }
 
-  const externals = [];
+  const externals =
+    options.mergeExternals && Array.isArray(config.externals)
+      ? [...config.externals]
+      : [];
   if (options.target === 'node' && options.externalDependencies === 'all') {
     const modulesDir = `${options.root}/node_modules`;
 

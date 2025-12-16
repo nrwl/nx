@@ -142,45 +142,45 @@ const messageOptions: Record<string, MessageData[]> = {
    * Simplified Cloud prompt for template flow
    */
   setupNxCloudV2: [
-    {
-      code: 'cloud-v2-remote-cache-visit',
-      message: 'Enable remote caching with Nx Cloud?',
-      initial: 0,
-      choices: [
-        { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip' },
-      ],
-      footer:
-        '\nRemote caching makes your builds faster for development and in CI: https://nx.dev/ci/features/remote-cache',
-      fallback: undefined,
-      completionMessage: 'cache-setup',
-    },
-    {
-      code: 'cloud-v2-fast-ci-visit',
-      message: 'Speed up CI and reduce compute costs with Nx Cloud?',
-      initial: 0,
-      choices: [
-        { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip' },
-      ],
-      footer:
-        '\n70% faster CI, 60% less compute, Automatically fix broken PRs: https://nx.dev/nx-cloud',
-      fallback: undefined,
-      completionMessage: 'ci-setup',
-    },
-    {
-      code: 'cloud-v2-green-prs-visit',
-      message: 'Get to green PRs faster with Nx Cloud?',
-      initial: 0,
-      choices: [
-        { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip' },
-      ],
-      footer:
-        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
-      fallback: undefined,
-      completionMessage: 'ci-setup',
-    },
+    //{
+    //  code: 'cloud-v2-remote-cache-visit',
+    //  message: 'Enable remote caching with Nx Cloud?',
+    //  initial: 0,
+    //  choices: [
+    //    { value: 'yes', name: 'Yes' },
+    //    { value: 'skip', name: 'Skip' },
+    //  ],
+    //  footer:
+    //    '\nRemote caching makes your builds faster for development and in CI: https://nx.dev/ci/features/remote-cache',
+    //  fallback: undefined,
+    //  completionMessage: 'cache-setup',
+    //},
+    //{
+    //  code: 'cloud-v2-fast-ci-visit',
+    //  message: 'Speed up CI and reduce compute costs with Nx Cloud?',
+    //  initial: 0,
+    //  choices: [
+    //    { value: 'yes', name: 'Yes' },
+    //    { value: 'skip', name: 'Skip' },
+    //  ],
+    //  footer:
+    //    '\n70% faster CI, 60% less compute, Automatically fix broken PRs: https://nx.dev/nx-cloud',
+    //  fallback: undefined,
+    //  completionMessage: 'ci-setup',
+    //},
+    //{
+    //  code: 'cloud-v2-green-prs-visit',
+    //  message: 'Get to green PRs faster with Nx Cloud?',
+    //  initial: 0,
+    //  choices: [
+    //    { value: 'yes', name: 'Yes' },
+    //    { value: 'skip', name: 'Skip' },
+    //  ],
+    //  footer:
+    //    '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
+    //  fallback: undefined,
+    //  completionMessage: 'ci-setup',
+    //},
     {
       code: 'cloud-v2-full-platform-visit',
       message: 'Try the full Nx platform?',
@@ -253,6 +253,38 @@ function getCloudUrl(): string {
 }
 
 /**
+ * Meta payload types for recordStat telemetry.
+ */
+export interface RecordStatMetaStart {
+  type: 'start';
+  [key: string]: string;
+}
+
+export interface RecordStatMetaComplete {
+  type: 'complete';
+  [key: string]: string;
+}
+
+export interface RecordStatMetaError {
+  type: 'error';
+  errorCode: string;
+  flowVariant?: string;
+  errorMessage?: string;
+  errorFile?: string;
+}
+
+export interface RecordStatMetaCancel {
+  type: 'cancel';
+  flowVariant?: string;
+}
+
+export type RecordStatMeta =
+  | RecordStatMetaStart
+  | RecordStatMetaComplete
+  | RecordStatMetaError
+  | RecordStatMetaCancel;
+
+/**
  * We are incrementing a counter to track how often create-nx-workspace is used in CI
  * vs dev environments. No personal information is collected.
  */
@@ -260,22 +292,12 @@ export async function recordStat(opts: {
   command: string;
   nxVersion: string;
   useCloud: boolean;
-  meta: string[];
-  directory: string;
+  meta: RecordStatMeta;
 }) {
   try {
     if (!shouldRecordStats()) {
       return;
     }
-
-    // nx-ignore-next-line
-    const { getCloudUrl } = require(require.resolve(
-      'nx/src/nx-cloud/utilities/get-cloud-options',
-      {
-        paths: [opts.directory],
-      }
-      // nx-ignore-next-line
-    )) as typeof import('nx/src/nx-cloud/utilities/get-cloud-options');
 
     const axios = require('axios');
     await (axios['default'] ?? axios)
@@ -287,7 +309,7 @@ export async function recordStat(opts: {
         command: opts.command,
         isCI: isCI(),
         useCloud: opts.useCloud,
-        meta: [opts.nxVersion, ...opts.meta].filter((v) => !!v).join(','),
+        meta: JSON.stringify({ nxVersion: opts.nxVersion, ...opts.meta }),
       });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {

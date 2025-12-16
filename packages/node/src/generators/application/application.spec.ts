@@ -127,7 +127,7 @@ describe('app', () => {
               optimization: false,
               outputHashing: 'none',
               generatePackageJson: true,
-              sourceMaps: true,
+              sourceMap: true,
             }),
           ],
         };
@@ -968,7 +968,7 @@ describe('app', () => {
               optimization: false,
               outputHashing: 'none',
               generatePackageJson: false,
-              sourceMaps: true,
+              sourceMap: true,
             })
           ],
         };

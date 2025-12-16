@@ -161,9 +161,9 @@ export function addNodesAndDependencies(
       traverseNode(graph, builder, node);
     } else if (workspacePackages.has(name)) {
       // Workspace Node
-      const node = graph.nodes[name];
-      if (node) {
-        traverseWorkspaceNode(graph, builder, node);
+      const workspaceNode = workspacePackages.get(name);
+      if (workspaceNode) {
+        traverseWorkspaceNode(graph, builder, workspaceNode);
       }
     }
   });

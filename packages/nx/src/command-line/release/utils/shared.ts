@@ -70,10 +70,12 @@ export class ReleaseVersion {
     version, // short form version string with no prefixes or patterns, e.g. 1.0.0
     releaseTagPattern, // full pattern to interpolate, e.g. "v{version}" or "{projectName}@{version}"
     projectName, // optional project name to interpolate into the releaseTagPattern
+    releaseGroupName, // optional release group name to interpolate into the releaseTagPattern
   }: {
     version: string;
     releaseTagPattern: string;
     projectName?: string;
+    releaseGroupName?: string;
   }) {
     this.rawVersion = version;
     this.gitTag = interpolate(releaseTagPattern, {
@@ -81,6 +83,7 @@ export class ReleaseVersion {
       projectName: projectName
         ? sanitizeProjectNameForGitTag(projectName)
         : projectName,
+      releaseGroupName,
     });
     this.isPrerelease = isPrerelease(version);
   }
@@ -149,6 +152,7 @@ export function createCommitMessageValues(
     const releaseVersion = new ReleaseVersion({
       version: projectVersionData.newVersion,
       releaseTagPattern: releaseGroup.releaseTag.pattern,
+      releaseGroupName: releaseGroup.name,
     });
     commitMessageValues[0] = interpolate(commitMessageValues[0], {
       version: releaseVersion.rawVersion,
@@ -176,6 +180,7 @@ export function createCommitMessageValues(
         version: projectVersionData.newVersion,
         releaseTagPattern: releaseGroup.releaseTag.pattern,
         projectName: releaseGroupProjectNames[0],
+        releaseGroupName: releaseGroup.name,
       });
       commitMessageValues[0] = interpolate(commitMessageValues[0], {
         version: releaseVersion.rawVersion,
@@ -212,6 +217,7 @@ export function createCommitMessageValues(
             version: projectVersionData.newVersion,
             releaseTagPattern: releaseGroup.releaseTag.pattern,
             projectName: project,
+            releaseGroupName: releaseGroup.name,
           });
           commitMessageValues.push(
             `- project: ${project} ${releaseVersion.rawVersion}`
@@ -227,6 +233,7 @@ export function createCommitMessageValues(
       const releaseVersion = new ReleaseVersion({
         version: projectVersionData.newVersion,
         releaseTagPattern: releaseGroup.releaseTag.pattern,
+        releaseGroupName: releaseGroup.name,
       });
       commitMessageValues.push(
         `- release-group: ${releaseGroup.name} ${releaseVersion.rawVersion}`
@@ -296,6 +303,7 @@ export function createGitTagValues(
                 interpolate(releaseGroup.releaseTag.pattern, {
                   version: projectVersionData.dockerVersion,
                   projectName: sanitizeProjectNameForGitTag(project),
+                  releaseGroupName: releaseGroup.name,
                 })
               );
             }
@@ -304,6 +312,7 @@ export function createGitTagValues(
                 interpolate(releaseGroup.releaseTag.pattern, {
                   version: projectVersionData.newVersion,
                   projectName: sanitizeProjectNameForGitTag(project),
+                  releaseGroupName: releaseGroup.name,
                 })
               );
             }
@@ -315,6 +324,7 @@ export function createGitTagValues(
                   ? projectVersionData.dockerVersion
                   : projectVersionData.newVersion,
                 projectName: sanitizeProjectNameForGitTag(project),
+                releaseGroupName: releaseGroup.name,
               })
             );
           }

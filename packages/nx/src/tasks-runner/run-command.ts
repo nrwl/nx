@@ -95,7 +95,7 @@ async function getTerminalOutputLifeCycle(
   const isRunOne = initiatingProject != null;
 
   if (tasks.length === 1) {
-    process.env.NX_TUI = 'false';
+    process.env.NX_TUI ??= 'false';
   }
 
   if (isTuiEnabled()) {

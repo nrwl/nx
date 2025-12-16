@@ -6,5 +6,6 @@ export * from './models';
 export * from './normalize-project-name';
 export * from './get-remotes-for-host';
 export * from './parse-static-remotes-config';
+export * from './port-utils';
 export * from './start-remote-proxies';
 export * from './start-ssr-remote-proxies';

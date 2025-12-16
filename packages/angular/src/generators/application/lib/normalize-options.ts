@@ -4,6 +4,7 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 
@@ -49,6 +50,16 @@ export async function normalizeOptions(
   const addPlugin =
     options.addPlugin ?? (!arePluginsExplicitlyDisabled(host) && isRspack);
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
+  const zonelessDefaultValue = angularMajorVersion >= 21 ? true : false;
+  const unitTestRunner =
+    options.unitTestRunner ??
+    (angularMajorVersion >= 21 && bundler === 'esbuild'
+      ? UnitTestRunner.VitestAngular
+      : angularMajorVersion >= 21
+      ? UnitTestRunner.VitestAnalog
+      : UnitTestRunner.Jest);
+
   // Set defaults and then overwrite with user options
   return {
     addPlugin,
@@ -56,7 +67,7 @@ export async function normalizeOptions(
     routing: true,
     inlineStyle: false,
     inlineTemplate: false,
-    skipTests: options.unitTestRunner === UnitTestRunner.None,
+    skipTests: unitTestRunner === UnitTestRunner.None,
     skipFormat: false,
     e2eTestRunner: E2eTestRunner.Playwright,
     linter: 'eslint',
@@ -77,6 +88,7 @@ export async function normalizeOptions(
       !options.rootProject ? appProjectRoot : appProjectName
     ),
     ssr: options.ssr ?? false,
-    unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
+    unitTestRunner,
+    zoneless: options.zoneless ?? zonelessDefaultValue,
   };
 }

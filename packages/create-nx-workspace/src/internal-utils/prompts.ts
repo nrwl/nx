@@ -7,7 +7,6 @@ import {
   messages,
   shouldUseTemplateFlow,
 } from '../utils/nx/ab-testing';
-import { output } from '../utils/output';
 import { deduceDefaultBase } from '../utils/git/default-base';
 import {
   detectInvokedPackageManager,
@@ -22,6 +21,7 @@ import {
   agentDisplayMap,
   supportedAgents,
 } from '../create-workspace-options';
+import { CnwError } from '../utils/error-utils';
 
 export async function determineNxCloud(
   parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>
@@ -137,13 +137,7 @@ export async function determineTemplate(
       choices: [
         {
           name: 'nrwl/empty-template',
-          message:
-            'TypeScript        (minimal TypeScript monorepo without projects)',
-        },
-        {
-          name: 'nrwl/typescript-template',
-          message:
-            'NPM Packages      (monorepo with TypeScript packages ready to publish)',
+          message: 'Minimal           (empty monorepo without projects)',
         },
         {
           name: 'nrwl/react-template',
@@ -156,9 +150,14 @@ export async function determineTemplate(
             'Angular           (fullstack monorepo with Angular and Express)',
         },
         {
+          name: 'nrwl/typescript-template',
+          message:
+            'NPM Packages      (monorepo with TypeScript packages ready to publish)',
+        },
+        {
           name: 'custom',
           message:
-            'Custom            (more options for frameworks, test runners, etc.)',
+            'Custom            (advanced setup with additional frameworks)',
         },
       ],
       initial: 0,
@@ -210,11 +209,10 @@ export async function determineDefaultBase(
       ])
       .then((a) => {
         if (!a.DefaultBase) {
-          output.error({
-            title: 'Invalid branch name',
-            bodyLines: [`Branch name cannot be empty`],
-          });
-          process.exit(1);
+          throw new CnwError(
+            'INVALID_BRANCH_NAME',
+            'Branch name cannot be empty'
+          );
         }
         return a.DefaultBase;
       });
@@ -231,15 +229,12 @@ export async function determinePackageManager(
     if (packageManagerList.includes(packageManager as PackageManager)) {
       return packageManager as PackageManager;
     }
-    output.error({
-      title: 'Invalid package manager',
-      bodyLines: [
-        `Package manager must be one of ${stringifyCollection([
-          ...packageManagerList,
-        ])}`,
-      ],
-    });
-    process.exit(1);
+    throw new CnwError(
+      'INVALID_PACKAGE_MANAGER',
+      `Package manager must be one of ${stringifyCollection([
+        ...packageManagerList,
+      ])}`
+    );
   } else if (parsedArgs.allPrompts) {
     return enquirer
       .prompt<{ packageManager: PackageManager }>([

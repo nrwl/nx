@@ -2,6 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { generateFiles, readProjectConfiguration } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
+import { isZonelessApp } from '../../../utils/zoneless';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 import { DEFAULT_BROWSER_DIR } from './constants';
@@ -25,7 +26,7 @@ export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
         : 'server-builder',
       'server'
     );
-  } else if (angularMajorVersion === 19) {
+  } else {
     pathToFiles = join(
       baseFilesPath,
       'v19',
@@ -35,29 +36,19 @@ export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
         : 'server-builder',
       'server'
     );
-  } else {
-    pathToFiles = join(
-      baseFilesPath,
-      'pre-v19',
-      'server',
-      options.isUsingApplicationBuilder
-        ? 'application-builder'
-        : 'server-builder'
-    );
   }
 
   const sourceRoot = getProjectSourceRoot(project, tree);
+  const zoneless = isZonelessApp(project);
 
-  generateFiles(
-    tree,
-    pathToFiles,
-    angularMajorVersion >= 19 ? sourceRoot : project.root,
-    {
-      ...options,
-      browserDistDirectory,
-      tpl: '',
-    }
-  );
+  generateFiles(tree, pathToFiles, sourceRoot, {
+    ...options,
+    browserDistDirectory,
+    zoneless,
+    useDefaultImport: angularMajorVersion >= 21,
+    angularMajorVersion,
+    tpl: '',
+  });
 }
 
 function getApplicationBuilderBrowserOutputPath(

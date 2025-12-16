@@ -19,6 +19,7 @@ import { dirname, join, relative } from 'node:path';
 import * as posix from 'node:path/posix';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { targetFromTargetString } from '../utils/targets';
 
 export interface AngularPluginOptions {
   targetNamePrefix?: string;
@@ -74,6 +75,7 @@ const knownExecutors = {
   test: new Set([
     '@angular-devkit/build-angular:karma',
     '@angular/build:karma',
+    '@angular/build:unit-test',
   ]),
 };
 
@@ -226,6 +228,7 @@ async function buildAngularProjects(
         };
       } else if (knownExecutors.test.has(angularTarget.builder)) {
         updateTestTarget(
+          projectName,
           targets[nxTargetName],
           angularTarget,
           context,
@@ -419,6 +422,7 @@ async function updateBuildTarget(
 }
 
 function updateTestTarget(
+  projectName: string,
   target: TargetConfiguration,
   angularTarget: AngularTargetConfiguration,
   context: CreateNodesContextV2,
@@ -432,15 +436,32 @@ function updateTestTarget(
     'production' in namedInputs
       ? ['default', '^production']
       : ['default', '^default'];
-  target.outputs = getKarmaTargetOutputs(
-    angularTarget,
-    angularWorkspaceRoot,
-    projectRoot,
-    context
-  );
-  externalDependencies.push('karma');
 
-  target.metadata.help.example.options = { codeCoverage: true };
+  const isKarmaRunner =
+    angularTarget.builder === '@angular-devkit/build-angular:karma' ||
+    angularTarget.builder === '@angular/build:karma' ||
+    angularTarget.options?.runner === 'karma';
+
+  if (isKarmaRunner) {
+    target.outputs = getKarmaTargetOutputs(
+      angularTarget,
+      angularWorkspaceRoot,
+      projectRoot,
+      context
+    );
+    externalDependencies.push('karma');
+  } else {
+    externalDependencies.push('vitest');
+    // this is currently hard-coded in the vitest executor
+    // https://github.com/angular/angular-cli/blob/5cc8c8479a3f6959f2834145b5163ef2245c2f31/packages/angular/build/src/builders/unit-test/runners/vitest/plugins.ts#L280
+    target.outputs = [`{workspaceRoot}/coverage/${projectName}`];
+  }
+
+  if (angularTarget.builder === '@angular/build:unit-test') {
+    target.metadata.help.example.options = { coverage: true };
+  } else {
+    target.metadata.help.example.options = { codeCoverage: true };
+  }
 }
 
 function updateServerTarget(
@@ -588,20 +609,33 @@ function getKarmaTargetOutputs(
     angularWorkspaceRoot,
     'coverage/{projectName}'
   );
-  if (!target.options?.karmaConfig) {
+
+  let karmaConfigPath: string | undefined;
+  if (target.builder === '@angular/build:unit-test') {
+    karmaConfigPath =
+      typeof target.options?.runnerConfig === 'string'
+        ? target.options?.runnerConfig
+        : target.options?.runnerConfig === true
+        ? 'karma.conf.js'
+        : undefined;
+  } else {
+    karmaConfigPath = target.options?.karmaConfig;
+  }
+
+  if (!karmaConfigPath) {
     return [defaultOutput];
   }
 
   try {
     const { parseConfig } = require('karma/lib/config');
 
-    const karmaConfigPath = join(
+    const karmaConfigFullPath = join(
       context.workspaceRoot,
       angularWorkspaceRoot,
       projectRoot,
-      target.options.karmaConfig
+      karmaConfigPath
     );
-    const config = parseConfig(karmaConfigPath);
+    const config = parseConfig(karmaConfigFullPath);
 
     if (config.coverageReporter.dir) {
       return [
@@ -732,26 +766,6 @@ function mergeInputs(
       ? [{ externalDependencies: Array.from(externalDependencies) }]
       : []),
   ];
-}
-
-// angular support abbreviated target specifiers, this is adapter from:
-// https://github.com/angular/angular-cli/blob/7d9ce246a33c60ec96eb4bf99520f5475716a910/packages/angular_devkit/architect/src/api.ts#L336
-function targetFromTargetString(
-  specifier: string,
-  abbreviatedProjectName?: string,
-  abbreviatedTargetName?: string
-) {
-  const tuple = specifier.split(':', 3);
-  if (tuple.length < 2) {
-    // invalid target, ignore
-    return undefined;
-  }
-
-  // we only care about project and target
-  return {
-    project: tuple[0] || abbreviatedProjectName || '',
-    target: tuple[1] || abbreviatedTargetName || '',
-  };
 }
 
 function getOutput(

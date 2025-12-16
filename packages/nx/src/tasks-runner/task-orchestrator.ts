@@ -134,6 +134,7 @@ export class TaskOrchestrator {
 
     process.stdout.setMaxListeners(threadCount + defaultMaxListeners);
     process.stderr.setMaxListeners(threadCount + defaultMaxListeners);
+    process.setMaxListeners(threadCount + defaultMaxListeners);
 
     // initial seeding of the queue
     for (let i = 0; i < threadCount; ++i) {
@@ -424,6 +425,7 @@ export class TaskOrchestrator {
         task: this.taskGraph.tasks[rootTaskId],
         code: 1,
         status: 'failure' as TaskStatus,
+        terminalOutput: e.stack ?? e.message ?? '',
       }));
     } finally {
       const runBatchEnd = performance.mark('TaskOrchestrator-run-batch:end');
@@ -711,7 +713,7 @@ export class TaskOrchestrator {
       }
       return new NoopChildProcess({
         code: 1,
-        terminalOutput: undefined,
+        terminalOutput: e.stack ?? e.message ?? '',
       });
     }
   }

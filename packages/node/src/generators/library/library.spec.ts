@@ -726,7 +726,7 @@ describe('lib', () => {
       expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "tslib": "^2.3.0",
+            "@swc/helpers": "~0.5.11",
           },
           "exports": {
             ".": {
@@ -741,6 +741,7 @@ describe('lib', () => {
           "module": "./dist/index.js",
           "name": "@proj/mylib",
           "nx": {
+            "sourceRoot": "mylib/src",
             "targets": {
               "build": {
                 "executor": "@nx/js:swc",

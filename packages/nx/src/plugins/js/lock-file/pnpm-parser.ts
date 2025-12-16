@@ -12,6 +12,7 @@ import {
 } from './utils/pnpm-normalizer';
 import {
   getHoistedPackageVersion,
+  invertObject,
   NormalizedPackageJson,
 } from './utils/package-json';
 import { sortObjectByKeys } from '../../../utils/object-sort';
@@ -30,6 +31,7 @@ import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
 import { join } from 'path';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import { satisfies, validRange } from 'semver';
 let currentLockFileHash: string;
 
 let parsedLockFile: Lockfile;
@@ -81,17 +83,22 @@ export function getPnpmLockfileDependencies(
   return getDependencies(data, keyMap, isV5, ctx);
 }
 
+const cachedInvertedRecords = new Map<string, Record<string, string>>();
 function matchPropValue(
   record: Record<string, string>,
   key: string,
-  originalPackageName: string
+  originalPackageName: string,
+  recordName: string
 ): string | undefined {
   if (!record) {
     return undefined;
   }
-  const index = Object.values(record).findIndex((version) => version === key);
-  if (index > -1) {
-    return Object.keys(record)[index];
+  if (!cachedInvertedRecords.has(recordName)) {
+    cachedInvertedRecords.set(recordName, invertObject(record));
+  }
+  const packageName = cachedInvertedRecords.get(recordName)[key];
+  if (packageName) {
+    return packageName;
   }
   // check if non-aliased name is found
   if (
@@ -108,23 +115,96 @@ function matchedDependencyName(
   originalPackageName: string
 ): string | undefined {
   return (
-    matchPropValue(importer.dependencies, key, originalPackageName) ||
-    matchPropValue(importer.optionalDependencies, key, originalPackageName) ||
-    matchPropValue(importer.peerDependencies, key, originalPackageName)
+    matchPropValue(
+      importer.dependencies,
+      key,
+      originalPackageName,
+      'dependencies'
+    ) ||
+    matchPropValue(
+      importer.optionalDependencies,
+      key,
+      originalPackageName,
+      'optionalDependencies'
+    ) ||
+    matchPropValue(
+      importer.peerDependencies,
+      key,
+      originalPackageName,
+      'peerDependencies'
+    )
   );
 }
 
-function createHashFromSnapshot(snapshot: PackageSnapshot) {
-  return (
+function createHashFromSnapshot(snapshot: PackageSnapshot, patchHash?: string) {
+  const baseHash =
     snapshot.resolution?.['integrity'] ||
     (snapshot.resolution?.['tarball']
       ? hashArray([snapshot.resolution['tarball']])
-      : undefined)
-  );
+      : undefined);
+
+  // If there's a patch hash, combine it with the base hash
+  if (patchHash && baseHash) {
+    return hashArray([baseHash, patchHash]);
+  }
+
+  return baseHash ?? patchHash;
 }
 
 function isAliasVersion(depVersion: string) {
   return depVersion.startsWith('/') || depVersion.includes('@');
+}
+
+/**
+ * Finds the appropriate patch hash for a package based on its name and version.
+ * Follows PNPM's priority order (https://pnpm.io/settings#patcheddependencies):
+ * 1. Exact version match (e.g., "vitest@3.2.4") - highest priority
+ * 2. Version range match (e.g., "vitest@^3.0.0")
+ * 3. Name-only match (e.g., "vitest") - lowest priority
+ */
+function findPatchHash(
+  patchEntriesByPackage: Map<
+    string,
+    Array<{ versionSpecifier: string | null; hash: string }>
+  >,
+  packageName: string,
+  version: string
+): string | undefined {
+  const entries = patchEntriesByPackage.get(packageName);
+  if (!entries) {
+    return undefined; // No patches for this package
+  }
+
+  // Check for exact version match first (highest priority)
+  const exactMatch = entries.find(
+    (entry) => entry.versionSpecifier === version
+  );
+  if (exactMatch) {
+    return exactMatch.hash;
+  }
+
+  // Check for version range matches
+  for (const entry of entries) {
+    // Skip name-only entries (will be handled at the end with lowest priority)
+    if (entry.versionSpecifier === null) {
+      continue;
+    }
+    if (validRange(entry.versionSpecifier)) {
+      try {
+        if (satisfies(version, entry.versionSpecifier)) {
+          return entry.hash;
+        }
+      } catch {
+        // Invalid semver range, skip
+      }
+    }
+  }
+
+  // Fall back to name-only match (lowest priority)
+  const nameOnlyMatch = entries.find(
+    (entry) => entry.versionSpecifier === null
+  );
+  return nameOnlyMatch?.hash;
 }
 
 function getNodes(
@@ -136,6 +216,31 @@ function getNodes(
 } {
   const keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
+
+  // Extract and pre-parse patch information from patchedDependencies section
+  const patchEntriesByPackage = new Map<
+    string,
+    Array<{
+      versionSpecifier: string | null; // null for name-only patches
+      hash: string;
+    }>
+  >();
+  if (data.patchedDependencies) {
+    for (const specifier of Object.keys(data.patchedDependencies)) {
+      const patchInfo = data.patchedDependencies[specifier];
+      if (patchInfo && typeof patchInfo === 'object' && 'hash' in patchInfo) {
+        const packageName = extractNameFromKey(specifier, false);
+        const versionSpecifier = getVersion(specifier, packageName) || null;
+        if (!patchEntriesByPackage.has(packageName)) {
+          patchEntriesByPackage.set(packageName, []);
+        }
+        patchEntriesByPackage.get(packageName).push({
+          versionSpecifier,
+          hash: patchInfo.hash,
+        });
+      }
+    }
+  }
 
   const maybeAliasedPackageVersions = new Map<string, string>(); // <version, alias>
 
@@ -179,7 +284,21 @@ function getNodes(
     if (!originalPackageName) {
       continue;
     }
-    const hash = createHashFromSnapshot(snapshot);
+
+    // Extract version from the key to match against patch specifiers
+    const versionFromKey = getVersion(key, originalPackageName);
+    // Parse the base version (without peer dependency info, etc.)
+    const baseVersion = parseBaseVersion(versionFromKey, isV5);
+
+    // Find the appropriate patch hash using PNPM's priority order:
+    // 1. Exact version match, 2. Version range match, 3. Name-only match
+    const patchHash = findPatchHash(
+      patchEntriesByPackage,
+      originalPackageName,
+      baseVersion
+    );
+    const hash = createHashFromSnapshot(snapshot, patchHash);
+
     // snapshot already has a name
     if (snapshot.name) {
       packageNameObj = {
@@ -199,18 +318,20 @@ function getNodes(
       matchPropValue(
         data.importers['.'].devDependencies,
         key,
-        originalPackageName
+        originalPackageName,
+        'devDependencies'
       ) ||
       matchPropValue(
         data.importers['.'].devDependencies,
         `/${key}`,
-        originalPackageName
+        originalPackageName,
+        'devDependencies'
       );
     if (rootDependencyName) {
       packageNameObj = {
         key,
         packageName: rootDependencyName,
-        hash: createHashFromSnapshot(snapshot),
+        hash,
       };
     }
 
@@ -218,7 +339,7 @@ function getNodes(
       packageNameObj = {
         key,
         packageName: originalPackageName,
-        hash: createHashFromSnapshot(snapshot),
+        hash,
       };
     }
 
@@ -316,6 +437,25 @@ function getNodes(
   }
 
   const hoistedDeps = loadPnpmHoistedDepsDefinition();
+
+  // Pre-build packageName -> key index for O(1) lookup instead of O(n) find() per package
+  const hoistedKeysByPackage = new Map<string, string>();
+  for (const key of Object.keys(hoistedDeps)) {
+    if (key.startsWith('/')) {
+      // Extract package name from key format: /{packageName}/{version}... or /@scope/name/{version}...
+      const withoutSlash = key.slice(1);
+      const slashIndex = withoutSlash.startsWith('@')
+        ? withoutSlash.indexOf('/', withoutSlash.indexOf('/') + 1)
+        : withoutSlash.indexOf('/');
+      if (slashIndex > 0) {
+        const pkgName = withoutSlash.slice(0, slashIndex);
+        if (!hoistedKeysByPackage.has(pkgName)) {
+          hoistedKeysByPackage.set(pkgName, key);
+        }
+      }
+    }
+  }
+
   const results: Record<string, ProjectGraphExternalNode> = {};
 
   for (const [packageName, versionMap] of nodes.entries()) {
@@ -323,7 +463,11 @@ function getNodes(
     if (versionMap.size === 1) {
       hoistedNode = versionMap.values().next().value;
     } else {
-      const hoistedVersion = getHoistedVersion(hoistedDeps, packageName, isV5);
+      const hoistedVersion = getHoistedVersion(
+        packageName,
+        isV5,
+        hoistedKeysByPackage
+      );
       hoistedNode = versionMap.get(hoistedVersion);
     }
     if (hoistedNode) {
@@ -338,16 +482,15 @@ function getNodes(
 }
 
 function getHoistedVersion(
-  hoistedDependencies: Record<string, any>,
   packageName: string,
-  isV5: boolean
+  isV5: boolean,
+  hoistedKeysByPackage: Map<string, string>
 ): string {
   let version = getHoistedPackageVersion(packageName);
 
   if (!version) {
-    const key = Object.keys(hoistedDependencies).find((k) =>
-      k.startsWith(`/${packageName}/`)
-    );
+    // Use pre-built index for O(1) lookup
+    const key = hoistedKeysByPackage.get(packageName);
     if (key) {
       version = parseBaseVersion(getVersion(key.slice(1), packageName), isV5);
     } else {
@@ -367,13 +510,15 @@ function getDependencies(
   ctx: CreateDependenciesContext
 ): RawProjectGraphDependency[] {
   const results: RawProjectGraphDependency[] = [];
-  Object.entries(data.packages).forEach(([key, snapshot]) => {
+  Object.keys(data.packages).forEach((key) => {
+    const snapshot = data.packages[key];
     const nodes = keyMap.get(key);
     nodes.forEach((node) => {
       [snapshot.dependencies, snapshot.optionalDependencies].forEach(
         (section) => {
           if (section) {
-            Object.entries(section).forEach(([name, versionRange]) => {
+            Object.keys(section).forEach((name) => {
+              const versionRange = section[name];
               const version = parseBaseVersion(
                 findVersion(versionRange, name, isV5),
                 isV5
@@ -710,21 +855,18 @@ function getVersion(key: string, packageName: string): string {
 }
 
 function extractNameFromKey(key: string, isV5: boolean): string {
-  // if package name contains org e.g. "@babel/runtime@7.12.5"
+  const versionSeparator = isV5 ? '/' : '@';
+
   if (key.startsWith('@')) {
-    if (isV5) {
-      const startFrom = key.indexOf('/');
-      return key.slice(0, key.indexOf('/', startFrom + 1));
-    } else {
-      // find the position of the '@'
-      return key.slice(0, key.indexOf('@', 1));
-    }
-  }
-  if (isV5) {
-    // if package has just a name e.g. "react/7.12.5..."
-    return key.slice(0, key.indexOf('/', 1));
+    // Scoped package (e.g., "@babel/core@7.12.5" or "@babel/core/7.12.5")
+    // Find the end of scope, then look for the first version separator after that
+    const scopeEnd = key.indexOf('/');
+    const sepIndex =
+      scopeEnd === -1 ? -1 : key.indexOf(versionSeparator, scopeEnd + 1);
+    return sepIndex === -1 ? key : key.slice(0, sepIndex);
   } else {
-    // if package has just a name e.g. "react@7.12.5..."
-    return key.slice(0, key.indexOf('@', 1));
+    // Non-scoped package (e.g., "react@7.12.5" or "react/7.12.5")
+    const sepIndex = key.indexOf(versionSeparator);
+    return sepIndex === -1 ? key : key.slice(0, sepIndex);
   }
 }
