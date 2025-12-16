@@ -271,6 +271,7 @@ export interface RecordStatMetaError {
   flowVariant?: string;
   errorMessage?: string;
   errorFile?: string;
+  [key: string]: string;
 }
 
 export interface RecordStatMetaCancel {

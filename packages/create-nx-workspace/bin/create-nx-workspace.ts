@@ -66,6 +66,8 @@ let chosenTemplate: string;
 let chosenPreset: string;
 // Track whether user opted into cloud or not for SIGINT handler.
 let useCloud: boolean;
+// For stats
+let packageManager: string;
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -295,6 +297,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             errorCode,
             errorMessage,
             errorFile,
+            template: chosenTemplate ?? '',
+            preset: chosenPreset ?? '',
+            nodeVersion: process.versions.node ?? '',
+            packageManager: packageManager ?? '',
           },
         });
 
@@ -387,6 +393,8 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       template: chosenTemplate ?? '',
       preset: chosenPreset ?? '',
       connectUrl: workspaceInfo.connectUrl ?? '',
+      nodeVersion: process.versions.node,
+      packageManager: packageManager ?? '',
     },
   });
 
@@ -428,6 +436,7 @@ async function normalizeArgsMiddleware(
     meta: {
       type: 'start',
       flowVariant: getFlowVariant(),
+      nodeVersion: process.versions.node,
     },
   });
 
@@ -447,11 +456,12 @@ async function normalizeArgsMiddleware(
         nxCloud === 'skip'
           ? undefined
           : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
+      packageManager = detectInvokedPackageManager();
       Object.assign(argv, {
         nxCloud,
         useGitHub: nxCloud !== 'skip',
         completionMessageKey,
-        packageManager: detectInvokedPackageManager(),
+        packageManager,
         defaultBase: 'main',
         aiAgents,
       });
@@ -473,7 +483,7 @@ async function normalizeArgsMiddleware(
         }
       }
 
-      const packageManager = await determinePackageManager(argv);
+      packageManager = await determinePackageManager(argv);
       const aiAgents = await determineAiAgents(argv);
       const defaultBase = await determineDefaultBase(argv);
       const nxCloud =
