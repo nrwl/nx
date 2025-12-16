@@ -148,7 +148,6 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
 /e2e/utils/** @meeroslav @nrwl/nx-testing-tools-reviewers @vsavkin
-/community @nrwl/nx-docs-reviewers
 /CONTRIBUTING.md @FrozenPandaz
 /CODE_OF_CONDUCT.md @FrozenPandaz
 /CODEOWNERS @FrozenPandaz @AgentEnder
