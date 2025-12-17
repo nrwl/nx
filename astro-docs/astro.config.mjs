@@ -91,6 +91,7 @@ export default defineConfig({
         './src/plugins/sidebar-icons.middleware.ts',
         './src/plugins/og.middleware.ts',
         './src/plugins/github-stars.middleware.ts',
+        './src/plugins/raw-content.middleware.ts',
       ],
       markdown: {
         // this breaks the renderMarkdown function in the plugin loader due to starlight path normalization
