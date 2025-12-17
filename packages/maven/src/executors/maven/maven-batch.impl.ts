@@ -49,8 +49,8 @@ function buildTaskData(
     goals: Array.isArray(options.goals)
       ? options.goals
       : options.goals
-      ? [options.goals]
-      : [],
+        ? [options.goals]
+        : [],
     args: normalizeMavenArgs(options.args),
     project: projectName,
   };
