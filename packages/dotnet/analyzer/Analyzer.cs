@@ -59,40 +59,79 @@ public static class Analyzer
         var nodesByFile = new Dictionary<string, NxProjectGraphNode>();
         var referencesByRoot = new Dictionary<string, ReferencesInfo>();
 
-        using (var analyzeProjectsPerf = PerfLogger.Start($"analyze workspace > transform {projectGraph.ProjectNodes.Count} projects"))
+        // Group nodes by project file path to handle multi-targeting projects.
+        // Multi-targeting projects (using TargetFrameworks plural) create multiple nodes:
+        // - An "outer build" with TargetFrameworks set but TargetFramework empty
+        // - "Inner builds" for each target framework with TargetFramework set
+        // We need to aggregate references from all builds and use an inner build for config.
+        var nodesByPath = new Dictionary<string, List<ProjectGraphNode>>();
+        foreach (var node in projectGraph.ProjectNodes)
         {
-            foreach (var node in projectGraph.ProjectNodes)
+            if (node.ProjectInstance?.FullPath is null)
             {
+                continue;
+            }
+            var path = node.ProjectInstance.FullPath;
+            if (!nodesByPath.TryGetValue(path, out var nodes))
+            {
+                nodes = new List<ProjectGraphNode>();
+                nodesByPath[path] = nodes;
+            }
+            nodes.Add(node);
+        }
+
+        using (var analyzeProjectsPerf = PerfLogger.Start($"analyze workspace > transform {nodesByPath.Count} projects"))
+        {
+            foreach (var kvp in nodesByPath)
+            {
+                var projectPath = kvp.Key;
+                var nodes = kvp.Value;
+
                 try
                 {
-                    if (node.ProjectInstance is null)
+                    // For multi-targeting projects, prefer an inner build (has TargetFramework set)
+                    // over the outer build (has TargetFrameworks but no TargetFramework).
+                    // Inner builds have the actual project references.
+                    var primaryNode = nodes.FirstOrDefault(n =>
+                        !string.IsNullOrEmpty(n.ProjectInstance?.GetPropertyValue("TargetFramework")))
+                        ?? nodes.First();
+
+                    if (primaryNode.ProjectInstance is null)
                     {
                         throw new InvalidOperationException("ProjectInstance is null.");
-                    }
-                    var projectPath = node.ProjectInstance.FullPath;
-                    if (string.IsNullOrEmpty(projectPath))
-                    {
-                        continue;
                     }
 
                     var projectRoot = ProjectUtilities.GetRelativeProjectRoot(projectPath, workspaceRoot);
                     var relativeProjectFile = ProjectUtilities.GetRelativeProjectFile(projectPath, workspaceRoot);
 
-                    // Collect package references
-                    var packageRefs = CollectPackageReferences(node.ProjectInstance!);
+                    // Collect package references from primary node
+                    var packageRefs = CollectPackageReferences(primaryNode.ProjectInstance!);
 
-                    // Collect project references
-                    var projectRefs = CollectProjectReferences(node, projectPath, workspaceRoot);
+                    // Collect project references from ALL nodes (aggregate from inner + outer builds)
+                    // This ensures we capture references from multi-targeting projects correctly
+                    var projectRefs = new HashSet<string>();
+                    foreach (var node in nodes)
+                    {
+                        var refs = CollectProjectReferences(node, projectPath, workspaceRoot);
+                        foreach (var r in refs)
+                        {
+                            // Filter out self-references (can happen with multi-targeting inner build cross-refs)
+                            if (r != projectRoot)
+                            {
+                                projectRefs.Add(r);
+                            }
+                        }
+                    }
 
-                    // Collect MSBuild properties
-                    var properties = CollectProperties(node.ProjectInstance!);
+                    // Collect MSBuild properties from primary node
+                    var properties = CollectProperties(primaryNode.ProjectInstance!);
 
                     // Determine project type
                     var isTest = IsTestProject(properties, packageRefs);
                     var isExe = IsExecutableProject(properties);
 
                     // Build targets
-                    var projectName = ProjectUtilities.GetProjectName(node.ProjectInstance);
+                    var projectName = ProjectUtilities.GetProjectName(primaryNode.ProjectInstance);
                     var targets = TargetBuilder.BuildTargets(
                         projectName,
                         Path.GetFileName(projectPath),
@@ -120,14 +159,14 @@ public static class Analyzer
                     {
                         referencesByRoot[projectRoot] = new ReferencesInfo
                         {
-                            Refs = projectRefs,
+                            Refs = projectRefs.ToList(),
                             SourceConfigFile = relativeProjectFile
                         };
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"Error analyzing {node.ProjectInstance?.FullPath}: {ex.Message}");
+                    Console.Error.WriteLine($"Error analyzing {projectPath}: {ex.Message}");
                 }
             }
         }
