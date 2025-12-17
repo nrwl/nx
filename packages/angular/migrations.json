@@ -389,6 +389,14 @@
       },
       "description": "Set 'isolatedModules' to 'true' in TypeScript test configurations for Angular projects.",
       "factory": "./src/migrations/update-22-3-0/set-isolated-modules"
+    },
+    "update-jest-preset-angular-setup": {
+      "version": "22.3.0-beta.3",
+      "requires": {
+        "@angular/core": ">=21.0.0"
+      },
+      "description": "Replace 'jest-preset-angular/setup-jest' imports with the new 'setupZoneTestEnv' function.",
+      "factory": "./src/migrations/update-22-3-0/update-jest-preset-angular-setup"
     }
   },
   "packageJsonUpdates": {
