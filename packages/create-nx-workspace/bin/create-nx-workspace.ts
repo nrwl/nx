@@ -447,7 +447,7 @@ async function normalizeArgsMiddleware(
     chosenTemplate = template;
 
     if (template !== 'custom') {
-      // Template flow - uses detected package manager (from invoking command) and 'main' branch by default
+      // Template flow - respects CLI arg, otherwise uses detected package manager (from invoking command)
       argv.template = template;
       const aiAgents = await determineAiAgents(argv);
       const nxCloud =
@@ -456,7 +456,7 @@ async function normalizeArgsMiddleware(
         nxCloud === 'skip'
           ? undefined
           : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
-      packageManager = detectInvokedPackageManager();
+      packageManager = argv.packageManager ?? detectInvokedPackageManager();
       Object.assign(argv, {
         nxCloud,
         useGitHub: nxCloud !== 'skip',

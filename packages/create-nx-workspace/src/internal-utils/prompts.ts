@@ -8,6 +8,7 @@ import {
   shouldUseTemplateFlow,
 } from '../utils/nx/ab-testing';
 import { deduceDefaultBase } from '../utils/git/default-base';
+import { isGitAvailable } from '../utils/git/git';
 import {
   detectInvokedPackageManager,
   PackageManager,
@@ -129,6 +130,8 @@ export async function determineTemplate(
   if (!parsedArgs.interactive || isCI()) return 'custom';
   // A/B test: shouldUseTemplateFlow() determines if user sees template or preset flow
   if (!shouldUseTemplateFlow()) return 'custom';
+  // Template flow requires git for cloning - fall back to custom preset if git is not available
+  if (!isGitAvailable()) return 'custom';
   const { template } = await enquirer.prompt<{ template: string }>([
     {
       name: 'template',
