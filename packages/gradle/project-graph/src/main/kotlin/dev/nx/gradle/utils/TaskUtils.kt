@@ -5,6 +5,7 @@ import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
 import java.io.File
+import org.gradle.api.Project
 import org.gradle.api.Task
 
 /**
@@ -24,7 +25,8 @@ fun processTask(
     dependencies: MutableSet<Dependency>,
     targetNameOverrides: Map<String, String>,
     gitIgnoreClassifier: GitIgnoreClassifier,
-    targetNamePrefix: String = ""
+    targetNamePrefix: String = "",
+    project: Project,
 ): MutableMap<String, Any?> {
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
@@ -77,15 +79,20 @@ fun processTask(
           task.description ?: "Run ${projectBuildPath}.${task.name}", projectBuildPath, task.name)
   target["metadata"] = metadata
 
-  target["options"] =
-      if (continuous) {
-        mapOf(
-            "taskName" to "${projectBuildPath}:${task.name}",
-            "continuous" to true,
-            "excludeDependsOn" to shouldExcludeDependsOn(task))
-      } else {
-        mapOf("taskName" to "${projectBuildPath}:${task.name}")
-      }
+  if (task.name == "composedJar") {
+    println("DEBUG location")
+  }
+
+  target["options"] = buildMap {
+    put("taskName", "${projectBuildPath}:${task.name}")
+    if (hasProviderBasedDependencies(task, project)) {
+      put("excludeDependsOn", false)
+    }
+    if (continuous) {
+      put("continuous", true)
+    }
+  }
+
 
   return target
 }
@@ -470,8 +477,67 @@ fun isCacheable(task: Task): Boolean {
   return !nonCacheableTasks.contains(task.name)
 }
 
-private val tasksWithDependsOn = setOf("bootRun", "bootJar")
+/**
+ * Finds provider-based task dependencies by comparing explicit dependsOn with computed
+ * taskDependencies after resolving configurations.
+ *
+ * Provider-based dependencies are lazy and only appear in taskDependencies after the underlying
+ * providers have been evaluated. This happens when configurations are resolved.
+ *
+ * @param task the task to analyze
+ * @param project the project containing the task
+ * @return set of task paths that are provider-based dependencies
+ */
+fun findProviderBasedDependencies(task: Task, project: Project): Set<String> {
+  val logger = task.logger
 
-fun shouldExcludeDependsOn(task: Task): Boolean {
-  return !tasksWithDependsOn.contains(task.name)
+  // Step 1: Get explicit dependsOn BEFORE resolution
+  val explicitDependsOn: Set<String> =
+      try {
+        task.dependsOn.filterIsInstance<Task>().map { it.path }.toSet()
+      } catch (e: Exception) {
+        logger.debug("Could not get explicit dependsOn for ${task.path}: ${e.message}")
+        emptySet()
+      }
+
+  // Step 2: Resolve all resolvable configurations to trigger provider evaluation
+  project.configurations
+      .matching { it.isCanBeResolved }
+      .forEach { conf ->
+        try {
+          conf.resolve()
+        } catch (e: Exception) {
+          // Some configurations may fail to resolve, log and continue
+          logger.debug("Could not resolve configuration ${conf.name}: ${e.message}")
+        }
+      }
+
+  // Step 3: Get computed dependencies AFTER resolution - providers have now been evaluated
+  val computedDependencies: Set<String> =
+      try {
+        task.taskDependencies.getDependencies(task).map { it.path }.toSet()
+      } catch (e: Exception) {
+        logger.debug("Could not get computed dependencies for ${task.path}: ${e.message}")
+        emptySet()
+      }
+
+  // Step 4: Provider-based dependencies are those in computed but not in explicit
+  val providerBasedDeps = computedDependencies - explicitDependsOn
+
+  if (providerBasedDeps.isNotEmpty()) {
+    logger.info("Task ${task.path} has provider-based dependencies: $providerBasedDeps")
+  }
+
+  return providerBasedDeps
+}
+
+/**
+ * Checks if a task has any provider-based dependencies.
+ *
+ * @param task the task to check
+ * @param project the project containing the task
+ * @return true if the task has provider-based dependencies, false otherwise
+ */
+fun hasProviderBasedDependencies(task: Task, project: Project): Boolean {
+  return findProviderBasedDependencies(task, project).isNotEmpty()
 }
