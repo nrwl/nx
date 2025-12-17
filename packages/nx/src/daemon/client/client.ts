@@ -197,6 +197,7 @@ export class DaemonClient {
       data: {
         projectGraph: ProjectGraph;
         sourceMaps: ConfigurationSourceMaps;
+        error: Error | null;
       } | null
     ) => void
   > = new Map();
@@ -568,6 +569,7 @@ export class DaemonClient {
       data: {
         projectGraph: ProjectGraph;
         sourceMaps: ConfigurationSourceMaps;
+        error: Error | null;
       } | null
     ) => void
   ): Promise<UnregisterCallback> {

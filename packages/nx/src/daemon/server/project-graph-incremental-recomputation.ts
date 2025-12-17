@@ -69,7 +69,11 @@ export let currentProjectGraph: ProjectGraph | undefined;
 const collectedUpdatedFiles = new Set<string>();
 const collectedDeletedFiles = new Set<string>();
 const projectGraphRecomputationListeners = new Set<
-  (projectGraph: ProjectGraph, sourceMaps: ConfigurationSourceMaps) => void
+  (
+    projectGraph: ProjectGraph,
+    sourceMaps: ConfigurationSourceMaps,
+    error: Error | null
+  ) => void
 >();
 let storedWorkspaceConfigHash: string | undefined;
 let waitPeriod = 100;
@@ -114,7 +118,8 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
     if (wasScheduled) {
       notifyProjectGraphRecomputationListeners(
         result.projectGraph,
-        result.sourceMaps
+        result.sourceMaps,
+        result.error
       );
     }
 
@@ -198,14 +203,14 @@ export function addUpdatedAndDeletedFiles(
 
       cachedSerializedProjectGraphPromise =
         processFilesAndCreateAndSerializeProjectGraph(await getPlugins());
-      const { projectGraph, sourceMaps } =
+      const { projectGraph, sourceMaps, error } =
         await cachedSerializedProjectGraphPromise;
 
       if (createdFiles.length > 0) {
         notifyFileWatcherSockets(createdFiles, null, null);
       }
 
-      notifyProjectGraphRecomputationListeners(projectGraph, sourceMaps);
+      notifyProjectGraphRecomputationListeners(projectGraph, sourceMaps, error);
     }, waitPeriod);
   }
 }
@@ -213,7 +218,8 @@ export function addUpdatedAndDeletedFiles(
 export function registerProjectGraphRecomputationListener(
   listener: (
     projectGraph: ProjectGraph,
-    sourceMaps: ConfigurationSourceMaps
+    sourceMaps: ConfigurationSourceMaps,
+    error: Error | null
   ) => void
 ) {
   projectGraphRecomputationListeners.add(listener);
@@ -498,10 +504,11 @@ async function resetInternalStateIfNxDepsMissing() {
 
 function notifyProjectGraphRecomputationListeners(
   projectGraph: ProjectGraph,
-  sourceMaps: ConfigurationSourceMaps
+  sourceMaps: ConfigurationSourceMaps,
+  error: Error | null
 ) {
   for (const listener of projectGraphRecomputationListeners) {
-    listener(projectGraph, sourceMaps);
+    listener(projectGraph, sourceMaps, error);
   }
-  notifyProjectGraphListenerSockets(projectGraph, sourceMaps);
+  notifyProjectGraphListenerSockets(projectGraph, sourceMaps, error);
 }
