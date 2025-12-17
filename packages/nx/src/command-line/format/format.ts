@@ -11,8 +11,6 @@ import {
 } from '../../utils/command-line-utils';
 import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { getIgnoreObject } from '../../utils/ignore';
-
-import type { SupportInfo } from 'prettier';
 import { readNxJson } from '../../config/configuration';
 import { ProjectGraph } from '../../config/project-graph';
 import {
@@ -32,8 +30,9 @@ export async function format(
   command: 'check' | 'write',
   args: yargs.Arguments
 ): Promise<void> {
+  let prettier: typeof import('prettier');
   try {
-    require('prettier');
+    prettier = await import('prettier');
   } catch {
     output.error({
       title: 'Prettier is not installed.',
@@ -50,7 +49,9 @@ export async function format(
     { printWarnings: false },
     readNxJson()
   );
-  const patterns = (await getPatterns({ ...args, ...nxArgs } as any)).map(
+  const patterns = (
+    await getPatterns(prettier, { ...args, ...nxArgs } as any)
+  ).map(
     // prettier removes one of the \
     // prettier-ignore
     (p) => `"${p.replace(/\$/g, '\\\$')}"`
@@ -96,6 +97,7 @@ export async function format(
 }
 
 async function getPatterns(
+  prettier: typeof import('prettier'),
   args: NxArgs & { libsAndApps: boolean; _: string[] }
 ): Promise<string[]> {
   const graph = await createProjectGraphAsync({ exitOnError: true });
@@ -112,13 +114,8 @@ async function getPatterns(
 
     const p = parseFiles(args);
 
-    // In prettier v3 the getSupportInfo result is a promise
     const supportedExtensions = new Set(
-      (
-        await (require('prettier').getSupportInfo() as
-          | Promise<SupportInfo>
-          | SupportInfo)
-      ).languages
+      (await prettier.getSupportInfo()).languages
         .flatMap((language) => language.extensions)
         .filter((extension) => !!extension)
         // Prettier supports ".swcrc" as a file instead of an extension

@@ -128,9 +128,9 @@ Plugins use config files to infer tasks for projects. You can specify which conf
     {
       "plugin": "@nx/jest/plugin",
       "include": ["packages/**/*"], // include any projects in the packages folder
-      "exclude": ["**/*-e2e/**/*"] // exclude any projects in a *-e2e folder
-    }
-  ]
+      "exclude": ["**/*-e2e/**/*"], // exclude any projects in a *-e2e folder
+    },
+  ],
 }
 ```
 
@@ -388,8 +388,8 @@ If you want to limit the projects that `nx release` targets, you can use the `pr
   "release": {
     // Here we are configuring nx release to target all projects
     // except the one called "ignore-me"
-    "projects": ["*", "!ignore-me"]
-  }
+    "projects": ["*", "!ignore-me"],
+  },
 }
 ```
 
@@ -403,8 +403,8 @@ The `projectsRelationship` property tells Nx whether to release projects indepen
   "release": {
     // Here we are configuring nx release to release projects
     // independently, as opposed to the default of "fixed"
-    "projectsRelationship": "independent"
-  }
+    "projectsRelationship": "independent",
+  },
 }
 ```
 
@@ -459,9 +459,9 @@ Example patterns and their results:
       "requireSemver": true,
       "strictPreid": true,
       "preferDockerVersion": false,
-      "checkAllBranchesWhen": "main"
-    }
-  }
+      "checkAllBranchesWhen": "main",
+    },
+  },
 }
 ```
 
@@ -476,8 +476,8 @@ Example patterns and their results:
     "releaseTagPatternRequireSemver": true,
     "releaseTagPatternStrictPreid": true,
     "releaseTagPatternPreferDockerVersion": false,
-    "releaseTagPatternCheckAllBranchesWhen": "main"
-  }
+    "releaseTagPatternCheckAllBranchesWhen": "main",
+  },
 }
 ```
 
@@ -513,10 +513,10 @@ Core version options are therefore directly at the top level of the `version` pr
       "manifestRootsToUpdate": ["dist/packages/{projectName}"],
       // Ecosystem-specific options
       "versionActionsOptions": {
-        "skipLockFileUpdate": true
-      }
-    }
-  }
+        "skipLockFileUpdate": true,
+      },
+    },
+  },
 }
 ```
 
@@ -556,9 +556,9 @@ The `changelog.workspaceChangelog` property configures the workspace changelog. 
   "release": {
     "changelog": {
       // This disables the workspace changelog
-      "workspaceChangelog": false
-    }
-  }
+      "workspaceChangelog": false,
+    },
+  },
 }
 ```
 
@@ -572,10 +572,10 @@ The `changelog.workspaceChangelog` property configures the workspace changelog. 
         // changelog contents
         "createRelease": "github",
         // This will disable creating a workspace CHANGELOG.md file
-        "file": false
-      }
-    }
-  }
+        "file": false,
+      },
+    },
+  },
 }
 ```
 
@@ -589,9 +589,9 @@ The `changelog.projectChangelogs` property configures the project changelogs. It
   "release": {
     "changelog": {
       // This enables project changelogs with the default options
-      "projectChangelogs": true
-    }
-  }
+      "projectChangelogs": true,
+    },
+  },
 }
 ```
 
@@ -606,10 +606,10 @@ The `changelog.projectChangelogs` property configures the project changelogs. It
         "createRelease": "github",
         // This will disable creating any project level CHANGELOG.md
         // files
-        "file": false
-      }
-    }
-  }
+        "file": false,
+      },
+    },
+  },
 }
 ```
 
@@ -624,10 +624,10 @@ By default, changelog entries are prepended to existing changelog files. To comp
     "changelog": {
       "workspaceChangelog": {
         // Replaces the entire CHANGELOG.md file with the new content
-        "replaceExistingContents": true
-      }
-    }
-  }
+        "replaceExistingContents": true,
+      },
+    },
+  },
 }
 ```
 
@@ -647,9 +647,9 @@ The `git` property configures the automated git operations that take place as pa
       "commit": true,
       // This will enable create a git for the overall release, or
       // one tag per project for independent project releases
-      "tag": false
-    }
-  }
+      "tag": false,
+    },
+  },
 }
 ```
 
@@ -666,8 +666,8 @@ The `docker` property configures Docker image versioning and publishing when usi
 {
   "release": {
     // Simple configuration - enables Docker with defaults
-    "docker": true
-  }
+    "docker": true,
+  },
 }
 ```
 
@@ -684,7 +684,7 @@ The `docker` property configures Docker image versioning and publishing when usi
         "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
         "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
         "staging": "{currentDate|YYMM.DD}-staging",
-        "development": "{currentDate|YYMM.DD}-dev-{shortCommitSha}"
+        "development": "{currentDate|YYMM.DD}-dev-{shortCommitSha}",
       },
 
       // Skip Docker versioning for these projects to prevent versioning with other tools like NPM
@@ -695,9 +695,9 @@ The `docker` property configures Docker image versioning and publishing when usi
       "repositoryName": "myorg",
 
       // Docker registry URL
-      "registryUrl": "docker.io"
-    }
-  }
+      "registryUrl": "docker.io",
+    },
+  },
 }
 ```
 
@@ -719,11 +719,11 @@ When configuring the `@nx/docker` plugin in `nx.json`, you can customize the beh
           // Skip the default --tag argument
           "skipDefaultTag": true,
           // You must provide your own tags via args
-          "args": ["--tag myorg/myapp:latest", "--tag myorg/myapp:1.0.0"]
-        }
-      }
-    }
-  ]
+          "args": ["--tag myorg/myapp:latest", "--tag myorg/myapp:1.0.0"],
+        },
+      },
+    },
+  ],
 }
 ```
 
@@ -797,11 +797,11 @@ These are global configuration options for the [`nx sync`](/docs/reference/nx-co
     "globalGenerators": ["my-plugin:my-sync-generator"],
     "generatorOptions": {
       "my-plugin:my-sync-generator": {
-        "verbose": true
-      }
+        "verbose": true,
+      },
     },
-    "disabledTaskSyncGenerators": ["other-plugin:problematic-generator"]
-  }
+    "disabledTaskSyncGenerators": ["other-plugin:problematic-generator"],
+  },
 }
 ```
 
@@ -917,14 +917,14 @@ The `conformance` property in `nx.json` configures the usage of [Nx Conformance]
       {
         "rule": "@nx/conformance/enforce-module-boundaries",
         "status": "evaluated",
-        "explanation": "This rule ensures proper module boundaries are maintained across the workspace"
+        "explanation": "This rule ensures proper module boundaries are maintained across the workspace",
       },
       {
         "rule": "./tools/local-conformance-rules/check-project.ts",
         "projects": ["*"],
         "options": {
-          "strictMode": true
-        }
+          "strictMode": true,
+        },
       },
       {
         "rule": "nx-cloud://my-custom-rule",
@@ -932,13 +932,13 @@ The `conformance` property in `nx.json` configures the usage of [Nx Conformance]
           "frontend-*",
           {
             "matcher": "backend-legacy",
-            "explanation": "Legacy backend project is exempt until migration is complete"
-          }
+            "explanation": "Legacy backend project is exempt until migration is complete",
+          },
         ],
-        "status": "enforced"
-      }
-    ]
-  }
+        "status": "enforced",
+      },
+    ],
+  },
 }
 ```
 
@@ -974,7 +974,7 @@ You can also use objects with `matcher` and `explanation` properties to document
   "rule": "my-rule",
   // Here we are configuring the rule to apply to all frontend projects
   // except the one called "frontend-legacy"
-  "projects": ["frontend-*", "!frontend-legacy"]
+  "projects": ["frontend-*", "!frontend-legacy"],
 }
 ```
 
@@ -985,9 +985,9 @@ You can also use objects with `matcher` and `explanation` properties to document
     "frontend-*",
     {
       "matcher": "!frontend-legacy",
-      "explanation": "Exempt until migration to new architecture is complete"
-    }
-  ]
+      "explanation": "Exempt until migration to new architecture is complete",
+    },
+  ],
 }
 ```
 

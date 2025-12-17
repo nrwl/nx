@@ -125,7 +125,10 @@
       "dependsOn": ["test-native", "build-native", "^build-native"],
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "options": {
-        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"]
+        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
+        "env": {
+          "NODE_OPTIONS": "--experimental-vm-modules"
+        }
       }
     },
     "lint": {

@@ -118,8 +118,8 @@ Finally, you need to configure your Nx cache in the `nx.json` file. The `contain
 {
   "azure": {
     "container": "mycontainer",
-    "accountName": "myaccount"
-  }
+    "accountName": "myaccount",
+  },
 }
 ```
 
@@ -143,8 +143,8 @@ Nx will only show warnings when the remote cache is not writable. You can disabl
 {
   "azure": {
     // ...
-    "localMode": "read-only"
-  }
+    "localMode": "read-only",
+  },
 }
 ```
 
@@ -155,7 +155,7 @@ The cache mode in CI can also be configured by setting `ciMode` to `read-only` o
 {
   "azure": {
     // ...
-    "ciMode": "read-only"
-  }
+    "ciMode": "read-only",
+  },
 }
 ```

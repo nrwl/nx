@@ -64,13 +64,11 @@ export default {
 The NxModuleFederationPlugin wraps and configures the Module Federation plugin from `@module-federation/enhanced` to provide a streamlined experience in Nx workspaces. Here's what the plugin does:
 
 1. **Base Configuration**: It sets up essential Rspack configurations:
-
    - Disables runtime chunking (`runtimeChunk: false`)
    - Sets a unique name for the output
    - Configures specific settings for server-side rendering when needed
 
 2. **Module Federation Setup**: The plugin automatically:
-
    - Configures the remote entry filename (`remoteEntry.js`)
    - Sets up exposed modules based on your configuration
    - Manages remote module connections

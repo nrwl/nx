@@ -71,8 +71,8 @@ Tools and scripts will often use some environment variables to change their beha
 ```jsonc
 {
   "inputs": [
-    { "env": "API_KEY" } // this will include the value of $API_KEY in the cache hash
-  ]
+    { "env": "API_KEY" }, // this will include the value of $API_KEY in the cache hash
+  ],
 }
 ```
 
@@ -82,7 +82,7 @@ You can use a Runtime input to provide a script which will output the informatio
 
 ```jsonc
 {
-  "inputs": [{ "runtime": "node --version" }]
+  "inputs": [{ "runtime": "node --version" }],
 }
 ```
 
@@ -96,7 +96,7 @@ External dependencies can also be tools used to run tasks. Updating the versions
 
 ```jsonc
 {
-  "inputs": [{ "externalDependencies": ["jest"] }]
+  "inputs": [{ "externalDependencies": ["jest"] }],
 }
 ```
 
@@ -112,9 +112,9 @@ The drawback of this assumption is that Nx will re-run the `lint` task even when
 {
   "targets": {
     "lint": {
-      "command": "eslint ."
-    }
-  }
+      "command": "eslint .",
+    },
+  },
 }
 ```
 
@@ -127,10 +127,10 @@ This default behavior can be overridden by adding any external dependency inputs
       "command": "eslint .",
       "inputs": [
         "default",
-        { "externalDependencies": ["eslint", "eslint-config-airbnb"] }
-      ]
-    }
-  }
+        { "externalDependencies": ["eslint", "eslint-config-airbnb"] },
+      ],
+    },
+  },
 }
 ```
 
@@ -144,8 +144,8 @@ When a task depends on another task, it is possible that the outputs of the depe
 {
   "inputs": [
     { "dependentTasksOutputFiles": "**/*.d.ts" },
-    { "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true }
-  ]
+    { "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true },
+  ],
 }
 ```
 
@@ -174,8 +174,8 @@ Named inputs defined in `nx.json` can be used by any project in the workspace in
 // nx.json
 {
   "namedInputs": {
-    "default": ["{projectRoot}/**/*"] // Default Inputs
-  }
+    "default": ["{projectRoot}/**/*"], // Default Inputs
+  },
 }
 ```
 
@@ -228,8 +228,8 @@ By default, Nx Workspaces are generated with the following named inputs:
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"], // Default Inputs
     "production": ["default", "!{projectRoot}/jest.config.ts"], // Production Inputs
-    "sharedGlobals": [] // Shared Global Inputs
-  }
+    "sharedGlobals": [], // Shared Global Inputs
+  },
 }
 ```
 
@@ -259,9 +259,9 @@ It is common for most tasks to consider a set of inputs for the project it belon
   "name": "myreactapp",
   "targets": {
     "test": {
-      "inputs": ["default", "^production", "{projectRoot}/jest.config.js"]
-    }
-  }
+      "inputs": ["default", "^production", "{projectRoot}/jest.config.js"],
+    },
+  },
 }
 ```
 

@@ -170,7 +170,7 @@ describe('convertConfigToRspackPluginGenerator', () => {
         }),
         (config) => {
           return config;
-        }
+        },
       );
       "
     `);

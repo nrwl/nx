@@ -83,10 +83,7 @@ export async function formatFilesWithPrettierIfAvailable(
 
         results.set(
           file.path,
-          // In prettier v3 the format result is a promise
-          await (prettier.format(file.content.toString('utf-8'), options) as
-            | Promise<string>
-            | string)
+          await prettier.format(file.content.toString('utf-8'), options)
         );
       } catch (e) {
         if (!options?.silent) {

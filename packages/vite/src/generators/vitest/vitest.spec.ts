@@ -244,7 +244,7 @@ describe('vitest generator', () => {
 
         getTestBed().initTestEnvironment(
           BrowserDynamicTestingModule,
-          platformBrowserDynamicTesting()
+          platformBrowserDynamicTesting(),
         );
         "
       `);
