@@ -1,7 +1,7 @@
 import { detectPackageManager, type CreateNodesContextV2 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import picomatch = require('picomatch');
-import { mkdirSync, rmdirSync } from 'node:fs';
+import { mkdirSync, rmSync } from 'node:fs';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -46,7 +46,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     tempFs.cleanup();
     process.chdir(cwd);
     process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
-    rmdirSync('tmp/project-graph-cache', { recursive: true });
+    rmSync('tmp/project-graph-cache', { recursive: true, force: true });
   });
 
   it('should handle missing lock file', async () => {
