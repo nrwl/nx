@@ -107,21 +107,10 @@ public static class Analyzer
                     // Collect package references from primary node
                     var packageRefs = CollectPackageReferences(primaryNode.ProjectInstance!);
 
-                    // Collect project references from ALL nodes (aggregate from inner + outer builds)
-                    // This ensures we capture references from multi-targeting projects correctly
-                    var projectRefs = new HashSet<string>();
-                    foreach (var node in nodes)
-                    {
-                        var refs = CollectProjectReferences(node, projectPath, workspaceRoot);
-                        foreach (var r in refs)
-                        {
-                            // Filter out self-references (can happen with multi-targeting inner build cross-refs)
-                            if (r != projectRoot)
-                            {
-                                projectRefs.Add(r);
-                            }
-                        }
-                    }
+                    // Collect direct project references from the primary node's ProjectInstance.
+                    // Uses GetItems("ProjectReference") which returns only DIRECT references,
+                    // with glob patterns already evaluated by MSBuild during project loading.
+                    var projectRefs = CollectProjectReferences(primaryNode.ProjectInstance!, projectPath, workspaceRoot);
 
                     // Collect MSBuild properties from primary node
                     var properties = CollectProperties(primaryNode.ProjectInstance!);
@@ -159,7 +148,7 @@ public static class Analyzer
                     {
                         referencesByRoot[projectRoot] = new ReferencesInfo
                         {
-                            Refs = projectRefs.ToList(),
+                            Refs = projectRefs,
                             SourceConfigFile = relativeProjectFile
                         };
                     }
@@ -194,24 +183,32 @@ public static class Analyzer
         return packageRefs;
     }
 
+    /// <summary>
+    /// Collects direct project references from the ProjectInstance.
+    /// Uses GetItems("ProjectReference") to get only direct references defined in the project file.
+    /// MSBuild evaluates glob patterns during project loading, so EvaluatedInclude contains
+    /// resolved paths even when the original ProjectReference used globs.
+    /// </summary>
     private static List<string> CollectProjectReferences(
-        ProjectGraphNode project,
+        ProjectInstance project,
         string projectPath,
         string workspaceRoot)
     {
         var projectRefs = new List<string>();
+        var projectDir = Path.GetDirectoryName(projectPath)!;
 
-        foreach (var referencedProject in project.ProjectReferences)
+        foreach (var item in project.GetItems("ProjectReference"))
         {
-            var refPath = referencedProject.ProjectInstance?.FullPath;
+            var refPath = item.EvaluatedInclude;
             if (string.IsNullOrEmpty(refPath))
             {
-                throw new InvalidOperationException(
-                    $"Project reference in {projectPath} is missing a valid path.");
+                continue;
             }
+
+            // Resolve the path relative to the project directory
             var absoluteRefPath = Path.IsPathRooted(refPath)
                 ? refPath
-                : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(projectPath)!, refPath));
+                : Path.GetFullPath(Path.Combine(projectDir, refPath));
 
             var relativeRefRoot = ProjectUtilities.GetRelativeProjectRoot(absoluteRefPath, workspaceRoot);
             projectRefs.Add(relativeRefRoot);
