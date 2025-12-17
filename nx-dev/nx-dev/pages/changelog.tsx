@@ -2,12 +2,14 @@ import { LinkIcon, TagIcon } from '@heroicons/react/24/outline';
 import { Breadcrumbs, Header, Footer } from '@nx/nx-dev-ui-common';
 import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import { cx } from '@nx/nx-dev-ui-primitives';
+import type { GetServerSideProps } from 'next';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { Octokit } from 'octokit';
 import { compare, parse } from 'semver';
 import { changeLogApi } from '../lib/changelog.api';
 import Link from 'next/link';
+import { tryFramerProxy } from '../lib/framer-proxy';
 
 interface ChangelogEntry {
   version: string;
@@ -84,7 +86,11 @@ async function fetchGithubRelease(
   }));
 }
 
-export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
+export const getServerSideProps: GetServerSideProps<ChangeLogProps> = async (
+  ctx
+) => {
+  if (await tryFramerProxy(ctx)) return { props: { changelog: [] } };
+
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
   let githubReleases: GithubReleaseData[] = [];
@@ -169,7 +175,7 @@ export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
       changelog: groupedReleases,
     },
   };
-}
+};
 
 export default function Changelog(props: ChangeLogProps): JSX.Element {
   const router = useRouter();

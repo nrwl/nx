@@ -2,6 +2,13 @@ import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import { Hero, PartnersList } from '@nx/nx-dev-ui-partners';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
+import type { GetServerSideProps } from 'next';
+import { tryFramerProxy } from '../lib/framer-proxy';
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  if (await tryFramerProxy(ctx)) return { props: {} };
+  return { props: {} };
+};
 
 export function Partners(): JSX.Element {
   const router = useRouter();
