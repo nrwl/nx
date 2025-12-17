@@ -498,6 +498,7 @@ export interface TuiCliArgs {
 
 export interface TuiConfig {
   autoExit?: boolean | number | undefined
+  suppressHints?: boolean
 }
 
 export interface UpdatedWorkspaceFiles {

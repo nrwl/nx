@@ -29,6 +29,7 @@ use super::components::Component;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::dependency_view::{DependencyView, DependencyViewState};
 use super::components::help_popup::HelpPopup;
+use super::components::hint_popup::HintPopup;
 use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
 };
@@ -45,6 +46,9 @@ use super::utils::normalize_newlines;
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::tui::graph_utils::get_failed_dependencies;
 use crate::native::utils::time::current_timestamp_millis;
+
+/// Duration before status messages in terminal panes are automatically cleared
+const STATUS_MESSAGE_DURATION: std::time::Duration = std::time::Duration::from_secs(3);
 
 pub struct App {
     pub components: Vec<Box<dyn Component>>,
@@ -88,6 +92,7 @@ pub enum Focus {
     MultipleOutput(usize),
     HelpPopup,
     CountdownPopup,
+    HintPopup,
 }
 
 impl App {
@@ -121,11 +126,13 @@ impl App {
         );
         let help_popup = HelpPopup::new();
         let countdown_popup = CountdownPopup::new();
+        let hint_popup = HintPopup::new();
 
         let components: Vec<Box<dyn Component>> = vec![
             Box::new(tasks_list),
             Box::new(help_popup),
             Box::new(countdown_popup),
+            Box::new(hint_popup),
         ];
 
         let main_terminal_pane_data = TerminalPaneData::new();
@@ -518,6 +525,22 @@ impl App {
                     return Ok(false);
                 }
 
+                // If hint popup is open, only ESC dismisses it
+                if matches!(self.focus, Focus::HintPopup) {
+                    if let Some(hint_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+                    {
+                        if key.code == KeyCode::Esc {
+                            hint_popup.hide();
+                            self.update_focus(self.previous_focus);
+                        }
+                        // All other keys are consumed while hint popup is visible
+                    }
+                    return Ok(false);
+                }
+
                 if let Some(tasks_list) = self
                     .components
                     .iter_mut()
@@ -780,6 +803,9 @@ impl App {
                                 Focus::CountdownPopup => {
                                     // Countdown popup has its own key handling above
                                 }
+                                Focus::HintPopup => {
+                                    // Hint popup has its own key handling above
+                                }
                             }
                         }
                     }
@@ -821,6 +847,30 @@ impl App {
                             messenger.update_running_tasks(&tasks_list.tasks, &self.pty_instances)
                         })
                 });
+
+                // Auto-dismiss hint popup after duration elapsed
+                if let Some(hint_popup) = self
+                    .components
+                    .iter_mut()
+                    .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+                {
+                    if hint_popup.should_auto_dismiss() {
+                        hint_popup.hide();
+                        // Restore focus if hint popup was focused
+                        if matches!(self.focus, Focus::HintPopup) {
+                            self.update_focus(self.previous_focus);
+                        }
+                    }
+                }
+
+                // Clear expired status messages from terminal panes
+                for terminal_pane_data in &mut self.terminal_pane_data {
+                    if let Some((_, shown_at)) = &terminal_pane_data.status_message {
+                        if shown_at.elapsed() > STATUS_MESSAGE_DURATION {
+                            terminal_pane_data.status_message = None;
+                        }
+                    }
+                }
             }
             // Quit immediately
             Action::Quit => {
@@ -1036,18 +1086,29 @@ impl App {
                         }
                     }
 
-                    // Draw the help popup and countdown popup
-                    let (first_part, second_part) = self.components.split_at_mut(2);
-                    let help_popup = first_part[1]
-                        .as_any_mut()
-                        .downcast_mut::<HelpPopup>()
-                        .unwrap();
-                    let countdown_popup = second_part[0]
-                        .as_any_mut()
-                        .downcast_mut::<CountdownPopup>()
-                        .unwrap();
-                    let _ = help_popup.draw(f, frame_area);
-                    let _ = countdown_popup.draw(f, frame_area);
+                    // Draw the popups (help, countdown, interstitial)
+                    // Draw each popup sequentially to avoid multiple mutable borrows
+                    if let Some(help_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
+                    {
+                        let _ = help_popup.draw(f, frame_area);
+                    }
+                    if let Some(countdown_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+                    {
+                        let _ = countdown_popup.draw(f, frame_area);
+                    }
+                    if let Some(hint_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+                    {
+                        let _ = hint_popup.draw(f, frame_area);
+                    }
                 })
                 .ok();
             }
@@ -1060,6 +1121,19 @@ impl App {
             }
             Action::EndCommand => {
                 self.handle_end_command();
+            }
+            Action::ShowHint(message) => {
+                // Only show hints if not suppressed by config
+                if !self.tui_config.suppress_hints {
+                    if let Some(hint_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+                    {
+                        hint_popup.show(message.clone());
+                        self.update_focus(Focus::HintPopup);
+                    }
+                }
             }
             _ => {}
         }
@@ -1265,6 +1339,7 @@ impl App {
             }
             Focus::HelpPopup => Focus::TaskList,
             Focus::CountdownPopup => Focus::TaskList,
+            Focus::HintPopup => Focus::TaskList,
         };
 
         self.update_focus(focus);
@@ -1330,6 +1405,7 @@ impl App {
             }
             Focus::HelpPopup => Focus::TaskList,
             Focus::CountdownPopup => Focus::TaskList,
+            Focus::HintPopup => Focus::TaskList,
         };
 
         self.update_focus(focus);
@@ -1479,10 +1555,11 @@ impl App {
                 if matches!(task_status, TaskStatus::NotStarted | TaskStatus::Skipped) {
                     // Task is pending - handle keys in dependency view
                     if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
-                        if dep_state.handle_key_event(key) {
-                            return Ok(()); // Key was handled by dependency view
+                        if let Some(action) = dep_state.handle_key_event(key) {
+                            self.dispatch_action(action);
                         }
                     }
+                    return Ok(());
                 } else {
                     // Task is running/completed - handle keys in terminal pane
                     let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];

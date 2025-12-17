@@ -97,6 +97,11 @@
           ],
           "description": "Whether to exit the TUI automatically after all tasks finish. If set to `true`, the TUI will exit immediately. If set to `false` the TUI will not automatically exit. If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits.",
           "default": 3
+        },
+        "suppressHints": {
+          "type": "boolean",
+          "description": "Whether to suppress hint popups that provide guidance for unhandled keys.",
+          "default": false
         }
       },
       "additionalProperties": false
