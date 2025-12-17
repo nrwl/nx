@@ -27,6 +27,7 @@ import {
 } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
+import { notifyFileChangeListeners } from './file-watching/file-change-events';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
 import { serverLogger } from './logger';
 import { NxWorkspaceFilesExternals } from '../../native';
@@ -169,6 +170,15 @@ export function addUpdatedAndDeletedFiles(
   for (let f of deletedFiles) {
     collectedUpdatedFiles.delete(f);
     collectedDeletedFiles.add(f);
+  }
+
+  // Notify file change listeners immediately when files change
+  if (
+    createdFiles.length > 0 ||
+    updatedFiles.length > 0 ||
+    deletedFiles.length > 0
+  ) {
+    notifyFileChangeListeners({ createdFiles, updatedFiles, deletedFiles });
   }
 
   if (updatedFiles.length > 0 || deletedFiles.length > 0) {
