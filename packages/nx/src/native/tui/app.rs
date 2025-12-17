@@ -434,15 +434,21 @@ impl App {
     pub fn register_running_batch(&mut self, batch_id: String, batch_info: BatchInfo) {
         // Early validation
         if batch_id.is_empty() {
+            trace!("Ignoring batch registration: empty batch_id");
             return;
         }
 
         if batch_info.task_ids.is_empty() {
+            trace!("Ignoring batch registration for {}: no task_ids", batch_id);
             return;
         }
 
         // Check if batch is already registered
         if self.batch_states.contains_key(&batch_id) {
+            trace!(
+                "Ignoring batch registration: {} already registered",
+                batch_id
+            );
             return;
         }
 
@@ -2274,10 +2280,6 @@ impl App {
     /// Handles the start of a batch by grouping individual tasks into a batch group.
     /// Tasks are removed from individual display and shown as nested items under the batch.
     fn handle_batch_start(&mut self, batch_id: String, batch_info: BatchInfo) {
-        if batch_info.task_ids.is_empty() || batch_id.is_empty() {
-            return;
-        }
-
         let start_time = self
             .batch_states
             .get(&batch_id)
@@ -2377,9 +2379,6 @@ impl App {
                     }
                 }
             }
-
-            // Clean up batch PTY instance
-            self.cleanup_batch_pty(&batch_id);
         }
     }
 

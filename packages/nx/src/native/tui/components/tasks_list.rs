@@ -1636,10 +1636,6 @@ impl TasksList {
         task_ids: Vec<String>,
         start_time: i64,
     ) {
-        if task_ids.is_empty() || batch_id.is_empty() {
-            return;
-        }
-
         // Filter to valid task IDs
         let valid_task_ids: Vec<String> = task_ids
             .into_iter()
@@ -1676,15 +1672,6 @@ impl TasksList {
         task_ids: Vec<String>,
         mut batch_group: BatchGroupItem,
     ) {
-        // Early validation
-        if task_ids.is_empty() {
-            return;
-        }
-
-        if batch_group.batch_id.is_empty() {
-            return;
-        }
-
         // Check if batch already exists
         if self.display_items.iter().any(|item| {
             matches!(item, DisplayItem::BatchGroup(bg) if bg.batch_id == batch_group.batch_id)
