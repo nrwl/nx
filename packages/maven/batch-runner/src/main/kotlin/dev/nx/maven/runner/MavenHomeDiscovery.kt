@@ -300,13 +300,16 @@ class MavenHomeDiscovery(
 
   /**
    * Find Maven 4.x installation from standard locations.
-   * Prefers newer versions (4.0.0 final, then rc-4, then rc-3, etc).
+   * Prefers newer versions (4.0.0 final, then rc-5, then rc-4, etc).
    */
   private fun findMaven4Installation(): File? {
     val candidates = listOf(
       // Prefer newer versions that have fixed plexus-container issues
       File(userHome, ".m2/wrapper/dists/apache-maven-4.0.0"),
       File(userHome, ".m2/wrapper/dists/apache-maven-4.0.0-bin"),
+      File(userHome, ".m2/wrapper/dists/apache-maven-4.0.0-rc-5"),
+      File(userHome, ".m2/wrapper/dists/apache-maven-4.0.0-rc.5"),
+      File(userHome, ".m2/wrapper/dists/apache-maven-4.0.0-rc.5-bin"),
       File(userHome, ".m2/wrapper/dists/apache-maven-4.0.0-rc-4"),
       File(userHome, ".m2/wrapper/dists/apache-maven-4.0.0-rc.4"),
       File(userHome, ".m2/wrapper/dists/apache-maven-4.0.0-rc.4-bin"),

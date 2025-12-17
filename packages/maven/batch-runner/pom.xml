@@ -8,7 +8,7 @@
     <parent>
         <groupId>dev.nx.maven</groupId>
         <artifactId>nx-maven-parent</artifactId>
-        <version>0.0.10</version>
+        <version>0.0.11</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -34,11 +34,11 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- Maven 4.0.0-rc-4 CLI for ResidentMavenInvoker (shaded - needed for bootstrap) -->
+        <!-- Maven 4.0.0-rc-5 CLI for ResidentMavenInvoker (shaded - needed for bootstrap) -->
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-cli</artifactId>
-            <version>4.0.0-rc-4</version>
+            <version>4.0.0-rc-5</version>
             <scope>compile</scope>
         </dependency>
 
@@ -46,7 +46,7 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-jline</artifactId>
-            <version>4.0.0-rc-4</version>
+            <version>4.0.0-rc-5</version>
             <scope>compile</scope>
         </dependency>
 
@@ -54,7 +54,7 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-executor</artifactId>
-            <version>4.0.0-rc-4</version>
+            <version>4.0.0-rc-5</version>
             <scope>compile</scope>
         </dependency>
 
@@ -62,7 +62,7 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-core</artifactId>
-            <version>4.0.0-rc-4</version>
+            <version>4.0.0-rc-5</version>
             <scope>compile</scope>
         </dependency>
 
@@ -70,7 +70,7 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>4.0.0-rc-4</version>
+            <version>4.0.0-rc-5</version>
             <scope>compile</scope>
         </dependency>
 
@@ -78,7 +78,7 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-model</artifactId>
-            <version>4.0.0-rc-4</version>
+            <version>4.0.0-rc-5</version>
             <scope>compile</scope>
         </dependency>
 
