@@ -65,12 +65,12 @@ function setInjectDocumentDomain(cypressConfig: string): string {
     !topLevelExperimentalSkipDomainInjectionProperty
       ? 'not-set'
       : !ts.isArrayLiteralExpression(
-          topLevelExperimentalSkipDomainInjectionProperty.initializer
-        ) ||
-        topLevelExperimentalSkipDomainInjectionProperty.initializer.elements
-          .length > 0
-      ? 'skipping'
-      : 'not-skipping';
+            topLevelExperimentalSkipDomainInjectionProperty.initializer
+          ) ||
+          topLevelExperimentalSkipDomainInjectionProperty.initializer.elements
+            .length > 0
+        ? 'skipping'
+        : 'not-skipping';
 
   let e2eSkipDomainState: 'not-set' | 'skipping' | 'not-skipping' = 'not-set';
   if (e2eProperty) {

@@ -618,8 +618,8 @@ export function newLernaWorkspace({
         packageManager === 'pnpm'
           ? ' --workspace-root'
           : packageManager === 'yarn'
-          ? ' -W'
-          : ''
+            ? ' -W'
+            : ''
       }`,
       {
         cwd: tmpProjPath(),

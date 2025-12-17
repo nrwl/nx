@@ -200,8 +200,8 @@ describe('@nx/next (legacy)', () => {
     
               const TestComponent = dynamic(
                   () => import('@${proj}/${nextLib}').then(d => d.${capitalize(
-        nextLib
-      )})
+                    nextLib
+                  )})
                 );
               ${content.replace(
                 `</h2>`,

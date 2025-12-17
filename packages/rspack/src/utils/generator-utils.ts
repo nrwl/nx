@@ -310,8 +310,8 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '${offsetFromRoot(project.root)}${
-    buildOptions.outputPath
-  }'),
+      buildOptions.outputPath
+    }'),
   },
   plugins: [
     new NxAppRspackPlugin({
@@ -486,10 +486,10 @@ export function deleteWebpackConfig(
     webpackConfigFilePath && tree.exists(webpackConfigFilePath)
       ? webpackConfigFilePath
       : tree.exists(`${projectRoot}/webpack.config.js`)
-      ? `${projectRoot}/webpack.config.js`
-      : tree.exists(`${projectRoot}/webpack.config.ts`)
-      ? `${projectRoot}/webpack.config.ts`
-      : null;
+        ? `${projectRoot}/webpack.config.js`
+        : tree.exists(`${projectRoot}/webpack.config.ts`)
+          ? `${projectRoot}/webpack.config.ts`
+          : null;
   if (webpackConfigPath) {
     tree.delete(webpackConfigPath);
   }
@@ -572,10 +572,10 @@ export function normalizeViteConfigFilePathWithTree(
   return configFile && tree.exists(configFile)
     ? configFile
     : tree.exists(joinPathFragments(`${projectRoot}/rspack.config.ts`))
-    ? joinPathFragments(`${projectRoot}/rspack.config.ts`)
-    : tree.exists(joinPathFragments(`${projectRoot}/rspack.config.js`))
-    ? joinPathFragments(`${projectRoot}/rspack.config.js`)
-    : undefined;
+      ? joinPathFragments(`${projectRoot}/rspack.config.ts`)
+      : tree.exists(joinPathFragments(`${projectRoot}/rspack.config.js`))
+        ? joinPathFragments(`${projectRoot}/rspack.config.js`)
+        : undefined;
 }
 
 export function getViteConfigPathForProject(

@@ -214,7 +214,7 @@ nx generate ${fullItemName} [options]
     const positionalArgs: string[] = [];
     for (const [propName, prop] of Object.entries(properties) as [
       string,
-      any
+      any,
     ][]) {
       if (
         prop.$default &&

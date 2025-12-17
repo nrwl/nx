@@ -38,8 +38,8 @@ export async function deriveSpecifierFromConventionalCommits(
   const previousVersionRef = latestMatchingGitTag
     ? latestMatchingGitTag.tag
     : fallbackCurrentVersionResolver === 'disk'
-    ? await getFirstGitCommit()
-    : undefined;
+      ? await getFirstGitCommit()
+      : undefined;
 
   if (!previousVersionRef) {
     // This should never happen since the checks above should catch if the current version couldn't be resolved

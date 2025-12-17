@@ -375,9 +375,8 @@ export class ReleaseGroupProcessor {
             depGroup !== releaseGroup.name &&
             this.processedGroups.has(depGroup)
           ) {
-            const depGroupBumpType = await this.getFixedReleaseGroupBumpType(
-              depGroup
-            );
+            const depGroupBumpType =
+              await this.getFixedReleaseGroupBumpType(depGroup);
 
             // If a dependency group has been bumped, determine if it should trigger a bump in this group
             if (depGroupBumpType !== 'none') {

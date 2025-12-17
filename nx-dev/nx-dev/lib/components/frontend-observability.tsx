@@ -21,8 +21,8 @@ export function FrontendObservability() {
       vercelEnv === 'production'
         ? 'prod'
         : vercelEnv === 'preview'
-        ? 'staging'
-        : 'development';
+          ? 'staging'
+          : 'development';
     initializeFaro({
       url,
       app: {

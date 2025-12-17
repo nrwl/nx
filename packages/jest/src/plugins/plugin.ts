@@ -436,10 +436,9 @@ async function buildJestTargets(
         watchman: false,
       });
 
-      const jest = require(resolveJestPath(
-        projectRoot,
-        context.workspaceRoot
-      )) as typeof import('jest');
+      const jest = require(
+        resolveJestPath(projectRoot, context.workspaceRoot)
+      ) as typeof import('jest');
       const source = new jest.SearchSource(jestContext);
 
       const jestVersion = getInstalledJestMajorVersion()!;
@@ -711,9 +710,11 @@ function requireJestUtil<T>(
     });
   }
 
-  return require(require.resolve(packageName, {
-    paths: [dirname(resolvedJestCorePaths[jestPath])],
-  }));
+  return require(
+    require.resolve(packageName, {
+      paths: [dirname(resolvedJestCorePaths[jestPath])],
+    })
+  );
 }
 
 async function getTestPaths(

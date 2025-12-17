@@ -616,8 +616,8 @@ function getKarmaTargetOutputs(
       typeof target.options?.runnerConfig === 'string'
         ? target.options?.runnerConfig
         : target.options?.runnerConfig === true
-        ? 'karma.conf.js'
-        : undefined;
+          ? 'karma.conf.js'
+          : undefined;
   } else {
     karmaConfigPath = target.options?.karmaConfig;
   }

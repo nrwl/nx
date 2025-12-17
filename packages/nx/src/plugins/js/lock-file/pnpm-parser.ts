@@ -782,13 +782,11 @@ function mapRootSnapshot(
                 workspaceDepImporterPath
               );
               importers[packageName] = importerKeyForPackage;
-              snapshot.specifiers[
-                packageName
-              ] = `file:./workspace_modules/${packageName}`;
+              snapshot.specifiers[packageName] =
+                `file:./workspace_modules/${packageName}`;
               snapshot.dependencies = snapshot.dependencies || {};
-              snapshot.dependencies[
-                packageName
-              ] = `link:./workspace_modules/${packageName}`;
+              snapshot.dependencies[packageName] =
+                `link:./workspace_modules/${packageName}`;
               break;
             }
           }

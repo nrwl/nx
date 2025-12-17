@@ -83,7 +83,7 @@ export async function applicationGeneratorInternal(
 
   options.useReactRouter =
     options.routing && options.bundler === 'vite'
-      ? options.useReactRouter ??
+      ? (options.useReactRouter ??
         (await promptWhenInteractive<{
           response: 'Yes' | 'No';
         }>(
@@ -107,7 +107,7 @@ export async function applicationGeneratorInternal(
             initial: 0,
           },
           { response: 'No' }
-        ).then((r) => r.response === 'Yes'))
+        ).then((r) => r.response === 'Yes')))
       : false;
 
   showPossibleWarnings(tree, options);

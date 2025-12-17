@@ -66,13 +66,11 @@ The site uses custom content loaders to dynamically generate documentation:
 ### Content Types
 
 1. **Regular Documentation** (`src/content/docs/`)
-
    - Written in `.mdoc` (Markdoc) or `.mdx` (MDX) format
    - Organized by sections: getting-started, concepts, guides, api
    - File-based routing (filename = URL path)
 
 2. **Dynamic Plugin Documentation**
-
    - Auto-generated from Nx packages
    - Includes generators, executors, and migrations
    - Updated during build process

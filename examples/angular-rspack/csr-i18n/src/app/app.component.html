@@ -10,15 +10,19 @@ Today's date is {{ today | date }} I have {{ 136.12 | currency }}
 <div>
   Let's handle plurals
   <span i18n
-    >Updated {minutes(), plural, =0 {just now} =1 {one minute ago} other
-    {{{ minutes() }} minutes ago}}</span
+    >Updated
+    {minutes(), plural,
+      =0 {just now}
+      =1 {one minute ago}
+      other {{{ minutes() }} minutes ago}
+    }</span
   >
 </div>
 <div>
   Let's handle selections
   <span i18n
-    >The author is {gender(), select, male {male} female {female} other
-    {other}}</span
+    >The author is
+    {gender(), select, male {male} female {female} other {other}}</span
   >
 </div>
 <img

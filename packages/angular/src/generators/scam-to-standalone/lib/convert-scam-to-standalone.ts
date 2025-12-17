@@ -30,11 +30,13 @@ export function convertScamToStandalone(
     componentDecoratorMetadataNode.getStart() - 1
   )}({
     imports: [${importsArray.join(',')}],${
-    providersArray.length > 0 ? `providers: [${providersArray.join(',')}],` : ''
-  }${componentFileContents.slice(
-    componentDecoratorMetadataNode.getStart() + 1,
-    moduleNodes[0].getStart() - 1
-  )}`;
+      providersArray.length > 0
+        ? `providers: [${providersArray.join(',')}],`
+        : ''
+    }${componentFileContents.slice(
+      componentDecoratorMetadataNode.getStart() + 1,
+      moduleNodes[0].getStart() - 1
+    )}`;
 
   tree.write(normalizedComponentPath, newComponentContents);
 

@@ -66,10 +66,10 @@ export function detectPackageManager(dir: string = ''): PackageManager {
     (existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
       ? 'bun'
       : existsSync(join(dir, 'yarn.lock'))
-      ? 'yarn'
-      : existsSync(join(dir, 'pnpm-lock.yaml'))
-      ? 'pnpm'
-      : 'npm')
+        ? 'yarn'
+        : existsSync(join(dir, 'pnpm-lock.yaml'))
+          ? 'pnpm'
+          : 'npm')
   );
 }
 

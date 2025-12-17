@@ -172,53 +172,56 @@ export function shareWorkspaceLibraries(
           joinPathFragments(workspaceRoot, projectRoot, 'package.json')
         );
       }
-      const libraries = pathMappings.reduce((libraries, library) => {
-        // Check to see if the library version is declared in the app's package.json
-        let version = pkgJson
-          ? getDependencyVersionFromPackageJson(
-              library.name,
-              workspaceRoot,
-              pkgJson
-            )
-          : null;
+      const libraries = pathMappings.reduce(
+        (libraries, library) => {
+          // Check to see if the library version is declared in the app's package.json
+          let version = pkgJson
+            ? getDependencyVersionFromPackageJson(
+                library.name,
+                workspaceRoot,
+                pkgJson
+              )
+            : null;
 
-        // Normalize workspace protocol versions (workspace:*, workspace:^, *, file:)
-        version = normalizeWorkspaceProtocolVersion(
-          version,
-          library.name,
-          workspaceLibs
-        );
-
-        if (!version && workspaceLibs.length > 0) {
-          const workspaceLib = workspaceLibs.find(
-            (lib) => lib.importKey === library.name
+          // Normalize workspace protocol versions (workspace:*, workspace:^, *, file:)
+          version = normalizeWorkspaceProtocolVersion(
+            version,
+            library.name,
+            workspaceLibs
           );
 
-          const libPackageJsonPath = workspaceLib
-            ? join(workspaceLib.root, 'package.json')
-            : null;
-          if (libPackageJsonPath && existsSync(libPackageJsonPath)) {
-            pkgJson = readJsonFile(libPackageJsonPath);
+          if (!version && workspaceLibs.length > 0) {
+            const workspaceLib = workspaceLibs.find(
+              (lib) => lib.importKey === library.name
+            );
 
-            if (pkgJson) {
-              version = pkgJson.version;
+            const libPackageJsonPath = workspaceLib
+              ? join(workspaceLib.root, 'package.json')
+              : null;
+            if (libPackageJsonPath && existsSync(libPackageJsonPath)) {
+              pkgJson = readJsonFile(libPackageJsonPath);
+
+              if (pkgJson) {
+                version = pkgJson.version;
+              }
             }
           }
-        }
 
-        return {
-          ...libraries,
-          [library.name]: {
-            ...(version
-              ? {
-                  requiredVersion: version,
-                  singleton: true,
-                }
-              : { requiredVersion: false }),
-            eager,
-          },
-        };
-      }, {} as Record<string, SharedLibraryConfig>);
+          return {
+            ...libraries,
+            [library.name]: {
+              ...(version
+                ? {
+                    requiredVersion: version,
+                    singleton: true,
+                  }
+                : { requiredVersion: false }),
+              eager,
+            },
+          };
+        },
+        {} as Record<string, SharedLibraryConfig>
+      );
 
       // Add workspace libs from package.json dependencies
       // This supports TS Solution + PM Workspaces
@@ -336,14 +339,17 @@ export function sharePackages(
     collectPackageSecondaryEntryPoints(pkg, pkgVersion, allPackages);
   });
 
-  return allPackages.reduce((shared, pkg) => {
-    const config = getNpmPackageSharedConfig(pkg.name, pkg.version);
-    if (config) {
-      shared[pkg.name] = config;
-    }
+  return allPackages.reduce(
+    (shared, pkg) => {
+      const config = getNpmPackageSharedConfig(pkg.name, pkg.version);
+      if (config) {
+        shared[pkg.name] = config;
+      }
 
-    return shared;
-  }, {} as Record<string, SharedLibraryConfig>);
+      return shared;
+    },
+    {} as Record<string, SharedLibraryConfig>
+  );
 }
 
 /**

@@ -59,9 +59,8 @@ export async function getStylesConfig(
     buildOptions.root,
     workspaceRoot,
   ]);
-  const postcssConfiguration = await loadPostcssConfiguration(
-    searchDirectories
-  );
+  const postcssConfiguration =
+    await loadPostcssConfiguration(searchDirectories);
   if (postcssConfiguration) {
     const postCssPluginRequire = createRequire(
       dirname(postcssConfiguration.configPath) + '/'

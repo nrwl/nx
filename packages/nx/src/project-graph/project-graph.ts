@@ -273,9 +273,8 @@ export async function createProjectGraphAsync(
     }
   }
 
-  const projectGraphAndSourceMaps = await createProjectGraphAndSourceMapsAsync(
-    opts
-  );
+  const projectGraphAndSourceMaps =
+    await createProjectGraphAndSourceMapsAsync(opts);
   return projectGraphAndSourceMaps.projectGraph;
 }
 

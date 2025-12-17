@@ -650,7 +650,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     let modified = false;
 
     function updatePropertyIfDifferent<
-      T extends Exclude<keyof AngularProjectConfiguration, 'namedInputs'>
+      T extends Exclude<keyof AngularProjectConfiguration, 'namedInputs'>,
     >(property: T): void {
       if (typeof res[property] === 'string') {
         if (res[property] !== updated[property]) {
@@ -752,7 +752,10 @@ export function arrayBufferToString(buffer: any) {
  * the project configuration files.
  */
 export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
-  constructor(root: string, private readonly host: Tree) {
+  constructor(
+    root: string,
+    private readonly host: Tree
+  ) {
     super(root);
   }
 

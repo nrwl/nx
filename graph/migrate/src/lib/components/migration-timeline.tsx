@@ -650,7 +650,7 @@ function MigrationStateCircle({
   return (
     <div
       className={twMerge(
-        !!Icon ? ' h-8 w-8' : 'mt-1 h-6 w-6',
+        !!Icon ? 'h-8 w-8' : 'mt-1 h-6 w-6',
         `absolute left-0 top-0 flex -translate-x-1/2 cursor-pointer items-center justify-center rounded-full ${bgColor} ${textColor}`,
         needsAttention ? 'animate-pulse' : ''
       )}

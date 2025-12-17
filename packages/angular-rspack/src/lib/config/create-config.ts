@@ -46,9 +46,8 @@ export async function _createConfig(
   options: AngularRspackPluginOptions,
   rspackConfigOverrides?: Partial<Configuration>
 ): Promise<Configuration[]> {
-  const { i18n, i18nHash, normalizedOptions } = await normalizeOptionWithI18n(
-    options
-  );
+  const { i18n, i18nHash, normalizedOptions } =
+    await normalizeOptionWithI18n(options);
   const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
 
   if (normalizedOptions.deleteOutputPath) {

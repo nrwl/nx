@@ -241,7 +241,7 @@ export function Footer({
                     title={item.name}
                     target="_blank"
                     rel="noreferer"
-                    className="text-slate-500 no-underline no-underline hover:text-slate-600 dark:hover:text-slate-400"
+                    className="text-slate-500 no-underline hover:text-slate-600 dark:hover:text-slate-400"
                   >
                     {item.name}
                   </a>

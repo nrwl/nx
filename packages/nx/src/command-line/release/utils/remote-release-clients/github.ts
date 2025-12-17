@@ -175,9 +175,10 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
             }
           }
           const { data } = await axios
-            .get<any, { data?: { user?: { username: string } } }>(
-              `https://ungh.cc/users/find/${email}`
-            )
+            .get<
+              any,
+              { data?: { user?: { username: string } } }
+            >(`https://ungh.cc/users/find/${email}`)
             .catch(() => ({ data: { user: null } }));
           if (data?.user) {
             meta.username = data.user.username;

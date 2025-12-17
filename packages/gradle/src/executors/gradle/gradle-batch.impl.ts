@@ -60,8 +60,8 @@ export default async function gradleBatch(
       typeof input.args === 'string'
         ? input.args.trim().split(' ')
         : Array.isArray(input.args)
-        ? input.args
-        : [];
+          ? input.args
+          : [];
     if (overrides.__overrides_unparsed__.length) {
       args.push(...overrides.__overrides_unparsed__);
     }

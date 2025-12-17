@@ -724,9 +724,9 @@ export async function createNxReleaseConfig(
           ? WORKSPACE_DEFAULTS.releaseTag.pattern?.includes('{projectName}')
             ? WORKSPACE_DEFAULTS.releaseTag.pattern
             : defaultIndependentReleaseTagPattern
-          : userConfig?.releaseTag?.pattern ??
+          : (userConfig?.releaseTag?.pattern ??
             userConfig?.releaseTagPattern ??
-            defaultFixedGroupReleaseTagPattern;
+            defaultFixedGroupReleaseTagPattern);
 
       // Initialize releaseTag object if it doesn't exist
       if (!releaseGroup.releaseTag) {

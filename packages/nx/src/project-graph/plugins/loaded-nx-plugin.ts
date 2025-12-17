@@ -35,7 +35,7 @@ export class LoadedNxPlugin {
       context: CreateNodesContextV2
     ) => Promise<
       Array<readonly [plugin: string, file: string, result: CreateNodesResult]>
-    >
+    >,
   ];
   readonly createDependencies?: (
     context: CreateDependenciesContext

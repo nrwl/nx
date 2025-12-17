@@ -140,8 +140,8 @@ export async function parseJsonSchemaToOptions(
     const aliases = json.isJsonArray(current.aliases)
       ? [...current.aliases].map((x) => `${x}`)
       : current.alias
-      ? [`${current.alias}`]
-      : [];
+        ? [`${current.alias}`]
+        : [];
     const format =
       typeof current.format == 'string' ? current.format : undefined;
     const visible = current.visible === undefined || current.visible === true;

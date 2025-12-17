@@ -342,7 +342,7 @@ export function createAPI(
 
     // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
     const gitTagValues: string[] =
-      args.gitTag ?? nxReleaseConfig.version.git.tag
+      (args.gitTag ?? nxReleaseConfig.version.git.tag)
         ? createGitTagValues(
             releaseGraph.releaseGroups,
             releaseGraph.releaseGroupToFilteredProjects,
