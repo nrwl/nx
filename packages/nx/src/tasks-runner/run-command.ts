@@ -13,10 +13,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { createTaskHasher } from '../hasher/create-task-hasher';
-import {
-  getTaskDetails,
-  hashTasksThatDoNotDependOnOutputsOfOtherTasks,
-} from '../hasher/hash-task';
+import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { hashArray, logDebug, RunMode } from '../native';
 import {
   runPostTasksExecution,
@@ -947,9 +944,6 @@ export async function invokeTasksRunner({
 }): Promise<{ [id: string]: TaskResult }> {
   setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
 
-  // this needs to be done before we start to run the tasks
-  const taskDetails = getTaskDetails();
-
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
   let hasher = createTaskHasher(projectGraph, nxJson, runnerOptions);
@@ -962,8 +956,7 @@ export async function invokeTasksRunner({
     hasher,
     projectGraph,
     taskGraph,
-    nxJson,
-    taskDetails
+    nxJson
   );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
