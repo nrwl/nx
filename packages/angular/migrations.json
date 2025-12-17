@@ -2152,22 +2152,6 @@
           "alwaysAddToPackageJson": false
         }
       }
-    },
-    "22.3.0-jest": {
-      "version": "22.3.0-beta.0",
-      "requires": {
-        "@angular/compiler-cli": ">=19.0.0 <22.0.0",
-        "@angular/core": ">=19.0.0 <22.0.0",
-        "@angular/platform-browser": ">=19.0.0 <22.0.0",
-        "@angular/platform-browser-dynamic": ">=19.0.0 <22.0.0",
-        "jest": "^30.0.0"
-      },
-      "packages": {
-        "jest-preset-angular": {
-          "version": "~16.0.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
     }
   }
 }
