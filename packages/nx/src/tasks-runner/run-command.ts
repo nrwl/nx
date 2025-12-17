@@ -471,11 +471,12 @@ export async function runCommand(
       const exitCode = !completed
         ? signalToCode('SIGINT')
         : Object.values(taskResults).some(
-            (taskResult) =>
-              taskResult.status === 'failure' || taskResult.status === 'skipped'
-          )
-        ? 1
-        : 0;
+              (taskResult) =>
+                taskResult.status === 'failure' ||
+                taskResult.status === 'skipped'
+            )
+          ? 1
+          : 0;
 
       await runPostTasksExecution({
         id,
@@ -917,6 +918,9 @@ export function setEnvVarsBasedOnArgs(
   if (nxArgs.outputStyle == 'stream-without-prefixes') {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'false';
+  }
+  if (nxArgs.outputStyle === 'dynamic' || nxArgs.outputStyle === 'tui') {
+    process.env.NX_STREAM_OUTPUT = 'true';
   }
   if (loadDotEnvFiles) {
     process.env.NX_LOAD_DOT_ENV_FILES = 'true';
