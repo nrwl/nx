@@ -1,4 +1,8 @@
-import { readJson, TargetConfiguration, Tree } from '@nx/devkit';
+import {
+  getDependencyVersionFromPackageJson,
+  TargetConfiguration,
+  Tree,
+} from '@nx/devkit';
 import { CompilerOptions } from 'typescript';
 import { statSync } from 'fs';
 import { findNodes } from '@nx/js';
@@ -52,12 +56,12 @@ export function getStorybookVersionToInstall(tree: Tree) {
 }
 
 export function storybookMajorVersion(tree?: Tree): number | undefined {
-  let foundStorybookPackageVersion: string;
+  let foundStorybookPackageVersion: string | null = null;
   if (tree) {
-    const rootPkgJson = readJson(tree, 'package.json');
-    foundStorybookPackageVersion =
-      rootPkgJson?.dependencies?.['storybook'] ||
-      rootPkgJson?.devDependencies?.['storybook'];
+    foundStorybookPackageVersion = getDependencyVersionFromPackageJson(
+      tree,
+      'storybook'
+    );
   }
   if (foundStorybookPackageVersion) {
     try {
@@ -78,12 +82,12 @@ export function storybookMajorVersion(tree?: Tree): number | undefined {
 }
 
 export function getInstalledStorybookVersion(tree?: Tree): string | undefined {
-  let foundStorybookPackageVersion: string;
+  let foundStorybookPackageVersion: string | null = null;
   if (tree) {
-    const rootPkgJson = readJson(tree, 'package.json');
-    foundStorybookPackageVersion =
-      rootPkgJson?.dependencies?.['storybook'] ||
-      rootPkgJson?.devDependencies?.['storybook'];
+    foundStorybookPackageVersion = getDependencyVersionFromPackageJson(
+      tree,
+      'storybook'
+    );
   }
   if (foundStorybookPackageVersion) {
     return foundStorybookPackageVersion;
