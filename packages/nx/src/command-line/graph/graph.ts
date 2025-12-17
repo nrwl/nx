@@ -641,6 +641,8 @@ async function startServer(
 
   currentSourceMapsClientResponse = sourceMapResponse;
 
+  isFilteredGraph = !!(focus || exclude.length > 0);
+
   const app = http.createServer(async (req, res) => {
     // parse URL
     const parsedUrl = new URL(req.url, `http://${host}:${port}`);
@@ -653,6 +655,21 @@ async function startServer(
 
     const sanitizePath = basename(parsedUrl.pathname);
     if (sanitizePath === 'project-graph.json') {
+      const requestFull = parsedUrl.searchParams.get('full') === 'true';
+
+      // If client requests full graph and current is filtered, regenerate
+      if (requestFull && isFilteredGraph) {
+        const { projectGraphClientResponse, sourceMapResponse } =
+          await createProjectGraphAndSourceMapClientResponse([], null, []);
+
+        currentProjectGraphClientResponse = projectGraphClientResponse;
+        currentProjectGraphClientResponse.focus = null;
+        currentProjectGraphClientResponse.groupByFolder = false;
+        currentProjectGraphClientResponse.exclude = [];
+        currentSourceMapsClientResponse = sourceMapResponse;
+        isFilteredGraph = false;
+      }
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(currentProjectGraphClientResponse));
       return;
@@ -802,6 +819,7 @@ let currentProjectGraphClientResponse: ProjectGraphClientResponse = {
   errors: [],
 };
 let currentSourceMapsClientResponse: ConfigurationSourceMaps = {};
+let isFilteredGraph = false;
 
 function debounce(fn: (...args) => void, time: number) {
   let timeout: NodeJS.Timeout;
@@ -834,8 +852,8 @@ function createFileWatcher() {
         const { projectGraphClientResponse, sourceMapResponse } =
           await createProjectGraphAndSourceMapClientResponse(
             [],
-            currentProjectGraphClientResponse.focus,
-            currentProjectGraphClientResponse.exclude
+            isFilteredGraph ? currentProjectGraphClientResponse.focus : null,
+            isFilteredGraph ? currentProjectGraphClientResponse.exclude : []
           );
 
         if (
