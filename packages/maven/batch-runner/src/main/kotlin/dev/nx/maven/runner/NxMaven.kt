@@ -206,6 +206,12 @@ class NxMaven(
     val count = executionCount.incrementAndGet()
     val invokeStartTime = System.currentTimeMillis()
 
+    // Ensure graph cache is set up before first execution
+    // This was previously done by CachingResidentMavenInvoker.doExecute()
+    if (cachedProjectGraph == null) {
+      setupGraphCache(request)
+    }
+
     // Attach execution listener to track mojo and session events
     request.executionListener = BatchExecutionListener(JLineMessageBuilderFactory())
 

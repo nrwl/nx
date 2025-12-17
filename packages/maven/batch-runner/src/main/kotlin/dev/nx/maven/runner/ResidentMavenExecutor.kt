@@ -30,6 +30,7 @@ class ResidentMavenExecutor(
   // Resident invoker and parser - kept in memory for reuse (loaded via reflection)
   private var invoker: Any? = null
   private var parser: Any? = null
+  private var nxLookupHandler: NxLookupHandler? = null  // Handler that intercepts Maven.class lookups
   private lateinit var classWorld: ClassWorld
   private var initialized = false
   private var invocationCount = 0
@@ -93,12 +94,22 @@ class ResidentMavenExecutor(
     // This ensures all threads (including thread pool threads) can load Maven/Plexus classes
     Thread.currentThread().contextClassLoader = classRealm
 
-    // Create the resident invoker using reflection - this will cache contexts and repository cache across invocations
-    val cachingInvokerClass = classRealm.loadClass("dev.nx.maven.runner.CachingResidentMavenInvoker")
+    // Create a dynamic proxy that wraps the Lookup to intercept Maven.class lookups
+    // This avoids ClassLoader issues that occur when extending ResidentMavenInvoker
     val lookupClass = classRealm.loadClass("org.apache.maven.api.services.Lookup")
+    nxLookupHandler = NxLookupHandler(lookup, classRealm)
+    val lookupProxy = java.lang.reflect.Proxy.newProxyInstance(
+      classRealm,
+      arrayOf(lookupClass),
+      nxLookupHandler
+    )
+
+    // Create ResidentMavenInvoker directly with our lookup proxy
+    // The proxy intercepts Maven.class lookups and returns NxMaven for session caching
+    val residentInvokerClass = classRealm.loadClass("org.apache.maven.cling.invoker.mvn.resident.ResidentMavenInvoker")
     val consumerClass = Class.forName("java.util.function.Consumer")
-    val invokerConstructor = cachingInvokerClass.getConstructor(lookupClass, consumerClass)
-    invoker = invokerConstructor.newInstance(lookup, null)
+    val invokerConstructor = residentInvokerClass.getConstructor(lookupClass, consumerClass)
+    invoker = invokerConstructor.newInstance(lookupProxy, null)
 
     // Get the invoke method
     val invokerRequestClass = classRealm.loadClass("org.apache.maven.api.cli.InvokerRequest")
@@ -326,14 +337,8 @@ class ResidentMavenExecutor(
    * Returns null if the executor is not initialized or NxMaven is not available.
    */
   fun getNxMaven(): NxMaven? {
-    return if (initialized && invoker != null) {
-      try {
-        val getNxMavenMethod = invoker!!.javaClass.getMethod("getNxMaven")
-        getNxMavenMethod.invoke(invoker) as? NxMaven
-      } catch (e: Exception) {
-        log.warn("Could not get NxMaven: ${e.message}")
-        null
-      }
+    return if (initialized && nxLookupHandler != null) {
+      nxLookupHandler!!.getNxMaven() as? NxMaven
     } else {
       null
     }

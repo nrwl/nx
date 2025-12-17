@@ -26,8 +26,13 @@ private val log = run {
 
 fun main(args: Array<String>) {
     try {
+        println("[BatchRunner] Starting...")
+
         // Parse arguments
         val options = ArgParser.parseArgs(args)
+        println("[BatchRunner] Parsed options: workspaceRoot=${options.workspaceRoot}, verbose=${options.verbose}")
+        println("[BatchRunner] TaskGraph: ${options.taskGraph?.tasks?.size ?: 0} tasks")
+        println("[BatchRunner] TaskOptions: ${options.taskOptions.size} task options")
 
         // Configure log level based on verbose option
         configureLogLevel(options.verbose)
@@ -37,10 +42,12 @@ fun main(args: Array<String>) {
 
         val taskGraph = options.taskGraph
         if (taskGraph == null || taskGraph.tasks.isEmpty()) {
+            println("[BatchRunner] ERROR: No tasks to execute")
             log.error("❌ No tasks to execute")
             exitProcess(1)
         }
         val taskCount = taskGraph.tasks.size
+        println("[BatchRunner] Task count: $taskCount")
 
         log.info("🚀 Starting Nx Maven batch execution ($taskCount tasks)")
         log.debug("   Workspace: ${workspaceRoot.absolutePath}")
@@ -49,8 +56,11 @@ fun main(args: Array<String>) {
         val startTime = System.currentTimeMillis()
 
         // Run batch execution
+        println("[BatchRunner] Creating MavenInvokerRunner...")
         val runner = MavenInvokerRunner(workspaceRoot, options)
+        println("[BatchRunner] Running batch...")
         val results = runner.runBatch()
+        println("[BatchRunner] Batch complete. Results: ${results.size}")
 
         val endTime = System.currentTimeMillis()
 

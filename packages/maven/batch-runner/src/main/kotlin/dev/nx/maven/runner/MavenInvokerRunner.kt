@@ -28,17 +28,27 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
   private val gson = Gson()
 
   // Detect Maven home once - used for executor initialization
-  private val mavenDiscovery = MavenHomeDiscovery(workspaceRoot).discoverMavenHomeWithVersion()
+  private val mavenDiscovery = run {
+    println("[MavenInvokerRunner] Discovering Maven home...")
+    val discovery = MavenHomeDiscovery(workspaceRoot).discoverMavenHomeWithVersion()
+    println("[MavenInvokerRunner] Maven home: ${discovery?.mavenHome}, version: ${discovery?.version}")
+    discovery
+  }
   private val isMaven4 = mavenDiscovery?.version?.startsWith("4") == true
 
   // Maven executor - automatically selects appropriate implementation:
   // - Maven 4.x: ResidentMavenExecutor (ResidentMavenInvoker + NxMaven caching)
   // - Maven 3.x: Maven3ResidentExecutor (MavenCli via reflection)
   // Pass isMaven4 from discovery to avoid re-detection which could give wrong result
-  private val mavenExecutor: MavenExecutor = MavenExecutorFactory.create(
-      mavenHome = mavenDiscovery?.mavenHome,
-      isMaven4 = isMaven4
-  )
+  private val mavenExecutor: MavenExecutor = run {
+    println("[MavenInvokerRunner] Creating Maven executor (isMaven4=$isMaven4)...")
+    val executor = MavenExecutorFactory.create(
+        mavenHome = mavenDiscovery?.mavenHome,
+        isMaven4 = isMaven4
+    )
+    println("[MavenInvokerRunner] Executor created: ${executor.javaClass.simpleName}")
+    executor
+  }
 
   fun runBatch(): Map<String, TaskResult> {
     val results = ConcurrentHashMap<String, TaskResult>()
@@ -148,9 +158,16 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
         }
       }
 
+      System.err.println("[MavenInvokerRunner] repeat() loop completed")
+      System.err.flush()
+
+      System.err.println("[MavenInvokerRunner] All workers submitted, waiting for completion latch (count: ${completionLatch.count})...")
+      System.out.flush()
       log.debug("All workers submitted, waiting for completion latch (count: ${completionLatch.count})...")
       // Wait for all tasks to complete
       completionLatch.await()
+      println("[MavenInvokerRunner] Latch completed!")
+      System.out.flush()
       log.debug("Latch completed!")
 
       // Record build states for all projects that had tasks executed
@@ -351,6 +368,9 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
     // Add task-specific arguments (e.g., -Dtest=TestClass for atomized tests)
     arguments.addAll(mavenBatchTask.args)
+
+    // Add global arguments passed from command line (e.g., -DskipTests)
+    arguments.addAll(options.args)
 
     return arguments
   }

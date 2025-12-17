@@ -38,9 +38,9 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
 
   afterAll(() => cleanupProject());
 
-  it('should build multiple projects with run-many in batch mode using Maven 3.9.11', () => {
-    // runCLI throws on non-zero exit, so successful execution + file checks is sufficient
-    runBatchCLI('run-many -t verify');
+  it('should build and install multiple projects with run-many in batch mode using Maven 3.9.11', () => {
+    // Run install to build, test, and install all JARs to local repo
+    runBatchCLI('run-many -t install');
     checkFilesExist(
       'app/target/app-1.0.0-SNAPSHOT.jar',
       'lib/target/lib-1.0.0-SNAPSHOT.jar',
@@ -49,21 +49,15 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
   });
 
   it('should fail when unit test fails', () => {
-    // Add a failing unit test
+    // Add a simple failing unit test (not Spring Boot test - just JUnit)
     updateFile(
-      'app/src/test/java/com/example/app/AppApplicationTests.java',
+      'app/src/test/java/com/example/app/SimpleTest.java',
       `package com.example.app;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@SpringBootTest
-class AppApplicationTests {
-    @Test
-    void contextLoads() {
-    }
-
+class SimpleTest {
     @Test
     void thisTestShouldFail() {
         fail("This test is intentionally failing");
@@ -71,10 +65,11 @@ class AppApplicationTests {
 }`
     );
 
-    // Expect the command to throw due to test failure and verify error is printed
+    // Run test on app project - this will include lifecycle dependencies
+    // but the test should still fail with the right error message
     let error: any;
     try {
-      runBatchCLI('run-many -t verify');
+      runBatchCLI('run-many -t test -p com.example:app');
     } catch (e) {
       error = e;
     }

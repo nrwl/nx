@@ -35,9 +35,11 @@ object MavenExecutorFactory {
     isMaven4: Boolean
   ): MavenExecutor {
     return if (isMaven4) {
+      println("[MavenExecutorFactory] Using Maven 4.x - creating ResidentMavenExecutor...")
       log.debug("🚀 Using Maven 4.x - ResidentMavenExecutor")
       createResidentMavenExecutor(mavenHome)
     } else {
+      println("[MavenExecutorFactory] Using Maven 3.x - creating Maven3CachingExecutor...")
       log.debug("📦 Using Maven 3.x - Maven3CachingExecutor")
       createMaven3CachingExecutor(mavenHome)
     }
@@ -50,6 +52,7 @@ object MavenExecutorFactory {
    */
   private fun createMaven3CachingExecutor(mavenHome: File?): MavenExecutor {
     return try {
+      log.debug("Attempting to create Maven3CachingExecutor...")
       // Set up ClassWorld with Maven's lib JARs first
       val cw = getOrCreateClassWorld(mavenHome)
       val classRealm = cw.getClassRealm("plexus.core")
@@ -60,9 +63,13 @@ object MavenExecutorFactory {
       // Load class via ClassRealm that has Maven JARs
       val clazz = classRealm.loadClass("dev.nx.maven.runner.Maven3CachingExecutor")
       val constructor = clazz.getConstructor(File::class.java)
-      constructor.newInstance(mavenHome) as MavenExecutor
+      val executor = constructor.newInstance(mavenHome) as MavenExecutor
+      log.debug("Successfully created Maven3CachingExecutor")
+      executor
     } catch (e: Exception) {
-      log.warn("Failed to create Maven3CachingExecutor: ${e.message}, falling back to Maven3ResidentExecutor")
+      println("[MavenExecutorFactory] ERROR: Failed to create Maven3CachingExecutor: ${e.message}")
+      e.printStackTrace()
+      log.warn("Failed to create Maven3CachingExecutor: ${e.message}, falling back to Maven3ResidentExecutor", e)
       Maven3ResidentExecutor(mavenHome)
     }
   }
@@ -73,24 +80,32 @@ object MavenExecutorFactory {
    */
   private fun createResidentMavenExecutor(mavenHome: File?): MavenExecutor {
     return try {
+      println("[MavenExecutorFactory] Setting up ClassWorld for Maven 4...")
       // First, set up ClassWorld with Maven's lib JARs
       val cw = getOrCreateClassWorld(mavenHome)
       val classRealm = cw.getClassRealm("plexus.core")
+      println("[MavenExecutorFactory] ClassRealm created")
 
       // Set the thread context classloader so class loading works correctly
       val originalTccl = Thread.currentThread().contextClassLoader
       Thread.currentThread().contextClassLoader = classRealm
 
       try {
+        println("[MavenExecutorFactory] Loading ResidentMavenExecutor class...")
         // Now load the class using the ClassRealm that has Maven JARs
         val clazz = classRealm.loadClass("dev.nx.maven.runner.ResidentMavenExecutor")
+        println("[MavenExecutorFactory] Creating instance...")
         val constructor = clazz.getConstructor(File::class.java)
-        constructor.newInstance(mavenHome) as MavenExecutor
+        val instance = constructor.newInstance(mavenHome) as MavenExecutor
+        println("[MavenExecutorFactory] ResidentMavenExecutor created successfully")
+        instance
       } finally {
         // Keep TCCL set to classRealm - ResidentMavenExecutor needs it
         // Thread.currentThread().contextClassLoader = originalTccl
       }
     } catch (e: Exception) {
+      println("[MavenExecutorFactory] ERROR: ${e.message}")
+      e.printStackTrace()
       log.error("Failed to create ResidentMavenExecutor: ${e.message}", e)
       throw RuntimeException("Could not create ResidentMavenExecutor. Is Maven 4.x installed?", e)
     }
@@ -108,22 +123,35 @@ object MavenExecutorFactory {
     log.debug("Creating ClassWorld and adding Maven lib JARs...")
     val cw = ClassWorld("plexus.core", ClassLoader.getSystemClassLoader())
 
+    val coreRealm = cw.getClassRealm("plexus.core")
+
+    // Add the batch-runner JAR itself to the ClassRealm so our classes (like CachingResidentMavenInvoker)
+    // are loaded via ClassRealm alongside Maven classes (like ResidentMavenInvoker).
+    // This ensures parent class resolution works correctly.
+    val batchRunnerJarUrl = this::class.java.protectionDomain.codeSource?.location
+    if (batchRunnerJarUrl != null) {
+      println("[MavenExecutorFactory] Adding batch-runner JAR to ClassRealm: $batchRunnerJarUrl")
+      coreRealm.addURL(batchRunnerJarUrl)
+    } else {
+      println("[MavenExecutorFactory] WARNING: Could not get batch-runner JAR location!")
+    }
+
     // Add Maven's lib JARs to the ClassRealm
     val mavenLibDir = mavenHome?.let { File(it, "lib") }
+    println("[MavenExecutorFactory] Maven home: $mavenHome, lib dir: ${mavenLibDir?.absolutePath}")
     if (mavenLibDir?.isDirectory == true) {
-      val coreRealm = cw.getClassRealm("plexus.core")
       val jarFiles = mavenLibDir.listFiles { file -> file.name.endsWith(".jar") } ?: emptyArray()
-      log.debug("Adding ${jarFiles.size} JARs from ${mavenLibDir.absolutePath} to ClassRealm")
+      println("[MavenExecutorFactory] Adding ${jarFiles.size} Maven JARs to ClassRealm")
 
       jarFiles.forEach { jarFile ->
         try {
           coreRealm.addURL(jarFile.toURI().toURL())
         } catch (e: Exception) {
-          log.warn("Failed to add JAR to ClassRealm: ${jarFile.name} - ${e.message}")
+          println("[MavenExecutorFactory] Failed to add JAR: ${jarFile.name} - ${e.message}")
         }
       }
     } else {
-      log.warn("Maven lib directory not found: ${mavenLibDir?.absolutePath}")
+      println("[MavenExecutorFactory] WARNING: Maven lib directory not found: ${mavenLibDir?.absolutePath}")
     }
 
     classWorld = cw

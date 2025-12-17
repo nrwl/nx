@@ -25,10 +25,11 @@ describe('Maven 4 Batch Mode', () => {
     });
     await createMavenProject(projectName);
 
-    // Update Maven wrapper to use Maven 4.0.0-rc-4
+    // Update Maven wrapper to use Maven 4.0.0-rc-5
+    // Note: rc-5 removed dependency on plexus-container-default which caused ClassLoader issues in rc-4
     updateFile(
       '.mvn/wrapper/maven-wrapper.properties',
-      `distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/4.0.0-rc-4/apache-maven-4.0.0-rc-4-bin.zip
+      `distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/4.0.0-rc-5/apache-maven-4.0.0-rc-5-bin.zip
 wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.3.2/maven-wrapper-3.3.2.jar
 `
     );
@@ -38,7 +39,7 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
 
   afterAll(() => cleanupProject());
 
-  it('should build multiple projects with run-many in batch mode using Maven 4.0.0-rc-4', () => {
+  it('should build multiple projects with run-many in batch mode using Maven 4.0.0-rc-5', () => {
     // runCLI throws on non-zero exit, so successful execution + file checks is sufficient
     runBatchCLI('run-many -t verify');
     checkFilesExist(
