@@ -2,9 +2,11 @@
 // recreated from https://github.com/withastro/starlight/blob/main/packages/starlight/components/TableOfContents.astro
 import TableOfContentsList from './TableOfContentsList.astro';
 import { GitHubStarWidget } from '@nx/nx-dev-ui-common';
+import CopyPageButton from '../CopyPageButton.astro';
 
 const { toc } = Astro.locals.starlightRoute;
 const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
+const rawContent = Astro.locals.rawContent;
 ---
 
 {
@@ -19,6 +21,11 @@ const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
           <TableOfContentsList toc={toc.items} />
         </div>
       </nav>
+      {rawContent && (
+        <div class="copy-page-button-container">
+          <CopyPageButton content={rawContent} />
+        </div>
+      )}
     </custom-toc>
   )
 }
@@ -171,6 +178,13 @@ const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
     /* GitHub star widget styling */
     .github-star-widget-container {
       margin-bottom: 1rem;
+    }
+
+    /* Copy page button styling - positioned after TOC with divider */
+    .copy-page-button-container {
+      padding-top: 1rem;
+      margin-top: 1rem;
+      border-top: 1px solid var(--sl-color-hairline);
     }
     
     /* Container with proper scrolling */
