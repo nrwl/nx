@@ -61,11 +61,11 @@ export default [
       "files": ["*.json"],
       "parser": "jsonc-eslint-parser",
       "rules": {
-        "@nx/dependency-checks": "error"
-      }
-    }
+        "@nx/dependency-checks": "error",
+      },
+    },
     // ... more ESLint overrides here
-  ]
+  ],
 }
 ```
 
@@ -86,11 +86,11 @@ Additionally, you need to adjust your `lintFilePatterns` to include the project'
       "options": {
         "lintFilePatterns": [
           "libs/my-lib/**/*.{ts,tsx,js,jsx}",
-          "libs/my-lib/package.json" // add this line
-        ]
-      }
-    }
-  }
+          "libs/my-lib/package.json", // add this line
+        ],
+      },
+    },
+  },
 }
 ```
 
@@ -142,9 +142,9 @@ export default [
       "ignoredDependencies": ["lodash"], // these libs will be omitted from checks
       "ignoredFiles": ["webpack.config.js", "eslint.config.mjs"], // list of files that should be skipped for check
       "includeTransitiveDependencies": true, // collect dependencies transitively from children
-      "useLocalPathsForWorkspaceDependencies": true // toggle to disable
-    }
-  ]
+      "useLocalPathsForWorkspaceDependencies": true, // toggle to disable
+    },
+  ],
 }
 ```
 

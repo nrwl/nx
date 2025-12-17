@@ -21,11 +21,11 @@ To enable version plans as a feature in your workspace, set `release.versionPlan
 // nx.json
 {
   "release": {
-    "versionPlans": true
+    "versionPlans": true,
     // other release config such as projects to include in releases etc
     // projects: ["packages/**/*"]
     // ...
-  }
+  },
 }
 ```
 
@@ -164,9 +164,9 @@ By default, all files that have changed are considered, but you may not want all
 {
   "release": {
     "versionPlans": {
-      "ignorePatternsForPlanCheck": ["**/*.spec.ts"]
-    }
-  }
+      "ignorePatternsForPlanCheck": ["**/*.spec.ts"],
+    },
+  },
 }
 ```
 

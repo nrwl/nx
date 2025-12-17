@@ -906,7 +906,7 @@ describe('lib', () => {
                   // Reading the SWC compilation config and remove the "exclude"
                   // for the test files to be compiled by SWC
                   const { exclude: _, ...swcJestConfig } = JSON.parse(
-                    readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8')
+                    readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8'),
                   );
 
                   // disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
@@ -2198,7 +2198,7 @@ describe('lib', () => {
 
                   // Reading the SWC compilation config for the spec files
                   const swcJestConfig = JSON.parse(
-                    readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+                    readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
                   );
 
                   // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves

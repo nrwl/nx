@@ -12,9 +12,15 @@ jest.mock('../../../config/nx-json', () => ({
   ...jest.requireActual('../../../config/nx-json'),
   readNxJson: jest.fn(),
 }));
+
+// Mock getPlugins to return an empty array, avoiding plugin worker spawning
+// while still allowing filterAffected to run its real logic
+jest.mock('../../../project-graph/plugins/get-plugins', () => ({
+  getPlugins: jest.fn().mockResolvedValue([]),
+}));
+
 import { createVersionConfig } from './test/test-utils';
 import { createNxReleaseConfig, NxReleaseConfig } from '../config/config';
-import { createProjectFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
 
 describe('shared', () => {
   describe('createCommitMessageValues()', () => {
@@ -705,9 +711,15 @@ describe('shared', () => {
         externalNodes: {},
       };
 
+      // Create mock project file map based on the mock project graph
+      const mockProjectFileMap: Record<string, any[]> = {};
+      for (const projectName of Object.keys(mockProjectGraph.nodes)) {
+        mockProjectFileMap[projectName] = [];
+      }
+
       ({ nxReleaseConfig: mockReleaseConfig } = await createNxReleaseConfig(
         mockProjectGraph,
-        await createProjectFileMapUsingProjectGraph(mockProjectGraph),
+        mockProjectFileMap,
         {
           projects: Object.keys(mockProjectGraph.nodes),
           changelog: {

@@ -141,8 +141,8 @@ Storing your credentials in the `nx.json` file is the least secure of the 4 auth
   "s3": {
     "ssoProfile": "default",
     "accessKeyId": "MYACCESSKEYID",
-    "secretAccessKey": "MYSECRETACCESSKEY"
-  }
+    "secretAccessKey": "MYSECRETACCESSKEY",
+  },
 }
 ```
 
@@ -163,8 +163,8 @@ Regardless of how you manage your AWS authentication, you need to configure your
   "s3": {
     "region": "us-east-1",
     "bucket": "my-bucket",
-    "encryptionKey": "create-your-own-key"
-  }
+    "encryptionKey": "create-your-own-key",
+  },
 }
 ```
 
@@ -190,8 +190,8 @@ Below is an example on how to connect to MinIO:
     "forcePathStyle": true,
     "accessKeyId": "abc1234",
     "secretAccessKey": "4321cba",
-    "disableChecksum": true
-  }
+    "disableChecksum": true,
+  },
 }
 ```
 
@@ -219,8 +219,8 @@ Nx will only show warnings when the remote cache is not writable. You can disabl
   "s3": {
     "region": "us-east-1",
     "bucket": "my-bucket",
-    "localMode": "read-only"
-  }
+    "localMode": "read-only",
+  },
 }
 ```
 
@@ -232,8 +232,8 @@ The cache mode in CI can also be configured by setting `ciMode` to `read-only` o
   "s3": {
     "region": "us-east-1",
     "bucket": "my-bucket",
-    "ciMode": "read-only"
-  }
+    "ciMode": "read-only",
+  },
 }
 ```
 

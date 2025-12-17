@@ -16,11 +16,11 @@ import { App } from './app';
           path: '',
           loadChildren: () =>
             import('./remote-entry/entry-module').then(
-              (m) => m.RemoteEntryModule
+              (m) => m.RemoteEntryModule,
             ),
         },
       ],
-      { initialNavigation: 'enabledBlocking' }
+      { initialNavigation: 'enabledBlocking' },
     ),
   ],
   providers: [],

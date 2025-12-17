@@ -70,10 +70,7 @@ export async function formatFiles(
 
         tree.write(
           file.path,
-          // In prettier v3 the format result is a promise
-          await (prettier.format(file.content.toString('utf-8'), options) as
-            | Promise<string>
-            | string)
+          await prettier.format(file.content.toString('utf-8'), options)
         );
       } catch (e) {
         console.warn(`Could not format ${file.path}. Error: "${e.message}"`);

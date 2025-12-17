@@ -395,7 +395,7 @@ export default defineConfig(() => ({
 `;
 
 exports[`@nx/vite:configuration transform React app to use Vite should move index.html to the root of the project 1`] = `
-"<!DOCTYPE html>
+"<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -448,7 +448,7 @@ export default defineConfig(() => ({
 `;
 
 exports[`@nx/vite:configuration transform Web app to use Vite should move index.html to the root of the project 1`] = `
-"<!DOCTYPE html>
+"<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />

@@ -78,7 +78,7 @@ To learn more about release groups, see the [Release Groups](/docs/guides/nx-rel
 {
   "release": {
     "releaseTag": {
-      "pattern": "release/{projectName}/{version}"
+      "pattern": "release/{projectName}/{version}",
     },
     "groups": {
       "apps": {
@@ -91,14 +91,14 @@ To learn more about release groups, see the [Release Groups](/docs/guides/nx-rel
           // `docker.io` is the default so you could leave this out for Docker Hub.
           "registryUrl": "docker.io",
           // The pre-version command is run before versioning, useful for verifying the Docker image.
-          "groupPreVersionCommand": "echo BEFORE VERSIONING"
+          "groupPreVersionCommand": "echo BEFORE VERSIONING",
         },
         "changelog": {
-          "projectChangelogs": true
-        }
-      }
-    }
-  }
+          "projectChangelogs": true,
+        },
+      },
+    },
+  },
 }
 ```
 
@@ -122,14 +122,14 @@ To learn more about release groups, see the [Release Groups](/docs/guides/nx-rel
           // `docker.io` is the default so you could leave this out for Docker Hub.
           "registryUrl": "docker.io",
           // The pre-version command is run before versioning, useful for verifying the Docker image.
-          "groupPreVersionCommand": "echo BEFORE VERSIONING"
+          "groupPreVersionCommand": "echo BEFORE VERSIONING",
         },
         "changelog": {
-          "projectChangelogs": true
-        }
-      }
-    }
-  }
+          "projectChangelogs": true,
+        },
+      },
+    },
+  },
 }
 ```
 

@@ -434,7 +434,7 @@ export default {
         "const { readFileSync } = require('fs');
 
         const swcJestConfig = JSON.parse(
-          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
         );
 
         swcJestConfig.swcrc = false;
@@ -443,7 +443,7 @@ export default {
           displayName: 'app1',
           preset: '../../jest.preset.js',
           transform: {
-            '^.+.[tj]s$': ['@swc/jest', swcJestConfig],
+            '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
           },
         };
         "
