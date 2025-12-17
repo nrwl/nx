@@ -25,8 +25,8 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
     ? schema.viteVersion === 5
       ? viteV5Version
       : schema.viteVersion === 6
-      ? viteV6Version
-      : viteVersion
+        ? viteV6Version
+        : viteVersion
     : viteVersion;
   return addDependenciesToPackageJson(
     tree,

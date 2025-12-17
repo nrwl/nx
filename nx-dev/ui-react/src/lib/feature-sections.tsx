@@ -12,7 +12,7 @@ export function FeatureSections(): ReactElement {
           </span>
         </SectionHeading>
 
-        <div className="mt-10 grid grid-cols-1 gap-8 sm:mt-16 md:grid-cols-2 lg:grid-cols-3 ">
+        <div className="mt-10 grid grid-cols-1 gap-8 sm:mt-16 md:grid-cols-2 lg:grid-cols-3">
           {/* Affected Section */}
           <FeatureSection
             title="Affected"
@@ -88,7 +88,7 @@ function FeatureSection({
 }: FeatureSectionProps): ReactElement {
   return (
     <div
-      className={`feature-section flex flex-col overflow-hidden rounded-2xl bg-white shadow ring-1 ring-black/5  dark:bg-slate-950 dark:ring-white/10 `}
+      className={`feature-section flex flex-col overflow-hidden rounded-2xl bg-white shadow ring-1 ring-black/5 dark:bg-slate-950 dark:ring-white/10`}
     >
       <div className="h-0 w-full md:h-72">
         <img

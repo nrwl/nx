@@ -28,7 +28,7 @@ export type Options = [
     packageJson?: string;
     allowedVersionStrings: string[];
     tsConfig?: string;
-  }
+  },
 ];
 
 type NormalizedOptions = Options[0] & {

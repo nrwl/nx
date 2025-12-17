@@ -158,7 +158,10 @@ const specParseCache = new Map<
 
 // Structured error types for better error handling
 export class BunLockfileParseError extends Error {
-  constructor(message: string, public readonly cause?: Error) {
+  constructor(
+    message: string,
+    public readonly cause?: Error
+  ) {
     super(message);
     this.name = 'BunLockfileParseError';
   }

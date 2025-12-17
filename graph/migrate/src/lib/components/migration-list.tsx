@@ -38,10 +38,13 @@ export function MigrationList(props: {
   const [selectedMigrations, setSelectedMigrations] = useState<
     Record<string, boolean>
   >(
-    props.migrations.reduce((acc, migration) => {
-      acc[migration.id] = false;
-      return acc;
-    }, {} as Record<string, boolean>)
+    props.migrations.reduce(
+      (acc, migration) => {
+        acc[migration.id] = false;
+        return acc;
+      },
+      {} as Record<string, boolean>
+    )
   );
 
   const numberSelected = useMemo(
@@ -73,10 +76,13 @@ export function MigrationList(props: {
   const handleHeaderCheckboxClick = () => {
     const newSelectedState = !anySelected;
     setSelectedMigrations(
-      Object.keys(selectedMigrations).reduce((acc, migrationId) => {
-        acc[migrationId] = newSelectedState;
-        return acc;
-      }, {} as Record<string, boolean>)
+      Object.keys(selectedMigrations).reduce(
+        (acc, migrationId) => {
+          acc[migrationId] = newSelectedState;
+          return acc;
+        },
+        {} as Record<string, boolean>
+      )
     );
   };
 

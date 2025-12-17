@@ -12,13 +12,13 @@ When a project has runtime tsconfig files like `tsconfig.lib.json`, the migratio
 // libs/my-lib/tsconfig.json
 {
   "compilerOptions": {
-    "composite": true
+    "composite": true,
   },
   "references": [
     {
-      "path": "../other-lib"
-    }
-  ]
+      "path": "../other-lib",
+    },
+  ],
 }
 ```
 
@@ -28,9 +28,9 @@ When a project has runtime tsconfig files like `tsconfig.lib.json`, the migratio
 // libs/my-lib/tsconfig.json
 {
   "compilerOptions": {
-    "composite": true
+    "composite": true,
   },
-  "references": []
+  "references": [],
 }
 ```
 
@@ -42,13 +42,13 @@ The external references remain in the runtime tsconfig file where they belong:
 // libs/my-lib/tsconfig.lib.json
 {
   "compilerOptions": {
-    "composite": true
+    "composite": true,
   },
   "references": [
     {
-      "path": "../other-lib/tsconfig.lib.json"
-    }
-  ]
+      "path": "../other-lib/tsconfig.lib.json",
+    },
+  ],
 }
 ```
 
@@ -58,13 +58,13 @@ The external references remain in the runtime tsconfig file where they belong:
 // libs/my-lib/tsconfig.lib.json
 {
   "compilerOptions": {
-    "composite": true
+    "composite": true,
   },
   "references": [
     {
-      "path": "../other-lib/tsconfig.lib.json"
-    }
-  ]
+      "path": "../other-lib/tsconfig.lib.json",
+    },
+  ],
 }
 ```
 
@@ -76,13 +76,13 @@ For projects without runtime tsconfig files, the project's `tsconfig.json` file 
 // libs/legacy-lib/tsconfig.json
 {
   "compilerOptions": {
-    "composite": true
+    "composite": true,
   },
   "references": [
     {
-      "path": "../other-lib"
-    }
-  ]
+      "path": "../other-lib",
+    },
+  ],
 }
 ```
 
@@ -92,13 +92,13 @@ For projects without runtime tsconfig files, the project's `tsconfig.json` file 
 // libs/legacy-lib/tsconfig.json
 {
   "compilerOptions": {
-    "composite": true
+    "composite": true,
   },
   "references": [
     {
-      "path": "../other-lib"
-    }
-  ]
+      "path": "../other-lib",
+    },
+  ],
 }
 ```
 
@@ -110,16 +110,16 @@ Internal project references (references within the same project directory) are p
 // libs/my-lib/tsconfig.json
 {
   "compilerOptions": {
-    "composite": true
+    "composite": true,
   },
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "./tsconfig.lib.json",
     },
     {
-      "path": "./tsconfig.spec.json"
-    }
-  ]
+      "path": "./tsconfig.spec.json",
+    },
+  ],
 }
 ```
 
@@ -129,15 +129,15 @@ Internal project references (references within the same project directory) are p
 // libs/my-lib/tsconfig.json
 {
   "compilerOptions": {
-    "composite": true
+    "composite": true,
   },
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "./tsconfig.lib.json",
     },
     {
-      "path": "./tsconfig.spec.json"
-    }
-  ]
+      "path": "./tsconfig.spec.json",
+    },
+  ],
 }
 ```

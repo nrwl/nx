@@ -88,11 +88,11 @@ function applyNxIndependentConfig(
         //
         // When the NODE_ENV is something else (e.g. test), then set it to none
         // to prevent extra behavior from rspack.
-        options.mode ??
+        (options.mode ??
         (process.env.NODE_ENV === 'development' ||
         process.env.NODE_ENV === 'production'
           ? (process.env.NODE_ENV as 'development' | 'production')
-          : 'none');
+          : 'none'));
   // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
   // So to mitigate this we enable in memory caching when target is Node and in watch mode.
   config.cache =
@@ -205,7 +205,7 @@ function applyNxIndependentConfig(
           ],
           concatenateModules: true,
           runtimeChunk: isDevServer
-            ? config.optimization?.runtimeChunk ?? undefined
+            ? (config.optimization?.runtimeChunk ?? undefined)
             : false,
         }
       : {}),

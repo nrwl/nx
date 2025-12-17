@@ -161,6 +161,6 @@ function getStatsOptions(compiler: Compiler | MultiCompiler) {
         ),
       }
     : compiler.options
-    ? compiler.options.stats
-    : undefined;
+      ? compiler.options.stats
+      : undefined;
 }

@@ -167,9 +167,8 @@ function handlePropertiesInOptions(
     if (target.configurations && configFilePath) {
       for (const configuration in target.configurations) {
         if (target.configurations[configuration]?.devServerTarget) {
-          webServerCommands[
-            configuration
-          ] = `npx nx run ${target.configurations[configuration].devServerTarget}`;
+          webServerCommands[configuration] =
+            `npx nx run ${target.configurations[configuration].devServerTarget}`;
           delete target.configurations[configuration].devServerTarget;
         }
       }

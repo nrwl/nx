@@ -479,8 +479,8 @@ function determineDistTag(
     parsedGivenVersion.prerelease.length > 0
       ? 'next'
       : parsedGivenVersion.major < parsedCurrentLatestVersion.major
-      ? 'previous'
-      : 'latest';
+        ? 'previous'
+        : 'latest';
 
   return distTag;
 }

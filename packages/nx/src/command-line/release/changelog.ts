@@ -322,7 +322,7 @@ export function createAPI(
 
     // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
     const gitTagValues: string[] =
-      args.gitTag ?? nxReleaseConfig.changelog.git.tag
+      (args.gitTag ?? nxReleaseConfig.changelog.git.tag)
         ? createGitTagValues(
             releaseGraph.releaseGroups,
             releaseGraph.releaseGroupToFilteredProjects,
@@ -527,9 +527,8 @@ export function createAPI(
               });
             }
 
-            const { fileMap } = await createFileMapUsingProjectGraph(
-              projectGraph
-            );
+            const { fileMap } =
+              await createFileMapUsingProjectGraph(projectGraph);
             const fileToProjectMap = createFileToProjectMap(
               fileMap.projectFileMap
             );
@@ -596,9 +595,8 @@ export function createAPI(
             );
           }
 
-          const { fileMap } = await createFileMapUsingProjectGraph(
-            projectGraph
-          );
+          const { fileMap } =
+            await createFileMapUsingProjectGraph(projectGraph);
           const fileToProjectMap = createFileToProjectMap(
             fileMap.projectFileMap
           );

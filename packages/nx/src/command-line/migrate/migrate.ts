@@ -403,7 +403,7 @@ export class Migrator {
     const packageGroup: ArrayPackageGroup =
       packageName === '@nrwl/workspace' && lt(targetVersion, '14.0.0-beta.0')
         ? LEGACY_NRWL_PACKAGE_GROUP
-        : migrationConfig.packageGroup ?? [];
+        : (migrationConfig.packageGroup ?? []);
 
     let packageGroupOrder: string[] = [];
     if (packageGroup.length) {

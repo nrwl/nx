@@ -13,8 +13,8 @@ The migration updates TypeScript configuration files in Angular projects to set 
 {
   "compilerOptions": {
     "module": "es2020",
-    "moduleResolution": "node"
-  }
+    "moduleResolution": "node",
+  },
 }
 ```
 
@@ -25,8 +25,8 @@ The migration updates TypeScript configuration files in Angular projects to set 
 {
   "compilerOptions": {
     "module": "preserve",
-    "moduleResolution": "bundler"
-  }
+    "moduleResolution": "bundler",
+  },
 }
 ```
 
@@ -40,8 +40,8 @@ If both values are already set correctly and inherited from an extended tsconfig
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "module": "preserve",
-    "moduleResolution": "bundler"
-  }
+    "moduleResolution": "bundler",
+  },
 }
 ```
 
@@ -50,8 +50,8 @@ If both values are already set correctly and inherited from an extended tsconfig
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": []
-  }
+    "types": [],
+  },
 }
 ```
 
@@ -63,8 +63,8 @@ If both values are already set correctly and inherited from an extended tsconfig
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "module": "preserve",
-    "moduleResolution": "bundler"
-  }
+    "moduleResolution": "bundler",
+  },
 }
 ```
 
@@ -73,8 +73,8 @@ If both values are already set correctly and inherited from an extended tsconfig
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": []
-  }
+    "types": [],
+  },
 }
 ```
 

@@ -21,18 +21,16 @@ async function addMigrationPackageGroup(
     version: `${targetNxMigrationVersion}`,
   };
 
-  const promptAndRequirements = await getPromptAndRequiredVersions(
-    packageVersionMap
-  );
+  const promptAndRequirements =
+    await getPromptAndRequiredVersions(packageVersionMap);
   if (!promptAndRequirements) {
     console.warn(
       '❗️ - The `@angular/core` latest version is greater than the next version. Skipping generating migration prompt and requirements.\n' +
         '     Please review the migrations and manually add the prompt and requirements if needed.'
     );
   } else {
-    angularPackageMigrations.packageJsonUpdates[targetNxVersion][
-      'x-prompt'
-    ] = `Do you want to update the Angular version to ${promptAndRequirements.promptVersion}?`;
+    angularPackageMigrations.packageJsonUpdates[targetNxVersion]['x-prompt'] =
+      `Do you want to update the Angular version to ${promptAndRequirements.promptVersion}?`;
     angularPackageMigrations.packageJsonUpdates[targetNxVersion].requires = {
       '@angular/core': promptAndRequirements.angularCoreRequirement,
     };

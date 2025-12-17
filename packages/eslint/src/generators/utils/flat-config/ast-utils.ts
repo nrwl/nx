@@ -1760,7 +1760,7 @@ export function generateFlatPredefinedConfig(
 }
 
 export function mapFilePaths<
-  T extends Partial<Linter.ConfigOverride<Linter.RulesRecord>>
+  T extends Partial<Linter.ConfigOverride<Linter.RulesRecord>>,
 >(_override: T) {
   const override: T = {
     ..._override,

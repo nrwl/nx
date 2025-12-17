@@ -44,10 +44,10 @@ function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
     !normalizedOptions.swcCliOptions.stripLeadingPaths
       ? projectRoot
       : sourceRoot
-      ? sourceRoot
-      : existsSync(join(root, projectRoot, 'src'))
-      ? join(projectRoot, 'src')
-      : projectRoot;
+        ? sourceRoot
+        : existsSync(join(root, projectRoot, 'src'))
+          ? join(projectRoot, 'src')
+          : projectRoot;
 
   const typeCheckOptions: TypeCheckOptions = {
     mode: 'emitDeclarationOnly',

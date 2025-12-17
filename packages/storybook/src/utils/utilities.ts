@@ -71,10 +71,9 @@ export function storybookMajorVersion(tree?: Tree): number | undefined {
     }
   }
   try {
-    const storybookPackageVersion = require(join(
-      'storybook',
-      'package.json'
-    )).version;
+    const storybookPackageVersion = require(
+      join('storybook', 'package.json')
+    ).version;
     return major(storybookPackageVersion);
   } catch {
     return undefined;
@@ -95,10 +94,9 @@ export function getInstalledStorybookVersion(tree?: Tree): string | undefined {
 
   // unable to find in root packageJson, fallback to requiring version from disk
   try {
-    const storybookPackageVersion = require(join(
-      'storybook',
-      'package.json'
-    )).version;
+    const storybookPackageVersion = require(
+      join('storybook', 'package.json')
+    ).version;
     return storybookPackageVersion;
   } catch {
     return undefined;

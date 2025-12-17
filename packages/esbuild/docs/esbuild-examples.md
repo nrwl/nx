@@ -10,10 +10,10 @@
       "options": {
         "main": "<app-root>",
         "tsConfig": "<app-root>/tsconfig.app.json",
-        "outputPath": "dist/<app-root>"
-      }
-    }
-  }
+        "outputPath": "dist/<app-root>",
+      },
+    },
+  },
 }
 ```
 

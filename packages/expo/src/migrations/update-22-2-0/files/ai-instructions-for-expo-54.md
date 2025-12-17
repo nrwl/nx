@@ -13,13 +13,11 @@ These instructions guide you through migrating an Nx workspace containing Expo p
    ```
 
 2. **Locate all Expo configuration files**:
-
    - Search for `app.json` or `app.config.{js,ts}`
    - Search for `metro.config.{js,ts}`
    - Check `project.json` files for Expo-related configuration
 
 3. **Identify affected code**:
-
    - Files importing from `expo-av`
    - Files importing from `expo-file-system`
    - Files using `StatusBar` configuration

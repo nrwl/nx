@@ -99,7 +99,7 @@ export function getAngularRspackVersion(tree: Tree): string {
 
 type TakeUntil<Arr extends readonly any[], Target> = Arr extends readonly [
   infer Head,
-  ...infer Rest
+  ...infer Rest,
 ]
   ? Head extends Target
     ? [Head]

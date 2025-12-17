@@ -29,7 +29,7 @@ export type Options = [
     includeTransitiveDependencies?: boolean;
     useLocalPathsForWorkspaceDependencies?: boolean;
     runtimeHelpers?: string[];
-  }
+  },
 ];
 
 export type MessageIds =

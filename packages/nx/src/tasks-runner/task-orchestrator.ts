@@ -306,8 +306,8 @@ export class TaskOrchestrator {
     const status = cachedResult.remote
       ? 'remote-cache'
       : shouldCopyOutputsFromCache
-      ? 'local-cache'
-      : 'local-cache-kept-existing';
+        ? 'local-cache'
+        : 'local-cache-kept-existing';
     this.options.lifeCycle.printTaskTerminalOutput(
       task,
       status,

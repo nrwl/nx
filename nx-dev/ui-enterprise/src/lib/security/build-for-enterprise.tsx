@@ -23,12 +23,12 @@ export function BuiltForEnterprise(): ReactElement {
             <div className="mt-12 grid w-full grid-cols-2 place-items-center gap-6">
               <CapitalOneIcon
                 aria-hidden="true"
-                className="col-span-1 size-28  text-black dark:text-white"
+                className="col-span-1 size-28 text-black dark:text-white"
               />
 
               <FicoIcon
                 aria-hidden="true"
-                className="col-span-1 size-24  text-[#0A6DE6] dark:text-white"
+                className="col-span-1 size-24 text-[#0A6DE6] dark:text-white"
               />
 
               <AwsIcon
@@ -38,17 +38,17 @@ export function BuiltForEnterprise(): ReactElement {
 
               <ModernaIcon
                 aria-hidden="true"
-                className="col-span-1 size-24  text-black dark:text-white"
+                className="col-span-1 size-24 text-black dark:text-white"
               />
 
               <RoyalBankOfCanadaIcon
                 aria-hidden="true"
-                className="col-span-1 size-14  text-black dark:text-white"
+                className="col-span-1 size-14 text-black dark:text-white"
               />
 
               <AdobeIcon
                 aria-hidden="true"
-                className="col-span-1 size-14  text-[#FF0000] dark:text-white"
+                className="col-span-1 size-14 text-[#FF0000] dark:text-white"
               />
             </div>
           </div>

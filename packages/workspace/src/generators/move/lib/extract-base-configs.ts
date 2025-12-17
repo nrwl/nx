@@ -34,8 +34,9 @@ export function maybeMigrateEslintConfigIfRootProject(
 ): void {
   let migrateConfigToMonorepoStyle: any;
   try {
-    migrateConfigToMonorepoStyle = require('@nx/' +
-      'eslint/src/generators/init/init-migration').migrateConfigToMonorepoStyle;
+    migrateConfigToMonorepoStyle = require(
+      '@nx/' + 'eslint/src/generators/init/init-migration'
+    ).migrateConfigToMonorepoStyle;
   } catch {
     // eslint not installed
   }

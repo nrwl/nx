@@ -78,8 +78,8 @@ export function executeDevServerBuilder(
     ...(parsedBuildTarget.configuration
       ? buildTarget.configurations[parsedBuildTarget.configuration]
       : buildTarget.defaultConfiguration
-      ? buildTarget.configurations[buildTarget.defaultConfiguration]
-      : {}),
+        ? buildTarget.configurations[buildTarget.defaultConfiguration]
+        : {}),
   };
 
   const buildLibsFromSource =

@@ -3,9 +3,9 @@ import { lt } from 'semver';
 export function assertCompatibleStorybookVersion() {
   let storybookVersion: string;
   try {
-    storybookVersion = require(require.resolve(
-      '@storybook/angular/package.json'
-    )).version;
+    storybookVersion = require(
+      require.resolve('@storybook/angular/package.json')
+    ).version;
   } catch {}
 
   if (storybookVersion && lt(storybookVersion, '8.0.0')) {

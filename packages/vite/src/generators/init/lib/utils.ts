@@ -30,8 +30,8 @@ export async function checkDependenciesInstalled(
       vite: schema.useViteV5
         ? viteV5Version
         : schema.useViteV6
-        ? viteV6Version
-        : viteVersion,
+          ? viteV6Version
+          : viteVersion,
       vitest: vitest,
       '@vitest/ui': vitest,
       jiti: jitiVersion,

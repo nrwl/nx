@@ -301,9 +301,8 @@ export async function resolveCurrentVersionFromGitTag(
     throw noMatchingGitTagsError;
   }
 
-  const fromDiskRes = await versionActions.readCurrentVersionFromSourceManifest(
-    tree
-  );
+  const fromDiskRes =
+    await versionActions.readCurrentVersionFromSourceManifest(tree);
   // Fallback on disk is available, return it directly
   if (fromDiskRes && fromDiskRes.currentVersion) {
     logger.buffer(

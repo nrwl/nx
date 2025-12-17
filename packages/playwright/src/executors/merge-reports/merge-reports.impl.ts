@@ -22,9 +22,8 @@ export async function mergeReportsExecutor(
     context.projectsConfigurations.projects[context.projectName].root
   );
   const configPath = join(projectRoot, config);
-  const playwrightConfig = await loadConfigFile<PlaywrightTestConfig>(
-    configPath
-  );
+  const playwrightConfig =
+    await loadConfigFile<PlaywrightTestConfig>(configPath);
   const reporterOutputs = getReporterOutputs(playwrightConfig);
   const blobReporterOutput = reporterOutputs.find(
     ([reporter]) => reporter === 'blob'

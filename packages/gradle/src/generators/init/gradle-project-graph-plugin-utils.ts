@@ -222,8 +222,8 @@ async function addNxProjectGraphPluginToBuildGradle(
   const nxProjectGraphReportPlugin = versionCatalogPluginAccessor
     ? `alias(${versionCatalogPluginAccessor})`
     : isKotlinDsl
-    ? `id("${gradleProjectGraphPluginName}") version("${expectedVersion}")`
-    : `id "${gradleProjectGraphPluginName}" version "${expectedVersion}"`;
+      ? `id("${gradleProjectGraphPluginName}") version("${expectedVersion}")`
+      : `id "${gradleProjectGraphPluginName}" version "${expectedVersion}"`;
 
   // Check if the plugin is already included (directly or via version catalog alias)
   const hasPluginDirectly = buildGradleContent.includes(
@@ -252,8 +252,8 @@ async function addNxProjectGraphPluginToBuildGradle(
     const applyPlugin = versionCatalogPluginAccessor
       ? `plugin(${versionCatalogPluginAccessor})`
       : isKotlinDsl
-      ? `plugin("${gradleProjectGraphPluginName}")`
-      : `plugin("${gradleProjectGraphPluginName}")`;
+        ? `plugin("${gradleProjectGraphPluginName}")`
+        : `plugin("${gradleProjectGraphPluginName}")`;
     return `${content}\nallprojects {\n    apply {\n        ${applyPlugin}\n    }\n}`;
   }
 
@@ -297,8 +297,8 @@ async function addNxProjectGraphPluginToBuildGradle(
         const applyPlugin = versionCatalogPluginAccessor
           ? `plugin(${versionCatalogPluginAccessor})`
           : isKotlinDsl
-          ? `plugin("${gradleProjectGraphPluginName}")`
-          : `plugin "${gradleProjectGraphPluginName}"`;
+            ? `plugin("${gradleProjectGraphPluginName}")`
+            : `plugin "${gradleProjectGraphPluginName}"`;
 
         buildGradleContent = buildGradleContent.replace(
           /allprojects\s*\{/,

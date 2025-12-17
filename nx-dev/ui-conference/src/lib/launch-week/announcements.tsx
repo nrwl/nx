@@ -3,7 +3,7 @@ import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 export function LaunchWeekAnnouncements(): JSX.Element {
   return (
     <div className="border-y border-slate-200 dark:border-slate-700">
-      <section className="w-full divide-y divide-slate-200  dark:divide-slate-700">
+      <section className="w-full divide-y divide-slate-200 dark:divide-slate-700">
         <article className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
           <div className="px-5 py-12 md:pr-12">
             <p>

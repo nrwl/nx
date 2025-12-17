@@ -79,19 +79,22 @@ export class TargetProjectLocator {
      * Unlike the raw externalNodes, ensure that there is always copy of the node where the version
      * is set in the key for optimal lookup.
      */
-    this.npmProjects = Object.values(this.externalNodes).reduce((acc, node) => {
-      if (node.type === 'npm') {
-        const keyWithVersion = `npm:${node.data.packageName}@${node.data.version}`;
-        if (!acc[node.name]) {
-          acc[node.name] = node;
+    this.npmProjects = Object.values(this.externalNodes).reduce(
+      (acc, node) => {
+        if (node.type === 'npm') {
+          const keyWithVersion = `npm:${node.data.packageName}@${node.data.version}`;
+          if (!acc[node.name]) {
+            acc[node.name] = node;
+          }
+          // The node.name may have already contained the version
+          if (!acc[keyWithVersion]) {
+            acc[keyWithVersion] = node;
+          }
         }
-        // The node.name may have already contained the version
-        if (!acc[keyWithVersion]) {
-          acc[keyWithVersion] = node;
-        }
-      }
-      return acc;
-    }, {} as Record<string, ProjectGraphExternalNode>);
+        return acc;
+      },
+      {} as Record<string, ProjectGraphExternalNode>
+    );
 
     if (this.tsConfig.config?.compilerOptions?.paths) {
       this.parsePaths(this.tsConfig.config.compilerOptions.paths);

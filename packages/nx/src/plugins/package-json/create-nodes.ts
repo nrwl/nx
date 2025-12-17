@@ -265,7 +265,7 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
       ...normalizePatterns(
         Array.isArray(packageJson.workspaces)
           ? packageJson.workspaces
-          : packageJson.workspaces?.packages ?? []
+          : (packageJson.workspaces?.packages ?? [])
       )
     );
 

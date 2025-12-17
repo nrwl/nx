@@ -192,7 +192,10 @@ export function assertTaskGraphDoesNotContainInvalidTargets(
 }
 
 class NonParallelTaskDependsOnContinuousTasksError extends Error {
-  constructor(public invalidTasks: Task[], taskGraph: TaskGraph) {
+  constructor(
+    public invalidTasks: Task[],
+    taskGraph: TaskGraph
+  ) {
     let message =
       'The following tasks do not support parallelism but depend on continuous tasks:';
 
@@ -208,7 +211,10 @@ class NonParallelTaskDependsOnContinuousTasksError extends Error {
 }
 
 class DependingOnNonParallelContinuousTaskError extends Error {
-  constructor(public invalidTasks: Task[], taskGraph: TaskGraph) {
+  constructor(
+    public invalidTasks: Task[],
+    taskGraph: TaskGraph
+  ) {
     let message =
       'The following continuous tasks do not support parallelism but are depended on:';
 

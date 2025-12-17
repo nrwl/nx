@@ -12,8 +12,8 @@ The migration updates TypeScript test configuration files in Angular projects us
 // apps/my-app/tsconfig.spec.json
 {
   "compilerOptions": {
-    "outDir": "./out-tsc/spec"
-  }
+    "outDir": "./out-tsc/spec",
+  },
 }
 ```
 
@@ -24,8 +24,8 @@ The migration updates TypeScript test configuration files in Angular projects us
 {
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
-    "isolatedModules": true
-  }
+    "isolatedModules": true,
+  },
 }
 ```
 
@@ -37,8 +37,8 @@ If the value is already set to `true` or inherited from an extended tsconfig fil
 // tsconfig.json
 {
   "compilerOptions": {
-    "isolatedModules": true
-  }
+    "isolatedModules": true,
+  },
 }
 ```
 
@@ -47,8 +47,8 @@ If the value is already set to `true` or inherited from an extended tsconfig fil
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "./out-tsc/spec"
-  }
+    "outDir": "./out-tsc/spec",
+  },
 }
 ```
 
@@ -58,8 +58,8 @@ If the value is already set to `true` or inherited from an extended tsconfig fil
 // tsconfig.json
 {
   "compilerOptions": {
-    "isolatedModules": true
-  }
+    "isolatedModules": true,
+  },
 }
 ```
 
@@ -68,8 +68,8 @@ If the value is already set to `true` or inherited from an extended tsconfig fil
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "./out-tsc/spec"
-  }
+    "outDir": "./out-tsc/spec",
+  },
 }
 ```
 
