@@ -92,7 +92,7 @@ export async function createMavenProject(
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <spring-boot.version>3.5.0</spring-boot.version>
+    <spring-boot.version>3.4.0</spring-boot.version>
   </properties>
 
   <dependencyManagement>
@@ -180,7 +180,7 @@ async function createModule(
     {
       type: 'maven-project',
       language: 'java',
-      bootVersion: '3.5.0',
+      bootVersion: '3.4.0',
       baseDir: moduleName,
       groupId: 'com.example',
       artifactId: moduleName,
