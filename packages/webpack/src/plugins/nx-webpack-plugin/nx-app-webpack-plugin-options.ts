@@ -37,6 +37,10 @@ export interface OptimizationOptions {
   styles: boolean;
 }
 
+export interface TypeCheckOptions {
+  async: boolean;
+}
+
 export interface NxAppWebpackPluginOptions {
   /**
    * The tsconfig file for the project. e.g. `tsconfig.json`
@@ -117,6 +121,10 @@ export interface NxAppWebpackPluginOptions {
    */
   generatePackageJson?: boolean;
   /**
+   * Add runtime dependencies to the generated `package.json` file. Useful for Docker install.
+   */
+  runtimeDependencies?: string[];
+  /**
    * Path to the `index.html`.
    */
   index?: string;
@@ -177,7 +185,12 @@ export interface NxAppWebpackPluginOptions {
    */
   skipPackageManager?: boolean;
   /**
+   * Configure type checking during the build. Set to `false` to disable type checking entirely. Use `{ async: true }` to run type checking in a separate process without blocking the build. Default is `{ async: true }`.
+   */
+  typeCheckOptions?: false | TypeCheckOptions;
+  /**
    * Skip type checking. Default is `false`.
+   * @deprecated Use `typeCheckOptions` option instead.
    */
   skipTypeChecking?: boolean;
   /**

@@ -142,6 +142,12 @@ Type: `boolean`
 
 Generate a `package.json` file for the bundle. Useful for Node applications.
 
+##### runtimeDependencies
+
+Type: `string[]`
+
+Add runtime dependencies to the generated `package.json` file. Useful for Docker installs. Only works in conjunction with `generatePackageJson` option.
+
 ##### index
 
 Type: `string`
@@ -237,6 +243,16 @@ Do not add a `packageManager` entry to the generated package.json file. Only wor
 Type: `boolean`
 
 Skip type checking. Default is `false`.
+
+**`Deprecated`**
+
+Use [`typeCheckOptions`](#typecheckoptions) instead.
+
+##### typeCheckOptions
+
+Type: `false | { async: boolean }`
+
+Configure type checking during the build. Set to `false` to disable type checking entirely. Use `{ async: true }` to run type checking in a separate process without blocking the build. Default is `{ async: true }`.
 
 ##### sourceMap
 
