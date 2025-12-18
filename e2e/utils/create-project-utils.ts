@@ -245,6 +245,7 @@ export function runCreateWorkspace(
     nextSrcDir,
     linter = 'eslint',
     formatter = 'prettier',
+    unitTestRunner,
     e2eTestRunner,
     ssr,
     framework,
@@ -267,6 +268,12 @@ export function runCreateWorkspace(
     nextAppDir?: boolean;
     nextSrcDir?: boolean;
     linter?: 'none' | 'eslint';
+    unitTestRunner?:
+      | 'jest'
+      | 'vitest'
+      | 'vitest-angular'
+      | 'vitest-analog'
+      | 'none';
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
     formatter?: 'prettier' | 'none';
     ssr?: boolean;
@@ -348,6 +355,10 @@ export function runCreateWorkspace(
 
   if (formatter) {
     command += ` --formatter=${formatter}`;
+  }
+
+  if (unitTestRunner) {
+    command += ` --unitTestRunner=${unitTestRunner}`;
   }
 
   if (e2eTestRunner) {
