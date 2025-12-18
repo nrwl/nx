@@ -23,6 +23,7 @@
           "target": "build"
         }
       ],
+      "inputs": ["production", "^production", { "env": "NX_DEV_URL" }],
       "outputs": [
         "{projectRoot}/dist",
         "{projectRoot}/.astro",
