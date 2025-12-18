@@ -37,12 +37,14 @@ export function updateModuleFederationProject(
 
     projectConfig.targets.build.configurations ??= {};
 
-    projectConfig.targets.build.configurations.production = {
-      ...(projectConfig.targets.build.configurations?.production ?? {}),
-      webpackConfig: `${options.appProjectRoot}/webpack.config.prod.${
-        options.typescriptConfiguration && !options.js ? 'ts' : 'js'
-      }`,
-    };
+    if (!isUsingTsSolutionSetup(host)) {
+      projectConfig.targets.build.configurations.production = {
+        ...(projectConfig.targets.build.configurations?.production ?? {}),
+        webpackConfig: `${options.appProjectRoot}/webpack.config.prod.${
+          options.typescriptConfiguration && !options.js ? 'ts' : 'js'
+        }`,
+      };
+    }
   }
 
   // If host should be configured to use dynamic federation
