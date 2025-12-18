@@ -2,9 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0          http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>dev.nx</groupId>
+  <groupId>dev.nx.maven</groupId>
   <artifactId>nx-parent</artifactId>
-  <version>0.0.11</version>
+  <version>0.0.12</version>
   <packaging>pom</packaging>
 
   <name>Nx Parent</name>
@@ -34,9 +34,8 @@
     <url>https://github.com/nrwl/nx/tree/master</url>
   </scm>
 
-
   <modules>
-    <module>packages/maven/maven-plugin</module>
+    <module>packages/maven</module>
   </modules>
 
   <properties>
@@ -53,7 +52,7 @@
 
     <!-- Dependency Versions -->
     <kotlin.version>1.9.22</kotlin.version>
-    <maven.version>3.9.11</maven.version>
+    <maven.version>4.0.0-rc-5</maven.version>
     <maven.plugin.tools.version>3.11.0</maven.plugin.tools.version>
     <jackson.version>2.16.1</jackson.version>
     <junit5.version>5.10.1</junit5.version>
@@ -282,6 +281,23 @@
             </execution>
           </executions>
         </plugin>
+
+      <plugin>
+        <groupId>dev.nx.maven</groupId>
+        <artifactId>nx-maven-plugin</artifactId>
+        <version>{project.version}</version>
+      </plugin>
+
+      <!-- Central Publishing Plugin for snapshots and releases -->
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
+        <version>0.9.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <publishingServerId>central</publishingServerId>
+        </configuration>
+      </plugin>
     </plugins>
     </pluginManagement>
 
@@ -290,6 +306,12 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>flatten-maven-plugin</artifactId>
+      </plugin>
+
+      <!-- Activate central publishing plugin -->
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>
@@ -314,15 +336,6 @@
                   </goals>
                 </execution>
               </executions>
-            </plugin>
-            <plugin>
-              <groupId>org.sonatype.central</groupId>
-              <artifactId>central-publishing-maven-plugin</artifactId>
-              <version>0.9.0</version>
-              <extensions>true</extensions>
-              <configuration>
-                <publishingServerId>central</publishingServerId>
-              </configuration>
             </plugin>
           </plugins>
         </pluginManagement>

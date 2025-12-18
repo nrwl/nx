@@ -14,7 +14,7 @@ import {
   type SyncGeneratorRunSuccessResult,
 } from '../../utils/sync-generators';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { serverLogger } from './logger';
+import { serverLogger } from '../logger';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 
 const syncGeneratorsCacheResultPromises = new Map<

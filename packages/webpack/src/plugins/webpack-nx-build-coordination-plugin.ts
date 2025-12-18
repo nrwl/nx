@@ -99,15 +99,21 @@ export class WebpackNxBuildCoordinationPlugin {
         watchProjects: 'all',
       },
       (err, { changedProjects, changedFiles }) => {
-        if (err === 'closed') {
+        if (err === 'reconnecting') {
+          // Silent - daemon restarts automatically on lockfile changes
+          return;
+        } else if (err === 'reconnected') {
+          // Silent - reconnection succeeded
+          return;
+        } else if (err === 'closed') {
           output.error({
-            title: 'Watch connection closed',
-            bodyLines: [
-              'The daemon has closed the connection to this watch process.',
-              'Please restart your watch command.',
-            ],
+            title: 'Failed to reconnect to daemon after multiple attempts',
           });
           process.exit(1);
+        } else if (err) {
+          output.error({
+            title: `Watch error: ${err?.message ?? 'Unknown'}`,
+          });
         }
 
         if (this.buildCmdProcess) {

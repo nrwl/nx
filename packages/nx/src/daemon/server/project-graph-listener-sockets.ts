@@ -17,7 +17,8 @@ export function hasRegisteredProjectGraphListenerSockets() {
 
 export async function notifyProjectGraphListenerSockets(
   projectGraph: ProjectGraph,
-  sourceMaps: ConfigurationSourceMaps
+  sourceMaps: ConfigurationSourceMaps,
+  error: Error | null
 ) {
   if (!hasRegisteredProjectGraphListenerSockets()) {
     return;
@@ -31,7 +32,7 @@ export async function notifyProjectGraphListenerSockets(
         () =>
           Promise.resolve({
             description: 'Project graph updated',
-            response: { projectGraph, sourceMaps },
+            response: { projectGraph, sourceMaps, error },
           }),
         isV8SerializerEnabled() ? 'v8' : 'json'
       )

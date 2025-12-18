@@ -124,7 +124,11 @@ export default async function runGenerator(
     logger.info('Updating /pom.xml...');
     updateXmlVersion(tree, 'pom.xml', newVersion, true);
 
-    // 2. Update maven-plugin pom.xml
+    // 2. Update packages/maven/pom.xml
+    logger.info('Updating packages/maven/pom.xml...');
+    updateXmlVersion(tree, 'packages/maven/pom.xml', newVersion, false);
+
+    // 3. Update maven-plugin pom.xml
     logger.info('Updating packages/maven/maven-plugin/pom.xml...');
     updateXmlVersion(
       tree,
@@ -133,7 +137,20 @@ export default async function runGenerator(
       false
     );
 
-    // 3. Update versions.ts
+    // 4. Update shared pom.xml
+    logger.info('Updating packages/maven/shared/pom.xml...');
+    updateXmlVersion(tree, 'packages/maven/shared/pom.xml', newVersion, false);
+
+    // 5. Update batch-runner pom.xml
+    logger.info('Updating packages/maven/batch-runner/pom.xml...');
+    updateXmlVersion(
+      tree,
+      'packages/maven/batch-runner/pom.xml',
+      newVersion,
+      false
+    );
+
+    // 6. Update versions.ts
     logger.info('Updating packages/maven/src/utils/versions.ts...');
     const versionsFile = tree.read(
       'packages/maven/src/utils/versions.ts',
@@ -150,7 +167,7 @@ export default async function runGenerator(
 
     tree.write('packages/maven/src/utils/versions.ts', updatedVersionsFile);
 
-    // 4. Update migrations.json
+    // 7. Update migrations.json
     logger.info('Updating packages/maven/migrations.json...');
     const migrationsJsonPath = 'packages/maven/migrations.json';
     const migrationEntry = {
@@ -175,7 +192,7 @@ export default async function runGenerator(
 
     updateJson(tree, migrationsJsonPath, migrationEntry[migrationsJsonPath]);
 
-    // 5. Create migration file
+    // 8. Create migration file
     logger.info(`Creating migration file in ${migrationsDir}...`);
     const migrationContent = `import { Tree } from '@nx/devkit';
 import { updateNxMavenPluginVersion } from '../../utils/pom-xml-updater';

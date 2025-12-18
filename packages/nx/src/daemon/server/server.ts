@@ -12,11 +12,15 @@ import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
-import { isNxVersionMismatch } from '../is-nx-version-mismatch';
+import {
+  getInstalledNxVersion,
+  isNxVersionMismatch,
+} from '../is-nx-version-mismatch';
 import {
   getFullOsSocketPath,
   isWindows,
   killSocketOrPath,
+  serializeResult,
 } from '../socket-utils';
 import {
   hasRegisteredFileWatcherSockets,
@@ -36,7 +40,7 @@ import {
 import { handleProcessInBackground } from './handle-process-in-background';
 import { handleRequestProjectGraph } from './handle-request-project-graph';
 import { handleRequestShutdown } from './handle-request-shutdown';
-import { serverLogger } from './logger';
+import { serverLogger } from '../logger';
 import {
   disableOutputsTracking,
   processFileChangesInOutputs,
@@ -49,6 +53,7 @@ import {
   getOutputWatcherInstance,
   getWatcherInstance,
   handleServerProcessTermination,
+  handleServerProcessTerminationWithRestart,
   resetInactivityTimeout,
   respondToClient,
   respondWithErrorAndExit,
@@ -178,6 +183,7 @@ const server = createServer(async (socket) => {
     `Established a connection. Number of open connections: ${numberOfOpenConnections}`
   );
   resetInactivityTimeout(handleInactivityTimeout);
+
   if (!performanceObserver) {
     performanceObserver = new PerformanceObserver((list) => {
       const entry = list.getEntries()[0];
@@ -217,15 +223,6 @@ async function handleMessage(socket: Socket, data: string) {
       socket,
       `File watcher error in the workspace '${workspaceRoot}'.`,
       workspaceWatcherError
-    );
-  }
-
-  const outdated = daemonIsOutdated();
-  if (outdated) {
-    await respondWithErrorAndExit(
-      socket,
-      `Daemon outdated`,
-      new Error(outdated)
     );
   }
 
@@ -545,17 +542,22 @@ function daemonIsOutdated(): string | null {
 }
 
 function lockFileHashChanged(): boolean {
-  const lockHashes = [
+  const lockFiles = [
     join(workspaceRoot, 'package-lock.json'),
     join(workspaceRoot, 'yarn.lock'),
     join(workspaceRoot, 'pnpm-lock.yaml'),
     join(workspaceRoot, 'bun.lockb'),
     join(workspaceRoot, 'bun.lock'),
-  ]
-    .filter((file) => existsSync(file))
-    .map((file) => hashFile(file));
+  ];
+
+  const existingFiles = lockFiles.filter((file) => existsSync(file));
+  const lockHashes = existingFiles.map((file) => hashFile(file));
   const newHash = hashArray(lockHashes);
+
   if (existingLockHash && newHash != existingLockHash) {
+    serverLogger.log(
+      `[Server] lock file hash changed! old=${existingLockHash}, new=${newHash}`
+    );
     existingLockHash = newHash;
     return true;
   } else {
@@ -582,16 +584,6 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
 
   try {
     resetInactivityTimeout(handleInactivityTimeout);
-
-    const outdatedReason = daemonIsOutdated();
-    if (outdatedReason) {
-      await handleServerProcessTermination({
-        server,
-        reason: outdatedReason,
-        sockets: openSockets,
-      });
-      return;
-    }
 
     if (err) {
       let error = typeof err === 'string' ? new Error(err) : err;
@@ -673,6 +665,14 @@ export async function startServer(): Promise<Server> {
 
   const socketPath = getFullOsSocketPath();
 
+  // Log daemon startup information for debugging
+  serverLogger.log(`New daemon starting from: ${__filename}`);
+  serverLogger.log(`New daemon __dirname: ${__dirname}`);
+  serverLogger.log(`New daemon nxVersion: ${nxVersion}`);
+  serverLogger.log(
+    `New daemon getInstalledNxVersion(): ${getInstalledNxVersion()}`
+  );
+
   // Persist metadata about the background process so that it can be cleaned up later if needed
   await writeDaemonJsonProcessCache({
     processId: process.pid,
@@ -685,6 +685,8 @@ export async function startServer(): Promise<Server> {
     killSocketOrPath();
   }
 
+  serverLogger.log(`[Server] Starting outdated check interval (20ms)`);
+
   setInterval(() => {
     if (getDaemonProcessIdSync() !== process.pid) {
       return handleServerProcessTermination({
@@ -692,6 +694,28 @@ export async function startServer(): Promise<Server> {
         reason: 'this process is no longer the current daemon (native)',
         sockets: openSockets,
       });
+    }
+
+    const outdated = daemonIsOutdated();
+    if (outdated) {
+      serverLogger.log(`[Server] Daemon outdated: ${outdated}`);
+      if (outdated === 'LOCK_FILES_CHANGED') {
+        // Lock file changes - restart daemon, clients will reconnect
+        serverLogger.log('[Server] Restarting daemon...');
+        handleServerProcessTerminationWithRestart({
+          server,
+          reason: outdated,
+          sockets: openSockets,
+        });
+      } else {
+        // Version changes or other reasons - just shut down, don't restart
+        serverLogger.log('[Server] Shutting down daemon (no restart)...');
+        handleServerProcessTermination({
+          server,
+          reason: outdated,
+          sockets: openSockets,
+        });
+      }
     }
   }, 20).unref();
 
