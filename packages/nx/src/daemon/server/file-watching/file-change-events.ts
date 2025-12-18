@@ -1,4 +1,4 @@
-import { serverLogger } from '../logger';
+import { serverLogger } from '../../logger';
 
 export interface FileChangeEvent {
   createdFiles: string[];
