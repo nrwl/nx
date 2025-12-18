@@ -54,6 +54,8 @@ export interface PackageJsonUpdateForPackage {
   ifPackageInstalled?: string;
   alwaysAddToPackageJson?: boolean | Dependencies;
   addToPackageJson?: boolean | Dependencies;
+  ignorePackageGroup?: boolean;
+  ignoreMigrations?: boolean;
 }
 
 export type PackageJsonUpdates = {
