@@ -33,11 +33,10 @@
       "x-deprecated": "Use `typeCheckOptions` instead."
     },
     "typeCheckOptions": {
-      "description": "Configure type checking during the build. Set to `false` to disable type checking entirely. Use `{ async: true }` to run type checking in a separate process without blocking the build. Default is `{ async: true }`.",
+      "description": "Configure type checking during the build. Set to `true` to enable with defaults (async: true). Set to `false` to disable type checking entirely. Use `{ async: true }` to run type checking in a separate process without blocking the build. Default is `{ async: true }`.",
       "oneOf": [
         {
-          "type": "boolean",
-          "enum": [false]
+          "type": "boolean"
         },
         {
           "type": "object",

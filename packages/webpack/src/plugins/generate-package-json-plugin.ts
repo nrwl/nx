@@ -30,12 +30,14 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
     }
   ) {}
 
-
   private resolveRuntimeDependencies(): Record<string, string> {
     const runtimeDependencies: Record<string, string> = {};
     if (this.options.runtimeDependencies) {
       for (const dep of this.options.runtimeDependencies) {
-        const pkgs = fs.readFileSync(`${process.env.NX_WORKSPACE_ROOT}/node_modules/${dep}/package.json`, 'utf-8');
+        const pkgs = fs.readFileSync(
+          `${process.env.NX_WORKSPACE_ROOT}/node_modules/${dep}/package.json`,
+          'utf-8'
+        );
         const { name, version } = JSON.parse(pkgs);
         runtimeDependencies[name] = version;
       }
@@ -72,7 +74,7 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
               target: HelperDependency.tsc,
             });
           }
-          const runtimeDependencies = this.resolveRuntimeDependencies()
+          const runtimeDependencies = this.resolveRuntimeDependencies();
 
           const packageJson = createPackageJson(
             this.options.projectName,
@@ -89,7 +91,7 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
 
           packageJson.dependencies = {
             ...packageJson.dependencies,
-            ...runtimeDependencies
+            ...runtimeDependencies,
           };
 
           compilation.emitAsset(

@@ -68,7 +68,7 @@ export interface WebpackExecutorOptions {
   target?: string;
   /** @deprecated Use `typeCheckOptions` option instead. */
   skipTypeChecking?: boolean;
-  typeCheckOptions?: false | TypeCheckOptions;
+  typeCheckOptions?: boolean | TypeCheckOptions;
   transformers?: TransformerEntry[];
   tsConfig?: string;
   vendorChunk?: boolean;

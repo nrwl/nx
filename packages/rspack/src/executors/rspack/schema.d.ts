@@ -34,7 +34,7 @@ export interface RspackExecutorSchema {
   scripts?: Array<ExtraEntryPointClass | string>;
   /** @deprecated Use `typeCheckOptions` option instead. */
   skipTypeChecking?: boolean;
-  typeCheckOptions?: false | TypeCheckOptions;
+  typeCheckOptions?: boolean | TypeCheckOptions;
   sourceMap?: boolean | DevTool;
   standardRspackConfigFunction?: boolean;
   statsJson?: boolean;

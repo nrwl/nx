@@ -271,11 +271,17 @@ function applyNxDependentConfig(
   }
 
   // Normalize typeCheckOptions from deprecated skipTypeChecking for backward compatibility
-  const defaultTypeCheckOptions = { async: false };
+  const defaultTypeCheckOptions = { async: true };
 
   let typeCheckOptions: false | { async: boolean };
   if (options.typeCheckOptions !== undefined) {
-    typeCheckOptions = options.typeCheckOptions;
+    if (options.typeCheckOptions === true) {
+      typeCheckOptions = defaultTypeCheckOptions;
+    } else if (options.typeCheckOptions === false) {
+      typeCheckOptions = false;
+    } else {
+      typeCheckOptions = options.typeCheckOptions;
+    }
   } else if (options.skipTypeChecking) {
     typeCheckOptions = false;
   } else {

@@ -190,9 +190,14 @@ export interface NxAppWebpackPluginOptions {
    */
   skipTypeChecking?: boolean;
   /**
-   * Configure type checking during the build. Set to `false` to disable type checking entirely. Use `{ async: true }` to run type checking in a separate process without blocking the build. Default is `{ async: true }`.
+   * Configure type checking during the build.
+   * - Set to `true` to enable type checking with default options (async: true).
+   * - Set to `false` to disable type checking entirely.
+   * - Use `{ async: true }` to run type checking in a separate process without blocking the build.
+   * - Use `{ async: false }` to run type checking synchronously.
+   * Default is `{ async: true }`.
    */
-  typeCheckOptions?: false | TypeCheckOptions;
+  typeCheckOptions?: boolean | TypeCheckOptions;
   /**
    * Generate source maps.
    */
