@@ -356,8 +356,8 @@ export interface NxReleaseVersionPlansConfiguration {
    *
    * These patterns follow gitignore semantics. When using negation patterns (to "un-ignore" certain files), use specific file extension patterns
    * rather than wildcards like `*` or `**`. For example:
-   * - Works: `["**/*.ts", "!**/src/**"]` - ignores all .ts files except those in src/ directories
-   * - Does NOT work as expected: `["*", "!src/"]` - negation won't properly un-ignore nested paths
+   * - Works: ["**\/*.ts", "!**\/src\/**"] - ignores all .ts files except those in src/ directories
+   * - Does NOT work as expected: ["*", "!src/"] - negation won't properly un-ignore nested paths
    */
   ignorePatternsForPlanCheck?: string[];
 }
