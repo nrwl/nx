@@ -246,6 +246,10 @@ export interface NxAppWebpackPluginOptions {
    */
   watch?: boolean;
   /**
+   * Configure webpack caching behavior. When not specified, defaults to `{ type: 'memory' }` for Node targets in watch mode, and `undefined` otherwise.
+   */
+  cache?: boolean | { type: 'memory' | 'filesystem'; [key: string]: any };
+  /**
    * Set a public path for assets resources with absolute paths.
    */
   publicPath?: string;

@@ -45,6 +45,25 @@
       "type": "boolean",
       "description": "Enable re-building when files change."
     },
+    "cache": {
+      "description": "Configure webpack caching behavior. When not specified, defaults to `{ type: 'memory' }` for Node targets in watch mode, and `undefined` otherwise.",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "The type of cache to use.",
+              "enum": ["memory", "filesystem"]
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
     "baseHref": {
       "type": "string",
       "description": "Base url for the application being built."

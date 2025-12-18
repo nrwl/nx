@@ -250,6 +250,10 @@ export interface NxAppRspackPluginOptions {
    */
   watch?: boolean;
   /**
+   * Configure rspack caching behavior. When not specified, defaults to `true` for Node targets in watch mode, and `undefined` otherwise.
+   */
+  cache?: boolean;
+  /**
    * Set a public path for assets resources with absolute paths.
    */
   publicPath?: string;

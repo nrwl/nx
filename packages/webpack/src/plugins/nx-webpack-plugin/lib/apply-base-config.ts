@@ -89,10 +89,12 @@ function applyNxIndependentConfig(
         : 'none';
   // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
   // So to mitigate this we enable in memory caching when target is Node and in watch mode.
-  // NX_WEBPACK_START_DIFF: force undefined event if target node and watch
-  config.cache = undefined
-    //options.target === 'node' && options.watch ? { type: 'memory' } : undefined;
-  // NX_WEBPACK_END_DIFF
+  config.cache =
+    'cache' in options
+      ? options.cache
+      : options.target === 'node' && options.watch
+        ? { type: 'memory' }
+        : undefined;
 
   config.devtool =
     options.sourceMap === true ? 'source-map' : options.sourceMap;

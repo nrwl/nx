@@ -96,10 +96,12 @@ function applyNxIndependentConfig(
   // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
   // So to mitigate this we enable in memory caching when target is Node and in watch mode.
   config.cache =
-    (options.target === 'node' || options.target === 'async-node') &&
-    options.watch
-      ? true
-      : undefined;
+    'cache' in options
+      ? options.cache
+      : (options.target === 'node' || options.target === 'async-node') &&
+          options.watch
+        ? true
+        : undefined;
 
   config.devtool =
     options.sourceMap === true ? 'source-map' : options.sourceMap;
@@ -451,7 +453,7 @@ function applyNxDependentConfig(
   config.externals = externals;
 
   // Enabled for performance
-  config.cache = true;
+  config.cache = 'cache' in options ? options.cache : true;
   config.module = {
     ...config.module,
     rules: [

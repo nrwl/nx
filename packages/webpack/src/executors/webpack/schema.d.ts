@@ -74,6 +74,7 @@ export interface WebpackExecutorOptions {
   vendorChunk?: boolean;
   verbose?: boolean;
   watch?: boolean;
+  cache?: boolean | { type: 'memory' | 'filesystem'; [key: string]: any };
   webpackConfig?: string;
   babelConfig?: string;
   babelUpwardRootMode?: boolean;

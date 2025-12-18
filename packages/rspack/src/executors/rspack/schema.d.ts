@@ -50,6 +50,7 @@ export interface RspackExecutorSchema {
   verbose?: boolean;
   vendorChunk?: boolean;
   watch?: boolean;
+  cache?: boolean;
 }
 
 export interface AssetGlobPattern {

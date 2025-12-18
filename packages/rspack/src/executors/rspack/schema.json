@@ -303,6 +303,10 @@
     "vendorChunk": {
       "type": "boolean",
       "description": "Use a separate bundle containing only vendor libraries."
+    },
+    "cache": {
+      "type": "boolean",
+      "description": "Configure rspack caching behavior. When not specified, defaults to `true` for Node targets in watch mode, and `undefined` otherwise."
     }
   },
   "required": ["rspackConfig"],
