@@ -25,11 +25,11 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       { label: 'Nx Cloud Intro', link: 'getting-started/nx-cloud' },
       {
         label: 'Install in Non-JS Repo',
-        link: 'guides/Installation/install-non-javascript',
+        link: 'guides/installation/install-non-javascript',
       },
       {
         label: 'Update Global Installation',
-        link: 'guides/Installation/update-global-installation',
+        link: 'guides/installation/update-global-installation',
       },
       {
         label: 'Tutorials',
@@ -77,13 +77,13 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
             label: 'Maintain TypeScript Monorepos',
             link: 'features/maintain-typescript-monorepos',
           },
-          { label: 'Enhance AI', link: 'features/enhance-AI' },
+          { label: 'Enhance AI', link: 'features/enhance-ai' },
           {
             label: 'CI Basics',
             collapsed: true,
             items: [
               // Links to Scale section for now
-              { label: 'CI Features Overview', link: 'features/CI Features' },
+              { label: 'CI Features Overview', link: 'features/ci-features' },
             ],
           },
           {
