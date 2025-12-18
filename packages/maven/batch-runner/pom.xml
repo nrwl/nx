@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>dev.nx.maven</groupId>
+        <artifactId>nx-maven-parent</artifactId>
+        <version>0.0.11</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>maven-batch-runner</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Nx Maven Batch Runner</name>
+    <description>Batch runner for Nx Maven plugin using Maven Embedder API</description>
+
+    <properties>
+        <!-- Skip deployment for this module - it's an internal tool, not published to Maven Central -->
+        <maven.install.skip>true</maven.install.skip>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.gpg.skip>true</maven.gpg.skip>
+    </properties>
+
+
+    <dependencies>
+        <!-- Shared Nx Maven utilities -->
+        <dependency>
+            <groupId>dev.nx.maven</groupId>
+            <artifactId>nx-maven-shared</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Maven 4.0.0-rc-5 CLI for ResidentMavenInvoker (shaded - needed for bootstrap) -->
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-cli</artifactId>
+            <version>4.0.0-rc-5</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Maven JLine for message formatting (shaded - needed for maven-cli) -->
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-jline</artifactId>
+            <version>4.0.0-rc-5</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Maven Executor API (shaded - needed for bootstrap) -->
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-executor</artifactId>
+            <version>4.0.0-rc-5</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Maven Core (shaded - needed for DefaultMaven and execution classes) -->
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-core</artifactId>
+            <version>4.0.0-rc-5</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Maven Plugin API (shaded - needed for plugin execution) -->
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
+            <version>4.0.0-rc-5</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Maven Model (shaded - needed for project/dependency model) -->
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-model</artifactId>
+            <version>4.0.0-rc-5</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Guice - MUST be shaded (not in Maven 4.x lib, but needed by maven-cli) -->
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>5.1.0</version>
+            <classifier>classes</classifier>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Sisu Plexus - MUST be shaded for PlexusContainer and related classes -->
+        <!-- Maven 4.x includes this in lib, but for standalone JAR we need to shade it -->
+        <dependency>
+            <groupId>org.eclipse.sisu</groupId>
+            <artifactId>org.eclipse.sisu.plexus</artifactId>
+            <version>0.9.0.M4</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Logging - MUST be shaded (runtime doesn't guarantee it) -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- JSON parsing - MUST be shaded (not part of Maven) -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Logging for testing -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>2.0.9</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Kotlin Compiler -->
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Java Compiler -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
+                </configuration>
+            </plugin>
+
+            <!-- Failsafe for Integration Tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Shade Plugin for uber JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>${project.build.directory}/batch-runner.jar</outputFile>
+                            <minimizeJar>false</minimizeJar>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>dev.nx.maven.NxMavenBatchRunnerKt</mainClass>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <!-- Combine META-INF resources for plexus components -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/sisu/javax.inject.Named</resource>
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                                <!-- Include Woodstox - loaded via ServiceLoader at runtime -->
+                                <filter>
+                                    <artifact>com.fasterxml.woodstox:woodstox-core</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.codehaus.woodstox:stax2-api</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <!-- Exclude slf4j-simple's service provider to avoid conflict with Maven's MavenServiceProvider -->
+                                <filter>
+                                    <artifact>org.slf4j:slf4j-simple</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/services/org.slf4j.spi.SLF4JServiceProvider</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <shadedArtifactAttached>false</shadedArtifactAttached>
+                            <createDependencyReducedPom>true</createDependencyReducedPom>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+
+        <sourceDirectory>src/main/kotlin</sourceDirectory>
+        <testSourceDirectory>src/test/kotlin</testSourceDirectory>
+    </build>
+</project>

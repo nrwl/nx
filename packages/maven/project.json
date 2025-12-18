@@ -1,5 +1,4 @@
 {
-  "name": "maven",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/maven/src",
   "projectType": "library",
@@ -23,6 +22,7 @@
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "outputs": ["{options.outputPath}"],
+      "dependsOn": ["build-base", "maven-batch-runner:_package"],
       "options": {
         "tsConfig": "./tsconfig.lib.json",
         "outputPath": "packages/maven/dist",
@@ -47,6 +47,12 @@
             "input": "packages/maven",
             "glob": "@(generators|executors).json",
             "output": "/"
+          },
+          {
+            "input": "packages/maven/batch-runner/target",
+            "glob": "batch-runner.jar",
+            "output": "/",
+            "includeIgnoredFiles": true
           }
         ]
       }
@@ -55,9 +61,9 @@
   "release": {
     "version": {
       "preserveLocalDependencyProtocols": false,
-      "manifestRootsToUpdate": ["packages/{projectName}"]
+      "manifestRootsToUpdate": ["{projectRoot}"]
     }
   },
-  "tags": [],
-  "implicitDependencies": ["nx-maven-plugin"]
+  "tags": ["maven:dev.nx.maven"],
+  "implicitDependencies": ["maven-batch-runner", "nx-maven-plugin"]
 }

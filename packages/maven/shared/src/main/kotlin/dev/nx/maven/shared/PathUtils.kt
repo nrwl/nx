@@ -1,21 +1,16 @@
-package dev.nx.maven.buildstate
+package dev.nx.maven.shared
 
 import org.slf4j.Logger
 import java.io.File
 import java.nio.file.Paths
 
 /**
- * Utility class for converting between absolute and relative paths
+ * Utility object for converting between absolute and relative paths
  */
 object PathUtils {
 
     /**
      * Convert an absolute path to a relative path from the project root
-     *
-     * @param absolutePath The absolute path to convert
-     * @param projectRoot The project root directory
-     * @param logger Optional logger for warnings
-     * @return The relative path from project root, or the original path if conversion fails
      */
     fun toRelativePath(absolutePath: String, projectRoot: File, logger: Logger? = null): String {
         return try {
@@ -30,11 +25,6 @@ object PathUtils {
 
     /**
      * Convert a relative path to an absolute path based on the project root
-     *
-     * @param pathString The path string (could be relative or absolute)
-     * @param projectRoot The project root directory
-     * @param logger Optional logger for warnings
-     * @return The absolute path
      */
     fun toAbsolutePath(pathString: String, projectRoot: File, logger: Logger? = null): String {
         return try {
