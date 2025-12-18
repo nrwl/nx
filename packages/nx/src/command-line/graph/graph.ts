@@ -859,7 +859,7 @@ function createProjectGraphListener() {
 
         let projectGraph = data.projectGraph;
         let sourceMaps = data.sourceMaps;
-        let errors = [];
+        let errors: GraphError[] | undefined;
 
         if (data.error instanceof ProjectGraphError) {
           projectGraph = data.error.getPartialProjectGraph();
@@ -880,6 +880,7 @@ function createProjectGraphListener() {
             projectGraph,
             sourceMaps,
             errors,
+            currentProjectGraphClientResponse.affected,
             isFilteredGraph ? currentProjectGraphClientResponse.focus : null,
             isFilteredGraph ? currentProjectGraphClientResponse.exclude : []
           );
@@ -922,6 +923,7 @@ function transformProjectGraphToClientResponse(
   projectGraph: ProjectGraph,
   sourceMaps: ConfigurationSourceMaps,
   errors: GraphError[] | null,
+  affected: string[] = [],
   focus: string = null,
   exclude: string[] = []
 ): {
@@ -974,7 +976,7 @@ function transformProjectGraphToClientResponse(
       layout,
       projects,
       dependencies,
-      affected: [],
+      affected,
       fileMap,
       isPartial: false,
       errors,
@@ -1031,6 +1033,7 @@ async function createProjectGraphAndSourceMapClientResponse(
       projectGraph,
       sourceMaps,
       errors,
+      affected,
       focus,
       exclude
     );
