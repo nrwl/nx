@@ -353,6 +353,11 @@ export interface NxReleaseVersionPlansConfiguration {
   /**
    * Changes to files matching any of these optional patterns will be excluded from the affected project logic within the `nx release plan:check`
    * command. This is useful for ignoring files that are not relevant to the versioning process, such as documentation or configuration files.
+   *
+   * These patterns follow gitignore semantics. When using negation patterns (to "un-ignore" certain files), use specific file extension patterns
+   * rather than wildcards like `*` or `**`. For example:
+   * - Works: `["**\/*.ts", "!**\/src/**"]` - ignores all .ts files except those in src/ directories
+   * - Does NOT work as expected: `["*", "!src/"]` - negation won't properly un-ignore nested paths
    */
   ignorePatternsForPlanCheck?: string[];
 }

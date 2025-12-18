@@ -170,6 +170,33 @@ By default, all files that have changed are considered, but you may not want all
 }
 ```
 
+{% aside type="warning" title="Important: Pattern Syntax" %}
+
+The `ignorePatternsForPlanCheck` patterns follow [gitignore semantics](https://git-scm.com/docs/gitignore). When using negation patterns (patterns starting with `!`) to "un-ignore" certain files, be aware that:
+
+**Working patterns:**
+
+- `["**/*.spec.ts"]` - ignore all spec files
+- `["**/*.ts", "!**/src/**"]` - ignore all .ts files except those in src/ directories
+
+**Non-working patterns:**
+
+- `["*", "!src/"]` - this does NOT work as expected because `*` in gitignore matches at the root level and negation patterns cannot properly un-ignore nested paths
+
+If you want to ignore all files except those in specific directories, use file extension patterns instead of wildcards:
+
+```jsonc
+{
+  "release": {
+    "versionPlans": {
+      "ignorePatternsForPlanCheck": ["**/*.ts", "**/*.json", "!**/src/**"],
+    },
+  },
+}
+```
+
+{% /aside %}
+
 To see more details about the changed files that were detected and the filtering logic that was used to determine the ultimately changed projects behind the scenes, you can pass `--verbose` to the command:
 
 ```shell
