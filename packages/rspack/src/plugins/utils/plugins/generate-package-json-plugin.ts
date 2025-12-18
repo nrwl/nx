@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import {
   type Compiler,
   sources,
@@ -29,8 +30,24 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
       projectName: string;
       targetName: string;
       projectGraph: ProjectGraph;
+      runtimeDependencies?: string[];
     }
   ) {}
+
+  private resolveRuntimeDependencies(): Record<string, string> {
+    const runtimeDependencies: Record<string, string> = {};
+    if (this.options.runtimeDependencies) {
+      for (const dep of this.options.runtimeDependencies) {
+        const pkgs = fs.readFileSync(
+          `${process.env.NX_WORKSPACE_ROOT}/node_modules/${dep}/package.json`,
+          'utf-8'
+        );
+        const { name, version } = JSON.parse(pkgs);
+        runtimeDependencies[name] = version;
+      }
+    }
+    return runtimeDependencies;
+  }
 
   apply(compiler: Compiler): void {
     compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
@@ -62,6 +79,8 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
             });
           }
 
+          const runtimeDependencies = this.resolveRuntimeDependencies();
+
           const packageJson = createPackageJson(
             this.options.projectName,
             this.options.projectGraph,
@@ -74,6 +93,11 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
             }
           );
           packageJson.main = packageJson.main ?? this.options.outputFileName;
+
+          packageJson.dependencies = {
+            ...packageJson.dependencies,
+            ...runtimeDependencies,
+          };
 
           compilation.emitAsset(
             'package.json',

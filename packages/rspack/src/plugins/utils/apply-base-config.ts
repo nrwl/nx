@@ -271,16 +271,27 @@ function applyNxDependentConfig(
     plugins.push(new NxTsconfigPathsRspackPlugin({ ...options, tsConfig }));
   }
 
+  // Normalize typeCheckOptions from deprecated skipTypeChecking for backward compatibility
+  const defaultTypeCheckOptions = { async: true };
+  let typeCheckOptions: false | { async: boolean };
+  if (options.typeCheckOptions !== undefined) {
+    typeCheckOptions = options.typeCheckOptions;
+  } else if (options.skipTypeChecking) {
+    typeCheckOptions = false;
+  } else {
+    typeCheckOptions = defaultTypeCheckOptions;
+  }
+
   // New TS Solution already has a typecheck target but allow it to run during serve
-  if (
-    (!options?.skipTypeChecking && !isUsingTsSolution) ||
-    (isUsingTsSolution &&
-      options?.skipTypeChecking === false &&
-      process.env['WEBPACK_SERVE'])
-  ) {
+  const shouldTypeCheck =
+    typeCheckOptions !== false &&
+    (!isUsingTsSolution || process.env['WEBPACK_SERVE']);
+
+  if (shouldTypeCheck) {
     const { TsCheckerRspackPlugin } = require('ts-checker-rspack-plugin');
 
     const pluginConfig: any = {
+      ...typeCheckOptions,
       typescript: {
         configFile: path.isAbsolute(tsConfig)
           ? tsConfig
