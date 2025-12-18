@@ -27,8 +27,9 @@
       "description": "The tsconfig file to build the project."
     },
     "skipTypeChecking": {
+      "alias": "typeCheck",
       "type": "boolean",
-      "description": "Skip type checking. Default is `false`.",
+      "description": "Skip the type checking. Default is `false`.",
       "x-deprecated": "Use `typeCheckOptions` instead."
     },
     "typeCheckOptions": {
