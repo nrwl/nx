@@ -2,31 +2,133 @@ import type { StarlightUserConfig } from '@astrojs/starlight/types';
 import { getPluginItems } from './src/plugins/utils/plugin-mappings';
 
 export const sidebar: StarlightUserConfig['sidebar'] = [
+  // ============================================
+  // 1. LEARN NX (only expanded section)
+  // ============================================
   {
-    label: 'Getting Started',
+    label: 'Learn Nx',
     collapsed: false,
-    autogenerate: { directory: 'getting-started', collapsed: true },
-  },
-  {
-    label: 'Features',
-    collapsed: false,
-    autogenerate: { directory: 'features', collapsed: true },
-  },
-  {
-    label: 'Core Guides',
-    collapsed: true,
-    autogenerate: { directory: 'guides', collapsed: true },
-  },
-  {
-    label: 'Core Concepts',
-    collapsed: true,
-    autogenerate: { directory: 'concepts', collapsed: true },
-  },
-  {
-    label: 'Technologies',
-    collapsed: false,
-    // manually type the tech routes due to complexity of order and structure
     items: [
+      // Getting Started - flattened
+      { label: 'Why Nx?', link: 'getting-started/intro' },
+      { label: 'Installation', link: 'getting-started/installation' },
+      {
+        label: 'Start a New Project',
+        link: 'getting-started/start-new-project',
+      },
+      {
+        label: 'Add to Existing Project',
+        link: 'getting-started/start-with-existing-project',
+      },
+      { label: 'Editor Setup', link: 'getting-started/editor-setup' },
+      { label: 'AI Setup', link: 'getting-started/ai-setup' },
+      { label: 'Nx Cloud Intro', link: 'getting-started/nx-cloud' },
+      {
+        label: 'Install in Non-JS Repo',
+        link: 'guides/Installation/install-non-javascript',
+      },
+      {
+        label: 'Update Global Installation',
+        link: 'guides/Installation/update-global-installation',
+      },
+      {
+        label: 'Tutorials',
+        collapsed: true,
+        autogenerate: {
+          directory: 'getting-started/Tutorials',
+          collapsed: true,
+        },
+      },
+      {
+        label: 'Core Concepts',
+        collapsed: true,
+        autogenerate: { directory: 'concepts', collapsed: true },
+      },
+    ],
+  },
+
+  // ============================================
+  // 2. BUILD WITH NX
+  // ============================================
+  {
+    label: 'Build with Nx',
+    collapsed: true,
+    items: [
+      // --- CORE (Nx-specific features) - FIRST ---
+      {
+        label: 'Core',
+        collapsed: true,
+        items: [
+          // Features flattened directly under Core
+          { label: 'Run Tasks', link: 'features/run-tasks' },
+          { label: 'Cache Task Results', link: 'features/cache-task-results' },
+          { label: 'Explore the Graph', link: 'features/explore-graph' },
+          { label: 'Generate Code', link: 'features/generate-code' },
+          {
+            label: 'Enforce Module Boundaries',
+            link: 'features/enforce-module-boundaries',
+          },
+          { label: 'Manage Releases', link: 'features/manage-releases' },
+          {
+            label: 'Automate Updating Dependencies',
+            link: 'features/automate-updating-dependencies',
+          },
+          {
+            label: 'Maintain TypeScript Monorepos',
+            link: 'features/maintain-typescript-monorepos',
+          },
+          { label: 'Enhance AI', link: 'features/enhance-AI' },
+          {
+            label: 'CI Basics',
+            collapsed: true,
+            items: [
+              // Links to Scale section for now
+              { label: 'CI Features Overview', link: 'features/CI Features' },
+            ],
+          },
+          {
+            label: 'Guides',
+            collapsed: true,
+            items: [
+              {
+                label: 'Tasks & Caching',
+                collapsed: true,
+                autogenerate: {
+                  directory: 'guides/Tasks & Caching',
+                  collapsed: true,
+                },
+              },
+              {
+                label: 'Nx Release',
+                collapsed: true,
+                autogenerate: {
+                  directory: 'guides/Nx Release',
+                  collapsed: true,
+                },
+              },
+              {
+                label: 'Enforce Module Boundaries',
+                collapsed: true,
+                autogenerate: {
+                  directory: 'guides/Enforce Module Boundaries',
+                  collapsed: true,
+                },
+              },
+              {
+                label: 'Adopting Nx',
+                collapsed: true,
+                autogenerate: {
+                  directory: 'guides/Adopting Nx',
+                  collapsed: true,
+                },
+              },
+              { label: 'CI Deployment', link: 'guides/ci-deployment' },
+            ],
+          },
+        ],
+      },
+
+      // --- TECHNOLOGIES (flattened from current structure) ---
       {
         label: 'TypeScript',
         collapsed: true,
@@ -226,24 +328,111 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       },
     ],
   },
+
+  // ============================================
+  // 3. SCALE WITH NX
+  // ============================================
   {
-    label: 'Enterprise',
+    label: 'Scale with Nx',
     collapsed: true,
-    autogenerate: { directory: 'enterprise', collapsed: true },
+    items: [
+      {
+        label: 'Nx Cloud',
+        collapsed: true,
+        autogenerate: { directory: 'guides/Nx Cloud', collapsed: true },
+      },
+      {
+        label: 'CI Features',
+        collapsed: true,
+        autogenerate: { directory: 'features/CI Features', collapsed: true },
+      },
+      {
+        label: 'Nx Console',
+        collapsed: true,
+        autogenerate: { directory: 'guides/Nx Console', collapsed: true },
+      },
+      {
+        label: 'Enterprise',
+        collapsed: true,
+        autogenerate: { directory: 'enterprise', collapsed: true },
+      },
+    ],
   },
+
+  // ============================================
+  // 4. EXTEND NX
+  // ============================================
   {
-    label: 'Extending Nx',
+    label: 'Extend Nx',
     collapsed: true,
     autogenerate: { directory: 'extending-nx', collapsed: true },
   },
+
+  // ============================================
+  // 5. REFERENCE
+  // ============================================
   {
     label: 'Reference',
-    collapsed: false,
-    autogenerate: { directory: 'reference', collapsed: true },
-  },
-  {
-    label: 'Troubleshooting',
-    collapsed: false,
-    autogenerate: { directory: 'troubleshooting', collapsed: true },
+    collapsed: true,
+    items: [
+      // Main reference content
+      { label: 'nx.json', link: 'reference/nx-json' },
+      {
+        label: 'Project Configuration',
+        link: 'reference/project-configuration',
+      },
+      { label: 'Inputs', link: 'reference/inputs' },
+      {
+        label: 'Environment Variables',
+        link: 'reference/environment-variables',
+      },
+      { label: 'Glossary', link: 'reference/glossary' },
+      { label: '.nxignore', link: 'reference/nxignore' },
+      { label: 'Releases', link: 'reference/releases' },
+      { label: 'Nx MCP', link: 'reference/nx-mcp' },
+      { label: 'Nx Console Settings', link: 'reference/nx-console-settings' },
+      { label: 'Nx Cloud CLI', link: 'reference/nx-cloud-cli' },
+      {
+        label: 'Node/TypeScript Compatibility',
+        link: 'reference/nodejs-typescript-compatibility',
+      },
+      {
+        label: 'Nx Cloud',
+        collapsed: true,
+        autogenerate: { directory: 'reference/Nx Cloud', collapsed: true },
+      },
+      {
+        label: 'Conformance',
+        collapsed: true,
+        autogenerate: { directory: 'reference/Conformance', collapsed: true },
+      },
+      {
+        label: 'Owners',
+        collapsed: true,
+        autogenerate: { directory: 'reference/Owners', collapsed: true },
+      },
+      {
+        label: 'Benchmarks',
+        collapsed: true,
+        autogenerate: { directory: 'reference/Benchmarks', collapsed: true },
+      },
+      {
+        label: 'Deprecated',
+        collapsed: true,
+        autogenerate: { directory: 'reference/Deprecated', collapsed: true },
+      },
+      // Moved from guides
+      {
+        label: 'Tips & Tricks',
+        collapsed: true,
+        autogenerate: { directory: 'guides/Tips-n-Tricks', collapsed: true },
+      },
+      // Moved from top-level
+      {
+        label: 'Troubleshooting',
+        collapsed: true,
+        autogenerate: { directory: 'troubleshooting', collapsed: true },
+      },
+    ],
   },
 ];
