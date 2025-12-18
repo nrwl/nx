@@ -52,7 +52,7 @@
 
     <!-- Dependency Versions -->
     <kotlin.version>1.9.22</kotlin.version>
-    <maven.version>3.9.11</maven.version>
+    <maven.version>4.0.0-rc-5</maven.version>
     <maven.plugin.tools.version>3.11.0</maven.plugin.tools.version>
     <jackson.version>2.16.1</jackson.version>
     <junit5.version>5.10.1</junit5.version>
