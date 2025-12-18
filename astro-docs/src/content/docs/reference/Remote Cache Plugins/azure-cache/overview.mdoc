@@ -55,7 +55,7 @@ Includes everything from Nx Cloud, plus:
 
 Run the following command:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/azure-cache
 ```
 
@@ -63,7 +63,7 @@ This will add the `@nx/azure-cache` NPM package and automatically configure it f
 
 The key will be saved in your repository (`.nx/key/key.ini`) and should be committed so that every developer has access to it. If your repository is public (or in CI), you can also use an environment variable:
 
-```
+```dotenv
 // .env
 NX_KEY=YOUR_ACTIVATION_KEY
 ```
@@ -118,8 +118,8 @@ Finally, you need to configure your Nx cache in the `nx.json` file. The `contain
 {
   "azure": {
     "container": "mycontainer",
-    "accountName": "myaccount"
-  }
+    "accountName": "myaccount",
+  },
 }
 ```
 
@@ -130,7 +130,7 @@ Finally, you need to configure your Nx cache in the `nx.json` file. The `contain
 
 ### Migrating from Custom Tasks Runners
 
-Many people who are interested in Nx Powerpack have previously used custom task runners. Nx offers a new and simpler extension API designed to meet the same use cases as the now-deprecated custom task runners.
+Many people who are interested in Nx caching plugins have previously used custom task runners. Nx offers a new and simpler extension API designed to meet the same use cases as the now-deprecated custom task runners.
 
 To learn more about migrating from custom task runners, [please refer to this detailed guide](/docs/reference/deprecated/custom-tasks-runner).
 
@@ -143,8 +143,8 @@ Nx will only show warnings when the remote cache is not writable. You can disabl
 {
   "azure": {
     // ...
-    "localMode": "read-only"
-  }
+    "localMode": "read-only",
+  },
 }
 ```
 
@@ -155,7 +155,7 @@ The cache mode in CI can also be configured by setting `ciMode` to `read-only` o
 {
   "azure": {
     // ...
-    "ciMode": "read-only"
-  }
+    "ciMode": "read-only",
+  },
 }
 ```

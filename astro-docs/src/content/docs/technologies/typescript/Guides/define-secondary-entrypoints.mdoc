@@ -3,7 +3,7 @@ title: Define Secondary Entry Points for TypeScript Packages
 description: Learn how to configure multiple entry points for your TypeScript packages using Nx, allowing consumers to import specific parts of your library.
 sidebar:
   label: Define Secondary Entrypoints for Typescript Packages
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 If you have a package where you want people to be able to access more than just the `main` file, you can define an `exports` property in the `package.json` file. Like this:
@@ -50,13 +50,13 @@ If you're using the `@nx/js:tsc` executor, as of Nx 16.8, you can specify the `a
           "main": "packages/my-awesome-lib/src/index.ts",
           "additionalEntryPoints": [
             "packages/my-awesome-lib/src/foo.ts",
-            "packages/my-awesome-lib/src/bar.ts"
+            "packages/my-awesome-lib/src/bar.ts",
           ],
-          "generateExportsField": true
-        }
-      }
-    }
-  }
+          "generateExportsField": true,
+        },
+      },
+    },
+  },
 }
 ```
 
@@ -74,12 +74,12 @@ If you're using the `@nx/js:tsc` executor, as of Nx 16.8, you can specify the `a
         "main": "packages/my-awesome-lib/src/index.ts",
         "additionalEntryPoints": [
           "packages/my-awesome-lib/src/foo.ts",
-          "packages/my-awesome-lib/src/bar.ts"
+          "packages/my-awesome-lib/src/bar.ts",
         ],
-        "generateExportsField": true
-      }
-    }
-  }
+        "generateExportsField": true,
+      },
+    },
+  },
 }
 ```
 

@@ -400,7 +400,7 @@ describe('CI Workflow generator', () => {
                   node-version: 20
                   cache: 'npm'
 
-              - run: npm ci --legacy-peer-deps
+              - run: npm ci
               - uses: nrwl/nx-set-shas@v4
 
               # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -420,7 +420,7 @@ describe('CI Workflow generator', () => {
         "version: 2.1
 
         orbs:
-          nx: nrwl/nx@1.6.2
+          nx: nrwl/nx@1.7.0
 
         jobs:
           main:
@@ -435,7 +435,7 @@ describe('CI Workflow generator', () => {
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
               # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-              - run: npm ci --legacy-peer-deps
+              - run: npm ci
               - nx/set-shas:
                   main-branch-name: 'main'
 
@@ -486,7 +486,7 @@ describe('CI Workflow generator', () => {
               vmImage: 'ubuntu-latest'
             steps:
               - checkout: self
-                fetchDepth: 0
+                fetchDepth: '0'
                 fetchFilter: tree:0
               # Set Azure Devops CLI default settings
               - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
@@ -512,7 +512,7 @@ describe('CI Workflow generator', () => {
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
               # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-              - script: npm ci --legacy-peer-deps
+              - script: npm ci
               - script: git branch --track main origin/main
                 condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -553,7 +553,7 @@ describe('CI Workflow generator', () => {
                     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
                     # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-                    - npm ci --legacy-peer-deps
+                    - npm ci
 
                     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
                     # npx nx-cloud record -- echo Hello World
@@ -575,7 +575,7 @@ describe('CI Workflow generator', () => {
                     # Connect your workspace by running "nx connect" and uncomment this
                     # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-                    - npm ci --legacy-peer-deps
+                    - npm ci
 
                     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
                     # - npx nx-cloud record -- echo Hello World
@@ -605,7 +605,7 @@ describe('CI Workflow generator', () => {
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci --legacy-peer-deps
+            - npm ci
             - NX_HEAD=$CI_COMMIT_SHA
             - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 

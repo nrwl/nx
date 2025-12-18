@@ -46,12 +46,19 @@ function collectDependencies(
     if (dependency.target.startsWith('npm:')) {
       dependencies.npmPackages.add(dependency.target.replace('npm:', ''));
     } else {
-      dependencies.workspaceLibraries.set(dependency.target, {
-        name: dependency.target,
-        root: projectGraph.nodes[dependency.target].data.root,
-        importKey: getLibraryImportPath(dependency.target, projectGraph),
-      });
-      collectDependencies(projectGraph, dependency.target, dependencies, seen);
+      if (projectGraph.nodes[dependency.target]) {
+        dependencies.workspaceLibraries.set(dependency.target, {
+          name: dependency.target,
+          root: projectGraph.nodes[dependency.target].data.root,
+          importKey: getLibraryImportPath(dependency.target, projectGraph),
+        });
+        collectDependencies(
+          projectGraph,
+          dependency.target,
+          dependencies,
+          seen
+        );
+      }
     }
   });
 
@@ -91,5 +98,7 @@ function getLibraryImportPath(
     }
   }
 
-  return undefined;
+  // Return library name if not found in TS path mappings
+  // This supports TS Solution + PM Workspaces where libs use package.json instead
+  return library;
 }

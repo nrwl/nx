@@ -31,12 +31,14 @@ function matchesCurrentNxInstall(
     if (
       currentInstallation.devDependencies['nx'] !==
         nxJsonInstallation.version ||
-      require(path.join(
-        path.dirname(installationPath),
-        'node_modules',
-        'nx',
-        'package.json'
-      )).version !== nxJsonInstallation.version
+      require(
+        path.join(
+          path.dirname(installationPath),
+          'node_modules',
+          'nx',
+          'package.json'
+        )
+      ).version !== nxJsonInstallation.version
     ) {
       return false;
     }

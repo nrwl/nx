@@ -5,7 +5,7 @@ exports[`app --bundler=rsbuild should generate valid rsbuild config files for @e
 import NxWelcome from "./nx-welcome";
 
 const StyledApp = styled.div\`
-    // Your style here
+    /* Your style here */
 \`;
 
 export function App() {
@@ -72,7 +72,7 @@ exports[`app --bundler=rsbuild should generate valid rsbuild config files for st
 import NxWelcome from "./nx-welcome";
 
 const StyledApp = styled.div\`
-    // Your style here
+    /* Your style here */
 \`;
 
 export function App() {
@@ -239,6 +239,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '../dist/my-app'),
+    clean: true,
   },
   devServer: {
     port: 4200,
@@ -278,7 +279,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server:{
     port: 4200,
@@ -291,7 +292,7 @@ export default defineConfig(() => ({
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //   plugins: () => [ nxViteTsPaths() ],
   // },
   build: {
     outDir: '../dist/my-app',
@@ -313,6 +314,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '../dist/my-app'),
+    clean: true,
   },
   devServer: {
     port: 4200,
@@ -352,7 +354,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server:{
     port: 4200,
@@ -365,7 +367,7 @@ export default defineConfig(() => ({
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //   plugins: () => [ nxViteTsPaths() ],
   // },
   build: {
     outDir: '../dist/my-app',
@@ -421,7 +423,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server: {
     port: 4200,
@@ -434,7 +436,7 @@ export default defineConfig(() => ({
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //   plugins: () => [ nxViteTsPaths() ],
   // },
   build: {
     outDir: '../dist/my-app',
@@ -485,7 +487,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server: {
     port: 4200,
@@ -498,7 +500,7 @@ export default defineConfig(() => ({
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //   plugins: () => [ nxViteTsPaths() ],
   // },
   build: {
     outDir: '../dist/my-app',
@@ -534,6 +536,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '../dist/my-app'),
+    clean: true,
   },
   devServer: {
     port: 4200,
@@ -589,7 +592,7 @@ exports[`app should generate valid .babelrc JSON config for CSS-in-JS solutions 
 import NxWelcome from "./nx-welcome";
 
 const StyledApp = styled.div\`
-    // Your style here
+    /* Your style here */
 \`;
 
 export function App() {
@@ -628,7 +631,7 @@ exports[`app should generate valid .babelrc JSON config for CSS-in-JS solutions 
 import NxWelcome from "./nx-welcome";
 
 const StyledApp = styled.div\`
-    // Your style here
+    /* Your style here */
 \`;
 
 export function App() {
@@ -652,7 +655,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server:{
     port: 4200,
@@ -665,7 +668,7 @@ export default defineConfig(() => ({
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //   plugins: () => [ nxViteTsPaths() ],
   // },
   build: {
     outDir: '../dist/my-app',
@@ -687,6 +690,7 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '../dist/my-app'),
+    clean: true,
   },
   devServer: {
     port: 4200,

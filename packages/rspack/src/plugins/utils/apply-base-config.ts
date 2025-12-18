@@ -50,7 +50,6 @@ export function applyBaseConfig(
   } = {}
 ): void {
   // Defaults that was applied from executor schema previously.
-  options.deleteOutputPath ??= true;
   options.externalDependencies ??= 'all';
   options.fileReplacements ??= [];
   options.memoryLimit ??= 2048;
@@ -89,11 +88,11 @@ function applyNxIndependentConfig(
         //
         // When the NODE_ENV is something else (e.g. test), then set it to none
         // to prevent extra behavior from rspack.
-        options.mode ??
+        (options.mode ??
         (process.env.NODE_ENV === 'development' ||
         process.env.NODE_ENV === 'production'
           ? (process.env.NODE_ENV as 'development' | 'production')
-          : 'none');
+          : 'none'));
   // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
   // So to mitigate this we enable in memory caching when target is Node and in watch mode.
   config.cache =
@@ -149,7 +148,7 @@ function applyNxIndependentConfig(
     hashFunction: config.output?.hashFunction ?? 'xxhash64',
     // Disabled for performance
     pathinfo: config.output?.pathinfo ?? false,
-    clean: config.output?.clean ?? options.deleteOutputPath,
+    clean: config.output?.clean ?? true,
   };
 
   config.watch = options.watch;
@@ -206,7 +205,7 @@ function applyNxIndependentConfig(
           ],
           concatenateModules: true,
           runtimeChunk: isDevServer
-            ? config.optimization?.runtimeChunk ?? undefined
+            ? (config.optimization?.runtimeChunk ?? undefined)
             : false,
         }
       : {}),
@@ -292,9 +291,11 @@ function applyNxDependentConfig(
 
     // When using TS solution setup, enable build mode to generate declaration files
     // This prevents TS6305 errors when declaration files are expected but missing
-    // from module federation remote imports
+    // from module federation remote imports but disable emitting tsbuildinfo files
+    // so that tsc builds are not affected.
     if (isUsingTsSolution) {
       pluginConfig.typescript.build = true;
+      pluginConfig.typescript.mode = 'readonly';
     }
 
     plugins.push(new TsCheckerRspackPlugin(pluginConfig));

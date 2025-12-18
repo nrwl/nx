@@ -33,13 +33,14 @@
   "dependencies": {
     "detect-port": "^1.5.1",
     "http-server": "^14.1.0",
-    "picocolors": "^1.1.0",
-    "tslib": "^2.3.0",
+    "picocolors": "catalog:",
+    "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*"
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "@nx/vitest": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

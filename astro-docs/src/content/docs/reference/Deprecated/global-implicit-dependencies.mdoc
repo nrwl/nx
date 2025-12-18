@@ -4,9 +4,8 @@ description: 'Learn about the transition from global implicit dependencies to in
 sidebar:
   hidden: true
 weight: .1
-filter: "type:References"
+filter: 'type:References'
 ---
-
 
 Since v14.4, Nx supports [`inputs` and `namedInputs`](/docs/guides/tasks--caching/configure-inputs) for setting up implicit dependencies. As of Nx v16, the `implicitDependencies` defined in `nx.json` are ignored and do not influence the affected graph. This field will be removed in v17. The [`implicitDependencies` in the project configuration](/docs/reference/project-configuration#implicitdependencies) are still the best way to manually set up a dependency between two projects that Nx is not able to detect automatically.
 

@@ -10,4 +10,4 @@ Learn how Nx's code generators help boost your productivity by:
 - Automating repetitive tasks in your development workflow
 - Ensuring your code is consistent and follows best practices
 
-Read more [in our docs](/features/generate-code)
+Read more [in our docs](/docs/features/generate-code)

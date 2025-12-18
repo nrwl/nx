@@ -134,16 +134,19 @@ nx ${cmd.command || cmdName}
       );
 
       for (const option of sortedOptions) {
-        const optionNames = option.name.map((n) => `\`--${n}\``).join(', ');
+        // Format option names following the convention:
+        // - Canonical (first) option always gets --
+        // - Single-character aliases get -
+        // - Multi-character aliases get --
+        const [canonical, ...aliases] = option.name;
+        const formattedNames = [canonical, ...aliases].map((name) => {
+          if (name === canonical) {
+            return `\`--${name}\``;
+          }
+          return name.length === 1 ? `\`-${name}\`` : `\`--${name}\``;
+        });
+        const optionNames = formattedNames.join(', ');
         let description = option.description || '';
-
-        if (option.name.length > 1) {
-          const aliases = option.name
-            .slice(1)
-            .map((a) => `\`-${a}\``)
-            .join(', ');
-          description += ` (alias: ${aliases})`;
-        }
 
         if (option.deprecated) {
           description += ` **⚠️ Deprecated**${

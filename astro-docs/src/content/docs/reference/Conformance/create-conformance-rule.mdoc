@@ -1,0 +1,451 @@
+---
+title: Create a Conformance Rule
+description: Learn how to create custom conformance rules to enforce standards and best practices across your Nx workspace.
+sidebar:
+  label: Create Conformance Rule
+filter: 'type:References'
+---
+
+For local conformance rules, the resolution utilities from `@nx/js` are used in the same way they are for all other JavaScript/TypeScript files in Nx. Therefore, you can simply reference an adhoc JavaScript file or TypeScript file in your `"rule"` property (as long as the path is resolvable based on your package manager and/or tsconfig setup), and the rule will be loaded/transpiled as needed. The rule implementation file should also have a `schema.json` file next to it that defines the available rule options, if any.
+
+In practice, writing your local conformance rules in an Nx generated library is the easiest way to organize them and ensure that they are easily resolvable via TypeScript. The library in question could also be an Nx plugin, but it does not have to be.
+
+## Generate a Conformance Rule
+
+To write your own conformance rule, run the `@nx/conformance:create-rule` generator and answer the prompts.
+
+```text {% title="nx g @nx/conformance:create-rule" frame="terminal" %}
+ NX  Generating @nx/conformance:create-rule
+
+✔ What is the name of the rule? · local-conformance-rule-example
+✔ Which directory do you want to create the rule directory in? · packages/my-plugin/local-conformance-rule
+✔ What category does this rule belong to? · security
+✔ What is the description of the rule? · an example of a conformance rule
+CREATE packages/my-plugin/local-conformance-rule/local-conformance-rule-example/index.ts
+CREATE packages/my-plugin/local-conformance-rule/local-conformance-rule-example/schema.json
+```
+
+The generated rule definition file should look like this:
+
+```ts
+// packages/my-plugin/local-conformance-rule/index.ts
+import { createConformanceRule, ConformanceViolation } from '@nx/conformance';
+
+export default createConformanceRule({
+  name: 'local-conformance-rule-example',
+  category: 'security',
+  description: 'an example of a conformance rule',
+  implementation: async (context) => {
+    const violations: ConformanceViolation[] = [];
+
+    return {
+      severity: 'low',
+      details: {
+        violations,
+      },
+    };
+  },
+});
+```
+
+To enable the rule, you need to register it in the `nx.json` file.
+
+```json
+// nx.json
+{
+  "conformance": {
+    "rules": [
+      {
+        "rule": "./packages/my-plugin/local-conformance-rule/index.ts"
+      }
+    ]
+  }
+}
+```
+
+Note that the severity of the error is defined by the rule author and can be adjusted based on the specific violations that are found.
+
+## Understanding Rule Context
+
+The implementation function of the rule is passed a `context` object which contains:
+
+- **`tree`**: A `ReadOnlyConformanceTree` that can be used to read files from the workspace instead of directly from disk. Useful for unit testing rules as a test tree can be provided to the rule implementation (see [Testing Conformance Rules](/docs/reference/conformance/test-conformance-rule)).
+- **`projectGraph`**: The Nx project graph
+- **`fileMapCache`**: The Nx file map cache
+- **`ruleOptions`**: The resolved rule configuration options based on the current workspace
+
+## Violation Interface
+
+Violations must follow this interface:
+
+```typescript
+interface ConformanceViolation {
+  message: string;
+  file?: string; // Used if the violation is attributed to a specific file
+  sourceProject?: string; // Used if the violation is attributed to a specific project
+  workspaceViolation?: boolean; // Used if the violation is attributed to the entire workspace
+}
+```
+
+### Automatic Project Inference
+
+```typescript
+violations.push({
+  message: 'File violates standards',
+  file: 'libs/my-lib/src/problematic.ts', // sourceProject auto-inferred as 'my-lib'
+});
+```
+
+### Best Practices for Violations
+
+1. **Use `workspaceViolation: true`** for issues affecting the entire workspace (global configs, workspace structure, etc.)
+2. **Use `sourceProject` only** for project-wide issues (missing configuration, structure problems)
+3. **Use `file` (and optional explicit `sourceProject`)** for violations tied to specific files in projects
+4. **Use `file` only** for files that may not belong to projects (CI configs, root files, etc.)
+
+## Conformance Rule Examples
+
+The following examples demonstrate how to write rules that report violations at different scopes.
+
+{% tabs %}
+{% tabitem label="workspace violation" %}
+
+This rule checks to see if there is a root README.md file in the workspace, and if there is not, it reports on the workspace itself.
+
+```ts
+import { workspaceRoot } from '@nx/devkit';
+import { createConformanceRule, ConformanceViolation } from '@nx/conformance';
+import { join } from 'node:path';
+import { existsSync } from 'node:fs';
+
+export default createConformanceRule<object>({
+  name: 'readme-file',
+  category: 'maintainability',
+  description: 'The workspace should have a root README.md file',
+  implementation: async () => {
+    const violations: ConformanceViolation[] = [];
+
+    const readmePath = join(workspaceRoot, 'README.md');
+    if (!existsSync(readmePath)) {
+      violations.push({
+        message: 'The workspace should have a root README.md file',
+        workspaceViolation: true,
+      });
+    }
+
+    return {
+      severity: 'low',
+      details: {
+        violations,
+      },
+    };
+  },
+});
+```
+
+{% /tabitem %}
+{% tabitem label="project violation" %}
+
+The `@nx/conformance:ensure-owners` rule provides us an example of how to write a rule that reports on a project being in violation of the rule. The `@nx/owners` plugin adds an `owners` metadata property to every project node that has an owner in the project graph. This rule checks each project node metadata to make sure that each project has some owner defined.
+
+```ts
+import { ProjectGraphProjectNode } from '@nx/devkit';
+import { createConformanceRule, ConformanceViolation } from '@nx/conformance';
+
+export default createConformanceRule({
+  name: 'ensure-owners',
+  category: 'consistency',
+  description: 'Ensure that all projects have owners defined via Nx Owners.',
+  implementation: async (context) => {
+    const violations: ConformanceViolation[] = [];
+
+    for (const node of Object.values(
+      context.projectGraph.nodes
+    ) as ProjectGraphProjectNode[]) {
+      const metadata = node.data.metadata;
+      if (!metadata?.owners || Object.keys(metadata.owners).length === 0) {
+        violations.push({
+          sourceProject: node.name,
+          message: `This project currently has no owners defined via Nx Owners.`,
+        });
+      }
+    }
+
+    return {
+      severity: 'medium',
+      details: {
+        violations,
+      },
+    };
+  },
+});
+```
+
+{% /tabitem %}
+{% tabitem label="file violation" %}
+
+This rule uses TypeScript AST processing to ensure that `index.ts` files use a client-side style of export syntax and `server.ts` files use a server-side style of export syntax.
+
+```ts
+import { createConformanceRule, ConformanceViolation } from '@nx/conformance';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import {
+  createSourceFile,
+  isExportDeclaration,
+  isStringLiteral,
+  isToken,
+  ScriptKind,
+  ScriptTarget,
+} from 'typescript';
+
+export default createConformanceRule({
+  name: 'server-client-public-api',
+  category: 'consistency',
+  description: 'Ensure server-only and client-only public APIs are not mixed',
+  implementation: async ({ projectGraph }) => {
+    const violations: ConformanceViolation[] = [];
+
+    for (const nodeId in projectGraph.nodes) {
+      const node = projectGraph.nodes[nodeId];
+
+      const sourceRoot = node.data.root;
+
+      const indexPath = join(sourceRoot, 'src/index.ts');
+      const serverPath = join(sourceRoot, 'src/server.ts');
+
+      if (existsSync(indexPath)) {
+        const fileContent = readFileSync(indexPath, 'utf8');
+        violations.push(
+          ...processEntryPoint(fileContent, indexPath, nodeId, 'client')
+        );
+      }
+
+      if (existsSync(serverPath)) {
+        const fileContent = readFileSync(serverPath, 'utf8');
+        violations.push(
+          ...processEntryPoint(fileContent, serverPath, nodeId, 'server')
+        );
+      }
+    }
+
+    return {
+      severity: 'medium',
+      details: { violations },
+    };
+  },
+});
+
+export function processEntryPoint(
+  fileContent: string,
+  entryPoint: string,
+  project: string,
+  style: 'server' | 'client'
+) {
+  const violations: ConformanceViolation[] = [];
+
+  const sf = createSourceFile(
+    entryPoint,
+    fileContent,
+    ScriptTarget.Latest,
+    true,
+    ScriptKind.TS
+  );
+
+  let hasNotOnlyExports = false;
+  sf.forEachChild((node) => {
+    if (isExportDeclaration(node)) {
+      const moduleSpecifier =
+        node.moduleSpecifier && isStringLiteral(node.moduleSpecifier)
+          ? node.moduleSpecifier.getText()
+          : '';
+
+      if (isModuleSpecifierViolated(moduleSpecifier, style)) {
+        if (
+          violations.find(
+            (v) => v.file === entryPoint && v.sourceProject === project
+          )
+        ) {
+          // we already have a violation for this file and project, so we don't need to add another one
+          return;
+        }
+
+        violations.push({
+          message:
+            style === 'client'
+              ? 'Client-side only entry point cannot export from server-side modules'
+              : 'Server-side only entry point can only export server-side modules ',
+          file: entryPoint,
+          sourceProject: project,
+        });
+      }
+    } else if (isToken(node) && node === sf.endOfFileToken) {
+      // do nothing
+    } else {
+      hasNotOnlyExports = true;
+    }
+  });
+
+  if (hasNotOnlyExports) {
+    violations.push({
+      message: `Entry point should only contain exported APIs`,
+      file: entryPoint,
+      sourceProject: project,
+    });
+  }
+
+  return violations;
+}
+
+function isModuleSpecifierViolated(
+  moduleSpecifier: string,
+  style: 'server' | 'client'
+) {
+  // should not get here. if this is the case, it's a grammar error in the source code.
+  if (!moduleSpecifier) return false;
+
+  if (style === 'server' && !moduleSpecifier.includes('.server')) {
+    return true;
+  }
+
+  if (style === 'client' && moduleSpecifier.includes('.server')) {
+    return true;
+  }
+
+  return false;
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+## Auto-fixing Violations with Fix Generators
+
+Rules can optionally implement a `fixGenerator` function that will be used to automatically fix violations.
+
+### When Fix Generators Run
+
+- **`nx conformance`**: Evaluates rules and applies any available fix generators. Changes are written to disk and rules are evaluated once more to calculate how many violations were fixed.
+- **`nx conformance:check`**: Evaluates rules only. Fix generators are not applied (useful for CI).
+
+Fix generators are only ever applied for rules whose final status is not `disabled`.
+
+### Fix Generator Function Signature
+
+Fix generators are essentially standard Nx generators. They receive a `WritableConformanceTree` (an extension of the `FsTree` used in other Nx generators) and a schema containing violations, rule options, and optional extra data exposed by the rule implementation via `result.details.fixGeneratorData`.
+
+```typescript
+type ConformanceRuleFixGenerator<RuleOptions> = (
+  tree: WritableConformanceTree,
+  schema: {
+    violations: ConformanceViolation[];
+    ruleOptions: RuleOptions;
+    fixGeneratorData?: Record<string, unknown>;
+  }
+) => Promise<void> | void;
+```
+
+During rule evaluation (diagnostics phase) the `tree` is read-only. During the fix phase, the `tree` is writable for generators to modify files.
+
+### Passing Data from Rules to Fix Generators
+
+There are two supported ways to pass data from your rule implementation to its fix generator:
+
+1. **Per-violation data**: The exact `details.violations` array returned by your rule is provided to the fix generator. Each violation can provide `fixGeneratorData` for targeted fixes.
+
+   ```typescript
+   violations.push({
+     message: 'Missing license header',
+     file: 'libs/my-lib/src/index.ts',
+     fixGeneratorData: { header: '/* LICENSE */\n', missing: true },
+   });
+   ```
+
+   Note: Before final results are reported, any `fixGeneratorData` fields are stripped out.
+
+2. **Global data**: Put shared data on `details.fixGeneratorData`. If present, it will be passed as `schema.fixGeneratorData` to the fix generator and then stripped from the final report.
+
+   ```typescript
+   return {
+     severity: 'low',
+     details: {
+       violations,
+       fixGeneratorData: { dryRun: ruleOptions.addHeader === false },
+     },
+   };
+   ```
+
+   Useful for expensive precomputed lookups or workspace-wide context that applies to all violations.
+
+### Additional Notes
+
+- **Project filtering**: If the rule is configured with `projects`, the runner filters the violations accordingly before calling the fix generator. The generator receives only the filtered set.
+- **File-to-project inference**: If a violation specifies `file` but not `sourceProject`, the runner attempts to infer the owning project and will include that on the violation provided to the fix generator where possible.
+- **Data privacy**: Both `details.fixGeneratorData` and per-violation `fixGeneratorData` are never included in the emitted report. They are only available to the fix generator.
+
+### Example Conformance Rule with Fix Generator
+
+```typescript
+import { createConformanceRule } from '@nx/conformance';
+import type { ConformanceViolation } from '@nx/conformance';
+
+type RuleOptions = {
+  addHeader: boolean;
+};
+
+export default createConformanceRule<RuleOptions>({
+  name: 'license-header',
+  category: 'maintainability',
+  description: 'Ensure files contain a license header',
+  implementation: async ({ tree, ruleOptions }) => {
+    const violations: ConformanceViolation[] = [];
+
+    for (const filePath of tree.children('libs/my-lib/src')) {
+      if (!filePath.endsWith('.ts')) continue;
+      const contents = tree.read(filePath, 'utf-8') ?? '';
+      if (!contents.startsWith('/* LICENSE */')) {
+        violations.push({
+          message: 'Missing license header',
+          file: `libs/my-lib/src/${filePath}`,
+          fixGeneratorData: { header: '/* LICENSE */\n', missing: true },
+        });
+      }
+    }
+
+    return {
+      severity: 'low',
+      details: {
+        violations,
+        fixGeneratorData: { dryRun: ruleOptions.addHeader === false },
+      },
+    };
+  },
+  fixGenerator: async (tree, { violations, ruleOptions, fixGeneratorData }) => {
+    if (fixGeneratorData?.dryRun) return;
+
+    for (const v of violations) {
+      if (!('file' in v) || !v.file) continue;
+      const header = (v as any).fixGeneratorData?.header ?? '/* LICENSE */\n';
+      const existing = tree.read(v.file, 'utf-8') ?? '';
+      if (!existing.startsWith(header) && ruleOptions.addHeader !== false) {
+        tree.write(v.file, header + existing);
+      }
+    }
+  },
+});
+```
+
+### Best Practices for Fix Generators
+
+- **Idempotent**: Generators should be safe to run multiple times without changing files after the first successful run.
+- **Minimal changes**: Modify only what is necessary to address the reported violations.
+- **Respect options**: Honor `ruleOptions` so users can tune behavior.
+- **Avoid re-discovery**: Prefer using the provided `violations` and optional `fixGeneratorData` rather than rescanning the workspace.
+- **Clear boundaries**: Keep heavy computation inside the rule implementation and pass the results via `fixGeneratorData` to the generator.
+
+## Share Conformance Rules Across Workspaces
+
+If you have an Enterprise Nx Cloud contract, you can share your conformance rules across every repository in your organization. Read more in these articles:
+
+- [Publish Conformance Rules to Nx Cloud](/docs/enterprise/publish-conformance-rules-to-nx-cloud)
+- [Configure Conformance Rules in Nx Cloud](/docs/enterprise/configure-conformance-rules-in-nx-cloud)

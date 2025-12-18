@@ -11,6 +11,11 @@ export function updateTsConfig(tree: Tree, options: NormalizedOptions): void {
       json.compilerOptions.experimentalDecorators = true;
       json.compilerOptions.emitDecoratorMetadata = true;
       json.compilerOptions.target = 'es2021';
+
+      // Only set this when not using TS solution setup, as TS solution setup uses 'nodenext'
+      if (!isUsingTsSolutionSetup(tree)) {
+        json.compilerOptions.moduleResolution = 'node';
+      }
       if (options.strict) {
         json.compilerOptions = {
           ...json.compilerOptions,

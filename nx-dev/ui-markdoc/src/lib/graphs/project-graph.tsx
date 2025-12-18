@@ -4,13 +4,13 @@ import type {
   ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from 'nx/src/config/project-graph';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { ElementData, RenderTheme } from '@nx/graph';
 import {
   NxGraphProjectGraphProvider,
   useProjectGraphContext,
 } from '@nx/graph/projects';
-import { resolveTheme } from './resolve-theme';
+import { affectedNodeStyles, useThemeSync } from './resolve-theme';
 import {
   NxGraphCompositeProjectNodePanelContent,
   NxGraphCompositeProjectNodePanelHeader,
@@ -27,11 +27,15 @@ interface NxDevProjectGraphProps {
   affectedProjects?: string[];
   enableContextMenu?: boolean;
   composite?: boolean;
+  showAffectedWithNodes?: boolean;
 }
 
 export function NxDevProjectGraph(props: NxDevProjectGraphProps) {
   return (
-    <NxGraphProjectGraphProvider renderPlatform="nx-dev">
+    <NxGraphProjectGraphProvider
+      renderPlatform="nx-dev"
+      styles={[affectedNodeStyles]}
+    >
       <NxDevProjectGraphInner {...props} />
     </NxGraphProjectGraphProvider>
   );
@@ -44,6 +48,7 @@ function NxDevProjectGraphInner({
   theme = 'system',
   composite = false,
   enableContextMenu = false,
+  showAffectedWithNodes = false,
 }: NxDevProjectGraphProps) {
   const graphContext = useProjectGraphContext();
 
@@ -59,12 +64,17 @@ function NxDevProjectGraphInner({
     ElementData.ProjectNode | ElementData.CompositeProjectNode
   >(eventBus);
 
-  useEffect(() => {
-    sendRendererConfigEvent({
-      type: 'themeChange',
-      theme: resolveTheme(theme),
-    });
-  }, [theme]);
+  const handleThemeChange = useCallback(
+    (resolvedTheme: RenderTheme) => {
+      sendRendererConfigEvent({
+        type: 'themeChange',
+        theme: resolvedTheme,
+      });
+    },
+    [sendRendererConfigEvent]
+  );
+
+  useThemeSync(theme, handleThemeChange);
 
   useEffect(() => {
     if (!orchestrator) return;
@@ -76,12 +86,21 @@ function NxDevProjectGraphInner({
       updater: (config) => ({
         mode: composite ? 'composite' : 'individual',
         autoExpand: composite ? config.autoExpand : 0,
-        showMode: affectedProjects.length ? 'affected' : 'all',
+        showMode: showAffectedWithNodes
+          ? 'all'
+          : affectedProjects.length
+            ? 'affected'
+            : 'all',
       }),
     });
 
     send({ type: 'showAll' });
-  }, [orchestrator]);
+    // make sure the graph sized to fix into the box
+    const el = orchestrator['renderer'].cy.elements();
+    orchestrator['renderer'].cy.fit(el, 1).center().resize();
+    // other values are static from the docs and we don't need to update for them
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orchestrator, send]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">

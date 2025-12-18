@@ -7,7 +7,6 @@ sidebar:
 filter: 'type:References'
 ---
 
-
 A project's configuration is constructed by Nx from three sources:
 
 1. [Tasks inferred by Nx plugins](/docs/concepts/inferred-tasks) from tooling configuration
@@ -16,12 +15,11 @@ A project's configuration is constructed by Nx from three sources:
 
 Each source will [overwrite the previous source](/docs/guides/tasks--caching/pass-args-to-commands). That means `targetDefaults` will overwrite inferred tasks and project level configuration will overwrite both `targetDefaults` and inferred tasks. The combined project configuration can be viewed in the project details view by using [Nx Console](/docs/getting-started/editor-setup) in your IDE or by running:
 
-```shell {% frame="none" %}
+```shell
 nx show project myproject --web
 ```
 
 {% project_details title="Project Details View" %}
-
 
 ```json
 {
@@ -85,28 +83,28 @@ The following configuration creates `build` and `test` targets for Nx.
 {% tabs syncKey="project-config-file" %}
 {% tabitem label="package.json" %}
 
-```jsonc 
+```jsonc
 // package.json
 {
   "name": "mylib",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
   },
   "nx": {
     // you could also do this in "scripts", but this "targets" configuration also supports Nx executors
     "targets": {
       "build": {
-        "command": "tsc -p tsconfig.lib.json"
-      }
-    }
-  }
+        "command": "tsc -p tsconfig.lib.json",
+      },
+    },
+  },
 }
 ```
 
 {% /tabitem %}
 {% tabitem label="project.json" %}
 
-```jsonc 
+```jsonc
 // project.json
 {
   "root": "libs/mylib/",
@@ -115,15 +113,15 @@ The following configuration creates `build` and `test` targets for Nx.
       "executor": "@nx/jest:jest",
       "options": {
         /* ... */
-      }
+      },
     },
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
         /* ... */
-      }
-    }
-  }
+      },
+    },
+  },
 }
 ```
 
@@ -144,27 +142,27 @@ Below are some more complete examples of project configuration files. For a more
   "scripts": {
     "test": "jest",
     "build": "tsc -p tsconfig.lib.json", // the actual command here is arbitrary
-    "ignored": "exit 1"
+    "ignored": "exit 1",
   },
   "nx": {
     "namedInputs": {
       "default": ["{projectRoot}/**/*"],
-      "production": ["!{projectRoot}/**/*.spec.tsx"]
+      "production": ["!{projectRoot}/**/*.spec.tsx"],
     },
     "targets": {
       "build": {
         "inputs": ["production", "^production"],
         "outputs": ["{workspaceRoot}/dist/libs/mylib"],
-        "dependsOn": ["^build"]
+        "dependsOn": ["^build"],
       },
       "test": {
         "inputs": ["default", "^production"],
         "outputs": [],
-        "dependsOn": ["build"]
-      }
+        "dependsOn": ["build"],
+      },
     },
-    "includedScripts": ["test", "build"] // If you want to limit the scripts Nx sees, you can specify a list here.
-  }
+    "includedScripts": ["test", "build"], // If you want to limit the scripts Nx sees, you can specify a list here.
+  },
 }
 ```
 
@@ -261,16 +259,16 @@ A typical set of inputs may look like this:
 {
   "namedInputs": {
     "default": ["{projectRoot}/**/*"], // every file in the project
-    "production": ["default", "!{projectRoot}/**/*.spec.tsx"] // except test files
+    "production": ["default", "!{projectRoot}/**/*.spec.tsx"], // except test files
   },
   "targets": {
     "build": {
       "inputs": [
         "production", // this project's production files
-        { "externalDependencies": ["vite"] } // the version of the vite package
-      ]
-    }
-  }
+        { "externalDependencies": ["vite"] }, // the version of the vite package
+      ],
+    },
+  },
 }
 ```
 
@@ -556,7 +554,7 @@ In Nx 21+, tasks that never exit (sometimes called long-running processes) can b
 
 In this example, application's configuration labels the `serve` task as continuous.
 
-```json 
+```json
 // apps/myapp/project.json
 {
   "targets": {
@@ -644,10 +642,10 @@ target does:
   "targets": {
     "build": {
       "metadata": {
-        "description": "Build the application for production"
-      }
-    }
-  }
+        "description": "Build the application for production",
+      },
+    },
+  },
 }
 ```
 
@@ -667,8 +665,8 @@ You can annotate your projects with `tags` as follows:
 {
   "name": "mylib",
   "nx": {
-    "tags": ["scope:myteam"]
-  }
+    "tags": ["scope:myteam"],
+  },
 }
 ```
 
@@ -679,7 +677,7 @@ You can annotate your projects with `tags` as follows:
 // project.json
 {
   "root": "libs/mylib",
-  "tags": ["scope:myteam"]
+  "tags": ["scope:myteam"],
 }
 ```
 
@@ -696,13 +694,13 @@ Nx uses powerful source-code analysis to figure out your workspace's project gra
 {% tabs syncKey="project-config-file"  %}
 {% tabitem label="package.json" %}
 
-```jsonc 
+```jsonc
 // package.json
 {
   "name": "mylib",
   "nx": {
-    "implicitDependencies": ["anotherlib"]
-  }
+    "implicitDependencies": ["anotherlib"],
+  },
 }
 ```
 
@@ -713,7 +711,7 @@ Nx uses powerful source-code analysis to figure out your workspace's project gra
 // project.json
 {
   "root": "libs/mylib",
-  "implicitDependencies": ["anotherlib"]
+  "implicitDependencies": ["anotherlib"],
 }
 ```
 
@@ -797,9 +795,9 @@ Projects with Docker images can override the global Docker configuration:
   "release": {
     "docker": {
       // Override the repository name for this specific project
-      "repositoryName": "acme/api"
-    }
-  }
+      "repositoryName": "acme/api",
+    },
+  },
 }
 ```
 
@@ -815,8 +813,8 @@ project:
 {
   "name": "admin",
   "metadata": {
-    "description": "This is the admin application"
-  }
+    "description": "This is the admin application",
+  },
 }
 ```
 

@@ -351,14 +351,9 @@ export async function convertToRspack(
 
   validateSupportedBuildExecutor(Object.values(project.targets));
 
-  const angularRspackVersion = getAngularRspackVersion(tree);
-  if (!angularRspackVersion) {
-    throw new Error(
-      'Angular Rspack requires Angular 19 or higher. Please upgrade your Angular version before converting to Rspack.'
-    );
-  }
-
   let projectServePort = DEFAULT_PORT;
+  const projectServeConfigurationOptions: Record<string, { port?: number }> =
+    {};
 
   for (const [targetName, target] of Object.entries(project.targets)) {
     if (
@@ -428,6 +423,12 @@ export async function convertToRspack(
             configurationOptions[configurationName].devServer,
             project.root
           );
+
+          if (configuration.port && configuration.port !== DEFAULT_PORT) {
+            projectServeConfigurationOptions[configurationName] ??= {};
+            projectServeConfigurationOptions[configurationName].port =
+              configuration.port;
+          }
         }
       }
       serveTarget = { name: targetName, config: target };
@@ -522,7 +523,6 @@ export async function convertToRspack(
         // which webpack tasks wouldn't have
         const namedInputs = getNamedInputs(project.root, {
           nxJsonConfiguration: nxJson,
-          configFiles: [],
           workspaceRoot,
         });
 
@@ -688,6 +688,15 @@ export async function convertToRspack(
       serveTarget.config.options.port = projectServePort;
     }
 
+    if (Object.keys(projectServeConfigurationOptions).length > 0) {
+      serveTarget.config.configurations = {};
+      for (const [configurationName, options] of Object.entries(
+        projectServeConfigurationOptions
+      )) {
+        serveTarget.config.configurations[configurationName] = options;
+      }
+    }
+
     if (Object.keys(serveTarget.config).length) {
       // there's extra target metadata left that wouldn't be inferred, we keep it
       project.targets[inferredServeTargetName] = serveTarget.config;
@@ -705,6 +714,7 @@ export async function convertToRspack(
 
   if (!schema.skipInstall) {
     const { webpackMergeVersion, tsNodeVersion } = versions(tree);
+    const angularRspackVersion = getAngularRspackVersion(tree);
     const installTask = addDependenciesToPackageJson(
       tree,
       {},

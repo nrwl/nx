@@ -3,7 +3,7 @@ title: Adding Images, Fonts, and Files
 description: Learn how to import and use assets like images, fonts, and files directly in your Nx projects, including special handling for SVGs in React, Next.js, and Vite applications.
 sidebar:
   label: 'Adding Images, Fonts, and Files'
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 With Nx, you can **`import` assets directly from your TypeScript/JavaScript code**.
@@ -44,24 +44,258 @@ export default Header;
 
 This method of import allow you to work with the SVG the same way you would with any other React component. You can style it using CSS, [styled-components](https://styled-components.com/), [TailwindCSS](https://tailwindcss.com/), etc. The SVG component accepts a `title` prop, as well as any other props that the `svg` element accepts.
 
-{% aside type="note" title="Additional configuration may be required" %}
-Note that SVGR is enabled by the `@nx/webpack` plugin by default. For other plugins, you will need to enable it on your own.
+{% aside type="caution" title="Manual Configuration Required" %}
+As of Nx 22, SVGR is removed for Webpack and Next.js, and deprecated for Rspack (will be removed in Nx 23). Manual configuration is required—see the sections below.
 {% /aside %}
+
+### SVGR for Webpack and Rspack
+
+To import SVGs as React components with Webpack or Rspack, you need to install the `@svgr/webpack` package and configure it manually. For detailed configuration options, refer to the [official SVGR webpack documentation](https://react-svgr.com/docs/webpack/).
+
+First, install the required dependencies:
+
+{% tabs %}
+{% tabitem label="npm" %}
+
+```shell
+npm add -D @svgr/webpack file-loader
+```
+
+{% /tabitem %}
+{% tabitem label="yarn" %}
+
+```shell
+yarn add -D @svgr/webpack file-loader
+```
+
+{% /tabitem %}
+{% tabitem label="pnpm" %}
+
+```shell
+pnpm add -D @svgr/webpack file-loader
+```
+
+{% /tabitem %}
+
+{% tabitem label="bun" %}
+
+```shell
+bun add -D @svgr/webpack file-loader
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Then, configure your webpack config:
+
+```javascript frame="none"
+// filename: webpack.config.js
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.svg$/,
+        issuer: /\.(js|ts|md)x?$/,
+        use: [
+          {
+            loader: '@svgr/webpack',
+            options: {
+              svgo: false,
+              titleProp: true,
+              ref: true,
+            },
+          },
+          'file-loader',
+        ],
+      },
+    ],
+  },
+};
+```
+
+If you're using `composePlugins` with `withNx`, you can create a `withSvgr` helper function:
+
+```javascript frame="none"
+// filename: webpack.config.js
+const { composePlugins, withNx } = require('@nx/webpack');
+
+function withSvgr(svgrOptions = {}) {
+  const defaultOptions = {
+    svgo: false,
+    titleProp: true,
+    ref: true,
+  };
+
+  const options = { ...defaultOptions, ...svgrOptions };
+
+  return function configure(config) {
+    // Remove existing SVG loader if present
+    const svgLoaderIdx = config.module.rules.findIndex(
+      (rule) =>
+        typeof rule === 'object' &&
+        typeof rule.test !== 'undefined' &&
+        rule.test.toString().includes('svg')
+    );
+
+    if (svgLoaderIdx !== -1) {
+      config.module.rules.splice(svgLoaderIdx, 1);
+    }
+
+    // Add SVGR loader
+    config.module.rules.push({
+      test: /\.svg$/,
+      issuer: /\.(js|ts|md)x?$/,
+      use: [
+        {
+          loader: require.resolve('@svgr/webpack'),
+          options,
+        },
+        {
+          loader: require.resolve('file-loader'),
+          options: {
+            name: '[name].[hash].[ext]',
+          },
+        },
+      ],
+    });
+
+    return config;
+  };
+}
+
+module.exports = composePlugins(withNx(), withSvgr());
+```
 
 ### SVGR for Next.js
 
-To import SVGs as React components with Next.js, you need to make sure that `nx.svgr` value is set to `true` in your Next.js application's `next.config.js` file:
+As of Nx 22, SVGR support for Next.js is no longer included by default. You can configure it manually using the same approach as Webpack. For detailed information, refer to the [official SVGR documentation](https://react-svgr.com/docs/webpack/).
 
-```javascript frame="none" meta="{ranges: '4'}"
+First, install the required dependencies:
+
+{% tabs %}
+{% tabitem label="npm" %}
+
+```shell
+npm add -D @svgr/webpack file-loader
+```
+
+{% /tabitem %}
+{% tabitem label="yarn" %}
+
+```shell
+yarn add -D @svgr/webpack file-loader
+```
+
+{% /tabitem %}
+{% tabitem label="pnpm" %}
+
+```shell
+pnpm add -D @svgr/webpack file-loader
+```
+
+{% /tabitem %}
+
+{% tabitem label="bun" %}
+
+```shell
+bun add -D @svgr/webpack file-loader
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Then, update your `next.config.js`:
+
+```javascript frame="none"
 // filename: next.config.js
-// ...
-const nextConfig = {
-  nx: {
-    svgr: true,
+module.exports = {
+  webpack(config) {
+    // Grab the existing rule that handles SVG imports
+    const fileLoaderRule = config.module.rules.find((rule) =>
+      rule.test?.test?.('.svg')
+    );
+
+    config.module.rules.push(
+      // Reapply the existing rule, but only for svg imports ending in ?url
+      {
+        ...fileLoaderRule,
+        test: /\.svg$/i,
+        resourceQuery: /url/, // *.svg?url
+      },
+      // Convert all other *.svg imports to React components
+      {
+        test: /\.svg$/i,
+        issuer: fileLoaderRule.issuer,
+        resourceQuery: { not: [...fileLoaderRule.resourceQuery.not, /url/] }, // exclude if *.svg?url
+        use: ['@svgr/webpack'],
+      }
+    );
+
+    // Modify the file loader rule to ignore *.svg, since we have it handled now.
+    fileLoaderRule.exclude = /\.svg$/i;
+
+    return config;
   },
+
+  // ...other config
 };
-// ...
-module.exports = composePlugins(...plugins)(nextConfig);
+```
+
+If you're using `composePlugins` with `withNx`, you can update your `next.config.js` to use a `withSvgr` helper function:
+
+```javascript frame="none"
+// filename: next.config.js
+const { composePlugins, withNx } = require('@nx/next');
+
+function withSvgr(svgrOptions = {}) {
+  const defaultOptions = {
+    svgo: false,
+    titleProp: true,
+    ref: true,
+  };
+
+  const options = { ...defaultOptions, ...svgrOptions };
+
+  return function configure(config) {
+    // Remove existing SVG loader if present
+    const svgLoaderIdx = config.module.rules.findIndex(
+      (rule) =>
+        typeof rule === 'object' &&
+        typeof rule.test !== 'undefined' &&
+        rule.test.toString().includes('svg')
+    );
+
+    if (svgLoaderIdx !== -1) {
+      config.module.rules.splice(svgLoaderIdx, 1);
+    }
+
+    // Add SVGR loader
+    config.module.rules.push({
+      test: /\.svg$/,
+      issuer: /\.(js|ts|md)x?$/,
+      use: [
+        {
+          loader: require.resolve('@svgr/webpack'),
+          options,
+        },
+        {
+          loader: require.resolve('file-loader'),
+          options: {
+            name: '[name].[hash].[ext]',
+          },
+        },
+      ],
+    });
+
+    return config;
+  };
+}
+
+const nextConfig = {
+  // your Next.js config here
+};
+
+module.exports = composePlugins(withNx(), withSvgr())(nextConfig);
 ```
 
 ### SVGR for Vite
@@ -71,21 +305,21 @@ To import SVGs as React components with Vite, you need to install the `vite-plug
 {% tabs %}
 {% tabitem label="npm" %}
 
-```shell frame="none"
+```shell
 npm add -D vite-plugin-svgr
 ```
 
 {% /tabitem %}
 {% tabitem label="yarn" %}
 
-```shell frame="none"
+```shell
 yarn add -D vite-plugin-svgr
 ```
 
 {% /tabitem %}
 {% tabitem label="pnpm" %}
 
-```shell frame="none"
+```shell
 pnpm add -D vite-plugin-svgr
 ```
 
@@ -93,7 +327,7 @@ pnpm add -D vite-plugin-svgr
 
 {% tabitem label="bun" %}
 
-```shell frame="none"
+```shell
 bun add -D vite-plugin-svgr
 ```
 

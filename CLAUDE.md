@@ -9,6 +9,25 @@ When responding to queries about this repository:
 Always strive to provide accurate, helpful responses that align with the best practices and workflows described in this
 file.
 
+## Documentation Contributions
+
+When working on Nx documentation, all documentation content lives in the `astro-docs/` folder. This is the new Astro-based documentation site built with Starlight.
+
+**Important**: Before making any documentation changes, read the `astro-docs/README.md` file for detailed guidance on:
+
+- Project structure and architecture
+- Content types (regular docs, dynamic plugin docs, CLI docs)
+- Available Markdoc tags for rich content
+- Development workflow and commands
+- Sidebar management
+
+### Quick Reference
+
+- Documentation content: `astro-docs/src/content/docs/`
+- Use `.mdoc` (Markdoc) or `.mdx` format for documentation files
+- Run `nx serve astro-docs` to start the local dev server
+- Sidebar structure is defined in `astro-docs/sidebar.mts`
+
 ## GitHub Issue Response Mode
 
 When responding to GitHub issues, determine your approach based on how the request is phrased:
@@ -180,6 +199,9 @@ Fixes #ISSUE_NUMBER
 - For complex changes, you can request a dedicated Nx release by mentioning the Nx team
 - Always link the related issue using "Fixes #ISSUE_NUMBER" to automatically close it when merged
 
+<!-- nx configuration start-->
+<!-- Leave the start & end comments to automatically receive updates. -->
+
 # General Guidelines for working with Nx
 
 - When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
@@ -197,3 +219,5 @@ If the user wants help with fixing an error in their CI pipeline, use the follow
 - If there are any errors, use the `nx_cloud_fix_cipe_failure` tool to retrieve the logs for a specific task
 - Use the task logs to see what's wrong and help the user fix their problem. Use the appropriate tools if necessary
 - Make sure that the problem is fixed by running the task that you passed into the `nx_cloud_fix_cipe_failure` tool
+
+<!-- nx configuration end-->

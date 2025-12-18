@@ -432,10 +432,10 @@ export function addExtendsToLintConfig(
     const eslintConfigFormat = fileName.endsWith('.mjs')
       ? 'mjs'
       : fileName.endsWith('.cjs')
-      ? 'cjs'
-      : tree.read(fileName, 'utf-8').includes('module.exports')
-      ? 'cjs'
-      : 'mjs';
+        ? 'cjs'
+        : tree.read(fileName, 'utf-8').includes('module.exports')
+          ? 'cjs'
+          : 'mjs';
 
     let shouldImportEslintCompat = false;
     // assume eslint version is 9 if not found, as it's what we'd be generating by default

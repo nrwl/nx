@@ -49,6 +49,9 @@
       "path": "../ui-blog"
     },
     {
+      "path": "../ui-resources"
+    },
+    {
       "path": "../ui-fence"
     },
     {
@@ -74,9 +77,6 @@
     },
     {
       "path": "../feature-search"
-    },
-    {
-      "path": "../models-menu"
     },
     {
       "path": "../ui-animations"
@@ -106,16 +106,10 @@
       "path": "../ui-scrollable-content"
     },
     {
-      "path": "../feature-package-schema-viewer"
-    },
-    {
-      "path": "../feature-doc-viewer"
-    },
-    {
-      "path": "../models-document"
-    },
-    {
       "path": "../ui-markdoc"
+    },
+    {
+      "path": "../ui-icons"
     },
     {
       "path": "../ui-common"
@@ -128,15 +122,6 @@
     },
     {
       "path": "../models-package"
-    },
-    {
-      "path": "../data-access-packages"
-    },
-    {
-      "path": "../data-access-menu"
-    },
-    {
-      "path": "../ui-icons"
     },
     {
       "path": "../util-ai"

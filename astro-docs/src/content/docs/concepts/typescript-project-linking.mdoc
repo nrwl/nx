@@ -3,7 +3,7 @@ title: 'TypeScript Project Linking'
 description: 'Learn how to efficiently reference code between TypeScript projects in your monorepo using project linking instead of relative paths.'
 sidebar:
   order: 1
-filter: "type:Concepts"
+filter: 'type:Concepts'
 ---
 
 {% youtube src="https://youtu.be/D9D8KNffyBk" title="TypeScript Monorepos Done Right!" /%}
@@ -32,7 +32,7 @@ There are two different methods that Nx supports for linking TypeScript projects
 
 Create a new Nx workspace that links projects with package manager workspaces:
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace
 ```
 
@@ -143,9 +143,9 @@ The root `tsconfig.base.json` should contain a `compilerOptions` property and no
     // Required compiler options
     "composite": true,
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
     // Other options...
-  }
+  },
 }
 ```
 
@@ -158,7 +158,7 @@ The root `tsconfig.json` file should extend `tsconfig.base.json` and not include
   "references": [
     // UPDATED BY PROJECT GENERATORS
     // All projects in the repository
-  ]
+  ],
 }
 ```
 
@@ -174,16 +174,16 @@ Each project's `tsconfig.json` file should extend the `tsconfig.base.json` file 
     // UPDATED BY NX SYNC
     // All project dependencies
     {
-      "path": "../utils"
+      "path": "../utils",
     },
     // This project's other tsconfig.*.json files
     {
-      "path": "./tsconfig.lib.json"
+      "path": "./tsconfig.lib.json",
     },
     {
-      "path": "./tsconfig.spec.json"
-    }
-  ]
+      "path": "./tsconfig.spec.json",
+    },
+  ],
 }
 ```
 
@@ -203,9 +203,9 @@ Each project's `tsconfig.lib.json` file extends the project's `tsconfig.json` fi
     // UPDATED BY NX SYNC
     // tsconfig.lib.json files for project dependencies
     {
-      "path": "../utils/tsconfig.lib.json"
-    }
-  ]
+      "path": "../utils/tsconfig.lib.json",
+    },
+  ],
 }
 ```
 
@@ -223,9 +223,9 @@ The project's `tsconfig.spec.json` does not need to reference project dependenci
   "references": [
     // tsconfig.lib.json for this project
     {
-      "path": "./tsconfig.lib.json"
-    }
-  ]
+      "path": "./tsconfig.lib.json",
+    },
+  ],
 }
 ```
 
@@ -281,10 +281,10 @@ If you define TS path aliases in an individual project's tsconfig files, you sho
       "#tests/*": ["./tests/*"],
       "@/icon-name": [
         "./app/components/ui/icons/name.d.ts",
-        "./types/icon-name.d.ts"
-      ]
-    }
-  }
+        "./types/icon-name.d.ts",
+      ],
+    },
+  },
 }
 ```
 
@@ -308,9 +308,9 @@ The paths for each library are defined in the root `tsconfig.base.json` and each
     "declaration": false,
     "paths": {
       // These paths are automatically added by Nx library generators
-      "@myorg/shared-ui": ["packages/shared-ui/src/index.ts"]
+      "@myorg/shared-ui": ["packages/shared-ui/src/index.ts"],
       // ...
-    }
-  }
+    },
+  },
 }
 ```

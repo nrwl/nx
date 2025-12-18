@@ -3,7 +3,7 @@ import { exec, execSync } from 'node:child_process';
 import { existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
-import { NormalizedSwcExecutorOptions, SwcCliOptions } from '../schema';
+import { NormalizedSwcExecutorOptions } from '../schema';
 import { printDiagnostics } from '../typescript/print-diagnostics';
 import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check';
 import { relative } from 'path';
@@ -13,25 +13,19 @@ function getSwcCmd(
     swcCliOptions: { swcrcPath, destPath, stripLeadingPaths },
     root,
     projectRoot,
-    originalProjectRoot,
     sourceRoot,
-    inline,
   }: NormalizedSwcExecutorOptions,
   watch = false
 ) {
   const swcCLI = require.resolve('@swc/cli/bin/swc.js');
   let inputDir: string;
-  // TODO(v22): remove inline feature
-  if (inline) {
-    inputDir = originalProjectRoot.split('/')[0];
+
+  if (sourceRoot) {
+    inputDir = relative(projectRoot, sourceRoot);
   } else {
-    if (sourceRoot) {
-      inputDir = relative(projectRoot, sourceRoot);
-    } else {
-      // If sourceRoot is not provided, check if `src` exists and use that instead.
-      // This is important for root projects to avoid compiling too many directories.
-      inputDir = existsSync(join(root, projectRoot, 'src')) ? 'src' : '.';
-    }
+    // If sourceRoot is not provided, check if `src` exists and use that instead.
+    // This is important for root projects to avoid compiling too many directories.
+    inputDir = existsSync(join(root, projectRoot, 'src')) ? 'src' : '.';
   }
 
   let swcCmd = `node ${swcCLI} ${
@@ -50,10 +44,10 @@ function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
     !normalizedOptions.swcCliOptions.stripLeadingPaths
       ? projectRoot
       : sourceRoot
-      ? sourceRoot
-      : existsSync(join(root, projectRoot, 'src'))
-      ? join(projectRoot, 'src')
-      : projectRoot;
+        ? sourceRoot
+        : existsSync(join(root, projectRoot, 'src'))
+          ? join(projectRoot, 'src')
+          : projectRoot;
 
   const typeCheckOptions: TypeCheckOptions = {
     mode: 'emitDeclarationOnly',
@@ -95,9 +89,12 @@ export async function compileSwc(
     });
     logger.log(swcCmdLog.replace(/\n/, ''));
   } catch (error) {
-    logger.error('SWC compilation failed');
-    if (error.stderr) {
+    logger.error(`SWC compilation failed: ${error?.message ?? error}`);
+    if (error?.stderr) {
       logger.error(error.stderr.toString());
+    }
+    if (error?.stdout) {
+      logger.error(error.stdout.toString());
     }
     return { success: false };
   }
@@ -144,6 +141,7 @@ export async function* compileSwcWatch(
   return yield* createAsyncIterable<{ success: boolean; outfile: string }>(
     async ({ next, done }) => {
       let processOnExit: () => void;
+      let handleCallback: (type: string, data?: string) => void;
       let stdoutOnData: () => void;
       let stderrOnData: () => void;
       let watcherOnExit: () => void;
@@ -161,64 +159,74 @@ export async function* compileSwcWatch(
         process.off('exit', processOnExit);
       };
 
-      stdoutOnData = async (data?: string) => {
-        process.stdout.write(data);
-        if (!data.startsWith('Watching')) {
-          const swcStatus = data.includes('Successfully');
+      handleCallback = async (type: string, data?: string) => {
+        if (type === 'stdout' || data.includes('Successfully')) {
+          process.stdout.write(data);
+          if (!data.startsWith('Watching')) {
+            const swcStatus = data.includes('Successfully');
 
-          if (initialPostCompile) {
-            await postCompilationCallback();
-            initialPostCompile = false;
+            if (initialPostCompile) {
+              await postCompilationCallback();
+              initialPostCompile = false;
+            }
+
+            if (
+              normalizedOptions.skipTypeCheck ||
+              normalizedOptions.isTsSolutionSetup
+            ) {
+              next(getResult(swcStatus));
+              return;
+            }
+
+            if (!typeCheckOptions) {
+              typeCheckOptions = getTypeCheckOptions(normalizedOptions);
+            }
+
+            const delayed = delay(5000);
+            next(
+              getResult(
+                await Promise.race([
+                  delayed
+                    .start()
+                    .then(() => ({ tscStatus: false, type: 'timeout' })),
+                  runTypeCheck(typeCheckOptions).then(
+                    ({ errors, warnings }) => {
+                      const hasErrors = errors.length > 0;
+                      if (hasErrors) {
+                        printDiagnostics(errors, warnings);
+                      }
+                      return {
+                        tscStatus: !hasErrors,
+                        type: 'tsc',
+                      };
+                    }
+                  ),
+                ]).then(({ type, tscStatus }) => {
+                  if (type === 'tsc') {
+                    delayed.cancel();
+                    return tscStatus && swcStatus;
+                  }
+
+                  return swcStatus;
+                })
+              )
+            );
           }
-
-          if (
-            normalizedOptions.skipTypeCheck ||
-            normalizedOptions.isTsSolutionSetup
-          ) {
-            next(getResult(swcStatus));
+        } else if (type === 'stderr' && !data.includes('Successfully')) {
+          process.stderr.write(data);
+          if (data.includes('Debugger attached.')) {
             return;
           }
-
-          if (!typeCheckOptions) {
-            typeCheckOptions = getTypeCheckOptions(normalizedOptions);
-          }
-
-          const delayed = delay(5000);
-          next(
-            getResult(
-              await Promise.race([
-                delayed
-                  .start()
-                  .then(() => ({ tscStatus: false, type: 'timeout' })),
-                runTypeCheck(typeCheckOptions).then(({ errors, warnings }) => {
-                  const hasErrors = errors.length > 0;
-                  if (hasErrors) {
-                    printDiagnostics(errors, warnings);
-                  }
-                  return {
-                    tscStatus: !hasErrors,
-                    type: 'tsc',
-                  };
-                }),
-              ]).then(({ type, tscStatus }) => {
-                if (type === 'tsc') {
-                  delayed.cancel();
-                  return tscStatus && swcStatus;
-                }
-
-                return swcStatus;
-              })
-            )
-          );
+          next(getResult(false));
         }
       };
 
+      stdoutOnData = async (data?: string) => {
+        handleCallback('stdout', data);
+      };
+
       stderrOnData = (err?: any) => {
-        process.stderr.write(err);
-        if (err.includes('Debugger attached.')) {
-          return;
-        }
-        next(getResult(false));
+        handleCallback('stderr', err);
       };
 
       watcherOnExit = () => {

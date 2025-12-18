@@ -12,10 +12,13 @@ declare const window: {
   Cookiebot?: any;
 };
 
+declare const Calendly: any;
+
 interface HubspotFormProps {
   region?: string;
   portalId?: string;
   formId?: string;
+  calendlyFormId?: string | null;
   noScript?: boolean;
   loading?: any;
   onSubmit?: (formData) => void;
@@ -26,8 +29,13 @@ export class HubspotForm extends Component<
   HubspotFormProps,
   { loaded: boolean }
 > {
+  static defaultProps = {
+    calendlyFormId: null,
+  };
+
   id: number;
   el?: HTMLDivElement | null = null;
+  calendlyInitAttempts: number = 0;
 
   constructor(props) {
     super(props);
@@ -107,8 +115,31 @@ export class HubspotForm extends Component<
       if (this.props.onReady) {
         this.props.onReady(form);
       }
+      this.initCalendlyIfAvailable();
     } else {
       setTimeout(this.findFormElement, 1);
+    }
+  }
+
+  initCalendlyIfAvailable() {
+    try {
+      if (
+        this.props.calendlyFormId &&
+        typeof this.props.calendlyFormId === 'string' &&
+        this.props.formId &&
+        typeof Calendly !== 'undefined' &&
+        typeof Calendly.initHubspotForm === 'function'
+      ) {
+        Calendly.initHubspotForm({
+          id: this.props.formId,
+          url: `https://calendly.com/api/form_builder/forms/${this.props.calendlyFormId}/submissions`,
+        });
+        return;
+      }
+    } catch {}
+    if (this.props.calendlyFormId && this.calendlyInitAttempts < 20) {
+      this.calendlyInitAttempts++;
+      setTimeout(() => this.initCalendlyIfAvailable(), 150);
     }
   }
 

@@ -8,7 +8,13 @@ import { CreateNxWorkspaceError } from './error-utils';
  */
 export function spawnAndWait(command: string, args: string[], cwd: string) {
   return new Promise((res, rej) => {
-    const childProcess = spawn(command, args, {
+    // Combine command and args into a single string to avoid DEP0190 warning
+    // (passing args with shell: true is deprecated)
+    const fullCommand = [command, ...args]
+      .map((arg) => (arg.includes(' ') ? `"${arg}"` : arg))
+      .join(' ');
+
+    const childProcess = spawn(fullCommand, {
       cwd,
       stdio: 'inherit',
       env: {
@@ -22,7 +28,8 @@ export function spawnAndWait(command: string, args: string[], cwd: string) {
       windowsHide: false,
     });
 
-    childProcess.on('exit', (code) => {
+    childProcess.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code !== 0) {
         rej({ code: code });
       } else {
@@ -57,4 +64,17 @@ export function execAndWait(
       }
     );
   });
+}
+
+function signalToCode(signal: NodeJS.Signals | null): number {
+  switch (signal) {
+    case 'SIGHUP':
+      return 128 + 1;
+    case 'SIGINT':
+      return 128 + 2;
+    case 'SIGTERM':
+      return 128 + 15;
+    default:
+      return 128;
+  }
 }

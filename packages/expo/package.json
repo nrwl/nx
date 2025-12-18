@@ -33,9 +33,10 @@
     "@nx/js": "workspace:*",
     "@nx/react": "workspace:*",
     "enhanced-resolve": "^5.8.3",
-    "picocolors": "^1.1.0",
-    "tsconfig-paths": "^4.1.2",
-    "tslib": "^2.3.0"
+    "picocolors": "catalog:",
+    "semver": "catalog:",
+    "tsconfig-paths": "catalog:typescript",
+    "tslib": "catalog:typescript"
   },
   "peerDependencies": {
     "metro-config": ">= 0.82.0",

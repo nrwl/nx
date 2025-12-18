@@ -71,12 +71,12 @@ The steps are very simple:
 1. Run `nx migrate latest` to update your workspace to the latest version of Nx.
 2. Run `nx g @nx/angular:convert-to-rspack` to migrate your Angular application to Rspack.
 
-There is also a [guide in our documentation](/technologies/angular/angular-rspack/recipes/migrate-from-webpack) that walks you through the process step-by-step.
+There is also a [guide in our documentation](/docs/technologies/angular/angular-rspack/guides/migrate-from-webpack) that walks you through the process step-by-step.
 Even if you're currently using the Angular CLI, it's as simple as first running `npx nx@latest init` in your workspace and then running `npx nx g convert-to-rspack`.
 
 ## Using Angular Rspack
 
-You'll notice that after migrating to Angular Rspack your `build` and `serve` targets have been removed from your project, and are instead [inferred](/concepts/inferred-tasks) by the `@nx/rspack/plugin`.
+You'll notice that after migrating to Angular Rspack your `build` and `serve` targets have been removed from your project, and are instead [inferred](/docs/concepts/inferred-tasks) by the `@nx/rspack/plugin`.
 In addition, a new `rspack.config.ts` file has been created in your project which looks something like this:
 
 ```ts
@@ -121,7 +121,7 @@ export default createConfig(
 
 {% callout type="deepdive" title="createConfig Information" %}
 The `createConfig` function is used to create an Rspack configuration object setup for Angular applications.
-You can read more about it [here](/technologies/angular/angular-rspack/api/create-config).
+You can read more about it [here](/docs/technologies/angular/angular-rspack/create-config).
 {% /callout %}
 
 ### Building and Serving your Application
@@ -226,10 +226,10 @@ Exciting times ahead! You can follow our progress by starring the [Angular Rspac
 
 ## Further Reading
 
-- [Nx Angular Rspack](/technologies/angular/angular-rspack/introduction)
+- [Nx Angular Rspack](/docs/technologies/angular/angular-rspack/introduction)
 - [Angular](https://angular.dev)
 - [Rspack](https://rspack.dev)
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

@@ -2,10 +2,10 @@
 
 import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
 import { TaskGraph } from 'nx/src/config/task-graph';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { RenderTheme } from '@nx/graph';
 import { NxGraphTaskGraphProvider, useTaskGraphContext } from '@nx/graph/tasks';
-import { resolveTheme } from './resolve-theme';
+import { useThemeSync } from './resolve-theme';
 import {
   NxGraphElementPanel,
   NxGraphTaskNodePanelContent,
@@ -49,12 +49,17 @@ export function NxDevTaskGraphInner({
 
   const [element] = useElementPanel(eventBus);
 
-  useEffect(() => {
-    sendRendererConfigEvent({
-      type: 'themeChange',
-      theme: resolveTheme(theme),
-    });
-  }, [theme]);
+  const handleThemeChange = useCallback(
+    (resolvedTheme: RenderTheme) => {
+      sendRendererConfigEvent({
+        type: 'themeChange',
+        theme: resolvedTheme,
+      });
+    },
+    [sendRendererConfigEvent]
+  );
+
+  useThemeSync(theme, handleThemeChange);
 
   useEffect(() => {
     if (!orchestrator) return;
@@ -70,7 +75,13 @@ export function NxDevTaskGraphInner({
         ),
       }
     );
-  }, [orchestrator]);
+
+    // make sure the graph sized to fix into the box
+    const el = orchestrator['renderer'].cy.elements();
+    orchestrator['renderer'].cy.fit(el, 10).center().resize();
+    // other values are static from the docs and we don't need to update for them
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orchestrator, send]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">

@@ -296,7 +296,7 @@ export async function* nodeExecutor(
         let childProcess: ChildProcess = null;
         const whenReady = new Promise<{ success: boolean }>(async (resolve) => {
           childProcess = fork(
-            require.resolve('nx'),
+            require.resolve('nx/bin/nx.js'),
             [
               'run',
               `${context.projectName}:${buildTarget.target}${
@@ -360,8 +360,6 @@ export async function* nodeExecutor(
         await addToQueue(null, Promise.resolve(event.value));
         await debouncedProcessQueue.trigger();
         if (event.done && !options.watch) {
-          next({ success: true });
-          done();
           break;
         }
       }

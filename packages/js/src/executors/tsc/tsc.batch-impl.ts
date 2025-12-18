@@ -258,14 +258,17 @@ function createTypescriptCompilationContext(
   context: ExecutorContext
 ): Record<string, TypescriptProjectContext> {
   const tsCompilationContext: Record<string, TypescriptProjectContext> =
-    Object.entries(tsConfigTaskInfoMap).reduce((acc, [tsConfig, taskInfo]) => {
-      acc[tsConfig] = {
-        project: taskInfo.context.projectName,
-        tsConfig: taskInfo.tsConfig,
-        transformers: taskInfo.options.transformers,
-      };
-      return acc;
-    }, {} as Record<string, TypescriptProjectContext>);
+    Object.entries(tsConfigTaskInfoMap).reduce(
+      (acc, [tsConfig, taskInfo]) => {
+        acc[tsConfig] = {
+          project: taskInfo.context.projectName,
+          tsConfig: taskInfo.tsConfig,
+          transformers: taskInfo.options.transformers,
+        };
+        return acc;
+      },
+      {} as Record<string, TypescriptProjectContext>
+    );
 
   Object.entries(taskInMemoryTsConfigMap).forEach(([task, tsConfig]) => {
     if (!tsCompilationContext[tsConfig.path]) {

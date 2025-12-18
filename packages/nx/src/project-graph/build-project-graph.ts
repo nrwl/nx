@@ -348,7 +348,7 @@ async function updateProjectGraphWithPlugins(
   }
 
   spinner = new DelayedSpinner(
-    `Creating project graph dependencies with ${plugins.length} plugins`
+    `Creating project graph dependencies with ${createDependencyPlugins.length} plugins`
   );
 
   await Promise.all(
@@ -468,29 +468,30 @@ export async function applyProjectMetadata(
     }
   }
 
+  const createMetadataPlugins = plugins.filter(
+    (plugin) => plugin.createMetadata
+  );
   spinner = new DelayedSpinner(
-    `Creating project metadata with ${plugins.length} plugins`
+    `Creating project metadata with ${createMetadataPlugins.length} plugins`
   );
 
-  const promises = plugins.map(async (plugin) => {
-    if (plugin.createMetadata) {
-      performance.mark(`${plugin.name}:createMetadata - start`);
-      inProgressPlugins.add(plugin.name);
-      try {
-        const metadata = await plugin.createMetadata(graph, context);
-        results.push({ metadata, pluginName: plugin.name });
-      } catch (e) {
-        errors.push(new CreateMetadataError(e, plugin.name));
-      } finally {
-        inProgressPlugins.delete(plugin.name);
-        updateSpinner();
-        performance.mark(`${plugin.name}:createMetadata - end`);
-        performance.measure(
-          `${plugin.name}:createMetadata`,
-          `${plugin.name}:createMetadata - start`,
-          `${plugin.name}:createMetadata - end`
-        );
-      }
+  const promises = createMetadataPlugins.map(async (plugin) => {
+    performance.mark(`${plugin.name}:createMetadata - start`);
+    inProgressPlugins.add(plugin.name);
+    try {
+      const metadata = await plugin.createMetadata(graph, context);
+      results.push({ metadata, pluginName: plugin.name });
+    } catch (e) {
+      errors.push(new CreateMetadataError(e, plugin.name));
+    } finally {
+      inProgressPlugins.delete(plugin.name);
+      updateSpinner();
+      performance.mark(`${plugin.name}:createMetadata - end`);
+      performance.measure(
+        `${plugin.name}:createMetadata`,
+        `${plugin.name}:createMetadata - start`,
+        `${plugin.name}:createMetadata - end`
+      );
     }
   });
 

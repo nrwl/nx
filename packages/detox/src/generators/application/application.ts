@@ -15,6 +15,7 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import { isExpoV54OrAbove } from '../../utils/expo-version-utils';
 
 export async function detoxApplicationGenerator(host: Tree, schema: Schema) {
   return await detoxApplicationGeneratorInternal(host, {
@@ -35,6 +36,19 @@ export async function detoxApplicationGeneratorInternal(
   });
 
   const options = await normalizeOptions(host, schema);
+
+  // Validate Expo version compatibility
+  // @config-plugins/detox was discontinued and is incompatible with Expo 54+
+  // See: https://github.com/expo/config-plugins/pull/290
+  if (options.framework === 'expo' && isExpoV54OrAbove(host)) {
+    throw new Error(
+      `Detox with Expo 54+ is not supported. The @config-plugins/detox package has been discontinued ` +
+        `and is incompatible with Expo 54. Please consider one of the following alternatives:\n` +
+        `  - Use framework: 'react-native' instead of 'expo'\n` +
+        `  - Use Maestro for E2E testing (recommended by Expo): https://docs.expo.dev/build-reference/e2e-tests/\n` +
+        `  - Stay on Expo 53 if you need Detox support`
+    );
+  }
 
   const initTask = await detoxInitGenerator(host, {
     ...options,

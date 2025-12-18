@@ -20,10 +20,9 @@ which allows for different ecosystems and use-cases to be supported via very min
 
 The migration will also update release groups version configuration, as well as project.json and package.json version configuration, if applicable.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "release": {
     "version": {
@@ -38,10 +37,9 @@ The migration will also update release groups version configuration, as well as 
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "release": {
     "version": {
@@ -54,6 +52,3 @@ The migration will also update release groups version configuration, as well as 
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

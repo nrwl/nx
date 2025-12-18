@@ -12,7 +12,10 @@ let projectGraphService: ProjectGraphService;
 
 export interface ProjectGraphService {
   getHash: () => Promise<string>;
-  getProjectGraph: (url: string) => Promise<ProjectGraphClientResponse>;
+  getProjectGraph: (
+    url: string,
+    requestFull?: boolean
+  ) => Promise<ProjectGraphClientResponse>;
   getTaskGraph: (url: string) => Promise<TaskGraphClientResponse>;
   getSpecificTaskGraph?: (
     url: string,

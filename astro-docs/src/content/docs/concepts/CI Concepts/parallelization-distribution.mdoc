@@ -1,6 +1,7 @@
 ---
 title: Parallelization and Distribution
-filter: "type:Concepts"
+description: Understanding task parallelization strategies and distributed task execution with Nx Agents
+filter: 'type:Concepts'
 ---
 
 Nx speeds up your CI in several ways. One method is to reduce wasted calculations with the [affected command](/docs/features/ci-features/affected) and [remote caching](/docs/features/ci-features/remote-cache). No matter how effective you are at eliminating wasted calculations in CI, there will always be some tasks that really do need to be executed and sometimes that list of tasks will be everything in the repository.
@@ -33,7 +34,7 @@ You can either distribute tasks across machines manually, or use Nx Cloud distri
 
 One way to manually distribute tasks is to use binning. Binning is a distribution strategy where there is a main job that divides the work into bins, one for each agent machine. Then every agent executes the work prepared for it. Here is a simplified version of the binning strategy.
 
-```yaml 
+```yaml
 // main-job.yml
 # Get the list of affected projects
 - nx show projects --affected --json > affected-projects.json
@@ -42,13 +43,13 @@ One way to manually distribute tasks is to use binning. Binning is a distributio
 - node storeAffectedProjects.js
 ```
 
-```yaml 
+```yaml
 // lint-agent.yml
 # Run lint for all projects defined in PROJECTS
 - nx run-many --projects=$PROJECTS -t lint
 ```
 
-```yaml 
+```yaml
 // test-agent.yml
 # Run test for all projects defined in PROJECTS
 - nx run-many --projects=$PROJECTS -t test
@@ -106,6 +107,6 @@ In the same way that Nx efficiently assigns tasks to parallel processes on a sin
 
 ## Conclusion
 
-If your repo is starting to grow large enough that CI times are suffering, or if your parallelization strategy is growing too complex to manage effectively, try [setting up Nx Agents](/docs/features/ci-features/distribute-task-execution). You can [generate a simple workflow](/docs/reference/core-api/workspace/generators/ci-workflow) for common CI providers with a `nx g ci-workflow` or follow one of the [CI setup recipes](/docs/guides/nx-cloud/setup-ci).
+If your repo is starting to grow large enough that CI times are suffering, or if your parallelization strategy is growing too complex to manage effectively, try [setting up Nx Agents](/docs/features/ci-features/distribute-task-execution). You can [generate a simple workflow](/docs/reference/workspace/generators#ci-workflow) for common CI providers with a `nx g ci-workflow` or follow one of the [CI setup recipes](/docs/guides/nx-cloud/setup-ci).
 
 Organizations that want extra help setting up Nx Cloud or getting the most out of Nx can [sign up for Nx Enterprise](https://nx.dev/enterprise). This package comes with extra support from the Nx team and the option to host Nx Cloud on your own servers.

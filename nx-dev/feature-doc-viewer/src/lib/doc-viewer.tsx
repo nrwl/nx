@@ -74,6 +74,8 @@ export function DocViewer({
     });
   }
 
+  // The pages using `DocViewer` should no longer be reachable.
+  // We'll be removing the Next.js app later, but for now just make sure noindex is set so if we somehow missed a redirect, at least nothing should be indexing the page.
   return (
     <>
       <NextSeo
@@ -82,8 +84,8 @@ export function DocViewer({
           vm.description ??
           'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.'
         }
-        noindex={!!process.env.NEXT_PUBLIC_ASTRO_URL}
-        nofollow={!!process.env.NEXT_PUBLIC_ASTRO_URL}
+        noindex={true}
+        nofollow={true}
         openGraph={{
           url: 'https://nx.dev' + currentPath,
           title: vm.title,
@@ -227,7 +229,7 @@ export function DocViewer({
                 title="Give feedback of this page"
                 className={`relative inline-flex items-center rounded-l-md ${
                   // If there is no file path for this page then don't show edit button.
-                  document.filePath ? '' : 'rounded-r-md '
+                  document.filePath ? '' : 'rounded-r-md'
                 }border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800`}
                 onClick={() => setShowFeedback(true)}
               >

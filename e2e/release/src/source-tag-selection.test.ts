@@ -82,7 +82,7 @@ describe('nx release source tag selection', () => {
             silenceError: true,
           })
         ).toContain(
-          `Resolved the current version as 3.0.0-beta.1 from git tag "v3.0.0-beta.1"`
+          `Resolved the current version as 2.0.0 from git tag "v2.0.0"`
         );
       });
     });
@@ -99,7 +99,7 @@ describe('nx release source tag selection', () => {
             silenceError: true,
           })
         ).toContain(
-          `Resolved the current version as 3.0.0-beta.1 from git tag "v3.0.0-beta.1"`
+          `Resolved the current version as 2.0.0 from git tag "v2.0.0"`
         );
       });
     });

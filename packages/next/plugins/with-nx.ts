@@ -12,20 +12,10 @@ import {
   type Target,
 } from '@nx/devkit';
 import type { AssetGlobPattern } from '@nx/webpack';
-
-export interface SvgrOptions {
-  svgo?: boolean;
-  titleProp?: boolean;
-  ref?: boolean;
-}
+import { satisfies } from 'semver';
 
 export interface WithNxOptions extends NextConfig {
   nx?: {
-    /**
-     * @deprecated Add SVGR support in your Webpack configuration without relying on Nx. See https://react-svgr.com/docs/webpack/
-     * TODO(v22): Remove this option and migrate userland webpack config to explicitly configure @svgr/webpack
-     * */
-    svgr?: boolean | SvgrOptions;
     babelUpwardRootMode?: boolean;
     fileReplacements?: { replace: string; with: string }[];
     assets?: AssetGlobPattern[];
@@ -221,12 +211,11 @@ function withNx(
 
       const userWebpackConfig = nextConfig.webpack;
 
-      const { createWebpackConfig } = require(require.resolve(
-        '@nx/next/src/utils/config',
-        {
+      const { createWebpackConfig } = require(
+        require.resolve('@nx/next/src/utils/config', {
           paths: [workspaceRoot],
-        }
-      )) as typeof import('@nx/next/src/utils/config');
+        })
+      ) as typeof import('@nx/next/src/utils/config');
       // If we have file replacements or assets, inside of the next config we pass the workspaceRoot as a join of the workspaceRoot and the projectDirectory
       // Because the file replacements and assets are relative to the projectRoot, not the workspaceRoot
       nextConfig.webpack = (a, b) =>
@@ -254,12 +243,21 @@ export function getNextConfig(
   }
   const userWebpack = nextConfig.webpack || ((x) => x);
   const { nx, ...validNextConfig } = nextConfig;
-  return {
-    eslint: {
+
+  const baseConfig: NextConfig = {
+    ...validNextConfig,
+  };
+
+  const nextJsVersion = require('next/package.json')?.version ?? '16.0.1';
+  if (satisfies(nextJsVersion, '<16.0.0', { includePrerelease: true })) {
+    baseConfig.eslint = {
       ignoreDuringBuilds: true,
       ...(validNextConfig.eslint ?? {}),
-    },
-    ...validNextConfig,
+    };
+  }
+
+  return {
+    ...baseConfig,
     webpack: (config, options) => {
       /**
        * To support ESM library export, we need to ensure the extensionAlias contains both `.js` and `.ts` extensions.
@@ -362,54 +360,6 @@ export function getNextConfig(
           ? nextGlobalCssLoader.issuer.and.concat(includes)
           : includes;
         delete nextGlobalCssLoader.issuer.and;
-      }
-
-      /**
-       * 5. Add SVGR support if option is on.
-       */
-
-      // Default SVGR support to be on for projects.
-      if (nx?.svgr !== false || typeof nx?.svgr === 'object') {
-        forNextVersion('>=15.0.0', () => {
-          // Since Next.js 15, turbopack could be enabled by default.
-          console.warn(
-            `NX: Next.js SVGR support is deprecated. If used with turbopack, it may not work as expected and is not recommended. Please configure SVGR manually.`
-          );
-        });
-        const defaultSvgrOptions = {
-          svgo: false,
-          titleProp: true,
-          ref: true,
-        };
-
-        const svgrOptions =
-          typeof nx?.svgr === 'object' ? nx.svgr : defaultSvgrOptions;
-        // TODO(v22): Remove SVGR support
-        config.module.rules.push({
-          test: /\.svg$/,
-          issuer: { not: /\.(css|scss|sass)$/ },
-          resourceQuery: {
-            not: [
-              /__next_metadata__/,
-              /__next_metadata_route__/,
-              /__next_metadata_image_meta__/,
-            ],
-          },
-          use: [
-            {
-              loader: require.resolve('@svgr/webpack'),
-              options: svgrOptions,
-            },
-            {
-              loader: require.resolve('file-loader'),
-              options: {
-                // Next.js hard-codes assets to load from "static/media".
-                // See: https://github.com/vercel/next.js/blob/53d017d/packages/next/src/build/webpack-config.ts#L1993
-                name: 'static/media/[name].[hash].[ext]',
-              },
-            },
-          ],
-        });
       }
 
       return userWebpack(config, options);

@@ -15,6 +15,13 @@ import {
   TimeToGreen,
 } from '@nx/nx-dev-ui-cloud';
 import { ButtonLinkProps } from '@nx/nx-dev-ui-common';
+import type { GetServerSideProps } from 'next';
+import { tryFramerProxy } from '../../lib/framer-proxy';
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  if (await tryFramerProxy(ctx)) return { props: {} };
+  return { props: {} };
+};
 
 export function NxCloud(): ReactElement {
   return (

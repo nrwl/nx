@@ -1,5 +1,6 @@
 import { exec, execSync } from 'node:child_process';
 import * as path from 'node:path';
+import { major } from 'semver';
 import * as yargs from 'yargs';
 import { calculateFileChanges, FileData } from '../../project-graph/file-utils';
 import {
@@ -10,8 +11,6 @@ import {
 } from '../../utils/command-line-utils';
 import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { getIgnoreObject } from '../../utils/ignore';
-
-import type { SupportInfo } from 'prettier';
 import { readNxJson } from '../../config/configuration';
 import { ProjectGraph } from '../../config/project-graph';
 import {
@@ -31,8 +30,9 @@ export async function format(
   command: 'check' | 'write',
   args: yargs.Arguments
 ): Promise<void> {
+  let prettier: typeof import('prettier');
   try {
-    require('prettier');
+    prettier = await import('prettier');
   } catch {
     output.error({
       title: 'Prettier is not installed.',
@@ -49,7 +49,9 @@ export async function format(
     { printWarnings: false },
     readNxJson()
   );
-  const patterns = (await getPatterns({ ...args, ...nxArgs } as any)).map(
+  const patterns = (
+    await getPatterns(prettier, { ...args, ...nxArgs } as any)
+  ).map(
     // prettier removes one of the \
     // prettier-ignore
     (p) => `"${p.replace(/\$/g, '\\\$')}"`
@@ -95,6 +97,7 @@ export async function format(
 }
 
 async function getPatterns(
+  prettier: typeof import('prettier'),
   args: NxArgs & { libsAndApps: boolean; _: string[] }
 ): Promise<string[]> {
   const graph = await createProjectGraphAsync({ exitOnError: true });
@@ -111,13 +114,8 @@ async function getPatterns(
 
     const p = parseFiles(args);
 
-    // In prettier v3 the getSupportInfo result is a promise
     const supportedExtensions = new Set(
-      (
-        await (require('prettier').getSupportInfo() as
-          | Promise<SupportInfo>
-          | SupportInfo)
-      ).languages
+      (await prettier.getSupportInfo()).languages
         .flatMap((language) => language.extensions)
         .filter((extension) => !!extension)
         // Prettier supports ".swcrc" as a file instead of an extension
@@ -161,7 +159,7 @@ async function getPatternsFromApps(
   });
   const affectedGraph = await filterAffected(
     graph,
-    calculateFileChanges(affectedFiles, allWorkspaceFiles)
+    calculateFileChanges(affectedFiles)
   );
   return getPatternsFromProjects(
     Object.keys(affectedGraph.nodes),
@@ -208,9 +206,12 @@ function write(patterns: string[]) {
       [[], []] as [swcrcPatterns: string[], regularPatterns: string[]]
     );
     const prettierPath = getPrettierPath();
+    const listDifferentArg = shouldUseListDifferent()
+      ? '--list-different '
+      : '';
 
     execSync(
-      `node "${prettierPath}" --write --list-different ${regularPatterns.join(
+      `node "${prettierPath}" --write ${listDifferentArg}${regularPatterns.join(
         ' '
       )}`,
       {
@@ -221,7 +222,7 @@ function write(patterns: string[]) {
 
     if (swcrcPatterns.length > 0) {
       execSync(
-        `node "${prettierPath}" --write --list-different ${swcrcPatterns.join(
+        `node "${prettierPath}" --write ${listDifferentArg}${swcrcPatterns.join(
           ' '
         )} --parser json`,
         {
@@ -240,12 +241,17 @@ async function check(patterns: string[]): Promise<string[]> {
 
   const prettierPath = getPrettierPath();
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     exec(
       `node "${prettierPath}" --list-different ${patterns.join(' ')}`,
       { encoding: 'utf-8', windowsHide: false },
       (error, stdout) => {
         if (error) {
+          // The command failed because Prettier threw an error.
+          if (stdout.length === 0) {
+            reject(error);
+          }
+
           // The command failed so there are files with different formatting. Prettier writes them to stdout, newline separated.
           resolve(stdout.trim().split('\n'));
         } else {
@@ -280,4 +286,23 @@ function getPrettierPath() {
   prettierPath = require.resolve(path.join('prettier', bin as string));
 
   return prettierPath;
+}
+
+let useListDifferent: boolean | undefined;
+
+/**
+ * Determines if --list-different should be used with --write.
+ * Prettier 4+ and 3.6.x with experimental CLI don't support combining these flags.
+ */
+function shouldUseListDifferent(): boolean {
+  if (useListDifferent !== undefined) {
+    return useListDifferent;
+  }
+
+  const prettierMajor = major(require('prettier').version);
+  const isExperimentalCli = process.env.PRETTIER_EXPERIMENTAL_CLI === '1';
+
+  useListDifferent = prettierMajor < 4 && !isExperimentalCli;
+
+  return useListDifferent;
 }

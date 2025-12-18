@@ -23,6 +23,8 @@ import {
   ArrowTrendingUpIcon,
   CommandLineIcon,
   UsersIcon,
+  DocumentChartBarIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
@@ -114,11 +116,11 @@ export const featuresItems: Record<string, MenuItem[]> = {
       isHighlight: false,
     },
   ],
-  'Nx Powerpack Features (Paid Enterprise Extensions)': [
+  'Nx Enterprise Features': [
     {
       name: 'Run Conformance Rules',
       description: null,
-      href: '/nx-enterprise/powerpack/conformance',
+      href: '/nx-enterprise/conformance',
       icon: CheckBadgeIcon,
       isNew: false,
       isHighlight: false,
@@ -126,7 +128,7 @@ export const featuresItems: Record<string, MenuItem[]> = {
     {
       name: 'Define Project Owners',
       description: null,
-      href: '/nx-enterprise/powerpack/owners',
+      href: '/nx-enterprise/owners',
       icon: UserGroupIcon,
       isNew: false,
       isHighlight: false,
@@ -156,9 +158,7 @@ export const learnItems: MenuItem[] = [
   {
     name: 'Step by step tutorials',
     description: null,
-    href: process.env.NEXT_PUBLIC_ASTRO_URL
-      ? '/docs/getting-started/tutorials'
-      : '/getting-started/tutorials',
+    href: '/docs/getting-started/tutorials',
     icon: AcademicCapIcon,
     isNew: false,
     isHighlight: false,
@@ -208,6 +208,30 @@ export const learnItems: MenuItem[] = [
     description: null,
     href: 'https://go.nx.dev/community',
     icon: DiscordIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Books',
+    description: null,
+    href: '/resources-library?filterBy=book',
+    icon: BookOpenIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Case Studies',
+    description: null,
+    href: '/resources-library?filterBy=case-study',
+    icon: DocumentChartBarIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Whitepapers',
+    description: null,
+    href: '/resources-library?filterBy=whitepaper',
+    icon: DocumentTextIcon,
     isNew: false,
     isHighlight: false,
   },

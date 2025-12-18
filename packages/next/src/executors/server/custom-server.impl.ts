@@ -11,8 +11,8 @@ export default async function* serveExecutor(
   (process.env as any).NODE_ENV = process.env.NODE_ENV
     ? process.env.NODE_ENV
     : options.dev
-    ? 'development'
-    : 'production';
+      ? 'development'
+      : 'production';
 
   // Setting port that the custom server should use.
   process.env.PORT = options.port ? `${options.port}` : process.env.PORT;

@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'fs';
+import { NX_VERSION } from '@nx/devkit';
 import { getExampleForSchema } from './get-schema-example-content';
 import {
   getPropertyDefault,
@@ -6,7 +7,6 @@ import {
   type PluginItem,
   type PluginMigrationItem,
 } from './plugin-schema-parser';
-import { stripMarkdocTags } from './strip-markdoc-tags';
 
 export function generateMigrationItem(name: string, item: any): string {
   const { config } = item;
@@ -33,7 +33,7 @@ export function generateMigrationItem(name: string, item: any): string {
     const maybeExampleMdFile = config.fullPath + '.md';
     if (existsSync(maybeExampleMdFile)) {
       const rawContent = readFileSync(maybeExampleMdFile, 'utf-8');
-      markdown += `${stripMarkdocTags(rawContent)}\n\n`;
+      markdown += `${rawContent}\n\n`;
     }
   }
 
@@ -76,8 +76,24 @@ export function getMigrationsMarkdown(
 ): string {
   const packageName = `@nx/${pluginName}`;
 
-  let markdown = `
-  The ${packageName} plugin provides various migrations to help you migrate to newer versions of ${pluginName} projects within your Nx workspace.
+  let markdown = ``;
+  if (items.size === 0) {
+    markdown += `No migrations found for \`${packageName}\`.
+Nx only retains migrations for the last 2 major versions of Nx.
+It's possible migrations existed in previous versions of \`${packageName}\`.\n\n`;
+    if (NX_VERSION) {
+      const majorVersion = Number(NX_VERSION.split('.')[0]);
+      const previousMajor = majorVersion - 1;
+      const twoMajorsAgo = previousMajor - 1;
+      markdown += `You can check the previous docs for [Nx v${previousMajor}](https://${previousMajor}.nx.dev/docs) or [Nx v${twoMajorsAgo}](https://${twoMajorsAgo}.nx.dev/docs).`;
+    } else {
+      markdown += `You can check previous versions of Nx documentations by using the version selector at the top of the page.`;
+    }
+
+    // early exit since there aren't any migration items to process anyway;
+    return markdown;
+  }
+  markdown += `The ${packageName} plugin provides various migrations to help you migrate to newer versions of ${pluginName} projects within your Nx workspace.
 Below is a complete reference for all available migrations.
 `;
 
@@ -198,7 +214,7 @@ nx generate ${fullItemName} [options]
     const positionalArgs: string[] = [];
     for (const [propName, prop] of Object.entries(properties) as [
       string,
-      any
+      any,
     ][]) {
       if (
         prop.$default &&

@@ -50,16 +50,11 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     updateFile('angular.json', JSON.stringify(angularJson, null, 2));
   }
 
-  function addCypress9() {
-    runNgAdd('@cypress/schematic', '--e2e-update', '1.7.0');
-    packageInstall('cypress', null, '^9.0.0');
-  }
-
-  function addCypress10() {
+  function addCypress() {
     runNgAdd('@cypress/schematic', '--e2e', 'latest');
     // pin latest version of Cypress that's supported by Nx to avoid flakiness
     // when a new major version is released
-    packageInstall('cypress', null, '^14.2.1');
+    packageInstall('cypress', null, '^15.6.0');
   }
 
   function addEsLint() {
@@ -97,13 +92,12 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     // update angular.json
     const angularJson = readJson('angular.json');
-    angularJson.projects[project].architect.build.options.scripts =
-      angularJson.projects[project].architect.test.options.scripts = [
-        'src/scripts.js',
-      ];
-    angularJson.projects[project].architect.test.options.styles = [
-      'src/styles.css',
+    angularJson.projects[project].architect.build.options.scripts = [
+      'src/scripts.js',
     ];
+    angularJson.projects[project].architect.test.options ??= {};
+    angularJson.projects[project].architect.test.options.tsconfig =
+      'tsconfig.spec.json';
     updateFile('angular.json', JSON.stringify(angularJson, null, 2));
 
     // confirm that @nx dependencies do not exist yet
@@ -186,7 +180,6 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       options: {
         outputPath: `dist/${project}`,
         browser: `apps/${project}/src/main.ts`,
-        polyfills: [`zone.js`],
         tsConfig: `apps/${project}/tsconfig.app.json`,
         assets: [{ glob: '**/*', input: `apps/${project}/public` }],
         styles: [`apps/${project}/src/styles.css`],
@@ -225,13 +218,9 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       defaultConfiguration: 'development',
     });
     expect(projectConfig.targets.test).toStrictEqual({
-      executor: '@angular/build:karma',
+      executor: '@angular/build:unit-test',
       options: {
-        polyfills: [`zone.js`, `zone.js/testing`],
-        tsConfig: `apps/${project}/tsconfig.spec.json`,
-        assets: [{ glob: '**/*', input: `apps/${project}/public` }],
-        styles: [`apps/${project}/src/styles.css`],
-        scripts: [`apps/${project}/src/scripts.js`],
+        tsconfig: `apps/${project}/tsconfig.spec.json`,
       },
     });
     expect(projectConfig.targets.e2e).toBeUndefined();
@@ -255,75 +244,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     checkFilesExist(`dist/${project}/browser/main.js`);
   });
 
-  it('should handle a workspace with cypress v9', () => {
-    addCypress9();
-
-    runCLI('g @nx/angular:ng-add --skip-install');
-
-    const e2eProject = `${project}-e2e`;
-    //check e2e project files
-    checkFilesDoNotExist(
-      'cypress.json',
-      'cypress/tsconfig.json',
-      'cypress/integration/spec.ts',
-      'cypress/plugins/index.ts',
-      'cypress/support/commands.ts',
-      'cypress/support/index.ts'
-    );
-    checkFilesExist(
-      `apps/${e2eProject}/cypress.json`,
-      `apps/${e2eProject}/tsconfig.json`,
-      `apps/${e2eProject}/src/integration/spec.ts`,
-      `apps/${e2eProject}/src/plugins/index.ts`,
-      `apps/${e2eProject}/src/support/commands.ts`,
-      `apps/${e2eProject}/src/support/index.ts`
-    );
-
-    const projectConfig = readJson(`apps/${project}/project.json`);
-    expect(projectConfig.targets['cypress-run']).toBeUndefined();
-    expect(projectConfig.targets['cypress-open']).toBeUndefined();
-    expect(projectConfig.targets.e2e).toBeUndefined();
-
-    // check e2e project config
-    const e2eProjectConfig = readJson(`apps/${project}-e2e/project.json`);
-    expect(e2eProjectConfig.targets['cypress-run']).toEqual({
-      executor: '@nx/cypress:cypress',
-      options: {
-        devServerTarget: `${project}:serve`,
-        cypressConfig: `apps/${e2eProject}/cypress.json`,
-      },
-      configurations: {
-        production: {
-          devServerTarget: `${project}:serve:production`,
-        },
-      },
-    });
-    expect(e2eProjectConfig.targets['cypress-open']).toEqual({
-      executor: '@nx/cypress:cypress',
-      options: {
-        watch: true,
-        headless: false,
-        cypressConfig: `apps/${e2eProject}/cypress.json`,
-      },
-    });
-    expect(e2eProjectConfig.targets.e2e).toEqual({
-      executor: '@nx/cypress:cypress',
-      options: {
-        devServerTarget: `${project}:serve`,
-        watch: true,
-        headless: false,
-        cypressConfig: `apps/${e2eProject}/cypress.json`,
-      },
-      configurations: {
-        production: {
-          devServerTarget: `${project}:serve:production`,
-        },
-      },
-    });
-  });
-
-  it('should handle a workspace with cypress v10', () => {
-    addCypress10();
+  it('should handle a workspace with cypress', () => {
+    addCypress();
 
     runCLI('g @nx/angular:ng-add --skip-install');
 

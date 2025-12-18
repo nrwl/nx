@@ -1,5 +1,5 @@
 import type { ProjectGraph } from '../../config/project-graph';
-import { readNxJson, type PluginConfiguration } from '../../config/nx-json';
+import { type PluginConfiguration } from '../../config/nx-json';
 import {
   AggregateCreateNodesError,
   isAggregateCreateNodesError,
@@ -15,10 +15,14 @@ import type {
   PreTasksExecutionContext,
   ProjectsMetadata,
 } from './public-api';
-import { createNodesFromFiles } from './utils';
 import { isIsolationEnabled } from './isolation/enabled';
 import { isDaemonEnabled } from '../../daemon/client/client';
 
+/**
+ * NOTE: Avoid using `import type` with this class. It causes issues with
+ * jest's module resolution when running tests in projects that import
+ * the devkit-internals
+ */
 export class LoadedNxPlugin {
   index?: number;
   readonly name: string;
@@ -31,7 +35,7 @@ export class LoadedNxPlugin {
       context: CreateNodesContextV2
     ) => Promise<
       Array<readonly [plugin: string, file: string, result: CreateNodesResult]>
-    >
+    >,
   ];
   readonly createDependencies?: (
     context: CreateDependenciesContext
@@ -59,17 +63,12 @@ export class LoadedNxPlugin {
       this.exclude = pluginDefinition.exclude;
     }
 
-    if (plugin.createNodes && !plugin.createNodesV2) {
-      throw new Error(
-        `Plugin ${plugin.name} only provides \`createNodes\` which was removed in Nx 21, it should provide a \`createNodesV2\` implementation.`
-      );
-    }
-
-    if (plugin.createNodesV2) {
+    const createNodesV2Impl = plugin.createNodesV2 ?? plugin.createNodes;
+    if (createNodesV2Impl) {
       this.createNodes = [
-        plugin.createNodesV2[0],
+        createNodesV2Impl[0],
         async (configFiles, context) => {
-          const result = await plugin.createNodesV2[1](
+          const result = await createNodesV2Impl[1](
             configFiles,
             this.options,
             context
@@ -79,6 +78,10 @@ export class LoadedNxPlugin {
       ];
     }
 
+    /**
+     * Wraps the plugin-provided createNodes function to provide performance
+     * measurement and error handling.
+     */
     if (this.createNodes) {
       const inner = this.createNodes[1];
       this.createNodes[1] = async (...args) => {
@@ -126,6 +129,8 @@ export class LoadedNxPlugin {
           });
         }
         await plugin.preTasksExecution(this.options, context);
+        // This doesn't revert env changes, as the proxy still updates
+        // originalEnv, rather it removes the proxy.
         process.env = originalEnv;
 
         return updates;

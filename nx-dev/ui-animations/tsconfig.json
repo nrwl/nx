@@ -17,9 +17,6 @@
   "include": [],
   "references": [
     {
-      "path": "../ui-primitives"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ]

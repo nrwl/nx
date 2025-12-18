@@ -1,8 +1,9 @@
 ---
 title: Creating Custom Steps
+description: Define and use custom workflow steps in Nx Cloud launch templates
 sidebar:
   label: Custom Steps
-filter: "type:References"
+filter: 'type:References'
 ---
 
 While Nx Cloud provides several pre-built steps, you can create custom steps to suit your specific needs. Custom steps are defined by creating a new YAML file.
@@ -44,15 +45,12 @@ inputs:
 ### Explanation of Fields
 
 - **name**:
-
   - The name of the custom step.
 
 - **description**:
-
   - A description of what the custom step does.
 
 - **definition**:
-
   - **using**: The runtime environment. Supported values are `node` and `aggregate`.
     - **node**: If `using` is set to `node`, then only `main` and `post` can be used.
     - **aggregate**: If `using` is set to `aggregate`, then only `steps` can be used.
@@ -108,7 +106,7 @@ While you can use both `env` and `inputs` to pass values to custom steps, it is 
 
 Just like launch templates, you should validate your custom steps to ensure they are defined correctly. In your CI pipeline, use the `nx-cloud validate` command with the `--step-file` flag to ensure nobody merges in invalid changes to your step:
 
-```shell {% frame="none" %}
+```shell
 nx-cloud validate --workflow-file=./.nx/workflows/custom-steps.yaml --step-file
 ```
 

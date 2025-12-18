@@ -19,10 +19,6 @@ export async function loadDevkitPackage(
   const { defaultTypedocOptions, outDir, buildDir } = setupTypeDoc(logger);
   const entries: CollectionEntry<'nx-reference-packages'>[] = [];
 
-  // TODO: Caleb there seems to be a resolution error where this entrypoint will resolved types
-  // from the node_modules/nx package and not the local workspace changes
-  // see: DOC-188
-
   logger.info('Generating devkit docs to dir...');
   // generate main @nx/devkit docs
   const devkitEntryPoint = join(
@@ -143,6 +139,7 @@ export async function loadDevkitPackage(
         category: mappedCategory,
         weight: 1.0,
         filter: 'type:References',
+        description: `${title} Devkit documentation`,
       },
     };
 

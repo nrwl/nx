@@ -28,13 +28,15 @@ export function convertScamToStandalone(
   newComponentContents = `${componentFileContents.slice(
     0,
     componentDecoratorMetadataNode.getStart() - 1
-  )}({${angularMajorVersion < 19 ? `\nstandalone: true,` : ''}
+  )}({
     imports: [${importsArray.join(',')}],${
-    providersArray.length > 0 ? `providers: [${providersArray.join(',')}],` : ''
-  }${componentFileContents.slice(
-    componentDecoratorMetadataNode.getStart() + 1,
-    moduleNodes[0].getStart() - 1
-  )}`;
+      providersArray.length > 0
+        ? `providers: [${providersArray.join(',')}],`
+        : ''
+    }${componentFileContents.slice(
+      componentDecoratorMetadataNode.getStart() + 1,
+      moduleNodes[0].getStart() - 1
+    )}`;
 
   tree.write(normalizedComponentPath, newComponentContents);
 

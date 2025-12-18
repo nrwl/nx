@@ -37,20 +37,20 @@
     }
   },
   "dependencies": {
-    "@angular/build": ">=19.0.0 <21.0.0",
+    "@angular/build": "catalog:angular-supported-versions",
     "sass-embedded": "^1.79.3",
-    "semver": "^7.6.3",
-    "ts-morph": "^24.0.0",
-    "tslib": "^2.3.0",
-    "typescript": "~5.9.2"
+    "semver": "catalog:",
+    "ts-morph": "catalog:typescript",
+    "tslib": "catalog:typescript",
+    "typescript": "catalog:typescript"
   },
   "devDependencies": {
     "jsonc-eslint-parser": "^2.4.0",
-    "vitest": "^3.0.5",
+    "vitest": "^4.0.8",
     "memfs": "^4.17.0"
   },
   "peerDependencies": {
-    "@angular/compiler-cli": ">=19.0.0 <21.0.0",
+    "@angular/compiler-cli": "catalog:angular-supported-versions",
     "@rsbuild/core": ">=1.0.5 <2.0.0"
   },
   "nx": {
@@ -67,7 +67,12 @@
     },
     "targets": {
       "build": {
-        "command": "node ./scripts/copy-readme.js angular-rspack-compiler packages/angular-rspack-compiler/README.md__tpl__ packages/angular-rspack-compiler/README.md",
+        "command": "node ./scripts/copy-readme.js angular-rspack-compiler packages/angular-rspack-compiler/readme-template.md packages/angular-rspack-compiler/README.md",
+        "inputs": [
+          "{projectRoot}/readme-template.md",
+          "{workspaceRoot}/scripts/copy-readme.js",
+          "{workspaceRoot}/scripts/readme-fragments"
+        ],
         "outputs": [
           "{projectRoot}/README.md"
         ]

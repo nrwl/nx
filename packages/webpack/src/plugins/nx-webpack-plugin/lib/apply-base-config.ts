@@ -50,7 +50,6 @@ export function applyBaseConfig(
 ): void {
   // Defaults that was applied from executor schema previously.
   options.compiler ??= 'babel';
-  options.deleteOutputPath ??= true;
   options.externalDependencies ??= 'all';
   options.fileReplacements ??= [];
   options.memoryLimit ??= 2048;
@@ -77,17 +76,17 @@ function applyNxIndependentConfig(
     config.target === 'node'
       ? 'none'
       : // Otherwise, make sure it matches `process.env.NODE_ENV`.
-      // When mode is development or production, webpack will automatically
-      // configure DefinePlugin to replace `process.env.NODE_ENV` with the
-      // build-time value. Thus, we need to make sure it's the same value to
-      // avoid conflicts.
-      //
-      // When the NODE_ENV is something else (e.g. test), then set it to none
-      // to prevent extra behavior from webpack.
-      process.env.NODE_ENV === 'development' ||
-        process.env.NODE_ENV === 'production'
-      ? (process.env.NODE_ENV as 'development' | 'production')
-      : 'none';
+        // When mode is development or production, webpack will automatically
+        // configure DefinePlugin to replace `process.env.NODE_ENV` with the
+        // build-time value. Thus, we need to make sure it's the same value to
+        // avoid conflicts.
+        //
+        // When the NODE_ENV is something else (e.g. test), then set it to none
+        // to prevent extra behavior from webpack.
+        process.env.NODE_ENV === 'development' ||
+          process.env.NODE_ENV === 'production'
+        ? (process.env.NODE_ENV as 'development' | 'production')
+        : 'none';
   // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
   // So to mitigate this we enable in memory caching when target is Node and in watch mode.
   config.cache =
@@ -216,7 +215,7 @@ function applyNxIndependentConfig(
     warnings: true,
     errors: true,
     colors: !options.verbose && !options.statsJson,
-    chunks: !options.verbose,
+    chunks: !!options.verbose,
     assets: !!options.verbose,
     chunkOrigins: !!options.verbose,
     chunkModules: !!options.verbose,
@@ -371,7 +370,10 @@ function applyNxDependentConfig(
     plugins.push(new StatsJsonPlugin());
   }
 
-  const externals = options.mergeExternals && Array.isArray(config.externals) ? [...config.externals] : [];
+  const externals =
+    options.mergeExternals && Array.isArray(config.externals)
+      ? [...config.externals]
+      : [];
   if (options.target === 'node' && options.externalDependencies === 'all') {
     const modulesDir = `${options.root}/node_modules`;
 

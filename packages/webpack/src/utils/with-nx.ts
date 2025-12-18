@@ -29,13 +29,13 @@ export function withNx(
         assets: options.assets
           ? options.assets
           : pluginOptions.assets
-          ? normalizeAssets(
-              pluginOptions.assets,
-              options.root,
-              options.sourceRoot,
-              options.projectRoot
-            )
-          : [],
+            ? normalizeAssets(
+                pluginOptions.assets,
+                options.root,
+                options.sourceRoot,
+                options.projectRoot
+              )
+            : [],
         root: context.root,
         projectName: context.projectName,
         targetName: context.targetName,

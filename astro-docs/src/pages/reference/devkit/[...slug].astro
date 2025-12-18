@@ -14,6 +14,9 @@ if(!doc) {
 }
 
 const { Content, headings } = await render(doc);
+
+// Set raw content for the copy button
+Astro.locals.rawContent = doc.body;
 ---
 
 <StarlightPage

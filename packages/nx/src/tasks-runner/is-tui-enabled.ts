@@ -4,7 +4,7 @@ import { NxArgs } from '../utils/command-line-utils';
 import { isCI } from '../utils/is-ci';
 import { logger } from '../utils/logger';
 
-let tuiEnabled = undefined;
+export const ORIGINAL_TUI_ENV_VALUE = process.env.NX_TUI;
 
 /**
  * @returns If tui is enabled
@@ -29,7 +29,6 @@ export function shouldUseTui(
   skipCapabilityCheck = process.env.NX_TUI_SKIP_CAPABILITY_CHECK === 'true'
 ) {
   // If the current terminal/environment is not capable of displaying the TUI, we don't run it
-  const isWindows = process.platform === 'win32';
   const isCapable =
     skipCapabilityCheck || (process.stderr.isTTY && isUnicodeSupported());
 
@@ -47,7 +46,11 @@ export function shouldUseTui(
     return false;
   }
 
-  if (['static', 'stream', 'dynamic-legacy'].includes(nxArgs.outputStyle)) {
+  if (
+    ['static', 'stream', 'stream-without-prefixes', 'dynamic-legacy'].includes(
+      nxArgs.outputStyle
+    )
+  ) {
     // If the user has specified a non-TUI output style, we disable the TUI
     return false;
   }
@@ -72,9 +75,6 @@ export function shouldUseTui(
     isCI() ||
     // Interactive TUI doesn't make sense in an AI agent context
     isAiAgent() ||
-    // TODO(@JamesHenry): Remove this check once Windows issues are fixed.
-    // Windows is not working well right now, temporarily disable it on Windows even if it has been specified as enabled
-    isWindows ||
     // WASM needs further testing
     IS_WASM
   ) {

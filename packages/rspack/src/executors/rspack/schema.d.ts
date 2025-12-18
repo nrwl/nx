@@ -5,7 +5,6 @@ export interface RspackExecutorSchema {
   assets?: Array<AssetGlobPattern | string>;
   baseHref?: string;
   buildLibsFromSource?: boolean;
-  deleteOutputPath?: boolean;
   deployUrl?: string;
   extractCss?: boolean;
   extractLicenses?: boolean;
@@ -41,7 +40,6 @@ export interface RspackExecutorSchema {
     sassOptions?: Record<string, any>;
     lessOptions?: Record<string, any>;
   };
-  sassImplementation?: 'sass' | 'sass-embedded';
   styles?: Array<ExtraEntryPointClass | string>;
   target?: 'web' | 'node';
   transformers?: TransformerEntry[];

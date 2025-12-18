@@ -17,10 +17,64 @@ import {
   logger,
   readJsonFile,
   joinPathFragments,
+  getDependencyVersionFromPackageJson,
 } from '@nx/devkit';
 import { existsSync } from 'fs';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { NormalModuleReplacementPlugin as RspackNormalModuleReplacementPlugin } from '@rspack/core';
+
+/**
+ * Checks if a version string is a workspace protocol version that needs normalization.
+ * This includes pnpm workspace protocol (workspace:*), file: protocol, or bare *.
+ */
+function isWorkspaceProtocolVersion(version: string | null): boolean {
+  if (!version) return false;
+  return (
+    version === '*' ||
+    version.startsWith('workspace:') ||
+    version.startsWith('file:')
+  );
+}
+
+/**
+ * Normalizes workspace protocol versions (workspace:*, workspace:^, *, file:) to actual semver versions
+ * by looking up the version from the library's package.json.
+ *
+ * @param version - The version string that may contain workspace protocol
+ * @param libraryName - The name of the library to look up
+ * @param workspaceLibs - The workspace libraries to search in
+ * @returns The normalized version string, or null if it cannot be resolved
+ */
+function normalizeWorkspaceProtocolVersion(
+  version: string | null,
+  libraryName: string,
+  workspaceLibs: WorkspaceLibrary[]
+): string | null {
+  if (!isWorkspaceProtocolVersion(version)) {
+    return version;
+  }
+
+  // Look up the actual version from the library's package.json
+  const workspaceLib = workspaceLibs.find(
+    (lib) => lib.importKey === libraryName
+  );
+  if (workspaceLib) {
+    const libPackageJsonPath = join(
+      workspaceRoot,
+      workspaceLib.root,
+      'package.json'
+    );
+    if (existsSync(libPackageJsonPath)) {
+      const libPkgJson = readJsonFile(libPackageJsonPath);
+      if (libPkgJson?.version) {
+        return libPkgJson.version;
+      }
+    }
+  }
+
+  // Can't resolve the actual version, return null to indicate no version requirement
+  return null;
+}
 
 /**
  * Build an object of functions to be used with the ModuleFederationPlugin to
@@ -40,9 +94,6 @@ export function shareWorkspaceLibraries(
   }
 
   const tsconfigPathAliases = readTsPathMappings(tsConfigPath);
-  if (!Object.keys(tsconfigPathAliases).length) {
-    return getEmptySharedLibrariesConfig();
-  }
 
   // Nested projects must come first, sort them as such
   const sortedTsConfigPathAliases = {};
@@ -79,6 +130,17 @@ export function shareWorkspaceLibraries(
     });
   }
 
+  // Collect workspace libs that are not in TS path mappings
+  // This supports TS Solution + PM Workspaces where libs use package.json
+  const workspaceLibrariesAsDeps: string[] = [];
+  if (Object.keys(sortedTsConfigPathAliases).length !== workspaceLibs.length) {
+    for (const workspaceLib of workspaceLibs) {
+      if (!sortedTsConfigPathAliases[workspaceLib.importKey]) {
+        workspaceLibrariesAsDeps.push(workspaceLib.importKey);
+      }
+    }
+  }
+
   const normalModuleReplacementPluginImpl =
     bundler === 'rspack'
       ? RspackNormalModuleReplacementPlugin
@@ -110,39 +172,80 @@ export function shareWorkspaceLibraries(
           joinPathFragments(workspaceRoot, projectRoot, 'package.json')
         );
       }
-      return pathMappings.reduce((libraries, library) => {
-        // Check to see if the library version is declared in the app's package.json
-        let version = pkgJson?.dependencies?.[library.name];
-        if (!version && workspaceLibs.length > 0) {
-          const workspaceLib = workspaceLibs.find(
-            (lib) => lib.importKey === library.name
+      const libraries = pathMappings.reduce(
+        (libraries, library) => {
+          // Check to see if the library version is declared in the app's package.json
+          let version = pkgJson
+            ? getDependencyVersionFromPackageJson(
+                library.name,
+                workspaceRoot,
+                pkgJson
+              )
+            : null;
+
+          // Normalize workspace protocol versions (workspace:*, workspace:^, *, file:)
+          version = normalizeWorkspaceProtocolVersion(
+            version,
+            library.name,
+            workspaceLibs
           );
 
-          const libPackageJsonPath = workspaceLib
-            ? join(workspaceLib.root, 'package.json')
-            : null;
-          if (libPackageJsonPath && existsSync(libPackageJsonPath)) {
-            pkgJson = readJsonFile(libPackageJsonPath);
+          if (!version && workspaceLibs.length > 0) {
+            const workspaceLib = workspaceLibs.find(
+              (lib) => lib.importKey === library.name
+            );
 
-            if (pkgJson) {
-              version = pkgJson.version;
+            const libPackageJsonPath = workspaceLib
+              ? join(workspaceLib.root, 'package.json')
+              : null;
+            if (libPackageJsonPath && existsSync(libPackageJsonPath)) {
+              pkgJson = readJsonFile(libPackageJsonPath);
+
+              if (pkgJson) {
+                version = pkgJson.version;
+              }
             }
           }
-        }
 
-        return {
-          ...libraries,
-          [library.name]: {
-            ...(version
-              ? {
-                  requiredVersion: version,
-                  singleton: true,
-                }
-              : { requiredVersion: false }),
-            eager,
-          },
+          return {
+            ...libraries,
+            [library.name]: {
+              ...(version
+                ? {
+                    requiredVersion: version,
+                    singleton: true,
+                  }
+                : { requiredVersion: false }),
+              eager,
+            },
+          };
+        },
+        {} as Record<string, SharedLibraryConfig>
+      );
+
+      // Add workspace libs from package.json dependencies
+      // This supports TS Solution + PM Workspaces
+      for (const libraryName of workspaceLibrariesAsDeps) {
+        let version =
+          pkgJson?.dependencies?.[libraryName] ??
+          pkgJson?.devDependencies?.[libraryName];
+
+        // Normalize workspace protocol versions (workspace:*, workspace:^, *, file:)
+        version = normalizeWorkspaceProtocolVersion(
+          version,
+          libraryName,
+          workspaceLibs
+        );
+
+        libraries[libraryName] = {
+          ...(version
+            ? { requiredVersion: version, singleton: true }
+            : { requiredVersion: false }),
+          eager,
         };
-      }, {} as Record<string, SharedLibraryConfig>);
+      }
+
+      return libraries as Record<string, SharedLibraryConfig>;
     },
     getReplacementPlugin: () =>
       new normalModuleReplacementPluginImpl(/./, (req) => {
@@ -198,6 +301,18 @@ export function getNpmPackageSharedConfig(
     return undefined;
   }
 
+  // Warn if a workspace protocol version is passed - this indicates the package
+  // should be configured as a workspace library instead of using sharePackages
+  if (isWorkspaceProtocolVersion(version)) {
+    logger.warn(
+      `Package "${pkgName}" has a workspace protocol version "${version}" which cannot be used ` +
+        'for Module Federation. For workspace libraries, use the workspace library configuration ' +
+        'instead of sharePackages. The package will not be shared.'
+    );
+
+    return undefined;
+  }
+
   return { singleton: true, strictVersion: true, requiredVersion: version };
 }
 
@@ -215,20 +330,26 @@ export function sharePackages(
   const pkgJson = readRootPackageJson();
   const allPackages: { name: string; version: string }[] = [];
   packages.forEach((pkg) => {
-    const pkgVersion =
-      pkgJson.dependencies?.[pkg] ?? pkgJson.devDependencies?.[pkg];
+    const pkgVersion = getDependencyVersionFromPackageJson(
+      pkg,
+      workspaceRoot,
+      pkgJson
+    );
     allPackages.push({ name: pkg, version: pkgVersion });
     collectPackageSecondaryEntryPoints(pkg, pkgVersion, allPackages);
   });
 
-  return allPackages.reduce((shared, pkg) => {
-    const config = getNpmPackageSharedConfig(pkg.name, pkg.version);
-    if (config) {
-      shared[pkg.name] = config;
-    }
+  return allPackages.reduce(
+    (shared, pkg) => {
+      const config = getNpmPackageSharedConfig(pkg.name, pkg.version);
+      if (config) {
+        shared[pkg.name] = config;
+      }
 
-    return shared;
-  }, {} as Record<string, SharedLibraryConfig>);
+      return shared;
+    },
+    {} as Record<string, SharedLibraryConfig>
+  );
 }
 
 /**
@@ -302,8 +423,7 @@ function addStringDependencyToSharedConfig(
     const pkgJson = readRootPackageJson();
     const config = getNpmPackageSharedConfig(
       dependency,
-      pkgJson.dependencies?.[dependency] ??
-        pkgJson.devDependencies?.[dependency]
+      getDependencyVersionFromPackageJson(dependency, workspaceRoot, pkgJson)
     );
 
     if (!config) {

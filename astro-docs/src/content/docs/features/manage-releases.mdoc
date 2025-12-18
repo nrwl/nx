@@ -3,7 +3,7 @@ title: 'Manage Releases'
 description: 'Learn how to use Nx release tools to version, generate changelogs, and publish your projects with confidence using conventional commits.'
 sidebar:
   order: 9
-filter: "type:Features"
+filter: 'type:Features'
 ---
 
 Once you have leveraged Nx's powerful code generation and task running capabilities to build your libraries and applications, you will want to share them with your users.
@@ -14,7 +14,7 @@ Nx provides a set of tools to help you manage your releases called `nx release`.
 
 > We recommend always starting with --dry-run, because publishing is difficult to undo
 
-```shell {% frame="none" %}
+```shell
 nx release --dry-run
 ```
 
@@ -34,12 +34,12 @@ By default, when you run `nx release` it will prompt you for a version keyword (
 
 When trying it out for the first time, you need to pass the `--first-release` flag since there is no previous release to compare against for changelog purposes. It is strongly recommended to use the `--dry-run` flag to see what will be published in the first release without actually pushing anything to the registry.
 
-```shell {% frame="none" %}
+```shell
 nx release --first-release --dry-run
 ```
 
 {% aside type="tip" title="Semantic Versioning" %}
-By default, the version follows semantic versioning (semver) rules. To disable this behavior, set `release.releaseTagPatternRequireSemver` to `false` in your `nx.json` file. This allows you to use custom versioning schemes.
+By default, the version follows semantic versioning (semver) rules. To disable this behavior, set `release.releaseTag.requireSemver` to `false` in your `nx.json` file. This allows you to use custom versioning schemes.
 {% /aside %}
 
 ## Set Up Your Workspace
@@ -64,8 +64,8 @@ Configure Nx Release in your `nx.json` file:
 // nx.json
 {
   "release": {
-    "projects": ["packages/*"]
-  }
+    "projects": ["packages/*"],
+  },
 }
 ```
 
@@ -75,70 +75,18 @@ See the [configuration reference](/docs/reference/nx-json#release) for all avail
 
 ## Using the Programmatic API for Nx Release
 
-For maximum control, use the programmatic API to create custom release workflows:
+A powerful feature of Nx Release is the fact that it is designed to be used via a Node.js programmatic API in addition to the `nx release` CLI.
 
-```ts 
-// tools/scripts/release.ts
-import { releaseChangelog, releasePublish, releaseVersion } from 'nx/release';
-import * as yargs from 'yargs';
+Releases are a hugely complex and nuanced process, filled with many special cases and idiosyncratic preferences, and it is impossible for a CLI to be able to support all of them out of the box. By having a first-class programmatic API, you can go beyond the CLI and create custom release workflows that are highly dynamic and tailored to your specific needs.
 
-(async () => {
-  const options = await yargs
-    .version(false) // don't use the default meaning of version in yargs
-    .option('version', {
-      description:
-        'Explicit version specifier to use, if overriding conventional commits',
-      type: 'string',
-    })
-    .option('dryRun', {
-      alias: 'd',
-      description:
-        'Whether or not to perform a dry-run of the release process, defaults to true',
-      type: 'boolean',
-      default: true,
-    })
-    .option('verbose', {
-      description:
-        'Whether or not to enable verbose logging, defaults to false',
-      type: 'boolean',
-      default: false,
-    })
-    .parseAsync();
-
-  const { workspaceVersion, projectsVersionData } = await releaseVersion({
-    specifier: options.version,
-    dryRun: options.dryRun,
-    verbose: options.verbose,
-  });
-
-  await releaseChangelog({
-    versionData: projectsVersionData,
-    version: workspaceVersion,
-    dryRun: options.dryRun,
-    verbose: options.verbose,
-  });
-
-  // publishResults contains a map of project names and their exit codes
-  const publishResults = await releasePublish({
-    dryRun: options.dryRun,
-    verbose: options.verbose,
-    // You can optionally pass through the version data (e.g. if you are using a custom publish executor that needs to be aware of versions)
-    // It will then be provided to the publish executor options as `nxReleaseVersionData`
-    // This is not required for the default @nx/js publish executor
-    versionData: projectsVersionData,
-  });
-
-  process.exit(
-    Object.values(publishResults).every((result) => result.code === 0) ? 0 : 1
-  );
-})();
-```
+See our dedicated guide on the [programmatic API](/docs/guides/nx-release/programmatic-api) to learn more and see some example release scripts.
 
 ## Learn More
 
 ### Configuration & Customization
 
-- **[Release Groups](/docs/guides/nx-release/release-projects-independently)** - Version projects independently or together
+- **[Version Projects Independently](/docs/guides/nx-release/release-projects-independently)** - Version projects independently or together
+- **[Release Groups](/docs/guides/nx-release/release-groups)** - Organize projects into release groups with specific configuration for each group
 - **[Conventional Commits](/docs/guides/nx-release/automatically-version-with-conventional-commits)** - Automate versioning based on commit messages
 - **[Custom Registries](/docs/guides/nx-release/configure-custom-registries)** - Publish to private or alternative registries
 - **[CI/CD Integration](/docs/guides/nx-release/publish-in-ci-cd)** - Automate releases in your pipeline

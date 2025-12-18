@@ -2,8 +2,8 @@ import { execSync } from 'child_process';
 import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { prompt } from 'enquirer';
-import type { ProjectGraphProjectNode } from '@nx/devkit';
-import type { FinalConfigForProject } from 'nx/src/command-line/release/version/release-group-processor';
+import { ProjectGraphProjectNode, workspaceRoot } from '@nx/devkit';
+import type { FinalConfigForProject } from 'nx/src/command-line/release/utils/release-graph';
 import { interpolateVersionPattern } from './version-pattern-utils';
 
 const DEFAULT_VERSION_SCHEMES = {
@@ -23,7 +23,8 @@ export async function handleDockerVersion(
   projectGraphNode: ProjectGraphProjectNode,
   finalConfigForProject: FinalConfigForProject,
   dockerVersionScheme?: string,
-  dockerVersion?: string
+  dockerVersion?: string,
+  versionActionsVersion?: string
 ) {
   // If the full docker image reference is provided, use it directly
   const nxDockerImageRefEnvOverride =
@@ -41,14 +42,17 @@ export async function handleDockerVersion(
       const versionScheme =
         dockerVersionScheme && dockerVersionScheme in availableVersionSchemes
           ? dockerVersionScheme
-          : await promptForNewVersion(
-              availableVersionSchemes,
-              projectGraphNode.name
-            );
+          : Object.keys(availableVersionSchemes).length === 1
+            ? Object.keys(availableVersionSchemes)[0]
+            : await promptForNewVersion(
+                availableVersionSchemes,
+                projectGraphNode.name
+              );
       newVersion = calculateNewVersion(
         projectGraphNode.name,
         versionScheme,
-        availableVersionSchemes
+        availableVersionSchemes,
+        versionActionsVersion
       );
     }
   }
@@ -91,7 +95,8 @@ async function promptForNewVersion(
 function calculateNewVersion(
   projectName: string,
   versionScheme: string,
-  versionSchemes: Record<string, string>
+  versionSchemes: Record<string, string>,
+  versionActionsVersion?: string
 ): string {
   if (!(versionScheme in versionSchemes)) {
     throw new Error(
@@ -102,6 +107,7 @@ function calculateNewVersion(
   }
   return interpolateVersionPattern(versionSchemes[versionScheme], {
     projectName,
+    versionActionsVersion,
   });
 }
 
@@ -148,5 +154,10 @@ function getImageReference(
 }
 
 function getDefaultImageReference(projectRoot: string) {
-  return projectRoot.replace(/^[\\/]/, '').replace(/[\\/\s]+/g, '-');
+  const root = projectRoot === '.' ? workspaceRoot : projectRoot;
+  const normalized = root
+    .replace(/^[\\/]/, '')
+    .replace(/[\\/\s]+/g, '-')
+    .toLowerCase();
+  return normalized.length > 128 ? normalized.slice(-128) : normalized;
 }

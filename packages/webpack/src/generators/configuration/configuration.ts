@@ -112,8 +112,8 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '${offsetFromRoot(project.root)}${
-            buildOptions.outputPath
-          }'),
+      buildOptions.outputPath
+    }'),
   },
   plugins: [
     new NxAppWebpackPlugin({
@@ -133,6 +133,7 @@ const { composePlugins, withNx, withWeb } = require('@nx/webpack');
 module.exports = composePlugins(withNx(), withWeb(), (config) => {
   // Update the webpack config as needed here.
   // e.g. \`config.plugins.push(new MyPlugin())\`
+  config.output.clean = true;
   return config;
 });
 `
@@ -148,8 +149,8 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '${offsetFromRoot(project.root)}${
-            buildOptions.outputPath
-          }'),
+      buildOptions.outputPath
+    }'),
   },
   plugins: [
     new NxAppWebpackPlugin({
@@ -169,6 +170,7 @@ const { composePlugins, withNx } = require('@nx/webpack');
 module.exports = composePlugins(withNx(), (config) => {
   // Update the webpack config as needed here.
   // e.g. \`config.plugins.push(new MyPlugin())\`
+  config.output.clean = true;
   return config;
 });
 `

@@ -1,12 +1,10 @@
 import {
-  type CreateNodes,
-  type CreateNodesContext,
+  type CreateNodesContextV2,
   createNodesFromFiles,
   type CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
-  logger,
   normalizePath,
   type NxJsonConfiguration,
   type ProjectConfiguration,
@@ -61,7 +59,7 @@ const defaultPatterns = {
 
 const pmc = getPackageManagerCommand();
 
-export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
+export const createNodes: CreateNodesV2<CypressPluginOptions> = [
   cypressConfigGlob,
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -84,24 +82,12 @@ export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
   },
 ];
 
-/**
- * @deprecated This is replaced with {@link createNodesV2}. Update your plugin to export its own `createNodesV2` function that wraps this one instead.
- * This function will change to the v2 function in Nx 20.
- */
-export const createNodes: CreateNodes<CypressPluginOptions> = [
-  cypressConfigGlob,
-  (configFile, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    return createNodesInternal(configFile, options, context, {});
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
   options: CypressPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: CypressTargets
 ) {
   options = normalizeOptions(options);
@@ -257,7 +243,7 @@ async function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
   options: CypressPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<CypressTargets> {
   const cypressConfig = await loadConfigFile(
     join(context.workspaceRoot, configFilePath)

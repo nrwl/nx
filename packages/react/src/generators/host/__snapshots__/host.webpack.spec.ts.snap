@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`hostGenerator bundler=webpack should generate host files and configs for SSR 1`] = `
 "const { composePlugins, withNx } = require('@nx/webpack');
@@ -20,7 +20,7 @@ const defaultConfig = {
 module.exports = composePlugins(
   withNx(),
   withReact({ ssr: true }),
-  withModuleFederationForSSR(defaultConfig, { dts: false })
+  withModuleFederationForSSR(defaultConfig, { dts: false }),
 );
 "
 `;
@@ -63,7 +63,7 @@ const defaultConfig = {
 export default composePlugins(
   withNx(),
   withReact({ ssr: true }),
-  withModuleFederationForSSR(defaultConfig, { dts: false })
+  withModuleFederationForSSR(defaultConfig, { dts: false }),
 );
 "
 `;
@@ -103,7 +103,7 @@ const config = {
 module.exports = composePlugins(
   withNx(),
   withReact(),
-  withModuleFederation(config, { dts: false })
+  withModuleFederation(config, { dts: false }),
 );
 "
 `;

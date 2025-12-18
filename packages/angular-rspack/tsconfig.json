@@ -4,16 +4,13 @@
   "include": [],
   "references": [
     {
-      "path": "../devkit"
-    },
-    {
-      "path": "../angular-rspack-compiler"
-    },
-    {
       "path": "./tsconfig.lib.json"
     },
     {
       "path": "./tsconfig.spec.json"
     }
-  ]
+  ],
+  "nx": {
+    "addTypecheckTarget": false
+  }
 }

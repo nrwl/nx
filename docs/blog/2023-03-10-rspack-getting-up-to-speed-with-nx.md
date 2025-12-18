@@ -41,13 +41,13 @@ This creates a pre-configured setup with React, TypeScript, ESLint, Jest (option
 
 All the usual Nx features, such as
 
-- [affected commands](/ci/features/affected)
-- [computation caching](/features/cache-task-results)
+- [affected commands](/docs/features/ci-features/affected)
+- [computation caching](/docs/features/cache-task-results)
 - remote caching with [Nx Cloud](/nx-cloud)
 
 ..work out of the box.
 
-But not just the "speed features". All the code generators, automate code migrations, and [code editor extensions](/getting-started/editor-setup) work too.
+But not just the "speed features". All the code generators, automate code migrations, and [code editor extensions](/docs/getting-started/editor-setup) work too.
 
 ## Rspack in an Nx Monorepo
 
@@ -70,12 +70,12 @@ This creates a new application in your Nx monorepo that uses Rspack as the bundl
 Go and learn more on the
 
 - official Rspack website: [https://rspack.dev](https://rspack.dev/)
-- learn about the Nx Rspack plugin: [/technologies/build-tools/rspack/introduction](/technologies/build-tools/rspack/introduction)
+- learn about the Nx Rspack plugin: [/technologies/build-tools/rspack/introduction](/docs/technologies/build-tools/rspack/introduction)
 
 ## Learn more
 
-- 🦀 [Rspack and Nx docs](/technologies/build-tools/rspack/introduction)
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🦀 [Rspack and Nx docs](/docs/technologies/build-tools/rspack/introduction)
+- 🧠 [Nx Docs](/docs/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

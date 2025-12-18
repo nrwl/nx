@@ -1,12 +1,10 @@
 import {
-  CreateNodes,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesResult,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
-  logger,
   NxJsonConfiguration,
   readJsonFile,
   TargetConfiguration,
@@ -57,7 +55,7 @@ function writeTargetsToCache(
   });
 }
 
-export const createNodesV2: CreateNodesV2<ExpoPluginOptions> = [
+export const createNodes: CreateNodesV2<ExpoPluginOptions> = [
   '**/app.{json,config.js,config.ts}',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -78,25 +76,12 @@ export const createNodesV2: CreateNodesV2<ExpoPluginOptions> = [
   },
 ];
 
-export const createNodes: CreateNodes<ExpoPluginOptions> = [
-  '**/app.{json,config.js,config.ts}',
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-
-    const optionsHash = hashObject(options);
-    const cachePath = join(workspaceDataDirectory, `expo-${optionsHash}.hash`);
-    const targetsCache = readTargetsCache(cachePath);
-
-    return createNodesInternal(configFilePath, options, context, targetsCache);
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFile: string,
   options: ExpoPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<
     string,
     Record<string, TargetConfiguration<ExpoPluginOptions>>
@@ -148,7 +133,7 @@ async function createNodesInternal(
 function buildExpoTargets(
   projectRoot: string,
   options: ExpoPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -208,7 +193,7 @@ function buildExpoTargets(
 
 function getAppConfig(
   configFilePath: string,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 

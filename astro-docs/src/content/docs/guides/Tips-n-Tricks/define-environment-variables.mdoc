@@ -1,7 +1,7 @@
 ---
 title: Define Environment Variables
 description: Learn how to set and use environment variables in Nx projects, including file-based configuration, custom env files, and ad-hoc variable definition across different operating systems.
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 Environment variables are global system variables accessible by all the processes running under the Operating System (OS).
@@ -13,28 +13,47 @@ the runtime of an app.
 
 By default, Nx will load any environment variables you place in the following files:
 
-1. `apps/my-app/.env.[target-name].[target-configuration-name].local`
-2. `apps/my-app/.env.[target-name].[target-configuration-name]`
-3. `apps/my-app/.env.[target-name].local`
-4. `apps/my-app/.env.[target-name]`
-5. `apps/my-app/.[target-name].[target-configuration-name].local.env`
-6. `apps/my-app/.[target-name].[target-configuration-name].env`
-7. `apps/my-app/.[target-name].local.env`
-8. `apps/my-app/.[target-name].env`
-9. `apps/my-app/.env.local`
-10. `apps/my-app/.local.env`
-11. `apps/my-app/.env`
-12. `.env.[target-name].[target-configuration-name].local`
-13. `.env.[target-name].[target-configuration-name]`
-14. `.env.[target-name].local`
-15. `.env.[target-name]`
-16. `.[target-name].[target-configuration-name].local.env`
-17. `.[target-name].[target-configuration-name].env`
-18. `.[target-name].local.env`
-19. `.[target-name].env`
-20. `.env.local`
-21. `.local.env`
-22. `.env`
+1. `[project-root]/.env.[target-name].[target-configuration-name].local`
+2. `[project-root]/.env.[target-name].[target-configuration-name]`
+3. `[project-root]/.[target-name].[target-configuration-name].local.env`
+4. `[project-root]/.[target-name].[target-configuration-name].env`
+5. `[project-root]/.env.[target-configuration-name].local`
+6. `[project-root]/.env.[target-configuration-name]`
+7. `[project-root]/.[target-configuration-name.local.env`
+8. `[project-root]/.[target-configuration-name].env`
+9. `[project-root]/.env.[target-name].local`
+10. `[project-root]/.env.[target-name]`
+11. `[project-root]/.[target-name].local.env`
+12. `[project-root]/.[target-name].env`
+13. `[project-root]/.env.local`
+14. `[project-root]/.local.env`
+15. `[project-root]/.env`
+16. `.env.[target-name].[target-configuration-name].local`
+17. `.env.[target-name].[target-configuration-name]`
+18. `.[target-name].[target-configuration-name].local.env`
+19. `.[target-name].[target-configuration-name].env`
+20. `.env.[target-configuration-name].local`
+21. `.env.[target-configuration-name]`
+22. `.[target-configuration-name].local.env`
+23. `.[target-configuration-name].env`
+24. `.env.[target-name].local`
+25. `.env.[target-name]`
+26. `.[target-name].local.env`
+27. `.[target-name].env`
+28. `.env.local`
+29. `.local.env`
+30. `.env`
+
+Or shorter we will use the following order:
+
+- [project-root]/[target-name].[target-configuration-name]
+- [project-root]/[target-configuration-name]
+- [project-root]/[target-name]
+- [project-root]/{general environment variables}
+- [target-name].[target-configuration-name]
+- [target-configuration-name]
+- [target-name]
+- {general environment variables}
 
 {% aside type="caution" title="Order is important" %}
 Nx will move through the above list, ignoring files it can't find, and loading environment variables
@@ -57,11 +76,35 @@ We recommend nesting your **app** specific `env` files in `apps/your-app`, and c
 for workspace-specific settings (like the [Nx Cloud token](/docs/guides/nx-cloud/access-tokens)).
 {% /aside %}
 
+### Environment Variables for Atomized targets
+
+Atomized targets have their names created dynamically, typically using the file names as a suffix. This makes it difficult to define environment variable files for them.
+For atomized targets, Nx will instead search for atomized target's parent and non-atomized target.
+
+Instead of looking for a file named e.g. `.env.e2e-ci--path/to/atomized/file`, Nx will instead look for:
+
+- `.env.e2e-ci` and
+- `.env.e2e`
+
+The above order with combinations of targets, configurations and path priority remainst the same:
+
+- [project-root]/[parent-target-name].[target-configuration-name]
+- [project-root]/[non-atomized-target-name].[target-configuration-name]
+- [project-root]/[target-configuration-name]
+- [project-root]/[parent-target-name]
+- [project-root]/[non-atomized-target-name]
+- [project-root]/{general environment variables}
+- [target-name].[target-configuration-name]
+- [target-configuration-name]
+- [parent-target-name]
+- [non-atomized-target-name]
+- {general environment variables}
+
 ### Environment Variables for Configurations
 
 Nx will only load environment variable files for a particular configuration if that configuration is defined for a task, even if you specify that configuration name from the command line. So if there is no `development` configuration defined for the `app`'s `build` task, the following command will use `.env.build` instead of `.env.build.development`:
 
-```shell {% frame="none" %}
+```shell
 nx build app --configuration development
 ```
 
@@ -74,10 +117,10 @@ In order to have Nx actually use the `.env.build.development` environment variab
     "build": {
       // ...
       "configurations": {
-        "development": {}
-      }
-    }
-  }
+        "development": {},
+      },
+    },
+  },
 }
 ```
 
@@ -87,7 +130,7 @@ If you want to load variables from `env` files other than the ones listed above:
 
 1. Use the [env-cmd](https://www.npmjs.com/package/env-cmd) package: `env-cmd -f .qa.env nx serve`
 2. Use [dotenvx](https://github.com/dotenvx/dotenvx): `dotenvx run --env-file=.qa.env -- nx serve`
-3. Use the `envFile` option of the [run-commands](/docs/reference/core-api/nx/executors/run-commands#envfile) builder and execute your command inside of the builder
+3. Use the `envFile` option of the [run-commands](/docs/reference/nx/executors/run-commands#envfile) builder and execute your command inside of the builder
 
 ### Ad-hoc Variables
 
@@ -99,18 +142,18 @@ In Unix systems, we need to set the environment variables before calling a comma
 
 Let's say that we want to define an API URL for the application to use:
 
-```shell {% frame="none" %}
+```shell
 NX_PUBLIC_API_URL=http://localhost:3333 nx build myapp
 ```
 
 **Windows (cmd.exe)**
 
-```shell {% frame="none" %}
+```shell
 set "NX_PUBLIC_API_URL=http://localhost:3333" && nx build myapp
 ```
 
 **Windows (Powershell)**
 
-```shell {% frame="none" %}
+```shell
 ($env:NX_PUBLIC_API_URL = "http://localhost:3333") -and (nx build myapp)
 ```

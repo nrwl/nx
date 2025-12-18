@@ -96,7 +96,8 @@
 /* Custom font for code blocks */
 @font-face {
   font-family: 'Input Mono';
-  src: url('/docs/fonts/InputMono-Regular.woff2') format('woff2'),
+  src:
+    url('/docs/fonts/InputMono-Regular.woff2') format('woff2'),
     url('/docs/fonts/InputMono-Regular.woff') format('woff');
   font-weight: normal;
   font-style: normal;
@@ -192,6 +193,14 @@ pre {
   .caution,
   aside {
     border-radius: var(--radius-lg);
+  }
+
+  aside a {
+    color: var(--sl-color-accent);
+  }
+
+  aside a:hover {
+    color: var(--sl-color-accent-high);
   }
 
   /* Align TOC with sidebar styling */
@@ -356,9 +365,15 @@ pre {
 /* Additional custom styles can be added here */
 
 /* For deepdive callouts that are still used, need to space out content */
-.callout div:not(:last-child),
+.callout div:not(:last-child):not(.ec-line),
 .callout p:not(:last-child) {
   @apply mb-4;
+}
+.callout a {
+  color: var(--sl-color-accent);
+}
+.callout a:hover {
+  color: var(--sl-color-accent-high);
 }
 
 /* Align top with breadcrumbs */
@@ -386,7 +401,7 @@ h6:hover .anchor-link {
 }
 
 .anchor-link:hover {
-  color: var(--sl-color-accent);
+  color: var(--sl-color-accent-high);
 }
 
 .right-sidebar {
@@ -402,10 +417,10 @@ iframe[src*='youtube'] {
 }
 
 table code {
-  word-wrap: break-word;
+  white-space: nowrap;
 }
 
-/* Fix tab alignment */
 [role='tablist'] {
-  align-items: end;
+  font-size: var(--text-sm);
+  align-items: end; /* Fix tab alignment */
 }

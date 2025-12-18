@@ -1,7 +1,7 @@
 ---
 title: Micro Frontend Architecture
 description: Explore how Nx supports Micro Frontend architecture with Module Federation, enabling independent deployment while managing associated challenges.
-filter: "type:Concepts"
+filter: 'type:Concepts'
 ---
 
 Nx provides out-of-the-box [Module Federation](/docs/technologies/module-federation/concepts/faster-builds-with-module-federation) support to both
@@ -56,7 +56,7 @@ application, and `nx g remote` for remote applications.
 {% tabs %}
 {% tabitem label="React" %}
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/react:host apps/shell --remotes=shop,cart
 nx g @nx/react:remote apps/about --host=shell
 ```
@@ -64,7 +64,7 @@ nx g @nx/react:remote apps/about --host=shell
 {% /tabitem %}
 {% tabitem label="Angular" %}
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:host apps/shell --remotes=shop,cart
 nx g @nx/angular:remote apps/about --host=shell
 ```

@@ -71,14 +71,12 @@ describe('app', () => {
     expect(dependencies['@angular/router']).toBe(angularVersion);
     expect(dependencies['rxjs']).toBeDefined();
     expect(dependencies['tslib']).toBeDefined();
-    expect(dependencies['zone.js']).toBeDefined();
     expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
     expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
     expect(devDependencies['@angular/language-service']).toBe(angularVersion);
     expect(devDependencies['@angular/build']).toBe(angularDevkitVersion);
-
-    // codelyzer should no longer be there by default
-    expect(devDependencies['codelyzer']).toBeUndefined();
+    // applications are zoneless by default
+    expect(dependencies['zone.js']).toBeUndefined();
   });
 
   it('should add both packages for builders when using rspack bundler', async () => {
@@ -189,7 +187,7 @@ describe('app', () => {
     it('should generate files', async () => {
       await generateApp(appTree);
 
-      expect(appTree.exists('my-app/jest.config.ts')).toBeTruthy();
+      expect(appTree.exists('my-app/jest.config.cts')).toBeTruthy();
       expect(appTree.exists('my-app/src/main.ts')).toBeTruthy();
       expect(appTree.exists('my-app/src/app/app-module.ts')).toBeTruthy();
       expect(appTree.exists('my-app/src/app/app.ts')).toBeTruthy();
@@ -236,9 +234,7 @@ describe('app', () => {
         import { AppModule } from './app/app.module';
 
         platformBrowser()
-          .bootstrapModule(AppModule, {
-            ngZoneEventCoalescing: true
-          })
+          .bootstrapModule(AppModule)
           .catch((err) => console.error(err));
         "
       `);
@@ -260,13 +256,14 @@ describe('app', () => {
     it('should setup jest with serializers', async () => {
       await generateApp(appTree);
 
-      expect(appTree.read('my-app/jest.config.ts', 'utf-8')).toContain(
+      const jestConfig = appTree.read('my-app/jest.config.cts', 'utf-8');
+      expect(jestConfig).toContain(
         `'jest-preset-angular/build/serializers/no-ng-attributes'`
       );
-      expect(appTree.read('my-app/jest.config.ts', 'utf-8')).toContain(
+      expect(jestConfig).toContain(
         `'jest-preset-angular/build/serializers/ng-snapshot'`
       );
-      expect(appTree.read('my-app/jest.config.ts', 'utf-8')).toContain(
+      expect(jestConfig).toContain(
         `'jest-preset-angular/build/serializers/html-comment'`
       );
     });
@@ -338,7 +335,7 @@ describe('app', () => {
 
       // Make sure these exist
       [
-        `my-dir/my-app/jest.config.ts`,
+        `my-dir/my-app/jest.config.cts`,
         'my-dir/my-app/src/main.ts',
         'my-dir/my-app/src/app/app-module.ts',
         'my-dir/my-app/src/app/app.ts',
@@ -358,10 +355,11 @@ describe('app', () => {
           path: 'my-dir/my-app/tsconfig.app.json',
           lookupFn: (json) => json.exclude,
           expectedValue: [
-            'jest.config.ts',
-            'src/test-setup.ts',
-            'src/**/*.test.ts',
             'src/**/*.spec.ts',
+            'src/**/*.test.ts',
+            'jest.config.ts',
+            'jest.config.cts',
+            'src/test-setup.ts',
           ],
         },
         {
@@ -427,7 +425,7 @@ describe('app', () => {
 
       // Make sure these exist
       [
-        'my-dir/my-app/jest.config.ts',
+        'my-dir/my-app/jest.config.cts',
         'my-dir/my-app/src/main.ts',
         'my-dir/my-app/src/app/app-module.ts',
         'my-dir/my-app/src/app/app.ts',
@@ -447,10 +445,11 @@ describe('app', () => {
           path: 'my-dir/my-app/tsconfig.app.json',
           lookupFn: (json) => json.exclude,
           expectedValue: [
-            'jest.config.ts',
-            'src/test-setup.ts',
-            'src/**/*.test.ts',
             'src/**/*.spec.ts',
+            'src/**/*.test.ts',
+            'jest.config.ts',
+            'jest.config.cts',
+            'src/test-setup.ts',
           ],
         },
         {
@@ -719,7 +718,7 @@ describe('app', () => {
       it('should generate jest.config.ts with serializers', async () => {
         await generateApp(appTree);
 
-        const jestConfig = appTree.read('my-app/jest.config.ts', 'utf-8');
+        const jestConfig = appTree.read('my-app/jest.config.cts', 'utf-8');
 
         expect(jestConfig).toContain(
           `'jest-preset-angular/build/serializers/no-ng-attributes'`
@@ -751,91 +750,68 @@ describe('app', () => {
       });
     });
 
-    describe('vitest', () => {
-      it('should generate vite.config.mts', async () => {
+    describe('vitest-angular', () => {
+      it('should setup test target with @angular/build:unit-test and configure target defaults', async () => {
         await generateApp(appTree, 'my-app', {
-          skipFormat: false,
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAngular,
         });
 
+        const project = readProjectConfiguration(appTree, 'my-app');
+        expect(project.targets.test).toStrictEqual({
+          executor: '@angular/build:unit-test',
+          options: {},
+        });
+        const nxJson = readNxJson(appTree);
+        expect(nxJson.targetDefaults['@angular/build:unit-test']).toStrictEqual(
+          {
+            cache: true,
+            inputs: ['default', '^default'],
+          }
+        );
+      });
+
+      it('should install vitest, jsdom and @angular/build packages', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.VitestAngular,
+        });
+
+        const { devDependencies } = readJson(appTree, 'package.json');
+        expect(devDependencies['vitest']).toBeDefined();
+        expect(devDependencies['jsdom']).toBeDefined();
+        expect(devDependencies['@angular/build']).toBeDefined();
+        // should not install packages related to the older setup with @analogjs
         expect(
-          appTree.read('my-app/vite.config.mts', 'utf-8')
-        ).toMatchSnapshot();
+          devDependencies['@analogjs/vite-plugin-angular']
+        ).toBeUndefined();
+        expect(devDependencies['@analogjs/vitest-angular']).toBeUndefined();
       });
 
-      it('should generate src/test-setup.ts', async () => {
+      it('should configure typescript correctly', async () => {
         await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
+          unitTestRunner: UnitTestRunner.VitestAngular,
         });
 
-        expect(
-          appTree.read('my-app/src/test-setup.ts', 'utf-8')
-        ).toMatchSnapshot();
-      });
-
-      it('should exclude src/test-setup.ts in tsconfig.app.json', async () => {
-        await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
-        });
-
-        const tsConfig = readJson(appTree, 'my-app/tsconfig.app.json');
-        expect(tsConfig.exclude).toContain('src/test-setup.ts');
-      });
-
-      it('should add tsconfig.spec.json', async () => {
-        await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
-        });
-
-        expect(
-          appTree.read('my-app/tsconfig.spec.json', 'utf-8')
-        ).toMatchSnapshot();
-      });
-
-      it('should add a reference to tsconfig.spec.json in tsconfig.json', async () => {
-        await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
-        });
-
+        const tsconfigSpec = appTree.read('my-app/tsconfig.spec.json', 'utf-8');
+        expect(tsconfigSpec).toMatchInlineSnapshot(`
+          "{
+            "extends": "./tsconfig.json",
+            "compilerOptions": {
+              "outDir": "../dist/out-tsc",
+              "types": [
+                "vitest/globals"
+              ]
+            },
+            "include": [
+              "src/**/*.ts",
+              "src/**/*.d.ts"
+            ]
+          }
+          "
+        `);
         const { references } = readJson(appTree, 'my-app/tsconfig.json');
         expect(references).toContainEqual({
           path: './tsconfig.spec.json',
         });
-      });
-
-      it('should add @nx/vite dependency', async () => {
-        await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
-        });
-
-        const { devDependencies } = readJson(appTree, 'package.json');
-        expect(devDependencies['@nx/vite']).toBeDefined();
-      });
-
-      it('should add vitest-angular', async () => {
-        await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
-        });
-
-        const { devDependencies } = readJson(appTree, 'package.json');
-        expect(devDependencies['@analogjs/vite-plugin-angular']).toBeDefined();
-        expect(devDependencies['@analogjs/vitest-angular']).toBeDefined();
-      });
-
-      it('should not override build configuration when using vitest as a test runner', async () => {
-        await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
-        });
-        const { targets } = readProjectConfiguration(appTree, 'my-app');
-        expect(targets.build.executor).toBe('@angular/build:application');
-      });
-
-      it('should not override serve configuration when using vitest as a test runner', async () => {
-        await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
-        });
-        const { targets } = readProjectConfiguration(appTree, 'my-app');
-        expect(targets.serve.executor).toBe('@angular/build:dev-server');
       });
     });
 
@@ -1056,9 +1032,7 @@ describe('app', () => {
       import { AppModule } from './app/app-module';
 
       platformBrowser()
-        .bootstrapModule(AppModule, {
-          ngZoneEventCoalescing: true
-        })
+        .bootstrapModule(AppModule)
         .catch((err) => console.error(err));
       "
     `);
@@ -1259,22 +1233,23 @@ describe('app', () => {
       expect(jestPlugin).toBeDefined();
     });
 
-    it('should generate use crystal vitest when --bundler=rspack', async () => {
+    it('should use crystal vitest when --bundler=rspack and vitest-analog with addPlugin', async () => {
       await generateApp(appTree, 'app1', {
         bundler: 'rspack',
-        unitTestRunner: UnitTestRunner.Vitest,
+        unitTestRunner: UnitTestRunner.VitestAnalog,
+        addPlugin: true,
       });
 
       const project = readProjectConfiguration(appTree, 'app1');
       expect(project.targets.test).not.toBeDefined();
 
       const nxJson = readNxJson(appTree);
-      const vitePlugin = nxJson.plugins.find(
+      const vitestPlugin = nxJson.plugins.find(
         (p) =>
-          (typeof p === 'string' && p === '@nx/vite/plugin') ||
-          (typeof p !== 'string' && p.plugin === '@nx/vite/plugin')
+          (typeof p === 'string' && p === '@nx/vitest') ||
+          (typeof p !== 'string' && p.plugin === '@nx/vitest')
       );
-      expect(vitePlugin).toBeDefined();
+      expect(vitestPlugin).toBeDefined();
     });
 
     it('should generate target options "browser" and "buildTarget"', async () => {
@@ -1304,7 +1279,7 @@ describe('app', () => {
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~18.2.0',
+          '@angular/core': '~19.2.0',
         },
       }));
     });
@@ -1314,31 +1289,14 @@ describe('app', () => {
 
       const { devDependencies } = readJson(appTree, 'package.json');
       expect(devDependencies['@angular-devkit/build-angular']).toEqual(
-        backwardCompatibleVersions.angularV18.angularDevkitVersion
+        backwardCompatibleVersions[19].angularDevkitVersion
       );
       expect(devDependencies['@angular-devkit/schematics']).toEqual(
-        backwardCompatibleVersions.angularV18.angularDevkitVersion
+        backwardCompatibleVersions[19].angularDevkitVersion
       );
       expect(devDependencies['@schematics/angular']).toEqual(
-        backwardCompatibleVersions.angularV18.angularDevkitVersion
+        backwardCompatibleVersions[19].angularDevkitVersion
       );
-    });
-
-    it('should disable modern class fields behavior for versions lower than v18.1', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~18.0.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app');
-
-      expect(
-        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .useDefineForClassFields
-      ).toBe(false);
     });
 
     it('should set the "index" option of the application builder for versions lower than v20', async () => {
@@ -1382,6 +1340,24 @@ describe('app', () => {
           '@angular-devkit/build-angular'
         ]
       ).toBeDefined();
+    });
+
+    it('should add "extract-i18n" target for Angular v20 (removed in v21+)', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~20.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
+
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets['extract-i18n']).toBeDefined();
+      expect(project.targets['extract-i18n'].executor).toBe(
+        '@angular/build:extract-i18n'
+      );
     });
 
     it('should not set provideBrowserGlobalErrorListeners in app.module.ts for versions lower than v20', async () => {
@@ -1441,6 +1417,29 @@ describe('app', () => {
       `);
     });
 
+    it('should set "typeCheckHostBindings" to true when strict is enabled for Angular v20 only', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~20.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { strict: true });
+
+      const appTsConfig = readJson(appTree, 'my-app/tsconfig.json');
+      expect(appTsConfig.angularCompilerOptions).toMatchInlineSnapshot(`
+        {
+          "enableI18nLegacyMessageIdFormat": false,
+          "strictInjectionParameters": true,
+          "strictInputAccessModifiers": true,
+          "strictTemplates": true,
+          "typeCheckHostBindings": true,
+        }
+      `);
+    });
+
     it('should use platformBrowserDynamic for versions lower than v20', async () => {
       updateJson(appTree, 'package.json', (json) => ({
         ...json,
@@ -1457,9 +1456,7 @@ describe('app', () => {
         import { AppModule } from './app/app.module';
 
         platformBrowserDynamic()
-          .bootstrapModule(AppModule, {
-            ngZoneEventCoalescing: true
-          })
+          .bootstrapModule(AppModule, { ngZoneEventCoalescing: true })
           .catch((err) => console.error(err));
         "
       `);
@@ -1515,9 +1512,7 @@ describe('app', () => {
         import { AppModule } from './app/app.module';
 
         platformBrowserDynamic()
-          .bootstrapModule(AppModule, {
-            ngZoneEventCoalescing: true
-          })
+          .bootstrapModule(AppModule, { ngZoneEventCoalescing: true })
           .catch((err) => console.error(err));
         "
       `);
@@ -1586,10 +1581,11 @@ describe('app', () => {
             "src/**/*.d.ts"
           ],
           "exclude": [
-            "jest.config.ts",
-            "src/test-setup.ts",
+            "src/**/*.spec.ts",
             "src/**/*.test.ts",
-            "src/**/*.spec.ts"
+            "jest.config.ts",
+            "jest.config.cts",
+            "src/test-setup.ts"
           ]
         }
         "
@@ -1603,10 +1599,11 @@ describe('app', () => {
           ],
           "compilerOptions": {},
           "exclude": [
-            "jest.config.ts",
-            "src/test-setup.ts",
+            "src/**/*.spec.ts",
             "src/**/*.test.ts",
-            "src/**/*.spec.ts"
+            "jest.config.ts",
+            "jest.config.cts",
+            "src/test-setup.ts"
           ]
         }
         "
@@ -1671,6 +1668,221 @@ describe('app', () => {
         });
         "
       `);
+    });
+
+    it('should setup zone.js correctly by default for a standalone application in versions lower than v21', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~20.3.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', {
+        standalone: true,
+        skipFormat: true,
+      });
+
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets.build.options.polyfills).toStrictEqual([
+        'zone.js',
+      ]);
+      expect(appTree.read('my-app/src/app/app.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+        import { provideRouter } from '@angular/router';
+        import { appRoutes } from './app.routes';
+
+        export const appConfig: ApplicationConfig = {
+          providers: [
+            provideBrowserGlobalErrorListeners(),
+            provideZoneChangeDetection({ eventCoalescing: true }),
+            provideRouter(appRoutes)
+          ]
+        };
+        "
+      `);
+    });
+
+    it('should setup zone.js correctly by default for a non-standalone application in versions lower than v21', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~20.3.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { skipFormat: true });
+
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets.build.options.polyfills).toStrictEqual([
+        'zone.js',
+      ]);
+      expect(appTree.read('my-app/src/main.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { platformBrowser } from '@angular/platform-browser';
+        import { AppModule } from './app/app-module';
+
+        platformBrowser()
+          .bootstrapModule(AppModule, { ngZoneEventCoalescing: true })
+          .catch((err) => console.error(err));
+        "
+      `);
+    });
+
+    it('should install vitest v3 when using vitest-analog with Angular v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~20.3.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', {
+        unitTestRunner: UnitTestRunner.VitestAnalog,
+      });
+
+      const { devDependencies } = readJson(appTree, 'package.json');
+      expect(devDependencies['vitest']).toBe(
+        backwardCompatibleVersions[20].vitestVersion
+      );
+      expect(devDependencies['jsdom']).toBe(
+        backwardCompatibleVersions[20].jsdomVersion
+      );
+    });
+
+    it('should install vitest v3 when using vitest-analog with Angular v19', async () => {
+      await generateApp(appTree, 'my-app', {
+        unitTestRunner: UnitTestRunner.VitestAnalog,
+      });
+
+      const { devDependencies } = readJson(appTree, 'package.json');
+      expect(devDependencies['vitest']).toBe(
+        backwardCompatibleVersions[19].vitestVersion
+      );
+      expect(devDependencies['jsdom']).toBe(
+        backwardCompatibleVersions[19].jsdomVersion
+      );
+    });
+
+    describe('vitest-analog & angular < 21', () => {
+      beforeEach(() => {
+        updateJson(appTree, 'package.json', (json) => ({
+          ...json,
+          dependencies: {
+            ...json.dependencies,
+            '@angular/core': '~20.3.0',
+          },
+        }));
+      });
+
+      it('should generate vite.config.mts', async () => {
+        await generateApp(appTree, 'my-app', {
+          skipFormat: false,
+          unitTestRunner: UnitTestRunner.VitestAnalog,
+        });
+
+        expect(
+          appTree.read('my-app/vite.config.mts', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it('should generate src/test-setup.ts', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.VitestAnalog,
+        });
+
+        expect(
+          appTree.read('my-app/src/test-setup.ts', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it('should exclude src/test-setup.ts in tsconfig.app.json', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.VitestAnalog,
+        });
+
+        const tsConfig = readJson(appTree, 'my-app/tsconfig.app.json');
+        expect(tsConfig.exclude).toContain('src/test-setup.ts');
+      });
+
+      it('should add tsconfig.spec.json', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.VitestAnalog,
+        });
+
+        expect(
+          appTree.read('my-app/tsconfig.spec.json', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it('should add a reference to tsconfig.spec.json in tsconfig.json', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.VitestAnalog,
+        });
+
+        const { references } = readJson(appTree, 'my-app/tsconfig.json');
+        expect(references).toContainEqual({
+          path: './tsconfig.spec.json',
+        });
+      });
+
+      it('should add @nx/vitest dependency', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.VitestAnalog,
+        });
+
+        const { devDependencies } = readJson(appTree, 'package.json');
+        expect(devDependencies['@nx/vitest']).toBeDefined();
+      });
+
+      it('should add vitest-angular', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.VitestAnalog,
+        });
+
+        const { devDependencies } = readJson(appTree, 'package.json');
+        expect(devDependencies['@analogjs/vite-plugin-angular']).toBeDefined();
+        expect(devDependencies['@analogjs/vitest-angular']).toBeDefined();
+      });
+
+      it('should not override build configuration when using vitest-analog as a test runner', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.VitestAnalog,
+        });
+        const { targets } = readProjectConfiguration(appTree, 'my-app');
+        expect(targets.build.executor).toBe('@angular/build:application');
+      });
+
+      it('should not override serve configuration when using vitest-analog as a test runner', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.VitestAnalog,
+        });
+        const { targets } = readProjectConfiguration(appTree, 'my-app');
+        expect(targets.serve.executor).toBe('@angular/build:dev-server');
+      });
+
+      it('should use crystal vitest when --bundler=rspack and addPlugin', async () => {
+        await generateApp(appTree, 'app1', {
+          bundler: 'rspack',
+          unitTestRunner: UnitTestRunner.VitestAnalog,
+          addPlugin: true,
+        });
+
+        const project = readProjectConfiguration(appTree, 'app1');
+        expect(project.targets.test).not.toBeDefined();
+
+        const nxJson = readNxJson(appTree);
+        const vitestPlugin = nxJson.plugins.find(
+          (p) =>
+            (typeof p === 'string' && p === '@nx/vitest') ||
+            (typeof p !== 'string' && p.plugin === '@nx/vitest')
+        );
+        expect(vitestPlugin).toBeDefined();
+      });
     });
   });
 });

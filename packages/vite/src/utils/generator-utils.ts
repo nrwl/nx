@@ -295,10 +295,10 @@ export function deleteWebpackConfig(
     webpackConfigFilePath && tree.exists(webpackConfigFilePath)
       ? webpackConfigFilePath
       : tree.exists(`${projectRoot}/webpack.config.js`)
-      ? `${projectRoot}/webpack.config.js`
-      : tree.exists(`${projectRoot}/webpack.config.ts`)
-      ? `${projectRoot}/webpack.config.ts`
-      : null;
+        ? `${projectRoot}/webpack.config.js`
+        : tree.exists(`${projectRoot}/webpack.config.ts`)
+          ? `${projectRoot}/webpack.config.ts`
+          : null;
   if (webpackConfigPath) {
     tree.delete(webpackConfigPath);
   }
@@ -400,14 +400,14 @@ export function createOrEditViteConfig(
   const buildOutDir = isTsSolutionSetup
     ? './dist'
     : projectRoot === '.'
-    ? `./dist/${options.project}`
-    : `${offsetFromRoot(projectRoot)}dist/${projectRoot}`;
+      ? `./dist/${options.project}`
+      : `${offsetFromRoot(projectRoot)}dist/${projectRoot}`;
 
   const buildOption = onlyVitest
     ? ''
     : options.includeLib
-    ? `  // Configuration for building your library.
-  // See: https://vitejs.dev/guide/build.html#library-mode
+      ? `  // Configuration for building your library.
+  // See: https://vite.dev/guide/build.html#library-mode
   build: {
     outDir: '${buildOutDir}',
     emptyOutDir: true,
@@ -429,7 +429,7 @@ export function createOrEditViteConfig(
       external: [${options.rollupOptionsExternal ?? ''}]
     },
   },`
-    : `  build: {
+      : `  build: {
     outDir: '${buildOutDir}',
     emptyOutDir: true,
     reportCompressedSize: true,
@@ -458,7 +458,7 @@ export function createOrEditViteConfig(
 
   if (!onlyVitest && options.includeLib) {
     plugins.push(
-      `dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json')${
+      `dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json')${
         !isTsSolutionSetup ? ', pathsToAliases: false' : ''
       } })`
     );
@@ -467,8 +467,8 @@ export function createOrEditViteConfig(
   const reportsDirectory = isTsSolutionSetup
     ? './test-output/vitest/coverage'
     : projectRoot === '.'
-    ? `./coverage/${options.project}`
-    : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
+      ? `./coverage/${options.project}`
+      : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
 
   const testOption = options.includeVitest
     ? `  test: {
@@ -504,8 +504,8 @@ ${
   const devServerOption = onlyVitest
     ? ''
     : options.includeLib
-    ? ''
-    : `  server:{
+      ? ''
+      : `  server:{
     port: ${options.port ?? 4200},
     host: 'localhost',
   },`;
@@ -513,15 +513,20 @@ ${
   const previewServerOption = onlyVitest
     ? ''
     : options.includeLib
-    ? ''
-    : `  preview:{
+      ? ''
+      : `  preview:{
     port: ${options.previewPort ?? 4300},
     host: 'localhost',
   },`;
 
-  const workerOption = `  // Uncomment this if you are using workers.
+  const workerOption = isTsSolutionSetup
+    ? `  // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //  plugins: [],
+  // },`
+    : `  // Uncomment this if you are using workers.
+  // worker: {
+  //   plugins: () => [ nxViteTsPaths() ],
   // },`;
 
   const cacheDir = `cacheDir: '${normalizedJoinPaths(
@@ -555,7 +560,7 @@ import { defineConfig } from 'vite';
 ${imports.join(';\n')}${imports.length ? ';' : ''}
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   ${printOptions(
     cacheDir,
     devServerOption,
@@ -583,11 +588,13 @@ export function normalizeViteConfigFilePathWithTree(
 ): string {
   return configFile && tree.exists(configFile)
     ? configFile
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
-    ? joinPathFragments(`${projectRoot}/vite.config.ts`)
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
-    ? joinPathFragments(`${projectRoot}/vite.config.js`)
-    : undefined;
+    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.mts`))
+      ? joinPathFragments(`${projectRoot}/vite.config.mts`)
+      : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
+        ? joinPathFragments(`${projectRoot}/vite.config.ts`)
+        : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
+          ? joinPathFragments(`${projectRoot}/vite.config.js`)
+          : undefined;
 }
 
 export function getViteConfigPathForProject(
@@ -654,8 +661,8 @@ async function handleUnsupportedUserProvidedTargetsErrors(
     `The custom ${target} target you provided (${userProvidedTargetName}) cannot be converted to use the @nx/vite:${executor} executor.
      However, we found the following ${target} target in your project that can be converted: ${validFoundTargetName}
 
-     Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
-     your changes before converting a project to use Vite.js, and test the converted project thoroughly before deploying it.
+     Please note that converting a potentially non-compatible project to use Vite may result in unexpected behavior. Always commit
+     your changes before converting a project to use Vite, and test the converted project thoroughly before deploying it.
     `
   );
   const { Confirm } = require('enquirer');
@@ -671,8 +678,8 @@ async function handleUnsupportedUserProvidedTargetsErrors(
       Please try again, either by providing a different ${target} target or by not providing a target at all (Nx will
         convert the first one it finds, most probably this one: ${validFoundTargetName})
 
-      Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
-      your changes before converting a project to use Vite.js, and test the converted project thoroughly before deploying it.
+      Please note that converting a potentially non-compatible project to use Vite may result in unexpected behavior. Always commit
+      your changes before converting a project to use Vite, and test the converted project thoroughly before deploying it.
       `
     );
   }

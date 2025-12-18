@@ -8,6 +8,13 @@ import {
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import type { GetServerSideProps } from 'next';
+import { tryFramerProxy } from '../lib/framer-proxy';
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  if (await tryFramerProxy(ctx)) return { props: {} };
+  return { props: {} };
+};
 
 export default function ConfPage(): JSX.Element {
   const router = useRouter();
@@ -184,7 +191,7 @@ export default function ConfPage(): JSX.Element {
                   </span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2 "
+                    className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"

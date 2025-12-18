@@ -108,8 +108,27 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       {
         label: 'Java',
         collapsed: true,
-        // when we have maven this will change to not have gradle as the top docs for Java
-        items: getPluginItems('gradle', 'java'),
+        items: [
+          {
+            label: 'Introduction',
+            link: 'technologies/java/introduction',
+          },
+          {
+            label: 'Gradle',
+            collapsed: true,
+            items: getPluginItems('gradle', 'java'),
+          },
+          {
+            label: 'Maven',
+            collapsed: true,
+            items: getPluginItems('maven', 'java'),
+          },
+        ],
+      },
+      {
+        label: '.NET',
+        collapsed: true,
+        items: getPluginItems('dotnet'),
       },
       {
         label: 'Module Federation',
@@ -162,6 +181,11 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
             collapsed: true,
             items: getPluginItems('rsbuild', 'build-tools'),
           },
+          {
+            label: 'Docker',
+            collapsed: true,
+            items: getPluginItems('docker', 'build-tools'),
+          },
         ],
       },
       {
@@ -172,6 +196,11 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
             label: 'Cypress',
             collapsed: true,
             items: getPluginItems('cypress', 'test-tools'),
+          },
+          {
+            label: 'Vitest',
+            collapsed: true,
+            items: getPluginItems('vitest', 'test-tools'),
           },
           {
             label: 'Jest',

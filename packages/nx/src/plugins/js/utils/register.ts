@@ -117,13 +117,17 @@ export function registerTsProject(
 export function getSwcTranspiler(
   compilerOptions: CompilerOptions
 ): (...args: unknown[]) => unknown {
-  type ISwcRegister = typeof import('@swc-node/register/register')['register'];
+  type ISwcRegister =
+    (typeof import('@swc-node/register/register'))['register'];
 
   // These are requires to prevent it from registering when it shouldn't
   const register = require('@swc-node/register/register')
     .register as ISwcRegister;
 
-  const cleanupFn = register(compilerOptions);
+  const cleanupFn = register({
+    ...compilerOptions,
+    baseUrl: compilerOptions.baseUrl ?? './',
+  });
 
   return typeof cleanupFn === 'function' ? cleanupFn : () => {};
 }

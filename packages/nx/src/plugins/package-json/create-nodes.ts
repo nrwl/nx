@@ -202,7 +202,7 @@ export function buildProjectConfigurationFromPackageJson(
     }
   }
 
-  if (!packageJson.name && projectRoot === '.') {
+  if (!packageJson.name && projectRoot === '.' && !packageJson.nx?.name) {
     throw new Error(
       'Nx requires the root package.json to specify a name if it is being used as an Nx project.'
     );
@@ -265,7 +265,7 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
       ...normalizePatterns(
         Array.isArray(packageJson.workspaces)
           ? packageJson.workspaces
-          : packageJson.workspaces?.packages ?? []
+          : (packageJson.workspaces?.packages ?? [])
       )
     );
 

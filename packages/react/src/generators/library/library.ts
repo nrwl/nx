@@ -29,7 +29,6 @@ import {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { updateJestConfigContent } from '../../utils/jest-utils';
@@ -75,13 +74,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   ) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
-    );
-  }
-
-  if (schema.simpleName !== undefined && schema.simpleName !== false) {
-    // TODO(v22): Remove simpleName as user should be using name.
-    logger.warn(
-      `The "--simpleName" option is deprecated and will be removed in Nx 22. Please use the "--name" option to provide the exact name you want for the library.`
     );
   }
 
@@ -169,6 +161,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
             : `import react from '@vitejs/plugin-react'`,
         ],
         plugins: ['react()'],
+        useEsmExtension: true,
       },
       false
     );
@@ -196,7 +189,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(jestTask);
     const jestConfigPath = joinPathFragments(
       options.projectRoot,
-      options.js ? 'jest.config.js' : 'jest.config.ts'
+      options.js ? 'jest.config.js' : 'jest.config.cts'
     );
     if (options.compiler === 'babel' && host.exists(jestConfigPath)) {
       const updatedContent = updateJestConfigContent(
@@ -208,10 +201,13 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // tests are already configured if bundler is vite
   ) {
-    const { vitestGenerator, createOrEditViteConfig } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
-    const vitestTask = await vitestGenerator(host, {
+    const { createOrEditViteConfig } = ensurePackage<typeof import('@nx/vite')>(
+      '@nx/vite',
+      nxVersion
+    );
+    ensurePackage('@nx/vitest', nxVersion);
+    const { configurationGenerator } = await import('@nx/vitest/generators');
+    const vitestTask = await configurationGenerator(host, {
       uiFramework: 'react',
       project: options.name,
       coverageProvider: 'v8',
@@ -240,6 +236,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
             : `import react from '@vitejs/plugin-react'`,
         ],
         plugins: ['react()'],
+        useEsmExtension: true,
       },
       true
     );
@@ -280,7 +277,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     } else {
       const nxJson = readNxJson(host);
       await addReleaseConfigForNonTsSolution(
-        shouldUseLegacyVersioning(nxJson.release),
         host,
         options.name,
         projectConfiguration

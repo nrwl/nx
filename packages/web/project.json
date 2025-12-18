@@ -4,7 +4,10 @@
   "sourceRoot": "packages/web",
   "projectType": "library",
   "targets": {
-    "build": {},
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/web/README.md"],
+      "command": "node ./scripts/copy-readme.js web"
+    },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {

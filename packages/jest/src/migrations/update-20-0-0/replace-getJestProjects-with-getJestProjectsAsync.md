@@ -4,10 +4,9 @@ Replaces the usage of the deprecated `getJestProjects` function with the `getJes
 
 #### Sample Code Changes
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="jest.config.ts" %}
+```ts title="jest.config.ts"
 import { getJestProjects } from '@nx/jest';
 
 export default {
@@ -15,16 +14,12 @@ export default {
 };
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```ts {% fileName="jest.config.ts" %}
+```ts title="jest.config.ts"
 import { getJestProjectsAsync } from '@nx/jest';
 
 export default async () => ({
   projects: await getJestProjectsAsync(),
 });
 ```
-
-{% /tab %}
-{% /tabs %}

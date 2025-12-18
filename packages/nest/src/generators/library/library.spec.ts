@@ -145,6 +145,7 @@ describe('lib', () => {
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
       expect(tsconfigJson.exclude).toEqual([
         'jest.config.ts',
+        'jest.config.cts',
         'src/**/*.spec.ts',
         'src/**/*.test.ts',
       ]);
@@ -155,7 +156,7 @@ describe('lib', () => {
         directory: 'my-lib',
       });
 
-      expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists(`my-lib/src/index.ts`)).toBeTruthy();
       expect(tree.exists(`my-lib/src/lib/my-lib.spec.ts`)).toBeFalsy();
       expect(readJson(tree, `my-lib/.eslintrc.json`)).toMatchSnapshot();
@@ -182,7 +183,7 @@ describe('lib', () => {
         directory: 'my-dir/my-lib',
       });
 
-      expect(tree.exists(`my-dir/my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-dir/my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists(`my-dir/my-lib/src/index.ts`)).toBeTruthy();
       expect(tree.exists(`my-dir/my-lib/src/lib/my-lib.spec.ts`)).toBeFalsy();
     });
@@ -234,7 +235,7 @@ describe('lib', () => {
       });
 
       expect(tree.exists(`my-lib/tsconfig.spec.json`)).toBeFalsy();
-      expect(tree.exists(`my-lib/jest.config.ts`)).toBeFalsy();
+      expect(tree.exists(`my-lib/jest.config.cts`)).toBeFalsy();
       expect(tree.exists(`my-lib/lib/my-lib.spec.ts`)).toBeFalsy();
       expect(readJson(tree, `my-lib/tsconfig.json`)).toMatchSnapshot();
     });
@@ -274,6 +275,16 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, `my-lib/tsconfig.lib.json`);
       expect(tsconfigJson.compilerOptions.target).toEqual('es2021');
     });
+
+    it('should enable decorators in tsconfig.lib.json for NestJS support', async () => {
+      await libraryGenerator(tree, {
+        directory: 'my-lib',
+      });
+
+      const tsconfigJson = readJson(tree, `my-lib/tsconfig.lib.json`);
+      expect(tsconfigJson.compilerOptions.experimentalDecorators).toBe(true);
+      expect(tsconfigJson.compilerOptions.emitDecoratorMetadata).toBe(true);
+    });
   });
 
   describe('--skipFormat', () => {
@@ -305,7 +316,7 @@ describe('lib', () => {
         directory: 'my-lib',
       });
 
-      expect(tree.read(`my-lib/jest.config.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`my-lib/jest.config.cts`, 'utf-8')).toMatchSnapshot();
     });
 
     it('should set target jest testEnvironment to jsdom', async () => {
@@ -314,40 +325,7 @@ describe('lib', () => {
         testEnvironment: 'jsdom',
       });
 
-      expect(tree.read(`my-lib/jest.config.ts`, 'utf-8')).toMatchSnapshot();
-    });
-  });
-
-  describe('--simpleName', () => {
-    it('should generate a library with a simple name', async () => {
-      await libraryGenerator(tree, {
-        simpleName: true,
-        directory: 'api/my-lib',
-        service: true,
-        controller: true,
-      });
-
-      const indexFile = tree.read('api/my-lib/src/index.ts', 'utf-8');
-
-      expect(indexFile).toContain(`export * from './lib/my-lib.module';`);
-      expect(indexFile).toContain(`export * from './lib/my-lib.service';`);
-      expect(indexFile).toContain(`export * from './lib/my-lib.controller';`);
-
-      expect(tree.exists('api/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
-
-      expect(tree.exists('api/my-lib/src/lib/my-lib.service.ts')).toBeTruthy();
-
-      expect(
-        tree.exists('api/my-lib/src/lib/my-lib.service.spec.ts')
-      ).toBeTruthy();
-
-      expect(
-        tree.exists('api/my-lib/src/lib/my-lib.controller.ts')
-      ).toBeTruthy();
-
-      expect(
-        tree.exists('api/my-lib/src/lib/my-lib.controller.spec.ts')
-      ).toBeTruthy();
+      expect(tree.read(`my-lib/jest.config.cts`, 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -407,7 +385,7 @@ describe('lib', () => {
               "test": {
                 "executor": "@nx/jest:jest",
                 "options": {
-                  "jestConfig": "mylib/jest.config.ts",
+                  "jestConfig": "mylib/jest.config.cts",
                 },
                 "outputs": [
                   "{projectRoot}/test-output/jest/coverage",
@@ -440,6 +418,8 @@ describe('lib', () => {
           "compilerOptions": {
             "baseUrl": ".",
             "emitDeclarationOnly": true,
+            "emitDecoratorMetadata": true,
+            "experimentalDecorators": true,
             "forceConsistentCasingInFileNames": true,
             "importHelpers": true,
             "module": "nodenext",
@@ -461,6 +441,7 @@ describe('lib', () => {
           },
           "exclude": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
           ],
@@ -491,6 +472,7 @@ describe('lib', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.d.ts",
@@ -541,22 +523,7 @@ describe('lib', () => {
                   "{projectRoot}/test-output/jest/coverage"
                 ],
                 "options": {
-                  "jestConfig": "mylib/jest.config.ts"
-                }
-              },
-              "build": {
-                "executor": "@nx/js:tsc",
-                "outputs": [
-                  "{options.outputPath}"
-                ],
-                "options": {
-                  "outputPath": "dist/mylib",
-                  "tsConfig": "mylib/tsconfig.lib.json",
-                  "packageJson": "mylib/package.json",
-                  "main": "mylib/src/index.ts",
-                  "assets": [
-                    "mylib/*.md"
-                  ]
+                  "jestConfig": "mylib/jest.config.cts"
                 }
               }
             }
@@ -653,7 +620,7 @@ describe('lib', () => {
             "test": {
               "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "mylib/jest.config.ts",
+                "jestConfig": "mylib/jest.config.cts",
               },
               "outputs": [
                 "{projectRoot}/test-output/jest/coverage",
@@ -663,6 +630,58 @@ describe('lib', () => {
         }
       `);
       expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
+    });
+  });
+
+  describe('non-TS solution setup', () => {
+    beforeEach(() => {
+      // Create a workspace without TS solution setup
+      tree = createTreeWithEmptyWorkspace();
+      // Remove workspaces to disable package manager workspaces
+      devkit.updateJson(tree, 'package.json', (json) => {
+        delete json.workspaces;
+        return json;
+      });
+      // Remove tsconfig.json to prevent TS solution detection
+      tree.delete('tsconfig.json');
+      // Create tsconfig.base.json without composite (non-TS solution)
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          target: 'es2015',
+          module: 'commonjs',
+        },
+      });
+    });
+
+    it('should add build target with correct output path for buildable libraries', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        buildable: true,
+        unitTestRunner: 'none',
+        linter: 'none',
+        skipFormat: true,
+      });
+
+      const project = readProjectConfiguration(tree, 'mylib');
+      expect(project.targets?.build).toBeDefined();
+      expect(project.targets?.build?.executor).toBe('@nx/js:tsc');
+      expect(project.targets?.build?.options?.outputPath).toBe('dist/mylib');
+    });
+
+    it('should add build target with correct output path for publishable libraries', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        publishable: true,
+        importPath: '@proj/mylib',
+        unitTestRunner: 'none',
+        linter: 'none',
+        skipFormat: true,
+      });
+
+      const project = readProjectConfiguration(tree, 'mylib');
+      expect(project.targets?.build).toBeDefined();
+      expect(project.targets?.build?.executor).toBe('@nx/js:tsc');
+      expect(project.targets?.build?.options?.outputPath).toBe('dist/mylib');
     });
   });
 });

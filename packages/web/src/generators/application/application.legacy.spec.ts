@@ -121,7 +121,7 @@ describe('web app generator (legacy)', () => {
           "test": {
             "executor": "@nx/jest:jest",
             "options": {
-              "jestConfig": "my-app/jest.config.ts",
+              "jestConfig": "my-app/jest.config.cts",
             },
             "outputs": [
               "{workspaceRoot}/coverage/{projectRoot}",
@@ -139,6 +139,7 @@ describe('web app generator (legacy)', () => {
       module.exports = composePlugins(withNx(), withWeb(), (config) => {
         // Update the webpack config as needed here.
         // e.g. \`config.plugins.push(new MyPlugin())\`
+        config.output.clean = true;
         return config;
       });
       "
@@ -229,7 +230,7 @@ describe('web app generator (legacy)', () => {
           "test": {
             "executor": "@nx/jest:jest",
             "options": {
-              "jestConfig": "my-vite-app/jest.config.ts",
+              "jestConfig": "my-vite-app/jest.config.cts",
             },
             "outputs": [
               "{workspaceRoot}/coverage/{projectRoot}",

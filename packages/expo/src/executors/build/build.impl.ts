@@ -7,6 +7,7 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '@nx/devkit';
+import { signalToCode } from '@nx/devkit/internal';
 import { getLockFileName } from '@nx/js';
 import { ChildProcess, fork } from 'child_process';
 import { copyFileSync, existsSync, rmSync, writeFileSync } from 'node:fs';
@@ -74,7 +75,8 @@ function runCliBuild(
     childProcess.on('error', (err) => {
       reject(err);
     });
-    childProcess.on('exit', (code) => {
+    childProcess.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code === 0) {
         resolve(code);
       } else {

@@ -26,7 +26,7 @@ export function normalizeOptions(
   // If we're not generating package.json file, then copy it as-is as an asset when not using ts solution setup.
   const assets =
     options.generatePackageJson || isTsSolutionSetup
-      ? options.assets ?? []
+      ? (options.assets ?? [])
       : [
           ...options.assets,
           joinPathFragments(
@@ -109,6 +109,7 @@ export function normalizeOptions(
       skipTypeCheck,
       userDefinedBuildOptions,
       external: options.external ?? [],
+      excludeFromExternal: options.excludeFromExternal ?? [],
       singleEntry: false,
       isTsSolutionSetup,
       // Use the `main` file name as the output file name.
@@ -126,6 +127,7 @@ export function normalizeOptions(
       skipTypeCheck,
       userDefinedBuildOptions,
       external: options.external ?? [],
+      excludeFromExternal: options.excludeFromExternal ?? [],
       singleEntry: true,
       isTsSolutionSetup,
       outputFileName:

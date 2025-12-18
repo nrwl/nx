@@ -6,7 +6,13 @@ export function readPort(appName: string): number {
   try {
     config = readJson(join('apps', appName, 'project.json'));
   } catch {
-    config = readJson(join(appName, 'project.json'));
+    try {
+      config = readJson(join(appName, 'project.json'));
+    } catch {
+      // TS Solution setup uses package.json
+      const pkgJson = readJson(join(appName, 'package.json'));
+      return pkgJson.nx?.targets?.serve?.options?.port;
+    }
   }
   return config.targets.serve.options.port;
 }

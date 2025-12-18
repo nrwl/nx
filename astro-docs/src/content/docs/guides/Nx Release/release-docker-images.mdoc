@@ -1,12 +1,10 @@
 ---
 title: Release Docker Images
 description: Learn how to use Nx Release to version and publish Docker images from your monorepo with calendar-based versioning.
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
-
-
-This guide walks you through setting up Nx Release to version and publish Docker images from your monorepo using calendar-based versioning.
+This guide walks you through setting up Nx Release to version and publish Docker images from your monorepo.
 
 {% youtube title="What is Nx?" src="https://www.youtube.com/embed/TOPxKJXUaqw" /%}
 
@@ -16,9 +14,10 @@ Before starting, ensure you have:
 
 1. Docker installed and running locally
 2. Run `docker login` to authenticate with your Docker registry (e.g., `docker login docker.io` for Docker Hub)
+
 ## Install Nx Docker Plugin
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/docker
 ```
 
@@ -28,7 +27,7 @@ This command adds the `@nx/docker` plugin to your `nx.json` so that projects wit
 
 If you don't already have a backend application, create one using `@nx/node`:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/node
 nx g @nx/node:app apps/api --docker --framework=express
 ```
@@ -60,7 +59,7 @@ CMD [ "node", "app" ]
 
 You should be able to run the following commands to compile the application and create a Docker image:
 
-```shell {% frame="none" %}
+```shell
 nx build api
 nx docker:build api
 ```
@@ -68,6 +67,43 @@ nx docker:build api
 ## Set Up a New Release Group
 
 Configure Docker applications in a separate release group called `apps` so it does not conflict with any existing release projects.
+
+To learn more about release groups, see the [Release Groups](/docs/guides/nx-release/release-groups) guide.
+
+{% tabs syncKey="nx-release-configuration" %}
+{% tabitem label="Nx 22+" %}
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "releaseTag": {
+      "pattern": "release/{projectName}/{version}",
+    },
+    "groups": {
+      "apps": {
+        "projects": ["api"],
+        "projectsRelationship": "independent",
+        "docker": {
+          // This should be true to skip versioning with other tools like NPM or Rust crates.
+          "skipVersionActions": true,
+          // You can also use a custom registry like `ghcr.io` for GitHub Container Registry.
+          // `docker.io` is the default so you could leave this out for Docker Hub.
+          "registryUrl": "docker.io",
+          // The pre-version command is run before versioning, useful for verifying the Docker image.
+          "groupPreVersionCommand": "echo BEFORE VERSIONING",
+        },
+        "changelog": {
+          "projectChangelogs": true,
+        },
+      },
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 22" %}
 
 ```jsonc
 // nx.json
@@ -80,21 +116,25 @@ Configure Docker applications in a separate release group called `apps` so it do
         "projectsRelationship": "independent",
         "docker": {
           // This should be true to skip versioning with other tools like NPM or Rust crates.
+          // Only set this if you are not using {versionActionsVersion} in your docker version scheme
           "skipVersionActions": true,
           // You can also use a custom registry like `ghcr.io` for GitHub Container Registry.
           // `docker.io` is the default so you could leave this out for Docker Hub.
           "registryUrl": "docker.io",
           // The pre-version command is run before versioning, useful for verifying the Docker image.
-          "groupPreVersionCommand": "echo BEFORE VERSIONING"
+          "groupPreVersionCommand": "echo BEFORE VERSIONING",
         },
         "changelog": {
-          "projectChangelogs": true
-        }
-      }
-    }
-  }
+          "projectChangelogs": true,
+        },
+      },
+    },
+  },
 }
 ```
+
+{% /tabitem %}
+{% /tabs %}
 
 The `release.groups.apps.docker.skipVersionActions` option should be set to `true` to skip versioning for other tooling such as NPM or Rust crates.
 
@@ -108,7 +148,7 @@ Docker images have to be pushed to a repository, and this must be set on each ap
 
 For example, from the previous `apps/api` Node.js application, you can set the `nx.release.docker.repositoryName` in `package.json`.
 
-```json {% meta="{6-8}" %}
+```json {% meta="{6-10}" %}
 // apps/api/package.json
 {
   "name": "@acme/api",
@@ -126,7 +166,7 @@ For example, from the previous `apps/api` Node.js application, you can set the `
 
 Or if you don't have a `package.json` (e.g. for non-JS projects), set it in `project.json`:
 
-```json {% meta="{6-8}" %}
+```json {% meta="{6-10}" %}
 // apps/api/project.json
 {
   "name": "api",
@@ -156,13 +196,13 @@ Versioning will continue to work as normal.
 
 Dry run your first Docker release with calendar versioning:
 
-```shell {% frame="none" %}
+```shell
 nx release --dockerVersionScheme=production --first-release --dry-run
 ```
 
 When you are ready, run the release command again without `--dry-run`:
 
-```shell {% frame="none" %}
+```shell
 nx release --dockerVersionScheme=production --first-release
 ```
 
@@ -191,6 +231,7 @@ By default, Nx Release uses the following patterns for calendar versioning
 - **Hotfix**: `YYMM.DD.SHA-hotfix`
 
 Where the following tokens are replaced:
+
 - `YYMM`: Year and month
 - `DD`: Day of the month
 - `SHA`: Short commit hash
@@ -214,7 +255,7 @@ These are the default schemes that come with Nx Release. These schemes support w
 
 If you need to specify an exact Docker version instead of using version schemes, you can use the `--dockerVersion` flag:
 
-```shell {% frame="none" %}
+```shell
 nx release --dockerVersion=1.2.3
 ```
 
@@ -223,7 +264,6 @@ This will bypass the version scheme logic entirely and tag your Docker images wi
 - Align Docker versions with external versioning systems
 - Override the calendar-based versioning for specific releases
 - Set custom version tags that don't follow the standard patterns
-
 
 ### Customizing Version Schemes
 
@@ -234,11 +274,11 @@ You can customize Docker version schemes in your `nx.json` to match your deploym
 {
   "release": {
     "docker": {
-        "versionSchemes": {
-            "production": "{currentDate|YYMM.DD}.{env.BUILD_NUMBER}",
-            "staging": "{currentDate|YYMM.DD}-staging.{shortCommitSha}",
-            "ci": "{env.BUILD_NUMBER}-{shortCommitSha}"
-        }
+      "versionSchemes": {
+        "production": "{currentDate|YYMM.DD}.{env.BUILD_NUMBER}",
+        "staging": "{currentDate|YYMM.DD}-staging.{shortCommitSha}",
+        "ci": "{env.BUILD_NUMBER}-{shortCommitSha}"
+      }
     }
   }
 }
@@ -247,5 +287,13 @@ You can customize Docker version schemes in your `nx.json` to match your deploym
 The above configuration swaps `hotfix` scheme for `staging` and adds a `ci` scheme that uses an environment variable. You can customize this list to fit your needs, and you can also change the patterns for each scheme.
 
 Version patterns can include environment variables using the `{env.VAR_NAME}` syntax, allowing you to inject CI/CD pipeline information like build numbers or deployment environments directly into your Docker tags.
+
+You can also include the semantic version generated during version actions using `{versionActionsVersion}`. For example:
+
+```json
+"production": "{projectName}-{versionActionsVersion}"
+```
+
+If you use `{versionActionsVersion}`, do not enable `docker.skipVersionActions` (or include the project in `skipVersionActions`) because the placeholder cannot be resolved when version actions are skipped.
 
 See the [`docker.versionScheme` documentation](/docs/reference/nx-json#version-scheme-syntax) for more details on how to customize the tag pattern.

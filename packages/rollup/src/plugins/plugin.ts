@@ -3,14 +3,12 @@ import { basename, dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import {
   type CreateDependencies,
-  type CreateNodes,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
-  logger,
   readJsonFile,
   type TargetConfiguration,
   writeJsonFile,
@@ -53,23 +51,7 @@ export interface RollupPluginOptions {
 
 const rollupConfigGlob = '**/rollup.config.{js,cjs,mjs,ts,cts,mts}';
 
-export const createNodes: CreateNodes<RollupPluginOptions> = [
-  rollupConfigGlob,
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    return createNodesInternal(
-      configFilePath,
-      normalizeOptions(options),
-      context,
-      {},
-      isUsingTsSolutionSetup()
-    );
-  },
-];
-
-export const createNodesV2: CreateNodesV2<RollupPluginOptions> = [
+export const createNodes: CreateNodesV2<RollupPluginOptions> = [
   rollupConfigGlob,
   async (configFilePaths, options, context) => {
     const normalizedOptions = normalizeOptions(options);
@@ -101,10 +83,12 @@ export const createNodesV2: CreateNodesV2<RollupPluginOptions> = [
   },
 ];
 
+export const createNodesV2 = createNodes;
+
 async function createNodesInternal(
   configFilePath: string,
   options: Required<RollupPluginOptions>,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, Record<string, TargetConfiguration>>,
   isTsSolutionSetup: boolean
 ) {
@@ -149,7 +133,7 @@ async function buildRollupTarget(
   configFilePath: string,
   projectRoot: string,
   options: RollupPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   isTsSolutionSetup: boolean
 ): Promise<Record<string, TargetConfiguration>> {
   let loadConfigFile: (
@@ -162,9 +146,11 @@ async function buildRollupTarget(
     // Try to load the workspace version of rollup first (it should already exist).
     // Using the workspace rollup ensures that the config file is compatible with the `loadConfigFile` function.
     // e.g. rollup@2 supports having `require` calls in rollup config, but rollup@4 does not.
-    const m = require(require.resolve('rollup/loadConfigFile', {
-      paths: [dirname(configFilePath)],
-    }));
+    const m = require(
+      require.resolve('rollup/loadConfigFile', {
+        paths: [dirname(configFilePath)],
+      })
+    );
     // Rollup 2 has this has default export, but it is named in 3 and 4.
     // See: https://www.unpkg.com/browse/rollup@2.79.1/dist/loadConfigFile.js
     loadConfigFile = typeof m === 'function' ? m : m.loadConfigFile;
@@ -252,8 +238,8 @@ function getOutputs(
         const outputPathFromConfig = output.dir
           ? output.dir
           : output.file
-          ? dirname(output.file)
-          : 'dist';
+            ? dirname(output.file)
+            : 'dist';
         const outputPath =
           projectRoot === '.'
             ? joinPathFragments(`{workspaceRoot}`, outputPathFromConfig)

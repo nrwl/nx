@@ -3,20 +3,26 @@ title: Setting Up CI for Nx Cloud
 description: Learn how to set up CI for your Nx workspace with Nx Cloud across different CI platforms including GitHub Actions, CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket.
 sidebar:
   label: Setup CI
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
-Learn how to set up Nx Cloud for your workspace with your preferred CI platform. Get started connecting to Nx Cloud by running `nx connect`.
+Learn how to set up Nx Cloud for your workspace with your preferred CI platform. Get started connecting to Nx Cloud by running
+
+```shell
+nx connect
+```
 
 Each platform has specific configurations and optimizations that help you build and test only what is affected, retrieve previous successful builds, and optimize CI performance.
 
+{% course_video src="https://www.youtube.com/watch?v=8mqHXYIl_qI" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="https://nx.dev/courses/pnpm-nx-next/lessons-06-nx-cloud-setup" /%}
 
 ## CI Configuration
+
 {% tabs syncKey="ci-provider" %}
 {% tabitem label="GitHub" %}
 Need a starting point? Generate a new workflow file with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g ci-workflow --ci=github
 ```
 
@@ -57,7 +63,7 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -74,9 +80,10 @@ jobs:
 
 Need a starting point? Generate a new workflow file with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g ci-workflow --ci=circleci
 ```
+
 Below is an example of a Circle CI setup, building, and testing only what is affected.
 
 ```yaml
@@ -84,7 +91,7 @@ Below is an example of a Circle CI setup, building, and testing only what is aff
 version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.6.2
+  nx: nrwl/nx@1.7.0
 
 jobs:
   main:
@@ -99,7 +106,7 @@ jobs:
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -125,7 +132,7 @@ workflows:
 {% tabitem label="GitLab" %}
 Need a starting point? Generate a new workflow file with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g ci-workflow --ci=gitlab
 ```
 
@@ -150,7 +157,7 @@ CI:
     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
     # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-    - npm ci --legacy-peer-deps
+    - npm ci
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
@@ -162,17 +169,16 @@ CI:
   after_script:
     - npx nx fix-ci
 ```
+
 {% /tabitem %}
 
 {% tabitem label="Azure" %}
 
 Need a starting point? Generate a new workflow file with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g ci-workflow --ci=azure-pipelines
 ```
-
-
 
 Below is an example of an Azure Pipelines setup building and testing only what is affected.
 
@@ -202,7 +208,7 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - checkout: self
-        fetchDepth: 0
+        fetchDepth: '0'
         fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
@@ -228,7 +234,7 @@ jobs:
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: npm ci --legacy-peer-deps
+      - script: npm ci
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -307,11 +313,9 @@ pipeline {
 
 Need a starting point? Generate a new workflow file with the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g ci-workflow --ci=bitbucket-pipelines
 ```
-
-
 
 Below is an example of a Bitbucket Pipelines, building and testing only what is affected.
 
@@ -336,7 +340,7 @@ pipelines:
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci --legacy-peer-deps
+            - npm ci
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # npx nx-cloud record -- echo Hello World
@@ -358,7 +362,7 @@ pipelines:
             # Connect your workspace by running "nx connect" and uncomment this
             # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci --legacy-peer-deps
+            - npm ci
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - npx nx-cloud record -- echo Hello World
@@ -481,6 +485,7 @@ Learn more about [Self-Healing CI features](https://nx.dev/ci/features/self-heal
 You can record any command's logs to Nx Cloud by prepending it with `nx-cloud record --`. This helps with debugging and monitoring your CI pipeline.
 
 Example:
+
 ```bash
 npx nx-cloud record -- echo Hello World
 ```

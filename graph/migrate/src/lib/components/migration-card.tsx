@@ -175,8 +175,8 @@ export const MigrationCard = forwardRef<
                   isSucceeded
                     ? 'accent-green-600 dark:accent-green-500'
                     : isFailed
-                    ? 'accent-red-600 dark:accent-red-500'
-                    : 'accent-blue-500 dark:accent-sky-500'
+                      ? 'accent-red-600 dark:accent-red-500'
+                      : 'accent-blue-500 dark:accent-sky-500'
                 }`}
               />
             </div>
@@ -251,8 +251,8 @@ export const MigrationCard = forwardRef<
                 isSucceeded
                   ? 'bg-green-50 text-green-700 ring-green-200 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-500 dark:ring-green-900/30 dark:hover:bg-green-900/30'
                   : isFailed
-                  ? 'bg-red-50 text-red-700 ring-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:ring-red-900/30 dark:hover:bg-red-900/30'
-                  : 'bg-inherit text-slate-600 ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60'
+                    ? 'bg-red-50 text-red-700 ring-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:ring-red-900/30 dark:hover:bg-red-900/30'
+                    : 'bg-inherit text-slate-600 ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60'
               }`}
             >
               {isRunning ? (

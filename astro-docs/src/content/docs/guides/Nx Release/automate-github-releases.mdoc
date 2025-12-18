@@ -1,11 +1,10 @@
 ---
 title: Automate GitHub Releases
 description: Learn how to configure Nx Release to automatically create GitHub releases with changelogs generated from your conventional commits, for both workspace and project-level releases.
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 Nx Release can automate the creation of [GitHub releases](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository) for you. GitHub releases are a great way to communicate the changes in your projects to your users.
-
 
 ## Authenticating with GitHub
 
@@ -30,10 +29,10 @@ To enable GitHub release creation for your workspace, set `release.changelog.wor
   "release": {
     "changelog": {
       "workspaceChangelog": {
-        "createRelease": "github"
-      }
-    }
-  }
+        "createRelease": "github",
+      },
+    },
+  },
 }
 ```
 
@@ -52,10 +51,10 @@ Since GitHub releases contain the changelog, you may wish to disable the generat
     "changelog": {
       "workspaceChangelog": {
         "file": false,
-        "createRelease": "github"
-      }
-    }
-  }
+        "createRelease": "github",
+      },
+    },
+  },
 }
 ```
 
@@ -71,10 +70,10 @@ Nx Release supports creating GitHub releases for project level changelogs as wel
   "release": {
     "changelog": {
       "projectChangelogs": {
-        "createRelease": "github"
-      }
-    }
-  }
+        "createRelease": "github",
+      },
+    },
+  },
 }
 ```
 
@@ -94,10 +93,10 @@ If you are not using github.com, and instead using a self-hosted GitHub Enterpri
       "workspaceChangelog": {
         "createRelease": {
           "provider": "github-enterprise-server",
-          "hostname": "github.example.com"
-        }
-      }
-    }
-  }
+          "hostname": "github.example.com",
+        },
+      },
+    },
+  },
 }
 ```

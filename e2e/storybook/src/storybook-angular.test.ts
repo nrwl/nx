@@ -31,7 +31,7 @@ describe('Storybook executors for Angular', () => {
       const p = await runCommandUntil(
         `run ${angularStorybookLib}:storybook --port 4400`,
         (output) => {
-          return /Storybook.*started/gi.test(output);
+          return /Storybook.*(started|ready)/gi.test(output);
         }
       );
       p.kill();

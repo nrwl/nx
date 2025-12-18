@@ -27,11 +27,11 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
     ? 'bun'
     : existsSync(join(dir, 'yarn.lock'))
-    ? 'yarn'
-    : existsSync(join(dir, 'pnpm-lock.yaml')) ||
-      existsSync(join(dir, 'pnpm-workspace.yaml'))
-    ? 'pnpm'
-    : 'npm';
+      ? 'yarn'
+      : existsSync(join(dir, 'pnpm-lock.yaml')) ||
+          existsSync(join(dir, 'pnpm-workspace.yaml'))
+        ? 'pnpm'
+        : 'npm';
 }
 
 export function isNotWindows() {
@@ -134,72 +134,11 @@ export const packageManagerLockFile = {
   })(),
 };
 
-export function ensureCypressInstallation() {
-  let cypressVerified = true;
-  try {
-    const r = execSync('npx cypress verify', {
-      stdio: isVerbose() ? 'inherit' : 'pipe',
-      encoding: 'utf-8',
-      cwd: tmpProjPath(),
-    });
-    if (r.indexOf('Verified Cypress!') === -1) {
-      cypressVerified = false;
-    }
-  } catch {
-    cypressVerified = false;
-  } finally {
-    if (!cypressVerified) {
-      e2eConsoleLogger('Cypress was not verified. Installing Cypress now.');
-      execSync('npx cypress install', {
-        stdio: isVerbose() ? 'inherit' : 'pipe',
-        encoding: 'utf-8',
-        cwd: tmpProjPath(),
-      });
-    }
-  }
-}
-
-export function ensurePlaywrightBrowsersInstallation() {
-  // Lightweight check: try to get Playwright browser path
-  try {
-    const browserPath = execSync('npx playwright install --dry-run', {
-      stdio: 'pipe',
-      encoding: 'utf-8',
-      cwd: tmpProjPath(),
-    });
-
-    // If browsers are up to date, skip installation
-    if (browserPath.includes('browser binaries are up to date')) {
-      e2eConsoleLogger('Playwright browsers already installed locally');
-      return;
-    }
-  } catch {
-    // If dry-run fails, browsers likely need installation
-  }
-
-  // Only install browsers for local development
-  const playwrightInstallArgs =
-    process.env.PLAYWRIGHT_INSTALL_ARGS || '--with-deps';
-
-  e2eConsoleLogger('Installing Playwright browsers for local development...');
-
-  try {
-    execSync(`npx playwright install ${playwrightInstallArgs}`, {
-      stdio: isVerbose() ? 'inherit' : 'pipe',
-      encoding: 'utf-8',
-      cwd: tmpProjPath(),
-    });
-
-    e2eConsoleLogger(
-      `Playwright browsers ${execSync('npx playwright --version')
-        .toString()
-        .trim()} installed.`
-    );
-  } catch (error) {
-    e2eConsoleLogger('Failed to install Playwright browsers:', error);
-    throw error;
-  }
-}
+// Re-export browser installation utilities from ensure-browser-installation.ts
+export {
+  ensureCypressInstallation,
+  ensurePlaywrightBrowsersInstallation,
+} from './ensure-browser-installation';
 
 export function getStrippedEnvironmentVariables() {
   return Object.fromEntries(

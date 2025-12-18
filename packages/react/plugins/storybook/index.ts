@@ -51,12 +51,15 @@ function getClientEnvironment(mode) {
     );
 
   // Stringify all values so we can feed into webpack DefinePlugin
-  const stringified = {
-    'process.env': Object.keys(raw).reduce((env, key) => {
-      env[key] = JSON.stringify(raw[key]);
+  const stringified = Object.keys(raw).reduce(
+    (env, key) => {
+      env[`process.env.${key}`] = JSON.stringify(raw[key]);
       return env;
-    }, {}),
-  };
+    },
+    // Provide a fallback for process.env itself to handle cases where code
+    // accesses process.env directly (e.g., in Cypress component testing)
+    { 'process.env': '{}' } as Record<string, string>
+  );
 
   return { stringified };
 }
@@ -201,7 +204,8 @@ export const webpack = async (
   );
   const finalConfig = configure(baseWebpackConfig, {
     options: builderOptions,
-    context: { root: workspaceRoot } as ExecutorContext, // The context is not used here.
+    // TODO(JamesHenry): replace as any type assertion with as ExecutorContext once the nx repo is updated to use https://github.com/nrwl/nx/pull/33095
+    context: { root: workspaceRoot } as any, // The context is not used here.
   });
 
   return {

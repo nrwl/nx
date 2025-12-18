@@ -36,9 +36,10 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   beforeEach(() => {
     tree = createTree();
-    // we need an actual path for the package manager version check
-    tree.root = process.cwd();
     jest.clearAllMocks();
+    // Mock getPackageManagerVersion to avoid needing tree.root = process.cwd()
+    // which would cause prettier to load plugins from the real .prettierrc
+    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.0.0');
   });
 
   it('should create files', async () => {
@@ -398,7 +399,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
         - "packages/*"
 
       autoInstallPeers: true
-      strictPeerDependencies: false
       "
     `);
     expect(tree.exists('proj/.npmrc')).toBeFalsy();

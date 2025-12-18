@@ -1,7 +1,7 @@
 ---
 title: Publish in CI/CD
 description: Learn how to configure Nx Release to automate your package publishing process in CI/CD pipelines across different ecosystems including npm, Docker, and Rust.
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 Nx Release makes it easy to move your publishing process into your CI/CD pipeline across different package ecosystems.
@@ -12,14 +12,14 @@ Nx Release makes it easy to move your publishing process into your CI/CD pipelin
 
 When running `nx release`, after the version updates and changelog generation, you will be prompted with the following question:
 
-```{% frame="terminal" title="nx release" %}
+```text {% frame="terminal" title="nx release" %}
 ...
 ? Do you want to publish these versions? (y/N) ›
 ```
 
 To move publishing into an automated pipeline, you will want to skip publishing when running `nx release` locally. To do this automatically, use the `--skip-publish` flag:
 
-```{% frame="terminal" title="nx release --skip-publish" %}
+```text {% frame="terminal" title="nx release --skip-publish" %}
 ...
 
 Skipped publishing packages.
@@ -29,7 +29,7 @@ Skipped publishing packages.
 
 Nx Release provides a publishing subcommand that performs just the publishing step. Use this in your CI/CD pipeline to publish the packages.
 
-```{% frame="terminal" title="nx release publish" %}
+```text {% frame="terminal" title="nx release publish" %}
 NX   Running target nx-release-publish for 3 projects:
 
 - pkg-1
@@ -43,7 +43,7 @@ NX   Running target nx-release-publish for 3 projects:
 
 ### Example NPM Publish Output
 
-```{% frame="terminal" title="nx release publish" %}
+```text {% frame="terminal" title="nx release publish" %}
 NX   Running target nx-release-publish for 3 projects:
 
 - pkg-1
@@ -179,6 +179,96 @@ This workflow will install node, install npm dependencies, then run `nx release 
 2. Push the changes (including the new tag) to the remote repository with `git push && git push --tags`.
 3. The publish workflow will automatically trigger and publish the packages to the npm registry.
 
+{% aside type="note" title="This template is designed for fixed versioning" %}
+The example workflow above triggers on a single tag pattern (`v*.*.*`), which works best when all packages share the same version (**fixed versioning strategy**). With fixed versioning, `nx release` creates one tag per release.
+
+If you're using **independent versioning** (where each project has its own version), see the [Considerations for Independent Versioning](#considerations-for-independent-versioning) section below.
+{% /aside %}
+
+### Considerations for Independent Versioning
+
+When using independent versioning, `nx release` creates a separate tag for each project being released (e.g., `pkg-1@1.0.0`, `pkg-2@2.1.0`). This introduces some challenges with tag-triggered workflows:
+
+#### GitHub's Tag Event Limitation
+
+GitHub Actions has an important limitation: **workflows triggered by the `push` event will not run if more than 3 tags are created at once**. This means if you run `nx release` and it creates tags for 4 or more projects, the publish workflow will not be triggered.
+
+This limitation is documented in [GitHub's workflow events documentation](https://docs.github.com/en/actions/reference/events-that-trigger-workflows#create).
+
+#### Alternative Approaches for Independent Versioning
+
+There are several ways to work around this limitation:
+
+**Option 1: Use `workflow_dispatch` with Manual Trigger**
+
+Instead of triggering on tags, use a manual workflow dispatch after pushing your release:
+
+```yaml
+// .github/workflows/publish.yml
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Run in dry-run mode (no actual publishing)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Publish packages
+        run: npx nx release publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
+```
+
+With this approach:
+
+1. Run `nx release --skip-publish` locally and push the commits and tags.
+2. Manually trigger the workflow from the GitHub Actions UI after the push completes.
+
+**Option 2: Trigger on Push to Main Branch**
+
+Trigger the workflow when the release commit is pushed to your main branch:
+
+```yaml
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/package.json'
+```
+
+This approach requires additional logic in your workflow to determine if a release was just made (e.g., by checking the commit message or comparing versions).
+
+**Option 3: Push Tags in Batches**
+
+If you prefer tag-triggered workflows, push tags in smaller batches (3 or fewer at a time) to ensure each push triggers the workflow. This can be automated with a script that pushes tags individually or in small groups.
+
 ### Configure the NODE_AUTH_TOKEN
 
 The `NODE_AUTH_TOKEN` environment variable is needed to authenticate with the npm registry. In the above workflow, it is passed into the Publish packages step via a [GitHub Secret](https://docs.github.com/en/actions/reference/encrypted-secrets).
@@ -271,9 +361,9 @@ Configure alternative registries in your `nx.json`:
 {
   "release": {
     "docker": {
-      "registryUrl": "ghcr.io" // GitHub Container Registry
-    }
-  }
+      "registryUrl": "ghcr.io", // GitHub Container Registry
+    },
+  },
 }
 ```
 

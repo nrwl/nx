@@ -1,11 +1,10 @@
 ---
 title: Hook into the Task Running Lifecycle
 description: Learn how to extend Nx's task running process with preTasksExecution and postTasksExecution hooks to implement custom logic before and after tasks run.
-sidebar: 
+sidebar:
   label: Task Running Lifecycle
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
-
 
 Nx plugins can hook into the task running lifecycle to execute custom logic before and after tasks are run. This is useful for implementing custom analytics, environment validation, or any other pre/post processing that should happen when running tasks.
 
@@ -118,6 +117,98 @@ export async function postTasksExecution(options, context) {
 }
 ```
 
+## Using `context.argv` to Determine the Command
+
+The context object includes an `argv` property that contains the original CLI arguments used to invoke Nx. This allows you to distinguish between different execution modes and apply conditional logic.
+
+### Context Properties
+
+Both `preTasksExecution` and `postTasksExecution` hooks receive a context object with the following properties:
+
+```typescript
+type PreTaskExecutionContext = {
+  id: string;
+  workspaceRoot: string;
+  nxJsonConfiguration: NxJsonConfiguration;
+  argv: string[]; // Original CLI arguments
+};
+
+type PostTasksExecutionContext = {
+  id: string;
+  workspaceRoot: string;
+  nxJsonConfiguration: NxJsonConfiguration;
+  taskResults: TaskResults;
+  argv: string[]; // Original CLI arguments
+  startTime: number;
+  endTime: number;
+};
+```
+
+### Example: Detecting Command Types
+
+```typescript
+export async function postTasksExecution(options, context) {
+  // Check if running affected command
+  if (context.argv.includes('affected')) {
+    console.log('✅ Ran affected tasks');
+  } else if (context.argv.includes('run-many')) {
+    console.log('✅ Ran tasks for multiple projects');
+  } else {
+    console.log('✅ Ran task for specific project');
+  }
+}
+```
+
+### Example: Conditional Analytics Based on Command
+
+```typescript
+function isAffectedCommand(argv) {
+  return argv.includes('affected');
+}
+
+function getTargetName(argv) {
+  const targetIndex = argv.findIndex(
+    (arg) => arg === '-t' || arg === '--target'
+  );
+  return targetIndex !== -1 ? argv[targetIndex + 1] : undefined;
+}
+
+export async function postTasksExecution(options, context) {
+  const isAffected = isAffectedCommand(context.argv);
+  const target = getTargetName(context.argv);
+
+  // Send analytics with command context
+  await sendAnalytics({
+    executionId: context.id,
+    commandType: isAffected ? 'affected' : 'direct',
+    target: target,
+    taskCount: Object.keys(context.taskResults).length,
+    duration: context.endTime - context.startTime,
+  });
+}
+```
+
+### Common Command Patterns
+
+- Direct execution: `nx build my-app` → `argv: ['node', '/path/to/nx', 'build', 'my-app']`
+- Affected: `nx affected -t build test` → `argv: ['node', '/path/to/nx', 'affected', '-t', 'build', 'test']`
+- Run many: `nx run-many -t build -p app1 app2` → `argv: ['node', '/path/to/nx', 'run-many', '-t', 'build', '-p', 'app1', 'app2']`
+
+### Best Practices for Parsing argv
+
+When working with `context.argv`, parse it defensively:
+
+```typescript
+// Bad - assumes structure
+const target = context.argv[2];
+
+// Good - searches for the flag
+const targetIndex = context.argv.findIndex(
+  (arg) => arg === '-t' || arg === '--target'
+);
+const target = targetIndex !== -1 ? context.argv[targetIndex + 1] : undefined;
+```
+
 ## Best Practices
 
 1. **Keep hooks fast**: Hooks should execute quickly to avoid slowing down the task execution process
@@ -125,3 +216,4 @@ export async function postTasksExecution(options, context) {
 3. **Use environment variables** for configuration that needs to persist across tasks
 4. **Leverage context data**: Use the context object to access relevant information about the workspace and task results
 5. **Provide clear errors**: If throwing errors, make sure they are descriptive and actionable
+6. **Parse argv defensively**: Don't assume the position of arguments; search for specific flags instead

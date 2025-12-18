@@ -185,11 +185,15 @@ export async function generateWorkspaceFiles(
 
   await createReadme(tree, options, token);
 
-  await setupAiAgentsGenerator(tree, {
-    directory: options.directory,
-    writeNxCloudRules: options.nxCloud !== 'skip',
-    packageVersion: 'latest',
-  });
+  let aiAgentsCallback: () => unknown | undefined = undefined;
+  if (options.aiAgents && options.aiAgents.length > 0) {
+    aiAgentsCallback = await setupAiAgentsGenerator(tree, {
+      directory: options.directory,
+      writeNxCloudRules: options.nxCloud !== 'skip',
+      packageVersion: 'latest',
+      agents: [...options.aiAgents],
+    });
+  }
 
   const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
@@ -209,7 +213,7 @@ export async function generateWorkspaceFiles(
   addNpmScripts(tree, options);
   setUpWorkspacesInPackageJson(tree, options);
 
-  return token;
+  return { token, aiAgentsCallback };
 }
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {
@@ -274,11 +278,11 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.TsStandalone
       ? './files-root-app'
       : (options.preset === Preset.TS &&
-          options.workspaces &&
-          process.env.NX_ADD_PLUGINS !== 'false') ||
-        options.preset === Preset.NPM
-      ? './files-package-based-repo'
-      : './files-integrated-repo';
+            options.workspaces &&
+            process.env.NX_ADD_PLUGINS !== 'false') ||
+          options.preset === Preset.NPM
+        ? './files-package-based-repo'
+        : './files-integrated-repo';
   generateFiles(tree, join(__dirname, filesDirName), options.directory, {
     formattedNames,
     dot: '.',
@@ -336,7 +340,6 @@ function addPnpmSettings(tree: Tree, options: NormalizedSchema) {
   tree.write(
     join(options.directory, 'pnpm-workspace.yaml'),
     `autoInstallPeers: true
-strictPeerDependencies: false
 `
   );
 }

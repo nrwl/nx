@@ -3,8 +3,9 @@ title: 'Cache Task Results'
 description: 'Learn how to use Nx computation caching to speed up task execution and reduce CI/CD costs by never rebuilding the same code twice.'
 sidebar:
   order: 2
-filter: "type:Features"
+filter: 'type:Features'
 ---
+
 {% youtube src="https://youtu.be/o-6jb78uuP0" title="Remote Caching with Nx Replay" /%}
 
 Rebuilding and retesting the same code repeatedly is costly. Nx offers a sophisticated and battle-tested computation caching system that ensures **code is never rebuilt twice**. This:
@@ -21,7 +22,7 @@ Nx **restores both the terminal output and the files** created from running the 
 
 To enable caching for `build` and `test`, edit the `targetDefaults` property in `nx.json` to include the `build` and `test` tasks:
 
-```json 
+```json
 // nx.json
 {
   "targetDefaults": {
@@ -69,7 +70,7 @@ By default, Nx caches task results locally. The biggest benefit of caching comes
 
 To enable remote caching, connect your workspace to [Nx Cloud](https://nx.dev/nx-cloud) by running the following command:
 
-```shell {% frame="none" %}
+```shell
 npx nx@latest connect
 ```
 
@@ -106,7 +107,7 @@ To achieve this, we can add `inputs` and `outputs` definitions globally for all 
 {% /tabitem %}
 {% tabitem label="Project Level (project.json)" %}
 
-```json 
+```json
 // packages/some-project/project.json
 {
   "name": "some-project",
@@ -125,7 +126,7 @@ To achieve this, we can add `inputs` and `outputs` definitions globally for all 
 {% /tabitem %}
 {% tabitem label="Project Level (package.json)" %}
 
-```json 
+```json
 // packages/some-project/package.json
 {
   "name": "some-project",
@@ -156,7 +157,7 @@ When using [Nx plugins](/docs/concepts/nx-plugins), many tasks have caching conf
 
 For example, if you add the `@nx/vite` plugin using the following command...
 
-```shell {% frame="none" %}
+```shell
 npx nx add @nx/vite
 ```
 
@@ -166,7 +167,7 @@ This means **you don't need to manually specify cacheable operations for Vite ta
 
 To view the task settings that have been automatically configured by a plugin, use the following command:
 
-```shell {% frame="none" %}
+```shell
 nx show project <project-name> --web
 ```
 

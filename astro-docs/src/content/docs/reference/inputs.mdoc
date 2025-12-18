@@ -6,7 +6,6 @@ sidebar:
 filter: 'type:References'
 ---
 
-
 When Nx [computes the hash for a given operation](/docs/concepts/how-caching-works), it takes into account the `inputs` of the target.
 The `inputs` are a list of **file sets**, **runtime** inputs and **environment variables** that affect the output of the target.
 If any of the `inputs` change, the cache is invalidated and the target is re-run.
@@ -45,6 +44,7 @@ Source file inputs are defined like this:
 Source file inputs must be prefixed with either `{projectRoot}` or `{workspaceRoot}` to distinguish where the paths should be resolved from. `{workspaceRoot}` should only appear in the beginning of an input but `{projectRoot}` and `{projectName}` can be specified later in the input to interpolate the root or name of the project into the input location.
 
 #### Token Behavior with Nested Projects
+
 These tokens behave differently when dealing with nested projects:
 
 - `{projectRoot}/**/*` only includes files that are assigned to the specific project. Files in nested projects are excluded.
@@ -71,8 +71,8 @@ Tools and scripts will often use some environment variables to change their beha
 ```jsonc
 {
   "inputs": [
-    { "env": "API_KEY" } // this will include the value of $API_KEY in the cache hash
-  ]
+    { "env": "API_KEY" }, // this will include the value of $API_KEY in the cache hash
+  ],
 }
 ```
 
@@ -82,9 +82,7 @@ You can use a Runtime input to provide a script which will output the informatio
 
 ```jsonc
 {
-  "inputs": [
-    { "runtime": "node --version" }
-  ]
+  "inputs": [{ "runtime": "node --version" }],
 }
 ```
 
@@ -98,9 +96,7 @@ External dependencies can also be tools used to run tasks. Updating the versions
 
 ```jsonc
 {
-  "inputs": [
-    { "externalDependencies": ["jest"] }
-  ]
+  "inputs": [{ "externalDependencies": ["jest"] }],
 }
 ```
 
@@ -116,9 +112,9 @@ The drawback of this assumption is that Nx will re-run the `lint` task even when
 {
   "targets": {
     "lint": {
-      "command": "eslint ."
-    }
-  }
+      "command": "eslint .",
+    },
+  },
 }
 ```
 
@@ -131,10 +127,10 @@ This default behavior can be overridden by adding any external dependency inputs
       "command": "eslint .",
       "inputs": [
         "default",
-        { "externalDependencies": ["eslint", "eslint-config-airbnb"] }
-      ]
-    }
-  }
+        { "externalDependencies": ["eslint", "eslint-config-airbnb"] },
+      ],
+    },
+  },
 }
 ```
 
@@ -148,12 +144,13 @@ When a task depends on another task, it is possible that the outputs of the depe
 {
   "inputs": [
     { "dependentTasksOutputFiles": "**/*.d.ts" },
-    { "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true }
-  ]
+    { "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true },
+  ],
 }
 ```
 
-The pattern will be matched with outputs of tasks which this task depends on. Setting `transitive` to `true` will also include outputs of all task dependencies of this task in the [task pipeline](/docs/concepts/task-pipeline-configuration).
+The glob pattern is matched against the file paths resolved from workspace root. For example, if a dependent task has `outputs: ["{workspaceRoot}/dist/{projectRoot}"]` and the project root is `libs/my-lib`, the output path becomes `dist/libs/my-lib`.
+Files such as `dist/libs/my-lib/index.d.ts` would be matched by patterns `**/*.d.ts`, `dist/**/*.d.ts`, or `dist/libs/my-lib/**/*.d.ts`. Setting `transitive` to `true` will also include outputs of all task dependencies of this task in the [task pipeline](/docs/concepts/task-pipeline-configuration). It's possible the dependent tasks can change over time, so be careful to not overly scope the matching glob to prevent accidental false cache hits.
 
 ### A subset of the root `tsconfig.json` or `tsconfig.base.json`
 
@@ -177,8 +174,8 @@ Named inputs defined in `nx.json` can be used by any project in the workspace in
 // nx.json
 {
   "namedInputs": {
-    "default": ["{projectRoot}/**/*"] // Default Inputs
-  }
+    "default": ["{projectRoot}/**/*"], // Default Inputs
+  },
 }
 ```
 
@@ -231,8 +228,8 @@ By default, Nx Workspaces are generated with the following named inputs:
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"], // Default Inputs
     "production": ["default", "!{projectRoot}/jest.config.ts"], // Production Inputs
-    "sharedGlobals": [] // Shared Global Inputs
-  }
+    "sharedGlobals": [], // Shared Global Inputs
+  },
 }
 ```
 
@@ -262,9 +259,9 @@ It is common for most tasks to consider a set of inputs for the project it belon
   "name": "myreactapp",
   "targets": {
     "test": {
-      "inputs": ["default", "^production", "{projectRoot}/jest.config.js"]
-    }
-  }
+      "inputs": ["default", "^production", "{projectRoot}/jest.config.js"],
+    },
+  },
 }
 ```
 
@@ -274,7 +271,7 @@ It is common for most tasks to consider a set of inputs for the project it belon
 
 All of the above inputs are taken into consideration when the following command is run:
 
-```shell {% frame="none" %}
+```shell
 nx test myreactapp
 ```
 

@@ -7,11 +7,9 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
-  logger,
   names,
   offsetFromRoot,
   ProjectConfiguration,
-  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -29,7 +27,6 @@ import {
 import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
@@ -107,13 +104,6 @@ export async function libraryGeneratorInternal(
   );
   const options = await normalizeOptions(tree, schema);
 
-  if (schema.simpleName !== undefined && schema.simpleName !== false) {
-    // TODO(v22): Remove simpleName as user should be using name.
-    logger.warn(
-      `The "--simpleName" option is deprecated and will be removed in Nx 22. Please use the "--name" option to provide the exact name you want for the library.`
-    );
-  }
-
   createFiles(tree, options);
 
   await configureProject(tree, options);
@@ -159,6 +149,7 @@ export async function libraryGeneratorInternal(
         includeLib: true,
         includeVitest: options.unitTestRunner === 'vitest',
         testEnvironment: options.testEnvironment,
+        useEsmExtension: true,
       },
       false
     );
@@ -182,11 +173,11 @@ export async function libraryGeneratorInternal(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // Test would have been set up already
   ) {
-    const { vitestGenerator, createOrEditViteConfig } = ensurePackage(
-      '@nx/vite',
-      nxVersion
-    );
-    const vitestTask = await vitestGenerator(tree, {
+    const { createOrEditViteConfig } = ensurePackage('@nx/vite', nxVersion);
+    ensurePackage('@nx/vitest', nxVersion);
+    // nx-ignore-next-line
+    const { configurationGenerator } = require('@nx/vitest/generators');
+    const vitestTask = await configurationGenerator(tree, {
       project: options.name,
       uiFramework: 'none',
       coverageProvider: 'v8',
@@ -357,7 +348,6 @@ async function configureProject(
       );
     } else {
       await addReleaseConfigForNonTsSolution(
-        shouldUseLegacyVersioning(nxJson.release),
         tree,
         options.name,
         projectConfiguration,
@@ -748,8 +738,8 @@ async function addJest(
     compiler: options.shouldUseSwcJest
       ? 'swc'
       : options.bundler === 'tsc'
-      ? 'tsc'
-      : undefined,
+        ? 'tsc'
+        : undefined,
     runtimeTsconfigFileName: 'tsconfig.lib.json',
   });
 }
@@ -762,7 +752,7 @@ function replaceJestConfig(
   // the existing config has to be deleted otherwise the new config won't overwrite it
   const existingJestConfig = joinPathFragments(
     filesDir,
-    `jest.config.${options.js ? 'js' : 'ts'}`
+    `jest.config.${options.js ? 'js' : 'cts'}`
   );
   if (tree.exists(existingJestConfig)) {
     tree.delete(existingJestConfig);
@@ -771,7 +761,7 @@ function replaceJestConfig(
 
   // replace with JS:SWC specific jest config
   generateFiles(tree, filesDir, options.projectRoot, {
-    ext: options.js ? 'js' : 'ts',
+    ext: options.js ? 'js' : 'cts',
     jestPreset,
     js: !!options.js,
     project: options.name,
@@ -903,11 +893,7 @@ async function normalizeOptions(
     rootProject: options.rootProject,
   });
   options.rootProject = projectRoot === '.';
-  const fileName = names(
-    options.simpleName
-      ? projectNames.projectSimpleName
-      : projectNames.projectFileName
-  ).fileName;
+  const fileName = names(projectNames.projectFileName).fileName;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

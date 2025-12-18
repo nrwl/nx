@@ -187,19 +187,21 @@ export function hasOverride(
   }
   for (const node of exportsArray) {
     if (isOverride(node)) {
-      let objSource;
+      let data: Partial<Linter.ConfigOverride<Linter.RulesRecord>>;
+
       if (ts.isObjectLiteralExpression(node)) {
-        objSource = node.getFullText();
-        // strip any spread elements
-        objSource = objSource.replace(SPREAD_ELEMENTS_REGEXP, '');
+        data = extractPropertiesFromObjectLiteral(node);
       } else {
-        const fullNodeText =
-          node['expression'].arguments[0].body.expression.getFullText();
-        // strip any spread elements
-        objSource = fullNodeText.replace(SPREAD_ELEMENTS_REGEXP, '');
+        // Handle compat.config(...).map(...) pattern
+        const arrowBody = node['expression'].arguments[0].body.expression;
+        if (ts.isObjectLiteralExpression(arrowBody)) {
+          data = extractPropertiesFromObjectLiteral(arrowBody);
+        } else {
+          continue;
+        }
       }
-      const data = parseTextToJson(objSource);
-      if (lookup(data)) {
+
+      if (lookup(data as Linter.ConfigOverride<Linter.RulesRecord>)) {
         return true;
       }
     }
@@ -217,6 +219,79 @@ function parseTextToJson(text: string): any {
       .replace(/require\(['"]([^'"]+)['"]\)/g, '"$1"')
       .replace(/\(?await import\(['"]([^'"]+)['"]\)\)?/g, '"$1"')
   );
+}
+
+/**
+ * Extracts literal values from AST nodes.
+ * Returns undefined for complex expressions that can't be statically evaluated.
+ */
+function extractLiteralValue(node: ts.Node): unknown {
+  if (ts.isStringLiteral(node)) {
+    return node.text;
+  }
+  if (ts.isNumericLiteral(node)) {
+    return Number(node.text);
+  }
+  if (node.kind === ts.SyntaxKind.TrueKeyword) return true;
+  if (node.kind === ts.SyntaxKind.FalseKeyword) return false;
+  if (node.kind === ts.SyntaxKind.NullKeyword) return null;
+
+  if (ts.isArrayLiteralExpression(node)) {
+    const arr: unknown[] = [];
+    for (const element of node.elements) {
+      const value = extractLiteralValue(element);
+      if (value === undefined) return undefined;
+      arr.push(value);
+    }
+    return arr;
+  }
+
+  if (ts.isObjectLiteralExpression(node)) {
+    const obj: Record<string, unknown> = {};
+    for (const prop of node.properties) {
+      if (ts.isPropertyAssignment(prop)) {
+        const name = prop.name.getText().replace(/['"]/g, '');
+        const value = extractLiteralValue(prop.initializer);
+        if (value === undefined) {
+          // Skip properties with non-extractable values (like variable references)
+          continue;
+        }
+        obj[name] = value;
+      } else if (ts.isSpreadAssignment(prop)) {
+        // Cannot extract spread assignments statically, skip them
+        continue;
+      } else {
+        // Skip other property types (shorthand, method, etc.)
+        continue;
+      }
+    }
+    return obj;
+  }
+
+  // For complex expressions (identifiers, function calls, etc.), return undefined
+  return undefined;
+}
+
+/**
+ * Extracts property values from an ObjectLiteralExpression using AST.
+ * Only extracts properties that have simple literal values.
+ * Returns a partial object suitable for the lookup function.
+ */
+function extractPropertiesFromObjectLiteral(
+  node: ts.ObjectLiteralExpression
+): Partial<Linter.ConfigOverride<Linter.RulesRecord>> {
+  const result: Record<string, unknown> = {};
+  for (const prop of node.properties) {
+    if (ts.isPropertyAssignment(prop)) {
+      const name = prop.name.getText().replace(/['"]/g, '');
+      const value = extractLiteralValue(prop.initializer);
+      if (value !== undefined) {
+        result[name] = value;
+      }
+    }
+  }
+
+  return result as Partial<Linter.ConfigOverride<Linter.RulesRecord>>;
 }
 
 /**
@@ -1685,7 +1760,7 @@ export function generateFlatPredefinedConfig(
 }
 
 export function mapFilePaths<
-  T extends Partial<Linter.ConfigOverride<Linter.RulesRecord>>
+  T extends Partial<Linter.ConfigOverride<Linter.RulesRecord>>,
 >(_override: T) {
   const override: T = {
     ..._override,

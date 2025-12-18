@@ -8,7 +8,10 @@ export class RspackNxBuildCoordinationPlugin {
   private currentlyRunning: 'none' | 'nx-build' | 'rspack-build' = 'none';
   private buildCmdProcess: ReturnType<typeof exec> | null = null;
 
-  constructor(private readonly buildCmd: string, skipInitialBuild?: boolean) {
+  constructor(
+    private readonly buildCmd: string,
+    skipInitialBuild?: boolean
+  ) {
     if (!skipInitialBuild) {
       this.buildChangedProjects();
     }

@@ -18,7 +18,6 @@ import {
 } from 'rxjs/operators';
 import type { Configuration, Stats } from 'webpack';
 import { isNxWebpackComposablePlugin } from '../../utils/config';
-import { deleteOutputDir } from '../../utils/fs';
 import { resolveUserDefinedWebpackConfig } from '../../utils/webpack/resolve-user-defined-webpack-config';
 import { normalizeOptions } from './lib/normalize-options';
 import { runWebpack } from './lib/run-webpack';
@@ -101,8 +100,8 @@ export async function* webpackExecutor(
     typeof options.optimization === 'boolean'
       ? options.optimization
       : options.optimization && options.optimization.scripts
-      ? options.optimization.scripts
-      : false;
+        ? options.optimization.scripts
+        : false;
 
   (process.env as any).NODE_ENV ||= isScriptOptimizeOn
     ? 'production'
@@ -128,11 +127,6 @@ export async function* webpackExecutor(
         options,
       };
     }
-  }
-
-  // Delete output path before bundling
-  if (options.deleteOutputPath && options.outputPath) {
-    deleteOutputDir(context.root, options.outputPath);
   }
 
   if (options.generatePackageJson && metadata.projectType !== 'application') {

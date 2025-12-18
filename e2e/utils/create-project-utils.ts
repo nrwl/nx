@@ -48,6 +48,7 @@ const nxPackages = [
   `@nx/jest`,
   `@nx/js`,
   `@nx/eslint`,
+  '@nx/maven',
   `@nx/nest`,
   `@nx/next`,
   `@nx/node`,
@@ -61,13 +62,25 @@ const nxPackages = [
   `@nx/storybook`,
   `@nx/vue`,
   `@nx/vite`,
+  `@nx/vitest`,
   `@nx/web`,
   `@nx/webpack`,
   `@nx/react-native`,
   `@nx/expo`,
+  '@nx/dotnet',
+  `@nx/workspace`,
 ] as const;
 
 type NxPackage = (typeof nxPackages)[number];
+
+export function openInEditor(projectDirectory: string = tmpProjPath()) {
+  if (process.env.NX_E2E_EDITOR) {
+    const editor = process.env.NX_E2E_EDITOR;
+    execSync(`${editor} ${projectDirectory}`, {
+      stdio: 'inherit',
+    });
+  }
+}
 
 /**
  * Sets up a new project in the temporary project path
@@ -109,27 +122,34 @@ export function newProject({
         createNxWorkspaceEnd.name
       );
 
-      // Temporary hack to prevent installing with `--frozen-lockfile`
+      // Workaround: pnpm defaults to frozen-lockfile in CI, but e2e tests
+      // dynamically add packages after workspace creation
       if (isCI && packageManager === 'pnpm') {
-        updateFile(
-          '.npmrc',
-          'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
-        );
+        updateFile('.npmrc', 'prefer-frozen-lockfile=false');
       }
 
+      let packagesToInstall: Array<NxPackage> = [];
       if (!packages) {
         console.warn(
           'ATTENTION: All packages are installed into the new workspace. To make this test faster, please pass the subset of packages that this test needs by passing a packages array in the options'
         );
+        packagesToInstall = [...nxPackages];
+      } else if (packages.length > 0) {
+        packagesToInstall = packages;
       }
-      const packageInstallStart = performance.mark('packageInstall:start');
-      packageInstall((packages ?? nxPackages).join(` `), projScope);
-      const packageInstallEnd = performance.mark('packageInstall:end');
-      packageInstallMeasure = performance.measure(
-        'packageInstall',
-        packageInstallStart.name,
-        packageInstallEnd.name
-      );
+
+      if (packagesToInstall.length) {
+        const packageInstallStart = performance.mark('packageInstall:start');
+        packageInstall(packagesToInstall.join(` `), projScope);
+        const packageInstallEnd = performance.mark('packageInstall:end');
+        packageInstallMeasure = performance.measure(
+          'packageInstall',
+          packageInstallStart.name,
+          packageInstallEnd.name
+        );
+      } else {
+        console.info('No packages to install');
+      }
       // stop the daemon
       execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
         cwd: `${e2eCwd}/proj`,
@@ -196,12 +216,7 @@ ${
       );
     }
 
-    if (process.env.NX_E2E_EDITOR) {
-      const editor = process.env.NX_E2E_EDITOR;
-      execSync(`${editor} ${projectDirectory}`, {
-        stdio: 'inherit',
-      });
-    }
+    openInEditor(projectDirectory);
     return projScope;
   } catch (e) {
     logError(`Failed to set up project for e2e tests.`, e.message);
@@ -209,18 +224,11 @@ ${
   }
 }
 
-// pnpm v7 sadly doesn't automatically install peer dependencies
-export function addPnpmRc() {
-  updateFile(
-    '.npmrc',
-    'strict-peer-dependencies=false\nauto-install-peers=true'
-  );
-}
-
 export function runCreateWorkspace(
   name: string,
   {
     preset,
+    template,
     appName,
     style,
     base,
@@ -242,7 +250,8 @@ export function runCreateWorkspace(
     framework,
     prefix,
   }: {
-    preset: string;
+    preset?: string;
+    template?: string;
     appName?: string;
     style?: string;
     base?: string;
@@ -265,6 +274,15 @@ export function runCreateWorkspace(
     prefix?: string;
   }
 ) {
+  if (preset && template) {
+    throw new Error(
+      'Cannot specify both preset and template. Use one or the other.'
+    );
+  }
+  if (!preset && !template) {
+    throw new Error('Must specify either preset or template.');
+  }
+
   projName = name;
 
   const pm = getPackageManagerCommand({ packageManager });
@@ -272,7 +290,14 @@ export function runCreateWorkspace(
   // Needed for bun workarounds, see below
   const registry = execSync('npm config get registry').toString().trim();
 
-  let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
+  let command = `${pm.createWorkspace} ${name} --nxCloud=skip --no-interactive`;
+
+  if (preset) {
+    command += ` --preset=${preset}`;
+  }
+  if (template) {
+    command += ` --template=${template}`;
+  }
 
   if (appName) {
     command += ` --appName=${appName}`;
@@ -515,6 +540,7 @@ export function runNgNew(
       }
     });
   }
+
   updateJson('package.json', (json) => {
     updateAngularDependencies(json.dependencies ?? {});
     updateAngularDependencies(json.devDependencies ?? {});
@@ -610,8 +636,8 @@ export function newLernaWorkspace({
         packageManager === 'pnpm'
           ? ' --workspace-root'
           : packageManager === 'yarn'
-          ? ' -W'
-          : ''
+            ? ' -W'
+            : ''
       }`,
       {
         cwd: tmpProjPath(),
@@ -695,6 +721,11 @@ export function createNonNxProjectDirectory(
       workspaces: addWorkspaces ? ['packages/*'] : undefined,
     })
   );
+}
+
+export function createEmptyProjectDirectory(name = uniq('proj')) {
+  projName = name;
+  ensureDirSync(tmpProjPath());
 }
 
 export function uniq(prefix: string): string {

@@ -4,7 +4,10 @@ import {
   isDaemonEnabled,
   joinPathFragments,
   output,
+  readJsonFile,
 } from '@nx/devkit';
+import { existsSync } from 'fs';
+import { join } from 'path';
 import type { TypeScriptCompilationOptions } from '@nx/workspace/src/utilities/typescript/compilation';
 import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler';
 import { checkDependencies } from '../../utils/check-dependencies';
@@ -12,11 +15,6 @@ import {
   getHelperDependency,
   HelperDependency,
 } from '../../utils/compiler-helper-dependency';
-import {
-  handleInliningBuild,
-  isInlineGraphEmpty,
-  postProcessInlinedDependencies,
-} from '../../utils/inline';
 import { updatePackageJson } from '../../utils/package-json/update-package-json';
 import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema';
 import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
@@ -26,9 +24,33 @@ import { readTsConfig } from '../../utils/typescript/ts-config';
 import { createEntryPoints } from '../../utils/package-json/create-entry-points';
 
 export function determineModuleFormatFromTsConfig(
-  absolutePathToTsConfig: string
+  absolutePathToTsConfig: string,
+  projectRoot?: string,
+  workspaceRoot?: string
 ): 'cjs' | 'esm' {
   const tsConfig = readTsConfig(absolutePathToTsConfig);
+
+  // NodeNext is context-dependent - check package.json type field
+  // NodeNext outputs ESM only when package.json has "type": "module"
+  // Otherwise it outputs CJS (when "type": "commonjs" or no type field)
+  if (tsConfig.options.module === ts.ModuleKind.NodeNext) {
+    if (projectRoot && workspaceRoot) {
+      const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
+      if (existsSync(packageJsonPath)) {
+        try {
+          const packageJson = readJsonFile(packageJsonPath);
+          if (packageJson.type === 'module') {
+            return 'esm';
+          }
+        } catch {
+          // Fall through to default CJS
+        }
+      }
+    }
+    // NodeNext defaults to CJS when no type field or when we can't check
+    return 'cjs';
+  }
+
   if (
     tsConfig.options.module === ts.ModuleKind.ES2015 ||
     tsConfig.options.module === ts.ModuleKind.ES2020 ||
@@ -100,16 +122,6 @@ export async function* tscExecutor(
     context
   );
 
-  const inlineProjectGraph = handleInliningBuild(
-    context,
-    options,
-    tsCompilationOptions.tsConfig
-  );
-
-  if (!isInlineGraphEmpty(inlineProjectGraph)) {
-    tsCompilationOptions.rootDir = '.';
-  }
-
   const typescriptCompilation = compileTypeScriptFiles(
     options,
     tsCompilationOptions,
@@ -123,18 +135,19 @@ export async function* tscExecutor(
               options.additionalEntryPoints,
               context.root
             ),
-            format: [determineModuleFormatFromTsConfig(options.tsConfig)],
+            format: [
+              determineModuleFormatFromTsConfig(
+                options.tsConfig,
+                options.projectRoot,
+                context.root
+              ),
+            ],
           },
           context,
           target,
           dependencies
         );
       }
-      postProcessInlinedDependencies(
-        tsCompilationOptions.outputPath,
-        tsCompilationOptions.projectRoot,
-        inlineProjectGraph
-      );
     }
   );
 
@@ -162,7 +175,13 @@ export async function* tscExecutor(
                 options.additionalEntryPoints,
                 context.root
               ),
-              format: [determineModuleFormatFromTsConfig(options.tsConfig)],
+              format: [
+                determineModuleFormatFromTsConfig(
+                  options.tsConfig,
+                  options.projectRoot,
+                  context.root
+                ),
+              ],
             },
             context,
             target,

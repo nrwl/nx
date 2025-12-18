@@ -50,9 +50,7 @@ export function Header({
   let [isOpen, setIsOpen] = useState(false);
 
   // Use the new docs URL when Astro docs are enabled
-  const docsUrl = process.env.NEXT_PUBLIC_ASTRO_URL
-    ? '/docs/getting-started/intro'
-    : '/getting-started/intro';
+  const docsUrl = '/docs/getting-started/intro';
   let [isScrolled, setIsScrolled] = useState(false);
 
   const router = useRouter();
@@ -270,6 +268,9 @@ export function Header({
               title="AI"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               prefetch={false}
+              onClick={() =>
+                sendCustomEvent('ai-click', 'header-cta', 'page-header')
+              }
             >
               AI
             </Link>
@@ -278,8 +279,22 @@ export function Header({
               title="Nx Cloud"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               prefetch={false}
+              onClick={() =>
+                sendCustomEvent('nx-cloud-click', 'header-cta', 'page-header')
+              }
             >
               Nx Cloud
+            </Link>
+            <Link
+              href="/nx-cloud#plans"
+              title="Nx Cloud Pricing"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+              onClick={() =>
+                sendCustomEvent('pricing-click', 'header-cta', 'page-header')
+              }
+            >
+              Pricing
             </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             {/*ENTERPRISE*/}
@@ -288,17 +303,12 @@ export function Header({
               title="Nx for Enterprises"
               className="hidden gap-2 px-3 py-2 font-semibold leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               prefetch={false}
+              onClick={() =>
+                sendCustomEvent('enterprise-click', 'header-cta', 'page-header')
+              }
             >
-              Nx Enterprise
+              Enterprise
             </Link>
-            {process.env.NEXT_PUBLIC_ASTRO_URL ? null : (
-              <>
-                <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
-                <div className="px-3 opacity-50 hover:opacity-100">
-                  <AlgoliaSearch tiny={true} />
-                </div>
-              </>
-            )}
           </nav>
         </div>
         {/*SECONDARY NAVIGATION*/}
@@ -609,6 +619,13 @@ export function Header({
                             title="AI"
                             className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
                             prefetch={false}
+                            onClick={() =>
+                              sendCustomEvent(
+                                'ai-click',
+                                'mobile-header-cta',
+                                'page-header'
+                              )
+                            }
                           >
                             AI
                           </Link>
@@ -617,8 +634,30 @@ export function Header({
                             title="Nx Cloud"
                             className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
                             prefetch={false}
+                            onClick={() =>
+                              sendCustomEvent(
+                                'nx-cloud-click',
+                                'mobile-header-cta',
+                                'page-header'
+                              )
+                            }
                           >
                             Nx Cloud
+                          </Link>
+                          <Link
+                            href="/nx-cloud#plans"
+                            title="Nx Cloud Pricing"
+                            className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+                            prefetch={false}
+                            onClick={() =>
+                              sendCustomEvent(
+                                'pricing-click',
+                                'mobile-header-cta',
+                                'page-header'
+                              )
+                            }
+                          >
+                            Pricing
                           </Link>
                           <Disclosure as="div">
                             {({ open }) => (
@@ -631,7 +670,7 @@ export function Header({
                                     'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
                                   )}
                                 >
-                                  <span>Nx Enterprise</span>
+                                  <span>Enterprise</span>
                                   <ChevronDownIcon
                                     aria-hidden="true"
                                     className={cx(

@@ -74,7 +74,8 @@ const VALID_AUTHORS_FOR_LATEST = [
   };
 
   // Intended for creating a github release which triggers the publishing workflow
-  if (!options.local && !process.env.NODE_AUTH_TOKEN) {
+  // This runs locally (not in CI) to create the GitHub release that triggers the actual publish workflow
+  if (!options.local && !process.env.GITHUB_ACTIONS) {
     // For this important use-case it makes sense to always have full logs
     isVerboseLogging = true;
 
@@ -122,22 +123,18 @@ const VALID_AUTHORS_FOR_LATEST = [
     process.exit(0);
   }
 
-  // TODO(colum): Remove when we have a better way to handle this
-  let angularRspackPrevVersion = '0.0.1';
-  let angularRspackCompilerPrevVersion = '0.0.1';
-  if (options.local) {
-    angularRspackPrevVersion = JSON.parse(
-      readFileSync(
-        join(workspaceRoot, 'packages/angular-rspack/package.json'),
-        'utf-8'
-      )
-    ).version;
-    angularRspackCompilerPrevVersion = JSON.parse(
-      readFileSync(
-        join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
-        'utf-8'
-      )
-    ).version;
+  const packagesToReset = [
+    'packages/angular-rspack',
+    'packages/angular-rspack-compiler',
+    'packages/dotnet',
+    'packages/maven',
+  ];
+
+  const packageSnapshots: { [key: string]: string } = {};
+  for (const packagePath of packagesToReset) {
+    const packageJsonPath = join(workspaceRoot, packagePath, 'package.json');
+    const packageJson = readFileSync(packageJsonPath, 'utf-8');
+    packageSnapshots[packagePath] = packageJson;
   }
 
   runNxReleaseVersion();
@@ -235,33 +232,11 @@ const VALID_AUTHORS_FOR_LATEST = [
   console.log(
     'Resetting angular-rspack package.json versions to previous versions'
   );
-  const angularRspackPackageJson = JSON.parse(
-    readFileSync(
-      join(workspaceRoot, 'packages/angular-rspack/package.json'),
-      'utf-8'
-    )
-  );
-  angularRspackPackageJson.dependencies['@nx/devkit'] = 'workspace:*';
-  angularRspackPackageJson.dependencies['@nx/angular-rspack-compiler'] =
-    'workspace:*';
-  angularRspackPackageJson.version = angularRspackPrevVersion;
-  writeFileSync(
-    join(workspaceRoot, 'packages/angular-rspack/package.json'),
-    JSON.stringify(angularRspackPackageJson)
-  );
 
-  writeFileSync(
-    join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
-    JSON.stringify({
-      ...JSON.parse(
-        readFileSync(
-          join(workspaceRoot, 'packages/angular-rspack-compiler/package.json'),
-          'utf-8'
-        )
-      ),
-      version: angularRspackCompilerPrevVersion,
-    })
-  );
+  for (const packagePath of packagesToReset) {
+    const packageJsonPath = join(workspaceRoot, packagePath, 'package.json');
+    writeFileSync(packageJsonPath, packageSnapshots[packagePath]);
+  }
 
   execSync(
     `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json`,
@@ -504,8 +479,8 @@ function determineDistTag(
     parsedGivenVersion.prerelease.length > 0
       ? 'next'
       : parsedGivenVersion.major < parsedCurrentLatestVersion.major
-      ? 'previous'
-      : 'latest';
+        ? 'previous'
+        : 'latest';
 
   return distTag;
 }
@@ -518,14 +493,14 @@ function hackFixForDevkitPeerDependencies() {
   );
 
   const beforeVersion = devkitPackageJson.peerDependencies['nx'];
-  if (!beforeVersion.includes('<')) {
+  const majorVersion = major(beforeVersion);
+  if (!beforeVersion.includes('<') && majorVersion !== 0) {
     console.log(
       '@nx/devkit peer dependencies range is broken - needs release fix. Patching it to avoid broken publishes.'
     );
-    const majorVersion = major(beforeVersion);
     devkitPackageJson.peerDependencies['nx'] = `>= ${majorVersion - 1} <= ${
       majorVersion + 1
-    }`;
+    } || ^${majorVersion}.0.0-0`;
     writeFileSync(
       './dist/packages/devkit/package.json',
       JSON.stringify(devkitPackageJson, null, 2)

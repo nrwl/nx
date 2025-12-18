@@ -35,7 +35,13 @@ export class ProjectGraphError extends Error {
     const messageFragments = ['Failed to process project graph.'];
     const mergeNodesErrors = [];
     const unknownErrors = [];
-    for (const e of errors) {
+    // Lets us throw aggregate errors without special handling,
+    // to avoid cases where users fix an error and get hit with another one
+    // which was already there but not reported.
+    let flat = errors.flatMap((e) =>
+      e instanceof AggregateError ? e.errors : e
+    );
+    for (const e of flat) {
       if (
         // Known errors that are self-explanatory
         isAggregateCreateNodesError(e) ||
@@ -121,7 +127,10 @@ export class MultipleProjectsWithSameNameError extends Error {
 }
 
 export class ProjectWithExistingNameError extends Error {
-  constructor(public projectName: string, public projectRoot: string) {
+  constructor(
+    public projectName: string,
+    public projectRoot: string
+  ) {
     super(`The project "${projectName}" is defined in multiple locations.`);
     this.name = this.constructor.name;
   }
@@ -199,6 +208,7 @@ export class ProjectConfigurationsError extends Error {
       | AggregateCreateNodesError
       | ProjectsWithNoNameError
       | MultipleProjectsWithSameNameError
+      | WorkspaceValidityError
     >,
     public readonly partialProjectConfigurationsResult: ConfigurationResult
   ) {
@@ -375,7 +385,10 @@ export class MergeNodesError extends Error {
 }
 
 export class CreateMetadataError extends Error {
-  constructor(public readonly error: Error, public readonly plugin: string) {
+  constructor(
+    public readonly error: Error,
+    public readonly plugin: string
+  ) {
     super(
       `The "${plugin}" plugin threw an error while creating metadata: ${error.message}`,
       {
@@ -387,7 +400,10 @@ export class CreateMetadataError extends Error {
 }
 
 export class ProcessDependenciesError extends Error {
-  constructor(public readonly pluginName: string, { cause }) {
+  constructor(
+    public readonly pluginName: string,
+    { cause }
+  ) {
     super(
       `The "${pluginName}" plugin threw an error while creating dependencies: ${cause.message}`,
       {
@@ -410,9 +426,13 @@ function isProcessDependenciesError(e: unknown): e is ProcessDependenciesError {
 
 export class WorkspaceValidityError extends Error {
   constructor(public message: string) {
-    message = `Configuration Error\n${message}`;
     super(message);
+    this.message = `[Configuration Error]:\n${message}`;
     this.name = this.constructor.name;
+  }
+
+  toString() {
+    return this.message;
   }
 }
 
@@ -490,7 +510,10 @@ export class DaemonProjectGraphError extends Error {
 }
 
 export class LoadPluginError extends Error {
-  constructor(public plugin: string, cause: Error) {
+  constructor(
+    public plugin: string,
+    cause: Error
+  ) {
     super(`Could not load plugin ${plugin}`, {
       cause,
     });

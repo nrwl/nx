@@ -1,7 +1,7 @@
 ---
 title: 'Configuring the Cloud Runner'
 description: 'Configuration options for Nx Cloud runner in nx.json'
-filter: "type:References"
+filter: 'type:References'
 ---
 
 The Nx Cloud runner is configured in `nx.json`.
@@ -84,7 +84,7 @@ Targets can be marked as cacheable either in the `targetDefaults` in `nx.json` o
 
 By default, Nx Cloud requests will time out after 10 seconds. `NX_CLOUD_NO_TIMEOUTS` disables the timeout.
 
-```shell {% frame="none" %}
+```shell
 NX_CLOUD_NO_TIMEOUTS=true nx run-many -t build
 ```
 
@@ -136,7 +136,7 @@ In `nx.json`, locate the `taskRunnerOptions` property. Under its "options" prope
 
 To instead use an environment variable to provide your secret key, run any Nx command as follows:
 
-```shell {% frame="none" %}
+```shell
 NX_CLOUD_ENCRYPTION_KEY=myEncryptionKey nx build my-project
 ```
 
@@ -159,7 +159,7 @@ You must be on version `16.0.4` or later of `nx-cloud` or `@nrwl/nx-cloud` for t
 ```json
 {
   // The following will cause all attempts to connect your workspace to Nx Cloud to fail.
-  // This value does not prevent using Nx Cloud if already connected. 
+  // This value does not prevent using Nx Cloud if already connected.
   // Use NX_NO_CLOUD=true env var to prevent using Nx Cloud when running commands
   "neverConnectToCloud": true
 }

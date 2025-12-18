@@ -4,6 +4,7 @@ import {
   logger,
   workspaceRoot,
 } from '@nx/devkit';
+import { signalToCode } from '@nx/devkit/internal';
 import { exec } from 'child_process';
 import type { DockerReleasePublishSchema } from './schema';
 import { existsSync, readFileSync } from 'fs';
@@ -132,7 +133,8 @@ async function dockerPush(imageReference: string, quiet: boolean) {
       childProcess.on('error', (error) => {
         rej(error);
       });
-      childProcess.on('exit', (code) => {
+      childProcess.on('exit', (code, signal) => {
+        if (code === null) code = signalToCode(signal);
         if (code === 0) {
           res(result.trim());
         } else {

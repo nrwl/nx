@@ -6,7 +6,6 @@ tags: ['nx', 'nx-cloud', 'ai', 'ci']
 cover_image: /blog/images/articles/thumb-self-healing-ci.avif
 description: 'Introducing Nx Cloud Self-Healing CI: AI agents that automatically detect, analyze, and fix your CI failures so you do not have to babysit PRs.'
 youtubeUrl: https://youtu.be/JW5Ki3PkRWA
-pinned: true
 ---
 
 {% callout type="deepdive" title="Series: Making your LLM smarter"  %}
@@ -61,7 +60,7 @@ Every developer knows this workflow:
 
 This "babysitting" wastes countless hours across development teams. The critical waste happens in **step 3**: the delay between failure and awareness.
 
-One big issue is already being handled: **[flaky tasks](/ci/features/flaky-tasks)**. When tests fail intermittently (same code, different results), the system retries them on different agents with zero human intervention.
+One big issue is already being handled: **[flaky tasks](/docs/features/ci-features/flaky-tasks)**. When tests fail intermittently (same code, different results), the system retries them on different agents with zero human intervention.
 
 **The missing piece:** What about **genuine failures**? Real bugs, configuration errors, and dependency issues that need actual code fixes. These can't be solved with retries—they need intelligent analysis and solutions.
 
@@ -102,7 +101,7 @@ If you haven't already connected to Nx Cloud:
 npx nx@latest connect
 ```
 
-You can [start with the free Hobby plan](/pricing) and play around with the new AI features.
+You can [start with the free Hobby plan](/nx-cloud#plans) and play around with the new AI features.
 
 Once connected, enable AI features in your [Nx Cloud dashboard](https://nx.app):
 
@@ -136,9 +135,9 @@ jobs:
 
 ### 3. Install Nx Console
 
-To receive notifications about self-healing activities directly in your editor and enable the full AI integration experience, you need [Nx Console](/getting-started/editor-setup) installed for VS Code, Cursor, or IntelliJ.
+To receive notifications about self-healing activities directly in your editor and enable the full AI integration experience, you need [Nx Console](/docs/getting-started/editor-setup) installed for VS Code, Cursor, or IntelliJ.
 
-For the complete AI setup guide, see our [AI integration documentation](/getting-started/ai-integration).
+For the complete AI setup guide, see our [AI integration documentation](/docs/getting-started/ai-setup).
 
 ## Wrapping up
 
@@ -152,7 +151,7 @@ Self-Healing CI completes Nx Cloud's comprehensive approach to eliminating CI fr
 - **Built on proven infrastructure**: Uses the same robust Nx Cloud infrastructure that powers distributed task execution
 - **Part of a broader vision**: Continues our mission to optimize "time to green" and eliminate developer workflow friction
 
-**Ready to try it?** Self-Healing CI is rolling out as an early access feature and is available to everyone right now—no special approval or signup required. If you don't have an Nx Cloud account yet, you can quickly [start with the Hobby plan](/pricing), connect your workspace with `npx nx@latest connect`, and get going immediately.
+**Ready to try it?** Self-Healing CI is rolling out as an early access feature and is available to everyone right now—no special approval or signup required. If you don't have an Nx Cloud account yet, you can quickly [start with the Hobby plan](/nx-cloud#plans), connect your workspace with `npx nx@latest connect`, and get going immediately.
 
 **For enterprise teams:** If you're already using Nx Cloud and want to learn more about how AI features like Self-Healing CI can enhance your existing setup, [reach out to us](/contact). We'd love to help you leverage these capabilities in your organization.
 
@@ -160,7 +159,7 @@ Self-Healing CI completes Nx Cloud's comprehensive approach to eliminating CI fr
 
 Learn more:
 
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/docs/features/enhance-ai)
 - 🌩️ [Nx Cloud](/nx-cloud)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)

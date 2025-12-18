@@ -1,5 +1,5 @@
 import { ensurePackage, readJson, stripIndents, type Tree } from '@nx/devkit';
-import { getPackageVersion } from '../../../utils/versions';
+import { nxVersion } from '../../../utils/versions';
 
 export async function ignoreViteTempFiles(
   tree: Tree,
@@ -34,7 +34,7 @@ async function ignoreViteTempFilesInEslintConfig(
     return;
   }
 
-  ensurePackage('@nx/eslint', getPackageVersion(tree, 'nx'));
+  ensurePackage('@nx/eslint', nxVersion);
   const { addIgnoresToLintConfig, isEslintConfigSupported } = await import(
     '@nx/eslint/src/generators/utils/eslint-file'
   );
@@ -52,7 +52,7 @@ async function ignoreViteTempFilesInEslintConfig(
   }
 
   // for flat config, we update the root config file
-  const directory = isUsingFlatConfig ? '' : projectRoot ?? '';
+  const directory = isUsingFlatConfig ? '' : (projectRoot ?? '');
 
   addIgnoresToLintConfig(tree, directory, [
     '**/vite.config.*.timestamp*',

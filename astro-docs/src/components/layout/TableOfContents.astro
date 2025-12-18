@@ -1,19 +1,31 @@
 ---
 // recreated from https://github.com/withastro/starlight/blob/main/packages/starlight/components/TableOfContents.astro
 import TableOfContentsList from './TableOfContentsList.astro';
+import { GitHubStarWidget } from '@nx/nx-dev-ui-common';
+import CopyPageButton from '../CopyPageButton.astro';
 
 const { toc } = Astro.locals.starlightRoute;
+const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
+const rawContent = Astro.locals.rawContent;
 ---
 
 {
   toc && (
     <custom-toc data-min-h={toc.minHeadingLevel} data-max-h={toc.maxHeadingLevel}>
+      <div class="github-star-widget-container">
+        <GitHubStarWidget starsCount={githubStarsCount} client:load />
+      </div>
       <nav aria-labelledby="starlight__on-this-page">
         <h2 id="starlight__on-this-page">{Astro.locals.t('tableOfContents.onThisPage')}</h2>
         <div class="toc-container">
           <TableOfContentsList toc={toc.items} />
         </div>
       </nav>
+      {rawContent && (
+        <div class="copy-page-button-container">
+          <CopyPageButton content={rawContent} />
+        </div>
+      )}
     </custom-toc>
   )
 }
@@ -163,18 +175,24 @@ const { toc } = Astro.locals.starlightRoute;
       padding: 0;
     }
     
+    /* GitHub star widget styling */
+    .github-star-widget-container {
+      margin-bottom: 1rem;
+    }
+
+    /* Copy page button styling - positioned after TOC with divider */
+    .copy-page-button-container {
+      padding-top: 1rem;
+      margin-top: 1rem;
+      border-top: 1px solid var(--sl-color-hairline);
+    }
+    
     /* Container with proper scrolling */
     .toc-container {
-      /* Calculate height based on viewport minus nav and footer with padding */
-      max-height: calc(100vh - var(--sl-nav-height) - 25rem);
-      /* 
-      * prevent ToC from going to 0 height.
-      * if this overlaps the footer it's not a huge issue for such small viewport
-      * */
-      min-height: 300px; 
+      /* Allow ToC to be its natural height - parent sticky container handles viewport constraints */
+      max-height: calc(100vh - var(--sl-nav-height) - 4rem);
       overflow-y: auto;
       overflow-x: hidden;
-      padding-bottom: 1rem;
     }
     
     /* Only enable smooth scrolling if user doesn't prefer reduced motion */

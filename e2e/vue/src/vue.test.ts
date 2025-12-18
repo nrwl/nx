@@ -45,7 +45,7 @@ describe('Vue Plugin', () => {
           .replace(/url: '[^']*'/, `url: 'http://localhost:${availablePort}'`);
       });
 
-      updateFile(`${app}/vite.config.ts`, (content) => {
+      updateFile(`${app}/vite.config.mts`, (content) => {
         return content.replace(
           /preview:\s*{[^}]*}/,
           `preview: {

@@ -1,13 +1,13 @@
 ---
 title: Automate GitLab Releases
 description: Learn how to configure Nx Release to automatically create GitLab releases with changelogs generated from your conventional commits, for both workspace and project-level releases.
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 Nx Release can automate the creation of [GitLab releases](https://docs.gitlab.com/user/project/releases/) for you. GitLab releases are a great way to communicate the changes in your projects to your users.
 
-
 ## Authenticating with GitLab
+
 In order to be able to create the release on GitLab, you need to provide a valid token which can be used for authenticating with the GitLab API.
 
 Nx release supports two main ways of doing this:
@@ -29,10 +29,10 @@ To enable GitLab release creation for your workspace, set `release.changelog.wor
   "release": {
     "changelog": {
       "workspaceChangelog": {
-        "createRelease": "gitlab"
-      }
-    }
-  }
+        "createRelease": "gitlab",
+      },
+    },
+  },
 }
 ```
 
@@ -51,10 +51,10 @@ Since GitLab releases contain the changelog, you may wish to disable the generat
     "changelog": {
       "workspaceChangelog": {
         "file": false,
-        "createRelease": "gitlab"
-      }
-    }
-  }
+        "createRelease": "gitlab",
+      },
+    },
+  },
 }
 ```
 
@@ -70,10 +70,10 @@ Nx Release supports creating GitLab releases for project level changelogs as wel
   "release": {
     "changelog": {
       "projectChangelogs": {
-        "createRelease": "gitlab"
-      }
-    }
-  }
+        "createRelease": "gitlab",
+      },
+    },
+  },
 }
 ```
 
@@ -93,10 +93,10 @@ If you are not using gitlab.com, and are instead using a self-hosted GitLab inst
       "workspaceChangelog": {
         "createRelease": {
           "provider": "gitlab",
-          "hostname": "gitlab.example.com"
-        }
-      }
-    }
-  }
+          "hostname": "gitlab.example.com",
+        },
+      },
+    },
+  },
 }
 ```

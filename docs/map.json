@@ -1254,6 +1254,22 @@
               ]
             },
             {
+              "name": ".NET",
+              "id": "dotnet",
+              "itemList": [
+                {
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/dotnet/dotnet-plugin"
+                },
+                {
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/dotnet/dotnet-plugin"
+                }
+              ]
+            },
+            {
               "name": "Module Federation",
               "id": "module-federation",
               "description": "Advanced guides to utilize Module Federation with Nx.",
@@ -1818,11 +1834,6 @@
               "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
               "file": "shared/features/powerpack/index",
               "itemList": [
-                {
-                  "name": "Free Licenses & Trials",
-                  "id": "licenses-and-trials",
-                  "file": "shared/features/powerpack/licenses-and-trials"
-                },
                 {
                   "name": "Run Language-Agnostic Conformance Rules",
                   "description": "Write and apply rules for your Nx workspace",
@@ -2581,12 +2592,6 @@
               "file": "nx-cloud/features/flaky-tasks"
             },
             {
-              "name": "Explain With AI",
-              "id": "explain-with-ai",
-              "description": "Learn how to use AI to explain cryptic failure logs into actionable errors.",
-              "file": "nx-cloud/features/explain-with-ai"
-            },
-            {
               "name": "GitHub Integration",
               "id": "github-integration",
               "description": "Learn how to setup the GitHub integration for Nx Cloud.",
@@ -3122,6 +3127,12 @@
               "id": "mcp",
               "tags": ["mcp"],
               "file": "generated/cli/mcp"
+            },
+            {
+              "name": "configure-ai-agents",
+              "id": "configure-ai-agents",
+              "tags": ["configure-ai-agents"],
+              "file": "generated/cli/configure-ai-agents"
             },
             {
               "name": "login",

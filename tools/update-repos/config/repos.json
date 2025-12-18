@@ -8,7 +8,7 @@
     "ocean": {
       "repo": "nrwl/ocean",
       "branch": "main",
-      "packageManager": "npm"
+      "packageManager": "pnpm"
     },
     "nx-examples": {
       "repo": "nrwl/nx-examples",

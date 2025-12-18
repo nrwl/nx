@@ -76,6 +76,7 @@
       },
       "currentVersionResolver": "registry",
       "preserveLocalDependencyProtocols": false,
+      "preserveMatchingDependencyRanges": false,
       "manifestRootsToUpdate": ["dist/packages/{projectName}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true
@@ -124,7 +125,10 @@
       "dependsOn": ["test-native", "build-native", "^build-native"],
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "options": {
-        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"]
+        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
+        "env": {
+          "NODE_OPTIONS": "--experimental-vm-modules"
+        }
       }
     },
     "lint": {
@@ -161,7 +165,10 @@
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry"
-      ]
+      ],
+      "options": {
+        "args": ["--forceExit"]
+      }
     },
     "e2e-macos-ci--**/*": {
       "inputs": ["e2eInputs", "^production"],
@@ -206,26 +213,28 @@
       "include": [
         "packages/angular-rspack-compiler/**",
         "packages/angular-rspack/**"
-      ],
-      "options": {
-        "testTargetName": "test"
-      }
+      ]
     },
     {
       "plugin": "@nx/vite/plugin",
-      "include": ["astro-docs/**"],
-      "options": {
-        "testTargetName": "vite:test"
-      }
+      "include": ["astro-docs/**"]
     },
     {
       "plugin": "@nx/js/typescript",
-      "exclude": ["examples/angular-rspack/**/*"],
+      "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
       "options": {
         "typecheck": true,
         "build": {
           "targetName": "build-base"
         }
+      }
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "include": ["e2e/**/*"],
+      "options": {
+        "typecheck": true,
+        "build": false
       }
     },
     {
@@ -286,6 +295,15 @@
         "serveStaticTargetName": "serve-static"
       }
     },
+    {
+      "plugin": "@nx/gradle",
+      "exclude": [
+        "packages/react-native/src/generators/application/files/**/*"
+      ],
+      "options": {
+        "testTargetName": "test-kt"
+      }
+    },
     "@nx/enterprise-cloud",
     {
       "plugin": "@nx/storybook/plugin",
@@ -306,12 +324,29 @@
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps"
       }
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "test"
+      },
+      "include": [
+        "packages/angular-rspack-compiler/**",
+        "packages/angular-rspack/**"
+      ]
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "vite:test"
+      },
+      "include": ["astro-docs/**"]
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 1,
+  "bust": 3,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true
@@ -420,6 +455,12 @@
       },
       {
         "rule": "./tools/workspace-plugin/src/conformance-rules/no-ignored-tracked-files"
+      },
+      {
+        "rule": "./tools/workspace-plugin/src/conformance-rules/codeblock-language"
+      },
+      {
+        "rule": "./tools/workspace-plugin/src/conformance-rules/relative-image-imports"
       }
     ]
   }

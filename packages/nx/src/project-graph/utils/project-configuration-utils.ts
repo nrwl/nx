@@ -13,8 +13,9 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { minimatch } from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
+import { existsSync } from 'node:fs';
 
-import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
+import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
   AggregateCreateNodesError,
   formatAggregateCreateNodesError,
@@ -23,12 +24,14 @@ import {
   isProjectsWithNoNameError,
   isProjectWithExistingNameError,
   isProjectWithNoNameError,
+  isWorkspaceValidityError,
   MergeNodesError,
   MultipleProjectsWithSameNameError,
   ProjectConfigurationsError,
   ProjectsWithNoNameError,
   ProjectWithExistingNameError,
   ProjectWithNoNameError,
+  WorkspaceValidityError,
 } from '../error-types';
 import { CreateNodesResult } from '../plugins/public-api';
 import { isGlobPattern } from '../../utils/globs';
@@ -37,6 +40,7 @@ import {
   getExecutorInformation,
   parseExecutor,
 } from '../../command-line/run/executor-utils';
+import { toProjectName } from '../../config/to-project-name';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -375,8 +379,11 @@ export async function createProjectConfigurationsWithPlugins(
     }
   }
 
+  const createNodesPlugins = plugins.filter(
+    (plugin) => plugin.createNodes?.[0]
+  );
   spinner = new DelayedSpinner(
-    `Creating project graph nodes with ${plugins.length} plugins`
+    `Creating project graph nodes with ${createNodesPlugins.length} plugins`
   );
 
   const results: Promise<
@@ -384,7 +391,7 @@ export async function createProjectConfigurationsWithPlugins(
       plugin: string,
       file: string,
       result: CreateNodesResult,
-      index?: number
+      index?: number,
     ])[]
   >[] = [];
   const errors: Array<
@@ -392,6 +399,7 @@ export async function createProjectConfigurationsWithPlugins(
     | MergeNodesError
     | ProjectsWithNoNameError
     | MultipleProjectsWithSameNameError
+    | WorkspaceValidityError
   > = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
@@ -404,12 +412,8 @@ export async function createProjectConfigurationsWithPlugins(
       exclude,
       name: pluginName,
     },
-  ] of plugins.entries()) {
-    const [pattern, createNodes] = createNodesTuple ?? [];
-
-    if (!pattern) {
-      continue;
-    }
+  ] of createNodesPlugins.entries()) {
+    const [pattern, createNodes] = createNodesTuple;
 
     const matchingConfigFiles: string[] = findMatchingConfigFiles(
       projectFiles[index],
@@ -486,7 +490,7 @@ function mergeCreateNodesResults(
     plugin: string,
     file: string,
     result: CreateNodesResult,
-    pluginIndex?: number
+    pluginIndex?: number,
   ])[][],
   nxJsonConfiguration: NxJsonConfiguration,
   workspaceRoot: string,
@@ -495,6 +499,7 @@ function mergeCreateNodesResults(
     | MergeNodesError
     | ProjectsWithNoNameError
     | MultipleProjectsWithSameNameError
+    | WorkspaceValidityError
   )[]
 ) {
   performance.mark('createNodes:merge - start');
@@ -550,14 +555,19 @@ function mergeCreateNodesResults(
       nxJsonConfiguration,
       configurationSourceMaps
     );
-  } catch (e) {
-    if (
-      isProjectsWithNoNameError(e) ||
-      isMultipleProjectsWithSameNameError(e)
-    ) {
-      errors.push(e);
-    } else {
-      throw e;
+  } catch (error) {
+    const unknownErrors: Error[] = [];
+    let _errors = error instanceof AggregateError ? error.errors : [error];
+    for (const e of _errors) {
+      if (
+        isProjectsWithNoNameError(e) ||
+        isMultipleProjectsWithSameNameError(e) ||
+        isWorkspaceValidityError(e)
+      ) {
+        errors.push(e);
+      } else {
+        throw e;
+      }
     }
   }
 
@@ -662,12 +672,23 @@ function validateAndNormalizeProjectRootMap(
   // to provide better error messaging.
   const conflicts = new Map<string, string[]>();
   const projectRootsWithNoName: string[] = [];
+  const validityErrors: WorkspaceValidityError[] = [];
 
   for (const root in projectRootMap) {
     const project = projectRootMap[root];
     // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
     // Strip it before returning configuration for usage.
     if (project['// targets']) delete project['// targets'];
+
+    // We initially did this in the project.json plugin, but
+    // that resulted in project.json files without names causing
+    // the resulting project to change names from earlier plugins...
+    if (
+      !project.name &&
+      existsSync(join(workspaceRoot, project.root, 'project.json'))
+    ) {
+      project.name = toProjectName(join(root, 'project.json'));
+    }
 
     try {
       validateProject(project, projects);
@@ -685,21 +706,40 @@ function validateAndNormalizeProjectRootMap(
         throw e;
       }
     }
-
-    normalizeTargets(
-      project,
-      sourceMaps,
-      nxJsonConfiguration,
-      workspaceRoot,
-      projects
-    );
   }
+
+  for (const root in projectRootMap) {
+    const project = projectRootMap[root];
+    try {
+      normalizeTargets(
+        project,
+        sourceMaps,
+        nxJsonConfiguration,
+        workspaceRoot,
+        projects
+      );
+    } catch (e) {
+      if (e instanceof WorkspaceValidityError) {
+        validityErrors.push(e);
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  const errors: Error[] = [];
 
   if (conflicts.size > 0) {
-    throw new MultipleProjectsWithSameNameError(conflicts, projects);
+    errors.push(new MultipleProjectsWithSameNameError(conflicts, projects));
   }
   if (projectRootsWithNoName.length > 0) {
-    throw new ProjectsWithNoNameError(projectRootsWithNoName, projects);
+    errors.push(new ProjectsWithNoNameError(projectRootsWithNoName, projects));
+  }
+  if (validityErrors.length > 0) {
+    errors.push(...validityErrors);
+  }
+  if (errors.length > 0) {
+    throw new AggregateError(errors);
   }
   return projectRootMap;
 }
@@ -714,12 +754,15 @@ function normalizeTargets(
    */
   projects: Record<string, ProjectConfiguration>
 ) {
+  const targetErrorMessage: string[] = [];
+
   for (const targetName in project.targets) {
     project.targets[targetName] = normalizeTarget(
       project.targets[targetName],
       project,
       workspaceRoot,
-      projects
+      projects,
+      [project.root, targetName].join(':')
     );
 
     const projectSourceMaps = sourceMaps[project.root];
@@ -738,28 +781,45 @@ function normalizeTargets(
       project.targets[targetName] = mergeTargetDefaultWithTargetDefinition(
         targetName,
         project,
-        normalizeTarget(targetDefaults, project, workspaceRoot, projects),
+        normalizeTarget(
+          targetDefaults,
+          project,
+          workspaceRoot,
+          projects,
+          ['nx.json[targetDefaults]', targetName].join(':')
+        ),
         projectSourceMaps
       );
     }
 
+    const target = project.targets[targetName];
+
     if (
       // If the target has no executor or command, it doesn't do anything
-      !project.targets[targetName].executor &&
-      !project.targets[targetName].command
+      !target.executor &&
+      !target.command
     ) {
       // But it may have dependencies that do something
-      if (
-        project.targets[targetName].dependsOn &&
-        project.targets[targetName].dependsOn.length > 0
-      ) {
-        project.targets[targetName].executor = 'nx:noop';
+      if (target.dependsOn && target.dependsOn.length > 0) {
+        target.executor = 'nx:noop';
       } else {
         // If it does nothing, and has no depenencies,
         // we can remove it.
         delete project.targets[targetName];
       }
     }
+
+    if (target.cache && target.continuous) {
+      targetErrorMessage.push(
+        `- "${targetName}" has both "cache" and "continuous" set to true. Continuous targets cannot be cached. Please remove the "cache" property.`
+      );
+    }
+  }
+  if (targetErrorMessage.length > 0) {
+    targetErrorMessage.unshift(
+      `Errors detected in targets of project "${project.name}":`
+    );
+    throw new WorkspaceValidityError(targetErrorMessage.join('\n'));
   }
 }
 
@@ -1191,7 +1251,8 @@ export function normalizeTarget(
   target: TargetConfiguration,
   project: ProjectConfiguration,
   workspaceRoot: string,
-  projectsMap: Record<string, ProjectConfiguration>
+  projectsMap: Record<string, ProjectConfiguration>,
+  errorMsgKey: string
 ) {
   target = {
     ...target,
@@ -1205,7 +1266,7 @@ export function normalizeTarget(
   target.options = resolveNxTokensInOptions(
     target.options,
     project,
-    `${project.root}:${target}`
+    errorMsgKey
   );
 
   for (const configuration in target.configurations) {

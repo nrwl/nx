@@ -1,5 +1,5 @@
 use color_eyre::eyre::Result;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
@@ -7,15 +7,17 @@ use ratatui::layout::{Alignment, Rect, Size};
 use ratatui::style::Modifier;
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::widgets::Paragraph;
 use std::collections::HashMap;
 use std::io;
+use std::io::Write;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::{debug, trace};
 use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetState};
 
+use crate::native::tui::escape_sequences::EscapeSequence;
 use crate::native::tui::tui::Tui;
 use crate::native::{
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
@@ -27,6 +29,7 @@ use super::components::Component;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::dependency_view::{DependencyView, DependencyViewState};
 use super::components::help_popup::HelpPopup;
+use super::components::hint_popup::HintPopup;
 use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
 };
@@ -42,6 +45,10 @@ use super::tui;
 use super::utils::normalize_newlines;
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::tui::graph_utils::get_failed_dependencies;
+use crate::native::utils::time::current_timestamp_millis;
+
+/// Duration before status messages in terminal panes are automatically cleared
+const STATUS_MESSAGE_DURATION: std::time::Duration = std::time::Duration::from_secs(3);
 
 pub struct App {
     pub components: Vec<Box<dyn Component>>,
@@ -72,6 +79,7 @@ pub struct App {
     pinned_tasks: Vec<String>,
     task_graph: TaskGraph,
     task_status_map: HashMap<String, TaskStatus>, // App owns task status
+    incomplete_task_count: usize,                 // Count of tasks that are not yet complete
     debug_mode: bool,
     debug_state: TuiWidgetState,
     console_messenger: Option<NxConsoleMessageConnection>,
@@ -84,6 +92,7 @@ pub enum Focus {
     MultipleOutput(usize),
     HelpPopup,
     CountdownPopup,
+    HintPopup,
 }
 
 impl App {
@@ -117,14 +126,19 @@ impl App {
         );
         let help_popup = HelpPopup::new();
         let countdown_popup = CountdownPopup::new();
+        let hint_popup = HintPopup::new();
 
         let components: Vec<Box<dyn Component>> = vec![
             Box::new(tasks_list),
             Box::new(help_popup),
             Box::new(countdown_popup),
+            Box::new(hint_popup),
         ];
 
         let main_terminal_pane_data = TerminalPaneData::new();
+
+        // All tasks start as NotStarted, so all are incomplete
+        let incomplete_task_count = task_status_map.len();
 
         Ok(Self {
             run_mode,
@@ -151,6 +165,7 @@ impl App {
             selection_manager,
             task_graph,
             task_status_map,
+            incomplete_task_count,
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
             console_messenger: None,
@@ -202,7 +217,6 @@ impl App {
     }
 
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
-        // Update the App's task status map first
         self.task_status_map.insert(task_id.clone(), status);
 
         // Auto-switch pane to failed dependency when a task becomes skipped
@@ -211,16 +225,11 @@ impl App {
         }
 
         self.dispatch_action(Action::UpdateTaskStatus(task_id.clone(), status));
-        if status == TaskStatus::InProgress && self.should_set_interactive_by_default(&task_id) {
-            // Find which pane this task is assigned to
-            for (pane_idx, pane_task) in self.pane_tasks.iter().enumerate() {
-                if let Some(pane_task_id) = pane_task {
-                    if pane_task_id == &task_id {
-                        self.terminal_pane_data[pane_idx].set_interactive(true);
-                        break;
-                    }
-                }
-            }
+
+        // Update terminal progress indicator only when task reaches a completed state
+        if self.is_status_complete(status) {
+            self.incomplete_task_count = self.incomplete_task_count.saturating_sub(1);
+            self.update_terminal_progress();
         }
     }
 
@@ -234,21 +243,19 @@ impl App {
         is_task_continuous(&self.task_graph, task_id)
     }
 
-    fn should_set_interactive_by_default(&self, task_id: &str) -> bool {
-        matches!(self.run_mode, RunMode::RunOne)
-            && self
-                .pty_instances
-                .get(task_id)
-                .is_some_and(|pty| pty.can_be_interactive())
+    /// Check if a task status is considered complete
+    fn is_status_complete(&self, status: TaskStatus) -> bool {
+        !matches!(
+            status,
+            TaskStatus::NotStarted | TaskStatus::InProgress | TaskStatus::Shared
+        )
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
         // Check if a PTY instance already exists for this task
         if let Some(pty) = self.pty_instances.get(&task_id) {
-            // Append output to the existing PTY instance to preserve scroll position
-            // Add ANSI escape sequence to hide cursor at the end of output
-            let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
-            Self::write_output_to_parser(pty, output_with_hidden_cursor);
+            // Hide cursor in the output to avoid confusion
+            Self::write_escape_sequence_to_parser(pty, crossterm::cursor::Hide);
         } else {
             // Tasks run within a pseudo-terminal always have a pty instance and do not need a new one
             // Tasks not run within a pseudo-terminal need a new pty instance to print output
@@ -315,6 +322,7 @@ impl App {
     }
 
     fn quit(&mut self) {
+        App::clear_terminal_progress();
         self.quit_at = Some(std::time::Instant::now());
     }
 
@@ -390,10 +398,7 @@ impl App {
 
                 // Check if we have a pending resize that needs to be processed
                 if let Some(timer) = self.resize_debounce_timer {
-                    let now = std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap()
-                        .as_millis();
+                    let now = current_timestamp_millis() as u128;
 
                     if now >= timer {
                         // Timer expired, process the resize
@@ -517,6 +522,22 @@ impl App {
                         }
                     }
 
+                    return Ok(false);
+                }
+
+                // If hint popup is open, only ESC dismisses it
+                if matches!(self.focus, Focus::HintPopup) {
+                    if let Some(hint_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+                    {
+                        if key.code == KeyCode::Esc {
+                            hint_popup.hide();
+                            self.update_focus(self.previous_focus);
+                        }
+                        // All other keys are consumed while hint popup is visible
+                    }
                     return Ok(false);
                 }
 
@@ -670,19 +691,15 @@ impl App {
                                 Focus::TaskList => match key.code {
                                     KeyCode::Char('j') if !is_filter_mode => {
                                         self.dispatch_action(Action::NextTask);
-                                        let _ = self.debounce_pty_resize();
                                     }
                                     KeyCode::Down => {
                                         self.dispatch_action(Action::NextTask);
-                                        let _ = self.debounce_pty_resize();
                                     }
                                     KeyCode::Char('k') if !is_filter_mode => {
                                         self.dispatch_action(Action::PreviousTask);
-                                        let _ = self.debounce_pty_resize();
                                     }
                                     KeyCode::Up => {
                                         self.dispatch_action(Action::PreviousTask);
-                                        let _ = self.debounce_pty_resize();
                                     }
                                     KeyCode::Esc => {
                                         if matches!(self.focus, Focus::HelpPopup) {
@@ -721,13 +738,11 @@ impl App {
                                                                 self.dispatch_action(
                                                                     Action::NextTask,
                                                                 );
-                                                                let _ = self.debounce_pty_resize();
                                                             }
                                                             'k' => {
                                                                 self.dispatch_action(
                                                                     Action::PreviousTask,
                                                                 );
-                                                                let _ = self.debounce_pty_resize();
                                                             }
                                                             '1' => {
                                                                 self.assign_current_task_to_pane(0);
@@ -788,48 +803,12 @@ impl App {
                                 Focus::CountdownPopup => {
                                     // Countdown popup has its own key handling above
                                 }
+                                Focus::HintPopup => {
+                                    // Hint popup has its own key handling above
+                                }
                             }
                         }
                     }
-                }
-            }
-            tui::Event::Mouse(mouse) => {
-                // If the app is in interactive mode, interactions are with
-                // the running task, not the app itself
-                if !self.is_interactive_mode() {
-                    // Record that the user has interacted with the app
-                    self.user_has_interacted = true;
-                }
-
-                if matches!(self.focus, Focus::MultipleOutput(_)) {
-                    self.handle_mouse_event(mouse).ok();
-                    return Ok(false);
-                }
-
-                match mouse.kind {
-                    MouseEventKind::ScrollUp => {
-                        if matches!(self.focus, Focus::TaskList) {
-                            self.dispatch_action(Action::ScrollUp);
-                        } else {
-                            self.handle_key_event(KeyEvent::new(
-                                KeyCode::Up,
-                                KeyModifiers::empty(),
-                            ))
-                            .ok();
-                        }
-                    }
-                    MouseEventKind::ScrollDown => {
-                        if matches!(self.focus, Focus::TaskList) {
-                            self.dispatch_action(Action::ScrollDown);
-                        } else {
-                            self.handle_key_event(KeyEvent::new(
-                                KeyCode::Down,
-                                KeyModifiers::empty(),
-                            ))
-                            .ok();
-                        }
-                    }
-                    _ => {}
                 }
             }
             _ => {}
@@ -868,6 +847,30 @@ impl App {
                             messenger.update_running_tasks(&tasks_list.tasks, &self.pty_instances)
                         })
                 });
+
+                // Auto-dismiss hint popup after duration elapsed
+                if let Some(hint_popup) = self
+                    .components
+                    .iter_mut()
+                    .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+                {
+                    if hint_popup.should_auto_dismiss() {
+                        hint_popup.hide();
+                        // Restore focus if hint popup was focused
+                        if matches!(self.focus, Focus::HintPopup) {
+                            self.update_focus(self.previous_focus);
+                        }
+                    }
+                }
+
+                // Clear expired status messages from terminal panes
+                for terminal_pane_data in &mut self.terminal_pane_data {
+                    if let Some((_, shown_at)) = &terminal_pane_data.status_message {
+                        if shown_at.elapsed() > STATUS_MESSAGE_DURATION {
+                            terminal_pane_data.status_message = None;
+                        }
+                    }
+                }
             }
             // Quit immediately
             Action::Quit => {
@@ -905,7 +908,7 @@ impl App {
                     }
 
                     let frame_area = self.frame_area.unwrap();
-                    let layout_areas = self.layout_areas.as_mut().unwrap();
+                    let layout_areas = self.layout_areas.as_ref().unwrap();
 
                     if self.debug_mode {
                         let debug_widget = TuiLoggerSmartWidget::default().state(&self.debug_state);
@@ -999,64 +1002,113 @@ impl App {
                         }
                     }
 
-                    // Render terminal panes - first collect necessary data
-                    let terminal_panes_data: Vec<(usize, Rect, Option<String>)> = layout_areas
-                        .terminal_panes
-                        .iter()
-                        .enumerate()
-                        .map(|(pane_idx, pane_area)| {
-                            let relevant_pane_task: Option<String> = if self.spacebar_mode {
-                                self.selection_manager
-                                    .lock()
-                                    .unwrap()
-                                    .get_selected_task_name()
-                                    .cloned()
-                            } else {
-                                self.pane_tasks[pane_idx].clone()
-                            };
-                            (pane_idx, *pane_area, relevant_pane_task)
-                        })
-                        .collect();
-
                     // Calculate minimal view context once for all panes
                     let is_minimal =
                         self.is_task_list_hidden() && get_task_count(&self.task_graph) == 1;
 
-                    for (pane_idx, pane_area, relevant_pane_task) in terminal_panes_data {
-                        if let Some(task_name) = relevant_pane_task {
-                            let task_status = self
-                                .get_task_status(&task_name)
-                                .unwrap_or(TaskStatus::NotStarted);
+                    // Clone terminal pane areas upfront to avoid borrow conflicts with self
+                    // This is a small vec (at most 2 elements), so the clone cost is minimal
+                    let terminal_panes: Vec<Rect> = layout_areas.terminal_panes.clone();
+                    let num_visible_panes = terminal_panes.len();
 
-                            // If task is pending or skipped, show dependency view
-                            if task_status == TaskStatus::NotStarted
-                                || task_status == TaskStatus::Skipped
-                            {
-                                self.render_dependency_view_internal(
-                                    f, pane_idx, pane_area, task_name, is_minimal,
+                    // Clone pane_tasks upfront to avoid borrow conflicts when calling render methods
+                    // This is a small fixed-size array (2 elements), so the clone cost is minimal
+                    let pane_tasks_snapshot: [Option<String>; 2] = if self.spacebar_mode {
+                        // In spacebar mode, use the selected task in pane 0
+                        let task = self
+                            .selection_manager
+                            .lock()
+                            .unwrap()
+                            .get_selected_task_name()
+                            .cloned();
+                        [task, None]
+                    } else {
+                        self.pane_tasks.clone()
+                    };
+
+                    // Capture focus state before mutable borrows
+                    let current_focus = self.focus;
+
+                    // Iterate over panes in order, mapping to physical positions
+                    // Physical position 0 gets the first pinned task, position 1 gets the second
+                    let mut physical_idx = 0;
+                    for (pane_idx, task_opt) in pane_tasks_snapshot.iter().enumerate() {
+                        if let Some(task_name) = task_opt {
+                            if physical_idx < terminal_panes.len() {
+                                let pane_area = terminal_panes[physical_idx];
+
+                                // Compute focus state based on pane index
+                                let is_focused = matches!(
+                                    current_focus,
+                                    Focus::MultipleOutput(focused) if focused == pane_idx
                                 );
-                            } else {
-                                self.render_terminal_pane_internal(
-                                    f, pane_idx, pane_area, task_name, is_minimal,
-                                );
+
+                                // Compute next-tab-target based on physical position
+                                let is_next_tab_target = !is_focused
+                                    && match current_focus {
+                                        Focus::TaskList => physical_idx == 0,
+                                        Focus::MultipleOutput(_) => {
+                                            physical_idx == 1 && num_visible_panes > 1
+                                        }
+                                        _ => false,
+                                    };
+
+                                let task_status = self
+                                    .get_task_status(task_name)
+                                    .unwrap_or(TaskStatus::NotStarted);
+
+                                // If task is pending or skipped, show dependency view
+                                if task_status == TaskStatus::NotStarted
+                                    || task_status == TaskStatus::Skipped
+                                {
+                                    self.render_dependency_view_internal(
+                                        f,
+                                        pane_idx,
+                                        pane_area,
+                                        task_name.clone(),
+                                        is_minimal,
+                                        is_focused,
+                                    );
+                                } else {
+                                    self.render_terminal_pane_internal(
+                                        f,
+                                        pane_idx,
+                                        pane_area,
+                                        task_name.clone(),
+                                        is_minimal,
+                                        is_focused,
+                                        is_next_tab_target,
+                                    );
+                                }
+
+                                physical_idx += 1;
                             }
-                        } else {
-                            self.render_pane_placeholder(f, pane_idx, pane_area);
                         }
                     }
 
-                    // Draw the help popup and countdown popup
-                    let (first_part, second_part) = self.components.split_at_mut(2);
-                    let help_popup = first_part[1]
-                        .as_any_mut()
-                        .downcast_mut::<HelpPopup>()
-                        .unwrap();
-                    let countdown_popup = second_part[0]
-                        .as_any_mut()
-                        .downcast_mut::<CountdownPopup>()
-                        .unwrap();
-                    let _ = help_popup.draw(f, frame_area);
-                    let _ = countdown_popup.draw(f, frame_area);
+                    // Draw the popups (help, countdown, interstitial)
+                    // Draw each popup sequentially to avoid multiple mutable borrows
+                    if let Some(help_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
+                    {
+                        let _ = help_popup.draw(f, frame_area);
+                    }
+                    if let Some(countdown_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+                    {
+                        let _ = countdown_popup.draw(f, frame_area);
+                    }
+                    if let Some(hint_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+                    {
+                        let _ = hint_popup.draw(f, frame_area);
+                    }
                 })
                 .ok();
             }
@@ -1069,6 +1121,19 @@ impl App {
             }
             Action::EndCommand => {
                 self.handle_end_command();
+            }
+            Action::ShowHint(message) => {
+                // Only show hints if not suppressed by config
+                if !self.tui_config.suppress_hints {
+                    if let Some(hint_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+                    {
+                        hint_popup.show(message.clone());
+                        self.update_focus(Focus::HintPopup);
+                    }
+                }
             }
             _ => {}
         }
@@ -1274,6 +1339,7 @@ impl App {
             }
             Focus::HelpPopup => Focus::TaskList,
             Focus::CountdownPopup => Focus::TaskList,
+            Focus::HintPopup => Focus::TaskList,
         };
 
         self.update_focus(focus);
@@ -1339,6 +1405,7 @@ impl App {
             }
             Focus::HelpPopup => Focus::TaskList,
             Focus::CountdownPopup => Focus::TaskList,
+            Focus::HintPopup => Focus::TaskList,
         };
 
         self.update_focus(focus);
@@ -1374,22 +1441,37 @@ impl App {
             None => return,
         };
 
-        // If we're in spacebar mode and this is pane 0, convert to pinned mode
-        if self.spacebar_mode && pane_idx == 0 {
-            // Clear the PTY reference when converting from spacebar to pinned mode
-            self.clear_pane_pty_reference(pane_idx);
+        // If we're in spacebar mode, clear the spacebar placeholder before pinning
+        // In spacebar mode, pane_tasks[0] is a placeholder that may hold a stale task
+        if self.spacebar_mode {
+            // Clear the spacebar placeholder in pane 0
+            self.pane_tasks[0] = None;
+            self.clear_pane_pty_reference(0);
+            self.dependency_view_states[0] = None;
 
-            // Pin the currently selected task to the pane
-            self.pane_tasks[pane_idx] = Some(task_name.clone());
-
-            // When converting from spacebar to pinned, stay in name-tracking mode
+            // Exit spacebar mode
             self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
-            if self.layout_manager.get_pane_arrangement() == PaneArrangement::None {
+
+            // Pin the task to the requested pane
+            self.pane_tasks[pane_idx] = Some(task_name.clone());
+            self.layout_manager
+                .set_pane_arrangement(PaneArrangement::Single);
+            self.dispatch_action(Action::PinTask(task_name.clone(), pane_idx));
+        } else {
+            // Check if the task is already pinned to the OTHER pane
+            let other_pane_idx = 1 - pane_idx;
+            if self.pane_tasks[other_pane_idx].as_deref() == Some(task_name.as_str()) {
+                // Clear the other pane - task is "moving" to the new pane
+                self.pane_tasks[other_pane_idx] = None;
+                self.clear_pane_pty_reference(other_pane_idx);
+                self.dependency_view_states[other_pane_idx] = None;
+                self.dispatch_action(Action::UnpinTask(task_name.clone(), other_pane_idx));
+
+                // Adjust layout since we now only have one pane
                 self.layout_manager
                     .set_pane_arrangement(PaneArrangement::Single);
             }
-            self.dispatch_action(Action::PinTask(task_name.clone(), pane_idx));
-        } else {
+
             // Check if the task is already pinned to the pane
             if self.pane_tasks[pane_idx].as_deref() == Some(task_name.as_str()) {
                 // Unpin the task if it's already pinned
@@ -1398,20 +1480,22 @@ impl App {
                 // Clear the PTY reference when unpinning
                 self.clear_pane_pty_reference(pane_idx);
 
-                // If this was previously pane 2 and its now unpinned and pane 1 is still set, set the pane arrangement to single
-                if pane_idx == 1 && self.pane_tasks[0].is_some() {
-                    self.layout_manager
-                        .set_pane_arrangement(PaneArrangement::Single);
-                }
-
-                // Adjust focused pane if necessary
-                if !self.has_visible_panes() {
-                    self.update_focus(Focus::TaskList);
-                    // When all panes are cleared, use position-based selection
-                    self.set_spacebar_mode(false, Some(SelectionMode::TrackByPosition));
-                    // If no visible panes are left, set the pane arrangement to none
-                    self.layout_manager
-                        .set_pane_arrangement(PaneArrangement::None);
+                // Set pane arrangement based on count of pinned tasks
+                let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
+                match pinned_count {
+                    0 => {
+                        self.update_focus(Focus::TaskList);
+                        // When all panes are cleared, use position-based selection
+                        self.set_spacebar_mode(false, Some(SelectionMode::TrackByPosition));
+                        self.layout_manager
+                            .set_pane_arrangement(PaneArrangement::None);
+                    }
+                    1 => self
+                        .layout_manager
+                        .set_pane_arrangement(PaneArrangement::Single),
+                    _ => self
+                        .layout_manager
+                        .set_pane_arrangement(PaneArrangement::Double),
                 }
 
                 self.dispatch_action(Action::UnpinTask(task_name.clone(), pane_idx));
@@ -1424,14 +1508,18 @@ impl App {
                 // When pinning a task, use name-based selection
                 self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
 
-                if self.layout_manager.get_pane_arrangement() == PaneArrangement::None {
-                    if pane_idx == 0 && self.pane_tasks[1].is_none() {
-                        self.layout_manager
-                            .set_pane_arrangement(PaneArrangement::Single);
-                    } else if pane_idx == 1 || pane_idx == 0 && self.pane_tasks[1].is_some() {
-                        self.layout_manager
-                            .set_pane_arrangement(PaneArrangement::Double);
-                    }
+                // Set pane arrangement based on count of pinned tasks
+                let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
+                match pinned_count {
+                    0 => self
+                        .layout_manager
+                        .set_pane_arrangement(PaneArrangement::None),
+                    1 => self
+                        .layout_manager
+                        .set_pane_arrangement(PaneArrangement::Single),
+                    _ => self
+                        .layout_manager
+                        .set_pane_arrangement(PaneArrangement::Double),
                 }
 
                 self.dispatch_action(Action::PinTask(task_name.clone(), pane_idx));
@@ -1442,15 +1530,6 @@ impl App {
         self.recalculate_layout_areas();
         // Ensure the pty instances get resized appropriately (no debounce as this is based on an imperative user action)
         let _ = self.handle_pty_resize();
-    }
-
-    fn handle_mouse_event(&mut self, mouse_event: MouseEvent) -> io::Result<()> {
-        if let Focus::MultipleOutput(pane_idx) = self.focus {
-            let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-            terminal_pane_data.handle_mouse_event(mouse_event)
-        } else {
-            Ok(())
-        }
     }
 
     /// Forward key events to the currently focused pane, if any.
@@ -1476,10 +1555,11 @@ impl App {
                 if matches!(task_status, TaskStatus::NotStarted | TaskStatus::Skipped) {
                     // Task is pending - handle keys in dependency view
                     if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
-                        if dep_state.handle_key_event(key) {
-                            return Ok(()); // Key was handled by dependency view
+                        if let Some(action) = dep_state.handle_key_event(key) {
+                            self.dispatch_action(action);
                         }
                     }
+                    return Ok(());
                 } else {
                     // Task is running/completed - handle keys in terminal pane
                     let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
@@ -1511,10 +1591,7 @@ impl App {
     /// Ensures that the PTY instances get resized appropriately based on the latest layout areas.
     fn debounce_pty_resize(&mut self) -> io::Result<()> {
         // Get current time in milliseconds
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis();
+        let now = current_timestamp_millis() as u128;
 
         // If we have a timer and it's not expired yet, just return
         if let Some(timer) = self.resize_debounce_timer {
@@ -1551,17 +1628,20 @@ impl App {
                 let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(*pane_area);
 
                 // Get current dimensions before resize
-                let old_rows = if let Some(screen) = pty.get_screen() {
-                    let (rows, _) = screen.size();
-                    rows
-                } else {
-                    0
-                };
+                let (current_rows, current_cols) = pty.get_dimensions();
+
+                // Skip resize if dimensions haven't actually changed
+                if current_rows == pty_height && current_cols == pty_width {
+                    continue;
+                }
+
+                // With shared dimensions, we only need to call resize once per PTY instance
+                // The shared Arc<RwLock<(u16, u16)>> ensures all references see the update
                 let mut pty_clone = pty.as_ref().clone();
                 pty_clone.resize(pty_height, pty_width)?;
 
                 // If dimensions changed, mark for sort
-                if old_rows != pty_height {
+                if current_rows != pty_height {
                     needs_sort = true;
                 }
             }
@@ -1590,6 +1670,10 @@ impl App {
     fn write_output_to_parser(parser: &PtyInstance, output: String) {
         let normalized_output = normalize_newlines(output.as_bytes());
         parser.process_output(&normalized_output);
+    }
+
+    fn write_escape_sequence_to_parser(parser: &PtyInstance, sequence: impl Into<EscapeSequence>) {
+        parser.process_output(sequence.into().as_bytes());
     }
 
     fn display_and_focus_current_task_in_terminal_pane(&mut self, force_spacebar_mode: bool) {
@@ -1666,6 +1750,7 @@ impl App {
         pane_area: Rect,
         task_name: String,
         is_minimal: bool,
+        is_focused: bool,
     ) {
         // Calculate values that were previously passed in
         let task_status = self
@@ -1677,11 +1762,6 @@ impl App {
             .find_map(|c| c.as_any().downcast_ref::<TasksList>())
             .map(|tasks_list| tasks_list.throbber_counter)
             .unwrap_or(0);
-
-        let is_focused = match self.focus {
-            Focus::MultipleOutput(focused_pane_idx) => pane_idx == focused_pane_idx,
-            _ => false,
-        };
 
         // Create or update dependency view state for this pane
         let should_update = self.dependency_view_states[pane_idx]
@@ -1725,6 +1805,8 @@ impl App {
         pane_area: Rect,
         task_name: String,
         is_minimal: bool,
+        is_focused: bool,
+        is_next_tab_target: bool,
     ) {
         // Calculate values that were previously passed in
         let task_status = self
@@ -1733,17 +1815,6 @@ impl App {
         let task_continuous = self.is_task_continuous(&task_name);
         let has_pty = self.pty_instances.contains_key(&task_name);
 
-        let is_focused = match self.focus {
-            Focus::MultipleOutput(focused_pane_idx) => pane_idx == focused_pane_idx,
-            _ => false,
-        };
-
-        let is_next_tab_target = !is_focused
-            && match self.focus {
-                Focus::TaskList => pane_idx == 0,
-                Focus::MultipleOutput(0) => pane_idx == 1,
-                _ => false,
-            };
         let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
         terminal_pane_data.is_continuous = task_continuous;
         let in_progress = task_status == TaskStatus::InProgress;
@@ -1755,6 +1826,11 @@ impl App {
             if let Some(pty) = self.pty_instances.get(&task_name) {
                 terminal_pane_data.can_be_interactive = in_progress && pty.can_be_interactive();
                 terminal_pane_data.pty = Some(pty.clone());
+
+                // Immediately resize PTY to match the current terminal pane dimensions
+                let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(pane_area);
+                let mut pty_clone = pty.as_ref().clone();
+                pty_clone.resize(pty_height, pty_width).ok();
             } else {
                 // Clear PTY data if the task exists but doesn't have a PTY instance
                 terminal_pane_data.pty = None;
@@ -1796,22 +1872,6 @@ impl App {
             .continuous(task_continuous);
 
         f.render_stateful_widget(terminal_pane, pane_area, &mut state);
-    }
-
-    /// Renders a placeholder for an empty pane
-    fn render_pane_placeholder(&self, f: &mut ratatui::Frame, pane_idx: usize, pane_area: Rect) {
-        let placeholder =
-            Paragraph::new(format!("Press {} on a task to show it here", pane_idx + 1))
-                .block(
-                    Block::default()
-                        .title(format!("  Output {}  ", pane_idx + 1))
-                        .borders(Borders::ALL)
-                        .border_style(Style::default().fg(THEME.secondary_fg)),
-                )
-                .style(Style::default().fg(THEME.secondary_fg))
-                .alignment(Alignment::Center);
-
-        f.render_widget(placeholder, pane_area);
     }
 
     pub fn set_estimated_task_timings(&mut self, timings: HashMap<String, i64>) {
@@ -1866,6 +1926,16 @@ impl App {
         // Assign the PTY for the new task to this pane if available
         if let Some(pty_instance) = self.pty_instances.get(&task_id) {
             self.terminal_pane_data[pane_idx].pty = Some(pty_instance.clone());
+
+            // Immediately resize PTY to match the current terminal pane dimensions
+            if let Some(layout_areas) = &self.layout_areas {
+                if let Some(pane_area) = layout_areas.terminal_panes.get(pane_idx) {
+                    let (pty_height, pty_width) =
+                        TerminalPane::calculate_pty_dimensions(*pane_area);
+                    let mut pty_clone = pty_instance.as_ref().clone();
+                    pty_clone.resize(pty_height, pty_width).ok();
+                }
+            }
         }
 
         // Update the selection manager to prevent conflicts with manual selection
@@ -1882,5 +1952,33 @@ impl App {
         let failed_deps =
             get_failed_dependencies(task_name, &self.task_graph, &self.task_status_map);
         failed_deps.into_iter().next()
+    }
+
+    /// Updates the terminal progress indicator (OSC 9;4).
+    /// Shows percentage of tasks that are complete (anything except NotStarted, InProgress, or Shared).
+    fn update_terminal_progress(&self) {
+        let total_tasks = self.task_status_map.len();
+        if total_tasks == 0 {
+            return;
+        }
+
+        // Use cached incomplete task count instead of recalculating
+        let completed_tasks = total_tasks - self.incomplete_task_count;
+        let percentage = (completed_tasks * 100) / total_tasks;
+
+        // Write OSC 9;4 escape sequence to stderr (less likely to conflict with TUI rendering)
+        // Format: ESC ] 9 ; 4 ; <state> ; <percentage> ST
+        // state: 1 = show progress, 0 = hide
+        // percentage: 0-100
+        // Using ST terminator (\x1b\\) for maximum compatibility (Ghostty, Windows Terminal, VTE)
+        let _ = io::stderr().write_all(format!("\x1b]9;4;1;{}\x1b\\", percentage).as_bytes());
+        let _ = io::stderr().flush();
+    }
+
+    /// Clears the terminal progress indicator.
+    pub fn clear_terminal_progress() {
+        // State 0 = hide progress (using ST terminator for compatibility)
+        let _ = io::stderr().write_all(b"\x1b]9;4;0;0\x1b\\");
+        let _ = io::stderr().flush();
     }
 }

@@ -52,6 +52,7 @@ async function main() {
     process.argv[2] === 'new' ||
     process.argv[2] === '_migrate' ||
     process.argv[2] === 'init' ||
+    process.argv[2] === 'configure-ai-agents' ||
     (process.argv[2] === 'graph' && !workspace)
   ) {
     process.env.NX_DAEMON = 'false';
@@ -180,6 +181,9 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
 function isNxCloudCommand(command: string): boolean {
   const nxCloudCommands = [
     'start-ci-run',
+    'start-agent',
+    'stop-all-agents',
+    'complete-ci-run',
     'login',
     'logout',
     'connect',

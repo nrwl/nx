@@ -1,9 +1,8 @@
 ---
 title: Configure Inputs for Task Caching
 description: 'Learn how to optimize when Nx restores from the cache by customizing what should be taken into consideration when calculating computation hashes for tasks'
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
-
 
 When Nx [computes the hash for a given operation](/docs/concepts/how-caching-works), it takes into account the `inputs` of the target.
 The `inputs` are a list of **file sets**, **runtime** inputs and **environment variables** that affect the output of the target.
@@ -54,7 +53,7 @@ Throughout this recipe, the following project structure of a simple workspace wi
 
 You can view the configuration for a task of a project by adding the `--graph` flag when running the command:
 
-```shell {% frame="none" %}
+```shell
 nx build myreactapp --graph
 ```
 
@@ -66,6 +65,7 @@ Doing so will show a view such as the one below:
 
 {% project_details%}
 
+```json
 {
   "project": {
     "name": "myreactapp",
@@ -79,27 +79,19 @@ Doing so will show a view such as the one below:
             "command": "vite build"
           },
           "cache": true,
-          "dependsOn": [
-            "^build"
-          ],
+          "dependsOn": ["^build"],
           "inputs": [
             "production",
             "^production",
             {
-              "externalDependencies": [
-                "vite"
-              ]
+              "externalDependencies": ["vite"]
             }
           ],
-          "outputs": [
-            "{workspaceRoot}/dist/apps/myreactapp"
-          ],
+          "outputs": ["{workspaceRoot}/dist/apps/myreactapp"],
           "executor": "nx:run-commands",
           "configurations": {},
           "metadata": {
-            "technologies": [
-              "vite"
-            ]
+            "technologies": ["vite"]
           }
         },
         "serve": {
@@ -111,9 +103,7 @@ Doing so will show a view such as the one below:
           "executor": "nx:run-commands",
           "configurations": {},
           "metadata": {
-            "technologies": [
-              "vite"
-            ]
+            "technologies": ["vite"]
           }
         },
         "preview": {
@@ -124,9 +114,7 @@ Doing so will show a view such as the one below:
           "executor": "nx:run-commands",
           "configurations": {},
           "metadata": {
-            "technologies": [
-              "vite"
-            ]
+            "technologies": ["vite"]
           }
         },
         "serve-static": {
@@ -147,20 +135,14 @@ Doing so will show a view such as the one below:
             "default",
             "^production",
             {
-              "externalDependencies": [
-                "vitest"
-              ]
+              "externalDependencies": ["vitest"]
             }
           ],
-          "outputs": [
-            "{workspaceRoot}/coverage/apps/myreactapp"
-          ],
+          "outputs": ["{workspaceRoot}/coverage/apps/myreactapp"],
           "executor": "nx:run-commands",
           "configurations": {},
           "metadata": {
-            "technologies": [
-              "vite"
-            ]
+            "technologies": ["vite"]
           }
         },
         "lint": {
@@ -175,17 +157,13 @@ Doing so will show a view such as the one below:
             "{workspaceRoot}/apps/myreactapp/.eslintrc.json",
             "{workspaceRoot}/tools/eslint-rules/**/*",
             {
-              "externalDependencies": [
-                "eslint"
-              ]
+              "externalDependencies": ["eslint"]
             }
           ],
           "executor": "nx:run-commands",
           "configurations": {},
           "metadata": {
-            "technologies": [
-              "eslint"
-            ]
+            "technologies": ["eslint"]
           }
         }
       },
@@ -196,25 +174,14 @@ Doing so will show a view such as the one below:
       "tags": [],
       "implicitDependencies": [],
       "metadata": {
-        "technologies": [
-          "react"
-        ]
+        "technologies": ["react"]
       }
     }
   },
   "sourceMap": {
-    "root": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ],
-    "targets": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build": [
-      "apps/myreactapp/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
+    "root": ["apps/myreactapp/project.json", "nx/core/project-json"],
+    "targets": ["apps/myreactapp/project.json", "nx/core/project-json"],
+    "targets.build": ["apps/myreactapp/vite.config.ts", "@nx/vite/plugin"],
     "targets.build.command": [
       "apps/myreactapp/vite.config.ts",
       "@nx/vite/plugin"
@@ -243,10 +210,7 @@ Doing so will show a view such as the one below:
       "apps/myreactapp/vite.config.ts",
       "@nx/vite/plugin"
     ],
-    "targets.serve": [
-      "apps/myreactapp/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
+    "targets.serve": ["apps/myreactapp/vite.config.ts", "@nx/vite/plugin"],
     "targets.serve.command": [
       "apps/myreactapp/vite.config.ts",
       "@nx/vite/plugin"
@@ -259,10 +223,7 @@ Doing so will show a view such as the one below:
       "apps/myreactapp/vite.config.ts",
       "@nx/vite/plugin"
     ],
-    "targets.preview": [
-      "apps/myreactapp/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
+    "targets.preview": ["apps/myreactapp/vite.config.ts", "@nx/vite/plugin"],
     "targets.preview.command": [
       "apps/myreactapp/vite.config.ts",
       "@nx/vite/plugin"
@@ -291,10 +252,7 @@ Doing so will show a view such as the one below:
       "apps/myreactapp/vite.config.ts",
       "@nx/vite/plugin"
     ],
-    "targets.test": [
-      "apps/myreactapp/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
+    "targets.test": ["apps/myreactapp/vite.config.ts", "@nx/vite/plugin"],
     "targets.test.command": [
       "apps/myreactapp/vite.config.ts",
       "@nx/vite/plugin"
@@ -303,10 +261,7 @@ Doing so will show a view such as the one below:
       "apps/myreactapp/vite.config.ts",
       "@nx/vite/plugin"
     ],
-    "targets.test.cache": [
-      "apps/myreactapp/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
+    "targets.test.cache": ["apps/myreactapp/vite.config.ts", "@nx/vite/plugin"],
     "targets.test.inputs": [
       "apps/myreactapp/vite.config.ts",
       "@nx/vite/plugin"
@@ -319,18 +274,12 @@ Doing so will show a view such as the one below:
       "apps/myreactapp/vite.config.ts",
       "@nx/vite/plugin"
     ],
-    "targets.lint": [
-      "apps/myreactapp/project.json",
-      "@nx/eslint/plugin"
-    ],
+    "targets.lint": ["apps/myreactapp/project.json", "@nx/eslint/plugin"],
     "targets.lint.command": [
       "apps/myreactapp/project.json",
       "@nx/eslint/plugin"
     ],
-    "targets.lint.cache": [
-      "apps/myreactapp/project.json",
-      "@nx/eslint/plugin"
-    ],
+    "targets.lint.cache": ["apps/myreactapp/project.json", "@nx/eslint/plugin"],
     "targets.lint.options": [
       "apps/myreactapp/project.json",
       "@nx/eslint/plugin"
@@ -343,28 +292,14 @@ Doing so will show a view such as the one below:
       "apps/myreactapp/project.json",
       "@nx/eslint/plugin"
     ],
-    "name": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ],
-    "$schema": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ],
-    "sourceRoot": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ],
-    "projectType": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ],
-    "tags": [
-      "apps/myreactapp/project.json",
-      "nx/core/project-json"
-    ]
+    "name": ["apps/myreactapp/project.json", "nx/core/project-json"],
+    "$schema": ["apps/myreactapp/project.json", "nx/core/project-json"],
+    "sourceRoot": ["apps/myreactapp/project.json", "nx/core/project-json"],
+    "projectType": ["apps/myreactapp/project.json", "nx/core/project-json"],
+    "tags": ["apps/myreactapp/project.json", "nx/core/project-json"]
   }
 }
+```
 
 {% /project_details %}
 
@@ -405,9 +340,9 @@ As you configure `inputs`, keep the project details screen open and it will refr
 {
   "targetDefaults": {
     "build": {
-      "inputs": ["production", "^production"]
-    }
-  }
+      "inputs": ["production", "^production"],
+    },
+  },
 }
 ```
 
@@ -429,9 +364,9 @@ Defining `inputs` of a target in `project.json` or `package.json` will apply onl
   "name": "myreactapp",
   "targets": {
     "build": {
-      "inputs": ["production", "^production"]
-    }
-  }
+      "inputs": ["production", "^production"],
+    },
+  },
 }
 ```
 
@@ -497,9 +432,9 @@ Given the above configurations, exclude the test and config files from the `prod
     "production": [
       "default",
       "!{projectRoot}/jest.config.ts",
-      "!{projectRoot}/**/?(*.)+(spec|test).ts"
-    ]
-  }
+      "!{projectRoot}/**/?(*.)+(spec|test).ts",
+    ],
+  },
 }
 ```
 
@@ -520,7 +455,7 @@ For example, to consider the version of Node.js in the hash of every task, add `
 {
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "sharedGlobals": [{ "runtime": "node --version" }]
-  }
+    "sharedGlobals": [{ "runtime": "node --version" }],
+  },
 }
 ```

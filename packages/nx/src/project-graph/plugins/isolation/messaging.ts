@@ -10,6 +10,7 @@ import type {
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type { Serializable } from 'child_process';
 import type { Socket } from 'net';
+import { MESSAGE_END_SEQ } from '../../../utils/consume-messages-from-socket';
 
 export interface PluginWorkerLoadMessage {
   type: 'load';
@@ -225,7 +226,7 @@ type MessageHandlerReturn<T extends PluginWorkerMessage | PluginWorkerResult> =
 // Takes a message and a map of handlers and calls the appropriate handler
 // type safe and requires all handlers to be handled
 export async function consumeMessage<
-  T extends PluginWorkerMessage | PluginWorkerResult
+  T extends PluginWorkerMessage | PluginWorkerResult,
 >(
   socket: Socket,
   raw: T,
@@ -250,5 +251,5 @@ export function sendMessageOverSocket(
   socket: Socket,
   message: PluginWorkerMessage | PluginWorkerResult
 ) {
-  socket.write(JSON.stringify(message) + String.fromCodePoint(4));
+  socket.write(JSON.stringify(message) + MESSAGE_END_SEQ);
 }

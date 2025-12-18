@@ -10,7 +10,6 @@ export interface WithWebOptions {
   generateIndexHtml?: boolean;
   index?: string;
   postcssConfig?: string;
-  sassImplementation?: 'sass' | 'sass-embedded';
   scripts?: Array<ExtraEntryPointClass | string>;
   styles?: Array<ExtraEntryPointClass | string>;
   stylePreprocessorOptions?: {
@@ -79,12 +78,15 @@ function getClientEnvironment(mode?: string) {
     }, {});
 
   // Stringify all values so we can feed into rspack DefinePlugin
-  const stringified = {
-    'process.env': Object.keys(raw).reduce((env, key) => {
-      env[key] = JSON.stringify(raw[key]);
+  const stringified = Object.keys(raw).reduce(
+    (env, key) => {
+      env[`process.env.${key}`] = JSON.stringify(raw[key]);
       return env;
-    }, {}),
-  };
+    },
+    // Provide a fallback for process.env itself to handle cases where code
+    // accesses process.env directly (e.g., in Cypress component testing)
+    { 'process.env': '{}' } as Record<string, string>
+  );
 
   return { stringified };
 }

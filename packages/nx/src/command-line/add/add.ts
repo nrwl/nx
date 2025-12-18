@@ -20,7 +20,7 @@ import {
   runPluginInitGenerator,
   getFailedToInstallPluginErrorMessages,
 } from '../init/configure-plugins';
-import * as ora from 'ora';
+import { globalSpinner } from '../../utils/spinner';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
@@ -43,8 +43,7 @@ async function installPackage(
   version: string,
   nxJson: NxJsonConfiguration
 ): Promise<void> {
-  const spinner = ora(`Installing ${pkgName}@${version}...`);
-  spinner.start();
+  const spinner = globalSpinner.start(`Installing ${pkgName}@${version}...`);
 
   if (existsSync('package.json')) {
     const pm = detectPackageManager();
@@ -62,11 +61,14 @@ async function installPackage(
         {
           windowsHide: false,
         },
-        (error, stdout) => {
+        (error, stdout, stderr) => {
           if (error) {
             spinner.fail();
             output.addNewline();
-            logger.error(stdout);
+            const errorOutput = [stdout.trim(), stderr.trim()]
+              .filter(Boolean)
+              .join('\n');
+            logger.error(errorOutput);
             output.error({
               title: `Failed to install ${pkgName}. Please check the error above for more details.`,
             });
@@ -121,8 +123,7 @@ async function initializePlugin(
     updatePackageScripts = true;
   }
 
-  const spinner = ora(`Initializing ${pkgName}...`);
-  spinner.start();
+  const spinner = globalSpinner.start(`Initializing ${pkgName}...`);
 
   try {
     await runPluginInitGenerator(

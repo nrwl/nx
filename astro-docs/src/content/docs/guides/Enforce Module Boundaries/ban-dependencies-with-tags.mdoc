@@ -1,7 +1,7 @@
 ---
 title: Ban Dependencies with Certain Tags
 description: Learn how to use the notDependOnLibsWithTags property to prevent projects from depending on libraries with specific tags in your Nx workspace.
-filter: "type:Guides"
+filter: 'type:Guides'
 ---
 
 Specifying which tags a project is allowed to depend on can sometimes lead to a long list of possible options:
@@ -14,8 +14,8 @@ Specifying which tags a project is allowed to depend on can sometimes lead to a 
     "scope:shared",
     "scope:utils",
     "scope:core",
-    "scope:client"
-  ]
+    "scope:client",
+  ],
 }
 ```
 
@@ -25,7 +25,7 @@ The property `notDependOnLibsWithTags` is used to invert this condition by expli
 {
   "sourceTag": "scope:client",
   // we accept any tag except for `scope:admin`
-  "notDependOnLibsWithTags": ["scope:admin"]
+  "notDependOnLibsWithTags": ["scope:admin"],
 }
 ```
 
@@ -38,9 +38,9 @@ In contrast to `onlyDependOnLibsWithTags`, the `notDependOnLibsWithTags` will al
     "type:react",
     "type:utils",
     "type:animation",
-    "type:model"
+    "type:model",
   ],
   // make sure no `angular` code ends up being referenced by react projects
-  "notDependOnLibsWithTags": ["type:angular"]
+  "notDependOnLibsWithTags": ["type:angular"],
 }
 ```

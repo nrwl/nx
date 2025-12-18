@@ -13,7 +13,8 @@ svg {
 }
 
 @font-face {
-  src: url('../public/fonts/InputMono-Regular.woff2') format('woff2'),
+  src:
+    url('../public/fonts/InputMono-Regular.woff2') format('woff2'),
     url('../public/fonts/InputMono-Regular.woff') format('woff');
   font-family: 'InputMono';
   font-style: normal;

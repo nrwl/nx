@@ -186,6 +186,22 @@ impl HelpPopup {
                     "https://nx.dev/terminal-ui",
                     Style::default().fg(THEME.info),
                 ),
+                Span::styled(
+                    "If you would prefer to not use the TUI, you can disable it by: ",
+                    Style::default().fg(THEME.info),
+                ),
+                Span::styled(
+                    "- Adding the `--no-tui` flag to your command.",
+                    Style::default()
+                        .fg(THEME.info)
+                        .add_modifier(Modifier::ITALIC),
+                ),
+                Span::styled(
+                    "- Setting NX_TUI=false in your environment.",
+                    Style::default()
+                        .fg(THEME.info)
+                        .add_modifier(Modifier::ITALIC),
+                ),
             ]),
             Line::from(vec![
                 Span::styled(

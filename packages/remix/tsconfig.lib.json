@@ -7,9 +7,17 @@
     "resolveJsonModule": true,
     "tsBuildInfoFile": "../../dist/packages/remix/tsconfig.tsbuildinfo"
   },
-  "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "jest.config.ts",
+    "jest.config.cts"
+  ],
   "include": ["**/*.ts", "**/*.json"],
   "references": [
+    {
+      "path": "../vitest/tsconfig.lib.json"
+    },
     {
       "path": "../workspace/tsconfig.lib.json"
     },
@@ -20,10 +28,10 @@
       "path": "../js/tsconfig.lib.json"
     },
     {
-      "path": "../nx/tsconfig.lib.json"
+      "path": "../devkit/tsconfig.lib.json"
     },
     {
-      "path": "../devkit/tsconfig.lib.json"
+      "path": "../nx/tsconfig.lib.json"
     }
   ]
 }

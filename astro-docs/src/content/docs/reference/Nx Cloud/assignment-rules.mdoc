@@ -1,6 +1,7 @@
 ---
 title: Assignment Rules
-filter: "type:References"
+description: Control which tasks run on which agents using assignment rules with Nx Agents or manual DTE
+filter: 'type:References'
 ---
 
 Assignment rules allow you to control which tasks can run on which agents. Save on agent costs by provisioning different sizes of agents to suite the individual needs of your tasks. Ensure resource intensive targets like `e2e-ci` and `build` have what they need by using larger agents and with a specified parallelism. Lighter tasks like `lint` and `test` can run on smaller agents.
@@ -353,7 +354,7 @@ jobs:
       - ... # other setup steps you may need
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Start Agent ${{ matrix.agent }}
         run: npx nx-cloud start-agent
@@ -381,7 +382,7 @@ jobs:
       - ... # other setup steps you may need
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Start Agent ${{ matrix.agent }}
         run: npx nx-cloud start-agent
@@ -441,7 +442,7 @@ jobs:
 
 #### Invalid Assignment Rules Example
 
-```yaml 
+```yaml
 // .nx/workflows/distribution-config.yaml
 distribute-on:
   # Invalid changeset that is missing `linux-large-js`. Tasks assigned to large agents won't be able to execute.

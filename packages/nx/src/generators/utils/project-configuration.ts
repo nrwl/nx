@@ -279,6 +279,20 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
     if (basename(projectFile) === 'project.json') {
       const json = readJson(tree, projectFile);
       const config = buildProjectFromProjectJson(json, projectFile);
+      if (!config.name) {
+        try {
+          const packageJson = readJson<PackageJson>(
+            tree,
+            joinPathFragments(config.root, 'package.json')
+          );
+          if (packageJson.name) {
+            config.name = packageJson.name;
+          }
+        } catch {
+          // Maybe no package json, is ok.
+        }
+        config.name ??= toProjectName(projectFile);
+      }
       mergeProjectConfigurationIntoRootMap(
         rootMap,
         config,
@@ -286,7 +300,8 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
         undefined,
         true
       );
-    } else if (basename(projectFile) === 'package.json') {
+    }
+    if (basename(projectFile) === 'package.json') {
       const packageJson = readJson<PackageJson>(tree, projectFile);
 
       // We don't want to have all of the extra inferred stuff in here, as
@@ -412,9 +427,8 @@ function handleEmptyTargets(
   ) {
     // Re-order `targets` to appear after the `// target` comment.
     delete projectConfiguration.targets;
-    projectConfiguration[
-      '// targets'
-    ] = `to see all targets run: nx show project ${projectName} --web`;
+    projectConfiguration['// targets'] =
+      `to see all targets run: nx show project ${projectName} --web`;
     projectConfiguration.targets = {};
   } else {
     delete projectConfiguration['// targets'];

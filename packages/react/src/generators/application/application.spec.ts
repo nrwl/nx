@@ -96,7 +96,7 @@ describe('app', () => {
         '@nx/react/typings/cssmodule.d.ts',
         '@nx/react/typings/image.d.ts',
       ]);
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should setup cypress correctly for vite', async () => {
@@ -250,7 +250,7 @@ describe('app', () => {
         '@nx/react/typings/cssmodule.d.ts',
         '@nx/react/typings/image.d.ts',
       ]);
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should not overwrite default project if already set', async () => {
@@ -289,7 +289,7 @@ describe('app', () => {
       expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeTruthy();
       expect(appTree.exists('my-app/src/app/app.module.css')).toBeTruthy();
 
-      const jestConfig = appTree.read('my-app/jest.config.ts').toString();
+      const jestConfig = appTree.read('my-app/jest.config.cts').toString();
       expect(jestConfig).toContain('@nx/react/plugins/jest');
 
       const tsconfig = readJson(appTree, 'my-app/tsconfig.json');
@@ -315,6 +315,7 @@ describe('app', () => {
         'src/**/*.spec.jsx',
         'src/**/*.test.jsx',
         'jest.config.ts',
+        'jest.config.cts',
       ]);
 
       const eslintJson = readJson(appTree, 'my-app/.eslintrc.json');
@@ -453,6 +454,7 @@ describe('app', () => {
             'src/**/*.spec.jsx',
             'src/**/*.test.jsx',
             'jest.config.ts',
+            'jest.config.cts',
           ],
         },
         {
@@ -560,7 +562,7 @@ describe('app', () => {
   it('should setup jest with tsx support', async () => {
     await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
-    expect(appTree.read('my-app/jest.config.ts').toString()).toContain(
+    expect(appTree.read('my-app/jest.config.cts').toString()).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
     );
   });
@@ -568,7 +570,7 @@ describe('app', () => {
   it('should setup jest with babel-jest support', async () => {
     await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
-    expect(appTree.read('my-app/jest.config.ts').toString()).toContain(
+    expect(appTree.read('my-app/jest.config.cts').toString()).toContain(
       "['babel-jest', { presets: ['@nx/react/babel'] }]"
     );
   });
@@ -576,7 +578,7 @@ describe('app', () => {
   it('should setup jest without serializers', async () => {
     await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
-    expect(appTree.read('my-app/jest.config.ts').toString()).not.toContain(
+    expect(appTree.read('my-app/jest.config.cts').toString()).not.toContain(
       `'jest-preset-angular/build/AngularSnapshotSerializer.js',`
     );
   });
@@ -598,7 +600,7 @@ describe('app', () => {
       bundler: 'vite',
     });
 
-    expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     expect(appTree.read('my-app/index.html', 'utf-8')).toContain('main.tsx');
   });
 
@@ -621,7 +623,7 @@ describe('app', () => {
       bundler: 'vite',
     });
 
-    expect(appTree.exists('my-app/vite.config.ts')).toBeTruthy();
+    expect(appTree.exists('my-app/vite.config.mts')).toBeTruthy();
   });
 
   it('should setup the eslint builder', async () => {
@@ -637,10 +639,10 @@ describe('app', () => {
         unitTestRunner: 'none',
       });
 
-      expect(appTree.exists('jest.config.ts')).toBeFalsy();
+      expect(appTree.exists('jest.config.cts')).toBeFalsy();
       expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeFalsy();
       expect(appTree.exists('my-app/tsconfig.spec.json')).toBeFalsy();
-      expect(appTree.exists('my-app/jest.config.ts')).toBeFalsy();
+      expect(appTree.exists('my-app/jest.config.cts')).toBeFalsy();
     });
   });
 
@@ -812,7 +814,7 @@ describe('app', () => {
         bundler: 'vite',
       });
 
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -891,7 +893,7 @@ describe('app', () => {
         bundler: 'vite',
       });
 
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should add dependencies to package.json', async () => {
@@ -1078,7 +1080,7 @@ describe('app', () => {
         unitTestRunner: 'vitest',
       });
 
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8'))
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
@@ -1087,7 +1089,7 @@ describe('app', () => {
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/my-app',
           server: {
             port: 4200,
@@ -1104,7 +1106,7 @@ describe('app', () => {
           ],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //   plugins: () => [ nxViteTsPaths() ],
           // },
           build: {
             outDir: '../dist/my-app',
@@ -1145,6 +1147,7 @@ describe('app', () => {
         'vite/client',
         'vitest',
         '@react-router/node',
+        'node',
       ]);
     });
 
@@ -1175,7 +1178,7 @@ describe('app', () => {
         unitTestRunner: 'jest',
       });
 
-      const jestConfig = appTree.read('my-app/jest.config.ts').toString();
+      const jestConfig = appTree.read('my-app/jest.config.cts').toString();
       expect(jestConfig).toContain('@nx/react/plugins/jest');
       expect(appTree.read('my-app/tsconfig.spec.json').toString())
         .toMatchInlineSnapshot(`
@@ -1196,6 +1199,7 @@ describe('app', () => {
           "files": ["src/test-setup.ts"],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -1254,7 +1258,7 @@ describe('app', () => {
     });
 
     it('should setup targets with vite configuration', () => {
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should add dependencies in package.json', () => {
@@ -1273,7 +1277,7 @@ describe('app', () => {
 
     it('should create index.html and vite.config file at the root of the app', () => {
       expect(viteAppTree.exists('/my-app/index.html')).toBe(true);
-      expect(viteAppTree.exists('/my-app/vite.config.ts')).toBe(true);
+      expect(viteAppTree.exists('/my-app/vite.config.mts')).toBe(true);
     });
 
     it('should not include a spec file when the bundler or unitTestRunner is vite and insourceTests is false', async () => {
@@ -1679,6 +1683,7 @@ describe('app', () => {
         module.exports = {
           output: {
             path: join(__dirname, 'dist'),
+            clean: true,
           },
           devServer: {
             port: 4200,
@@ -1833,10 +1838,10 @@ describe('app', () => {
 
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.dependencies['react']).toMatchInlineSnapshot(
-        `"19.0.0"`
+        `"^19.0.0"`
       );
       expect(packageJson.dependencies['react-dom']).toMatchInlineSnapshot(
-        `"19.0.0"`
+        `"^19.0.0"`
       );
     });
 
@@ -1877,7 +1882,7 @@ describe('app', () => {
         port: 9000,
       });
 
-      const viteConfig = appTree.read('my-app/vite.config.ts', 'utf-8');
+      const viteConfig = appTree.read('my-app/vite.config.mts', 'utf-8');
       expect(viteConfig).toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
@@ -1886,7 +1891,7 @@ describe('app', () => {
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/my-app',
           server:{
             port: 9000,
@@ -1899,7 +1904,7 @@ describe('app', () => {
           plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //   plugins: () => [ nxViteTsPaths() ],
           // },
           build: {
             outDir: '../dist/my-app',
@@ -1931,6 +1936,7 @@ describe('app', () => {
         module.exports = {
           output: {
             path: join(__dirname, '../dist/my-app'),
+            clean: true,
           },
           devServer: {
             port: 9000,
@@ -2018,7 +2024,7 @@ describe('app', () => {
         bundler: 'vite',
       });
 
-      const viteConfig = appTree.read('my-app/vite.config.ts', 'utf-8');
+      const viteConfig = appTree.read('my-app/vite.config.mts', 'utf-8');
       expect(viteConfig).toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
@@ -2027,7 +2033,7 @@ describe('app', () => {
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/my-app',
           server:{
             port: 4200,
@@ -2040,7 +2046,7 @@ describe('app', () => {
           plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //   plugins: () => [ nxViteTsPaths() ],
           // },
           build: {
             outDir: '../dist/my-app',

@@ -17,6 +17,13 @@ import {
 import { type ReactElement } from 'react';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import type { GetServerSideProps } from 'next';
+import { tryFramerProxy } from '../lib/framer-proxy';
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  if (await tryFramerProxy(ctx)) return { props: {} };
+  return { props: {} };
+};
 
 export function WhitePaperFastCI(): ReactElement {
   const router = useRouter();
@@ -137,17 +144,17 @@ export function WhitePaperFastCI(): ReactElement {
                   <div className="mt-12 grid w-full grid-cols-4 place-items-center gap-2">
                     <CapitalOneIcon
                       aria-hidden="true"
-                      className="col-span-1 size-28  text-black dark:text-white"
+                      className="col-span-1 size-28 text-black dark:text-white"
                     />
 
                     <CaterpillarIcon
                       aria-hidden="true"
-                      className="col-span-1 size-14  text-[#FFCD11]"
+                      className="col-span-1 size-14 text-[#FFCD11]"
                     />
 
                     <RoyalBankOfCanadaIcon
                       aria-hidden="true"
-                      className="col-span-1 size-14  text-black dark:text-white"
+                      className="col-span-1 size-14 text-black dark:text-white"
                     />
 
                     <ShopifyIcon

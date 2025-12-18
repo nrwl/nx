@@ -1,23 +1,30 @@
 import {
   addDependenciesToPackageJson,
+  getDependencyVersionFromPackageJson,
+  readJson,
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import type { PackageJson } from 'nx/src/utils/package-json';
 import {
   getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
-  getInstalledPackageVersion,
   versions,
 } from './version-utils';
 
-export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
+export function ensureAngularDependencies(
+  tree: Tree,
+  zoneless: boolean
+): GeneratorCallback {
   const dependencies: Record<string, string> = {};
   const devDependencies: Record<string, string> = {};
   const pkgVersions = versions(tree);
 
-  const installedAngularCoreVersion = getInstalledPackageVersion(
+  const packageJson = readJson<PackageJson>(tree, 'package.json');
+  const installedAngularCoreVersion = getDependencyVersionFromPackageJson(
     tree,
-    '@angular/core'
+    '@angular/core',
+    packageJson
   );
   if (!installedAngularCoreVersion) {
     /**
@@ -28,11 +35,11 @@ export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
      */
     const angularVersion = pkgVersions.angularVersion;
     const rxjsVersion =
-      getInstalledPackageVersion(tree, 'rxjs') ?? pkgVersions.rxjsVersion;
+      getDependencyVersionFromPackageJson(tree, 'rxjs', packageJson) ??
+      pkgVersions.rxjsVersion;
     const tsLibVersion =
-      getInstalledPackageVersion(tree, 'tslib') ?? pkgVersions.tsLibVersion;
-    const zoneJsVersion =
-      getInstalledPackageVersion(tree, 'zone.js') ?? pkgVersions.zoneJsVersion;
+      getDependencyVersionFromPackageJson(tree, 'tslib', packageJson) ??
+      pkgVersions.tsLibVersion;
 
     dependencies['@angular/common'] = angularVersion;
     dependencies['@angular/compiler'] = angularVersion;
@@ -42,7 +49,13 @@ export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
     dependencies['@angular/router'] = angularVersion;
     dependencies.rxjs = rxjsVersion;
     dependencies.tslib = tsLibVersion;
-    dependencies['zone.js'] = zoneJsVersion;
+
+    if (!zoneless) {
+      const zoneJsVersion =
+        getDependencyVersionFromPackageJson(tree, 'zone.js', packageJson) ??
+        pkgVersions.zoneJsVersion;
+      dependencies['zone.js'] = zoneJsVersion;
+    }
   }
 
   const installedAngularDevkitVersion = getInstalledAngularDevkitVersion(tree);

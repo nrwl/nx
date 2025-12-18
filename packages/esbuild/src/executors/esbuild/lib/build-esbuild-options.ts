@@ -24,6 +24,14 @@ export function buildEsbuildOptions(
   context: ExecutorContext
 ): esbuild.BuildOptions {
   const outExtension = getOutExtension(format, options, context);
+  const external = options.bundle
+    ? [
+        ...(options.userDefinedBuildOptions?.external ?? []),
+        ...options.external,
+      ].filter(
+        (packageName) => !options.excludeFromExternal?.includes(packageName)
+      )
+    : undefined;
 
   const esbuildOptions: esbuild.BuildOptions = {
     ...options.userDefinedBuildOptions,
@@ -31,12 +39,7 @@ export function buildEsbuildOptions(
       options.outputHashing === 'all' ? '[dir]/[name].[hash]' : '[dir]/[name]',
     bundle: options.bundle,
     // Cannot use external with bundle option
-    external: options.bundle
-      ? [
-          ...(options.userDefinedBuildOptions?.external ?? []),
-          ...options.external,
-        ]
-      : undefined,
+    external: external,
     minify: options.minify,
     platform: options.platform,
     target: options.target,
@@ -272,10 +275,10 @@ export function getOutExtension(
   return userDefinedExt === '.js' && format === 'cjs'
     ? '.js'
     : userDefinedExt === '.mjs' && format === 'esm'
-    ? '.mjs'
-    : format === 'esm'
-    ? ESM_FILE_EXTENSION
-    : CJS_FILE_EXTENSION;
+      ? '.mjs'
+      : format === 'esm'
+        ? ESM_FILE_EXTENSION
+        : CJS_FILE_EXTENSION;
 }
 
 export function getOutfile(

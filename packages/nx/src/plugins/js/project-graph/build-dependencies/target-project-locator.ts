@@ -1,6 +1,6 @@
 import { isBuiltin } from 'node:module';
 import { dirname, join, posix, relative } from 'node:path';
-import { clean } from 'semver';
+import { clean, satisfies } from 'semver';
 import type {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
@@ -79,19 +79,22 @@ export class TargetProjectLocator {
      * Unlike the raw externalNodes, ensure that there is always copy of the node where the version
      * is set in the key for optimal lookup.
      */
-    this.npmProjects = Object.values(this.externalNodes).reduce((acc, node) => {
-      if (node.type === 'npm') {
-        const keyWithVersion = `npm:${node.data.packageName}@${node.data.version}`;
-        if (!acc[node.name]) {
-          acc[node.name] = node;
+    this.npmProjects = Object.values(this.externalNodes).reduce(
+      (acc, node) => {
+        if (node.type === 'npm') {
+          const keyWithVersion = `npm:${node.data.packageName}@${node.data.version}`;
+          if (!acc[node.name]) {
+            acc[node.name] = node;
+          }
+          // The node.name may have already contained the version
+          if (!acc[keyWithVersion]) {
+            acc[keyWithVersion] = node;
+          }
         }
-        // The node.name may have already contained the version
-        if (!acc[keyWithVersion]) {
-          acc[keyWithVersion] = node;
-        }
-      }
-      return acc;
-    }, {} as Record<string, ProjectGraphExternalNode>);
+        return acc;
+      },
+      {} as Record<string, ProjectGraphExternalNode>
+    );
 
     if (this.tsConfig.config?.compilerOptions?.paths) {
       this.parsePaths(this.tsConfig.config.compilerOptions.paths);
@@ -323,10 +326,56 @@ export class TargetProjectLocator {
     return project?.name;
   }
 
-  findDependencyInWorkspaceProjects(dep: string): string | null {
+  findDependencyInWorkspaceProjects(
+    packageJsonPath: string,
+    dep: string,
+    packageVersion: string
+  ): string | null {
     this.packagesMetadata ??= getWorkspacePackagesMetadata(this.nodes);
 
-    return this.packagesMetadata.packageToProjectMap[dep]?.name;
+    const maybeDep = this.packagesMetadata.packageToProjectMap[dep];
+
+    const maybeDepMetadata = maybeDep?.data.metadata.js;
+
+    if (!maybeDepMetadata) {
+      return null;
+    }
+
+    const workspaceRegex = /^workspace:/;
+    const hasWorkspaceProtocol = workspaceRegex.test(packageVersion);
+    const normalizedRange = packageVersion.replace(workspaceRegex, '');
+
+    /**
+     * Regex is needed to test for workspace: protocol because following options are all valid:
+     *  - workspace:*
+     *  - workspace:^
+     *  - workspace:~
+     *  - workspace:foo@*
+     */
+    if (hasWorkspaceProtocol || normalizedRange === '*') {
+      return maybeDep?.name;
+    }
+
+    if (normalizedRange.startsWith('file:')) {
+      const targetPath = maybeDep?.data.root;
+
+      const normalizedPath = normalizedRange.replace('file:', '');
+      const resolvedPath = posix.join(dirname(packageJsonPath), normalizedPath);
+
+      if (targetPath === resolvedPath) {
+        return maybeDep?.name;
+      }
+    }
+
+    if (
+      satisfies(maybeDepMetadata.packageVersion, normalizedRange, {
+        includePrerelease: true,
+      })
+    ) {
+      return maybeDep?.name;
+    }
+
+    return null;
   }
 
   private isPatternMatch(

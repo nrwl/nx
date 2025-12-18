@@ -7,14 +7,15 @@ import { readJsonFile } from '../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
-import {
-  detectPackageManager,
-  getPackageManagerCommand,
-} from '../../utils/package-manager';
+import { getPackageManagerCommand } from '../../utils/package-manager';
 import { nxVersion } from '../../utils/versions';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../nx-cloud/connect/connect-to-nx-cloud';
 import { configurePlugins, installPluginPackages } from './configure-plugins';
+import { determineAiAgents } from './ai-agent-prompts';
+import { setupAiAgentsGenerator } from '../../ai/set-up-ai-agents/set-up-ai-agents';
+import { FsTree, flushChanges } from '../../generators/tree';
+import { Agent } from '../../ai/utils';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToTurborepo } from './implementation/add-nx-to-turborepo';
@@ -29,6 +30,8 @@ import {
   updateGitIgnore,
 } from './implementation/utils';
 import { addNxToCraRepo } from './implementation/react';
+import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { installPackageToTmp } from '../../devkit-internals';
 
 export interface InitArgs {
   interactive: boolean;
@@ -37,9 +40,42 @@ export interface InitArgs {
   integrated?: boolean; // For Angular projects only
   verbose?: boolean;
   force?: boolean;
+  aiAgents?: Agent[];
 }
 
-export async function initHandler(options: InitArgs): Promise<void> {
+export async function initHandler(
+  options: InitArgs,
+  inner = false
+): Promise<void> {
+  // Use environment variable to force local execution
+  if (process.env.NX_USE_LOCAL === 'true' || inner) {
+    return await initHandlerImpl(options);
+  }
+
+  let cleanup: () => void | undefined;
+  try {
+    await ensurePackageHasProvenance('nx', 'latest');
+    const packageInstallResults = installPackageToTmp('nx', 'latest');
+    cleanup = packageInstallResults.cleanup;
+
+    let modulePath = require.resolve('nx/src/command-line/init/init-v2.js', {
+      paths: [packageInstallResults.tempDir],
+    });
+
+    const module = await import(modulePath);
+    const result = await module.initHandler(options, true);
+    cleanup();
+    return result;
+  } catch (error) {
+    if (cleanup) {
+      cleanup();
+    }
+    // Fall back to local implementation
+    return initHandlerImpl(options);
+  }
+}
+
+async function initHandlerImpl(options: InitArgs): Promise<void> {
   process.env.NX_RUNNING_NX_INIT = 'true';
   const version =
     process.env.NX_VERSION ?? (prerelease(nxVersion) ? nxVersion : 'latest');
@@ -164,6 +200,30 @@ export async function initHandler(options: InitArgs): Promise<void> {
     );
   }
 
+  const selectedAgents = await determineAiAgents(
+    options.aiAgents,
+    options.interactive && guided
+  );
+
+  if (selectedAgents && selectedAgents.length > 0) {
+    const tree = new FsTree(repoRoot, false);
+    const aiAgentsCallback = await setupAiAgentsGenerator(tree, {
+      directory: '.',
+      writeNxCloudRules: options.nxCloud !== false,
+      packageVersion: 'latest',
+      agents: [...selectedAgents],
+    });
+
+    const changes = tree.listChanges();
+    flushChanges(repoRoot, changes);
+
+    if (aiAgentsCallback) {
+      const results = await aiAgentsCallback();
+      results.messages.forEach((m) => output.log(m));
+      results.errors.forEach((e) => output.error(e));
+    }
+  }
+
   let useNxCloud: any = options.nxCloud;
   if (useNxCloud === undefined) {
     output.log({ title: '🛠️ Setting up Self-Healing CI and Remote Caching' });
@@ -192,7 +252,7 @@ const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   storybook: '@nx/storybook',
   // Bundlers
   vite: '@nx/vite',
-  vitest: '@nx/vite',
+  vitest: '@nx/vitest',
   webpack: '@nx/webpack',
   '@rspack/core': '@nx/rspack',
   rollup: '@nx/rollup',
@@ -268,6 +328,33 @@ export async function detectPlugins(
   );
   if (gradlewFiles.some((f) => existsSync(f))) {
     detectedPlugins.add('@nx/gradle');
+  }
+
+  const dotnetProjectGlobs = ['**/*.csproj', '**/*.fsproj', '**/*.vbproj'];
+  const dotnetFiles = globWithWorkspaceContextSync(process.cwd(), [
+    ...dotnetProjectGlobs,
+  ]);
+  if (dotnetFiles.length > 0) {
+    detectedPlugins.add('@nx/dotnet');
+  }
+
+  let mvnwFiles = globWithWorkspaceContextSync(process.cwd(), [
+    'mvnw',
+    'mvnw.cmd',
+    'pom.xml',
+    '**/mvnw',
+    '**/mvnw.cmd',
+    '**/pom.xml',
+  ]);
+  if (mvnwFiles.length > 0) {
+    detectedPlugins.add('@nx/maven');
+  }
+
+  let dockerFiles = ['Dockerfile'].concat(
+    globWithWorkspaceContextSync(process.cwd(), ['**/Dockerfile'])
+  );
+  if (dockerFiles.some((f) => existsSync(f))) {
+    detectedPlugins.add('@nx/docker');
   }
 
   // Remove existing plugins

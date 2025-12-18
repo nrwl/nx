@@ -1,22 +1,34 @@
+import { ModuleFederationConfig, SharedLibraryConfig } from '../../utils';
 import {
-  applyAdditionalShared,
-  applySharedFunction,
-  getDependentPackagesForProject,
-  mapRemotes,
-  mapRemotesForSSR,
-  ModuleFederationConfig,
-  SharedLibraryConfig,
-  sharePackages,
-  shareWorkspaceLibraries,
-} from '../../utils';
+  createDefaultRemoteUrlResolver,
+  FrameworkConfig,
+  getModuleFederationConfigAsync,
+  getModuleFederationConfigSync as getModuleFederationConfigSyncCore,
+} from '../../utils/module-federation-config';
 
-import {
-  createProjectGraphAsync,
-  ProjectGraph,
-  readCachedProjectGraph,
-} from '@nx/devkit';
-import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+/**
+ * Default npm packages to always share for Angular projects.
+ */
+export const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
+  '@angular/core',
+  '@angular/animations',
+  '@angular/common',
+];
 
+/**
+ * npm packages to avoid sharing in Angular projects.
+ */
+export const DEFAULT_NPM_PACKAGES_TO_AVOID = [
+  'zone.js',
+  '@nx/angular/mf',
+  '@nrwl/angular/mf',
+  '@nx/angular-rspack',
+];
+
+/**
+ * Applies eager loading to default Angular packages.
+ * Exported for backward compatibility.
+ */
 export function applyDefaultEagerPackages(
   sharedConfig: Record<string, SharedLibraryConfig>,
   useRspack = false
@@ -28,6 +40,7 @@ export function applyDefaultEagerPackages(
       ? [
           '@angular/core',
           '@angular/core/primitives/signals',
+          '@angular/core/primitives/di',
           '@angular/core/event-dispatch',
           '@angular/core/rxjs-interop',
           '@angular/common',
@@ -40,67 +53,37 @@ export function applyDefaultEagerPackages(
     if (!sharedConfig[pkg]) {
       continue;
     }
-
     sharedConfig[pkg] = { ...sharedConfig[pkg], eager: true };
   }
 }
 
-export const DEFAULT_NPM_PACKAGES_TO_AVOID = [
-  'zone.js',
-  '@nx/angular/mf',
-  '@nrwl/angular/mf',
-  '@nx/angular-rspack',
-];
-export const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
-  '@angular/core',
-  '@angular/animations',
-  '@angular/common',
-];
-
+/**
+ * Creates the default remote URL resolver for Angular.
+ * Kept for backward compatibility with existing configs.
+ */
 export function getFunctionDeterminateRemoteUrl(
   isServer: boolean = false,
   useRspack = false
 ) {
-  const target = 'serve';
-  const remoteEntry = isServer
-    ? 'server/remoteEntry.js'
-    : useRspack
-    ? 'remoteEntry.js'
-    : 'remoteEntry.mjs';
+  return createDefaultRemoteUrlResolver(isServer, useRspack ? 'js' : 'mjs');
+}
 
-  return function (remote: string) {
-    const mappedStaticRemotesFromEnv = process.env
-      .NX_MF_DEV_SERVER_STATIC_REMOTES
-      ? JSON.parse(process.env.NX_MF_DEV_SERVER_STATIC_REMOTES)
-      : undefined;
-    if (mappedStaticRemotesFromEnv && mappedStaticRemotesFromEnv[remote]) {
-      return `${mappedStaticRemotesFromEnv[remote]}/${remoteEntry}`;
-    }
-
-    let remoteConfiguration = null;
-    try {
-      remoteConfiguration = readCachedProjectConfiguration(remote);
-    } catch (e) {
-      throw new Error(
-        `Cannot find remote "${remote}". Check that the remote name is correct in your module federation config file.\n`
-      );
-    }
-    const serveTarget = remoteConfiguration?.targets?.[target];
-
-    if (!serveTarget) {
-      throw new Error(
-        `Cannot automatically determine URL of remote (${remote}). Looked for property "host" in the project's "serve" target.\n
-      You can also use the tuple syntax in your webpack config to configure your remotes. e.g. \`remotes: [['remote1', 'http://localhost:4201']]\``
-      );
-    }
-
-    const host =
-      serveTarget.options?.host ??
-      `http${serveTarget.options.ssl ? 's' : ''}://localhost`;
-    const port = serveTarget.options?.port ?? 4201;
-    return `${useRspack ? `${remote}@` : ''}${
-      host.endsWith('/') ? host.slice(0, -1) : host
-    }:${port}/${remoteEntry}`;
+/**
+ * Creates framework config for Angular projects.
+ */
+function getAngularFrameworkConfig(
+  bundler: 'rspack' | 'webpack',
+  useRspack: boolean
+): FrameworkConfig {
+  return {
+    bundler,
+    remoteEntryExt: useRspack ? 'js' : 'mjs',
+    mapRemotesExpose: false,
+    defaultPackagesToShare: DEFAULT_ANGULAR_PACKAGES_TO_SHARE,
+    packagesToAvoid: DEFAULT_NPM_PACKAGES_TO_AVOID,
+    applyEagerPackages: (sharedConfig: Record<string, SharedLibraryConfig>) => {
+      applyDefaultEagerPackages(sharedConfig, useRspack);
+    },
   };
 }
 
@@ -112,80 +95,12 @@ export async function getModuleFederationConfig(
   } = { isServer: false },
   bundler: 'rspack' | 'webpack' = 'rspack'
 ) {
-  let projectGraph: ProjectGraph;
-  try {
-    projectGraph = readCachedProjectGraph();
-  } catch (e) {
-    projectGraph = await createProjectGraphAsync();
-  }
-
-  if (!projectGraph.nodes[mfConfig.name]?.data) {
-    throw Error(
-      `Cannot find project "${mfConfig.name}". Check that the name is correct in module-federation.config.js`
-    );
-  }
-
-  const dependencies = getDependentPackagesForProject(
-    projectGraph,
-    mfConfig.name
+  // Angular async uses 'mjs' extension (webpack), not rspack
+  return getModuleFederationConfigAsync(
+    mfConfig,
+    options,
+    getAngularFrameworkConfig(bundler, false)
   );
-
-  if (mfConfig.shared) {
-    dependencies.workspaceLibraries = dependencies.workspaceLibraries.filter(
-      (lib) => mfConfig.shared(lib.importKey, {}) !== false
-    );
-    dependencies.npmPackages = dependencies.npmPackages.filter(
-      (pkg) => mfConfig.shared(pkg, {}) !== false
-    );
-  }
-
-  const sharedLibraries = shareWorkspaceLibraries(
-    dependencies.workspaceLibraries,
-    undefined,
-    bundler
-  );
-
-  const npmPackages = sharePackages(
-    Array.from(
-      new Set([
-        ...DEFAULT_ANGULAR_PACKAGES_TO_SHARE,
-        ...dependencies.npmPackages.filter(
-          (pkg) => !DEFAULT_NPM_PACKAGES_TO_AVOID.includes(pkg)
-        ),
-      ])
-    )
-  );
-
-  DEFAULT_NPM_PACKAGES_TO_AVOID.forEach((pkgName) => {
-    if (pkgName in npmPackages) {
-      delete npmPackages[pkgName];
-    }
-  });
-
-  const sharedDependencies = {
-    ...sharedLibraries.getLibraries(
-      projectGraph.nodes[mfConfig.name].data.root
-    ),
-    ...npmPackages,
-  };
-
-  applyDefaultEagerPackages(sharedDependencies);
-  applySharedFunction(sharedDependencies, mfConfig.shared);
-  applyAdditionalShared(
-    sharedDependencies,
-    mfConfig.additionalShared,
-    projectGraph
-  );
-  const determineRemoteUrlFn =
-    options.determineRemoteUrl ||
-    getFunctionDeterminateRemoteUrl(options.isServer);
-
-  const mapRemotesFunction = options.isServer ? mapRemotesForSSR : mapRemotes;
-  const mappedRemotes =
-    !mfConfig.remotes || mfConfig.remotes.length === 0
-      ? {}
-      : mapRemotesFunction(mfConfig.remotes, 'mjs', determineRemoteUrlFn);
-  return { sharedLibraries, sharedDependencies, mappedRemotes };
 }
 
 export function getModuleFederationConfigSync(
@@ -196,74 +111,9 @@ export function getModuleFederationConfigSync(
   } = { isServer: false },
   useRspack = false
 ) {
-  const projectGraph: ProjectGraph = readCachedProjectGraph();
-
-  if (!projectGraph.nodes[mfConfig.name]?.data) {
-    throw Error(
-      `Cannot find project "${mfConfig.name}". Check that the name is correct in module-federation.config.js`
-    );
-  }
-
-  const dependencies = getDependentPackagesForProject(
-    projectGraph,
-    mfConfig.name
+  return getModuleFederationConfigSyncCore(
+    mfConfig,
+    options,
+    getAngularFrameworkConfig('rspack', useRspack)
   );
-
-  if (mfConfig.shared) {
-    dependencies.workspaceLibraries = dependencies.workspaceLibraries.filter(
-      (lib) => mfConfig.shared(lib.importKey, {}) !== false
-    );
-    dependencies.npmPackages = dependencies.npmPackages.filter(
-      (pkg) => mfConfig.shared(pkg, {}) !== false
-    );
-  }
-
-  const sharedLibraries = shareWorkspaceLibraries(
-    dependencies.workspaceLibraries
-  );
-
-  const npmPackages = sharePackages(
-    Array.from(
-      new Set([
-        ...dependencies.npmPackages.filter(
-          (pkg) => !DEFAULT_NPM_PACKAGES_TO_AVOID.includes(pkg)
-        ),
-      ])
-    )
-  );
-
-  DEFAULT_NPM_PACKAGES_TO_AVOID.forEach((pkgName) => {
-    if (pkgName in npmPackages) {
-      delete npmPackages[pkgName];
-    }
-  });
-
-  const sharedDependencies = {
-    ...sharedLibraries.getLibraries(
-      projectGraph.nodes[mfConfig.name].data.root
-    ),
-    ...npmPackages,
-  };
-
-  applyDefaultEagerPackages(sharedDependencies, useRspack);
-  applySharedFunction(sharedDependencies, mfConfig.shared);
-  applyAdditionalShared(
-    sharedDependencies,
-    mfConfig.additionalShared,
-    projectGraph
-  );
-  const determineRemoteUrlFn =
-    options.determineRemoteUrl ||
-    getFunctionDeterminateRemoteUrl(options.isServer, useRspack);
-
-  const mapRemotesFunction = options.isServer ? mapRemotesForSSR : mapRemotes;
-  const mappedRemotes =
-    !mfConfig.remotes || mfConfig.remotes.length === 0
-      ? {}
-      : mapRemotesFunction(
-          mfConfig.remotes,
-          useRspack ? 'js' : 'mjs',
-          determineRemoteUrlFn
-        );
-  return { sharedLibraries, sharedDependencies, mappedRemotes };
 }

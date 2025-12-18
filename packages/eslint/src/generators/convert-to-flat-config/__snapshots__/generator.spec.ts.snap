@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`convert-to-flat-config generator CJS should add env configuration 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
@@ -13,7 +13,7 @@ const compat = new FlatCompat({
 
 module.exports = [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
@@ -74,7 +74,7 @@ const compat = new FlatCompat({
 
 module.exports = [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -138,7 +138,7 @@ const compat = new FlatCompat({
 
 module.exports = [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { globals: { myCustomGlobal: 'readonly' } } },
@@ -198,7 +198,7 @@ const compat = new FlatCompat({
 
 module.exports = [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -261,7 +261,7 @@ const compat = new FlatCompat({
 
 module.exports = [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { parser: typescriptEslintParser } },
@@ -324,7 +324,7 @@ const compat = new FlatCompat({
 
 module.exports = [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   {
     plugins: {
@@ -390,7 +390,7 @@ const compat = new FlatCompat({
 
 module.exports = [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -454,7 +454,7 @@ const compat = new FlatCompat({
 
 module.exports = [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -506,7 +506,7 @@ exports[`convert-to-flat-config generator CJS should convert json successfully 2
 
 module.exports = [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   ...baseConfig,
   {
@@ -540,7 +540,7 @@ const compat = new FlatCompat({
 
 module.exports = [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -592,7 +592,7 @@ exports[`convert-to-flat-config generator CJS should convert yaml successfully 2
 
 module.exports = [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   ...baseConfig,
   {
@@ -626,7 +626,7 @@ const compat = new FlatCompat({
 
 module.exports = [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -678,7 +678,7 @@ exports[`convert-to-flat-config generator CJS should convert yml successfully 2`
 
 module.exports = [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   ...baseConfig,
   {
@@ -705,7 +705,7 @@ exports[`convert-to-flat-config generator CJS should handle custom eslintignores
 
 module.exports = [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   ...baseConfig,
   {
@@ -748,7 +748,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
@@ -811,7 +811,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -877,7 +877,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { globals: { myCustomGlobal: 'readonly' } } },
@@ -939,7 +939,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -1004,7 +1004,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { parser: typescriptEslintParser } },
@@ -1069,7 +1069,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   {
     plugins: {
@@ -1137,7 +1137,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -1203,7 +1203,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -1255,7 +1255,7 @@ exports[`convert-to-flat-config generator MJS should convert json successfully 2
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   ...baseConfig,
   {
@@ -1291,7 +1291,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -1343,7 +1343,7 @@ exports[`convert-to-flat-config generator MJS should convert yaml successfully 2
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   ...baseConfig,
   {
@@ -1379,7 +1379,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -1431,7 +1431,7 @@ exports[`convert-to-flat-config generator MJS should convert yml successfully 2`
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   ...baseConfig,
   {
@@ -1458,7 +1458,7 @@ exports[`convert-to-flat-config generator MJS should handle custom eslintignores
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', '**/out-tsc'],
   },
   ...baseConfig,
   {

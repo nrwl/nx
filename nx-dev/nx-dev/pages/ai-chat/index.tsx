@@ -1,16 +1,16 @@
 import { FeedContainer } from '@nx/nx-dev-feature-ai';
-import {
-  DocumentationHeader,
-  Header,
-  SidebarContainer,
-} from '@nx/nx-dev-ui-common';
+import { Header } from '@nx/nx-dev-ui-common';
 import { NextSeo } from 'next-seo';
-import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { cx } from '@nx/nx-dev-ui-primitives';
+import type { GetServerSideProps } from 'next';
+import { tryFramerProxy } from '../../lib/framer-proxy';
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  if (await tryFramerProxy(ctx)) return { props: {} };
+  return { props: {} };
+};
 
 export default function AiDocs(): JSX.Element {
-  const { toggleNav, navIsOpen } = useNavToggle();
-
   return (
     <>
       <NextSeo
@@ -51,28 +51,14 @@ export default function AiDocs(): JSX.Element {
           'h-[calc(100dvh)]'
         )}
       >
-        {process.env.NEXT_PUBLIC_ASTRO_URL ? (
-          <div className="mb-12">
-            <Header />
-          </div>
-        ) : (
-          <div className="w-full flex-shrink-0">
-            <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
-          </div>
-        )}
+        <div className="mb-12">
+          <Header />
+        </div>
         <main
           id="main"
           role="main"
           className="flex h-full flex-1 overflow-y-hidden"
         >
-          <div className="hidden">
-            <SidebarContainer
-              menu={{ sections: [] }}
-              navIsOpen={navIsOpen}
-              toggleNav={toggleNav}
-            />
-          </div>
-
           <FeedContainer />
         </main>
       </div>

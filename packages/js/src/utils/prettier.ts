@@ -18,7 +18,7 @@ export interface ExistingPrettierConfig {
 export async function resolveUserExistingPrettierConfig(): Promise<ExistingPrettierConfig | null> {
   let prettier: typeof import('prettier');
   try {
-    prettier = require('prettier');
+    prettier = await import('prettier');
   } catch {
     return null;
   }
@@ -103,7 +103,7 @@ export async function resolvePrettierConfigPath(
 ): Promise<string | null> {
   let prettier: typeof import('prettier');
   try {
-    prettier = require('prettier');
+    prettier = await import('prettier');
   } catch {
     return null;
   }
