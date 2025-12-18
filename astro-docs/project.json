@@ -3,9 +3,22 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "comment": "package.json#scripts runs in the project root directory with astro assumes is where the node_modules is. which fails. so run the scripts in project.json#targets with --root command instead",
   "targets": {
+    "prebuild-banner": {
+      "cache": false,
+      "outputs": ["{projectRoot}/src/content/banner.json"],
+      "command": "node ../scripts/documentation/prebuild-banner.mjs",
+      "options": {
+        "cwd": "astro-docs",
+        "env": {
+          "BANNER_OUTPUT_PATH": "src/content/banner.json",
+          "BANNER_ENV_VAR": "BANNER_URL"
+        }
+      }
+    },
     "serve": {
       "continuous": true,
       "dependsOn": [
+        "prebuild-banner",
         {
           "projects": ["devkit", "create-nx-workspace", "dotnet", "maven"],
           "target": "build"
@@ -18,12 +31,18 @@
     },
     "build": {
       "dependsOn": [
+        "prebuild-banner",
         {
           "projects": ["devkit", "create-nx-workspace", "dotnet", "maven"],
           "target": "build"
         }
       ],
-      "inputs": ["production", "^production", { "env": "NX_DEV_URL" }],
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/src/content/banner.json",
+        { "env": "NX_DEV_URL" }
+      ],
       "outputs": [
         "{projectRoot}/dist",
         "{projectRoot}/.astro",
