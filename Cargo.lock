@@ -2420,6 +2420,7 @@ dependencies = [
  "rusqlite",
  "serde",
  "serde_json",
+ "static_assertions",
  "swc_common",
  "swc_ecma_ast",
  "swc_ecma_dep_graph",
