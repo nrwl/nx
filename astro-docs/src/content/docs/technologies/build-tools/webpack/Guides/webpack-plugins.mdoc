@@ -418,6 +418,16 @@ Type: `boolean`
 
 Disable type checks (useful to speed up builds).
 
+**`Deprecated`**
+
+Use [`typeCheckOptions`](#typecheckoptions-1) instead.
+
+##### typeCheckOptions
+
+Type: `false | { async: boolean }`
+
+Configure type checking during the build. Set to `false` to disable type checking entirely. Use `{ async: true }` to run type checking in a separate process without blocking the build. Default is `{ async: true }`.
+
 #### Example
 
 ```js
