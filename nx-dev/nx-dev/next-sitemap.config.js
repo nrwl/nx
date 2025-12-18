@@ -1,6 +1,6 @@
 const path = require('path');
 
-const siteUrl = process.env.SITE_URL || 'https://nx.dev';
+const siteUrl = process.env.NX_DEV_URL || 'https://nx.dev';
 const noIndex = process.env.NEXT_PUBLIC_NO_INDEX === 'true';
 
 /**
