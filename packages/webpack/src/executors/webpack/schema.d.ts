@@ -66,7 +66,7 @@ export interface WebpackExecutorOptions {
   sourceMap?: boolean | string;
   statsJson?: boolean;
   target?: string;
-  /** @deprecated Use `typeCheckOptions` instead. */
+  /** @deprecated Use `typeCheckOptions` option instead. */
   skipTypeChecking?: boolean;
   typeCheckOptions?: false | TypeCheckOptions;
   transformers?: TransformerEntry[];

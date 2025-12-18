@@ -32,9 +32,9 @@ export interface RspackExecutorSchema {
   rspackConfig?: string;
   runtimeChunk?: boolean;
   scripts?: Array<ExtraEntryPointClass | string>;
-  /** @deprecated Use `typeCheckOptions` instead. */
-  typeCheckOptions?: false | TypeCheckOptions;
+  /** @deprecated Use `typeCheckOptions` option instead. */
   skipTypeChecking?: boolean;
+  typeCheckOptions?: false | TypeCheckOptions;
   sourceMap?: boolean | DevTool;
   standardRspackConfigFunction?: boolean;
   statsJson?: boolean;
