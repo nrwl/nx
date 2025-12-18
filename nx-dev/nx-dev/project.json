@@ -44,15 +44,33 @@
     },
     "sitemap": {
       "executor": "nx:run-commands",
+      "inputs": [
+        "{workspaceRoot}/nx-dev/nx-dev/next-sitemap.config.js",
+        { "env": "NX_DEV_URL" },
+        { "env": "NEXT_PUBLIC_NO_INDEX" }
+      ],
       "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev/public"],
       "options": {
         "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
       }
     },
+    "prebuild-banner": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": ["{projectRoot}/lib/banner.json"],
+      "options": {
+        "command": "node ../../scripts/documentation/prebuild-banner.mjs",
+        "cwd": "nx-dev/nx-dev",
+        "env": {
+          "BANNER_OUTPUT_PATH": "lib/banner.json"
+        }
+      }
+    },
     "build-base": {
       "parallelism": false,
       "executor": "@nx/next:build",
-      "dependsOn": ["copy-docs"],
+      "dependsOn": ["copy-docs", "prebuild-banner"],
+      "inputs": ["production", "^production", "{projectRoot}/lib/banner.json"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "root": "nx-dev/nx-dev",
@@ -89,7 +107,7 @@
     },
     "serve": {
       "executor": "@nx/next:server",
-      "dependsOn": ["copy-docs"],
+      "dependsOn": ["copy-docs", "prebuild-banner"],
       "options": {
         "buildTarget": "nx-dev:build-base",
         "dev": true
