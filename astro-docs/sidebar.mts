@@ -35,13 +35,17 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         collapsed: true,
         items: [
           { label: 'Mental Model', link: 'concepts/mental-model' },
-          { label: 'How Caching Works', link: 'concepts/how-caching-works' },
+          { label: 'Run Tasks', link: 'features/run-tasks' },
+          { label: 'Nx Plugins', link: 'concepts/nx-plugins' },
+          { label: 'Inferred Tasks', link: 'concepts/inferred-tasks' },
           {
             label: 'Task Pipelines',
             link: 'concepts/task-pipeline-configuration',
           },
-          { label: 'Inferred Tasks', link: 'concepts/inferred-tasks' },
-          { label: 'Nx Plugins', link: 'concepts/nx-plugins' },
+          { label: 'Cache Task Results', link: 'features/cache-task-results' },
+          { label: 'How Caching Works', link: 'concepts/how-caching-works' },
+          { label: 'Explore the Graph', link: 'features/explore-graph' },
+          { label: 'Generate Code', link: 'features/generate-code' },
         ],
       },
     ],
@@ -55,10 +59,6 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
     collapsed: true,
     items: [
       // --- FEATURES (flattened, no Core wrapper) ---
-      { label: 'Run Tasks', link: 'features/run-tasks' },
-      { label: 'Cache Task Results', link: 'features/cache-task-results' },
-      { label: 'Explore the Graph', link: 'features/explore-graph' },
-      { label: 'Generate Code', link: 'features/generate-code' },
       { label: 'Manage Releases', link: 'features/manage-releases' },
       {
         label: 'Automate Updating Dependencies',
