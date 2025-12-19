@@ -285,7 +285,7 @@
       <plugin>
         <groupId>dev.nx.maven</groupId>
         <artifactId>nx-maven-plugin</artifactId>
-        <version>{project.version}</version>
+        <version>${project.version}</version>
       </plugin>
 
       <!-- Central Publishing Plugin for snapshots and releases -->
