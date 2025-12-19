@@ -6,7 +6,7 @@ import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
  */
 export async function isPortInUse(
   port: number,
-  host: string = '127.0.0.1'
+  host: string = 'localhost'
 ): Promise<boolean> {
   try {
     await waitForPortOpen(port, { retries: 0, host });
