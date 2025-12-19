@@ -28,22 +28,31 @@ import {
   readPackageJsonConfigurationCache,
 } from '../../../plugins/package-json';
 
+const globPatterns = combineGlobPatterns(
+  'package.json',
+  '**/package.json',
+  'project.json',
+  '**/project.json'
+);
+
 export const createNodesV2: CreateNodesV2 = [
-  combineGlobPatterns(
-    'package.json',
-    '**/package.json',
-    'project.json',
-    '**/project.json'
-  ),
+  globPatterns,
   (configFiles, _, context) => {
     const { packageJsons, projectJsonRoots } = splitConfigFiles(configFiles);
 
     const readJson = (f) => readJsonFile(join(context.workspaceRoot, f));
-    const isInPackageJsonWorkspaces =
-      process.env.NX_INFER_ALL_PACKAGE_JSONS === 'true' &&
-      !configFiles.includes('package.json')
-        ? () => true
-        : buildPackageJsonWorkspacesMatcher(context.workspaceRoot, readJson);
+    let isInPackageJsonWorkspaces = (p: string) => true;
+
+    if (
+      process.env.NX_INFER_ALL_PACKAGE_JSONS !== 'true' ||
+      configFiles.includes('package.json')
+    ) {
+      const patterns = buildPackageJsonPatterns(
+        context.workspaceRoot,
+        readJson
+      );
+      isInPackageJsonWorkspaces = buildPackageJsonWorkspacesMatcher(patterns);
+    }
     const isNextToProjectJson = (packageJsonPath: string) => {
       return projectJsonRoots.has(dirname(packageJsonPath));
     };
@@ -93,19 +102,29 @@ function splitConfigFiles(configFiles: readonly string[]): {
 
   return { packageJsons, projectJsonRoots };
 }
-
-export function buildPackageJsonWorkspacesMatcher(
+export function buildPackageJsonPatterns(
   workspaceRoot: string,
   readJson: (path: string) => any
-) {
+): PackageJsonPatterns {
   const patterns = getGlobPatternsFromPackageManagerWorkspaces(
     workspaceRoot,
     readJson
   );
 
-  const negativePatterns = patterns.filter((p) => p.startsWith('!'));
-  const positivePatterns = patterns.filter((p) => !p.startsWith('!'));
+  const negativePatterns: string[] = [];
+  const positivePatterns: string[] = [];
+  const positivePatternLookup: Record<string, boolean> = {};
+  const negativePatternLookup: Record<string, boolean> = {};
 
+  for (const pattern of patterns) {
+    if (pattern.startsWith('!')) {
+      negativePatterns.push(pattern);
+      negativePatternLookup[pattern.slice(1)] = true;
+    } else {
+      positivePatterns.push(pattern);
+      positivePatternLookup[pattern] = true;
+    }
+  }
   if (
     // There are some negative patterns
     negativePatterns.length > 0 &&
@@ -117,8 +136,26 @@ export function buildPackageJsonWorkspacesMatcher(
     positivePatterns.push('**/package.json');
   }
 
-  return (p: string) =>
-    positivePatterns.some((positive) => minimatch(p, positive)) &&
+  return {
+    positive: positivePatterns,
+    positiveLookup: positivePatternLookup,
+    negative: negativePatterns,
+    negativeLookup: negativePatternLookup,
+  };
+}
+type PackageJsonPatterns = {
+  positive: string[];
+  positiveLookup: Record<string, boolean>;
+  negative: string[];
+  negativeLookup: Record<string, boolean>;
+};
+export function buildPackageJsonWorkspacesMatcher(
+  patterns: PackageJsonPatterns
+) {
+  return (p) =>
+    // use lookup to avoid unnecessary minimatch calls
+    (patterns.positiveLookup[p] ||
+      patterns.positive.some((positive) => minimatch(p, positive))) &&
     /**
      * minimatch will return true if the given p is NOT excluded by the negative pattern.
      *
@@ -128,7 +165,8 @@ export function buildPackageJsonWorkspacesMatcher(
      * Therefore, we need to ensure that every negative pattern returns true to validate that the given p is not
      * excluded by any of the negative patterns.
      */
-    negativePatterns.every((negative) => minimatch(p, negative));
+    !patterns.negativeLookup[p] &&
+    patterns.negative.every((negative) => minimatch(p, negative));
 }
 
 export function createNodeFromPackageJson(
