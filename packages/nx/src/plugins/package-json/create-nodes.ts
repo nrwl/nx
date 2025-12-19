@@ -51,9 +51,7 @@ export const createNodesV2: CreateNodesV2 = [
         context.workspaceRoot,
         readJson
       );
-      isInPackageJsonWorkspaces = buildPackageJsonWorkspacesMatcher(
-        patterns
-      );
+      isInPackageJsonWorkspaces = buildPackageJsonWorkspacesMatcher(patterns);
     }
     const isNextToProjectJson = (packageJsonPath: string) => {
       return projectJsonRoots.has(dirname(packageJsonPath));
@@ -107,7 +105,7 @@ function splitConfigFiles(configFiles: readonly string[]): {
 export function buildPackageJsonPatterns(
   workspaceRoot: string,
   readJson: (path: string) => any
-) {
+): PackageJsonPatterns {
   const patterns = getGlobPatternsFromPackageManagerWorkspaces(
     workspaceRoot,
     readJson
