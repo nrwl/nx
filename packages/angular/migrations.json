@@ -2160,6 +2160,18 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "22.3.2-ngrx": {
+      "version": "22.3.2-beta.0",
+      "requires": {
+        "@angular/core": "^21.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "^21.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
