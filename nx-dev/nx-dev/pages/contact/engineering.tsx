@@ -2,13 +2,6 @@ import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
 import { Footer, Header } from '@nx/nx-dev-ui-common';
 import { TalkToOurEngineeringTeam } from '@nx/nx-dev-ui-contact';
-import type { GetServerSideProps } from 'next';
-import { tryFramerProxy } from '../../lib/framer-proxy';
-
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  if (await tryFramerProxy(ctx)) return { props: {} };
-  return { props: {} };
-};
 
 export function EngineeringTeam(): JSX.Element {
   const router = useRouter();

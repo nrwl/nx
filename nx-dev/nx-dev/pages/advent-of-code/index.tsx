@@ -14,13 +14,6 @@ import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
-import type { GetServerSideProps } from 'next';
-import { tryFramerProxy } from '../../lib/framer-proxy';
-
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  if (await tryFramerProxy(ctx)) return { props: {} };
-  return { props: {} };
-};
 
 export default function AdventOfCode(): JSX.Element {
   const router = useRouter();
