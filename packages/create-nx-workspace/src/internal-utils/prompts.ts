@@ -2,11 +2,7 @@ import * as yargs from 'yargs';
 import * as enquirer from 'enquirer';
 import * as chalk from 'chalk';
 
-import {
-  MessageKey,
-  messages,
-  shouldUseTemplateFlow,
-} from '../utils/nx/ab-testing';
+import { MessageKey, messages } from '../utils/nx/ab-testing';
 import { deduceDefaultBase } from '../utils/git/default-base';
 import { isGitAvailable } from '../utils/git/git';
 import {
@@ -128,8 +124,8 @@ export async function determineTemplate(
   if (parsedArgs.template) return parsedArgs.template;
   if (parsedArgs.preset) return 'custom';
   if (!parsedArgs.interactive || isCI()) return 'custom';
-  // A/B test: shouldUseTemplateFlow() determines if user sees template or preset flow
-  if (!shouldUseTemplateFlow()) return 'custom';
+  // Docs generation needs preset flow to document all presets
+  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') return 'custom';
   // Template flow requires git for cloning - fall back to custom preset if git is not available
   if (!isGitAvailable()) return 'custom';
   const { template } = await enquirer.prompt<{ template: string }>([

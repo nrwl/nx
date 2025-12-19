@@ -95,18 +95,7 @@ export async function createNxCloudOnboardingUrl(
       ? 'create-nx-workspace-success-cache-setup'
       : 'create-nx-workspace-success-ci-setup';
 
-  // Meta: "start" or "start-v2" prefix, with prompt code
-  // For template flow (variant 1): use specific prompt code from setupNxCloudV2
-  // For preset flow (variant 0): use visit codes based on nxCloud value
-  const flowVariant = getFlowVariant();
-  const prefix = flowVariant === '1' ? 'start-v2' : 'start';
-  const promptCode =
-    flowVariant === '1'
-      ? messages.codeOfSelectedPromptMessage('setupNxCloudV2')
-      : '';
-  const code =
-    promptCode || (nxCloud === 'yes' ? 'remote-cache-visit' : 'ci-setup-visit');
-  const meta = `${prefix}-${code}`;
+  const meta = messages.codeOfSelectedPromptMessage('setupNxCloudV2');
 
   return createNxCloudOnboardingURL(
     source,
