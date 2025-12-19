@@ -22,6 +22,7 @@ import {
   getRootTsConfigFileName,
   resolveModuleByImport,
 } from '../../utils/typescript';
+import { existsSync } from 'node:fs';
 
 /**
  * The key is a combination of the package name and the workspace relative directory
@@ -29,6 +30,7 @@ import {
  * resolved external node name from the project graph.
  */
 type NpmResolutionCache = Map<string, string | null>;
+type PackageJsonResolutionCache = Map<string, PackageJson | null>;
 
 type PathPattern = {
   pattern: string;
@@ -44,6 +46,7 @@ type ParsedPatterns = {
  * Use a shared cache to avoid repeated npm package resolution work within the TargetProjectLocator.
  */
 const defaultNpmResolutionCache: NpmResolutionCache = new Map();
+const defaultPackageJsonResolutionCache: PackageJsonResolutionCache = new Map();
 
 const experimentalNodeModules = new Set(['node:sqlite']);
 
@@ -71,7 +74,8 @@ export class TargetProjectLocator {
       string,
       ProjectGraphExternalNode
     > = {},
-    private readonly npmResolutionCache: NpmResolutionCache = defaultNpmResolutionCache
+    private readonly npmResolutionCache: NpmResolutionCache = defaultNpmResolutionCache,
+    private readonly packageJsonResolutionCache: PackageJsonResolutionCache = defaultPackageJsonResolutionCache
   ) {
     /**
      * Only the npm external nodes should be included.
@@ -211,7 +215,8 @@ export class TargetProjectLocator {
       // package.json refers to an external package, we do not match against the version found in there, we instead try and resolve the relevant package how node would
       const externalPackageJson = this.readPackageJson(
         packageName,
-        fullDirPath
+        fullDirPath,
+        workspaceRoot
       );
       // The external package.json path might be not be resolvable, e.g. if a reference has been added to a project package.json, but the install command has not been run yet.
       if (!externalPackageJson) {
@@ -533,7 +538,8 @@ export class TargetProjectLocator {
    */
   private readPackageJson(
     packageName: string,
-    relativeToDir: string
+    relativeToDir: string,
+    workspaceRoot: string
   ): PackageJson | null {
     // The package.json is directly resolvable
     const packageJsonPath = resolveRelativeToDir(
@@ -541,9 +547,13 @@ export class TargetProjectLocator {
       relativeToDir
     );
     if (packageJsonPath) {
+      if (this.packageJsonResolutionCache.has(packageJsonPath)) {
+        return this.packageJsonResolutionCache.get(packageJsonPath);
+      }
       const parsedPackageJson = readJsonFile(packageJsonPath);
 
       if (parsedPackageJson.name && parsedPackageJson.version) {
+        this.packageJsonResolutionCache.set(packageJsonPath, parsedPackageJson);
         return parsedPackageJson;
       }
     }
@@ -556,14 +566,26 @@ export class TargetProjectLocator {
 
       while (dir !== dirname(dir)) {
         const packageJsonPath = join(dir, 'package.json');
-        try {
-          const parsedPackageJson = readJsonFile(packageJsonPath);
-          // Ensure the package.json contains the "name" and "version" fields
-          if (parsedPackageJson.name && parsedPackageJson.version) {
-            return parsedPackageJson;
+        if (this.packageJsonResolutionCache.has(packageJsonPath)) {
+          return this.packageJsonResolutionCache.get(packageJsonPath);
+        }
+        if (existsSync(packageJsonPath)) {
+          try {
+            const parsedPackageJson = readJsonFile(packageJsonPath);
+            // Ensure the package.json contains the "name" and "version" fields
+            if (parsedPackageJson.name && parsedPackageJson.version) {
+              this.packageJsonResolutionCache.set(
+                packageJsonPath,
+                parsedPackageJson
+              );
+              return parsedPackageJson;
+            }
+          } catch {
+            // Package.json is invalid, keep traversing
           }
-        } catch {
-          // Package.json doesn't exist, keep traversing
+        }
+        if (dir === workspaceRoot) {
+          return null;
         }
         dir = dirname(dir);
       }
