@@ -45,7 +45,9 @@
     "sitemap": {
       "executor": "nx:run-commands",
       "inputs": [
-        "{workspaceRoot}/nx-dev/nx-dev/next-sitemap.config.js",
+        "{workspaceRoot}/docs/**/*",
+        "production",
+        "{projectRoot}/next-sitemap.config.js",
         { "env": "NX_DEV_URL" },
         { "env": "NEXT_PUBLIC_NO_INDEX" }
       ],
