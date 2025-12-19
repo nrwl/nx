@@ -169,9 +169,9 @@ export async function addMountDefinition(cmpCommandFileContents: string) {
           ? `<${node.typeParameters.map((p) => p.getText()).join(', ')}>`
           : ''
       } {
-      ${node.members.map((m) => m.getText()).join('\n      ')}
-      mount: typeof mount;
-    }`;
+    ${node.members.map((m) => m.getText()).join('\n    ')}
+    mount: typeof mount;
+  }`;
     }
   );
   return `${updatedInterface}\n${mountCommand}`;

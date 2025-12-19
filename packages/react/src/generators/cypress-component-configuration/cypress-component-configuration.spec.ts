@@ -542,13 +542,11 @@ describe('React:CypressComponentTestConfiguration', () => {
       import './commands';
 
       // add component testing only related command here, such as mount
-      declare global {
-        // eslint-disable-next-line @typescript-eslint/no-namespace
-        namespace Cypress {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          interface Chainable<Subject> {
-            mount: typeof mount;
-          }
+      // eslint-disable-next-line @typescript-eslint/no-namespace
+      declare namespace Cypress {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        interface Chainable<Subject> {
+          mount: typeof mount;
         }
       }
 
@@ -631,13 +629,11 @@ describe('React:CypressComponentTestConfiguration', () => {
       import './commands';
 
       // add component testing only related command here, such as mount
-      declare global {
-        // eslint-disable-next-line @typescript-eslint/no-namespace
-        namespace Cypress {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          interface Chainable<Subject> {
-            mount: typeof mount;
-          }
+      // eslint-disable-next-line @typescript-eslint/no-namespace
+      declare namespace Cypress {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        interface Chainable<Subject> {
+          mount: typeof mount;
         }
       }
 
