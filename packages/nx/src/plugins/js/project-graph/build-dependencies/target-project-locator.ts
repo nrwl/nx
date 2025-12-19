@@ -555,6 +555,9 @@ export class TargetProjectLocator {
       if (parsedPackageJson.name && parsedPackageJson.version) {
         this.packageJsonResolutionCache.set(packageJsonPath, parsedPackageJson);
         return parsedPackageJson;
+      } else {
+        this.packageJsonResolutionCache.set(packageJsonPath, null);
+        return null;
       }
     }
 
@@ -579,6 +582,9 @@ export class TargetProjectLocator {
                 parsedPackageJson
               );
               return parsedPackageJson;
+            } else {
+              this.packageJsonResolutionCache.set(packageJsonPath, null);
+              return null;
             }
           } catch {
             // Package.json is invalid, keep traversing
