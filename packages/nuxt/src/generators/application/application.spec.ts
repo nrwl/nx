@@ -124,7 +124,7 @@ describe('app', () => {
           ).toMatchSnapshot();
           expect(tree.read(`${name}/tsconfig.json`, 'utf-8')).toMatchSnapshot();
           const packageJson = readJson(tree, 'package.json');
-          expect(packageJson.devDependencies['vitest']).toEqual('^4.0.0');
+          expect(packageJson.devDependencies['vitest']).toEqual('^4.0.8');
         });
 
         it('should configure tsconfig and project.json correctly', async () => {
