@@ -3,11 +3,44 @@ title: Start a new project with Nx
 description: Create a new Nx workspace manually with your favorite CLI or use the guided setup with presets for various technology stacks and configurations.
 sidebar:
   label: Start a new project
-  order: 3
+  order: 2
 filter: 'type:Guides'
 ---
 
 When you start a new project with Nx, you have two options: manual or guided.
+
+## Prerequisites: Install Nx
+
+Before creating a new project, install Nx globally on your machine:
+
+{% tabs syncKey="install-method" %}
+{% tabitem label="npm" %}
+
+```shell
+npm add --global nx
+```
+
+**Note:** You can also use `yarn`, `pnpm`, or `bun`
+{% /tabitem %}
+
+{% tabitem label="Homebrew (macOS, Linux)" %}
+
+```shell
+brew install nx
+```
+
+{% /tabitem %}
+
+{% tabitem label="Chocolatey (Windows)" %}
+
+```shell
+choco install nx
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Alternatively, you can use `npx` to run Nx commands without installing it globally.
 
 ## Option 1: Manual setup
 
@@ -30,10 +63,6 @@ Then you can add Nx to it by using:
 ```shell
 nx@latest init
 ```
-
-{% aside type="note" title="Global Installs" %}
-Make sure you have [Nx installed globally](/docs/getting-started/installation) or use `npx` if you're in a JavaScript environment
-{% /aside %}
 
 Nx will detect the underlying workspace configuration, ask you a couple of questions and install itself into the workspace. You can now [run tasks with Nx](/docs/features/run-tasks) and incrementally add functionality, like:
 

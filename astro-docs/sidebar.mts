@@ -9,9 +9,7 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
     label: 'Learn Nx',
     collapsed: false,
     items: [
-      // Getting Started - flattened
-      { label: 'Why Nx?', link: 'getting-started/intro' },
-      { label: 'Installation', link: 'getting-started/installation' },
+      { label: 'Introduction', link: 'getting-started/intro' },
       {
         label: 'Start a New Project',
         link: 'getting-started/start-new-project',
@@ -20,16 +18,9 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         label: 'Add to Existing Project',
         link: 'getting-started/start-with-existing-project',
       },
-      { label: 'Editor Setup', link: 'getting-started/editor-setup' },
-      { label: 'AI Setup', link: 'getting-started/ai-setup' },
-      { label: 'Nx Cloud Intro', link: 'getting-started/nx-cloud' },
       {
-        label: 'Install in Non-JS Repo',
-        link: 'guides/installation/install-non-javascript',
-      },
-      {
-        label: 'Update Global Installation',
-        link: 'guides/installation/update-global-installation',
+        label: 'Local Development',
+        link: 'getting-started/local-development',
       },
       {
         label: 'Tutorials',
@@ -40,9 +31,18 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         },
       },
       {
-        label: 'Core Concepts',
+        label: 'Concepts',
         collapsed: true,
-        autogenerate: { directory: 'concepts', collapsed: true },
+        items: [
+          { label: 'Mental Model', link: 'concepts/mental-model' },
+          { label: 'How Caching Works', link: 'concepts/how-caching-works' },
+          {
+            label: 'Task Pipelines',
+            link: 'concepts/task-pipeline-configuration',
+          },
+          { label: 'Inferred Tasks', link: 'concepts/inferred-tasks' },
+          { label: 'Nx Plugins', link: 'concepts/nx-plugins' },
+        ],
       },
     ],
   },
