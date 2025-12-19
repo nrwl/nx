@@ -476,6 +476,121 @@ describe('Migration', () => {
       });
     });
 
+    it('should skip package group processing when ignorePackageGroup is true', async () => {
+      const migrator = new Migrator({
+        packageJson: {
+          name: 'some-workspace',
+          version: '0.0.0',
+          devDependencies: {
+            parent: '1.0.0',
+            '@my-company/nx-workspace': '1.0.0',
+            '@my-company/lib-1': '1.0.0',
+            '@my-company/lib-2': '1.0.0',
+          },
+        },
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: async (pkg) => {
+          if (pkg === 'parent') {
+            return {
+              version: '2.0.0',
+              packageJsonUpdates: {
+                version2: {
+                  version: '2.0.0',
+                  packages: {
+                    '@my-company/nx-workspace': {
+                      version: '2.0.0',
+                      ignorePackageGroup: true,
+                    },
+                  },
+                },
+              },
+            };
+          }
+          if (pkg === '@my-company/nx-workspace') {
+            return {
+              version: '2.0.0',
+              packageGroup: [
+                { package: '@my-company/lib-1', version: '^2.0.0' },
+                { package: '@my-company/lib-2', version: '^2.0.0' },
+              ],
+            };
+          }
+          return { version: '2.1.0' };
+        },
+        from: {},
+        to: {},
+      });
+
+      const result = await migrator.migrate('parent', '2.0.0');
+
+      // @my-company/nx-workspace should be updated but its package group should NOT be processed
+      expect(result.packageUpdates).toStrictEqual({
+        parent: { version: '2.0.0', addToPackageJson: false },
+        '@my-company/nx-workspace': {
+          version: '2.0.0',
+          addToPackageJson: false,
+        },
+      });
+      // lib-1 and lib-2 should NOT be in the updates because ignorePackageGroup was true
+      expect(result.packageUpdates['@my-company/lib-1']).toBeUndefined();
+      expect(result.packageUpdates['@my-company/lib-2']).toBeUndefined();
+    });
+
+    it('should skip migration collection when ignoreMigrations is true', async () => {
+      const migrator = new Migrator({
+        packageJson: {
+          name: 'some-workspace',
+          version: '0.0.0',
+          devDependencies: {
+            parent: '1.0.0',
+            child: '1.0.0',
+          },
+        },
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: async (pkg) => {
+          if (pkg === 'parent') {
+            return {
+              version: '2.0.0',
+              packageJsonUpdates: {
+                version2: {
+                  version: '2.0.0',
+                  packages: {
+                    child: {
+                      version: '2.0.0',
+                      ignoreMigrations: true,
+                    },
+                  },
+                },
+              },
+            };
+          }
+          if (pkg === 'child') {
+            return {
+              version: '2.0.0',
+              generators: {
+                'child-migration': {
+                  version: '2.0.0',
+                  description: 'A migration that should be skipped',
+                  factory: './migrations/child-migration',
+                },
+              },
+            };
+          }
+          return { version: '2.0.0' };
+        },
+        from: {},
+        to: {},
+      });
+
+      const result = await migrator.migrate('parent', '2.0.0');
+
+      // child package should be updated
+      expect(result.packageUpdates['child']).toBeDefined();
+      expect(result.packageUpdates['child'].version).toBe('2.0.0');
+      // But migrations from child should NOT be collected
+      expect(result.migrations).toEqual([]);
+    });
+
     it('should properly handle cyclic dependency in nested packageGroup', async () => {
       const migrator = new Migrator({
         packageJson: {
