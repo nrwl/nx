@@ -415,6 +415,47 @@ describe('@nx/eslint:lint-project', () => {
     process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
   });
 
+  it('should set parserOptions.project in flat config when enabled', async () => {
+    const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
+
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: 'eslint',
+      project: 'test-lib',
+      setParserOptionsProject: true,
+      skipFormat: true,
+      eslintConfigFormat: 'mjs',
+    });
+
+    expect(tree.read('libs/test-lib/eslint.config.mjs', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import baseConfig from "../../eslint.config.mjs";
+
+      export default [
+          ...baseConfig,
+          {
+              files: [
+                  "**/*.ts",
+                  "**/*.tsx",
+                  "**/*.js",
+                  "**/*.jsx"
+              ],
+              languageOptions: {
+                  parserOptions: {
+                      project: [
+                          "libs/test-lib/tsconfig.*?.json"
+                      ]
+                  }
+              }
+          }
+      ];
+      "
+    `);
+
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+  });
+
   it('should generate a eslint config (legacy)', async () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
