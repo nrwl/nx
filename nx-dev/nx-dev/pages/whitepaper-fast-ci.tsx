@@ -17,13 +17,6 @@ import {
 import { type ReactElement } from 'react';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
-import type { GetServerSideProps } from 'next';
-import { tryFramerProxy } from '../lib/framer-proxy';
-
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  if (await tryFramerProxy(ctx)) return { props: {} };
-  return { props: {} };
-};
 
 export function WhitePaperFastCI(): ReactElement {
   const router = useRouter();

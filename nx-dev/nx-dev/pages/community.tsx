@@ -11,13 +11,6 @@ import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import { champions } from '../lib/champions';
-import type { GetServerSideProps } from 'next';
-import { tryFramerProxy } from '../lib/framer-proxy';
-
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  if (await tryFramerProxy(ctx)) return { props: {} };
-  return { props: {} };
-};
 
 export function ChampionsList(): JSX.Element {
   return (
