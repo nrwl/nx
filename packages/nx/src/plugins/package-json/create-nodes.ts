@@ -47,13 +47,12 @@ export const createNodesV2: CreateNodesV2 = [
       process.env.NX_INFER_ALL_PACKAGE_JSONS !== 'true' ||
       configFiles.includes('package.json')
     ) {
-      const { positivePatterns, negativePatterns } = buildPackageJsonPatterns(
+      const patterns = buildPackageJsonPatterns(
         context.workspaceRoot,
         readJson
       );
       isInPackageJsonWorkspaces = buildPackageJsonWorkspacesMatcher(
-        positivePatterns,
-        negativePatterns
+        patterns
       );
     }
     const isNextToProjectJson = (packageJsonPath: string) => {
