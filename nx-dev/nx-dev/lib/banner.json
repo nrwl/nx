@@ -1,13 +1,1 @@
-[
-  {
-    "activeUntil": "2025-12-26T00:00:00.000Z",
-    "description": "This is the first banner's description.",
-    "enabled": false,
-    "primaryCtaText": "Hello from today",
-    "primaryCtaUrl": "https://nx.dev",
-    "title": "This is the first banner's title HEHEHEHEHE",
-    "secondaryCtaText": "",
-    "secondaryCtaUrl": "",
-    "_generated": "2025-12-11T20:41:11.810Z"
-  }
-]
+[]
