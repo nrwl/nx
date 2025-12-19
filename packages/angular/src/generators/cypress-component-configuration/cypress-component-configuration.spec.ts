@@ -868,7 +868,151 @@ describe('Cypress Component Testing Configuration', () => {
     );
   });
 
-  it('should throw an error when the application is zoneless', async () => {
+  it('should generate a zoneless support file for zoneless applications with cypress 15.8.0+', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        cypress: '15.8.0',
+      };
+      return json;
+    });
+    await generateTestApplication(tree, {
+      directory: 'zoneless-app',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+    // Apps are zoneless by default in v21+, no need to modify
+
+    projectGraph = {
+      nodes: {
+        'zoneless-app': {
+          name: 'zoneless-app',
+          type: 'app',
+          data: { ...readProjectConfiguration(tree, 'zoneless-app') } as any,
+        },
+      },
+      dependencies: {},
+    };
+
+    await cypressComponentConfiguration(tree, {
+      project: 'zoneless-app',
+      generateTests: false,
+      skipFormat: true,
+    });
+
+    expect(tree.read('zoneless-app/cypress/support/component.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { mount } from 'cypress/angular-zoneless';
+      // ***********************************************************
+      // This example support/component.ts is processed and
+      // loaded automatically before your test files.
+      //
+      // This is a great place to put global configuration and
+      // behavior that modifies Cypress.
+      //
+      // You can change the location of this file or turn off
+      // automatically serving support files with the
+      // 'supportFile' configuration option.
+      //
+      // You can read more here:
+      // https://on.cypress.io/configuration
+      // ***********************************************************
+      
+      // Import commands.ts using ES2015 syntax:
+      import './commands';
+      
+      // add component testing only related command here, such as mount
+      declare global {
+        // eslint-disable-next-line @typescript-eslint/no-namespace
+        namespace Cypress {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          interface Chainable<Subject> {
+            
+            mount: typeof mount;
+          }
+        }
+      }
+      
+      Cypress.Commands.add('mount', mount);"
+    `);
+  });
+
+  it('should generate a zoneless support file for zoneless libraries with cypress 15.8.0+', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        cypress: '15.8.0',
+      };
+      return json;
+    });
+    await generateTestLibrary(tree, {
+      directory: 'zoneless-lib',
+      skipFormat: true,
+    });
+
+    projectGraph = {
+      nodes: {
+        'zoneless-lib': {
+          name: 'zoneless-lib',
+          type: 'lib',
+          data: { ...readProjectConfiguration(tree, 'zoneless-lib') } as any,
+        },
+      },
+      dependencies: {},
+    };
+
+    await cypressComponentConfiguration(tree, {
+      project: 'zoneless-lib',
+      buildTarget: 'zoneless-lib:build',
+      generateTests: false,
+      skipFormat: true,
+    });
+
+    expect(tree.read('zoneless-lib/cypress/support/component.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { mount } from 'cypress/angular-zoneless';
+      // ***********************************************************
+      // This example support/component.ts is processed and
+      // loaded automatically before your test files.
+      //
+      // This is a great place to put global configuration and
+      // behavior that modifies Cypress.
+      //
+      // You can change the location of this file or turn off
+      // automatically serving support files with the
+      // 'supportFile' configuration option.
+      //
+      // You can read more here:
+      // https://on.cypress.io/configuration
+      // ***********************************************************
+      
+      // Import commands.ts using ES2015 syntax:
+      import './commands';
+      
+      // add component testing only related command here, such as mount
+      declare global {
+        // eslint-disable-next-line @typescript-eslint/no-namespace
+        namespace Cypress {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          interface Chainable<Subject> {
+            
+            mount: typeof mount;
+          }
+        }
+      }
+      
+      Cypress.Commands.add('mount', mount);"
+    `);
+  });
+
+  it('should throw an error when the application is zoneless and cypress version is less than 15.8.0', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        cypress: '15.7.0',
+      };
+      return json;
+    });
     await generateTestApplication(tree, {
       directory: 'zoneless-app',
       bundler: 'webpack',
@@ -896,7 +1040,14 @@ describe('Cypress Component Testing Configuration', () => {
     ).rejects.toThrow(/zoneless/i);
   });
 
-  it('should throw an error when the library is in a zoneless workspace', async () => {
+  it('should throw an error when the library is in a zoneless workspace and cypress version is less than 15.8.0', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        cypress: '15.7.0',
+      };
+      return json;
+    });
     await generateTestLibrary(tree, {
       directory: 'zoneless-lib',
       skipFormat: true,
@@ -920,86 +1071,6 @@ describe('Cypress Component Testing Configuration', () => {
         skipFormat: true,
       })
     ).rejects.toThrow(/zoneless/i);
-  });
-
-  // TODO: should we support this?
-  it.skip('should handle multiple components per file', async () => {
-    await generateTestLibrary(tree, {
-      directory: 'multiple-components',
-      flat: true,
-      skipFormat: true,
-    });
-    await componentGenerator(tree, {
-      name: 'cmp-one',
-      path: 'multiple-components/src/lib/cmp-one',
-      skipFormat: true,
-    });
-    await componentGenerator(tree, {
-      name: 'cmp-two',
-      path: 'multiple-components/src/lib/cmp-two',
-      skipFormat: true,
-    });
-    tree.write(
-      `multiple-components/src/lib/cmp-one.component.ts`,
-      `
-import { Component, OnInit } from '@angular/core';
-
-@Component({
-  selector: 'proj-cmp-one',
-  templateUrl: './cmp-one.component.html',
-  styleUrls: ['./cmp-one.component.css']
-})
-export class CmpOneComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
-
-}
-
-@Component({
-  selector: 'proj-cmp-one',
-  template: '<h1>Hello World, {{abc}}</h1>',
-  styles: []
-})
-export class CmpMultiComponent implements OnInit {
-  @Input() name: string = 'abc'
-  constructor() { }
-  ngOnInit(): void {}
-}
-`
-    );
-    tree.write(
-      '',
-      `
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { CmpOneComponent, CmpMultiComponent } from './cmp-one.component';
-import { CmpTwoComponent } from './cmp-two.component';
-
-@NgModule({
-  imports: [
-    CommonModule
-  ],
-  declarations: [
-    CmpOneComponent,
-    CmpTwoComponent
-  ]
-})
-export class MultipleComponentsModule { }
-`
-    );
-
-    await cypressComponentConfiguration(tree, {
-      project: 'multiple-components',
-      generateTests: true,
-      skipFormat: true,
-    });
-
-    expect(
-      tree.read('multiple-components/src/lib/cmp-one.component.cy.ts', 'utf-8')
-    ).toEqual('');
   });
 });
 
