@@ -2,13 +2,6 @@ import { FeedContainer } from '@nx/nx-dev-feature-ai';
 import { Header } from '@nx/nx-dev-ui-common';
 import { NextSeo } from 'next-seo';
 import { cx } from '@nx/nx-dev-ui-primitives';
-import type { GetServerSideProps } from 'next';
-import { tryFramerProxy } from '../../lib/framer-proxy';
-
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  if (await tryFramerProxy(ctx)) return { props: {} };
-  return { props: {} };
-};
 
 export default function AiDocs(): JSX.Element {
   return (
