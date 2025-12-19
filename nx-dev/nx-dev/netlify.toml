@@ -1,0 +1,40 @@
+# Netlify configuration for nx-dev (Next.js app)
+#
+# Migration Plan (DOC-330):
+# 1. Deploy nx-dev to Netlify alongside existing Vercel deployment
+# 2. Test and validate Netlify deployment
+# 3. Update DNS to point to Netlify
+# 4. Remove Vercel deployment after 2 weeks
+#
+# Netlify UI Settings Required:
+# - Create new site from this repository
+# - Package directory: nx-dev/nx-dev
+# - Leave Base directory empty (defaults to repository root)
+#
+# Environment Variables (set in Netlify dashboard):
+# - NEXT_PUBLIC_ASTRO_URL: URL of the Astro docs site (e.g., https://master--nx-docs.netlify.app)
+#
+# After migration is complete (remove Vercel):
+# - Delete Vercel project
+# - Remove process.env.VERCEL checks in next.config.js (optional cleanup)
+
+[build]
+  # Build command runs from workspace root
+  command = "pnpm nx run nx-dev:build"
+  # Publish directory is the Next.js output (relative to repo root)
+  publish = "dist/nx-dev/nx-dev"
+
+[build.environment]
+  # Node version
+  NODE_VERSION = "22"
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-DNS-Prefetch-Control = "on"
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
