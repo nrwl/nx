@@ -275,7 +275,7 @@ function applyNxDependentConfig(
 
   // Normalize typeCheckOptions from deprecated skipTypeChecking for backward compatibility
   const defaultTypeCheckOptions = { async: true };
-  let typeCheckOptions: false | { async: boolean };
+  let typeCheckOptions: boolean | { async: boolean };
   if (options.typeCheckOptions !== undefined) {
     if (options.typeCheckOptions === true) {
       typeCheckOptions = defaultTypeCheckOptions;
