@@ -45,6 +45,10 @@ module.exports = withNx({
         source: '/.netlify/:path*',
         destination: `${astroDocsUrl}/.netlify/:path*`,
       },
+      {
+        source: '/llms.txt',
+        destination: `${astroDocsUrl}/docs/llms.txt`,
+      },
     ];
 
     // For Vite assets only in development mode

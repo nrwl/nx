@@ -342,14 +342,6 @@
       "description": "Update the @angular/cli package version to ~20.3.0.",
       "factory": "./src/migrations/update-21-6-1/update-angular-cli"
     },
-    "update-angular-cli-version-21-0-0": {
-      "version": "22.3.0-beta.0",
-      "requires": {
-        "@angular/core": ">=21.0.0"
-      },
-      "description": "Update the @angular/cli package version to ~21.0.0.",
-      "factory": "./src/migrations/update-22-3-0/update-angular-cli"
-    },
     "update-ssr-webpack-config-22-2-0": {
       "version": "22.3.0-beta.0",
       "requires": {
@@ -2012,6 +2004,12 @@
         "@angular/core": ">=20.3.0 <21.0.0"
       },
       "packages": {
+        "@angular/cli": {
+          "version": "~21.0.0",
+          "alwaysAddToPackageJson": false,
+          "ignorePackageGroup": true,
+          "ignoreMigrations": true
+        },
         "@angular-devkit/build-angular": {
           "version": "~21.0.0",
           "alwaysAddToPackageJson": false
@@ -2157,6 +2155,18 @@
         },
         "@angular-eslint/bundled-angular-compiler": {
           "version": "^21.0.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.3.2-ngrx": {
+      "version": "22.3.2-beta.0",
+      "requires": {
+        "@angular/core": "^21.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "^21.0.0",
           "alwaysAddToPackageJson": false
         }
       }

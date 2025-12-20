@@ -1,5 +1,4 @@
 import { CallToAction, DefaultLayout } from '@nx/nx-dev-ui-common';
-import type { GetServerSideProps } from 'next';
 import { NextSeo } from 'next-seo';
 import {
   Hero,
@@ -10,12 +9,6 @@ import {
   Solution,
   Features,
 } from '@nx/nx-dev-ui-home';
-import { tryFramerProxy } from '../lib/framer-proxy';
-
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  if (await tryFramerProxy(ctx)) return { props: {} };
-  return { props: {} };
-};
 
 export default function Index(): JSX.Element {
   return (

@@ -12,13 +12,6 @@ import {
   WhyCiSecurityMatters,
 } from '@nx/nx-dev-ui-enterprise';
 import { type ReactElement, useEffect, useState } from 'react';
-import type { GetServerSideProps } from 'next';
-import { tryFramerProxy } from '../../lib/framer-proxy';
-
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  if (await tryFramerProxy(ctx)) return { props: {} };
-  return { props: {} };
-};
 
 export function EnterpriseSecurity(): ReactElement {
   const router = useRouter();

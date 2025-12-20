@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import {
   AiHero,
@@ -6,15 +7,8 @@ import {
   WhileRunningCi,
   WhileScalingYourOrganization,
 } from '@nx/nx-dev-ui-ai-landing-page';
-import type { GetServerSideProps } from 'next';
 import type { ReactElement } from 'react';
 import { NextSeo } from 'next-seo';
-import { tryFramerProxy } from '../lib/framer-proxy';
-
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  if (await tryFramerProxy(ctx)) return { props: {} };
-  return { props: {} };
-};
 
 export function Ai(): ReactElement {
   return (
