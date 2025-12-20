@@ -3182,6 +3182,10 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+    devDependencies:
+      nx:
+        specifier: workspace:*
+        version: link:../nx
 
   packages/expo:
     dependencies:
@@ -3218,6 +3222,10 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+    devDependencies:
+      nx:
+        specifier: workspace:*
+        version: link:../nx
     optionalDependencies:
       '@nx/detox':
         specifier: workspace:*
@@ -3896,6 +3904,9 @@ importers:
       '@nx/rsbuild':
         specifier: workspace:*
         version: link:../rsbuild
+      '@nx/storybook':
+        specifier: workspace:*
+        version: link:../storybook
       '@nx/vitest':
         specifier: workspace:*
         version: link:../vitest
@@ -3951,6 +3962,10 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+    devDependencies:
+      nx:
+        specifier: workspace:*
+        version: link:../nx
     optionalDependencies:
       '@nx/detox':
         specifier: workspace:*

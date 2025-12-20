@@ -7,7 +7,7 @@ filter: 'type:References'
 ---
 
 When Nx [computes the hash for a given operation](/docs/concepts/how-caching-works), it takes into account the `inputs` of the target.
-The `inputs` are a list of **file sets**, **runtime** inputs and **environment variables** that affect the output of the target.
+The `inputs` are a list of **file sets**, **runtime** inputs, **environment variables**, and **working directory** that affect the output of the target.
 If any of the `inputs` change, the cache is invalidated and the target is re-run.
 
 ## Types of Inputs
@@ -87,6 +87,23 @@ You can use a Runtime input to provide a script which will output the informatio
 ```
 
 This kind of input is often used to include versions of tools used to run the task. You should ensure that these scripts work on any platform where the workspace is used. Avoid using `.sh` or `.bat` files as these will not work across Windows and \*nix operating systems.
+
+### Working Directory
+
+Some tasks may behave differently depending on which directory they are run from. Nx can include the current working directory in the computation hash to ensure that tasks are re-run when the working directory changes. Working directory inputs are defined like this:
+
+```jsonc
+{
+  "inputs": [
+    { "workingDirectory": "relative" }, // Hash the path relative to workspace root
+  ],
+}
+```
+
+The `workingDirectory` input accepts two values:
+
+- `"relative"` - Hashes the relative path from the workspace root to the current working directory. This is useful when tasks should be invalidated when run from different subdirectories within the workspace.
+- `"absolute"` - Hashes the full absolute path of the current working directory. This is useful when tasks depend on the exact location on the filesystem. Notably, this will invalidate cache entries if the repository is cloned to a different location on the filesystem, such as between CI and local development environments.
 
 ### External Dependencies
 
