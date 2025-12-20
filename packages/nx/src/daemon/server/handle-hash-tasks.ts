@@ -16,6 +16,7 @@ export async function handleHashTasks(payload: {
   env: any;
   tasks: Task[];
   taskGraph: TaskGraph;
+  cwd: string;
 }) {
   const {
     error,
@@ -48,7 +49,8 @@ export async function handleHashTasks(payload: {
   const response = await storedHasher.hashTasks(
     payload.tasks,
     payload.taskGraph,
-    payload.env
+    payload.env,
+    payload.cwd
   );
   return {
     response,

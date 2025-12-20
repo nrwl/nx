@@ -22,6 +22,9 @@
     },
     {
       "path": "../devkit/tsconfig.lib.json"
+    },
+    {
+      "path": "../nx/tsconfig.lib.json"
     }
   ]
 }

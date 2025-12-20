@@ -52,7 +52,7 @@ public static partial class TargetBuilder
             },
             DependsOn = [buildReleaseTarget],
             Cache = true,
-            Inputs = ["default", $"^{productionInput}"],
+            Inputs = ["default", $"^{productionInput}", new { workingDirectory = "absolute" }],
             Outputs = [$"{outputPrefix}/{publishDir}"],
             Metadata = new TargetMetadata
             {

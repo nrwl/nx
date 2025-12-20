@@ -1,7 +1,7 @@
 use crate::native::logger::enable_logger;
 use crate::native::tasks::{
     dep_outputs::get_dep_output,
-    types::{HashInstruction, TaskGraph},
+    types::{CwdMode, HashInstruction, TaskGraph},
 };
 use crate::native::types::{Input, NxJson};
 use crate::native::{
@@ -391,6 +391,13 @@ impl HashPlanner {
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
             Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
             Input::Environment(env) => Some(HashInstruction::Environment(env.to_string())),
+            Input::WorkingDirectory(mode) => {
+                let cwd_mode = match mode.to_lowercase().as_str() {
+                    "absolute" => CwdMode::Absolute,
+                    _ => CwdMode::Relative,
+                };
+                Some(HashInstruction::Cwd(cwd_mode))
+            }
             _ => None,
         });
 
