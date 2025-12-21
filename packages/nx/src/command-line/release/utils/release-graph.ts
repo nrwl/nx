@@ -6,16 +6,16 @@ import type {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
-import { NxArgs } from '../../../utils/command-line-utils';
 import type { Tree } from '../../../generators/tree';
+import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
+import { calculateFileChanges } from '../../../project-graph/file-utils';
+import { NxArgs } from '../../../utils/command-line-utils';
 import {
   IMPLICIT_DEFAULT_RELEASE_GROUP,
   type NxReleaseConfig,
 } from '../config/config';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { ProjectLogger } from '../version/project-logger';
-import { calculateFileChanges } from '../../../project-graph/file-utils';
-import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
 import { resolveCurrentVersion } from '../version/resolve-current-version';
 import { topologicalSort } from '../version/topological-sort';
 import {
@@ -26,9 +26,11 @@ import {
 } from '../version/version-actions';
 import {
   getLatestGitTagForPattern,
+  GetLatestGitTagForPatternOptions,
   GitCommit,
   sanitizeProjectNameForGitTag,
 } from './git';
+import { RepoGitTags } from './repository-git-tags';
 import { shouldSkipVersionActions, type VersionDataEntry } from './shared';
 
 /**
@@ -138,6 +140,8 @@ export class ReleaseGraph {
    * with multiple projects
    */
   private affectedGraphPerCommit = new Map<string, ProjectGraph>();
+
+  private repositoryGitTags = RepoGitTags.create();
 
   /**
    * User-friendly log describing what the filter matched.
@@ -645,6 +649,7 @@ export class ReleaseGraph {
               projectName: sanitizeProjectNameForGitTag(projectGraphNode.name),
               releaseGroupName: releaseGroupNode.group.name,
             },
+            this.resolveRepositoryTags,
             {
               checkAllBranchesWhen:
                 releaseGroupNode.group.releaseTag.checkAllBranchesWhen,
@@ -1034,6 +1039,12 @@ Valid values are: ${validReleaseVersionPrefixes
 
     return affectedGraph;
   }
+
+  resolveRepositoryTags = async (
+    resolveTagsWhen: GetLatestGitTagForPatternOptions['checkAllBranchesWhen']
+  ) => {
+    return this.repositoryGitTags.resolveTags(resolveTagsWhen);
+  };
 
   /**
    * Runs validation on resolved VersionActions instances. E.g. check that manifest files exist for all projects that will be processed.
