@@ -33,7 +33,6 @@ import { ReleaseGraph, createReleaseGraph } from './utils/release-graph';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
   VersionData,
-  clearAffectedGraphCache,
   commitChanges,
   createCommitMessageValues,
   createGitTagValues,
@@ -262,8 +261,6 @@ export function createAPI(
       processor.flushAllProjectLoggers();
       // Bubble up the error so that the CLI can print the error and exit, or the programmatic API can handle it
       throw err;
-    } finally {
-      clearAffectedGraphCache();
     }
 
     /**
