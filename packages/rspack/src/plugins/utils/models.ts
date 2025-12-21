@@ -181,12 +181,12 @@ export interface NxAppRspackPluginOptions {
   skipPackageManager?: boolean;
   /**
    * Skip type checking. Default is `false`.
-   * @deprecated Use `typeCheckOptions` option instead.
+   * @deprecated Use `typeCheckOptions` option instead. This option will be removed in Nx 24.
    */
   skipTypeChecking?: boolean;
   /**
    * Skip type checking. Default is `false`.
-   * @deprecated Use `typeCheckOptions` option instead.
+   * @deprecated Use `typeCheckOptions` option instead. This option will be removed in Nx 24.
    */
   typeCheck?: boolean;
   /**

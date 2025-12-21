@@ -30,7 +30,7 @@
       "alias": "typeCheck",
       "type": "boolean",
       "description": "Skip the type checking. Default is `false`.",
-      "x-deprecated": "Use `typeCheckOptions` instead."
+      "x-deprecated": "Use `typeCheckOptions` instead. This option will be removed in Nx 24."
     },
     "typeCheckOptions": {
       "description": "Configure type checking during the build. Set to `true` to enable with defaults (async: true). Set to `false` to disable type checking entirely. Use `{ async: true }` to run type checking in a separate process without blocking the build. Default is `{ async: true }`.",
