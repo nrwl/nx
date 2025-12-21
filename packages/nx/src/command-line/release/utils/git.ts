@@ -153,9 +153,8 @@ export class RepoGitTags {
   async resolveTags(
     checkAllBranchesWhen?: GetLatestGitTagForPatternOptions['checkAllBranchesWhen']
   ) {
-    const alwaysCheckAllBranches = await this.#alwaysCheckAllBranches(
-      checkAllBranchesWhen
-    );
+    const alwaysCheckAllBranches =
+      await this.#alwaysCheckAllBranches(checkAllBranchesWhen);
 
     let tags = this.#tagsMap.get(alwaysCheckAllBranches);
     if (!tags) {

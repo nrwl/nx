@@ -6,6 +6,7 @@ import type {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
+import { NxArgs } from '../../../utils/command-line-utils';
 import type { Tree } from '../../../generators/tree';
 import {
   IMPLICIT_DEFAULT_RELEASE_GROUP,
@@ -13,6 +14,8 @@ import {
 } from '../config/config';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { ProjectLogger } from '../version/project-logger';
+import { calculateFileChanges } from '../../../project-graph/file-utils';
+import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
 import { resolveCurrentVersion } from '../version/resolve-current-version';
 import { topologicalSort } from '../version/topological-sort';
 import {
@@ -21,7 +24,11 @@ import {
   type AfterAllProjectsVersioned,
   type VersionActions,
 } from '../version/version-actions';
-import { getLatestGitTagForPattern, sanitizeProjectNameForGitTag } from './git';
+import {
+  getLatestGitTagForPattern,
+  GitCommit,
+  sanitizeProjectNameForGitTag,
+} from './git';
 import { shouldSkipVersionActions, type VersionDataEntry } from './shared';
 
 /**
@@ -124,6 +131,13 @@ export class ReleaseGraph {
     Set<string>
   >();
   private originalFilteredProjects = new Set<string>();
+
+  /**
+   * Store the affected graph per commit per project
+   * to avoid recomputation of the graph on workspace
+   * with multiple projects
+   */
+  private affectedGraphPerCommit = new Map<string, ProjectGraph>();
 
   /**
    * User-friendly log describing what the filter matched.
@@ -993,6 +1007,32 @@ Valid values are: ${validReleaseVersionPrefixes
    */
   isProjectToProcess(projectName: string): boolean {
     return this.allProjectsToProcess.has(projectName);
+  }
+
+  async resolveAffectedFilesPerCommitInProjectGraph(
+    commit: GitCommit,
+    projectGraph: ProjectGraph
+  ) {
+    // Try to get the graph associated with the commit shortHash
+    // if not available, calculate it and store it in the cache
+    const { shortHash } = commit;
+    let affectedGraph = this.affectedGraphPerCommit.get(shortHash);
+
+    if (affectedGraph) {
+      return affectedGraph;
+    }
+
+    // Convert affectedFiles to FileChange[] format with proper diff computation
+    const touchedFiles = calculateFileChanges(commit.affectedFiles, {
+      base: `${commit.shortHash}^`,
+      head: commit.shortHash,
+    } as NxArgs);
+
+    // Use the same affected detection logic as `nx affected`
+    affectedGraph = await filterAffected(projectGraph, touchedFiles);
+    this.affectedGraphPerCommit.set(shortHash, affectedGraph);
+
+    return affectedGraph;
   }
 
   /**
