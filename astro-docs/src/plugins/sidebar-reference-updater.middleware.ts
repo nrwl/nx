@@ -28,12 +28,12 @@ interface SidebarGroup {
 export const onRequest = defineRouteMiddleware(async (context) => {
   const { sidebar } = context.locals.starlightRoute;
 
+  // Find all sections we need to update
   const refSection = sidebar.find((s) => s.label === 'Reference');
+  const buildSection = sidebar.find((s) => s.label === 'Build with Nx');
+  const extendSection = sidebar.find((s) => s.label === 'Extend Nx');
 
-  if (!refSection || !('entries' in refSection)) {
-    return;
-  }
-
+  // Generate all dynamic sections
   const devkitSection = await getDevKitSection(context.locals.starlightRoute);
   const nxSection = await getNxPackageSection(
     'nx',
@@ -75,22 +75,46 @@ export const onRequest = defineRouteMiddleware(async (context) => {
     attrs: {},
   };
 
-  // Apply sorting to reference entries
-  const newEntries = [
-    ...commandSection,
-    pluginRegistryLink,
-    changelogLink,
-    nxSection,
-    devkitSection,
-    webSection,
-    workspaceSection,
-    pluginSection,
-  ] as Array<SidebarGroup | SidebarLink>;
-  refSection.entries = sortReferenceEntries(
-    refSection.entries as (SidebarGroup | SidebarLink)[],
-    newEntries,
-    desiredSectionOrder
-  );
+  // Add Nx, Web, Workspace packages to Build with Nx section
+  if (buildSection && 'entries' in buildSection) {
+    // Find the Guides section to insert packages after it
+    const guidesIndex = buildSection.entries.findIndex(
+      (e) => 'label' in e && e.label === 'Guides'
+    );
+    const insertIndex =
+      guidesIndex !== -1 ? guidesIndex + 1 : buildSection.entries.length;
+
+    // Insert packages after Guides, before Technologies
+    buildSection.entries.splice(
+      insertIndex,
+      0,
+      nxSection as SidebarGroup,
+      webSection as SidebarGroup,
+      workspaceSection as SidebarGroup
+    );
+  }
+
+  // Add Devkit and Plugin package to Extend Nx section
+  if (extendSection && 'entries' in extendSection) {
+    extendSection.entries.push(
+      devkitSection as SidebarGroup,
+      pluginSection as SidebarGroup
+    );
+  }
+
+  // Reference section gets commands, plugin registry, and changelog
+  if (refSection && 'entries' in refSection) {
+    const newEntries = [
+      ...commandSection,
+      pluginRegistryLink,
+      changelogLink,
+    ] as Array<SidebarGroup | SidebarLink>;
+    refSection.entries = sortReferenceEntries(
+      refSection.entries as (SidebarGroup | SidebarLink)[],
+      newEntries,
+      desiredSectionOrder
+    );
+  }
 });
 
 async function getDevKitSection({ entry }: StarlightRouteData) {
