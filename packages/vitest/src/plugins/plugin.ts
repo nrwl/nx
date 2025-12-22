@@ -193,6 +193,14 @@ async function buildVitestTargets(
     'build'
   );
 
+  // If this is a root workspace config file with projects property, don't infer targets.
+  // The root config is just an orchestrator - the actual tests live in the individual project configs.
+  const isWorkspaceRoot = projectRoot === '.';
+  const hasProjectsProperty = Array.isArray(viteBuildConfig?.test?.projects);
+  if (isWorkspaceRoot && hasProjectsProperty) {
+    return { targets: {}, metadata: {}, projectType: 'library' };
+  }
+
   let metadata: ProjectConfiguration['metadata'] = {};
 
   const { testOutputs, hasTest } = getOutputs(
