@@ -23,37 +23,13 @@ assignment-rules:
       - agent: linux-extra-large
         parallelism: 1
 
-  - projects:
-      - e2e-release
-      - e2e-angular
-      - e2e-react
-      - e2e-next
-      - e2e-web
-      - e2e-eslint
-      - e2e-remix
-      - e2e-cypress
-      - e2e-docker
-      - e2e-js
-      - e2e-nx-init
-      - e2e-dotnet
-      - e2e-workspace-create
-      - e2e-rollup
-    targets:
-      - e2e-ci**
-    run-on:
-      - agent: linux-large
-        parallelism: 1
-      - agent: linux-extra-large
-        parallelism: 1
-
-  # All other e2e tests can run in parallel
   - targets:
       - e2e-ci**
     run-on:
       - agent: linux-large
-        parallelism: 2
+        parallelism: 1
       - agent: linux-extra-large
-        parallelism: 3
+        parallelism: 1
 
   # These projects should not need to be isolated.
   - projects:
