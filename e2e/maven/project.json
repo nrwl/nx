@@ -7,10 +7,18 @@
   "// targets": "to see all targets run: nx show project e2e-maven --web",
   "targets": {
     "e2e-local": {
-      "command": "echo 'Maven e2e tests disabled'"
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry",
+        "nx-maven-plugin:install"
+      ]
     },
     "e2e-ci--**/**": {
-      "command": "echo 'Maven e2e tests disabled'"
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry",
+        "nx-maven-plugin:install"
+      ]
     }
   }
 }
