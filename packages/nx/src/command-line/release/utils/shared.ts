@@ -2,23 +2,19 @@ import * as chalk from 'chalk';
 import { prerelease } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
 import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
-import {
-  calculateFileChanges,
-  Change,
-  DeletedFileChange,
-  WholeFileChange,
-} from '../../../project-graph/file-utils';
+import { calculateFileChanges } from '../../../project-graph/file-utils';
 import { interpolate } from '../../../tasks-runner/utils';
 import type { NxArgs } from '../../../utils/command-line-utils';
 import { output } from '../../../utils/output';
+import { NxReleaseConfig } from '../config/config';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import {
-  GitCommit,
   gitAdd,
+  GitCommit,
   gitCommit,
   sanitizeProjectNameForGitTag,
 } from './git';
-import { NxReleaseConfig } from '../config/config';
+import { ReleaseGraph } from './release-graph';
 
 export const noDiffInChangelogMessage = chalk.yellow(
   `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
@@ -436,7 +432,8 @@ export async function getCommitsRelevantToProjects(
   projectGraph: ProjectGraph,
   commits: GitCommit[],
   projects: string[],
-  nxReleaseConfig: NxReleaseConfig
+  nxReleaseConfig: NxReleaseConfig,
+  releaseGraph: ReleaseGraph
 ): // Map of projectName to GitCommit[]
 Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
   const projectSet = new Set(projects);
@@ -451,14 +448,13 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
       continue;
     }
 
-    // Convert affectedFiles to FileChange[] format with proper diff computation
-    const touchedFiles = calculateFileChanges(commit.affectedFiles, {
-      base: `${commit.shortHash}^`,
-      head: commit.shortHash,
-    } as NxArgs);
-
-    // Use the same affected detection logic as `nx affected`
-    const affectedGraph = await filterAffected(projectGraph, touchedFiles);
+    // Try to get the graph associated with the commit shortHash
+    // if not available, calculate it and store it in the cache
+    let affectedGraph =
+      await releaseGraph.resolveAffectedFilesPerCommitInProjectGraph(
+        commit,
+        projectGraph
+      );
 
     for (const projectName of Object.keys(affectedGraph.nodes)) {
       if (projectSet.has(projectName)) {

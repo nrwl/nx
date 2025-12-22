@@ -7,6 +7,10 @@ import {
 import { ProjectGraph } from '../../../config/project-graph';
 import { GitCommit } from './git';
 import { readNxJson } from '../../../config/nx-json';
+import { ReleaseGraph } from './release-graph';
+import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
+import { calculateFileChanges } from '../../../project-graph/file-utils';
+import { NxArgs } from '../../../utils/command-line-utils';
 
 jest.mock('../../../config/nx-json', () => ({
   ...jest.requireActual('../../../config/nx-json'),
@@ -661,6 +665,7 @@ describe('shared', () => {
   describe(`getCommitsRelevantToProjects()`, () => {
     let mockProjectGraph: ProjectGraph;
     let mockReleaseConfig: NxReleaseConfig | null;
+    let mockReleaseGraph: ReleaseGraph;
 
     beforeEach(async () => {
       (readNxJson as jest.Mock).mockReturnValue({});
@@ -729,6 +734,19 @@ describe('shared', () => {
           },
         }
       ));
+
+      // Create a mock ReleaseGraph with the required method
+      mockReleaseGraph = {
+        resolveAffectedFilesPerCommitInProjectGraph: jest.fn(
+          async (commit: GitCommit, projectGraph: ProjectGraph) => {
+            const touchedFiles = calculateFileChanges(commit.affectedFiles, {
+              base: `${commit.shortHash}^`,
+              head: commit.shortHash,
+            } as NxArgs);
+            return filterAffected(projectGraph, touchedFiles);
+          }
+        ),
+      } as unknown as ReleaseGraph;
     });
 
     it('should include commits that directly touch target projects', async () => {
@@ -742,7 +760,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a', 'lib-b'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       expect(result.size).toBe(2);
@@ -763,7 +782,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       // Both commits should be included - nx.json affects all, and lib-a is directly touched
@@ -784,7 +804,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       expect(result.size).toBe(1);
@@ -811,7 +832,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       // lib-a depends on lib-c, so commit touching lib-c should affect lib-a
@@ -833,7 +855,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       expect(result.size).toBe(1);
@@ -853,7 +876,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a', 'lib-b'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       // Same commit should appear for both projects
@@ -871,7 +895,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a', 'lib-b'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       // Global file should appear for all requested projects
@@ -891,7 +916,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a', 'lib-b'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       expect(result.has('lib-a')).toBe(false);
@@ -904,7 +930,8 @@ describe('shared', () => {
         mockProjectGraph,
         [],
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       expect(result.size).toBe(0);
@@ -919,7 +946,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         [],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       expect(result.size).toBe(0);
@@ -935,7 +963,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       // Lock file changes typically affect all or many projects
@@ -952,7 +981,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       // package.json changes typically affect projects
@@ -977,7 +1007,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       expect(result.size).toBe(0);
