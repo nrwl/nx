@@ -1,5 +1,6 @@
 import { CreateNodesContextV2 } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
+import { loadViteDynamicImport } from '../utils/executor-utils';
 
 // Mock fs to provide stable test environment
 jest.mock('node:fs', () => ({
@@ -125,6 +126,81 @@ describe('@nx/vitest', () => {
       );
 
       expect(nodes).toMatchSnapshot();
+    });
+  });
+
+  describe('workspace config with projects', () => {
+    beforeEach(async () => {
+      context = {
+        nxJsonConfiguration: {
+          targetDefaults: {},
+          namedInputs: {
+            default: ['{projectRoot}/**/*'],
+            production: ['!{projectRoot}/**/*.spec.ts'],
+          },
+        },
+        workspaceRoot: '',
+      };
+    });
+
+    afterEach(() => {
+      jest.resetModules();
+    });
+
+    it('should NOT create targets for root config with projects array', async () => {
+      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+        resolveConfig: jest.fn().mockResolvedValue({
+          path: 'vitest.config.ts',
+          config: {},
+          dependencies: [],
+          test: {
+            projects: ['packages/*'],
+          },
+        }),
+      });
+
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        {
+          testTargetName: 'test',
+        },
+        context
+      );
+
+      // Root config with projects should return empty targets
+      expect(nodes[0][1].projects['.']).toMatchObject({
+        targets: {},
+        metadata: {},
+        projectType: 'library',
+      });
+    });
+
+    it('should NOT create targets for root config with empty projects array', async () => {
+      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+        resolveConfig: jest.fn().mockResolvedValue({
+          path: 'vitest.config.ts',
+          config: {},
+          dependencies: [],
+          test: {
+            projects: [],
+          },
+        }),
+      });
+
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        {
+          testTargetName: 'test',
+        },
+        context
+      );
+
+      // Root config with empty projects array should also return empty targets
+      expect(nodes[0][1].projects['.']).toMatchObject({
+        targets: {},
+        metadata: {},
+        projectType: 'library',
+      });
     });
   });
 });
