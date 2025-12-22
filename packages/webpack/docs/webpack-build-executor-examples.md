@@ -128,3 +128,63 @@ Set `isolatedConfig` to `true` in your `project.json` file in the `build` target
   }
 }
 ```
+
+##### Configuring type checking
+
+You can configure type checking behavior using the `typeCheckOptions` option. By default, type checking runs asynchronously (non-blocking).
+
+```json5
+//...
+"my-app": {
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "options": {
+        "webpackConfig": "apps/my-app/webpack.config.js",
+        // Run type checking asynchronously (non-blocking)
+        "typeCheckOptions": { "async": true }
+      }
+    },
+    //...
+  }
+}
+```
+
+To disable type checking entirely:
+
+```json5
+//...
+"my-app": {
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "options": {
+        "webpackConfig": "apps/my-app/webpack.config.js",
+        "typeCheckOptions": false
+      }
+    },
+    //...
+  }
+}
+```
+
+##### Adding runtime dependencies to generated package.json
+
+When using `generatePackageJson`, you can add additional runtime dependencies that should be included in the generated `package.json` file. This is useful for Docker installs where you need dependencies that aren't detected automatically:
+
+```json5
+//...
+"my-app": {
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "options": {
+        "webpackConfig": "apps/my-app/webpack.config.js",
+        "generatePackageJson": true,
+        "runtimeDependencies": ["pg", "redis"]
+      }
+    },
+    //...
+  }
+}
+```
