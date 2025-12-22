@@ -11,6 +11,7 @@ import {
 import {
   detectPackageManager,
   type ProjectGraph,
+  readJsonFile,
   serializeJson,
 } from '@nx/devkit';
 
@@ -34,11 +35,9 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
     const runtimeDependencies: Record<string, string> = {};
     if (this.options.runtimeDependencies) {
       for (const dep of this.options.runtimeDependencies) {
-        const pkgs = fs.readFileSync(
-          `${process.env.NX_WORKSPACE_ROOT}/node_modules/${dep}/package.json`,
-          'utf-8'
-        );
-        const { name, version } = JSON.parse(pkgs);
+        const depPkgJson = require.resolve(`${dep}/package.json`);
+        if (!fs.existsSync(depPkgJson)) continue;
+        const { name, version } = readJsonFile(depPkgJson);
         runtimeDependencies[name] = version;
       }
     }
