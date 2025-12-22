@@ -17,10 +17,12 @@
 import './commands';
 
 // add component testing only related command here, such as mount
-declare global {<% if (linter === 'eslint') { %>
-  // eslint-disable-next-line @typescript-eslint/no-namespace<% } %>
-  namespace Cypress {<% if (linter === 'eslint') { %>
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars<% } %>
-    interface Chainable<Subject> {}
-  }
+<%_ if (linter === 'eslint') { _%>
+// eslint-disable-next-line @typescript-eslint/no-namespace
+<%_ } _%>
+declare namespace Cypress {
+  <%_ if (linter === 'eslint') { _%>
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  <%_ } _%>
+  interface Chainable<Subject> {}
 }
