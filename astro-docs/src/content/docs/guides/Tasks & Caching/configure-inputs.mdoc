@@ -12,6 +12,10 @@ Nx errs on the side of caution when using inputs. Ideally, the "perfect" configu
 
 For an overview of all the possible [types of inputs](/docs/reference/inputs) and how to reuse sets of inputs as [named inputs](/docs/reference/inputs#named-inputs), see the reference documentation.
 
+{% aside type="caution" title="Directory Paths Require Trailing Slash or Glob" %}
+When specifying a directory as an input, you must use a trailing slash (`/`) or a glob pattern. For example, `{projectRoot}/src/` or `{projectRoot}/src/**/*` will match all files in the `src` directory, but `{projectRoot}/src` (without trailing slash) will not match any files. This differs from `outputs`, which support naked directory paths.
+{% /aside %}
+
 Throughout this recipe, the following project structure of a simple workspace will be used as an example to help understand inputs better.
 
 {% graph height="450px" %}
