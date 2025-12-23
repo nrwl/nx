@@ -2,8 +2,8 @@ import * as chalk from 'chalk';
 import { ChildProcess, exec, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
-import * as treeKill from 'tree-kill';
 import { ExecutorContext } from '../../config/misc-interfaces';
+import { killProcessTree } from '../../native';
 import {
   createPseudoTerminal,
   PseudoTerminal,
@@ -77,16 +77,10 @@ export class ParallelRunningTasks implements RunningTask {
     }
   }
 
-  async kill(signal?: NodeJS.Signals) {
-    await Promise.all(
-      this.childProcesses.map(async (p) => {
-        try {
-          return p.kill();
-        } catch (e) {
-          console.error(`Unable to terminate "${p.command}"\nError:`, e);
-        }
-      })
-    );
+  kill(signal?: NodeJS.Signals): void {
+    for (const p of this.childProcesses) {
+      p.kill(signal);
+    }
   }
 
   private async run() {
@@ -155,10 +149,7 @@ export class ParallelRunningTasks implements RunningTask {
             failureDetails = { childProcess, code, terminalOutput };
 
             // Immediately terminate all other running processes
-            await this.terminateRemainingProcesses(
-              runningProcesses,
-              childProcess
-            );
+            this.terminateRemainingProcesses(runningProcesses, childProcess);
           }
 
           runningProcesses.delete(childProcess);
@@ -186,38 +177,16 @@ export class ParallelRunningTasks implements RunningTask {
     }
   }
 
-  private async terminateRemainingProcesses(
+  private terminateRemainingProcesses(
     runningProcesses: Set<RunningNodeProcess>,
     failedProcess: RunningNodeProcess
-  ): Promise<void> {
-    const terminationPromises: Promise<void>[] = [];
-
+  ): void {
     const processesToTerminate = [...runningProcesses].filter(
       (p) => p !== failedProcess
     );
     for (const process of processesToTerminate) {
       runningProcesses.delete(process);
-
-      // Terminate the process
-      terminationPromises.push(
-        process.kill('SIGTERM').catch((err) => {
-          // Log error but don't fail the entire operation
-          if (this.streamOutput) {
-            console.error(
-              `Failed to terminate process "${process.command}":`,
-              err
-            );
-          }
-        })
-      );
-    }
-
-    // Wait for all terminations to complete with a timeout
-    if (terminationPromises.length > 0) {
-      await Promise.race([
-        Promise.all(terminationPromises),
-        new Promise<void>((resolve) => setTimeout(resolve, 5_000)),
-      ]);
+      process.kill('SIGTERM');
     }
   }
 }
@@ -436,18 +405,10 @@ class RunningNodeProcess implements RunningTask {
     this.childProcess.send(message);
   }
 
-  kill(signal?: NodeJS.Signals): Promise<void> {
-    return new Promise<void>((res, rej) => {
-      treeKill(this.childProcess.pid, signal, (err) => {
-        // On Windows, tree-kill (which uses taskkill) may fail when the process or its child process is already terminated.
-        // Ignore the errors, otherwise we will log them unnecessarily.
-        if (err && process.platform !== 'win32') {
-          rej(err);
-        } else {
-          res();
-        }
-      });
-    });
+  kill(signal?: NodeJS.Signals): void {
+    if (this.childProcess.pid) {
+      killProcessTree(this.childProcess.pid, signal);
+    }
   }
 
   private triggerOutputListeners(output: string) {
