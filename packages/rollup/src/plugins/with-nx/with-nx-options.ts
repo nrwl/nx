@@ -4,6 +4,11 @@ export interface RollupWithNxPluginOptions {
    * */
   additionalEntryPoints?: string[];
   /**
+   * Root dir for the additional entry-points.
+   * If provided, the paths in `additionalEntryPoints` are relative to this root dir.
+   * */
+  additionalEntryPointsRootDir?: string;
+  /**
    * Allow JavaScript files to be compiled.
    */
   allowJs?: boolean;
