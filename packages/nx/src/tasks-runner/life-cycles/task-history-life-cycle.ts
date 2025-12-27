@@ -11,6 +11,7 @@ import { LegacyTaskHistoryLifeCycle } from './task-history-life-cycle-old';
 
 interface TaskRun extends NativeTaskRun {
   target: Task['target'];
+  cacheable: boolean;
 }
 
 let tasksHistoryLifeCycle: TaskHistoryLifeCycle | LegacyTaskHistoryLifeCycle;
@@ -58,6 +59,7 @@ export class TaskHistoryLifeCycle implements LifeCycle {
         start:
           taskResult.task.startTime ?? this.startTimings[taskResult.task.id],
         end: taskResult.task.endTime ?? Date.now(),
+        cacheable: taskResult.task.cache === true,
       }))
       .forEach((taskRun) => {
         this.taskRuns.set(taskRun.hash, taskRun);
@@ -70,9 +72,14 @@ export class TaskHistoryLifeCycle implements LifeCycle {
       return;
     }
     await this.taskHistory.recordTaskRuns(entries.map(([_, v]) => v));
-    this.flakyTasks = await this.taskHistory.getFlakyTasks(
-      entries.map(([hash]) => hash)
-    );
+    // Only check for flaky tasks among cacheable tasks
+    const cacheableHashes = entries
+      .filter(([_, v]) => v.cacheable)
+      .map(([hash]) => hash);
+    this.flakyTasks =
+      cacheableHashes.length > 0
+        ? await this.taskHistory.getFlakyTasks(cacheableHashes)
+        : [];
     // Do not directly print output when using the TUI
     if (isTuiEnabled()) {
       return;
