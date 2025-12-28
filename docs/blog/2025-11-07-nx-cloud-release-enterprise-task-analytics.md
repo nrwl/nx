@@ -5,7 +5,6 @@ authors: ['Philip Fulcher']
 tags: ['nx', 'nx cloud', 'release']
 cover_image: /blog/images/2025-11-07/header.avif
 description: 'Eliminate CI guesswork with Enterprise Task Analytics. Identify performance regressions, prioritize flaky task fixes, and make data-driven decisions about workspace health—all with graph-powered insights only Nx can provide.'
-pinned: true
 youtubeUrl: https://youtu.be/TChFr9V__Mc
 ---
 
