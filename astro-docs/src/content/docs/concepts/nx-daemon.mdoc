@@ -51,72 +51,30 @@ To see information about the running Nx Daemon (such as its background process I
 The Nx Daemon uses a unix socket to communicate between the daemon and the Nx processes. By default this socket gets placed in a temp directory. If you are using Nx in a docker-compose environment, however, you may want to run the daemon manually
 and control its location to enable sharing the daemon among your docker containers. To do so, simply set the NX_DAEMON_SOCKET_DIR environment variable to a shared directory.
 
-## Running Nx in Docker
+## Daemon Behavior in Containers
 
-Docker containers present unique challenges for the Nx Daemon due to their ephemeral nature and filesystem behavior.
+Nx automatically disables the daemon in Docker containers and CI environments. The daemon's performance benefits come from maintaining state between commands and watching for file changes—in short-lived environments where each command runs in a fresh container, this state cannot be reused, so the overhead of starting a background process provides no benefit.
 
-### Why the daemon often fails in Docker
+### Automatic Detection
 
-The daemon relies on stable host conditions that containers typically do not provide:
+Nx detects Docker containers by checking for `/.dockerenv` or Docker references in `/proc/self/cgroup`. When detected, the daemon is disabled unless explicitly enabled with `NX_DAEMON=true`.
 
-- Containers have **ephemeral filesystems** that reset on restart
-- Volume mounts create **inode/mtime changes** that confuse file watching
-- Containers **restart frequently** during development
-- No stable **inter-process communication channel** between container restarts
-- Node processes inside Docker may have **different permissions**
+### Enabling the Daemon in Containers
 
-As a result, the daemon may fail to start, restart repeatedly, or provide inconsistent results.
-
-### Recommended: Disable the daemon in Docker
-
-For most container-based workflows, the simplest and most reliable approach is to disable the daemon:
-
-```shell
-NX_DAEMON=false nx build myapp
-```
-
-You can set this in your Dockerfile:
+If you have a long-running container with a persistent filesystem (e.g., a dev container), you can enable the daemon:
 
 ```dockerfile
-ENV NX_DAEMON=false
+ENV NX_DAEMON=true
 ```
 
-Or in docker-compose:
+When enabling the daemon in containers, be aware of these considerations:
 
-```yaml
-services:
-  dev:
-    environment:
-      - NX_DAEMON=false
-```
+- **Volume mounts** can cause inode/mtime changes that interfere with file watching
+- **Container restarts** invalidate the daemon's socket, requiring a new daemon process
+- **Permission differences** between the container and host may affect socket communication
 
-This switches Nx into a fully deterministic, stateless mode.
+For docker-compose setups with shared daemon sockets, see the [Customizing the socket location](#customizing-the-socket-location) section above.
 
-### Example: docker-compose setup for local development
-
-```yaml
-services:
-  dev:
-    image: node:20
-    working_dir: /workspace
-    volumes:
-      - .:/workspace
-      - /workspace/node_modules
-    environment:
-      - NX_DAEMON=false
-    command: sh -c "npm install && nx serve myapp"
-```
-
-This approach ensures consistent builds even when containers restart or mounts change.
-
-### CI/CD: Prefer stateless builds
-
-Most CI environments (GitHub Actions, GitLab CI, etc.) use fresh containers on every run. In these workflows:
-
-- The daemon offers little benefit since containers are ephemeral
-- Stateless, content-based builds are more reliable
-- Use [Nx Cloud remote caching](/ci/features/remote-cache) for faster builds instead of relying on daemon caching
-
-{% aside type="note" title="Rule of thumb" %}
-Use the daemon on stable hosts (local machines without containers). Disable it (`NX_DAEMON=false`) in ephemeral or container-based environments.
+{% aside type="note" title="When to enable the daemon" %}
+Only enable the daemon in containers that persist across multiple Nx commands. For ephemeral CI containers or frequently restarted dev containers, the default (disabled) behavior is more reliable.
 {% /aside %}
