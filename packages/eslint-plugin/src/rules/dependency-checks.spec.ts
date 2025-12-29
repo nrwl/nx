@@ -2701,6 +2701,102 @@ describe('Dependency checks (eslint)', () => {
       expect(failures.length).toEqual(0);
     });
 
+    it('should not report workspace:^ peer dependencies when peerDepsVersionStrategy is workspace', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        peerDependencies: {
+          external1: 'workspace:^',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        { peerDepsVersionStrategy: 'workspace' },
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, ['npm:external1']),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should not report workspace:~ peer dependencies when peerDepsVersionStrategy is workspace', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        peerDependencies: {
+          external1: 'workspace:~',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        { peerDepsVersionStrategy: 'workspace' },
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, ['npm:external1']),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
     it('should not affect optionalDependencies when peerDepsVersionStrategy is workspace', () => {
       const packageJson = {
         name: '@mycompany/liba',

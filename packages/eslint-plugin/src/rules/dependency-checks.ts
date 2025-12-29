@@ -32,7 +32,7 @@ export type Options = [
     useLocalPathsForWorkspaceDependencies?: boolean;
     runtimeHelpers?: string[];
     peerDepsVersionStrategy?: 'installed' | 'workspace';
-  }
+  },
 ];
 
 export type MessageIds =
@@ -290,7 +290,7 @@ export default ESLintUtils.RuleCreator(
       if (
         dependencySection === 'peerDependencies' &&
         peerDepsVersionStrategy === 'workspace' &&
-        packageRange !== WORKSPACE_VERSION_WILDCARD
+        !packageRange.startsWith('workspace:')
       ) {
         context.report({
           node: node as any,
