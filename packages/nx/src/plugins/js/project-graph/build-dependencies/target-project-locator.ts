@@ -146,17 +146,11 @@ export class TargetProjectLocator {
     }
 
     if (this.tsConfig.config) {
-      // Convert to an absolute file path because TypeScript's module resolution won't
-      // properly walk up the directory tree (toward the workspace root) when given a relative path.
-      const absolutePath = isAbsolute(filePath)
-        ? filePath
-        : this.getAbsolutePath(filePath);
-
       // TODO: this can be removed once we rework resolveImportWithRequire below
       // to properly handle ESM (exports, imports, conditions)
       const resolvedProject = this.resolveImportWithTypescript(
         importExpr,
-        absolutePath
+        filePath
       );
       if (resolvedProject) {
         return resolvedProject;
@@ -423,6 +417,11 @@ export class TargetProjectLocator {
     filePath: string
   ): string | undefined {
     let resolvedModule: string;
+    if (!isAbsolute(filePath)) {
+      // Convert to an absolute file path because TypeScript's module resolution won't
+      // properly walk up the directory tree (toward the workspace root) when given a relative path.
+      filePath = this.getAbsolutePath(filePath);
+    }
     const projectName = findProjectForPath(filePath, this.projectRootMappings);
     const cacheScope = projectName
       ? // fall back to the project name if the project root can't be determined
