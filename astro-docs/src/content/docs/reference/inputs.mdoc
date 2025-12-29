@@ -35,8 +35,8 @@ Source file inputs are defined like this:
     "{projectRoot}/**/*", // All files in a project
     "{workspaceRoot}/.gitignore", // A specific file in the workspace
     "{projectRoot}/**/*.ts", // A glob pattern for files
-    "!{projectRoot}/**/*.spec.ts" // Excluding files matching a glob pattern
-  ]
+    "!{projectRoot}/**/*.spec.ts", // Excluding files matching a glob pattern
+  ],
 }
 ```
 
@@ -46,7 +46,7 @@ Alternatively, you can use the object format with the `fileset` property:
 
 ```jsonc
 {
-  "inputs": [{ "fileset": "{projectRoot}/**/*" }]
+  "inputs": [{ "fileset": "{projectRoot}/**/*" }],
 }
 ```
 
@@ -199,8 +199,8 @@ You can reference named inputs from specific projects or from project dependenci
 
     // Reference a named input from all project dependencies
     // Equivalent to: { "input": "production", "dependencies": true }
-    "^production"
-  ]
+    "^production",
+  ],
 }
 ```
 
