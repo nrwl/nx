@@ -30,18 +30,25 @@ Changing source code will often change the behavior of a task. Nx can consider t
 Source file inputs are defined like this:
 
 ```jsonc
-// nx.json
 {
-  "inputs": {
+  "inputs": [
     "{projectRoot}/**/*", // All files in a project
     "{workspaceRoot}/.gitignore", // A specific file in the workspace
     "{projectRoot}/**/*.ts", // A glob pattern for files
-    "!{projectRoot}/**/*.spec.ts", // Excluding files matching a glob pattern
-  }
+    "!{projectRoot}/**/*.spec.ts" // Excluding files matching a glob pattern
+  ]
 }
 ```
 
-Source file inputs must be prefixed with either `{projectRoot}` or `{workspaceRoot}` to distinguish where the paths should be resolved from. `{workspaceRoot}` should only appear in the beginning of an input but `{projectRoot}` and `{projectName}` can be specified later in the input to interpolate the root or name of the project into the input location.
+Source file inputs can be specified as strings with glob patterns. These patterns must be prefixed with either `{projectRoot}` or `{workspaceRoot}` to distinguish where the paths should be resolved from. `{workspaceRoot}` should only appear in the beginning of an input but `{projectRoot}` and `{projectName}` can be specified later in the input to interpolate the root or name of the project into the input location.
+
+Alternatively, you can use the object format with the `fileset` property:
+
+```jsonc
+{
+  "inputs": [{ "fileset": "{projectRoot}/**/*" }]
+}
+```
 
 #### Token Behavior with Nested Projects
 
@@ -173,7 +180,31 @@ Files such as `dist/libs/my-lib/index.d.ts` would be matched by patterns `**/*.d
 
 When a root `tsconfig.json` or `tsconfig.base.json` is present, Nx will always consider parts of the file which apply to the project of a task being run.
 This includes the full `compilerOptions` section and particular path mappings in the `compilerOptions.paths` property.
-This allows Nx to to not invalidate every single task when a path mapping is added or removed from the root `tsconfig.json` file
+This allows Nx to not invalidate every single task when a path mapping is added or removed from the root `tsconfig.json` file
+
+### Named Inputs from Other Projects
+
+You can reference named inputs from specific projects or from project dependencies using the object format with the `input` property:
+
+```jsonc
+{
+  "inputs": [
+    // Reference a named input from specific project(s)
+    { "input": "production", "projects": "mylib" },
+    { "input": "production", "projects": ["mylib", "myapp"] },
+
+    // Reference a named input from the current project
+    // Equivalent to: { "input": "production" }
+    "production",
+
+    // Reference a named input from all project dependencies
+    // Equivalent to: { "input": "production", "dependencies": true }
+    "^production"
+  ]
+}
+```
+
+The `projects` property can be a string or an array of strings specifying which project(s) to reference the named input from. Using just the string name (e.g., `"production"`) is shorthand for referencing the named input from the current project. Prefixing with `^` (e.g., `"^production"`) references the named input from all project dependencies.
 
 ## Named Inputs
 
