@@ -1,5 +1,5 @@
 import { isBuiltin } from 'node:module';
-import { dirname, join, posix, relative } from 'node:path';
+import { dirname, join, posix, relative, isAbsolute } from 'node:path';
 import { clean, satisfies } from 'semver';
 import type {
   ProjectGraphExternalNode,
@@ -146,11 +146,17 @@ export class TargetProjectLocator {
     }
 
     if (this.tsConfig.config) {
+      // Convert to an absolute file path because TypeScript's module resolution won't
+      // properly walk up the directory tree (toward the workspace root) when given a relative path.
+      const absolutePath = isAbsolute(filePath)
+        ? filePath
+        : this.getAbsolutePath(filePath);
+
       // TODO: this can be removed once we rework resolveImportWithRequire below
       // to properly handle ESM (exports, imports, conditions)
       const resolvedProject = this.resolveImportWithTypescript(
         importExpr,
-        filePath
+        absolutePath
       );
       if (resolvedProject) {
         return resolvedProject;
