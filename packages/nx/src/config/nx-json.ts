@@ -320,6 +320,18 @@ export interface NxReleaseGitConfiguration {
 }
 
 export interface NxReleaseConventionalCommitsConfiguration {
+  /**
+   * When enabled, commits affecting a project will use their full semver bump
+   * even if the commit scope doesn't match the project name.
+   *
+   * By default (false), a commit like `feat(other-lib):` affecting a project as a dependency
+   * will be downgraded to a patch bump. When set to true, the same commit will apply its full
+   * semver bump (minor for feat, patch for fix, etc.).
+   *
+   * This is useful when your commit scopes don't map 1:1 with project names, or when you want
+   * any commit affecting a project to use its configured semver bump regardless of scope matching.
+   */
+  ignoreProjectScopeForVersionBump?: boolean;
   types?: Record<
     string,
     /**

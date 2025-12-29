@@ -24,7 +24,8 @@ Promise<Map<string, SemverSpecifier | null>> {
   );
   return determineSemverChange(
     relevantCommits,
-    releaseConfig.conventionalCommits
+    releaseConfig.conventionalCommits,
+    releaseConfig.conventionalCommits?.ignoreProjectScopeForVersionBump
   );
 }
 

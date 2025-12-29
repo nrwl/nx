@@ -34,15 +34,17 @@ export function determineSemverChange(
     string,
     { commit: GitCommit; isProjectScopedCommit: boolean }[]
   >,
-  config: NxReleaseConfig['conventionalCommits']
+  config: NxReleaseConfig['conventionalCommits'],
+  ignoreProjectScopeForVersionBump?: boolean
 ): Map<string, SemverSpecifier | null> {
   const semverChangePerProject: Map<string, SemverSpecifier | null> = new Map();
   for (const [projectName, relevantCommit] of relevantCommits) {
     let highestChange: SemverSpecifier | null = null;
 
     for (const { commit, isProjectScopedCommit } of relevantCommit) {
-      if (!isProjectScopedCommit) {
+      if (!isProjectScopedCommit && !ignoreProjectScopeForVersionBump) {
         // commit is relevant to the project, but not directly, report patch change to match side-effectful bump behavior in update dependents in release-group-processor
+        // unless ignoreProjectScopeForVersionBump is enabled, in which case we use the commit type's configured semver bump
         highestChange = Math.max(SemverSpecifier.PATCH, highestChange ?? 0);
         continue;
       }

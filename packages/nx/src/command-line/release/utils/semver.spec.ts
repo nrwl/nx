@@ -237,5 +237,93 @@ describe('semver', () => {
         ).get('default')
       ).toEqual(null);
     });
+
+    it('should apply full semver bump to non-scoped commits when ignoreProjectScopeForVersionBump is true', () => {
+      expect(
+        determineSemverChange(
+          new Map([
+            [
+              'default',
+              [
+                { commit: fixCommit, isProjectScopedCommit: false },
+                {
+                  commit: featNonBreakingCommit,
+                  isProjectScopedCommit: false,
+                },
+                { commit: choreCommit, isProjectScopedCommit: false },
+              ],
+            ],
+          ]),
+          config,
+          true // ignoreProjectScopeForVersionBump enabled
+        ).get('default')
+      ).toEqual(SemverSpecifier.MINOR);
+    });
+
+    it('should still return major for breaking non-scoped commits when ignoreProjectScopeForVersionBump is true', () => {
+      expect(
+        determineSemverChange(
+          new Map([
+            [
+              'default',
+              [
+                { commit: fixCommit, isProjectScopedCommit: false },
+                { commit: featBreakingCommit, isProjectScopedCommit: false },
+              ],
+            ],
+          ]),
+          config,
+          true // ignoreProjectScopeForVersionBump enabled
+        ).get('default')
+      ).toEqual(SemverSpecifier.MAJOR);
+    });
+
+    it('should return patch for non-scoped patch commits when ignoreProjectScopeForVersionBump is true', () => {
+      expect(
+        determineSemverChange(
+          new Map([
+            [
+              'default',
+              [
+                { commit: fixCommit, isProjectScopedCommit: false },
+                { commit: choreCommit, isProjectScopedCommit: false },
+              ],
+            ],
+          ]),
+          config,
+          true // ignoreProjectScopeForVersionBump enabled
+        ).get('default')
+      ).toEqual(SemverSpecifier.PATCH);
+    });
+
+    it('should respect ignoreProjectScopeForVersionBump for individual projects', () => {
+      expect(
+        determineSemverChange(
+          new Map([
+            [
+              'project-a',
+              [
+                { commit: fixCommit, isProjectScopedCommit: false },
+                {
+                  commit: featNonBreakingCommit,
+                  isProjectScopedCommit: false,
+                },
+              ],
+            ],
+            [
+              'project-b',
+              [{ commit: fixCommit, isProjectScopedCommit: false }],
+            ],
+          ]),
+          config,
+          true // ignoreProjectScopeForVersionBump enabled
+        )
+      ).toEqual(
+        new Map([
+          ['project-a', SemverSpecifier.MINOR],
+          ['project-b', SemverSpecifier.PATCH],
+        ])
+      );
+    });
   });
 });
