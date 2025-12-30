@@ -14,7 +14,15 @@ use crate::native::utils::time::current_timestamp_millis;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
 use super::lifecycle::RunMode;
+#[cfg(not(test))]
+use super::lifecycle_event::LifecycleEvent;
 use super::pty::PtyInstance;
+
+#[cfg(not(test))]
+pub type LifecycleEventHandler = ThreadsafeFunction<LifecycleEvent, ErrorStrategy::Fatal>;
+
+#[cfg(test)]
+pub type LifecycleEventHandler = ();
 
 // In test mode, use a stub type instead of the real NAPI ThreadsafeFunction.
 // This is necessary because ThreadsafeFunction requires NAPI symbols that are
@@ -70,6 +78,9 @@ pub struct TuiState {
     // === Cloud Message ===
     cloud_message: Option<String>,
 
+    // === Lifecycle Event Handler ===
+    lifecycle_event_handler: Option<LifecycleEventHandler>,
+
     // === UI State (for mode switching persistence) ===
     /// Tasks assigned to terminal panes [pane0, pane1]
     ui_pane_tasks: [Option<String>; 2],
@@ -120,6 +131,7 @@ impl TuiState {
             is_forced_shutdown: false,
             user_has_interacted: false,
             cloud_message: None,
+            lifecycle_event_handler: None,
             ui_pane_tasks: [None, None],
             ui_spacebar_mode: false,
             ui_focused_pane: None,
@@ -413,6 +425,31 @@ impl TuiState {
     /// Get the cloud message (if any)
     pub fn get_cloud_message(&self) -> Option<&str> {
         self.cloud_message.as_deref()
+    }
+
+    // === Lifecycle Event Handler Methods ===
+
+    /// Set the lifecycle event handler (called from TS via NAPI)
+    #[cfg(not(test))]
+    pub fn set_lifecycle_event_handler(&mut self, handler: LifecycleEventHandler) {
+        self.lifecycle_event_handler = Some(handler);
+    }
+
+    /// Get a reference to the lifecycle event handler
+    #[cfg(not(test))]
+    pub fn get_lifecycle_event_handler(&self) -> Option<&LifecycleEventHandler> {
+        self.lifecycle_event_handler.as_ref()
+    }
+
+    // Test stubs
+    #[cfg(test)]
+    pub fn set_lifecycle_event_handler(&mut self, _handler: ()) {
+        self.lifecycle_event_handler = Some(());
+    }
+
+    #[cfg(test)]
+    pub fn get_lifecycle_event_handler(&self) -> Option<&()> {
+        self.lifecycle_event_handler.as_ref()
     }
 
     // === UI State Methods (for mode switching persistence) ===
