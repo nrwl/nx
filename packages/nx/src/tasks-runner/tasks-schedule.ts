@@ -10,6 +10,7 @@ import { ProjectGraph } from '../config/project-graph';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
 import { TaskHistory, getTaskHistory } from '../utils/task-history';
+import { TaskStatus } from './tasks-runner';
 
 export interface Batch {
   executorName: string;
@@ -30,11 +31,16 @@ export class TasksSchedule {
   private estimatedTaskTimings: Record<string, number> = {};
   private projectDependencies: Record<string, number> = {};
 
+  // Keep immutable copy of original task graph for re-queueing
+  private readonly originalTaskGraph: TaskGraph;
+
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
     private readonly options: DefaultTasksRunnerOptions
-  ) {}
+  ) {
+    this.originalTaskGraph = taskGraph;
+  }
 
   public async init() {
     if (this.taskHistory) {
@@ -312,5 +318,77 @@ export class TasksSchedule {
 
   public getEstimatedTaskTimings(): Record<string, number> {
     return this.estimatedTaskTimings;
+  }
+
+  /**
+   * Re-queue a task for execution
+   *
+   * This removes the task from completed state and adds it back to the
+   * scheduling queue. Used when users trigger task re-run from the TUI.
+   */
+  public requeueTask(taskId: string): void {
+    // 1. Remove from completed set
+    this.completedTasks.delete(taskId);
+    this.runningTasks.delete(taskId);
+
+    // Also remove from scheduled queue if present (avoids duplicate scheduling)
+    const scheduledIndex = this.scheduledTasks.indexOf(taskId);
+    if (scheduledIndex !== -1) {
+      this.scheduledTasks.splice(scheduledIndex, 1);
+    }
+
+    // 2. Get original task definition
+    const task = this.originalTaskGraph.tasks[taskId];
+    if (!task) {
+      throw new Error(`Cannot requeue unknown task: ${taskId}`);
+    }
+
+    // 3. Re-add to notScheduledTaskGraph
+    this.notScheduledTaskGraph.tasks[taskId] = task;
+    this.notScheduledTaskGraph.dependencies[taskId] =
+      this.originalTaskGraph.dependencies[taskId] ?? [];
+
+    // Also handle continuous dependencies if they exist
+    if (this.notScheduledTaskGraph.continuousDependencies) {
+      this.notScheduledTaskGraph.continuousDependencies[taskId] =
+        this.originalTaskGraph.continuousDependencies?.[taskId] ?? [];
+    }
+
+    // 4. Update roots if task can be scheduled
+    // A task is a root if all its dependencies are complete
+    const deps = this.notScheduledTaskGraph.dependencies[taskId] ?? [];
+    const allDepsCompleted = deps.every((d) => this.completedTasks.has(d));
+    if (
+      allDepsCompleted &&
+      !this.notScheduledTaskGraph.roots.includes(taskId)
+    ) {
+      this.notScheduledTaskGraph.roots.push(taskId);
+    }
+  }
+
+  /**
+   * Re-queue immediate dependents that were skipped due to a parent failure
+   *
+   * When a failed task is re-run and succeeds, its dependents that were
+   * marked as skipped should be re-queued automatically.
+   *
+   * Note: Only immediate dependents are requeued. Transitive dependents
+   * will be requeued automatically when their direct parents complete.
+   */
+  public requeueSkippedDependents(
+    taskId: string,
+    completedTasks: Record<string, TaskStatus>
+  ): string[] {
+    const requeued: string[] = [];
+    const reverseDeps = this.reverseTaskDeps[taskId] ?? [];
+
+    for (const depId of reverseDeps) {
+      if (completedTasks[depId] === 'skipped') {
+        this.requeueTask(depId);
+        requeued.push(depId);
+      }
+    }
+
+    return requeued;
   }
 }
