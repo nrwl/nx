@@ -1,8 +1,9 @@
-import { basename, join, parse } from 'path';
+import { basename, join, parse, relative } from 'path';
 import { writeJsonFile } from 'nx/src/utils/fileutils';
 import { writeFileSync } from 'fs';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { stripIndents, workspaceRoot } from '@nx/devkit';
+import { OutputBundle, OutputChunk } from 'rollup';
 
 export function updatePackageJson(
   options: {
@@ -14,7 +15,8 @@ export function updatePackageJson(
     outputFileName?: string;
     additionalEntryPoints?: string[];
   },
-  packageJson: PackageJson
+  packageJson: PackageJson,
+  bundle: OutputBundle
 ) {
   const jsFileRegex = /(\.cjs|\.mjs|\.esm\.js|\.cjs\.js|\.mjs\.js|\.js)$/;
   const hasEsmFormat = options.format.includes('esm');
@@ -27,10 +29,13 @@ export function updatePackageJson(
   }
 
   if (hasEsmFormat) {
-    const esmExports = getExports({
-      ...options,
-      fileExt: '.esm.js',
-    });
+    const esmExports = getExports(
+      {
+        ...options,
+        fileExt: '.esm.js',
+      },
+      bundle
+    );
 
     packageJson.module = esmExports['.'];
 
@@ -54,10 +59,13 @@ export function updatePackageJson(
   }
 
   if (hasCjsFormat) {
-    const cjsExports = getExports({
-      ...options,
-      fileExt: '.cjs.js',
-    });
+    const cjsExports = getExports(
+      {
+        ...options,
+        fileExt: '.cjs.js',
+      },
+      bundle
+    );
 
     packageJson.main = cjsExports['.'];
 
@@ -126,13 +134,28 @@ interface Exports {
   [name: string]: string;
 }
 
-function getExports(options: {
-  main?: string;
-  fileExt: string;
-  outputFileName?: string;
-  additionalEntryPoints?: string[];
-}): Exports {
+function getExports(
+  options: {
+    main?: string;
+    fileExt: string;
+    outputFileName?: string;
+    additionalEntryPoints?: string[];
+  },
+  bundle: OutputBundle
+): Exports {
   const exports: Exports = {};
+
+  const exportMapping = new Map(
+    Object.entries(bundle)
+      .filter(
+        (entry): entry is [string, OutputChunk] =>
+          entry[1].type === 'chunk' && entry[1].facadeModuleId != null
+      )
+      .map(([key, value]) => [
+        relative(workspaceRoot, value.facadeModuleId),
+        { path: key, name: value.name },
+      ])
+  );
 
   // Users may provide custom input option and skip the main field.
   if (options.main) {
@@ -144,8 +167,13 @@ function getExports(options: {
 
   if (options.additionalEntryPoints) {
     for (const file of options.additionalEntryPoints) {
-      const { name: fileName } = parse(file);
-      exports['./' + fileName] = './' + fileName + options.fileExt;
+      const mapping = exportMapping.get(file);
+      if (mapping != null && mapping.path.endsWith(options.fileExt)) {
+        exports['./' + mapping.name] = './' + mapping.path;
+      } else {
+        const { name: fileName } = parse(file);
+        exports['./' + fileName] = './' + fileName + options.fileExt;
+      }
     }
   }
 
