@@ -38,4 +38,18 @@ pub enum Action {
     EndCommand,
     ShowHint(String),
     SwitchMode(TuiMode),
+
+    // Task control actions
+    RerunSelectedTask,
+    KillSelectedTask,
+    RerunAllFailed,
+    KillAllRunning,
+
+    // Confirmation dialog actions
+    ShowConfirmDialog {
+        action: Box<Action>,
+        message: String,
+    },
+    ConfirmAction(Box<Action>),
+    CancelConfirmDialog,
 }

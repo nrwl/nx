@@ -24,6 +24,7 @@ use super::inline_app::InlineApp;
 #[cfg(not(test))]
 use super::tui::Tui;
 use super::tui_app::TuiApp;
+use super::lifecycle_event::LifecycleEvent;
 use super::tui_state::TuiState;
 
 #[napi(object)]
@@ -546,6 +547,25 @@ impl AppLifeCycle {
         timings: std::collections::HashMap<String, i64>,
     ) -> napi::Result<()> {
         self.with_app(|app| app.set_estimated_task_timings(timings));
+        Ok(())
+    }
+
+    /// Register a handler for lifecycle events emitted by the TUI
+    ///
+    /// The handler is called when users trigger task control actions:
+    /// - RerunTask: Re-run a completed task or restart a running task
+    /// - KillTask: Kill a running task
+    /// - RerunAllFailed: Re-run all failed tasks
+    /// - KillAllRunning: Kill all running tasks
+    #[cfg(not(test))]
+    #[napi]
+    pub fn register_lifecycle_event_handler(
+        &self,
+        handler: ThreadsafeFunction<LifecycleEvent, ErrorStrategy::Fatal>,
+    ) -> napi::Result<()> {
+        self.with_app(|app| {
+            app.get_shared_state().lock().set_lifecycle_event_handler(handler);
+        });
         Ok(())
     }
 }
