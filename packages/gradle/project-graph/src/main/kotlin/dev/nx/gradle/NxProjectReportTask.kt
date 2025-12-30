@@ -52,6 +52,7 @@ abstract class NxProjectReportTask @Inject constructor(private val projectLayout
     logger.info("${Date()} Target Name Overrides ${targetNameOverrides.get()}")
     logger.info("${Date()} Target Name Prefix: ${targetNamePrefix.get()}")
     logger.info("${Date()} Atomized: ${atomized.get()}")
+
     val project = projectRef.get() // Get project reference at execution time
     val report =
         createNodeForProject(
