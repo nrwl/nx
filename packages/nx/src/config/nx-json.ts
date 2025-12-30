@@ -320,6 +320,13 @@ export interface NxReleaseGitConfiguration {
 }
 
 export interface NxReleaseConventionalCommitsConfiguration {
+  /**
+   * Whether or not to rely on commit scope to resolve version specifier.
+   * If set to 'true', then only commits with scope matching projectName and commits without scope affects version determined, rest are assumed as patch change.
+   * If set to 'false', then all commits that affected project used to determine semver change.
+   * If not set, this will default to 'true'
+   */
+  useCommitScope?: boolean;
   types?: Record<
     string,
     /**

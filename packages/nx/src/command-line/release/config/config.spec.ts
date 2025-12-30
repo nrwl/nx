@@ -278,6 +278,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -491,6 +492,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -707,6 +709,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -954,6 +957,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -1185,6 +1189,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -1425,6 +1430,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -1663,6 +1669,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -1886,6 +1893,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -2104,6 +2112,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -2325,6 +2334,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -2549,6 +2559,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -2807,6 +2818,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -3032,6 +3044,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -3283,6 +3296,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -3546,6 +3560,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -3812,6 +3827,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -4085,6 +4101,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -4377,6 +4394,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -4596,6 +4614,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -4818,6 +4837,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -5036,6 +5056,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -5259,6 +5280,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -5472,6 +5494,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -5712,6 +5735,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -5959,6 +5983,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": {
               "preVersionCommand": "npx nx run-many docker:build -p lib-a",
@@ -6192,6 +6217,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": {
               "preVersionCommand": "npx nx run-many -t docker:build",
@@ -6428,6 +6454,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -6649,6 +6676,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -6893,6 +6921,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -7109,6 +7138,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -7334,6 +7364,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -7554,6 +7585,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -7794,6 +7826,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -8035,6 +8068,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -8265,6 +8299,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -8489,6 +8524,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -8716,6 +8752,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -8943,6 +8980,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -9171,6 +9209,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -9462,6 +9501,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -9706,6 +9746,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -10131,6 +10172,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -10348,6 +10390,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -10601,6 +10644,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -10830,6 +10874,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -11062,6 +11107,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -11295,6 +11341,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -11531,6 +11578,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -11779,6 +11827,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -12105,6 +12154,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -12366,6 +12416,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -12607,6 +12658,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -13082,6 +13134,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -13515,6 +13568,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -13747,6 +13801,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -13966,6 +14021,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -14183,6 +14239,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -14402,6 +14459,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -14631,6 +14689,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -14854,6 +14913,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -15076,6 +15136,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -15304,6 +15365,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -15548,6 +15610,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -15796,6 +15859,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {
@@ -16042,6 +16106,7 @@ describe('createNxReleaseConfig()', () => {
                   "semverBump": "none",
                 },
               },
+              "useCommitScope": true,
             },
             "docker": undefined,
             "git": {

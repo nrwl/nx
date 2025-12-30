@@ -1253,6 +1253,10 @@
     "NxReleaseConventionalCommitsConfiguration": {
       "type": "object",
       "properties": {
+        "useCommitScope": {
+          "type": "boolean",
+          "description": "Whether or not to rely on commit scope to resolve version specifier.\nIf set to 'true', then only commits with scope matching projectName and commits without scope affects version determined, rest are assumed as patch change.\nIf set to 'false', then all commits that affected project used to determine semver change.\nIf not set, this will default to 'true'"
+        },
         "types": {
           "type": "object",
           "description": "A map of commit types to their configuration. If a type is set to 'true', then it will be enabled with the default 'semverBump' of 'patch' and will appear in the changelog. If a type is set to 'false', then it will not trigger a version bump and will be hidden from the changelog.",
