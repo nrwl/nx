@@ -64,28 +64,29 @@ describe('Cypress e2e configuration', () => {
     ).toBeUndefined();
 
     expect(readJson(tree, 'apps/my-app/tsconfig.json')).toMatchInlineSnapshot(`
-        {
-          "compilerOptions": {
-            "allowJs": true,
-            "module": "commonjs",
-            "outDir": "../../dist/out-tsc",
-            "sourceMap": false,
-            "types": [
-              "cypress",
-              "node",
-            ],
-          },
-          "extends": "../../tsconfig.base.json",
-          "include": [
-            "**/*.ts",
-            "**/*.js",
-            "cypress.config.ts",
-            "**/*.cy.ts",
-            "**/*.cy.js",
-            "**/*.d.ts",
+      {
+        "compilerOptions": {
+          "allowJs": true,
+          "module": "commonjs",
+          "moduleResolution": "node10",
+          "outDir": "../../dist/out-tsc",
+          "sourceMap": false,
+          "types": [
+            "cypress",
+            "node",
           ],
-        }
-      `);
+        },
+        "extends": "../../tsconfig.base.json",
+        "include": [
+          "**/*.ts",
+          "**/*.js",
+          "cypress.config.ts",
+          "**/*.cy.ts",
+          "**/*.cy.js",
+          "**/*.d.ts",
+        ],
+      }
+    `);
     assertCypressFiles(tree, 'apps/my-app/src');
   });
 
@@ -131,28 +132,29 @@ describe('Cypress e2e configuration', () => {
       }
     `);
     expect(readJson(tree, 'apps/my-app/tsconfig.json')).toMatchInlineSnapshot(`
-        {
-          "compilerOptions": {
-            "allowJs": true,
-            "module": "commonjs",
-            "outDir": "../../dist/out-tsc",
-            "sourceMap": false,
-            "types": [
-              "cypress",
-              "node",
-            ],
-          },
-          "extends": "../../tsconfig.base.json",
-          "include": [
-            "**/*.ts",
-            "**/*.js",
-            "cypress.config.ts",
-            "**/*.cy.ts",
-            "**/*.cy.js",
-            "**/*.d.ts",
+      {
+        "compilerOptions": {
+          "allowJs": true,
+          "module": "commonjs",
+          "moduleResolution": "node10",
+          "outDir": "../../dist/out-tsc",
+          "sourceMap": false,
+          "types": [
+            "cypress",
+            "node",
           ],
-        }
-      `);
+        },
+        "extends": "../../tsconfig.base.json",
+        "include": [
+          "**/*.ts",
+          "**/*.js",
+          "cypress.config.ts",
+          "**/*.cy.ts",
+          "**/*.cy.js",
+          "**/*.d.ts",
+        ],
+      }
+    `);
     assertCypressFiles(tree, 'apps/my-app/src');
   });
 
@@ -282,28 +284,29 @@ describe('Cypress e2e configuration', () => {
     assertCypressFiles(tree, 'apps/my-app/e2e/something');
     expect(readJson(tree, 'apps/my-app/e2e/something/tsconfig.json'))
       .toMatchInlineSnapshot(`
-        {
-          "compilerOptions": {
-            "allowJs": true,
-            "module": "commonjs",
-            "outDir": "../../dist/out-tsc",
-            "sourceMap": false,
-            "types": [
-              "cypress",
-              "node",
-            ],
-          },
-          "extends": "../../tsconfig.json",
-          "include": [
-            "**/*.ts",
-            "**/*.js",
-            "../../cypress.config.ts",
-            "../../**/*.cy.ts",
-            "../../**/*.cy.js",
-            "../../**/*.d.ts",
+      {
+        "compilerOptions": {
+          "allowJs": true,
+          "module": "commonjs",
+          "moduleResolution": "node10",
+          "outDir": "../../dist/out-tsc",
+          "sourceMap": false,
+          "types": [
+            "cypress",
+            "node",
           ],
-        }
-      `);
+        },
+        "extends": "../../tsconfig.json",
+        "include": [
+          "**/*.ts",
+          "**/*.js",
+          "../../cypress.config.ts",
+          "../../**/*.cy.ts",
+          "../../**/*.cy.js",
+          "../../**/*.d.ts",
+        ],
+      }
+    `);
     expect(readJson(tree, 'apps/my-app/tsconfig.json').references).toEqual(
       expect.arrayContaining([{ path: './e2e/something/tsconfig.json' }])
     );

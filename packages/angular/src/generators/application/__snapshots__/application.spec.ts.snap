@@ -601,6 +601,7 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
   "compilerOptions": {
     "allowJs": true,
     "module": "commonjs",
+    "moduleResolution": "node10",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -1061,6 +1062,7 @@ exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
   "compilerOptions": {
     "allowJs": true,
     "module": "commonjs",
+    "moduleResolution": "node10",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,

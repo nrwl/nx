@@ -1,7 +1,7 @@
 {
   "extends": "<%= tsConfigPath %>",
   "compilerOptions": {
-    "moduleResolution": "node",
+    "moduleResolution": "node10",
     "allowJs": true,
     "outDir": "<%= offsetFromRoot %>dist/out-tsc",
     "module": "commonjs",
