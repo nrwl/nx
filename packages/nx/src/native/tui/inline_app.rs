@@ -4,7 +4,7 @@ use crossterm::event::{KeyCode, KeyModifiers};
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use parking_lot::Mutex;
-use ratatui::layout::{Constraint, Direction, Layout, Size};
+use ratatui::layout::{Constraint, Direction, Layout, Rect, Size};
 use ratatui::style::Modifier;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Paragraph;
@@ -20,6 +20,7 @@ const STATUS_MESSAGE_DURATION: std::time::Duration = std::time::Duration::from_s
 use crate::native::tui::utils::{
     calculate_actual_duration_ms, format_duration_with_estimate, get_task_status_style,
 };
+use crate::native::utils::time::current_timestamp_millis;
 use crate::native::{
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
     tasks::types::{Task, TaskGraph},
@@ -81,6 +82,8 @@ pub struct InlineApp {
     total_inserted_lines: u32,
     /// Status message to display in the bottom chrome (e.g., "Output copied")
     status_message: Option<(String, Instant)>,
+    /// Debounce timer for PTY resize operations (milliseconds since epoch)
+    resize_debounce_timer: Option<u128>,
 }
 
 impl InlineApp {
@@ -116,6 +119,7 @@ impl InlineApp {
             title_text,
             task_graph,
             HashMap::new(), // estimated_task_timings - will be set later via set_estimated_task_timings()
+            None,
         )));
 
         Ok(Self {
@@ -128,6 +132,7 @@ impl InlineApp {
             scrollback_render_counter: 0,
             total_inserted_lines: 0,
             status_message: None,
+            resize_debounce_timer: None,
         })
     }
 
@@ -157,6 +162,7 @@ impl InlineApp {
             scrollback_render_counter: 19,
             total_inserted_lines: 0,
             status_message: None,
+            resize_debounce_timer: None,
         })
     }
 
@@ -215,38 +221,69 @@ impl InlineApp {
     /// Called when switching to inline mode via init().
     /// This ensures PTY output fits the available space, pushing excess content
     /// into scrollback.
-    fn resize_all_ptys(&mut self) {
+    fn resize_selected_pty(&mut self, dimensions: Option<(u16, u16)>) {
         let (rows, cols) = self.calculate_pty_dimensions();
 
         let mut state = self.core.state().lock();
 
         // Collect task IDs to avoid holding immutable borrow during mutation
-        let task_ids: Vec<String> = state.get_pty_instances().keys().cloned().collect();
+        let task_id = self.selected_task.clone();
 
-        // Resize each PTY instance by replacing the Arc
-        for task_id in task_ids {
-            if let Some(pty_arc) = state.get_pty_instance(&task_id) {
-                let (current_rows, current_cols) = pty_arc.get_dimensions();
+        let task_id = if let Some(task_id) = task_id {
+            task_id
+        } else {
+            return;
+        };
 
-                // Only resize if dimensions actually changed
-                if current_rows != rows || current_cols != cols {
-                    tracing::trace!(
-                        "InlineApp resizing PTY for {} from {}x{} to {}x{}",
-                        task_id,
-                        current_cols,
-                        current_rows,
-                        cols,
-                        rows
-                    );
+        if let Some(pty_arc) = state.get_pty_instance(&task_id) {
+            let (current_rows, current_cols) = pty_arc.get_dimensions();
 
-                    // Clone the PTY instance, resize it, and replace the Arc
-                    let mut pty_clone = pty_arc.as_ref().clone();
-                    if let Ok(()) = pty_clone.resize(rows, cols) {
-                        state.register_pty_instance(task_id, Arc::new(pty_clone));
-                    }
+            // Only resize if dimensions actually changed
+            if current_rows != rows || current_cols != cols {
+                tracing::trace!(
+                    "InlineApp resizing PTY for {} from {}x{} to {}x{}",
+                    task_id,
+                    current_cols,
+                    current_rows,
+                    cols,
+                    rows
+                );
+
+                // Clone the PTY instance, resize it, and replace the Arc
+                let mut pty_clone = pty_arc.as_ref().clone();
+                if let Ok(()) = pty_clone.resize(rows, cols) {
+                    state.register_pty_instance(task_id, Arc::new(pty_clone));
                 }
             }
         }
+    }
+
+    /// Debounce PTY resize operations to avoid excessive resizing
+    ///
+    /// This prevents performance issues when the terminal is being resized
+    /// rapidly (e.g., during window dragging). Resizes are batched with a
+    /// 200ms debounce window.
+    fn debounce_resize(&mut self, tui: &mut tui::Tui, w: u16, h: u16) {
+        // Get current time in milliseconds
+        let now = current_timestamp_millis() as u128;
+
+        // If we have a timer and it's not expired yet, just return
+        if let Some(timer) = self.resize_debounce_timer {
+            if now < timer {
+                return;
+            }
+        }
+
+        // Set a new timer for 200ms from now
+        self.resize_debounce_timer = Some(now + 200);
+
+        self.core().state().lock().set_dimensions((w, h));
+
+        // Process the resize
+        self.resize_selected_pty(Some((w, h)));
+
+        let rect = Rect::new(0, 0, w, h);
+        tui.resize(rect).ok();
     }
 
     fn dispatch_action(&self, action: Action) {
@@ -553,6 +590,9 @@ impl TuiApp for InlineApp {
                 // In inline mode, show hints in the status bar instead of a popup
                 self.show_hint(message);
             }
+            Action::Resize(w, h) => {
+                self.debounce_resize(tui, w, h);
+            }
             _ => {} // Ignore other actions (including Resize - ratatui doesn't handle it properly for inline viewports)
         }
     }
@@ -565,10 +605,14 @@ impl TuiApp for InlineApp {
 
     // === Initialization ===
 
-    fn init(&mut self, _area: Size) -> Result<()> {
+    fn init(&mut self, area: Size) -> Result<()> {
         // Resize all existing PTYs to inline dimensions
         // This is critical when switching from full-screen mode
-        self.resize_all_ptys();
+        self.resize_selected_pty(Some((area.width, area.height)));
+        self.core
+            .state()
+            .lock()
+            .set_dimensions((area.width, area.height));
         Ok(())
     }
 
@@ -586,17 +630,27 @@ impl TuiApp for InlineApp {
     // === PTY Registration (hooks for trait defaults) ===
 
     fn calculate_pty_dimensions(&self) -> (u16, u16) {
-        // Get terminal size
-        if let Ok((cols, rows)) = crossterm::terminal::size() {
-            // Reserves 2 rows at the bottom - one for the inline chrome,
-            // one for space between terminal output and chrome.
-            let content_height = rows.saturating_sub(2);
-            (content_height, cols)
-        } else {
-            // Fallback to reasonable defaults
-            debug!("Failed to get terminal size, using default PTY dimensions");
-            (20, 80)
-        }
+        let (cols, rows) = self
+            .core
+            .state()
+            .lock()
+            .get_dimensions()
+            .unwrap_or_else(|| {
+                // Get terminal size
+                debug!("Getting terminal size for PTY dimensions inline_app");
+                if let Ok((cols, rows)) = crossterm::terminal::size() {
+                    (rows, cols)
+                } else {
+                    // Fallback to reasonable defaults
+                    debug!("Failed to get terminal size, using default PTY dimensions");
+                    (20, 80)
+                }
+            });
+
+        // Reserves 2 rows at the bottom - one for the inline chrome,
+        // one for space between terminal output and chrome.
+        let content_height = rows.saturating_sub(2);
+        (content_height, cols)
     }
 
     fn on_pty_registered(&mut self, task_id: &str) {
@@ -1118,6 +1172,7 @@ mod tests {
             String::from("Existing"),
             existing_graph,
             HashMap::new(),
+            None,
         )));
 
         // Create app with existing state
@@ -1534,6 +1589,7 @@ mod tests {
             String::from("Test"),
             task_graph,
             HashMap::new(),
+            None,
         )));
 
         // Create app with existing state (simulating mode switch)
@@ -1696,6 +1752,7 @@ mod integration_tests {
             String::from("Shared"),
             task_graph,
             HashMap::new(),
+            None,
         )));
 
         // Create two apps with same state
