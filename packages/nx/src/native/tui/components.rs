@@ -9,6 +9,7 @@ use super::{
     tui::{Event, Frame},
 };
 
+pub mod confirm_dialog;
 pub mod countdown_popup;
 pub mod dependency_view;
 pub mod help_popup;
