@@ -79,6 +79,8 @@ pub struct TuiState {
     ui_focused_pane: Option<usize>,
     /// Currently selected task in the task list
     ui_selected_task: Option<String>,
+
+    dimensions: Option<(u16, u16)>,
 }
 
 impl TuiState {
@@ -93,6 +95,7 @@ impl TuiState {
         title_text: String,
         task_graph: TaskGraph,
         estimated_task_timings: HashMap<String, i64>,
+        dimensions: Option<(u16, u16)>,
     ) -> Self {
         // Initialize task status map with NotStarted for all tasks
         let mut task_status_map = HashMap::new();
@@ -124,6 +127,7 @@ impl TuiState {
             ui_spacebar_mode: false,
             ui_focused_pane: None,
             ui_selected_task: None,
+            dimensions,
         }
     }
 
@@ -467,6 +471,14 @@ impl TuiState {
         // No pane tasks available
         None
     }
+
+    pub fn get_dimensions(&self) -> Option<(u16, u16)> {
+        self.dimensions
+    }
+
+    pub fn set_dimensions(&mut self, dimensions: (u16, u16)) {
+        self.dimensions = Some(dimensions);
+    }
 }
 
 // Compile-time verification that TuiState is Send
@@ -519,6 +531,7 @@ mod tests {
             String::from("Test"),
             task_graph,
             HashMap::new(),
+            None,
         )
     }
 
@@ -846,6 +859,7 @@ mod integration_tests {
             String::from("Test"),
             task_graph,
             HashMap::new(),
+            None,
         )
     }
 

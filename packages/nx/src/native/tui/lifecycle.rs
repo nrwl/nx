@@ -22,7 +22,7 @@ use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
 use super::inline_app::InlineApp;
 #[cfg(not(test))]
-use super::tui::Tui;
+use super::tui::{Event, Tui};
 use super::tui_app::TuiApp;
 use super::tui_state::TuiState;
 
@@ -321,6 +321,7 @@ impl AppLifeCycle {
             title_text,
             task_graph,
             std::collections::HashMap::new(), // estimated_task_timings - will be set later
+            None,
         )));
 
         // Default to FullScreen mode for the constructor
@@ -467,6 +468,20 @@ impl AppLifeCycle {
             loop {
                 // Handle events through TuiApp trait
                 if let Some(event) = tui.next().await {
+                    // some events have global handling
+                    match event {
+                        Event::Resize(w, h) => {
+                            // inline viewport doesn't handle resizing well...
+                            switch_mode(&app, &mut tui, TuiMode::FullScreen, &action_tx);
+                            // try to resize inline terminal anyway
+                            tui.inline_terminal
+                                .resize(ratatui::layout::Rect::new(0, 0, w, h))
+                                .unwrap();
+                        }
+                        _ => {
+                            // no global handler
+                        }
+                    }
                     // Pass event to app - mode switching is handled via Action::SwitchMode
                     // which is dispatched by the apps and processed in the action loop below
                     let _ = with_shared_app(&app, |a| a.handle_event(event, &action_tx));
