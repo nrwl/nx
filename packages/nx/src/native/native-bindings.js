@@ -398,6 +398,7 @@ module.exports.installNxConsoleForEditor = nativeBinding.installNxConsoleForEdit
 module.exports.IS_WASM = nativeBinding.IS_WASM
 module.exports.isAiAgent = nativeBinding.isAiAgent
 module.exports.isEditorInstalled = nativeBinding.isEditorInstalled
+module.exports.LifecycleEventType = nativeBinding.LifecycleEventType
 module.exports.logDebug = nativeBinding.logDebug
 module.exports.parseTaskStatus = nativeBinding.parseTaskStatus
 module.exports.remove = nativeBinding.remove

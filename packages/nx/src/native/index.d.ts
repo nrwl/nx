@@ -327,6 +327,35 @@ export declare export declare function isAiAgent(): boolean
 
 export declare export declare function isEditorInstalled(editor: SupportedEditor): boolean
 
+/**
+ * Event emitted by the TUI to control task execution
+ *
+ * Contains an event type and optional task_id for task-specific events.
+ */
+export interface LifecycleEvent {
+  /** The type of lifecycle event */
+  eventType: LifecycleEventType
+  /** The task ID (required for RerunTask and KillTask, None for bulk operations) */
+  taskId?: string
+}
+
+/**
+ * Event types that can be emitted by the TUI to control task execution
+ *
+ * These event types flow from the TUI (Rust) to the TaskOrchestrator (TypeScript).
+ * The TypeScript side registers a handler via `registerLifecycleEventHandler`.
+ */
+export declare const enum LifecycleEventType {
+  /** Re-run a completed task or restart a running task */
+  RerunTask = 'RerunTask',
+  /** Kill a running task without re-running */
+  KillTask = 'KillTask',
+  /** Re-run all failed tasks */
+  RerunAllFailed = 'RerunAllFailed',
+  /** Kill all currently running tasks */
+  KillAllRunning = 'KillAllRunning'
+}
+
 export declare export declare function logDebug(message: string): void
 
 /** Combined metadata for groups and processes */

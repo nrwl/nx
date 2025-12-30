@@ -6,6 +6,7 @@ pub mod escape_sequences;
 pub mod graph_utils;
 pub mod inline_app;
 pub mod lifecycle;
+pub mod lifecycle_event;
 pub mod pty;
 pub mod scroll_momentum;
 pub mod status_icons;
@@ -18,6 +19,7 @@ pub mod tui_state;
 pub mod utils;
 
 pub use inline_app::InlineApp;
+pub use lifecycle_event::{LifecycleEvent, LifecycleEventType};
 pub use tui_app::TuiApp;
 pub use tui_core::TuiCore;
 pub use tui_state::TuiState;
