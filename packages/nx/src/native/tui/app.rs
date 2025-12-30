@@ -26,6 +26,7 @@ use crate::native::{
 
 use super::action::Action;
 use super::components::Component;
+use super::components::confirm_dialog::ConfirmDialog;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::dependency_view::{DependencyView, DependencyViewState};
 use super::components::help_popup::HelpPopup;
@@ -38,6 +39,7 @@ use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::graph_utils::{get_task_count, is_task_continuous};
 use super::lifecycle::{RunMode, TuiMode};
+use super::lifecycle_event::LifecycleEvent;
 use super::pty::PtyInstance;
 use super::theme::THEME;
 use super::tui;
@@ -75,6 +77,8 @@ pub struct App {
     debug_state: TuiWidgetState,
     /// Flag to indicate this App was restored from a mode switch and should skip init pane setup
     restored_from_mode_switch: bool,
+    /// Active confirmation dialog (if any)
+    confirm_dialog: Option<ConfirmDialog>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -224,6 +228,7 @@ impl App {
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
             restored_from_mode_switch: has_restored_state,
+            confirm_dialog: None,
         })
     }
 
@@ -311,6 +316,24 @@ impl App {
     pub fn is_task_continuous(&self, task_id: &str) -> bool {
         let state = self.core.state().lock();
         is_task_continuous(state.task_graph(), task_id)
+    }
+
+    /// Check if the currently selected task is running
+    fn is_selected_task_running(&self) -> bool {
+        if let Some(task_id) = self
+            .selection_manager
+            .lock()
+            .get_selected_task_name()
+            .cloned()
+        {
+            let state = self.core.state().lock();
+            matches!(
+                state.get_task_status(&task_id),
+                Some(TaskStatus::InProgress) | Some(TaskStatus::Shared)
+            )
+        } else {
+            false
+        }
     }
 
     /// Check if a task status is considered complete
@@ -498,6 +521,14 @@ impl App {
             tui::Event::Resize(x, y) => action_tx.send(Action::Resize(x, y))?,
             tui::Event::Key(key) => {
                 trace!("Handling Key Event: {:?}", key);
+
+                // If confirm dialog is open, route all input to it
+                if let Some(dialog) = &mut self.confirm_dialog {
+                    if let Some(result) = dialog.handle_key(key) {
+                        action_tx.send(result).ok();
+                    }
+                    return Ok(false);
+                }
 
                 // If the app is in interactive mode, interactions are with
                 // the running task, not the app itself
@@ -781,6 +812,25 @@ impl App {
                                     KeyCode::Up => {
                                         self.dispatch_action(Action::PreviousTask);
                                     }
+                                    // Task control keybindings with modifiers
+                                    KeyCode::Char('r')
+                                        if key.modifiers.contains(KeyModifiers::CONTROL) =>
+                                    {
+                                        // Ctrl+r: Re-run all failed (with confirmation)
+                                        self.dispatch_action(Action::ShowConfirmDialog {
+                                            action: Box::new(Action::RerunAllFailed),
+                                            message: "Re-run all failed tasks?".to_string(),
+                                        });
+                                    }
+                                    KeyCode::Char('x')
+                                        if key.modifiers.contains(KeyModifiers::CONTROL) =>
+                                    {
+                                        // Ctrl+x: Kill all running (with confirmation)
+                                        self.dispatch_action(Action::ShowConfirmDialog {
+                                            action: Box::new(Action::KillAllRunning),
+                                            message: "Kill all running tasks?".to_string(),
+                                        });
+                                    }
                                     KeyCode::Esc => {
                                         if matches!(self.focus, Focus::HelpPopup) {
                                             if let Some(help_popup) =
@@ -840,6 +890,41 @@ impl App {
                                                                 if let Some(area) = self.frame_area
                                                                 {
                                                                     self.toggle_layout_mode(area);
+                                                                }
+                                                            }
+                                                            // Task control keybindings
+                                                            'r' => {
+                                                                // r: Re-run or restart selected task
+                                                                if self.is_selected_task_running() {
+                                                                    self.dispatch_action(
+                                                                        Action::ShowConfirmDialog {
+                                                                            action: Box::new(
+                                                                                Action::RerunSelectedTask,
+                                                                            ),
+                                                                            message:
+                                                                                "Restart running task?"
+                                                                                    .to_string(),
+                                                                        },
+                                                                    );
+                                                                } else {
+                                                                    self.dispatch_action(
+                                                                        Action::RerunSelectedTask,
+                                                                    );
+                                                                }
+                                                            }
+                                                            'x' => {
+                                                                // x: Kill selected task (with confirmation if running)
+                                                                if self.is_selected_task_running() {
+                                                                    self.dispatch_action(
+                                                                        Action::ShowConfirmDialog {
+                                                                            action: Box::new(
+                                                                                Action::KillSelectedTask,
+                                                                            ),
+                                                                            message:
+                                                                                "Kill running task?"
+                                                                                    .to_string(),
+                                                                        },
+                                                                    );
                                                                 }
                                                             }
                                                             _ => {}
@@ -1192,6 +1277,10 @@ impl App {
                     {
                         let _ = hint_popup.draw(f, frame_area);
                     }
+                    // Render confirm dialog on top of everything
+                    if let Some(dialog) = &self.confirm_dialog {
+                        dialog.render(f, frame_area);
+                    }
                 })
                 .ok();
             }
@@ -1219,6 +1308,51 @@ impl App {
                         self.update_focus(Focus::HintPopup);
                     }
                 }
+            }
+            // Confirmation dialog actions
+            Action::ShowConfirmDialog { action, message } => {
+                let mut dialog = ConfirmDialog::new();
+                dialog.show(message.clone(), (**action).clone());
+                self.confirm_dialog = Some(dialog);
+            }
+            Action::ConfirmAction(confirmed_action) => {
+                self.confirm_dialog = None;
+                // Recursively handle the confirmed action
+                self.handle_action(tui, *confirmed_action.clone(), action_tx);
+            }
+            Action::CancelConfirmDialog => {
+                self.confirm_dialog = None;
+            }
+            // Task control actions
+            Action::RerunSelectedTask => {
+                if let Some(task_id) = self
+                    .selection_manager
+                    .lock()
+                    .get_selected_task_name()
+                    .cloned()
+                {
+                    self.core
+                        .emit_lifecycle_event(LifecycleEvent::rerun_task(task_id));
+                }
+            }
+            Action::KillSelectedTask => {
+                if let Some(task_id) = self
+                    .selection_manager
+                    .lock()
+                    .get_selected_task_name()
+                    .cloned()
+                {
+                    self.core
+                        .emit_lifecycle_event(LifecycleEvent::kill_task(task_id));
+                }
+            }
+            Action::RerunAllFailed => {
+                self.core
+                    .emit_lifecycle_event(LifecycleEvent::rerun_all_failed());
+            }
+            Action::KillAllRunning => {
+                self.core
+                    .emit_lifecycle_event(LifecycleEvent::kill_all_running());
             }
             _ => {}
         }

@@ -23,6 +23,16 @@ export declare class AppLifeCycle {
   registerForcedShutdownCallback(forcedShutdownCallback: () => any): void
   __setCloudMessage(message: string): Promise<void>
   setEstimatedTaskTimings(timings: Record<string, number>): void
+  /**
+   * Register a handler for lifecycle events emitted by the TUI
+   *
+   * The handler is called when users trigger task control actions:
+   * - RerunTask: Re-run a completed task or restart a running task
+   * - KillTask: Kill a running task
+   * - RerunAllFailed: Re-run all failed tasks
+   * - KillAllRunning: Kill all running tasks
+   */
+  registerLifecycleEventHandler(handler: (arg: LifecycleEvent) => any): void
 }
 
 export declare class ChildProcess {

@@ -21,10 +21,10 @@ use super::app::App;
 use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
 use super::inline_app::InlineApp;
+use super::lifecycle_event::LifecycleEvent;
 #[cfg(not(test))]
 use super::tui::Tui;
 use super::tui_app::TuiApp;
-use super::lifecycle_event::LifecycleEvent;
 use super::tui_state::TuiState;
 
 #[napi(object)]
@@ -564,7 +564,9 @@ impl AppLifeCycle {
         handler: ThreadsafeFunction<LifecycleEvent, ErrorStrategy::Fatal>,
     ) -> napi::Result<()> {
         self.with_app(|app| {
-            app.get_shared_state().lock().set_lifecycle_event_handler(handler);
+            app.get_shared_state()
+                .lock()
+                .set_lifecycle_event_handler(handler);
         });
         Ok(())
     }
