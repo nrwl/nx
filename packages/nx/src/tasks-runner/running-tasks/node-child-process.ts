@@ -2,7 +2,7 @@ import * as chalk from 'chalk';
 import type { ChildProcess, Serializable } from 'child_process';
 import { readFileSync } from 'fs';
 import { Transform } from 'stream';
-import * as treeKill from 'tree-kill';
+import { killProcessTree } from '../../native';
 import { signalToCode } from '../../utils/exit-codes';
 import type { RunningTask } from './running-task';
 
@@ -102,9 +102,7 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
   }
   public kill(signal?: NodeJS.Signals) {
     if (this.childProcess?.pid) {
-      treeKill(this.childProcess.pid, signal, () => {
-        // Ignore errors - process may have already exited
-      });
+      killProcessTree(this.childProcess.pid, signal);
     }
   }
 }
@@ -227,9 +225,7 @@ export class NodeChildProcessWithDirectOutput implements RunningTask {
 
   kill(signal?: NodeJS.Signals): void {
     if (this.childProcess?.pid) {
-      treeKill(this.childProcess.pid, signal, () => {
-        // Ignore errors - process may have already exited
-      });
+      killProcessTree(this.childProcess.pid, signal);
     }
   }
 }
