@@ -1,4 +1,5 @@
 import { Task } from '../config/task-graph';
+import type { LifecycleEvent } from '../native';
 import { ExternalObject, TaskStatus as NativeTaskStatus } from '../native';
 import { RunningTask } from './running-tasks/running-task';
 import { TaskStatus } from './tasks-runner';
@@ -70,6 +71,10 @@ export interface LifeCycle {
   registerForcedShutdownCallback?(callback: () => void): void;
 
   setEstimatedTaskTimings?(timings: Record<string, number>): void;
+
+  registerLifecycleEventHandler?(
+    handler: (event: LifecycleEvent) => void
+  ): void;
 }
 
 export class CompositeLifeCycle implements LifeCycle {
@@ -197,6 +202,16 @@ export class CompositeLifeCycle implements LifeCycle {
     for (let l of this.lifeCycles) {
       if (l.setEstimatedTaskTimings) {
         l.setEstimatedTaskTimings(timings);
+      }
+    }
+  }
+
+  registerLifecycleEventHandler(
+    handler: (event: LifecycleEvent) => void
+  ): void {
+    for (const l of this.lifeCycles) {
+      if (l.registerLifecycleEventHandler) {
+        l.registerLifecycleEventHandler(handler);
       }
     }
   }
