@@ -32,6 +32,12 @@ use parking_lot::Mutex;
 use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
+#[cfg(not(test))]
+use napi::threadsafe_function::ThreadsafeFunctionCallMode;
+
+#[cfg(not(test))]
+use super::lifecycle_event::LifecycleEvent;
+
 use crate::native::tasks::types::{Task, TaskResult};
 
 use super::action::Action;
@@ -278,6 +284,25 @@ impl TuiCore {
         } else {
             AutoExitDecision::ExitImmediately
         }
+    }
+
+    // === Lifecycle Event Emission ===
+
+    /// Emit a lifecycle event to the TypeScript handler
+    ///
+    /// Events are sent non-blocking to avoid deadlocks.
+    /// If no handler is registered, the event is silently dropped.
+    #[cfg(not(test))]
+    pub fn emit_lifecycle_event(&self, event: LifecycleEvent) {
+        let state = self.state.lock();
+        if let Some(handler) = state.get_lifecycle_event_handler() {
+            handler.call(event, ThreadsafeFunctionCallMode::NonBlocking);
+        }
+    }
+
+    #[cfg(test)]
+    pub fn emit_lifecycle_event(&self, _event: super::lifecycle_event::LifecycleEvent) {
+        // No-op in tests
     }
 }
 
