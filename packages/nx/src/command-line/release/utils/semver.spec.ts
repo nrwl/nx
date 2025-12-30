@@ -79,6 +79,7 @@ describe('semver', () => {
   // tests for determineSemverChange()
   describe('determineSemverChange()', () => {
     const config: NxReleaseConfig['conventionalCommits'] = {
+      useCommitScope: true,
       types: {
         feat: {
           semverBump: 'minor',
@@ -160,6 +161,30 @@ describe('semver', () => {
           config
         ).get('default')
       ).toEqual(SemverSpecifier.PATCH);
+    });
+
+    it('should return a minor bump level if useCommitScope is false and none of the commits are project scoped', () => {
+      expect(
+        determineSemverChange(
+          new Map([
+            [
+              'default',
+              [
+                { commit: fixCommit, isProjectScopedCommit: false },
+                {
+                  commit: featNonBreakingCommit,
+                  isProjectScopedCommit: false,
+                },
+                { commit: choreCommit, isProjectScopedCommit: false },
+              ],
+            ],
+          ]),
+          {
+            ...config,
+            useCommitScope: false,
+          }
+        ).get('default')
+      ).toEqual(SemverSpecifier.MINOR);
     });
 
     it('should return major if any commits are breaking', () => {
