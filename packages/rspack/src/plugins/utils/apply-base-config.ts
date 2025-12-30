@@ -96,10 +96,12 @@ function applyNxIndependentConfig(
   // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
   // So to mitigate this we enable in memory caching when target is Node and in watch mode.
   config.cache =
-    (options.target === 'node' || options.target === 'async-node') &&
-    options.watch
-      ? true
-      : undefined;
+    'cache' in options
+      ? options.cache
+      : (options.target === 'node' || options.target === 'async-node') &&
+          options.watch
+        ? true
+        : undefined;
 
   config.devtool =
     options.sourceMap === true ? 'source-map' : options.sourceMap;
@@ -271,16 +273,33 @@ function applyNxDependentConfig(
     plugins.push(new NxTsconfigPathsRspackPlugin({ ...options, tsConfig }));
   }
 
+  // Normalize typeCheckOptions from deprecated skipTypeChecking for backward compatibility
+  const defaultTypeCheckOptions = { async: true };
+  let typeCheckOptions: boolean | { async: boolean };
+  if (options.typeCheckOptions !== undefined) {
+    if (options.typeCheckOptions === true) {
+      typeCheckOptions = defaultTypeCheckOptions;
+    } else if (options.typeCheckOptions === false) {
+      typeCheckOptions = false;
+    } else {
+      typeCheckOptions = options.typeCheckOptions;
+    }
+  } else if (options.skipTypeChecking) {
+    typeCheckOptions = false;
+  } else {
+    typeCheckOptions = defaultTypeCheckOptions;
+  }
+
   // New TS Solution already has a typecheck target but allow it to run during serve
-  if (
-    (!options?.skipTypeChecking && !isUsingTsSolution) ||
-    (isUsingTsSolution &&
-      options?.skipTypeChecking === false &&
-      process.env['WEBPACK_SERVE'])
-  ) {
+  const shouldTypeCheck =
+    typeCheckOptions !== false &&
+    (!isUsingTsSolution || process.env['WEBPACK_SERVE']);
+
+  if (shouldTypeCheck) {
     const { TsCheckerRspackPlugin } = require('ts-checker-rspack-plugin');
 
     const pluginConfig: any = {
+      ...typeCheckOptions,
       typescript: {
         configFile: path.isAbsolute(tsConfig)
           ? tsConfig
@@ -440,7 +459,7 @@ function applyNxDependentConfig(
   config.externals = externals;
 
   // Enabled for performance
-  config.cache = true;
+  config.cache = 'cache' in options ? options.cache : true;
   config.module = {
     ...config.module,
     rules: [
