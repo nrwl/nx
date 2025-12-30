@@ -158,6 +158,8 @@ pub enum TaskStatus {
     Shared,
     // This continuous task has been stopped by Nx
     Stopped,
+    // This task is being restarted (killed and will be re-run)
+    Restarting,
 }
 
 impl std::str::FromStr for TaskStatus {
@@ -328,7 +330,9 @@ impl TasksList {
                     continue;
                 }
                 match task.status {
-                    TaskStatus::InProgress => in_progress.push(task_name.clone()),
+                    TaskStatus::InProgress | TaskStatus::Shared | TaskStatus::Restarting => {
+                        in_progress.push(task_name.clone())
+                    }
                     TaskStatus::NotStarted => pending.push(task_name.clone()),
                     _ => completed.push(task_name.clone()),
                 }
@@ -955,10 +959,12 @@ impl TasksList {
         }
 
         // Find first in-progress task
-        if let Some(first_in_progress) = self
-            .tasks
-            .iter()
-            .find(|t| matches!(t.status, TaskStatus::InProgress | TaskStatus::Shared))
+        if let Some(first_in_progress) = self.tasks.iter().find(|t| {
+            matches!(
+                t.status,
+                TaskStatus::InProgress | TaskStatus::Shared | TaskStatus::Restarting
+            )
+        })
         {
             selection_manager.select_task(first_in_progress.name.clone());
             return true;
@@ -1014,8 +1020,10 @@ impl TasksList {
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
         if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task_id.clone()) {
             let old_status = task_item.status;
-            let old_is_in_progress =
-                matches!(old_status, TaskStatus::InProgress | TaskStatus::Shared);
+            let old_is_in_progress = matches!(
+                old_status,
+                TaskStatus::InProgress | TaskStatus::Shared | TaskStatus::Restarting
+            );
 
             // Calculate old index BEFORE updating status (needed for position tracking)
             let old_in_progress_index = if old_is_in_progress {
@@ -1029,7 +1037,10 @@ impl TasksList {
             // Update the task status
             task_item.update_status(status);
 
-            let new_is_in_progress = matches!(status, TaskStatus::InProgress | TaskStatus::Shared);
+            let new_is_in_progress = matches!(
+                status,
+                TaskStatus::InProgress | TaskStatus::Shared | TaskStatus::Restarting
+            );
             let is_finishing = old_is_in_progress && !new_is_in_progress;
 
             if is_finishing {
@@ -1337,9 +1348,11 @@ impl TasksList {
                     let status_cell = {
                         let mut spans = vec![Span::raw(if is_selected { ">" } else { " " })];
 
-                        // Add vertical line for parallel section if needed (InProgress/Shared tasks only)
-                        if matches!(task.status, TaskStatus::InProgress | TaskStatus::Shared)
-                            && is_in_parallel_section
+                        // Add vertical line for parallel section if needed (InProgress/Shared/Restarting tasks)
+                        if matches!(
+                            task.status,
+                            TaskStatus::InProgress | TaskStatus::Shared | TaskStatus::Restarting
+                        ) && is_in_parallel_section
                         {
                             spans.push(Span::styled("│", Style::default().fg(THEME.info)));
                         } else {

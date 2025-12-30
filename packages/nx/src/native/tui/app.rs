@@ -340,7 +340,10 @@ impl App {
     fn is_status_complete(status: TaskStatus) -> bool {
         !matches!(
             status,
-            TaskStatus::NotStarted | TaskStatus::InProgress | TaskStatus::Shared
+            TaskStatus::NotStarted
+                | TaskStatus::InProgress
+                | TaskStatus::Shared
+                | TaskStatus::Restarting
         )
     }
 
@@ -1325,12 +1328,19 @@ impl App {
             }
             // Task control actions
             Action::RerunSelectedTask => {
-                if let Some(task_id) = self
+                // Get task_id first, then release the lock before calling other methods
+                let task_id = self
                     .selection_manager
                     .lock()
                     .get_selected_task_name()
-                    .cloned()
-                {
+                    .cloned();
+                if let Some(task_id) = task_id {
+                    // Set status to Restarting BEFORE emitting the lifecycle event
+                    // This prevents race conditions where the process exits before
+                    // JavaScript can set the restarting flag
+                    if self.is_selected_task_running() {
+                        self.update_task_status(task_id.clone(), TaskStatus::Restarting);
+                    }
                     self.core
                         .emit_lifecycle_event(LifecycleEvent::rerun_task(task_id));
                 }

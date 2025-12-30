@@ -148,7 +148,7 @@ pub fn get_task_status_style(status: TaskStatus) -> Style {
         | TaskStatus::LocalCache
         | TaskStatus::RemoteCache => THEME.success,
         TaskStatus::Failure => THEME.error,
-        TaskStatus::Skipped => THEME.warning,
+        TaskStatus::Skipped | TaskStatus::Restarting => THEME.warning,
         TaskStatus::InProgress | TaskStatus::Shared => THEME.info,
         TaskStatus::NotStarted | TaskStatus::Stopped => THEME.secondary_fg,
     })
@@ -190,6 +190,12 @@ pub fn get_task_status_icon(status: TaskStatus, padding: usize) -> Span<'static>
             pad_symbol("●", padding),
             Style::default().fg(THEME.info).add_modifier(Modifier::BOLD),
         ),
+        TaskStatus::Restarting => Span::styled(
+            pad_symbol("↻", padding),
+            Style::default()
+                .fg(THEME.warning)
+                .add_modifier(Modifier::BOLD),
+        ),
         TaskStatus::Stopped => Span::styled(
             pad_symbol("◼", padding),
             Style::default()
@@ -227,7 +233,7 @@ pub fn sort_task_items(tasks: &mut [TaskItem], highlighted_names: &HashSet<Strin
             }
 
             match status {
-                TaskStatus::InProgress | TaskStatus::Shared => 0,
+                TaskStatus::InProgress | TaskStatus::Shared | TaskStatus::Restarting => 0,
                 TaskStatus::Failure => 2,
                 TaskStatus::Success
                 | TaskStatus::LocalCacheKeptExisting
@@ -660,7 +666,7 @@ mod tests {
             let status_to_category = |status: &TaskStatus, _: &str| -> u8 {
                 // In this test we're using an empty highlighted list
                 match status {
-                    TaskStatus::InProgress | TaskStatus::Shared => 0,
+                    TaskStatus::InProgress | TaskStatus::Shared | TaskStatus::Restarting => 0,
                     TaskStatus::Failure => 2,
                     TaskStatus::Success
                     | TaskStatus::LocalCacheKeptExisting

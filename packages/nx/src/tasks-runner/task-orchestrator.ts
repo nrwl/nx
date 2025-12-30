@@ -1,6 +1,6 @@
 import { defaultMaxListeners } from 'events';
-import { writeFileSync } from 'fs';
-import { relative } from 'path';
+import { appendFileSync, writeFileSync } from 'fs';
+import { join, relative } from 'path';
 import { performance } from 'perf_hooks';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
@@ -11,10 +11,11 @@ import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
 import { TaskHasher } from '../hasher/task-hasher';
 import {
   IS_WASM,
+  LifecycleEvent,
+  TaskStatus as NativeTaskStatus,
   parseTaskStatus,
   RunningTasksService,
   TaskDetails,
-  TaskStatus as NativeTaskStatus,
 } from '../native';
 import { NxArgs } from '../utils/command-line-utils';
 import { getDbConnection } from '../utils/db-connection';
@@ -29,6 +30,7 @@ import { TaskMetadata, TaskResult } from './life-cycle';
 import { PseudoTtyProcess } from './pseudo-terminal';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
 import { RunningTask } from './running-tasks/running-task';
+import { SharedRunningTask } from './running-tasks/shared-running-task';
 import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
@@ -45,7 +47,13 @@ import {
   removeTasksFromTaskGraph,
   shouldStreamOutput,
 } from './utils';
-import { SharedRunningTask } from './running-tasks/shared-running-task';
+
+// Debug logging utility that writes to a file instead of console
+const DEBUG_LOG_FILE = join('nx-task-orchestrator-debug.log');
+function debugLog(message: string) {
+  const timestamp = new Date().toISOString();
+  appendFileSync(DEBUG_LOG_FILE, `[${timestamp}] ${message}\n`);
+}
 
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
@@ -90,6 +98,10 @@ export class TaskOrchestrator {
   private runningContinuousTasks = new Map<string, RunningTask>();
   private runningRunCommandsTasks = new Map<string, RunningTask>();
 
+  // Track tasks that are being intentionally restarted (killed then re-run)
+  // This prevents the onExit handlers from treating the kill as an unexpected failure
+  private tasksBeingRestarted = new Set<string>();
+
   // endregion internal state
 
   constructor(
@@ -125,6 +137,13 @@ export class TaskOrchestrator {
 
   async run() {
     await this.init();
+
+    // Register handler for TUI task control events
+    if (this.tuiEnabled) {
+      this.options.lifeCycle.registerLifecycleEventHandler?.((event) => {
+        this.handleLifecycleEvent(event);
+      });
+    }
 
     performance.mark('task-execution:start');
 
@@ -175,6 +194,33 @@ export class TaskOrchestrator {
   private async executeNextBatchOfTasksUsingTaskSchedule() {
     // completed all the tasks
     if (!this.tasksSchedule.hasTasks() || this.bailed) {
+      // When TUI is enabled, keep workers alive if:
+      // 1. There are tasks being restarted (they'll be requeued soon)
+      // 2. There are running continuous tasks (user may trigger restart)
+      // 3. There are running run-commands tasks (user may trigger restart)
+      const shouldKeepWorkerAlive =
+        this.tuiEnabled &&
+        !this.bailed &&
+        (this.tasksBeingRestarted.size > 0 ||
+          this.runningContinuousTasks.size > 0 ||
+          this.runningRunCommandsTasks.size > 0);
+
+      if (shouldKeepWorkerAlive) {
+        debugLog(
+          `[EXEC] executeNextBatch: no tasks but keeping worker alive. ` +
+            `restarting=${this.tasksBeingRestarted.size}, ` +
+            `continuousRunning=${this.runningContinuousTasks.size}, ` +
+            `runCommandsRunning=${this.runningRunCommandsTasks.size}`
+        );
+        // Wait for a rerun event to wake us up
+        return new Promise((res) => this.waitingForTasks.push(res)).then(() =>
+          this.executeNextBatchOfTasksUsingTaskSchedule()
+        );
+      }
+
+      debugLog(
+        `[EXEC] executeNextBatch: no tasks or bailed. hasTasks=${this.tasksSchedule.hasTasks()}, bailed=${this.bailed}`
+      );
       return null;
     }
 
@@ -195,6 +241,9 @@ export class TaskOrchestrator {
     }
 
     const task = this.tasksSchedule.nextTask();
+    debugLog(
+      `[EXEC] executeNextBatch: nextTask=${task?.id ?? 'null'}, continuous=${task?.continuous ?? 'N/A'}`
+    );
     if (task) {
       const groupId = this.closeGroup();
 
@@ -208,6 +257,10 @@ export class TaskOrchestrator {
 
       return this.executeNextBatchOfTasksUsingTaskSchedule();
     }
+
+    debugLog(
+      `[EXEC] executeNextBatch: no task available, waiting... waitingForTasks.length=${this.waitingForTasks.length}`
+    );
 
     // block until some other task completes, then try again
     return new Promise((res) => this.waitingForTasks.push(res)).then(() =>
@@ -719,6 +772,8 @@ export class TaskOrchestrator {
   }
 
   async startContinuousTask(task: Task, groupId: number) {
+    debugLog(`[START] startContinuousTask called for: ${task.id}`);
+
     if (
       this.runningTasksService &&
       this.runningTasksService.getRunningTasks([task.id]).length
@@ -735,8 +790,25 @@ export class TaskOrchestrator {
       );
 
       this.runningContinuousTasks.set(task.id, runningTask);
+
+      // Clear restarting flag and update TUI status now that the new process has started
+      if (this.tasksBeingRestarted.delete(task.id) && this.tuiEnabled) {
+        this.options.lifeCycle.setTaskStatus(
+          task.id,
+          NativeTaskStatus.InProgress
+        );
+      }
+
       runningTask.onExit((code) => {
-        if (this.tuiEnabled && !this.completedTasks[task.id]) {
+        // Check both the JS flag and Rust-side status to handle race conditions
+        // The Rust status is set synchronously before the lifecycle event is emitted
+        const rustStatus = this.options.lifeCycle.getTaskStatus?.(task.id);
+        const jsFlag = this.tasksBeingRestarted.has(task.id);
+        const isRestarting =
+          jsFlag || rustStatus === NativeTaskStatus.Restarting;
+
+        // Only set status to Stopped if not being restarted and task hasn't been completed
+        if (this.tuiEnabled && !this.completedTasks[task.id] && !isRestarting) {
           this.options.lifeCycle.setTaskStatus(
             task.id,
             NativeTaskStatus.Stopped
@@ -744,8 +816,8 @@ export class TaskOrchestrator {
         }
         this.runningContinuousTasks.delete(task.id);
 
-        // we're not cleaning up, so this is an unexpected exit, fail the task
-        if (!this.cleaningUp) {
+        // we're not cleaning up and not restarting, so this is an unexpected exit
+        if (!this.cleaningUp && !isRestarting) {
           console.error(
             `Task "${task.id}" is continuous but exited with code ${code}`
           );
@@ -813,17 +885,34 @@ export class TaskOrchestrator {
     this.runningTasksService.addRunningTask(task.id);
     this.runningContinuousTasks.set(task.id, childProcess);
 
+    // Clear restarting flag and update TUI status now that the new process has started
+    // This must happen AFTER the task is registered in runningContinuousTasks
+    // so that the old process's onExit handler (which may still be pending)
+    // sees isRestarting=true and doesn't trigger cascade failure logic
+    if (this.tasksBeingRestarted.delete(task.id) && this.tuiEnabled) {
+      this.options.lifeCycle.setTaskStatus(
+        task.id,
+        NativeTaskStatus.InProgress
+      );
+    }
+
     childProcess.onExit((code) => {
-      // Only set status to Stopped if task hasn't been completed yet
-      if (this.tuiEnabled && !this.completedTasks[task.id]) {
+      // Check both the JS flag and Rust-side status to handle race conditions
+      // The Rust status is set synchronously before the lifecycle event is emitted
+      const rustStatus = this.options.lifeCycle.getTaskStatus?.(task.id);
+      const jsFlag = this.tasksBeingRestarted.has(task.id);
+      const isRestarting = jsFlag || rustStatus === NativeTaskStatus.Restarting;
+
+      // Only set status to Stopped if not being restarted and task hasn't been completed
+      if (this.tuiEnabled && !this.completedTasks[task.id] && !isRestarting) {
         this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Stopped);
       }
       if (this.runningContinuousTasks.delete(task.id)) {
         this.runningTasksService.removeRunningTask(task.id);
       }
 
-      // we're not cleaning up, so this is an unexpected exit, fail the task
-      if (!this.cleaningUp) {
+      // we're not cleaning up and not restarting, so this is an unexpected exit
+      if (!this.cleaningUp && !isRestarting) {
         console.error(
           `Task "${task.id}" is continuous but exited with code ${code}`
         );
@@ -1095,6 +1184,18 @@ export class TaskOrchestrator {
       }
     }
 
+    // Also keep continuous tasks that are dependencies of tasks being restarted
+    // These tasks will be needed again once the restarting task comes back up
+    for (const restartingTaskId of this.tasksBeingRestarted) {
+      const continuousDependencies =
+        this.taskGraph.continuousDependencies[restartingTaskId];
+      if (continuousDependencies) {
+        for (const continuousDependency of continuousDependencies) {
+          neededContinuousTasks.add(continuousDependency);
+        }
+      }
+    }
+
     for (const taskId of this.runningContinuousTasks.keys()) {
       if (!neededContinuousTasks.has(taskId)) {
         const runningTask = this.runningContinuousTasks.get(taskId);
@@ -1108,6 +1209,195 @@ export class TaskOrchestrator {
       }
     }
   }
+
+  // region Lifecycle Event Handling
+
+  /**
+   * Handle lifecycle events emitted by the TUI for task control
+   */
+  private handleLifecycleEvent(event: LifecycleEvent): void {
+    switch (event.eventType) {
+      case 'RerunTask':
+        if (event.taskId) {
+          this.handleRerunTask(event.taskId).catch((e) => {
+            console.error(`Failed to rerun task ${event.taskId}:`, e);
+          });
+        }
+        break;
+      case 'KillTask':
+        if (event.taskId) {
+          this.handleKillTask(event.taskId).catch((e) => {
+            console.error(`Failed to kill task ${event.taskId}:`, e);
+          });
+        }
+        break;
+      case 'RerunAllFailed':
+        this.handleRerunAllFailed().catch((e) => {
+          console.error(`Failed to rerun all failed tasks:`, e);
+        });
+        break;
+      case 'KillAllRunning':
+        this.handleKillAllRunning().catch((e) => {
+          console.error(`Failed to kill all running tasks:`, e);
+        });
+        break;
+    }
+  }
+
+  /**
+   * Re-run a task, killing it first if currently running
+   */
+  private async handleRerunTask(taskId: string): Promise<void> {
+    debugLog(`[RERUN] Starting rerun for task: ${taskId}`);
+
+    // 1. Mark task as being restarted BEFORE killing
+    // This prevents onExit handlers from treating the kill as an unexpected failure
+    const isRunning =
+      this.runningContinuousTasks.has(taskId) ||
+      this.runningRunCommandsTasks.has(taskId);
+
+    debugLog(`[RERUN] Task ${taskId} isRunning: ${isRunning}`);
+
+    if (isRunning) {
+      this.tasksBeingRestarted.add(taskId);
+
+      // Show "Restarting" status in TUI
+      if (this.tuiEnabled) {
+        this.options.lifeCycle.setTaskStatus?.(
+          taskId,
+          NativeTaskStatus.Restarting
+        );
+      }
+
+      debugLog(`[RERUN] Killing task ${taskId}...`);
+      await this.handleKillTask(taskId);
+      debugLog(`[RERUN] Task ${taskId} killed`);
+    }
+
+    // 2. Reset completion state
+    const previousStatus = this.completedTasks[taskId];
+    delete this.completedTasks[taskId];
+
+    debugLog(
+      `[RERUN] Task ${taskId} previousStatus: ${previousStatus}, cleared from completedTasks`
+    );
+
+    // 3. Clear from processed tasks so it gets re-hashed
+    this.processedTasks.delete(taskId);
+
+    // 4. Clear the task's hash so it will be re-computed
+    const task = this.taskGraph.tasks[taskId];
+    if (task) {
+      task.hash = undefined;
+    }
+
+    debugLog(
+      `[RERUN] Task ${taskId} exists in taskGraph: ${!!task}, continuous: ${task?.continuous}`
+    );
+
+    // 5. Re-queue skipped dependents if this was a failure
+    if (previousStatus === 'failure') {
+      const requeued = this.tasksSchedule.requeueSkippedDependents(
+        taskId,
+        this.completedTasks
+      );
+      debugLog(`[RERUN] Requeued skipped dependents: ${requeued}`);
+      // Also clear these from completedTasks and processedTasks
+      for (const depId of requeued) {
+        delete this.completedTasks[depId];
+        this.processedTasks.delete(depId);
+        // Clear hash for dependent tasks too
+        const depTask = this.taskGraph.tasks[depId];
+        if (depTask) {
+          depTask.hash = undefined;
+        }
+      }
+    }
+
+    // 6. Re-queue the task
+    debugLog(`[RERUN] Requeueing task ${taskId}...`);
+    this.tasksSchedule.requeueTask(taskId);
+
+    // NOTE: Don't clear tasksBeingRestarted here!
+    // The flag will be cleared in startContinuousTask after the new process starts.
+    // This ensures the old process's onExit handler sees isRestarting=true.
+
+    // 7. Signal that new work is available
+    debugLog(`[RERUN] Scheduling next tasks...`);
+    await this.tasksSchedule.scheduleNextTasks();
+
+    // 8. Wake up any waiting workers
+    debugLog(
+      `[RERUN] Waking up ${this.waitingForTasks.length} waiting workers`
+    );
+    this.waitingForTasks.forEach((resolve) => resolve(null));
+    this.waitingForTasks.length = 0;
+
+    debugLog(`[RERUN] handleRerunTask complete for ${taskId}`);
+  }
+
+  /**
+   * Kill a running task
+   */
+  private async handleKillTask(taskId: string): Promise<void> {
+    // Find the running task - check various task maps
+    const runningTask =
+      this.runningContinuousTasks.get(taskId) ||
+      this.runningRunCommandsTasks.get(taskId);
+
+    if (runningTask) {
+      try {
+        await runningTask.kill();
+      } catch (e) {
+        console.error(`Failed to kill task ${taskId}:`, e);
+      }
+
+      // Clean up tracking (the onExit handlers will also do this, but we ensure it here)
+      // Check if it was a continuous task that needs service cleanup
+      if (this.runningContinuousTasks.delete(taskId)) {
+        this.runningTasksService?.removeRunningTask(taskId);
+      }
+      this.runningRunCommandsTasks.delete(taskId);
+
+      // Update TUI status - but NOT if we're restarting (status should stay as Restarting)
+      if (this.tuiEnabled && !this.tasksBeingRestarted.has(taskId)) {
+        this.options.lifeCycle.setTaskStatus?.(
+          taskId,
+          NativeTaskStatus.Stopped
+        );
+      }
+    }
+  }
+
+  /**
+   * Re-run all failed tasks
+   */
+  private async handleRerunAllFailed(): Promise<void> {
+    const failedTaskIds = Object.entries(this.completedTasks)
+      .filter(([_, status]) => status === 'failure')
+      .map(([taskId]) => taskId);
+
+    for (const taskId of failedTaskIds) {
+      await this.handleRerunTask(taskId);
+    }
+  }
+
+  /**
+   * Kill all currently running tasks
+   */
+  private async handleKillAllRunning(): Promise<void> {
+    // Get all running task IDs
+    const runningTaskIds = [
+      ...this.runningContinuousTasks.keys(),
+      ...this.runningRunCommandsTasks.keys(),
+    ];
+
+    for (const taskId of runningTaskIds) {
+      await this.handleKillTask(taskId);
+    }
+  }
+
+  // endregion Lifecycle Event Handling
 }
 
 export function getThreadCount(

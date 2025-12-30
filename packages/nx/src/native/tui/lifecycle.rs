@@ -522,6 +522,19 @@ impl AppLifeCycle {
         self.with_app(|app| app.update_task_status(task_id, status));
     }
 
+    /// Get the current status of a task from the TUI state
+    ///
+    /// This is used by JavaScript to check if a task is being restarted
+    /// before treating an exit as a failure. Returns None if task not found.
+    #[napi]
+    pub fn get_task_status(&self, task_id: String) -> Option<TaskStatus> {
+        self.with_app(|app| {
+            let shared_state = app.get_shared_state();
+            let state = shared_state.lock();
+            state.get_task_status(&task_id)
+        })
+    }
+
     // This method is excluded from test builds because it uses ThreadsafeFunction
     // which requires Node.js runtime symbols.
     #[cfg(not(test))]

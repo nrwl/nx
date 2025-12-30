@@ -203,6 +203,12 @@ impl InlineApp {
         match action {
             Action::RerunSelectedTask => {
                 if let Some(task_id) = self.selected_task.clone() {
+                    // Set status to Restarting BEFORE emitting the lifecycle event
+                    // This prevents race conditions where the process exits before
+                    // JavaScript can set the restarting flag
+                    // Note: Confirmation dialog is only shown for running tasks,
+                    // so if we reach here, the task is running
+                    self.update_task_status(task_id.clone(), TaskStatus::Restarting);
                     self.core
                         .emit_lifecycle_event(LifecycleEvent::rerun_task(task_id));
                 }

@@ -20,6 +20,13 @@ export declare class AppLifeCycle {
   registerRunningTaskWithEmptyParser(taskId: string): void
   appendTaskOutput(taskId: string, output: string, isPtyOutput: boolean): void
   setTaskStatus(taskId: string, status: TaskStatus): void
+  /**
+   * Get the current status of a task from the TUI state
+   *
+   * This is used by JavaScript to check if a task is being restarted
+   * before treating an exit as a failure. Returns None if task not found.
+   */
+  getTaskStatus(taskId: string): TaskStatus | null
   registerForcedShutdownCallback(forcedShutdownCallback: () => any): void
   __setCloudMessage(message: string): Promise<void>
   setEstimatedTaskTimings(timings: Record<string, number>): void
@@ -513,7 +520,8 @@ export declare const enum TaskStatus {
   NotStarted = 6,
   InProgress = 7,
   Shared = 8,
-  Stopped = 9
+  Stopped = 9,
+  Restarting = 10
 }
 
 export interface TaskTarget {

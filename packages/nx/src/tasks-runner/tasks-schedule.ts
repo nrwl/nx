@@ -1,16 +1,25 @@
+import { appendFileSync } from 'fs';
+import { join } from 'path';
+import { ProjectGraph } from '../config/project-graph';
+import { Task, TaskGraph } from '../config/task-graph';
+import { reverse } from '../project-graph/operators';
+import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
+import { TaskHistory, getTaskHistory } from '../utils/task-history';
+import { DefaultTasksRunnerOptions } from './default-tasks-runner';
+import { TaskStatus } from './tasks-runner';
 import {
   calculateReverseDeps,
   getExecutorForTask,
   getExecutorNameForTask,
   removeTasksFromTaskGraph,
 } from './utils';
-import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { Task, TaskGraph } from '../config/task-graph';
-import { ProjectGraph } from '../config/project-graph';
-import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
-import { reverse } from '../project-graph/operators';
-import { TaskHistory, getTaskHistory } from '../utils/task-history';
-import { TaskStatus } from './tasks-runner';
+
+// Debug logging utility that writes to a file instead of console
+const DEBUG_LOG_FILE = join('nx-task-orchestrator-debug.log');
+function debugLog(message: string) {
+  const timestamp = new Date().toISOString();
+  appendFileSync(DEBUG_LOG_FILE, `[${timestamp}] ${message}\n`);
+}
 
 export interface Batch {
   executorName: string;
@@ -94,9 +103,19 @@ export class TasksSchedule {
   }
 
   public nextTask() {
+    debugLog(
+      `[SCHEDULE] nextTask called. scheduledTasks: ${JSON.stringify(this.scheduledTasks)}`
+    );
+
     if (this.scheduledTasks.length > 0) {
-      return this.taskGraph.tasks[this.scheduledTasks.shift()];
+      const taskId = this.scheduledTasks.shift();
+      const task = this.taskGraph.tasks[taskId];
+      debugLog(
+        `[SCHEDULE] nextTask returning: ${taskId}, found in taskGraph: ${!!task}`
+      );
+      return task;
     } else {
+      debugLog(`[SCHEDULE] nextTask: no scheduled tasks`);
       return null;
     }
   }
@@ -118,12 +137,23 @@ export class TasksSchedule {
   }
 
   private async scheduleTasks() {
+    debugLog(
+      `[SCHEDULE] scheduleTasks called. roots: ${JSON.stringify(this.notScheduledTaskGraph.roots)}`
+    );
+
     if (this.options.batch || process.env.NX_BATCH_MODE === 'true') {
       await this.scheduleBatches();
     }
     for (let root of this.notScheduledTaskGraph.roots) {
-      if (this.canBeScheduled(root)) {
+      const canSchedule = this.canBeScheduled(root);
+      debugLog(
+        `[SCHEDULE] Checking root ${root}: canBeScheduled=${canSchedule}`
+      );
+      if (canSchedule) {
         await this.scheduleTask(root);
+        debugLog(
+          `[SCHEDULE] Scheduled task ${root}. scheduledTasks now: ${JSON.stringify(this.scheduledTasks)}`
+        );
       }
     }
   }
@@ -327,6 +357,11 @@ export class TasksSchedule {
    * scheduling queue. Used when users trigger task re-run from the TUI.
    */
   public requeueTask(taskId: string): void {
+    debugLog(`[SCHEDULE] requeueTask called for: ${taskId}`);
+    debugLog(
+      `[SCHEDULE] Before: completedTasks.has=${this.completedTasks.has(taskId)}, runningTasks.has=${this.runningTasks.has(taskId)}`
+    );
+
     // 1. Remove from completed set
     this.completedTasks.delete(taskId);
     this.runningTasks.delete(taskId);
@@ -343,6 +378,10 @@ export class TasksSchedule {
       throw new Error(`Cannot requeue unknown task: ${taskId}`);
     }
 
+    debugLog(
+      `[SCHEDULE] Task found in originalTaskGraph: continuous=${task.continuous}`
+    );
+
     // 3. Re-add to notScheduledTaskGraph
     this.notScheduledTaskGraph.tasks[taskId] = task;
     this.notScheduledTaskGraph.dependencies[taskId] =
@@ -358,12 +397,27 @@ export class TasksSchedule {
     // A task is a root if all its dependencies are complete
     const deps = this.notScheduledTaskGraph.dependencies[taskId] ?? [];
     const allDepsCompleted = deps.every((d) => this.completedTasks.has(d));
+
+    debugLog(
+      `[SCHEDULE] Task deps: ${JSON.stringify(deps)}, allDepsCompleted: ${allDepsCompleted}`
+    );
+    debugLog(
+      `[SCHEDULE] Current roots before: ${JSON.stringify(this.notScheduledTaskGraph.roots)}`
+    );
+
     if (
       allDepsCompleted &&
       !this.notScheduledTaskGraph.roots.includes(taskId)
     ) {
       this.notScheduledTaskGraph.roots.push(taskId);
     }
+
+    debugLog(
+      `[SCHEDULE] Current roots after: ${JSON.stringify(this.notScheduledTaskGraph.roots)}`
+    );
+    debugLog(
+      `[SCHEDULE] notScheduledTaskGraph.tasks keys: ${JSON.stringify(Object.keys(this.notScheduledTaskGraph.tasks))}`
+    );
   }
 
   /**

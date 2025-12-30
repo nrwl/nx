@@ -39,6 +39,16 @@ pub fn get_status_icon(status: TaskStatus, throbber_counter: usize) -> Span<'sta
                 Style::default().fg(THEME.info).add_modifier(Modifier::BOLD),
             )
         }
+        TaskStatus::Restarting => {
+            let throbber_chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+            let throbber_char = throbber_chars[throbber_counter % throbber_chars.len()];
+            Span::styled(
+                format!("  {}  ", throbber_char),
+                Style::default()
+                    .fg(THEME.warning)
+                    .add_modifier(Modifier::BOLD),
+            )
+        }
         TaskStatus::Stopped => Span::styled(
             "  ◼  ",
             Style::default()
@@ -68,6 +78,10 @@ pub fn get_status_char(status: TaskStatus, throbber_counter: usize) -> char {
             let throbber_chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
             throbber_chars[throbber_counter % throbber_chars.len()]
         }
+        TaskStatus::Restarting => {
+            let throbber_chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+            throbber_chars[throbber_counter % throbber_chars.len()]
+        }
         TaskStatus::Stopped => '◼',
         TaskStatus::NotStarted => '·',
     }
@@ -91,6 +105,9 @@ pub fn get_status_style(status: TaskStatus) -> Style {
         TaskStatus::InProgress | TaskStatus::Shared => {
             Style::default().fg(THEME.info).add_modifier(Modifier::BOLD)
         }
+        TaskStatus::Restarting => Style::default()
+            .fg(THEME.warning)
+            .add_modifier(Modifier::BOLD),
         TaskStatus::Stopped | TaskStatus::NotStarted => Style::default()
             .fg(THEME.secondary_fg)
             .add_modifier(Modifier::BOLD),
