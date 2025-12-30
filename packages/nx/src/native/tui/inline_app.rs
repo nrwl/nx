@@ -26,10 +26,12 @@ use crate::native::{
 };
 
 use super::action::Action;
+use super::components::confirm_dialog::ConfirmDialog;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
 use super::lifecycle::{RunMode, TuiMode};
+use super::lifecycle_event::LifecycleEvent;
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_app::TuiApp;
@@ -81,6 +83,8 @@ pub struct InlineApp {
     total_inserted_lines: u32,
     /// Status message to display in the bottom chrome (e.g., "Output copied")
     status_message: Option<(String, Instant)>,
+    /// Active confirmation dialog (if any)
+    confirm_dialog: Option<ConfirmDialog>,
 }
 
 impl InlineApp {
@@ -128,6 +132,7 @@ impl InlineApp {
             scrollback_render_counter: 0,
             total_inserted_lines: 0,
             status_message: None,
+            confirm_dialog: None,
         })
     }
 
@@ -157,6 +162,7 @@ impl InlineApp {
             scrollback_render_counter: 19,
             total_inserted_lines: 0,
             status_message: None,
+            confirm_dialog: None,
         })
     }
 
@@ -177,6 +183,38 @@ impl InlineApp {
     /// Get the task ID of the currently running task (if any)
     fn get_current_running_task(&self) -> Option<String> {
         self.core.state().lock().get_current_running_task()
+    }
+
+    /// Check if the currently displayed task is running
+    fn is_current_task_running(&self) -> bool {
+        if let Some(task_id) = &self.selected_task {
+            let state = self.core.state().lock();
+            matches!(
+                state.get_task_status(task_id),
+                Some(TaskStatus::InProgress) | Some(TaskStatus::Shared)
+            )
+        } else {
+            false
+        }
+    }
+
+    /// Handle a confirmed action from the confirm dialog
+    fn handle_confirmed_action(&mut self, action: Action) {
+        match action {
+            Action::RerunSelectedTask => {
+                if let Some(task_id) = self.selected_task.clone() {
+                    self.core
+                        .emit_lifecycle_event(LifecycleEvent::rerun_task(task_id));
+                }
+            }
+            Action::KillSelectedTask => {
+                if let Some(task_id) = self.selected_task.clone() {
+                    self.core
+                        .emit_lifecycle_event(LifecycleEvent::kill_task(task_id));
+                }
+            }
+            _ => {}
+        }
     }
 
     /// Internal method to handle Action::EndCommand
@@ -369,6 +407,23 @@ impl TuiApp for InlineApp {
             }
             tui::Event::Key(key) => {
                 // If countdown popup is visible, handle countdown-specific keys
+                // If confirm dialog is open, route all input to it
+                if let Some(dialog) = &mut self.confirm_dialog {
+                    if let Some(result) = dialog.handle_key(key) {
+                        match result {
+                            Action::CancelConfirmDialog => {
+                                self.confirm_dialog = None;
+                            }
+                            Action::ConfirmAction(action) => {
+                                self.confirm_dialog = None;
+                                self.handle_confirmed_action(*action);
+                            }
+                            _ => {}
+                        }
+                    }
+                    return Ok(false);
+                }
+
                 if self.countdown_popup.is_visible() {
                     match key.code {
                         KeyCode::Char('q') => {
@@ -492,6 +547,39 @@ impl TuiApp for InlineApp {
                     }
                     return Ok(false);
                 }
+
+                // Task control keybindings (inline mode - single task operations only)
+                // 'r': Re-run or restart the current task
+                if matches!(key.code, KeyCode::Char('r')) && key.modifiers.is_empty() {
+                    if let Some(task_id) = self.selected_task.clone() {
+                        if self.is_current_task_running() {
+                            // Task is running - show confirmation dialog
+                            let mut dialog = ConfirmDialog::new();
+                            dialog.show(
+                                "Restart running task?".to_string(),
+                                Action::RerunSelectedTask,
+                            );
+                            self.confirm_dialog = Some(dialog);
+                        } else {
+                            // Task is not running - re-run immediately
+                            self.core
+                                .emit_lifecycle_event(LifecycleEvent::rerun_task(task_id));
+                        }
+                    }
+                    return Ok(false);
+                }
+
+                // 'x': Kill the current task (only if running)
+                if matches!(key.code, KeyCode::Char('x')) && key.modifiers.is_empty() {
+                    if self.selected_task.is_some() && self.is_current_task_running() {
+                        // Task is running - show confirmation dialog
+                        let mut dialog = ConfirmDialog::new();
+                        dialog.show("Kill running task?".to_string(), Action::KillSelectedTask);
+                        self.confirm_dialog = Some(dialog);
+                    }
+                    return Ok(false);
+                }
+                // Note: Ctrl+r and Ctrl+x NOT handled in inline mode (no bulk operations)
 
                 let unhandled_key_message = if self.can_be_interactive() {
                     "This key is not handled by the TUI. To send input to the terminal, press 'i' to enter interactive mode."
@@ -796,6 +884,13 @@ impl InlineApp {
         // Render countdown popup as overlay if visible
         if self.countdown_popup.is_visible() {
             self.countdown_popup.render(f, area);
+        }
+
+        // Render confirm dialog on top of everything
+        if let Some(dialog) = &self.confirm_dialog {
+            if dialog.is_visible() {
+                dialog.render(f, area);
+            }
         }
     }
 
