@@ -38,6 +38,7 @@ import {
   formatCacheSize,
   resolveMaxCacheSize,
 } from '../../tasks-runner/cache';
+import { daemonClient } from '../../daemon/client/client';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')
@@ -86,6 +87,7 @@ export async function reportHandler() {
     projectGraphError,
     nativeTarget,
     cache,
+    daemon,
   } = await getReportData();
 
   const fields = [
@@ -93,6 +95,16 @@ export async function reportHandler() {
     ['OS', `${process.platform}-${process.arch}`],
     ['Native Target', nativeTarget ?? 'Unavailable'],
     [pm, pmVersion],
+    [
+      'daemon',
+      'error' in daemon
+        ? `Error: ${daemon.error}`
+        : daemon.disabled
+          ? 'Disabled'
+          : daemon.available
+            ? 'Available'
+            : 'Unavailable',
+    ],
   ];
   let padding = Math.max(...fields.map((f) => f[0].length));
   const bodyLines = fields.map(
@@ -273,6 +285,12 @@ export interface ReportData {
   localPlugins: string[];
   communityPlugins: PackageJson[];
   registeredPlugins: string[];
+  daemon:
+    | {
+        available: boolean;
+        disabled: boolean;
+      }
+    | { error: unknown };
   packageVersionsWeCareAbout: {
     package: string;
     version: string;
@@ -424,7 +442,23 @@ export async function getReportData(): Promise<ReportData> {
     projectGraphError,
     nativeTarget: native ? native.getBinaryTarget() : null,
     cache,
+    daemon: await getDaemonStatus(),
   };
+}
+
+async function getDaemonStatus(): Promise<ReportData['daemon']> {
+  try {
+    const enabled = daemonClient.enabled();
+    const available = enabled && (await daemonClient.isServerAvailable());
+    return {
+      available,
+      disabled: !enabled,
+    };
+  } catch (e) {
+    return {
+      error: e,
+    };
+  }
 }
 
 async function tryGetProjectGraph() {
