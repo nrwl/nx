@@ -83,6 +83,7 @@ export function buildExplicitTypeScriptDependencies(
     file,
     staticImportExpressions,
     dynamicImportExpressions,
+    typeImportExpressions,
   } of imports) {
     const normalizedFilePath = normalizePath(relative(workspaceRoot, file));
 
@@ -124,6 +125,26 @@ export function buildExplicitTypeScriptDependencies(
         !isRoot(ctx.projects, dependency.target)
       ) {
         validateDependency(dependency, ctx);
+        res.push(dependency);
+      }
+    }
+    for (const importExpr of typeImportExpressions ?? []) {
+      const dependency = convertImportToDependency(
+        importExpr,
+        normalizedFilePath,
+        sourceProject,
+        DependencyType.type,
+        targetProjectLocator
+      );
+      if (!dependency) {
+        continue;
+      }
+
+      // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
+      if (
+        isRoot(ctx.projects, dependency.source) ||
+        !isRoot(ctx.projects, dependency.target)
+      ) {
         res.push(dependency);
       }
     }
