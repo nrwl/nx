@@ -599,6 +599,47 @@ describe('cache', () => {
     );
   }
 
+  it('should invalidate cache when git-ignored input file changes', async () => {
+    const projectName = uniq('myapp');
+
+    // Create a project with a target that uses a git-ignored file as input
+    updateFile(
+      `projects/${projectName}/project.json`,
+      JSON.stringify({
+        name: projectName,
+        targets: {
+          build: {
+            command: 'echo "building"',
+            inputs: ['{projectRoot}/.env'],
+            cache: true,
+          },
+        },
+      })
+    );
+
+    // Create the .env file
+    updateFile(`projects/${projectName}/.env`, 'SECRET=initial-value');
+
+    // Add .env to gitignore
+    updateFile('.gitignore', (content) => `${content}\n.env\n`);
+
+    // First run - should not be cached
+    const firstRun = runCLI(`build ${projectName}`);
+    expect(firstRun).not.toContain('local cache');
+
+    // Second run - should be cached
+    const secondRun = runCLI(`build ${projectName}`);
+    expect(secondRun).toContain('local cache');
+
+    // Modify the git-ignored .env file
+    updateFile(`projects/${projectName}/.env`, 'SECRET=changed-value');
+
+    // Third run - should NOT be cached because the input changed
+    // This is the bug: currently this will incorrectly hit the cache
+    const thirdRun = runCLI(`build ${projectName}`);
+    expect(thirdRun).not.toContain('local cache');
+  });
+
   function expectProjectMatchTaskCacheStatus(
     actualOutput: string,
     expectedProjects: string[],
