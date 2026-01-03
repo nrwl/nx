@@ -196,14 +196,12 @@ export default defineConfig({
   it('should add a mount config', async () => {
     const actual = await addMountDefinition(
       `/// <reference types="cypress" />
-declare global {
 // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace Cypress {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    interface Chainable<Subject> {
-      login(email: string, password: string): void;
-      blah: string;
-    }
+declare namespace Cypress {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface Chainable<Subject> {
+    login(email: string, password: string): void;
+    blah: string;
   }
 }
 `
@@ -211,15 +209,13 @@ declare global {
 
     expect(actual).toMatchInlineSnapshot(`
       "/// <reference types="cypress" />
-      declare global {
       // eslint-disable-next-line @typescript-eslint/no-namespace
-        namespace Cypress {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          interface Chainable<Subject> {
-            login(email: string, password: string): void;
-            blah: string;
-            mount: typeof mount;
-          }
+      declare namespace Cypress {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        interface Chainable<Subject> {
+          login(email: string, password: string): void;
+          blah: string;
+          mount: typeof mount;
         }
       }
 
@@ -231,14 +227,12 @@ declare global {
     const actual = await addMountDefinition(
       `/// <reference types="cypress" />
 import { customMount } from 'something-else';
-declare global {
 // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace Cypress {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    interface Chainable<Subject> {
-      login(email: string, password: string): void;
-      mount: 'something-else';
-    }
+declare namespace Cypress {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface Chainable<Subject> {
+    login(email: string, password: string): void;
+    mount: 'something-else';
   }
 }
 Cypress.Commands.add('mount', customMount);
@@ -248,14 +242,12 @@ Cypress.Commands.add('mount', customMount);
     expect(actual).toMatchInlineSnapshot(`
       "/// <reference types="cypress" />
       import { customMount } from 'something-else';
-      declare global {
       // eslint-disable-next-line @typescript-eslint/no-namespace
-        namespace Cypress {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          interface Chainable<Subject> {
-            login(email: string, password: string): void;
-            mount: 'something-else';
-          }
+      declare namespace Cypress {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        interface Chainable<Subject> {
+          login(email: string, password: string): void;
+          mount: 'something-else';
         }
       }
       Cypress.Commands.add('mount', customMount);
