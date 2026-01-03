@@ -2,7 +2,7 @@
 title: Start with an existing project
 description: Add Nx to any existing project with a single command. Start with Nx Core and gradually adopt plugins, CI integrations, and other capabilities.
 sidebar:
-  order: 4
+  order: 3
   label: Add to existing project
 filter: 'type:Guides'
 ---
@@ -11,17 +11,46 @@ filter: 'type:Guides'
 
 In many situations, you have an existing codebase and want to improve it with Nx using an **incremental adoption approach**.
 
-Thanks to [Nx's modular architecture](/docs/getting-started/intro), you can start with just **Nx Core** and then gradually add [technology-specific plugins](/docs/technologies), [CI integrations](/docs/getting-started/nx-cloud), or other capabilities as your requirements evolve.
+## Prerequisites: Install Nx
+
+Before adding Nx to your project, install Nx globally on your machine:
+
+{% tabs syncKey="install-method" %}
+{% tabitem label="npm" %}
+
+```shell
+npm add --global nx
+```
+
+**Note:** You can also use `yarn`, `pnpm`, or `bun`
+{% /tabitem %}
+
+{% tabitem label="Homebrew (macOS, Linux)" %}
+
+```shell
+brew install nx
+```
+
+{% /tabitem %}
+
+{% tabitem label="Chocolatey (Windows)" %}
+
+```shell
+choco install nx
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Alternatively, you can use `npx` to run Nx commands without installing it globally.
+
+Thanks to [Nx's modular architecture](/docs/getting-started/intro), you can start with just **Nx Core** and then gradually add [technology-specific plugins](/docs/technologies), [CI integrations](/docs/guides/nx-cloud/intro), or other capabilities as your requirements evolve.
 
 Getting started is remarkably simple. You can add Nx to any existing project with a single command:
 
 ```shell
 nx@latest init
 ```
-
-{% aside type="note" title="Global Installs" %}
-Make sure you have [Nx installed globally](/docs/getting-started/installation) or use `npx` if you're in a JavaScript environment
-{% /aside %}
 
 Whether a monorepo, single project or something in between, `nx init` walks you through adding and configuring Nx. You can pick a minimal approach or detailed guided setup. At the end you'll have an Nx workspace ready for anything!
 

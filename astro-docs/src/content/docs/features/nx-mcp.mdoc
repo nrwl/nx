@@ -1,10 +1,10 @@
 ---
-title: Nx MCP Server Reference
+title: Nx MCP Server
 description: Complete reference for the Nx MCP (Model Context Protocol) server, including available tools, configuration options, and setup instructions for various AI clients.
 sidebar:
-  order: 5
-  label: Nx MCP Server
-filter: 'type:References'
+  order: 10
+  label: Nx MCP
+filter: 'type:Features'
 ---
 
 The Nx MCP server is a [Model Context Protocol](https://modelcontextprotocol.io/introduction) implementation that gives LLMs deep access to your monorepo's structure: project relationships, file mappings, runnable tasks, ownership info, tech stacks, Nx generators, and Nx documentation.
@@ -38,7 +38,7 @@ All args are passed through to the underlying MCP server.
 
 ### Via Nx Console Extension
 
-If you're using Cursor, VS Code, or JetBrains IDEs, install the [Nx Console extension](/docs/getting-started/editor-setup) which automatically manages the MCP server for you.
+If you're using Cursor, VS Code, or JetBrains IDEs, install the [Nx Console extension](/docs/getting-started/local-development) which automatically manages the MCP server for you.
 
 ## Client-Specific Setup
 
@@ -60,7 +60,7 @@ Alternatively, configure it in your VS Code settings or use the Nx Console exten
 
 ### Cursor
 
-1. Install [Nx Console](/docs/getting-started/editor-setup) from the marketplace
+1. Install [Nx Console](/docs/getting-started/local-development) from the marketplace
 2. You'll receive a notification to "Improve Copilot/AI agent with Nx-specific context"
 3. Click "Yes" to configure the MCP server
 
@@ -68,7 +68,7 @@ If you miss the notification, run the `nx.configureMcpServer` command from the c
 
 ### JetBrains IDEs
 
-1. Install [Nx Console](/docs/getting-started/editor-setup) from the marketplace
+1. Install [Nx Console](/docs/getting-started/local-development) from the marketplace
 2. You'll receive a notification to "Improve Copilot/AI agent with Nx-specific context"
 3. Click "Yes" to configure the MCP server
 
