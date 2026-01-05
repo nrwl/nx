@@ -1,8 +1,5 @@
 import type { NxJsonConfiguration } from '@nx/devkit';
-import {
-  ensureProjectIsExcludedFromPluginRegistrations,
-  ensureProjectIsIncludedInPluginRegistrations,
-} from './plugin';
+import { ensureProjectIsIncludedInPluginRegistrations } from './plugin';
 
 describe('ensureProjectIsIncludedInPluginRegistrations', () => {
   it('should do nothing when `include`/`exclude` are not set in a plugin registration that infers both targets', () => {
@@ -413,7 +410,29 @@ describe('ensureProjectIsIncludedInPluginRegistrations', () => {
     });
   });
 
-  it('should add a new plugin registration including the project when there is an existing plugin registration that infers both targets but the build target is not needed', () => {
+  it('should do nothing when there is an existing plugin registration that infers both targets but the build target is not needed', () => {
+    const originalNxJson: NxJsonConfiguration = {
+      plugins: [
+        {
+          plugin: '@nx/js/typescript',
+          options: {
+            typecheck: { targetName: 'typecheck' },
+            build: {
+              targetName: 'build',
+              configName: 'tsconfig.lib.json',
+            },
+          },
+        },
+      ],
+    };
+    const nxJson = structuredClone(originalNxJson);
+
+    ensureProjectIsIncludedInPluginRegistrations(nxJson, 'packages/pkg1', null);
+
+    expect(nxJson).toEqual(originalNxJson);
+  });
+
+  it('should exclude a project from a plugin registration with `skipBuildCheck: true` when the build target is not needed and add a new plugin registration that includes it', () => {
     const nxJson: NxJsonConfiguration = {
       plugins: [
         {
@@ -423,6 +442,7 @@ describe('ensureProjectIsIncludedInPluginRegistrations', () => {
             build: {
               targetName: 'build',
               configName: 'tsconfig.lib.json',
+              skipBuildCheck: true,
             },
           },
         },
@@ -441,6 +461,7 @@ describe('ensureProjectIsIncludedInPluginRegistrations', () => {
             build: {
               targetName: 'build',
               configName: 'tsconfig.lib.json',
+              skipBuildCheck: true,
             },
           },
         },
@@ -483,146 +504,6 @@ describe('ensureProjectIsIncludedInPluginRegistrations', () => {
         {
           plugin: '@nx/js/typescript',
           exclude: ['packages/pkg2/*'],
-          options: {
-            typecheck: { targetName: 'typecheck' },
-            build: {
-              targetName: 'build',
-              configName: 'tsconfig.lib.json',
-            },
-          },
-        },
-      ],
-    });
-  });
-});
-
-describe('ensureProjectIsExcludedFromPluginRegistrations', () => {
-  it('should do nothing when there is no `plugin` entry', () => {
-    const nxJson: NxJsonConfiguration = {};
-
-    ensureProjectIsExcludedFromPluginRegistrations(nxJson, 'packages/pkg1');
-
-    expect(nxJson).toStrictEqual({});
-  });
-
-  it('should do nothing when the there are no plugins', () => {
-    const nxJson: NxJsonConfiguration = { plugins: [] };
-
-    ensureProjectIsExcludedFromPluginRegistrations(nxJson, 'packages/pkg1');
-
-    expect(nxJson).toStrictEqual({ plugins: [] });
-  });
-
-  it('should do nothing when the are no registrations for the `@nx/js/typescript` plugin', () => {
-    const nxJson: NxJsonConfiguration = { plugins: ['@foo/bar/plugin'] };
-
-    ensureProjectIsExcludedFromPluginRegistrations(nxJson, 'packages/pkg1');
-
-    expect(nxJson).toStrictEqual({ plugins: ['@foo/bar/plugin'] });
-  });
-
-  it('should do nothing when the plugin registration does not infer any of the targets', () => {
-    const nxJson: NxJsonConfiguration = {
-      plugins: [
-        {
-          plugin: '@nx/js/typescript',
-          options: { typecheck: false },
-        },
-      ],
-    };
-
-    ensureProjectIsExcludedFromPluginRegistrations(nxJson, 'packages/pkg1');
-
-    expect(nxJson).toStrictEqual({
-      plugins: [
-        {
-          plugin: '@nx/js/typescript',
-          options: { typecheck: false },
-        },
-      ],
-    });
-  });
-
-  it('should do nothing when `include` is set in a plugin registration that infers any of the targets and the project is not included', () => {
-    const originalNxJson: NxJsonConfiguration = {
-      plugins: [
-        {
-          plugin: '@nx/js/typescript',
-          include: ['packages/pkg1/*'],
-          options: {
-            typecheck: { targetName: 'typecheck' },
-          },
-        },
-      ],
-    };
-    const nxJson = structuredClone(originalNxJson);
-
-    ensureProjectIsExcludedFromPluginRegistrations(nxJson, 'packages/pkg2');
-
-    expect(nxJson).toEqual(originalNxJson);
-  });
-
-  it('should do nothing when `exclude` is set in a plugin registration that infers any of the targets and the project is already excluded', () => {
-    const originalNxJson: NxJsonConfiguration = {
-      plugins: [
-        {
-          plugin: '@nx/js/typescript',
-          exclude: ['packages/pkg1/*'],
-          options: {
-            typecheck: false,
-            build: {
-              targetName: 'build',
-              configName: 'tsconfig.lib.json',
-            },
-          },
-        },
-      ],
-    };
-    const nxJson = structuredClone(originalNxJson);
-
-    ensureProjectIsExcludedFromPluginRegistrations(nxJson, 'packages/pkg1');
-
-    expect(nxJson).toEqual(originalNxJson);
-  });
-
-  it('should exclude a project from a string plugin registration', () => {
-    const nxJson: NxJsonConfiguration = { plugins: ['@nx/js/typescript'] };
-
-    ensureProjectIsExcludedFromPluginRegistrations(nxJson, 'packages/pkg1');
-
-    expect(nxJson).toStrictEqual({
-      plugins: [
-        {
-          plugin: '@nx/js/typescript',
-          exclude: ['packages/pkg1/*'],
-        },
-      ],
-    });
-  });
-
-  it('should exclude a project from a plugin registration that infers any of the targets', () => {
-    const nxJson: NxJsonConfiguration = {
-      plugins: [
-        {
-          plugin: '@nx/js/typescript',
-          options: {
-            typecheck: { targetName: 'typecheck' },
-            build: {
-              targetName: 'build',
-              configName: 'tsconfig.lib.json',
-            },
-          },
-        },
-      ],
-    };
-
-    ensureProjectIsExcludedFromPluginRegistrations(nxJson, 'packages/pkg1');
-
-    expect(nxJson).toStrictEqual({
-      plugins: [
-        {
-          plugin: '@nx/js/typescript',
-          exclude: ['packages/pkg1/*'],
           options: {
             typecheck: { targetName: 'typecheck' },
             build: {
