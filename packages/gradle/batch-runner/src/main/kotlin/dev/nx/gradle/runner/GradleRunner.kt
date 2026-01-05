@@ -41,6 +41,7 @@ fun runTasksInParallel(
           "--continue",
           "-Dorg.gradle.daemon.idletimeout=0",
           "--parallel",
+          "--rerun",
           "-Dorg.gradle.workers.max=$workersMax")
 
   if (additionalArgs.isNotBlank()) {
