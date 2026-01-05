@@ -71,28 +71,31 @@ export async function loadRemoteNxPlugin(
 
   // Register plugin worker as a subprocess of the main CLI
   // This allows metrics collection when the daemon is not used
+  // Fire-and-forget to avoid blocking the loading of the plugin
   if (worker.pid) {
-    try {
-      const { isOnDaemon } = await import('../../../daemon/is-on-daemon');
-      /**
-       * We can only register the plugin worker as a subprocess of the main CLI
-       * when the daemon is not used. Additionally, we can't explcitly register
-       * the plugin worker as a subprocess of the daemon, because when on the
-       * daemon, we'd get a different instance of the process metrics service.
-       */
-      if (!isOnDaemon()) {
-        const { getProcessMetricsService } = await import(
-          '../../../tasks-runner/process-metrics-service'
-        );
+    (async () => {
+      try {
+        const { isOnDaemon } = await import('../../../daemon/is-on-daemon');
+        /**
+         * We can only register the plugin worker as a subprocess of the main CLI
+         * when the daemon is not used. Additionally, we can't explcitly register
+         * the plugin worker as a subprocess of the daemon, because when on the
+         * daemon, we'd get a different instance of the process metrics service.
+         */
+        if (!isOnDaemon()) {
+          const { getProcessMetricsService } = await import(
+            '../../../tasks-runner/process-metrics-service'
+          );
 
-        getProcessMetricsService().registerMainCliSubprocess(
-          worker.pid,
-          `${name}${index !== undefined ? ` (${index})` : ''}`
-        );
+          getProcessMetricsService().registerMainCliSubprocess(
+            worker.pid,
+            `${name}${index !== undefined ? ` (${index})` : ''}`
+          );
+        }
+      } catch {
+        // Silently ignore - metrics collection is optional
       }
-    } catch {
-      // Silently ignore - metrics collection is optional
-    }
+    })();
   }
 
   const pendingPromises = new Map<string, PendingPromise>();

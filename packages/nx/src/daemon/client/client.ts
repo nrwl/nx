@@ -1012,11 +1012,13 @@ export class DaemonClient {
       this._daemonReady();
 
       daemonPid ??= getDaemonProcessIdSync();
-      await this.registerDaemonProcessWithMetricsService(daemonPid);
+      // Fire-and-forget - don't block daemon connection by waiting for metrics registration
+      this.registerDaemonProcessWithMetricsService(daemonPid);
     } else if (this._daemonStatus == DaemonStatus.CONNECTING) {
       await this._waitForDaemonReady;
       const daemonPid = getDaemonProcessIdSync();
-      await this.registerDaemonProcessWithMetricsService(daemonPid);
+      // Fire-and-forget - don't block daemon connection by waiting for metrics registration
+      this.registerDaemonProcessWithMetricsService(daemonPid);
     }
   }
 
