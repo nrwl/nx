@@ -75,6 +75,68 @@ describe('semver', () => {
         `"Invalid semver version specifier "foo" provided. Please provide either a valid semver version or a valid semver version keyword."`
       );
     });
+
+    describe('0.x version handling', () => {
+      describe('0.x.y versions (shift bumps down)', () => {
+        it('should bump 0.1.0 + major to 0.2.0', () => {
+          expect(deriveNewSemverVersion('0.1.0', 'major')).toBe('0.2.0');
+        });
+
+        it('should bump 0.1.0 + minor to 0.1.1', () => {
+          expect(deriveNewSemverVersion('0.1.0', 'minor')).toBe('0.1.1');
+        });
+
+        it('should bump 0.1.0 + patch to 0.1.1', () => {
+          expect(deriveNewSemverVersion('0.1.0', 'patch')).toBe('0.1.1');
+        });
+
+        it('should bump 0.0.1 + major to 0.1.0', () => {
+          expect(deriveNewSemverVersion('0.0.1', 'major')).toBe('0.1.0');
+        });
+
+        it('should bump 0.0.1 + minor to 0.0.2', () => {
+          expect(deriveNewSemverVersion('0.0.1', 'minor')).toBe('0.0.2');
+        });
+
+        it('should bump 0.0.1 + patch to 0.0.2', () => {
+          expect(deriveNewSemverVersion('0.0.1', 'patch')).toBe('0.0.2');
+        });
+      });
+
+      describe('1.x.y+ versions (no change)', () => {
+        it('should bump 1.0.0 + major to 2.0.0', () => {
+          expect(deriveNewSemverVersion('1.0.0', 'major')).toBe('2.0.0');
+        });
+
+        it('should bump 1.0.0 + minor to 1.1.0', () => {
+          expect(deriveNewSemverVersion('1.0.0', 'minor')).toBe('1.1.0');
+        });
+
+        it('should bump 1.0.0 + patch to 1.0.1', () => {
+          expect(deriveNewSemverVersion('1.0.0', 'patch')).toBe('1.0.1');
+        });
+      });
+
+      describe('prerelease specifiers (consistent with 0.x shift)', () => {
+        it('should shift premajor to preminor for 0.x versions', () => {
+          expect(deriveNewSemverVersion('0.1.0', 'premajor')).toBe('0.2.0-0');
+        });
+
+        it('should shift preminor to prepatch for 0.x versions', () => {
+          expect(deriveNewSemverVersion('0.1.0', 'preminor')).toBe('0.1.1-0');
+        });
+
+        it('should not adjust prepatch for 0.x versions', () => {
+          expect(deriveNewSemverVersion('0.1.0', 'prepatch')).toBe('0.1.1-0');
+        });
+
+        it('should not adjust prerelease for 0.x versions', () => {
+          expect(deriveNewSemverVersion('0.1.0-0', 'prerelease')).toBe(
+            '0.1.0-1'
+          );
+        });
+      });
+    });
   });
   // tests for determineSemverChange()
   describe('determineSemverChange()', () => {
