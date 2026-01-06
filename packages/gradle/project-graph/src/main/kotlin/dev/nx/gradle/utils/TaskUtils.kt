@@ -5,8 +5,13 @@ import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
 import java.io.File
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.internal.TaskInternal
+import org.gradle.api.internal.provider.ProviderInternal
+import org.gradle.api.internal.tasks.DefaultTaskDependency
+import org.gradle.api.tasks.TaskProvider
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -79,13 +84,9 @@ fun processTask(
           task.description ?: "Run ${projectBuildPath}.${task.name}", projectBuildPath, task.name)
   target["metadata"] = metadata
 
-  if (task.name == "composedJar") {
-    println("DEBUG location")
-  }
-
   target["options"] = buildMap {
     put("taskName", "${projectBuildPath}:${task.name}")
-    if (hasProviderBasedDependencies(task, project)) {
+    if (hasProviderBasedDependencies(task)) {
       put("excludeDependsOn", false)
     }
     if (continuous) {
@@ -478,66 +479,73 @@ fun isCacheable(task: Task): Boolean {
 }
 
 /**
- * Finds provider-based task dependencies by comparing explicit dependsOn with computed
- * taskDependencies after resolving configurations.
+ * Finds provider-based task dependencies by inspecting lifecycle dependencies without triggering
+ * resolution. Uses Gradle internal APIs to access raw dependency values and check for providers
+ * with known producer tasks.
  *
- * Provider-based dependencies are lazy and only appear in taskDependencies after the underlying
- * providers have been evaluated. This happens when configurations are resolved.
+ * These are the dependencies that will cause "Querying the mapped value of flatmap(...) before
+ * task has completed" errors when the provider value is queried before the producing task completes.
  *
  * @param task the task to analyze
- * @param project the project containing the task
- * @return set of task paths that are provider-based dependencies
+ * @param project the project containing the task (unused but kept for API compatibility)
+ * @return set of task paths that are provider-based dependencies with known producers
  */
-fun findProviderBasedDependencies(task: Task, project: Project): Set<String> {
+fun findProviderBasedDependencies(task: Task): Set<String> {
   val logger = task.logger
+  val producerTasks = mutableSetOf<String>()
 
-  // Step 1: Get explicit dependsOn BEFORE resolution
-  val explicitDependsOn: Set<String> =
-      try {
-        task.dependsOn.filterIsInstance<Task>().map { it.path }.toSet()
-      } catch (e: Exception) {
-        logger.debug("Could not get explicit dependsOn for ${task.path}: ${e.message}")
-        emptySet()
-      }
+  try {
+    val taskInternal = task as? TaskInternal ?: return emptySet()
+    val lifecycleDeps = taskInternal.lifecycleDependencies
 
-  // Step 2: Resolve all resolvable configurations to trigger provider evaluation
-  project.configurations
-      .matching { it.isCanBeResolved }
-      .forEach { conf ->
-        try {
-          conf.resolve()
-        } catch (e: Exception) {
-          // Some configurations may fail to resolve, log and continue
-          logger.debug("Could not resolve configuration ${conf.name}: ${e.message}")
+    if (lifecycleDeps is DefaultTaskDependency) {
+      // Access raw unresolved values without triggering resolution
+      val rawDeps: Set<Any> = lifecycleDeps.mutableValues
+
+      rawDeps.forEach { dep ->
+        when (dep) {
+          is ProviderInternal<*> -> {
+            try {
+              val producer = dep.producer
+              if (producer.isKnown) {
+                producer.visitProducerTasks(
+                    Action { producerTask -> producerTasks.add(producerTask.path) })
+              }
+            } catch (e: Exception) {
+              logger.debug("Could not get producer from provider: ${e.message}")
+            }
+          }
+          is TaskProvider<*> -> {
+            // TaskProvider itself indicates a lazy task dependency
+            try {
+              // Don't resolve the provider, just note that there's a provider-based dependency
+              // We can get the name without fully resolving
+              producerTasks.add(dep.name)
+            } catch (e: Exception) {
+              logger.debug("Could not get name from TaskProvider: ${e.message}")
+            }
+          }
         }
       }
+    }
 
-  // Step 3: Get computed dependencies AFTER resolution - providers have now been evaluated
-  val computedDependencies: Set<String> =
-      try {
-        task.taskDependencies.getDependencies(task).map { it.path }.toSet()
-      } catch (e: Exception) {
-        logger.debug("Could not get computed dependencies for ${task.path}: ${e.message}")
-        emptySet()
-      }
-
-  // Step 4: Provider-based dependencies are those in computed but not in explicit
-  val providerBasedDeps = computedDependencies - explicitDependsOn
-
-  if (providerBasedDeps.isNotEmpty()) {
-    logger.info("Task ${task.path} has provider-based dependencies: $providerBasedDeps")
+    if (producerTasks.isNotEmpty()) {
+      logger.info("Task ${task.path} has provider-based dependencies: $producerTasks")
+    }
+  } catch (e: Exception) {
+    logger.debug("Could not analyze provider dependencies for ${task.path}: ${e.message}")
   }
 
-  return providerBasedDeps
+  return producerTasks
 }
 
 /**
- * Checks if a task has any provider-based dependencies.
+ * Checks if a task has any provider-based dependencies with known producer tasks.
  *
  * @param task the task to check
  * @param project the project containing the task
  * @return true if the task has provider-based dependencies, false otherwise
  */
-fun hasProviderBasedDependencies(task: Task, project: Project): Boolean {
-  return findProviderBasedDependencies(task, project).isNotEmpty()
+fun hasProviderBasedDependencies(task: Task): Boolean {
+  return findProviderBasedDependencies(task).isNotEmpty()
 }
