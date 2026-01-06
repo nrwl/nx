@@ -1,5 +1,5 @@
 export const nxVersion = require('../../package.json').version;
-export const rspackCoreVersion = '^1.5.0';
+export const rspackCoreVersion = '1.6.8';
 export const rspackDevServerVersion = '^1.1.4';
 
 export const rspackPluginReactRefreshVersion = '^1.0.0';
