@@ -110,7 +110,7 @@ Update packages 3 with major
     const result = runCLI(`release -p ${pkg1} --skip-publish --verbose`);
 
     // Verify pkg1 was versioned
-    expect(readJson(`${pkg1}/package.json`).version).toEqual('0.1.0');
+    expect(readJson(`${pkg1}/package.json`).version).toEqual('0.0.2');
 
     // Verify pkg2 and pkg3 were NOT versioned
     expect(readJson(`${pkg2}/package.json`).version).toEqual('0.0.1');

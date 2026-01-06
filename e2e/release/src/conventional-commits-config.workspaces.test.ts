@@ -263,7 +263,7 @@ describe('nx release conventional commits config', () => {
       `${pkg1} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultCustomTypeChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to manifest: ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.0.2 written to manifest: ${pkg2}/package.json`
     );
     expect(versionResultCustomTypeChanges).toContain(
       `${pkg3} ✍️  New version 0.0.2 written to manifest: ${pkg3}/package.json`
@@ -289,10 +289,10 @@ describe('nx release conventional commits config', () => {
 
     const versionResultCustomTypeBreakingChanges = runCLI(`release version -d`);
     expect(versionResultCustomTypeBreakingChanges).toContain(
-      `${pkg1} ✍️  New version 1.0.0 written to manifest: ${pkg1}/package.json`
+      `${pkg1} ✍️  New version 0.1.0 written to manifest: ${pkg1}/package.json`
     );
     expect(versionResultCustomTypeBreakingChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to manifest: ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.0.2 written to manifest: ${pkg2}/package.json`
     );
     expect(versionResultCustomTypeBreakingChanges).toContain(
       `${pkg3} ✍️  New version 0.0.2 written to manifest: ${pkg3}/package.json`
@@ -316,10 +316,10 @@ describe('nx release conventional commits config', () => {
 
     const versionResultChoreChanges = runCLI(`release version -d`);
     expect(versionResultChoreChanges).toContain(
-      `${pkg1} ✍️  New version 1.0.0 written to manifest: ${pkg1}/package.json`
+      `${pkg1} ✍️  New version 0.1.0 written to manifest: ${pkg1}/package.json`
     );
     expect(versionResultChoreChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to manifest: ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.0.2 written to manifest: ${pkg2}/package.json`
     );
     expect(versionResultChoreChanges).toContain(
       `${pkg3} ✍️  New version 0.0.2 written to manifest: ${pkg3}/package.json`
@@ -345,10 +345,10 @@ describe('nx release conventional commits config', () => {
 
     const versionResultPerfChanges = runCLI(`release version -d`);
     expect(versionResultPerfChanges).toContain(
-      `${pkg1} ✍️  New version 1.0.0 written to manifest: ${pkg1}/package.json`
+      `${pkg1} ✍️  New version 0.1.0 written to manifest: ${pkg1}/package.json`
     );
     expect(versionResultPerfChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to manifest: ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.0.2 written to manifest: ${pkg2}/package.json`
     );
     expect(versionResultPerfChanges).toContain(
       `${pkg3} ✍️  New version 0.0.2 written to manifest: ${pkg3}/package.json`
@@ -372,10 +372,10 @@ describe('nx release conventional commits config', () => {
 
     const versionResultRefactorChanges = runCLI(`release version -d`);
     expect(versionResultRefactorChanges).toContain(
-      `${pkg1} ✍️  New version 1.0.0 written to manifest: ${pkg1}/package.json`
+      `${pkg1} ✍️  New version 0.1.0 written to manifest: ${pkg1}/package.json`
     );
     expect(versionResultRefactorChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to manifest: ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.0.2 written to manifest: ${pkg2}/package.json`
     );
     expect(versionResultRefactorChanges).toContain(
       `${pkg3} ✍️  New version 0.0.2 written to manifest: ${pkg3}/package.json`
@@ -529,7 +529,7 @@ describe('nx release conventional commits config', () => {
     const versionResultFixCommit = runCLI(`release version -d`);
 
     expect(versionResultFixCommit).toContain(
-      `${pkg1} ✍️  New version 0.1.0 written to manifest: ${pkg1}/package.json`
+      `${pkg1} ✍️  New version 0.0.2 written to manifest: ${pkg1}/package.json`
     );
     expect(versionResultFixCommit).toContain(
       `${pkg2} ✍️  New version 0.0.2 written to manifest: ${pkg2}/package.json`

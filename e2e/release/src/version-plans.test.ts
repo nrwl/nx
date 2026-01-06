@@ -149,7 +149,7 @@ Here is another line in the message.
 
     expect(result).toMatch(
       new RegExp(
-        `${pkg1} ❓ Applied semver relative bump "minor", read from version plan \\.nx\\/version-plans\\/version-plan-\\d+\\.md, to get new version 0\\.1\\.0`
+        `${pkg1} ❓ Applied semver relative bump "minor", read from version plan \\.nx\\/version-plans\\/version-plan-\\d+\\.md, to get new version 0\\.0\\.1`
       )
     );
     // pkg2 uses the previously resolved specifier from pkg1
@@ -163,7 +163,7 @@ Here is another line in the message.
     );
     expect(result).toMatch(
       new RegExp(
-        `${pkg4} ❓ Applied semver relative bump "preminor", read from version plan \\.nx\\/version-plans\\/bump-independent\\.md, to get new version 0\\.1\\.0-0`
+        `${pkg4} ❓ Applied semver relative bump "preminor", read from version plan \\.nx\\/version-plans\\/bump-independent\\.md, to get new version 0\\.0\\.1-0`
       )
     );
     expect(result).toMatch(
@@ -179,10 +179,10 @@ Here is another line in the message.
     );
 
     expect(resultWithoutDate).toContain(
-      `NX   Generating an entry in ${pkg1}/CHANGELOG.md for v0.1.0
+      `NX   Generating an entry in ${pkg1}/CHANGELOG.md for v0.0.1
 
 
-+ ## 0.1.0 (YYYY-MM-DD)
++ ## 0.0.1 (YYYY-MM-DD)
 +
 + ### 🚀 Features
 +
@@ -193,10 +193,10 @@ Here is another line in the message.
 + - Test`
     );
     expect(resultWithoutDate).toContain(
-      `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.1.0
+      `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.0.1
 
 
-+ ## 0.1.0 (YYYY-MM-DD)
++ ## 0.0.1 (YYYY-MM-DD)
 +
 + ### 🚀 Features
 +
@@ -224,10 +224,10 @@ Here is another line in the message.
     );
 
     expect(resultWithoutDate).toContain(
-      `NX   Generating an entry in ${pkg4}/CHANGELOG.md for ${pkg4}@0.1.0-0
+      `NX   Generating an entry in ${pkg4}/CHANGELOG.md for ${pkg4}@0.0.1-0
 
 
-+ ## 0.1.0-0 (YYYY-MM-DD)
++ ## 0.0.1-0 (YYYY-MM-DD)
 +
 + ### 🚀 Features
 +
@@ -295,12 +295,12 @@ Update packages in both groups with a mix #2
 
     expect(result2).toMatch(
       new RegExp(
-        `${pkg1} ❓ Applied semver relative bump "minor", read from version plan \\.nx\\/version-plans\\/bump-mixed1\\.md, to get new version 0\\.2\\.0`
+        `${pkg1} ❓ Applied semver relative bump "minor", read from version plan \\.nx\\/version-plans\\/bump-mixed1\\.md, to get new version 0\\.0\\.2`
       )
     );
     // pkg2 uses the previously resolved specifier from pkg1
     expect(result2).toContain(
-      `${pkg2} ✍️  New version 0.2.0 written to manifest: ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.0.2 written to manifest: ${pkg2}/package.json`
     );
     expect(result2).toMatch(
       new RegExp(
@@ -309,7 +309,7 @@ Update packages in both groups with a mix #2
     );
     expect(result2).toMatch(
       new RegExp(
-        `${pkg4} ❓ Applied semver relative bump "preminor", read from version plan \\.nx\\/version-plans\\/bump-mixed2\\.md, to get new version 0\\.2\\.0-0`
+        `${pkg4} ❓ Applied semver relative bump "preminor", read from version plan \\.nx\\/version-plans\\/bump-mixed2\\.md, to get new version 0\\.0\\.2-0`
       )
     );
     expect(result2).toMatch(
@@ -325,11 +325,11 @@ Update packages in both groups with a mix #2
     );
 
     expect(result2WithoutDate).toContain(
-      `NX   Generating an entry in ${pkg1}/CHANGELOG.md for v0.2.0
+      `NX   Generating an entry in ${pkg1}/CHANGELOG.md for v0.0.2
 
 
 
-+ ## 0.2.0 (YYYY-MM-DD)
++ ## 0.0.2 (YYYY-MM-DD)
 +
 + ### 🚀 Features
 +
@@ -344,11 +344,11 @@ Update packages in both groups with a mix #2
 + - Test`
     );
     expect(result2WithoutDate).toContain(
-      `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.2.0
+      `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.0.2
 
 
 
-+ ## 0.2.0 (YYYY-MM-DD)
++ ## 0.0.2 (YYYY-MM-DD)
 +
 + ### 🩹 Fixes
 +
@@ -376,11 +376,11 @@ Update packages in both groups with a mix #2
     );
 
     expect(result2WithoutDate).toContain(
-      `NX   Generating an entry in ${pkg4}/CHANGELOG.md for ${pkg4}@0.2.0-0
+      `NX   Generating an entry in ${pkg4}/CHANGELOG.md for ${pkg4}@0.0.2-0
 
 
 
-+ ## 0.2.0-0 (YYYY-MM-DD)
++ ## 0.0.2-0 (YYYY-MM-DD)
 +
 + ### 🚀 Features
 +
@@ -542,12 +542,12 @@ const yargs = require('yargs');
 
     expect(result).toMatch(
       new RegExp(
-        `${pkg1} ❓ Applied semver relative bump "minor", read from version plan \\.nx\\/version-plans\\/bump-fixed\\.md, to get new version 0\\.1\\.0`
+        `${pkg1} ❓ Applied semver relative bump "minor", read from version plan \\.nx\\/version-plans\\/bump-fixed\\.md, to get new version 0\\.0\\.1`
       )
     );
     // pkg2 uses the previously resolved specifier from pkg1
     expect(result).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to manifest: ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.0.1 written to manifest: ${pkg2}/package.json`
     );
     expect(result).toMatch(
       new RegExp(
@@ -556,7 +556,7 @@ const yargs = require('yargs');
     );
     expect(result).toMatch(
       new RegExp(
-        `${pkg4} ❓ Applied semver relative bump "preminor", read from version plan \\.nx\\/version-plans\\/bump-independent\\.md, to get new version 0\\.1\\.0-0`
+        `${pkg4} ❓ Applied semver relative bump "preminor", read from version plan \\.nx\\/version-plans\\/bump-independent\\.md, to get new version 0\\.0\\.1-0`
       )
     );
     expect(result).toMatch(
@@ -572,10 +572,10 @@ const yargs = require('yargs');
     );
 
     expect(resultWithoutDate).toContain(
-      `NX   Generating an entry in ${pkg1}/CHANGELOG.md for v0.1.0
+      `NX   Generating an entry in ${pkg1}/CHANGELOG.md for v0.0.1
 
 
-+ ## 0.1.0 (YYYY-MM-DD)
++ ## 0.0.1 (YYYY-MM-DD)
 +
 + ### 🚀 Features
 +
@@ -586,10 +586,10 @@ const yargs = require('yargs');
 + - Test`
     );
     expect(resultWithoutDate).toContain(
-      `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.1.0
+      `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.0.1
 
 
-+ ## 0.1.0 (YYYY-MM-DD)
++ ## 0.0.1 (YYYY-MM-DD)
 +
 + ### 🚀 Features
 +
@@ -618,7 +618,7 @@ const yargs = require('yargs');
       `NX   Generating an entry in ${pkg4}/CHANGELOG.md for ${pkg4}@0.1.0-0
 
 
-+ ## 0.1.0-0 (YYYY-MM-DD)
++ ## 0.0.1-0 (YYYY-MM-DD)
 +
 + ### 🚀 Features
 +
@@ -685,12 +685,12 @@ Update packages in both groups with a mix #2
 
     expect(result2).toMatch(
       new RegExp(
-        `${pkg1} ❓ Applied semver relative bump "minor", read from version plan \\.nx\\/version-plans\\/bump-mixed1\\.md, to get new version 0\\.2\\.0`
+        `${pkg1} ❓ Applied semver relative bump "minor", read from version plan \\.nx\\/version-plans\\/bump-mixed1\\.md, to get new version 0\\.0\\.2`
       )
     );
     // pkg2 uses the previously resolved specifier from pkg1
     expect(result2).toContain(
-      `${pkg2} ✍️  New version 0.2.0 written to manifest: ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.0.2 written to manifest: ${pkg2}/package.json`
     );
     expect(result2).toMatch(
       new RegExp(
@@ -699,7 +699,7 @@ Update packages in both groups with a mix #2
     );
     expect(result2).toMatch(
       new RegExp(
-        `${pkg4} ❓ Applied semver relative bump "preminor", read from version plan \\.nx\\/version-plans\\/bump-mixed2\\.md, to get new version 0\\.2\\.0-0`
+        `${pkg4} ❓ Applied semver relative bump "preminor", read from version plan \\.nx\\/version-plans\\/bump-mixed2\\.md, to get new version 0\\.0\\.2-0`
       )
     );
     expect(result2).toMatch(
@@ -715,11 +715,11 @@ Update packages in both groups with a mix #2
     );
 
     expect(result2WithoutDate).toContain(
-      `NX   Generating an entry in ${pkg1}/CHANGELOG.md for v0.2.0
+      `NX   Generating an entry in ${pkg1}/CHANGELOG.md for v0.0.2
 
 
 
-+ ## 0.2.0 (YYYY-MM-DD)
++ ## 0.0.2 (YYYY-MM-DD)
 +
 + ### 🚀 Features
 +
@@ -734,11 +734,11 @@ Update packages in both groups with a mix #2
 + - Test`
     );
     expect(result2WithoutDate).toContain(
-      `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.2.0
+      `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.0.2
 
 
 
-+ ## 0.2.0 (YYYY-MM-DD)
++ ## 0.0.2 (YYYY-MM-DD)
 +
 + ### 🩹 Fixes
 +
@@ -766,11 +766,11 @@ Update packages in both groups with a mix #2
     );
 
     expect(result2WithoutDate).toContain(
-      `NX   Generating an entry in ${pkg4}/CHANGELOG.md for ${pkg4}@0.2.0-0
+      `NX   Generating an entry in ${pkg4}/CHANGELOG.md for ${pkg4}@0.0.2-0
 
 
 
-+ ## 0.2.0-0 (YYYY-MM-DD)
++ ## 0.0.2-0 (YYYY-MM-DD)
 +
 + ### 🚀 Features
 +
@@ -937,27 +937,27 @@ Update packages in both groups with a mix #2
     );
     expect(versionResult).toMatch(
       new RegExp(
-        `${pkg1} ❓ Applied semver relative bump "major", from the given specifier, to get new version 1\\.0\\.0`
+        `${pkg1} ❓ Applied semver relative bump "major", from the given specifier, to get new version 0\\.1\\.0`
       )
     );
     expect(versionResult).toMatch(
       new RegExp(
-        `${pkg2} ❓ Applied version 1.0.0 directly, because the project is a member of a fixed release group containing ${pkg1}`
+        `${pkg2} ❓ Applied version 0.1.0 directly, because the project is a member of a fixed release group containing ${pkg1}`
       )
     );
     expect(versionResult).toMatch(
       new RegExp(
-        `${pkg3} ❓ Applied semver relative bump "major", from the given specifier, to get new version 1\\.0\\.0`
+        `${pkg3} ❓ Applied semver relative bump "major", from the given specifier, to get new version 0\\.1\\.0`
       )
     );
     expect(versionResult).toMatch(
       new RegExp(
-        `${pkg4} ❓ Applied semver relative bump "major", from the given specifier, to get new version 1\\.0\\.0`
+        `${pkg4} ❓ Applied semver relative bump "major", from the given specifier, to get new version 0\\.1\\.0`
       )
     );
     expect(versionResult).toMatch(
       new RegExp(
-        `${pkg5} ❓ Applied semver relative bump "major", from the given specifier, to get new version 1\\.0\\.0`
+        `${pkg5} ❓ Applied semver relative bump "major", from the given specifier, to get new version 0\\.1\\.0`
       )
     );
 

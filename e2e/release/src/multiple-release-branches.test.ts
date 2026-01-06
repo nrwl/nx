@@ -107,7 +107,7 @@ describe('nx release multiple release branches', () => {
     runCommand(`git add ${pkg1}/package.json`);
     runCommand(`git commit -m "feat(${pkg1}): new feature 1"`);
 
-    const versionResult1x = runCLI(`release version minor`);
+    const versionResult1x = runCLI(`release version major`);
 
     // update my-pkg-2 with a fix commit
     updateJson(`${pkg2}/package.json`, (json) => ({
@@ -170,7 +170,7 @@ describe('nx release multiple release branches', () => {
       NX   Running release version for project: {project-name}
 
       {project-name} 🏷️  Resolved the current version as 0.0.7 from git tag "v0.0.7", based on releaseTagPattern "v{version}"
-      {project-name} ❓ Applied semver relative bump "minor", from the given specifier, to get new version 0.1.0
+      {project-name} ❓ Applied semver relative bump "major", from the given specifier, to get new version 0.1.0
       {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
@@ -309,25 +309,25 @@ describe('nx release multiple release branches', () => {
       NX   Running release version for project: {project-name}
 
       {project-name} ⚠️  Unable to resolve the current version from git tags using pattern "v{version}". Falling back to the version 0.0.0 in manifest: {project-name}/package.json
-      {project-name} ❓ Applied semver relative bump "minor", from the given specifier, to get new version 0.1.0
-      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
+      {project-name} ❓ Applied semver relative bump "minor", from the given specifier, to get new version 0.0.1
+      {project-name} ✍️  New version 0.0.1 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
 
       {project-name} 🔄 Reusing the current version 0.0.0 already resolved for {project-name} from the disk fallback
-      {project-name} ❓ Applied version 0.1.0 directly, because the project is a member of a fixed release group containing {project-name}
-      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
+      {project-name} ❓ Applied version 0.0.1 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.0.1 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
 
       {project-name} 🔄 Reusing the current version 0.0.0 already resolved for {project-name} from the disk fallback
-      {project-name} ❓ Applied version 0.1.0 directly, because the project is a member of a fixed release group containing {project-name}
-      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
+      {project-name} ❓ Applied version 0.0.1 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.0.1 written to manifest: {project-name}/package.json
 
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
-      +   "version": "0.1.0",
+      +   "version": "0.0.1",
       "exports": {
 
       }
@@ -336,13 +336,13 @@ describe('nx release multiple release branches', () => {
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
-      +   "version": "0.1.0",
+      +   "version": "0.0.1",
       "exports": {
 
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
-      +   "version": "0.1.0",
+      +   "version": "0.0.1",
       "exports": {
 
 
@@ -357,32 +357,32 @@ describe('nx release multiple release branches', () => {
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🏷️  Resolved the current version as 0.1.0 from git tag "v0.1.0", based on releaseTagPattern "v{version}"
-      {project-name} ❓ Applied semver relative bump "major", from the given specifier, to get new version 1.0.0
-      {project-name} ✍️  New version 1.0.0 written to manifest: {project-name}/package.json
+      {project-name} 🏷️  Resolved the current version as 0.0.1 from git tag "v0.0.1", based on releaseTagPattern "v{version}"
+      {project-name} ❓ Applied semver relative bump "major", from the given specifier, to get new version 0.1.0
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔄 Reusing the current version 0.1.0 already resolved for {project-name} from git tag "v0.1.0"
-      {project-name} ❓ Applied version 1.0.0 directly, because the project is a member of a fixed release group containing {project-name}
-      {project-name} ✍️  New version 1.0.0 written to manifest: {project-name}/package.json
+      {project-name} 🔄 Reusing the current version 0.0.1 already resolved for {project-name} from git tag "v0.0.1"
+      {project-name} ❓ Applied version 0.1.0 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔄 Reusing the current version 0.1.0 already resolved for {project-name} from git tag "v0.1.0"
-      {project-name} ❓ Applied version 1.0.0 directly, because the project is a member of a fixed release group containing {project-name}
-      {project-name} ✍️  New version 1.0.0 written to manifest: {project-name}/package.json
+      {project-name} 🔄 Reusing the current version 0.0.1 already resolved for {project-name} from git tag "v0.0.1"
+      {project-name} ❓ Applied version 0.1.0 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
 
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
-      +   "version": "1.0.0",
+      +   "version": "0.1.0",
       "exports": {
 
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
-      +   "version": "1.0.0",
+      +   "version": "0.1.0",
       "exports": {
 
       }
@@ -391,7 +391,7 @@ describe('nx release multiple release branches', () => {
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
-      +   "version": "1.0.0",
+      +   "version": "0.1.0",
       "exports": {
 
 
