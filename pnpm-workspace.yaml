@@ -80,8 +80,8 @@ catalogs:
     react: '18.3.1'
     react-dom: '18.3.1'
   rspack:
-    '@rspack/cli': '^1.5.2'
-    '@rspack/core': '^1.5.2'
+    '@rspack/cli': '1.6.8'
+    '@rspack/core': '1.6.8'
     '@rspack/dev-server': '^1.1.4'
     '@rspack/plugin-react-refresh': '^1.0.0'
     ts-checker-rspack-plugin: '^1.1.1'
