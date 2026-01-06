@@ -86,8 +86,10 @@ fun processTask(
 
   target["options"] = buildMap {
     put("taskName", "${projectBuildPath}:${task.name}")
-    if (hasProviderBasedDependencies(task)) {
+    val providerDependencies = findProviderBasedDependencies(task)
+    if (providerDependencies.isNotEmpty()) {
       put("excludeDependsOn", false)
+      put("includeDependsOnTasks", providerDependencies.toList())
     }
     if (continuous) {
       put("continuous", true)
@@ -537,15 +539,4 @@ fun findProviderBasedDependencies(task: Task): Set<String> {
   }
 
   return producerTasks
-}
-
-/**
- * Checks if a task has any provider-based dependencies with known producer tasks.
- *
- * @param task the task to check
- * @param project the project containing the task
- * @return true if the task has provider-based dependencies, false otherwise
- */
-fun hasProviderBasedDependencies(task: Task): Boolean {
-  return findProviderBasedDependencies(task).isNotEmpty()
 }

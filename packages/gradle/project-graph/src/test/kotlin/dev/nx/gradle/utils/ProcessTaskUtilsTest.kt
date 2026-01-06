@@ -591,20 +591,5 @@ class ProcessTaskUtilsTest {
       assertTrue(result.any { it.contains("task2") }, "Found: $result")
       assertTrue(result.any { it.contains("task3") }, "Found: $result")
     }
-
-    @Test
-    fun `hasProviderBasedDependencies returns false for no provider deps`() {
-      val task = project.tasks.register("standalone").get()
-      assertFalse(hasProviderBasedDependencies(task))
-    }
-
-    @Test
-    fun `hasProviderBasedDependencies returns true for TaskProvider dependency`() {
-      val producerProvider = project.tasks.register("producer")
-      val consumerProvider = project.tasks.register("consumer")
-      consumerProvider.configure { it.dependsOn(producerProvider) }
-
-      assertTrue(hasProviderBasedDependencies(consumerProvider.get()))
-    }
   }
 }
