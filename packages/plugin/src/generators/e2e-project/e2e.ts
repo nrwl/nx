@@ -10,12 +10,12 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
+  Tree,
   updateJson,
   updateProjectConfiguration,
   writeJson,
   type GeneratorCallback,
   type ProjectConfiguration,
-  type Tree,
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { LinterType, lintProjectGenerator } from '@nx/eslint';
@@ -32,6 +32,8 @@ import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { configurationGenerator as vitestConfigurationGenerator } from '@nx/vitest';
+import { ensureViteConfigIsCorrect } from '@nx/vitest/src/utils/vite-config-edit-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { Schema } from './schema';
@@ -197,6 +199,95 @@ async function addJest(host: Tree, options: NormalizedSchema) {
   return jestTask;
 }
 
+async function addVitest(host: Tree, options: NormalizedSchema) {
+  const projectConfiguration: ProjectConfiguration = {
+    name: options.projectName,
+    root: options.projectRoot,
+    projectType: 'application',
+    sourceRoot: `${options.projectRoot}/src`,
+    implicitDependencies: [options.pluginName],
+  };
+
+  if (options.isTsSolutionSetup) {
+    writeJson<PackageJson>(
+      host,
+      joinPathFragments(options.projectRoot, 'package.json'),
+      {
+        name: options.projectName,
+        version: '0.0.1',
+        private: true,
+      }
+    );
+    updateProjectConfiguration(host, options.projectName, projectConfiguration);
+  } else {
+    projectConfiguration.targets = {};
+    addProjectConfiguration(host, options.projectName, projectConfiguration);
+  }
+
+  const vitestTask = await vitestConfigurationGenerator(host, {
+    project: options.projectName,
+    testTarget: 'e2e',
+    coverageProvider: 'v8',
+    skipFormat: true,
+    addPlugin: options.addPlugin,
+    testEnvironment: 'node',
+  });
+
+  const { startLocalRegistryPath, stopLocalRegistryPath } =
+    addLocalRegistryScripts(host);
+
+  // Add globalSetup and globalTeardown to vitest config
+  const vitestConfigPath = joinPathFragments(
+    options.projectRoot,
+    'vitest.config.ts'
+  );
+  
+  if (host.exists(vitestConfigPath)) {
+    const vitestConfig = host.read(vitestConfigPath, 'utf-8');
+    const globalSetupPath = join(
+      offsetFromRoot(options.projectRoot),
+      startLocalRegistryPath
+    );
+    const globalTeardownPath = join(
+      offsetFromRoot(options.projectRoot),
+      stopLocalRegistryPath
+    );
+
+    // Insert globalSetup and globalTeardown in the test config
+    const updatedConfig = vitestConfig.replace(
+      /test:\s*{/,
+      `test: {
+    globalSetup: '${globalSetupPath}',
+    globalTeardown: '${globalTeardownPath}',`
+    );
+    host.write(vitestConfigPath, updatedConfig);
+  }
+
+  const project = readProjectConfiguration(host, options.projectName);
+  project.targets ??= {};
+  if (project.targets.e2e) {
+    const e2eTarget = project.targets.e2e;
+
+    project.targets.e2e = {
+      ...e2eTarget,
+      dependsOn: [`^build`],
+      options: {
+        ...e2eTarget.options,
+        pool: 'forks',
+        poolOptions: {
+          forks: {
+            singleFork: true,
+          },
+        },
+      },
+    };
+
+    updateProjectConfiguration(host, options.projectName, project);
+  }
+
+  return vitestTask;
+}
+
 async function addLintingToApplication(
   tree: Tree,
   options: NormalizedSchema
@@ -207,7 +298,7 @@ async function addLintingToApplication(
     tsConfigPaths: [
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
     ],
-    unitTestRunner: 'jest',
+    unitTestRunner: options.testRunner ?? 'jest',
     skipFormat: true,
     setParserOptionsProject: false,
     addPlugin: options.addPlugin,
@@ -238,13 +329,24 @@ export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
 
   validatePlugin(host, schema.pluginName);
   const options = await normalizeOptions(host, schema);
+  
+  // Default to jest if no testRunner is specified
+  options.testRunner = options.testRunner ?? 'jest';
+  
   addFiles(host, options);
   tasks.push(
     await setupVerdaccio(host, {
       skipFormat: true,
     })
   );
-  tasks.push(await addJest(host, options));
+  
+  // Add test runner based on the testRunner option
+  if (options.testRunner === 'vitest') {
+    tasks.push(await addVitest(host, options));
+  } else {
+    tasks.push(await addJest(host, options));
+  }
+  
   updatePluginPackageJson(host, options);
 
   if (options.linter !== 'none') {
