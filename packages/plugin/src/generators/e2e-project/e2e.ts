@@ -228,8 +228,9 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
 
   // Ensure @nx/vitest is installed before using it
   ensurePackage('@nx/vitest', nxVersion);
-  const { configurationGenerator: vitestConfigurationGenerator } =
-    await import('@nx/vitest/generators');
+  const { configurationGenerator: vitestConfigurationGenerator } = await import(
+    '@nx/vitest/generators'
+  );
 
   const vitestTask = await vitestConfigurationGenerator(host, {
     project: options.projectName,
@@ -239,47 +240,39 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
     testEnvironment: 'node',
   } satisfies Partial<VitestGeneratorSchema>);
 
-
-    addLocalRegistryScripts(host);
+  addLocalRegistryScripts(host);
 
   // Add globalSetup and globalTeardown to vitest config
   // Check for both .mts and .ts extensions (mts is checked first as it's the default created by @nx/vitest)
   const vitestConfigExtensions = ['mts', 'ts'];
   let vitestConfigPath: string | undefined;
-  
-  for (const ext of vitestConfigExtensions) {
-    const configPath = joinPathFragments(
-      options.projectRoot,
 
-    );
+  for (const ext of vitestConfigExtensions) {
+    const configPath = joinPathFragments(options.projectRoot);
     if (host.exists(configPath)) {
       vitestConfigPath = configPath;
       break;
     }
   }
-  
+
   if (vitestConfigPath) {
     let vitestConfig = host.read(vitestConfigPath, 'utf-8');
     const globalSetupPath = join(
       offsetFromRoot(options.projectRoot),
       startLocalRegistryPath
     );
-    const globalTeardownPath = join(
-      offsetFromRoot(options.projectRoot),
-
-    );
+    const globalTeardownPath = join(offsetFromRoot(options.projectRoot));
 
     // Insert globalSetup and globalTeardown in the test config
     // Look for 'test: {' and insert our properties right after the opening brace
     const testConfigRegex = /(test:\s*\{\s*)/;
 
-    
     if (match) {
       // Extract the indentation from the next line to maintain consistent formatting
       const afterMatch = vitestConfig.slice(match.index + match[0].length);
       const nextLineMatch = afterMatch.match(/\n(\s*)/);
       const indent = nextLineMatch ? nextLineMatch[1] : '    ';
-      
+
       vitestConfig = vitestConfig.replace(
         testConfigRegex,
         `$1\n${indent}globalSetup: '${globalSetupPath}',\n${indent}globalTeardown: '${globalTeardownPath}',`
@@ -357,14 +350,14 @@ export async function e2eProjectGenerator(host: Tree, schema: Schema) {
     useProjectJson: true,
     ...schema,
   });
-
+}
 
 export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
-
+  const tasks: GeneratorCallback[] = [];
 
   validatePlugin(host, schema.pluginName);
   const options = await normalizeOptions(host, schema);
-  
+
   // Default to jest if no testRunner is specified
   options.testRunner = options.testRunner ?? 'jest';
 
@@ -381,7 +374,7 @@ export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
   } else {
     tasks.push(await addJest(host, options));
   }
-  
+
   updatePluginPackageJson(host, options);
 
   if (options.linter !== 'none') {
