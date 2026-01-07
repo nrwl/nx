@@ -236,12 +236,22 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
     addLocalRegistryScripts(host);
 
   // Add globalSetup and globalTeardown to vitest config
-  const vitestConfigPath = joinPathFragments(
-    options.projectRoot,
-    'vitest.config.ts'
-  );
+  // Check for both .ts and .mts extensions
+  const vitestConfigExtensions = ['mts', 'ts'];
+  let vitestConfigPath: string;
   
-  if (host.exists(vitestConfigPath)) {
+  for (const ext of vitestConfigExtensions) {
+    const configPath = joinPathFragments(
+      options.projectRoot,
+      `vitest.config.${ext}`
+    );
+    if (host.exists(configPath)) {
+      vitestConfigPath = configPath;
+      break;
+    }
+  }
+  
+  if (vitestConfigPath) {
     const vitestConfig = host.read(vitestConfigPath, 'utf-8');
     const globalSetupPath = join(
       offsetFromRoot(options.projectRoot),

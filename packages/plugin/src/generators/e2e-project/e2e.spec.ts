@@ -236,8 +236,15 @@ describe('NxPlugin e2e-project Generator', () => {
     });
 
     expect(tree.exists('my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();
-    expect(tree.exists('my-plugin-e2e/vitest.config.ts')).toBeTruthy();
-    const vitestConfig = tree.read('my-plugin-e2e/vitest.config.ts', 'utf-8');
+    const vitestConfigExists = 
+      tree.exists('my-plugin-e2e/vitest.config.ts') ||
+      tree.exists('my-plugin-e2e/vitest.config.mts');
+    expect(vitestConfigExists).toBeTruthy();
+    
+    const vitestConfigPath = tree.exists('my-plugin-e2e/vitest.config.ts')
+      ? 'my-plugin-e2e/vitest.config.ts'
+      : 'my-plugin-e2e/vitest.config.mts';
+    const vitestConfig = tree.read(vitestConfigPath, 'utf-8');
     expect(vitestConfig).toContain('globalSetup');
     expect(vitestConfig).toContain('globalTeardown');
   });
