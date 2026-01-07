@@ -214,7 +214,7 @@ export interface NxReleaseVersionConfiguration {
       >;
   // TODO(v23): change the default value of this to true
   /**
-   * Whether to apply the common convention for 0.x versions where breaking changes
+   * Whether to strictly follow SemVer V2 spec for 0.x versions where breaking changes
    * bump the minor version (instead of major), and new features bump the patch version
    * (instead of minor).
    *
