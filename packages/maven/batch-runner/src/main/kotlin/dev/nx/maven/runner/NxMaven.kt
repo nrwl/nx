@@ -95,15 +95,19 @@ class NxMaven(
    */
   private fun initializeModelBuilderSession(session: MavenSession) {
     try {
+      val internalSession = InternalSession.from(session.session)
+      val key = SessionData.key(ModelBuilder.ModelBuilderSession::class.java)
+      val existing = internalSession.getData().get(key)
+      if (existing != null) {
+        log.debug("   ✅ ModelBuilderSession already exists in session data")
+        return
+      }
+
+      log.debug("   🏗️  Initializing new ModelBuilderSession...")
       val modelBuilder = lookup.lookup(ModelBuilder::class.java)
       val mbSession = modelBuilder.newSession()
-      val internalSession = InternalSession.from(session.session)
-      internalSession
-        .getData()
-        .set(
-          SessionData.key(ModelBuilder.ModelBuilderSession::class.java),
-          mbSession
-        )
+      internalSession.getData().set(key, mbSession)
+      log.debug("   ✅ ModelBuilderSession initialized")
     } catch (e: Exception) {
       log.warn("   ⚠️  Failed to initialize ModelBuilderSession: ${e.message}", e)
     }
@@ -171,6 +175,7 @@ class NxMaven(
       BuildStateManager.applyBuildStates(graph.allProjects)
       val applyTimeMs = System.currentTimeMillis() - applyStartTime
       log.debug("   ✅ Build state application completed in ${applyTimeMs}ms")
+      initializeModelBuilderSession(graphSession)
     } finally {
       sessionScope.exit()
       val totalSetupTimeMs = System.currentTimeMillis() - setupStartTime
@@ -238,7 +243,6 @@ class NxMaven(
       val session = MavenSession(cachedRepositorySession!!, request, result)
       session.session = cachedInternalSession  // Reuse cached InternalSession object to preserve ModelBuilderSession
 
-      initializeModelBuilderSession(session)
       applyGraphToSession(session, cachedProjectGraph!!, request)
 
       // Re-seed the cached session into the current scope context for this invocation
@@ -259,6 +263,9 @@ class NxMaven(
       request.workspaceReader?.let { readers.add(it) }
       ideWorkspaceReader?.let { readers.add(it) }
       cachedWorkspaceReader!!.setReaders(readers)
+
+      // Now that the session is seeded and workspace reader is ready, ensure ModelBuilderSession is initialized
+      initializeModelBuilderSession(session)
 
       // Debug: verify workspace reader is properly connected
       log.debug("Workspace reader debug:")
@@ -369,5 +376,4 @@ class NxMaven(
     val duration = System.currentTimeMillis() - startTime
     log.debug("✅ Build state recording completed: $recordedCount succeeded, $failedCount failed (took ${duration}ms)")
   }
-
 }
