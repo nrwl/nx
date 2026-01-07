@@ -195,6 +195,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
           },
         }
       );
@@ -263,6 +264,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           {
             version: {
               specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
             },
           }
         );
@@ -309,6 +311,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           {
             version: {
               specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
             },
           }
         );
@@ -351,6 +354,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           {
             version: {
               specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
             },
           }
         );
@@ -408,6 +412,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           {
             version: {
               specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
             },
           }
         );
@@ -478,6 +483,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
             {
               version: {
                 specifierSource: 'prompt',
+                adjustSemverBumpsForZeroMajorVersion: true,
               },
             }
           );
@@ -534,6 +540,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
             {
               version: {
                 specifierSource: 'prompt',
+                adjustSemverBumpsForZeroMajorVersion: true,
               },
             }
           );
@@ -591,6 +598,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
               {
                 version: {
                   specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
                   // No value for updateDependents, should default to 'always'
                 },
               },
@@ -680,6 +688,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
               {
                 version: {
                   specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
                   updateDependents: 'never',
                 },
               },
@@ -742,6 +751,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
               {
                 version: {
                   specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
                   updateDependents: 'auto',
                 },
               },
@@ -804,6 +814,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
               {
                 version: {
                   specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
                 },
               }
             );
@@ -878,6 +889,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           {
             version: {
               specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
             },
           }
         );
@@ -962,6 +974,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: '',
             preserveMatchingDependencyRanges: false,
           },
@@ -1026,6 +1039,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: '^',
             preserveMatchingDependencyRanges: false,
           },
@@ -1090,6 +1104,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: '~',
             preserveMatchingDependencyRanges: false,
           },
@@ -1154,6 +1169,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: 'auto',
             preserveMatchingDependencyRanges: false,
           },
@@ -1218,6 +1234,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             // No value, should default to "auto"
             versionPrefix: undefined,
             preserveMatchingDependencyRanges: false,
@@ -1285,6 +1302,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: '$' as any,
           },
         });
@@ -1924,6 +1942,7 @@ Valid values are: "auto", "", "~", "^", "="`,
           {
             version: {
               specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
               preserveLocalDependencyProtocols: true,
             },
           },
@@ -1998,6 +2017,7 @@ Valid values are: "auto", "", "~", "^", "="`,
           {
             version: {
               specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
               preserveLocalDependencyProtocols: true,
             },
           },
@@ -2076,6 +2096,7 @@ Valid values are: "auto", "", "~", "^", "="`,
         {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
           },
         },
         undefined,

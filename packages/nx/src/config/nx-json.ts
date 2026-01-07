@@ -212,6 +212,23 @@ export interface NxReleaseVersionConfiguration {
         | 'peerDependencies'
         | 'optionalDependencies'
       >;
+  // TODO(v23): change the default value of this to true
+  /**
+   * Whether to apply the common convention for 0.x versions where breaking changes
+   * bump the minor version (instead of major), and new features bump the patch version
+   * (instead of minor).
+   *
+   * When enabled:
+   * - 'major' bumps become 'minor' bumps for 0.x versions
+   * - 'minor' bumps become 'patch' bumps for 0.x versions
+   * - 'premajor' becomes 'preminor' for 0.x versions
+   * - 'preminor' becomes 'prepatch' for 0.x versions
+   *
+   * Versions 1.0.0 and above are unaffected.
+   *
+   * This is false by default for backward compatibility.
+   */
+  adjustSemverBumpsForZeroMajorVersion?: boolean;
 }
 
 export interface NxReleaseChangelogConfiguration {

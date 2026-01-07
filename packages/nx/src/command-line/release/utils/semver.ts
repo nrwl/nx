@@ -102,7 +102,8 @@ function adjustSpecifierForZeroMajorVersion(
 export function deriveNewSemverVersion(
   currentSemverVersion: string,
   semverSpecifier: string,
-  preid?: string
+  preid?: string,
+  options?: { adjustSemverBumpsForZeroMajorVersion?: boolean }
 ) {
   if (!valid(currentSemverVersion)) {
     throw new Error(
@@ -112,11 +113,13 @@ export function deriveNewSemverVersion(
 
   let newVersion = semverSpecifier;
   if (isRelativeVersionKeyword(semverSpecifier)) {
-    // Adjust for 0.x versions
-    const adjustedSpecifier = adjustSpecifierForZeroMajorVersion(
-      semverSpecifier,
-      currentSemverVersion
-    );
+    // Adjust for 0.x versions if explicitly enabled
+    const adjustedSpecifier = options?.adjustSemverBumpsForZeroMajorVersion
+      ? adjustSpecifierForZeroMajorVersion(
+          semverSpecifier,
+          currentSemverVersion
+        )
+      : semverSpecifier;
     // Derive the new version from the current version combined with the adjusted version specifier.
     const derivedVersion = inc(
       currentSemverVersion,
