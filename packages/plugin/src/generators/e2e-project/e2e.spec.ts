@@ -211,6 +211,37 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(tree.exists('my-plugin-e2e/.spec.swcrc')).toBeFalsy();
   });
 
+  it('should add vitest support', async () => {
+    await e2eProjectGenerator(tree, {
+      pluginName: 'my-plugin',
+      pluginOutputPath: `dist/libs/my-plugin`,
+      npmPackageName: '@proj/my-plugin',
+      testRunner: 'vitest',
+      addPlugin: true,
+    });
+
+    const project = readProjectConfiguration(tree, 'my-plugin-e2e');
+
+    expect(project.targets.e2e.executor).toBe('@nx/vitest:test');
+    expect(project.targets.e2e).toMatchObject({
+      dependsOn: ['^build'],
+      options: expect.objectContaining({
+        pool: 'forks',
+        poolOptions: {
+          forks: {
+            singleFork: true,
+          },
+        },
+      }),
+    });
+
+    expect(tree.exists('my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();
+    expect(tree.exists('my-plugin-e2e/vitest.config.ts')).toBeTruthy();
+    const vitestConfig = tree.read('my-plugin-e2e/vitest.config.ts', 'utf-8');
+    expect(vitestConfig).toContain('globalSetup');
+    expect(vitestConfig).toContain('globalTeardown');
+  });
+
   it('should setup the eslint builder', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',
