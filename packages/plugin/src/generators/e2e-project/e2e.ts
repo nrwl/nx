@@ -238,7 +238,7 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
   // Add globalSetup and globalTeardown to vitest config
   // Check for both .mts and .ts extensions (mts is checked first as it's the default created by @nx/vitest)
   const vitestConfigExtensions = ['mts', 'ts'];
-  let vitestConfigPath: string | undefined = undefined;
+  let vitestConfigPath: string | undefined;
   
   for (const ext of vitestConfigExtensions) {
     const configPath = joinPathFragments(
@@ -252,7 +252,7 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
   }
   
   if (vitestConfigPath) {
-    const vitestConfig = host.read(vitestConfigPath, 'utf-8');
+    let vitestConfig = host.read(vitestConfigPath, 'utf-8');
     const globalSetupPath = join(
       offsetFromRoot(options.projectRoot),
       startLocalRegistryPath
@@ -263,15 +263,27 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
     );
 
     // Insert globalSetup and globalTeardown in the test config
-    // Match test: { with optional whitespace and handle multiline formatting
-    const testConfigRegex = /test:\s*\{/;
-    const updatedConfig = vitestConfig.replace(
-      testConfigRegex,
-      `test: {
-    globalSetup: '${globalSetupPath}',
-    globalTeardown: '${globalTeardownPath}',`
-    );
-    host.write(vitestConfigPath, updatedConfig);
+    // Look for 'test: {' and insert our properties right after the opening brace
+    const testConfigRegex = /(test:\s*\{\s*)/;
+    const match = vitestConfig.match(testConfigRegex);
+    
+    if (match) {
+      // Extract the indentation from the next line to maintain consistent formatting
+      const afterMatch = vitestConfig.slice(match.index + match[0].length);
+      const nextLineMatch = afterMatch.match(/\n(\s*)/);
+      const indent = nextLineMatch ? nextLineMatch[1] : '    ';
+      
+      vitestConfig = vitestConfig.replace(
+        testConfigRegex,
+        `$1\n${indent}globalSetup: '${globalSetupPath}',\n${indent}globalTeardown: '${globalTeardownPath}',`
+      );
+      host.write(vitestConfigPath, vitestConfig);
+    } else {
+      // If we can't find the test config block, log a warning
+      throw new Error(
+        `Could not find test configuration block in ${vitestConfigPath}. Please manually add globalSetup and globalTeardown properties.`
+      );
+    }
   } else {
     // This should not happen as the vitest configuration generator should create the config file
     throw new Error(
