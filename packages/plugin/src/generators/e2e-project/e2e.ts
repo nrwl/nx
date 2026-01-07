@@ -239,7 +239,7 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
     testEnvironment: 'node',
   } satisfies Partial<VitestGeneratorSchema>);
 
-  const { startLocalRegistryPath, stopLocalRegistryPath } =
+
     addLocalRegistryScripts(host);
 
   // Add globalSetup and globalTeardown to vitest config
@@ -250,7 +250,7 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
   for (const ext of vitestConfigExtensions) {
     const configPath = joinPathFragments(
       options.projectRoot,
-      `vitest.config.${ext}`
+
     );
     if (host.exists(configPath)) {
       vitestConfigPath = configPath;
@@ -266,13 +266,13 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
     );
     const globalTeardownPath = join(
       offsetFromRoot(options.projectRoot),
-      stopLocalRegistryPath
+
     );
 
     // Insert globalSetup and globalTeardown in the test config
     // Look for 'test: {' and insert our properties right after the opening brace
     const testConfigRegex = /(test:\s*\{\s*)/;
-    const match = vitestConfig.match(testConfigRegex);
+
     
     if (match) {
       // Extract the indentation from the next line to maintain consistent formatting
@@ -357,24 +357,24 @@ export async function e2eProjectGenerator(host: Tree, schema: Schema) {
     useProjectJson: true,
     ...schema,
   });
-}
+
 
 export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
-  const tasks: GeneratorCallback[] = [];
+
 
   validatePlugin(host, schema.pluginName);
   const options = await normalizeOptions(host, schema);
   
   // Default to jest if no testRunner is specified
   options.testRunner = options.testRunner ?? 'jest';
-  
+
   addFiles(host, options);
   tasks.push(
     await setupVerdaccio(host, {
       skipFormat: true,
     })
   );
-  
+
   // Add test runner based on the testRunner option
   if (options.testRunner === 'vitest') {
     tasks.push(await addVitest(host, options));
