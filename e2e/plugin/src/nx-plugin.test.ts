@@ -54,6 +54,32 @@ describe('Nx Plugin', () => {
     runCLI(`e2e ${plugin}-e2e`);
   }, 90000);
 
+  it('should be able to generate a Nx Plugin with vitest e2e tests', async () => {
+    const plugin = uniq('plugin');
+
+    runCLI(
+      `generate @nx/plugin:plugin ${plugin} --linter=eslint --e2eTestRunner=vitest --publishable`
+    );
+    const lintResults = runCLI(`lint ${plugin}`);
+    expect(lintResults).toContain('All files pass linting');
+
+    const buildResults = runCLI(`build ${plugin}`);
+    expect(buildResults).toContain('Done compiling TypeScript files');
+    checkFilesExist(
+      `dist/${plugin}/package.json`,
+      `dist/${plugin}/src/index.js`
+    );
+
+    // Verify vitest config was created
+    const vitestConfigExists =
+      checkFilesExist(`${plugin}-e2e/vitest.config.ts`, false) ||
+      checkFilesExist(`${plugin}-e2e/vitest.config.mts`, false);
+    expect(vitestConfigExists).toBeTruthy();
+
+    // Run the e2e tests with vitest
+    runCLI(`e2e ${plugin}-e2e`);
+  }, 120000);
+
   it('should be able to generate a migration', async () => {
     const plugin = uniq('plugin');
     const version = '1.0.0';
