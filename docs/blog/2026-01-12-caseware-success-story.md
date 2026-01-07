@@ -5,7 +5,6 @@ authors: [Juri Strumpflohner]
 tags: ['customer story']
 description: Discover how Caseware's platform engineering team transformed their development workflow by unifying 700+ projects and multiple teams under one efficient monorepo architecture.
 youtubeUrl: https://www.youtube.com/watch?v=lvS8HjjFwEM
-cover_image: /blog/images/articles/bg-caseware-success-story.avif
 metrics:
   - value: '700+'
     label: 'projects in unified monorepo'
