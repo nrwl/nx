@@ -88,14 +88,12 @@ fun processTask(
     put("taskName", "${projectBuildPath}:${task.name}")
     val providerDependencies = findProviderBasedDependencies(task)
     if (providerDependencies.isNotEmpty()) {
-      put("excludeDependsOn", false)
       put("includeDependsOnTasks", providerDependencies.toList())
     }
     if (continuous) {
       put("continuous", true)
     }
   }
-
 
   return target
 }
@@ -485,8 +483,8 @@ fun isCacheable(task: Task): Boolean {
  * resolution. Uses Gradle internal APIs to access raw dependency values and check for providers
  * with known producer tasks.
  *
- * These are the dependencies that will cause "Querying the mapped value of flatmap(...) before
- * task has completed" errors when the provider value is queried before the producing task completes.
+ * These are the dependencies that will cause "Querying the mapped value of flatmap(...) before task
+ * has completed" errors when the provider value is queried before the producing task completes.
  *
  * @param task the task to analyze
  * @param project the project containing the task (unused but kept for API compatibility)

@@ -547,9 +547,11 @@ class ProcessTaskUtilsTest {
 
     @Test
     fun `identifies ProviderInternal from task output files`() {
-      val producerProvider = project.tasks.register("producer") { task ->
-        task.outputs.file(java.io.File(project.layout.buildDirectory.asFile.get(), "output.jar"))
-      }
+      val producerProvider =
+          project.tasks.register("producer") { task ->
+            task.outputs.file(
+                java.io.File(project.layout.buildDirectory.asFile.get(), "output.jar"))
+          }
       val consumerProvider = project.tasks.register("consumer")
       consumerProvider.configure { it.dependsOn(producerProvider.map { p -> p.outputs.files }) }
 
@@ -560,9 +562,10 @@ class ProcessTaskUtilsTest {
 
     @Test
     fun `identifies ProviderInternal from task output directory`() {
-      val compileProvider = project.tasks.register("compile") { task ->
-        task.outputs.dir(java.io.File(project.layout.buildDirectory.asFile.get(), "classes"))
-      }
+      val compileProvider =
+          project.tasks.register("compile") { task ->
+            task.outputs.dir(java.io.File(project.layout.buildDirectory.asFile.get(), "classes"))
+          }
       val jarProvider = project.tasks.register("jar")
       jarProvider.configure { it.dependsOn(compileProvider.map { p -> p.outputs.files }) }
 
