@@ -236,11 +236,11 @@ describe('NxPlugin e2e-project Generator', () => {
     });
 
     expect(tree.exists('my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();
-    const vitestConfigExists = 
+    const vitestConfigExists =
       tree.exists('my-plugin-e2e/vitest.config.ts') ||
       tree.exists('my-plugin-e2e/vitest.config.mts');
     expect(vitestConfigExists).toBeTruthy();
-    
+
     const vitestConfigPath = tree.exists('my-plugin-e2e/vitest.config.ts')
       ? 'my-plugin-e2e/vitest.config.ts'
       : 'my-plugin-e2e/vitest.config.mts';
