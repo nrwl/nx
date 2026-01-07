@@ -8,7 +8,7 @@ describe('<%= pluginName %>', () => {
   beforeAll(() => {
     projectDirectory = createTestProject();
 
-    // The plugin has been built and published to a local registry in the jest globalSetup
+    // The plugin has been built and published to a local registry in the globalSetup
     // Install the plugin built with the latest source code into the test repo
     execSync(`<%= packageManagerCommands.addDev %> <%= pluginPackageName %>@e2e`, {
       cwd: projectDirectory,
