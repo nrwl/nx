@@ -357,6 +357,7 @@ describe('filterReleaseGroups()', () => {
             logUnchangedProjects: undefined,
             versionActions: undefined,
             versionActionsOptions: undefined,
+            adjustSemverBumpsForZeroMajorVersion: undefined,
           },
           releaseTag: {
             pattern: '',
