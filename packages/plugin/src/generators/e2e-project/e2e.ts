@@ -1,5 +1,6 @@
 import {
   addProjectConfiguration,
+  ensurePackage,
   formatFiles,
   generateFiles,
   getPackageManagerCommand,
@@ -32,10 +33,12 @@ import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { configurationGenerator as vitestConfigurationGenerator } from '@nx/vitest';
+import type { VitestGeneratorSchema } from '@nx/vitest';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { Schema } from './schema';
+
+const nxVersion = require('../../../package.json').version;
 
 interface NormalizedSchema extends Schema {
   projectRoot: string;
@@ -223,13 +226,18 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
     addProjectConfiguration(host, options.projectName, projectConfiguration);
   }
 
+  // Ensure @nx/vitest is installed before using it
+  ensurePackage('@nx/vitest', nxVersion);
+  const { configurationGenerator: vitestConfigurationGenerator } =
+    await import('@nx/vitest/generators');
+
   const vitestTask = await vitestConfigurationGenerator(host, {
     project: options.projectName,
     testTarget: 'e2e',
-    coverageProvider: 'v8',
     skipFormat: true,
     addPlugin: options.addPlugin,
     testEnvironment: 'node',
+  } satisfies Partial<VitestGeneratorSchema>);
   });
 
   const { startLocalRegistryPath, stopLocalRegistryPath } =
