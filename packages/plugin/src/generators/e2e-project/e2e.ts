@@ -238,7 +238,6 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
     addPlugin: options.addPlugin,
     testEnvironment: 'node',
   } satisfies Partial<VitestGeneratorSchema>);
-  });
 
   const { startLocalRegistryPath, stopLocalRegistryPath } =
     addLocalRegistryScripts(host);
