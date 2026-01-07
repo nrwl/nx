@@ -1,5 +1,5 @@
 import type { CreateNodesContextV2 } from '@nx/devkit';
-import { mkdirSync, rmdirSync } from 'node:fs';
+import { mkdirSync, rmSync } from 'node:fs';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { createNodesV2, type AngularProjectConfiguration } from './plugin';
 
@@ -30,7 +30,7 @@ describe('@nx/angular/plugin', () => {
   afterEach(() => {
     jest.resetModules();
     tempFs.cleanup();
-    rmdirSync('tmp/project-graph-cache', { recursive: true });
+    rmSync('tmp/project-graph-cache', { recursive: true, force: true });
   });
 
   it('should infer tasks from multiple projects in angular.json', async () => {

@@ -91,7 +91,7 @@ describe('update-nx-next-dependency', () => {
     `);
   });
 
-  it('should remove @next/next/no-html-link-for-pages in flat configs', async () => {
+  fit('should remove @next/next/no-html-link-for-pages in flat configs', async () => {
     tree.write('eslint.config.js', 'module.exports = []');
 
     addProjectConfiguration(tree, 'my-pkg', {

@@ -160,6 +160,7 @@
     "@types/yargs": "17.0.10",
     "@types/yarnpkg__lockfile": "^1.1.5",
     "@typescript-eslint/eslint-plugin": "^8.19.0",
+    "@typescript-eslint/parser": "^8.19.0",
     "@typescript-eslint/rule-tester": "^8.19.0",
     "@typescript-eslint/type-utils": "^8.19.0",
     "@typescript-eslint/utils": "^8.19.0",
