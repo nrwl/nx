@@ -33,7 +33,6 @@ import {
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { configurationGenerator as vitestConfigurationGenerator } from '@nx/vitest';
-import { ensureViteConfigIsCorrect } from '@nx/vitest/src/utils/vite-config-edit-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { Schema } from './schema';
