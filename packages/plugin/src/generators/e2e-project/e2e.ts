@@ -236,9 +236,9 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
     addLocalRegistryScripts(host);
 
   // Add globalSetup and globalTeardown to vitest config
-  // Check for both .ts and .mts extensions
+  // Check for both .mts and .ts extensions (mts is checked first as it's the default created by @nx/vitest)
   const vitestConfigExtensions = ['mts', 'ts'];
-  let vitestConfigPath: string;
+  let vitestConfigPath: string | undefined = undefined;
   
   for (const ext of vitestConfigExtensions) {
     const configPath = joinPathFragments(
@@ -263,13 +263,20 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
     );
 
     // Insert globalSetup and globalTeardown in the test config
+    // Match test: { with optional whitespace and handle multiline formatting
+    const testConfigRegex = /test:\s*\{/;
     const updatedConfig = vitestConfig.replace(
-      /test:\s*{/,
+      testConfigRegex,
       `test: {
     globalSetup: '${globalSetupPath}',
     globalTeardown: '${globalTeardownPath}',`
     );
     host.write(vitestConfigPath, updatedConfig);
+  } else {
+    // This should not happen as the vitest configuration generator should create the config file
+    throw new Error(
+      `Could not find Vitest config for project ${options.projectName} at ${options.projectRoot}`
+    );
   }
 
   const project = readProjectConfiguration(host, options.projectName);
