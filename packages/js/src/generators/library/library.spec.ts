@@ -2272,7 +2272,7 @@ describe('lib', () => {
       ]);
     });
 
-    it('should exclude a non-buildable library from a plugin registration when it has a build target', async () => {
+    it('should not change the plugin registration for a non-buildable library when it has build options without skipBuildCheck', async () => {
       updateJson(tree, 'nx.json', (json) => {
         json.plugins ??= [];
         json.plugins.push({
@@ -2297,6 +2297,36 @@ describe('lib', () => {
           plugin: '@nx/js/typescript',
           options: {
             build: { targetName: 'build' },
+          },
+        },
+      ]);
+    });
+
+    it('should exclude a non-buildable library from a plugin registration when it has build options with skipBuildCheck', async () => {
+      updateJson(tree, 'nx.json', (json) => {
+        json.plugins ??= [];
+        json.plugins.push({
+          plugin: '@nx/js/typescript',
+          options: {
+            build: { targetName: 'build', skipBuildCheck: true },
+          },
+        });
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'packages/my-lib',
+        bundler: 'none',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'nx.json').plugins).toStrictEqual([
+        {
+          plugin: '@nx/js/typescript',
+          options: {
+            build: { targetName: 'build', skipBuildCheck: true },
           },
           exclude: ['packages/my-lib/*'],
         },
