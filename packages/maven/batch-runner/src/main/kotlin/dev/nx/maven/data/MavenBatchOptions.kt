@@ -5,7 +5,8 @@ data class MavenBatchOptions(
     val taskOptions: Map<String, MavenBatchTask>,
     val args: List<String> = emptyList(),
     val verbose: Boolean = false,
-    val taskGraph: TaskGraph? = null
+    val taskGraph: TaskGraph? = null,
+    val communicationPort: Int? = null
 )
 
 data class MavenBatchTask(
