@@ -83,6 +83,7 @@ Similar to the Nx CLI, Nx Cloud also used the `NX_VERBOSE_LOGGING` environment v
 | `NX_CLOUD_NO_TIMEOUTS`                | boolean | Disables the default 10-second timeout for Nx Cloud requests.                                                                                                                                                          |
 | `NX_NO_CLOUD`                         | boolean | If set to `true`, prevents Nx Cloud from being used for the current run. No remote cache will be used. Value cannot be set if using [distributed task execution](/docs/features/ci-features/distribute-task-execution) |
 | `NX_VERBOSE_LOGGING`                  | boolean | Outputs debug information about agents communicating with the main job. Useful for debugging cache misses and on-premises setup issues.                                                                                |
+| `NX_WORKING_DIRECTORY`                | string  | The subdirectory containing your Nx workspace. Set this in your launch template if your Nx workspace is not at the repository root. Only used by Nx Agents.                                                            |
 
 ### Deprecated Nx Cloud Environment Variables
 
