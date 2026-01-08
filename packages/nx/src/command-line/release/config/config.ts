@@ -378,6 +378,9 @@ export async function createNxReleaseConfig(
         userConfig.version?.preserveMatchingDependencyRanges ?? true,
       logUnchangedProjects: userConfig.version?.logUnchangedProjects ?? true,
       updateDependents: userConfig.version?.updateDependents ?? 'always',
+      // TODO(v23): change the default value of this to true
+      adjustSemverBumpsForZeroMajorVersion:
+        userConfig.version?.adjustSemverBumpsForZeroMajorVersion ?? false,
     } as DeepRequired<NxReleaseConfiguration['version']>,
     changelog: {
       git: changelogGitDefaults,
