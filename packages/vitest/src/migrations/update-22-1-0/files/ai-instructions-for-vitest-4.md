@@ -702,6 +702,14 @@ nx show project PROJECT_NAME --web
 nx reset
 ```
 
+## Guard Rails
+
+DO NOT
+
+- Force tests to pass by removing test logic and replacing it with `expect(true).toBe(true)`
+- Remove assertions
+- Add additional mocks that force tests to pass
+
 ---
 
 ## Notes for LLM Execution

@@ -42,6 +42,9 @@
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
   },
+  "devDependencies": {
+    "nx": "workspace:*"
+  },
   "optionalDependencies": {
     "@nx/detox": "workspace:*",
     "@nx/rollup": "workspace:*"

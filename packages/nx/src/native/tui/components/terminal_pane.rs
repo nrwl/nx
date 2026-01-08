@@ -17,7 +17,9 @@ use tui_term::widget::PseudoTerminal;
 use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use crate::native::tui::theme::THEME;
-use crate::native::tui::utils::{format_duration, format_duration_since, format_live_duration};
+use crate::native::tui::utils::{
+    format_duration_with_estimate, get_task_status_icon, get_task_status_style,
+};
 use crate::native::tui::{action::Action, pty::PtyInstance};
 
 /// Configuration for terminal pane layout and display constants
@@ -268,7 +270,6 @@ impl TerminalPaneState {
 pub struct TerminalPane<'a> {
     pty_data: Option<&'a mut TerminalPaneData>,
     is_continuous: bool,
-    minimal: bool,
 }
 
 impl<'a> TerminalPane<'a> {
@@ -276,7 +277,6 @@ impl<'a> TerminalPane<'a> {
         Self {
             pty_data: None,
             is_continuous: false,
-            minimal: false,
         }
     }
 
@@ -290,64 +290,12 @@ impl<'a> TerminalPane<'a> {
         self
     }
 
-    pub fn minimal(mut self, minimal: bool) -> Self {
-        self.minimal = minimal;
-        self
-    }
-
-    fn get_status_icon(&self, status: TaskStatus) -> Span {
-        match status {
-            TaskStatus::Success
-            | TaskStatus::LocalCacheKeptExisting
-            | TaskStatus::LocalCache
-            | TaskStatus::RemoteCache => Span::styled(
-                "  ✔  ",
-                Style::default()
-                    .fg(THEME.success)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::Failure => Span::styled(
-                "  ✖  ",
-                Style::default()
-                    .fg(THEME.error)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::Skipped => Span::styled(
-                "  ⏭  ",
-                Style::default()
-                    .fg(THEME.warning)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::InProgress | TaskStatus::Shared => Span::styled(
-                "  ●  ",
-                Style::default().fg(THEME.info).add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::Stopped => Span::styled(
-                "  ◼  ",
-                Style::default()
-                    .fg(THEME.secondary_fg)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::NotStarted => Span::styled(
-                "  ·  ",
-                Style::default()
-                    .fg(THEME.secondary_fg)
-                    .add_modifier(Modifier::BOLD),
-            ),
-        }
+    fn get_status_icon(&self, status: TaskStatus) -> Span<'static> {
+        get_task_status_icon(status, 2)
     }
 
     fn get_base_style(&self, status: TaskStatus) -> Style {
-        Style::default().fg(match status {
-            TaskStatus::Success
-            | TaskStatus::LocalCacheKeptExisting
-            | TaskStatus::LocalCache
-            | TaskStatus::RemoteCache => THEME.success,
-            TaskStatus::Failure => THEME.error,
-            TaskStatus::Skipped => THEME.warning,
-            TaskStatus::InProgress | TaskStatus::Shared => THEME.info,
-            TaskStatus::NotStarted | TaskStatus::Stopped => THEME.secondary_fg,
-        })
+        get_task_status_style(status)
     }
 
     /// Calculates appropriate pty dimensions by applying relevant borders and padding adjustments to the given area
@@ -445,21 +393,23 @@ impl<'a> TerminalPane<'a> {
         let estimated = state.estimated_duration?;
         let start = state.start_time?;
 
-        let actual_duration = match state.task_status {
-            TaskStatus::InProgress => format_live_duration(start),
+        let actual_ms = match state.task_status {
+            TaskStatus::InProgress => {
+                let current_ms = crate::native::utils::time::current_timestamp_millis();
+                current_ms.saturating_sub(start)
+            }
             TaskStatus::Success
             | TaskStatus::Failure
             | TaskStatus::LocalCacheKeptExisting
             | TaskStatus::LocalCache
             | TaskStatus::RemoteCache => {
                 let end = state.end_time?;
-                format_duration_since(start, end)
+                end.saturating_sub(start)
             }
             _ => return None,
         };
 
-        let formatted_estimate = format_duration(estimated);
-        Some(format!("{} ({} avg)", actual_duration, formatted_estimate))
+        Some(format_duration_with_estimate(actual_ms, Some(estimated)))
     }
 }
 
@@ -510,17 +460,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
 
         let mut title = vec![];
 
-        if self.minimal {
-            title.push(Span::styled(
-                " NX ",
-                Style::default().fg(THEME.primary_fg).bold().bg(base_style
-                    .fg
-                    .expect("Base style should have foreground color")),
-            ));
-            title.push(Span::raw("  "));
-        } else {
-            title.push(status_icon.clone());
-        }
+        title.push(status_icon.clone());
         title.push(Span::styled(
             format!("{}  ", state.task_name),
             match state.is_focused {
@@ -582,11 +522,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
         let block = Block::default()
             .title(title)
             .title_alignment(Alignment::Left)
-            .borders(if self.minimal {
-                Borders::NONE
-            } else {
-                Borders::ALL
-            })
+            .borders(Borders::ALL)
             .border_type(if state.is_focused {
                 BorderType::Thick
             } else {
@@ -764,41 +700,10 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
 
                     let show_interactive_status = state.task_status == TaskStatus::InProgress
                         && state.is_focused
-                        && pty_data.can_be_interactive
-                        && !self.minimal;
+                        && pty_data.can_be_interactive;
 
-                    // Show instructions to quit in minimal mode if somehow terminal became non-interactive
-                    if self.minimal && !self.is_currently_interactive() {
-                        let top_text = Line::from(vec![
-                            Span::styled("quit: ", Style::default().fg(THEME.primary_fg)),
-                            Span::styled("q ", Style::default().fg(THEME.info)),
-                        ]);
-
-                        let mode_width = top_text
-                            .spans
-                            .iter()
-                            .map(|span| span.content.len())
-                            .sum::<usize>();
-
-                        // Ensure text doesn't extend past safe area
-                        if mode_width as u16 + Self::CONFIG.right_margin < safe_area.width {
-                            let top_right_area = Rect {
-                                x: safe_area.x + safe_area.width
-                                    - mode_width as u16
-                                    - Self::CONFIG.right_margin,
-                                y: safe_area.y,
-                                width: mode_width as u16 + Self::CONFIG.width_padding,
-                                height: 1,
-                            };
-
-                            Paragraph::new(top_text)
-                                .alignment(Alignment::Right)
-                                .style(border_style)
-                                .render(top_right_area, buf);
-                        }
-
-                    // Show status message and/or interactive status for focused, in progress tasks, when not in minimal mode
-                    } else if show_interactive_status || pty_data.status_message.is_some() {
+                    // Show status message and/or interactive status for focused, in progress tasks
+                    if show_interactive_status || pty_data.status_message.is_some() {
                         // Get status message if present
                         let status_msg = pty_data
                             .status_message
@@ -911,7 +816,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                     }
 
                     // Render scrollbar padding when needed, but not for minimal non-interactive panes
-                    if needs_scrollbar && !(self.minimal && !self.is_currently_interactive()) {
+                    if needs_scrollbar {
                         // Render padding for both top and bottom when scrollbar is present
                         let padding_text = Line::from(vec![Span::raw("  ")]);
                         let padding_width = 2;

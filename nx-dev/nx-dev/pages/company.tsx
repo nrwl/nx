@@ -3,13 +3,6 @@ import { NextSeo } from 'next-seo';
 import { CoFounders, Hero, TheTeam, Layout } from '@nx/nx-dev-ui-company';
 import { CustomerLogos } from '@nx/nx-dev-ui-enterprise';
 import { SectionHeading } from '@nx/nx-dev-ui-common';
-import type { GetServerSideProps } from 'next';
-import { tryFramerProxy } from '../lib/framer-proxy';
-
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  if (await tryFramerProxy(ctx)) return { props: {} };
-  return { props: {} };
-};
 
 export function Company(): JSX.Element {
   const router = useRouter();

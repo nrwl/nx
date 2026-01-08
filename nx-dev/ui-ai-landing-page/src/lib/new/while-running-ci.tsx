@@ -59,32 +59,6 @@ const features: FeatureCardProps[] = [
     videoUrl: 'https://youtu.be/JW5Ki3PkRWA',
     imageUrl: '/images/ai/self-healing-ci-thumb.avif',
   },
-  {
-    isAvailable: true,
-    id: 'autonomous-ci-optimization',
-    title: 'Autonomous CI Optimization',
-    subtitle: 'Let AI manage your CI resources for optimal performance.',
-    description: (
-      <>
-        <p className="flex-auto">
-          AI-driven resource allocation that learns from your CI patterns to
-          automatically scale agents and optimize build times.
-        </p>
-        <div className="mt-4">
-          <Link
-            href={'/docs/features/ci-features/dynamic-agents'}
-            title="How to setup dynamic agents"
-            className="text-sm/6 font-semibold"
-          >
-            How to setup Autonomous CI Optimization{' '}
-            <span aria-hidden="true">→</span>
-          </Link>
-        </div>
-      </>
-    ),
-    type: 'link',
-    imageUrl: '/images/ai/autonomous-ci-optimization-thumb.avif',
-  },
 ];
 
 export function WhileRunningCi(): ReactElement {
@@ -103,7 +77,7 @@ export function WhileRunningCi(): ReactElement {
           </SectionHeading>
         </div>
         <div className="mt-16 sm:mt-20 lg:mt-24">
-          <dl className="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
+          <dl className="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2">
             {features.map((feature) =>
               feature.type === 'video' ? (
                 <FeatureCard

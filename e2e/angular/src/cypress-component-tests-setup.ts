@@ -19,7 +19,9 @@ export interface CypressComponentTestsSetup {
   buildableLibName: string;
 }
 
-export function setupCypressComponentTests(): CypressComponentTestsSetup {
+export function setupCypressComponentTests(
+  zoneless: boolean = true
+): CypressComponentTestsSetup {
   const projectName = newProject({
     name: uniq('cy-ng'),
     packages: ['@nx/angular'],
@@ -29,7 +31,7 @@ export function setupCypressComponentTests(): CypressComponentTestsSetup {
   const usedInAppLibName = uniq('cy-angular-lib');
   const buildableLibName = uniq('cy-angular-buildable-lib');
 
-  createApp(appName, ['--no-zoneless']);
+  createApp(appName, zoneless ? [] : ['--no-zoneless']);
   createLib(projectName, appName, usedInAppLibName);
   useLibInApp(projectName, appName, usedInAppLibName);
   createBuildableLib(projectName, buildableLibName);

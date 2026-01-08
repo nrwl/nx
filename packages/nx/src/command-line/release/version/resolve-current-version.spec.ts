@@ -24,6 +24,7 @@ describe('resolveCurrentVersion', () => {
       versionPrefix: 'auto',
       preserveLocalDependencyProtocols: true,
       preserveMatchingDependencyRanges: false,
+      adjustSemverBumpsForZeroMajorVersion: undefined,
       manifestRootsToUpdate: [],
       versionActionsOptions: {},
       dockerOptions: {

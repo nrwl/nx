@@ -1,11 +1,29 @@
 ---
 // Copied from https://github.com/withastro/starlight/blob/f14eb0c/packages/starlight/components/PageFrame.astro with modifications.
 import MobileMenuToggle from '@astrojs/starlight/components/MobileMenuToggle.astro';
-import { Footer, GitHubStarWidget  } from '@nx/nx-dev-ui-common';
+import { Footer } from '@nx/nx-dev-ui-common/src/lib/footer';
+import { GitHubStarWidget } from '@nx/nx-dev-ui-common/src/lib/github-star-widget';
 import { WebinarNotifier } from '@nx/nx-dev-ui-common/src/lib/webinar-notifier';
+import { getCollection } from 'astro:content';
 
 const { hasSidebar } = Astro.locals.starlightRoute;
 const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
+
+// Get banner from collection
+const bannerCollection = await getCollection('banner');
+const bannerConfig = bannerCollection[0]?.data;
+
+// Check if banner is active
+function isBannerActive(config: typeof bannerConfig): boolean {
+  if (!config?.enabled) return false;
+  if (config.activeUntil) {
+    return new Date() < new Date(config.activeUntil);
+  }
+  return true;
+}
+
+const showBanner = isBannerActive(bannerConfig);
+const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUntil || 'no-expiry'}` : '';
 ---
 
 <div class="page sl-flex">
@@ -48,7 +66,19 @@ const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
   }
   <div class="main-frame"><slot /></div>
   <Footer disableThemeSwitcher={true} useDomainPrefix={true} className="dark:bg-slate-900" />
-  <WebinarNotifier client:load />
+  {showBanner && bannerConfig && (
+    <WebinarNotifier
+      id={bannerId}
+      title={bannerConfig.title}
+      description={bannerConfig.description}
+      primaryCtaUrl={bannerConfig.primaryCtaUrl}
+      primaryCtaText={bannerConfig.primaryCtaText}
+      secondaryCtaUrl={bannerConfig.secondaryCtaUrl}
+      secondaryCtaText={bannerConfig.secondaryCtaText}
+      activeUntil={bannerConfig.activeUntil}
+      client:load
+    />
+  )}
 </div>
 
 <style>

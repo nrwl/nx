@@ -11,7 +11,7 @@ import {
   getInterruptedWorkspaceState,
 } from '../src/create-workspace';
 import { isKnownPreset, Preset } from '../src/utils/preset/preset';
-import { CLIErrorMessageConfig, output } from '../src/utils/output';
+import { output } from '../src/utils/output';
 import { nxVersion } from '../src/utils/nx/nx-version';
 
 import { yargsDecorator } from './decorator';
@@ -69,6 +69,12 @@ let useCloud: boolean;
 // For stats
 let packageManager: string;
 
+type AngularUnitTestRunner =
+  | 'none'
+  | 'jest'
+  | 'vitest-angular'
+  | 'vitest-analog';
+
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
   linter?: 'none' | 'eslint';
@@ -106,7 +112,7 @@ interface AngularArguments extends BaseArguments {
   style: string;
   routing: boolean;
   standaloneApi: boolean;
-  unitTestRunner: 'none' | 'jest' | 'vitest';
+  unitTestRunner: AngularUnitTestRunner;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
   bundler: 'webpack' | 'rspack' | 'esbuild';
   ssr: boolean;
@@ -1151,7 +1157,7 @@ async function determineAngularOptions(
   let preset: Preset;
   let style: string;
   let appName: string;
-  let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
+  let unitTestRunner: undefined | AngularUnitTestRunner = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let bundler: undefined | 'webpack' | 'rspack' | 'esbuild' = undefined;
   let ssr: undefined | boolean = undefined;
@@ -1273,7 +1279,46 @@ async function determineAngularOptions(
     ssr = reply.ssr === 'Yes';
   }
 
-  unitTestRunner = await determineUnitTestRunner(parsedArgs);
+  if (parsedArgs.unitTestRunner) {
+    unitTestRunner = parsedArgs.unitTestRunner as AngularUnitTestRunner;
+  } else if (!parsedArgs.workspaces) {
+    unitTestRunner = undefined;
+  } else {
+    unitTestRunner = await enquirer
+      .prompt<{
+        unitTestRunner: 'none' | 'jest' | 'vitest-angular' | 'vitest-analog';
+      }>([
+        {
+          message: 'Which unit test runner would you like to use?',
+          type: 'autocomplete',
+          name: 'unitTestRunner',
+          skip: !parsedArgs.interactive || isCI(),
+          choices: [
+            {
+              name: 'vitest-angular',
+              message:
+                'Vitest & Angular [ https://vitest.dev/ & https://angular.dev ]',
+            },
+            {
+              name: 'vitest-analog',
+              message:
+                'Vitest & Analog  [ https://vitest.dev/ & https://analogjs.org/ ]',
+            },
+            {
+              name: 'jest',
+              message: 'Jest             [ https://jestjs.io/ ]',
+            },
+            {
+              name: 'none',
+              message: 'None',
+            },
+          ],
+          initial: 0,
+        },
+      ])
+      .then((r) => r.unitTestRunner as AngularUnitTestRunner);
+  }
+
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
 
   return {
