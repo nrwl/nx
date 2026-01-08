@@ -125,7 +125,7 @@ function shouldDelegateToAngularCLI() {
 
 async function ensureNxConsoleInstalledViaDaemon(): Promise<void> {
   // Only proceed if daemon is available
-  if (!daemonClient.enabled()) {
+  if (!daemonClient.enabled() || !(await daemonClient.isServerAvailable())) {
     return;
   }
 
