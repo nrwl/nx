@@ -402,12 +402,6 @@ fun getMetadata(
  * Into an external dependency with key: "gradle:commons-lang3-3.13.0" with value: { "type":
  * "gradle", "name": "commons-lang3", "data": { "version": "3.13.0", "packageName":
  * "org.apache.commons.commons-lang3", "hash": "b7263237aa89c1f99b327197c41d0669707a462e",} }
- *
- * @param inputFile Path to the dependency jar.
- * @param externalNodes Map to populate with the resulting ExternalNode.
- * @param logger Gradle logger for warnings and debug info
- * @return The external dependency key (e.g., gradle:commons-lang3-3.13.0), or null if parsing
- *   fails.
  */
 fun getExternalDepFromInputFile(
     inputFile: String,
@@ -485,10 +479,6 @@ fun isCacheable(task: Task): Boolean {
  *
  * These are the dependencies that will cause "Querying the mapped value of flatmap(...) before task
  * has completed" errors when the provider value is queried before the producing task completes.
- *
- * @param task the task to analyze
- * @param project the project containing the task (unused but kept for API compatibility)
- * @return set of task paths that are provider-based dependencies with known producers
  */
 fun findProviderBasedDependencies(task: Task): Set<String> {
   val logger = task.logger
