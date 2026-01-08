@@ -11,7 +11,7 @@ import org.codehaus.plexus.classworlds.ClassWorld
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.PrintStream
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Maven Executor using ResidentMavenInvoker for efficient batch execution.
@@ -36,10 +36,13 @@ class ResidentMavenExecutor(
   private lateinit var parser: MavenParser
   private lateinit var classWorld: ClassWorld
   private var initialized = false
-  private var invocationCount = 0
+  private var invocationCount = AtomicInteger(0)
 
   // Cached Maven home - found once during initialization and reused
   private var cachedMavenHome: File? = null
+
+  // Message builder factory - reused across invocations to avoid JLine hook issues
+  private lateinit var messageBuilderFactory: MessageBuilderFactory
 
   init {
     initializeMaven()
@@ -90,6 +93,9 @@ class ResidentMavenExecutor(
 
     // Create the Maven parser for parsing command-line arguments
     parser = MavenParser()
+
+    // Initialize message builder factory
+    messageBuilderFactory = JLineMessageBuilderFactory()
 
     // Set TCCL to plexus.core ClassRealm globally for the entire JVM
     // This ensures all threads (including thread pool threads) can load Maven/Plexus classes
@@ -177,8 +183,8 @@ class ResidentMavenExecutor(
       throw RuntimeException("Maven not properly initialized")
     }
 
-    invocationCount++
-    log.debug("execute() Invocation #$invocationCount with goals: $goals")
+    val currentInvocation = invocationCount.incrementAndGet()
+    log.debug("execute() Invocation #$currentInvocation with goals: $goals")
     val startTime = System.currentTimeMillis()
 
     // Stream output to stderr in real-time while also capturing for results
@@ -192,9 +198,6 @@ class ResidentMavenExecutor(
       allArguments.addAll(arguments)
 
       log.debug("Executing Maven with goals: $goals, arguments: $arguments from directory: $workingDir")
-
-      // Create a message builder factory for formatting output
-      val messageBuilderFactory: MessageBuilderFactory = JLineMessageBuilderFactory()
 
       // Use cached Maven home (found during initialization)
       val mavenHome = cachedMavenHome
@@ -231,29 +234,20 @@ class ResidentMavenExecutor(
       }
 
       // ResidentMavenInvoker may try to read from stdin - provide empty input to prevent hanging
-      val originalIn = System.`in`
-      System.setIn(java.io.ByteArrayInputStream(ByteArray(0)))
+      // Maven execution must be synchronized because ResidentMavenInvoker is not thread-safe
+      val exitCode = synchronized(this) {
+        val originalIn = System.`in`
+        System.setIn(java.io.ByteArrayInputStream(ByteArray(0)))
 
-      val exitCode = try {
-        val invokeStartTime = System.currentTimeMillis()
-        val result = invoker.invoke(invokerRequest)
-        val invokeDuration = System.currentTimeMillis() - invokeStartTime
-        log.debug("invoker.invoke() completed in ${invokeDuration}ms, returned: $result")
-        result
-      } catch (e: NoSuchMethodError) {
-        log.error("Maven version incompatibility: ${e.message}", e)
-        outputStream.write("EXCEPTION: Maven version incompatibility - ${e.message}\n".toByteArray())
-        e.printStackTrace(PrintStream(outputStream, true))
-        1
-      } catch (e: Throwable) {
-        log.error("EXCEPTION during invoker.invoke(): ${e.javaClass.simpleName}: ${e.message}", e)
-        // Also print to stderr so error is visible in test output
-        System.err.println("[ERROR] EXCEPTION during invoker.invoke(): ${e.javaClass.simpleName}: ${e.message}")
-        e.printStackTrace(System.err)
-        e.printStackTrace(PrintStream(outputStream, true))
-        1
-      } finally {
-        System.setIn(originalIn)
+        try {
+          val invokeStartTime = System.currentTimeMillis()
+          val result = invoker.invoke(invokerRequest)
+          val invokeDuration = System.currentTimeMillis() - invokeStartTime
+          log.debug("invoker.invoke() completed in ${invokeDuration}ms, returned: $result")
+          result
+        } finally {
+          System.setIn(originalIn)
+        }
       }
 
       val duration = System.currentTimeMillis() - startTime
