@@ -35,6 +35,7 @@ export interface FinalConfigForProject {
   versionPrefix: NxReleaseVersionConfiguration['versionPrefix'];
   preserveLocalDependencyProtocols: NxReleaseVersionConfiguration['preserveLocalDependencyProtocols'];
   preserveMatchingDependencyRanges: NxReleaseVersionConfiguration['preserveMatchingDependencyRanges'];
+  adjustSemverBumpsForZeroMajorVersion: NxReleaseVersionConfiguration['adjustSemverBumpsForZeroMajorVersion'];
   versionActionsOptions: NxReleaseVersionConfiguration['versionActionsOptions'];
   manifestRootsToUpdate: Array<
     Exclude<
@@ -888,6 +889,17 @@ Valid values are: ${validReleaseVersionPrefixes
       true;
 
     /**
+     * adjustSemverBumpsForZeroMajorVersion
+     *
+     * TODO(v23): change the default value of this to true
+     * This is false by default for backward compatibility.
+     */
+    const adjustSemverBumpsForZeroMajorVersion =
+      projectVersionConfig?.adjustSemverBumpsForZeroMajorVersion ??
+      releaseGroupVersionConfig?.adjustSemverBumpsForZeroMajorVersion ??
+      false;
+
+    /**
      * fallbackCurrentVersionResolver, defaults to disk when performing a first release, otherwise undefined
      */
     const fallbackCurrentVersionResolver =
@@ -931,6 +943,7 @@ Valid values are: ${validReleaseVersionPrefixes
       versionPrefix,
       preserveLocalDependencyProtocols,
       preserveMatchingDependencyRanges,
+      adjustSemverBumpsForZeroMajorVersion,
       versionActionsOptions,
       manifestRootsToUpdate,
       dockerOptions,

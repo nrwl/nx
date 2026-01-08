@@ -295,7 +295,66 @@ function extractPropertiesFromObjectLiteral(
 }
 
 /**
- * Finds an override matching the lookup function and applies the update function to it
+ * Find a property assignment node by name in an object literal.
+ */
+function findPropertyNode(
+  node: ts.ObjectLiteralExpression,
+  propertyName: string
+): ts.PropertyAssignment | undefined {
+  for (const prop of node.properties) {
+    if (ts.isPropertyAssignment(prop)) {
+      const name = prop.name.getText().replace(/['"]/g, '');
+      if (name === propertyName) {
+        return prop;
+      }
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Find properties that are added, changed, or removed.
+ */
+function findChangedProperties(
+  original: Record<string, unknown>,
+  updated: Record<string, unknown>
+): string[] {
+  const changed: string[] = [];
+  // Check modified/added properties
+  for (const key of Object.keys(updated)) {
+    if (JSON.stringify(original[key]) !== JSON.stringify(updated[key])) {
+      changed.push(key);
+    }
+  }
+  // Check removed properties
+  for (const key of Object.keys(original)) {
+    if (!(key in updated)) {
+      changed.push(key);
+    }
+  }
+  return changed;
+}
+
+/**
+ * Serialize a value to JavaScript source code. Handles converting eslintrc parser format to flat config format.
+ */
+function serializeValue(value: unknown, format: 'mjs' | 'cjs'): string {
+  const parserReplacement =
+    format === 'mjs'
+      ? (parser: string) => `(await import('${parser}'))`
+      : (parser: string) => `require('${parser}')`;
+
+  return JSON.stringify(value, null, 2)
+    .replace(
+      /"parser": "([^"]+)"/g,
+      (_, parser) => `"parser": ${parserReplacement(parser)}`
+    )
+    .replaceAll(/\n/g, '\n    '); // Maintain indentation
+}
+
+/**
+ * Finds an override matching the lookup function and applies the update function to it.
+ * Uses property-level AST updates to preserve properties with variable references.
  */
 export function replaceOverride(
   content: string,
@@ -320,52 +379,78 @@ export function replaceOverride(
   }
   const changes: StringChange[] = [];
   exportsArray.forEach((node) => {
-    if (isOverride(node)) {
-      let objSource;
-      let start, end;
-      if (ts.isObjectLiteralExpression(node)) {
-        objSource = node.getFullText();
-        start = node.properties.pos + 1; // keep leading line break
-        end = node.properties.end;
+    if (!isOverride(node)) {
+      return;
+    }
+
+    let objectLiteralNode: ts.ObjectLiteralExpression;
+    if (ts.isObjectLiteralExpression(node)) {
+      objectLiteralNode = node;
+    } else {
+      // Handle compat.config(...).map(...) pattern
+      const arrowBody = node['expression'].arguments[0].body.expression;
+      if (ts.isObjectLiteralExpression(arrowBody)) {
+        objectLiteralNode = arrowBody;
       } else {
-        const fullNodeText =
-          node['expression'].arguments[0].body.expression.getFullText();
-        // strip any spread elements
-        objSource = fullNodeText.replace(SPREAD_ELEMENTS_REGEXP, '');
-        start =
-          node['expression'].arguments[0].body.expression.properties.pos +
-          (fullNodeText.length - objSource.length);
-        end = node['expression'].arguments[0].body.expression.properties.end;
+        return;
       }
-      const data = parseTextToJson(objSource);
-      if (lookup(data)) {
-        changes.push({
-          type: ChangeType.Delete,
-          start,
-          length: end - start,
-        });
-        let updatedData = update(data);
-        if (updatedData) {
-          updatedData = mapFilePaths(updatedData);
+    }
 
-          const parserReplacement =
-            format === 'mjs'
-              ? (parser: string) => `(await import('${parser}'))`
-              : (parser: string) => `require('${parser}')`;
+    // Use AST-based extraction to handle variable references (e.g., plugins: { 'abc': abc })
+    const data = extractPropertiesFromObjectLiteral(objectLiteralNode);
+    if (lookup(data as Linter.ConfigOverride<Linter.RulesRecord>)) {
+      // Deep clone before update (update functions may mutate nested objects)
+      const originalData = structuredClone(data);
 
-          changes.push({
-            type: ChangeType.Insert,
-            index: start,
-            text:
-              '    ' +
-              JSON.stringify(updatedData, null, 2)
-                .replace(
-                  /"parser": "([^"]+)"/g,
-                  (_, parser) => `"parser": ${parserReplacement(parser)}`
-                )
-                .slice(2, -2) // Remove curly braces and start/end line breaks
-                .replaceAll(/\n/g, '\n    '), // Maintain indentation
-          });
+      let updatedData = update?.(data);
+      if (updatedData) {
+        updatedData = mapFilePaths(updatedData);
+
+        const changedProps = findChangedProperties(
+          originalData as Record<string, unknown>,
+          updatedData as Record<string, unknown>
+        );
+
+        for (const propName of changedProps) {
+          const originalNode = findPropertyNode(objectLiteralNode, propName);
+          const updatedValue = updatedData[propName];
+
+          if (originalNode && !(propName in updatedData)) {
+            // Delete property that was removed
+            changes.push({
+              type: ChangeType.Delete,
+              start: originalNode.pos,
+              length: originalNode.end - originalNode.pos,
+            });
+          } else if (originalNode) {
+            // Replace existing property value
+            const valueNode = originalNode.initializer;
+            changes.push({
+              type: ChangeType.Delete,
+              start: valueNode.pos,
+              length: valueNode.end - valueNode.pos,
+            });
+            changes.push({
+              type: ChangeType.Insert,
+              index: valueNode.pos,
+              text: ' ' + serializeValue(updatedValue, format),
+            });
+          } else {
+            // Add new property at the end of the object
+            const lastProp =
+              objectLiteralNode.properties[
+                objectLiteralNode.properties.length - 1
+              ];
+            const insertPos = lastProp
+              ? lastProp.end
+              : objectLiteralNode.pos + 1;
+            const needsComma = lastProp ? ',' : '';
+            changes.push({
+              type: ChangeType.Insert,
+              index: insertPos,
+              text: `${needsComma}\n    "${propName}": ${serializeValue(updatedValue, format)}`,
+            });
+          }
         }
       }
     }

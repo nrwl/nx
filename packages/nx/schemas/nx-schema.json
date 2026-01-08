@@ -1034,6 +1034,11 @@
             ]
           }
         },
+        "adjustSemverBumpsForZeroMajorVersion": {
+          "type": "boolean",
+          "description": "Whether to strictly follow SemVer V2 spec for 0.x versions where breaking changes bump the minor version (instead of major), and new features bump the patch version (instead of minor). When enabled: 'major' bumps become 'minor' bumps for 0.x versions, 'minor' bumps become 'patch' bumps for 0.x versions. Versions 1.0.0 and above are unaffected. This is false by default for backward compatibility.",
+          "default": false
+        },
         "versionActions": {
           "type": "string",
           "description": "The path to the version actions implementation to use for releasing all projects by default. This can also be overridden on the release group and project levels.",
@@ -1150,6 +1155,11 @@
               "optionalDependencies"
             ]
           }
+        },
+        "adjustSemverBumpsForZeroMajorVersion": {
+          "type": "boolean",
+          "description": "Whether to apply the common convention for 0.x versions where breaking changes bump the minor version (instead of major), and new features bump the patch version (instead of minor). When enabled: 'major' bumps become 'minor' bumps for 0.x versions, 'minor' bumps become 'patch' bumps for 0.x versions. Versions 1.0.0 and above are unaffected. This is false by default for backward compatibility.",
+          "default": false
         },
         "versionActions": {
           "type": "string",
