@@ -5,7 +5,13 @@ import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
 import java.io.File
+import org.gradle.api.Action
+import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.internal.TaskInternal
+import org.gradle.api.internal.provider.ProviderInternal
+import org.gradle.api.internal.tasks.DefaultTaskDependency
+import org.gradle.api.tasks.TaskProvider
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -24,7 +30,8 @@ fun processTask(
     dependencies: MutableSet<Dependency>,
     targetNameOverrides: Map<String, String>,
     gitIgnoreClassifier: GitIgnoreClassifier,
-    targetNamePrefix: String = ""
+    targetNamePrefix: String = "",
+    project: Project,
 ): MutableMap<String, Any?> {
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
@@ -77,15 +84,16 @@ fun processTask(
           task.description ?: "Run ${projectBuildPath}.${task.name}", projectBuildPath, task.name)
   target["metadata"] = metadata
 
-  target["options"] =
-      if (continuous) {
-        mapOf(
-            "taskName" to "${projectBuildPath}:${task.name}",
-            "continuous" to true,
-            "excludeDependsOn" to shouldExcludeDependsOn(task))
-      } else {
-        mapOf("taskName" to "${projectBuildPath}:${task.name}")
-      }
+  target["options"] = buildMap {
+    put("taskName", "${projectBuildPath}:${task.name}")
+    val providerDependencies = findProviderBasedDependencies(task)
+    if (providerDependencies.isNotEmpty()) {
+      put("includeDependsOnTasks", providerDependencies.toList())
+    }
+    if (continuous) {
+      put("continuous", true)
+    }
+  }
 
   return target
 }
@@ -394,12 +402,6 @@ fun getMetadata(
  * Into an external dependency with key: "gradle:commons-lang3-3.13.0" with value: { "type":
  * "gradle", "name": "commons-lang3", "data": { "version": "3.13.0", "packageName":
  * "org.apache.commons.commons-lang3", "hash": "b7263237aa89c1f99b327197c41d0669707a462e",} }
- *
- * @param inputFile Path to the dependency jar.
- * @param externalNodes Map to populate with the resulting ExternalNode.
- * @param logger Gradle logger for warnings and debug info
- * @return The external dependency key (e.g., gradle:commons-lang3-3.13.0), or null if parsing
- *   fails.
  */
 fun getExternalDepFromInputFile(
     inputFile: String,
@@ -470,8 +472,52 @@ fun isCacheable(task: Task): Boolean {
   return !nonCacheableTasks.contains(task.name)
 }
 
-private val tasksWithDependsOn = setOf("bootRun", "bootJar")
+/**
+ * Finds provider-based task dependencies by inspecting lifecycle dependencies without triggering
+ * resolution. Uses Gradle internal APIs to access raw dependency values and check for providers
+ * with known producer tasks.
+ */
+fun findProviderBasedDependencies(task: Task): Set<String> {
+  val logger = task.logger
+  val producerTasks = mutableSetOf<String>()
 
-fun shouldExcludeDependsOn(task: Task): Boolean {
-  return !tasksWithDependsOn.contains(task.name)
+  try {
+    val taskInternal = task as? TaskInternal ?: return emptySet()
+    val lifecycleDeps = taskInternal.lifecycleDependencies
+
+    if (lifecycleDeps is DefaultTaskDependency) {
+      val rawDeps: Set<Any> = lifecycleDeps.mutableValues
+
+      rawDeps.forEach { dep ->
+        when (dep) {
+          is ProviderInternal<*> -> {
+            try {
+              val producer = dep.producer
+              if (producer.isKnown) {
+                producer.visitProducerTasks(
+                    Action { producerTask -> producerTasks.add(producerTask.path) })
+              }
+            } catch (e: Exception) {
+              logger.debug("Could not get producer from provider: ${e.message}")
+            }
+          }
+          is TaskProvider<*> -> {
+            try {
+              producerTasks.add(dep.name)
+            } catch (e: Exception) {
+              logger.debug("Could not get name from TaskProvider: ${e.message}")
+            }
+          }
+        }
+      }
+    }
+
+    if (producerTasks.isNotEmpty()) {
+      logger.info("Task ${task.path} has provider-based dependencies: $producerTasks")
+    }
+  } catch (e: Exception) {
+    logger.debug("Could not analyze provider dependencies for ${task.path}: ${e.message}")
+  }
+
+  return producerTasks
 }

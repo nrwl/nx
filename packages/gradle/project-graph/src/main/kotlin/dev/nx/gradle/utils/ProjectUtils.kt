@@ -151,7 +151,8 @@ fun processTargetsForProject(
               dependencies,
               targetNameOverrides,
               gitIgnoreClassifier,
-              targetNamePrefix)
+              targetNamePrefix,
+              project)
 
       targets[targetName] = target
 
