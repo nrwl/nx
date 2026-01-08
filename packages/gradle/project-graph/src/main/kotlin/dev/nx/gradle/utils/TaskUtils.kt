@@ -476,9 +476,6 @@ fun isCacheable(task: Task): Boolean {
  * Finds provider-based task dependencies by inspecting lifecycle dependencies without triggering
  * resolution. Uses Gradle internal APIs to access raw dependency values and check for providers
  * with known producer tasks.
- *
- * These are the dependencies that will cause "Querying the mapped value of flatmap(...) before task
- * has completed" errors when the provider value is queried before the producing task completes.
  */
 fun findProviderBasedDependencies(task: Task): Set<String> {
   val logger = task.logger
@@ -489,7 +486,6 @@ fun findProviderBasedDependencies(task: Task): Set<String> {
     val lifecycleDeps = taskInternal.lifecycleDependencies
 
     if (lifecycleDeps is DefaultTaskDependency) {
-      // Access raw unresolved values without triggering resolution
       val rawDeps: Set<Any> = lifecycleDeps.mutableValues
 
       rawDeps.forEach { dep ->
@@ -506,10 +502,7 @@ fun findProviderBasedDependencies(task: Task): Set<String> {
             }
           }
           is TaskProvider<*> -> {
-            // TaskProvider itself indicates a lazy task dependency
             try {
-              // Don't resolve the provider, just note that there's a provider-based dependency
-              // We can get the name without fully resolving
               producerTasks.add(dep.name)
             } catch (e: Exception) {
               logger.debug("Could not get name from TaskProvider: ${e.message}")
