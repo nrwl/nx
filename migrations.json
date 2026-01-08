@@ -1,0 +1,20 @@
+{
+  "migrations": [
+    {
+      "version": "22.3.2-beta.0",
+      "requires": { "@angular/build": ">=21.0.0" },
+      "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vitest 4.",
+      "implementation": "./src/migrations/update-22-1-0/create-ai-instructions-for-vitest-4",
+      "package": "@nx/vitest",
+      "name": "update-22-3-2"
+    },
+    {
+      "version": "22.3.2-beta.0",
+      "requires": { "jest": ">=30.0.0" },
+      "description": "Replace removed matcher aliases in Jest v30 with their corresponding matcher",
+      "implementation": "./src/migrations/update-21-3-0/replace-removed-matcher-aliases",
+      "package": "@nx/jest",
+      "name": "replace-removed-matcher-aliases-v22-3"
+    }
+  ]
+}
