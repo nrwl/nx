@@ -419,8 +419,10 @@ impl AppLifeCycle {
         // Set panic hook (identical for both modes)
         std::panic::set_hook(Box::new(move |panic_info| {
             // Only try to restore terminal if it's still in raw mode
+            // NOTE: We use exit_sync() here because panic handlers are sync context.
+            // The 100ms delay is acceptable during a panic - we just need to restore the terminal.
             if let Ok(mut t) = Tui::new() {
-                if let Err(r) = t.exit() {
+                if let Err(r) = t.exit_sync() {
                     debug!("Unable to exit Terminal: {:?}", r);
                 }
             }
@@ -470,13 +472,14 @@ impl AppLifeCycle {
                 if let Some(event) = tui.next().await {
                     // some events have global handling
                     match event {
-                        Event::Resize(w, h) => {
-                            // inline viewport doesn't handle resizing well...
-                            switch_mode(&app, &mut tui, TuiMode::FullScreen, &action_tx);
-                            // try to resize inline terminal anyway
-                            tui.inline_terminal
-                                .resize(ratatui::layout::Rect::new(0, 0, w, h))
-                                .unwrap();
+                        Event::Resize(_w, _h) => {
+                            // Reinitialize the inline terminal with new dimensions.
+                            // The inline viewport's height is fixed at creation time, so we
+                            // need to recreate it when the terminal is resized.
+                            // This properly stops/starts the event stream thanks to our async fix.
+                            if let Err(e) = tui.reinitialize_inline_terminal().await {
+                                debug!("Failed to reinitialize inline terminal: {:?}", e);
+                            }
                         }
                         _ => {
                             // no global handler
@@ -519,9 +522,7 @@ impl AppLifeCycle {
 
             // Cleanup and exit
             debug!("Event loop exited - cleaning up");
-            // Exit the TUI before calling done callback (like master branch does)
-            // The idempotent check in exit() will prevent double-exit when Drop runs
-            tui.exit().ok();
+            tui.exit().await.ok();
             debug!("TUI exited, calling done callback");
             with_shared_app(&app, |a| a.call_done_callback());
             debug!("Done callback called");

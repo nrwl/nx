@@ -213,7 +213,12 @@ impl Tui {
                 let render_delay = render_interval.tick();
                 let crossterm_event = reader.next().fuse();
 
+                // NOTE: `biased;` ensures cancellation is checked FIRST every iteration.
+                // Without it, tokio::select! randomly picks which branch to check,
+                // which can delay cancellation when tick/render intervals are always ready.
                 tokio::select! {
+                  biased;
+
                   _ = _cancellation_token.cancelled() => {
                     debug!("Got a cancellation token");
                     break;
@@ -268,7 +273,36 @@ impl Tui {
         });
     }
 
-    pub fn stop(&self) -> Result<()> {
+    /// Stop the event loop task.
+    ///
+    /// This properly yields to the tokio runtime, allowing the inner task
+    /// to be polled and see the cancellation token.
+    pub async fn stop(&self) -> Result<()> {
+        self.cancel();
+        let mut counter = 0;
+        while !self.task.is_finished() {
+            // IMPORTANT: Use tokio::time::sleep instead of std::thread::sleep!
+            // std::thread::sleep blocks the executor thread, preventing the inner
+            // task from being polled to see the cancellation token.
+            tokio::time::sleep(Duration::from_millis(1)).await;
+            counter += 1;
+            if counter > 50 {
+                self.task.abort();
+            }
+            if counter > 100 {
+                debug!("Failed to abort TUI event loop task after 100ms, moving on anyway");
+                break;
+            }
+        }
+        Ok(())
+    }
+
+    /// Stop the event loop task (blocking version for sync contexts like Drop).
+    ///
+    /// WARNING: This can cause a 100ms delay if called from within an async task
+    /// on a single-threaded runtime, because std::thread::sleep blocks the executor.
+    /// Prefer `stop_async()` when in an async context.
+    pub fn stop_sync(&self) -> Result<()> {
         self.cancel();
         let mut counter = 0;
         while !self.task.is_finished() {
@@ -278,9 +312,10 @@ impl Tui {
                 self.task.abort();
             }
             if counter > 100 {
-                // NOTE: This seems to happen frequently, but no ill effects have been observed yet.
-                // TODO: Investigate further.
-                debug!("Failed to abort TUI event loop task after 100ms, moving on anyway");
+                // This timeout is expected when called from sync context on single-threaded runtime
+                debug!(
+                    "Failed to abort TUI event loop task after 100ms (expected in sync context)"
+                );
                 break;
             }
         }
@@ -355,8 +390,20 @@ impl Tui {
         Ok(())
     }
 
-    pub fn exit(&mut self) -> Result<()> {
-        self.stop()?;
+    /// Exit the TUI.
+    ///
+    /// This properly yields to the runtime while waiting for the event loop task to stop.
+    pub async fn exit(&mut self) -> Result<()> {
+        self.stop().await?;
+        self.restore_terminal()?;
+        Ok(())
+    }
+
+    /// Exit the TUI (sync version - for Drop and panic handlers).
+    ///
+    /// WARNING: Can cause 100ms delay on single-threaded runtimes.
+    pub fn exit_sync(&mut self) -> Result<()> {
+        self.stop_sync()?;
         self.restore_terminal()?;
         Ok(())
     }
@@ -416,6 +463,56 @@ impl Tui {
         Ok(())
     }
 
+    /// Reinitialize the inline terminal with the current terminal dimensions.
+    ///
+    /// The inline terminal's viewport height is fixed at creation time. When the
+    /// terminal is resized, we need to recreate the inline terminal with the new
+    /// dimensions rather than trying to resize an existing viewport (which doesn't
+    /// work well with ratatui's Inline viewport).
+    ///
+    /// This method:
+    /// 1. Stops the event stream task (async, allowing proper cleanup)
+    /// 2. Creates a new inline terminal with current dimensions
+    /// 3. Restarts the event stream task
+    ///
+    /// Should be called when a resize event is received and we want to properly
+    /// handle inline mode resizing.
+    pub async fn reinitialize_inline_terminal(&mut self) -> Result<()> {
+        debug!("Reinitializing inline terminal");
+
+        // Stop the event stream to ensure clean state
+        self.stop().await?;
+
+        // Clear the current inline viewport before recreating
+        // This prevents the old content from being "baked" into the terminal output
+        execute!(
+            std::io::stderr(),
+            cursor::MoveTo(0, 0),
+            crossterm::terminal::Clear(crossterm::terminal::ClearType::FromCursorDown)
+        )?;
+
+        // Get current terminal dimensions
+        let (cols, rows) = crossterm::terminal::size().unwrap_or((80, 24));
+        debug!(
+            "Creating new inline terminal with dimensions: {}x{}",
+            cols, rows
+        );
+
+        // Create new inline terminal with current dimensions
+        self.inline_terminal = Some(ratatui::Terminal::with_options(
+            CrosstermBackend::new(std::io::stderr()),
+            ratatui::TerminalOptions {
+                viewport: ratatui::Viewport::Inline(rows),
+            },
+        )?);
+
+        // Restart the event stream
+        self.start();
+
+        debug!("Inline terminal reinitialized");
+        Ok(())
+    }
+
     pub fn cancel(&self) {
         self.cancellation_token.cancel();
     }
@@ -441,6 +538,10 @@ impl DerefMut for Tui {
 
 impl Drop for Tui {
     fn drop(&mut self) {
-        self.exit().unwrap();
+        // NOTE: Drop cannot be async, so we use the sync version here.
+        // This may cause a 100ms delay on single-threaded runtimes, but Drop
+        // is typically called during cleanup when the delay is less noticeable.
+        // The main event loop should use exit_async() for proper cleanup.
+        self.exit_sync().unwrap();
     }
 }

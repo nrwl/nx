@@ -4,7 +4,7 @@ use crossterm::event::{KeyCode, KeyModifiers};
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use parking_lot::Mutex;
-use ratatui::layout::{Constraint, Direction, Layout, Rect, Size};
+use ratatui::layout::{Constraint, Direction, Layout, Size};
 use ratatui::style::Modifier;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Paragraph;
@@ -20,7 +20,6 @@ const STATUS_MESSAGE_DURATION: std::time::Duration = std::time::Duration::from_s
 use crate::native::tui::utils::{
     calculate_actual_duration_ms, format_duration_with_estimate, get_task_status_style,
 };
-use crate::native::utils::time::current_timestamp_millis;
 use crate::native::{
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
     tasks::types::{Task, TaskGraph},
@@ -82,8 +81,6 @@ pub struct InlineApp {
     total_inserted_lines: u32,
     /// Status message to display in the bottom chrome (e.g., "Output copied")
     status_message: Option<(String, Instant)>,
-    /// Debounce timer for PTY resize operations (milliseconds since epoch)
-    resize_debounce_timer: Option<u128>,
 }
 
 impl InlineApp {
@@ -132,7 +129,6 @@ impl InlineApp {
             scrollback_render_counter: 0,
             total_inserted_lines: 0,
             status_message: None,
-            resize_debounce_timer: None,
         })
     }
 
@@ -162,7 +158,6 @@ impl InlineApp {
             scrollback_render_counter: 19,
             total_inserted_lines: 0,
             status_message: None,
-            resize_debounce_timer: None,
         })
     }
 
@@ -221,8 +216,8 @@ impl InlineApp {
     /// Called when switching to inline mode via init().
     /// This ensures PTY output fits the available space, pushing excess content
     /// into scrollback.
-    fn resize_selected_pty(&mut self, dimensions: Option<(u16, u16)>) {
-        let (rows, cols) = self.calculate_pty_dimensions();
+    fn resize_selected_pty(&mut self, terminal_dimensions: (u16, u16)) {
+        let (rows, cols) = terminal_dimensions;
 
         let mut state = self.core.state().lock();
 
@@ -256,34 +251,6 @@ impl InlineApp {
                 }
             }
         }
-    }
-
-    /// Debounce PTY resize operations to avoid excessive resizing
-    ///
-    /// This prevents performance issues when the terminal is being resized
-    /// rapidly (e.g., during window dragging). Resizes are batched with a
-    /// 200ms debounce window.
-    fn debounce_resize(&mut self, tui: &mut tui::Tui, w: u16, h: u16) {
-        // Get current time in milliseconds
-        let now = current_timestamp_millis() as u128;
-
-        // If we have a timer and it's not expired yet, just return
-        if let Some(timer) = self.resize_debounce_timer {
-            if now < timer {
-                return;
-            }
-        }
-
-        // Set a new timer for 200ms from now
-        self.resize_debounce_timer = Some(now + 200);
-
-        self.core().state().lock().set_dimensions((w, h));
-
-        // Process the resize
-        self.resize_selected_pty(Some((w, h)));
-
-        let rect = Rect::new(0, 0, w, h);
-        tui.resize(rect).ok();
     }
 
     fn dispatch_action(&self, action: Action) {
@@ -590,9 +557,6 @@ impl TuiApp for InlineApp {
                 // In inline mode, show hints in the status bar instead of a popup
                 self.show_hint(message);
             }
-            Action::Resize(w, h) => {
-                self.debounce_resize(tui, w, h);
-            }
             _ => {} // Ignore other actions (including Resize - ratatui doesn't handle it properly for inline viewports)
         }
     }
@@ -608,7 +572,7 @@ impl TuiApp for InlineApp {
     fn init(&mut self, area: Size) -> Result<()> {
         // Resize all existing PTYs to inline dimensions
         // This is critical when switching from full-screen mode
-        self.resize_selected_pty(Some((area.width, area.height)));
+        self.resize_selected_pty((area.height, area.width));
         self.core
             .state()
             .lock()
@@ -616,21 +580,10 @@ impl TuiApp for InlineApp {
         Ok(())
     }
 
-    // === Task Lifecycle (hooks for trait defaults) ===
-
-    fn on_tasks_started(&mut self, tasks: &[Task]) {
-        // Auto-select the first task to display its output
-        if let Some(first_task) = tasks.first() {
-            self.selected_task = Some(first_task.id.clone());
-        }
-    }
-
-    // start_tasks uses trait default which calls on_tasks_started
-
     // === PTY Registration (hooks for trait defaults) ===
 
     fn calculate_pty_dimensions(&self) -> (u16, u16) {
-        let (cols, rows) = self
+        let (rows, cols) = self
             .core
             .state()
             .lock()
