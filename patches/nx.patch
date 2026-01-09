@@ -1,0 +1,12 @@
+diff --git a/src/daemon/server/project-graph-incremental-recomputation.js b/src/daemon/server/project-graph-incremental-recomputation.js
+index 63bf389677938fbbfec741f547cfdde50788fe9d..ffcc09d0c5641aabacb54a5b04380f3dbf8d0e66 100644
+--- a/src/daemon/server/project-graph-incremental-recomputation.js
++++ b/src/daemon/server/project-graph-incremental-recomputation.js
+@@ -77,6 +77,7 @@ async function getCachedSerializedProjectGraphPromise() {
+         return result;
+     }
+     catch (e) {
++        console.error('Error from getCachedSerializedProjectGraphPromise', e);
+         return {
+             error: e,
+             serializedProjectGraph: null,
