@@ -1,4 +1,9 @@
-import { Tree, ensurePackage, offsetFromRoot } from '@nx/devkit';
+import {
+  Tree,
+  ensurePackage,
+  offsetFromRoot,
+  type GeneratorCallback,
+} from '@nx/devkit';
 import { nxVersion } from './versions';
 
 export async function addJest(
@@ -10,7 +15,7 @@ export async function addJest(
   skipPackageJson: boolean,
   addPlugin: boolean,
   runtimeTsconfigFileName: string
-) {
+): Promise<GeneratorCallback> {
   if (unitTestRunner !== 'jest') {
     return () => {};
   }

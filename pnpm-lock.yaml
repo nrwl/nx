@@ -3827,6 +3827,9 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
+      '@nx/vitest':
+        specifier: workspace:*
+        version: link:../vitest
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
