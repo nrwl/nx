@@ -199,7 +199,20 @@ export class TaskOrchestrator {
       const groupId = this.closeGroup();
 
       if (task.continuous) {
-        await this.startContinuousTask(task, groupId);
+        const runningTask = await this.startContinuousTask(task, groupId);
+
+        if (this.initializingTaskIds.has(task.id)) {
+          await new Promise<void>((res) => {
+            runningTask.onExit((code) => {
+              if (!this.tuiEnabled) {
+                if (code > 128) {
+                  process.exit(code);
+                }
+              }
+              res();
+            });
+          });
+        }
       } else {
         await this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId);
       }
@@ -756,18 +769,6 @@ export class TaskOrchestrator {
       // task is already running by another process, we schedule the next tasks
       // and release the threads
       await this.scheduleNextTasksAndReleaseThreads();
-      if (this.initializingTaskIds.has(task.id)) {
-        await new Promise<void>((res) => {
-          runningTask.onExit((code) => {
-            if (!this.tuiEnabled) {
-              if (code > 128) {
-                process.exit(code);
-              }
-            }
-            res();
-          });
-        });
-      }
       return runningTask;
     }
 
@@ -831,18 +832,6 @@ export class TaskOrchestrator {
       }
     });
     await this.scheduleNextTasksAndReleaseThreads();
-    if (this.initializingTaskIds.has(task.id)) {
-      await new Promise<void>((res) => {
-        childProcess.onExit((code) => {
-          if (!this.tuiEnabled) {
-            if (code > 128) {
-              process.exit(code);
-            }
-          }
-          res();
-        });
-      });
-    }
 
     return childProcess;
   }
