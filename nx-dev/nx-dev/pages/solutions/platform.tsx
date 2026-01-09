@@ -22,7 +22,7 @@ export function EnterpriseSolutionsPlatform(): ReactElement {
   const scrollCTAConfig: ButtonLinkProps[] = [
     {
       href: '/contact/sales',
-      variant: 'primary',
+      variant: 'contrast',
       size: 'small',
       title: 'Talk to our team',
       children: 'Talk to our team',

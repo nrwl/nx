@@ -24,7 +24,7 @@ const coFounders = [
 export function CoFounders(): JSX.Element {
   return (
     <section>
-      <div className="slate-100 border border-y bg-slate-50/40 dark:border-slate-800 dark:bg-slate-800/60">
+      <div className="zinc-100 border border-y bg-zinc-50/40 dark:border-zinc-800 dark:bg-zinc-800/60">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-24">
           <div className="space-y-12 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
             <div className="space-y-5 sm:space-y-4">
@@ -48,10 +48,10 @@ export function CoFounders(): JSX.Element {
                       <div>
                         <div className="space-y-4">
                           <div className="space-y-1 text-lg font-medium leading-6">
-                            <h3 className="font-semi-bold leading-8 tracking-tight text-slate-800 dark:text-slate-200">
+                            <h3 className="font-semi-bold leading-8 tracking-tight text-zinc-800 dark:text-zinc-200">
                               {coFounder.name}
                             </h3>
-                            <p className="text-slate-500 dark:text-slate-600">
+                            <p className="text-zinc-500 dark:text-zinc-600">
                               {coFounder.title}
                             </p>
                           </div>
@@ -60,7 +60,7 @@ export function CoFounders(): JSX.Element {
                               <a
                                 title="X"
                                 href={coFounder.social.url}
-                                className="text-slate-500 dark:text-slate-600"
+                                className="text-zinc-500 dark:text-zinc-600"
                               >
                                 <span className="sr-only">X</span>
                                 <coFounder.social.icon className="h-5 w-5" />

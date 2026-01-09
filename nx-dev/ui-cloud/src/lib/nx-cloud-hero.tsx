@@ -139,7 +139,7 @@ export function NxCloudHero(): ReactElement {
               <ButtonLink
                 href="https://cloud.nx.app/get-started"
                 title="Nx AI Integration"
-                variant="primary"
+                variant="contrast"
                 size="default"
                 onClick={() =>
                   sendCustomEvent(

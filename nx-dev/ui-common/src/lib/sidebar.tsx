@@ -63,7 +63,7 @@ function SidebarSection({ section }: { section: MenuSection }): JSX.Element {
       {section.hideSectionHeader ? null : (
         <h4
           data-testid={`section-h4:${section.id}`}
-          className="mb-3 mt-8 border-b border-solid border-slate-200 pb-2 text-xl font-bold dark:border-slate-700 dark:text-slate-100"
+          className="mb-3 mt-8 border-b border-solid border-zinc-200 pb-2 text-xl font-bold dark:border-zinc-700 dark:text-zinc-100"
         >
           {section.name}
         </h4>
@@ -142,8 +142,8 @@ function SidebarSectionItems({
           'group flex items-center py-2',
           '-ml-1 px-1',
           !isNested
-            ? 'text-base text-slate-800 lg:text-base dark:text-slate-200'
-            : 'text-sm text-slate-800 lg:text-sm dark:text-slate-200',
+            ? 'text-base text-zinc-800 lg:text-base dark:text-zinc-200'
+            : 'text-sm text-zinc-800 lg:text-sm dark:text-zinc-200',
           firstLevel ? 'font-semibold' : '',
           item.disableCollapsible ? 'cursor-text' : 'cursor-pointer'
         )}
@@ -195,7 +195,7 @@ function SidebarSectionItems({
               className={cx(
                 'relative',
                 item.id !== 'technologies'
-                  ? 'border-l border-slate-300 pl-2 pl-3 transition-colors duration-150 dark:border-slate-600'
+                  ? 'border-l border-zinc-300 pl-2 pl-3 transition-colors duration-150 dark:border-zinc-600'
                   : ''
               )}
             >
@@ -214,13 +214,13 @@ function SidebarSectionItems({
                 <Link
                   href={subItem.path}
                   className={cx(
-                    'relative block py-1 text-slate-500 transition-colors duration-200 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300'
+                    'relative block py-1 text-zinc-500 transition-colors duration-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-300'
                   )}
                   prefetch={false}
                 >
                   <span
                     className={cx('relative', {
-                      'text-md font-medium text-blue-500 dark:text-sky-500':
+                      'text-md font-medium text-blue-500 dark:text-blue-500':
                         isActiveLink,
                     })}
                   >
@@ -245,7 +245,7 @@ function CollapsibleIcon({
     <svg
       xmlns="http://www.w3.org/2000/svg"
       className={cx(
-        'w-3.5 text-slate-600 transition-all dark:text-slate-400',
+        'w-3.5 text-zinc-600 transition-all dark:text-zinc-400',
         !isCollapsed && 'rotate-90 transform'
       )}
       fill="none"
@@ -361,9 +361,9 @@ export function SidebarMobile({
             leaveFrom="translate-x-0"
             leaveTo="-translate-x-full"
           >
-            <DialogPanel className="relative flex w-full flex-col overflow-y-auto bg-white dark:bg-slate-900">
+            <DialogPanel className="relative flex w-full flex-col overflow-y-auto bg-white dark:bg-zinc-900">
               {/*HEADER*/}
-              <div className="flex w-full items-center border-b border-slate-200 bg-slate-50 p-4 lg:hidden dark:border-slate-700 dark:bg-slate-800/60">
+              <div className="flex w-full items-center border-b border-zinc-200 bg-zinc-50 p-4 lg:hidden dark:border-zinc-700 dark:bg-zinc-800/60">
                 {/*CLOSE BUTTON*/}
                 <button
                   type="button"
@@ -379,7 +379,7 @@ export function SidebarMobile({
                 <div className="ml-auto flex items-center">
                   <Link
                     href="/"
-                    className="flex flex-grow items-center px-4 text-slate-900 lg:px-0 dark:text-white"
+                    className="flex flex-grow items-center px-4 text-zinc-900 lg:px-0 dark:text-white"
                     prefetch={false}
                   >
                     <span className="sr-only">Nx</span>
@@ -389,7 +389,7 @@ export function SidebarMobile({
               </div>
               <div className="p-4">
                 {/*SECTIONS*/}
-                <div className="mt-5 divide-y divide-slate-200">
+                <div className="mt-5 divide-y divide-zinc-200">
                   <div className="grid w-full shrink-0 grid-cols-3 items-center justify-between">
                     {sections.general.map((section) => (
                       <Link
@@ -397,8 +397,8 @@ export function SidebarMobile({
                         href={section.href}
                         className={cx(
                           section.current
-                            ? 'text-blue-600 dark:text-sky-500'
-                            : 'hover:text-slate-900 dark:hover:text-sky-400',
+                            ? 'text-blue-600 dark:text-blue-500'
+                            : 'hover:text-zinc-900 dark:hover:text-blue-400',
                           'whitespace-nowrap p-4 text-center text-sm font-medium'
                         )}
                         aria-current={section.current ? 'page' : undefined}
@@ -415,8 +415,8 @@ export function SidebarMobile({
                         href={section.href}
                         className={cx(
                           section.current
-                            ? 'text-blue-600 dark:text-sky-500'
-                            : 'hover:text-slate-900 dark:hover:text-sky-400',
+                            ? 'text-blue-600 dark:text-blue-500'
+                            : 'hover:text-zinc-900 dark:hover:text-blue-400',
                           'whitespace-nowrap p-4 text-center text-sm font-medium'
                         )}
                         aria-current={section.current ? 'page' : undefined}

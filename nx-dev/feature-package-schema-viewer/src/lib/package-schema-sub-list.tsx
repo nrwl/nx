@@ -116,7 +116,7 @@ export function PackageSchemaSubList({
             ) : null}
 
             {vm.type === 'migration' ? (
-              <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+              <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {filesAndLabels.map((schema) =>
                   typeof schema === 'string' ? (
                     <VersionLabelListItem
@@ -142,7 +142,7 @@ export function PackageSchemaSubList({
 
 export const VersionLabelListItem = ({ label }: { label: string }) => {
   return label ? (
-    <li className="relative flex px-1 pt-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800/60">
+    <li className="relative flex px-1 pt-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-zinc-50 dark:focus-within:ring-blue-500 dark:hover:bg-zinc-800/60">
       <div className="pt-2">
         <span className="text-sm font-bold">
           <Heading2 title={label} />

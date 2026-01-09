@@ -100,7 +100,7 @@ export function WhileCoding(): ReactElement {
       className="mx-auto max-w-7xl scroll-mt-32 px-6 lg:px-8"
     >
       <div className="max-w-2xl">
-        <div className="h-8 w-36 border-t-2 border-blue-500 dark:border-sky-500" />
+        <div className="h-8 w-36 border-t-2 border-blue-500 dark:border-blue-500" />
         <SectionHeading as="h2" variant="title" id="while-coding-title">
           While Coding
         </SectionHeading>

@@ -21,7 +21,7 @@ const PartnerIconGrid: FC<PartnerIconGridProps> = ({ icons }) => {
             href={partnerIcon.url}
             target="_blank"
             rel="noopener noreferrer"
-            className={`flex items-center justify-center border-slate-200/20 p-12 shadow-[0_0px_1px_0_rgba(226,232,240,0.2)] transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white`}
+            className={`flex items-center justify-center border-zinc-200/20 p-12 shadow-[0_0px_1px_0_rgba(226,232,240,0.2)] transition hover:bg-zinc-100/20 hover:text-zinc-950 dark:border-zinc-800/20 dark:hover:border-zinc-600/20 dark:hover:bg-zinc-600/10 dark:hover:text-white`}
           >
             <partnerIcon.icon
               aria-hidden="true"

@@ -27,7 +27,7 @@ export function CallToAction(): ReactElement {
         <svg
           x="50%"
           y={0}
-          className="overflow-visible fill-slate-200/20 dark:fill-slate-800/20"
+          className="overflow-visible fill-zinc-200/20 dark:fill-zinc-800/20"
         >
           <path
             d="M-200 0h201v201h-201Z M600 0h201v201h-201Z M-400 600h201v201h-201Z M200 800h201v201h-201Z"
@@ -59,10 +59,10 @@ export function CallToAction(): ReactElement {
       {/* Content */}
       <div className="mx-auto max-w-2xl text-center">
         <div className="mb-8 flex justify-center">
-          <ReactIcon className="h-24 w-24 text-slate-900 dark:text-white" />
+          <ReactIcon className="h-24 w-24 text-zinc-900 dark:text-white" />
         </div>
 
-        <h2 className="text-3xl font-medium tracking-tight text-slate-950 sm:text-5xl dark:text-white">
+        <h2 className="text-3xl font-medium tracking-tight text-zinc-950 sm:text-5xl dark:text-white">
           Get Started With Nx React
         </h2>
         <p className="mt-8">
@@ -74,7 +74,7 @@ export function CallToAction(): ReactElement {
             href="/nx-api/react/documents/overview"
             title="Get started with the tutorial"
             prefetch={false}
-            className="rounded-md bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+            className="rounded-md bg-zinc-950 px-3.5 py-2.5 text-sm font-semibold text-zinc-100 shadow-sm hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
           >
             Read the Docs{' '}
             <span

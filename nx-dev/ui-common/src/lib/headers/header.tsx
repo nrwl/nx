@@ -104,7 +104,7 @@ export function Header({
     },
     {
       href: 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=header',
-      variant: 'primary',
+      variant: 'contrast',
       size: 'small',
       target: '_blank',
       title: 'Try Nx Cloud for free',
@@ -133,13 +133,13 @@ export function Header({
         }}
       />
       {/*DESKTOP*/}
-      <div className="mx-auto mt-2 hidden w-full max-w-7xl items-center justify-between space-x-10 rounded-xl border border-slate-200/40 bg-white/70 px-4 py-2 shadow-sm backdrop-blur-xl backdrop-saturate-150 lg:flex dark:border-slate-800/60 dark:bg-slate-950/40">
+      <div className="mx-auto mt-2 hidden w-full max-w-7xl items-center justify-between space-x-10 rounded-xl border border-zinc-200/40 bg-white/70 px-4 py-2 shadow-sm backdrop-blur-xl backdrop-saturate-150 lg:flex dark:border-zinc-800/60 dark:bg-zinc-950/40">
         {/*PRIMARY NAVIGATION*/}
         <div className="flex flex-shrink-0 text-sm">
           {/*LOGO*/}
           <Link
             href="/"
-            className="mr-4 flex items-center text-slate-900 dark:text-white"
+            className="mr-4 flex items-center text-zinc-900 dark:text-white"
             prefetch={false}
             onContextMenu={handleContextMenu}
           >
@@ -156,7 +156,7 @@ export function Header({
             <Link
               href={docsUrl}
               title="Documentation"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
               onClick={() =>
                 sendCustomEvent(
@@ -171,7 +171,7 @@ export function Header({
             <Link
               href="/blog"
               title="Blog"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
             >
               Blog
@@ -182,19 +182,19 @@ export function Header({
                 <>
                   <PopoverButton
                     className={cx(
-                      open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
+                      open ? 'text-blue-500 dark:text-blue-500' : '',
+                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-zinc-200'
                     )}
                   >
-                    <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
+                    <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-blue-500">
                       Solutions
                     </span>
                     <ChevronDownIcon
                       className={cx(
                         open
-                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
+                          ? 'rotate-180 transform text-blue-500 dark:text-blue-500'
                           : '',
-                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-blue-500'
                       )}
                       aria-hidden="true"
                     />
@@ -228,19 +228,19 @@ export function Header({
                 <>
                   <PopoverButton
                     className={cx(
-                      open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
+                      open ? 'text-blue-500 dark:text-blue-500' : '',
+                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-zinc-200'
                     )}
                   >
-                    <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
+                    <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-blue-500">
                       Resources
                     </span>
                     <ChevronDownIcon
                       className={cx(
                         open
-                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
+                          ? 'rotate-180 transform text-blue-500 dark:text-blue-500'
                           : '',
-                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-blue-500'
                       )}
                       aria-hidden="true"
                     />
@@ -262,11 +262,11 @@ export function Header({
                 </>
               )}
             </Popover>
-            <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
+            <div className="hidden h-6 w-px bg-zinc-200 md:block dark:bg-zinc-700" />
             <Link
               href="/ai"
               title="AI"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
               onClick={() =>
                 sendCustomEvent('ai-click', 'header-cta', 'page-header')
@@ -277,7 +277,7 @@ export function Header({
             <Link
               href="/nx-cloud"
               title="Nx Cloud"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
               onClick={() =>
                 sendCustomEvent('nx-cloud-click', 'header-cta', 'page-header')
@@ -288,7 +288,7 @@ export function Header({
             <Link
               href="/nx-cloud#plans"
               title="Nx Cloud Pricing"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
               onClick={() =>
                 sendCustomEvent('pricing-click', 'header-cta', 'page-header')
@@ -296,12 +296,12 @@ export function Header({
             >
               Pricing
             </Link>
-            <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
+            <div className="hidden h-6 w-px bg-zinc-200 md:block dark:bg-zinc-700" />
             {/*ENTERPRISE*/}
             <Link
               href="/enterprise"
               title="Nx for Enterprises"
-              className="hidden gap-2 px-3 py-2 font-semibold leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              className="hidden gap-2 px-3 py-2 font-semibold leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
               onClick={() =>
                 sendCustomEvent('enterprise-click', 'header-cta', 'page-header')
@@ -367,7 +367,7 @@ export function Header({
           {/*LOGO*/}
           <Link
             href="/"
-            className="flex items-center text-slate-900 dark:text-white"
+            className="flex items-center text-zinc-900 dark:text-white"
             prefetch={false}
           >
             <span className="sr-only">Nx</span>
@@ -417,13 +417,13 @@ export function Header({
                   leaveTo="translate-x-full"
                 >
                   <DialogPanel className="pointer-events-auto w-screen">
-                    <div className="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-xl dark:bg-slate-900">
+                    <div className="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-xl dark:bg-zinc-900">
                       <div className="px-4 sm:px-6">
                         <div className="flex items-start justify-between">
                           <DialogTitle>
                             <Link
                               href="/"
-                              className="flex items-center text-slate-900 dark:text-white"
+                              className="flex items-center text-zinc-900 dark:text-white"
                               prefetch={false}
                             >
                               <svg
@@ -442,7 +442,7 @@ export function Header({
                           <div className="ml-3 flex h-7 items-center">
                             <button
                               type="button"
-                              className="dark:hovers:text-sky-500 relative rounded-md text-slate-600 hover:text-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-slate-400 dark:focus:ring-sky-500"
+                              className="dark:hovers:text-blue-500 relative rounded-md text-zinc-600 hover:text-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-zinc-400 dark:focus:ring-blue-500"
                               onClick={() => setIsOpen(!isOpen)}
                             >
                               <span className="absolute -inset-2.5" />
@@ -471,7 +471,7 @@ export function Header({
                           >
                             <ButtonLink
                               href="https://cloud.nx.app/get-started"
-                              variant="primary"
+                              variant="contrast"
                               size="small"
                               target="_blank"
                               title="Try Nx Cloud for free"
@@ -508,11 +508,11 @@ export function Header({
                           )}
                         </div>
 
-                        <div className="mt-4 divide-y divide-slate-200 border-b border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+                        <div className="mt-4 divide-y divide-zinc-200 border-b border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
                           <Link
                             href={docsUrl}
                             title="Documentation"
-                            className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                             onClick={() =>
                               sendCustomEvent(
@@ -527,7 +527,7 @@ export function Header({
                           <Link
                             href="/blog"
                             title="Blog"
-                            className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                           >
                             Blog
@@ -539,8 +539,8 @@ export function Header({
                                 <DisclosureButton
                                   className={cx(
                                     open
-                                      ? 'text-blue-500 dark:text-sky-500'
-                                      : 'tex-slate-800 dark:text-slate-200',
+                                      ? 'text-blue-500 dark:text-blue-500'
+                                      : 'tex-zinc-800 dark:text-zinc-200',
                                     'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
                                   )}
                                 >
@@ -549,9 +549,9 @@ export function Header({
                                     aria-hidden="true"
                                     className={cx(
                                       open
-                                        ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
-                                        : 'tex-slate-800 dark:text-slate-200',
-                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                                        ? 'rotate-180 transform text-blue-500 dark:text-blue-500'
+                                        : 'tex-zinc-800 dark:text-zinc-200',
+                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-blue-500'
                                     )}
                                   />
                                 </DisclosureButton>
@@ -582,8 +582,8 @@ export function Header({
                                 <DisclosureButton
                                   className={cx(
                                     open
-                                      ? 'text-blue-500 dark:text-sky-500'
-                                      : 'tex-slate-800 dark:text-slate-200',
+                                      ? 'text-blue-500 dark:text-blue-500'
+                                      : 'tex-zinc-800 dark:text-zinc-200',
                                     'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
                                   )}
                                 >
@@ -592,9 +592,9 @@ export function Header({
                                     aria-hidden="true"
                                     className={cx(
                                       open
-                                        ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
-                                        : 'tex-slate-800 dark:text-slate-200',
-                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                                        ? 'rotate-180 transform text-blue-500 dark:text-blue-500'
+                                        : 'tex-zinc-800 dark:text-zinc-200',
+                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-blue-500'
                                     )}
                                   />
                                 </DisclosureButton>
@@ -617,7 +617,7 @@ export function Header({
                           <Link
                             href="/ai"
                             title="AI"
-                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                             onClick={() =>
                               sendCustomEvent(
@@ -632,7 +632,7 @@ export function Header({
                           <Link
                             href="/nx-cloud"
                             title="Nx Cloud"
-                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                             onClick={() =>
                               sendCustomEvent(
@@ -647,7 +647,7 @@ export function Header({
                           <Link
                             href="/nx-cloud#plans"
                             title="Nx Cloud Pricing"
-                            className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+                            className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                             onClick={() =>
                               sendCustomEvent(
@@ -665,8 +665,8 @@ export function Header({
                                 <DisclosureButton
                                   className={cx(
                                     open
-                                      ? 'text-blue-500 dark:text-sky-500'
-                                      : 'tex-slate-800 dark:text-slate-200',
+                                      ? 'text-blue-500 dark:text-blue-500'
+                                      : 'tex-zinc-800 dark:text-zinc-200',
                                     'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
                                   )}
                                 >
@@ -675,9 +675,9 @@ export function Header({
                                     aria-hidden="true"
                                     className={cx(
                                       open
-                                        ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
-                                        : 'tex-slate-800 dark:text-slate-200',
-                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                                        ? 'rotate-180 transform text-blue-500 dark:text-blue-500'
+                                        : 'tex-zinc-800 dark:text-zinc-200',
+                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-blue-500'
                                     )}
                                   />
                                 </DisclosureButton>
@@ -700,7 +700,7 @@ export function Header({
                           <Link
                             href="/contact"
                             title="Contact"
-                            className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                             onClick={() =>
                               sendCustomEvent(

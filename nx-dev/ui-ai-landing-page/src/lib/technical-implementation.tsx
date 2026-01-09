@@ -13,7 +13,7 @@ export function TechnicalImplementation({
 }: TechnicalImplementationProps): JSX.Element {
   return (
     <section
-      className={`bg-gradient-to-b from-white to-slate-50 py-12 dark:from-slate-900 dark:to-slate-800 ${
+      className={`bg-gradient-to-b from-white to-zinc-50 py-12 dark:from-zinc-900 dark:to-zinc-800 ${
         className || ''
       }`}
     >
@@ -21,7 +21,7 @@ export function TechnicalImplementation({
         <div className="mb-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:gap-12">
           {/* Left Side - Title and How It Works */}
           <div className="flex flex-col justify-center">
-            <h2 className="mb-8 text-left text-3xl font-bold text-slate-900 md:text-4xl dark:text-white">
+            <h2 className="mb-8 text-left text-3xl font-bold text-zinc-900 md:text-4xl dark:text-white">
               Powered by Nx workspace intelligence
             </h2>
 
@@ -31,7 +31,7 @@ export function TechnicalImplementation({
                   <span className="text-lg font-semibold">1</span>
                 </div>
                 <div className="flex-1 pt-1">
-                  <p className="text-slate-600 dark:text-slate-300">
+                  <p className="text-zinc-600 dark:text-zinc-300">
                     Nx daemon runs in the background, maintaining up-to-date
                     workspace metadata
                   </p>
@@ -43,7 +43,7 @@ export function TechnicalImplementation({
                   <span className="text-lg font-semibold">2</span>
                 </div>
                 <div className="flex-1 pt-1">
-                  <p className="text-slate-600 dark:text-slate-300">
+                  <p className="text-zinc-600 dark:text-zinc-300">
                     This rich contextual data is processed and optimized for AI
                     consumption
                   </p>
@@ -55,7 +55,7 @@ export function TechnicalImplementation({
                   <span className="text-lg font-semibold">3</span>
                 </div>
                 <div className="flex-1 pt-1">
-                  <p className="text-slate-600 dark:text-slate-300">
+                  <p className="text-zinc-600 dark:text-zinc-300">
                     Nx Console exposes the data to your AI assistant via an MCP
                   </p>
                 </div>
@@ -82,16 +82,16 @@ export function TechnicalImplementation({
           {/* Flow diagram with connected boxes */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:gap-8">
             {/* Nx Console Box */}
-            <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-6 shadow-md dark:border-slate-700 dark:bg-slate-800/50">
+            <div className="relative rounded-xl border border-zinc-200 bg-zinc-50 p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-800/50">
               <div className="mb-4 flex items-center">
                 <div className="mr-4 flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-blue-500 text-white">
                   <NxConsoleSmallIcon className="h-24 w-24" />
                 </div>
-                <h4 className="text-xl font-bold text-slate-900 dark:text-white">
+                <h4 className="text-xl font-bold text-zinc-900 dark:text-white">
                   Start with Nx Console
                 </h4>
               </div>
-              <p className="text-slate-600 dark:text-slate-300">
+              <p className="text-zinc-600 dark:text-zinc-300">
                 Install the Nx Console Extension, available for VSCode, Cursor,
                 and IntelliJ.
               </p>
@@ -132,16 +132,16 @@ export function TechnicalImplementation({
             </div>
 
             {/* MCP Box */}
-            <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-6 shadow-md dark:border-slate-700 dark:bg-slate-800/50">
+            <div className="relative rounded-xl border border-zinc-200 bg-zinc-50 p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-800/50">
               <div className="mb-4 flex items-center">
                 <div className="mr-4 flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-indigo-500 text-white">
                   <ModelContextProtocolIcon className="h-8 w-8" />
                 </div>
-                <h4 className="text-xl font-bold text-slate-900 dark:text-white">
+                <h4 className="text-xl font-bold text-zinc-900 dark:text-white">
                   Nx MCP
                 </h4>
               </div>
-              <p className="text-slate-600 dark:text-slate-300">
+              <p className="text-zinc-600 dark:text-zinc-300">
                 Nx Console automatically registers its MCP server or you can
                 configure it in any MCP compatible client.
               </p>
@@ -182,7 +182,7 @@ export function TechnicalImplementation({
             </div>
 
             {/* Enhanced LLM Workflow Box */}
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 shadow-md dark:border-slate-700 dark:bg-slate-800/50">
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-800/50">
               <div className="mb-4 flex items-center">
                 <div className="mr-4 flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
                   <svg
@@ -200,11 +200,11 @@ export function TechnicalImplementation({
                     />
                   </svg>
                 </div>
-                <h4 className="text-xl font-bold text-slate-900 dark:text-white">
+                <h4 className="text-xl font-bold text-zinc-900 dark:text-white">
                   Enhanced LLM workflow
                 </h4>
               </div>
-              <p className="text-slate-600 dark:text-slate-300">
+              <p className="text-zinc-600 dark:text-zinc-300">
                 Your existing AI tools understand your workspace architecture
                 without changing your development habits.
               </p>

@@ -28,7 +28,7 @@ export function ChampionPerks(): JSX.Element {
   return (
     <article
       id="making-of-champion"
-      className="relative bg-slate-50 py-28 dark:bg-slate-800/40"
+      className="relative bg-zinc-50 py-28 dark:bg-zinc-800/40"
     >
       <div className="mx-auto max-w-7xl px-4 sm:grid sm:grid-cols-2 sm:gap-8 sm:px-6 lg:px-8">
         <div>
@@ -46,7 +46,7 @@ export function ChampionPerks(): JSX.Element {
             </SectionHeading>
           </header>
           <div className="mt-8 flex gap-16 font-normal">
-            <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
+            <p className="max-w-xl text-lg text-zinc-700 dark:text-zinc-400">
               If you love Nx and want other people to love Nx too, you may have
               the makings of an Nx Champion.
             </p>
@@ -59,7 +59,7 @@ export function ChampionPerks(): JSX.Element {
             <dt>
               <div className="relative flex h-12 w-12">
                 <CheckBadgeIcon
-                  className="h-8 w-8 text-blue-500 dark:text-sky-500"
+                  className="h-8 w-8 text-blue-500 dark:text-blue-500"
                   aria-hidden="true"
                 />
                 <HeartIcon
@@ -71,12 +71,12 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
               </div>
-              <p className="relative mt-4 text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
-                <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>
+              <p className="relative mt-4 text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
+                <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-blue-500"></span>
                 Recognition as a Leader
               </p>
             </dt>
-            <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">
+            <dd className="mt-2 text-base text-zinc-500 dark:text-zinc-400">
               You'll be listed in the Nx Champion directory above, receive
               branded swag for yourself and Nx stickers to give away.
             </dd>
@@ -85,7 +85,7 @@ export function ChampionPerks(): JSX.Element {
             <dt>
               <div className="relative flex h-12 w-12">
                 <NewspaperIcon
-                  className="h-8 w-8 text-blue-500 dark:text-sky-500"
+                  className="h-8 w-8 text-blue-500 dark:text-blue-500"
                   aria-hidden="true"
                 />
                 <VideoCameraIcon
@@ -97,12 +97,12 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
               </div>
-              <p className="relative mt-4 text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
-                <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>
+              <p className="relative mt-4 text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
+                <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-blue-500"></span>
                 Content Promotion
               </p>
             </dt>
-            <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">
+            <dd className="mt-2 text-base text-zinc-500 dark:text-zinc-400">
               You can collaborate with other Nx Champions to improve your blog
               posts and videos. Nx will promote your content on our social media
               channels.
@@ -112,7 +112,7 @@ export function ChampionPerks(): JSX.Element {
             <dt>
               <div className="relative flex h-12 w-12">
                 <KeyIcon
-                  className="h-8 w-8 text-blue-500 dark:text-sky-500"
+                  className="h-8 w-8 text-blue-500 dark:text-blue-500"
                   aria-hidden="true"
                 />
                 <LightBulbIcon
@@ -124,12 +124,12 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
               </div>
-              <p className="relative mt-4 text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
-                <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>
+              <p className="relative mt-4 text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
+                <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-blue-500"></span>
                 Special Access
               </p>
             </dt>
-            <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">
+            <dd className="mt-2 text-base text-zinc-500 dark:text-zinc-400">
               You'll have a dedicated Discord channel with the Nx team and
               monthly video calls with Nx team members to share feedback and
               brainstorm content ideas.
@@ -139,7 +139,7 @@ export function ChampionPerks(): JSX.Element {
             <dt>
               <div className="relative flex h-12 w-12">
                 <UserGroupIcon
-                  className="h-8 w-8 text-blue-500 dark:text-sky-500"
+                  className="h-8 w-8 text-blue-500 dark:text-blue-500"
                   aria-hidden="true"
                 />
                 <UsersIcon
@@ -151,15 +151,15 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
               </div>
-              <p className="relative mt-4 text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
-                <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>
+              <p className="relative mt-4 text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
+                <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-blue-500"></span>
                 Join the Program
               </p>
             </dt>
-            <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">
+            <dd className="mt-2 text-base text-zinc-500 dark:text-zinc-400">
               When you're ready to join, fill out the{' '}
               <a
-                className="text-slate-900 underline dark:text-slate-100"
+                className="text-zinc-900 underline dark:text-zinc-100"
                 href="https://forms.gle/wYd9mC3ka64ki96G7"
               >
                 application form

@@ -41,7 +41,7 @@ export function Hero(): ReactElement {
             <ButtonLink
               href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=homepage_links&utm_campaign=try-nx-cloud"
               title="Get started with Nx & Nx Cloud"
-              variant="primary"
+              variant="contrast"
               size="default"
               onClick={() =>
                 sendCustomEvent('get-started-click', 'hero', 'homepage')

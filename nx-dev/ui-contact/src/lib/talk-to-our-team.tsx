@@ -86,7 +86,7 @@ export function TalkToOurTeam(): ReactElement {
               </VideoPlayerProvider>
             </div>
 
-            <figure className="mt-12 rounded-lg bg-slate-100 p-4 pl-8 dark:bg-slate-800">
+            <figure className="mt-12 rounded-lg bg-zinc-100 p-4 pl-8 dark:bg-zinc-800">
               <blockquote className="text-base/7">
                 <p>
                   “Nx means tooling and efficiency around our software
@@ -102,18 +102,18 @@ export function TalkToOurTeam(): ReactElement {
                 />
                 <div>
                   <div className="font-semibold">Justin Schwartzenberger</div>
-                  <div className="text-slate-500">
+                  <div className="text-zinc-500">
                     Principal Software Engineer, SiriusXM
                   </div>
                 </div>
                 <SiriusxmAlternateIcon
                   aria-hidden="true"
-                  className="ml-auto size-10 rounded text-[#0000EB] dark:bg-slate-200"
+                  className="ml-auto size-10 rounded text-[#0000EB] dark:bg-zinc-200"
                 />
               </figcaption>
             </figure>
           </section>
-          <section className="w-full flex-1 rounded-xl border border-slate-200 bg-white p-8 md:self-start dark:border-slate-800/40">
+          <section className="w-full flex-1 rounded-xl border border-zinc-200 bg-white p-8 md:self-start dark:border-zinc-800/40">
             <HubspotForm
               calendlyFormId="436b5997-6d7f-4220-8726-0ac417eb8f54"
               formId="2e492124-843c-4a6d-87fe-93db27ab4323"

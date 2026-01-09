@@ -21,8 +21,8 @@ export function CourseOverview({ courses }: CourseOverviewProps): JSX.Element {
             >
               <div
                 className={cx(
-                  'group relative h-full w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-8',
-                  'dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-900 dark:hover:shadow-blue-900/20',
+                  'group relative h-full w-full overflow-hidden rounded-2xl border border-zinc-200 bg-white p-8',
+                  'dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-900 dark:hover:shadow-blue-900/20',
                   'before:absolute before:inset-0 before:z-0 before:bg-gradient-to-br before:from-blue-50 before:to-transparent before:opacity-0 before:transition-opacity',
                   'transition-all duration-300 ease-out',
                   'hover:-translate-y-2 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/50',
@@ -30,15 +30,15 @@ export function CourseOverview({ courses }: CourseOverviewProps): JSX.Element {
                 )}
               >
                 <div className="relative z-10">
-                  <p className="text-2xl font-semibold text-slate-900 transition-colors duration-200 dark:text-slate-100">
+                  <p className="text-2xl font-semibold text-zinc-900 transition-colors duration-200 dark:text-zinc-100">
                     {course.title}
                   </p>
 
-                  <div className="mt-2 flex items-center gap-2 text-sm font-medium text-slate-400 dark:text-slate-500">
+                  <div className="mt-2 flex items-center gap-2 text-sm font-medium text-zinc-400 dark:text-zinc-500">
                     {course.authors?.[0]?.name && (
                       <>
                         <span>{course.authors[0].name}</span>
-                        <span className="text-slate-300 dark:text-slate-600">
+                        <span className="text-zinc-300 dark:text-zinc-600">
                           •
                         </span>
                       </>
@@ -48,9 +48,7 @@ export function CourseOverview({ courses }: CourseOverviewProps): JSX.Element {
                         ? `${course.lessons.length} lessons`
                         : `${course.lessonCount} lessons`}
                     </span>
-                    <span className="text-slate-300 dark:text-slate-600">
-                      •
-                    </span>
+                    <span className="text-zinc-300 dark:text-zinc-600">•</span>
                     {course.lessons.length > 0 && (
                       <span className="flex items-center gap-1">
                         <ClockIcon className="h-3 w-3" />
@@ -60,7 +58,7 @@ export function CourseOverview({ courses }: CourseOverviewProps): JSX.Element {
                   </div>
 
                   <div className="mt-4">
-                    <p className="text-[15px] leading-relaxed text-slate-600 transition-colors duration-200 dark:text-slate-400">
+                    <p className="text-[15px] leading-relaxed text-zinc-600 transition-colors duration-200 dark:text-zinc-400">
                       {course.description}
                     </p>
                   </div>

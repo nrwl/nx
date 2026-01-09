@@ -15,7 +15,7 @@ export function ProblemStatement({
             Your AI assistant is blind to your workspace architecture
           </SectionHeading>
 
-          <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
+          <p className="mt-4 text-lg text-zinc-500 dark:text-zinc-400">
             As monorepos scale, AI tools become progressively less effective
             without true workspace understanding.
           </p>
@@ -24,7 +24,7 @@ export function ProblemStatement({
         <div className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2">
           {/* Left Column - Problems */}
           <div>
-            <h3 className="mb-3 text-lg font-bold text-slate-900 dark:text-white">
+            <h3 className="mb-3 text-lg font-bold text-zinc-900 dark:text-white">
               The challenges
             </h3>
 
@@ -50,10 +50,10 @@ export function ProblemStatement({
                   </svg>
                 </div>
                 <div>
-                  <h4 className="mb-1 text-sm font-medium leading-tight text-slate-900 dark:text-slate-100">
+                  <h4 className="mb-1 text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-100">
                     Limited context
                   </h4>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
                     LLMs only see individual files, missing the architectural
                     relationships in large monorepos.
                   </p>
@@ -77,10 +77,10 @@ export function ProblemStatement({
                   </svg>
                 </div>
                 <div>
-                  <h4 className="mb-1 text-sm font-medium leading-tight text-slate-900 dark:text-slate-100">
+                  <h4 className="mb-1 text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-100">
                     Inconsistent output
                   </h4>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
                     AI generates code that doesn't follow team standards or may
                     break components it can't see.
                   </p>
@@ -106,10 +106,10 @@ export function ProblemStatement({
                   </svg>
                 </div>
                 <div>
-                  <h4 className="mb-1 text-sm font-medium leading-tight text-slate-900 dark:text-slate-100">
+                  <h4 className="mb-1 text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-100">
                     No workspace awareness
                   </h4>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
                     AI can't understand project dependencies, ownership, or
                     cross-project integration points.
                   </p>
@@ -136,10 +136,10 @@ export function ProblemStatement({
                   </svg>
                 </div>
                 <div>
-                  <h4 className="mb-1 text-sm font-medium leading-tight text-slate-900 dark:text-slate-100">
+                  <h4 className="mb-1 text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-100">
                     Manual context burden
                   </h4>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
                     Developers must repeatedly provide the same contextual
                     information about project structure.
                   </p>
@@ -150,7 +150,7 @@ export function ProblemStatement({
 
           {/* Right Column - Solutions */}
           <div>
-            <h3 className="mb-3 text-lg font-bold text-slate-900 dark:text-white">
+            <h3 className="mb-3 text-lg font-bold text-zinc-900 dark:text-white">
               How Nx helps
             </h3>
 
@@ -176,10 +176,10 @@ export function ProblemStatement({
                   </svg>
                 </div>
                 <div>
-                  <h4 className="mb-1 text-sm font-medium leading-tight text-slate-900 dark:text-slate-100">
+                  <h4 className="mb-1 text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-100">
                     Architectural awareness
                   </h4>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
                     Move from file-level to workspace-level understanding with
                     rich project relationship metadata.
                   </p>
@@ -203,10 +203,10 @@ export function ProblemStatement({
                   </svg>
                 </div>
                 <div>
-                  <h4 className="mb-1 text-sm font-medium leading-tight text-slate-900 dark:text-slate-100">
+                  <h4 className="mb-1 text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-100">
                     Predictable + intelligent
                   </h4>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
                     Combine consistent generators with AI customization that
                     follows team standards.
                   </p>
@@ -241,10 +241,10 @@ export function ProblemStatement({
                   </svg>
                 </div>
                 <div>
-                  <h4 className="mb-1 text-sm font-medium leading-tight text-slate-900 dark:text-slate-100">
+                  <h4 className="mb-1 text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-100">
                     Integrated workflows
                   </h4>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
                     Connect editor, terminal, CI, and AI for truly context-aware
                     assistance across your entire workspace.
                   </p>
@@ -290,10 +290,10 @@ export function ProblemStatement({
                   </svg>
                 </div>
                 <div>
-                  <h4 className="mb-1 text-sm font-medium leading-tight text-slate-900 dark:text-slate-100">
+                  <h4 className="mb-1 text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-100">
                     Up-to-Date Documentation
                   </h4>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
                     Access current docs and best practices for accurate,
                     workspace-specific guidance.
                   </p>

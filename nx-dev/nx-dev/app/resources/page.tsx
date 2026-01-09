@@ -15,7 +15,7 @@ interface ResourceCardProps {
 
 function Hero(): JSX.Element {
   return (
-    <section className="relative overflow-hidden py-16 dark:from-slate-900 dark:to-slate-950">
+    <section className="relative overflow-hidden py-16 dark:from-zinc-900 dark:to-zinc-950">
       <div className="mx-auto max-w-3xl text-center">
         <SectionHeading
           as="h1"
@@ -27,7 +27,7 @@ function Hero(): JSX.Element {
         <SectionHeading
           as="p"
           variant="subtitle"
-          className="mx-auto mt-6 max-w-3xl text-xl text-slate-600 dark:text-slate-400"
+          className="mx-auto mt-6 max-w-3xl text-xl text-zinc-600 dark:text-zinc-400"
         >
           Learning ⋅ Events ⋅ Company
         </SectionHeading>
@@ -41,8 +41,8 @@ function ResourceCard({ item }: ResourceCardProps) {
     <a href={item.href} className="block h-full transform-gpu">
       <div
         className={cx(
-          'group relative h-full w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-8',
-          'dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-900 dark:hover:shadow-blue-900/20',
+          'group relative h-full w-full overflow-hidden rounded-2xl border border-zinc-200 bg-white p-8',
+          'dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-900 dark:hover:shadow-blue-900/20',
           'before:absolute before:inset-0 before:z-0 before:bg-gradient-to-br before:from-blue-50 before:to-transparent before:opacity-0 before:transition-opacity',
           'transition-all duration-300 ease-out',
           'hover:-translate-y-2 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/50',
@@ -51,15 +51,15 @@ function ResourceCard({ item }: ResourceCardProps) {
       >
         <div className="relative z-10">
           {item.icon && (
-            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-50 group-hover:bg-blue-100 dark:bg-slate-800 dark:group-hover:bg-blue-900">
+            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-50 group-hover:bg-blue-100 dark:bg-zinc-800 dark:group-hover:bg-blue-900">
               <item.icon className="h-8 w-8 text-blue-600 transition-transform duration-300 group-hover:scale-110 dark:text-blue-400" />
             </div>
           )}
-          <p className="text-xl font-medium text-slate-900 transition-colors duration-200 dark:text-slate-100">
+          <p className="text-xl font-medium text-zinc-900 transition-colors duration-200 dark:text-zinc-100">
             {item.name}
           </p>
           {item.description && (
-            <p className="mt-3 text-slate-600 transition-colors duration-200 dark:text-slate-400">
+            <p className="mt-3 text-zinc-600 transition-colors duration-200 dark:text-zinc-400">
               {item.description}
             </p>
           )}

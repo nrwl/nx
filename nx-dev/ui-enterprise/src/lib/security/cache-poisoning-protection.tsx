@@ -54,7 +54,7 @@ export function CachePoisoningProtection(): ReactElement {
 
             <ul className="mt-4 space-y-4 text-base leading-7">
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <ServerIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
@@ -67,7 +67,7 @@ export function CachePoisoningProtection(): ReactElement {
                 main.
               </li>
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <FingerPrintIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
@@ -78,7 +78,7 @@ export function CachePoisoningProtection(): ReactElement {
                 or process that created them.
               </li>
               <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
+                <span className="inline font-semibold text-zinc-950 dark:text-white">
                   <LinkSlashIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"

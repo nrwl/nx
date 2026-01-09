@@ -36,8 +36,8 @@ export function PowerpackFeatures(): ReactElement {
     <section className="relative isolate">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="relative flex justify-center">
-          <div className="pointer-events-auto w-fit justify-between gap-x-6 bg-slate-950 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5 dark:bg-white">
-            <p className="text-sm/6 text-white dark:text-slate-950">
+          <div className="pointer-events-auto w-fit justify-between gap-x-6 bg-zinc-950 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5 dark:bg-white">
+            <p className="text-sm/6 text-white dark:text-zinc-950">
               <strong className="font-semibold">
                 Looking for self-hosted caching?
               </strong>
@@ -52,7 +52,7 @@ export function PowerpackFeatures(): ReactElement {
               <Link
                 href="/remote-cache"
                 title="Self-hosted cache storage"
-                className="text-white dark:text-slate-950"
+                className="text-white dark:text-zinc-950"
               >
                 <span className="absolute inset-0" />
                 <span aria-hidden="true">&rarr;</span>
@@ -61,7 +61,7 @@ export function PowerpackFeatures(): ReactElement {
           </div>
         </div>
         <div className="mt-32 grid grid-cols-1 gap-8 lg:grid-cols-2">
-          {/*<div className="flex max-w-full flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 md:col-span-full lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
+          {/*<div className="flex max-w-full flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-zinc-200 sm:rounded-3xl sm:p-8 md:col-span-full lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
             <div className="xl:max-w-xl">
               <SectionHeading
                 as="h2"
@@ -101,7 +101,7 @@ export function PowerpackFeatures(): ReactElement {
             </div>
           </div>*/}
 
-          <div className="flex flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-none lg:justify-between lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
+          <div className="flex flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-zinc-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-none lg:justify-between lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
             <div className="max-w-2xl">
               <SectionHeading
                 as="h2"
@@ -137,7 +137,7 @@ export function PowerpackFeatures(): ReactElement {
               </ButtonLink>
             </div>
           </div>
-          <div className="flex flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-none lg:justify-between lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
+          <div className="flex flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-zinc-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-none lg:justify-between lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
             <div className="max-w-2xl">
               <SectionHeading
                 as="h2"
@@ -177,7 +177,7 @@ export function PowerpackFeatures(): ReactElement {
               </ButtonLink>
             </div>
           </div>
-          <div className="flex max-w-full flex-col gap-16 bg-slate-50/80 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:col-span-2 lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
+          <div className="flex max-w-full flex-col gap-16 bg-zinc-50/80 px-6 py-16 ring-1 ring-zinc-200 sm:rounded-3xl sm:p-8 lg:col-span-2 lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
             <div className="relative hidden h-full w-64 shrink-0 overflow-hidden lg:block">
               <img
                 src="/images/powerpack/trust-secure-light.avif"
@@ -219,7 +219,7 @@ export function PowerpackFeatures(): ReactElement {
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-16 bg-slate-50/80 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-none lg:justify-between lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
+          <div className="flex flex-col gap-16 bg-zinc-50/80 px-6 py-16 ring-1 ring-zinc-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-none lg:justify-between lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
             <div className="max-w-2xl">
               <SectionHeading
                 as="h2"
@@ -240,7 +240,7 @@ export function PowerpackFeatures(): ReactElement {
               </p>
             </div>
           </div>
-          <div className="flex flex-col gap-16 bg-slate-50/80 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-none lg:justify-between lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
+          <div className="flex flex-col gap-16 bg-zinc-50/80 px-6 py-16 ring-1 ring-zinc-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-none lg:justify-between lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
             <div className="max-w-2xl">
               <SectionHeading
                 as="h2"
@@ -296,7 +296,7 @@ const Card = forwardRef<
     <div
       ref={ref}
       className={cx(
-        'z-10 flex items-center gap-2 rounded-md border border-slate-200 bg-white p-2 py-2 shadow-sm dark:border-white/10 dark:bg-slate-950',
+        'z-10 flex items-center gap-2 rounded-md border border-zinc-200 bg-white p-2 py-2 shadow-sm dark:border-white/10 dark:bg-zinc-950',
         className
       )}
       onMouseEnter={onMouseEnter}
@@ -415,15 +415,15 @@ export function CustomRemoteCacheAnimation(): ReactElement {
         <div className="flex w-full justify-center">
           <Card
             ref={nxRef}
-            className="size-18 relative p-3 transition hover:bg-slate-50 dark:hover:bg-slate-800"
+            className="size-18 relative p-3 transition hover:bg-zinc-50 dark:hover:bg-zinc-800"
           >
             <NxIcon
               aria-hidden="true"
-              className="size-10 text-slate-900 dark:text-white"
+              className="size-10 text-zinc-900 dark:text-white"
             />
             <CircleStackIcon
               aria-hidden="true"
-              className="absolute bottom-1 right-1 size-4 text-slate-900 dark:text-white"
+              className="absolute bottom-1 right-1 size-4 text-zinc-900 dark:text-white"
             />
           </Card>
         </div>
@@ -439,15 +439,15 @@ export function CustomRemoteCacheAnimation(): ReactElement {
               setSelected(null);
             }}
             className={cx(
-              'relative transition hover:bg-slate-50 dark:hover:bg-slate-800',
-              { 'bg-slate-50 dark:bg-slate-800': selected === 'aws' }
+              'relative transition hover:bg-zinc-50 dark:hover:bg-zinc-800',
+              { 'bg-zinc-50 dark:bg-zinc-800': selected === 'aws' }
             )}
           >
             <AmazonS3Icon aria-hidden="true" className="size-4" />
             <Link
               href="/nx-api/powerpack-s3-cache"
               title="Learn how to configure Amazon S3 caching"
-              className="text-center text-xs text-slate-900 dark:text-white"
+              className="text-center text-xs text-zinc-900 dark:text-white"
             >
               <span className="absolute inset-0" />
               Amazon S3
@@ -464,15 +464,15 @@ export function CustomRemoteCacheAnimation(): ReactElement {
               setSelected(null);
             }}
             className={cx(
-              'relative transition hover:bg-slate-50 dark:hover:bg-slate-800',
-              { 'bg-slate-50 dark:bg-slate-800': selected === 'minio' }
+              'relative transition hover:bg-zinc-50 dark:hover:bg-zinc-800',
+              { 'bg-zinc-50 dark:bg-zinc-800': selected === 'minio' }
             )}
           >
             <MinIOIcon aria-hidden="true" className="size-4" />
             <Link
               href="/nx-api/powerpack-s3-cache"
               title="Learn how to configure Amazon S3 caching"
-              className="text-center text-xs text-slate-900 dark:text-white"
+              className="text-center text-xs text-zinc-900 dark:text-white"
             >
               <span className="absolute inset-0" />
               MinIO
@@ -489,8 +489,8 @@ export function CustomRemoteCacheAnimation(): ReactElement {
               setSelected(null);
             }}
             className={cx(
-              'relative transition hover:bg-slate-50 dark:hover:bg-slate-800',
-              { 'bg-slate-50 dark:bg-slate-800': selected === 'networkDrive' }
+              'relative transition hover:bg-zinc-50 dark:hover:bg-zinc-800',
+              { 'bg-zinc-50 dark:bg-zinc-800': selected === 'networkDrive' }
             )}
           >
             <ServerIcon aria-hidden="true" className="size-4" />
@@ -498,7 +498,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             <Link
               href="/nx-api/powerpack-shared-fs-cache"
               title="Learn how to configure network drive caching"
-              className="text-center text-xs text-slate-900 dark:text-white"
+              className="text-center text-xs text-zinc-900 dark:text-white"
             >
               <span className="absolute inset-0" />
               Network Drive
@@ -515,8 +515,8 @@ export function CustomRemoteCacheAnimation(): ReactElement {
               setSelected(null);
             }}
             className={cx(
-              'relative transition hover:bg-slate-50 dark:hover:bg-slate-800',
-              { 'bg-slate-50 dark:bg-slate-800': selected === 'gcp' }
+              'relative transition hover:bg-zinc-50 dark:hover:bg-zinc-800',
+              { 'bg-zinc-50 dark:bg-zinc-800': selected === 'gcp' }
             )}
           >
             <GoogleCloudIcon aria-hidden="true" className="size-4" />
@@ -524,7 +524,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             <Link
               href="/nx-api/powerpack-gcs-cache"
               title="Learn how to configure Google Storage caching"
-              className="text-center text-xs text-slate-900 dark:text-white"
+              className="text-center text-xs text-zinc-900 dark:text-white"
             >
               <span className="absolute inset-0" />
               GCP
@@ -541,8 +541,8 @@ export function CustomRemoteCacheAnimation(): ReactElement {
               setSelected(null);
             }}
             className={cx(
-              'relative transition hover:bg-slate-50 dark:hover:bg-slate-800',
-              { 'bg-slate-50 dark:bg-slate-800': selected === 'azure' }
+              'relative transition hover:bg-zinc-50 dark:hover:bg-zinc-800',
+              { 'bg-zinc-50 dark:bg-zinc-800': selected === 'azure' }
             )}
           >
             <AzureDevOpsIcon aria-hidden="true" className="size-4" />
@@ -550,7 +550,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             <Link
               href="/nx-api/powerpack-azure-cache"
               title="Learn how to configure Azure Blob Storage caching"
-              className="text-center text-xs text-slate-900 dark:text-white"
+              className="text-center text-xs text-zinc-900 dark:text-white"
             >
               <span className="absolute inset-0" />
               Azure
