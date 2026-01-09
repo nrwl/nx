@@ -90,6 +90,8 @@ export class TaskOrchestrator {
   private runningContinuousTasks = new Map<string, RunningTask>();
   private runningRunCommandsTasks = new Map<string, RunningTask>();
 
+  private batchTaskResultsStreamed = new Set<string>();
+
   // endregion internal state
 
   constructor(
@@ -337,6 +339,11 @@ export class TaskOrchestrator {
     // Wait for batch to be processed
     await this.processedBatches.get(batch);
 
+    this.options.lifeCycle.registerRunningBatch?.(batch.id, {
+      executorName: batch.executorName,
+      taskIds: Object.keys(batch.taskGraph.tasks),
+    });
+
     await this.preRunSteps(tasks, { groupId });
 
     let results: TaskResult[] = doNotSkipCache
@@ -345,23 +352,36 @@ export class TaskOrchestrator {
 
     // Run tasks that were not cached
     if (results.length !== taskEntries.length) {
+      await this.postRunSteps(results, doNotSkipCache, { groupId });
+
       const unrunTaskGraph = removeTasksFromTaskGraph(
         batch.taskGraph,
         results.map(({ task }) => task.id)
       );
 
-      const batchResults = await this.runBatch(
+      results = await this.runBatch(
         {
+          id: batch.id,
           executorName: batch.executorName,
           taskGraph: unrunTaskGraph,
         },
-        this.batchEnv
+        this.batchEnv,
+        groupId
       );
-
-      results.push(...batchResults);
     }
 
-    await this.postRunSteps(tasks, results, doNotSkipCache, { groupId });
+    await this.postRunSteps(results, doNotSkipCache, { groupId });
+
+    // Update batch status based on all task results
+    const hasFailures = taskEntries.some(([taskId]) => {
+      const status = this.completedTasks[taskId];
+      return status === 'failure' || status === 'skipped';
+    });
+    this.options.lifeCycle.setBatchStatus?.(
+      batch.id,
+      hasFailures ? 'failure' : 'success'
+    );
+
     this.forkedProcessTaskRunner.cleanUpBatchProcesses();
 
     const tasksCompleted = taskEntries.filter(
@@ -373,6 +393,7 @@ export class TaskOrchestrator {
       await this.applyFromCacheOrRunBatch(
         doNotSkipCache,
         {
+          id: batch.id,
           executorName: batch.executorName,
           taskGraph: removeTasksFromTaskGraph(
             batch.taskGraph,
@@ -396,7 +417,8 @@ export class TaskOrchestrator {
 
   private async runBatch(
     batch: Batch,
-    env: NodeJS.ProcessEnv
+    env: NodeJS.ProcessEnv,
+    groupId: number
   ): Promise<TaskResult[]> {
     const runBatchStart = performance.mark('TaskOrchestrator-run-batch:start');
     try {
@@ -407,8 +429,41 @@ export class TaskOrchestrator {
           this.taskGraph,
           env
         );
+
+      // Stream output from batch process to the batch
+      batchProcess.onOutput((output) => {
+        this.options.lifeCycle.appendBatchOutput?.(batch.id, output);
+      });
+
+      // Stream task results as they complete
+      // Heavy operations (caching, scheduling, complete) happen at batch-end in postRunSteps
+      batchProcess.onTaskResults((taskId, result) => {
+        const task = this.taskGraph.tasks[taskId];
+        const status = result.success ? 'success' : 'failure';
+
+        this.options.lifeCycle.endTasks(
+          [
+            {
+              task: {
+                ...task,
+                startTime: result.startTime,
+                endTime: result.endTime,
+              },
+              status,
+              code: result.success ? 0 : 1,
+              terminalOutput: result.terminalOutput,
+            },
+          ],
+          { groupId }
+        );
+
+        this.batchTaskResultsStreamed.add(taskId);
+        this.options.lifeCycle.setTaskStatus(taskId, parseTaskStatus(status));
+      });
+
       const results = await batchProcess.getResults();
       const batchResultEntries = Object.entries(results);
+
       return batchResultEntries.map(([taskId, result]) => ({
         ...result,
         code: result.success ? 0 : 1,
@@ -506,7 +561,7 @@ export class TaskOrchestrator {
         terminalOutput,
       });
     }
-    await this.postRunSteps([task], results, doNotSkipCache, { groupId });
+    await this.postRunSteps(results, doNotSkipCache, { groupId });
     return results[0];
   }
 
@@ -859,7 +914,6 @@ export class TaskOrchestrator {
   }
 
   private async postRunSteps(
-    tasks: Task[],
     results: {
       task: Task;
       status: TaskStatus;
@@ -869,8 +923,9 @@ export class TaskOrchestrator {
     { groupId }: { groupId: number }
   ) {
     const now = Date.now();
-    for (const task of tasks) {
-      task.endTime = now;
+    for (const { task } of results) {
+      // Only set endTime as fallback (batch provides timing via result.task)
+      task.endTime ??= now;
       await this.recordOutputsHash(task);
     }
 
@@ -910,8 +965,10 @@ export class TaskOrchestrator {
         'cache-results-end'
       );
     }
-    await this.options.lifeCycle.endTasks(
-      results.map((result) => {
+
+    const resultsToReportEndTasks: TaskResult[] = [];
+    for (const result of results) {
+      if (!this.batchTaskResultsStreamed.has(result.task.id)) {
         const code =
           result.status === 'success' ||
           result.status === 'local-cache' ||
@@ -919,15 +976,23 @@ export class TaskOrchestrator {
           result.status === 'remote-cache'
             ? 0
             : 1;
-        return {
-          ...result,
-          task: result.task,
-          status: result.status,
+        resultsToReportEndTasks.push({
           code,
-        };
-      }),
-      { groupId }
-    );
+          status: result.status,
+          task: result.task,
+          terminalOutput: result.terminalOutput,
+        });
+      } else {
+        // clean up the task id from the set since we've already verified it
+        this.batchTaskResultsStreamed.delete(result.task.id);
+      }
+    }
+
+    if (resultsToReportEndTasks.length > 0) {
+      await this.options.lifeCycle.endTasks(resultsToReportEndTasks, {
+        groupId,
+      });
+    }
 
     this.complete(
       results.map(({ task, status }) => {

@@ -1,13 +1,10 @@
 use color_eyre::eyre::Result;
 use napi::bindgen_prelude::External;
-#[cfg(not(test))]
-use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use parking_lot::Mutex;
 use ratatui::layout::Size;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
-use tracing::debug;
 
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::{
@@ -25,6 +22,14 @@ use super::tui_state::TuiState;
 #[cfg(not(test))]
 use super::tui_state::{DoneCallback, ForcedShutdownCallback};
 use super::utils::write_output_to_pty;
+use crate::native::utils::time::current_timestamp_millis;
+
+/// Batch task group information
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BatchInfo {
+    pub executor_name: String,
+    pub task_ids: Vec<String>,
+}
 
 /// Common trait for both full-screen and inline TUI implementations
 ///
@@ -480,5 +485,64 @@ pub trait TuiApp: Send {
     /// Returns a clone of the Arc<Mutex<TuiState>>, which is cheap (just increments ref count).
     fn get_shared_state(&self) -> Arc<Mutex<TuiState>> {
         self.state().clone()
+    }
+
+    // === Batch Methods ===
+    // Default implementations capture batch output via TuiState.
+    // Full-screen mode provides hooks for UI updates.
+
+    /// Register a running batch - captures PTY for output and saves metadata
+    ///
+    /// Default implementation handles core registration:
+    /// - Validates inputs
+    /// - Checks for duplicate registration
+    /// - Creates PTY and registers in TuiState
+    /// - Saves batch metadata for mode switching
+    /// - Calls on_batch_registered hook for mode-specific behavior
+    fn register_running_batch(&mut self, batch_id: String, batch_info: BatchInfo) {
+        if batch_id.is_empty() || batch_info.task_ids.is_empty() {
+            return;
+        }
+
+        // Check if batch is already registered (PTY exists in shared state)
+        if self.state().lock().get_pty_instance(&batch_id).is_some() {
+            return;
+        }
+
+        let start_time = current_timestamp_millis();
+
+        // Register PTY so output is captured regardless of mode
+        let pty = PtyInstance::non_interactive();
+
+        {
+            let mut state = self.state().lock();
+            state.register_pty_instance(batch_id.clone(), Arc::new(pty));
+            state.save_batch_metadata(batch_id.clone(), batch_info.clone(), start_time);
+        }
+
+        // Hook for mode-specific behavior
+        self.on_batch_registered(&batch_id, &batch_info, start_time);
+    }
+
+    /// Hook called after batch is registered
+    ///
+    /// Default: no-op. Override for mode-specific behavior (UI updates, etc.)
+    fn on_batch_registered(&mut self, _batch_id: &str, _batch_info: &BatchInfo, _start_time: i64) {
+        // Default: no-op for inline mode
+    }
+
+    /// Append output to a batch's PTY
+    fn append_batch_output(&mut self, batch_id: String, output: String) {
+        let state = self.state().lock();
+        if let Some(pty) = state.get_pty_instance(&batch_id) {
+            pty.process_output(output.as_bytes());
+        }
+    }
+
+    /// Set batch status (completion) - default is no-op
+    ///
+    /// Full-screen mode overrides to handle batch completion and ungrouping.
+    fn set_batch_status(&mut self, _batch_id: String, _status: String) {
+        // Default: no-op for inline mode (no batch UI)
     }
 }
