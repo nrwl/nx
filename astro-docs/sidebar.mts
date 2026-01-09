@@ -3,10 +3,10 @@ import { getPluginItems } from './src/plugins/utils/plugin-mappings';
 
 export const sidebar: StarlightUserConfig['sidebar'] = [
   // ============================================
-  // 1. LEARN NX (only expanded section)
+  // 1. GETTING STARTED (Day 1 - MINIMAL)
   // ============================================
   {
-    label: 'Learn Nx',
+    label: 'Getting Started',
     collapsed: false,
     items: [
       { label: 'Introduction', link: 'getting-started/intro' },
@@ -30,8 +30,19 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           collapsed: true,
         },
       },
+    ],
+  },
+
+  // ============================================
+  // 2. NX ESSENTIALS (First Month - MOST CONTENT)
+  // ============================================
+  {
+    label: 'Nx Essentials',
+    collapsed: true,
+    items: [
+      // Core Concepts
       {
-        label: 'Concepts',
+        label: 'Core Concepts',
         collapsed: true,
         items: [
           { label: 'Mental Model', link: 'concepts/mental-model' },
@@ -48,17 +59,66 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           { label: 'Generate Code', link: 'features/generate-code' },
         ],
       },
-    ],
-  },
 
-  // ============================================
-  // 2. BUILD WITH NX
-  // ============================================
-  {
-    label: 'Build with Nx',
-    collapsed: true,
-    items: [
-      // --- FEATURES (flattened, no Core wrapper) ---
+      // Module Boundaries - moved from Advanced Nx
+      {
+        label: 'Module Boundaries',
+        collapsed: true,
+        items: [
+          {
+            label: 'Overview',
+            link: 'scale-with-nx/module-boundaries/overview',
+          },
+          {
+            label: 'Tag Multiple Dimensions',
+            link: 'scale-with-nx/module-boundaries/tag-multiple-dimensions',
+          },
+          {
+            label: 'Ban Dependencies with Tags',
+            link: 'scale-with-nx/module-boundaries/ban-dependencies-with-tags',
+          },
+          {
+            label: 'Ban External Imports',
+            link: 'scale-with-nx/module-boundaries/ban-external-imports',
+          },
+          {
+            label: 'Tags Allow List',
+            link: 'scale-with-nx/module-boundaries/tags-allow-list',
+          },
+        ],
+      },
+
+      // CI Basics - elevated from Advanced Nx
+      {
+        label: 'CI Basics',
+        collapsed: true,
+        items: [
+          { label: 'Setup CI', link: 'guides/nx-cloud/setup-ci' },
+          {
+            label: 'Remote Caching',
+            link: 'features/ci-features/remote-cache',
+          },
+          { label: 'Affected Commands', link: 'features/ci-features/affected' },
+          {
+            label: 'GitHub Integration',
+            link: 'features/ci-features/github-integration',
+          },
+          {
+            label: 'Enable AI Features',
+            link: 'guides/nx-cloud/enable-ai-features',
+          },
+          {
+            label: 'Source Control Integration',
+            collapsed: true,
+            autogenerate: {
+              directory: 'guides/Nx Cloud/Source Control Integration',
+              collapsed: true,
+            },
+          },
+        ],
+      },
+
+      // --- FEATURES ---
       { label: 'Manage Releases', link: 'features/manage-releases' },
       {
         label: 'Automate Updating Dependencies',
@@ -67,7 +127,7 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       { label: 'Enhance AI', link: 'features/enhance-ai' },
       { label: 'Nx MCP', link: 'features/nx-mcp' },
 
-      // --- GUIDES (elevated, no longer nested under Core) ---
+      // --- GUIDES ---
       {
         label: 'Guides',
         collapsed: true,
@@ -107,9 +167,6 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           { label: 'CI Deployment', link: 'guides/ci-deployment' },
         ],
       },
-
-      // --- NX PACKAGES (dynamically injected via middleware) ---
-      // Nx, Web, Workspace packages will be added here by sidebar-reference-updater.middleware.ts
 
       // --- TECHNOLOGIES ---
       {
@@ -222,11 +279,6 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         items: getPluginItems('dotnet'),
       },
       {
-        label: 'Module Federation',
-        collapsed: true,
-        items: getPluginItems('module-federation'),
-      },
-      {
         label: 'ESLint',
         collapsed: true,
         items: [
@@ -237,6 +289,12 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
             items: getPluginItems('eslint-plugin', 'eslint'),
           },
         ],
+      },
+      // Module Federation - advanced architecture
+      {
+        label: 'Module Federation',
+        collapsed: true,
+        items: getPluginItems('module-federation'),
       },
       {
         label: 'Build Tools',
@@ -319,46 +377,39 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
   },
 
   // ============================================
-  // 3. SCALE WITH NX
+  // 3. ELEVATE (After First Month - ADVANCED)
   // ============================================
   {
-    label: 'Scale with Nx',
+    label: 'Advanced Nx',
     collapsed: true,
     items: [
-      // Nx Cloud Introduction - elevated
+      // Nx Cloud Introduction
       { label: 'Introduction', link: 'guides/nx-cloud/intro' },
 
-      // CI Features - flattened (no longer nested)
-      { label: 'Remote Caching', link: 'features/ci-features/remote-cache' },
+      // Advanced CI Features - true scaling features
       {
         label: 'Distributed Task Execution',
         link: 'features/ci-features/distribute-task-execution',
-      },
-      { label: 'Affected Commands', link: 'features/ci-features/affected' },
-      {
-        label: 'Flaky Task Detection',
-        link: 'features/ci-features/flaky-tasks',
       },
       {
         label: 'Split E2E Tasks',
         link: 'features/ci-features/split-e2e-tasks',
       },
       {
+        label: 'Flaky Task Detection',
+        link: 'features/ci-features/flaky-tasks',
+      },
+      {
         label: 'Self-Healing CI',
         link: 'features/ci-features/self-healing-ci',
       },
       { label: 'Dynamic Agents', link: 'features/ci-features/dynamic-agents' },
-      {
-        label: 'GitHub Integration',
-        link: 'features/ci-features/github-integration',
-      },
 
-      // Setup & Configuration - grouped
+      // CI Configuration - advanced setup
       {
-        label: 'Setup & Configuration',
+        label: 'CI Configuration',
         collapsed: true,
         items: [
-          { label: 'Setup CI', link: 'guides/nx-cloud/setup-ci' },
           {
             label: 'Optimize Your TTG',
             link: 'guides/nx-cloud/optimize-your-ttg',
@@ -369,10 +420,6 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
             link: 'guides/nx-cloud/personal-access-tokens',
           },
           { label: 'Encryption', link: 'guides/nx-cloud/encryption' },
-          {
-            label: 'Enable AI Features',
-            link: 'guides/nx-cloud/enable-ai-features',
-          },
           { label: 'Record Commands', link: 'guides/nx-cloud/record-commands' },
           {
             label: 'CI Resource Usage',
@@ -384,46 +431,10 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
           },
           { label: 'Manual DTE', link: 'guides/nx-cloud/manual-dte' },
           { label: 'Google Auth', link: 'guides/nx-cloud/google-auth' },
-          {
-            label: 'Source Control Integration',
-            collapsed: true,
-            autogenerate: {
-              directory: 'guides/Nx Cloud/Source Control Integration',
-              collapsed: true,
-            },
-          },
         ],
       },
 
-      // Module Boundaries - moved from Build with Nx
-      {
-        label: 'Module Boundaries',
-        collapsed: true,
-        items: [
-          {
-            label: 'Overview',
-            link: 'scale-with-nx/module-boundaries/overview',
-          },
-          {
-            label: 'Tag Multiple Dimensions',
-            link: 'scale-with-nx/module-boundaries/tag-multiple-dimensions',
-          },
-          {
-            label: 'Ban Dependencies with Tags',
-            link: 'scale-with-nx/module-boundaries/ban-dependencies-with-tags',
-          },
-          {
-            label: 'Ban External Imports',
-            link: 'scale-with-nx/module-boundaries/ban-external-imports',
-          },
-          {
-            label: 'Tags Allow List',
-            link: 'scale-with-nx/module-boundaries/tags-allow-list',
-          },
-        ],
-      },
-
-      // Conformance - moved from Reference
+      // Conformance - enterprise
       {
         label: 'Conformance',
         collapsed: true,
@@ -442,7 +453,7 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         ],
       },
 
-      // Owners - moved from Reference
+      // Owners - enterprise
       {
         label: 'Owners',
         collapsed: true,
@@ -452,11 +463,11 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         ],
       },
 
-      // Nx Console
+      // Tips & Tricks - advanced optimization
       {
-        label: 'Nx Console',
+        label: 'Tips & Tricks',
         collapsed: true,
-        autogenerate: { directory: 'guides/Nx Console', collapsed: true },
+        autogenerate: { directory: 'guides/Tips-n-Tricks', collapsed: true },
       },
 
       // Enterprise
@@ -472,7 +483,7 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
   // 4. EXTEND NX
   // ============================================
   {
-    label: 'Extend Nx',
+    label: 'Custom Nx Plugins',
     collapsed: true,
     autogenerate: { directory: 'extending-nx', collapsed: true },
   },
@@ -504,7 +515,37 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
       { label: 'Glossary', link: 'reference/glossary' },
       { label: '.nxignore', link: 'reference/nxignore' },
       { label: 'Releases', link: 'reference/releases' },
-      { label: 'Nx Console Settings', link: 'reference/nx-console-settings' },
+      // Nx Console - consolidated
+      {
+        label: 'Nx Console',
+        collapsed: true,
+        items: [
+          { label: 'Overview', link: 'guides/nx-console' },
+          {
+            label: 'Run Commands',
+            link: 'guides/nx-console/console-run-command',
+          },
+          {
+            label: 'Generate Code',
+            link: 'guides/nx-console/console-generate-command',
+          },
+          {
+            label: 'Project Details',
+            link: 'guides/nx-console/console-project-details',
+          },
+          { label: 'Migrate UI', link: 'guides/nx-console/console-migrate-ui' },
+          {
+            label: 'Nx Cloud Integration',
+            link: 'guides/nx-console/console-nx-cloud',
+          },
+          { label: 'Settings', link: 'reference/nx-console-settings' },
+          { label: 'Telemetry', link: 'guides/nx-console/console-telemetry' },
+          {
+            label: 'Troubleshooting',
+            link: 'guides/nx-console/console-troubleshooting',
+          },
+        ],
+      },
       { label: 'Nx Cloud CLI', link: 'reference/nx-cloud-cli' },
       {
         label: 'Node/TypeScript Compatibility',
@@ -533,17 +574,15 @@ export const sidebar: StarlightUserConfig['sidebar'] = [
         collapsed: true,
         autogenerate: { directory: 'reference/Deprecated', collapsed: true },
       },
-      // Tips & Tricks - remaining items after split
-      {
-        label: 'Tips & Tricks',
-        collapsed: true,
-        autogenerate: { directory: 'guides/Tips-n-Tricks', collapsed: true },
-      },
-      {
-        label: 'Troubleshooting',
-        collapsed: true,
-        autogenerate: { directory: 'troubleshooting', collapsed: true },
-      },
     ],
+  },
+
+  // ============================================
+  // 6. TROUBLESHOOTING
+  // ============================================
+  {
+    label: 'Troubleshooting',
+    collapsed: true,
+    autogenerate: { directory: 'troubleshooting', collapsed: true },
   },
 ];
