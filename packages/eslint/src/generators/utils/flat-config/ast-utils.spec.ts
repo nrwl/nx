@@ -934,6 +934,114 @@ module.exports = [
         ];"
       `);
     });
+
+    it('should delete entire override block when update returns undefined (ESM)', () => {
+      const content = `import baseConfig from "../../eslint.config.mjs";
+
+export default [
+    ...baseConfig,
+    {
+        files: ["**/*.*"],
+        rules: { "@next/next/no-html-link-for-pages": "off" },
+    },
+    {
+        files: ["my-lib/**/*.ts", "my-lib/**/*.tsx"],
+        rules: {
+            "no-console": "error",
+        },
+    },
+];`;
+
+      const result = replaceOverride(
+        content,
+        '',
+        (o) =>
+          o.rules?.['@next/next/no-html-link-for-pages'] &&
+          o.files?.includes('**/*.*'),
+        () => undefined
+      );
+
+      expect(result).not.toContain('@next/next/no-html-link-for-pages');
+      expect(result).not.toContain('files: ["**/*.*"]');
+      // Other override should remain
+      expect(result).toContain('no-console');
+      expect(result).toMatchInlineSnapshot(`
+        "import baseConfig from "../../eslint.config.mjs";
+
+        export default [
+            ...baseConfig,
+            {
+                files: ["my-lib/**/*.ts", "my-lib/**/*.tsx"],
+                rules: {
+                    "no-console": "error",
+                },
+            },
+        ];"
+      `);
+    });
+
+    it('should delete entire override block when update returns undefined (CJS)', () => {
+      const content = `const baseConfig = require("../../eslint.config.js");
+
+module.exports = [
+    ...baseConfig,
+    {
+        files: ["**/*.*"],
+        rules: { "@next/next/no-html-link-for-pages": "off" },
+    },
+    {
+        files: ["my-lib/**/*.ts"],
+        rules: { "no-console": "error" },
+    },
+];`;
+
+      const result = replaceOverride(
+        content,
+        '',
+        (o) =>
+          o.rules?.['@next/next/no-html-link-for-pages'] &&
+          o.files?.includes('**/*.*'),
+        () => undefined
+      );
+
+      expect(result).not.toContain('@next/next/no-html-link-for-pages');
+      expect(result).toContain('no-console');
+      expect(result).toMatchInlineSnapshot(`
+        "const baseConfig = require("../../eslint.config.js");
+
+        module.exports = [
+            ...baseConfig,
+            {
+                files: ["my-lib/**/*.ts"],
+                rules: { "no-console": "error" },
+            },
+        ];"
+      `);
+    });
+
+    it('should not delete override when update function is not provided', () => {
+      const content = `import baseConfig from "../../eslint.config.mjs";
+
+export default [
+    ...baseConfig,
+    {
+        files: ["**/*.*"],
+        rules: { "@next/next/no-html-link-for-pages": "off" },
+    },
+];`;
+
+      const result = replaceOverride(
+        content,
+        '',
+        (o) =>
+          o.rules?.['@next/next/no-html-link-for-pages'] &&
+          o.files?.includes('**/*.*')
+      );
+
+      // Content should remain unchanged when no update function provided
+      expect(result).toContain('@next/next/no-html-link-for-pages');
+      expect(result).toBe(content);
+    });
   });
 
   describe('removePlugin', () => {
