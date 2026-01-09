@@ -61,13 +61,3 @@ export function normalizePackageJson(
     resolutions,
   };
 }
-
-export function invertObject(
-  record: Record<string, string>
-): Record<string, string> {
-  const result = {};
-  Object.keys(record).forEach((key) => {
-    result[record[key]] = key;
-  });
-  return result;
-}
