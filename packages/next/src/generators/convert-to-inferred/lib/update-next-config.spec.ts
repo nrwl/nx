@@ -13,6 +13,7 @@ describe('UpdateNextConfig', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    jest.clearAllMocks();
   });
 
   it('should update the next config file adding the options passed in', () => {

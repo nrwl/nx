@@ -1,7 +1,7 @@
 import { logger, Tree } from '@nx/devkit';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { join, relative } from 'path';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 
 const FILE_EXTENSION_REGEX = /\.[^.]+$/;
 
@@ -45,10 +45,10 @@ export function convertWebpackConfigToUseNxModuleFederationPlugin(
   webpackConfigContents: string
 ): string {
   let newWebpackConfigContents = webpackConfigContents;
-  let ast = tsquery.ast(webpackConfigContents);
+  let sourceFile = ast(webpackConfigContents);
 
-  const withModuleFederationImportNodes = tsquery(
-    ast,
+  const withModuleFederationImportNodes = query(
+    sourceFile,
     'ImportDeclaration:has(StringLiteral[value=@nx/module-federation/angular])'
   );
   if (withModuleFederationImportNodes.length > 0) {
@@ -60,9 +60,9 @@ export function convertWebpackConfigToUseNxModuleFederationPlugin(
       withModuleFederationImportNode.getEnd()
     )}`;
 
-    ast = tsquery.ast(newWebpackConfigContents);
-    const exportedWithModuleFederationNodes = tsquery(
-      ast,
+    sourceFile = ast(newWebpackConfigContents);
+    const exportedWithModuleFederationNodes = query(
+      sourceFile,
       'ExportAssignment:has(CallExpression > Identifier[name=withModuleFederation])'
     );
     if (exportedWithModuleFederationNodes.length > 0) {
@@ -90,8 +90,8 @@ export function convertWebpackConfigToUseNxModuleFederationPlugin(
     }
   }
 
-  const withModuleFederationRequireNodes = tsquery(
-    ast,
+  const withModuleFederationRequireNodes = query(
+    sourceFile,
     'VariableStatement:has(CallExpression > Identifier[name=withModuleFederation], StringLiteral[value=@nx/module-federation/angular])'
   );
   if (withModuleFederationRequireNodes.length > 0) {
@@ -103,9 +103,9 @@ export function convertWebpackConfigToUseNxModuleFederationPlugin(
       withModuleFederationRequireNode.getEnd()
     )}`;
 
-    ast = tsquery.ast(newWebpackConfigContents);
-    const exportedWithModuleFederationNodes = tsquery(
-      ast,
+    sourceFile = ast(newWebpackConfigContents);
+    const exportedWithModuleFederationNodes = query(
+      sourceFile,
       'ExpressionStatement:has(BinaryExpression > PropertyAccessExpression:has(Identifier[name=module], Identifier[name=exports]), CallExpression:has(Identifier[name=withModuleFederation]))'
     );
     if (exportedWithModuleFederationNodes.length > 0) {

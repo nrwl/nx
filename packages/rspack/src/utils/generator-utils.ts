@@ -702,7 +702,7 @@ export function determineFrameworkAndTarget(
 ): { target: 'node' | 'web'; framework?: Framework } {
   ensureTypescript();
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
 
   // First try to infer if the target is node
   if (options.target !== 'node') {
@@ -721,9 +721,9 @@ export function determineFrameworkAndTarget(
       return { target: options.target, framework: options.framework };
     }
     const appFileContent = tree.read(jestConfigPath, 'utf-8');
-    const file = tsquery.ast(appFileContent);
+    const file = ast(appFileContent);
     // find testEnvironment: 'node' in jest config
-    const testEnvironment = tsquery(
+    const testEnvironment = query(
       file,
       `PropertyAssignment:has(Identifier[name="testEnvironment"]) > StringLiteral[value="node"]`
     );
@@ -736,8 +736,8 @@ export function determineFrameworkAndTarget(
         joinPathFragments(projectRoot, 'src/main.ts'),
         'utf-8'
       );
-      const file = tsquery.ast(appFileContent);
-      const hasNestJsDependency = tsquery(
+      const file = ast(appFileContent);
+      const hasNestJsDependency = query(
         file,
         `ImportDeclaration:has(StringLiteral[value="@nestjs/common"])`
       );

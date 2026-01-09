@@ -1,4 +1,4 @@
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 import { readJson, joinPathFragments, type Tree } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 import { toProjectRelativePath } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
@@ -24,11 +24,9 @@ export function addConfigValuesToConfigFile(
   const IMPORT_PROPERTY_SELECTOR = 'ImportDeclaration';
   const configFileContents = tree.read(configFile, 'utf-8');
 
-  const ast = tsquery.ast(configFileContents);
+  const sourceFile = ast(configFileContents);
   // AST TO GET SECTION TO APPEND TO
-  const importNodes = tsquery(ast, IMPORT_PROPERTY_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const importNodes = query(sourceFile, IMPORT_PROPERTY_SELECTOR);
   let startPosition = 0;
   if (importNodes.length !== 0) {
     const lastImportNode = importNodes[importNodes.length - 1];
@@ -110,7 +108,7 @@ export function ensureViteConfigPathIsRelative(
     return;
   }
 
-  const ast = tsquery.ast(configFileContents);
+  const sourceFile = ast(configFileContents);
   const REACT_FRAMEWORK_SELECTOR_IDENTIFIERS =
     'PropertyAssignment:has(Identifier[name=framework]) PropertyAssignment:has(Identifier[name=name]) StringLiteral[value=@storybook/react-vite]';
   const REACT_FRAMEWORK_SELECTOR_STRING_LITERALS =
@@ -121,35 +119,23 @@ export function ensureViteConfigPathIsRelative(
   const VUE_FRAMEWORK_SELECTOR_STRING_LITERALS =
     'PropertyAssignment:has(StringLiteral[value=framework]) PropertyAssignment:has(StringLiteral[value=name]) StringLiteral[value=@storybook/vue3-vite]';
   const isUsingVite =
-    tsquery(ast, REACT_FRAMEWORK_SELECTOR_IDENTIFIERS, {
-      visitAllChildren: true,
-    }).length > 0 ||
-    tsquery(ast, REACT_FRAMEWORK_SELECTOR_STRING_LITERALS, {
-      visitAllChildren: true,
-    }).length > 0 ||
-    tsquery(ast, VUE_FRAMEWORK_SELECTOR_STRING_LITERALS, {
-      visitAllChildren: true,
-    }).length > 0 ||
-    tsquery(ast, VUE_FRAMEWORK_SELECTOR_IDENTIFIERS, { visitAllChildren: true })
-      .length > 0;
+    query(sourceFile, REACT_FRAMEWORK_SELECTOR_IDENTIFIERS).length > 0 ||
+    query(sourceFile, REACT_FRAMEWORK_SELECTOR_STRING_LITERALS).length > 0 ||
+    query(sourceFile, VUE_FRAMEWORK_SELECTOR_STRING_LITERALS).length > 0 ||
+    query(sourceFile, VUE_FRAMEWORK_SELECTOR_IDENTIFIERS).length > 0;
   if (!isUsingVite) {
     return;
   }
 
   const VITE_CONFIG_PATH_SELECTOR =
     'PropertyAssignment:has(Identifier[name=framework]) PropertyAssignment PropertyAssignment PropertyAssignment:has(Identifier[name=viteConfigPath]) > StringLiteral';
-  let viteConfigPathNodes = tsquery(ast, VITE_CONFIG_PATH_SELECTOR, {
-    visitAllChildren: true,
-  });
+  let viteConfigPathNodes = query(sourceFile, VITE_CONFIG_PATH_SELECTOR);
   if (viteConfigPathNodes.length === 0) {
     const VITE_CONFIG_PATH_SELECTOR_STRING_LITERALS =
       'PropertyAssignment:has(StringLiteral[value=framework]) PropertyAssignment PropertyAssignment PropertyAssignment:has(StringLiteral[value=viteConfigPath]) > StringLiteral:not(StringLiteral[value=viteConfigPath])';
-    viteConfigPathNodes = tsquery(
-      ast,
-      VITE_CONFIG_PATH_SELECTOR_STRING_LITERALS,
-      {
-        visitAllChildren: true,
-      }
+    viteConfigPathNodes = query(
+      sourceFile,
+      VITE_CONFIG_PATH_SELECTOR_STRING_LITERALS
     );
 
     if (viteConfigPathNodes.length === 0) {

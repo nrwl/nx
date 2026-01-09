@@ -16,11 +16,10 @@ export function convertScamToStandalone(
   let newComponentContents = '';
   const COMPONENT_PROPERTY_SELECTOR =
     'ClassDeclaration > Decorator > CallExpression:has(Identifier[name=Component]) ObjectLiteralExpression';
-  const { tsquery } = require('@phenomnomnominal/tsquery');
-  const componentDecoratorMetadataNode = tsquery(
+  const { query } = require('@phenomnomnominal/tsquery');
+  const componentDecoratorMetadataNode = query(
     componentAST,
-    COMPONENT_PROPERTY_SELECTOR,
-    { visitAllChildren: true }
+    COMPONENT_PROPERTY_SELECTOR
   )[0];
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
