@@ -134,7 +134,7 @@ Module._load = function (request, parent, isMain) {
 
     // All retries failed - warn and load from original location
     console.warn(
-      `Warning: Failed to copy native module to cache after ${maxRetries} attempts. ` +
+      `Warning: Failed to copy native module to cache after ${MAX_COPY_RETRIES} attempts. ` +
         `Loading from original location instead. ` +
         `This may cause file locking issues on Windows.`
     );
