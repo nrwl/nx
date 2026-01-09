@@ -1294,11 +1294,15 @@ async function determineAngularOptions(
           name: 'unitTestRunner',
           skip: !parsedArgs.interactive || isCI(),
           choices: [
-            {
-              name: 'vitest-angular',
-              message:
-                'Vitest & Angular [ https://vitest.dev/ & https://angular.dev ]',
-            },
+            ...(bundler === 'esbuild'
+              ? [
+                  {
+                    name: 'vitest-angular',
+                    message:
+                      'Vitest & Angular [ https://vitest.dev/ & https://angular.dev ]',
+                  },
+                ]
+              : []),
             {
               name: 'vitest-analog',
               message:
