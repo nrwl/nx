@@ -65,7 +65,7 @@ export default async function mavenExecutor(
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
   const mavenExecutable = detectMavenExecutable(workspaceRoot);
-  const projectName = context.projectName;
+  const projectName = options.project ?? context.projectName;
   const useMaven4 = isMaven4(workspaceRoot);
   const args = buildMavenArgs(options, projectName, useMaven4);
 
