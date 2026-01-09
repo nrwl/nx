@@ -15,7 +15,7 @@ describe('<%= pluginName %>', () => {
       stdio: 'inherit',
       env: process.env,
     });
-  });
+  }, 30_000);
 
   afterAll(() => {
     if (projectDirectory) {

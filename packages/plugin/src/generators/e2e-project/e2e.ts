@@ -33,7 +33,7 @@ import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import type { VitestGeneratorSchema } from '@nx/vitest';
+import type { VitestGeneratorSchema } from '@nx/vitest/generators';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { Schema } from './schema';
@@ -238,9 +238,11 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
     skipFormat: true,
     addPlugin: options.addPlugin,
     testEnvironment: 'node',
+    coverageProvider: 'none',
   } satisfies Partial<VitestGeneratorSchema>);
 
-  addLocalRegistryScripts(host);
+  const { startLocalRegistryPath, stopLocalRegistryPath } =
+    addLocalRegistryScripts(host);
 
   // Add globalSetup and globalTeardown to vitest config
   // Check for both .mts and .ts extensions (mts is checked first as it's the default created by @nx/vitest)
@@ -248,7 +250,10 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
   let vitestConfigPath: string | undefined;
 
   for (const ext of vitestConfigExtensions) {
-    const configPath = joinPathFragments(options.projectRoot);
+    const configPath = joinPathFragments(
+      options.projectRoot,
+      `vitest.config.${ext}`
+    );
     if (host.exists(configPath)) {
       vitestConfigPath = configPath;
       break;
@@ -261,11 +266,15 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
       offsetFromRoot(options.projectRoot),
       startLocalRegistryPath
     );
-    const globalTeardownPath = join(offsetFromRoot(options.projectRoot));
+    const globalTeardownPath = join(
+      offsetFromRoot(options.projectRoot),
+      stopLocalRegistryPath
+    );
 
     // Insert globalSetup and globalTeardown in the test config
     // Look for 'test: {' and insert our properties right after the opening brace
     const testConfigRegex = /(test:\s*\{\s*)/;
+    const match = testConfigRegex.exec(vitestConfig);
 
     if (match) {
       // Extract the indentation from the next line to maintain consistent formatting
