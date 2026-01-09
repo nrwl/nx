@@ -69,6 +69,75 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "22.4.0": {
+      "version": "22.4.0-beta.2",
+      "packages": {
+        "@remix-run/node": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/react": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/serve": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/dev": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/css-bundle": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/eslint-config": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/server-runtime": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/testing": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/express": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/cloudflare": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/cloudflare-pages": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/cloudflare-workers": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/architect": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/deno": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/route-config": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/fs-routes": {
+          "version": "2.17.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
