@@ -130,7 +130,6 @@ Cypress.SelectorPlayground.defaults({
       "Cypress.ElementSelector.defaults({
         selectorPriority: ['data-cy'],
       });
-
       Cypress.ElementSelector.defaults({
         selectorPriority: ['data-test'],
       });

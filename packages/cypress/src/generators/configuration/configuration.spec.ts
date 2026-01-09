@@ -41,24 +41,23 @@ describe('Cypress e2e configuration', () => {
     });
     expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import { defineConfig } from 'cypress';
-
-        export default defineConfig({
-          e2e: {
-            ...nxE2EPreset(__filename, {
-              cypressDir: 'src',
-              webServerCommands: {
-                default: 'nx run my-app:serve',
-                production: 'nx run my-app:serve:production',
-              },
-              ciWebServerCommand: 'nx run my-app:serve-static',
-            }),
-            baseUrl: 'http://localhost:4200',
-          },
-        });
-        "
-      `);
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'src',
+            webServerCommands: {
+              default: 'nx run my-app:serve',
+              production: 'nx run my-app:serve:production',
+            },
+            ciWebServerCommand: 'nx run my-app:serve-static',
+          }),
+          baseUrl: 'http://localhost:4200',
+        },
+      });
+      "
+    `);
     expect(
       readProjectConfiguration(tree, 'my-app').targets.e2e
     ).toBeUndefined();
@@ -100,18 +99,17 @@ describe('Cypress e2e configuration', () => {
 
     expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import { defineConfig } from 'cypress';
-
-        export default defineConfig({
-          e2e: {
-            ...nxE2EPreset(__filename, {
-              cypressDir: 'src',
-            }),
-          },
-        });
-        "
-      `);
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'src',
+          }),
+        },
+      });
+      "
+    `);
     expect(readProjectConfiguration(tree, 'my-app').targets.e2e)
       .toMatchInlineSnapshot(`
       {
@@ -169,23 +167,22 @@ describe('Cypress e2e configuration', () => {
     });
     expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import { defineConfig } from 'cypress';
-
-        export default defineConfig({
-          e2e: {
-            ...nxE2EPreset(__filename, {
-              cypressDir: 'cypress',
-              webServerCommands: {
-                default: 'nx run my-app:serve',
-                production: 'nx run my-app:serve:production',
-              },
-              ciWebServerCommand: 'nx run my-app:serve-static',
-            }),
-          },
-        });
-        "
-      `);
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'cypress',
+            webServerCommands: {
+              default: 'nx run my-app:serve',
+              production: 'nx run my-app:serve:production',
+            },
+            ciWebServerCommand: 'nx run my-app:serve-static',
+          }),
+        },
+      });
+      "
+    `);
     assertCypressFiles(tree, 'libs/my-lib/cypress');
   });
 
@@ -199,24 +196,23 @@ describe('Cypress e2e configuration', () => {
     assertCypressFiles(tree, 'apps/my-app/src');
     expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import { defineConfig } from 'cypress';
-
-        export default defineConfig({
-          e2e: {
-            ...nxE2EPreset(__filename, {
-              cypressDir: 'src',
-              webServerCommands: {
-                default: 'nx run my-app:serve',
-                production: 'nx run my-app:serve:production',
-              },
-              ciWebServerCommand: 'nx run my-app:serve-static',
-            }),
-            baseUrl: 'http://localhost:4200',
-          },
-        });
-        "
-      `);
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'src',
+            webServerCommands: {
+              default: 'nx run my-app:serve',
+              production: 'nx run my-app:serve:production',
+            },
+            ciWebServerCommand: 'nx run my-app:serve-static',
+          }),
+          baseUrl: 'http://localhost:4200',
+        },
+      });
+      "
+    `);
   });
 
   it('should not overwrite existing e2e target', async () => {
@@ -496,21 +492,20 @@ export default defineConfig({
 
     expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import { defineConfig } from 'cypress';
-        import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
-
-        export default defineConfig({
-          component: nxComponentTestingPreset(__filename),
-          e2e: {
-            ...nxE2EPreset(__filename, {
-              cypressDir: 'src',
-            }),
-            baseUrl: 'http://localhost:4200',
-          },
-        });
-        "
-      `);
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+      import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
+      export default defineConfig({
+        component: nxComponentTestingPreset(__filename),
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'src',
+          }),
+          baseUrl: 'http://localhost:4200',
+        },
+      });
+      "
+    `);
     // these files are only added when there isn't already a cypress config
     expect(
       tree.exists('libs/my-lib/cypress/fixtures/example.json')
@@ -558,19 +553,18 @@ export default defineConfig({
 
     expect(tree.read('libs/my-lib/cypress.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-        "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
-        const { defineConfig } = require('cypress');
-
-        module.exports = defineConfig({
-          e2e: {
-            ...nxE2EPreset(__filename, {
-              cypressDir: 'src',
-            }),
-            baseUrl: 'http://localhost:4200',
-          },
-        });
-        "
-      `);
+      "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
+      const { defineConfig } = require('cypress');
+      module.exports = defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'src',
+          }),
+          baseUrl: 'http://localhost:4200',
+        },
+      });
+      "
+    `);
   });
 
   it('should support --js option with ESM format', async () => {
@@ -590,19 +584,18 @@ export default defineConfig({
 
     expect(tree.read('libs/my-lib/cypress.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import { defineConfig } from 'cypress';
-
-        export default defineConfig({
-          e2e: {
-            ...nxE2EPreset(__filename, {
-              cypressDir: 'src',
-            }),
-            baseUrl: 'http://localhost:4200',
-          },
-        });
-        "
-      `);
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'src',
+          }),
+          baseUrl: 'http://localhost:4200',
+        },
+      });
+      "
+    `);
   });
 
   describe('TS Solution Setup', () => {

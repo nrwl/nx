@@ -8,7 +8,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query, replace } from '@phenomnomnominal/tsquery';
 import { lt, valid } from 'semver';
 import type {
   ImportDeclaration,
@@ -130,7 +130,7 @@ function resolveFramework(
   projectName: string,
   projectGraph: ProjectGraph
 ): string | null {
-  const frameworkProperty = tsquery.query<PropertyAssignment>(
+  const frameworkProperty = query<PropertyAssignment>(
     config,
     'PropertyAssignment:has(Identifier[name=component]) PropertyAssignment:has(Identifier[name=devServer]) PropertyAssignment:has(Identifier[name=framework])'
   )[0];
@@ -143,7 +143,7 @@ function resolveFramework(
 
   // component might be assigned to an Nx preset function call, so we try to
   // infer the framework from the Nx preset import
-  const sourceFile = tsquery.ast(cypressConfig);
+  const sourceFile = ast(cypressConfig);
   const nxPresetModuleSpecifiers = [
     '@nx/angular/plugins/component-testing',
     '@nx/react/plugins/component-testing',
@@ -204,7 +204,7 @@ function migrateAngularFramework(
     if (isLegacyVersion) {
       let needPackage = false;
 
-      updatedFileContent = tsquery.replace(
+      updatedFileContent = replace(
         content,
         'ImportDeclaration',
         importTransformerFactory(
@@ -227,7 +227,7 @@ function migrateAngularFramework(
         );
       }
     } else {
-      updatedFileContent = tsquery.replace(
+      updatedFileContent = replace(
         content,
         'ImportDeclaration',
         importTransformerFactory(
@@ -253,7 +253,7 @@ function migrateReactFramework(
     }
 
     const content = tree.read(filePath, 'utf-8');
-    const updatedContent = tsquery.replace(
+    const updatedContent = replace(
       content,
       'ImportDeclaration',
       importTransformerFactory(content, 'cypress/react18', 'cypress/react')
@@ -268,7 +268,7 @@ function importTransformerFactory(
   sourceModuleSpecifier: string,
   targetModuleSpecifier: string,
   matchImportCallback?: () => void
-): Parameters<typeof tsquery.replace>[2] {
+): Parameters<typeof replace>[2] {
   return (node: ImportDeclaration) => {
     if (
       node.moduleSpecifier.getText().replace(/['"`]/g, '') ===
@@ -286,7 +286,7 @@ function importTransformerFactory(
       return printer.printNode(
         ts.EmitHint.Unspecified,
         updatedImport,
-        tsquery.ast(fileContent)
+        ast(fileContent)
       );
     }
 

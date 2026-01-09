@@ -6,7 +6,7 @@ import {
   addDependenciesToPackageJson,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 import { nxVersion } from '../../utils/versions';
 
 const NX_RSPACK_MODULE_FEDERATION_IMPORT_SELECTOR =
@@ -35,9 +35,9 @@ export default async function migrateWithMfImport(tree: Tree) {
         return;
       }
 
-      const ast = tsquery.ast(contents);
-      const importNodes = tsquery(
-        ast,
+      const sourceFile = ast(contents);
+      const importNodes = query(
+        sourceFile,
         NX_RSPACK_MODULE_FEDERATION_IMPORT_SELECTOR
       );
 
