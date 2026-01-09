@@ -1,6 +1,7 @@
 import { ProjectConfiguration } from '@nx/devkit';
 import {
   checkFilesExist,
+  checkFilesMatchingPatternExist,
   cleanupProject,
   createFile,
   expectTestsPass,
@@ -71,13 +72,12 @@ describe('Nx Plugin', () => {
     );
 
     // Verify vitest config was created
-    const vitestConfigExists =
-      checkFilesExist(`${plugin}-e2e/vitest.config.ts`, false) ||
-      checkFilesExist(`${plugin}-e2e/vitest.config.mts`, false);
-    expect(vitestConfigExists).toBeTruthy();
+    checkFilesMatchingPatternExist(`${plugin}-e2e/vitest.config.(ts|mts)`);
 
     // Run the e2e tests with vitest
-    runCLI(`e2e ${plugin}-e2e`);
+    expect(() => {
+      runCLI(`e2e ${plugin}-e2e`);
+    }).not.toThrow();
   }, 120000);
 
   it('should be able to generate a migration', async () => {

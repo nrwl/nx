@@ -30,7 +30,7 @@
     },
     "coverageProvider": {
       "type": "string",
-      "enum": ["v8", "istanbul", "custom"],
+      "enum": ["v8", "istanbul", "custom", "none"],
       "default": "v8",
       "description": "Coverage provider to use."
     },
