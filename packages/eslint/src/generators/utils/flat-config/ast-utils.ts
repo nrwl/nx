@@ -402,20 +402,28 @@ export function replaceOverride(
       // Deep clone before update (update functions may mutate nested objects)
       const originalData = structuredClone(data);
 
-      let updatedData = update?.(data);
-      if (updatedData) {
-        updatedData = mapFilePaths(updatedData);
+      const updatedData = update?.(data);
+
+      // If update function was provided and returns undefined, delete the entire override block
+      if (update && updatedData === undefined) {
+        changes.push({
+          type: ChangeType.Delete,
+          start: node.pos,
+          length: node.end - node.pos + 1, // +1 for trailing comma
+        });
+      } else if (updatedData) {
+        const mappedData = mapFilePaths(updatedData);
 
         const changedProps = findChangedProperties(
           originalData as Record<string, unknown>,
-          updatedData as Record<string, unknown>
+          mappedData as Record<string, unknown>
         );
 
         for (const propName of changedProps) {
           const originalNode = findPropertyNode(objectLiteralNode, propName);
-          const updatedValue = updatedData[propName];
+          const updatedValue = mappedData[propName];
 
-          if (originalNode && !(propName in updatedData)) {
+          if (originalNode && !(propName in mappedData)) {
             // Delete property that was removed
             changes.push({
               type: ChangeType.Delete,
