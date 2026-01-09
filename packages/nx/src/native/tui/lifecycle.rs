@@ -22,7 +22,7 @@ use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
 use super::inline_app::InlineApp;
 #[cfg(not(test))]
-use super::tui::Tui;
+use super::tui::{Event, Tui};
 use super::tui_app::TuiApp;
 use super::tui_state::TuiState;
 
@@ -300,6 +300,7 @@ impl AppLifeCycle {
             title_text,
             task_graph,
             std::collections::HashMap::new(), // estimated_task_timings - will be set later
+            None,
         )));
 
         // Default to FullScreen mode for the constructor
@@ -397,8 +398,10 @@ impl AppLifeCycle {
         // Set panic hook (identical for both modes)
         std::panic::set_hook(Box::new(move |panic_info| {
             // Only try to restore terminal if it's still in raw mode
+            // NOTE: We use exit_sync() here because panic handlers are sync context.
+            // The 100ms delay is acceptable during a panic - we just need to restore the terminal.
             if let Ok(mut t) = Tui::new() {
-                if let Err(r) = t.exit() {
+                if let Err(r) = t.exit_sync() {
                     debug!("Unable to exit Terminal: {:?}", r);
                 }
             }
@@ -446,6 +449,21 @@ impl AppLifeCycle {
             loop {
                 // Handle events through TuiApp trait
                 if let Some(event) = tui.next().await {
+                    // some events have global handling
+                    match event {
+                        Event::Resize(_w, _h) => {
+                            // Reinitialize the inline terminal with new dimensions.
+                            // The inline viewport's height is fixed at creation time, so we
+                            // need to recreate it when the terminal is resized.
+                            // This properly stops/starts the event stream thanks to our async fix.
+                            if let Err(e) = tui.reinitialize_inline_terminal().await {
+                                debug!("Failed to reinitialize inline terminal: {:?}", e);
+                            }
+                        }
+                        _ => {
+                            // no global handler
+                        }
+                    }
                     // Pass event to app - mode switching is handled via Action::SwitchMode
                     // which is dispatched by the apps and processed in the action loop below
                     let _ = with_shared_app(&app, |a| a.handle_event(event, &action_tx));
@@ -483,9 +501,7 @@ impl AppLifeCycle {
 
             // Cleanup and exit
             debug!("Event loop exited - cleaning up");
-            // Exit the TUI before calling done callback (like master branch does)
-            // The idempotent check in exit() will prevent double-exit when Drop runs
-            tui.exit().ok();
+            tui.exit().await.ok();
             debug!("TUI exited, calling done callback");
             with_shared_app(&app, |a| a.call_done_callback());
             debug!("Done callback called");

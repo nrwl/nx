@@ -116,6 +116,7 @@ impl InlineApp {
             title_text,
             task_graph,
             HashMap::new(), // estimated_task_timings - will be set later via set_estimated_task_timings()
+            None,
         )));
 
         Ok(Self {
@@ -215,35 +216,38 @@ impl InlineApp {
     /// Called when switching to inline mode via init().
     /// This ensures PTY output fits the available space, pushing excess content
     /// into scrollback.
-    fn resize_all_ptys(&mut self) {
-        let (rows, cols) = self.calculate_pty_dimensions();
+    fn resize_selected_pty(&mut self, forced_dimensions: Option<(u16, u16)>) {
+        let (rows, cols) = forced_dimensions.unwrap_or_else(|| self.calculate_pty_dimensions());
 
         let mut state = self.core.state().lock();
 
         // Collect task IDs to avoid holding immutable borrow during mutation
-        let task_ids: Vec<String> = state.get_pty_instances().keys().cloned().collect();
+        let task_id = self.selected_task.clone();
 
-        // Resize each PTY instance by replacing the Arc
-        for task_id in task_ids {
-            if let Some(pty_arc) = state.get_pty_instance(&task_id) {
-                let (current_rows, current_cols) = pty_arc.get_dimensions();
+        let task_id = if let Some(task_id) = task_id {
+            task_id
+        } else {
+            return;
+        };
 
-                // Only resize if dimensions actually changed
-                if current_rows != rows || current_cols != cols {
-                    tracing::trace!(
-                        "InlineApp resizing PTY for {} from {}x{} to {}x{}",
-                        task_id,
-                        current_cols,
-                        current_rows,
-                        cols,
-                        rows
-                    );
+        if let Some(pty_arc) = state.get_pty_instance(&task_id) {
+            let (current_rows, current_cols) = pty_arc.get_dimensions();
 
-                    // Clone the PTY instance, resize it, and replace the Arc
-                    let mut pty_clone = pty_arc.as_ref().clone();
-                    if let Ok(()) = pty_clone.resize(rows, cols) {
-                        state.register_pty_instance(task_id, Arc::new(pty_clone));
-                    }
+            // Only resize if dimensions actually changed
+            if current_rows != rows || current_cols != cols {
+                tracing::trace!(
+                    "InlineApp resizing PTY for {} from {}x{} to {}x{}",
+                    task_id,
+                    current_cols,
+                    current_rows,
+                    cols,
+                    rows
+                );
+
+                // Clone the PTY instance, resize it, and replace the Arc
+                let mut pty_clone = pty_arc.as_ref().clone();
+                if let Ok(()) = pty_clone.resize(rows, cols) {
+                    state.register_pty_instance(task_id, Arc::new(pty_clone));
                 }
             }
         }
@@ -565,38 +569,41 @@ impl TuiApp for InlineApp {
 
     // === Initialization ===
 
-    fn init(&mut self, _area: Size) -> Result<()> {
+    fn init(&mut self, area: Size) -> Result<()> {
         // Resize all existing PTYs to inline dimensions
         // This is critical when switching from full-screen mode
-        self.resize_all_ptys();
+        self.resize_selected_pty(Some((area.height, area.width)));
+        self.core
+            .state()
+            .lock()
+            .set_dimensions((area.width, area.height));
         Ok(())
     }
-
-    // === Task Lifecycle (hooks for trait defaults) ===
-
-    fn on_tasks_started(&mut self, tasks: &[Task]) {
-        // Auto-select the first task to display its output
-        if let Some(first_task) = tasks.first() {
-            self.selected_task = Some(first_task.id.clone());
-        }
-    }
-
-    // start_tasks uses trait default which calls on_tasks_started
 
     // === PTY Registration (hooks for trait defaults) ===
 
     fn calculate_pty_dimensions(&self) -> (u16, u16) {
-        // Get terminal size
-        if let Ok((cols, rows)) = crossterm::terminal::size() {
-            // Reserves 2 rows at the bottom - one for the inline chrome,
-            // one for space between terminal output and chrome.
-            let content_height = rows.saturating_sub(2);
-            (content_height, cols)
-        } else {
-            // Fallback to reasonable defaults
-            debug!("Failed to get terminal size, using default PTY dimensions");
-            (20, 80)
-        }
+        let (rows, cols) = self
+            .core
+            .state()
+            .lock()
+            .get_dimensions()
+            .unwrap_or_else(|| {
+                // Get terminal size
+                debug!("Getting terminal size for PTY dimensions inline_app");
+                if let Ok((cols, rows)) = crossterm::terminal::size() {
+                    (rows, cols)
+                } else {
+                    // Fallback to reasonable defaults
+                    debug!("Failed to get terminal size, using default PTY dimensions");
+                    (20, 80)
+                }
+            });
+
+        // Reserves 2 rows at the bottom - one for the inline chrome,
+        // one for space between terminal output and chrome.
+        let content_height = rows.saturating_sub(2);
+        (content_height, cols)
     }
 
     fn on_pty_registered(&mut self, task_id: &str) {
@@ -1118,6 +1125,7 @@ mod tests {
             String::from("Existing"),
             existing_graph,
             HashMap::new(),
+            None,
         )));
 
         // Create app with existing state
@@ -1534,6 +1542,7 @@ mod tests {
             String::from("Test"),
             task_graph,
             HashMap::new(),
+            None,
         )));
 
         // Create app with existing state (simulating mode switch)
@@ -1696,6 +1705,7 @@ mod integration_tests {
             String::from("Shared"),
             task_graph,
             HashMap::new(),
+            None,
         )));
 
         // Create two apps with same state
