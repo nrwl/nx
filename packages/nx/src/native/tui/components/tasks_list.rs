@@ -322,13 +322,15 @@ impl TasksList {
                 // If we're in run one mode, and the task is an initiating task, highlight it
                 if matches!(self.run_mode, RunMode::RunOne)
                     && self.initiating_tasks.contains(task_name)
-                    && !matches!(task.status, TaskStatus::InProgress)
+                    && !matches!(task.status, TaskStatus::InProgress | TaskStatus::Shared)
                 {
                     highlighted.push(task_name.clone());
                     continue;
                 }
                 match task.status {
-                    TaskStatus::InProgress => in_progress.push(task_name.clone()),
+                    TaskStatus::InProgress | TaskStatus::Shared => {
+                        in_progress.push(task_name.clone())
+                    }
                     TaskStatus::NotStarted => pending.push(task_name.clone()),
                     _ => completed.push(task_name.clone()),
                 }
@@ -2442,6 +2444,43 @@ mod tests {
                 TaskStatus::Skipped,
             ))
             .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_shared_task_grouped_with_in_progress_section() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+
+        tasks_list
+            .update(Action::StartTasks(vec![
+                test_tasks[0].clone(),
+                test_tasks[1].clone(),
+            ]))
+            .ok();
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[1].id.clone(),
+                TaskStatus::Success,
+            ))
+            .ok();
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[2].id.clone(),
+                TaskStatus::Shared,
+            ))
+            .ok();
+
+        let (entries, in_progress_size) =
+            tasks_list.create_entries_with_separator(&tasks_list.filtered_names);
+        assert_eq!(in_progress_size, 2);
+        assert_eq!(entries.first(), Some(&Some(test_tasks[0].id.clone())));
+        assert_eq!(entries.get(1), Some(&Some(test_tasks[2].id.clone())));
+        assert_eq!(entries.get(in_progress_size), Some(&None));
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
