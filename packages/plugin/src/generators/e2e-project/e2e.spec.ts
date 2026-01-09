@@ -3,11 +3,11 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import {
   Tree,
   addProjectConfiguration,
-  readProjectConfiguration,
-  readJson,
   getProjects,
-  writeJson,
+  readJson,
+  readProjectConfiguration,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { e2eProjectGenerator } from './e2e';
@@ -217,7 +217,7 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
       testRunner: 'vitest',
-      addPlugin: true,
+      addPlugin: false,
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
