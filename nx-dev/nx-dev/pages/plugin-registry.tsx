@@ -31,7 +31,7 @@ interface BrowseProps {
 
 export async function getStaticProps(): Promise<{ props: BrowseProps }> {
   const res = await fetch(
-    'https://raw.githubusercontent.com/nrwl/nx/master/community/approved-plugins.json'
+    'https://raw.githubusercontent.com/nrwl/nx/refs/heads/20.8.x/community/approved-plugins.json'
   );
   const pluginList = await res.json();
 
