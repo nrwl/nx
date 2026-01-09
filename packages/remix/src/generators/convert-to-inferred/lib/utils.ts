@@ -1,5 +1,4 @@
 import { type Tree, joinPathFragments } from '@nx/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
 
 export const REMIX_PROPERTY_MAPPINGS = {
   sourcemap: 'sourcemap',

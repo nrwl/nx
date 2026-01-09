@@ -1,5 +1,5 @@
 import { type Tree } from '@nx/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 import { indentBy } from './indent-by';
 
 const DEFINE_CONFIG_SELECTOR =
@@ -26,11 +26,11 @@ export function addBuildPlugin(
   configContents = `import { ${pluginName} } from '${importPath}';
   ${configContents}`;
 
-  const ast = tsquery.ast(configContents);
+  const sourceFile = ast(configContents);
 
-  const pluginsArrayNodes = tsquery(ast, PLUGINS_ARRAY_SELECTOR);
+  const pluginsArrayNodes = query(sourceFile, PLUGINS_ARRAY_SELECTOR);
   if (pluginsArrayNodes.length === 0) {
-    const defineConfigNodes = tsquery(ast, DEFINE_CONFIG_SELECTOR);
+    const defineConfigNodes = query(sourceFile, DEFINE_CONFIG_SELECTOR);
     if (defineConfigNodes.length === 0) {
       throw new Error(
         `Could not find defineConfig in the config file at ${pathToConfigFile}.`

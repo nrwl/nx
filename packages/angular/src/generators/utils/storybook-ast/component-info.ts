@@ -14,7 +14,8 @@ import type { EntryPoint } from './entry-point';
 import { getModuleDeclarations } from './module-info';
 
 let tsModule: typeof import('typescript');
-let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
+let tsqueryAst: typeof import('@phenomnomnominal/tsquery').ast;
+let tsqueryQuery: typeof import('@phenomnomnominal/tsquery').query;
 
 export interface ComponentInfo {
   componentFileName: string;
@@ -112,19 +113,20 @@ export function getStandaloneComponentsInfo(
 }
 
 function getStandaloneComponents(tree: Tree, filePath: string): string[] {
-  if (!tsquery) {
+  if (!tsqueryAst) {
     ensureTypescript();
-    tsquery = require('@phenomnomnominal/tsquery').tsquery;
+    const tsqueryModule = require('@phenomnomnominal/tsquery');
+    tsqueryAst = tsqueryModule.ast;
+    tsqueryQuery = tsqueryModule.query;
   }
   const fileContent = tree.read(filePath, 'utf-8');
-  const ast = tsquery.ast(fileContent);
+  const sourceFile = tsqueryAst(fileContent);
 
   // standalone: true is the default, so all components except those with
   // standalone: false are considered standalone
-  const standaloneComponentNodes = tsquery<Identifier>(
-    ast,
-    'ClassDeclaration:has(Decorator > CallExpression:has(Identifier[name=Component]) ObjectLiteralExpression:not(:has(PropertyAssignment:has(Identifier[name=standalone]) > FalseKeyword))) > Identifier',
-    { visitAllChildren: true }
+  const standaloneComponentNodes = tsqueryQuery<Identifier>(
+    sourceFile,
+    'ClassDeclaration:has(Decorator > CallExpression:has(Identifier[name=Component]) ObjectLiteralExpression:not(:has(PropertyAssignment:has(Identifier[name=standalone]) > FalseKeyword))) > Identifier'
   );
 
   return standaloneComponentNodes.map((component) => component.getText());
@@ -174,18 +176,19 @@ function tryGetComponentInfo(
   symbolName: string
 ): ComponentInfo | undefined {
   try {
-    if (!tsquery) {
+    if (!tsqueryQuery) {
       ensureTypescript();
-      tsquery = require('@phenomnomnominal/tsquery').tsquery;
+      const tsqueryModule = require('@phenomnomnominal/tsquery');
+      tsqueryAst = tsqueryModule.ast;
+      tsqueryQuery = tsqueryModule.query;
     }
 
     const moduleFolderPath = dirname(moduleFilePath);
 
     // try to get the component from the same file (inline scam)
-    const node = tsquery(
+    const node = tsqueryQuery(
       sourceFile,
-      `ClassDeclaration:has(Decorator > CallExpression > Identifier[name=Component]):has(Identifier[name=${symbolName}])`,
-      { visitAllChildren: true }
+      `ClassDeclaration:has(Decorator > CallExpression > Identifier[name=Component]):has(Identifier[name=${symbolName}])`
     )[0];
 
     if (node) {
