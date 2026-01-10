@@ -29,6 +29,13 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
   // Detect Maven home and version once - used for argument building and executor selection
   private val mavenDiscovery = MavenHomeDiscovery(workspaceRoot).discoverMavenHomeWithVersion()
   private val isMaven4 = mavenDiscovery?.version?.startsWith("4") == true
+  private val resultEmitter: ResultEmitter = createResultEmitter()
+
+  private fun createResultEmitter(): ResultEmitter {
+    val port = options.communicationPort
+      ?: throw IllegalArgumentException("communicationPort is required for result reporting")
+    return TcpResultEmitter(port, gson)
+  }
 
   // Maven executor - automatically selects best available strategy:
   // - Maven 4.x: ResidentMavenExecutor with context caching
@@ -85,8 +92,9 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
 
             val result = executeSingleTask(taskId, results)
 
-            // Emit result to stderr for streaming to Nx
-            emitResult(taskId, result)
+            // Emit result via configured emitter (TCP or Stderr)
+            log.debug("Emitting result for task: $taskId (success=${result.success})")
+            resultEmitter.emit(taskId, result)
 
             // Record task state
             val success = results[taskId]?.success == true
@@ -107,8 +115,8 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
               val newRoots = newGraph.roots.filter { it !in previousRoots && !taskStates.containsKey(it) }
               newRoots.forEach { newTaskId ->
                 if (!taskStates.containsKey(newTaskId)) {
+                  log.debug("Task $newTaskId became available after $taskId")
                   taskQueue.offer(newTaskId)
-                  log.debug("Added newly available task to queue: $newTaskId")
                 }
               }
 
@@ -136,6 +144,9 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       // Record build states for all projects that had tasks executed
       recordBuildStatesForExecutedTasks()
     } finally {
+      // Close result emitter
+      resultEmitter.close()
+
       // Threads are daemon threads, so they won't prevent JVM exit
       // Just try to shutdown gracefully without waiting
       try {
@@ -271,25 +282,6 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       results[taskId] = result
       result
     }
-  }
-
-  /**
-   * Emit a task result to stderr as JSON for streaming to Nx.
-   * Format: NX_RESULT:{"task":"taskId","result":{...}}
-   */
-  private fun emitResult(taskId: String, result: TaskResult) {
-    val resultData = mapOf(
-      "task" to taskId,
-      "result" to mapOf(
-        "success" to result.success,
-        "terminalOutput" to result.terminalOutput,
-        "startTime" to result.startTime,
-        "endTime" to result.endTime
-      )
-    )
-    val json = gson.toJson(resultData)
-    System.err.println("NX_RESULT:$json")
-    System.err.flush()
   }
 
   private fun buildArguments(mavenBatchTask: MavenBatchTask): List<String> {

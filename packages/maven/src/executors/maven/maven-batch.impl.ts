@@ -6,6 +6,7 @@ import { createInterface } from 'readline';
 import { TaskResult } from 'nx/src/config/misc-interfaces';
 import { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
 import { MavenExecutorSchema } from './schema';
+import * as net from 'net';
 
 /**
  * Get path to the batch runner JAR
@@ -89,6 +90,63 @@ export default async function* mavenBatchExecutor(
   // Build task map for batch runner
   const tasks = buildTasks(taskGraph, inputs);
 
+  // Set up TCP server for communication
+  const server = net.createServer();
+  const port = await new Promise<number>((resolve) => {
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address() as net.AddressInfo;
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.log(
+          `[Maven Batch] TCP server listening on 127.0.0.1:${address.port}`
+        );
+      }
+      resolve(address.port);
+    });
+  });
+
+  const resultsQueue: { task: string; result: TaskResult }[] = [];
+  let resolveNextResult:
+    | ((value: { task: string; result: TaskResult } | null) => void)
+    | null = null;
+  let isDone = false;
+
+  server.on('connection', (socket) => {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.log('[Maven Batch] Connection established with batch runner');
+    }
+    const rl = createInterface({
+      input: socket,
+      crlfDelay: Infinity,
+    });
+
+    rl.on('line', (line) => {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.log(`[Maven Batch] Received line: ${line}`);
+      }
+      try {
+        const data = JSON.parse(line);
+        const result = {
+          task: data.task,
+          result: {
+            success: data.result.success ?? false,
+            terminalOutput: data.result.terminalOutput ?? '',
+            startTime: data.result.startTime,
+            endTime: data.result.endTime,
+          },
+        };
+
+        if (resolveNextResult) {
+          resolveNextResult(result);
+          resolveNextResult = null;
+        } else {
+          resultsQueue.push(result);
+        }
+      } catch (e) {
+        console.error('[Maven Batch] Failed to parse result line:', line, e);
+      }
+    });
+  });
+
   // Build arguments for batch runner
   const args: string[] = [];
   if (overrides.__overrides_unparsed__?.length) {
@@ -96,7 +154,12 @@ export default async function* mavenBatchExecutor(
   }
 
   // Prepare batch runner arguments
-  const javaArgs = ['-jar', batchRunnerJar, `--workspaceRoot=${workspaceRoot}`];
+  const javaArgs = [
+    '-jar',
+    batchRunnerJar,
+    `--workspaceRoot=${workspaceRoot}`,
+    `--communicationPort=${port}`,
+  ];
 
   if (process.env.NX_VERBOSE_LOGGING === 'true') {
     javaArgs.push('--verbose');
@@ -110,14 +173,24 @@ export default async function* mavenBatchExecutor(
     args,
   };
 
+  if (process.env.NX_VERBOSE_LOGGING === 'true') {
+    console.log(
+      `[Maven Batch] Sending stdin payload (${JSON.stringify(stdinPayload).length} bytes)`
+    );
+  }
+
   // Spawn batch runner process
-  // stdin: pipe (send task data), stdout: inherit (Maven output), stderr: pipe (results)
+  // stdin: pipe (send task data), stdout: inherit (Maven output), stderr: inherit (log output)
   const child = spawn('java', javaArgs, {
     cwd: workspaceRoot,
     env: process.env,
-    stdio: ['pipe', 'inherit', 'pipe'],
+    stdio: ['pipe', 'inherit', 'inherit'],
     windowsHide: true,
   });
+
+  if (process.env.NX_VERBOSE_LOGGING === 'true') {
+    console.log(`[Maven Batch] Spawned process ${child.pid}`);
+  }
 
   // Send task data via stdin (ignore EPIPE if process exits early)
   child.stdin.on('error', (err: NodeJS.ErrnoException) => {
@@ -128,72 +201,51 @@ export default async function* mavenBatchExecutor(
   child.stdin.write(JSON.stringify(stdinPayload));
   child.stdin.end();
 
-  // Read stderr line by line for JSON results
-  const rl = createInterface({
-    input: child.stderr,
-    crlfDelay: Infinity,
-  });
-
-  // Collect non-result stderr lines for error reporting
-  const stderrLines: string[] = [];
-  // Collect terminal output from failed tasks
-  const failedTaskOutputs: string[] = [];
-
-  // Yield results as they stream in
-  for await (const line of rl) {
-    if (line.startsWith('NX_RESULT:')) {
-      try {
-        const jsonStr = line.slice('NX_RESULT:'.length);
-        const data = JSON.parse(jsonStr);
-        const result = {
-          success: data.result.success ?? false,
-          terminalOutput: data.result.terminalOutput ?? '',
-          startTime: data.result.startTime,
-          endTime: data.result.endTime,
-        };
-
-        // Collect terminal output from failed tasks
-        if (!result.success && result.terminalOutput) {
-          failedTaskOutputs.push(result.terminalOutput);
-        }
-
-        yield {
-          task: data.task,
-          result,
-        };
-      } catch (e) {
-        console.error('[Maven Batch] Failed to parse result line:', line, e);
-      }
-    } else if (line.trim()) {
-      // Collect non-empty stderr lines for error reporting
-      stderrLines.push(line);
-    }
-  }
-
-  // Wait for process to exit
-  await new Promise<void>((resolve, reject) => {
+  // Promise to track process exit
+  const processExitPromise = new Promise<void>((resolve, reject) => {
     child.on('close', (code) => {
+      isDone = true;
+      if (resolveNextResult) {
+        resolveNextResult(null);
+      }
+      server.close();
+
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         console.log(`[Maven Batch] Process exited with code: ${code}`);
       }
-      // If process exited unexpectedly, print captured stderr
-      if (code !== 0 && stderrLines.length > 0) {
-        console.error(
-          `[Maven Batch] Process exited with code ${code}. Stderr output:`
-        );
-        for (const line of stderrLines) {
-          console.error(line);
-        }
+      if (code !== 0) {
+        reject(new Error(`Maven batch runner exited with code ${code}`));
+      } else {
+        resolve();
       }
-      // Print failed task outputs to stderr so they appear in error.message
-      if (failedTaskOutputs.length > 0) {
-        console.error('\n[Maven Batch] Failed task outputs:');
-        for (const output of failedTaskOutputs) {
-          console.error(output);
-        }
-      }
-      resolve();
     });
-    child.on('error', reject);
+    child.on('error', (err) => {
+      isDone = true;
+      if (resolveNextResult) {
+        resolveNextResult(null);
+      }
+      server.close();
+      reject(err);
+    });
   });
+
+  // Yield results as they come in through the TCP server
+  while (!isDone || resultsQueue.length > 0) {
+    if (resultsQueue.length > 0) {
+      yield resultsQueue.shift()!;
+    } else if (!isDone) {
+      const nextResult = await new Promise<{
+        task: string;
+        result: TaskResult;
+      } | null>((resolve) => {
+        resolveNextResult = resolve;
+      });
+      if (nextResult) {
+        yield nextResult;
+      }
+    }
+  }
+
+  // Wait for process to exit and check exit code
+  await processExitPromise;
 }

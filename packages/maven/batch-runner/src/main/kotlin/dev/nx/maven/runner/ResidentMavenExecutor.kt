@@ -191,6 +191,13 @@ class ResidentMavenExecutor(
       allArguments.addAll(goals)
       allArguments.addAll(arguments)
 
+      // Prevent Maven 4 from redirecting System.out/System.err to its logger,
+      // which causes a StackOverflowError when maven.logger.logFile is System.out.
+      // We already capture output via stdOut/stdErr in ParserRequest.
+      if (!allArguments.contains("--raw-streams")) {
+        allArguments.add("--raw-streams")
+      }
+
       log.debug("Executing Maven with goals: $goals, arguments: $arguments from directory: $workingDir")
 
       // Create a message builder factory for formatting output
