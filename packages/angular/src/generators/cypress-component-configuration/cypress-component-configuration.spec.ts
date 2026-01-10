@@ -917,22 +917,20 @@ describe('Cypress Component Testing Configuration', () => {
       // You can read more here:
       // https://on.cypress.io/configuration
       // ***********************************************************
-      
+
       // Import commands.ts using ES2015 syntax:
       import './commands';
-      
+
       // add component testing only related command here, such as mount
-      declare global {
-        // eslint-disable-next-line @typescript-eslint/no-namespace
-        namespace Cypress {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          interface Chainable<Subject> {
-            
-            mount: typeof mount;
-          }
+      // eslint-disable-next-line @typescript-eslint/no-namespace
+      declare namespace Cypress {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        interface Chainable<Subject> {
+          
+          mount: typeof mount;
         }
       }
-      
+
       Cypress.Commands.add('mount', mount);"
     `);
   });
@@ -985,22 +983,20 @@ describe('Cypress Component Testing Configuration', () => {
       // You can read more here:
       // https://on.cypress.io/configuration
       // ***********************************************************
-      
+
       // Import commands.ts using ES2015 syntax:
       import './commands';
-      
+
       // add component testing only related command here, such as mount
-      declare global {
-        // eslint-disable-next-line @typescript-eslint/no-namespace
-        namespace Cypress {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          interface Chainable<Subject> {
-            
-            mount: typeof mount;
-          }
+      // eslint-disable-next-line @typescript-eslint/no-namespace
+      declare namespace Cypress {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        interface Chainable<Subject> {
+          
+          mount: typeof mount;
         }
       }
-      
+
       Cypress.Commands.add('mount', mount);"
     `);
   });
