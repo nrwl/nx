@@ -1,14 +1,14 @@
 import { output } from '../../utils/output';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../../project-graph/project-graph';
 import { ShowProjectOptions } from './command-object';
 import { generateGraph } from '../graph/graph';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { workspaceRoot } from '../../utils/workspace-root';
-import {
-  createProjectRootMappings,
-  findProjectForPath,
-} from '../../project-graph/utils/find-project-for-path';
-import { relative } from 'path';
+import { readNxJson } from '../../config/configuration';
+import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 
 export async function showProjectHandler(
   args: ShowProjectOptions
@@ -21,12 +21,13 @@ export async function showProjectHandler(
 
   // If no project name is provided, try to infer from cwd
   if (!projectName) {
-    const relativeCwd = relative(workspaceRoot, process.cwd()).replace(
-      /\\/g,
-      '/'
+    const nxJson = readNxJson();
+    projectName = calculateDefaultProjectName(
+      process.cwd(),
+      workspaceRoot,
+      readProjectsConfigurationFromProjectGraph(graph),
+      nxJson
     );
-    const projectRootMappings = createProjectRootMappings(graph.nodes);
-    projectName = findProjectForPath(relativeCwd, projectRootMappings);
 
     if (!projectName) {
       output.error({

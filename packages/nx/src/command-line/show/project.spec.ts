@@ -33,6 +33,10 @@ jest.mock('../../utils/output', () => ({
   },
 }));
 
+jest.mock('../../config/configuration', () => ({
+  readNxJson: jest.fn().mockReturnValue({}),
+}));
+
 const originalCwd = process.cwd;
 
 performance.mark = jest.fn();
