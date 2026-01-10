@@ -164,8 +164,8 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       }
 
       // Extract unique project selectors from executed tasks
-      val uniqueProjectSelectors = options.taskGraph?.tasks?.values
-        ?.map { it.target.project }
+      val uniqueProjectSelectors = options.taskGraph?.tasks
+        ?.map { (taskId, task) -> options.taskOptions[taskId]?.project ?: task.target.project }
         ?.toSet() ?: emptySet()
 
       if (uniqueProjectSelectors.isEmpty()) {

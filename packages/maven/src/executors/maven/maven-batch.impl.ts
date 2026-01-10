@@ -66,8 +66,8 @@ function buildTasks(
   const tasks: Record<string, TaskData> = {};
   for (const taskId of Object.keys(taskGraph.tasks)) {
     const task = taskGraph.tasks[taskId];
-    const projectName = task.target.project;
     const options = inputs[taskId];
+    const projectName = options.project ?? task.target.project;
     tasks[taskId] = buildTaskData(options, projectName);
   }
   return tasks;
