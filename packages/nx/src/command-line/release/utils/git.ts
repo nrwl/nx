@@ -3,11 +3,11 @@
  * https://github.com/unjs/changelogen
  */
 import { relative } from 'node:path';
-import { minimatch } from 'minimatch';
 import { coerce as semverCoerce, gte as semverGte } from 'semver';
 import { interpolate } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
+import type { CheckAllBranchesWhen, RepoGitTags } from './repository-git-tags';
 import { isPrerelease } from './shared';
 
 export interface GitCommitAuthor {
@@ -44,7 +44,7 @@ export interface GitCommit extends RawGitCommit {
 }
 
 export interface GetLatestGitTagForPatternOptions {
-  checkAllBranchesWhen?: boolean | string[];
+  checkAllBranchesWhen?: CheckAllBranchesWhen;
   preid?: string;
   requireSemver: boolean;
   strictPreid: boolean;
@@ -142,84 +142,13 @@ export function extractTagAndVersion(
 export async function getLatestGitTagForPattern(
   releaseTagPattern: string,
   additionalInterpolationData = {},
+  resolveTags: RepoGitTags['resolveTags'],
   options: GetLatestGitTagForPatternOptions
 ): Promise<GitTagAndVersion | null> {
-  const { checkAllBranchesWhen, requireSemver, strictPreid, preid } = options;
-
-  /**
-   * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
-   * falling back to all branches if no match is found on the current branch.
-   *
-   * - If checkAllBranchesWhen is true it will cause us to ALWAYS check all branches for the latest match.
-   * - If checkAllBranchesWhen is explicitly set to false it will cause us to ONLY check the current branch for the latest match.
-   * - If checkAllBranchesWhen is an array of strings it will cause us to check all branches WHEN the current branch is one of the strings in the array.
-   */
-  let alwaysCheckAllBranches = false;
-  if (typeof checkAllBranchesWhen !== 'undefined') {
-    if (typeof checkAllBranchesWhen === 'boolean') {
-      alwaysCheckAllBranches = checkAllBranchesWhen;
-    } else if (Array.isArray(checkAllBranchesWhen)) {
-      /**
-       * Get the current git branch and determine whether to check all branches based on the checkAllBranchesWhen parameter
-       */
-      const currentBranch = await execCommand('git', [
-        'rev-parse',
-        '--abbrev-ref',
-        'HEAD',
-      ]).then((r) => r.trim());
-      // Check exact match first
-      alwaysCheckAllBranches = checkAllBranchesWhen.includes(currentBranch);
-      // Check if any glob pattern matches next
-      if (!alwaysCheckAllBranches) {
-        alwaysCheckAllBranches = checkAllBranchesWhen.some((pattern) => {
-          const r = minimatch.makeRe(pattern, { dot: true });
-          if (!r) {
-            return false;
-          }
-          return r.test(currentBranch);
-        });
-      }
-    }
-  }
-
-  const defaultGitArgs = [
-    // Apply git config to take version suffixes into account when sorting, e.g. 1.0.0 is newer than 1.0.0-beta.1
-    '-c',
-    'versionsort.suffix=-',
-    'tag',
-    '--sort',
-    '-v:refname',
-  ];
+  const { requireSemver, strictPreid, preid, checkAllBranchesWhen } = options;
 
   try {
-    let tags: string[];
-    tags = await execCommand('git', [
-      ...defaultGitArgs,
-      ...(alwaysCheckAllBranches ? [] : ['--merged']),
-    ]).then((r) =>
-      r
-        .trim()
-        .split('\n')
-        .map((t) => t.trim())
-        .filter(Boolean)
-    );
-
-    if (
-      // Do not run this fallback if the user explicitly set checkAllBranchesWhen to false
-      checkAllBranchesWhen !== false &&
-      !tags.length &&
-      // There is no point in running this fallback if we already checked against all branches
-      !alwaysCheckAllBranches
-    ) {
-      // try again, but include all tags on the repo instead of just --merged ones
-      tags = await execCommand('git', defaultGitArgs).then((r) =>
-        r
-          .trim()
-          .split('\n')
-          .map((t) => t.trim())
-          .filter(Boolean)
-      );
-    }
+    let tags: string[] = await resolveTags(checkAllBranchesWhen);
 
     if (!tags.length) {
       return null;
