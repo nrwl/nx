@@ -38,7 +38,13 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
+import {
+  HashedTask,
+  IS_WASM,
+  NxWorkspaceFiles,
+  TaskRun,
+  TaskTarget,
+} from '../../native';
 import {
   HandleGlobMessage,
   HandleMultiGlobMessage,
@@ -69,6 +75,33 @@ import {
   HandleRecordTaskRunsMessage,
   RECORD_TASK_RUNS,
 } from '../message-types/task-history';
+import {
+  HandleRecordTaskDetailsMessage,
+  RECORD_TASK_DETAILS,
+} from '../message-types/task-details';
+import {
+  HandleGetRunningTasksMessage,
+  HandleAddRunningTaskMessage,
+  HandleRemoveRunningTaskMessage,
+  GET_RUNNING_TASKS,
+  ADD_RUNNING_TASK,
+  REMOVE_RUNNING_TASK,
+} from '../message-types/running-tasks';
+import {
+  CACHE_GET,
+  CACHE_PUT,
+  CACHE_REMOVE_OLD_RECORDS,
+  CACHE_APPLY_REMOTE_RESULTS,
+  CACHE_GET_SIZE,
+  CACHE_CHECK_FS_IN_SYNC,
+  type HandleCacheGetMessage,
+  type HandleCachePutMessage,
+  type HandleCacheRemoveOldRecordsMessage,
+  type HandleCacheApplyRemoteResultsMessage,
+  type HandleCacheGetSizeMessage,
+  type HandleCacheCheckFsInSyncMessage,
+} from '../message-types/cache';
+import type { CachedResult as NativeCacheResult } from '../../native';
 import {
   GET_SYNC_GENERATOR_CHANGES,
   type HandleGetSyncGeneratorChangesMessage,
@@ -875,6 +908,97 @@ export class DaemonClient {
     const message: HandleRecordTaskRunsMessage = {
       type: RECORD_TASK_RUNS,
       taskRuns,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  recordTaskDetails(taskDetails: HashedTask[]): Promise<void> {
+    const message: HandleRecordTaskDetailsMessage = {
+      type: RECORD_TASK_DETAILS,
+      taskDetails,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getRunningTasks(ids: string[]): Promise<string[]> {
+    const message: HandleGetRunningTasksMessage = {
+      type: GET_RUNNING_TASKS,
+      ids,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  addRunningTask(taskId: string): Promise<void> {
+    const message: HandleAddRunningTaskMessage = {
+      type: ADD_RUNNING_TASK,
+      taskId,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  removeRunningTask(taskId: string): Promise<void> {
+    const message: HandleRemoveRunningTaskMessage = {
+      type: REMOVE_RUNNING_TASK,
+      taskId,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  cacheGet(hash: string): Promise<NativeCacheResult | null> {
+    const message: HandleCacheGetMessage = {
+      type: CACHE_GET,
+      hash,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  cachePut(
+    hash: string,
+    terminalOutput: string | null,
+    outputs: string[],
+    code: number
+  ): Promise<void> {
+    const message: HandleCachePutMessage = {
+      type: CACHE_PUT,
+      hash,
+      terminalOutput,
+      outputs,
+      code,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  cacheRemoveOldRecords(): Promise<void> {
+    const message: HandleCacheRemoveOldRecordsMessage = {
+      type: CACHE_REMOVE_OLD_RECORDS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  cacheApplyRemoteResults(
+    hash: string,
+    result: NativeCacheResult,
+    outputs: string[]
+  ): Promise<void> {
+    const message: HandleCacheApplyRemoteResultsMessage = {
+      type: CACHE_APPLY_REMOTE_RESULTS,
+      hash,
+      result,
+      outputs,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  cacheGetSize(): Promise<number> {
+    const message: HandleCacheGetSizeMessage = {
+      type: CACHE_GET_SIZE,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  cacheCheckFsInSync(): Promise<boolean> {
+    const message: HandleCacheCheckFsInSyncMessage = {
+      type: CACHE_CHECK_FS_IN_SYNC,
     };
     return this.sendToDaemonViaQueue(message);
   }

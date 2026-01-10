@@ -7,17 +7,11 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
-import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
+import { hashTask, hashTasks } from '../hasher/hash-task';
 import { TaskHasher } from '../hasher/task-hasher';
-import {
-  IS_WASM,
-  parseTaskStatus,
-  RunningTasksService,
-  TaskDetails,
-  TaskStatus as NativeTaskStatus,
-} from '../native';
+import { parseTaskStatus, TaskStatus as NativeTaskStatus } from '../native';
 import { NxArgs } from '../utils/command-line-utils';
-import { getDbConnection } from '../utils/db-connection';
+import { getRunningTasksService } from '../utils/running-tasks';
 import { output } from '../utils/output';
 import { combineOptionsForExecutor } from '../utils/params';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -48,7 +42,6 @@ import {
 import { SharedRunningTask } from './running-tasks/shared-running-task';
 
 export class TaskOrchestrator {
-  private taskDetails: TaskDetails | null = getTaskDetails();
   private cache: DbCache | Cache = getCache(this.options);
   private readonly tuiEnabled = isTuiEnabled();
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(
@@ -56,9 +49,7 @@ export class TaskOrchestrator {
     this.tuiEnabled
   );
 
-  private runningTasksService = !IS_WASM
-    ? new RunningTasksService(getDbConnection())
-    : null;
+  private runningTasksService = getRunningTasksService();
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
     this.taskGraph,
@@ -161,7 +152,7 @@ export class TaskOrchestrator {
       'task-execution:start',
       'task-execution:end'
     );
-    this.cache.removeOldCacheRecords();
+    await this.cache.removeOldCacheRecords();
 
     await this.cleanup();
 
@@ -248,8 +239,7 @@ export class TaskOrchestrator {
         this.projectGraph,
         this.taskGraphForHashing,
         task,
-        taskSpecificEnv,
-        this.taskDetails
+        taskSpecificEnv
       );
     }
 
@@ -263,8 +253,7 @@ export class TaskOrchestrator {
       this.hasher,
       this.projectGraph,
       batch.taskGraph,
-      this.batchEnv,
-      this.taskDetails
+      this.batchEnv
     );
 
     await Promise.all(
@@ -465,7 +454,7 @@ export class TaskOrchestrator {
 
     const pipeOutput = await this.pipeOutputCapture(task);
     // obtain metadata
-    const temporaryOutputPath = this.cache.temporaryOutputPath(task);
+    const temporaryOutputPath = await this.cache.temporaryOutputPath(task);
     const streamOutput =
       this.outputStyle === 'static'
         ? false
@@ -732,10 +721,10 @@ export class TaskOrchestrator {
   }
 
   async startContinuousTask(task: Task, groupId: number) {
-    if (
-      this.runningTasksService &&
-      this.runningTasksService.getRunningTasks([task.id]).length
-    ) {
+    const runningTasks = this.runningTasksService
+      ? await this.runningTasksService.getRunningTasks([task.id])
+      : [];
+    if (runningTasks.length) {
       await this.preRunSteps([task], { groupId });
 
       if (this.tuiEnabled) {
@@ -777,7 +766,7 @@ export class TaskOrchestrator {
 
     const pipeOutput = await this.pipeOutputCapture(task);
     // obtain metadata
-    const temporaryOutputPath = this.cache.temporaryOutputPath(task);
+    const temporaryOutputPath = await this.cache.temporaryOutputPath(task);
     const streamOutput =
       this.outputStyle === 'static'
         ? false
@@ -811,16 +800,16 @@ export class TaskOrchestrator {
       temporaryOutputPath,
       pipeOutput
     );
-    this.runningTasksService.addRunningTask(task.id);
+    await this.runningTasksService?.addRunningTask(task.id);
     this.runningContinuousTasks.set(task.id, childProcess);
 
-    childProcess.onExit((code) => {
+    childProcess.onExit(async (code) => {
       // Only set status to Stopped if task hasn't been completed yet
       if (this.tuiEnabled && !this.completedTasks[task.id]) {
         this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Stopped);
       }
       if (this.runningContinuousTasks.delete(task.id)) {
-        this.runningTasksService.removeRunningTask(task.id);
+        await this.runningTasksService?.removeRunningTask(task.id);
       }
 
       // we're not cleaning up, so this is an unexpected exit, fail the task
@@ -1054,7 +1043,7 @@ export class TaskOrchestrator {
           console.error(`Unable to terminate ${taskId}\nError:`, e);
         } finally {
           if (this.runningContinuousTasks.delete(taskId)) {
-            this.runningTasksService.removeRunningTask(taskId);
+            await this.runningTasksService?.removeRunningTask(taskId);
           }
         }
       }),
