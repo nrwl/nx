@@ -417,7 +417,7 @@ describe('pnpm LockFile utility', () => {
       }
       graph = builder.getUpdatedProjectGraph();
 
-      expect(Object.keys(graph.externalNodes).length).toEqual(213);
+      expect(Object.keys(graph.externalNodes).length).toEqual(214);
 
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
         {
@@ -2283,6 +2283,154 @@ snapshots:
           hash: 'sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==',
         },
       });
+    });
+  });
+
+  describe('alias-first-party', () => {
+    beforeEach(() => {
+      const modulesYaml = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/alias-first-party/.modules.yaml'
+        )
+      ).default;
+      const fileSys = {
+        'node_modules/.modules.yaml': modulesYaml,
+        'node_modules/string-width/package.json': '{"version": "5.1.2"}',
+        'node_modules/another-string-width/package.json':
+          '{"version": "5.1.2"}',
+        'node_modules/string-width-cjs/package.json': '{"version": "4.2.3"}',
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should handle first-party aliases (root package.json)', () => {
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/alias-first-party/pnpm-lock.yaml'
+        )
+      ).default;
+      const lockFileHash = '__fixtures__/alias-first-party/pnpm-lock.yaml';
+
+      const { nodes: externalNodes } = getPnpmLockfileNodes(
+        lockFile,
+        lockFileHash
+      );
+
+      // "string-width" is a direct dependency and should remain a node even with an alias present.
+      expect(externalNodes).toMatchInlineSnapshot(`
+        {
+          "npm:another-string-width": {
+            "data": {
+              "hash": "sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA==",
+              "packageName": "another-string-width",
+              "version": "npm:string-width@5.1.2",
+            },
+            "name": "npm:another-string-width",
+            "type": "npm",
+          },
+          "npm:ansi-regex@5.0.1": {
+            "data": {
+              "hash": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
+              "packageName": "ansi-regex",
+              "version": "5.0.1",
+            },
+            "name": "npm:ansi-regex@5.0.1",
+            "type": "npm",
+          },
+          "npm:ansi-regex@6.2.2": {
+            "data": {
+              "hash": "sha512-Bq3SmSpyFHaWjPk8If9yc6svM8c56dB5BAtW4Qbw5jHTwwXXcTLoRMkpDJp6VL0XzlWaCHTXrkFURMYmD0sLqg==",
+              "packageName": "ansi-regex",
+              "version": "6.2.2",
+            },
+            "name": "npm:ansi-regex@6.2.2",
+            "type": "npm",
+          },
+          "npm:eastasianwidth": {
+            "data": {
+              "hash": "sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==",
+              "packageName": "eastasianwidth",
+              "version": "0.2.0",
+            },
+            "name": "npm:eastasianwidth",
+            "type": "npm",
+          },
+          "npm:emoji-regex@8.0.0": {
+            "data": {
+              "hash": "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==",
+              "packageName": "emoji-regex",
+              "version": "8.0.0",
+            },
+            "name": "npm:emoji-regex@8.0.0",
+            "type": "npm",
+          },
+          "npm:emoji-regex@9.2.2": {
+            "data": {
+              "hash": "sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==",
+              "packageName": "emoji-regex",
+              "version": "9.2.2",
+            },
+            "name": "npm:emoji-regex@9.2.2",
+            "type": "npm",
+          },
+          "npm:is-fullwidth-code-point": {
+            "data": {
+              "hash": "sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg==",
+              "packageName": "is-fullwidth-code-point",
+              "version": "3.0.0",
+            },
+            "name": "npm:is-fullwidth-code-point",
+            "type": "npm",
+          },
+          "npm:string-width": {
+            "data": {
+              "hash": "sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA==",
+              "packageName": "string-width",
+              "version": "5.1.2",
+            },
+            "name": "npm:string-width",
+            "type": "npm",
+          },
+          "npm:string-width-cjs": {
+            "data": {
+              "hash": "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==",
+              "packageName": "string-width-cjs",
+              "version": "npm:string-width@4.2.3",
+            },
+            "name": "npm:string-width-cjs",
+            "type": "npm",
+          },
+          "npm:string-width@4.2.3": {
+            "data": {
+              "hash": "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==",
+              "packageName": "string-width",
+              "version": "4.2.3",
+            },
+            "name": "npm:string-width@4.2.3",
+            "type": "npm",
+          },
+          "npm:strip-ansi@6.0.1": {
+            "data": {
+              "hash": "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==",
+              "packageName": "strip-ansi",
+              "version": "6.0.1",
+            },
+            "name": "npm:strip-ansi@6.0.1",
+            "type": "npm",
+          },
+          "npm:strip-ansi@7.1.2": {
+            "data": {
+              "hash": "sha512-gmBGslpoQJtgnMAvOVqGZpEz9dyoKTCzy2nfz/n8aIFhN/jCE/rCmcxabB6jOOHV+0WNnylOxaxBQPSvcWklhA==",
+              "packageName": "strip-ansi",
+              "version": "7.1.2",
+            },
+            "name": "npm:strip-ansi@7.1.2",
+            "type": "npm",
+          },
+        }
+      `);
     });
   });
 });
