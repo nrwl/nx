@@ -53,6 +53,16 @@ The following environment variables are ones that you can set to change the beha
 | `NX_FORMAT_SORT_TSCONFIG_PATHS`    | boolean        | If set to `true`, generators will sort the TypeScript path mappings in the root tsconfig file.                                                                                                                                      |
 | `NX_SKIP_VSCODE_EXTENSION_INSTALL` | boolean        | If set to `true`, skips the automatic installation of the Nx Console extension for supported editors. Set this in environments where the temp file that we store this information in otherwise isn't accessible.                    |
 
+## Plugin Environment Variables
+
+The following environment variables can be used to disable specific Nx plugins. This is useful in CI environments where the required tooling (e.g., Java) is not available.
+
+| Property            | Type    | Description                                                                                                    |
+| ------------------- | ------- | -------------------------------------------------------------------------------------------------------------- |
+| `NX_DOTNET_DISABLE` | boolean | If set to `true`, disables the `@nx/dotnet` plugin. Useful in environments where .NET SDK is not available.    |
+| `NX_GRADLE_DISABLE` | boolean | If set to `true`, disables the `@nx/gradle` plugin. Useful in environments where Java/Gradle is not available. |
+| `NX_MAVEN_DISABLE`  | boolean | If set to `true`, disables the `@nx/maven` plugin. Useful in environments where Java/Maven is not available.   |
+
 Nx will set the following environment variables so they can be accessible within the process even outside of executors and generators.
 
 | Property                       | Type    | Description                                                                                                                                               |
