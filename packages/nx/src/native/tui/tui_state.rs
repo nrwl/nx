@@ -11,10 +11,12 @@ use crate::native::utils::time::current_timestamp_millis;
 
 // Re-export for backward compatibility with places that use TuiState timing
 
+use super::components::task_selection_manager::{PaneSelection, Selection};
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
 use super::lifecycle::RunMode;
 use super::pty::PtyInstance;
+use super::tui_app::BatchInfo;
 
 // In test mode, use a stub type instead of the real NAPI ThreadsafeFunction.
 // This is necessary because ThreadsafeFunction requires NAPI symbols that are
@@ -28,6 +30,17 @@ pub type ForcedShutdownCallback = ();
 pub type DoneCallback = ThreadsafeFunction<(), ErrorStrategy::Fatal>;
 #[cfg(not(test))]
 pub type ForcedShutdownCallback = ThreadsafeFunction<(), ErrorStrategy::Fatal>;
+
+/// Batch metadata stored for mode switching persistence
+#[derive(Debug, Clone)]
+pub struct StoredBatchState {
+    pub info: BatchInfo,
+    pub start_time: i64,
+    pub is_completed: bool,
+    pub final_status: Option<TaskStatus>,
+    pub display_name: Option<String>,
+    pub completion_time: Option<i64>,
+}
 
 /// Shared state that can be transferred between TUI modes
 /// This is the "source of truth" for task execution state
@@ -72,13 +85,16 @@ pub struct TuiState {
 
     // === UI State (for mode switching persistence) ===
     /// Tasks assigned to terminal panes [pane0, pane1]
-    ui_pane_tasks: [Option<String>; 2],
+    ui_pane_tasks: [Option<PaneSelection>; 2],
     /// Whether spacebar (follow) mode is active
     ui_spacebar_mode: bool,
     /// Index of focused pane (None = task list, Some(0) = pane 0, Some(1) = pane 1)
     ui_focused_pane: Option<usize>,
-    /// Currently selected task in the task list
-    ui_selected_task: Option<String>,
+    /// Currently selected item in the task list (task or batch group)
+    ui_selected_item: Option<Selection>,
+
+    // === Batch Metadata (for mode switching persistence) ===
+    batch_metadata: HashMap<String, StoredBatchState>,
 }
 
 impl TuiState {
@@ -123,7 +139,8 @@ impl TuiState {
             ui_pane_tasks: [None, None],
             ui_spacebar_mode: false,
             ui_focused_pane: None,
-            ui_selected_task: None,
+            ui_selected_item: None,
+            batch_metadata: HashMap::new(),
         }
     }
 
@@ -420,19 +437,19 @@ impl TuiState {
     /// Save the UI state from full-screen mode for later restoration
     pub fn save_ui_state(
         &mut self,
-        pane_tasks: [Option<String>; 2],
+        pane_tasks: [Option<PaneSelection>; 2],
         spacebar_mode: bool,
         focused_pane: Option<usize>,
-        selected_task: Option<String>,
+        selected_item: Option<Selection>,
     ) {
         self.ui_pane_tasks = pane_tasks;
         self.ui_spacebar_mode = spacebar_mode;
         self.ui_focused_pane = focused_pane;
-        self.ui_selected_task = selected_task;
+        self.ui_selected_item = selected_item;
     }
 
     /// Get the saved pane tasks
-    pub fn get_ui_pane_tasks(&self) -> &[Option<String>; 2] {
+    pub fn get_ui_pane_tasks(&self) -> &[Option<PaneSelection>; 2] {
         &self.ui_pane_tasks
     }
 
@@ -446,9 +463,9 @@ impl TuiState {
         self.ui_focused_pane
     }
 
-    /// Get the saved selected task from the task list
-    pub fn get_ui_selected_task(&self) -> Option<&String> {
-        self.ui_selected_task.as_ref()
+    /// Get the saved selected item from the task list (task or batch group)
+    pub fn get_ui_selected_item(&self) -> Option<&Selection> {
+        self.ui_selected_item.as_ref()
     }
 
     /// Get the task that should be shown in inline mode
@@ -456,16 +473,59 @@ impl TuiState {
     pub fn get_focused_task(&self) -> Option<String> {
         // If we have a focused pane, use that pane's task
         if let Some(pane_idx) = self.ui_focused_pane {
-            if let Some(task) = &self.ui_pane_tasks[pane_idx] {
-                return Some(task.clone());
+            if let Some(selection) = &self.ui_pane_tasks[pane_idx] {
+                return Some(selection.id.clone());
             }
         }
         // Otherwise try the first pane
-        if let Some(task) = &self.ui_pane_tasks[0] {
-            return Some(task.clone());
+        if let Some(selection) = &self.ui_pane_tasks[0] {
+            return Some(selection.id.clone());
         }
         // No pane tasks available
         None
+    }
+
+    // === Batch Metadata Methods (for mode switching persistence) ===
+
+    /// Store batch metadata for mode switching
+    pub fn save_batch_metadata(&mut self, batch_id: String, info: BatchInfo, start_time: i64) {
+        self.batch_metadata.insert(
+            batch_id,
+            StoredBatchState {
+                info,
+                start_time,
+                is_completed: false,
+                final_status: None,
+                display_name: None,
+                completion_time: None,
+            },
+        );
+    }
+
+    /// Update batch as completed
+    pub fn complete_batch_metadata(
+        &mut self,
+        batch_id: &str,
+        final_status: TaskStatus,
+        display_name: String,
+        completion_time: i64,
+    ) {
+        if let Some(batch) = self.batch_metadata.get_mut(batch_id) {
+            batch.is_completed = true;
+            batch.final_status = Some(final_status);
+            batch.display_name = Some(display_name);
+            batch.completion_time = Some(completion_time);
+        }
+    }
+
+    /// Remove batch metadata (when batch is unpinned or fully cleaned up)
+    pub fn remove_batch_metadata(&mut self, batch_id: &str) {
+        self.batch_metadata.remove(batch_id);
+    }
+
+    /// Get all batch metadata for restoration
+    pub fn get_batch_metadata(&self) -> &HashMap<String, StoredBatchState> {
+        &self.batch_metadata
     }
 }
 
