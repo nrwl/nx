@@ -327,6 +327,9 @@ export declare export declare function isAiAgent(): boolean
 
 export declare export declare function isEditorInstalled(editor: SupportedEditor): boolean
 
+/** Kill a process and all its descendants. */
+export declare export declare function killProcessTree(rootPid: number, signal?: string | undefined | null): void
+
 export declare export declare function logDebug(message: string): void
 
 /** Combined metadata for groups and processes */
