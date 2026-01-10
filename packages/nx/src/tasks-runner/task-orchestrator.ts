@@ -748,7 +748,7 @@ export class TaskOrchestrator {
       );
 
       this.runningContinuousTasks.set(task.id, runningTask);
-      runningTask.onExit((code) => {
+      runningTask.onExit(async (code) => {
         if (this.tuiEnabled && !this.completedTasks[task.id]) {
           this.options.lifeCycle.setTaskStatus(
             task.id,
@@ -762,8 +762,11 @@ export class TaskOrchestrator {
           console.error(
             `Task "${task.id}" is continuous but exited with code ${code}`
           );
-          this.complete([{ taskId: task.id, status: 'failure' }]);
         }
+        const status = this.cleaningUp ? 'success' : 'failure';
+        await this.postRunSteps([task], [{ task, status }], false, {
+          groupId,
+        });
       });
 
       // task is already running by another process, we schedule the next tasks
@@ -814,7 +817,7 @@ export class TaskOrchestrator {
     this.runningTasksService.addRunningTask(task.id);
     this.runningContinuousTasks.set(task.id, childProcess);
 
-    childProcess.onExit((code) => {
+    childProcess.onExit(async (code) => {
       // Only set status to Stopped if task hasn't been completed yet
       if (this.tuiEnabled && !this.completedTasks[task.id]) {
         this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Stopped);
@@ -828,8 +831,11 @@ export class TaskOrchestrator {
         console.error(
           `Task "${task.id}" is continuous but exited with code ${code}`
         );
-        this.complete([{ taskId: task.id, status: 'failure' }]);
       }
+      const status = this.cleaningUp ? 'success' : 'failure';
+      await this.postRunSteps([task], [{ task, status }], false, {
+        groupId,
+      });
     });
     await this.scheduleNextTasksAndReleaseThreads();
 
@@ -860,7 +866,10 @@ export class TaskOrchestrator {
     const now = Date.now();
     for (const task of tasks) {
       task.endTime = now;
-      await this.recordOutputsHash(task);
+      // Continuous tasks don't have outputs to track
+      if (!task.continuous) {
+        await this.recordOutputsHash(task);
+      }
     }
 
     if (doNotSkipCache) {
