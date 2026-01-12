@@ -13,13 +13,10 @@ const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
 const bannerCollection = await getCollection('banner');
 const bannerConfig = bannerCollection[0]?.data;
 
-// Check if banner is active
+// Check if banner is active based on activeUntil date
 function isBannerActive(config: typeof bannerConfig): boolean {
-  if (!config?.enabled) return false;
-  if (config.activeUntil) {
-    return new Date() < new Date(config.activeUntil);
-  }
-  return true;
+  if (!config?.activeUntil) return false;
+  return new Date() < new Date(config.activeUntil);
 }
 
 const showBanner = isBannerActive(bannerConfig);
