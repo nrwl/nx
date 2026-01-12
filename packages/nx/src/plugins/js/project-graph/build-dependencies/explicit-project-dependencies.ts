@@ -59,26 +59,26 @@ export function buildExplicitTypeScriptDependencies(
     '.vue',
   ];
 
-  Object.keys(ctx.filesToProcess.projectFileMap).forEach((project) => {
+  for (const [project, fileData] of Object.entries(
+    ctx.filesToProcess.projectFileMap
+  )) {
     filesToProcess[project] ??= [];
-    ctx.filesToProcess.projectFileMap[project].forEach((fileData) => {
-      if (moduleExtensions.some((ext) => fileData.file.endsWith(ext))) {
-        filesToProcess[project].push(join(workspaceRoot, fileData.file));
+    for (const { file } of fileData) {
+      if (moduleExtensions.some((ext) => file.endsWith(ext))) {
+        filesToProcess[project].push(join(workspaceRoot, file));
       }
-    });
-  });
+    }
+  }
 
   const { findImports } = require('../../../../native');
-  // TODO(jon): check why this function is very slow and whether we it can be optimized
   const imports = findImports(filesToProcess);
 
-  for (let i = 0; i < imports.length; i++) {
-    const {
-      sourceProject,
-      file,
-      staticImportExpressions,
-      dynamicImportExpressions,
-    } = imports[i];
+  for (const {
+    sourceProject,
+    file,
+    staticImportExpressions,
+    dynamicImportExpressions,
+  } of imports) {
     const normalizedFilePath = normalizePath(relative(workspaceRoot, file));
 
     for (const importExpr of staticImportExpressions) {
