@@ -1,0 +1,23 @@
+{
+  "name": "@nx/nx-android-arm64",
+  "version": "0.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx/native-packages/android-arm64"
+  },
+  "os": [
+    "android"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "main": "nx.android-arm64.node",
+  "files": [
+    "nx.android-arm64.node"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

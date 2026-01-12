@@ -7,6 +7,7 @@ export function assertSupportedPlatform() {
     let title = '';
     let bodyLines = [];
     if (
+      process.platform == 'android' ||
       process.platform == 'win32' ||
       process.platform == 'darwin' ||
       process.platform == 'linux' ||
