@@ -365,29 +365,19 @@ impl HashPlanner {
                 file_set.starts_with("{projectRoot}/") || file_set.starts_with("!{projectRoot}/")
             });
 
-        let project_inputs = if project_file_sets.is_empty() {
-            vec![
+        let project_inputs: Vec<HashInstruction> = project_file_sets
+            .iter()
+            .map(|f| HashInstruction::ProjectFileSet(project_name.to_string(), vec![f.to_string()]))
+            .chain(vec![
                 HashInstruction::ProjectConfiguration(project_name.to_string()),
                 HashInstruction::TsConfiguration(project_name.to_string()),
-            ]
-        } else {
-            vec![
-                HashInstruction::ProjectFileSet(
-                    project_name.to_string(),
-                    project_file_sets.iter().map(|f| f.to_string()).collect(),
-                ),
-                HashInstruction::ProjectConfiguration(project_name.to_string()),
-                HashInstruction::TsConfiguration(project_name.to_string()),
-            ]
-        };
+            ])
+            .collect();
 
-        let workspace_file_set_inputs = if workspace_file_sets.is_empty() {
-            vec![]
-        } else {
-            vec![HashInstruction::WorkspaceFileSet(
-                workspace_file_sets.iter().map(|f| f.to_string()).collect(),
-            )]
-        };
+        let workspace_file_set_inputs: Vec<HashInstruction> = workspace_file_sets
+            .iter()
+            .map(|f| HashInstruction::WorkspaceFileSet(vec![f.to_string()]))
+            .collect();
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
             Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
             Input::Environment(env) => Some(HashInstruction::Environment(env.to_string())),
