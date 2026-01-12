@@ -215,8 +215,7 @@ export class TargetProjectLocator {
       // package.json refers to an external package, we do not match against the version found in there, we instead try and resolve the relevant package how node would
       const externalPackageJson = this.readPackageJson(
         packageName,
-        fullDirPath,
-        workspaceRoot
+        fullDirPath
       );
       // The external package.json path might be not be resolvable, e.g. if a reference has been added to a project package.json, but the install command has not been run yet.
       if (!externalPackageJson) {
@@ -538,8 +537,7 @@ export class TargetProjectLocator {
    */
   private readPackageJson(
     packageName: string,
-    relativeToDir: string,
-    workspaceRoot: string
+    relativeToDir: string
   ): PackageJson | null {
     // The package.json is directly resolvable
     const packageJsonPath = resolveRelativeToDir(
@@ -589,9 +587,6 @@ export class TargetProjectLocator {
           } catch {
             // Package.json is invalid, keep traversing
           }
-        }
-        if (dir === workspaceRoot) {
-          return null;
         }
         dir = dirname(dir);
       }
