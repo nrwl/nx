@@ -24,7 +24,7 @@
 
   <properties>
     <!-- Skip deployment for this parent POM -->
-    <maven.install.skip>true</maven.install.skip>
+    <maven.install.skip>false</maven.install.skip>
     <maven.deploy.skip>true</maven.deploy.skip>
     <maven.gpg.skip>true</maven.gpg.skip>
   </properties>
