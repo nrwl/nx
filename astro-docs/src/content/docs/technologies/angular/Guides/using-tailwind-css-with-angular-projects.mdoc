@@ -19,13 +19,74 @@ For the most up-to-date installation instructions, refer to the official Tailwin
 
 ### Tailwind CSS v4
 
-For Tailwind CSS v4, classes are [automatically detected from source files](https://tailwindcss.com/docs/detecting-classes-in-source-files). To register workspace libraries, add the following configuration to your stylesheet where you configure TailwindCSS.
+Tailwind CSS v4 [automatically detects classes from source files](https://tailwindcss.com/docs/detecting-classes-in-source-files). However, with Angular's PostCSS plugin, scanning starts from the workspace root by default. This means classes from all libraries end up in your production CSS, even unused ones.
+
+To avoid bloated CSS, restrict scanning to your app folder and explicitly add your library dependencies:
 
 ```css
 // apps/myapp/src/styles.css
-@import 'tailwindcss';
-@source "../../../libs";
+@import "tailwindcss" source("./app");
+
+@source "../../../libs/ui";
+@source "../../../libs/shared";
 ```
+
+#### Automating @source directives
+
+Manually maintaining `@source` directives is tedious and error-prone. Use [`@juristr/nx-tailwind-sync`](https://www.npmjs.com/package/@juristr/nx-tailwind-sync) to automate this based on your project's dependency graph.
+
+Install the package:
+
+```shell
+npm install @juristr/nx-tailwind-sync
+```
+
+Register the sync generator for your application's `build` and `serve` targets:
+
+{% tabs syncKey="project-config-file" %}
+{% tabitem label="project.json" %}
+
+```json
+{
+  "name": "myapp",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "syncGenerators": ["@juristr/nx-tailwind-sync:source-directives"]
+    },
+    "serve": {
+      "executor": "@angular/build:dev-server",
+      "syncGenerators": ["@juristr/nx-tailwind-sync:source-directives"]
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="package.json" %}
+
+```json
+{
+  "name": "myapp",
+  "nx": {
+    "targets": {
+      "build": {
+        "syncGenerators": ["@juristr/nx-tailwind-sync:source-directives"]
+      },
+      "serve": {
+        "syncGenerators": ["@juristr/nx-tailwind-sync:source-directives"]
+      }
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+When you run `nx build myapp` or `nx serve myapp`, the sync generator analyzes your dependency graph and updates your `styles.css` with the correct `@source` directives automatically.
+
+For more details on why this is necessary and how Tailwind's scanning behavior differs between PostCSS and Vite, see [Tailwind v4 with Angular in an Nx Monorepo](/blog/setup-tailwind-4-angular-nx-workspace).
 
 ### Tailwind CSS v3
 
