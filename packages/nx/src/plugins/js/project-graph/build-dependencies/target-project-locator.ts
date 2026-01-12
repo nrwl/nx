@@ -22,7 +22,6 @@ import {
   getRootTsConfigFileName,
   resolveModuleByImport,
 } from '../../utils/typescript';
-import { existsSync } from 'node:fs';
 
 /**
  * The key is a combination of the package name and the workspace relative directory
@@ -570,23 +569,21 @@ export class TargetProjectLocator {
         if (this.packageJsonResolutionCache.has(packageJsonPath)) {
           return this.packageJsonResolutionCache.get(packageJsonPath);
         }
-        if (existsSync(packageJsonPath)) {
-          try {
-            const parsedPackageJson = readJsonFile(packageJsonPath);
-            // Ensure the package.json contains the "name" and "version" fields
-            if (parsedPackageJson.name && parsedPackageJson.version) {
-              this.packageJsonResolutionCache.set(
-                packageJsonPath,
-                parsedPackageJson
-              );
-              return parsedPackageJson;
-            } else {
-              this.packageJsonResolutionCache.set(packageJsonPath, null);
-              return null;
-            }
-          } catch {
-            // Package.json is invalid, keep traversing
+        try {
+          const parsedPackageJson = readJsonFile(packageJsonPath);
+          // Ensure the package.json contains the "name" and "version" fields
+          if (parsedPackageJson.name && parsedPackageJson.version) {
+            this.packageJsonResolutionCache.set(
+              packageJsonPath,
+              parsedPackageJson
+            );
+            return parsedPackageJson;
+          } else {
+            this.packageJsonResolutionCache.set(packageJsonPath, null);
+            return null;
           }
+        } catch {
+          // Package.json is invalid, keep traversing
         }
         dir = dirname(dir);
       }
