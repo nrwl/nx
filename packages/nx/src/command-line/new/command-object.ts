@@ -8,8 +8,8 @@ export const yargsNewCommand: CommandModule = {
     args._ = args._.slice(1);
     process.exit(
       await (
-        await import('./new')
-      ).newWorkspace(args['nxWorkspaceRoot'] as string, args)
+        await import('./new.js')
+      ).newWorkspace(args['nxWorkspaceRoot'] as string, args),
     );
   },
 };

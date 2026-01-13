@@ -46,27 +46,27 @@ export const yargsConfigureAiAgentsCommand: CommandModule<
       })
       .example(
         '$0 configure-ai-agents',
-        'Interactively select AI agents to update and configure'
+        'Interactively select AI agents to update and configure',
       )
       .example(
         '$0 configure-ai-agents --agents claude gemini',
-        'Prompts for updates and and configuration of Claude and Gemini AI agents'
+        'Prompts for updates and and configuration of Claude and Gemini AI agents',
       )
       .example(
         '$0 configure-ai-agents --check',
-        'Checks if any configured agents are out of date and need to be updated'
+        'Checks if any configured agents are out of date and need to be updated',
       )
       .example(
         '$0 configure-ai-agents --check=all',
-        'Checks if any agents are not configured, out of date or partially configured'
+        'Checks if any agents are not configured, out of date or partially configured',
       )
       .example(
         '$0 configure-ai-agents --agents claude gemini --no-interactive',
-        'Configures and updates Claude and Gemini AI agents without prompts'
+        'Configures and updates Claude and Gemini AI agents without prompts',
       ) as any, // because of the coerce function
   handler: async (args) => {
     await (
-      await import('./configure-ai-agents')
+      await import('./configure-ai-agents.js')
     ).configureAiAgentsHandler(args);
   },
 };

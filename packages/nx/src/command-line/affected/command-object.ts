@@ -22,10 +22,10 @@ export const yargsAffectedCommand: CommandModule = {
         withTuiOptions(
           withRunOptions(
             withOutputStyleOption(
-              withTargetAndConfigurationOption(withBatch(yargs))
-            )
-          )
-        )
+              withTargetAndConfigurationOption(withBatch(yargs)),
+            ),
+          ),
+        ),
       )
         .option('all', {
           type: 'boolean',
@@ -34,21 +34,21 @@ export const yargsAffectedCommand: CommandModule = {
         .middleware((args) => {
           if (args.all !== undefined) {
             throw new Error(
-              "The '--all' option has been removed for `nx affected`. Use 'nx run-many' instead."
+              'The \'--all\' option has been removed for `nx affected`. Use \'nx run-many\' instead.',
             );
           }
         }),
-      'affected'
+      'affected',
     ),
   handler: async (args) => {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await import('./affected')).affected(
+        return (await import('./affected.js')).affected(
           'affected',
-          withOverrides(args)
+          withOverrides(args),
         );
-      }
+      },
     );
     process.exit(exitCode);
   },
@@ -61,20 +61,20 @@ export const yargsAffectedTestCommand: CommandModule = {
     linkToNxDevAndExamples(
       withAffectedOptions(
         withTuiOptions(
-          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
-        )
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs))),
+        ),
       ),
-      'affected'
+      'affected',
     ),
   handler: async (args) => {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await import('./affected')).affected('affected', {
+        return (await import('./affected.js')).affected('affected', {
           ...withOverrides(args),
           target: 'test',
         });
-      }
+      },
     );
     process.exit(exitCode);
   },
@@ -87,20 +87,20 @@ export const yargsAffectedBuildCommand: CommandModule = {
     linkToNxDevAndExamples(
       withAffectedOptions(
         withTuiOptions(
-          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
-        )
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs))),
+        ),
       ),
-      'affected'
+      'affected',
     ),
   handler: async (args) => {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await import('./affected')).affected('affected', {
+        return (await import('./affected.js')).affected('affected', {
           ...withOverrides(args),
           target: 'build',
         });
-      }
+      },
     );
     process.exit(exitCode);
   },
@@ -113,20 +113,20 @@ export const yargsAffectedLintCommand: CommandModule = {
     linkToNxDevAndExamples(
       withAffectedOptions(
         withTuiOptions(
-          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
-        )
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs))),
+        ),
       ),
-      'affected'
+      'affected',
     ),
   handler: async (args) => {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await import('./affected')).affected('affected', {
+        return (await import('./affected.js')).affected('affected', {
           ...withOverrides(args),
           target: 'lint',
         });
-      }
+      },
     );
     process.exit(exitCode);
   },
@@ -139,20 +139,20 @@ export const yargsAffectedE2ECommand: CommandModule = {
     linkToNxDevAndExamples(
       withAffectedOptions(
         withTuiOptions(
-          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
-        )
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs))),
+        ),
       ),
-      'affected'
+      'affected',
     ),
   handler: async (args) => {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await import('./affected')).affected('affected', {
+        return (await import('./affected.js')).affected('affected', {
           ...withOverrides(args),
           target: 'e2e',
         });
-      }
+      },
     );
     process.exit(exitCode);
   },

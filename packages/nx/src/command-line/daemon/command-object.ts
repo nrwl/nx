@@ -14,7 +14,7 @@ export const yargsDaemonCommand = makeCommandModule({
   builder,
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose, async () =>
-      (await import('./daemon')).daemonHandler(args)
+      (await import('./daemon.js')).daemonHandler(args),
     );
     process.exit(exitCode);
   },

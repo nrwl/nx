@@ -6,10 +6,17 @@
   "implicitDependencies": ["graph-client"],
   "release": {
     "version": {
-      "generator": "@nx/js:release-version"
+      "generator": "@nx/js:release-version",
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
     }
   },
   "targets": {
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "packages/{projectName}"
+      }
+    },
     "build-native-wasm": {
       "cache": true,
       "inputs": ["native"],
@@ -47,11 +54,11 @@
       }
     },
     "copy-native-package-directories": {
-      "command": "node scripts/copy.js dist/packages/nx/native-packages/* dist/packages"
+      "command": "node scripts/copy.js packages/nx/dist/native-packages/* dist/packages"
     },
     "artifacts": {
       "dependsOn": ["copy-native-package-directories"],
-      "command": "pnpm napi artifacts --package-json-path dist/packages/nx/package.json -d ./artifacts --npm-dir dist/packages"
+      "command": "pnpm napi artifacts --package-json-path packages/nx/package.json -d ./artifacts --npm-dir dist/packages"
     },
     "echo": {
       "command": "echo hi"
@@ -59,6 +66,11 @@
     "long-task": {
       "command": "node -e \"let i = 0; let interval = setInterval(() => { console.log('Long task running ' + i++ + '---------------------------------------------------------------'); }, 200); setTimeout(() => { clearInterval(interval); console.log('Long task finished'); }, 62_000);\"",
       "dependsOn": ["echo"]
+    },
+    "build-base": {
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,cjs,mjs,d.ts}"
+      ]
     },
     "build": {
       "dependsOn": [
@@ -77,14 +89,15 @@
         "{workspaceRoot}/scripts/copy-local-native.js",
         "{workspaceRoot}/scripts/copy-graph-client.js",
         "{workspaceRoot}/scripts/chmod.js",
-        "{workspaceRoot}/scripts/copy-readme.js"
+        "{workspaceRoot}/scripts/copy-readme.js",
+        "{projectRoot}/readme-template.md"
       ],
       "executor": "nx:run-commands",
       "outputs": [
-        "{workspaceRoot}/dist/packages/nx/**/*.{node,wasm,js,mjs,cjs}",
-        "{workspaceRoot}/dist/packages/nx/src/core/graph",
-        "{workspaceRoot}/dist/packages/nx/bin/nx.js",
-        "{workspaceRoot}/dist/packages/nx/README.md"
+        "{workspaceRoot}/packages/nx/dist/**/*.{node,wasm,js,mjs,cjs}",
+        "{workspaceRoot}/packages/nx/dist/src/core/graph",
+        "{workspaceRoot}/packages/nx/dist/bin/nx.js",
+        "{workspaceRoot}/packages/nx/README.md"
       ],
       "options": {
         "commands": [
@@ -95,10 +108,10 @@
             "command": "node ./scripts/copy-graph-client.js"
           },
           {
-            "command": "node ./scripts/chmod dist/packages/nx/bin/nx.js"
+            "command": "node ./scripts/chmod packages/nx/dist/bin/nx.js"
           },
           {
-            "command": "node ./scripts/copy-readme.js nx"
+            "command": "node ./scripts/copy-readme.js nx packages/nx/readme-template.md packages/nx/README.md"
           }
         ],
         "parallel": false
@@ -135,6 +148,7 @@
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
         "main": "./bin/nx.js",
         "types": "./bin/nx.d.ts",
@@ -161,7 +175,12 @@
             "ignore": [
               "**/tsconfig*.json",
               "**/project.json",
-              "**/__fixtures__/**"
+              "**/__fixtures__/**",
+              ".eslintrc.json",
+              "executors.json",
+              "generators.json",
+              "migrations.json",
+              "package.json"
             ],
             "output": "/"
           },
@@ -169,16 +188,6 @@
             "input": "packages/nx",
             "glob": "**/*.{mjs,cjs,js,css,html,svg,wasm}",
             "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/nx",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
             "output": "/"
           }
         ]

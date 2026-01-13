@@ -94,14 +94,14 @@ async function normalizeOptions(options: Options): Promise<NormalizedOptions> {
 
 async function addBundler(options: NormalizedOptions) {
   const { addViteCommandsToPackageScripts } = await import(
-    './add-vite-commands-to-package-scripts'
-  );
+    './add-vite-commands-to-package-scripts.js'
+    );
   addViteCommandsToPackageScripts(options.reactAppName, options.isStandalone);
   writeViteConfig(options.reactAppName, options.isStandalone, options.appIsJs);
   writeViteIndexHtml(
     options.reactAppName,
     options.isStandalone,
-    options.appIsJs
+    options.appIsJs,
   );
   await renameJsToJsx(options.reactAppName, options.isStandalone);
 }

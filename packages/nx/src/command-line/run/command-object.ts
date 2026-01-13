@@ -21,10 +21,10 @@ export const yargsRunCommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        await import('./run-one').then((m) =>
-          m.runOne(process.cwd(), withOverrides(args))
+        await import('./run-one.js').then((m) =>
+          m.runOne(process.cwd(), withOverrides(args)),
         );
-      }
+      },
     );
     process.exit(exitCode);
   },
@@ -46,11 +46,11 @@ export const yargsNxInfixCommand: CommandModule = {
           showHelp();
           process.exit(1);
         }
-        return (await import('./run-one')).runOne(
+        return (await import('./run-one.js')).runOne(
           process.cwd(),
-          withOverrides(args, 0)
+          withOverrides(args, 0),
         );
-      }
+      },
     );
     process.exit(exitCode);
   },

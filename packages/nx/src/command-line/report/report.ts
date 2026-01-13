@@ -9,6 +9,7 @@ import {
 } from '../../utils/package-manager';
 import { readJsonFile } from '../../utils/fileutils';
 import {
+  NxPackageJson,
   PackageJson,
   readModulePackageJson,
   readNxMigrateConfig,
@@ -40,14 +41,14 @@ import {
 } from '../../tasks-runner/cache';
 import { daemonClient } from '../../daemon/client/client';
 
-const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
-  join(__dirname, '../../../package.json')
+const nxPackageJson = readJsonFile<NxPackageJson>(
+  require.resolve('nx/package.json'),
 );
 
 export const packagesWeCareAbout = [
   'lerna',
   ...nxPackageJson['nx-migrations'].packageGroup.map((x) =>
-    typeof x === 'string' ? x : x.package
+    typeof x === 'string' ? x : x.package,
   ),
   '@nrwl/schematics', // manually added since we don't publish it anymore.
   'typescript',
@@ -108,7 +109,7 @@ export async function reportHandler() {
   ];
   let padding = Math.max(...fields.map((f) => f[0].length));
   const bodyLines = fields.map(
-    ([field, value]) => `${field.padEnd(padding)}  : ${value}`
+    ([field, value]) => `${field.padEnd(padding)}  : ${value}`,
   );
 
   bodyLines.push('');
@@ -117,7 +118,7 @@ export async function reportHandler() {
     Math.max(...packageVersionsWeCareAbout.map((x) => x.package.length)) + 1;
   packageVersionsWeCareAbout.forEach((p) => {
     bodyLines.push(
-      `${chalk.green(p.package.padEnd(padding))} : ${chalk.bold(p.version)}`
+      `${chalk.green(p.package.padEnd(padding))} : ${chalk.bold(p.version)}`,
     );
   });
 
@@ -130,7 +131,7 @@ export async function reportHandler() {
 
     if (nxKey.realExpiresAt || nxKey.expiresAt) {
       const licenseExpiryDate = new Date(
-        (nxKey.realExpiresAt ?? nxKey.expiresAt) * 1000
+        (nxKey.realExpiresAt ?? nxKey.expiresAt) * 1000,
       );
 
       // license is not expired
@@ -139,11 +140,11 @@ export async function reportHandler() {
           bodyLines.push(
             `License expires on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
               nxKey.perpetualNxVersion
-            } and below.`
+            } and below.`,
           );
         } else {
           bodyLines.push(
-            `License expires on ${licenseExpiryDate.toLocaleDateString()}.`
+            `License expires on ${licenseExpiryDate.toLocaleDateString()}.`,
           );
         }
       } else {
@@ -151,11 +152,11 @@ export async function reportHandler() {
           bodyLines.push(
             `License expired on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
               nxKey.perpetualNxVersion
-            } and below.`
+            } and below.`,
           );
         } else {
           bodyLines.push(
-            `License expired on ${licenseExpiryDate.toLocaleDateString()}.`
+            `License expired on ${licenseExpiryDate.toLocaleDateString()}.`,
           );
         }
       }
@@ -166,14 +167,14 @@ export async function reportHandler() {
     padding =
       Math.max(
         ...powerpackPlugins.map(
-          (powerpackPlugin) => powerpackPlugin.name.length
-        )
+          (powerpackPlugin) => powerpackPlugin.name.length,
+        ),
       ) + 1;
     for (const powerpackPlugin of powerpackPlugins) {
       bodyLines.push(
         `${chalk.green(powerpackPlugin.name.padEnd(padding))} : ${chalk.bold(
-          powerpackPlugin.version
-        )}`
+          powerpackPlugin.version,
+        )}`,
       );
     }
     bodyLines.push('');
@@ -199,7 +200,7 @@ export async function reportHandler() {
     bodyLines.push('Community plugins:');
     communityPlugins.forEach((p) => {
       bodyLines.push(
-        `${chalk.green(p.name.padEnd(padding))}: ${chalk.bold(p.version)}`
+        `${chalk.green(p.name.padEnd(padding))}: ${chalk.bold(p.version)}`,
       );
     });
   }
@@ -219,21 +220,21 @@ export async function reportHandler() {
     bodyLines.push(
       `Cache Usage: ${formatCacheSize(cache.used)} / ${
         cache.max === 0 ? '∞' : formatCacheSize(cache.max)
-      }`
+      }`,
     );
   }
 
   if (outOfSyncPackageGroup) {
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push(
-      `The following packages should match the installed version of ${outOfSyncPackageGroup.basePackage}`
+      `The following packages should match the installed version of ${outOfSyncPackageGroup.basePackage}`,
     );
     for (const pkg of outOfSyncPackageGroup.misalignedPackages) {
       bodyLines.push(`  - ${pkg.name}@${pkg.version}`);
     }
     bodyLines.push('');
     bodyLines.push(
-      `To fix this, run \`nx migrate ${outOfSyncPackageGroup.migrateTarget}\``
+      `To fix this, run \`nx migrate ${outOfSyncPackageGroup.migrateTarget}\``,
     );
   }
 
@@ -242,20 +243,20 @@ export async function reportHandler() {
     bodyLines.push(chalk.yellow('⚠️ Multiple Nx versions detected'));
     bodyLines.push('');
     bodyLines.push(
-      `Your workspace uses nx@${nxVersion}, but other packages depend on a different version:`
+      `Your workspace uses nx@${nxVersion}, but other packages depend on a different version:`,
     );
     for (const { version, chain } of mismatchedNxVersions) {
       if (chain.length === 0) {
         bodyLines.push(`  - ${chalk.bold(`nx@${version}`)}`);
       } else {
         bodyLines.push(
-          `  - ${chain.reverse().join(' → ')} → ${chalk.bold(`nx@${version}`)}`
+          `  - ${chain.reverse().join(' → ')} → ${chalk.bold(`nx@${version}`)}`,
         );
       }
     }
     bodyLines.push('');
     bodyLines.push(
-      'These packages should not have nx as a dependency. Please report this issue to the package maintainers.'
+      'These packages should not have nx as a dependency. Please report this issue to the package maintainers.',
     );
     const whyCommand = getPackageManagerCommand(pm).why;
     for (const { version } of mismatchedNxVersions) {
@@ -317,7 +318,7 @@ export interface ReportData {
 
 function findDependencyChain(
   graph: ProjectGraph,
-  targetNode: string
+  targetNode: string,
 ): string[] {
   const reversedGraph = reverse(graph);
 
@@ -357,7 +358,7 @@ function findDependencyChain(
 }
 
 function findMismatchedNxVersions(
-  graph: ProjectGraph
+  graph: ProjectGraph,
 ): Array<{ version: string; chain: string[] }> {
   if (!graph || !graph.externalNodes) {
     return [];
@@ -404,7 +405,7 @@ export async function getReportData(): Promise<ReportData> {
     });
   }
 
-  const outOfSyncPackageGroup = findMisalignedPackagesForPackage(nxPackageJson);
+  const outOfSyncPackageGroup = findMisalignedPackagesForPackage(nxPackageJson as PackageJson);
 
   const mismatchedNxVersions = findMismatchedNxVersions(graph);
 
@@ -422,9 +423,9 @@ export async function getReportData(): Promise<ReportData> {
 
   let cache = dbCacheEnabled()
     ? {
-        max: resolveMaxCacheSize(nxJson),
-        used: new DbCache({ nxCloudRemoteCache: null }).getUsedCacheSpace(),
-      }
+      max: resolveMaxCacheSize(nxJson),
+      used: new DbCache({ nxCloudRemoteCache: null }).getUsedCacheSpace(),
+    }
     : null;
 
   return {
@@ -479,12 +480,12 @@ async function tryGetProjectGraph() {
 
 async function findLocalPlugins(
   projectGraph: ProjectGraph,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
 ) {
   try {
     const localPlugins = await getLocalWorkspacePlugins(
       readProjectsConfigurationFromProjectGraph(projectGraph),
-      nxJson
+      nxJson,
     );
     return Array.from(localPlugins.keys());
   } catch {
@@ -514,7 +515,7 @@ interface OutOfSyncPackageGroup {
 }
 
 export function findMisalignedPackagesForPackage(
-  base: PackageJson
+  base: PackageJson,
 ): undefined | OutOfSyncPackageGroup {
   const misalignedPackages: { name: string; version: string }[] = [];
 
@@ -542,10 +543,10 @@ export function findMisalignedPackagesForPackage(
 
   return misalignedPackages.length
     ? {
-        basePackage: base.name,
-        misalignedPackages,
-        migrateTarget: `${base.name}@${migrateTarget}`,
-      }
+      basePackage: base.name,
+      misalignedPackages,
+      migrateTarget: `${base.name}@${migrateTarget}`,
+    }
     : undefined;
 }
 
@@ -553,8 +554,8 @@ export function findInstalledPowerpackPlugins(): PackageJson[] {
   const installedPlugins = findInstalledPlugins();
   return installedPlugins.filter((dep) =>
     new RegExp(
-      '@nx/powerpack*|@nx/(.+)-cache|@nx/(conformance|owners|enterprise*)'
-    ).test(dep.name)
+      '@nx/powerpack*|@nx/(.+)-cache|@nx/(conformance|owners|enterprise*)',
+    ).test(dep.name),
   );
 }
 
@@ -566,8 +567,8 @@ export function findInstalledCommunityPlugins(): PackageJson[] {
       !patternsWeIgnoreInCommunityReport.some((pattern) =>
         typeof pattern === 'string'
           ? pattern === dep.name
-          : pattern.test(dep.name)
-      )
+          : pattern.test(dep.name),
+      ),
   );
 }
 
@@ -577,7 +578,7 @@ export function findRegisteredPluginsBeingUsed(nxJson: NxJsonConfiguration) {
   }
 
   return nxJson.plugins.map((plugin) =>
-    typeof plugin === 'object' ? plugin.plugin : plugin
+    typeof plugin === 'object' ? plugin.plugin : plugin,
   );
 }
 

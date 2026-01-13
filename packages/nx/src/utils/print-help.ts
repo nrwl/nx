@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import * as stringWidth from 'string-width';
+import stringWidth from 'string-width';
 import { logger } from './logger';
 import { output } from './output';
 import { Schema } from './params';
@@ -16,7 +16,7 @@ export function printHelp(
   schema: Schema,
   meta:
     | { mode: 'generate'; plugin: string; entity: string; aliases: string[] }
-    | { mode: 'run'; plugin: string; entity: string }
+    | { mode: 'run'; plugin: string; entity: string },
 ) {
   const allPositional = Object.keys(schema.properties).filter((key) => {
     const p = schema.properties[key];
@@ -26,38 +26,38 @@ export function printHelp(
 
   logger.info(`
 ${output.applyNxPrefix(
-  'cyan',
-  chalk.bold(
-    `${`${header + chalk.reset.cyan(positional)} ${chalk.reset.cyan(
-      '[options,...]'
-    )}`}`
-  )
-)}
+    'cyan',
+    chalk.bold(
+      `${`${header + chalk.reset.cyan(positional)} ${chalk.reset.cyan(
+        '[options,...]',
+      )}`}`,
+    ),
+  )}
 
 ${generateOverviewOutput({
-  pluginName: meta.plugin,
-  name: meta.entity,
-  description: schema.description,
-  mode: meta.mode,
-  aliases: meta.mode === 'generate' ? meta.aliases : [],
-})}
+    pluginName: meta.plugin,
+    name: meta.entity,
+    description: schema.description,
+    mode: meta.mode,
+    aliases: meta.mode === 'generate' ? meta.aliases : [],
+  })}
 ${generateOptionsOutput(schema)}
 ${generateExamplesOutput(schema)}
 ${generateLinkOutput({
-  pluginName: meta.plugin,
-  name: meta.entity,
-  type: meta.mode === 'generate' ? 'generators' : 'executors',
-})}
+    pluginName: meta.plugin,
+    name: meta.entity,
+    type: meta.mode === 'generate' ? 'generators' : 'executors',
+  })}
 `);
 }
 
 function generateOverviewOutput({
-  pluginName,
-  name,
-  description,
-  mode,
-  aliases,
-}: {
+                                  pluginName,
+                                  name,
+                                  description,
+                                  mode,
+                                  aliases,
+                                }: {
   pluginName: string;
   name: string;
   description: string;
@@ -84,11 +84,11 @@ function generateOverviewOutput({
 }
 
 function generateGeneratorOverviewOutput({
-  pluginName,
-  name,
-  description,
-  aliases,
-}: {
+                                           pluginName,
+                                           name,
+                                           description,
+                                           aliases,
+                                         }: {
   pluginName: string;
   name: string;
   description: string;
@@ -104,7 +104,8 @@ function generateGeneratorOverviewOutput({
   let installedVersion: string;
   try {
     installedVersion = readModulePackageJson(pluginName).packageJson.version;
-  } catch {}
+  } catch {
+  }
 
   ui.div(
     ...[
@@ -119,7 +120,7 @@ function generateGeneratorOverviewOutput({
           (installedVersion ? chalk.dim(` (v${installedVersion})`) : ''),
         padding: [1, 0, 0, 2],
       },
-    ]
+    ],
   );
 
   ui.div(
@@ -135,7 +136,7 @@ function generateGeneratorOverviewOutput({
         }`,
         padding: [0, 0, 0, 2],
       },
-    ]
+    ],
   );
 
   ui.div(
@@ -144,17 +145,17 @@ function generateGeneratorOverviewOutput({
         text: description,
         padding: [2, 0, 1, 2],
       },
-    ]
+    ],
   );
 
   return ui.toString();
 }
 
 function generateExecutorOverviewOutput({
-  pluginName,
-  name,
-  description,
-}: {
+                                          pluginName,
+                                          name,
+                                          description,
+                                        }: {
   pluginName: string;
   name: string;
   description: string;
@@ -176,7 +177,7 @@ function generateExecutorOverviewOutput({
           (pluginName.startsWith('@nx/') ? chalk.dim(` (v${nxVersion})`) : ''),
         padding: [1, 0, 0, 0],
       },
-    ]
+    ],
   );
 
   ui.div(
@@ -185,7 +186,7 @@ function generateExecutorOverviewOutput({
         text: description,
         padding: [2, 0, 1, 2],
       },
-    ]
+    ],
   );
 
   return ui.toString();
@@ -220,7 +221,7 @@ function generateOptionsOutput(schema: Schema): string {
   >();
   let requiredSpaceToRenderAllFlagsAndAliases = 0;
   const sorted = Object.entries(schema.properties).sort((a, b) =>
-    compareByPriority(a, b, schema)
+    compareByPriority(a, b, schema),
   );
   for (const [optionName, optionConfig] of sorted) {
     const renderedFlagAndAlias =
@@ -238,8 +239,8 @@ function generateOptionsOutput(schema: Schema): string {
     const renderedTypesAndDefault = `${formatOptionType(optionConfig)}${
       optionConfig.enum
         ? ` [choices: ${optionConfig.enum
-            .map((e) => formatOptionVal(e))
-            .join(', ')}]`
+          .map((e) => formatOptionVal(e))
+          .join(', ')}]`
         : ''
     }${
       optionConfig.default
@@ -324,10 +325,10 @@ function generateExamplesOutput(schema: Schema): string {
 
 // TODO: generalize link generation so it works for non @nx plugins as well
 function generateLinkOutput({
-  pluginName,
-  name,
-  type,
-}: {
+                              pluginName,
+                              name,
+                              type,
+                            }: {
   pluginName: string;
   name: string;
   type: 'generators' | 'executors';
@@ -338,11 +339,11 @@ function generateLinkOutput({
   }
 
   const link = `https://nx.dev/nx-api/${pluginName.substring(
-    nxPackagePrefix.length
+    nxPackagePrefix.length,
   )}/${type}/${name}`;
 
   return `\n\n${chalk.dim(
-    'Find more information and examples at:'
+    'Find more information and examples at:',
   )} ${chalk.bold(link)}`;
 }
 
@@ -358,7 +359,7 @@ function generateLinkOutput({
 function compareByPriority(
   a: [string, Schema['properties'][0]],
   b: [string, Schema['properties'][0]],
-  schema: Schema
+  schema: Schema,
 ): number {
   function getPriority([name, property]: [
     string,

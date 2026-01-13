@@ -2,7 +2,7 @@ import * as chalk from 'chalk';
 import { ChildProcess, exec, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
-import * as treeKill from 'tree-kill';
+import treeKill from 'tree-kill';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import {
   createPseudoTerminal,
@@ -34,7 +34,7 @@ export class ParallelRunningTasks implements RunningTask {
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
-    taskId: string
+    taskId: string,
   ) {
     this.childProcesses = options.commands.map(
       (commandConfig) =>
@@ -46,8 +46,8 @@ export class ParallelRunningTasks implements RunningTask {
           options.readyWhenStatus,
           options.streamOutput,
           options.envFile,
-          taskId
-        )
+          taskId,
+        ),
     );
     this.readyWhenStatus = options.readyWhenStatus;
     this.streamOutput = options.streamOutput;
@@ -85,7 +85,7 @@ export class ParallelRunningTasks implements RunningTask {
         } catch (e) {
           console.error(`Unable to terminate "${p.command}"\nError:`, e);
         }
-      })
+      }),
     );
   }
 
@@ -112,8 +112,8 @@ export class ParallelRunningTasks implements RunningTask {
                   result: { code, terminalOutput },
                 });
               });
-            })
-        )
+            }),
+        ),
       );
 
       if (code !== 0) {
@@ -157,12 +157,12 @@ export class ParallelRunningTasks implements RunningTask {
             // Immediately terminate all other running processes
             await this.terminateRemainingProcesses(
               runningProcesses,
-              childProcess
+              childProcess,
             );
           }
 
           runningProcesses.delete(childProcess);
-        })
+        }),
       );
 
       let terminalOutput = Array.from(terminalOutputs.values()).join('\r\n');
@@ -188,12 +188,12 @@ export class ParallelRunningTasks implements RunningTask {
 
   private async terminateRemainingProcesses(
     runningProcesses: Set<RunningNodeProcess>,
-    failedProcess: RunningNodeProcess
+    failedProcess: RunningNodeProcess,
   ): Promise<void> {
     const terminationPromises: Promise<void>[] = [];
 
     const processesToTerminate = [...runningProcesses].filter(
-      (p) => p !== failedProcess
+      (p) => p !== failedProcess,
     );
     for (const process of processesToTerminate) {
       runningProcesses.delete(process);
@@ -205,10 +205,10 @@ export class ParallelRunningTasks implements RunningTask {
           if (this.streamOutput) {
             console.error(
               `Failed to terminate process "${process.command}":`,
-              err
+              err,
             );
           }
-        })
+        }),
       );
     }
 
@@ -235,7 +235,7 @@ export class SeriallyRunningTasks implements RunningTask {
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
     private readonly tuiEnabled: boolean,
-    private readonly taskId: string
+    private readonly taskId: string,
   ) {
     this.run(options, context)
       .catch((e) => {
@@ -278,7 +278,7 @@ export class SeriallyRunningTasks implements RunningTask {
 
   private async run(
     options: NormalizedRunCommandsOptions,
-    context: ExecutorContext
+    context: ExecutorContext,
   ) {
     for (const c of options.commands) {
       const childProcess = await this.createProcess(
@@ -290,7 +290,7 @@ export class SeriallyRunningTasks implements RunningTask {
         options.usePty,
         options.streamOutput,
         options.tty,
-        options.envFile
+        options.envFile,
       );
       this.currentProcess = childProcess;
 
@@ -326,7 +326,7 @@ export class SeriallyRunningTasks implements RunningTask {
     usePty: boolean = true,
     streamOutput: boolean = true,
     tty: boolean,
-    envFile?: string
+    envFile?: string,
   ): Promise<PseudoTtyProcess | RunningNodeProcess> {
     // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
     // currently does not work properly in windows
@@ -347,7 +347,7 @@ export class SeriallyRunningTasks implements RunningTask {
         env,
         streamOutput,
         tty,
-        envFile
+        envFile,
       );
 
       // Register process for metrics collection (direct run-commands execution)
@@ -368,7 +368,7 @@ export class SeriallyRunningTasks implements RunningTask {
       [],
       streamOutput,
       envFile,
-      taskId
+      taskId,
     );
   }
 }
@@ -389,7 +389,7 @@ class RunningNodeProcess implements RunningTask {
     private readyWhenStatus: { stringToMatch: string; found: boolean }[],
     streamOutput = true,
     envFile: string,
-    private taskId: string
+    private taskId: string,
   ) {
     env = processEnv(color, cwd, env, envFile);
     this.command = commandConfig.command;
@@ -455,7 +455,7 @@ class RunningNodeProcess implements RunningTask {
 
   private addListeners(
     commandConfig: RunCommandsCommandOptions,
-    streamOutput: boolean
+    streamOutput: boolean,
   ) {
     this.childProcess.stdout.on('data', (data) => {
       const output = addColorAndPrefix(data, commandConfig);
@@ -535,7 +535,7 @@ class RunningNodeProcess implements RunningTask {
 export async function runSingleCommandWithPseudoTerminal(
   normalized: NormalizedRunCommandsOptions,
   context: ExecutorContext,
-  taskId: string
+  taskId: string,
 ): Promise<PseudoTtyProcess> {
   const pseudoTerminal = createPseudoTerminal();
   const pseudoTtyProcess = await createProcessWithPseudoTty(
@@ -546,7 +546,7 @@ export async function runSingleCommandWithPseudoTerminal(
     normalized.env,
     normalized.streamOutput,
     pseudoTerminal ? normalized.isTTY : false,
-    normalized.envFile
+    normalized.envFile,
   );
 
   // Register process for metrics collection (direct run-commands execution)
@@ -568,7 +568,7 @@ async function createProcessWithPseudoTty(
   env: Record<string, string>,
   streamOutput: boolean = true,
   tty: boolean,
-  envFile?: string
+  envFile?: string,
 ) {
   return pseudoTerminal.runCommand(commandConfig.command, {
     cwd,
@@ -603,7 +603,7 @@ function addColorAndPrefix(out: string, config: RunCommandsCommandOptions) {
 
 function calculateCwd(
   cwd: string | undefined,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): string {
   if (!cwd) return context.root;
   if (isAbsolute(cwd)) return cwd;
@@ -620,7 +620,7 @@ function processEnv(
   color: boolean,
   cwd: string,
   envOptionFromExecutor: Record<string, string>,
-  envFile?: string
+  envFile?: string,
 ) {
   let localEnv = appendLocalEnv({ cwd: cwd ?? process.cwd() });
   localEnv = {
@@ -647,7 +647,7 @@ function processEnv(
 
 function isReady(
   readyWhenStatus: { stringToMatch: string; found: boolean }[] = [],
-  data?: string
+  data?: string,
 ): boolean {
   if (data) {
     for (const readyWhenElement of readyWhenStatus) {
@@ -673,7 +673,7 @@ let registered = false;
 
 function registerProcessListener(
   runningTask: PseudoTtyProcess | ParallelRunningTasks | SeriallyRunningTasks,
-  pseudoTerminal?: PseudoTerminal
+  pseudoTerminal?: PseudoTerminal,
 ) {
   if (registered) {
     return;

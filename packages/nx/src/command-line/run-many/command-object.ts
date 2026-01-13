@@ -18,18 +18,18 @@ export const yargsRunManyCommand: CommandModule = {
       withTuiOptions(
         withRunManyOptions(
           withOutputStyleOption(
-            withTargetAndConfigurationOption(withBatch(yargs))
-          )
-        )
+            withTargetAndConfigurationOption(withBatch(yargs)),
+          ),
+        ),
       ),
-      'run-many'
+      'run-many',
     ),
   handler: async (args) => {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        await import('./run-many').then((m) => m.runMany(withOverrides(args)));
-      }
+        await import('./run-many.js').then((m) => m.runMany(withOverrides(args)));
+      },
     );
     process.exit(exitCode);
   },

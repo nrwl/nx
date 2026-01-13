@@ -50,15 +50,15 @@ export function printChanges(fileChanges: FileChange[]) {
 async function promptForCollection(
   generatorName: string,
   interactive: boolean,
-  projectsConfiguration: ProjectsConfigurations
+  projectsConfiguration: ProjectsConfigurations,
 ): Promise<string> {
   const localPlugins = await getLocalWorkspacePlugins(
     projectsConfiguration,
-    readNxJson()
+    readNxJson(),
   );
 
   const installedCollections = Array.from(
-    new Set(findInstalledPlugins().map((x) => x.name))
+    new Set(findInstalledPlugins().map((x) => x.name)),
   );
 
   const choicesMap = new Set<string>();
@@ -75,19 +75,20 @@ async function promptForCollection(
         collectionName,
         generatorName,
         workspaceRoot,
-        projectsConfiguration.projects
+        projectsConfiguration.projects,
       );
       if (hidden) {
         continue;
       }
       if (deprecated) {
         deprecatedChoices.add(
-          `${resolvedCollectionName}:${normalizedGeneratorName}`
+          `${resolvedCollectionName}:${normalizedGeneratorName}`,
         );
       } else {
         choicesMap.add(`${resolvedCollectionName}:${normalizedGeneratorName}`);
       }
-    } catch {}
+    } catch {
+    }
   }
 
   const choicesFromLocalPlugins: {
@@ -105,7 +106,7 @@ async function promptForCollection(
         name,
         generatorName,
         workspaceRoot,
-        projectsConfiguration.projects
+        projectsConfiguration.projects,
       );
       if (hidden) {
         continue;
@@ -122,7 +123,8 @@ async function promptForCollection(
           });
         }
       }
-    } catch {}
+    } catch {
+    }
   }
   if (choicesFromLocalPlugins.length) {
     choicesFromLocalPlugins[choicesFromLocalPlugins.length - 1].message += '\n';
@@ -131,11 +133,11 @@ async function promptForCollection(
     choicesFromLocalPlugins as (
       | string
       | {
-          name: string;
-          message: string;
-          value: string;
-        }
-    )[]
+      name: string;
+      message: string;
+      value: string;
+    }
+      )[]
   ).concat(...choicesMap);
   if (choices.length === 1) {
     return typeof choices[0] === 'string' ? choices[0] : choices[0].value;
@@ -159,11 +161,11 @@ async function promptForCollection(
         name: 'customCollection',
         type: 'input',
         message: `Which collection would you like to use?`,
-        skip: function () {
+        skip: function() {
           // Skip this question if the user did not answer None of the above
           return this.state.answers.generator !== noneOfTheAbove;
         },
-        validate: function (value) {
+        validate: function(value) {
           if (this.skipped) {
             return true;
           }
@@ -172,7 +174,7 @@ async function promptForCollection(
               value,
               generatorName,
               workspaceRoot,
-              projectsConfiguration.projects
+              projectsConfiguration.projects,
             );
             return true;
           } catch {
@@ -190,7 +192,7 @@ async function promptForCollection(
       [
         `All installed generators named "${generatorName}" are deprecated. To run one, provide its full \`collection:generator\` id.`,
         [...deprecatedChoices].map((x) => `  - ${x}`),
-      ].join('\n')
+      ].join('\n'),
     );
   } else {
     throw new Error(`Could not find any generators named "${generatorName}"`);
@@ -218,7 +220,7 @@ export function parseGeneratorString(value: string): {
 async function convertToGenerateOptions(
   generatorOptions: { [p: string]: any },
   mode: 'generate' | 'new',
-  projectsConfiguration?: ProjectsConfigurations
+  projectsConfiguration?: ProjectsConfigurations,
 ): Promise<GenerateOptions> {
   let collectionName: string | null = null;
   let generatorName: string | null = null;
@@ -235,7 +237,7 @@ async function convertToGenerateOptions(
       const generatorString = await promptForCollection(
         generatorDescriptor,
         interactive,
-        projectsConfiguration
+        projectsConfiguration,
       );
       const parsedGeneratorString = parseGeneratorString(generatorString);
       collectionName = parsedGeneratorString.collection;
@@ -275,8 +277,8 @@ async function convertToGenerateOptions(
 function throwInvalidInvocation(availableGenerators: string[]) {
   throw new Error(
     `Specify the generator name (e.g., nx generate ${availableGenerators.join(
-      ', '
-    )})`
+      ', ',
+    )})`,
   );
 }
 
@@ -284,7 +286,7 @@ export function printGenHelp(
   opts: GenerateOptions,
   schema: Schema,
   normalizedGeneratorName: string,
-  aliases: string[]
+  aliases: string[],
 ) {
   printHelp(
     `generate ${opts.collectionName}:${normalizedGeneratorName}`,
@@ -297,7 +299,7 @@ export function printGenHelp(
       plugin: opts.collectionName,
       entity: normalizedGeneratorName,
       aliases,
-    }
+    },
   );
 }
 
@@ -310,7 +312,7 @@ export async function generate(args: { [k: string]: any }) {
     const opts = await convertToGenerateOptions(
       args,
       'generate',
-      projectsConfigurations
+      projectsConfigurations,
     );
 
     const {
@@ -327,7 +329,7 @@ export async function generate(args: { [k: string]: any }) {
       opts.collectionName,
       opts.generatorName,
       workspaceRoot,
-      projectsConfigurations.projects
+      projectsConfigurations.projects,
     );
 
     if (deprecated) {
@@ -335,12 +337,12 @@ export async function generate(args: { [k: string]: any }) {
         [
           `${NX_PREFIX}: ${opts.collectionName}:${normalizedGeneratorName} is deprecated`,
           `${deprecated}`,
-        ].join('\n')
+        ].join('\n'),
       );
     }
     if (!opts.quiet && !opts.help) {
       logger.info(
-        `NX Generating ${opts.collectionName}:${normalizedGeneratorName}`
+        `NX Generating ${opts.collectionName}:${normalizedGeneratorName}`,
       );
     }
 
@@ -363,10 +365,10 @@ export async function generate(args: { [k: string]: any }) {
         cwd,
         workspaceRoot,
         projectsConfigurations,
-        nxJsonConfiguration
+        nxJsonConfiguration,
       ),
       relative(workspaceRoot, cwd),
-      args.verbose
+      args.verbose,
     );
 
     if (
@@ -374,13 +376,13 @@ export async function generate(args: { [k: string]: any }) {
         opts.collectionName,
         normalizedGeneratorName,
         workspaceRoot,
-        projectsConfigurations.projects
+        projectsConfigurations.projects,
       ).isNxGenerator
     ) {
       const host = new FsTree(
         workspaceRoot,
         args.verbose,
-        `generating (${opts.collectionName}:${normalizedGeneratorName})`
+        `generating (${opts.collectionName}:${normalizedGeneratorName})`,
       );
       const implementation = implementationFactory();
 
@@ -408,14 +410,14 @@ export async function generate(args: { [k: string]: any }) {
       }
     } else {
       require('../../adapter/compat');
-      return (await import('../../adapter/ngcli-adapter')).generate(
+      return (await import('../../adapter/ngcli-adapter.js')).generate(
         workspaceRoot,
         {
           ...opts,
           generatorOptions: combinedOpts,
         },
         projectsConfigurations.projects,
-        args.verbose
+        args.verbose,
       );
     }
   });

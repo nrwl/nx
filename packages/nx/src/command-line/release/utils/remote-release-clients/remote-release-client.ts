@@ -50,7 +50,7 @@ export abstract class RemoteReleaseClient<
     // A workspace isn't guaranteed to have a remote
     private remoteRepoData: RemoteRepoData | null,
     protected createReleaseConfig: false | ResolvedCreateRemoteReleaseProvider,
-    protected tokenData: { token: string; headerName: string } | null
+    protected tokenData: { token: string; headerName: string } | null,
   ) {
     this.tokenHeader = {};
     if (tokenData) {
@@ -73,7 +73,7 @@ export abstract class RemoteReleaseClient<
   abstract createPostGitTask(
     releaseVersion: ReleaseVersion,
     changelogContents: string,
-    dryRun: boolean
+    dryRun: boolean,
   ): PostGitTask;
 
   /**
@@ -81,7 +81,7 @@ export abstract class RemoteReleaseClient<
    * invoked by a changelog renderer implementation.
    */
   abstract applyUsernameToAuthors(
-    authors: Map<string, { email: Set<string>; username?: string }>
+    authors: Map<string, { email: Set<string>; username?: string }>,
   ): Promise<void>;
 
   /**
@@ -89,12 +89,12 @@ export abstract class RemoteReleaseClient<
    */
   protected async makeRequest(
     url: string,
-    opts: AxiosRequestConfig = {}
+    opts: AxiosRequestConfig = {},
   ): Promise<any> {
     const remoteRepoData = this.getRemoteRepoData<RemoteRepoData>();
     if (!remoteRepoData) {
       throw new Error(
-        `No remote repo data could be resolved for the current workspace`
+        `No remote repo data could be resolved for the current workspace`,
       );
     }
     const config: AxiosRequestConfig<any> = {
@@ -112,7 +112,7 @@ export abstract class RemoteReleaseClient<
     releaseVersion: ReleaseVersion,
     changelogContents: string,
     latestCommit: string,
-    { dryRun }: { dryRun: boolean }
+    { dryRun }: { dryRun: boolean },
   ): Promise<void> {
     let existingRelease: RemoteRelease | undefined;
 
@@ -141,7 +141,7 @@ export abstract class RemoteReleaseClient<
             ? existingRelease.description
             : ''
         : '',
-      changelogContents
+      changelogContents,
     );
 
     if (!dryRun) {
@@ -153,7 +153,7 @@ export abstract class RemoteReleaseClient<
       };
       const result = await this.syncRelease(
         remoteReleaseOptions,
-        existingRelease
+        existingRelease,
       );
       if (result.status === 'manual') {
         await this.handleError(result.error, result);
@@ -174,7 +174,7 @@ export abstract class RemoteReleaseClient<
    */
   protected abstract handleError(
     error: any,
-    result: RemoteReleaseResult
+    result: RemoteReleaseResult,
   ): Promise<void>;
 
   /**
@@ -188,7 +188,7 @@ export abstract class RemoteReleaseClient<
   protected abstract logReleaseAction(
     existingRelease: RemoteRelease | undefined,
     gitTag: string,
-    dryRun: boolean
+    dryRun: boolean,
   ): void;
 
   /**
@@ -196,7 +196,7 @@ export abstract class RemoteReleaseClient<
    */
   protected printRemoteReleaseContents(
     existingBody: string,
-    newBody: string
+    newBody: string,
   ): void {
     console.log('');
     printDiff(existingBody, newBody, 3, noDiffInChangelogMessage);
@@ -211,7 +211,7 @@ export abstract class RemoteReleaseClient<
    * Create a manual release URL used to create/edit a release in the remote release provider's UI
    */
   protected abstract getManualRemoteReleaseURL(
-    remoteReleaseOptions: RemoteReleaseOptions
+    remoteReleaseOptions: RemoteReleaseOptions,
   ): string;
 
   /**
@@ -224,7 +224,7 @@ export abstract class RemoteReleaseClient<
    */
   protected abstract updateRelease(
     id: string,
-    body: RemoteRelease
+    body: RemoteRelease,
   ): Promise<any>;
 
   /**
@@ -232,7 +232,7 @@ export abstract class RemoteReleaseClient<
    */
   protected abstract syncRelease(
     remoteReleaseOptions: RemoteReleaseOptions,
-    existingRelease?: RemoteRelease
+    existingRelease?: RemoteRelease,
   ): Promise<RemoteReleaseResult>;
 }
 
@@ -241,19 +241,19 @@ export abstract class RemoteReleaseClient<
  */
 export async function createRemoteReleaseClient(
   createReleaseConfig: false | ResolvedCreateRemoteReleaseProvider,
-  remoteName = 'origin'
+  remoteName = 'origin',
 ): Promise<GithubRemoteReleaseClient | GitLabRemoteReleaseClient | null> {
   switch (true) {
     // GitHub and GitHub Enterprise Server
     case typeof createReleaseConfig === 'object' &&
-      (createReleaseConfig.provider === 'github-enterprise-server' ||
-        createReleaseConfig.provider === 'github'):
+    (createReleaseConfig.provider === 'github-enterprise-server' ||
+      createReleaseConfig.provider === 'github'):
     // If remote releases are disabled, assume GitHub repo data resolution (but don't attempt to resolve a token) to match existing behavior
     case createReleaseConfig === false: {
-      const { GithubRemoteReleaseClient } = await import('./github');
+      const { GithubRemoteReleaseClient } = await import('./github.js');
       const repoData = GithubRemoteReleaseClient.resolveRepoData(
         createReleaseConfig,
-        remoteName
+        remoteName,
       );
       const token =
         createReleaseConfig && repoData
@@ -262,16 +262,16 @@ export async function createRemoteReleaseClient(
       return new GithubRemoteReleaseClient(
         repoData,
         createReleaseConfig,
-        token
+        token,
       );
     }
     // GitLab
     case typeof createReleaseConfig === 'object' &&
-      createReleaseConfig.provider === 'gitlab': {
-      const { GitLabRemoteReleaseClient } = await import('./gitlab');
+    createReleaseConfig.provider === 'gitlab': {
+      const { GitLabRemoteReleaseClient } = await import('./gitlab.js');
       const repoData = GitLabRemoteReleaseClient.resolveRepoData(
         createReleaseConfig,
-        remoteName
+        remoteName,
       );
       const tokenData = repoData
         ? await GitLabRemoteReleaseClient.resolveTokenData(repoData.hostname)
@@ -279,14 +279,14 @@ export async function createRemoteReleaseClient(
       return new GitLabRemoteReleaseClient(
         repoData,
         createReleaseConfig,
-        tokenData
+        tokenData,
       );
     }
     default:
       throw new Error(
         `Unsupported remote release configuration: ${JSON.stringify(
-          createReleaseConfig
-        )}`
+          createReleaseConfig,
+        )}`,
       );
   }
 }

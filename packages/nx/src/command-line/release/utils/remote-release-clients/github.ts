@@ -20,9 +20,10 @@ import {
 // axios types and values don't seem to match
 import _axios = require('axios');
 
-const axios = _axios as any as (typeof _axios)['default'];
+const axios = _axios as any as (typeof _axios);
 
-export interface GithubRepoData extends RemoteRepoData {}
+export interface GithubRepoData extends RemoteRepoData {
+}
 
 // https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#create-a-release--parameters
 export interface GithubRemoteRelease {
@@ -51,7 +52,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
    */
   static resolveRepoData(
     createReleaseConfig: false | ResolvedCreateRemoteReleaseProvider,
-    remoteName = 'origin'
+    remoteName = 'origin',
   ): GithubRepoData | null {
     try {
       const remoteUrl = execSync(`git remote get-url ${remoteName}`, {
@@ -85,7 +86,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
         };
       } else {
         throw new Error(
-          `Could not extract "user/repo" data from the resolved remote URL: ${remoteUrl}`
+          `Could not extract "user/repo" data from the resolved remote URL: ${remoteUrl}`,
         );
       }
     } catch (error) {
@@ -97,7 +98,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
    * Resolve a GitHub token from environment variables or gh CLI
    */
   static async resolveTokenData(
-    hostname: string
+    hostname: string,
   ): Promise<{ token: string; headerName: string } | null> {
     // Try and resolve from the environment
     const tokenFromEnv = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
@@ -108,7 +109,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
     const ghCLIPath = joinPathFragments(
       process.env.XDG_CONFIG_HOME || joinPathFragments(homedir(), '.config'),
       'gh',
-      'hosts.yml'
+      'hosts.yml',
     );
     if (existsSync(ghCLIPath)) {
       const yamlContents = await fsp.readFile(ghCLIPath, 'utf8');
@@ -136,7 +137,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
     }
     if (hostname !== 'github.com') {
       console.log(
-        `Warning: It was not possible to automatically resolve a GitHub token from your environment for hostname ${hostname}. If you set the GITHUB_TOKEN or GH_TOKEN environment variable, that will be used for GitHub API requests.`
+        `Warning: It was not possible to automatically resolve a GitHub token from your environment for hostname ${hostname}. If you set the GITHUB_TOKEN or GH_TOKEN environment variable, that will be used for GitHub API requests.`,
       );
     }
     return null;
@@ -145,7 +146,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
   createPostGitTask(
     releaseVersion: ReleaseVersion,
     changelogContents: string,
-    dryRun: boolean
+    dryRun: boolean,
   ): PostGitTask {
     return async (latestCommit: string) => {
       output.logSingleLine(`Creating GitHub Release`);
@@ -153,13 +154,13 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
         releaseVersion,
         changelogContents,
         latestCommit,
-        { dryRun }
+        { dryRun },
       );
     };
   }
 
   async applyUsernameToAuthors(
-    authors: Map<string, { email: Set<string>; username?: string }>
+    authors: Map<string, { email: Set<string>; username?: string }>,
   ): Promise<void> {
     await Promise.all(
       [...authors.keys()].map(async (authorName) => {
@@ -167,7 +168,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
         for (const email of meta.email) {
           if (email.endsWith('@users.noreply.github.com')) {
             const match = email.match(
-              /^(\d+\+)?([^@]+)@users\.noreply\.github\.com$/
+              /^(\d+\+)?([^@]+)@users\.noreply\.github\.com$/,
             );
             if (match && match[2]) {
               meta.username = match[2];
@@ -185,7 +186,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
             break;
           }
         }
-      })
+      }),
     );
   }
 
@@ -195,7 +196,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
   protected async getReleaseByTag(tag: string): Promise<GithubRemoteRelease> {
     const githubRepoData = this.getRequiredRemoteRepoData();
     return await this.makeRequest(
-      `/repos/${githubRepoData.slug}/releases/tags/${tag}`
+      `/repos/${githubRepoData.slug}/releases/tags/${tag}`,
     );
   }
 
@@ -203,7 +204,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
    * Create a new release
    */
   protected async createRelease(
-    remoteRelease: GithubRemoteRelease
+    remoteRelease: GithubRemoteRelease,
   ): Promise<any> {
     const githubRepoData = this.getRequiredRemoteRepoData();
     return await this.makeRequest(`/repos/${githubRepoData.slug}/releases`, {
@@ -214,7 +215,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
 
   protected async updateRelease(
     id: string,
-    remoteRelease: GithubRemoteRelease
+    remoteRelease: GithubRemoteRelease,
   ): Promise<any> {
     const githubRepoData = this.getRequiredRemoteRepoData();
     return await this.makeRequest(
@@ -222,12 +223,12 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       {
         method: 'PATCH',
         data: remoteRelease,
-      }
+      },
     );
   }
 
   protected getManualRemoteReleaseURL(
-    remoteReleaseOptions: RemoteReleaseOptions
+    remoteReleaseOptions: RemoteReleaseOptions,
   ): string {
     const githubRepoData = this.getRequiredRemoteRepoData();
     // Parameters taken from https://github.com/isaacs/github/issues/1410#issuecomment-442240267
@@ -257,7 +258,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
   protected logReleaseAction(
     existingRelease: GithubRemoteRelease | undefined,
     gitTag: string,
-    dryRun: boolean
+    dryRun: boolean,
   ): void {
     const githubRepoData = this.getRequiredRemoteRepoData();
     const logTitle = `https://${githubRepoData.hostname}/${githubRepoData.slug}/releases/tag/${gitTag}`;
@@ -265,20 +266,20 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       console.error(
         `${chalk.white('UPDATE')} ${logTitle}${
           dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-        }`
+        }`,
       );
     } else {
       console.error(
         `${chalk.green('CREATE')} ${logTitle}${
           dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-        }`
+        }`,
       );
     }
   }
 
   protected async handleError(
     error: any,
-    result: RemoteReleaseResult
+    result: RemoteReleaseResult,
   ): Promise<void> {
     if (error) {
       process.exitCode = 1;
@@ -299,7 +300,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       } else {
         console.log(error);
         console.error(
-          `An unknown error occurred while trying to create a release on GitHub, please report this on https://github.com/nrwl/nx (NOTE: make sure to redact your GitHub token from the error message!)`
+          `An unknown error occurred while trying to create a release on GitHub, please report this on https://github.com/nrwl/nx (NOTE: make sure to redact your GitHub token from the error message!)`,
         );
       }
     }
@@ -314,15 +315,15 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       .then(() => {
         console.info(
           `\nFollow up in the browser to manually create the release:\n\n` +
-            chalk.underline(chalk.cyan(result.url)) +
-            `\n`
+          chalk.underline(chalk.cyan(result.url)) +
+          `\n`,
         );
       })
       .catch(() => {
         console.info(
           `Open this link to manually create a release: \n` +
-            chalk.underline(chalk.cyan(result.url)) +
-            '\n'
+          chalk.underline(chalk.cyan(result.url)) +
+          '\n',
         );
       });
   }
@@ -396,7 +397,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
 
   protected async syncRelease(
     remoteReleaseOptions: RemoteReleaseOptions,
-    existingRelease?: GithubRemoteRelease
+    existingRelease?: GithubRemoteRelease,
   ): Promise<RemoteReleaseResult> {
     const githubReleaseData: GithubRemoteRelease = {
       tag_name: remoteReleaseOptions.version,
@@ -411,9 +412,9 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       const newGhRelease = await (existingRelease
         ? this.updateRelease(existingRelease.id, githubReleaseData)
         : this.createRelease({
-            ...githubReleaseData,
-            target_commitish: remoteReleaseOptions.commit,
-          }));
+          ...githubReleaseData,
+          target_commitish: remoteReleaseOptions.commit,
+        }));
 
       return {
         status: existingRelease ? 'updated' : 'created',
@@ -434,7 +435,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
     const githubRepoData = this.getRemoteRepoData<GithubRepoData>();
     if (!githubRepoData) {
       throw new Error(
-        `No remote repo data could be resolved for the current workspace`
+        `No remote repo data could be resolved for the current workspace`,
       );
     }
     return githubRepoData;

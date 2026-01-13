@@ -13,7 +13,7 @@ export const yargsStopAllAgentsCommand: CommandModule = {
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
     process.exit(
-      await (await import('./stop-all-agents')).stopAllAgentsHandler(args)
+      await (await import('./stop-all-agents.js')).stopAllAgentsHandler(args),
     );
   },
 };

@@ -12,20 +12,20 @@ export function setupWorkspaceContext(workspaceRoot: string) {
   performance.mark('workspace-context');
   workspaceContext = new WorkspaceContext(
     workspaceRoot,
-    workspaceDataDirectoryForWorkspace(workspaceRoot)
+    workspaceDataDirectoryForWorkspace(workspaceRoot),
   );
   performance.mark('workspace-context:end');
   performance.measure(
     'workspace context init',
     'workspace-context',
-    'workspace-context:end'
+    'workspace-context:end',
   );
 }
 
 export async function getNxWorkspaceFilesFromContext(
   workspaceRoot: string,
   projectRootMap: Record<string, string>,
-  useDaemonProcess: boolean = true
+  useDaemonProcess: boolean = true,
 ) {
   if (!useDaemonProcess || isOnDaemon() || !daemonClient.enabled()) {
     ensureContextAvailable(workspaceRoot);
@@ -44,7 +44,7 @@ export async function getNxWorkspaceFilesFromContext(
 export function globWithWorkspaceContextSync(
   workspaceRoot: string,
   globs: string[],
-  exclude?: string[]
+  exclude?: string[],
 ) {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext.glob(globs, exclude);
@@ -53,7 +53,7 @@ export function globWithWorkspaceContextSync(
 export async function globWithWorkspaceContext(
   workspaceRoot: string,
   globs: string[],
-  exclude?: string[]
+  exclude?: string[],
 ) {
   if (workspaceRoot === '/virtual' || isOnDaemon() || !daemonClient.enabled()) {
     ensureContextAvailable(workspaceRoot);
@@ -66,7 +66,7 @@ export async function globWithWorkspaceContext(
 export async function multiGlobWithWorkspaceContext(
   workspaceRoot: string,
   globs: string[],
-  exclude?: string[]
+  exclude?: string[],
 ) {
   if (isOnDaemon() || !daemonClient.enabled()) {
     ensureContextAvailable(workspaceRoot);
@@ -78,7 +78,7 @@ export async function multiGlobWithWorkspaceContext(
 export async function hashWithWorkspaceContext(
   workspaceRoot: string,
   globs: string[],
-  exclude?: string[]
+  exclude?: string[],
 ) {
   if (isOnDaemon() || !daemonClient.enabled()) {
     ensureContextAvailable(workspaceRoot);
@@ -89,7 +89,7 @@ export async function hashWithWorkspaceContext(
 
 export async function hashMultiGlobWithWorkspaceContext(
   workspaceRoot: string,
-  globGroups: string[][]
+  globGroups: string[][],
 ) {
   if (isOnDaemon() || !daemonClient.enabled()) {
     ensureContextAvailable(workspaceRoot);
@@ -102,19 +102,19 @@ export async function updateContextWithChangedFiles(
   workspaceRoot: string,
   createdFiles: string[],
   updatedFiles: string[],
-  deletedFiles: string[]
+  deletedFiles: string[],
 ) {
   if (!daemonClient.enabled()) {
     updateFilesInContext(
       workspaceRoot,
       [...createdFiles, ...updatedFiles],
-      deletedFiles
+      deletedFiles,
     );
   } else if (isOnDaemon()) {
     // make sure to only import this when running on the daemon
     const { addUpdatedAndDeletedFiles } = await import(
-      '../daemon/server/project-graph-incremental-recomputation'
-    );
+      '../daemon/server/project-graph-incremental-recomputation.js'
+      );
     // update files for the incremental graph recomputation on the daemon
     addUpdatedAndDeletedFiles(createdFiles, updatedFiles, deletedFiles);
   } else {
@@ -122,7 +122,7 @@ export async function updateContextWithChangedFiles(
     await daemonClient.updateWorkspaceContext(
       createdFiles,
       updatedFiles,
-      deletedFiles
+      deletedFiles,
     );
   }
 }
@@ -130,7 +130,7 @@ export async function updateContextWithChangedFiles(
 export function updateFilesInContext(
   workspaceRoot: string,
   updatedFiles: string[],
-  deletedFiles: string[]
+  deletedFiles: string[],
 ) {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext?.incrementalUpdate(updatedFiles, deletedFiles);
@@ -146,7 +146,7 @@ export async function getAllFileDataInContext(workspaceRoot: string) {
 
 export async function getFilesInDirectoryUsingContext(
   workspaceRoot: string,
-  dir: string
+  dir: string,
 ) {
   if (isOnDaemon() || !daemonClient.enabled()) {
     ensureContextAvailable(workspaceRoot);
@@ -159,14 +159,14 @@ export function updateProjectFiles(
   projectRootMappings: Record<string, string>,
   rustReferences: NxWorkspaceFilesExternals,
   updatedFiles: Record<string, string>,
-  deletedFiles: string[]
+  deletedFiles: string[],
 ) {
   return workspaceContext?.updateProjectFiles(
     projectRootMappings,
     rustReferences.projectFiles,
     rustReferences.globalFiles,
     updatedFiles,
-    deletedFiles
+    deletedFiles,
   );
 }
 

@@ -10,7 +10,7 @@ export const yargsMigrateCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(withMigrationOptions(yargs), 'migrate'),
   handler: async () => {
-    await (await import('./migrate')).runMigration();
+    await (await import('./migrate.js')).runMigration();
     process.exit(0);
   },
 };
@@ -22,8 +22,8 @@ export const yargsInternalMigrateCommand: CommandModule = {
   handler: async (args) =>
     process.exit(
       await (
-        await import('./migrate')
-      ).migrate(process.cwd(), args, process.argv.slice(3))
+        await import('./migrate.js')
+      ).migrate(process.cwd(), args, process.argv.slice(3)),
     ),
 };
 
@@ -82,15 +82,15 @@ function withMigrationOptions(yargs: Argv) {
       ({ createCommits, commitPrefix, from, excludeAppliedMigrations }) => {
         if (!createCommits && commitPrefix !== defaultCommitPrefix) {
           throw new Error(
-            'Error: Providing a custom commit prefix requires --create-commits to be enabled'
+            'Error: Providing a custom commit prefix requires --create-commits to be enabled',
           );
         }
         if (excludeAppliedMigrations && !from) {
           throw new Error(
-            'Error: Excluding migrations that should have been previously applied requires --from to be set'
+            'Error: Excluding migrations that should have been previously applied requires --from to be set',
           );
         }
         return true;
-      }
+      },
     );
 }

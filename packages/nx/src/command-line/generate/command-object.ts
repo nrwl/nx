@@ -11,7 +11,7 @@ export const yargsGenerateCommand: CommandModule = {
     // Remove the command from the args
     args._ = args._.slice(1);
 
-    process.exit(await (await import('./generate')).generate(args));
+    process.exit(await (await import('./generate.js')).generate(args));
   },
 };
 
@@ -62,7 +62,7 @@ function withGenerateOptions(yargs: Argv) {
     return res.help(false);
   } else {
     return res.epilog(
-      `Run "nx g collection:generator --help" to see information about the generator's schema.`
+      `Run "nx g collection:generator --help" to see information about the generator's schema.`,
     );
   }
 }

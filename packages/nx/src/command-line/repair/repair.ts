@@ -1,13 +1,13 @@
 import { handleErrors } from '../../utils/handle-errors';
-import * as migrationsJson from '../../../migrations.json';
 import { executeMigrations } from '../migrate/migrate';
 import { output } from '../../utils/output';
 
 export async function repair(
   args: { verbose: boolean },
-  extraMigrations = [] as any[]
+  extraMigrations = [] as any[],
 ) {
   return handleErrors(args.verbose, async () => {
+    const migrationsJson: { generators: Record<string, string>[] } = require(require.resolve('nx/migrations.json'));
     const nxMigrations = Object.entries(migrationsJson.generators).reduce(
       (agg, [name, migration]) => {
         const skip = migration['x-repair-skip'];
@@ -21,7 +21,7 @@ export async function repair(
         }
         return agg;
       },
-      []
+      [],
     );
 
     const migrations = [...nxMigrations, ...extraMigrations];
@@ -30,7 +30,7 @@ export async function repair(
       migrations,
       args.verbose,
       false,
-      ''
+      '',
     );
 
     if (migrationsWithNoChanges.length < migrations.length) {

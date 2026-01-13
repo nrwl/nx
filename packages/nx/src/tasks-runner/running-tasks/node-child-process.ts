@@ -2,7 +2,7 @@ import * as chalk from 'chalk';
 import type { ChildProcess, Serializable } from 'child_process';
 import { readFileSync } from 'fs';
 import { Transform } from 'stream';
-import * as treeKill from 'tree-kill';
+import treeKill from 'tree-kill';
 import { signalToCode } from '../../utils/exit-codes';
 import type { RunningTask } from './running-task';
 
@@ -16,7 +16,7 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
 
   constructor(
     private childProcess: ChildProcess,
-    { streamOutput, prefix }: { streamOutput: boolean; prefix: string }
+    { streamOutput, prefix }: { streamOutput: boolean; prefix: string },
   ) {
     if (streamOutput) {
       if (process.env.NX_PREFIX_OUTPUT === 'true') {
@@ -100,6 +100,7 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
       this.childProcess.send(message);
     }
   }
+
   public kill(signal?: NodeJS.Signals) {
     if (this.childProcess?.pid) {
       treeKill(this.childProcess.pid, signal, () => {
@@ -118,8 +119,8 @@ function addPrefixTransformer(prefix?: string) {
         .filter(Boolean)
         .forEach((m) =>
           this.push(
-            prefix ? prefix + ' ' + m + newLineSeparator : m + newLineSeparator
-          )
+            prefix ? prefix + ' ' + m + newLineSeparator : m + newLineSeparator,
+          ),
         );
       callback();
     },
@@ -175,7 +176,7 @@ export class NodeChildProcessWithDirectOutput implements RunningTask {
 
   constructor(
     private childProcess: ChildProcess,
-    private temporaryOutputPath: string
+    private temporaryOutputPath: string,
   ) {
     // Re-emit any messages from the task process
     this.childProcess.on('message', (message) => {
