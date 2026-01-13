@@ -21,7 +21,7 @@ export const yargsMcpCommand: CommandModule = {
       .showHelpOnFail(false);
   },
   handler: async (args: any) => {
-    await (await import('./mcp')).mcpHandler(args);
+    await (await import('./mcp.js')).mcpHandler(args);
     process.exit(0);
   },
 };

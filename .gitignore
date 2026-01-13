@@ -141,3 +141,8 @@ test-results
 /*.deb
 .nx/polygraph/
 .claude/worktrees
+
+# Nx Typings Output
+packages/nx/**/*.d.ts
+!packages/nx/src/ai/set-up-ai-agents/schema.d.ts
+!packages/nx/src/native/index.d.ts
