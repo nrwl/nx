@@ -1618,6 +1618,7 @@ export async function executeMigrations(
 
 class ChangedDepInstaller {
   private initialDeps: string;
+
   constructor(private readonly root: string) {
     this.initialDeps = getStringifiedPackageJsonDeps(root);
   }
@@ -2041,7 +2042,7 @@ const getNgCompatLayer = (() => {
   let _ngCliAdapter: typeof import('../../adapter/ngcli-adapter');
   return async function getNgCompatLayer() {
     if (!_ngCliAdapter) {
-      _ngCliAdapter = await import('../../adapter/ngcli-adapter');
+      _ngCliAdapter = await import('../../adapter/ngcli-adapter.js');
       require('../../adapter/compat');
     }
     return _ngCliAdapter;

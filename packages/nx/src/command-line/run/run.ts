@@ -210,7 +210,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   } else {
     require('../../adapter/compat');
     const observable = await (
-      await import('../../adapter/ngcli-adapter')
+      await import('../../adapter/ngcli-adapter.js')
     ).scheduleTarget(
       root,
       {
@@ -223,7 +223,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
       isVerbose,
       projectGraph
     );
-    const { eachValueFrom } = await import('../../adapter/rxjs-for-await');
+    const { eachValueFrom } = await import('../../adapter/rxjs-for-await.js');
     return eachValueFrom(observable as any);
   }
 }

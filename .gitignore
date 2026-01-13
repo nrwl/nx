@@ -143,3 +143,8 @@ test-results
 .claude/worktrees
 
 .nx/self-healing
+# Nx Typings Output
+packages/nx/**/*.d.ts
+!packages/nx/src/utils/perf-hooks.d.ts
+!packages/nx/src/ai/set-up-ai-agents/schema.d.ts
+!packages/nx/src/native/index.d.ts
