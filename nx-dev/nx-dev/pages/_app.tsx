@@ -102,9 +102,8 @@ export default function CustomApp({
       {bannerCollection.map((bannerConfig) => {
         // Check if banner is active
         const isActive =
-          bannerConfig.enabled &&
-          (!bannerConfig.activeUntil ||
-            new Date() < new Date(bannerConfig.activeUntil));
+          bannerConfig.activeUntil &&
+          new Date() < new Date(bannerConfig.activeUntil);
         if (!isActive) return null;
         return (
           <WebinarNotifier
