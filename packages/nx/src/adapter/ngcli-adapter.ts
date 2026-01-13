@@ -1260,7 +1260,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
 ) {
   const {
     WorkspaceNodeModulesArchitectHost: AngularWorkspaceNodeModulesArchitectHost,
-  } = await import('@angular-devkit/architect/node');
+  } = await import('@angular-devkit/architect/node/index.js');
 
   class WrappedWorkspaceNodeModulesArchitectHost extends AngularWorkspaceNodeModulesArchitectHost {
     constructor(

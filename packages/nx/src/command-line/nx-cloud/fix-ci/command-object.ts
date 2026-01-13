@@ -11,6 +11,6 @@ export const yargsFixCiCommand: CommandModule = {
       .showHelpOnFail(false)
       .option('help', { describe: 'Show help.', type: 'boolean' }),
   handler: async (args: any) => {
-    process.exit(await (await import('./fix-ci')).fixCiHandler(args));
+    process.exit(await (await import('./fix-ci.js')).fixCiHandler(args));
   },
 };

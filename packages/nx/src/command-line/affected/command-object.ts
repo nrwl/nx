@@ -44,7 +44,7 @@ export const yargsAffectedCommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await import('./affected')).affected(
+        return (await import('./affected.js')).affected(
           'affected',
           withOverrides(args)
         );
@@ -70,7 +70,7 @@ export const yargsAffectedTestCommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await import('./affected')).affected('affected', {
+        return (await import('./affected.js')).affected('affected', {
           ...withOverrides(args),
           target: 'test',
         });
@@ -96,7 +96,7 @@ export const yargsAffectedBuildCommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await import('./affected')).affected('affected', {
+        return (await import('./affected.js')).affected('affected', {
           ...withOverrides(args),
           target: 'build',
         });
@@ -122,7 +122,7 @@ export const yargsAffectedLintCommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await import('./affected')).affected('affected', {
+        return (await import('./affected.js')).affected('affected', {
           ...withOverrides(args),
           target: 'lint',
         });
@@ -148,7 +148,7 @@ export const yargsAffectedE2ECommand: CommandModule = {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await import('./affected')).affected('affected', {
+        return (await import('./affected.js')).affected('affected', {
           ...withOverrides(args),
           target: 'e2e',
         });

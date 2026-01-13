@@ -66,7 +66,7 @@ export async function handleErrors(
         bodyLines,
       });
     }
-    const { daemonClient } = await import('../daemon/client/client');
+    const { daemonClient } = await import('../daemon/client/client.js');
     if (daemonClient.enabled()) {
       daemonClient.reset();
     }

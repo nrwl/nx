@@ -138,3 +138,8 @@ test-results
 /packages/dotnet/analyzer/bin
 /packages/dotnet/analyzer/obj
 /*.deb
+
+# Nx Typings Output
+packages/nx/**/*.d.ts
+!packages/nx/src/ai/set-up-ai-agents/schema.d.ts
+!packages/nx/src/native/index.d.ts
