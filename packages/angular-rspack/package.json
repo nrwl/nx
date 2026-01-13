@@ -82,7 +82,7 @@
     "@angular/localize": "catalog:angular-supported-versions",
     "@angular/platform-server": "catalog:angular-supported-versions",
     "@angular/ssr": "catalog:angular-supported-versions",
-    "@rspack/core": ">=1.3.5 <2.0.0",
+    "@rspack/core": ">=1.3.5 <1.7.0",
     "tailwindcss": "^2.0.0 || ^3.0.0 || ^4.0.0",
     "zone.js": "catalog:angular-supported-versions"
   },

@@ -144,7 +144,7 @@ async function createOrchestrator(
   const orchestrator = new TaskOrchestrator(
     hasher,
     null,
-    [],
+    tasks,
     projectGraph,
     taskGraph,
     nxJson,

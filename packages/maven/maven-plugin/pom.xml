@@ -5,7 +5,7 @@
   <parent>
     <groupId>dev.nx.maven</groupId>
     <artifactId>nx-maven-parent</artifactId>
-    <version>0.0.11</version>
+    <version>0.0.12</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -42,7 +42,8 @@
   <properties>
     <!-- Enable install, deploy, and signing for this module -->
     <maven.install.skip>false</maven.install.skip>
-    <maven.deploy.skip>false</maven.deploy.skip>
+    <!-- Skip standard maven-deploy-plugin; we use central-publishing-maven-plugin instead -->
+    <maven.deploy.skip>true</maven.deploy.skip>
     <maven.gpg.skip>false</maven.gpg.skip>
   </properties>
 
@@ -330,6 +331,15 @@
           <plugin>
             <groupId>org.sonatype.central</groupId>
             <artifactId>central-publishing-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>publish-to-central</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>publish</goal>
+                </goals>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>

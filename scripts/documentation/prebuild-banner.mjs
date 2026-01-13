@@ -57,7 +57,9 @@ function validateBannerConfig(config) {
     return false;
   if (typeof config.primaryCtaText !== 'string' || !config.primaryCtaText)
     return false;
-  if (typeof config.enabled !== 'boolean') return false;
+  // activeUntil is required for determining when the banner expires
+  if (typeof config.activeUntil !== 'string' || !config.activeUntil)
+    return false;
   return true;
 }
 

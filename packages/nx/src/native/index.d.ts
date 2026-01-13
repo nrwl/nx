@@ -156,7 +156,7 @@ export declare class TaskDetails {
 
 export declare class TaskHasher {
   constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, options?: HasherOptions | undefined | null)
-  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>): NapiDashMap
+  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string): NapiDashMap
 }
 
 export declare class Watcher {
@@ -511,6 +511,10 @@ export declare export declare function validateOutputs(outputs: Array<string>): 
 export interface WatchEvent {
   path: string
   type: EventType
+}
+
+export interface WorkingDirectoryInput {
+  workingDirectory: string
 }
 
 /** Public NAPI error codes that are for Node */

@@ -9,7 +9,7 @@ use crate::native::{
 };
 use crate::native::{
     project_graph::utils::ProjectRootMappings,
-    tasks::hashers::{hash_env, hash_runtime, hash_workspace_files},
+    tasks::hashers::{hash_cwd, hash_env, hash_runtime, hash_workspace_files},
 };
 use crate::native::{
     tasks::hashers::{
@@ -81,6 +81,7 @@ impl TaskHasher {
         &self,
         hash_plans: External<HashMap<String, Vec<HashInstruction>>>,
         js_env: HashMap<String, String>,
+        cwd: String,
     ) -> anyhow::Result<NapiDashMap<String, HashDetails>> {
         // Create a fresh task output cache for this invocation
         // This ensures no stale caches across multiple CLI commands when the daemon holds
@@ -112,6 +113,7 @@ impl TaskHasher {
         let hash_time = std::time::Instant::now();
 
         let hashes: NapiDashMap<String, HashDetails> = NapiDashMap::new();
+        let cwd_path = std::path::Path::new(&cwd);
 
         hash_plans
             .iter()
@@ -132,6 +134,7 @@ impl TaskHasher {
                         sorted_externals: &sorted_externals,
                         selectively_hash_tsconfig,
                         task_output_cache: &task_output_cache,
+                        cwd: cwd_path,
                     },
                 )?;
 
@@ -191,6 +194,7 @@ impl TaskHasher {
             sorted_externals,
             selectively_hash_tsconfig,
             task_output_cache,
+            cwd,
         }: HashInstructionArgs,
     ) -> anyhow::Result<(String, String)> {
         let now = std::time::Instant::now();
@@ -219,6 +223,12 @@ impl TaskHasher {
                 let hashed_env = hash_env(env, js_env);
                 trace!(parent: &span, "hash_env: {:?}", now.elapsed());
                 hashed_env
+            }
+            HashInstruction::Cwd(mode) => {
+                let workspace_root = std::path::Path::new(&self.workspace_root);
+                let hashed_cwd = hash_cwd(workspace_root, cwd, mode.clone());
+                trace!(parent: &span, "hash_cwd: {:?}", now.elapsed());
+                hashed_cwd
             }
             HashInstruction::ProjectFileSet(project_name, file_sets) => {
                 let project = self
@@ -303,4 +313,5 @@ struct HashInstructionArgs<'a> {
     sorted_externals: &'a [&'a String],
     selectively_hash_tsconfig: bool,
     task_output_cache: &'a DashMap<String, String>,
+    cwd: &'a std::path::Path,
 }

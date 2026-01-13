@@ -55,6 +55,7 @@
     "@nx/vite": "workspace:*",
     "@nx/vitest": "workspace:*",
     "@nx/webpack": "workspace:*",
+    "@nx/storybook": "workspace:*",
     "nx": "workspace:*"
   },
   "optionalDependencies": {

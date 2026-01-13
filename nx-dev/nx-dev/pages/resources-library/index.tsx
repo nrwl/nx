@@ -1,14 +1,10 @@
 import { DefaultLayout } from '@nx/nx-dev-ui-common';
-import type { GetServerSideProps } from 'next';
 import type { ReactElement } from 'react';
 import { NextSeo } from 'next-seo';
 import { ResourceContainer } from '@nx/nx-dev-ui-resources';
 import { Resource } from '@nx/nx-dev-ui-resources';
-import { tryFramerProxy } from '../../lib/framer-proxy';
 
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  if (await tryFramerProxy(ctx)) return { props: { resources: [] } };
-
+export async function getStaticProps() {
   const fs = require('fs');
   const path = require('path');
 
@@ -21,7 +17,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
       resources,
     },
   };
-};
+}
 
 interface ResourcesPageProps {
   resources: Resource[];

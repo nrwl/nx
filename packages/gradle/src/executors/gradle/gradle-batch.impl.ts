@@ -119,12 +119,20 @@ export function getGradlewTasksToRun(
   const testTaskIdsWithExclude: Set<string> = new Set([]);
   const taskIdsWithoutExclude: Set<string> = new Set([]);
   const gradlewTasksToRun: Record<string, GradleExecutorSchema> = {};
+  const includeDependsOnTasks: Set<string> = new Set();
 
   for (const taskId of taskIds) {
     const task = taskGraph.tasks[taskId];
     const input = inputs[task.id];
 
     gradlewTasksToRun[taskId] = input;
+
+    // Collect tasks that should be included (not excluded) - typically provider-based dependencies
+    if (input.includeDependsOnTasks) {
+      for (const task of input.includeDependsOnTasks) {
+        includeDependsOnTasks.add(task);
+      }
+    }
 
     if (input.excludeDependsOn) {
       if (input.testClassName) {
@@ -144,7 +152,12 @@ export function getGradlewTasksToRun(
     dependencies.forEach((dep) => allDependsOn.add(dep));
   }
 
-  const excludeTasks = getExcludeTasks(taskIdsWithExclude, nodes, allDependsOn);
+  const excludeTasks = getExcludeTasks(
+    taskIdsWithExclude,
+    nodes,
+    allDependsOn,
+    includeDependsOnTasks
+  );
 
   const allTestsDependsOn = new Set<string>();
   for (const taskId of testTaskIdsWithExclude) {

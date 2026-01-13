@@ -1,5 +1,5 @@
 import { isBuiltin } from 'node:module';
-import { dirname, join, posix, relative } from 'node:path';
+import { dirname, join, posix, relative, isAbsolute } from 'node:path';
 import { clean, satisfies } from 'semver';
 import type {
   ProjectGraphExternalNode,
@@ -420,6 +420,11 @@ export class TargetProjectLocator {
     filePath: string
   ): string | undefined {
     let resolvedModule: string;
+    if (!isAbsolute(filePath)) {
+      // Convert to an absolute file path because TypeScript's module resolution won't
+      // properly walk up the directory tree (toward the workspace root) when given a relative path.
+      filePath = this.getAbsolutePath(filePath);
+    }
     const projectName = findProjectForPath(filePath, this.projectRootMappings);
     const cacheScope = projectName
       ? // fall back to the project name if the project root can't be determined

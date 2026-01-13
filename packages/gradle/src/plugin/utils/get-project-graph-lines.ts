@@ -1,18 +1,12 @@
 import { AggregateCreateNodesError, output, workspaceRoot } from '@nx/devkit';
 import { execGradleAsync, newLineSeparator } from '../../utils/exec-gradle';
 import { GradlePluginOptions } from './gradle-plugin-options';
-import { dirname } from 'node:path';
 
 export async function getNxProjectGraphLines(
   gradlewFile: string,
   gradleConfigHash: string,
   gradlePluginOptions: GradlePluginOptions
 ): Promise<string[]> {
-  if (process.env.VERCEL) {
-    // skip on Vercel
-    return [];
-  }
-
   let nxProjectGraphBuffer: Buffer;
 
   const gradlePluginOptionsArgs =
