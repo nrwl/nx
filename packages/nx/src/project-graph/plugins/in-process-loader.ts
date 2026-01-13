@@ -60,7 +60,7 @@ export function loadNxPlugin(
   index?: number
 ) {
   return [
-    loadNxPluginAsync(plugin, getNxRequirePaths(root), root, index),
+    loadNxPluginAsync(plugin, getNxRequirePaths(root), root),
     () => {},
   ] as const;
 }
@@ -83,7 +83,7 @@ export async function loadNxPluginAsync(
       registerPluginTSTranspiler();
     }
     const { loadResolvedNxPluginAsync } = await import(
-      './load-resolved-plugin'
+      './load-resolved-plugin.js'
     );
     return loadResolvedNxPluginAsync(
       pluginConfiguration,
