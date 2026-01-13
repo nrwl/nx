@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": "banner",
+    "activeUntil": "2026-01-14T00:00:00.000Z",
+    "description": "This is the first banner's description.",
+    "slug": "main-event",
+    "primaryCtaText": "Register now!",
+    "primaryCtaUrl": "https://nx.dev",
+    "title": "This is the first banner's title",
+    "secondaryCtaText": "",
+    "secondaryCtaUrl": "",
+    "_generated": "2026-01-13T16:53:11.357Z"
+  }
+]
