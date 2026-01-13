@@ -373,7 +373,7 @@ export function Footer({
         </div>
         <div className="mt-20 border-t border-slate-200 p-2 dark:border-slate-800">
           <div className="flex items-center gap-1 text-sm text-slate-400 xl:justify-center">
-            <span>&copy; 2025 made with</span>
+            <span>&copy; {new Date().getFullYear()} made with</span>
             <HeartIcon className="inline h-4 w-4" />
             <span>by</span>
             <Link
