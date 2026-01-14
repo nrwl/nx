@@ -1,4 +1,4 @@
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 import type { ArrayLiteralExpression } from 'typescript';
 import { checkIsCommaNeeded } from './add-remote-to-host';
 
@@ -11,11 +11,10 @@ describe('Add remote to host', () => {
                 'remote2',
             ]
         }`;
-    const webpackAst = tsquery.ast(hostWebpackConfig);
-    const mfRemotesNode = tsquery(
+    const webpackAst = ast(hostWebpackConfig);
+    const mfRemotesNode = query(
       webpackAst,
-      'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=remotes]) > ArrayLiteralExpression',
-      { visitAllChildren: true }
+      'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=remotes]) > ArrayLiteralExpression'
     )[0] as ArrayLiteralExpression;
 
     const endOfPropertiesPos = mfRemotesNode.getEnd() - 1;

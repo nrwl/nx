@@ -86,7 +86,7 @@ catalogs:
     '@rspack/plugin-react-refresh': '^1.0.0'
     ts-checker-rspack-plugin: '^1.1.1'
   typescript:
-    '@phenomnomnominal/tsquery': '~5.0.1'
+    '@phenomnomnominal/tsquery': '~6.1.4'
     '@types/node': '^20.19.10'
     ts-morph: '^24.0.0'
     ts-node: '10.9.1'
