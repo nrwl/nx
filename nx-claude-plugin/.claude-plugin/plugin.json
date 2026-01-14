@@ -1,5 +1,5 @@
 {
   "name": "nx",
-  "version": "0.1.0",
-  "description": "Claude Code plugin for Nx - helps users work with Nx generators and documentation"
+  "version": "0.2.0",
+  "description": "Claude Code plugin for Nx - helps with generators, documentation, and CI monitoring with self-healing integration"
 }
