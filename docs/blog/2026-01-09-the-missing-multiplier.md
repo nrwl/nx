@@ -5,6 +5,7 @@ authors: ['Victor Savkin', 'Philip Fulcher']
 tags: ['nx']
 cover_image: /blog/images/2026-01-09/header.avif
 description: 'Discover why AI agents underperform in polyrepos and how Nx monorepos unlock 30% productivity gains. Learn why architecture matters for AI agent success.'
+pinned: true
 ---
 
 ## Nx doesn't just make monorepos manageable. It makes AI agents effective.
