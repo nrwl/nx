@@ -67,16 +67,16 @@ export interface PackageJson {
   exports?:
     | string
     | Record<
-    string,
-    | string
-    | {
-    types?: string;
-    require?: string;
-    import?: string;
-    development?: string;
-    default?: string;
-  }
-  >;
+        string,
+        | string
+        | {
+            types?: string;
+            require?: string;
+            import?: string;
+            development?: string;
+            default?: string;
+          }
+      >;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
@@ -91,8 +91,8 @@ export interface PackageJson {
   workspaces?:
     | string[]
     | {
-    packages: string[];
-  };
+        packages: string[];
+      };
   publishConfig?: Record<string, string>;
   files?: string[];
 
@@ -119,23 +119,23 @@ export interface NxPackageJson extends PackageJson {
 }
 
 export function normalizePackageGroup(
-  packageGroup: PackageGroup,
+  packageGroup: PackageGroup
 ): ArrayPackageGroup {
   return Array.isArray(packageGroup)
     ? packageGroup.map((x) =>
-      typeof x === 'string' ? { package: x, version: '*' } : x,
-    )
+        typeof x === 'string' ? { package: x, version: '*' } : x
+      )
     : Object.entries(packageGroup).map(([pkg, version]) => ({
-      package: pkg,
-      version,
-    }));
+        package: pkg,
+        version,
+      }));
 }
 
 export function readNxMigrateConfig(
-  json: Partial<PackageJson>,
+  json: Partial<PackageJson>
 ): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } {
   const parseNxMigrationsConfig = (
-    fromJson?: string | NxMigrationsConfiguration,
+    fromJson?: string | NxMigrationsConfiguration
   ): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } => {
     if (!fromJson) {
       return {};
@@ -163,7 +163,7 @@ export function readNxMigrateConfig(
 export function buildTargetFromScript(
   script: string,
   scripts: Record<string, string> = {},
-  packageManagerCommand: PackageManagerCommands,
+  packageManagerCommand: PackageManagerCommands
 ): TargetConfiguration {
   return {
     executor: 'nx:run-script',
@@ -181,7 +181,7 @@ let packageManagerCommand: PackageManagerCommands | undefined;
 
 export function getMetadataFromPackageJson(
   packageJson: PackageJson,
-  isInPackageManagerWorkspaces: boolean,
+  isInPackageManagerWorkspaces: boolean
 ): ProjectMetadata {
   const { scripts, nx, description, name, exports, main, version } =
     packageJson;
@@ -216,7 +216,7 @@ export function readTargetsFromPackageJson(
   packageJson: PackageJson,
   nxJson: NxJsonConfiguration,
   projectRoot: string,
-  workspaceRoot: string,
+  workspaceRoot: string
 ) {
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
@@ -228,7 +228,7 @@ export function readTargetsFromPackageJson(
   for (const targetName in nx?.targets) {
     res[targetName] = mergeTargetConfigurations(
       nx?.targets[targetName],
-      res[targetName],
+      res[targetName]
     );
   }
 
@@ -285,7 +285,7 @@ function hasNxJsPlugin(projectRoot: string, workspaceRoot: string) {
  */
 export function readModulePackageJsonWithoutFallbacks(
   moduleSpecifier: string,
-  requirePaths = getNxRequirePaths(),
+  requirePaths = getNxRequirePaths()
 ): {
   packageJson: PackageJson;
   path: string;
@@ -294,7 +294,7 @@ export function readModulePackageJsonWithoutFallbacks(
     `${moduleSpecifier}/package.json`,
     {
       paths: requirePaths,
-    },
+    }
   );
   const packageJson: PackageJson = readJsonFile(packageJsonPath);
 
@@ -320,7 +320,7 @@ export function readModulePackageJsonWithoutFallbacks(
  */
 export function readModulePackageJson(
   moduleSpecifier: string,
-  requirePaths = getNxRequirePaths(),
+  requirePaths = getNxRequirePaths()
 ): {
   packageJson: PackageJson;
   path: string;
@@ -347,7 +347,7 @@ export function readModulePackageJson(
     packageJson = readJsonFile(packageJsonPath);
     if (packageJson.name && packageJson.name !== moduleSpecifier) {
       throw new Error(
-        `Found module ${packageJson.name} while trying to locate ${moduleSpecifier}/package.json`,
+        `Found module ${packageJson.name} while trying to locate ${moduleSpecifier}/package.json`
       );
     }
   }
@@ -365,8 +365,7 @@ export function readModulePackageJson(
 function preparePackageInstallation(pkg: string, requiredVersion: string) {
   const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
     dir: dirSync().name,
-    cleanup: () => {
-    },
+    cleanup: () => {},
   };
 
   console.log(`Fetching ${pkg}...`);
@@ -402,7 +401,7 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
 
 export function installPackageToTmp(
   pkg: string,
-  requiredVersion: string,
+  requiredVersion: string
 ): {
   tempDir: string;
   cleanup: () => void;
@@ -425,7 +424,7 @@ export function installPackageToTmp(
 
 export async function installPackageToTmpAsync(
   pkg: string,
-  requiredVersion: string,
+  requiredVersion: string
 ): Promise<{
   tempDir: string;
   cleanup: () => void;
@@ -529,45 +528,45 @@ export function getDependencyVersionFromPackageJson(
   tree: Tree,
   packageName: string,
   packageJsonPath?: string,
-  dependencyLookup?: PackageJsonDependencySection[],
+  dependencyLookup?: PackageJsonDependencySection[]
 ): string | null;
 export function getDependencyVersionFromPackageJson(
   tree: Tree,
   packageName: string,
   packageJson?: PackageJson,
-  dependencyLookup?: PackageJsonDependencySection[],
+  dependencyLookup?: PackageJsonDependencySection[]
 ): string | null;
 export function getDependencyVersionFromPackageJson(
   packageName: string,
   workspaceRootPath?: string,
   packageJsonPath?: string,
-  dependencyLookup?: PackageJsonDependencySection[],
+  dependencyLookup?: PackageJsonDependencySection[]
 ): string | null;
 export function getDependencyVersionFromPackageJson(
   packageName: string,
   workspaceRootPath?: string,
   packageJson?: PackageJson,
-  dependencyLookup?: PackageJsonDependencySection[],
+  dependencyLookup?: PackageJsonDependencySection[]
 ): string | null;
 export function getDependencyVersionFromPackageJson(
   treeOrPackageName: Tree | string,
   packageNameOrRoot?: string,
   packageJsonPathOrObjectOrRoot?: string | PackageJson,
-  dependencyLookup?: PackageJsonDependencySection[],
+  dependencyLookup?: PackageJsonDependencySection[]
 ): string | null {
   if (typeof treeOrPackageName !== 'string') {
     return getDependencyVersionFromPackageJsonFromTree(
       treeOrPackageName,
       packageNameOrRoot!,
       packageJsonPathOrObjectOrRoot,
-      dependencyLookup,
+      dependencyLookup
     );
   } else {
     return getDependencyVersionFromPackageJsonFromFileSystem(
       treeOrPackageName,
       packageNameOrRoot,
       packageJsonPathOrObjectOrRoot,
-      dependencyLookup,
+      dependencyLookup
     );
   }
 }
@@ -582,7 +581,7 @@ function getDependencyVersionFromPackageJsonFromTree(
   dependencyLookup: PackageJsonDependencySection[] = [
     'dependencies',
     'devDependencies',
-  ],
+  ]
 ): string | null {
   let packageJson: PackageJson;
   if (typeof packageJsonPathOrObject === 'object') {
@@ -621,7 +620,7 @@ function getDependencyVersionFromPackageJsonFromFileSystem(
   dependencyLookup: PackageJsonDependencySection[] = [
     'dependencies',
     'devDependencies',
-  ],
+  ]
 ): string | null {
   let packageJson: PackageJson;
   if (typeof packageJsonPathOrObject === 'object') {
@@ -659,7 +658,7 @@ function getDependencyVersionFromPackageJsonFromFileSystem(
  */
 function generatePackageManagerFiles(
   root: string,
-  packageManager: PackageManager = detectPackageManager(),
+  packageManager: PackageManager = detectPackageManager()
 ) {
   const [pmMajor] = getPackageManagerVersion(packageManager).split('.');
   switch (packageManager) {
@@ -667,7 +666,7 @@ function generatePackageManagerFiles(
       if (+pmMajor >= 2) {
         writeFileSync(
           join(root, '.yarnrc.yml'),
-          'nodeLinker: node-modules\nenableScripts: false',
+          'nodeLinker: node-modules\nenableScripts: false'
         );
       }
       break;

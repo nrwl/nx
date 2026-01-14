@@ -50,15 +50,15 @@ export const yargsShowCommand: CommandModule<
       })
       .example(
         '$0 show projects',
-        'Show a list of all projects in the workspace',
+        'Show a list of all projects in the workspace'
       )
       .example(
         '$0 show projects --with-target serve',
-        'Show a list of all projects in the workspace that have a "serve" target',
+        'Show a list of all projects in the workspace that have a "serve" target'
       )
       .example(
         '$0 show project [projectName]',
-        'Shows the resolved configuration for [projectName]',
+        'Shows the resolved configuration for [projectName]'
       ),
   handler: async (args) => {
     showHelp();
@@ -105,23 +105,23 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
       .conflicts('json', 'sep')
       .example(
         '$0 show projects --projects "apps/*"',
-        'Show all projects in the apps directory',
+        'Show all projects in the apps directory'
       )
       .example(
         '$0 show projects --projects "shared-*"',
-        'Show all projects that start with "shared-"',
+        'Show all projects that start with "shared-"'
       )
       .example(
         '$0 show projects --affected',
-        'Show affected projects in the workspace',
+        'Show affected projects in the workspace'
       )
       .example(
         '$0 show projects --type app --affected',
-        'Show affected apps in the workspace',
+        'Show affected apps in the workspace'
       )
       .example(
         '$0 show projects --affected --exclude=*-e2e',
-        'Show affected projects in the workspace, excluding end-to-end projects',
+        'Show affected projects in the workspace, excluding end-to-end projects'
       ) as any,
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
@@ -170,7 +170,7 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
       })
       .example(
         '$0 show project my-app',
-        'View project information for my-app in JSON format',
+        'View project information for my-app in JSON format'
       )
       .example(
         '$0 show project my-app --web',

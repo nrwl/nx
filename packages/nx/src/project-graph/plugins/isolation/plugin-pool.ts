@@ -38,7 +38,7 @@ const MAX_MESSAGE_WAIT =
       // This does mean that the NX_PLUGIN_NO_TIMEOUTS env var
       // would still timeout after 24.8 days, but that seems
       // like a reasonable compromise.
-    2147483647
+      2147483647
     : 1000 * 60 * MINUTES; // 10 minutes
 
 interface PendingPromise {
@@ -51,17 +51,16 @@ type NxPluginWorkerCache = Map<string, Promise<LoadedNxPlugin>>;
 
 const nxPluginWorkerCache: NxPluginWorkerCache = (global[
   'nxPluginWorkerCache'
-  ] ??= new Map());
+] ??= new Map());
 
 export async function loadRemoteNxPlugin(
   plugin: PluginConfiguration,
   root: string,
-  index?: number,
+  index?: number
 ): Promise<[Promise<LoadedNxPlugin>, () => void]> {
   const cacheKey = JSON.stringify({ plugin, root });
   if (nxPluginWorkerCache.has(cacheKey)) {
-    return [nxPluginWorkerCache.get(cacheKey), () => {
-    }];
+    return [nxPluginWorkerCache.get(cacheKey), () => {}];
   }
   const moduleName = typeof plugin === 'string' ? plugin : plugin.plugin;
 
@@ -86,11 +85,11 @@ export async function loadRemoteNxPlugin(
         if (!isOnDaemon()) {
           const { getProcessMetricsService } = await import(
             '../../../tasks-runner/process-metrics-service.js'
-            );
+          );
 
           getProcessMetricsService().registerMainCliSubprocess(
             worker.pid,
-            `${name}${index !== undefined ? ` (${index})` : ''}`,
+            `${name}${index !== undefined ? ` (${index})` : ''}`
           );
         }
       } catch {
@@ -132,8 +131,8 @@ export async function loadRemoteNxPlugin(
         new Error(
           `Loading "${
             typeof plugin === 'string' ? plugin : plugin.plugin
-          }" timed out after ${MINUTES} minutes. ${PLUGIN_TIMEOUT_HINT_TEXT}`,
-        ),
+          }" timed out after ${MINUTES} minutes. ${PLUGIN_TIMEOUT_HINT_TEXT}`
+        )
       );
     }, MAX_MESSAGE_WAIT);
     socket.on(
@@ -147,9 +146,9 @@ export async function loadRemoteNxPlugin(
             res(val);
           },
           rej,
-          socket,
-        ),
-      ),
+          socket
+        )
+      )
     );
     worker.on('exit', exitHandler);
   });
@@ -172,13 +171,13 @@ function createWorkerHandler(
   pending: Map<string, PendingPromise>,
   onload: (plugin: LoadedNxPlugin) => void,
   onloadError: (err?: unknown) => void,
-  socket: Socket,
+  socket: Socket
 ) {
   let pluginName: string;
 
   let txId = 0;
 
-  return function(raw: string) {
+  return function (raw: string) {
     const message = JSON.parse(raw);
 
     if (!isPluginWorkerResult(message)) {
@@ -199,106 +198,106 @@ function createWorkerHandler(
             exclude,
             createNodes: createNodesPattern
               ? [
-                createNodesPattern,
-                (configFiles, ctx) => {
+                  createNodesPattern,
+                  (configFiles, ctx) => {
+                    const tx =
+                      pluginName + worker.pid + ':createNodes:' + txId++;
+                    return registerPendingPromise(
+                      tx,
+                      pending,
+                      () => {
+                        sendMessageOverSocket(socket, {
+                          type: 'createNodes',
+                          payload: { configFiles, context: ctx, tx },
+                        });
+                      },
+                      {
+                        plugin: pluginName,
+                        operation: 'createNodes',
+                      }
+                    );
+                  },
+                ]
+              : undefined,
+            createDependencies: result.hasCreateDependencies
+              ? (ctx) => {
                   const tx =
-                    pluginName + worker.pid + ':createNodes:' + txId++;
+                    pluginName + worker.pid + ':createDependencies:' + txId++;
                   return registerPendingPromise(
                     tx,
                     pending,
                     () => {
                       sendMessageOverSocket(socket, {
-                        type: 'createNodes',
-                        payload: { configFiles, context: ctx, tx },
+                        type: 'createDependencies',
+                        payload: { context: ctx, tx },
                       });
                     },
                     {
                       plugin: pluginName,
-                      operation: 'createNodes',
-                    },
+                      operation: 'createDependencies',
+                    }
                   );
-                },
-              ]
-              : undefined,
-            createDependencies: result.hasCreateDependencies
-              ? (ctx) => {
-                const tx =
-                  pluginName + worker.pid + ':createDependencies:' + txId++;
-                return registerPendingPromise(
-                  tx,
-                  pending,
-                  () => {
-                    sendMessageOverSocket(socket, {
-                      type: 'createDependencies',
-                      payload: { context: ctx, tx },
-                    });
-                  },
-                  {
-                    plugin: pluginName,
-                    operation: 'createDependencies',
-                  },
-                );
-              }
+                }
               : undefined,
             createMetadata: result.hasCreateMetadata
               ? (graph, ctx) => {
-                const tx =
-                  pluginName + worker.pid + ':createMetadata:' + txId++;
-                return registerPendingPromise(
-                  tx,
-                  pending,
-                  () => {
-                    sendMessageOverSocket(socket, {
-                      type: 'createMetadata',
-                      payload: { graph, context: ctx, tx },
-                    });
-                  },
-                  {
-                    plugin: pluginName,
-                    operation: 'createMetadata',
-                  },
-                );
-              }
+                  const tx =
+                    pluginName + worker.pid + ':createMetadata:' + txId++;
+                  return registerPendingPromise(
+                    tx,
+                    pending,
+                    () => {
+                      sendMessageOverSocket(socket, {
+                        type: 'createMetadata',
+                        payload: { graph, context: ctx, tx },
+                      });
+                    },
+                    {
+                      plugin: pluginName,
+                      operation: 'createMetadata',
+                    }
+                  );
+                }
               : undefined,
             preTasksExecution: result.hasPreTasksExecution
               ? (context) => {
-                const tx =
-                  pluginName + worker.pid + ':preTasksExecution:' + txId++;
-                return registerPendingPromise(
-                  tx,
-                  pending,
-                  () => {
-                    sendMessageOverSocket(socket, {
-                      type: 'preTasksExecution',
-                      payload: { tx, context },
-                    });
-                  },
-                  {
-                    plugin: pluginName,
-                    operation: 'preTasksExecution',
-                  },
-                );
-              }
+                  const tx =
+                    pluginName + worker.pid + ':preTasksExecution:' + txId++;
+                  return registerPendingPromise(
+                    tx,
+                    pending,
+                    () => {
+                      sendMessageOverSocket(socket, {
+                        type: 'preTasksExecution',
+                        payload: { tx, context },
+                      });
+                    },
+                    {
+                      plugin: pluginName,
+                      operation: 'preTasksExecution',
+                    }
+                  );
+                }
               : undefined,
             postTasksExecution: result.hasPostTasksExecution
               ? (context) => {
-                const tx =
-                  pluginName + worker.pid + ':postTasksExecution:' + txId++;
-                return registerPendingPromise(
-                  tx,
-                  pending,
-                  () => {
-                    sendMessageOverSocket(socket, {
-                      type: 'postTasksExecution',
-                      payload: { tx, context },
-                    });
-                  },
-                  {
-                    plugin: pluginName,
-                    operation: 'postTasksExecution',
-                  },
-                );
-              }
+                  const tx =
+                    pluginName + worker.pid + ':postTasksExecution:' + txId++;
+                  return registerPendingPromise(
+                    tx,
+                    pending,
+                    () => {
+                      sendMessageOverSocket(socket, {
+                        type: 'postTasksExecution',
+                        payload: { tx, context },
+                      });
+                    },
+                    {
+                      plugin: pluginName,
+                      operation: 'postTasksExecution',
+                    }
+                  );
+                }
               : undefined,
           });
         } else if (result.success === false) {
@@ -351,7 +350,7 @@ function createWorkerHandler(
 
 function createWorkerExitHandler(
   worker: ChildProcess,
-  pendingPromises: Map<string, PendingPromise>,
+  pendingPromises: Map<string, PendingPromise>
 ) {
   return () => {
     // Clean up piped streams when worker exits to prevent hanging
@@ -366,8 +365,8 @@ function createWorkerExitHandler(
         new Error(
           `Plugin worker ${
             pluginNames.get(worker) ?? worker.pid
-          } exited unexpectedly with code ${worker.exitCode}`,
-        ),
+          } exited unexpectedly with code ${worker.exitCode}`
+        )
       );
     }
   };
@@ -379,9 +378,9 @@ function getPendingPromise(tx: string, pending: Map<string, PendingPromise>) {
   if (!pendingPromise) {
     throw new Error(
       `No pending promise found for transaction "${tx}". This may indicate a bug in the plugin pool. Currently pending promises:\n` +
-      Array.from(pending.keys())
-        .map((t) => `  -  ${t}`)
-        .join('\n'),
+        Array.from(pending.keys())
+          .map((t) => `  -  ${t}`)
+          .join('\n')
     );
   }
 
@@ -399,7 +398,7 @@ function registerPendingPromise(
   context: {
     plugin: string;
     operation: string;
-  },
+  }
 ): Promise<any> {
   let resolver: (x: unknown) => void,
     rejector: (e: Error | unknown) => void,
@@ -412,8 +411,8 @@ function registerPendingPromise(
     timeout = setTimeout(() => {
       rej(
         new Error(
-          `${context.plugin} timed out after ${MINUTES} minutes during ${context.operation}. ${PLUGIN_TIMEOUT_HINT_TEXT}`,
-        ),
+          `${context.plugin} timed out after ${MINUTES} minutes during ${context.operation}. ${PLUGIN_TIMEOUT_HINT_TEXT}`
+        )
       );
     }, MAX_MESSAGE_WAIT);
 
@@ -446,17 +445,21 @@ async function startPluginWorker(name: string) {
     ...process.env,
     ...(isWorkerTypescript
       ? {
-        // Ensures that the worker uses the same tsconfig as the main process
-        TS_NODE_PROJECT: path.join(
-          __dirname,
-          '../../../../tsconfig.lib.json',
-        ),
-      }
+          // Ensures that the worker uses the same tsconfig as the main process
+          TS_NODE_PROJECT: path.join(
+            __dirname,
+            '../../../../tsconfig.lib.json'
+          ),
+          TS_NODE_COMPILER_OPTIONS: JSON.stringify({
+            module: 'CommonJS',
+            moduleResolution: 'Node',
+          }),
+        }
       : {}),
   };
 
   const ipcPath = getPluginOsSocketPath(
-    [process.pid, global.nxPluginWorkerCount++, performance.now()].join('-'),
+    [process.pid, global.nxPluginWorkerCount++, performance.now()].join('-')
   );
 
   const worker = spawn(
@@ -473,7 +476,7 @@ async function startPluginWorker(name: string) {
       detached: true,
       shell: false,
       windowsHide: true,
-    },
+    }
   );
 
   logger.verbose(

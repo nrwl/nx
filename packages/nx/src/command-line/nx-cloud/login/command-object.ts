@@ -11,7 +11,7 @@ export const yargsLoginCommand: CommandModule = {
           'The Nx Cloud URL of the instance you are trying to connect to. If no positional argument is provided, this command will connect to your configured Nx Cloud instance by default.',
         type: 'string',
         required: false,
-      }),
+      })
     )
       .help(false)
       .showHelpOnFail(false)

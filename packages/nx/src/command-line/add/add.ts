@@ -42,7 +42,7 @@ export function addHandler(options: AddOptions): Promise<number> {
 async function installPackage(
   pkgName: string,
   version: string,
-  nxJson: NxJsonConfiguration,
+  nxJson: NxJsonConfiguration
 ): Promise<void> {
   const spinner = globalSpinner.start(`Installing ${pkgName}@${version}...`);
 
@@ -77,14 +77,14 @@ async function installPackage(
           }
 
           return resolve();
-        },
-      ),
+        }
+      )
     );
   } else {
     nxJson.installation.plugins ??= {};
     nxJson.installation.plugins[pkgName] = normalizeVersionForNxJson(
       pkgName,
-      version,
+      version
     );
     writeJsonFile('nx.json', nxJson);
 
@@ -111,7 +111,7 @@ async function installPackage(
 async function initializePlugin(
   pkgName: string,
   options: AddOptions,
-  nxJson: NxJsonConfiguration,
+  nxJson: NxJsonConfiguration
 ): Promise<void> {
   let updatePackageScripts = false;
   if (
@@ -131,7 +131,7 @@ async function initializePlugin(
       pkgName,
       workspaceRoot,
       updatePackageScripts,
-      options.verbose,
+      options.verbose
     );
   } catch (e) {
     spinner.fail();
@@ -147,7 +147,7 @@ async function initializePlugin(
 }
 
 function parsePackageSpecifier(
-  packageSpecifier: string,
+  packageSpecifier: string
 ): [pkgName: string, version: string] {
   const i = packageSpecifier.lastIndexOf('@');
 
@@ -174,5 +174,5 @@ export const coreNxPluginVersions = (
     return map.set(packageName, version);
   },
   // Package Name -> Desired Version
-  new Map<string, string>(),
+  new Map<string, string>()
 );

@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { prerelease } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
 import { filterAffected } from '../../../project-graph/affected/affected-project-graph';

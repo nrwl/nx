@@ -7,13 +7,13 @@ export function getDbConnection(
   opts: {
     directory?: string;
     dbName?: string;
-  } = {},
+  } = {}
 ) {
   const { version: NX_VERSION } = require(require.resolve('nx/package.json'));
   opts.directory ??= workspaceDataDirectory;
   const key = `${opts.directory}:${opts.dbName ?? 'default'}`;
   const connection = getEntryOrSet(dbConnectionMap, key, () =>
-    connectToNxDb(opts.directory, NX_VERSION, opts.dbName),
+    connectToNxDb(opts.directory, NX_VERSION, opts.dbName)
   );
   return connection;
 }
@@ -28,7 +28,7 @@ export function removeDbConnections() {
 function getEntryOrSet<TKey, TVal>(
   map: Map<TKey, TVal>,
   key: TKey,
-  defaultValue: () => TVal,
+  defaultValue: () => TVal
 ) {
   const existing = map.get(key);
   if (existing) {

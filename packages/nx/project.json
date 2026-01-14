@@ -68,9 +68,7 @@
       "dependsOn": ["echo"]
     },
     "build-base": {
-      "outputs": [
-        "{projectRoot}/dist/**/*.{js,cjs,mjs,d.ts}"
-      ]
+      "outputs": ["{projectRoot}/dist/**/*.{js,cjs,mjs,d.ts}"]
     },
     "build": {
       "dependsOn": [
@@ -154,11 +152,6 @@
         "types": "./bin/nx.d.ts",
         "tsConfig": "./tsconfig.lib.json",
         "assets": [
-          {
-            "input": "packages/nx",
-            "glob": ".npmignore",
-            "output": "/"
-          },
           {
             "input": "packages/nx",
             "glob": "**/files/**",

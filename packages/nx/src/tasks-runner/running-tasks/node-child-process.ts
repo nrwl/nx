@@ -16,7 +16,7 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
 
   constructor(
     private childProcess: ChildProcess,
-    { streamOutput, prefix }: { streamOutput: boolean; prefix: string },
+    { streamOutput, prefix }: { streamOutput: boolean; prefix: string }
   ) {
     if (streamOutput) {
       if (process.env.NX_PREFIX_OUTPUT === 'true') {
@@ -119,8 +119,8 @@ function addPrefixTransformer(prefix?: string) {
         .filter(Boolean)
         .forEach((m) =>
           this.push(
-            prefix ? prefix + ' ' + m + newLineSeparator : m + newLineSeparator,
-          ),
+            prefix ? prefix + ' ' + m + newLineSeparator : m + newLineSeparator
+          )
         );
       callback();
     },
@@ -176,7 +176,7 @@ export class NodeChildProcessWithDirectOutput implements RunningTask {
 
   constructor(
     private childProcess: ChildProcess,
-    private temporaryOutputPath: string,
+    private temporaryOutputPath: string
   ) {
     // Re-emit any messages from the task process
     this.childProcess.on('message', (message) => {

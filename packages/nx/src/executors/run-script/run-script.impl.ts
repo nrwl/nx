@@ -15,16 +15,16 @@ export interface RunScriptOptions {
   __unparsed__: string[];
 }
 
-export default async function(
+export default async function (
   options: RunScriptOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   const pm = getPackageManagerCommand();
   try {
     let command = pm.run(options.script, options.__unparsed__.join(' '));
     let cwd = path.join(
       context.root,
-      context.projectsConfigurations.projects[context.projectName].root,
+      context.projectsConfigurations.projects[context.projectName].root
     );
 
     let env = process.env;
@@ -51,7 +51,7 @@ export default async function(
 function nodeProcess(
   command: string,
   cwd: string,
-  env: Record<string, string>,
+  env: Record<string, string>
 ): Promise<void> {
   return new Promise<void>((res, rej) => {
     let cp = exec(
@@ -63,7 +63,7 @@ function nodeProcess(
         } else {
           res();
         }
-      },
+      }
     );
 
     // Forward stdout/stderr to parent process
@@ -93,7 +93,7 @@ function nodeProcess(
 async function ptyProcess(
   command: string,
   cwd: string,
-  env: Record<string, string>,
+  env: Record<string, string>
 ) {
   const terminal = createPseudoTerminal();
   await terminal.init();

@@ -120,7 +120,7 @@ function buildEnvironmentJs(
   depGraphClientResponse?: ProjectGraphClientResponse,
   taskGraphClientResponse?: TaskGraphClientResponse,
   expandedTaskInputsReponse?: ExpandedTaskInputsReponse,
-  sourceMapsResponse?: ConfigurationSourceMaps,
+  sourceMapsResponse?: ConfigurationSourceMaps
 ) {
   let environmentJs = `window.exclude = ${JSON.stringify(exclude)};
   window.watch = ${!!watchMode};
@@ -146,20 +146,20 @@ function buildEnvironmentJs(
 
   if (localMode === 'build') {
     environmentJs += `window.projectGraphResponse = ${JSON.stringify(
-      depGraphClientResponse,
+      depGraphClientResponse
     )};
     `;
 
     environmentJs += `window.taskGraphResponse = ${JSON.stringify(
-      taskGraphClientResponse,
+      taskGraphClientResponse
     )};
     `;
     environmentJs += `window.expandedTaskInputsResponse = ${JSON.stringify(
-      expandedTaskInputsReponse,
+      expandedTaskInputsReponse
     )};`;
 
     environmentJs += `window.sourceMapsResponse = ${JSON.stringify(
-      sourceMapsResponse,
+      sourceMapsResponse
     )};`;
   } else {
     environmentJs += `window.projectGraphResponse = null;`;
@@ -173,7 +173,7 @@ function buildEnvironmentJs(
 
 function projectExists(
   projects: ProjectGraphProjectNode[],
-  projectToFind: string,
+  projectToFind: string
 ) {
   return (
     projects.find((project) => project.name === projectToFind) !== undefined
@@ -184,7 +184,7 @@ function hasPath(
   graph: ProjectGraph,
   target: string,
   node: string,
-  visited: Set<string>,
+  visited: Set<string>
 ) {
   if (target === node) return true;
 
@@ -199,7 +199,7 @@ function hasPath(
 function filterGraph(
   graph: ProjectGraph,
   focus: string,
-  exclude: string[],
+  exclude: string[]
 ): ProjectGraph {
   let projectNames = (
     Object.values(graph.nodes) as ProjectGraphProjectNode[]
@@ -256,7 +256,7 @@ export async function generateGraph(
     exclude?: string[];
     affected?: boolean;
   },
-  affectedProjects: string[],
+  affectedProjects: string[]
 ): Promise<void> {
   if (args.view === 'project-details' && !args.focus) {
     output.error({
@@ -307,7 +307,7 @@ export async function generateGraph(
   let prunedGraph = pruneExternalNodes(rawGraph);
 
   const projects = Object.values(
-    prunedGraph.nodes,
+    prunedGraph.nodes
   ) as ProjectGraphProjectNode[];
   projects.sort((a, b) => {
     return a.name.localeCompare(b.name);
@@ -333,9 +333,9 @@ export async function generateGraph(
             printWarnings:
               args.affected && !args.print && args.file !== 'stdout',
           },
-          readNxJson(),
+          readNxJson()
         ).nxArgs,
-        rawGraph,
+        rawGraph
       )
     ).map((n) => n.name);
   } catch (e) {
@@ -375,7 +375,7 @@ export async function generateGraph(
 
   let html = readFileSync(
     join(__dirname, '../../core/graph/index.html'),
-    'utf-8',
+    'utf-8'
   );
 
   prunedGraph = filterGraph(prunedGraph, args.focus || null, excludePatterns);
@@ -387,11 +387,11 @@ export async function generateGraph(
           prunedGraph,
           rawGraph,
           args.projects,
-          args.targets,
+          args.targets
         ),
         null,
-        2,
-      ),
+        2
+      )
     );
     await output.drain();
     await new Promise((res) => setImmediate(res));
@@ -425,14 +425,14 @@ export async function generateGraph(
 
       const taskGraphClientResponse = args.targets
         ? await createTaskGraphForTargetsAndProjects(
-          args.targets,
-          args.projects,
-        )
+            args.targets,
+            args.projects
+          )
         : await createTaskGraphClientResponse();
 
       const taskInputsReponse = await createExpandedTaskInputResponse(
         taskGraphClientResponse,
-        projectGraphClientResponse,
+        projectGraphClientResponse
       );
 
       const environmentJs = buildEnvironmentJs(
@@ -442,7 +442,7 @@ export async function generateGraph(
         projectGraphClientResponse,
         taskGraphClientResponse,
         taskInputsReponse,
-        sourceMaps,
+        sourceMaps
       );
       html = html.replace(/src="/g, 'src="static/');
       html = html.replace(/href="styles/g, 'href="static/styles');
@@ -463,7 +463,7 @@ export async function generateGraph(
         prunedGraph,
         rawGraph,
         args.projects,
-        args.targets,
+        args.targets
       );
 
       writeJsonFile(fullFilePath, json);
@@ -485,7 +485,7 @@ export async function generateGraph(
     const environmentJs = buildEnvironmentJs(
       excludePatterns,
       args.watch,
-      !!args.file && args.file.endsWith('html') ? 'build' : 'serve',
+      !!args.file && args.file.endsWith('html') ? 'build' : 'serve'
     );
 
     let app: net.Server;
@@ -500,7 +500,7 @@ export async function generateGraph(
         affectedProjects,
         args.focus,
         args.groupByFolder,
-        excludePatterns,
+        excludePatterns
       );
       app = result.app;
       url = result.url;
@@ -515,9 +515,9 @@ export async function generateGraph(
     // setting up `?graph=serialized-graph-state`
     let graphState:
       | {
-      config: Record<string, unknown>;
-      state?: Record<string, unknown>;
-    }
+          config: Record<string, unknown>;
+          state?: Record<string, unknown>;
+        }
       | undefined = undefined;
     url.pathname = args.view;
 
@@ -548,7 +548,7 @@ export async function generateGraph(
     } else if (args.projects) {
       url.searchParams.append(
         'projects',
-        args.projects.map((projectName) => projectName).join(' '),
+        args.projects.map((projectName) => projectName).join(' ')
       );
     } else if (args.affected) {
       graphState ??= { config: {} };
@@ -576,7 +576,7 @@ export async function generateGraph(
 
 function findAvailablePort(
   startPort: number,
-  host: string = '127.0.0.1',
+  host: string = '127.0.0.1'
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
@@ -610,7 +610,7 @@ async function startServer(
   affected: string[] = [],
   focus: string = null,
   groupByFolder: boolean = false,
-  exclude: string[] = [],
+  exclude: string[] = []
 ) {
   let unregisterFileWatcher: (() => void) | undefined;
 
@@ -629,7 +629,7 @@ async function startServer(
     await createProjectGraphAndSourceMapClientResponse(
       affected,
       focus,
-      exclude,
+      exclude
     );
 
   currentProjectGraphClientResponse = projectGraphClientResponse;
@@ -691,9 +691,9 @@ async function startServer(
             await createTaskGraphForTargetsAndProjects(
               targetNames,
               projectNames,
-              configuration,
-            ),
-          ),
+              configuration
+            )
+          )
         );
       }
 
@@ -713,7 +713,7 @@ async function startServer(
       performance.measure(
         'task input generation',
         'task input generation:start',
-        'task input generation:end',
+        'task input generation:end'
       );
 
       return;
@@ -882,12 +882,12 @@ function createProjectGraphListener() {
             errors,
             currentProjectGraphClientResponse.affected,
             isFilteredGraph ? currentProjectGraphClientResponse.focus : null,
-            isFilteredGraph ? currentProjectGraphClientResponse.exclude : [],
+            isFilteredGraph ? currentProjectGraphClientResponse.exclude : []
           );
 
         if (
           projectGraphClientResponse.hash !==
-          currentProjectGraphClientResponse.hash &&
+            currentProjectGraphClientResponse.hash &&
           sourceMapResponse
         ) {
           if (projectGraphClientResponse.errors?.length > 0) {
@@ -915,7 +915,7 @@ function createProjectGraphListener() {
           output.note({ title: 'No graph changes found.' });
         }
       }
-    }, 500),
+    }, 500)
   );
 }
 
@@ -925,7 +925,7 @@ function transformProjectGraphToClientResponse(
   errors: GraphError[] | null,
   affected: string[] = [],
   focus: string = null,
-  exclude: string[] = [],
+  exclude: string[] = []
 ): {
   projectGraphClientResponse: ProjectGraphClientResponse;
   sourceMapResponse: ConfigurationSourceMaps;
@@ -957,7 +957,7 @@ function transformProjectGraphToClientResponse(
       sourceMaps,
       connectedToCloud,
       disabledTaskSyncGenerators,
-    }),
+    })
   );
 
   const hash = hasher.digest('hex');
@@ -966,7 +966,7 @@ function transformProjectGraphToClientResponse(
   performance.measure(
     'project graph transform',
     'project graph transform:start',
-    'project graph transform:end',
+    'project graph transform:end'
   );
 
   return {
@@ -990,7 +990,7 @@ function transformProjectGraphToClientResponse(
 async function createProjectGraphAndSourceMapClientResponse(
   affected: string[] = [],
   focus: string = null,
-  exclude: string[] = [],
+  exclude: string[] = []
 ): Promise<{
   projectGraphClientResponse: ProjectGraphClientResponse;
   sourceMapResponse: ConfigurationSourceMaps;
@@ -1035,7 +1035,7 @@ async function createProjectGraphAndSourceMapClientResponse(
       errors,
       affected,
       focus,
-      exclude,
+      exclude
     );
 
   performance.mark('project graph response generation:end');
@@ -1043,13 +1043,13 @@ async function createProjectGraphAndSourceMapClientResponse(
   performance.measure(
     'project graph watch calculation',
     'project graph watch calculation:start',
-    'project graph watch calculation:end',
+    'project graph watch calculation:end'
   );
 
   performance.measure(
     'project graph response generation',
     'project graph response generation:start',
-    'project graph response generation:end',
+    'project graph response generation:end'
   );
 
   return {
@@ -1059,7 +1059,7 @@ async function createProjectGraphAndSourceMapClientResponse(
 }
 
 async function createTaskGraphClientResponse(
-  pruneExternal: boolean = false,
+  pruneExternal: boolean = false
 ): Promise<TaskGraphClientResponse> {
   let graph: ProjectGraph;
   try {
@@ -1096,14 +1096,14 @@ async function createTaskGraphClientResponse(
       projects,
       targets,
       undefined,
-      {},
+      {}
     );
 
     performance.mark('task graph generation:end');
 
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(graph)),
+      transferProjectGraph(transformProjectGraphForRust(graph))
     );
     performance.mark('task hash plan generation:start');
 
@@ -1116,13 +1116,13 @@ async function createTaskGraphClientResponse(
     performance.measure(
       'task graph generation',
       'task graph generation:start',
-      'task graph generation:end',
+      'task graph generation:end'
     );
 
     performance.measure(
       'task hash plan generation',
       'task hash plan generation:start',
-      'task hash plan generation:end',
+      'task hash plan generation:end'
     );
 
     return { taskGraph, plans, error: null };
@@ -1131,7 +1131,7 @@ async function createTaskGraphClientResponse(
     performance.measure(
       'task graph generation (failed)',
       'task graph generation:start',
-      'task graph generation:end',
+      'task graph generation:end'
     );
 
     return {
@@ -1149,7 +1149,7 @@ async function createTaskGraphClientResponse(
 
 async function createExpandedTaskInputResponse(
   taskGraphClientResponse: TaskGraphClientResponse,
-  depGraphClientResponse: ProjectGraphClientResponse,
+  depGraphClientResponse: ProjectGraphClientResponse
 ): Promise<ExpandedTaskInputsReponse> {
   performance.mark('task input static generation:start');
 
@@ -1163,7 +1163,7 @@ async function createExpandedTaskInputResponse(
       inputs,
       depGraphClientResponse.projects.find((p) => p.name === project),
       allWorkspaceFiles,
-      depGraphClientResponse,
+      depGraphClientResponse
     );
 
     response[key] = expandedInputs;
@@ -1172,7 +1172,7 @@ async function createExpandedTaskInputResponse(
   performance.measure(
     'task input static generation',
     'task input static generation:start',
-    'task input static generation:end',
+    'task input static generation:end'
   );
   return response;
 }
@@ -1198,7 +1198,7 @@ function clearTaskGraphCache() {
 async function createTaskGraphForTargetsAndProjects(
   targetNames: string[],
   projectNames?: string[],
-  configuration?: string,
+  configuration?: string
 ): Promise<TaskGraphClientResponse> {
   // Get project graph
   let graph: ProjectGraph;
@@ -1220,7 +1220,7 @@ async function createTaskGraphForTargetsAndProjects(
     // Get all projects that have at least one of the targets
     projectsToUse = Object.entries(graph.nodes)
       .filter(([_, project]) =>
-        targetNames.some((targetName) => project.data.targets?.[targetName]),
+        targetNames.some((targetName) => project.data.targets?.[targetName])
       )
       .map(([projectName]) => projectName);
   }
@@ -1233,14 +1233,14 @@ async function createTaskGraphForTargetsAndProjects(
       projectsToUse,
       targetNames,
       configuration,
-      {},
+      {}
     );
 
     performance.mark(`task graph generation:end`);
 
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(graph)),
+      transferProjectGraph(transformProjectGraphForRust(graph))
     );
     performance.mark('task hash plan generation:start');
 
@@ -1253,12 +1253,12 @@ async function createTaskGraphForTargetsAndProjects(
     performance.measure(
       `task graph generation for ${targetNames.join(', ')}`,
       `task graph generation:start`,
-      `task graph generation:end`,
+      `task graph generation:end`
     );
     performance.measure(
       'task hash plan generation',
       'task hash plan generation:start',
-      'task hash plan generation:end',
+      'task hash plan generation:end'
     );
 
     return { taskGraph, plans, error: null };
@@ -1267,7 +1267,7 @@ async function createTaskGraphForTargetsAndProjects(
     performance.measure(
       `task graph generation for ${targetNames.join(', ')} (failed)`,
       `task graph generation:start`,
-      `task graph generation:end`,
+      `task graph generation:end`
     );
 
     return {
@@ -1284,7 +1284,7 @@ async function createTaskGraphForTargetsAndProjects(
 }
 
 async function getExpandedTaskInputs(
-  taskId: string,
+  taskId: string
 ): Promise<Record<string, string[]>> {
   // Check cache first
   if (expandedTaskInputsCache.has(taskId)) {
@@ -1296,7 +1296,7 @@ async function getExpandedTaskInputs(
   const taskGraphResponse = await createTaskGraphForTargetsAndProjects(
     [targetName],
     [projectName],
-    configuration,
+    configuration
   );
 
   const allWorkspaceFiles = await allFileData();
@@ -1308,10 +1308,10 @@ async function getExpandedTaskInputs(
     result = expandInputs(
       inputs,
       currentProjectGraphClientResponse.projects.find(
-        (p) => p.name === projectName,
+        (p) => p.name === projectName
       ),
       allWorkspaceFiles,
-      currentProjectGraphClientResponse,
+      currentProjectGraphClientResponse
     );
   }
 
@@ -1325,7 +1325,7 @@ function expandInputs(
   inputs: string[],
   project: ProjectGraphProjectNode,
   allWorkspaceFiles: FileData[],
-  depGraphClientResponse: ProjectGraphClientResponse,
+  depGraphClientResponse: ProjectGraphClientResponse
 ): Record<string, string[]> {
   const projectNames = depGraphClientResponse.projects.map((p) => p.name);
 
@@ -1362,7 +1362,7 @@ function expandInputs(
 
   const workspaceRootsExpanded: string[] = getExpandedWorkspaceRoots(
     workspaceRootInputs,
-    allWorkspaceFiles,
+    allWorkspaceFiles
   );
 
   const otherInputsExpanded = otherInputs.map((input) => {
@@ -1373,7 +1373,7 @@ function expandInputs(
       return depGraphClientResponse.fileMap[project.name].find(
         (file) =>
           file.file === `${project.data.root}/project.json` ||
-          file.file === `${project.data.root}/package.json`,
+          file.file === `${project.data.root}/package.json`
       ).file;
     }
 
@@ -1384,7 +1384,7 @@ function expandInputs(
     .map((input) => {
       const fileSetProjectName = input.split(':')[0];
       const fileSetProject = depGraphClientResponse.projects.find(
-        (p) => p.name === fileSetProjectName,
+        (p) => p.name === fileSetProjectName
       );
       const fileSets = input.replace(`${fileSetProjectName}:`, '').split(',');
 
@@ -1392,7 +1392,7 @@ function expandInputs(
         [fileSetProject.name]: filterUsingGlobPatterns(
           fileSetProject.data.root,
           depGraphClientResponse.fileMap[fileSetProject.name] || [],
-          fileSets,
+          fileSets
         ).map((f) => f.file),
       };
 
@@ -1432,7 +1432,7 @@ export interface GraphJson {
 
 function getExpandedWorkspaceRoots(
   workspaceRootInputs: string[],
-  allWorkspaceFiles: FileData[],
+  allWorkspaceFiles: FileData[]
 ) {
   const workspaceRootsExpanded: string[] = [];
   const negativeWRPatterns = [];
@@ -1456,7 +1456,7 @@ function getExpandedWorkspaceRoots(
         .filter(
           (f) =>
             minimatch(f.file, pattern) &&
-            !negativeWRPatterns.some((p) => minimatch(f.file, p)),
+            !negativeWRPatterns.some((p) => minimatch(f.file, p))
         )
         .forEach((f) => {
           workspaceRootsExpanded.push(f.file);
@@ -1471,7 +1471,7 @@ async function createJsonOutput(
   prunedGraph: ProjectGraph,
   rawGraph: ProjectGraph,
   projects: string[],
-  targets?: string[],
+  targets?: string[]
 ): Promise<GraphJson> {
   const response: GraphJson = {
     graph: prunedGraph,
@@ -1484,7 +1484,7 @@ async function createJsonOutput(
       projects,
       targets,
       undefined,
-      {},
+      {}
     );
 
     const hasher = createTaskHasher(rawGraph, readNxJson());
@@ -1502,13 +1502,13 @@ async function createJsonOutput(
 
 function getHelpTextFromTarget(
   projectName: string,
-  targetName: string,
+  targetName: string
 ): string {
   if (!projectName) throw new Error(`Missing project`);
   if (!targetName) throw new Error(`Missing target`);
 
   const project = currentProjectGraphClientResponse.projects?.find(
-    (p) => p.name === projectName,
+    (p) => p.name === projectName
   );
   if (!project) throw new Error(`Cannot find project ${projectName}`);
 

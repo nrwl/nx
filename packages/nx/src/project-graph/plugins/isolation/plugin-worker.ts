@@ -26,7 +26,7 @@ performance.mark(`plugin worker ${process.pid} code loading -- end`);
 performance.measure(
   `plugin worker ${process.pid} code loading`,
   `plugin worker ${process.pid} code loading -- start`,
-  `plugin worker ${process.pid} code loading -- end`,
+  `plugin worker ${process.pid} code loading -- end`
 );
 
 global.NX_GRAPH_CREATION = true;
@@ -75,9 +75,9 @@ const server = createServer((socket) => {
           loadErrorTimeout?.clear();
           process.chdir(root);
           try {
-            const { loadResolvedNxPluginAsync } = await import(
-              '../load-resolved-plugin.js'
-              );
+            const { loadResolvedNxPluginAsync } = await Promise.resolve(
+              require(require.resolve('../load-resolved-plugin'))
+            );
 
             // Register the ts-transpiler if we are pointing to a
             // plain ts file that's not part of a plugin project
@@ -89,7 +89,7 @@ const server = createServer((socket) => {
             plugin = await loadResolvedNxPluginAsync(
               pluginConfiguration,
               pluginPath,
-              name,
+              name
             );
             logger.verbose(
               `[plugin-worker] "${name}" (pid: ${process.pid}) loaded successfully`
@@ -216,7 +216,7 @@ const server = createServer((socket) => {
           }
         },
       });
-    }),
+    })
   );
 
   // There should only ever be one host -> worker connection
@@ -230,8 +230,7 @@ const server = createServer((socket) => {
     server.close(() => {
       try {
         unlinkSync(socketPath);
-      } catch (e) {
-      }
+      } catch (e) {}
       process.exit(0);
     });
   });
@@ -268,8 +267,7 @@ const exitHandler = (exitCode: number) => () => {
   server.close();
   try {
     unlinkSync(socketPath);
-  } catch (e) {
-  }
+  } catch (e) {}
   process.exit(exitCode);
 };
 

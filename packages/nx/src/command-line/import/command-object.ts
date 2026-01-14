@@ -40,9 +40,9 @@ export const yargsImportCommand: CommandModule = {
             type: 'boolean',
             description: 'Interactive mode.',
             default: true,
-          }),
+          })
       ),
-      'import',
+      'import'
     ),
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {

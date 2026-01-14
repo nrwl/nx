@@ -7,7 +7,7 @@ import { output } from './output';
 
 export async function handleErrors(
   isVerbose: boolean,
-  fn: Function,
+  fn: Function
 ): Promise<number> {
   try {
     const result = await fn();
@@ -66,7 +66,9 @@ export async function handleErrors(
         bodyLines,
       });
     }
-    const { daemonClient } = await import('../daemon/client/client.js');
+    const { daemonClient } = await import(
+      require.resolve('../daemon/client/client')
+    );
     if (daemonClient.enabled()) {
       daemonClient.reset();
     }
@@ -76,17 +78,17 @@ export async function handleErrors(
 
 function formatErrorStackAndCause<T extends Error>(
   error: T,
-  verbose: boolean,
+  verbose: boolean
 ): string[] {
   return [
     verbose ? error.stack || error.message : error.message,
     ...(error.cause && typeof error.cause === 'object'
       ? [
-        'Caused by:',
-        verbose && 'stack' in error.cause
-          ? error.cause.stack.toString()
-          : error.cause.toString(),
-      ]
+          'Caused by:',
+          verbose && 'stack' in error.cause
+            ? error.cause.stack.toString()
+            : error.cause.toString(),
+        ]
       : []),
   ];
 }

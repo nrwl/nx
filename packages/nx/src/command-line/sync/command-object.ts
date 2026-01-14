@@ -28,8 +28,8 @@ export const yargsSyncCheckCommand: CommandModule<
   handler: async (args) => {
     process.exit(
       await import('./sync.js').then((m) =>
-        m.syncHandler({ ...args, check: true }),
-      ),
+        m.syncHandler({ ...args, check: true })
+      )
     );
   },
 };

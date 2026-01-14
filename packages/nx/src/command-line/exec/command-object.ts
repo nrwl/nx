@@ -11,7 +11,9 @@ export const yargsExecCommand: CommandModule = {
   builder: (yargs) => withTuiOptions(withRunManyOptions(yargs)),
   handler: async (args) => {
     try {
-      await (await import('./exec.js')).nxExecCommand(withOverrides(args) as any);
+      await (
+        await import('./exec.js')
+      ).nxExecCommand(withOverrides(args) as any);
       process.exit(0);
     } catch (e) {
       console.error(e);

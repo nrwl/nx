@@ -49,42 +49,42 @@ export type VersionOptions = NxReleaseArgs &
   VersionPlanArgs &
   FirstReleaseArgs &
   DockerVersionSchemeArgs & {
-  specifier?: string;
-  preid?: string;
-  stageChanges?: boolean;
-  versionActionsOptionsOverrides?: Record<string, unknown>;
-  // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
-  releaseGraph?: ReleaseGraph;
-};
+    specifier?: string;
+    preid?: string;
+    stageChanges?: boolean;
+    versionActionsOptionsOverrides?: Record<string, unknown>;
+    // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
+    releaseGraph?: ReleaseGraph;
+  };
 
 export type ChangelogOptions = NxReleaseArgs &
   GitOptions &
   VersionPlanArgs &
   FirstReleaseArgs & {
-  // version and/or versionData must be set
-  version?: string | null;
-  versionData?: VersionData;
-  to?: string;
-  from?: string;
-  interactive?: string;
-  createRelease?: false | 'github' | 'gitlab';
-  resolveVersionPlans?: 'all' | 'using-from-and-to';
-  replaceExistingContents?: boolean;
-  // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
-  releaseGraph?: ReleaseGraph;
-};
+    // version and/or versionData must be set
+    version?: string | null;
+    versionData?: VersionData;
+    to?: string;
+    from?: string;
+    interactive?: string;
+    createRelease?: false | 'github' | 'gitlab';
+    resolveVersionPlans?: 'all' | 'using-from-and-to';
+    replaceExistingContents?: boolean;
+    // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
+    releaseGraph?: ReleaseGraph;
+  };
 
 export type PublishOptions = NxReleaseArgs &
   Partial<RunManyOptions> & { outputStyle?: OutputStyle } & FirstReleaseArgs & {
-  registry?: string;
-  tag?: string;
-  access?: string;
-  otp?: number;
-  // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
-  versionData?: VersionData;
-  // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
-  releaseGraph?: ReleaseGraph;
-};
+    registry?: string;
+    tag?: string;
+    access?: string;
+    otp?: number;
+    // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
+    versionData?: VersionData;
+    // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
+    releaseGraph?: ReleaseGraph;
+  };
 
 export type PlanOptions = NxReleaseArgs & {
   bump?: string;
@@ -103,11 +103,11 @@ export type PlanCheckOptions = BaseNxReleaseArgs & {
 export type ReleaseOptions = NxReleaseArgs &
   FirstReleaseArgs &
   DockerVersionSchemeArgs & {
-  specifier?: string;
-  yes?: boolean;
-  preid?: VersionOptions['preid'];
-  skipPublish?: boolean;
-};
+    specifier?: string;
+    yes?: boolean;
+    preid?: VersionOptions['preid'];
+    skipPublish?: boolean;
+  };
 
 export type VersionPlanArgs = {
   deleteVersionPlans?: boolean;
@@ -174,7 +174,7 @@ export const yargsReleaseCommand: CommandModule<
       .check(async (argv) => {
         if (argv.groups && argv.projects) {
           throw new Error(
-            'The --projects and --groups options are mutually exclusive, please use one or the other.',
+            'The --projects and --groups options are mutually exclusive, please use one or the other.'
           );
         }
         const nxJson = (await import('../../config/nx-json.js')).readNxJson();
@@ -182,7 +182,7 @@ export const yargsReleaseCommand: CommandModule<
           for (const group of argv.groups) {
             if (!nxJson.release?.groups?.[group]) {
               throw new Error(
-                `The specified release group "${group}" was not found in nx.json`,
+                `The specified release group "${group}" was not found in nx.json`
               );
             }
           }
@@ -228,12 +228,12 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
           .check((argv) => {
             if (argv.yes !== undefined && argv.skipPublish !== undefined) {
               throw new Error(
-                'The --yes and --skip-publish options are mutually exclusive, please use one or the other.',
+                'The --yes and --skip-publish options are mutually exclusive, please use one or the other.'
               );
             }
             return true;
-          }),
-      ),
+          })
+      )
     ),
   handler: async (args) => {
     const release = await import('./release.js');
@@ -271,9 +271,9 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
               type: 'boolean',
               describe:
                 'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
-            }),
-        ),
-      ),
+            })
+        )
+      )
     ),
   handler: async (args) => {
     const release = await import('./version.js');
@@ -336,12 +336,12 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
           .check((argv) => {
             if (!argv.version) {
               throw new Error(
-                'An explicit target version must be specified when using the changelog command directly',
+                'An explicit target version must be specified when using the changelog command directly'
               );
             }
             return true;
-          }),
-      ),
+          })
+      )
     ),
   handler: async (args) => {
     const release = await import('./changelog.js');
@@ -380,7 +380,7 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
           type: 'number',
           description:
             'A one-time password for publishing to a registry that requires 2FA.',
-        }),
+        })
     ),
   handler: async (args) => {
     const status = await (
@@ -511,7 +511,7 @@ function withGitOptions<T>(yargs: Argv<T>): Argv<T & GitOptions> {
 }
 
 function withFirstReleaseOptions<T>(
-  yargs: Argv<T>,
+  yargs: Argv<T>
 ): Argv<T & FirstReleaseArgs> {
   return yargs.option('first-release', {
     type: 'boolean',
@@ -521,7 +521,7 @@ function withFirstReleaseOptions<T>(
 }
 
 function withDockerVersionSchemeOptions<T>(
-  yargs: Argv<T>,
+  yargs: Argv<T>
 ): Argv<T & DockerVersionSchemeArgs> {
   return yargs
     .option('dockerVersionScheme', {
@@ -540,7 +540,7 @@ function withDockerVersionSchemeOptions<T>(
         argv.dockerVersion !== undefined
       ) {
         throw new Error(
-          'The --dockerVersionScheme and --dockerVersion options are mutually exclusive, please use one or the other.',
+          'The --dockerVersionScheme and --dockerVersion options are mutually exclusive, please use one or the other.'
         );
       }
       return true;

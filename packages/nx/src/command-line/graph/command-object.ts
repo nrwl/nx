@@ -13,7 +13,7 @@ export const yargsGraphCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withVerbose(withAffectedOptions(withGraphOptions(yargs))),
-      'dep-graph',
+      'dep-graph'
     )
       .option('affected', {
         type: 'boolean',

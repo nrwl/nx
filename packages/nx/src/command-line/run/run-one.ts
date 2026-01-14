@@ -35,7 +35,7 @@ export async function runOne(
   } as {
     excludeTaskDependencies: boolean;
     loadDotEnvFiles: boolean;
-  },
+  }
 ): Promise<void> {
   performance.mark('code-loading:end');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
@@ -53,7 +53,7 @@ export async function runOne(
     },
     'run-one',
     { printWarnings: args.graph !== 'stdout' },
-    nxJson,
+    nxJson
   );
 
   const { projects, projectName } = getProjects(projectGraph, opts.project);
@@ -86,7 +86,7 @@ export async function runOne(
         projects: projectNames,
         file,
       },
-      projectNames,
+      projectNames
     );
   } else {
     const status = await runCommand(
@@ -97,7 +97,7 @@ export async function runOne(
       overrides,
       projectName,
       extraTargetDependencies,
-      extraOptions,
+      extraOptions
     );
     process.exit(status);
   }
@@ -105,7 +105,7 @@ export async function runOne(
 
 function getProjects(
   projectGraph: ProjectGraph,
-  projectName: string,
+  projectName: string
 ): {
   projectName: string;
   projects: ProjectGraphProjectNode[];
@@ -161,13 +161,13 @@ export function parseRunOneOptions(
   cwd: string,
   parsedArgs: { [k: string]: any },
   projectGraph: ProjectGraph,
-  nxJson: NxJsonConfiguration,
+  nxJson: NxJsonConfiguration
 ): { project; target; configuration; parsedArgs } {
   const defaultProjectName = calculateDefaultProjectName(
     cwd,
     workspaceRoot,
     readProjectsConfigurationFromProjectGraph(projectGraph),
-    nxJson,
+    nxJson
   );
 
   let project;
@@ -178,7 +178,7 @@ export function parseRunOneOptions(
     // run case
     [project, target, configuration] = splitTarget(
       parsedArgs[PROJECT_TARGET_CONFIG],
-      projectGraph,
+      projectGraph
     );
     // this is to account for "nx npmscript:dev"
     if (project && !target && defaultProjectName) {

@@ -22,7 +22,7 @@ import {
 export function readPluginPackageJson(
   pluginName: string,
   projects: Record<string, ProjectConfiguration>,
-  paths = getNxRequirePaths(),
+  paths = getNxRequirePaths()
 ): {
   path: string;
   json: PackageJson;
@@ -39,7 +39,7 @@ export function readPluginPackageJson(
       if (localPluginPath) {
         const localPluginPackageJson = path.join(
           localPluginPath.path,
-          'package.json',
+          'package.json'
         );
         if (!pluginTranspilerIsRegistered()) {
           registerPluginTSTranspiler();
@@ -57,15 +57,14 @@ export function readPluginPackageJson(
 export function loadNxPlugin(plugin: PluginConfiguration, root: string) {
   return [
     loadNxPluginAsync(plugin, getNxRequirePaths(root), root),
-    () => {
-    },
+    () => {},
   ] as const;
 }
 
 export async function loadNxPluginAsync(
   pluginConfiguration: PluginConfiguration,
   paths: string[],
-  root: string,
+  root: string
 ): Promise<LoadedNxPlugin> {
   const moduleName =
     typeof pluginConfiguration === 'string'
@@ -79,8 +78,8 @@ export async function loadNxPluginAsync(
       registerPluginTSTranspiler();
     }
     const { loadResolvedNxPluginAsync } = await import(
-      './load-resolved-plugin.js'
-      );
+      require.resolve('./load-resolved-plugin')
+    );
     return loadResolvedNxPluginAsync(pluginConfiguration, pluginPath, name);
   } catch (e) {
     throw new LoadPluginError(moduleName, e);
