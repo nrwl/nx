@@ -1,4 +1,4 @@
-import * as yargsParser from 'yargs-parser';
+import yargsParser from 'yargs-parser';
 import type { Arguments } from 'yargs';
 import { TEN_MEGABYTES } from '../project-graph/file-utils';
 import { output } from './output';
