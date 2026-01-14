@@ -1,3 +1,12 @@
+jest.mock('fs', () => {
+  return {
+    ...jest.requireActual('fs'),
+    existsSync: jest.fn(),
+    readFileSync: jest.fn(),
+  };
+});
+jest.mock('child_process');
+
 import * as fs from 'fs';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
@@ -24,6 +33,7 @@ describe('package-manager', () => {
   describe('detectPackageManager', () => {
     afterEach(() => {
       jest.restoreAllMocks();
+      jest.clearAllMocks();
     });
     it('should detect package manager in nxJson', () => {
       jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
@@ -224,9 +234,11 @@ describe('package-manager', () => {
   describe('getPackageManagerVersion', () => {
     afterEach(() => {
       jest.restoreAllMocks();
+      jest.clearAllMocks();
     });
 
     it('should detect package manager from --version', () => {
+      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
       jest.spyOn(childProcess, 'execSync').mockImplementation((p) => {
         switch (p) {
           case 'yarn --version':
@@ -245,6 +257,7 @@ describe('package-manager', () => {
     });
 
     it('should detect pnpm package manager version from package.json packageManager', () => {
+      jest.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
       jest.spyOn(childProcess, 'execSync').mockImplementation(() => {
         throw new Error('Command failed');
       });
@@ -255,6 +268,7 @@ describe('package-manager', () => {
     });
 
     it('should detect yarn package manager from package.json packageManager', () => {
+      jest.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
       jest.spyOn(childProcess, 'execSync').mockImplementation(() => {
         throw new Error('Command failed');
       });
@@ -265,6 +279,7 @@ describe('package-manager', () => {
     });
 
     it('should detect npm package manager from package.json packageManager', () => {
+      jest.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
       jest.spyOn(childProcess, 'execSync').mockImplementation(() => {
         throw new Error('Command failed');
       });
@@ -296,6 +311,9 @@ describe('package-manager', () => {
   describe('isWorkspacesEnabled', () => {
     it('should return true if package manager is pnpm and pnpm-workspace.yaml exists', () => {
       jest.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
+      jest
+        .spyOn(fs, 'readFileSync')
+        .mockReturnValueOnce('packages:\n  - apps/*');
       expect(isWorkspacesEnabled('pnpm')).toEqual(true);
     });
 
@@ -385,6 +403,11 @@ describe('package-manager', () => {
           join(tempWorkspace, 'package.json'),
           '{"workspaces": ["packages/*"]}'
         );
+        jest
+          .spyOn(fs, 'readFileSync')
+          .mockImplementation((...args) =>
+            jest.requireActual('fs').readFileSync(...args)
+          );
         const workspaces = getPackageWorkspaces(
           packageManager as PackageManager,
           tempWorkspace
@@ -414,6 +437,13 @@ describe('package-manager', () => {
           join(tempWorkspace, 'pnpm-workspace.yaml'),
           `packages:\n  - apps/*`
         );
+
+        jest
+          .spyOn(fs, 'readFileSync')
+          .mockImplementation((...args) =>
+            jest.requireActual('fs').readFileSync(...args)
+          );
+        jest.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
         const workspaces = getPackageWorkspaces('pnpm', tempWorkspace);
         expect(workspaces).toEqual(['apps/*']);
       });
@@ -533,6 +563,7 @@ describe('package-manager', () => {
       });
 
       it('should add to pnpm workspace if there are packages defined', () => {
+        jest.spyOn(fs, 'existsSync').mockReturnValue(true);
         writeFileSync(
           join(tempWorkspace, 'pnpm-workspace.yaml'),
           `packages:\n  - apps/*`
@@ -556,6 +587,7 @@ describe('package-manager', () => {
       });
 
       it('should preserve comments', () => {
+        jest.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
         writeFileSync(
           join(tempWorkspace, 'pnpm-workspace.yaml'),
           `packages:\n  - apps/* # comment`
@@ -571,6 +603,7 @@ describe('package-manager', () => {
       });
 
       it('should add packages key if it is not defined', () => {
+        jest.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
         writeFileSync(
           join(tempWorkspace, 'pnpm-workspace.yaml'),
           `something:\n  - random/* # comment`
