@@ -41,6 +41,15 @@ export interface CreateWorkspaceOptions {
   };
   cliName?: string; // Name of the CLI, used when displaying outputs. e.g. nx, Nx
   aiAgents?: Agent[]; // List of AI agents to configure
+  /**
+   * @description Skip cloud connection (variant 1 experiment - NXC-3628)
+   * @default false
+   */
+  skipCloudConnect?: boolean;
+  /**
+   * @description Whether GitHub CLI (gh) is available on the system (for telemetry)
+   */
+  ghAvailable?: boolean;
 }
 
 export const supportedAgents = [
