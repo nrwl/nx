@@ -10,7 +10,7 @@ use crossterm::{
 use futures::{FutureExt, StreamExt};
 use ratatui::backend::CrosstermBackend;
 use std::{
-    io::Write,
+    io::{IsTerminal, Write},
     ops::{Deref, DerefMut},
     time::Duration,
 };
@@ -42,8 +42,8 @@ pub enum Event {
 pub struct Tui {
     /// Terminal configured for fullscreen mode (alternate screen)
     pub fullscreen_terminal: ratatui::Terminal<Backend>,
-    /// Terminal configured for inline mode (viewport)
-    pub inline_terminal: ratatui::Terminal<Backend>,
+    /// Terminal configured for inline mode (viewport) - created lazily on first use
+    pub inline_terminal: Option<ratatui::Terminal<Backend>>,
     pub task: JoinHandle<()>,
     pub cancellation_token: CancellationToken,
     pub event_rx: UnboundedReceiver<Event>,
@@ -69,16 +69,25 @@ impl Tui {
         // Create fullscreen terminal with its own backend
         let fullscreen_terminal = ratatui::Terminal::new(CrosstermBackend::new(std::io::stderr()))?;
 
-        // Create inline terminal with its own backend and viewport
-        let inline_height = crossterm::terminal::size()
-            .map(|(_cols, rows)| rows)
-            .unwrap_or(24);
-        let inline_terminal = ratatui::Terminal::with_options(
-            CrosstermBackend::new(std::io::stderr()),
-            ratatui::TerminalOptions {
-                viewport: ratatui::Viewport::Inline(inline_height),
-            },
-        )?;
+        // Only create inline terminal if stdin is a TTY.
+        // Inline mode requires cursor position queries (via Viewport::Inline) which use
+        // escape sequences that wait for responses on stdin. In git hooks and other
+        // non-interactive environments, stdin is redirected so these queries hang.
+        // By checking upfront, we avoid flakiness from deferred initialization.
+        let inline_terminal = if Self::is_stdin_interactive() {
+            let inline_height = crossterm::terminal::size()
+                .map(|(_cols, rows)| rows)
+                .unwrap_or(24);
+            Some(ratatui::Terminal::with_options(
+                CrosstermBackend::new(std::io::stderr()),
+                ratatui::TerminalOptions {
+                    viewport: ratatui::Viewport::Inline(inline_height),
+                },
+            )?)
+        } else {
+            debug!("Inline terminal not created: stdin is not a TTY");
+            None
+        };
 
         let (event_tx, event_rx) = mpsc::unbounded_channel();
         let cancellation_token = CancellationToken::new();
@@ -97,11 +106,27 @@ impl Tui {
         })
     }
 
+    /// Checks if stdin is a proper interactive terminal
+    ///
+    /// This is critical for avoiding hangs in git hooks and other non-interactive
+    /// environments. While stderr may be connected to a terminal (making isTTY true
+    /// on the JS side), stdin may be redirected from the hook script. crossterm's
+    /// terminal operations send escape sequences and wait for responses on stdin,
+    /// which hang indefinitely if stdin isn't a real terminal.
+    ///
+    /// See: https://github.com/crossterm-rs/crossterm/issues/692
+    pub fn is_stdin_interactive() -> bool {
+        std::io::stdin().is_terminal()
+    }
+
     /// Returns a reference to the currently active terminal based on mode
     pub fn terminal(&self) -> &ratatui::Terminal<Backend> {
         match self.current_mode {
             TuiMode::FullScreen => &self.fullscreen_terminal,
-            TuiMode::Inline => &self.inline_terminal,
+            TuiMode::Inline => self
+                .inline_terminal
+                .as_ref()
+                .expect("inline terminal should be initialized before use"),
         }
     }
 
@@ -109,7 +134,10 @@ impl Tui {
     pub fn terminal_mut(&mut self) -> &mut ratatui::Terminal<Backend> {
         match self.current_mode {
             TuiMode::FullScreen => &mut self.fullscreen_terminal,
-            TuiMode::Inline => &mut self.inline_terminal,
+            TuiMode::Inline => self
+                .inline_terminal
+                .as_mut()
+                .expect("inline terminal should be initialized before use"),
         }
     }
 
@@ -227,6 +255,12 @@ impl Tui {
                 execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide)?;
             }
             TuiMode::Inline => {
+                // Inline terminal must exist (created upfront if stdin is TTY)
+                if self.inline_terminal.is_none() {
+                    return Err(color_eyre::eyre::eyre!(
+                        "Cannot enter inline mode: inline terminal not available (stdin is not a TTY)"
+                    ));
+                }
                 execute!(std::io::stderr(), cursor::Hide)?;
                 execute!(std::io::stderr(), cursor::MoveTo(0, 0))?;
                 execute!(
@@ -300,8 +334,14 @@ impl Tui {
             }
         }
 
-        // Switch the mode - NO terminal recreation needed!
-        // Both terminals were created upfront, we just delegate to the right one via Deref
+        // Ensure inline terminal exists before switching to it
+        if new_mode == TuiMode::Inline && self.inline_terminal.is_none() {
+            return Err(color_eyre::eyre::eyre!(
+                "Cannot switch to inline mode: inline terminal not available (stdin is not a TTY)"
+            ));
+        }
+
+        // Switch the mode
         self.current_mode = new_mode;
 
         // Clear the new terminal's buffers to force a full redraw
