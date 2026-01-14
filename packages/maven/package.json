@@ -33,6 +33,7 @@
     "dist",
     "generators.json",
     "executors.json",
+    "migrations.json",
     "!dist/tsconfig.lib.tsbuildinfo"
   ],
   "keywords": [
