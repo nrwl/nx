@@ -514,7 +514,6 @@ describe('React:CypressComponentTestConfiguration', () => {
     expect(config).toMatchInlineSnapshot(`
       "import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
       import { defineConfig } from 'cypress';
-
       export default defineConfig({
         component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
       });
@@ -537,10 +536,8 @@ describe('React:CypressComponentTestConfiguration', () => {
       // You can read more here:
       // https://on.cypress.io/configuration
       // ***********************************************************
-
       // Import commands.ts using ES2015 syntax:
       import './commands';
-
       // add component testing only related command here, such as mount
       declare global {
         // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -551,7 +548,6 @@ describe('React:CypressComponentTestConfiguration', () => {
           }
         }
       }
-
       Cypress.Commands.add('mount', mount);
       "
     `);
@@ -626,10 +622,8 @@ describe('React:CypressComponentTestConfiguration', () => {
       // You can read more here:
       // https://on.cypress.io/configuration
       // ***********************************************************
-
       // Import commands.ts using ES2015 syntax:
       import './commands';
-
       // add component testing only related command here, such as mount
       declare global {
         // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -640,7 +634,6 @@ describe('React:CypressComponentTestConfiguration', () => {
           }
         }
       }
-
       Cypress.Commands.add('mount', mount);
       "
     `);

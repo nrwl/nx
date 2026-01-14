@@ -11,7 +11,7 @@ import {
   processTargetOutputs,
   toProjectRelativePath,
 } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 import { basename, resolve } from 'path';
 import * as ts from 'typescript';
 import type { WebpackOptionsNormalized } from 'webpack';
@@ -246,7 +246,7 @@ function updateWebpackConfig(
 
   const updateSources = () => {
     webpackConfigText = tree.read(webpackConfigPath, 'utf-8');
-    sourceFile = tsquery.ast(webpackConfigText);
+    sourceFile = ast(webpackConfigText);
   };
   updateSources();
 
@@ -279,7 +279,7 @@ function setOptionsInWebpackConfig(
 
   const configValuesSelector =
     'VariableDeclaration:has(Identifier[name=configValues]) ObjectLiteralExpression';
-  const configValuesObject = tsquery<ts.ObjectLiteralExpression>(
+  const configValuesObject = query<ts.ObjectLiteralExpression>(
     sourceFile,
     configValuesSelector
   )[0];
@@ -337,10 +337,10 @@ function setOptionsInWebpackConfig(
 
   tree.write(webpackConfigPath, text);
 
-  sourceFile = tsquery.ast(text);
+  sourceFile = ast(text);
   const buildOptionsSelector =
     'VariableStatement:has(VariableDeclaration:has(Identifier[name=buildOptions]))';
-  const buildOptionsStatement = tsquery<ts.VariableStatement>(
+  const buildOptionsStatement = query<ts.VariableStatement>(
     sourceFile,
     buildOptionsSelector
   )[0];
@@ -363,7 +363,7 @@ function setDevServerOptionsInWebpackConfig(
 ) {
   const webpackConfigDevServerSelector =
     'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=devServer])';
-  const webpackConfigDevServer = tsquery<ts.PropertyAssignment>(
+  const webpackConfigDevServer = query<ts.PropertyAssignment>(
     sourceFile,
     webpackConfigDevServerSelector
   )[0];
@@ -389,7 +389,7 @@ function setDevServerOptionsInWebpackConfig(
 
   const webpackConfigSelector =
     'ObjectLiteralExpression:has(PropertyAssignment:has(Identifier[name=plugins]))';
-  const webpackConfig = tsquery<ts.ObjectLiteralExpression>(
+  const webpackConfig = query<ts.ObjectLiteralExpression>(
     sourceFile,
     webpackConfigSelector
   )[0];

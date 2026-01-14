@@ -1,7 +1,7 @@
 import { formatFiles, workspaceRoot, type Tree } from '@nx/devkit';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 import { join } from 'node:path';
 import type {
   ObjectLiteralExpression,
@@ -58,7 +58,7 @@ async function updateCtJustInTimeCompile(
   ts ??= ensureTypescript();
   printer ??= ts.createPrinter();
 
-  const sourceFile = tsquery.ast(cypressConfig);
+  const sourceFile = ast(cypressConfig);
   let updatedConfig = config;
 
   const bundler = await resolveBundler(updatedConfig, cypressConfigPath);
@@ -135,7 +135,7 @@ async function resolveBundler(
   config: ObjectLiteralExpression,
   cypressConfigPath: string
 ): Promise<string | null> {
-  const bundlerProperty = tsquery.query<PropertyAssignment>(
+  const bundlerProperty = query<PropertyAssignment>(
     config,
     'PropertyAssignment:has(Identifier[name=component]) PropertyAssignment:has(Identifier[name=devServer]) PropertyAssignment:has(Identifier[name=bundler])'
   )[0];

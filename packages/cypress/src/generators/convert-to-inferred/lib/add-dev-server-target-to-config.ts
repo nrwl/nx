@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 
 /**
  * Add or update the webServerCommands and ciWebServerCommand options in the Cypress Config
@@ -19,28 +19,26 @@ export function addDevServerTargetToConfig(
 ) {
   let configFileContents = tree.read(configFilePath, 'utf-8');
 
-  let ast = tsquery.ast(configFileContents);
+  let sourceFile = ast(configFileContents);
 
   const NX_E2E_PRESET_SELECTOR =
     'PropertyAssignment:has(Identifier[name=e2e]) CallExpression:has(Identifier[name=nxE2EPreset])';
-  const nxE2ePresetOptionsNodes = tsquery(ast, NX_E2E_PRESET_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const nxE2ePresetOptionsNodes = query(sourceFile, NX_E2E_PRESET_SELECTOR);
   if (nxE2ePresetOptionsNodes.length !== 0) {
     const NX_E2E_PRESET_OPTIONS_SELECTOR =
       'PropertyAssignment:has(Identifier[name=e2e]) CallExpression:has(Identifier[name=nxE2EPreset]) > ObjectLiteralExpression';
-    const optionsObjectNodes = tsquery(ast, NX_E2E_PRESET_OPTIONS_SELECTOR, {
-      visitAllChildren: true,
-    });
+    const optionsObjectNodes = query(
+      sourceFile,
+      NX_E2E_PRESET_OPTIONS_SELECTOR
+    );
     const hasObjectDefinition = optionsObjectNodes?.length > 0;
 
     let nxE2ePresetOptionsNode = nxE2ePresetOptionsNodes[0];
     const WEB_SERVER_COMMANDS_SELECTOR =
       'PropertyAssignment:has(Identifier[name=webServerCommands])';
-    const webServerCommandsNodes = tsquery(
+    const webServerCommandsNodes = query(
       nxE2ePresetOptionsNode,
-      WEB_SERVER_COMMANDS_SELECTOR,
-      { visitAllChildren: true }
+      WEB_SERVER_COMMANDS_SELECTOR
     );
     if (webServerCommandsNodes.length !== 0) {
       // Already exists, replace it
@@ -79,24 +77,22 @@ export function addDevServerTargetToConfig(
 
     if (ciDevServerTarget) {
       configFileContents = tree.read(configFilePath, 'utf-8');
-      ast = tsquery.ast(configFileContents);
-      nxE2ePresetOptionsNode = tsquery(ast, NX_E2E_PRESET_SELECTOR, {
-        visitAllChildren: true,
-      })[0];
+      sourceFile = ast(configFileContents);
+      nxE2ePresetOptionsNode = query(sourceFile, NX_E2E_PRESET_SELECTOR)[0];
 
       const NX_E2E_PRESET_OPTIONS_SELECTOR =
         'PropertyAssignment:has(Identifier[name=e2e]) CallExpression:has(Identifier[name=nxE2EPreset]) > ObjectLiteralExpression';
-      const optionsObjectNodes = tsquery(ast, NX_E2E_PRESET_OPTIONS_SELECTOR, {
-        visitAllChildren: true,
-      });
+      const optionsObjectNodes = query(
+        sourceFile,
+        NX_E2E_PRESET_OPTIONS_SELECTOR
+      );
       const hasObjectDefinition = optionsObjectNodes?.length > 0;
 
       const CI_WEB_SERVER_COMMANDS_SELECTOR =
         'PropertyAssignment:has(Identifier[name=ciWebServerCommand])';
-      const ciWebServerCommandsNodes = tsquery(
+      const ciWebServerCommandsNodes = query(
         nxE2ePresetOptionsNode,
-        CI_WEB_SERVER_COMMANDS_SELECTOR,
-        { visitAllChildren: true }
+        CI_WEB_SERVER_COMMANDS_SELECTOR
       );
 
       if (ciWebServerCommandsNodes.length !== 0) {
