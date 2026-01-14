@@ -20,8 +20,6 @@ export class RepoGitTags {
     return new RepoGitTags();
   }
 
-  private constructor() {}
-
   /**
    * Resolves git tags with caching. Fetches from git on cache miss, returns cached tags on hit.
    * Cache key is determined by whether to check all branches or only merged branches.
@@ -29,9 +27,9 @@ export class RepoGitTags {
    * @param checkAllBranchesWhen - Strategy for checking branches (boolean, array of patterns, or undefined)
    * @returns Promise resolving to array of git tags
    */
-  resolveTags = async (
+  async resolveTags(
     checkAllBranchesWhen?: CheckAllBranchesWhen
-  ): Promise<string[]> => {
+  ): Promise<string[]> {
     const alwaysCheckAllBranches =
       await this.#alwaysCheckAllBranches(checkAllBranchesWhen);
 
@@ -45,12 +43,12 @@ export class RepoGitTags {
     this.#tagsMap.set(cacheKey, tags);
 
     return tags;
-  };
+  }
 
   /** Clears the tag cache. Useful for testing or forcing a fresh fetch. */
-  clean = (): void => {
+  clean(): void {
     this.#tagsMap.clear();
-  };
+  }
 
   /** Fetches tags from git. Falls back to all branches if no merged tags found. */
   async #getTags(

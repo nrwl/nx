@@ -649,7 +649,7 @@ export class ReleaseGraph {
               projectName: sanitizeProjectNameForGitTag(projectGraphNode.name),
               releaseGroupName: releaseGroupNode.group.name,
             },
-            this.resolveRepositoryTags,
+            this.resolveRepositoryTags.bind(this),
             {
               checkAllBranchesWhen:
                 releaseGroupNode.group.releaseTag.checkAllBranchesWhen,
@@ -1040,11 +1040,11 @@ Valid values are: ${validReleaseVersionPrefixes
     return affectedGraph;
   }
 
-  resolveRepositoryTags = async (
+  async resolveRepositoryTags(
     resolveTagsWhen: GetLatestGitTagForPatternOptions['checkAllBranchesWhen']
-  ) => {
+  ) {
     return this.repositoryGitTags.resolveTags(resolveTagsWhen);
-  };
+  }
 
   /**
    * Runs validation on resolved VersionActions instances. E.g. check that manifest files exist for all projects that will be processed.

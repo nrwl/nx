@@ -238,7 +238,8 @@ export function createAPI(
       args,
       nxReleaseConfig,
       useAutomaticFromRef,
-      resolveRepositoryTags: releaseGraph.resolveRepositoryTags,
+      resolveRepositoryTags:
+        releaseGraph.resolveRepositoryTags.bind(releaseGraph),
     });
 
     // Filter version plans based on resolveVersionPlans option
@@ -378,7 +379,8 @@ export function createAPI(
         fromRef: args.from,
         tagPattern: pattern,
         tagPatternValues: templateValues,
-        resolveRepositoryTags: releaseGraph.resolveRepositoryTags,
+        resolveRepositoryTags:
+          releaseGraph.resolveRepositoryTags.bind(releaseGraph),
         checkAllBranchesWhen,
         preid,
         requireSemver,

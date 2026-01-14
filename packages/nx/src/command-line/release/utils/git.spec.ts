@@ -153,7 +153,7 @@ See merge request nx-release-test/nx-release-test!2`,
   describe('getLatestGitTagForPattern', () => {
     // Create a mock resolveTags function that uses the mocked execCommand
     const mockRepoGitTags = RepoGitTags.create();
-    const mockResolveTags = mockRepoGitTags.resolveTags;
+    const mockResolveTags = mockRepoGitTags.resolveTags.bind(mockRepoGitTags);
 
     afterEach(() => {
       jest.clearAllMocks();
