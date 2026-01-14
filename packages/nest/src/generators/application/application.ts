@@ -2,8 +2,6 @@ import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { formatFiles, runTasksInSerial } from '@nx/devkit';
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 
-import '@angular-devkit/core';
-
 import { initGenerator } from '../init/init';
 import {
   createFiles,
