@@ -154,11 +154,6 @@
         "assets": [
           {
             "input": "packages/nx",
-            "glob": ".npmignore",
-            "output": "/"
-          },
-          {
-            "input": "packages/nx",
             "glob": "**/files/**",
             "output": "/"
           },
