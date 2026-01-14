@@ -51,7 +51,7 @@ swc_common = "0.31.16"
 swc_ecma_parser = { version = "0.137.1", features = ["typescript"] }
 swc_ecma_visit = "0.93.0"
 swc_ecma_ast = "0.107.0"
-sysinfo = "0.33.1"
+sysinfo = "0.37.2"
 rand = "0.9.0"
 tar = "0.4.44"
 terminal-colorsaurus = "0.4.0"
