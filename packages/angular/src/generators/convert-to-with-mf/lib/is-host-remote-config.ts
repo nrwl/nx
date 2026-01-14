@@ -9,22 +9,20 @@ const EXPOSES_EXPRESSION_SELECTOR =
   'PropertyAssignment:has(Identifier[name=exposes]) > ObjectLiteralExpression';
 const PROPERTY_SELECTOR = 'ObjectLiteralExpression > PropertyAssignment';
 
-export function isHostRemoteConfig(ast: SourceFile): IsHostRemoteConfigResult {
+export function isHostRemoteConfig(
+  sourceFile: SourceFile
+): IsHostRemoteConfigResult {
   let isHost = false;
   let isRemote = false;
   ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { query } = require('@phenomnomnominal/tsquery');
 
-  const remotesNodes = tsquery(ast, REMOTES_EXPRESSION_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const remotesNodes = query(sourceFile, REMOTES_EXPRESSION_SELECTOR);
   if (remotesNodes.length > 0) {
     isHost = true;
   }
 
-  const exposesNodes = tsquery(ast, EXPOSES_EXPRESSION_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const exposesNodes = query(sourceFile, EXPOSES_EXPRESSION_SELECTOR);
   if (exposesNodes.length > 0) {
     isRemote = true;
   }
@@ -34,19 +32,15 @@ export function isHostRemoteConfig(ast: SourceFile): IsHostRemoteConfigResult {
   return result;
 }
 
-export function getRemotesFromHost(ast: SourceFile) {
+export function getRemotesFromHost(sourceFile: SourceFile) {
   ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
-  const remotesObjectNodes = tsquery(ast, REMOTES_EXPRESSION_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const { query } = require('@phenomnomnominal/tsquery');
+  const remotesObjectNodes = query(sourceFile, REMOTES_EXPRESSION_SELECTOR);
   if (remotesObjectNodes.length === 0) {
     return [];
   }
 
-  const remotesNodes = tsquery(remotesObjectNodes[0], PROPERTY_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const remotesNodes = query(remotesObjectNodes[0], PROPERTY_SELECTOR);
 
   if (remotesNodes.length === 0) {
     return [];
@@ -65,12 +59,10 @@ export function getRemotesFromHost(ast: SourceFile) {
   return remotes;
 }
 
-export function getExposedModulesFromRemote(ast: SourceFile) {
+export function getExposedModulesFromRemote(sourceFile: SourceFile) {
   ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
-  const exposesObjectNodes = tsquery(ast, EXPOSES_EXPRESSION_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const { query } = require('@phenomnomnominal/tsquery');
+  const exposesObjectNodes = query(sourceFile, EXPOSES_EXPRESSION_SELECTOR);
   if (exposesObjectNodes.length === 0) {
     return {};
   }

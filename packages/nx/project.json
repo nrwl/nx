@@ -15,7 +15,7 @@
       "inputs": ["native"],
       "outputs": [
         "{projectRoot}/src/native/*.wasm",
-        "{projectRoot}/src/native/*.js",
+        "{projectRoot}/src/native/!(index|browser).js",
         "{projectRoot}/src/native/*.cjs",
         "{projectRoot}/src/native/*.mjs",
         "{projectRoot}/src/native/index.d.ts"
@@ -31,7 +31,7 @@
     "build-native": {
       "outputs": [
         "{projectRoot}/src/native/*.node",
-        "{projectRoot}/src/native/*.js",
+        "{projectRoot}/src/native/!(index|browser).js",
         "{projectRoot}/src/native/index.d.ts"
       ],
       "executor": "@monodon/rust:napi",

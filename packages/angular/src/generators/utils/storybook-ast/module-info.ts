@@ -83,13 +83,12 @@ export function getModuleFilePaths(
 
 function hasNgModule(tree: Tree, filePath: string): boolean {
   ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
   const fileContent = tree.read(filePath, 'utf-8');
-  const ast = tsquery.ast(fileContent);
-  const ngModule = tsquery(
-    ast,
-    'ClassDeclaration > Decorator > CallExpression > Identifier[name=NgModule]',
-    { visitAllChildren: true }
+  const sourceFile = ast(fileContent);
+  const ngModule = query(
+    sourceFile,
+    'ClassDeclaration > Decorator > CallExpression > Identifier[name=NgModule]'
   );
 
   return ngModule.length > 0;
