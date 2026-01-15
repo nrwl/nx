@@ -312,8 +312,14 @@ export function postcss(pluginOptions: PostCSSPluginOptions = {}): Plugin {
         const chunk = bundle[chunkId];
         if (chunk.type !== 'chunk') continue;
 
-        const chunkName = chunk.name || basename(chunkId, extname(chunkId));
-        const cssFilename = getExtractedFilename(options.extract, chunkName);
+        // Use the actual chunk filename to derive CSS filename
+        // This preserves patterns like index.esm.js -> index.esm.css
+        const chunkFileName = chunk.fileName;
+        const chunkBaseName = basename(chunkFileName, extname(chunkFileName));
+        const cssFilename = getExtractedFilename(
+          options.extract,
+          chunkBaseName
+        );
 
         // Concatenate CSS files with source maps
         const concat = new Concat(!!options.sourceMap, cssFilename, '\n');
