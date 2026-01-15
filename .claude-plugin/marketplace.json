@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "nx-plugins",
+  "version": "1.0.0",
+  "description": "Official Nx plugins for Claude Code.",
+  "owner": {
+    "name": "Nx",
+    "email": "support@nx.dev"
+  },
+  "plugins": [
+    {
+      "name": "nx",
+      "version": "0.2.0",
+      "source": "./nx-claude-plugin"
+    }
+  ]
+}
