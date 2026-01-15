@@ -645,8 +645,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       '@nx/maven':
-        specifier: 22.1.0-rc.5
-        version: 22.1.0-rc.5(nx@22.1.0-rc.5(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.9.2))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+        specifier: 22.4.0-beta.4
+        version: 22.4.0-beta.4(nx@22.5.0-beta.4(@swc-node/register@1.11.1(@swc/core@1.15.8(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.8(@swc/helpers@0.5.18)))
       '@nx/next':
         specifier: 22.5.0-beta.4
         version: 22.5.0-beta.4(62aca7ab769c8039d90e453c2181d9c9)
@@ -9957,6 +9957,11 @@ packages:
     peerDependencies:
       nx: '>= 20 <= 22'
 
+  '@nx/devkit@22.4.0-beta.4':
+    resolution: {integrity: sha512-sDAzVHHUEJsugrxe0867L0d4Ky8s5MG46IU8JjZyVVRFjAHOelVoST3oHS5epuW91bt6qmVNr1UMEm2wvsnQcw==}
+    peerDependencies:
+      nx: '>= 21 <= 23 || ^22.0.0-0'
+
   '@nx/devkit@22.5.0-beta.4':
     resolution: {integrity: sha512-07+aiZkYj6KBH0ILs8pVW5NMsEO1wcT0MaBH0FWTjsmDr7gNGN6vYUw7DtNwG7bTYBZcsX1vYIr26fakofnPhA==}
     peerDependencies:
@@ -10165,6 +10170,9 @@ packages:
   '@nx/key@4.0.0':
     resolution: {integrity: sha512-oXYTVb79zV3J3GIMT0jUzzPBSzd6Z5ku4hkfvpSfFAQ8b0LGzNMuPWkw+wfbR7vOZZSQ2iAEzLNEm4r1O9zHnw==}
     engines: {node: '>= 10'}
+
+  '@nx/maven@22.4.0-beta.4':
+    resolution: {integrity: sha512-q4eHCcYsngLtnHAJxy6iLc+NknTj3VOGwfyRQrdv8D1P33bTshQ8gURtFOEOymGAadIt0aIAlj5AKA4nWmYrgQ==}
 
   '@nx/module-federation@22.5.0-beta.4':
     resolution: {integrity: sha512-6zHRuHXlxdQS1egIiSqi4vtqaDxKbshepP2tNYDkRaVeSHZ/p7bKJ4kX9nWp/ICh0GPwmnLwV21nSqx3Z6pcDw==}
@@ -34916,6 +34924,17 @@ snapshots:
       tslib: 2.8.1
       yargs-parser: 21.1.1
 
+  '@nx/devkit@22.4.0-beta.4(nx@22.5.0-beta.4(@swc-node/register@1.11.1(@swc/core@1.15.8(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.8(@swc/helpers@0.5.18)))':
+    dependencies:
+      '@zkochan/js-yaml': 0.0.7
+      ejs: 3.1.10
+      enquirer: 2.3.6
+      minimatch: 10.1.1
+      nx: 22.5.0-beta.4(@swc-node/register@1.11.1(@swc/core@1.15.8(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.8(@swc/helpers@0.5.18))
+      semver: 7.7.3
+      tslib: 2.8.1
+      yargs-parser: 21.1.1
+
   '@nx/devkit@22.5.0-beta.4(nx@22.5.0-beta.4(@swc-node/register@1.11.1(@swc/core@1.15.8(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.8(@swc/helpers@0.5.18)))':
     dependencies:
       '@zkochan/js-yaml': 0.0.7
@@ -35192,6 +35211,14 @@ snapshots:
       '@nx/key-win32-x64-msvc': 4.0.0
     transitivePeerDependencies:
       - debug
+
+  '@nx/maven@22.4.0-beta.4(nx@22.5.0-beta.4(@swc-node/register@1.11.1(@swc/core@1.15.8(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.8(@swc/helpers@0.5.18)))':
+    dependencies:
+      '@nx/devkit': 22.4.0-beta.4(nx@22.5.0-beta.4(@swc-node/register@1.11.1(@swc/core@1.15.8(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.8(@swc/helpers@0.5.18)))
+      '@xmldom/xmldom': 0.8.11
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - nx
 
   '@nx/module-federation@22.5.0-beta.4(@babel/traverse@7.28.6)(@swc-node/register@1.11.1(@swc/core@1.15.8(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.8(@swc/helpers@0.5.18))(@swc/helpers@0.5.18)(esbuild@0.25.0)(next@14.2.35(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(@playwright/test@1.54.0)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.55.0))(nx@22.5.0-beta.4(@swc-node/register@1.11.1(@swc/core@1.15.8(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.8(@swc/helpers@0.5.18)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.2)(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0))(webpack-cli@5.1.4)':
     dependencies:
