@@ -452,11 +452,11 @@ export function getTuiTerminalSummaryLifeCycle({
           );
         }
         if (totalFailedTasks > 0) {
-          const numFailedToPrint = 5;
-          const failedTasksForPrinting = Array.from(failedTasks).slice(
+          const numFailedToPrint = parseInt(process.env['NX_FAILED_TASKS_TO_PRINT'] || '5', 10);
+          const failedTasksForPrinting = numFailedToPrint > 0 ? Array.from(failedTasks).slice(
             0,
             numFailedToPrint
-          );
+          ) : Array.from(failedTasks);
           failureSummaryRows.push(
             `${LEFT_PAD}${output.colors.red(
               figures.cross
