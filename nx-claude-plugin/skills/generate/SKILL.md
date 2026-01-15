@@ -1,7 +1,7 @@
 ---
-name: run-nx-generator
+name: generate
 description: |
-  Run Nx generators to scaffold code or transform existing code - for example creating libraries or apps, creating components, or anything else that is boilerplate code or automates repetitive tasks.
+  Generate code using nx generators. This is used to scaffold code or transform existing code - for example creating libraries or apps, creating components, or anything else that is boilerplate code or automates repetitive tasks. Use this whenever someone wants to 'create', 'generate', 'add' artifacts of that kind in an nx repo.
 allowed-tools: Bash, Read, Glob, Grep, Edit, Write, mcp__nx-mcp__nx_generators, mcp__nx-mcp__nx_generator_schema
 ---
 
