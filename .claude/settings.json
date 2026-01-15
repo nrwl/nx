@@ -1,4 +1,7 @@
 {
+  "env": {
+    "BASH_MAX_TIMEOUT_MS": "1800000"
+  },
   "permissions": {
     "allow": [
       "Bash(find:*)",
@@ -28,7 +31,7 @@
     "deny": []
   },
   "enableAllProjectMcpServers": true,
-  "env": {
-    "BASH_MAX_TIMEOUT_MS": "1800000"
+  "enabledPlugins": {
+    "nx@nx-plugins": true
   }
 }
