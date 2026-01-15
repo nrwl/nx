@@ -1,5 +1,5 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 import picomatch = require('picomatch');
 
 const REMIX_IMPORT_SELECTOR =
@@ -31,15 +31,16 @@ export default async function (tree: Tree) {
 
   for (const file of viteFiles) {
     const contents = tree.read(file, 'utf-8');
-    const ast = tsquery.ast(contents);
-    const remixImportNodes = tsquery(ast, REMIX_IMPORT_SELECTOR, {
-      visitAllChildren: true,
-    });
+    const sourceFile = ast(contents);
+    const remixImportNodes = query(sourceFile, REMIX_IMPORT_SELECTOR);
     if (remixImportNodes.length > 0) {
       continue;
     }
 
-    const defineConfigObjectNodes = tsquery(ast, DEFINE_CONFIG_OBJECT_SELECTOR);
+    const defineConfigObjectNodes = query(
+      sourceFile,
+      DEFINE_CONFIG_OBJECT_SELECTOR
+    );
     if (defineConfigObjectNodes.length === 0) {
       console.warn(
         `Could not migrate vite config at ${file}. No "defineConfig" object found. Apply "resolve.conditions: ['module', 'browser', 'development|production']" manually to your vite config.`
@@ -48,7 +49,7 @@ export default async function (tree: Tree) {
     }
     let newContents = contents;
     const defineConfigObjectNode = defineConfigObjectNodes[0];
-    const resolvePropertyNodes = tsquery(
+    const resolvePropertyNodes = query(
       defineConfigObjectNode,
       RESOLVE_PROPERTY_SELECTOR
     );
@@ -57,7 +58,7 @@ export default async function (tree: Tree) {
       continue;
     } else {
       const resolvePropertyNode = resolvePropertyNodes[0];
-      const conditionsPropertyNodes = tsquery(
+      const conditionsPropertyNodes = query(
         resolvePropertyNode,
         CONDITIONS_PROPERTY_SELECTOR
       );

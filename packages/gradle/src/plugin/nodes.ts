@@ -145,11 +145,6 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       const normalizedOptions = normalizeOptions(options);
 
       for (const gradleFilePath of allBuildFiles) {
-        // Skip on Vercel and Netlify
-        if (process.env.VERCEL || process.env.NETLIFY) {
-          continue;
-        }
-
         const projectRoot = dirname(gradleFilePath);
         const hash = await calculateHashForCreateNodes(
           projectRoot,
@@ -216,12 +211,6 @@ export const makeCreateNodesForGradleConfigFile =
     options: GradlePluginOptions | undefined,
     context: CreateNodesContextV2
   ) => {
-    // Vercel does not allow JAVA_VERSION to be set, skip on Vercel
-    if (process.env.VERCEL) return {};
-
-    // Netlify only supports Java 8 but we require 17, skip on Netlify
-    if (process.env.NETLIFY) return {};
-
     const projectRoot = dirname(gradleFilePath);
     options = normalizeOptions(options);
 

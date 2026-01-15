@@ -13,7 +13,8 @@ import { versions } from '../../generators/utils/version-utils';
 import { FileChangeRecorder } from '../../utils/file-change-recorder';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
 
-let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
+let tsqueryAst: typeof import('@phenomnomnominal/tsquery').ast;
+let tsqueryQuery: typeof import('@phenomnomnominal/tsquery').query;
 
 const angularPluginTargetNames = ['npm:@nx/angular', 'npm:@nrwl/angular'];
 const dataPersistenceOperators = [
@@ -34,7 +35,9 @@ export default async function (tree: Tree): Promise<void> {
   }
 
   ensureTypescript();
-  tsquery = require('@phenomnomnominal/tsquery').tsquery;
+  const tsqueryModule = require('@phenomnomnominal/tsquery');
+  tsqueryAst = tsqueryModule.ast;
+  tsqueryQuery = tsqueryModule.query;
   const cachedFileMap = readFileMapCache().fileMap.projectFileMap;
 
   const filesWithNxAngularImports: FileData[] = [];
@@ -60,17 +63,16 @@ export default async function (tree: Tree): Promise<void> {
 
 function replaceDataPersistenceInFile(tree: Tree, file: string): boolean {
   const fileContents = tree.read(file, 'utf-8');
-  const fileAst = tsquery.ast(fileContents);
+  const fileAst = tsqueryAst(fileContents);
 
   // "\\u002F" is the unicode code for "/", there's an issue with the query parser
   // that prevents using "/" directly in regex queries
   // https://github.com/estools/esquery/issues/68#issuecomment-415597670
   const NX_ANGULAR_IMPORT_SELECTOR =
     'ImportDeclaration:has(StringLiteral[value=/@(nx|nrwl)\\u002Fangular$/])';
-  const nxAngularImports = tsquery<ImportDeclaration>(
+  const nxAngularImports = tsqueryQuery<ImportDeclaration>(
     fileAst,
-    NX_ANGULAR_IMPORT_SELECTOR,
-    { visitAllChildren: true }
+    NX_ANGULAR_IMPORT_SELECTOR
   );
 
   if (!nxAngularImports.length) {
@@ -82,10 +84,9 @@ function replaceDataPersistenceInFile(tree: Tree, file: string): boolean {
   const IMPORT_SPECIFIERS_SELECTOR =
     'ImportClause NamedImports ImportSpecifier';
   for (const importDeclaration of nxAngularImports) {
-    const importSpecifiers = tsquery<ImportSpecifier>(
+    const importSpecifiers = tsqueryQuery<ImportSpecifier>(
       importDeclaration,
-      IMPORT_SPECIFIERS_SELECTOR,
-      { visitAllChildren: true }
+      IMPORT_SPECIFIERS_SELECTOR
     );
 
     if (!importSpecifiers.length) {
@@ -100,9 +101,10 @@ function replaceDataPersistenceInFile(tree: Tree, file: string): boolean {
     // all imported symbols are data persistence operators, change import path
     if (importSpecifiers.every((i) => isOperatorImport(i))) {
       const IMPORT_PATH_SELECTOR = `${NX_ANGULAR_IMPORT_SELECTOR} > StringLiteral`;
-      const importPathNode = tsquery(importDeclaration, IMPORT_PATH_SELECTOR, {
-        visitAllChildren: true,
-      });
+      const importPathNode = tsqueryQuery(
+        importDeclaration,
+        IMPORT_PATH_SELECTOR
+      );
       recorder.replace(importPathNode[0], `'${newImportPath}'`);
 
       continue;

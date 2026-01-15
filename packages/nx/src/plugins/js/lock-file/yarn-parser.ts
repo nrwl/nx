@@ -185,7 +185,14 @@ function getNodes(
 
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
   for (const [packageName, versionMap] of nodes.entries()) {
-    const hoistedNode = findHoistedNode(packageName, versionMap, combinedDeps);
+    // If there's only one version of a package, treat it as hoisted
+    // This ensures deterministic hashing across environments for packages
+    // like optional platform-specific dependencies (e.g., @nx/nx-darwin-arm64)
+    const hoistedNode: ProjectGraphExternalNode =
+      versionMap.size === 1
+        ? versionMap.values().next().value
+        : findHoistedNode(packageName, versionMap, combinedDeps);
+
     if (hoistedNode) {
       hoistedNode.name = `npm:${packageName}`;
     }

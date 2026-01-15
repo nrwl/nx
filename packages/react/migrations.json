@@ -137,8 +137,8 @@
         }
       }
     },
-    "22.4.0": {
-      "version": "22.4.0-beta.2",
+    "22.3.4": {
+      "version": "22.3.4-beta.0",
       "packages": {
         "react-router-dom": {
           "version": "6.30.3",

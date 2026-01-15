@@ -3,6 +3,7 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   generateFiles,
+  logger,
   readProjectConfiguration,
 } from '@nx/devkit';
 
@@ -19,6 +20,10 @@ export async function setupTailwindGenerator(
   tree: Tree,
   options: SetupTailwindOptions
 ): Promise<void | GeneratorCallback> {
+  logger.warn(
+    `The 'setup-tailwind' generator is deprecated. Generating Tailwind configuration is no longer maintained. This generator will be removed in Nx 23.`
+  );
+
   let installTask: GeneratorCallback | undefined = undefined;
   const project = readProjectConfiguration(tree, options.project);
 

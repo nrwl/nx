@@ -12,6 +12,10 @@ Tailwind CSS v4 brings revolutionary changes to how we configure and use the pop
 
 This guide walks you through setting up Tailwind v4 with Vite in an NPM workspace, then shows you how to automate the configuration using Nx Sync Generators to **eliminate manual maintenance**.
 
+{% callout type="note" title="Ready-to-use Nx Community plugin available" %}
+Don't want to build your own sync generator? Use the [`@juristr/nx-tailwind-sync`](https://www.npmjs.com/package/@juristr/nx-tailwind-sync) package which implements everything described in this article.
+{% /callout %}
+
 {% github-repository url="https://github.com/juristr/tailwind4-vite-npm-workspaces" /%}
 
 {% toc /%}
