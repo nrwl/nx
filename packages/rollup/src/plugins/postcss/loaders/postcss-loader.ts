@@ -198,7 +198,7 @@ function generateInjectCode(
   // Inject the CSS
   if (typeof inject === 'function') {
     // Custom inject function
-    lines.push(`(${inject.toString()})('css', ${JSON.stringify(id)});`);
+    lines.push(`(${inject.toString()})(css, ${JSON.stringify(id)});`);
   } else if (typeof inject === 'object') {
     // Inject with options
     lines.push(`styleInject(css, ${JSON.stringify(inject)});`);
