@@ -16,9 +16,9 @@ export async function getOptions(
   options: VitestExecutorOptions,
   context: ExecutorContext,
   projectRoot: string
-) {
+): Promise<Record<string, any>> {
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { loadConfigFromFile, mergeConfig } = await loadViteDynamicImport();
+  const { loadConfigFromFile } = await loadViteDynamicImport();
 
   const viteConfigPath = normalizeViteConfigFilePath(
     context.root,
@@ -40,13 +40,13 @@ export async function getOptions(
 
   const resolved = await loadConfigFromFile(
     {
-      mode: options?.mode ?? 'production',
+      mode: options?.mode ?? 'test',
       command: 'serve',
     },
     viteConfigPath
   );
 
-  if (!viteConfigPath || !resolved?.config?.['test']) {
+  if (!resolved?.config?.['test']) {
     logger.warn(stripIndents`Unable to load test config from config file ${
       resolved?.path ?? viteConfigPath
     }
@@ -63,29 +63,46 @@ export async function getOptions(
 
   const { parseCLI } = await loadVitestDynamicImport();
 
+  // Use parseCLI for Vitest-specific normalization/validation
   const {
     options: { watch, ...normalizedExtraArgs },
   } = parseCLI(['vitest', ...getOptionsAsArgv(options)]);
 
-  const { reportsDirectory, coverage, ...restNormalizedArgs } =
-    normalizedExtraArgs as Record<string, any>;
+  // Filter out options that are handled specially or are parseCLI artifacts
+  const {
+    // Handled specially by executor
+    testFiles: _testFiles,
+    configFile: _configFile,
+    mode: _mode,
+    runMode: _runMode,
+    reportsDirectory,
+    coverage,
+    // parseCLI artifacts
+    '--': _dashdash,
+    color: _color,
+    w: _w,
+    // Pass through any additional Vitest options
+    ...passThroughOptions
+  } = normalizedExtraArgs as Record<string, any>;
 
-  const settings = {
+  return {
     // Explicitly set watch mode to false if not provided otherwise vitest
     // will enable watch mode by default for non CI environments
     watch: watch ?? false,
-    ...restNormalizedArgs,
+    // Pass through any additional Vitest options
+    ...passThroughOptions,
     // This should not be needed as it's going to be set in vite.config.ts
     // but leaving it here in case someone did not migrate correctly
-    root: resolved.config.root ?? root,
+    root: resolved?.config?.root ?? root,
     config: viteConfigPath,
+    // Pass reporters from config so NxReporter can be merged without losing config reporters
+    // Safe: CLI options override (not merge with) config reporters, so no duplication
+    reporters: resolved?.config?.['test']?.reporters,
     coverage: {
       ...(coverage ?? {}),
       ...(reportsDirectory && { reportsDirectory }),
     },
   };
-
-  return mergeConfig(resolved?.config?.['test'] ?? {}, settings);
 }
 
 export function getOptionsAsArgv(obj: Record<string, any>): string[] {
