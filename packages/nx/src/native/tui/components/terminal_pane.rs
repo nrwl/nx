@@ -820,14 +820,18 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         let help_line = Line::from(vec![
                             Span::styled("  <", Style::default().fg(THEME.secondary_fg)),
                             Span::styled("enter", Style::default().fg(THEME.info)),
-                            Span::styled("> full screen  ", Style::default().fg(THEME.secondary_fg)),
+                            Span::styled(
+                                "> full screen  ",
+                                Style::default().fg(THEME.secondary_fg),
+                            ),
                         ]);
 
                         let help_text_width: u16 = help_line
                             .spans
                             .iter()
                             .map(|span| span.content.len())
-                            .sum::<usize>() as u16;
+                            .sum::<usize>()
+                            as u16;
 
                         // Ensure help text fits within the safe area
                         if help_text_width + 2 < safe_area.width && safe_area.height > 1 {

@@ -848,9 +848,6 @@ impl InlineApp {
                 )
             };
 
-        // Get cloud message from state (using trait default implementation)
-        let cloud_message = TuiApp::get_cloud_message(self);
-
         // Get status message (e.g., "Output copied")
         let status_msg = self.status_message.as_ref().map(|(msg, _)| msg.as_str());
 
@@ -872,7 +869,6 @@ impl InlineApp {
         } else {
             0
         };
-        let cloud_size = cloud_message.as_ref().map(|m| m.len() + 1).unwrap_or(0);
 
         // Calculate available width and determine what fits
         let total_width = area.width as usize;
@@ -887,7 +883,6 @@ impl InlineApp {
 
         // Determine if we have space for optional elements
         let available_for_optional = total_width.saturating_sub(required_size);
-        let show_cloud = cloud_size > 0 && available_for_optional >= cloud_size + interactive_size;
         let show_interactive = interactive_size > 0 && available_for_optional >= interactive_size;
 
         // Calculate actual right side size based on what we'll show
@@ -901,7 +896,6 @@ impl InlineApp {
                 } else {
                     0
                 }
-                + if show_cloud { cloud_size } else { 0 }
         };
 
         let chunks = Layout::default()
@@ -931,16 +925,6 @@ impl InlineApp {
                 Style::default().fg(THEME.info),
             ));
         } else {
-            // Show cloud message only if there's space
-            if show_cloud {
-                if let Some(ref message) = cloud_message {
-                    right_spans.push(Span::styled(
-                        format!("{} ", message),
-                        Style::default().fg(THEME.info),
-                    ));
-                }
-            }
-
             // ESC hint - always shown
             right_spans.push(Span::styled("exit: esc", Style::default().fg(THEME.info)));
             right_spans.push(Span::styled(" ", Style::default().fg(THEME.secondary_fg)));
@@ -999,7 +983,7 @@ impl InlineApp {
             .alignment(Alignment::Center)
             .block(
                 Block::default()
-                    .borders(Borders::ALL)
+                    .borders(Borders::NONE)
                     .title(" Output ")
                     .border_style(Style::default().fg(THEME.secondary_fg)),
             );

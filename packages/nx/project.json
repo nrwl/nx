@@ -56,6 +56,10 @@
     "echo": {
       "command": "echo hi"
     },
+    "long-task": {
+      "command": "node -e \"let i = 0; setInterval(() => { console.log('Long task running ' + i++); }, 200); setTimeout(() => { clearInterval(i); console.log('Long task finished'); }, 62_000);\"",
+      "dependsOn": ["echo"]
+    },
     "build": {
       "dependsOn": [
         "^build-client",

@@ -466,6 +466,12 @@ impl AppLifeCycle {
                 with_shared_app(&app, |a| a.set_console_messenger(connection));
             }
 
+            // Debounce state for resize events - tracks when the last resize occurred.
+            // We wait for RESIZE_DEBOUNCE_MS after the last resize before reinitializing
+            // to avoid rapid reinitialization during window drag operations.
+            const RESIZE_DEBOUNCE_MS: u64 = 150;
+            let mut pending_resize: Option<std::time::Instant> = None;
+
             // UNIFIED EVENT LOOP - works for both modes!
             loop {
                 // Handle events through TuiApp trait
@@ -473,13 +479,12 @@ impl AppLifeCycle {
                     // some events have global handling
                     match event {
                         Event::Resize(_w, _h) => {
-                            // Reinitialize the inline terminal with new dimensions.
-                            // The inline viewport's height is fixed at creation time, so we
-                            // need to recreate it when the terminal is resized.
-                            // This properly stops/starts the event stream thanks to our async fix.
-                            if let Err(e) = tui.reinitialize_inline_terminal().await {
-                                debug!("Failed to reinitialize inline terminal: {:?}", e);
-                            }
+                            // Mark resize as pending instead of immediately reinitializing.
+                            // This debounces rapid resize events (e.g., from dragging the
+                            // terminal corner) to avoid multiple reinitializations that can
+                            // cause the terminal to go black.
+                            pending_resize = Some(std::time::Instant::now());
+                            debug!("Resize event received, debouncing");
                         }
                         _ => {
                             // no global handler
@@ -493,6 +498,20 @@ impl AppLifeCycle {
                     if with_shared_app(&app, |a| a.should_quit()) {
                         debug!("should_quit() returned true - breaking event loop");
                         break;
+                    }
+                }
+
+                // Check if we should process a debounced resize
+                // This runs after event processing so we check on every loop iteration
+                if let Some(resize_time) = pending_resize {
+                    if resize_time.elapsed()
+                        >= std::time::Duration::from_millis(RESIZE_DEBOUNCE_MS)
+                    {
+                        debug!("Debounce period elapsed, reinitializing inline terminal");
+                        pending_resize = None;
+                        if let Err(e) = tui.reinitialize_inline_terminal().await {
+                            debug!("Failed to reinitialize inline terminal: {:?}", e);
+                        }
                     }
                 }
 

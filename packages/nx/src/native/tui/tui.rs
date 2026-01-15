@@ -475,8 +475,8 @@ impl Tui {
     /// 2. Creates a new inline terminal with current dimensions
     /// 3. Restarts the event stream task
     ///
-    /// Should be called when a resize event is received and we want to properly
-    /// handle inline mode resizing.
+    /// Note: Callers should debounce resize events before calling this method
+    /// to avoid rapid reinitialization during window drag operations.
     pub async fn reinitialize_inline_terminal(&mut self) -> Result<()> {
         debug!("Reinitializing inline terminal");
 
