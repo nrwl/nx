@@ -5,13 +5,14 @@
   "description": "Official Nx plugins for Claude Code.",
   "owner": {
     "name": "Nx",
-    "email": "support@nx.dev"
+    "email": "hello@nrwl.io"
   },
   "plugins": [
     {
       "name": "nx",
       "version": "0.2.0",
-      "source": "./nx-claude-plugin"
+      "source": "./nx-claude-plugin",
+      "description": "Claude Code plugin for Nx - helps with generators, documentation, and CI monitoring with self-healing integration"
     }
   ]
 }
