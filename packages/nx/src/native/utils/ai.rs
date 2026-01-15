@@ -12,6 +12,24 @@ fn is_claude_ai() -> bool {
     }
 }
 
+/// Detects if the current process is being run by VS Code Copilot chat
+fn is_vscode_copilot() -> bool {
+    is_vscode_copilot_from_path(env::var("PATH").ok())
+}
+
+fn is_vscode_copilot_from_path(path: Option<String>) -> bool {
+    match path {
+        Some(path) => {
+            let is_copilot = path.contains("github.copilot-chat");
+            if is_copilot {
+                debug!("VS Code Copilot detected via PATH containing github.copilot-chat");
+            }
+            is_copilot
+        }
+        None => false,
+    }
+}
+
 /// Detects if the current process is being run by Repl.it
 fn is_replit_ai() -> bool {
     match env::var("REPL_ID") {
@@ -45,7 +63,7 @@ fn is_cursor_ai() -> bool {
 /// Detects if the current process is being run by an AI agent
 #[napi]
 pub fn is_ai_agent() -> bool {
-    let is_ai = is_claude_ai() || is_replit_ai() || is_cursor_ai();
+    let is_ai = is_claude_ai() || is_replit_ai() || is_cursor_ai() || is_vscode_copilot();
 
     if is_ai {
         debug!("AI agent detected");
@@ -179,5 +197,29 @@ mod tests {
                 env::set_var("COMPOSER_NO_INTERACTION", val);
             }
         }
+    }
+
+    #[test]
+    fn test_vscode_copilot_detection() {
+        // Test with no PATH
+        assert!(
+            !is_vscode_copilot_from_path(None),
+            "Should not detect VS Code Copilot without PATH"
+        );
+
+        // Test with PATH not containing copilot
+        assert!(
+            !is_vscode_copilot_from_path(Some("/usr/bin:/usr/local/bin".to_string())),
+            "Should not detect VS Code Copilot without github.copilot-chat in PATH"
+        );
+
+        // Test with PATH containing copilot-chat
+        assert!(
+            is_vscode_copilot_from_path(Some(
+                "/usr/bin:/some/path/globalStorage/github.copilot-chat/copilotCli:/usr/local/bin"
+                    .to_string()
+            )),
+            "Should detect VS Code Copilot with github.copilot-chat in PATH"
+        );
     }
 }
