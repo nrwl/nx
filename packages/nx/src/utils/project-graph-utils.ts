@@ -33,7 +33,7 @@ export function getSourceDirOfDependentProjects(
 ): [
   projectDirs: string[],
   // this is kept for backwards compatibility, but it's not used anymore
-  warnings: string[]
+  warnings: string[],
 ] {
   if (!projectGraph.nodes[projectName]) {
     throw new Error(

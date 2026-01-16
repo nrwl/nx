@@ -40,7 +40,7 @@ import {
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
-import { isTuiEnabled } from './is-tui-enabled';
+import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
 import {
   CompositeLifeCycle,
   LifeCycle,
@@ -94,8 +94,8 @@ async function getTerminalOutputLifeCycle(
 
   const isRunOne = initiatingProject != null;
 
-  if (tasks.length === 1) {
-    process.env.NX_TUI ??= 'false';
+  if (tasks.length === 1 && !ORIGINAL_TUI_ENV_VALUE) {
+    process.env.NX_TUI = 'false';
   }
 
   if (isTuiEnabled()) {
@@ -471,11 +471,12 @@ export async function runCommand(
       const exitCode = !completed
         ? signalToCode('SIGINT')
         : Object.values(taskResults).some(
-            (taskResult) =>
-              taskResult.status === 'failure' || taskResult.status === 'skipped'
-          )
-        ? 1
-        : 0;
+              (taskResult) =>
+                taskResult.status === 'failure' ||
+                taskResult.status === 'skipped'
+            )
+          ? 1
+          : 0;
 
       await runPostTasksExecution({
         id,

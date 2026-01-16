@@ -127,8 +127,8 @@ export function resolveImportPath(
     const npmScope = getNpmScope(tree);
     importPath =
       projectRoot === '.'
-        ? readJson<{ name?: string }>(tree, 'package.json').name ??
-          getImportPath(npmScope, projectName)
+        ? (readJson<{ name?: string }>(tree, 'package.json').name ??
+          getImportPath(npmScope, projectName))
         : getImportPath(npmScope, projectName);
   }
 

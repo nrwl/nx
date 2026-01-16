@@ -26,7 +26,7 @@ export async function normalizeOptions(
     // Publishable libs cannot use `full` yet, so if its false then use the passed value or default to `full`
     compilationMode: schema.publishable
       ? 'partial'
-      : schema.compilationMode ?? 'full',
+      : (schema.compilationMode ?? 'full'),
     skipModule: schema.skipModule || schema.standalone,
     ...schema,
   };
@@ -59,8 +59,8 @@ export async function normalizeOptions(
     (angularMajorVersion >= 21 && (options.buildable || options.publishable)
       ? UnitTestRunner.VitestAngular
       : angularMajorVersion >= 21
-      ? UnitTestRunner.VitestAnalog
-      : UnitTestRunner.Jest);
+        ? UnitTestRunner.VitestAnalog
+        : UnitTestRunner.Jest);
 
   const ngCliSchematicLibRoot = projectName;
   const allNormalizedOptions = {

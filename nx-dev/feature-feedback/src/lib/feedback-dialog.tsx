@@ -242,7 +242,7 @@ function FeedbackDialog({
                         onClick={submitFeedback}
                         disabled={formDisabled}
                         className={cx(
-                          'rounded-md border border-slate-200 bg-white px-4 py-2 text-base font-medium text-slate-600  dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400',
+                          'rounded-md border border-slate-200 bg-white px-4 py-2 text-base font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400',
                           { 'cursor-not-allowed': formDisabled },
                           {
                             'focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800':

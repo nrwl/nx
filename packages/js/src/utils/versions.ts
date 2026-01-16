@@ -1,7 +1,7 @@
 export const nxVersion = require('../../package.json').version;
 
 export const esbuildVersion = '^0.19.2';
-export const prettierVersion = '^2.6.2';
+export const prettierVersion = '~3.6.2';
 export const swcCliVersion = '~0.6.0';
 export const swcCoreVersion = '~1.5.7';
 export const swcHelpersVersion = '~0.5.11';

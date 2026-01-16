@@ -1,6 +1,6 @@
 import { formatFiles, type Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast } from '@phenomnomnominal/tsquery';
 import type { Printer } from 'typescript';
 import { resolveCypressConfigObject } from '../../utils/config';
 import { cypressProjectConfigs } from '../../utils/migrations';
@@ -36,7 +36,7 @@ function removeExperimentalFetchPolyfill(cypressConfig: string): string {
     return cypressConfig;
   }
 
-  const sourceFile = tsquery.ast(cypressConfig);
+  const sourceFile = ast(cypressConfig);
 
   const updatedConfig = ts.factory.updateObjectLiteralExpression(
     config,

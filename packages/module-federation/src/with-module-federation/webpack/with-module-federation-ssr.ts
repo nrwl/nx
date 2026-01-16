@@ -30,7 +30,7 @@ export async function withModuleFederationForSSR(
     config.optimization = {
       ...(config.optimization ?? {}),
       runtimeChunk: isDevServer
-        ? config.optimization?.runtimeChunk ?? undefined
+        ? (config.optimization?.runtimeChunk ?? undefined)
         : false,
     };
 

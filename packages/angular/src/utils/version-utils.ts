@@ -12,8 +12,8 @@ export function getPkgVersionForAngularMajorVersion(
   angularMajorVersion: number
 ): string {
   return angularMajorVersion < major(coerce(angularVersion))
-    ? backwardCompatibleVersions[angularMajorVersion]?.[pkgVersionName] ??
-        versions[pkgVersionName]
+    ? (backwardCompatibleVersions[angularMajorVersion]?.[pkgVersionName] ??
+        versions[pkgVersionName])
     : versions[pkgVersionName];
 }
 
@@ -21,6 +21,6 @@ export function getPkgVersionsForAngularMajorVersion(
   angularMajorVersion: number
 ): PackageCompatVersions {
   return angularMajorVersion < major(coerce(angularVersion))
-    ? backwardCompatibleVersions[angularMajorVersion] ?? versions
+    ? (backwardCompatibleVersions[angularMajorVersion] ?? versions)
     : versions;
 }

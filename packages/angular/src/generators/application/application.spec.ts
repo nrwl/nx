@@ -701,6 +701,85 @@ describe('app', () => {
           }
         `);
       });
+
+      it('should set parserOptions.project when enabled (eslintrc)', async () => {
+        await generateApp(appTree, 'my-app', {
+          linter: 'eslint',
+          setParserOptionsProject: true,
+        });
+
+        const eslintConfig = readJson(appTree, 'my-app/.eslintrc.json');
+        expect(eslintConfig.overrides[0].parserOptions.project).toEqual([
+          'my-app/tsconfig.*?.json',
+        ]);
+      });
+
+      it('should set parserOptions.project when enabled (flat config)', async () => {
+        appTree.write('eslint.config.cjs', '');
+
+        await generateApp(appTree, 'my-app', {
+          linter: 'eslint',
+          setParserOptionsProject: true,
+        });
+
+        const eslintConfig = appTree.read('my-app/eslint.config.cjs', 'utf-8');
+        expect(eslintConfig).toMatchInlineSnapshot(`
+          "const nx = require("@nx/eslint-plugin");
+          const baseConfig = require("../eslint.config.cjs");
+
+          module.exports = [
+              ...baseConfig,
+              {
+                  files: [
+                      "**/*.ts",
+                      "**/*.tsx",
+                      "**/*.js",
+                      "**/*.jsx"
+                  ],
+                  languageOptions: {
+                      parserOptions: {
+                          project: [
+                              "my-app/tsconfig.*?.json"
+                          ]
+                      }
+                  }
+              },
+              ...nx.configs["flat/angular"],
+              ...nx.configs["flat/angular-template"],
+              {
+                  files: [
+                      "**/*.ts"
+                  ],
+                  rules: {
+                      "@angular-eslint/directive-selector": [
+                          "error",
+                          {
+                              type: "attribute",
+                              prefix: "app",
+                              style: "camelCase"
+                          }
+                      ],
+                      "@angular-eslint/component-selector": [
+                          "error",
+                          {
+                              type: "element",
+                              prefix: "app",
+                              style: "kebab-case"
+                          }
+                      ]
+                  }
+              },
+              {
+                  files: [
+                      "**/*.html"
+                  ],
+                  // Override or add rules here
+                  rules: {}
+              }
+          ];
+          "
+        `);
+      });
     });
 
     describe('none', () => {

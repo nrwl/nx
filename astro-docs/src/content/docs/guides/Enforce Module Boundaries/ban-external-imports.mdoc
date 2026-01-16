@@ -66,16 +66,16 @@ export default [
         // projects tagged with "frontend" can't import from "@nestjs/common"
         {
           "sourceTag": "frontend",
-          "bannedExternalImports": ["@nestjs/common"]
+          "bannedExternalImports": ["@nestjs/common"],
         },
         // projects tagged with "backend" can't import from "@angular/core"
         {
           "sourceTag": "backend",
-          "bannedExternalImports": ["@angular/core"]
-        }
-      ]
-    }
-  ]
+          "bannedExternalImports": ["@angular/core"],
+        },
+      ],
+    },
+  ],
 
   // ... more ESLint config here
 }
@@ -136,11 +136,11 @@ export default [
         // projects tagged with "type:util" can't import from "react" or related projects
         {
           "sourceTag": "type:util",
-          "bannedExternalImports": ["*react*"]
-        }
-      ]
-    }
-  ]
+          "bannedExternalImports": ["*react*"],
+        },
+      ],
+    },
+  ],
 
   // ... more ESLint config here
 }
@@ -220,24 +220,24 @@ export default [
         // projects tagged with "type:util" can only import from "date-fns"
         {
           "sourceTag": "type:util",
-          "allowedExternalImports": ["date-fns"]
+          "allowedExternalImports": ["date-fns"],
         },
         // ui libraries clean from data access concerns
         // projects tagged with "type:ui" can only import packages matching "@angular/*" except "@angular/common/http"
         {
           "sourceTag": "type:ui",
           "allowedExternalImports": ["@angular/*"],
-          "bannedExternalImports": ["@angular/common/http"]
+          "bannedExternalImports": ["@angular/common/http"],
         },
         // keeping the domain logic clean from infrastructure concerns
         // projects tagged with "type:core" can't import any external packages.
         {
           "sourceTag": "type:core",
-          "allowedExternalImports": []
-        }
-      ]
-    }
-  ]
+          "allowedExternalImports": [],
+        },
+      ],
+    },
+  ],
 }
 ```
 

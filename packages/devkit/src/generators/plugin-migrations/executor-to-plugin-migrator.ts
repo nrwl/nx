@@ -171,9 +171,8 @@ class ExecutorToPluginMigrator<T> {
     }
 
     if (!projectConfig['// targets']) {
-      projectConfig[
-        '// targets'
-      ] = `to see all targets run: nx show project ${projectName} --web`;
+      projectConfig['// targets'] =
+        `to see all targets run: nx show project ${projectName} --web`;
     }
 
     updateProjectConfiguration(this.tree, projectName, projectConfig);

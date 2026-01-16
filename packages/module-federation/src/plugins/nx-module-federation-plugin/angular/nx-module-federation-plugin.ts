@@ -24,7 +24,7 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
     compiler.options.optimization ??= {};
     compiler.options.optimization.runtimeChunk =
       process.env['WEBPACK_SERVE'] && !this._options.config.exposes
-        ? compiler.options.optimization?.runtimeChunk ?? undefined
+        ? (compiler.options.optimization?.runtimeChunk ?? undefined)
         : false;
 
     if (compiler.options.optimization.splitChunks) {

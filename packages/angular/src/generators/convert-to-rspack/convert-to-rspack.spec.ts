@@ -351,7 +351,7 @@ describe('convert-to-rspack', () => {
               tsConfig: './tsconfig.prod.json',
             },
           },
-        }
+        },
       );
       "
     `);
@@ -471,7 +471,7 @@ describe('convert-to-rspack', () => {
             { config },
             {
               dts: false,
-            }
+            },
           ),
           new NxModuleFederationDevServerPlugin({ config }),
         ],

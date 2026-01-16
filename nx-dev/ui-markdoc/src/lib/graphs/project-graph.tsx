@@ -89,8 +89,8 @@ function NxDevProjectGraphInner({
         showMode: showAffectedWithNodes
           ? 'all'
           : affectedProjects.length
-          ? 'affected'
-          : 'all',
+            ? 'affected'
+            : 'all',
       }),
     });
 

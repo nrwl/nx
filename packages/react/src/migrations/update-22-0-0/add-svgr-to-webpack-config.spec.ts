@@ -100,7 +100,7 @@ module.exports = composePlugins(
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
+                rule.test.toString().includes('svg'),
             );
 
             if (svgLoaderIdx !== -1) {
@@ -195,7 +195,7 @@ module.exports = composePlugins(
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
+                rule.test.toString().includes('svg'),
             );
 
             if (svgLoaderIdx !== -1) {
@@ -234,7 +234,7 @@ module.exports = composePlugins(
           }),
           (config) => {
             return config;
-          }
+          },
         );
         "
       `);
@@ -345,7 +345,7 @@ module.exports = composePlugins(
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
+                rule.test.toString().includes('svg'),
             );
 
             if (svgLoaderIdx !== -1) {
@@ -438,7 +438,7 @@ module.exports = config;
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
+                rule.test.toString().includes('svg'),
             );
 
             if (svgLoaderIdx !== -1) {
@@ -531,7 +531,7 @@ export default config;
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
+                rule.test.toString().includes('svg'),
             );
 
             if (svgLoaderIdx !== -1) {
@@ -625,7 +625,7 @@ export default composePlugins(
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
+                rule.test.toString().includes('svg'),
             );
 
             if (svgLoaderIdx !== -1) {
@@ -814,7 +814,7 @@ module.exports = {
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    )
+                    ),
                 );
 
                 // Add SVGR loader with both default and named exports
@@ -975,7 +975,7 @@ module.exports = {
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    )
+                    ),
                 );
 
                 // Add SVGR loader with both default and named exports
@@ -1092,7 +1092,7 @@ module.exports = webpackConfig;
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    )
+                    ),
                 );
 
                 // Add SVGR loader with both default and named exports
@@ -1207,7 +1207,7 @@ export default webpackConfig;
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    )
+                    ),
                 );
 
                 // Add SVGR loader with both default and named exports
@@ -1322,7 +1322,7 @@ export default {
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    )
+                    ),
                 );
 
                 // Add SVGR loader with both default and named exports
@@ -1545,7 +1545,7 @@ module.exports = composePlugins(withNx(), withReact(), (config) => config);
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
+                rule.test.toString().includes('svg'),
             );
 
             if (svgLoaderIdx !== -1) {
@@ -1607,7 +1607,7 @@ module.exports = composePlugins(withNx(), withReact(), (config) => config);
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    )
+                    ),
                 );
 
                 // Add SVGR loader with both default and named exports

@@ -23,8 +23,8 @@ export async function storybookConfigurationGenerator(
   const sourceDir = sourceRoot?.endsWith('/app')
     ? 'app'
     : sourceRoot?.endsWith('/src')
-    ? 'src'
-    : 'src'; // default to src for backward compatibility
+      ? 'src'
+      : 'src'; // default to src for backward compatibility
 
   const storybookConfigurationGenerator =
     await vueStorybookConfigurationGenerator(tree, {

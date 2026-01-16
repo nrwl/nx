@@ -11,7 +11,9 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::Duration;
-use sysinfo::{Pid, ProcessRefreshKind, System, UpdateKind};
+use sysinfo::{
+    CpuRefreshKind, MemoryRefreshKind, Pid, ProcessRefreshKind, RefreshKind, System, UpdateKind,
+};
 use tracing::{error, trace};
 
 use crate::native::metrics::types::{
@@ -816,7 +818,15 @@ impl ProcessMetricsCollector {
 
     /// Create a new ProcessMetricsCollector with custom configuration
     fn with_config(config: CollectorConfig) -> Self {
-        let sys = System::new_all();
+        // Use targeted refresh instead of new_all() to avoid loading unnecessary data
+        // (disks, networks, components, users). Load processes to establish CPU baseline
+        // so first collection cycle has accurate CPU data.
+        let sys = System::new_with_specifics(
+            RefreshKind::nothing()
+                .with_cpu(CpuRefreshKind::nothing())
+                .with_memory(MemoryRefreshKind::nothing().with_ram())
+                .with_processes(ProcessRefreshKind::nothing().with_cpu().with_memory()),
+        );
         let cpu_cores = sys.cpus().len() as u32;
         let total_memory = sys.total_memory() as i64;
 
@@ -1048,29 +1058,10 @@ impl ProcessMetricsCollector {
         }
     }
 
-    /// Establish baseline process metrics by acquiring system lock and refreshing
-    /// Must be called BEFORE any registration to avoid deadlock with collection thread
-    fn establish_process_baseline(&self, pid: i32) {
-        let target_pid = Pid::from(pid as usize);
-        let mut sys = self.system.lock();
-        sys.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::Some(&[target_pid]),
-            false, // don't remove dead processes
-            ProcessRefreshKind::nothing().with_cpu(),
-        );
-        drop(sys); // Explicitly release system lock
-    }
-
     /// Register the main CLI process for metrics collection
     #[napi]
     pub fn register_main_cli_process(&self, pid: i32) {
         trace!("Registering main CLI process: pid={}", pid);
-
-        // Establish baseline immediately for the main CLI process
-        // This ensures accurate CPU data from the first collection cycle
-        self.establish_process_baseline(pid);
-
-        // Now register the PID (after releasing system lock)
         *self.main_cli_pid.lock() = Some(pid);
         trace!("Main CLI process registered: pid={}", pid);
     }
@@ -1082,12 +1073,6 @@ impl ProcessMetricsCollector {
             "Registering main CLI subprocess: pid={}, alias={:?}",
             pid, alias
         );
-
-        // Establish baseline immediately for this subprocess
-        // This ensures accurate CPU data from the first collection cycle after spawn
-        self.establish_process_baseline(pid);
-
-        // Now register in map (after releasing system lock)
         self.main_cli_subprocess_pids.insert(pid, alias);
         trace!("Main CLI subprocess registered: pid={}", pid);
     }
@@ -1104,12 +1089,6 @@ impl ProcessMetricsCollector {
     #[napi]
     pub fn register_task_process(&self, task_id: String, pid: i32) {
         trace!("Registering task process: task_id={}, pid={}", task_id, pid);
-
-        // Establish baseline immediately for this task process
-        // This ensures accurate CPU data from the first collection cycle after spawn
-        self.establish_process_baseline(pid);
-
-        // Now register the task (after releasing system lock)
         self.individual_tasks
             .entry(task_id.clone())
             .or_insert_with(|| IndividualTaskRegistration::new(task_id.clone()))
@@ -1127,11 +1106,6 @@ impl ProcessMetricsCollector {
             task_ids.len(),
             pid
         );
-
-        // Establish baseline immediately for the batch worker
-        self.establish_process_baseline(pid);
-
-        // Now register the batch (after releasing system lock)
         self.batches.insert(
             batch_id.clone(),
             BatchRegistration::new(batch_id.clone(), task_ids, pid),

@@ -17,6 +17,7 @@ exports[`cypress-component-configuration generator should setup nextjs app:
   "compilerOptions": {
     "allowJs": true,
     "module": "commonjs",
+    "moduleResolution": "node10",
     "outDir": "../dist/out-tsc",
     "sourceMap": false,
     "types": [
@@ -55,6 +56,7 @@ exports[`cypress-component-configuration generator should setup nextjs lib:
   "compilerOptions": {
     "allowJs": true,
     "module": "commonjs",
+    "moduleResolution": "node10",
     "outDir": "../dist/out-tsc",
     "sourceMap": false,
     "types": [

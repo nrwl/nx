@@ -154,13 +154,13 @@ export async function runCommands(
           resolvedTaskId
         )
       : options.parallel
-      ? new ParallelRunningTasks(normalized, context, resolvedTaskId)
-      : new SeriallyRunningTasks(
-          normalized,
-          context,
-          tuiEnabled,
-          resolvedTaskId
-        );
+        ? new ParallelRunningTasks(normalized, context, resolvedTaskId)
+        : new SeriallyRunningTasks(
+            normalized,
+            context,
+            tuiEnabled,
+            resolvedTaskId
+          );
     return runningTask;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {

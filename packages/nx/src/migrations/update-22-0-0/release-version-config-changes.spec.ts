@@ -1,8 +1,9 @@
+import '../../internal-testing-utils/mock-prettier';
+
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import { Tree } from '../../generators/tree';
 import { readJson, writeJson } from '../../generators/utils/json';
 import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
-
 import update from './release-version-config-changes';
 
 describe('release version config changes', () => {

@@ -91,7 +91,7 @@ describe('turnOffDtsByDefault', () => {
         "import { withModuleFederation } from '@nx/angular/module-federation';
         export default withModuleFederation(
           { remotes: [] },
-          { dts: false, runtimePlugins: [] }
+          { dts: false, runtimePlugins: [] },
         );
         "
       `);
@@ -100,7 +100,7 @@ describe('turnOffDtsByDefault', () => {
         "const { withModuleFederation } = require('@nx/angular/module-federation');
         module.exports = withModuleFederation(
           { remotes: [] },
-          { dts: false, runtimePlugins: [] }
+          { dts: false, runtimePlugins: [] },
         );
         "
       `);
@@ -129,7 +129,7 @@ describe('turnOffDtsByDefault', () => {
         "import { withModuleFederation } from '@nx/angular/module-federation';
         export default withModuleFederation(
           { remotes: { remote1: 'something' } },
-          { dts: false, runtimePlugins: { foo: 'bar' } }
+          { dts: false, runtimePlugins: { foo: 'bar' } },
         );
         "
       `);
@@ -138,7 +138,7 @@ describe('turnOffDtsByDefault', () => {
         "const { withModuleFederation } = require('@nx/angular/module-federation');
         module.exports = withModuleFederation(
           { remotes: { remote1: 'something' } },
-          { dts: false, runtimePlugins: { foo: 'bar' } }
+          { dts: false, runtimePlugins: { foo: 'bar' } },
         );
         "
       `);
@@ -167,7 +167,7 @@ describe('turnOffDtsByDefault', () => {
         "import { withModuleFederation } from '@nx/angular/module-federation';
         export default withModuleFederation(
           { remotes: { remote1: 'something' } },
-          { dts: true, runtimePlugins: { foo: 'bar' } }
+          { dts: true, runtimePlugins: { foo: 'bar' } },
         );
         "
       `);
@@ -176,7 +176,7 @@ describe('turnOffDtsByDefault', () => {
         "const { withModuleFederation } = require('@nx/angular/module-federation');
         module.exports = withModuleFederation(
           { remotes: { remote1: 'something' } },
-          { dts: true, runtimePlugins: { foo: 'bar' } }
+          { dts: true, runtimePlugins: { foo: 'bar' } },
         );
         "
       `);
@@ -277,8 +277,8 @@ describe('turnOffDtsByDefault', () => {
           withReact(),
           withModuleFederationForSSR(
             { remotes: [] },
-            { dts: false, runtimePlugins: [] }
-          )
+            { dts: false, runtimePlugins: [] },
+          ),
         );
         "
       `);
@@ -287,7 +287,7 @@ describe('turnOffDtsByDefault', () => {
         "const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
         module.exports = withModuleFederationForSSR(
           { remotes: [] },
-          { dts: false, runtimePlugins: [] }
+          { dts: false, runtimePlugins: [] },
         );
         "
       `);

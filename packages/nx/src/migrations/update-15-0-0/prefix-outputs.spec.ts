@@ -1,3 +1,5 @@
+import '../../internal-testing-utils/mock-prettier';
+
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../generators/tree';
 import {

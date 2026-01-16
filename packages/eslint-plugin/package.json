@@ -46,6 +46,9 @@
     "semver": "catalog:",
     "tslib": "catalog:typescript"
   },
+  "devDependencies": {
+    "nx": "workspace:*"
+  },
   "publishConfig": {
     "access": "public"
   },

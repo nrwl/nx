@@ -40,8 +40,8 @@ export async function createApplicationFiles(
       ? options.src
         ? 'src/'
         : options.appDir
-        ? 'app/'
-        : 'pages/'
+          ? 'app/'
+          : 'pages/'
       : '';
 
   const templateVariables = {

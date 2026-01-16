@@ -71,7 +71,10 @@ export type FlushSyncGeneratorChangesResult =
   | FlushSyncGeneratorChangesFailure;
 
 export class SyncError extends Error {
-  constructor(public title: string, public bodyLines?: string[]) {
+  constructor(
+    public title: string,
+    public bodyLines?: string[]
+  ) {
     super(title);
     this.name = this.constructor.name;
   }

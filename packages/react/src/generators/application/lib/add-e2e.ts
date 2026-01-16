@@ -166,8 +166,8 @@ export async function addE2e(
           options.bundler === 'rspack'
             ? 'webpack'
             : options.bundler === 'rsbuild'
-            ? 'none'
-            : options.bundler,
+              ? 'none'
+              : options.bundler,
         skipFormat: true,
         devServerTarget: e2eWebServerInfo.e2eDevServerTarget,
         baseUrl: e2eWebServerInfo.e2eWebServerAddress,

@@ -117,8 +117,8 @@ export async function host(tree: Tree, schema: Schema) {
     const remoteDirectory = options.directory
       ? joinPathFragments(options.directory, '..', remote)
       : appRoot === '.'
-      ? remote
-      : joinPathFragments(appRoot, '..', remote);
+        ? remote
+        : joinPathFragments(appRoot, '..', remote);
     await remoteGenerator(tree, {
       ...options,
       name: remote,

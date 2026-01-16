@@ -4,6 +4,8 @@ import { NxArgs } from '../utils/command-line-utils';
 import { isCI } from '../utils/is-ci';
 import { logger } from '../utils/logger';
 
+export const ORIGINAL_TUI_ENV_VALUE = process.env.NX_TUI;
+
 /**
  * @returns If tui is enabled
  */

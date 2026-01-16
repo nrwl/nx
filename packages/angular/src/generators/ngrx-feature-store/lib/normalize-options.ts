@@ -36,7 +36,7 @@ export function normalizeOptions(
     name,
     subdirectory,
     parentDirectory: options.parent ? dirname(options.parent) : undefined,
-    route: options.route === '' ? `''` : options.route ?? `''`,
+    route: options.route === '' ? `''` : (options.route ?? `''`),
     directory: names(options.directory).fileName,
     rxjsVersion,
     rxjsMajorVersion,

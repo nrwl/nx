@@ -13,9 +13,9 @@ The migration updates generator defaults in `nx.json`:
 {
   "generators": {
     "@nx/angular:application": {
-      "unitTestRunner": "vitest"
-    }
-  }
+      "unitTestRunner": "vitest",
+    },
+  },
 }
 ```
 
@@ -26,8 +26,8 @@ The migration updates generator defaults in `nx.json`:
 {
   "generators": {
     "@nx/angular:application": {
-      "unitTestRunner": "vitest-analog"
-    }
-  }
+      "unitTestRunner": "vitest-analog",
+    },
+  },
 }
 ```

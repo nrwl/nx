@@ -51,6 +51,10 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     }
     if (Object.keys(project.targets).length) {
       packageJson.nx ??= {};
+      packageJson.nx.sourceRoot = joinPathFragments(
+        options.appProjectRoot,
+        'src'
+      );
       packageJson.nx.targets = project.targets;
     }
     if (options.parsedTags?.length) {

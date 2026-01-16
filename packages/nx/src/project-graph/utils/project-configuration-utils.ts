@@ -391,7 +391,7 @@ export async function createProjectConfigurationsWithPlugins(
       plugin: string,
       file: string,
       result: CreateNodesResult,
-      index?: number
+      index?: number,
     ])[]
   >[] = [];
   const errors: Array<
@@ -490,7 +490,7 @@ function mergeCreateNodesResults(
     plugin: string,
     file: string,
     result: CreateNodesResult,
-    pluginIndex?: number
+    pluginIndex?: number,
   ])[][],
   nxJsonConfiguration: NxJsonConfiguration,
   workspaceRoot: string,

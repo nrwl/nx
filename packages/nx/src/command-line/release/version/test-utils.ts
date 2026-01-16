@@ -152,8 +152,8 @@ export class ExampleRustVersionActions extends VersionActions {
       typeof value === 'object' && !Array.isArray(value)
         ? TOML.inline(value as any)
         : typeof value === 'function'
-        ? value()
-        : value;
+          ? value()
+          : value;
   }
 
   async readCurrentVersionFromSourceManifest(tree: Tree): Promise<{

@@ -1260,6 +1260,73 @@ describe('lib', () => {
         `);
       });
 
+      it('should set parserOptions.project when enabled (flat config)', async () => {
+        tree.write('eslint.config.cjs', '');
+
+        await runLibraryGeneratorWithOpts({
+          linter: 'eslint',
+          setParserOptionsProject: true,
+        });
+
+        const eslintConfig = tree.read('my-lib/eslint.config.cjs', 'utf-8');
+        expect(eslintConfig).toMatchInlineSnapshot(`
+          "const nx = require("@nx/eslint-plugin");
+          const baseConfig = require("../eslint.config.cjs");
+
+          module.exports = [
+              ...baseConfig,
+              {
+                  files: [
+                      "**/*.ts",
+                      "**/*.tsx",
+                      "**/*.js",
+                      "**/*.jsx"
+                  ],
+                  languageOptions: {
+                      parserOptions: {
+                          project: [
+                              "my-lib/tsconfig.*?.json"
+                          ]
+                      }
+                  }
+              },
+              ...nx.configs["flat/angular"],
+              ...nx.configs["flat/angular-template"],
+              {
+                  files: [
+                      "**/*.ts"
+                  ],
+                  rules: {
+                      "@angular-eslint/directive-selector": [
+                          "error",
+                          {
+                              type: "attribute",
+                              prefix: "lib",
+                              style: "camelCase"
+                          }
+                      ],
+                      "@angular-eslint/component-selector": [
+                          "error",
+                          {
+                              type: "element",
+                              prefix: "lib",
+                              style: "kebab-case"
+                          }
+                      ]
+                  }
+              },
+              {
+                  files: [
+                      "**/*.html"
+                  ],
+                  // Override or add rules here
+                  rules: {}
+              }
+          ];
+          "
+        `);
+      });
+
       it('should add valid eslint JSON configuration which extends from Nx presets (eslintrc)', async () => {
         // ACT
         await runLibraryGeneratorWithOpts({ linter: 'eslint' });
@@ -1315,6 +1382,18 @@ describe('lib', () => {
             ],
           }
         `);
+      });
+
+      it('should set parserOptions.project when enabled (eslintrc)', async () => {
+        await runLibraryGeneratorWithOpts({
+          linter: 'eslint',
+          setParserOptionsProject: true,
+        });
+
+        const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');
+        expect(eslintConfig.overrides[0].parserOptions.project).toEqual([
+          'my-lib/tsconfig.*?.json',
+        ]);
       });
 
       it('should add dependency checks to buildable libs', async () => {

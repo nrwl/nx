@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`create-nodes-plugin/generator generator should add the plugin path to package.json exports 1`] = `
 "{
@@ -98,7 +98,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
             configFilePath,
             projectRoot,
             options,
-            context
+            context,
           ),
         },
       },
@@ -110,14 +110,14 @@ function buildEslintTargets(
   configFilePath: string,
   projectRoot: string,
   options: EslintPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
 ) {
   const eslintConfig = getEslintConfig(configFilePath, context);
 
   const targetDefaults = readTargetDefaultsForTarget(
     options.targetName,
     context.nxJsonConfiguration.targetDefaults,
-    'executorName'
+    'executorName',
   );
 
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -136,7 +136,7 @@ function buildEslintTargets(
     ...baseTargetConfig,
     cache: targetDefaults?.cache ?? true,
     inputs:
-      targetDefaults?.inputs ?? 'production' in namedInputs
+      (targetDefaults?.inputs ?? 'production' in namedInputs)
         ? ['default', '^production']
         : ['default', '^default'],
     outputs: targetDefaults?.outputs ?? getOutputs(projectRoot),
@@ -150,7 +150,7 @@ function buildEslintTargets(
 
 function getEslintConfig(
   configFilePath: string,
-  context: CreateNodesContext
+  context: CreateNodesContext,
 ): any {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
@@ -228,7 +228,7 @@ describe('@nx/eslint/plugin', () => {
       {
         targetName: 'target',
       },
-      context
+      context,
     );
 
     expect(nodes).toMatchInlineSnapshot();
@@ -243,7 +243,7 @@ function mockEslintConfig(config: any) {
     }),
     {
       virtual: true,
-    }
+    },
   );
 }
 "
@@ -268,7 +268,7 @@ export default async function update(tree: Tree) {
     createNodes,
     {
       targetName: 'TODO',
-    }
+    },
   );
 
   await formatFiles(tree);

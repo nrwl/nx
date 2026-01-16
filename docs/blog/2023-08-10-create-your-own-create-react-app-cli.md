@@ -96,7 +96,7 @@ main();
 
 ```
 
-The main chunk of code is `` createWorkspace(`my-own-react@${presetVersion}`) ``. This function creates an Nx workspace with the `my-own-react` plugin installed.
+The main chunk of code is ``createWorkspace(`my-own-react@${presetVersion}`)``. This function creates an Nx workspace with the `my-own-react` plugin installed.
 
 2. `createWorkspace` will also generate the preset generator defined by `my-own-react` located at `src/generators/preset/generator.ts`. This is the logic which scaffolds a project which uses your technology.
 

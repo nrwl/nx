@@ -102,8 +102,8 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.zoneless
         ? `--zoneless`
         : opts.zoneless === false
-        ? `--no-zoneless`
-        : null,
+          ? `--no-zoneless`
+          : null,
       opts.nxCloudToken ? `--nxCloudToken=${opts.nxCloudToken}` : null,
       opts.formatter ? `--formatter=${opts.formatter}` : null,
       opts.workspaces !== false ? `--workspaces` : `--no-workspaces`,

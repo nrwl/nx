@@ -91,8 +91,8 @@ async function buildHost(
           buildTarget.configuration
             ? `:${buildTarget.configuration}`
             : context.configurationName
-            ? `:${context.configurationName}`
-            : ''
+              ? `:${context.configurationName}`
+              : ''
         }`,
       ],
       {

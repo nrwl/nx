@@ -130,7 +130,7 @@ export const ProjectDetails = ({
                 <span className="font-mono"> {projectData.root.trim()}</span>
               </p>
             ) : null}
-            {projectData.projectType ?? typeToProjectType[project.type] ? (
+            {(projectData.projectType ?? typeToProjectType[project.type]) ? (
               <p className="mb-2">
                 <span className="font-medium">Type:</span>
                 <span className="ml-2 font-mono capitalize">
@@ -187,7 +187,7 @@ function ViewInProjectGraphButton({ onClick }: { onClick: () => void }) {
       className="inline-flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-base text-slate-600 ring-2 ring-inset ring-slate-400/40 hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
       onClick={() => onClick()}
     >
-      <EyeIcon className="h-5 w-5 "></EyeIcon>
+      <EyeIcon className="h-5 w-5"></EyeIcon>
       <span>View In Graph</span>
     </button>
   );

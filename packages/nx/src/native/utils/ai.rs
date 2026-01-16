@@ -42,10 +42,21 @@ fn is_cursor_ai() -> bool {
     is_cursor
 }
 
+/// Detects if the current process is being run by OpenCode
+fn is_opencode_ai() -> bool {
+    match env::var("OPENCODE") {
+        Ok(_) => {
+            debug!("OpenCode AI detected via OPENCODE environment variable");
+            true
+        }
+        Err(_) => false,
+    }
+}
+
 /// Detects if the current process is being run by an AI agent
 #[napi]
 pub fn is_ai_agent() -> bool {
-    let is_ai = is_claude_ai() || is_replit_ai() || is_cursor_ai();
+    let is_ai = is_claude_ai() || is_replit_ai() || is_cursor_ai() || is_opencode_ai();
 
     if is_ai {
         debug!("AI agent detected");
@@ -65,6 +76,7 @@ mod tests {
             "PAGER",
             "CURSOR_TRACE_ID",
             "COMPOSER_NO_INTERACTION",
+            "OPENCODE",
         ];
         for var in &ai_vars {
             unsafe {
@@ -81,6 +93,7 @@ mod tests {
         let original_pager = env::var("PAGER").ok();
         let original_cursor_trace_id = env::var("CURSOR_TRACE_ID").ok();
         let original_composer_no_interaction = env::var("COMPOSER_NO_INTERACTION").ok();
+        let original_opencode = env::var("OPENCODE").ok();
 
         // Start with clean environment
         clear_ai_env_vars();
@@ -97,6 +110,10 @@ mod tests {
         assert!(
             !is_cursor_ai(),
             "Should not detect Cursor AI without all variables"
+        );
+        assert!(
+            !is_opencode_ai(),
+            "Should not detect OpenCode AI without OPENCODE"
         );
         assert!(!is_ai_agent(), "Should not detect any AI agent");
 
@@ -118,6 +135,16 @@ mod tests {
         assert!(is_ai_agent(), "Main function should detect Repl.it AI");
         unsafe {
             env::remove_var("REPL_ID");
+        }
+
+        // Test OpenCode AI detection
+        unsafe {
+            env::set_var("OPENCODE", "1");
+        }
+        assert!(is_opencode_ai(), "Should detect OpenCode AI with OPENCODE");
+        assert!(is_ai_agent(), "Main function should detect OpenCode AI");
+        unsafe {
+            env::remove_var("OPENCODE");
         }
 
         // Test Cursor AI detection with wrong PAGER
@@ -177,6 +204,11 @@ mod tests {
         if let Some(val) = original_composer_no_interaction {
             unsafe {
                 env::set_var("COMPOSER_NO_INTERACTION", val);
+            }
+        }
+        if let Some(val) = original_opencode {
+            unsafe {
+                env::set_var("OPENCODE", val);
             }
         }
     }

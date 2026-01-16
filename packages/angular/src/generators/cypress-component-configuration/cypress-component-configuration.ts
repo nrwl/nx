@@ -24,6 +24,7 @@ import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
 import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
 import { updateAppEditorTsConfigExcludedFiles } from '../utils/update-app-editor-tsconfig-excluded-files';
 import { CypressComponentConfigSchema } from './schema';
+import { lt } from 'semver';
 
 const webpackExecutors = new Set<string>([
   '@nx/angular:webpack-browser',
@@ -47,9 +48,11 @@ export async function cypressComponentConfiguration(
   tree: Tree,
   options: CypressComponentConfigSchema
 ): Promise<GeneratorCallback> {
+  const { componentConfigurationGenerator: baseCyCTConfig } = ensurePackage<
+    typeof import('@nx/cypress')
+  >('@nx/cypress', nxVersion);
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  // Cypress Component Testing requires Zone.js
   let isZoneless: boolean;
   if (projectConfig.projectType === 'application') {
     // For applications, check the polyfills in the build target
@@ -60,16 +63,21 @@ export async function cypressComponentConfiguration(
   }
 
   if (isZoneless) {
-    throw new Error(
-      `Cypress Component Testing doesn't support Zoneless Angular projects yet. ` +
-        `The project "${options.project}" is configured without Zone.js. ` +
-        `See https://github.com/cypress-io/cypress/issues/31504.`
+    const { getInstalledCypressVersion } = await import(
+      '@nx/cypress/src/utils/versions'
     );
+    const installedCypressVersion = getInstalledCypressVersion(tree);
+    // Zoneless support was introduced in Cypress 15.8.0
+    // If Cypress is not yet installed, we'll install the latest version, which will have zoneless support
+    if (installedCypressVersion && lt(installedCypressVersion, '15.8.0')) {
+      throw new Error(
+        `Cypress Component Testing doesn't support Zoneless Angular projects for your installed Cypress version (${installedCypressVersion}). ` +
+          `The project "${options.project}" is configured without Zone.js. ` +
+          `Please upgrade Cypress to version 15.8.0 or higher.`
+      );
+    }
   }
 
-  const { componentConfigurationGenerator: baseCyCTConfig } = ensurePackage<
-    typeof import('@nx/cypress')
-  >('@nx/cypress', nxVersion);
   const tasks: GeneratorCallback[] = [];
   tasks.push(
     await baseCyCTConfig(tree, {
@@ -82,7 +90,7 @@ export async function cypressComponentConfiguration(
   );
 
   await configureCypressCT(tree, options);
-  tasks.push(await addFiles(tree, projectConfig, options));
+  tasks.push(await addFiles(tree, projectConfig, options, isZoneless));
 
   if (projectConfig.projectType === 'application') {
     updateAppEditorTsConfigExcludedFiles(tree, projectConfig);
@@ -98,7 +106,8 @@ export async function cypressComponentConfiguration(
 async function addFiles(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  options: CypressComponentConfigSchema
+  options: CypressComponentConfigSchema,
+  isZoneless: boolean
 ): Promise<GeneratorCallback> {
   const componentFile = joinPathFragments(
     projectConfig.root,
@@ -114,7 +123,7 @@ async function addFiles(
   );
   tree.write(
     componentFile,
-    `import { mount } from 'cypress/angular';\n${updatedCmpContents}`
+    `import { mount } from '${isZoneless ? 'cypress/angular-zoneless' : 'cypress/angular'}';\n${updatedCmpContents}`
   );
 
   if (!options.generateTests) {

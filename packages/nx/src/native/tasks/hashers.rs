@@ -1,3 +1,4 @@
+mod hash_cwd;
 mod hash_env;
 mod hash_external;
 mod hash_project_config;
@@ -7,6 +8,7 @@ mod hash_task_output;
 mod hash_tsconfig;
 mod hash_workspace_files;
 
+pub use hash_cwd::*;
 pub use hash_env::*;
 pub use hash_external::*;
 pub use hash_project_config::*;

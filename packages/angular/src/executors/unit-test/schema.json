@@ -68,8 +68,7 @@
     },
     "ui": {
       "type": "boolean",
-      "description": "Enables the Vitest UI for interactive test execution. This option is only available for the Vitest runner.",
-      "default": false
+      "description": "Enables the Vitest UI for interactive test execution. This option is only available for the Vitest runner."
     },
     "coverage": {
       "type": "boolean",

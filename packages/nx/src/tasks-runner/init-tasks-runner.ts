@@ -144,7 +144,7 @@ async function createOrchestrator(
   const orchestrator = new TaskOrchestrator(
     hasher,
     null,
-    [],
+    tasks,
     projectGraph,
     taskGraph,
     nxJson,
@@ -222,8 +222,11 @@ export async function runContinuousTasks(
     nxJson,
     lifeCycle
   );
-  return tasks.reduce((current, task, index) => {
-    current[task.id] = orchestrator.startContinuousTask(task, index);
-    return current;
-  }, {} as Record<string, Promise<RunningTask>>);
+  return tasks.reduce(
+    (current, task, index) => {
+      current[task.id] = orchestrator.startContinuousTask(task, index);
+      return current;
+    },
+    {} as Record<string, Promise<RunningTask>>
+  );
 }

@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: PureComponent class & then default export new JSX transform should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
@@ -913,11 +913,11 @@ import { expect } from 'storybook/test';
 
 export default {
   component: Test,
-  title: 'Test',
-};
+  title: 'Test',};
 
 export const Primary = {
-  args: {},
+  args: {
+  },
 };
 
 export const Heading: Story = {

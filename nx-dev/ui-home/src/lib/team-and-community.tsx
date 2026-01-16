@@ -107,7 +107,7 @@ export function TeamAndCommunity(): ReactElement {
               </Link>
               <ChevronRightIcon
                 aria-hidden="true"
-                className="size-4 shrink-0 transition group-hover/item:translate-x-1 "
+                className="size-4 shrink-0 transition group-hover/item:translate-x-1"
               />
             </div>
           </div>

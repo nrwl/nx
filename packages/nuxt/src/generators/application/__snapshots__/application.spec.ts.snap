@@ -111,7 +111,7 @@ module.exports = createConfigForNuxt({
     },
     {
       ignores: ['.nuxt/**', '.output/**', 'node_modules'],
-    }
+    },
   );
 "
 `;
@@ -133,7 +133,7 @@ export default createConfigForNuxt({
     },
     {
       ignores: ['.nuxt/**', '.output/**', 'node_modules'],
-    }
+    },
   );
 "
 `;
@@ -480,7 +480,7 @@ module.exports = createConfigForNuxt({
     },
     {
       ignores: ['.nuxt/**', '.output/**', 'node_modules'],
-    }
+    },
   );
 "
 `;
@@ -502,7 +502,7 @@ export default createConfigForNuxt({
     },
     {
       ignores: ['.nuxt/**', '.output/**', 'node_modules'],
-    }
+    },
   );
 "
 `;

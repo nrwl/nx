@@ -12,8 +12,8 @@ The migration processes TypeScript configuration files referenced by Angular pro
 // apps/my-app/tsconfig.app.json
 {
   "compilerOptions": {
-    "lib": ["es2020", "dom"]
-  }
+    "lib": ["es2020", "dom"],
+  },
 }
 ```
 
@@ -23,8 +23,8 @@ The migration processes TypeScript configuration files referenced by Angular pro
 // apps/my-app/tsconfig.app.json
 {
   "compilerOptions": {
-    "lib": ["dom", "es2022"]
-  }
+    "lib": ["dom", "es2022"],
+  },
 }
 ```
 
@@ -36,8 +36,8 @@ When the `lib` array contains only an ES version older than ES2022 without addit
 // apps/my-app/tsconfig.app.json
 {
   "compilerOptions": {
-    "lib": ["es2020"]
-  }
+    "lib": ["es2020"],
+  },
 }
 ```
 
@@ -47,8 +47,8 @@ When the `lib` array contains only an ES version older than ES2022 without addit
 // apps/my-app/tsconfig.app.json
 {
   "compilerOptions": {
-    "lib": ["es2022"]
-  }
+    "lib": ["es2022"],
+  },
 }
 ```
 
@@ -60,8 +60,8 @@ If the configuration already uses ES2022 or higher (e.g., `'es2023'`, `'esnext'`
 // apps/my-app/tsconfig.app.json
 {
   "compilerOptions": {
-    "lib": ["es2022", "dom"]
-  }
+    "lib": ["es2022", "dom"],
+  },
 }
 ```
 
@@ -71,8 +71,8 @@ If the configuration already uses ES2022 or higher (e.g., `'es2023'`, `'esnext'`
 // apps/my-app/tsconfig.app.json
 {
   "compilerOptions": {
-    "lib": ["es2022", "dom"]
-  }
+    "lib": ["es2022", "dom"],
+  },
 }
 ```
 
@@ -84,8 +84,8 @@ When the `lib` array contains multiple library entries, only the ES version is u
 // apps/my-app/tsconfig.app.json
 {
   "compilerOptions": {
-    "lib": ["es2020", "dom", "webworker"]
-  }
+    "lib": ["es2020", "dom", "webworker"],
+  },
 }
 ```
 
@@ -95,8 +95,8 @@ When the `lib` array contains multiple library entries, only the ES version is u
 // apps/my-app/tsconfig.app.json
 {
   "compilerOptions": {
-    "lib": ["dom", "webworker", "es2022"]
-  }
+    "lib": ["dom", "webworker", "es2022"],
+  },
 }
 ```
 

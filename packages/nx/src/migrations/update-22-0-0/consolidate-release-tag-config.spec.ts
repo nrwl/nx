@@ -1,7 +1,9 @@
+import '../../internal-testing-utils/mock-prettier';
+
 import { readJson, updateJson } from '../../generators/utils/json';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
-import migrate from './consolidate-release-tag-config';
 import type { Tree } from '../../generators/tree';
+import migrate from './consolidate-release-tag-config';
 
 describe('consolidate-release-tag-config migration', () => {
   let tree: Tree;

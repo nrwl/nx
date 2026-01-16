@@ -71,7 +71,7 @@ export function GettingStarted(): ReactElement {
           <p className="mt-8">Nx supports both Gradle and Maven</p>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 ">
+        <div className="mt-12 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2">
           <GetStartedCard
             title="Install Nx"
             command="brew install nx"

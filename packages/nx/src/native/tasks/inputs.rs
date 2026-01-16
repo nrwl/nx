@@ -105,7 +105,8 @@ fn split_inputs_into_self_and_deps<'a>(
                 | Input::Runtime(_)
                 | Input::Environment(_)
                 | Input::DepsOutputs { .. }
-                | Input::ExternalDependency(_) => {
+                | Input::ExternalDependency(_)
+                | Input::WorkingDirectory(_) => {
                     acc.1.push(input);
                 }
                 Input::Projects { .. } => {
@@ -171,6 +172,7 @@ pub(super) fn expand_single_project_inputs<'a>(
                 transitive: *transitive,
                 dependent_tasks_output_files,
             }),
+            Input::WorkingDirectory(mode) => expanded.push(Input::WorkingDirectory(mode)),
             Input::Projects { .. }
             | Input::Inputs {
                 dependencies: true, ..

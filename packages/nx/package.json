@@ -101,11 +101,11 @@
     "migrations": "./migrations.json",
     "packageGroup": [
       "@nx/js",
-      "@nx/jest",
       "@nx/linter",
       "@nx/eslint",
       "@nx/workspace",
       "@nx/angular",
+      "@nx/jest",
       "@nx/cypress",
       "@nx/detox",
       "@nx/devkit",

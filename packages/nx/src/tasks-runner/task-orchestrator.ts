@@ -199,7 +199,20 @@ export class TaskOrchestrator {
       const groupId = this.closeGroup();
 
       if (task.continuous) {
-        await this.startContinuousTask(task, groupId);
+        const runningTask = await this.startContinuousTask(task, groupId);
+
+        if (this.initializingTaskIds.has(task.id)) {
+          await new Promise<void>((res) => {
+            runningTask.onExit((code) => {
+              if (!this.tuiEnabled) {
+                if (code > 128) {
+                  process.exit(code);
+                }
+              }
+              res();
+            });
+          });
+        }
       } else {
         await this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId);
       }
@@ -306,8 +319,8 @@ export class TaskOrchestrator {
     const status = cachedResult.remote
       ? 'remote-cache'
       : shouldCopyOutputsFromCache
-      ? 'local-cache'
-      : 'local-cache-kept-existing';
+        ? 'local-cache'
+        : 'local-cache-kept-existing';
     this.options.lifeCycle.printTaskTerminalOutput(
       task,
       status,
@@ -756,18 +769,6 @@ export class TaskOrchestrator {
       // task is already running by another process, we schedule the next tasks
       // and release the threads
       await this.scheduleNextTasksAndReleaseThreads();
-      if (this.initializingTaskIds.has(task.id)) {
-        await new Promise<void>((res) => {
-          runningTask.onExit((code) => {
-            if (!this.tuiEnabled) {
-              if (code > 128) {
-                process.exit(code);
-              }
-            }
-            res();
-          });
-        });
-      }
       return runningTask;
     }
 
@@ -831,18 +832,6 @@ export class TaskOrchestrator {
       }
     });
     await this.scheduleNextTasksAndReleaseThreads();
-    if (this.initializingTaskIds.has(task.id)) {
-      await new Promise<void>((res) => {
-        childProcess.onExit((code) => {
-          if (!this.tuiEnabled) {
-            if (code > 128) {
-              process.exit(code);
-            }
-          }
-          res();
-        });
-      });
-    }
 
     return childProcess;
   }
@@ -994,6 +983,12 @@ export class TaskOrchestrator {
   private async pipeOutputCapture(task: Task) {
     try {
       if (process.env.NX_NATIVE_COMMAND_RUNNER !== 'false') {
+        return true;
+      }
+
+      // When TUI is enabled, we need to use pipe output capture to support
+      // progressive output streaming via the onOutput callback
+      if (this.tuiEnabled) {
         return true;
       }
 

@@ -29,13 +29,13 @@ export function TimeToGreen(): ReactElement {
             <div className="flex h-12 items-center justify-center rounded-t-lg bg-blue-400/40 sm:col-span-2 sm:h-auto sm:rounded-l-lg sm:rounded-r-none dark:bg-blue-600/40">
               <span className="px-2">Write Code</span>
             </div>
-            <div className="relative flex h-12 items-center justify-center bg-red-500/40 sm:col-span-2  sm:h-auto dark:bg-red-500/40">
+            <div className="relative flex h-12 items-center justify-center bg-red-500/40 sm:col-span-2 sm:h-auto dark:bg-red-500/40">
               <span className="px-2">Run CI (Flaky Test Failure)</span>
             </div>
             <div className="flex h-12 items-center justify-center bg-red-200/40 sm:col-span-3 sm:h-auto dark:bg-red-950/40">
               <span className="px-2">Switch Focus</span>
             </div>
-            <div className="relative flex h-12 items-center justify-center bg-red-500/40  sm:col-span-2 sm:h-auto dark:bg-red-500/40">
+            <div className="relative flex h-12 items-center justify-center bg-red-500/40 sm:col-span-2 sm:h-auto dark:bg-red-500/40">
               <span className="px-2">Re-Run CI (Code Error)</span>
             </div>
             <div className="flex h-12 items-center justify-center bg-red-400/40 sm:col-span-1 sm:h-auto dark:bg-red-800/40">

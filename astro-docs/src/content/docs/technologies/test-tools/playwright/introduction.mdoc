@@ -200,7 +200,7 @@ In order to set different `baseURL` values for different environments you can pa
 import { defineConfig } from '@playwright/test';
 
 const baseUrl =
-  process.env.BASE_URL ?? process.env.CI
+  (process.env.BASE_URL ?? process.env.CI)
     ? 'https://some-staging-url.example.com'
     : 'http://localhost:4200';
 

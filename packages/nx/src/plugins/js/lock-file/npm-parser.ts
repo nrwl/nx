@@ -216,8 +216,8 @@ function createNode(
           snapshot.resolved
             ? [snapshot.resolved]
             : version
-            ? [packageName, version]
-            : [packageName]
+              ? [packageName, version]
+              : [packageName]
         ),
     },
   };

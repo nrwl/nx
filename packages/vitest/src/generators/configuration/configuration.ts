@@ -252,7 +252,9 @@ getTestBed().initTestEnvironment(
     const installDependenciesTask = addDependenciesToPackageJson(
       tree,
       {},
-      devDependencies
+      devDependencies,
+      undefined,
+      true
     );
     tasks.push(installDependenciesTask);
   }

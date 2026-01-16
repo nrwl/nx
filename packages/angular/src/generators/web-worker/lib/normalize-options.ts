@@ -25,7 +25,7 @@ export function normalizeOptions(
   }
 
   const path =
-    options.path ?? sourceRoot
+    (options.path ?? sourceRoot)
       ? joinPathFragments(sourceRoot, 'app')
       : joinPathFragments(root, 'src', 'app');
 

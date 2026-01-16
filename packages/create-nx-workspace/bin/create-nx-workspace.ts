@@ -11,7 +11,7 @@ import {
   getInterruptedWorkspaceState,
 } from '../src/create-workspace';
 import { isKnownPreset, Preset } from '../src/utils/preset/preset';
-import { CLIErrorMessageConfig, output } from '../src/utils/output';
+import { output } from '../src/utils/output';
 import { nxVersion } from '../src/utils/nx/nx-version';
 
 import { yargsDecorator } from './decorator';
@@ -66,6 +66,14 @@ let chosenTemplate: string;
 let chosenPreset: string;
 // Track whether user opted into cloud or not for SIGINT handler.
 let useCloud: boolean;
+// For stats
+let packageManager: string;
+
+type AngularUnitTestRunner =
+  | 'none'
+  | 'jest'
+  | 'vitest-angular'
+  | 'vitest-analog';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -104,7 +112,7 @@ interface AngularArguments extends BaseArguments {
   style: string;
   routing: boolean;
   standaloneApi: boolean;
-  unitTestRunner: 'none' | 'jest' | 'vitest';
+  unitTestRunner: AngularUnitTestRunner;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
   bundler: 'webpack' | 'rspack' | 'esbuild';
   ssr: boolean;
@@ -294,7 +302,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             flowVariant: getFlowVariant(),
             errorCode,
             errorMessage,
-            errorFile,
+            errorFile: errorFile ?? '',
+            template: chosenTemplate ?? '',
+            preset: chosenPreset ?? '',
+            nodeVersion: process.versions.node ?? '',
+            packageManager: packageManager ?? '',
           },
         });
 
@@ -387,6 +399,8 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       template: chosenTemplate ?? '',
       preset: chosenPreset ?? '',
       connectUrl: workspaceInfo.connectUrl ?? '',
+      nodeVersion: process.versions.node,
+      packageManager: packageManager ?? '',
     },
   });
 
@@ -428,6 +442,7 @@ async function normalizeArgsMiddleware(
     meta: {
       type: 'start',
       flowVariant: getFlowVariant(),
+      nodeVersion: process.versions.node,
     },
   });
 
@@ -438,7 +453,7 @@ async function normalizeArgsMiddleware(
     chosenTemplate = template;
 
     if (template !== 'custom') {
-      // Template flow - uses detected package manager (from invoking command) and 'main' branch by default
+      // Template flow - respects CLI arg, otherwise uses detected package manager (from invoking command)
       argv.template = template;
       const aiAgents = await determineAiAgents(argv);
       const nxCloud =
@@ -447,13 +462,28 @@ async function normalizeArgsMiddleware(
         nxCloud === 'skip'
           ? undefined
           : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
+      packageManager = argv.packageManager ?? detectInvokedPackageManager();
       Object.assign(argv, {
         nxCloud,
         useGitHub: nxCloud !== 'skip',
         completionMessageKey,
-        packageManager: detectInvokedPackageManager(),
+        packageManager,
         defaultBase: 'main',
         aiAgents,
+      });
+
+      await recordStat({
+        nxVersion,
+        command: 'create-nx-workspace',
+        useCloud: nxCloud !== 'skip',
+        meta: {
+          type: 'precreate',
+          flowVariant: getFlowVariant(),
+          template: chosenTemplate,
+          preset: '',
+          nodeVersion: process.versions.node ?? '',
+          packageManager,
+        },
       });
     } else {
       // Preset flow - existing behavior
@@ -473,24 +503,61 @@ async function normalizeArgsMiddleware(
         }
       }
 
-      const packageManager = await determinePackageManager(argv);
+      packageManager = await determinePackageManager(argv);
       const aiAgents = await determineAiAgents(argv);
       const defaultBase = await determineDefaultBase(argv);
-      const nxCloud =
-        argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
-      const useGitHub =
-        nxCloud === 'skip'
-          ? undefined
-          : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
+
+      // Check if CLI arg was provided (use rawArgs to check original input)
+      const cliNxCloudArgProvided = rawArgs.nxCloud !== undefined;
+
+      let nxCloud: string;
+      let useGitHub: boolean | undefined;
+      let completionMessageKey: string | undefined;
+
+      if (argv.skipGit === true) {
+        nxCloud = 'skip';
+        useGitHub = undefined;
+      } else if (cliNxCloudArgProvided) {
+        // CLI arg provided: use existing flow (CI provider selection if needed)
+        nxCloud = await determineNxCloud(argv);
+        useGitHub =
+          nxCloud === 'skip'
+            ? undefined
+            : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
+      } else {
+        // No CLI arg: use simplified prompt (same as template flow)
+        nxCloud = await determineNxCloudV2(argv);
+        useGitHub = nxCloud !== 'skip';
+        completionMessageKey =
+          nxCloud === 'skip'
+            ? undefined
+            : messages.completionMessageOfSelectedPrompt('setupNxCloudV2');
+      }
+
       Object.assign(argv, {
         nxCloud,
         useGitHub,
+        completionMessageKey,
         packageManager,
         defaultBase,
         aiAgents,
       });
 
       chosenPreset = argv.preset;
+
+      await recordStat({
+        nxVersion,
+        command: 'create-nx-workspace',
+        useCloud: nxCloud !== 'skip',
+        meta: {
+          type: 'precreate',
+          flowVariant: getFlowVariant(),
+          template: '',
+          preset: chosenPreset ?? '',
+          nodeVersion: process.versions.node ?? '',
+          packageManager,
+        },
+      });
     }
   } catch (e) {
     if (e instanceof CnwError) {
@@ -535,8 +602,30 @@ async function determineFolder(
 
   if (folderName) {
     validateWorkspaceName(folderName);
+
+    // If directory exists, either re-prompt (interactive) or error (non-interactive)
+    if (existsSync(folderName)) {
+      if (parsedArgs.interactive && !isCI()) {
+        output.warn({
+          title: `Directory ${folderName} already exists.`,
+        });
+        // Re-prompt for a new folder name
+        return promptForFolder(parsedArgs);
+      }
+      throw new CnwError(
+        'DIRECTORY_EXISTS',
+        `The directory '${folderName}' already exists. Choose a different name or remove the existing directory.`
+      );
+    }
     return folderName;
   }
+
+  return promptForFolder(parsedArgs);
+}
+
+async function promptForFolder(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<string> {
   const reply = await enquirer.prompt<{ folderName: string }>([
     {
       name: 'folderName',
@@ -544,9 +633,22 @@ async function determineFolder(
       initial: 'org',
       type: 'input',
       skip: !parsedArgs.interactive || isCI(),
+      validate: (value: string): string | true => {
+        if (!value) {
+          return 'Folder name cannot be empty';
+        }
+        if (!/^[a-zA-Z]/.test(value)) {
+          return 'Workspace name must start with a letter';
+        }
+        if (existsSync(value)) {
+          return `The directory '${value}' already exists`;
+        }
+        return true;
+      },
     },
   ]);
 
+  // Fallback invariants in case validate is bypassed (e.g., in CI or non-interactive mode)
   invariant(
     reply.folderName,
     'INVALID_FOLDER_NAME',
@@ -558,7 +660,7 @@ async function determineFolder(
   invariant(
     !existsSync(reply.folderName),
     'DIRECTORY_EXISTS',
-    `The folder '${reply.folderName}' already exists`
+    `The directory '${reply.folderName}' already exists. Choose a different name or remove the existing directory.`
   );
 
   return reply.folderName;
@@ -1055,7 +1157,7 @@ async function determineAngularOptions(
   let preset: Preset;
   let style: string;
   let appName: string;
-  let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
+  let unitTestRunner: undefined | AngularUnitTestRunner = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let bundler: undefined | 'webpack' | 'rspack' | 'esbuild' = undefined;
   let ssr: undefined | boolean = undefined;
@@ -1177,7 +1279,50 @@ async function determineAngularOptions(
     ssr = reply.ssr === 'Yes';
   }
 
-  unitTestRunner = await determineUnitTestRunner(parsedArgs);
+  if (parsedArgs.unitTestRunner) {
+    unitTestRunner = parsedArgs.unitTestRunner as AngularUnitTestRunner;
+  } else if (!parsedArgs.workspaces) {
+    unitTestRunner = undefined;
+  } else {
+    unitTestRunner = await enquirer
+      .prompt<{
+        unitTestRunner: 'none' | 'jest' | 'vitest-angular' | 'vitest-analog';
+      }>([
+        {
+          message: 'Which unit test runner would you like to use?',
+          type: 'autocomplete',
+          name: 'unitTestRunner',
+          skip: !parsedArgs.interactive || isCI(),
+          choices: [
+            ...(bundler === 'esbuild'
+              ? [
+                  {
+                    name: 'vitest-angular',
+                    message:
+                      'Vitest & Angular [ https://vitest.dev/ & https://angular.dev ]',
+                  },
+                ]
+              : []),
+            {
+              name: 'vitest-analog',
+              message:
+                'Vitest & Analog  [ https://vitest.dev/ & https://analogjs.org/ ]',
+            },
+            {
+              name: 'jest',
+              message: 'Jest             [ https://jestjs.io/ ]',
+            },
+            {
+              name: 'none',
+              message: 'None',
+            },
+          ],
+          initial: 0,
+        },
+      ])
+      .then((r) => r.unitTestRunner as AngularUnitTestRunner);
+  }
+
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
 
   return {

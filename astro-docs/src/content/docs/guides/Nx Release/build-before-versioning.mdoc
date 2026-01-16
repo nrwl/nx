@@ -48,9 +48,9 @@ In order to ensure that images are built before versioning, use the `preVersionC
 {
   "release": {
     "docker": {
-      "preVersionCommand": "npx nx run-many -t docker:build"
-    }
-  }
+      "preVersionCommand": "npx nx run-many -t docker:build",
+    },
+  },
 }
 ```
 
@@ -66,11 +66,11 @@ When using release groups with Docker, use the `groupPreVersionCommand` option t
       "my-group": {
         "projects": ["api", "microservice"],
         "docker": {
-          "groupPreVersionCommand": "npx nx run-many -t docker:build -p api,microservice"
-        }
-      }
-    }
-  }
+          "groupPreVersionCommand": "npx nx run-many -t docker:build -p api,microservice",
+        },
+      },
+    },
+  },
 }
 ```
 

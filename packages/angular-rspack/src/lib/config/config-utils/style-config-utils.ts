@@ -1,4 +1,4 @@
-import { Sass } from '@nx/angular-rspack-compiler/src/models/style-preprocessor-options';
+import { Sass } from '@nx/angular-rspack-compiler';
 import { workspaceRoot } from '@nx/devkit';
 import {
   CssExtractRspackPlugin,
@@ -59,9 +59,8 @@ export async function getStylesConfig(
     buildOptions.root,
     workspaceRoot,
   ]);
-  const postcssConfiguration = await loadPostcssConfiguration(
-    searchDirectories
-  );
+  const postcssConfiguration =
+    await loadPostcssConfiguration(searchDirectories);
   if (postcssConfiguration) {
     const postCssPluginRequire = createRequire(
       dirname(postcssConfiguration.configPath) + '/'

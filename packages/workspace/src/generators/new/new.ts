@@ -160,13 +160,13 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     workspaceGlobs: Array.isArray(options.workspaceGlobs)
       ? options.workspaceGlobs
       : options.workspaceGlobs
-      ? [options.workspaceGlobs]
-      : undefined,
+        ? [options.workspaceGlobs]
+        : undefined,
     aiAgents: Array.isArray(options.aiAgents)
       ? options.aiAgents
       : options.aiAgents
-      ? [options.aiAgents]
-      : undefined,
+        ? [options.aiAgents]
+        : undefined,
   };
 
   if (!options.directory) {

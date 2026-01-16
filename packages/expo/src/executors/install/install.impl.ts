@@ -40,7 +40,7 @@ export async function installAndUpdatePackageJson(
   const packages =
     typeof options.packages === 'string'
       ? options.packages.split(',')
-      : options.packages ?? [];
+      : (options.packages ?? []);
 
   await installAsync(
     packages,

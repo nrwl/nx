@@ -170,7 +170,7 @@ describe('convertConfigToWebpackPluginGenerator', () => {
         }),
         (config) => {
           return config;
-        }
+        },
       );
       "
     `);

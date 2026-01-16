@@ -1,5 +1,5 @@
 import { formatFiles, globAsync, type Tree } from '@nx/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { replace } from '@phenomnomnominal/tsquery';
 import { SearchSource } from 'jest';
 import { readConfig } from 'jest-config';
 import Runtime from 'jest-runtime';
@@ -26,7 +26,7 @@ export default async function (tree: Tree) {
   for (const testFilePath of testFilePaths) {
     let testFileContent = tree.read(testFilePath, 'utf-8');
     for (const [alias, matcher] of matcherAliasesMap) {
-      testFileContent = tsquery.replace(
+      testFileContent = replace(
         testFileContent,
         `CallExpression PropertyAccessExpression:has(CallExpression Identifier[name=expect]) Identifier[name=${alias}]`,
         (_node: Identifier) => matcher

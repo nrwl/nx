@@ -241,7 +241,10 @@ export function normalizeTargetDependencyWithStringProjects(
 }
 
 class InvalidOutputsError extends Error {
-  constructor(public outputs: string[], public invalidOutputs: Set<string>) {
+  constructor(
+    public outputs: string[],
+    public invalidOutputs: Set<string>
+  ) {
     super(InvalidOutputsError.createMessage(invalidOutputs));
   }
 

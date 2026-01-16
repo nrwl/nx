@@ -140,7 +140,7 @@ function SidebarSectionItems({
         data-testid={`section-h5:${item.id}`}
         className={cx(
           'group flex items-center py-2',
-          '-ml-1 px-1 ',
+          '-ml-1 px-1',
           !isNested
             ? 'text-base text-slate-800 lg:text-base dark:text-slate-200'
             : 'text-sm text-slate-800 lg:text-sm dark:text-slate-200',

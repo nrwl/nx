@@ -35,7 +35,6 @@ If you apply project or group filtering to the programmatic API via the `project
 - `workspaceVersion`: The new overall version of the workspace. This is only applicable in cases where all projects are versioned together in a single release group. In all other cases, this will be `null`.
 
 - `projectsVersionData`: A map of project names to their version data. The version data is a `VersionData` object, which contains the following properties:
-
   - `currentVersion`: The current version of the project. This is the version that the project was at before the versioning process began.
   - `newVersion`: The new version of the project.
   - `dockerVersion`: The new version of the project if it is a docker project.
@@ -64,7 +63,6 @@ console.log(releaseGraph);
 `releaseChangelog` will return a `NxReleaseChangelogResult` object containing the following properties:
 
 - `workspaceChangelog`: The changelog data for the workspace, if applicable based on the nx release config.
-
   - `releaseVersion`: Relevant version data for the new changelog entry.
   - `contents`: The changelog entry contents.
 

@@ -331,6 +331,7 @@ describe('app', () => {
           "compilerOptions": {
             "allowJs": true,
             "module": "commonjs",
+            "moduleResolution": "node10",
             "outDir": "../dist/out-tsc",
             "sourceMap": false,
             "types": [

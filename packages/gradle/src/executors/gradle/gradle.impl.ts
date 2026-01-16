@@ -28,8 +28,8 @@ export default async function gradleExecutor(
     typeof options.args === 'string'
       ? options.args.trim().split(' ')
       : Array.isArray(options.args)
-      ? options.args
-      : [];
+        ? options.args
+        : [];
   if (options.testClassName) {
     args.push(`--tests`, options.testClassName);
   }
@@ -40,6 +40,7 @@ export default async function gradleExecutor(
     'testClassName',
     'args',
     'excludeDependsOn',
+    'includeDependsOnTasks',
     '__unparsed__',
   ]);
   Object.entries(options).forEach(([key, value]) => {
@@ -55,9 +56,12 @@ export default async function gradleExecutor(
   });
 
   if (options.excludeDependsOn) {
+    const includeDependsOnTasks = new Set(options.includeDependsOnTasks ?? []);
     getExcludeTasks(
       new Set([`${context.projectName}:${context.targetName}`]),
-      context.projectGraph.nodes
+      context.projectGraph.nodes,
+      new Set(),
+      includeDependsOnTasks
     ).forEach((task) => {
       if (task) {
         args.push('--exclude-task', task);

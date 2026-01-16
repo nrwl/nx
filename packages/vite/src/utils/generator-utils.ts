@@ -295,10 +295,10 @@ export function deleteWebpackConfig(
     webpackConfigFilePath && tree.exists(webpackConfigFilePath)
       ? webpackConfigFilePath
       : tree.exists(`${projectRoot}/webpack.config.js`)
-      ? `${projectRoot}/webpack.config.js`
-      : tree.exists(`${projectRoot}/webpack.config.ts`)
-      ? `${projectRoot}/webpack.config.ts`
-      : null;
+        ? `${projectRoot}/webpack.config.js`
+        : tree.exists(`${projectRoot}/webpack.config.ts`)
+          ? `${projectRoot}/webpack.config.ts`
+          : null;
   if (webpackConfigPath) {
     tree.delete(webpackConfigPath);
   }
@@ -400,13 +400,13 @@ export function createOrEditViteConfig(
   const buildOutDir = isTsSolutionSetup
     ? './dist'
     : projectRoot === '.'
-    ? `./dist/${options.project}`
-    : `${offsetFromRoot(projectRoot)}dist/${projectRoot}`;
+      ? `./dist/${options.project}`
+      : `${offsetFromRoot(projectRoot)}dist/${projectRoot}`;
 
   const buildOption = onlyVitest
     ? ''
     : options.includeLib
-    ? `  // Configuration for building your library.
+      ? `  // Configuration for building your library.
   // See: https://vite.dev/guide/build.html#library-mode
   build: {
     outDir: '${buildOutDir}',
@@ -429,7 +429,7 @@ export function createOrEditViteConfig(
       external: [${options.rollupOptionsExternal ?? ''}]
     },
   },`
-    : `  build: {
+      : `  build: {
     outDir: '${buildOutDir}',
     emptyOutDir: true,
     reportCompressedSize: true,
@@ -467,8 +467,8 @@ export function createOrEditViteConfig(
   const reportsDirectory = isTsSolutionSetup
     ? './test-output/vitest/coverage'
     : projectRoot === '.'
-    ? `./coverage/${options.project}`
-    : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
+      ? `./coverage/${options.project}`
+      : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
 
   const testOption = options.includeVitest
     ? `  test: {
@@ -504,8 +504,8 @@ ${
   const devServerOption = onlyVitest
     ? ''
     : options.includeLib
-    ? ''
-    : `  server:{
+      ? ''
+      : `  server:{
     port: ${options.port ?? 4200},
     host: 'localhost',
   },`;
@@ -513,8 +513,8 @@ ${
   const previewServerOption = onlyVitest
     ? ''
     : options.includeLib
-    ? ''
-    : `  preview:{
+      ? ''
+      : `  preview:{
     port: ${options.previewPort ?? 4300},
     host: 'localhost',
   },`;
@@ -589,12 +589,12 @@ export function normalizeViteConfigFilePathWithTree(
   return configFile && tree.exists(configFile)
     ? configFile
     : tree.exists(joinPathFragments(`${projectRoot}/vite.config.mts`))
-    ? joinPathFragments(`${projectRoot}/vite.config.mts`)
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
-    ? joinPathFragments(`${projectRoot}/vite.config.ts`)
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
-    ? joinPathFragments(`${projectRoot}/vite.config.js`)
-    : undefined;
+      ? joinPathFragments(`${projectRoot}/vite.config.mts`)
+      : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
+        ? joinPathFragments(`${projectRoot}/vite.config.ts`)
+        : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
+          ? joinPathFragments(`${projectRoot}/vite.config.js`)
+          : undefined;
 }
 
 export function getViteConfigPathForProject(

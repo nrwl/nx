@@ -136,6 +136,51 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "22.3.4": {
+      "version": "22.3.4-beta.0",
+      "packages": {
+        "react-router-dom": {
+          "version": "6.30.3",
+          "alwaysAddToPackageJson": false
+        },
+        "react-router": {
+          "version": "7.12.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-router/dev": {
+          "version": "7.12.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-router/node": {
+          "version": "7.12.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-router/serve": {
+          "version": "7.12.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-router/express": {
+          "version": "7.12.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-router/fs-routes": {
+          "version": "7.12.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-router/cloudflare": {
+          "version": "7.12.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-router/architect": {
+          "version": "7.12.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-router/remix-routes-option-adapter": {
+          "version": "7.12.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

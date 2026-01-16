@@ -177,6 +177,7 @@ describe('Cypress Component Configuration', () => {
       '../**/*.d.ts',
     ]);
     expect(cyTsConfig.compilerOptions.outDir).toEqual('../../dist/out-tsc');
+    expect(cyTsConfig.compilerOptions.moduleResolution).toBe('node10');
     const libTsConfig = readJson(tree, 'libs/cool-lib/tsconfig.lib.json');
     expect(libTsConfig.exclude).toEqual(
       expect.arrayContaining([

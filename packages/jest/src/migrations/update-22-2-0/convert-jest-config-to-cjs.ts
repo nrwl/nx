@@ -35,7 +35,7 @@ export default async function convertJestConfigToCjs(tree: Tree) {
   // is what we're trying to address.
   if (!isJestPluginRegistered(tree)) return;
 
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast: parseAst, query } = require('@phenomnomnominal/tsquery');
 
   const jestConfigPaths = await globAsync(tree, ['**/jest.config.ts']);
   const projectsWithEsmOnlyFeatures: string[] = [];
@@ -81,18 +81,18 @@ export default async function convertJestConfigToCjs(tree: Tree) {
 
     // Check for ESM-only features that can't be converted
     const hasImportMeta =
-      tsquery.query(content, 'MetaProperty').length > 0 ||
+      query(content, 'MetaProperty').length > 0 ||
       content.includes('import.meta');
-    const hasTopLevelAwait = checkForTopLevelAwait(content, tsquery);
+    const hasTopLevelAwait = checkForTopLevelAwait(content, parseAst, query);
 
     if (hasImportMeta || hasTopLevelAwait) {
       projectsWithEsmOnlyFeatures.push(configPath);
       continue;
     }
 
-    content = convertImportsToRequire(content, tsquery);
+    content = convertImportsToRequire(content, parseAst, query);
 
-    content = convertExportDefaultToModuleExports(content, tsquery);
+    content = convertExportDefaultToModuleExports(content, query);
 
     tree.write(configPath, content);
     modifiedFiles.push(configPath);
@@ -127,11 +127,15 @@ export default async function convertJestConfigToCjs(tree: Tree) {
   }
 }
 
-function checkForTopLevelAwait(content: string, tsquery: any): boolean {
+function checkForTopLevelAwait(
+  content: string,
+  parseAst: any,
+  query: any
+): boolean {
   const ts = require('typescript');
   // Check for await expressions that are not inside a function
-  const ast = tsquery.ast(content);
-  const awaitExpressions = tsquery.query(ast, 'AwaitExpression');
+  const sourceFile = parseAst(content);
+  const awaitExpressions = query(sourceFile, 'AwaitExpression');
 
   for (const awaitExpr of awaitExpressions) {
     let parent = awaitExpr.parent;
@@ -153,10 +157,14 @@ function checkForTopLevelAwait(content: string, tsquery: any): boolean {
   return false;
 }
 
-function convertImportsToRequire(content: string, tsquery: any): string {
+function convertImportsToRequire(
+  content: string,
+  parseAst: any,
+  query: any
+): string {
   const ts = require('typescript');
-  const ast = tsquery.ast(content);
-  const importDeclarations = tsquery.query(ast, 'ImportDeclaration');
+  const sourceFile = parseAst(content);
+  const importDeclarations = query(sourceFile, 'ImportDeclaration');
 
   if (importDeclarations.length === 0) {
     return content;
@@ -221,10 +229,10 @@ function convertImportsToRequire(content: string, tsquery: any): string {
 
 function convertExportDefaultToModuleExports(
   content: string,
-  tsquery: any
+  query: any
 ): string {
   // Handle: export default { ... }
-  const exportAssignments = tsquery.query(content, 'ExportAssignment');
+  const exportAssignments = query(content, 'ExportAssignment');
 
   if (exportAssignments.length > 0) {
     for (const exportAssignment of exportAssignments) {

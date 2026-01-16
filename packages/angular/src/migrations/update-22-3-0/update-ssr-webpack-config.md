@@ -17,9 +17,9 @@ For webpack-based SSR projects (using `@nx/angular:webpack-server` or `@angular-
     "target": "es2022",
     "module": "commonjs",
     "moduleResolution": "node",
-    "types": ["node"]
+    "types": ["node"],
   },
-  "files": ["src/main.server.ts", "src/server.ts"]
+  "files": ["src/main.server.ts", "src/server.ts"],
 }
 ```
 
@@ -34,9 +34,9 @@ For webpack-based SSR projects (using `@nx/angular:webpack-server` or `@angular-
     "target": "es2022",
     "module": "preserve",
     "moduleResolution": "bundler",
-    "types": ["node"]
+    "types": ["node"],
   },
-  "files": ["src/main.server.ts", "src/server.ts"]
+  "files": ["src/main.server.ts", "src/server.ts"],
 }
 ```
 

@@ -47,9 +47,7 @@ export const ErrorToastUI = forwardRef(
         <div className="fixed inset-x-0 top-4 z-50 px-4 py-2 text-center">
           <div
             onClick={() => inputsModalRef.current?.openModal()}
-            className="z-50 flex w-fit max-w-sm
-             cursor-pointer items-center rounded-md bg-red-600
-            p-4 text-slate-200 shadow-lg"
+            className="z-50 flex w-fit max-w-sm cursor-pointer items-center rounded-md bg-red-600 p-4 text-slate-200 shadow-lg"
           >
             <ExclamationCircleIcon className="mr-2 inline-block h-6 w-6" />
             Some project information might be missing. Click to see errors.

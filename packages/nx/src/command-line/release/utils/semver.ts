@@ -3,7 +3,7 @@
  * https://github.com/unjs/changelogen
  */
 
-import { RELEASE_TYPES, ReleaseType, inc, valid } from 'semver';
+import { major, RELEASE_TYPES, ReleaseType, inc, valid } from 'semver';
 import { NxReleaseConfig } from '../config/config';
 import { GitCommit } from './git';
 
@@ -41,7 +41,7 @@ export function determineSemverChange(
     let highestChange: SemverSpecifier | null = null;
 
     for (const { commit, isProjectScopedCommit } of relevantCommit) {
-      if (!isProjectScopedCommit) {
+      if (config.useCommitScope && !isProjectScopedCommit) {
         // commit is relevant to the project, but not directly, report patch change to match side-effectful bump behavior in update dependents in release-group-processor
         highestChange = Math.max(SemverSpecifier.PATCH, highestChange ?? 0);
         continue;
@@ -63,10 +63,47 @@ export function determineSemverChange(
   return semverChangePerProject;
 }
 
+/**
+ * For 0.x versions, shifts semver bump types down to follow
+ * the common convention where breaking changes bump minor, and
+ * new features bump patch.
+ *
+ * - 'major' -> 'minor'
+ * - 'premajor' -> 'preminor'
+ * - 'minor' -> 'patch'
+ * - 'preminor' -> 'prepatch'
+ * - 'patch' -> 'patch' (unchanged)
+ * - 'prepatch' -> 'prepatch' (unchanged)
+ * - 'prerelease' -> 'prerelease' (unchanged)
+ */
+function adjustSpecifierForZeroMajorVersion(
+  specifier: string,
+  currentVersion: string
+): string {
+  // Only adjust for 0.x versions
+  if (major(currentVersion) !== 0) {
+    return specifier;
+  }
+
+  switch (specifier) {
+    case 'major':
+      return 'minor';
+    case 'premajor':
+      return 'preminor';
+    case 'minor':
+      return 'patch';
+    case 'preminor':
+      return 'prepatch';
+    default:
+      return specifier;
+  }
+}
+
 export function deriveNewSemverVersion(
   currentSemverVersion: string,
   semverSpecifier: string,
-  preid?: string
+  preid?: string,
+  options?: { adjustSemverBumpsForZeroMajorVersion?: boolean }
 ) {
   if (!valid(currentSemverVersion)) {
     throw new Error(
@@ -76,8 +113,19 @@ export function deriveNewSemverVersion(
 
   let newVersion = semverSpecifier;
   if (isRelativeVersionKeyword(semverSpecifier)) {
-    // Derive the new version from the current version combined with the new version specifier.
-    const derivedVersion = inc(currentSemverVersion, semverSpecifier, preid);
+    // Adjust for 0.x versions if explicitly enabled
+    const adjustedSpecifier = options?.adjustSemverBumpsForZeroMajorVersion
+      ? adjustSpecifierForZeroMajorVersion(
+          semverSpecifier,
+          currentSemverVersion
+        )
+      : semverSpecifier;
+    // Derive the new version from the current version combined with the adjusted version specifier.
+    const derivedVersion = inc(
+      currentSemverVersion,
+      adjustedSpecifier as ReleaseType,
+      preid
+    );
     if (!derivedVersion) {
       throw new Error(
         `Unable to derive new version from current version "${currentSemverVersion}" and version specifier "${semverSpecifier}"`

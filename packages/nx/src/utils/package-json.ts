@@ -380,7 +380,7 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
   const execOptions = {
     cwd: tempDir,
     stdio: isVerbose ? 'inherit' : 'ignore',
-    windowsHide: false,
+    windowsHide: true,
   } as const;
 
   return {

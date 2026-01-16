@@ -11,11 +11,11 @@ export function getEntryPoints(
     ['polyfills', true],
     ...(globalStyles.filter((s) => s.initial).map((s) => [s.name, false]) as [
       string,
-      boolean
+      boolean,
     ][]),
     ...(globalScripts.filter((s) => s.initial).map((s) => [s.name, false]) as [
       string,
-      boolean
+      boolean,
     ][]),
     ['vendor', true],
     ['main', true],

@@ -63,8 +63,8 @@ export function mapErrorToBodyLines(error: Error): string[] {
     error instanceof CreateNxWorkspaceError
       ? [`Exit code: ${error.code}`, `Log file: ${error.logFile}`]
       : error instanceof CnwError && error.logFile
-      ? [`Log file: ${error.logFile}`]
-      : [];
+        ? [`Log file: ${error.logFile}`]
+        : [];
 
   if (process.env.NX_VERBOSE_LOGGING === 'true') {
     lines.push(`Error: ${error.message}`);

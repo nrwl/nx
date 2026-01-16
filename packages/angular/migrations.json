@@ -342,14 +342,6 @@
       "description": "Update the @angular/cli package version to ~20.3.0.",
       "factory": "./src/migrations/update-21-6-1/update-angular-cli"
     },
-    "update-angular-cli-version-21-0-0": {
-      "version": "22.3.0-beta.0",
-      "requires": {
-        "@angular/core": ">=21.0.0"
-      },
-      "description": "Update the @angular/cli package version to ~21.0.0.",
-      "factory": "./src/migrations/update-22-3-0/update-angular-cli"
-    },
     "update-ssr-webpack-config-22-2-0": {
       "version": "22.3.0-beta.0",
       "requires": {
@@ -389,6 +381,14 @@
       },
       "description": "Set 'isolatedModules' to 'true' in TypeScript test configurations for Angular projects.",
       "factory": "./src/migrations/update-22-3-0/set-isolated-modules"
+    },
+    "update-jest-preset-angular-setup": {
+      "version": "22.3.0-beta.3",
+      "requires": {
+        "@angular/core": ">=21.0.0"
+      },
+      "description": "Replace 'jest-preset-angular/setup-jest' imports with the new 'setupZoneTestEnv' function.",
+      "factory": "./src/migrations/update-22-3-0/update-jest-preset-angular-setup"
     }
   },
   "packageJsonUpdates": {
@@ -2004,6 +2004,12 @@
         "@angular/core": ">=20.3.0 <21.0.0"
       },
       "packages": {
+        "@angular/cli": {
+          "version": "~21.0.0",
+          "alwaysAddToPackageJson": false,
+          "ignorePackageGroup": true,
+          "ignoreMigrations": true
+        },
         "@angular-devkit/build-angular": {
           "version": "~21.0.0",
           "alwaysAddToPackageJson": false
@@ -2153,18 +2159,85 @@
         }
       }
     },
-    "22.3.0-jest": {
-      "version": "22.3.0-beta.0",
+    "22.3.2-ngrx": {
+      "version": "22.3.2-beta.0",
       "requires": {
-        "@angular/compiler-cli": ">=19.0.0 <22.0.0",
-        "@angular/core": ">=19.0.0 <22.0.0",
-        "@angular/platform-browser": ">=19.0.0 <22.0.0",
-        "@angular/platform-browser-dynamic": ">=19.0.0 <22.0.0",
-        "jest": "^30.0.0"
+        "@angular/core": "^21.0.0"
       },
       "packages": {
-        "jest-preset-angular": {
-          "version": "~16.0.0",
+        "@ngrx/store": {
+          "version": "^21.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.4.0": {
+      "version": "22.4.0-beta.4",
+      "x-prompt": "Do you want to update the Angular version to v21.1?",
+      "requires": {
+        "@angular/core": ">=21.0.0 <21.1.0"
+      },
+      "packages": {
+        "@angular/cli": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false,
+          "ignorePackageGroup": true,
+          "ignoreMigrations": true
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/build": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.2101.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.2101.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/google-maps": {
+          "version": "~21.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~21.1.0",
           "alwaysAddToPackageJson": false
         }
       }

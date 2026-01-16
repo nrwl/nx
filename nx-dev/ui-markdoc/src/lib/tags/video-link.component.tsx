@@ -35,7 +35,7 @@ export function VideoLink({ text, link }: VideoLinkProps) {
         href={link}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center space-x-2 border-transparent !text-inherit !no-underline  dark:text-white"
+        className="flex items-center space-x-2 border-transparent !text-inherit !no-underline dark:text-white"
       >
         <div className="flex items-center justify-between space-x-2 rounded-md border border-slate-200 py-1 pl-2 pl-3 pr-2 transition hover:border-slate-500 dark:border-slate-700/40 dark:hover:border-slate-700">
           {youtubeIcon}

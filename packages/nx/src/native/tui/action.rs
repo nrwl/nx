@@ -1,6 +1,6 @@
 use crate::native::tasks::types::{Task, TaskResult};
 
-use super::{app::Focus, components::tasks_list::TaskStatus};
+use super::{app::Focus, components::tasks_list::TaskStatus, lifecycle::TuiMode};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
@@ -36,4 +36,6 @@ pub enum Action {
     SendConsoleMessage(String),
     ConsoleMessengerAvailable(bool),
     EndCommand,
+    ShowHint(String),
+    SwitchMode(TuiMode),
 }

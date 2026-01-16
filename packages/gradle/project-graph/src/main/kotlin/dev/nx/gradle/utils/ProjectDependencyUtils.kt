@@ -19,8 +19,11 @@ private fun buildDependenciesForProject(project: Project): Set<Dependency> {
   val sourcePath = project.projectDir.absolutePath
   val sourceFilePath = project.buildFile.takeIf { it.exists() }?.absolutePath ?: ""
 
+  // Create a snapshot of configurations to avoid ConcurrentModificationException
+  // with Kotlin Multiplatform which adds configurations dynamically
   project.configurations
-      .matching { it.isCanBeResolved }
+      .filter { it.isCanBeResolved }
+      .toList()
       .forEach { conf ->
         try {
           conf.incoming.resolutionResult.allDependencies.forEach { dependency ->

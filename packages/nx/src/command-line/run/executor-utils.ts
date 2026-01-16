@@ -23,7 +23,7 @@ export function normalizeExecutorSchema(
   return {
     version,
     outputCapture:
-      schema.outputCapture ?? version < 2 ? 'direct-nodejs' : 'pipe',
+      (schema.outputCapture ?? version < 2) ? 'direct-nodejs' : 'pipe',
     continuous: schema.continuous ?? false,
     properties:
       !schema.properties || typeof schema.properties !== 'object'

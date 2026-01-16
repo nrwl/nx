@@ -58,22 +58,6 @@ function getFlowVariantInternal(): string {
 }
 
 /**
- * Determines whether to use the new template flow (1) or old preset flow (0).
- * - NX_CNW_FLOW_VARIANT=0 forces preset flow
- * - NX_CNW_FLOW_VARIANT=1 forces template flow
- * - NX_GENERATE_DOCS_PROCESS=true forces preset flow (for docs generation)
- * - Otherwise, uses cached value (7 days) or randomly assigns
- */
-export function shouldUseTemplateFlow(): boolean {
-  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
-    flowVariantCache = '0';
-    return false;
-  }
-
-  return getFlowVariantInternal() === '1';
-}
-
-/**
  * Returns the flow variant for tracking (0 = preset, 1 = template).
  */
 export function getFlowVariant(): string {
@@ -268,9 +252,10 @@ export interface RecordStatMetaComplete {
 export interface RecordStatMetaError {
   type: 'error';
   errorCode: string;
-  flowVariant?: string;
-  errorMessage?: string;
-  errorFile?: string;
+  flowVariant: string;
+  errorMessage: string;
+  errorFile: string;
+  [key: string]: string;
 }
 
 export interface RecordStatMetaCancel {
@@ -278,11 +263,21 @@ export interface RecordStatMetaCancel {
   flowVariant?: string;
 }
 
+export interface RecordStatMetaPrecreate {
+  type: 'precreate';
+  flowVariant: string;
+  template: string;
+  preset: string;
+  nodeVersion: string;
+  packageManager: string;
+}
+
 export type RecordStatMeta =
   | RecordStatMetaStart
   | RecordStatMetaComplete
   | RecordStatMetaError
-  | RecordStatMetaCancel;
+  | RecordStatMetaCancel
+  | RecordStatMetaPrecreate;
 
 /**
  * We are incrementing a counter to track how often create-nx-workspace is used in CI

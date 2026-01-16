@@ -338,7 +338,7 @@ export function runCLIAsync(
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   const pm = getPackageManagerCommand();
   const commandToRun = `${opts.silent ? pm.runNxSilent : pm.runNx} ${command} ${
-    opts.verbose ?? isVerboseE2ERun() ? ' --verbose' : ''
+    (opts.verbose ?? isVerboseE2ERun()) ? ' --verbose' : ''
   }${opts.redirectStderr ? ' 2>&1' : ''}`;
 
   return runCommandAsync(commandToRun, opts);
@@ -398,7 +398,7 @@ export function runCLI(
   try {
     const pm = getPackageManagerCommand();
     const commandToRun = `${pm.runNxSilent} ${command} ${
-      opts.verbose ?? isVerboseE2ERun() ? ' --verbose' : ''
+      (opts.verbose ?? isVerboseE2ERun()) ? ' --verbose' : ''
     }${opts.redirectStderr ? ' 2>&1' : ''}`;
     const logs = execSync(commandToRun, {
       cwd: opts.cwd || tmpProjPath(),

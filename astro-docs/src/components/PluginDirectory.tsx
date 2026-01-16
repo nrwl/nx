@@ -266,12 +266,11 @@ function OrderButton({
 
   return (
     <button
-      className={`flex items-center gap-1 rounded border px-1.5 py-0.5 font-medium transition
-        ${
-          isActive
-            ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300'
-            : 'border-slate-200 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700'
-        }`}
+      className={`flex items-center gap-1 rounded border px-1.5 py-0.5 font-medium transition ${
+        isActive
+          ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300'
+          : 'border-slate-200 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700'
+      }`}
       onClick={() => onClick(orderKey)}
     >
       {icon}

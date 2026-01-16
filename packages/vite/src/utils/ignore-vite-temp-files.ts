@@ -48,7 +48,7 @@ async function ignoreViteTempFilesInEslintConfig(
   }
 
   // for flat config, we update the root config file
-  const directory = isUsingFlatConfig ? '' : projectRoot ?? '';
+  const directory = isUsingFlatConfig ? '' : (projectRoot ?? '');
 
   addIgnoresToLintConfig(tree, directory, ['**/vite.config.*.timestamp*']);
 }

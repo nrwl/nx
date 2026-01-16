@@ -35,7 +35,7 @@ export function CodeOfConduct(): JSX.Element {
                 </span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2 "
+                  className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"

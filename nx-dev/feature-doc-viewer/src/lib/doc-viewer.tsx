@@ -229,7 +229,7 @@ export function DocViewer({
                 title="Give feedback of this page"
                 className={`relative inline-flex items-center rounded-l-md ${
                   // If there is no file path for this page then don't show edit button.
-                  document.filePath ? '' : 'rounded-r-md '
+                  document.filePath ? '' : 'rounded-r-md'
                 }border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800`}
                 onClick={() => setShowFeedback(true)}
               >

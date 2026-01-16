@@ -1,6 +1,6 @@
 import { Tree } from '@nx/devkit';
 import { findNextConfigPath } from './utils';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 
@@ -21,15 +21,15 @@ export function updateNextConfig(
   }
 
   const nextConfigContents = tree.read(nextConfigPath, 'utf-8');
-  let ast = tsquery.ast(nextConfigContents);
+  let sourceFile = ast(nextConfigContents);
 
   const reservedVarQuery = `
-  VariableStatement > VariableDeclarationList > VariableDeclaration:has(Identifier[name=configValues]), 
-  VariableStatement > VariableDeclarationList > VariableDeclaration:has(Identifier[name=configuration]),
-  VariableStatement > VariableDeclarationList > VariableDeclaration:has(Identifier[name=options])
+  VariableStatement VariableDeclarationList > VariableDeclaration:has(Identifier[name=configValues]),
+  VariableStatement VariableDeclarationList > VariableDeclaration:has(Identifier[name=configuration]),
+  VariableStatement VariableDeclarationList > VariableDeclaration:has(Identifier[name=options])
   `;
 
-  const matches = tsquery(ast, reservedVarQuery);
+  const matches = query(sourceFile, reservedVarQuery);
   if (matches.length > 0) {
     migrationLogs.addLog({
       project: project.projectName,
@@ -41,7 +41,7 @@ export function updateNextConfig(
 
   // Query to check for composePlugins in module.exports
   const composePluginsQuery = `ExpressionStatement > BinaryExpression > CallExpression > CallExpression:has(Identifier[name=composePlugins])`;
-  const composePluginNode = tsquery(ast, composePluginsQuery)[0];
+  const composePluginNode = query(sourceFile, composePluginsQuery)[0];
 
   if (!composePluginNode) {
     migrationLogs.addLog({
@@ -65,22 +65,22 @@ export function updateNextConfig(
     ts.forEachChild(node, findLastRequire);
   };
 
-  findLastRequire(ast);
+  findLastRequire(sourceFile);
 
   let updatedCode = `
     ${nextConfigContents.slice(0, lastRequireEndPosition)}\n
     ${updatedConfigFileContents}\n\n
     ${nextConfigContents.slice(lastRequireEndPosition)}
     `;
-  ast = tsquery.ast(updatedCode);
+  sourceFile = ast(updatedCode);
 
-  const nextConfigNode = tsquery(
-    ast,
+  const nextConfigNode = query(
+    sourceFile,
     'VariableDeclaration:has(Identifier[name=nextConfig]) ObjectLiteralExpression'
   )[0];
 
   if (nextConfigNode) {
-    const nxNode = tsquery(
+    const nxNode = query(
       nextConfigNode,
       'PropertyAssignment:has(Identifier[name=nx]) ObjectLiteralExpression'
     )[0];
@@ -108,7 +108,7 @@ export function updateNextConfig(
           return ts.visitNode(rootNode, visit);
         };
 
-      const result = ts.transform(ast, [transformer]);
+      const result = ts.transform(sourceFile, [transformer]);
       const transformedSourceFile = result.transformed[0] as ts.SourceFile;
 
       const printer = ts.createPrinter();

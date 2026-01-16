@@ -113,7 +113,10 @@ function statsToString(
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const colors = statsConfig.colors!;
+  const colors =
+    typeof statsConfig.colors === 'boolean'
+      ? statsConfig.colors
+      : !!statsConfig.colors;
   const rs = (x: string) => (colors ? ansiColors.reset(x) : x);
   const w = (x: string) => (colors ? ansiColors.bold.white(x) : x);
 
@@ -228,7 +231,10 @@ export function statsWarningsToString(
   json: StatsCompilation,
   statsConfig: RspackStatsOptions
 ): string {
-  const colors = statsConfig.colors;
+  const colors =
+    typeof statsConfig.colors === 'boolean'
+      ? statsConfig.colors
+      : !!statsConfig.colors;
   const c = (x: string) => (colors ? ansiColors.reset.cyan(x) : x);
   const y = (x: string) => (colors ? ansiColors.reset.yellow(x) : x);
   const yb = (x: string) => (colors ? ansiColors.reset.yellowBright(x) : x);
@@ -287,7 +293,10 @@ export function statsErrorsToString(
   json: StatsCompilation,
   statsConfig: RspackStatsOptions
 ): string {
-  const colors = statsConfig.colors;
+  const colors =
+    typeof statsConfig.colors === 'boolean'
+      ? statsConfig.colors
+      : !!statsConfig.colors;
   const c = (x: string) => (colors ? ansiColors.reset.cyan(x) : x);
   const yb = (x: string) => (colors ? ansiColors.reset.yellowBright(x) : x);
   const r = (x: string) => (colors ? ansiColors.reset.redBright(x) : x);

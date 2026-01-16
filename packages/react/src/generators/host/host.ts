@@ -49,7 +49,7 @@ export async function hostGenerator(
     js: schema.js ?? false,
     typescriptConfiguration: schema.js
       ? false
-      : schema.typescriptConfiguration ?? true,
+      : (schema.typescriptConfiguration ?? true),
     dynamic: schema.dynamic ?? false,
     // TODO(colum): remove when Webpack MF works with Crystal
     addPlugin: !schema.bundler || schema.bundler === 'rspack' ? true : false,

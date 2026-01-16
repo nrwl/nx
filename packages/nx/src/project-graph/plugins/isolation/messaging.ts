@@ -226,7 +226,7 @@ type MessageHandlerReturn<T extends PluginWorkerMessage | PluginWorkerResult> =
 // Takes a message and a map of handlers and calls the appropriate handler
 // type safe and requires all handlers to be handled
 export async function consumeMessage<
-  T extends PluginWorkerMessage | PluginWorkerResult
+  T extends PluginWorkerMessage | PluginWorkerResult,
 >(
   socket: Socket,
   raw: T,

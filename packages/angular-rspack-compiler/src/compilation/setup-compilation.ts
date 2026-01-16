@@ -103,9 +103,8 @@ export function styleTransform(
     try {
       let stylesheetResult;
       if (stylesheetFile) {
-        stylesheetResult = await componentStylesheetBundler.bundleFile(
-          stylesheetFile
-        );
+        stylesheetResult =
+          await componentStylesheetBundler.bundleFile(stylesheetFile);
       } else {
         stylesheetResult = await componentStylesheetBundler.bundleInline(
           styles,

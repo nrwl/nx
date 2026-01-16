@@ -126,7 +126,7 @@ describe('react app generator (legacy)', () => {
           // e.g. \`config.plugins.push(new MyPlugin())\`
           config.output.clean = true;
           return config;
-        }
+        },
       );
       "
     `);

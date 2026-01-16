@@ -139,7 +139,7 @@ export function ShowOptionsHelp({
                     <code>project.json</code> file for{' '}
                     <span className="font-semibold">{projectName}</span>.
                   </p>
-                  <pre className="mb-2 border border-slate-200 bg-slate-100/50 p-2 p-2 text-slate-400 dark:border-slate-700 dark:bg-slate-700/50 dark:text-slate-500">
+                  <pre className="mb-2 border border-slate-200 bg-slate-100/50 p-2 text-slate-400 dark:border-slate-700 dark:bg-slate-700/50 dark:text-slate-500">
                     {helpExampleTest}
                   </pre>
                   {helpExampleOptions && (

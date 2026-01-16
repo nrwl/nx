@@ -146,9 +146,11 @@ async function buildRollupTarget(
     // Try to load the workspace version of rollup first (it should already exist).
     // Using the workspace rollup ensures that the config file is compatible with the `loadConfigFile` function.
     // e.g. rollup@2 supports having `require` calls in rollup config, but rollup@4 does not.
-    const m = require(require.resolve('rollup/loadConfigFile', {
-      paths: [dirname(configFilePath)],
-    }));
+    const m = require(
+      require.resolve('rollup/loadConfigFile', {
+        paths: [dirname(configFilePath)],
+      })
+    );
     // Rollup 2 has this has default export, but it is named in 3 and 4.
     // See: https://www.unpkg.com/browse/rollup@2.79.1/dist/loadConfigFile.js
     loadConfigFile = typeof m === 'function' ? m : m.loadConfigFile;
@@ -236,8 +238,8 @@ function getOutputs(
         const outputPathFromConfig = output.dir
           ? output.dir
           : output.file
-          ? dirname(output.file)
-          : 'dist';
+            ? dirname(output.file)
+            : 'dist';
         const outputPath =
           projectRoot === '.'
             ? joinPathFragments(`{workspaceRoot}`, outputPathFromConfig)

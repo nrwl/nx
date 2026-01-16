@@ -49,20 +49,20 @@ Conformance rules are configured in the `conformance` property of the `nx.json` 
           "depConstraints": [
             {
               "sourceTag": "scope:shared",
-              "onlyDependOnProjectsWithTags": ["scope:shared"]
-            }
-          ]
-        }
+              "onlyDependOnProjectsWithTags": ["scope:shared"],
+            },
+          ],
+        },
       },
       {
         "rule": "@nx/conformance/ensure-owners",
-        "projects": ["!experimental-app"]
+        "projects": ["!experimental-app"],
       },
       {
-        "rule": "./tools/local-conformance-rule.ts"
-      }
-    ]
-  }
+        "rule": "./tools/local-conformance-rule.ts",
+      },
+    ],
+  },
 }
 ```
 

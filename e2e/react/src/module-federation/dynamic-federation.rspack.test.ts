@@ -77,8 +77,8 @@ describe('Dynamic Module Federation', () => {
 
           it('should navigate to /${remote} from /', () => {
             cy.get('a').contains('${remote[0].toUpperCase()}${remote.slice(
-        1
-      )}').click();
+              1
+            )}').click();
             cy.url().should('include', '/${remote}');
             getGreeting().contains('Welcome ${remote}');
           });

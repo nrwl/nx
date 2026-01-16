@@ -107,7 +107,7 @@ export interface OldCreateNodesContext extends CreateNodesContextV2 {
 
 type OldCreateNodes<T = unknown> = readonly [
   projectFilePattern: string,
-  createNodesFunction: OldCreateNodesFunction<T>
+  createNodesFunction: OldCreateNodesFunction<T>,
 ];
 
 export type OldCreateNodesFunction<T = unknown> = (

@@ -63,6 +63,7 @@ out
 .rustup/
 target
 .flattened-pom.xml
+dependency-reduced-pom.xml
 *.wasm
 /wasi-sdk*
 
@@ -75,6 +76,7 @@ storybook-static
 .kotlin
 
 .claude/settings.local.json
+CLAUDE.local.md
 
 .cursor/mcp.json
 

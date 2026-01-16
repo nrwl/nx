@@ -59,7 +59,7 @@ export function generateSSRFiles(
 
   const ssrVersion = getDependencyVersionFromPackageJson(tree, '@angular/ssr');
   const cleanedSsrVersion = ssrVersion
-    ? clean(ssrVersion) ?? coerce(ssrVersion).version
+    ? (clean(ssrVersion) ?? coerce(ssrVersion).version)
     : null;
 
   const componentType = getComponentType(tree);

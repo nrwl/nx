@@ -34,6 +34,14 @@
       "version": "22.2.0-beta.2",
       "description": "Convert jest.config.ts files from ESM to CJS syntax (export default -> module.exports, import -> require) for projects using CommonJS resolution to ensure correct loading under Node.js type-stripping.",
       "implementation": "./src/migrations/update-22-2-0/convert-jest-config-to-cjs"
+    },
+    "replace-removed-matcher-aliases-v22-3": {
+      "version": "22.3.2-beta.0",
+      "requires": {
+        "jest": ">=30.0.0"
+      },
+      "description": "Replace removed matcher aliases in Jest v30 with their corresponding matcher",
+      "implementation": "./src/migrations/update-21-3-0/replace-removed-matcher-aliases"
     }
   },
   "packageJsonUpdates": {
@@ -101,7 +109,7 @@
       }
     },
     "22.3.0": {
-      "version": "22.3.0-beta.0",
+      "version": "22.3.0-beta.3",
       "x-prompt": "Do you want to update the Jest version to v30?",
       "incompatibleWith": {
         "@angular-devkit/build-angular": "< 21.0.0"
@@ -144,6 +152,22 @@
         },
         "@swc/jest": {
           "version": "~0.2.38",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.3.0-jest-preset-angular": {
+      "version": "22.3.0-beta.3",
+      "requires": {
+        "@angular/compiler-cli": ">=19.0.0 <22.0.0",
+        "@angular/core": ">=19.0.0 <22.0.0",
+        "@angular/platform-browser": ">=19.0.0 <22.0.0",
+        "@angular/platform-browser-dynamic": ">=19.0.0 <22.0.0",
+        "jest": "^30.0.0"
+      },
+      "packages": {
+        "jest-preset-angular": {
+          "version": "~16.0.0",
           "alwaysAddToPackageJson": false
         }
       }

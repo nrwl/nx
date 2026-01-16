@@ -628,3 +628,213 @@ build/
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+describe('CopyAssetsHandler - node_modules support', () => {
+  let rootDir: string;
+  let projectDir: string;
+  let outputDir: string;
+  let callback: jest.SpyInstance;
+  let originalCwd: string;
+
+  beforeEach(() => {
+    originalCwd = process.cwd();
+    const tmp = fs.realpathSync(path.join(os.tmpdir()));
+
+    callback = jest.fn();
+    rootDir = path.join(tmp, 'nx-assets-node-modules-test');
+    projectDir = path.join(rootDir, 'apps/api');
+    outputDir = path.join(rootDir, 'dist/apps/api');
+
+    fs.rmSync(rootDir, { recursive: true, force: true });
+    fs.mkdirSync(projectDir, { recursive: true });
+    fs.mkdirSync(path.join(rootDir, 'node_modules/.prisma/client'), {
+      recursive: true,
+    });
+    fs.mkdirSync(path.join(rootDir, 'node_modules/@prisma/client'), {
+      recursive: true,
+    });
+  });
+
+  afterEach(() => {
+    process.chdir(originalCwd);
+  });
+
+  test('should copy files from node_modules/.prisma using async method', async () => {
+    // Create mock Prisma client files
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/.prisma/client/index.js'),
+      'prisma client'
+    );
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/.prisma/client/index.d.ts'),
+      'prisma types'
+    );
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/.prisma/client/schema.prisma'),
+      'schema'
+    );
+
+    const sut = new CopyAssetsHandler({
+      rootDir,
+      projectDir,
+      outputDir,
+      callback: callback as any,
+      assets: [
+        {
+          input: 'node_modules/.prisma/client',
+          glob: '**/*',
+          output: 'prisma-client',
+        },
+      ],
+    });
+
+    await sut.processAllAssetsOnce();
+
+    expect(callback).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'create',
+          src: path.join(rootDir, 'node_modules/.prisma/client/index.js'),
+          dest: path.join(rootDir, 'dist/apps/api/prisma-client/index.js'),
+        }),
+        expect.objectContaining({
+          type: 'create',
+          src: path.join(rootDir, 'node_modules/.prisma/client/index.d.ts'),
+          dest: path.join(rootDir, 'dist/apps/api/prisma-client/index.d.ts'),
+        }),
+        expect.objectContaining({
+          type: 'create',
+          src: path.join(rootDir, 'node_modules/.prisma/client/schema.prisma'),
+          dest: path.join(rootDir, 'dist/apps/api/prisma-client/schema.prisma'),
+        }),
+      ])
+    );
+  });
+
+  test('should copy files from node_modules/.prisma using sync method', () => {
+    // Create mock Prisma client files
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/.prisma/client/index.js'),
+      'prisma client'
+    );
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/.prisma/client/index.d.ts'),
+      'prisma types'
+    );
+
+    const sut = new CopyAssetsHandler({
+      rootDir,
+      projectDir,
+      outputDir,
+      callback: callback as any,
+      assets: [
+        {
+          input: 'node_modules/.prisma/client',
+          glob: '**/*',
+          output: 'prisma-client',
+        },
+      ],
+    });
+
+    sut.processAllAssetsOnceSync();
+
+    expect(callback).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'create',
+          src: path.join(rootDir, 'node_modules/.prisma/client/index.js'),
+          dest: path.join(rootDir, 'dist/apps/api/prisma-client/index.js'),
+        }),
+        expect.objectContaining({
+          type: 'create',
+          src: path.join(rootDir, 'node_modules/.prisma/client/index.d.ts'),
+          dest: path.join(rootDir, 'dist/apps/api/prisma-client/index.d.ts'),
+        }),
+      ])
+    );
+  });
+
+  test('should copy files from node_modules/@prisma/client', async () => {
+    // Create mock @prisma/client files
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/@prisma/client/index.js'),
+      'prisma client'
+    );
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/@prisma/client/package.json'),
+      '{"name": "@prisma/client"}'
+    );
+
+    const sut = new CopyAssetsHandler({
+      rootDir,
+      projectDir,
+      outputDir,
+      callback: callback as any,
+      assets: [
+        {
+          input: 'node_modules/@prisma/client',
+          glob: '**/*',
+          output: '@prisma/client',
+        },
+      ],
+    });
+
+    await sut.processAllAssetsOnce();
+
+    expect(callback).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'create',
+          src: path.join(rootDir, 'node_modules/@prisma/client/index.js'),
+          dest: path.join(rootDir, 'dist/apps/api/@prisma/client/index.js'),
+        }),
+        expect.objectContaining({
+          type: 'create',
+          src: path.join(rootDir, 'node_modules/@prisma/client/package.json'),
+          dest: path.join(rootDir, 'dist/apps/api/@prisma/client/package.json'),
+        }),
+      ])
+    );
+  });
+
+  test('should still ignore node_modules for non-node_modules patterns', async () => {
+    // Create files in project directory and in node_modules that would match the pattern
+    fs.writeFileSync(path.join(projectDir, 'config.json'), 'config');
+    fs.writeFileSync(
+      path.join(rootDir, 'node_modules/@prisma/client/package.json'),
+      '{"name": "@prisma/client"}'
+    );
+
+    const sut = new CopyAssetsHandler({
+      rootDir,
+      projectDir,
+      outputDir,
+      callback: callback as any,
+      assets: [
+        {
+          input: 'apps/api',
+          glob: '**/*.json',
+          output: 'assets',
+        },
+      ],
+    });
+
+    await sut.processAllAssetsOnce();
+
+    // Should include project files
+    expect(callback).toHaveBeenCalledWith([
+      expect.objectContaining({
+        type: 'create',
+        src: path.join(rootDir, 'apps/api/config.json'),
+        dest: path.join(rootDir, 'dist/apps/api/assets/config.json'),
+      }),
+    ]);
+
+    // Should NOT include node_modules files even though they match the glob pattern
+    const allCalls = callback.mock.calls.flat().flat();
+    const nodeModulesFiles = allCalls.filter((event: any) =>
+      event.src.includes('node_modules')
+    );
+    expect(nodeModulesFiles).toHaveLength(0);
+  });
+});

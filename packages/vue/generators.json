@@ -32,7 +32,8 @@
     "setup-tailwind": {
       "factory": "./src/generators/setup-tailwind/setup-tailwind",
       "schema": "./src/generators/setup-tailwind/schema.json",
-      "description": "Set up Tailwind configuration for a project."
+      "description": "Set up Tailwind configuration for a project.",
+      "x-deprecated": "Generating Tailwind configuration is no longer maintained. This generator will be removed in Nx 23."
     },
     "storybook-configuration": {
       "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGeneratorInternal",

@@ -280,9 +280,8 @@ ${content}`;
       `
     );
     updateJson(join('apps', appName, 'project.json'), (config) => {
-      config.targets[
-        'build'
-      ].options.webpackConfig = `apps/${appName}/webpack.config.js`;
+      config.targets['build'].options.webpackConfig =
+        `apps/${appName}/webpack.config.js`;
 
       return config;
     });

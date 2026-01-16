@@ -7,7 +7,7 @@ authors: ['Nicole Oliver', 'Miroslav Jonas', 'Victor Savkin']
 tags: [webinar]
 cover_image: /blog/images/2025-12-17/2025-December-webinar-card.avif
 time: 2pm ET/7pm UTC
-status: Upcoming
+status: Past - Gated
 registrationUrl: https://go.nx.dev/dec2025-webinar
 ---
 
@@ -21,4 +21,4 @@ Whether you’re a longtime Nx user or considering it for your team, this sessio
 
 Bah humbug to slow builds and CI bottlenecks—let’s build something better together.
 
-{% call-to-action title="Register today!" url="https://go.nx.dev/dec2025-webinar" description="Save your spot" /%}
+{% call-to-action title="Download the recording!" url="https://go.nx.dev/dec2025-webinar" description="Sign up to gain access" /%}

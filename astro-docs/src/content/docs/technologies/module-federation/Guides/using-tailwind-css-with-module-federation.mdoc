@@ -1,0 +1,156 @@
+---
+title: Using Tailwind CSS with Module Federation
+description: Learn how to configure Tailwind CSS so that classes used in remote applications are properly compiled by the host application.
+filter: 'type:Guides'
+---
+
+When using [Tailwind CSS](https://tailwindcss.com/) with Module Federation, you may encounter an issue where Tailwind classes used in your remote applications don't render correctly. This guide explains why this happens and how to configure your workspace to resolve it.
+
+## Understanding the Problem
+
+Tailwind CSS uses a content scanning mechanism to determine which CSS classes to include in your final stylesheet. During the build process, Tailwind scans the files specified in your configuration and only generates CSS for the classes it finds. This is how Tailwind keeps your CSS bundle small by eliminating unused styles.
+
+In a Module Federation architecture, the host and remote applications are built independently. When the host application builds, Tailwind only scans the host's source files—it has no knowledge of the classes used in remote applications. As a result, when remotes are loaded at runtime, any Tailwind classes they use that aren't also used in the host will be missing from the stylesheet.
+
+{% aside type="note" title="This is expected behavior" %}
+This is not a bug in Nx or Module Federation. It's a fundamental aspect of how Tailwind's content scanning works combined with Module Federation's independent build model.
+{% /aside %}
+
+## Configuring the Host Application
+
+The solution is to configure your host application's Tailwind setup to include the source files from your remote applications. This ensures all Tailwind classes used across your federated application are compiled into the host's stylesheet.
+
+### Tailwind CSS v4
+
+For Tailwind CSS v4, use the [`@source` directive](https://tailwindcss.com/docs/detecting-classes-in-source-files) in your stylesheet to include remote application paths:
+
+{% tabs %}
+{% tabitem label="React" %}
+
+```css
+/* apps/shell/src/styles.css */
+@import 'tailwindcss';
+
+/* Include shared libraries */
+@source "../../../libs";
+
+/* Include remote applications */
+@source "../remote1/src";
+@source "../remote2/src";
+```
+
+{% /tabitem %}
+{% tabitem label="Angular" %}
+
+```css
+/* apps/shell/src/styles.css */
+@import 'tailwindcss';
+
+/* Include shared libraries */
+@source "../../../libs";
+
+/* Include remote applications */
+@source "../remote1/src";
+@source "../remote2/src";
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+### Tailwind CSS v3
+
+For Tailwind CSS v3, configure the [`content`](https://v3.tailwindcss.com/docs/content-configuration) array in your host's `tailwind.config.js` to include glob patterns for your remote applications:
+
+{% tabs %}
+{% tabitem label="React" %}
+
+```javascript
+// apps/shell/tailwind.config.js
+const { join } = require('path');
+
+module.exports = {
+  content: [
+    join(__dirname, '{src,pages,components,app}/**/*.{ts,tsx,js,jsx}'),
+    // Include shared libraries
+    join(__dirname, '../../libs/**/*.{ts,tsx,js,jsx}'),
+    // Include remote applications
+    join(__dirname, '../remote1/src/**/*.{ts,tsx,js,jsx}'),
+    join(__dirname, '../remote2/src/**/*.{ts,tsx,js,jsx}'),
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+```
+
+{% /tabitem %}
+{% tabitem label="Angular" %}
+
+```javascript
+// apps/shell/tailwind.config.js
+const { join } = require('path');
+
+module.exports = {
+  content: [
+    join(__dirname, 'src/**/*.{ts,html}'),
+    // Include shared libraries
+    join(__dirname, '../../libs/**/*.{ts,html}'),
+    // Include remote applications
+    join(__dirname, '../remote1/src/**/*.{ts,html}'),
+    join(__dirname, '../remote2/src/**/*.{ts,html}'),
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Adjust the paths based on your workspace structure. If your remotes are in different directories, update the glob patterns accordingly.
+
+## Shared Theme Extensions
+
+If your remote applications use custom Tailwind theme extensions (such as custom colors, fonts, or spacing values), you need to ensure these are also defined in the host's Tailwind configuration. Otherwise, classes like `bg-brand-primary` or `text-custom-lg` won't generate any CSS.
+
+Consider creating a shared Tailwind preset that all applications can extend:
+
+```javascript
+// libs/shared/tailwind-preset/src/index.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          primary: '#3b82f6',
+          secondary: '#10b981',
+        },
+      },
+    },
+  },
+};
+```
+
+Then use this preset in both your host and remote configurations:
+
+```javascript
+// apps/shell/tailwind.config.js
+const sharedPreset = require('../../libs/shared/tailwind-preset/src');
+
+module.exports = {
+  presets: [sharedPreset],
+  content: [
+    // ... your content configuration
+  ],
+};
+```
+
+## Further Reading
+
+- [Using Tailwind CSS with Angular](/docs/technologies/angular/guides/using-tailwind-css-with-angular-projects)
+- [Using Tailwind CSS with React](/docs/technologies/react/guides/using-tailwind-css-in-react)
+- [Tailwind CSS v4 Source Detection](https://tailwindcss.com/docs/detecting-classes-in-source-files)
+- [Tailwind CSS v3 Content Configuration](https://v3.tailwindcss.com/docs/content-configuration)

@@ -127,7 +127,10 @@ export class MultipleProjectsWithSameNameError extends Error {
 }
 
 export class ProjectWithExistingNameError extends Error {
-  constructor(public projectName: string, public projectRoot: string) {
+  constructor(
+    public projectName: string,
+    public projectRoot: string
+  ) {
     super(`The project "${projectName}" is defined in multiple locations.`);
     this.name = this.constructor.name;
   }
@@ -382,7 +385,10 @@ export class MergeNodesError extends Error {
 }
 
 export class CreateMetadataError extends Error {
-  constructor(public readonly error: Error, public readonly plugin: string) {
+  constructor(
+    public readonly error: Error,
+    public readonly plugin: string
+  ) {
     super(
       `The "${plugin}" plugin threw an error while creating metadata: ${error.message}`,
       {
@@ -394,7 +400,10 @@ export class CreateMetadataError extends Error {
 }
 
 export class ProcessDependenciesError extends Error {
-  constructor(public readonly pluginName: string, { cause }) {
+  constructor(
+    public readonly pluginName: string,
+    { cause }
+  ) {
     super(
       `The "${pluginName}" plugin threw an error while creating dependencies: ${cause.message}`,
       {
@@ -501,7 +510,10 @@ export class DaemonProjectGraphError extends Error {
 }
 
 export class LoadPluginError extends Error {
-  constructor(public plugin: string, cause: Error) {
+  constructor(
+    public plugin: string,
+    cause: Error
+  ) {
     super(`Could not load plugin ${plugin}`, {
       cause,
     });

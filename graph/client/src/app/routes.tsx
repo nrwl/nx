@@ -30,7 +30,10 @@ export function getRoutesForEnvironment() {
   }
 }
 
-const workspaceDataLoader = async (selectedWorkspaceId: string) => {
+const workspaceDataLoader = async (
+  selectedWorkspaceId: string,
+  requestFull = false
+) => {
   const workspaceInfo = appConfig.workspaces.find(
     (graph) => graph.id === selectedWorkspaceId
   );
@@ -43,7 +46,8 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
 
   const projectGraph: ProjectGraphClientResponse =
     await projectGraphDataService.getProjectGraph(
-      workspaceInfo.projectGraphUrl
+      workspaceInfo.projectGraphUrl,
+      requestFull
     );
 
   const targetsSet = new Set<string>();
@@ -291,7 +295,7 @@ export const devRoutes: RouteObject[] = [
         loader: async ({ params }) => {
           const selectedWorkspaceId =
             params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
-          return workspaceDataLoader(selectedWorkspaceId);
+          return workspaceDataLoader(selectedWorkspaceId, true);
         },
         children: childRoutes,
       },
@@ -314,7 +318,7 @@ export const releaseRoutes: RouteObject[] = [
     id: 'selectedWorkspace',
     loader: async () => {
       const selectedWorkspaceId = appConfig.defaultWorkspaceId;
-      return workspaceDataLoader(selectedWorkspaceId);
+      return workspaceDataLoader(selectedWorkspaceId, true);
     },
     shouldRevalidate: () => {
       return false;

@@ -195,6 +195,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
           },
         }
       );
@@ -228,17 +229,17 @@ describe('releaseVersionGenerator (ported tests)', () => {
                 "type": "static",
               },
             ],
-            "newVersion": "1.0.0",
+            "newVersion": "0.1.0",
           },
           "project-with-dependency-on-my-pkg": {
             "currentVersion": "0.0.1",
             "dependentProjects": [],
-            "newVersion": "1.0.0",
+            "newVersion": "0.1.0",
           },
           "project-with-devDependency-on-my-pkg": {
             "currentVersion": "0.0.1",
             "dependentProjects": [],
-            "newVersion": "1.0.0",
+            "newVersion": "0.1.0",
           },
         },
       }
@@ -263,6 +264,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           {
             version: {
               specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
             },
           }
         );
@@ -309,6 +311,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           {
             version: {
               specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
             },
           }
         );
@@ -323,13 +326,13 @@ describe('releaseVersionGenerator (ported tests)', () => {
       expect(readJson(tree, 'my-app/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "my-lib-1": "1.0.0",
+            "my-lib-1": "0.1.0",
           },
           "devDependencies": {
-            "my-lib-2": "1.0.0",
+            "my-lib-2": "0.1.0",
           },
           "name": "my-app",
-          "version": "1.0.0",
+          "version": "0.1.0",
         }
       `);
     });
@@ -351,6 +354,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           {
             version: {
               specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
             },
           }
         );
@@ -363,7 +367,8 @@ describe('releaseVersionGenerator (ported tests)', () => {
         filters,
         userGivenSpecifier: 'major',
       });
-      expect(readJson(tree, 'my-lib/package.json').version).toEqual('1.0.0');
+      // 0.0.1 + major = 0.1.0 (0.x versioning: major bumps minor)
+      expect(readJson(tree, 'my-lib/package.json').version).toEqual('0.1.0');
 
       await releaseVersionGeneratorForTest(tree, {
         nxReleaseConfig,
@@ -371,7 +376,8 @@ describe('releaseVersionGenerator (ported tests)', () => {
         filters,
         userGivenSpecifier: 'minor',
       });
-      expect(readJson(tree, 'my-lib/package.json').version).toEqual('1.1.0');
+      // 0.1.0 + minor = 0.1.1 (0.x versioning: minor bumps patch)
+      expect(readJson(tree, 'my-lib/package.json').version).toEqual('0.1.1');
 
       await releaseVersionGeneratorForTest(tree, {
         nxReleaseConfig,
@@ -379,7 +385,8 @@ describe('releaseVersionGenerator (ported tests)', () => {
         filters,
         userGivenSpecifier: 'patch',
       });
-      expect(readJson(tree, 'my-lib/package.json').version).toEqual('1.1.1');
+      // 0.1.1 + patch = 0.1.2
+      expect(readJson(tree, 'my-lib/package.json').version).toEqual('0.1.2');
 
       await releaseVersionGeneratorForTest(tree, {
         nxReleaseConfig,
@@ -405,6 +412,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           {
             version: {
               specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
             },
           }
         );
@@ -419,7 +427,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
       expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
         {
           "name": "my-lib",
-          "version": "1.0.0",
+          "version": "0.1.0",
         }
       `);
 
@@ -427,10 +435,10 @@ describe('releaseVersionGenerator (ported tests)', () => {
         .toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "my-lib": "1.0.0",
+            "my-lib": "0.1.0",
           },
           "name": "project-with-dependency-on-my-pkg",
-          "version": "1.0.0",
+          "version": "0.1.0",
         }
       `);
       expect(
@@ -438,10 +446,10 @@ describe('releaseVersionGenerator (ported tests)', () => {
       ).toMatchInlineSnapshot(`
         {
           "devDependencies": {
-            "my-lib": "1.0.0",
+            "my-lib": "0.1.0",
           },
           "name": "project-with-devDependency-on-my-pkg",
-          "version": "1.0.0",
+          "version": "0.1.0",
         }
       `);
     });
@@ -475,6 +483,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
             {
               version: {
                 specifierSource: 'prompt',
+                adjustSemverBumpsForZeroMajorVersion: true,
               },
             }
           );
@@ -486,10 +495,11 @@ describe('releaseVersionGenerator (ported tests)', () => {
           userGivenSpecifier: undefined,
         });
 
+        // 0.0.1 + minor = 0.0.2 (0.x versioning: minor bumps patch)
         expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
           {
             "name": "my-lib",
-            "version": "0.1.0",
+            "version": "0.0.2",
           }
         `);
 
@@ -497,7 +507,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           .toMatchInlineSnapshot(`
           {
             "dependencies": {
-              "my-lib": "0.1.0",
+              "my-lib": "0.0.2",
             },
             "name": "project-with-dependency-on-my-pkg",
             "version": "0.0.2",
@@ -508,7 +518,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         ).toMatchInlineSnapshot(`
           {
             "devDependencies": {
-              "my-lib": "0.1.0",
+              "my-lib": "0.0.2",
             },
             "name": "project-with-devDependency-on-my-pkg",
             "version": "1.2.3",
@@ -530,6 +540,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
             {
               version: {
                 specifierSource: 'prompt',
+                adjustSemverBumpsForZeroMajorVersion: true,
               },
             }
           );
@@ -587,6 +598,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
               {
                 version: {
                   specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
                   // No value for updateDependents, should default to 'always'
                 },
               },
@@ -676,6 +688,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
               {
                 version: {
                   specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
                   updateDependents: 'never',
                 },
               },
@@ -738,6 +751,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
               {
                 version: {
                   specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
                   updateDependents: 'auto',
                 },
               },
@@ -800,6 +814,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
               {
                 version: {
                   specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
                 },
               }
             );
@@ -874,6 +889,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           {
             version: {
               specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
             },
           }
         );
@@ -958,6 +974,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: '',
             preserveMatchingDependencyRanges: false,
           },
@@ -1022,6 +1039,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: '^',
             preserveMatchingDependencyRanges: false,
           },
@@ -1086,6 +1104,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: '~',
             preserveMatchingDependencyRanges: false,
           },
@@ -1150,6 +1169,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: 'auto',
             preserveMatchingDependencyRanges: false,
           },
@@ -1214,6 +1234,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             // No value, should default to "auto"
             versionPrefix: undefined,
             preserveMatchingDependencyRanges: false,
@@ -1281,6 +1302,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: '$' as any,
           },
         });
@@ -1920,6 +1942,7 @@ Valid values are: "auto", "", "~", "^", "="`,
           {
             version: {
               specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
               preserveLocalDependencyProtocols: true,
             },
           },
@@ -1994,6 +2017,7 @@ Valid values are: "auto", "", "~", "^", "="`,
           {
             version: {
               specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
               preserveLocalDependencyProtocols: true,
             },
           },
@@ -2072,6 +2096,7 @@ Valid values are: "auto", "", "~", "^", "="`,
         {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
           },
         },
         undefined,

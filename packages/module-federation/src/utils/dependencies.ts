@@ -45,7 +45,9 @@ function collectDependencies(
   (projectGraph.dependencies[name] ?? []).forEach((dependency) => {
     if (dependency.target.startsWith('npm:')) {
       dependencies.npmPackages.add(dependency.target.replace('npm:', ''));
-    } else {
+    } else if (!dependency.target.includes(':')) {
+      // Only process as workspace library if it's not an external node.
+      // External nodes have prefixes like 'npm:', 'cargo:', etc.
       if (projectGraph.nodes[dependency.target]) {
         dependencies.workspaceLibraries.set(dependency.target, {
           name: dependency.target,
@@ -60,6 +62,7 @@ function collectDependencies(
         );
       }
     }
+    // Skip other external node types (cargo:, etc.)
   });
 
   return dependencies;

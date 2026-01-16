@@ -95,7 +95,7 @@ export function Features(): ReactElement {
             </div>
           </div>
           <div className="relative">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)]  bg-white shadow ring-1 ring-black/5 lg:rounded-bl-[calc(2rem+1px)] dark:bg-slate-800 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-bl-[calc(2rem+1px)] dark:bg-slate-800 dark:ring-white/10">
               <img
                 alt="Nx Agents: simple & fast task distribution"
                 src="/images/enterprise/visibility.avif"

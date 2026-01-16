@@ -1,3 +1,9 @@
+# Disable gradle and maven plugins on Netlify
+# (Netlify only supports Java 8 but these plugins require Java 17)
+[build.environment]
+NX_GRADLE_DISABLE = "true"
+NX_MAVEN_DISABLE = "true"
+
 # Permanent redirects (301 by default)
 
 # Storybook docs consolidation

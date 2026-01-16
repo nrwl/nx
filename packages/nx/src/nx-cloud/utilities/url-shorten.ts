@@ -16,9 +16,8 @@ export async function createNxCloudOnboardingURL(
   const remoteInfo = getVcsRemoteInfo(directory);
   const apiUrl = getCloudUrl();
 
-  const installationSupportsGitHub = await getInstallationSupportsGitHub(
-    apiUrl
-  );
+  const installationSupportsGitHub =
+    await getInstallationSupportsGitHub(apiUrl);
 
   let usesGithub = false;
   if (forceGithub) {

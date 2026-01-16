@@ -112,8 +112,8 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '${offsetFromRoot(project.root)}${
-            buildOptions.outputPath
-          }'),
+      buildOptions.outputPath
+    }'),
   },
   plugins: [
     new NxAppWebpackPlugin({
@@ -149,8 +149,8 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '${offsetFromRoot(project.root)}${
-            buildOptions.outputPath
-          }'),
+      buildOptions.outputPath
+    }'),
   },
   plugins: [
     new NxAppWebpackPlugin({
