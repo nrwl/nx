@@ -3,7 +3,7 @@ use napi::bindgen_prelude::*;
 use parking_lot::{Mutex, MutexGuard};
 use std::io::Write;
 use std::sync::Arc;
-use tracing::debug;
+use tracing::{debug, trace};
 
 #[cfg(not(test))]
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
@@ -469,22 +469,48 @@ impl AppLifeCycle {
             // Debounce state for resize events - tracks when the last resize occurred.
             // We wait for RESIZE_DEBOUNCE_MS after the last resize before reinitializing
             // to avoid rapid reinitialization during window drag operations.
-            const RESIZE_DEBOUNCE_MS: u64 = 150;
+            // NOTE: Only used for inline mode - fullscreen handles resize automatically.
+            const RESIZE_DEBOUNCE_MS: u64 = 10;
+            // Cooldown period after a resize completes - during this window, we track
+            // resize events but don't start a new debounce cycle. If a resize happens
+            // during cooldown, we'll start a new cycle after cooldown ends.
+            const RESIZE_COOLDOWN_MS: u64 = 100;
             let mut pending_resize: Option<std::time::Instant> = None;
+            let mut last_resize_completed: Option<std::time::Instant> = None;
+            // Track if a resize occurred during cooldown - we'll need to handle it after
+            let mut resize_during_cooldown = false;
 
             // UNIFIED EVENT LOOP - works for both modes!
             loop {
                 // Handle events through TuiApp trait
+                trace!("Waiting for next event...");
                 if let Some(event) = tui.next().await {
+                    trace!("Received event: {:?}", event);
                     // some events have global handling
                     match event {
                         Event::Resize(_w, _h) => {
-                            // Mark resize as pending instead of immediately reinitializing.
-                            // This debounces rapid resize events (e.g., from dragging the
-                            // terminal corner) to avoid multiple reinitializations that can
-                            // cause the terminal to go black.
-                            pending_resize = Some(std::time::Instant::now());
-                            debug!("Resize event received, debouncing");
+                            // Only need to reinitialize in inline mode.
+                            // Fullscreen mode uses alternate screen which handles resize automatically.
+                            // Inline viewport height is fixed at creation, so we need to recreate it.
+                            if tui_mode == TuiMode::Inline {
+                                // Check if we're in the cooldown period after a recent reinitialize.
+                                let in_cooldown = last_resize_completed
+                                    .map(|t| {
+                                        t.elapsed()
+                                            < std::time::Duration::from_millis(RESIZE_COOLDOWN_MS)
+                                    })
+                                    .unwrap_or(false);
+
+                                if !in_cooldown {
+                                    pending_resize = Some(std::time::Instant::now());
+                                    debug!("Resize event received in inline mode, debouncing");
+                                } else {
+                                    // Remember that a resize happened during cooldown.
+                                    // We'll start a new debounce cycle after cooldown ends.
+                                    resize_during_cooldown = true;
+                                    debug!("Resize event during cooldown - will process after");
+                                }
+                            }
                         }
                         _ => {
                             // no global handler
@@ -492,7 +518,13 @@ impl AppLifeCycle {
                     }
                     // Pass event to app - mode switching is handled via Action::SwitchMode
                     // which is dispatched by the apps and processed in the action loop below
-                    let _ = with_shared_app(&app, |a| a.handle_event(event, &action_tx));
+                    let should_pass_event = match (&event, tui_mode) {
+                        (Event::Resize(_, _), TuiMode::Inline) => false,
+                        _ => true,
+                    };
+                    if should_pass_event {
+                        let _ = with_shared_app(&app, |a| a.handle_event(event, &action_tx));
+                    }
 
                     // Check if we should quit (time-based, like master branch)
                     if with_shared_app(&app, |a| a.should_quit()) {
@@ -501,17 +533,49 @@ impl AppLifeCycle {
                     }
                 }
 
-                // Check if we should process a debounced resize
+                // Check if cooldown has ended and we had a resize during it
+                if resize_during_cooldown {
+                    let cooldown_ended = last_resize_completed
+                        .map(|t| {
+                            t.elapsed() >= std::time::Duration::from_millis(RESIZE_COOLDOWN_MS)
+                        })
+                        .unwrap_or(true);
+
+                    if cooldown_ended {
+                        // Cooldown is over, start a new debounce cycle for the resize
+                        // that happened during cooldown
+                        resize_during_cooldown = false;
+                        pending_resize = Some(std::time::Instant::now());
+                        debug!("Cooldown ended, starting debounce for deferred resize");
+                    }
+                }
+
+                // Check if we should process a debounced resize (inline mode only)
                 // This runs after event processing so we check on every loop iteration
                 if let Some(resize_time) = pending_resize {
-                    if resize_time.elapsed()
-                        >= std::time::Duration::from_millis(RESIZE_DEBOUNCE_MS)
+                    if resize_time.elapsed() >= std::time::Duration::from_millis(RESIZE_DEBOUNCE_MS)
                     {
                         debug!("Debounce period elapsed, reinitializing inline terminal");
                         pending_resize = None;
-                        if let Err(e) = tui.reinitialize_inline_terminal().await {
-                            debug!("Failed to reinitialize inline terminal: {:?}", e);
+                        resize_during_cooldown = false; // Clear in case it was set
+                        match tui.reinitialize_inline_terminal().await {
+                            Ok(()) => {
+                                debug!("Reinitialize complete, sending resize event to app");
+                                // Get new terminal dimensions and pass resize event to app.
+                                // The app's handle_action will call resize_selected_pty().
+                                let size = tui.size().unwrap_or(ratatui::layout::Size::new(80, 24));
+                                let resize_event = Event::Resize(size.width, size.height);
+                                let _ = with_shared_app(&app, |a| {
+                                    a.handle_event(resize_event, &action_tx)
+                                });
+                            }
+                            Err(e) => {
+                                debug!("Failed to reinitialize inline terminal: {:?}", e);
+                            }
                         }
+                        // Set a cooldown to track resize events that arrive immediately after.
+                        last_resize_completed = Some(std::time::Instant::now());
+                        debug!("Cooldown set, about to continue loop");
                     }
                 }
 

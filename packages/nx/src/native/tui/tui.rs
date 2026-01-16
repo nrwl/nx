@@ -87,10 +87,15 @@ impl Tui {
         // escape sequences that wait for responses on stdin. In git hooks and other
         // non-interactive environments, stdin is redirected so these queries hang.
         // By checking upfront, we avoid flakiness from deferred initialization.
-        let inline_terminal = if Self::inline_viewport_supported() {
-            let inline_height = crossterm::terminal::size()
-                .map(|(_cols, rows)| rows)
-                .unwrap_or(24);
+        //
+        // IMPORTANT: We must stop the EventStream before creating an Inline viewport
+        // because Viewport::Inline queries cursor position, which conflicts with
+        // EventStream (both read from stdin). This is handled in enter() and
+        // reinitialize_inline_terminal().
+        let inline_terminal = if Self::is_stdin_interactive() {
+            let size = crossterm::terminal::size();
+            debug!("Terminal size: {:?}", size);
+            let inline_height = size.map(|(_cols, rows)| rows).unwrap_or(24);
             ratatui::Terminal::with_options(
                 CrosstermBackend::new(std::io::stderr()),
                 ratatui::TerminalOptions {
@@ -202,10 +207,15 @@ impl Tui {
         self.cancellation_token = CancellationToken::new();
         let _cancellation_token = self.cancellation_token.clone();
         let _event_tx = self.event_tx.clone();
+        debug!("start(): spawning new event task");
         self.task = tokio::spawn(async move {
+            debug!("Event task spawned - inside async block");
+            debug!("Event task: creating EventStream");
             let mut reader = crossterm::event::EventStream::new();
+            debug!("Event task: EventStream created successfully");
             let mut tick_interval = tokio::time::interval(tick_delay);
             let mut render_interval = tokio::time::interval(render_delay);
+            debug!("Sending Event::Init");
             _event_tx.send(Event::Init).unwrap();
             debug!("Start Listening for Crossterm Events");
             loop {
@@ -276,8 +286,12 @@ impl Tui {
     /// Stop the event loop task.
     ///
     /// This properly yields to the tokio runtime, allowing the inner task
-    /// to be polled and see the cancellation token.
+    /// to be polled and see the cancellation token. It's critical that this
+    /// method waits for the task to fully finish, because the EventStream
+    /// inside the task holds terminal input resources that conflict with
+    /// cursor position queries.
     pub async fn stop(&self) -> Result<()> {
+        debug!("stop(): cancelling event task");
         self.cancel();
         let mut counter = 0;
         while !self.task.is_finished() {
@@ -286,14 +300,18 @@ impl Tui {
             // task from being polled to see the cancellation token.
             tokio::time::sleep(Duration::from_millis(1)).await;
             counter += 1;
-            if counter > 50 {
+            if counter > 50 && counter % 10 == 0 {
+                // Abort periodically after 50ms in case the task is stuck
+                debug!("stop(): aborting task (attempt at {}ms)", counter);
                 self.task.abort();
             }
-            if counter > 100 {
-                debug!("Failed to abort TUI event loop task after 100ms, moving on anyway");
+            if counter > 200 {
+                // Give up after 200ms, but log a warning
+                debug!("stop(): WARN - task not finished after 200ms, continuing anyway");
                 break;
             }
         }
+        debug!("stop(): event task finished (counter={})", counter);
         Ok(())
     }
 
@@ -471,17 +489,34 @@ impl Tui {
     /// work well with ratatui's Inline viewport).
     ///
     /// This method:
-    /// 1. Stops the event stream task (async, allowing proper cleanup)
-    /// 2. Creates a new inline terminal with current dimensions
-    /// 3. Restarts the event stream task
+    /// 1. Stops the event stream task to avoid conflicts with cursor queries
+    /// 2. Clears the current viewport content
+    /// 3. Creates a new inline terminal with current dimensions
+    /// 4. Restarts the event stream task
     ///
     /// Note: Callers should debounce resize events before calling this method
     /// to avoid rapid reinitialization during window drag operations.
     pub async fn reinitialize_inline_terminal(&mut self) -> Result<()> {
+        if let Some(reason) = self.inline_tui_unsupported_reason() {
+            return Err(color_eyre::eyre::eyre!(
+                "Cannot reinitialize inline terminal: {}",
+                reason
+            ));
+        }
         debug!("Reinitializing inline terminal");
 
-        // Stop the event stream to ensure clean state
+        // Stop the event stream task. This is CRITICAL because ratatui's Inline
+        // viewport queries cursor position, which conflicts with crossterm's
+        // EventStream reading from the same terminal input.
+        // See: https://docs.rs/crossterm/latest/crossterm/event/index.html
+        // "cursor::position() will block while EventStream is active"
         self.stop().await?;
+        debug!("Event stream stopped");
+
+        // Small delay to let crossterm's internal state fully settle.
+        // This helps ensure the old EventStream's resources are released
+        // before we query cursor position for the new Inline viewport.
+        tokio::time::sleep(Duration::from_millis(10)).await;
 
         // Clear the current inline viewport before recreating
         // This prevents the old content from being "baked" into the terminal output
@@ -498,7 +533,10 @@ impl Tui {
             cols, rows
         );
 
-        // Create new inline terminal with current dimensions
+        // Create new inline terminal with current dimensions.
+        // We use Viewport::Inline for insert_before scrollback support.
+        // The cursor position query happens here, which is safe because we
+        // stopped the EventStream above.
         self.inline_terminal = Some(ratatui::Terminal::with_options(
             CrosstermBackend::new(std::io::stderr()),
             ratatui::TerminalOptions {
@@ -506,10 +544,47 @@ impl Tui {
             },
         )?);
 
-        // Restart the event stream
-        self.start();
+        // Create a fresh event channel to ensure no stale state from the old task
+        let (new_tx, new_rx) = mpsc::unbounded_channel();
+        self.event_tx = new_tx;
+        self.event_rx = new_rx;
+        debug!("Created fresh event channel");
 
-        debug!("Inline terminal reinitialized");
+        // Restart the event stream with the new channel
+        debug!("About to call start()");
+        self.start();
+        debug!("start() returned, yielding to allow new task to run");
+        // Yield to let the new event task get scheduled and start running
+        tokio::task::yield_now().await;
+        debug!("Inline terminal reinitialized, event stream restarted");
+        Ok(())
+    }
+
+    /// Draw to the terminal without calling autoresize().
+    ///
+    /// This is critical for inline mode because ratatui's normal draw() calls
+    /// autoresize(), which queries cursor position. The cursor position query
+    /// conflicts with crossterm's EventStream (both read from stdin), causing
+    /// hangs in inline mode.
+    ///
+    /// This method:
+    /// 1. Gets a frame without calling autoresize()
+    /// 2. Renders widgets to the frame
+    /// 3. Flushes the diff to the backend
+    /// 4. Swaps buffers for the next frame
+    ///
+    /// Use this instead of tui.draw() in inline mode to avoid cursor conflicts.
+    pub fn draw_without_autoresize<F>(&mut self, f: F) -> Result<()>
+    where
+        F: FnOnce(&mut Frame<'_>),
+    {
+        let terminal = self.terminal_mut();
+        {
+            let mut frame = terminal.get_frame();
+            f(&mut frame);
+        }
+        terminal.flush()?;
+        terminal.swap_buffers();
         Ok(())
     }
 

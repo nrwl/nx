@@ -533,8 +533,11 @@ impl TuiApp for InlineApp {
                 // Render scrollback content above the TUI using insert_before
                 self.render_scrollback_above_tui(tui);
 
-                // Draw the inline TUI layout
-                tui.draw(|f| {
+                // Draw the inline TUI layout using draw_without_autoresize
+                // This avoids cursor position queries that conflict with EventStream.
+                // Normal tui.draw() calls autoresize() which queries cursor position,
+                // causing hangs when EventStream is also reading from stdin.
+                tui.draw_without_autoresize(|f| {
                     let area = f.area();
                     self.render_inline_layout(f, area);
                 })
@@ -557,7 +560,12 @@ impl TuiApp for InlineApp {
                 // In inline mode, show hints in the status bar instead of a popup
                 self.show_hint(message);
             }
-            _ => {} // Ignore other actions (including Resize - ratatui doesn't handle it properly for inline viewports)
+            Action::Resize(w, h) => {
+                // Resize the PTY to match the new terminal dimensions
+                self.resize_selected_pty((h, w));
+                self.core.state().lock().set_dimensions((w, h));
+            }
+            _ => {} // Ignore other actions
         }
     }
 
