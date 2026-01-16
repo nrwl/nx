@@ -106,14 +106,14 @@ const banner = defineCollection({
   loader: file('src/content/banner.json'),
   schema: z.object({
     id: z.string(),
+    slug: z.string(),
     title: z.string(),
     description: z.string(),
     primaryCtaUrl: z.string(),
     primaryCtaText: z.string(),
     secondaryCtaUrl: z.string().optional(),
     secondaryCtaText: z.string().optional(),
-    enabled: z.boolean(),
-    activeUntil: z.string().optional(),
+    activeUntil: z.string(),
   }),
 });
 

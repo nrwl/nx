@@ -4,4 +4,5 @@ export interface VitestExecutorOptions {
   testFiles?: string[];
   watch?: boolean;
   mode?: string;
+  runMode?: 'test' | 'benchmark';
 }

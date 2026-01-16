@@ -6,7 +6,7 @@
   <parent>
     <groupId>dev.nx.maven</groupId>
     <artifactId>nx-parent</artifactId>
-    <version>0.0.11</version>
+    <version>0.0.12</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -24,7 +24,7 @@
 
   <properties>
     <!-- Skip deployment for this parent POM -->
-    <maven.install.skip>true</maven.install.skip>
+    <maven.install.skip>false</maven.install.skip>
     <maven.deploy.skip>true</maven.deploy.skip>
     <maven.gpg.skip>true</maven.gpg.skip>
   </properties>

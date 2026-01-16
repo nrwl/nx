@@ -70,8 +70,8 @@
         }
       }
     },
-    "22.4.0": {
-      "version": "22.4.0-beta.2",
+    "22.3.4": {
+      "version": "22.3.4-beta.0",
       "packages": {
         "@remix-run/node": {
           "version": "2.17.3",

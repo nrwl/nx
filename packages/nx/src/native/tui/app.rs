@@ -542,7 +542,7 @@ impl App {
                 if matches!(key.code, KeyCode::F(11))
                     && !matches!(self.focus, Focus::CountdownPopup)
                 {
-                    self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
+                    self.try_switch_to_inline_mode();
                     return Ok(false);
                 }
 
@@ -745,9 +745,7 @@ impl App {
                                     KeyCode::Enter => {
                                         // dispatch action to switch to inline mode with focused task
                                         if let Focus::MultipleOutput(_pane_idx) = self.focus {
-                                            self.dispatch_action(Action::SwitchMode(
-                                                TuiMode::Inline,
-                                            ));
+                                            self.try_switch_to_inline_mode();
                                         }
                                     }
                                     _ => {
@@ -1266,6 +1264,22 @@ impl App {
     /// Dispatches an action to the action tx for other components to handle however they see fit
     fn dispatch_action(&self, action: Action) {
         self.core.dispatch_action(action);
+    }
+
+    /// Attempts to switch to inline mode, showing a hint if unavailable
+    ///
+    /// Inline mode requires stdin to be a TTY for cursor position queries.
+    /// In environments like git hooks where stdin is redirected, inline mode
+    /// would hang waiting for terminal responses. This method shows a helpful
+    /// hint instead of silently failing.
+    fn try_switch_to_inline_mode(&self) {
+        if tui::Tui::is_stdin_interactive() {
+            self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
+        } else {
+            self.dispatch_action(Action::ShowHint(
+                "Inline mode is not available in this environment (stdin is not a TTY)".to_string(),
+            ));
+        }
     }
 
     fn recalculate_layout_areas(&mut self) {

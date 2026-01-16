@@ -11,7 +11,7 @@ import {
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import { createNodesV2, type WebpackPluginOptions } from '../../plugins/plugin';
 import { webpackCliVersion } from '../../utils/versions';
@@ -117,11 +117,11 @@ function skipProjectFilterFactory(tree: Tree) {
       return `The webpack config path is missing in the project configuration (${projectConfiguration.root}).`;
     }
 
-    const sourceFile = tsquery.ast(tree.read(webpackConfigPath, 'utf-8'));
+    const sourceFile = ast(tree.read(webpackConfigPath, 'utf-8'));
 
     const composePluginsSelector =
       'CallExpression:has(Identifier[name=composePlugins])';
-    const composePlugins = tsquery<ts.CallExpression>(
+    const composePlugins = query<ts.CallExpression>(
       sourceFile,
       composePluginsSelector
     )[0];
@@ -132,7 +132,7 @@ function skipProjectFilterFactory(tree: Tree) {
 
     const nxAppWebpackPluginSelector =
       'PropertyAssignment:has(Identifier[name=plugins]) NewExpression:has(Identifier[name=NxAppWebpackPlugin])';
-    const nxAppWebpackPlugin = tsquery<ts.NewExpression>(
+    const nxAppWebpackPlugin = query<ts.NewExpression>(
       sourceFile,
       nxAppWebpackPluginSelector
     )[0];

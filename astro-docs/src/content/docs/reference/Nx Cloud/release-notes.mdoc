@@ -58,6 +58,16 @@ filter: 'type:References'
 - Chore: Released Helm chart `1.0.0` for Nx Cloud
   - Review the [migration guide](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-cloud/MIGRATION.md) before upgrading
 
+### 2025.07.7
+
+- Fix: Resolve zod dependency issues caused by Docker images being built without package-lock file
+- Fix: Normalize S3 bucket configuration to support assumedRole authentication for workspace data and conformance rule buckets
+- Feat: CIPE summary table updated to display CIPE link outside the table for improved readability
+
+### 2025.07.4 - 2025.07.6
+
+- Note: These versions had issues and should be skipped. Please use 2025.07.7 or later.
+
 ### 2025.07.3
 
 - Fix: use short link when generating DTE summary URLs for CI Pipeline Executions

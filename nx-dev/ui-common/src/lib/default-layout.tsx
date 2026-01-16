@@ -1,7 +1,10 @@
+'use client';
+
 import { Footer } from './footer';
 import { Header } from './headers/header';
 import { PropsWithChildren } from 'react';
 import { ButtonLinkProps } from './button';
+import { useWindowScrollDepth } from '@nx/nx-dev-feature-analytics';
 
 export function DefaultLayout({
   isHome = false,
@@ -19,6 +22,8 @@ export function DefaultLayout({
   headerCTAConfig?: ButtonLinkProps[];
   scrollCTAConfig?: ButtonLinkProps[];
 } & PropsWithChildren): JSX.Element {
+  useWindowScrollDepth();
+
   return (
     <div className="w-full dark:bg-slate-950">
       {!hideHeader && (
