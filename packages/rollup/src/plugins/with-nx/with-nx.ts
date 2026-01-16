@@ -38,7 +38,9 @@ const commonjs = require('@rollup/plugin-commonjs');
 const image = require('@rollup/plugin-image');
 
 const json = require('@rollup/plugin-json');
-const postcss = require('rollup-plugin-postcss');
+
+// Use our inlined postcss plugin instead of external rollup-plugin-postcss
+import { postcss } from '../postcss';
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
