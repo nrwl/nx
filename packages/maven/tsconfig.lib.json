@@ -23,6 +23,9 @@
   ],
   "references": [
     {
+      "path": "../.."
+    },
+    {
       "path": "../devkit/tsconfig.lib.json"
     },
     {
