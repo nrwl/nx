@@ -31,6 +31,7 @@ export class ForkedProcessTaskRunner {
   private processes = new Set<RunningTask | BatchProcess>();
   private finishedProcesses = new Set<BatchProcess>();
   private pseudoTerminals = new Set<PseudoTerminal>();
+  private onBeforeCleanupCallback?: () => void;
 
   constructor(
     private readonly options: DefaultTasksRunnerOptions,
@@ -410,10 +411,17 @@ export class ForkedProcessTaskRunner {
   }
 
   cleanup(signal?: NodeJS.Signals) {
+    if (this.onBeforeCleanupCallback) {
+      this.onBeforeCleanupCallback();
+    }
     this.processes.forEach((p) => {
       p.kill(signal);
     });
     this.cleanUpBatchProcesses();
+  }
+
+  onBeforeCleanup(callback: () => void) {
+    this.onBeforeCleanupCallback = callback;
   }
 
   private setupProcessEventListeners() {

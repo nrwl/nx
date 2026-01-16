@@ -89,6 +89,7 @@ export class TaskOrchestrator {
 
   private runningContinuousTasks = new Map<string, RunningTask>();
   private runningRunCommandsTasks = new Map<string, RunningTask>();
+  private recordedShutdownStats = false;
 
   // endregion internal state
 
@@ -115,6 +116,11 @@ export class TaskOrchestrator {
       }),
       'init' in this.cache ? this.cache.init() : null,
     ]);
+
+    // Register callback to record continuous task stats before process cleanup
+    this.forkedProcessTaskRunner.onBeforeCleanup(() => {
+      this.recordContinuousTaskStatsSync();
+    });
 
     // Pass estimated timings to TUI after TasksSchedule is initialized
     if (this.tuiEnabled) {
@@ -1038,6 +1044,32 @@ export class TaskOrchestrator {
   }
 
   // endregion utils
+
+  private recordContinuousTaskStatsSync() {
+    if (this.recordedShutdownStats) {
+      return;
+    }
+    this.recordedShutdownStats = true;
+    this.cleaningUp = true;
+
+    const continuousTaskIds = Array.from(this.runningContinuousTasks.keys());
+    const runCommandsTaskIds = Array.from(this.runningRunCommandsTasks.keys());
+    const allTaskIds = [...continuousTaskIds, ...runCommandsTaskIds];
+
+    const results: TaskResult[] = [];
+    for (const taskId of allTaskIds) {
+      const task = this.taskGraph.tasks[taskId];
+      if (task && this.completedTasks[taskId] === undefined) {
+        task.endTime = Date.now();
+        this.completedTasks[taskId] = 'success';
+        results.push({ task, status: 'success', code: 0 });
+      }
+    }
+
+    if (results.length > 0) {
+      this.options.lifeCycle.endTasks(results, { groupId: 0 });
+    }
+  }
 
   private async cleanup() {
     this.cleaningUp = true;
