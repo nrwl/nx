@@ -87,15 +87,23 @@ impl Tui {
         // non-interactive environments, stdin is redirected so these queries hang.
         // By checking upfront, we avoid flakiness from deferred initialization.
         let inline_terminal = if Self::is_stdin_interactive() {
-            let inline_height = crossterm::terminal::size()
-                .map(|(_cols, rows)| rows)
-                .unwrap_or(24);
-            Some(ratatui::Terminal::with_options(
+            let size = crossterm::terminal::size();
+            debug!("Terminal size: {:?}", size);
+            let inline_height = size.map(|(_cols, rows)| rows).unwrap_or(24);
+            ratatui::Terminal::with_options(
                 CrosstermBackend::new(std::io::stderr()),
                 ratatui::TerminalOptions {
                     viewport: ratatui::Viewport::Inline(inline_height),
                 },
-            )?)
+            )
+            .inspect(|_| {
+                debug!(
+                    "Inline terminal created successfully with height {}",
+                    inline_height
+                )
+            })
+            .inspect_err(|e| debug!("Inline terminal not created: {}", e))
+            .ok()
         } else {
             debug!("Inline terminal not created: stdin is not a TTY");
             None
