@@ -10,6 +10,7 @@ use crossterm::{
 use futures::{FutureExt, StreamExt};
 use ratatui::backend::CrosstermBackend;
 use std::{
+    env,
     io::{IsTerminal, Write},
     ops::{Deref, DerefMut},
     time::Duration,
@@ -86,10 +87,10 @@ impl Tui {
         // escape sequences that wait for responses on stdin. In git hooks and other
         // non-interactive environments, stdin is redirected so these queries hang.
         // By checking upfront, we avoid flakiness from deferred initialization.
-        let inline_terminal = if Self::is_stdin_interactive() {
-            let size = crossterm::terminal::size();
-            debug!("Terminal size: {:?}", size);
-            let inline_height = size.map(|(_cols, rows)| rows).unwrap_or(24);
+        let inline_terminal = if Self::inline_viewport_supported() {
+            let inline_height = crossterm::terminal::size()
+                .map(|(_cols, rows)| rows)
+                .unwrap_or(24);
             ratatui::Terminal::with_options(
                 CrosstermBackend::new(std::io::stderr()),
                 ratatui::TerminalOptions {
@@ -135,8 +136,33 @@ impl Tui {
     /// which hang indefinitely if stdin isn't a real terminal.
     ///
     /// See: https://github.com/crossterm-rs/crossterm/issues/692
-    pub fn is_stdin_interactive() -> bool {
+    fn is_stdin_interactive() -> bool {
         std::io::stdin().is_terminal()
+    }
+
+    fn is_inline_mode_disabled() -> bool {
+        let env = env::var("NX_TUI_INLINE_MODE");
+        match env {
+            Ok(val) if val == "0" || val.to_lowercase() == "false" => true,
+            _ => false,
+        }
+    }
+
+    fn inline_viewport_supported() -> bool {
+        Self::is_stdin_interactive() && !Self::is_inline_mode_disabled()
+    }
+
+    pub fn inline_tui_unsupported_reason(&self) -> Option<String> {
+        if !Self::is_stdin_interactive() {
+            return Some("Stdin is not a TTY".to_string());
+        }
+        if Self::is_inline_mode_disabled() {
+            return Some("NX_TUI_INLINE_MODE is set to false or 0".to_string());
+        }
+        if !self.inline_terminal.is_some() {
+            return Some("Inline terminal failed to initialize".to_string());
+        }
+        None
     }
 
     /// Returns a reference to the currently active terminal based on mode
