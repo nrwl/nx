@@ -571,6 +571,10 @@ pub fn restore_terminal() -> napi::Result<()> {
     // Clear terminal progress indicator
     App::clear_terminal_progress();
 
+    // Drain pending terminal responses (e.g., OSC color query responses)
+    // to prevent escape sequences from leaking to the terminal on exit
+    super::tui::drain_stdin();
+
     if crossterm::terminal::is_raw_mode_enabled()? {
         crossterm::execute!(
             std::io::stderr(),
