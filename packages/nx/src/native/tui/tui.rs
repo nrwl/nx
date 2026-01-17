@@ -3,7 +3,7 @@ use crate::native::tui::theme::THEME;
 use color_eyre::eyre::Result;
 use crossterm::{
     cursor,
-    event::{Event as CrosstermEvent, KeyEvent, KeyEventKind},
+    event::{self, Event as CrosstermEvent, KeyEvent, KeyEventKind},
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -53,6 +53,18 @@ pub struct Tui {
     pub current_mode: TuiMode,
 }
 
+/// Drain any pending input from stdin to prevent escape sequence leakage.
+/// This consumes terminal responses (e.g., from OSC color queries) that may
+/// arrive after a query was sent but before the response was fully read.
+pub(crate) fn drain_stdin() {
+    // Poll and consume any pending terminal events
+    // Note: Duration::ZERO can incorrectly return false with use-dev-tty feature
+    // See: https://github.com/crossterm-rs/crossterm/issues/839
+    while event::poll(Duration::from_millis(5)).unwrap_or(false) {
+        let _ = event::read();
+    }
+}
+
 impl Tui {
     pub fn new() -> Result<Self> {
         Self::new_with_mode(TuiMode::FullScreen)
@@ -75,15 +87,23 @@ impl Tui {
         // non-interactive environments, stdin is redirected so these queries hang.
         // By checking upfront, we avoid flakiness from deferred initialization.
         let inline_terminal = if Self::is_stdin_interactive() {
-            let inline_height = crossterm::terminal::size()
-                .map(|(_cols, rows)| rows)
-                .unwrap_or(24);
-            Some(ratatui::Terminal::with_options(
+            let size = crossterm::terminal::size();
+            debug!("Terminal size: {:?}", size);
+            let inline_height = size.map(|(_cols, rows)| rows).unwrap_or(24);
+            ratatui::Terminal::with_options(
                 CrosstermBackend::new(std::io::stderr()),
                 ratatui::TerminalOptions {
                     viewport: ratatui::Viewport::Inline(inline_height),
                 },
-            )?)
+            )
+            .inspect(|_| {
+                debug!(
+                    "Inline terminal created successfully with height {}",
+                    inline_height
+                )
+            })
+            .inspect_err(|e| debug!("Inline terminal not created: {}", e))
+            .ok()
         } else {
             debug!("Inline terminal not created: stdin is not a TTY");
             None
@@ -277,6 +297,10 @@ impl Tui {
     pub fn restore_terminal(&mut self) -> Result<()> {
         if crossterm::terminal::is_raw_mode_enabled()? {
             self.flush()?;
+
+            // Drain pending terminal responses (e.g., OSC color query responses)
+            // to prevent escape sequences from leaking to the terminal on exit
+            drain_stdin();
 
             // Only leave alternate screen if we're in full-screen mode
             match self.current_mode {
