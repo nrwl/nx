@@ -180,16 +180,21 @@ fn switch_mode(
     // This happens in git hooks where stderr is a TTY but stdin is redirected.
     // In this case, show a hint to the user and stay in fullscreen mode instead of hanging.
     // See: https://github.com/crossterm-rs/crossterm/issues/692
-    if target_mode == TuiMode::Inline && !super::tui::Tui::is_stdin_interactive() {
-        debug!(
-            "Cannot switch to inline mode: stdin is not a TTY. \
-             Staying in fullscreen mode to avoid hanging on cursor position query."
-        );
-        // Show hint to inform user why inline mode is unavailable
-        let _ = action_tx.send(Action::ShowHint(
-            "Inline mode is not available in this environment (stdin is not a TTY)".to_string(),
-        ));
-        return Some(tui.current_mode);
+    if target_mode == TuiMode::Inline {
+        let inline_tui_unsupported = tui.inline_tui_unsupported_reason();
+        if let Some(reason) = inline_tui_unsupported {
+            debug!(
+                "Cannot switch to inline mode: {}. \
+                 Staying in fullscreen mode to avoid hanging on cursor position query.",
+                reason
+            );
+            // Show hint to inform user why inline mode is unavailable
+            let _ = action_tx.send(Action::ShowHint(format!(
+                "Inline mode is not available in this environment: {}",
+                reason
+            )));
+            return Some(tui.current_mode);
+        }
     }
 
     // Save UI state before switching (for full-screen mode persistence)
