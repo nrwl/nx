@@ -113,12 +113,11 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
     .option('nxBail', {
       describe:
         'Stop command execution after the first failed task. Pass a number to stop after N failed tasks.',
-      type: 'string',
       default: false,
       coerce: (val: string | boolean | number | undefined) => {
         if (val === undefined || val === false || val === 'false') return false;
-        if (val === true || val === 'true' || val === '') return 1;
-        const num = typeof val === 'number' ? val : parseInt(val, 10);
+        if (val === true || val === 'true') return 1;
+        const num = typeof val === 'number' ? val : parseInt(String(val), 10);
         return Number.isNaN(num) || num < 1 ? 1 : num;
       },
     })
