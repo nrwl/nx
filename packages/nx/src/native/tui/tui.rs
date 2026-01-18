@@ -92,7 +92,7 @@ impl Tui {
         // because Viewport::Inline queries cursor position, which conflicts with
         // EventStream (both read from stdin). This is handled in enter() and
         // reinitialize_inline_terminal().
-        let inline_terminal = if Self::is_stdin_interactive() {
+        let inline_terminal = if Self::inline_viewport_supported() {
             let size = crossterm::terminal::size();
             debug!("Terminal size: {:?}", size);
             let inline_height = size.map(|(_cols, rows)| rows).unwrap_or(24);

@@ -414,8 +414,8 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
 
         Love
 
-           ◼  nx run bar:test
            ✔  nx run foo:test
+           ◼  nx run bar:test
 
         ———————————————————————————————————————————————————————————————————————————————
 
