@@ -86,6 +86,7 @@ export class TaskOrchestrator {
 
   private bailed = false;
   private cleaningUp = false;
+  private failedTaskCount = 0;
 
   private runningContinuousTasks = new Map<string, RunningTask>();
   private runningRunCommandsTasks = new Map<string, RunningTask>();
@@ -100,11 +101,21 @@ export class TaskOrchestrator {
     private readonly taskGraph: TaskGraph,
     private readonly nxJson: NxJsonConfiguration,
     private readonly options: NxArgs & DefaultTasksRunnerOptions,
-    private readonly bail: boolean,
+    private readonly bail: boolean | number,
     private readonly daemon: DaemonClient,
     private readonly outputStyle: string,
     private readonly taskGraphForHashing: TaskGraph = taskGraph
   ) {}
+
+  /**
+   * Gets the bail threshold - the number of failed tasks after which to stop execution.
+   * Returns false if bail is disabled, otherwise returns the threshold number.
+   */
+  private getBailThreshold(): number | false {
+    if (this.bail === false || this.bail === undefined) return false;
+    if (this.bail === true) return 1;
+    return this.bail;
+  }
 
   async init() {
     // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
@@ -957,10 +968,25 @@ export class TaskOrchestrator {
         }
 
         if (status === 'failure' || status === 'skipped') {
-          if (this.bail) {
-            // mark the execution as bailed which will stop all further execution
-            // only the tasks that are currently running will finish
-            this.bailed = true;
+          const bailThreshold = this.getBailThreshold();
+          if (bailThreshold !== false) {
+            // Only count actual failures, not skipped tasks (which are cascading from failures)
+            if (status === 'failure') {
+              this.failedTaskCount++;
+            }
+            if (this.failedTaskCount >= bailThreshold) {
+              // mark the execution as bailed which will stop all further execution
+              // only the tasks that are currently running will finish
+              this.bailed = true;
+            } else {
+              // Haven't hit threshold yet - skip dependent tasks but continue with others
+              this.complete(
+                this.reverseTaskDeps[taskId].map((depTaskId) => ({
+                  taskId: depTaskId,
+                  status: 'skipped',
+                }))
+              );
+            }
           } else {
             // only mark the packages that depend on the current task as skipped
             // other tasks will continue to execute

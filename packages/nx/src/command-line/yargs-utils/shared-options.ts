@@ -33,7 +33,7 @@ export interface RunOptions {
   prod: boolean;
   graph: string;
   verbose: boolean;
-  nxBail: boolean;
+  nxBail: boolean | number;
   nxIgnoreCycles: boolean;
   skipNxCache: boolean;
   skipRemoteCache: boolean;
@@ -111,9 +111,16 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
             : value,
     })
     .option('nxBail', {
-      describe: 'Stop command execution after the first failed task.',
-      type: 'boolean',
+      describe:
+        'Stop command execution after the first failed task. Pass a number to stop after N failed tasks.',
+      type: 'string',
       default: false,
+      coerce: (val: string | boolean | number | undefined) => {
+        if (val === undefined || val === false || val === 'false') return false;
+        if (val === true || val === 'true' || val === '') return 1;
+        const num = typeof val === 'number' ? val : parseInt(val, 10);
+        return Number.isNaN(num) || num < 1 ? 1 : num;
+      },
     })
     .option('nxIgnoreCycles', {
       describe: 'Ignore cycles in the task graph.',
