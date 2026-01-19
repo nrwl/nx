@@ -6,6 +6,7 @@ import { stripIndents } from '../src/utils/strip-indents';
 import { daemonClient } from '../src/daemon/client/client';
 import { prompt } from 'enquirer';
 import { output } from '../src/utils/output';
+import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
 
 /**
  * Nx is being run inside a workspace.
@@ -36,6 +37,11 @@ export async function initLocal(workspace: WorkspaceTypeAndRoot) {
     // Ensure NxConsole is installed if the user has it configured.
     try {
       await ensureNxConsoleInstalledViaDaemon();
+    } catch {}
+
+    // Prompt for analytics preference if not set
+    try {
+      await ensureAnalyticsPreferenceSet();
     } catch {}
 
     const command = process.argv[2];
