@@ -96,7 +96,14 @@ export default async function* mavenBatchExecutor(
   }
 
   // Prepare batch runner arguments
-  const javaArgs = ['-jar', batchRunnerJar, `--workspaceRoot=${workspaceRoot}`];
+  // Add JVM args to allow reflective access for class injection into ClassRealm
+  const javaArgs = [
+    '--add-opens',
+    'java.base/java.lang=ALL-UNNAMED',
+    '-jar',
+    batchRunnerJar,
+    `--workspaceRoot=${workspaceRoot}`,
+  ];
 
   if (process.env.NX_VERBOSE_LOGGING === 'true') {
     javaArgs.push('--verbose');
@@ -165,6 +172,10 @@ export default async function* mavenBatchExecutor(
         console.error('[Maven Batch] Failed to parse result line:', line, e);
       }
     } else if (line.trim()) {
+      // Pass through debug/reflection logs immediately
+      if (line.includes('[NX-REFLECTION]') || line.includes('[NX-DEBUG]')) {
+        console.error(line);
+      }
       // Collect non-empty stderr lines for error reporting
       stderrLines.push(line);
     }

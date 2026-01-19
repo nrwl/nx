@@ -1,9 +1,8 @@
-package dev.nx.maven.runner
+package dev.nx.maven.adapter.maven4
 
 import com.google.gson.Gson
 import dev.nx.maven.shared.BuildState
-import dev.nx.maven.shared.BuildStateApplier
-import dev.nx.maven.shared.BuildStateRecorder
+// BuildStateApplier and BuildStateRecorder are in this package (moved from shared to avoid classloader issues)
 import org.apache.maven.api.services.Lookup
 import org.apache.maven.project.MavenProject
 import org.apache.maven.project.MavenProjectHelper

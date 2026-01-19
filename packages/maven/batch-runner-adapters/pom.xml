@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>dev.nx.maven</groupId>
+        <artifactId>nx-maven-parent</artifactId>
+        <version>0.0.12</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>batch-runner-adapters</artifactId>
+    <packaging>pom</packaging>
+
+    <name>Nx Maven Batch Runner Adapters</name>
+    <description>Maven version-specific adapters for the batch runner</description>
+
+    <properties>
+        <!-- Skip deployment for adapter modules - they're compiled classes embedded in batch-runner -->
+        <maven.install.skip>true</maven.install.skip>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.gpg.skip>true</maven.gpg.skip>
+    </properties>
+
+    <modules>
+        <module>maven3</module>
+        <module>maven4</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Shared Nx Maven utilities -->
+            <dependency>
+                <groupId>dev.nx.maven</groupId>
+                <artifactId>nx-maven-shared</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>

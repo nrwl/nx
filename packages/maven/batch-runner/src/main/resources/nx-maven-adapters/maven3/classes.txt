@@ -1,0 +1,7 @@
+dev/nx/maven/adapter/maven3/BuildStateApplier3.class
+dev/nx/maven/adapter/maven3/BuildStateManager3.class
+dev/nx/maven/adapter/maven3/BuildStateRecorder3.class
+dev/nx/maven/adapter/maven3/CachingMaven3Invoker.class
+dev/nx/maven/adapter/maven3/NxMaven3$getProjectMapMethod$2.class
+dev/nx/maven/adapter/maven3/NxMaven3.class
+dev/nx/maven/adapter/maven3/NxMaven3Factory.class

@@ -16,7 +16,7 @@
     <packaging>jar</packaging>
 
     <name>Nx Maven Batch Runner</name>
-    <description>Batch runner for Nx Maven plugin using Maven Embedder API</description>
+    <description>Batch runner for Nx Maven plugin - NO Maven compile-time dependencies</description>
 
     <properties>
         <!-- Skip deployment for this module - it's an internal tool, not published to Maven Central -->
@@ -34,69 +34,11 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- Maven 4.0.0-rc-5 CLI for ResidentMavenInvoker (shaded - needed for bootstrap) -->
+        <!-- Plexus ClassWorlds - needed for ClassRealm to load Maven JARs at runtime -->
         <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-cli</artifactId>
-            <version>4.0.0-rc-5</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- Maven JLine for message formatting (shaded - needed for maven-cli) -->
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-jline</artifactId>
-            <version>4.0.0-rc-5</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- Maven Executor API (shaded - needed for bootstrap) -->
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-executor</artifactId>
-            <version>4.0.0-rc-5</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- Maven Core (shaded - needed for DefaultMaven and execution classes) -->
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-core</artifactId>
-            <version>4.0.0-rc-5</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- Maven Plugin API (shaded - needed for plugin execution) -->
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-plugin-api</artifactId>
-            <version>4.0.0-rc-5</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- Maven Model (shaded - needed for project/dependency model) -->
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-model</artifactId>
-            <version>4.0.0-rc-5</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- Guice - MUST be shaded (not in Maven 4.x lib, but needed by maven-cli) -->
-        <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
-            <version>5.1.0</version>
-            <classifier>classes</classifier>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- Sisu Plexus - MUST be shaded for PlexusContainer and related classes -->
-        <!-- Maven 4.x includes this in lib, but for standalone JAR we need to shade it -->
-        <dependency>
-            <groupId>org.eclipse.sisu</groupId>
-            <artifactId>org.eclipse.sisu.plexus</artifactId>
-            <version>0.9.0.M4</version>
+            <groupId>org.codehaus.plexus</groupId>
+            <artifactId>plexus-classworlds</artifactId>
+            <version>2.8.0</version>
             <scope>compile</scope>
         </dependency>
 
@@ -147,6 +89,51 @@
 
     <build>
         <plugins>
+            <!-- Copy adapter classes from batch-runner-adapters modules -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-maven3-adapter-classes</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/nx-maven-adapters/maven3</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../batch-runner-adapters/maven3/target/classes</directory>
+                                    <includes>
+                                        <include>**/*.class</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-maven4-adapter-classes</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/nx-maven-adapters/maven4</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../batch-runner-adapters/maven4/target/classes</directory>
+                                    <includes>
+                                        <include>**/*.class</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Kotlin Compiler -->
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
@@ -210,15 +197,18 @@
                         <configuration>
                             <outputFile>${project.build.directory}/batch-runner.jar</outputFile>
                             <minimizeJar>false</minimizeJar>
+                            <!-- Relocate SLF4J to avoid conflicts with Maven's SLF4J in ClassRealm -->
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.slf4j</pattern>
+                                    <shadedPattern>dev.nx.maven.shaded.slf4j</shadedPattern>
+                                </relocation>
+                            </relocations>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>dev.nx.maven.NxMavenBatchRunnerKt</mainClass>
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                                <!-- Combine META-INF resources for plexus components -->
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                    <resource>META-INF/sisu/javax.inject.Named</resource>
-                                </transformer>
                             </transformers>
                             <filters>
                                 <filter>
@@ -227,26 +217,6 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                                <!-- Include Woodstox - loaded via ServiceLoader at runtime -->
-                                <filter>
-                                    <artifact>com.fasterxml.woodstox:woodstox-core</artifact>
-                                    <includes>
-                                        <include>**</include>
-                                    </includes>
-                                </filter>
-                                <filter>
-                                    <artifact>org.codehaus.woodstox:stax2-api</artifact>
-                                    <includes>
-                                        <include>**</include>
-                                    </includes>
-                                </filter>
-                                <!-- Exclude slf4j-simple's service provider to avoid conflict with Maven's MavenServiceProvider -->
-                                <filter>
-                                    <artifact>org.slf4j:slf4j-simple</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/services/org.slf4j.spi.SLF4JServiceProvider</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
