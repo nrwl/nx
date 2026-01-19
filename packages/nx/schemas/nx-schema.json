@@ -142,6 +142,10 @@
       "type": "boolean",
       "description": "Specifies whether to add inference plugins when generating new projects."
     },
+    "analytics": {
+      "type": "boolean",
+      "description": "Set this to false to disable Nx from collecting anonymous usage analytics."
+    },
     "release": {
       "type": "object",
       "description": "Configuration for the nx release commands.",
