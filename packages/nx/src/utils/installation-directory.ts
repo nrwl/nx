@@ -6,5 +6,5 @@ export function getNxInstallationPath(root: string = workspaceRoot) {
 }
 
 export function getNxRequirePaths(root: string = workspaceRoot) {
-  return [root, getNxInstallationPath(root)];
+  return [getNxInstallationPath(root), root];
 }
