@@ -96,6 +96,7 @@
     "@nx/key": "3.0.0",
     "@nx/next": "22.4.0-beta.3",
     "@nx/playwright": "22.4.0-beta.3",
+    "@nx/maven": "22.4.0-beta.3",
     "@nx/powerpack-license": "3.0.0",
     "@nx/react": "22.4.0-beta.3",
     "@nx/rsbuild": "22.4.0-beta.3",
