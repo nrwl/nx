@@ -267,44 +267,60 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     compiler.hooks.afterEmit.tap(PLUGIN_NAME, (compilation) => {
       // Check for budget errors and display them to the user.
       const budgets = this.#_options.budgets;
-      let budgetFailures: BudgetCalculatorResult[] | undefined;
 
-      compiler.hooks.done.tap(PLUGIN_NAME, (statsValue) => {
-        const stats = statsValue.toJson();
+      compiler.hooks.done.tap(PLUGIN_NAME + '_budgets', (statsValue) => {
         const isPlatformServer = Array.isArray(compiler.options.target)
           ? compiler.options.target.some(
               (target) => target === 'node' || target == 'async-node'
             )
           : compiler.options.target === 'node' ||
             compiler.options.target === 'async-node';
-        if (budgets?.length && !isPlatformServer) {
-          budgetFailures = [...checkBudgets(budgets, stats)];
-          for (const { severity, message } of budgetFailures) {
-            switch (severity) {
-              case ThresholdSeverity.Warning:
-                addWarning(compilation, {
-                  message,
-                  name: PLUGIN_NAME,
-                  hideStack: true,
-                });
-                break;
-              case ThresholdSeverity.Error:
-                addError(compilation, {
-                  message,
-                  name: PLUGIN_NAME,
-                  hideStack: true,
-                });
-                break;
-              default:
-                assertNever(severity);
-            }
+
+        // Early exit - skip expensive toJson() when budgets not needed
+        if (!budgets?.length || isPlatformServer) {
+          return;
+        }
+
+        // Only serialize what's needed for budget checking
+        const stats = statsValue.toJson({
+          all: false,
+          assets: true,
+          chunks: true,
+        });
+        const budgetFailures = [...checkBudgets(budgets, stats)];
+        for (const { severity, message } of budgetFailures) {
+          switch (severity) {
+            case ThresholdSeverity.Warning:
+              addWarning(compilation, {
+                message,
+                name: PLUGIN_NAME,
+                hideStack: true,
+              });
+              break;
+            case ThresholdSeverity.Error:
+              addError(compilation, {
+                message,
+                name: PLUGIN_NAME,
+                hideStack: true,
+              });
+              break;
+            default:
+              assertNever(severity);
           }
         }
       });
     });
 
     compiler.hooks.afterDone.tap(PLUGIN_NAME, (stats) => {
-      rspackStatsLogger(stats, getStatsOptions(this.#_options.verbose));
+      // Get stats options - merge defaults with user's config if provided
+      const configStats = compiler.options.stats;
+      const defaultStatsOptions = getStatsOptions(this.#_options.verbose);
+      const statsOptions =
+        typeof configStats === 'object' && configStats !== null
+          ? { ...defaultStatsOptions, ...configStats }
+          : defaultStatsOptions;
+
+      rspackStatsLogger(stats, statsOptions);
       if (stats.hasErrors()) {
         process.exit(1);
       }
