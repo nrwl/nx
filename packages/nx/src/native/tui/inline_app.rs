@@ -989,12 +989,7 @@ impl InlineApp {
         let message = Paragraph::new(" Waiting for tasks to start... ")
             .style(Style::default().fg(THEME.secondary_fg))
             .alignment(Alignment::Center)
-            .block(
-                Block::default()
-                    .borders(Borders::NONE)
-                    .title(" Output ")
-                    .border_style(Style::default().fg(THEME.secondary_fg)),
-            );
+            .block(Block::default().borders(Borders::NONE));
 
         f.render_widget(message, area);
     }
