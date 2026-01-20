@@ -37,47 +37,119 @@ pub struct PtyInstance {
     scroll_momentum: Arc<Mutex<ScrollMomentum>>,
 }
 
+/// Split formatted content (containing ANSI escape codes) into visual rows by terminal width.
+///
+/// The vt100 `all_contents_formatted()` method returns logical lines where content that
+/// wrapped to the next row is concatenated without newlines. This function splits
+/// those logical lines into visual rows based on the terminal width while preserving
+/// ANSI escape sequences.
+///
+/// # Arguments
+///
+/// * `content` - The formatted content string (may contain ANSI escape codes)
+/// * `cols` - The terminal width in columns
+///
+/// # Returns
+///
+/// A vector of strings, each representing one visual row with ANSI codes preserved.
+fn split_formatted_into_visual_rows(content: &str, cols: usize) -> Vec<String> {
+    if cols == 0 {
+        return content.lines().map(|s| s.to_string()).collect();
+    }
+
+    let mut rows = Vec::new();
+
+    for logical_line in content.lines() {
+        let mut current_row = String::new();
+        let mut visible_count = 0;
+        let mut chars = logical_line.chars().peekable();
+
+        while let Some(c) = chars.next() {
+            if c == '\x1b' {
+                // Start of ANSI escape sequence - include it but don't count toward visible width
+                current_row.push(c);
+                // Read until we hit a letter (the end of the escape sequence)
+                while let Some(&next) = chars.peek() {
+                    current_row.push(chars.next().unwrap());
+                    if next.is_ascii_alphabetic() {
+                        break;
+                    }
+                }
+            } else {
+                // Regular visible character
+                if visible_count >= cols {
+                    // Start a new row
+                    rows.push(current_row);
+                    current_row = String::new();
+                    visible_count = 0;
+                }
+                current_row.push(c);
+                visible_count += 1;
+            }
+        }
+
+        // Don't forget the last row from this logical line
+        if !current_row.is_empty() {
+            rows.push(current_row);
+        }
+    }
+
+    // Handle empty content
+    if rows.is_empty() {
+        rows.push(String::new());
+    }
+
+    rows
+}
+
 impl PtyInstance {
     /// Get buffered scrollback content that should be displayed above the current screen
     /// This gets content from last_rendered_lines to current scrollback for batched rendering
+    ///
+    /// The vt100 `all_contents_formatted()` method returns logical lines where wrapped
+    /// content is concatenated without newlines. This method splits the content into
+    /// visual rows based on terminal width while preserving ANSI formatting codes.
     pub fn get_buffered_scrollback_content_for_inline(
         &self,
         last_rendered_lines: usize,
     ) -> Vec<String> {
         let parser = self.parser.read();
         let screen = parser.screen();
-        let (screen_rows, _) = screen.size();
+        let (screen_rows, screen_cols) = screen.size();
+
 
         // Get all content with ANSI formatting preserved for colors
         let all_formatted = screen.all_contents_formatted();
         let content_str = String::from_utf8_lossy(&all_formatted);
-        let all_lines: Vec<&str> = content_str.lines().collect();
 
-        let total_lines = all_lines.len();
+        // Split content into visual rows based on terminal width
+        // This handles the case where logical lines (from all_contents_formatted)
+        // may be longer than terminal width due to wrapping
+        let visual_rows = split_formatted_into_visual_rows(&content_str, screen_cols as usize);
+        let total_visual_rows = visual_rows.len();
 
         // Calculate current scrollback: everything above the current visible screen
-        let current_scrollback_lines = total_lines.saturating_sub(screen_rows as usize);
+        let current_scrollback_rows = total_visual_rows.saturating_sub(screen_rows as usize);
 
         // Return buffered scrollback content since last render
-        if current_scrollback_lines > last_rendered_lines {
-            all_lines[last_rendered_lines..current_scrollback_lines]
-                .iter()
-                .map(|line| line.to_string())
-                .collect()
+        if current_scrollback_rows > last_rendered_lines {
+            visual_rows[last_rendered_lines..current_scrollback_rows].to_vec()
         } else {
             Vec::new()
         }
     }
 
-    /// Get the current number of scrollback lines for tracking
+    /// Get the current number of scrollback lines (visual rows) for tracking
     pub fn get_scrollback_line_count(&self) -> usize {
         let parser = self.parser.read();
         let screen = parser.screen();
-        let (screen_rows, _) = screen.size();
+        let (screen_rows, screen_cols) = screen.size();
         let all_formatted = screen.all_contents_formatted();
         let content_str = String::from_utf8_lossy(&all_formatted);
-        let total_lines = content_str.lines().count();
-        total_lines.saturating_sub(screen_rows as usize)
+
+        // Count visual rows, not logical lines
+        let visual_rows = split_formatted_into_visual_rows(&content_str, screen_cols as usize);
+        visual_rows.len().saturating_sub(screen_rows as usize)
     }
 
     pub fn interactive(
