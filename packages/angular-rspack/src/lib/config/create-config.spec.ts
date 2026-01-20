@@ -306,6 +306,55 @@ describe('createConfig', () => {
       ]);
     });
 
+    it('should set default watchOptions with aggregateTimeout of 50ms', async () => {
+      await expect(
+        createConfig({ options: configBase })
+      ).resolves.toStrictEqual([
+        expect.objectContaining({
+          watchOptions: expect.objectContaining({
+            aggregateTimeout: 50,
+          }),
+        }),
+      ]);
+    });
+
+    it('should allow overriding watchOptions.aggregateTimeout', async () => {
+      await expect(
+        createConfig({
+          options: {
+            ...configBase,
+            watchOptions: { aggregateTimeout: 200 },
+          },
+        })
+      ).resolves.toStrictEqual([
+        expect.objectContaining({
+          watchOptions: expect.objectContaining({
+            aggregateTimeout: 200,
+          }),
+        }),
+      ]);
+    });
+
+    it('should merge watchOptions with poll option', async () => {
+      await expect(
+        createConfig({
+          options: {
+            ...configBase,
+            poll: 1000,
+            watchOptions: { aggregateTimeout: 100 },
+          },
+        })
+      ).resolves.toStrictEqual([
+        expect.objectContaining({
+          watchOptions: expect.objectContaining({
+            aggregateTimeout: 100,
+            poll: 1000,
+            ignored: '**/node_modules/**',
+          }),
+        }),
+      ]);
+    });
+
     it.each([
       ['development', 'dev', true],
       ['production', 'prod', false],
