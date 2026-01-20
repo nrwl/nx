@@ -1,6 +1,8 @@
 use crate::native::tasks::types::{Task, TaskResult};
 
-use super::{app::Focus, components::tasks_list::TaskStatus, lifecycle::TuiMode};
+use super::{
+    app::Focus, components::tasks_list::TaskStatus, lifecycle::TuiMode, tui_app::BatchInfo,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
@@ -19,6 +21,8 @@ pub enum Action {
     ScrollDown,
     PinTask(String, usize),
     UnpinTask(String, usize),
+    PinBatch(String, usize),
+    UnpinBatch(String, usize),
     UnpinAllTasks,
     SortTasks,
     NextTask,
@@ -38,4 +42,7 @@ pub enum Action {
     EndCommand,
     ShowHint(String),
     SwitchMode(TuiMode),
+    StartBatch(String, BatchInfo),
+    ExpandBatch(String),
+    CollapseBatch(String),
 }

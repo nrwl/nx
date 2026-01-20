@@ -23,6 +23,9 @@ export declare class AppLifeCycle {
   registerForcedShutdownCallback(forcedShutdownCallback: () => any): void
   __setCloudMessage(message: string): Promise<void>
   setEstimatedTaskTimings(timings: Record<string, number>): void
+  registerRunningBatch(batchId: string, batchInfo: BatchInfo): void
+  appendBatchOutput(batchId: string, output: string): void
+  setBatchStatus(batchId: string, status: string): void
 }
 
 export declare class ChildProcess {
@@ -191,6 +194,11 @@ export declare class WorkspaceContext {
   updateProjectFiles(projectRootMappings: ProjectRootMappings, projectFiles: ExternalObject<ProjectFiles>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
   getFilesInDirectory(directory: string): Array<string>
+}
+
+export interface BatchInfo {
+  executorName: string
+  taskIds: Array<string>
 }
 
 export interface CachedResult {

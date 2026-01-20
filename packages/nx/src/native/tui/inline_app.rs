@@ -62,9 +62,9 @@ pub struct InlineApp {
     core: TuiCore,
 
     // === Inline UI State ===
-    /// The task whose output should be displayed (required for inline mode)
-    /// This is set during mode switching or defaults to the first running task
-    selected_task: Option<String>,
+    /// The item (task or batch) whose output should be displayed (required for inline mode)
+    /// This is set during mode switching or defaults to the first running item
+    selected_item: Option<String>,
     /// Countdown popup for auto-exit (shared with full-screen mode)
     countdown_popup: CountdownPopup,
     /// Whether we're in interactive mode (forwarding keys to PTY)
@@ -121,7 +121,7 @@ impl InlineApp {
 
         Ok(Self {
             core: TuiCore::new(state),
-            selected_task: None, // Will auto-select first running task on render
+            selected_item: None, // Will auto-select first running item on render
             countdown_popup: CountdownPopup::new(),
             is_interactive: false,
             task_scrollback_lines: HashMap::new(),
@@ -142,11 +142,11 @@ impl InlineApp {
     /// # Arguments
     ///
     /// * `state` - Existing shared TuiState from another app instance
-    /// * `selected_task` - Optional task to display (from full-screen selection)
-    pub fn with_state(state: Arc<Mutex<TuiState>>, selected_task: Option<String>) -> Result<Self> {
+    /// * `selected_item` - Optional item (task or batch) to display (from full-screen selection)
+    pub fn with_state(state: Arc<Mutex<TuiState>>, selected_item: Option<String>) -> Result<Self> {
         Ok(Self {
             core: TuiCore::new(state),
-            selected_task, // Use the provided selection from mode switch
+            selected_item, // Use the provided selection from mode switch
             countdown_popup: CountdownPopup::new(),
             is_interactive: false, // Always start non-interactive when switching modes
             // Reset all scrollback tracking when mode switching
@@ -175,9 +175,9 @@ impl InlineApp {
         self.core.quit_immediately();
     }
 
-    /// Get the task ID of the currently running task (if any)
-    fn get_current_running_task(&self) -> Option<String> {
-        self.core.state().lock().get_current_running_task()
+    /// Get the ID of the currently running item (task or batch, if any)
+    fn get_current_running_item(&self) -> Option<String> {
+        self.core.state().lock().get_current_running_item()
     }
 
     /// Internal method to handle Action::EndCommand
@@ -284,9 +284,9 @@ impl InlineApp {
     /// Handle keyboard input in interactive mode - forward to PTY
     fn handle_interactive_key(&mut self, key: crossterm::event::KeyEvent) -> Result<()> {
         let current_task = self
-            .selected_task
+            .selected_item
             .clone()
-            .or_else(|| self.get_current_running_task());
+            .or_else(|| self.get_current_running_item());
 
         let Some(task_id) = current_task else {
             return Ok(());
@@ -473,9 +473,9 @@ impl TuiApp for InlineApp {
                 if matches!(key.code, KeyCode::Char('c')) && key.modifiers.is_empty() {
                     // Get the task to display (selected or first running)
                     let current_task = self
-                        .selected_task
+                        .selected_item
                         .clone()
-                        .or_else(|| self.get_current_running_task());
+                        .or_else(|| self.get_current_running_item());
 
                     if let Some(task_id) = current_task {
                         let state = self.core.state().lock();
@@ -650,12 +650,12 @@ impl TuiApp for InlineApp {
 
     // === Mode-specific overrides ===
 
-    fn get_selected_task_name(&self) -> Option<String> {
-        // Include fallback to first running task for inline mode
+    fn get_selected_item_id(&self) -> Option<String> {
+        // Include fallback to first running item for inline mode
         // This ensures can_be_interactive and other trait methods work correctly
-        self.selected_task
+        self.selected_item
             .clone()
-            .or_else(|| self.get_current_running_task())
+            .or_else(|| self.get_current_running_item())
     }
 
     fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
@@ -676,13 +676,13 @@ impl TuiApp for InlineApp {
                 .iter()
                 .map(|t| &t.task.id)
                 .collect::<Vec<_>>(),
-            self.selected_task
+            self.selected_item
         );
         self.core.end_tasks(&task_results);
         if task_results
             .iter()
             .find(|t| {
-                self.selected_task
+                self.selected_item
                     .as_ref()
                     .map_or(false, |id| id == &t.task.id)
             })
@@ -706,9 +706,9 @@ impl InlineApp {
 
         // Get the task to display (selected or first running)
         let current_task = self
-            .selected_task
+            .selected_item
             .clone()
-            .or_else(|| self.get_current_running_task());
+            .or_else(|| self.get_current_running_item());
 
         if let Some(current_task) = current_task {
             let state = self.core.state().lock();
@@ -820,9 +820,9 @@ impl InlineApp {
 
         // Get current task and its status for color coding
         let current_task = self
-            .selected_task
+            .selected_item
             .clone()
-            .or_else(|| self.get_current_running_task());
+            .or_else(|| self.get_current_running_item());
 
         let (task_name, status, status_style, duration_text) =
             if let Some(ref task_id) = current_task {
@@ -966,9 +966,9 @@ impl InlineApp {
     fn render_inline_main_content(&mut self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
         // Show selected task output if available, otherwise first running task
         let current_task = self
-            .selected_task
+            .selected_item
             .clone()
-            .or_else(|| self.get_current_running_task());
+            .or_else(|| self.get_current_running_item());
 
         if let Some(current_task) = current_task {
             let state = self.core.state().lock();
@@ -1360,17 +1360,17 @@ mod tests {
     // === Helper Method Tests ===
 
     #[test]
-    fn test_get_current_running_task() {
+    fn test_get_current_running_item() {
         let mut app = create_test_inline_app();
 
         // No running tasks initially
-        assert!(app.get_current_running_task().is_none());
+        assert!(app.get_current_running_item().is_none());
 
         // Start a task
         app.update_task_status(String::from("app1"), TaskStatus::InProgress);
 
         // Should find running task
-        assert_eq!(app.get_current_running_task(), Some(String::from("app1")));
+        assert_eq!(app.get_current_running_item(), Some(String::from("app1")));
     }
 
     #[test]

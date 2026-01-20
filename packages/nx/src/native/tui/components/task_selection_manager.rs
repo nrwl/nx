@@ -11,9 +11,9 @@ pub struct ScrollMetrics {
 }
 
 pub struct TaskSelectionManager {
-    // The list of task names in their current visual order, None represents empty rows
-    entries: Vec<Option<String>>,
-    // The current selection state (Selected, AwaitingPendingTask, or NoSelection)
+    // The list of entries (tasks and batch groups) in their current visual order, None represents empty rows
+    entries: Vec<Option<SelectionEntry>>,
+    // The current selection state (Selected or NoSelection)
     selection_state: SelectionState,
     // Scroll offset for viewport management
     scroll_offset: usize,
@@ -56,15 +56,76 @@ pub enum SelectionMode {
     TrackByPosition,
 }
 
+/// Represents a selection in the TUI, eliminating the need for string prefixes
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Selection {
+    /// A task is selected (pure task ID like "app:build")
+    Task(String),
+    /// A batch group is selected (pure batch ID)
+    BatchGroup(String),
+}
+
+impl Selection {
+    /// Gets the ID regardless of selection type
+    pub fn id(&self) -> &str {
+        match self {
+            Selection::Task(id) | Selection::BatchGroup(id) => id,
+        }
+    }
+}
+
 /// Represents the current selection state of the task manager
 #[derive(Clone, PartialEq, Debug)]
 pub enum SelectionState {
-    /// A task is currently selected
-    Selected(String),
-    /// Waiting for a pending task to start (intentional deselection)
-    AwaitingPendingTask,
-    /// No task is selected
+    /// A task or batch group is currently selected
+    Selected(Selection),
+    /// No task is selected (waiting for selection)
     NoSelection,
+}
+
+/// Represents an entry in the selection manager with type information
+/// This preserves the distinction between tasks and batch groups through the pipeline
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SelectionEntry {
+    /// A task entry (task ID like "app:build")
+    Task(String),
+    /// A batch group entry (batch ID)
+    BatchGroup(String),
+}
+
+impl SelectionEntry {
+    /// Gets the ID regardless of entry type
+    pub fn id(&self) -> &str {
+        match self {
+            SelectionEntry::Task(id) | SelectionEntry::BatchGroup(id) => id,
+        }
+    }
+
+    /// Converts this entry into a Selection variant
+    pub fn to_selection(&self) -> Selection {
+        match self {
+            SelectionEntry::Task(id) => Selection::Task(id.clone()),
+            SelectionEntry::BatchGroup(id) => Selection::BatchGroup(id.clone()),
+        }
+    }
+}
+
+/// Represents the type of item currently selected
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SelectedItemType {
+    /// No item is selected
+    None,
+    /// A batch group is selected
+    BatchGroup,
+    /// A task is selected (whether nested in batch or standalone)
+    Task,
+}
+
+/// Represents a selection pinned to a terminal pane (task or batch group)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PaneSelection {
+    pub id: String,
+    pub item_type: SelectedItemType,
 }
 
 impl TaskSelectionManager {
@@ -114,7 +175,7 @@ impl TaskSelectionManager {
         self.selection_mode
     }
 
-    pub fn update_entries(&mut self, entries: Vec<Option<String>>) {
+    pub fn update_entries(&mut self, entries: Vec<Option<SelectionEntry>>) {
         match self.selection_mode {
             SelectionMode::TrackByName => self.update_entries_track_by_name(entries, None),
             SelectionMode::TrackByPosition => self.update_entries_track_by_position(entries, None),
@@ -124,7 +185,7 @@ impl TaskSelectionManager {
     /// Update entries with explicit in-progress section size
     pub fn update_entries_with_size(
         &mut self,
-        entries: Vec<Option<String>>,
+        entries: Vec<Option<SelectionEntry>>,
         in_progress_size: usize,
     ) {
         match self.selection_mode {
@@ -140,7 +201,7 @@ impl TaskSelectionManager {
     /// Updates entries while trying to preserve the selected task by name
     fn update_entries_track_by_name(
         &mut self,
-        entries: Vec<Option<String>>,
+        entries: Vec<Option<SelectionEntry>>,
         in_progress_size: Option<usize>,
     ) {
         // Keep track of current selection state
@@ -160,34 +221,46 @@ impl TaskSelectionManager {
 
         // Update selection state based on previous state
         self.selection_state = match previous_state {
-            SelectionState::Selected(task_name) => {
-                // Check if the task still exists in the entries
-                let task_still_exists = self
+            SelectionState::Selected(selection) => {
+                // Extract the ID from the selection
+                let selected_id = match &selection {
+                    Selection::Task(id) | Selection::BatchGroup(id) => id,
+                };
+
+                // Check if the item still exists in the entries
+                let item_still_exists = self
                     .entries
                     .iter()
-                    .any(|entry| entry.as_ref() == Some(&task_name));
+                    .any(|entry| entry.as_ref().map(|e| e.id()) == Some(selected_id.as_str()));
 
-                if task_still_exists {
-                    // Task is still in the list, keep it selected
-                    SelectionState::Selected(task_name)
+                if item_still_exists {
+                    // Item is still in the list, find it and preserve its type
+                    let mut found = None;
+                    for entry in &self.entries {
+                        if let Some(e) = entry {
+                            if e.id() == selected_id {
+                                found = Some(SelectionState::Selected(e.to_selection()));
+                                break;
+                            }
+                        }
+                    }
+                    // Use found selection or select first available
+                    found.unwrap_or_else(|| match self.entries.iter().find_map(|e| e.as_ref()) {
+                        Some(entry) => SelectionState::Selected(entry.to_selection()),
+                        None => SelectionState::NoSelection,
+                    })
                 } else {
-                    // Task no longer exists - select first available
-                    match self.entries.iter().find_map(|e| e.as_ref().cloned()) {
-                        Some(name) => SelectionState::Selected(name),
+                    // Item no longer exists - select first available
+                    // This follows master's rule: no preference between batches and tasks
+                    match self.entries.iter().find_map(|e| e.as_ref()) {
+                        Some(entry) => SelectionState::Selected(entry.to_selection()),
                         None => SelectionState::NoSelection,
                     }
                 }
             }
-            SelectionState::AwaitingPendingTask => {
-                // Stay in waiting state
-                SelectionState::AwaitingPendingTask
-            }
             SelectionState::NoSelection => {
-                // No previous selection - select first available
-                match self.entries.iter().find_map(|e| e.as_ref().cloned()) {
-                    Some(name) => SelectionState::Selected(name),
-                    None => SelectionState::NoSelection,
-                }
+                // Stay in waiting state - selection happens at render time
+                SelectionState::NoSelection
             }
         };
 
@@ -198,7 +271,7 @@ impl TaskSelectionManager {
     /// Updates entries while trying to preserve the selected position in the list
     fn update_entries_track_by_position(
         &mut self,
-        entries: Vec<Option<String>>,
+        entries: Vec<Option<SelectionEntry>>,
         in_progress_size: Option<usize>,
     ) {
         // Get the current selection index
@@ -219,35 +292,36 @@ impl TaskSelectionManager {
         // Update selection state based on position
         self.selection_state = if let Some(idx) = selection_index {
             // Try to maintain the position - find next non-empty entry at or after position
-            let mut found_task = None;
+            let mut found_entry = None;
             for i in idx..self.entries.len() {
-                if let Some(Some(name)) = self.entries.get(i) {
-                    found_task = Some(name.clone());
+                if let Some(Some(entry)) = self.entries.get(i) {
+                    found_entry = Some(entry.to_selection());
                     break;
                 }
             }
 
             // If not found after, try before
-            if found_task.is_none() {
+            if found_entry.is_none() {
                 for i in (0..idx).rev() {
-                    if let Some(Some(name)) = self.entries.get(i) {
-                        found_task = Some(name.clone());
+                    if let Some(Some(entry)) = self.entries.get(i) {
+                        found_entry = Some(entry.to_selection());
                         break;
                     }
                 }
             }
 
-            // Use found task or select first available
-            match found_task.or_else(|| self.entries.iter().find_map(|e| e.as_ref().cloned())) {
-                Some(name) => SelectionState::Selected(name),
+            // Use found entry or select first available
+            match found_entry.or_else(|| {
+                self.entries
+                    .iter()
+                    .find_map(|e| e.as_ref().map(|entry| entry.to_selection()))
+            }) {
+                Some(selection) => SelectionState::Selected(selection),
                 None => SelectionState::NoSelection,
             }
         } else {
-            // No previous selection, select first available task
-            match self.entries.iter().find_map(|e| e.as_ref().cloned()) {
-                Some(name) => SelectionState::Selected(name),
-                None => SelectionState::NoSelection,
-            }
+            // No previous selection - stay in waiting state (selection happens at render time)
+            SelectionState::NoSelection
         };
 
         // Invalidate selection cache
@@ -255,35 +329,76 @@ impl TaskSelectionManager {
     }
 
     pub fn select(&mut self, task_name: Option<String>) {
-        self.selection_state = match task_name {
-            Some(name) if self.entries.iter().any(|e| e.as_ref() == Some(&name)) => {
-                SelectionState::Selected(name)
+        match task_name {
+            Some(name)
+                if self
+                    .entries
+                    .iter()
+                    .any(|e| e.as_ref().map(|entry| entry.id()) == Some(name.as_str())) =>
+            {
+                // Find the entry and preserve its type
+                for entry in &self.entries {
+                    if let Some(e) = entry {
+                        if e.id() == name {
+                            self.selection_state = SelectionState::Selected(e.to_selection());
+                            // Invalidate selection cache since selected item changed
+                            self.invalidate_selection_cache();
+                            // Scroll to ensure the selected item is visible
+                            self.ensure_selected_visible();
+                            return;
+                        }
+                    }
+                }
             }
-            _ => SelectionState::NoSelection,
-        };
-        // Invalidate selection cache since selected task changed
-        self.invalidate_selection_cache();
-        // Scroll to ensure the selected task is visible
-        self.ensure_selected_visible();
+            _ => {
+                self.selection_state = SelectionState::NoSelection;
+                // Invalidate selection cache since selection was cleared
+                self.invalidate_selection_cache();
+            }
+        }
     }
 
     pub fn select_task(&mut self, task_id: String) {
-        self.selection_state = SelectionState::Selected(task_id);
+        self.selection_state = SelectionState::Selected(Selection::Task(task_id));
         // Invalidate selection cache since selected task changed
         self.invalidate_selection_cache();
         self.ensure_selected_visible();
     }
 
+    /// Selects a batch group by its ID
+    pub fn select_batch_group(&mut self, batch_id: String) {
+        self.selection_state = SelectionState::Selected(Selection::BatchGroup(batch_id));
+        // Invalidate selection cache since selection changed
+        self.invalidate_selection_cache();
+        self.ensure_selected_visible();
+    }
+
+    /// Clears the current selection (enters waiting state)
+    pub fn clear_selection(&mut self) {
+        self.selection_state = SelectionState::NoSelection;
+        self.invalidate_selection_cache();
+    }
+
     /// Determine which section a task belongs to based on its position in entries
-    fn determine_task_section(&self, task_name: &str) -> Option<TaskSection> {
-        // Find the task's index in entries
-        let task_index = self
+    /// Returns None for batch groups (they don't belong to a section)
+    fn determine_task_section(&self, selection: &Selection) -> Option<TaskSection> {
+        // Batch groups don't belong to sections
+        if matches!(selection, Selection::BatchGroup(_)) {
+            return None;
+        }
+
+        let item_id = match selection {
+            Selection::Task(id) | Selection::BatchGroup(id) => id,
+        };
+
+        // Find the item's index in entries
+        let item_index = self
             .entries
             .iter()
-            .position(|entry| entry.as_deref() == Some(task_name))?;
+            .position(|entry| entry.as_ref().map(|e| e.id()) == Some(item_id.as_str()))?;
 
         // Check if it's in the in-progress section (before the first None spacer)
-        if task_index < self.in_progress_section_size {
+        if item_index < self.in_progress_section_size {
             Some(TaskSection::InProgress)
         } else {
             Some(TaskSection::Other)
@@ -296,18 +411,19 @@ impl TaskSelectionManager {
                 if let Some(current_idx) = self.get_selected_index() {
                     // Find next non-empty entry
                     for idx in (current_idx + 1)..self.entries.len() {
-                        if let Some(task_name) = &self.entries[idx] {
-                            self.selection_state = SelectionState::Selected(task_name.clone());
+                        if let Some(entry) = &self.entries[idx] {
+                            self.selection_state = SelectionState::Selected(entry.to_selection());
                             self.invalidate_selection_cache();
                             self.ensure_selected_visible();
                             return;
                         }
                     }
+                    // No next selectable found - scroll to reveal trailing entries (extended scroll)
+                    // This allows viewing placeholders and separators at the end of the list
+                    if self.can_scroll_down() {
+                        self.scroll_down(1);
+                    }
                 }
-            }
-            SelectionState::AwaitingPendingTask => {
-                self.exit_waiting_state_and_select_first();
-                self.ensure_selected_visible();
             }
             SelectionState::NoSelection => {
                 self.select_first_available();
@@ -320,20 +436,36 @@ impl TaskSelectionManager {
         match &self.selection_state {
             SelectionState::Selected(_) => {
                 if let Some(current_idx) = self.get_selected_index() {
-                    // Find previous non-empty entry
+                    // Check if we've scrolled past selection (extended scroll mode)
+                    // This happens when at last selectable and user scrolled down to see trailing None entries
+                    let has_selectable_below = self.entries[(current_idx + 1)..]
+                        .iter()
+                        .any(|e| e.is_some());
+
+                    if !has_selectable_below && self.can_scroll_up() {
+                        // Check if selection is not at bottom of viewport (we've scrolled past it)
+                        let viewport_bottom_idx = self
+                            .scroll_offset
+                            .saturating_add(self.viewport_height)
+                            .saturating_sub(1);
+                        if current_idx < viewport_bottom_idx {
+                            // Scroll back up first before moving selection
+                            self.scroll_up(1);
+                            self.invalidate_viewport_cache();
+                            return;
+                        }
+                    }
+
+                    // Normal: Find previous non-empty entry
                     for idx in (0..current_idx).rev() {
-                        if let Some(task_name) = &self.entries[idx] {
-                            self.selection_state = SelectionState::Selected(task_name.clone());
+                        if let Some(entry) = &self.entries[idx] {
+                            self.selection_state = SelectionState::Selected(entry.to_selection());
                             self.invalidate_selection_cache();
                             self.ensure_selected_visible();
                             return;
                         }
                     }
                 }
-            }
-            SelectionState::AwaitingPendingTask => {
-                self.exit_waiting_state_and_select_first();
-                self.ensure_selected_visible();
             }
             SelectionState::NoSelection => {
                 self.select_first_available();
@@ -378,7 +510,7 @@ impl TaskSelectionManager {
     }
 
     /// Get the entries visible in the current viewport
-    pub fn get_viewport_entries(&self) -> Vec<Option<String>> {
+    pub fn get_viewport_entries(&self) -> Vec<Option<SelectionEntry>> {
         let start = self.scroll_offset;
         let end = (start + self.viewport_height).min(self.entries.len());
         self.entries[start..end].to_vec()
@@ -386,16 +518,77 @@ impl TaskSelectionManager {
 
     pub fn is_selected(&self, task_name: &str) -> bool {
         match &self.selection_state {
-            SelectionState::Selected(selected) => selected == task_name,
+            SelectionState::Selected(Selection::Task(selected_task))
+            | SelectionState::Selected(Selection::BatchGroup(selected_task)) => {
+                selected_task == task_name
+            }
             _ => false,
         }
     }
 
-    pub fn get_selected_task_name(&self) -> Option<&String> {
+    /// Gets the currently selected item as a Selection enum
+    pub fn get_selection(&self) -> Option<&Selection> {
         match &self.selection_state {
-            SelectionState::Selected(name) => Some(name),
+            SelectionState::Selected(selection) => Some(selection),
             _ => None,
         }
+    }
+
+    /// Gets the selected task name if a task is selected, otherwise None
+    pub fn get_selected_task_name(&self) -> Option<&String> {
+        match &self.selection_state {
+            SelectionState::Selected(Selection::Task(task_name)) => Some(task_name),
+            _ => None,
+        }
+    }
+
+    /// Gets the current selection state
+    pub fn get_selection_state(&self) -> &SelectionState {
+        &self.selection_state
+    }
+
+    /// Gets the in-progress section size
+    pub fn get_in_progress_section_size(&self) -> usize {
+        self.in_progress_section_size
+    }
+
+    /// Determines the type of the currently selected item
+    pub fn get_selected_item_type(&self) -> SelectedItemType {
+        match &self.selection_state {
+            SelectionState::Selected(Selection::Task(_)) => SelectedItemType::Task,
+            SelectionState::Selected(Selection::BatchGroup(_)) => SelectedItemType::BatchGroup,
+            _ => SelectedItemType::None,
+        }
+    }
+
+    /// Gets the batch ID if a batch group is selected
+    pub fn get_selected_batch_id(&self) -> Option<&String> {
+        match &self.selection_state {
+            SelectionState::Selected(Selection::BatchGroup(batch_id)) => Some(batch_id),
+            _ => None,
+        }
+    }
+
+    /// Gets the selected item ID and type in one call (unified getter)
+    /// This is the preferred method over separate type/ID getters
+    pub fn get_selected_item(&self) -> Option<(&String, SelectedItemType)> {
+        match &self.selection_state {
+            SelectionState::Selected(Selection::Task(id)) => Some((id, SelectedItemType::Task)),
+            SelectionState::Selected(Selection::BatchGroup(id)) => {
+                Some((id, SelectedItemType::BatchGroup))
+            }
+            _ => None,
+        }
+    }
+
+    /// Gets the task name if a task is selected (deprecated method name)
+    pub fn get_selected_nested_task_name(&self) -> Option<&String> {
+        self.get_selected_task_name()
+    }
+
+    /// Gets the task name if a task is selected (deprecated method name)
+    pub fn get_selected_regular_task_name(&self) -> Option<&String> {
+        self.get_selected_task_name()
     }
 
     /// Get total number of entries
@@ -435,9 +628,9 @@ impl TaskSelectionManager {
     /// Get the index of the currently selected task among actual tasks only (excludes spacers)
     /// This represents progress through tasks only, ignoring None spacer entries (which are never selected)
     pub fn get_selected_task_index(&mut self) -> Option<usize> {
-        // Extract selected name from state, or return None if not selected
-        let selected_name = match &self.selection_state {
-            SelectionState::Selected(name) => name,
+        // Extract selected item from state, or return None if not selected
+        let selection = match &self.selection_state {
+            SelectionState::Selected(sel) => sel,
             _ => return None,
         };
 
@@ -447,10 +640,13 @@ impl TaskSelectionManager {
         }
 
         // Cache miss - compute and store the result
+        let selected_id = match selection {
+            Selection::Task(id) | Selection::BatchGroup(id) => id,
+        };
         let mut task_index = 0;
         for entry in &self.entries {
-            if let Some(name) = entry {
-                if name == selected_name {
+            if let Some(e) = entry {
+                if e.id() == selected_id {
                     self.selected_task_index_cache = Some(task_index);
                     return Some(task_index);
                 }
@@ -470,22 +666,17 @@ impl TaskSelectionManager {
         self.scroll_offset + self.viewport_height < self.entries.len()
     }
 
-    fn select_first_available(&mut self) {
-        self.selection_state = match self.entries.iter().find_map(|e| e.as_ref().cloned()) {
-            Some(name) => SelectionState::Selected(name),
+    pub fn select_first_available(&mut self) {
+        self.selection_state = match self
+            .entries
+            .iter()
+            .find_map(|e| e.as_ref().map(|entry| entry.to_selection()))
+        {
+            Some(selection) => SelectionState::Selected(selection),
             None => SelectionState::NoSelection,
         };
-        // Invalidate selection cache since selected task changed
+        // Invalidate selection cache since selected item changed
         self.invalidate_selection_cache();
-    }
-
-    /// Exit waiting state by selecting the first available task
-    /// Used when navigating (next/previous) while in AwaitingPendingTask state
-    fn exit_waiting_state_and_select_first(&mut self) {
-        if let Some(first_task) = self.entries.iter().find_map(|e| e.as_ref()) {
-            self.selection_state = SelectionState::Selected(first_task.clone());
-            self.invalidate_selection_cache();
-        }
     }
 
     /// Validate and adjust scroll offset to ensure it's within bounds
@@ -502,10 +693,11 @@ impl TaskSelectionManager {
 
     pub fn get_selected_index(&self) -> Option<usize> {
         match &self.selection_state {
-            SelectionState::Selected(task_name) => self
+            SelectionState::Selected(Selection::Task(id))
+            | SelectionState::Selected(Selection::BatchGroup(id)) => self
                 .entries
                 .iter()
-                .position(|entry| entry.as_ref() == Some(task_name)),
+                .position(|entry| entry.as_ref().map(|e| e.id()) == Some(id.as_str())),
             _ => None,
         }
     }
@@ -542,14 +734,15 @@ impl TaskSelectionManager {
     // Section tracking methods for split-index behavior
 
     /// Get the section the currently selected task belongs to
+    /// Returns None for batch groups (they don't have sections)
     pub fn get_selected_task_section(&self) -> Option<TaskSection> {
         match &self.selection_state {
-            SelectionState::Selected(name) => self.determine_task_section(name),
+            SelectionState::Selected(selection) => self.determine_task_section(selection),
             _ => None,
         }
     }
 
-    /// Update the in-progress section size by counting tasks before the first spacer
+    /// Update the in-progress section size by counting entries before the first spacer
     fn update_in_progress_section_size(&mut self) {
         let mut count = 0;
         for entry in &self.entries {
@@ -564,49 +757,52 @@ impl TaskSelectionManager {
     }
 
     /// Get the index of a task within the in-progress section
-    pub fn get_index_in_in_progress_section(&self, task_name: &str) -> Option<usize> {
-        self.entries[0..self.in_progress_section_size]
+    /// Works for both tasks and batch groups (returns position among all entries in section)
+    pub fn get_index_in_in_progress_section(&self, item_id: &str) -> Option<usize> {
+        let safe_size = self.in_progress_section_size.min(self.entries.len());
+        self.entries[0..safe_size]
             .iter()
             .filter_map(|e| e.as_ref())
-            .position(|name| name == task_name)
+            .position(|entry| entry.id() == item_id)
     }
 
-    /// Get all in-progress tasks
-    fn get_in_progress_tasks(&self) -> Vec<String> {
-        self.entries[0..self.in_progress_section_size]
+    /// Get all in-progress items (tasks and batch groups)
+    pub fn get_in_progress_items(&self) -> Vec<Selection> {
+        let safe_size = self.in_progress_section_size.min(self.entries.len());
+        self.entries[0..safe_size]
             .iter()
-            .filter_map(|e| e.clone())
+            .filter_map(|e| e.as_ref().map(|entry| entry.to_selection()))
             .collect()
     }
 
     /// Handle a task finishing from the in-progress section
     ///
     /// # Parameters
-    /// - `task_name`: The task that finished
+    /// - `task_id`: The task that finished
     /// - `old_in_progress_index`: The index the task had in the in-progress section before finishing
     /// - `has_pending_tasks`: Whether there are pending tasks waiting to start
     fn handle_in_progress_task_finished(
         &mut self,
-        task_name: String,
+        task_id: String,
         old_in_progress_index: Option<usize>,
         has_pending_tasks: bool,
     ) {
-        // Get in-progress tasks, excluding the one that just finished
+        // Get in-progress items, excluding the one that just finished
         // (entries have already been updated to reflect the status change)
-        let in_progress_tasks = self.get_in_progress_tasks();
+        let in_progress_items = self.get_in_progress_items();
 
         // Check for last task scenario
-        if in_progress_tasks.is_empty() && !has_pending_tasks {
+        if in_progress_items.is_empty() && !has_pending_tasks {
             // This was the last task - keep tracking by name
-            self.selection_state = SelectionState::Selected(task_name);
+            self.selection_state = SelectionState::Selected(Selection::Task(task_id));
             self.invalidate_selection_cache();
             return;
         }
 
         // Check if in-progress section is empty but there are pending tasks
-        if in_progress_tasks.is_empty() {
+        if in_progress_items.is_empty() {
             // Wait for next allocation - enter "waiting state"
-            self.selection_state = SelectionState::AwaitingPendingTask;
+            self.selection_state = SelectionState::NoSelection;
             self.invalidate_selection_cache();
             return;
         }
@@ -614,54 +810,67 @@ impl TaskSelectionManager {
         // Switch to position tracking at the old index
         let target_index = old_in_progress_index.unwrap_or(0);
 
-        // Try to select task at old index, falling back to lower indices
+        // Try to select item at old index, falling back to lower indices
         for idx in (0..=target_index).rev() {
-            if let Some(task) = in_progress_tasks.get(idx) {
-                self.selection_state = SelectionState::Selected(task.clone());
+            if let Some(item) = in_progress_items.get(idx) {
+                self.selection_state = SelectionState::Selected(item.clone());
                 self.invalidate_selection_cache();
                 return;
             }
         }
 
-        // Shouldn't reach here, but fallback to first in-progress task
-        if let Some(task) = in_progress_tasks.first() {
-            self.selection_state = SelectionState::Selected(task.clone());
+        // Shouldn't reach here, but fallback to first in-progress item
+        if let Some(item) = in_progress_items.first() {
+            self.selection_state = SelectionState::Selected(item.clone());
             self.invalidate_selection_cache();
         }
     }
 
-    /// Handle task status changes to manage section transitions
+    /// Handle task lifecycle transitions to manage selection state
     ///
     /// # Parameters
-    /// - `task_name`: The task whose status changed
-    /// - `old_in_progress_index`: The index the task had in the in-progress section BEFORE status change (if it was in-progress)
-    /// - `new_is_in_progress`: Whether the task is now in-progress
+    /// - `task_id`: The task whose status changed
+    /// - `old_in_progress_index`: The index the task had in the in-progress section BEFORE status change (if it was in that section)
+    /// - `new_is_in_progress`: Whether the task is NOW in-progress (true for starting, false for finishing)
     /// - `has_pending_tasks`: Whether there are pending tasks waiting to start
+    ///
+    /// Handles two transitions:
+    /// 1. Task starting (pending → in-progress): Exits NoSelection state
+    /// 2. Task finishing (in-progress → completed): Switches selection or enters NoSelection state
     pub fn handle_task_status_change(
         &mut self,
-        task_name: String,
+        task_id: String,
         old_in_progress_index: Option<usize>,
         new_is_in_progress: bool,
         has_pending_tasks: bool,
     ) {
-        // Only process if this is the selected task
+        // Only process if this is the selected task OR we're waiting for a task
         match &self.selection_state {
-            SelectionState::Selected(selected_name) if selected_name != &task_name => return,
+            SelectionState::Selected(Selection::Task(selected_task))
+                if selected_task != &task_id =>
+            {
+                return;
+            }
+            SelectionState::Selected(Selection::BatchGroup(_)) => return,
             SelectionState::NoSelection => return,
-            _ => {}
+            _ => {} // Allow Selected(matching task) to continue
         }
 
+        // Handle two lifecycle transitions:
+
+        // 1. Task finishing: was in-progress → not in-progress
         if old_in_progress_index.is_some() && !new_is_in_progress {
-            // Selected in-progress task just finished
             self.handle_in_progress_task_finished(
-                task_name,
+                task_id,
                 old_in_progress_index,
                 has_pending_tasks,
             );
-        } else if old_in_progress_index.is_none() && new_is_in_progress {
-            // Task started (pending → in-progress) - clear waiting state if we're in AwaitingPendingTask
-            if matches!(self.selection_state, SelectionState::AwaitingPendingTask) {
-                self.selection_state = SelectionState::Selected(task_name);
+        }
+        // 2. Task starting: was NOT in-progress → now in-progress
+        else if old_in_progress_index.is_none() && new_is_in_progress {
+            // Clear waiting state if we're in NoSelection
+            if matches!(self.selection_state, SelectionState::NoSelection) {
+                self.selection_state = SelectionState::Selected(Selection::Task(task_id));
                 self.invalidate_selection_cache();
             }
         }
@@ -687,15 +896,24 @@ mod tests {
         manager.set_selection_mode(SelectionMode::TrackByName);
 
         // Initial entries
-        let entries = vec![Some("Task 1".to_string()), None, Some("Task 2".to_string())];
+        let entries = vec![
+            Some(SelectionEntry::Task("Task 1".to_string())),
+            None,
+            Some(SelectionEntry::Task("Task 2".to_string())),
+        ];
         manager.update_entries(entries);
+        manager.select_first_available(); // Manual selection since NoSelection doesn't auto-select
         assert_eq!(
             manager.get_selected_task_name(),
             Some(&"Task 1".to_string())
         );
 
         // Update entries with same tasks but different order
-        let entries = vec![Some("Task 2".to_string()), None, Some("Task 1".to_string())];
+        let entries = vec![
+            Some(SelectionEntry::Task("Task 2".to_string())),
+            None,
+            Some(SelectionEntry::Task("Task 1".to_string())),
+        ];
         manager.update_entries(entries);
 
         // Selection should still be Task 1 despite order change
@@ -711,15 +929,24 @@ mod tests {
         manager.set_selection_mode(SelectionMode::TrackByPosition);
 
         // Initial entries
-        let entries = vec![Some("Task 1".to_string()), None, Some("Task 2".to_string())];
+        let entries = vec![
+            Some(SelectionEntry::Task("Task 1".to_string())),
+            None,
+            Some(SelectionEntry::Task("Task 2".to_string())),
+        ];
         manager.update_entries(entries);
+        manager.select_first_available(); // Manual selection since NoSelection doesn't auto-select
         assert_eq!(
             manager.get_selected_task_name(),
             Some(&"Task 1".to_string())
         );
 
         // Update entries with different tasks but same structure
-        let entries = vec![Some("Task 3".to_string()), None, Some("Task 4".to_string())];
+        let entries = vec![
+            Some(SelectionEntry::Task("Task 3".to_string())),
+            None,
+            Some(SelectionEntry::Task("Task 4".to_string())),
+        ];
         manager.update_entries(entries);
 
         // Selection should be Task 3 (same position as Task 1 was)
@@ -732,7 +959,11 @@ mod tests {
     #[test]
     fn test_select() {
         let mut manager = TaskSelectionManager::new(2);
-        let entries = vec![Some("Task 1".to_string()), None, Some("Task 2".to_string())];
+        let entries = vec![
+            Some(SelectionEntry::Task("Task 1".to_string())),
+            None,
+            Some(SelectionEntry::Task("Task 2".to_string())),
+        ];
         manager.update_entries(entries);
         manager.select(Some("Task 2".to_string()));
         assert_eq!(
@@ -745,12 +976,13 @@ mod tests {
     fn test_navigation() {
         let mut manager = TaskSelectionManager::new(2);
         let entries = vec![
-            Some("Task 1".to_string()),
+            Some(SelectionEntry::Task("Task 1".to_string())),
             None,
-            Some("Task 2".to_string()),
-            Some("Task 3".to_string()),
+            Some(SelectionEntry::Task("Task 2".to_string())),
+            Some(SelectionEntry::Task("Task 3".to_string())),
         ];
         manager.update_entries(entries);
+        manager.select_first_available(); // Manual selection since NoSelection doesn't auto-select
 
         // Test next
         assert_eq!(
@@ -775,10 +1007,10 @@ mod tests {
     fn test_scrolling() {
         let mut manager = TaskSelectionManager::new(2); // Viewport height = 2
         let entries = vec![
-            Some("Task 1".to_string()),
-            Some("Task 2".to_string()),
-            Some("Task 3".to_string()),
-            Some("Task 4".to_string()),
+            Some(SelectionEntry::Task("Task 1".to_string())),
+            Some(SelectionEntry::Task("Task 2".to_string())),
+            Some(SelectionEntry::Task("Task 3".to_string())),
+            Some(SelectionEntry::Task("Task 4".to_string())),
         ];
         manager.update_entries(entries);
 
@@ -788,8 +1020,14 @@ mod tests {
         assert!(!manager.can_scroll_up());
         assert!(manager.can_scroll_down());
         let viewport_entries = manager.get_viewport_entries();
-        assert_eq!(viewport_entries[0], Some("Task 1".to_string()));
-        assert_eq!(viewport_entries[1], Some("Task 2".to_string()));
+        assert_eq!(
+            viewport_entries[0],
+            Some(SelectionEntry::Task("Task 1".to_string()))
+        );
+        assert_eq!(
+            viewport_entries[1],
+            Some(SelectionEntry::Task("Task 2".to_string()))
+        );
 
         // Test scrolling down
         manager.scroll_down(1);
@@ -797,23 +1035,39 @@ mod tests {
         assert!(manager.can_scroll_down());
         let viewport_entries = manager.get_viewport_entries();
         assert_eq!(viewport_entries.len(), 2);
-        assert_eq!(viewport_entries[0], Some("Task 2".to_string()));
-        assert_eq!(viewport_entries[1], Some("Task 3".to_string()));
+        assert_eq!(
+            viewport_entries[0],
+            Some(SelectionEntry::Task("Task 2".to_string()))
+        );
+        assert_eq!(
+            viewport_entries[1],
+            Some(SelectionEntry::Task("Task 3".to_string()))
+        );
 
         // Test scrolling up
         manager.scroll_up(1);
         assert!(!manager.can_scroll_up());
         assert!(manager.can_scroll_down());
         let viewport_entries = manager.get_viewport_entries();
-        assert_eq!(viewport_entries[0], Some("Task 1".to_string()));
-        assert_eq!(viewport_entries[1], Some("Task 2".to_string()));
+        assert_eq!(
+            viewport_entries[0],
+            Some(SelectionEntry::Task("Task 1".to_string()))
+        );
+        assert_eq!(
+            viewport_entries[1],
+            Some(SelectionEntry::Task("Task 2".to_string()))
+        );
     }
 
     #[test]
     fn test_is_selected() {
         let mut manager = TaskSelectionManager::new(2);
-        let entries = vec![Some("Task 1".to_string()), Some("Task 2".to_string())];
+        let entries = vec![
+            Some(SelectionEntry::Task("Task 1".to_string())),
+            Some(SelectionEntry::Task("Task 2".to_string())),
+        ];
         manager.update_entries(entries);
+        manager.select_first_available(); // Manual selection since NoSelection doesn't auto-select
 
         assert!(manager.is_selected("Task 1"));
         assert!(!manager.is_selected("Task 2"));
@@ -825,15 +1079,19 @@ mod tests {
         manager.set_selection_mode(SelectionMode::TrackByPosition);
 
         // Initial entries
-        let entries = vec![Some("Task 1".to_string()), Some("Task 2".to_string())];
+        let entries = vec![
+            Some(SelectionEntry::Task("Task 1".to_string())),
+            Some(SelectionEntry::Task("Task 2".to_string())),
+        ];
         manager.update_entries(entries);
+        manager.select_first_available(); // Manual selection since NoSelection doesn't auto-select
         assert_eq!(
             manager.get_selected_task_name(),
             Some(&"Task 1".to_string())
         );
 
         // Update with empty entries
-        let entries: Vec<Option<String>> = vec![];
+        let entries: Vec<Option<SelectionEntry>> = vec![];
         manager.update_entries(entries);
 
         // No entries, so no selection
@@ -841,18 +1099,103 @@ mod tests {
     }
 
     #[test]
-    fn test_section_detection() {
+    fn test_batch_selection_type_detection() {
+        let mut manager = TaskSelectionManager::new(2);
+
+        // Test batch group selection (using pure batch ID)
+        manager.select_batch_group("my-batch-id".to_string());
+        assert_eq!(
+            manager.get_selected_item_type(),
+            SelectedItemType::BatchGroup
+        );
+        assert_eq!(
+            manager.get_selected_batch_id(),
+            Some(&"my-batch-id".to_string())
+        );
+        assert_eq!(manager.get_selected_task_name(), None);
+
+        // Test task selection (no more distinction between nested and regular)
+        manager.select_task("my-task".to_string());
+        assert_eq!(manager.get_selected_item_type(), SelectedItemType::Task);
+        assert_eq!(manager.get_selected_batch_id(), None);
+        assert_eq!(
+            manager.get_selected_task_name(),
+            Some(&"my-task".to_string())
+        );
+
+        // Test another task selection
+        manager.select_task("regular-task".to_string());
+        assert_eq!(manager.get_selected_item_type(), SelectedItemType::Task);
+        assert_eq!(manager.get_selected_batch_id(), None);
+        assert_eq!(
+            manager.get_selected_task_name(),
+            Some(&"regular-task".to_string())
+        );
+
+        // Test no selection
+        let entries: Vec<Option<SelectionEntry>> = vec![];
+        manager.update_entries(entries);
+        assert_eq!(manager.get_selected_item_type(), SelectedItemType::None);
+        assert_eq!(manager.get_selected_batch_id(), None);
+        assert_eq!(manager.get_selected_nested_task_name(), None);
+        assert_eq!(manager.get_selected_regular_task_name(), None);
+    }
+
+    #[test]
+    fn test_awaiting_pending_task_state() {
         let mut manager = TaskSelectionManager::new(5);
 
-        // Create entries with in-progress and other sections
+        // Set up initial entries with in-progress section
         let entries = vec![
-            Some("in-progress-1".to_string()),
-            Some("in-progress-2".to_string()),
+            Some(SelectionEntry::Task("task1".to_string())),
             None, // Spacer
-            Some("other-1".to_string()),
-            Some("other-2".to_string()),
+            Some(SelectionEntry::Task("pending1".to_string())),
         ];
-        manager.update_entries(entries);
+        manager.update_entries_with_size(entries, 1);
+        manager.select_first_available(); // Manual selection since NoSelection doesn't auto-select
+
+        // task1 should be selected initially
+        assert_eq!(manager.get_selected_task_name(), Some(&"task1".to_string()));
+
+        // Simulate task1 finishing (it was at index 0 in in-progress section)
+        // After update_entries, task1 is no longer in in-progress section
+        let entries = vec![
+            None, // Spacer - in-progress section is now empty
+            Some(SelectionEntry::Task("pending1".to_string())),
+            Some(SelectionEntry::Task("task1".to_string())), // Moved to completed section
+        ];
+        manager.update_entries_with_size(entries, 0);
+
+        // Now handle the status change - should enter NoSelection state
+        manager.handle_task_status_change("task1".to_string(), Some(0), false, true);
+
+        // Should be in NoSelection state
+        assert!(matches!(
+            manager.selection_state,
+            SelectionState::NoSelection
+        ));
+
+        // Navigation should exit waiting state
+        manager.next();
+        assert!(matches!(
+            manager.selection_state,
+            SelectionState::Selected(_)
+        ));
+    }
+
+    #[test]
+    fn test_section_tracking() {
+        let mut manager = TaskSelectionManager::new(5);
+
+        // Set up entries with in-progress and other sections
+        let entries = vec![
+            Some(SelectionEntry::Task("in-progress-1".to_string())),
+            Some(SelectionEntry::Task("in-progress-2".to_string())),
+            None, // Spacer
+            Some(SelectionEntry::Task("other-1".to_string())),
+            Some(SelectionEntry::Task("other-2".to_string())),
+        ];
+        manager.update_entries_with_size(entries, 2);
 
         // Select in-progress task
         manager.select_task("in-progress-1".to_string());
@@ -861,272 +1204,15 @@ mod tests {
             Some(TaskSection::InProgress)
         );
 
-        // Select other task
+        // Select other section task
         manager.select_task("other-1".to_string());
         assert_eq!(
             manager.get_selected_task_section(),
             Some(TaskSection::Other)
         );
-    }
 
-    #[test]
-    fn test_in_progress_task_finished_with_other_running() {
-        let mut manager = TaskSelectionManager::new(5);
-
-        // Initial state: 2 in-progress tasks
-        let entries = vec![
-            Some("task-1".to_string()),
-            Some("task-2".to_string()),
-            None, // Spacer
-            Some("finished-1".to_string()),
-        ];
-        manager.update_entries(entries);
-        manager.select_task("task-2".to_string());
-
-        // Simulate task-2 finishing: first update entries (task-2 moves to Other section)
-        let entries = vec![
-            Some("task-1".to_string()),
-            None, // Spacer
-            Some("finished-1".to_string()),
-            Some("task-2".to_string()), // Moved to Other section
-        ];
-        manager.update_entries(entries);
-
-        // Then notify about status change with old index 1
-        manager.handle_task_status_change("task-2".to_string(), Some(1), false, false);
-
-        // After task-2 finishes and moves to Other section, the old index (1) is now
-        // out of bounds for the remaining in-progress tasks. The fallback logic tries
-        // index 1 → None, then index 0 → finds task-1 (the only remaining in-progress task).
-        assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"task-1".to_string())
-        );
-        assert_eq!(
-            manager.get_selected_task_section(),
-            Some(TaskSection::InProgress)
-        );
-    }
-
-    #[test]
-    fn test_in_progress_task_finished_last_task() {
-        let mut manager = TaskSelectionManager::new(5);
-
-        // Initial state: 1 in-progress task, no pending
-        let entries = vec![
-            Some("last-task".to_string()),
-            None, // Spacer
-        ];
-        manager.update_entries(entries);
-        manager.select_task("last-task".to_string());
-
-        // Simulate last-task finishing (no pending tasks)
-        // First update entries to move task to Other section (simulates sort_tasks)
-        let entries = vec![
-            None,                          // Spacer - in-progress section is now empty
-            Some("last-task".to_string()), // Moved to Other section
-        ];
-        manager.update_entries(entries);
-
-        // Then notify about status change with old index 0
-        manager.handle_task_status_change("last-task".to_string(), Some(0), false, false);
-
-        // Should keep tracking by name
-        assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"last-task".to_string())
-        );
-        assert_eq!(
-            manager.get_selected_task_section(),
-            Some(TaskSection::Other)
-        );
-    }
-
-    #[test]
-    fn test_in_progress_task_finished_with_pending() {
-        let mut manager = TaskSelectionManager::new(5);
-
-        // Initial state: 1 in-progress task
-        let entries = vec![
-            Some("running-task".to_string()),
-            None, // Spacer
-        ];
-        manager.update_entries(entries);
-        manager.select_task("running-task".to_string());
-
-        // Simulate running-task finishing: first update entries (task moves to Other section)
-        let entries = vec![
-            None,                             // Spacer - in-progress section is now empty
-            Some("running-task".to_string()), // Moved to Other section
-        ];
-        manager.update_entries(entries);
-
-        // Then notify about status change with old index 0 and pending tasks
-        manager.handle_task_status_change("running-task".to_string(), Some(0), false, true);
-
-        // Should deselect (wait for next allocation)
-        assert_eq!(manager.get_selected_task_name(), None);
+        // Batch groups should return None for section
+        manager.select_batch_group("batch-1".to_string());
         assert_eq!(manager.get_selected_task_section(), None);
-    }
-
-    #[test]
-    fn test_section_maintained_during_reorder() {
-        let mut manager = TaskSelectionManager::new(5);
-
-        // Initial state
-        let entries = vec![
-            Some("task-a".to_string()),
-            Some("task-b".to_string()),
-            None, // Spacer
-            Some("other-1".to_string()),
-        ];
-        manager.update_entries(entries);
-        manager.select_task("task-b".to_string());
-
-        // Reorder (task-b moves to index 0)
-        let entries = vec![
-            Some("task-b".to_string()),
-            Some("task-a".to_string()),
-            None, // Spacer
-            Some("other-1".to_string()),
-        ];
-        manager.set_selection_mode(SelectionMode::TrackByName);
-        manager.update_entries(entries);
-
-        // Should still be selected
-        assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"task-b".to_string())
-        );
-    }
-
-    #[test]
-    fn test_navigation_from_awaiting_pending_task() {
-        let mut manager = TaskSelectionManager::new(5);
-
-        // Initial state: 1 in-progress task
-        let entries = vec![
-            Some("running-task".to_string()),
-            None, // Spacer
-            Some("pending-task".to_string()),
-        ];
-        manager.update_entries(entries);
-        manager.select_task("running-task".to_string());
-
-        // Simulate task finishing with pending tasks: update entries
-        let entries = vec![
-            None,                             // Spacer - in-progress section is now empty
-            Some("running-task".to_string()), // Moved to Other section
-            Some("pending-task".to_string()),
-        ];
-        manager.update_entries(entries);
-
-        // Enter AwaitingPendingTask state
-        manager.handle_task_status_change("running-task".to_string(), Some(0), false, true);
-
-        // Verify we're in waiting state
-        assert_eq!(manager.get_selected_task_name(), None);
-
-        // Test navigation with next() - should exit waiting state and select first available
-        manager.next();
-        assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"running-task".to_string())
-        );
-
-        // Reset to waiting state for testing previous()
-        manager.selection_state = SelectionState::AwaitingPendingTask;
-        assert_eq!(manager.get_selected_task_name(), None);
-
-        // Test navigation with previous() - should also exit waiting state
-        manager.previous();
-        assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"running-task".to_string())
-        );
-    }
-
-    #[test]
-    fn test_all_tasks_in_one_section_no_spacer() {
-        let mut manager = TaskSelectionManager::new(5);
-
-        // Create entries with no spacer - all tasks in one section
-        let entries = vec![
-            Some("task-1".to_string()),
-            Some("task-2".to_string()),
-            Some("task-3".to_string()),
-        ];
-        manager.update_entries(entries);
-
-        // Verify in_progress_section_size counts all tasks (no spacer found)
-        assert_eq!(manager.in_progress_section_size, 3);
-
-        // Verify first task is selected
-        assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"task-1".to_string())
-        );
-
-        // Verify navigation works
-        manager.next();
-        assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"task-2".to_string())
-        );
-
-        manager.next();
-        assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"task-3".to_string())
-        );
-
-        // Verify section detection - all tasks should be InProgress
-        assert_eq!(
-            manager.get_selected_task_section(),
-            Some(TaskSection::InProgress)
-        );
-
-        manager.select_task("task-1".to_string());
-        assert_eq!(
-            manager.get_selected_task_section(),
-            Some(TaskSection::InProgress)
-        );
-    }
-
-    #[test]
-    fn test_all_tasks_in_progress_no_other_section() {
-        let mut manager = TaskSelectionManager::new(5);
-
-        // Create entries where all tasks are in-progress, no "Other" section
-        // Spacer exists but nothing after it
-        let entries = vec![
-            Some("task-1".to_string()),
-            Some("task-2".to_string()),
-            None, // Spacer
-        ];
-        manager.update_entries(entries);
-
-        // Verify in_progress_section_size is correct
-        assert_eq!(manager.in_progress_section_size, 2);
-
-        // Select a task
-        manager.select_task("task-1".to_string());
-
-        // Verify it's detected as InProgress
-        assert_eq!(
-            manager.get_selected_task_section(),
-            Some(TaskSection::InProgress)
-        );
-
-        // Verify navigation works within the section
-        manager.next();
-        assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"task-2".to_string())
-        );
-        assert_eq!(
-            manager.get_selected_task_section(),
-            Some(TaskSection::InProgress)
-        );
     }
 }

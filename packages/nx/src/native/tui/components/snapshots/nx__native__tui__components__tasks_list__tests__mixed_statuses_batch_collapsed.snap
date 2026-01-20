@@ -1,0 +1,24 @@
+---
+source: packages/nx/src/native/tui/components/tasks_list.rs
+expression: terminal.backend()
+---
+"                                                                                                                        "
+" NX    Running Mixed Status Batch Test...                                                               Cache   Duration"
+" │                                                                                                                      "
+">│⠋ ▶  build-batch (4)                                                                                                  "
+" │·    Waiting for task...                                                                                              "
+" │·    Waiting for task...                                                                                              "
+" │·    Waiting for task...                                                                                              "
+" └                                                                                                                      "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                    quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"
