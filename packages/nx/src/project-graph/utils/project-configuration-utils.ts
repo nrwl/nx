@@ -582,6 +582,36 @@ function mergeCreateNodesResults(
   return { projectRootMap, externalNodes, rootMap, configurationSourceMaps };
 }
 
+/**
+ * Helper function to check if a file matches a pattern array with negation support.
+ * Patterns starting with '!' are negation patterns that remove files from the match set.
+ * Patterns are processed in order, with later patterns overriding earlier ones.
+ * @param file The file path to check
+ * @param patterns Array of glob patterns (can include negation patterns starting with '!')
+ * @returns true if the file should be included based on the pattern array
+ */
+function matchesPatternArray(file: string, patterns: string[]): boolean {
+  // Empty array means no filtering
+  if (!patterns || patterns.length === 0) {
+    return false;
+  }
+
+  // If first pattern is negation, start by matching everything
+  let isMatch = patterns[0].startsWith('!');
+
+  for (const pattern of patterns) {
+    const isNegation = pattern.startsWith('!');
+    const actualPattern = isNegation ? pattern.substring(1) : pattern;
+
+    if (minimatch(file, actualPattern, { dot: true })) {
+      // Last matching pattern wins
+      isMatch = !isNegation;
+    }
+  }
+
+  return isMatch;
+}
+
 export function findMatchingConfigFiles(
   projectFiles: string[],
   pattern: string,
@@ -592,20 +622,16 @@ export function findMatchingConfigFiles(
 
   for (const file of projectFiles) {
     if (minimatch(file, pattern, { dot: true })) {
-      if (include) {
-        const included = include.some((includedPattern) =>
-          minimatch(file, includedPattern, { dot: true })
-        );
-        if (!included) {
+      // Process include patterns with negation support
+      if (include && include.length > 0) {
+        if (!matchesPatternArray(file, include)) {
           continue;
         }
       }
 
-      if (exclude) {
-        const excluded = exclude.some((excludedPattern) =>
-          minimatch(file, excludedPattern, { dot: true })
-        );
-        if (excluded) {
+      // Process exclude patterns with negation support
+      if (exclude && exclude.length > 0) {
+        if (matchesPatternArray(file, exclude)) {
           continue;
         }
       }
