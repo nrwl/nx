@@ -136,6 +136,48 @@ Plugins use config files to infer tasks for projects. You can specify which conf
 
 The `include` and `exclude` properties are each file glob patterns that are used to include or exclude the configuration file that the plugin is interpreting. In the example provided, the `@nx/jest/plugin` plugin will only infer tasks for projects where the `jest.config.ts` file path matches the `packages/**/*` glob but does not match the `**/*-e2e/**/*` glob.
 
+#### Using Negation Patterns
+
+You can use negation patterns (patterns starting with `!`) to create more precise include/exclude rules. Patterns are processed in order, with later patterns overriding earlier ones.
+
+**Example: Excluding all e2e projects except one**
+
+```jsonc
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "exclude": ["**/*-e2e/**/*", "!**/toolkit-workspace-e2e/**/*"],
+    },
+  ],
+}
+```
+
+This will exclude all e2e projects except `toolkit-workspace-e2e`.
+
+**Example: Including packages except legacy ones**
+
+```jsonc
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "include": ["packages/**/*", "!packages/legacy/**/*"],
+    },
+  ],
+}
+```
+
+**How negation patterns work:**
+
+- Patterns are processed in order from first to last
+- A pattern starting with `!` removes files from the match set
+- A pattern without `!` adds files to the match set
+- The last matching pattern determines if a file is included
+- If the first pattern is a negation, all files are matched initially
+
 ## Task Options
 
 The following properties affect the way Nx runs tasks and can be set at the root of `nx.json`.
