@@ -133,3 +133,4 @@ test-results
 # .NET build output
 /packages/dotnet/analyzer/bin
 /packages/dotnet/analyzer/obj
+/*.deb
