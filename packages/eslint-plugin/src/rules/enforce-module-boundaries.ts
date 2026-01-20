@@ -348,9 +348,8 @@ export default ESLintUtils.RuleCreator(
                     // Step 2: Get the path relative to project path (which is the workspace root in practice)
                     // Example: absoluteImportPath='/root/libs/models/user', projectPath='/root'
                     //          => workspaceRelativePath='libs/models/user'
-                    const workspaceRelativePath = relative(
-                      projectPath,
-                      absoluteImportPath
+                    const workspaceRelativePath = normalizePath(
+                      relative(projectPath, absoluteImportPath)
                     );
 
                     // Step 3: Extract the dynamic part after the base path
