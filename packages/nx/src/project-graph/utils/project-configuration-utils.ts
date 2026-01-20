@@ -596,6 +596,14 @@ function matchesPatternArray(file: string, patterns: string[]): boolean {
     return false;
   }
 
+  // Fast path: if no negation patterns exist, use short-circuit evaluation
+  // This maintains backward-compatible performance for existing configurations
+  const hasNegationPattern = patterns.some((p) => p.startsWith('!'));
+  if (!hasNegationPattern) {
+    return patterns.some((pattern) => minimatch(file, pattern, { dot: true }));
+  }
+
+  // Slow path: process patterns sequentially for negation support
   // If first pattern is negation, start by matching everything
   let isMatch = patterns[0].startsWith('!');
 
