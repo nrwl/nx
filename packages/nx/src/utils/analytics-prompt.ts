@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { prompt } from 'enquirer';
 import { join } from 'path';
 import { output } from './output';
@@ -22,7 +23,8 @@ export async function ensureAnalyticsPreferenceSet(): Promise<void> {
   }
 
   const nxJson = readNxJson(workspaceRoot);
-  if (typeof nxJson?.analytics === 'boolean') {
+  // Check if already set (string = enabled with UUID, false = disabled)
+  if (typeof nxJson?.analytics === 'string' || nxJson?.analytics === false) {
     return;
   }
 
@@ -38,7 +40,7 @@ async function promptForAnalyticsPreference(): Promise<boolean> {
       bodyLines: [
         'Nx collects anonymous usage analytics to help improve the developer experience.',
         'No personal or project-specific information is collected.',
-        'Learn more: https://cloud.nx.app/privacy'
+        'Learn more: https://cloud.nx.app/privacy',
       ],
     });
 
@@ -60,7 +62,7 @@ function saveAnalyticsPreference(enabled: boolean): void {
   try {
     const nxJsonPath = join(workspaceRoot, 'nx.json');
     const nxJson = readNxJson(workspaceRoot);
-    nxJson.analytics = enabled;
+    nxJson.analytics = enabled ? randomUUID() : false;
     writeJsonFile(nxJsonPath, nxJson);
 
     if (enabled) {
@@ -76,4 +78,13 @@ function saveAnalyticsPreference(enabled: boolean): void {
   } catch {
     // Silently fail - don't block user's command
   }
+}
+
+/**
+ * Returns the analytics ID if analytics is enabled, false if disabled,
+ * or undefined if not yet set.
+ */
+export function getAnalyticsId(): string | false | undefined {
+  const nxJson = readNxJson(workspaceRoot);
+  return nxJson?.analytics;
 }
