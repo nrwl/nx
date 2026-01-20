@@ -583,27 +583,18 @@ function mergeCreateNodesResults(
 }
 
 /**
- * Helper function to check if a file matches a pattern array with negation support.
+ * Fast matcher for patterns without negations - uses short-circuit evaluation.
+ */
+function matchesSimplePatterns(file: string, patterns: string[]): boolean {
+  return patterns.some((pattern) => minimatch(file, pattern, { dot: true }));
+}
+
+/**
+ * Full matcher for patterns with negations - processes all patterns sequentially.
  * Patterns starting with '!' are negation patterns that remove files from the match set.
  * Patterns are processed in order, with later patterns overriding earlier ones.
- * @param file The file path to check
- * @param patterns Array of glob patterns (can include negation patterns starting with '!')
- * @returns true if the file should be included based on the pattern array
  */
-function matchesPatternArray(file: string, patterns: string[]): boolean {
-  // Empty array means no filtering
-  if (!patterns || patterns.length === 0) {
-    return false;
-  }
-
-  // Fast path: if no negation patterns exist, use short-circuit evaluation
-  // This maintains backward-compatible performance for existing configurations
-  const hasNegationPattern = patterns.some((p) => p.startsWith('!'));
-  if (!hasNegationPattern) {
-    return patterns.some((pattern) => minimatch(file, pattern, { dot: true }));
-  }
-
-  // Slow path: process patterns sequentially for negation support
+function matchesNegationPatterns(file: string, patterns: string[]): boolean {
   // If first pattern is negation, start by matching everything
   let isMatch = patterns[0].startsWith('!');
 
@@ -620,6 +611,27 @@ function matchesPatternArray(file: string, patterns: string[]): boolean {
   return isMatch;
 }
 
+/**
+ * Creates a matcher function for the given patterns.
+ * @param patterns Array of glob patterns (can include negation patterns starting with '!')
+ * @param emptyValue Value to return when patterns array is empty
+ * @returns A function that checks if a file matches the patterns
+ */
+function createMatcher(
+  patterns: string[],
+  emptyValue: boolean
+): (file: string) => boolean {
+  if (!patterns || patterns.length === 0) {
+    return () => emptyValue;
+  }
+
+  const hasNegationPattern = patterns.some((p) => p.startsWith('!'));
+
+  return hasNegationPattern
+    ? (file: string) => matchesNegationPatterns(file, patterns)
+    : (file: string) => matchesSimplePatterns(file, patterns);
+}
+
 export function findMatchingConfigFiles(
   projectFiles: string[],
   pattern: string,
@@ -628,25 +640,25 @@ export function findMatchingConfigFiles(
 ): string[] {
   const matchingConfigFiles: string[] = [];
 
+  // Create matchers once, outside the loop
+  // Empty include means include everything, empty exclude means exclude nothing
+  const includes = createMatcher(include, true);
+  const excludes = createMatcher(exclude, false);
+
   for (const file of projectFiles) {
     if (minimatch(file, pattern, { dot: true })) {
-      // Process include patterns with negation support
-      if (include && include.length > 0) {
-        if (!matchesPatternArray(file, include)) {
-          continue;
-        }
+      if (!includes(file)) {
+        continue;
       }
 
-      // Process exclude patterns with negation support
-      if (exclude && exclude.length > 0) {
-        if (matchesPatternArray(file, exclude)) {
-          continue;
-        }
+      if (excludes(file)) {
+        continue;
       }
 
       matchingConfigFiles.push(file);
     }
   }
+
   return matchingConfigFiles;
 }
 
