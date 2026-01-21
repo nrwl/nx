@@ -2,6 +2,8 @@ package dev.nx.maven.adapter.maven3
 
 import com.google.gson.Gson
 import dev.nx.maven.shared.BuildState
+import dev.nx.maven.shared.BuildStateApplier
+import dev.nx.maven.shared.BuildStateRecorder
 import org.apache.maven.project.MavenProject
 import org.apache.maven.project.MavenProjectHelper
 import org.codehaus.plexus.PlexusContainer
@@ -57,7 +59,7 @@ object BuildStateManager3 {
         projectsToApply.forEach { (project, stateFile) ->
             try {
                 val buildState = gson.fromJson(stateFile.readText(), BuildState::class.java)
-                BuildStateApplier3.applyBuildState(project, buildState, projectHelper)
+                BuildStateApplier.applyBuildState(project, buildState, projectHelper)
                 log.debug("  Applied build state for ${project.groupId}:${project.artifactId}")
             } catch (e: Exception) {
                 log.error("  Failed to apply build state to ${project.artifactId}: ${e.message}", e)
@@ -72,6 +74,6 @@ object BuildStateManager3 {
      * Record the build state of a Maven project to nx-build-state.json.
      */
     fun recordBuildState(project: MavenProject) {
-        BuildStateRecorder3.recordBuildState(project)
+        BuildStateRecorder.recordBuildState(project)
     }
 }
