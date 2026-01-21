@@ -17,8 +17,8 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use super::help_text::HelpText;
 use super::task_selection_manager::{
-    ScrollMetrics, SelectedItemType, Selection, SelectionEntry, SelectionMode, SelectionState,
-    TaskSection, TaskSelectionManager,
+    ScrollMetrics, SelectedItemType, Selection, SelectionEntry, SelectionMode, TaskSection,
+    TaskSelectionManager,
 };
 use crate::native::tui::{
     scroll_momentum::{ScrollDirection, ScrollMomentum},
@@ -1417,10 +1417,7 @@ impl TasksList {
         // Get current state and check if we need to make a selection
         let (needs_selection, has_in_progress, selected_task) = {
             let selection_manager = self.selection_manager.lock();
-            let needs_selection = matches!(
-                selection_manager.get_selection_state(),
-                SelectionState::NoSelection
-            );
+            let needs_selection = matches!(selection_manager.get_selection_state(), None);
             let in_progress_items = selection_manager.get_in_progress_items();
             let has_in_progress = !in_progress_items.is_empty();
             let selected_task = selection_manager.get_selected_task_name().cloned();

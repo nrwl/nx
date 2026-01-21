@@ -13,8 +13,8 @@ pub struct ScrollMetrics {
 pub struct TaskSelectionManager {
     // The list of entries (tasks and batch groups) in their current visual order, None represents empty rows
     entries: Vec<Option<SelectionEntry>>,
-    // The current selection state (Selected or NoSelection)
-    selection_state: SelectionState,
+    // The current selection state (Some = selected, None = no selection)
+    selection_state: Option<Selection>,
     // Scroll offset for viewport management
     scroll_offset: usize,
     // Viewport height for visible area calculations
@@ -74,15 +74,6 @@ impl Selection {
     }
 }
 
-/// Represents the current selection state of the task manager
-#[derive(Clone, PartialEq, Debug)]
-pub enum SelectionState {
-    /// A task or batch group is currently selected
-    Selected(Selection),
-    /// No task is selected (waiting for selection)
-    NoSelection,
-}
-
 /// Represents an entry in the selection manager with type information
 /// This preserves the distinction between tasks and batch groups through the pipeline
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -132,7 +123,7 @@ impl TaskSelectionManager {
     pub fn new(viewport_height: usize) -> Self {
         Self {
             entries: Vec::new(),
-            selection_state: SelectionState::NoSelection,
+            selection_state: None,
             scroll_offset: 0,
             viewport_height: viewport_height.max(1),
             selection_mode: SelectionMode::TrackByName,
@@ -221,7 +212,7 @@ impl TaskSelectionManager {
 
         // Update selection state based on previous state
         self.selection_state = match previous_state {
-            SelectionState::Selected(selection) => {
+            Some(selection) => {
                 // Extract the ID from the selection
                 let selected_id = match &selection {
                     Selection::Task(id) | Selection::BatchGroup(id) => id,
@@ -239,28 +230,28 @@ impl TaskSelectionManager {
                     for entry in &self.entries {
                         if let Some(e) = entry {
                             if e.id() == selected_id {
-                                found = Some(SelectionState::Selected(e.to_selection()));
+                                found = Some(e.to_selection());
                                 break;
                             }
                         }
                     }
                     // Use found selection or select first available
-                    found.unwrap_or_else(|| match self.entries.iter().find_map(|e| e.as_ref()) {
-                        Some(entry) => SelectionState::Selected(entry.to_selection()),
-                        None => SelectionState::NoSelection,
+                    found.or_else(|| match self.entries.iter().find_map(|e| e.as_ref()) {
+                        Some(entry) => Some(entry.to_selection()),
+                        None => None,
                     })
                 } else {
                     // Item no longer exists - select first available
                     // This follows master's rule: no preference between batches and tasks
                     match self.entries.iter().find_map(|e| e.as_ref()) {
-                        Some(entry) => SelectionState::Selected(entry.to_selection()),
-                        None => SelectionState::NoSelection,
+                        Some(entry) => Some(entry.to_selection()),
+                        None => None,
                     }
                 }
             }
-            SelectionState::NoSelection => {
+            None => {
                 // Stay in waiting state - selection happens at render time
-                SelectionState::NoSelection
+                None
             }
         };
 
@@ -316,12 +307,12 @@ impl TaskSelectionManager {
                     .iter()
                     .find_map(|e| e.as_ref().map(|entry| entry.to_selection()))
             }) {
-                Some(selection) => SelectionState::Selected(selection),
-                None => SelectionState::NoSelection,
+                Some(selection) => Some(selection),
+                None => None,
             }
         } else {
             // No previous selection - stay in waiting state (selection happens at render time)
-            SelectionState::NoSelection
+            None
         };
 
         // Invalidate selection cache
@@ -340,7 +331,7 @@ impl TaskSelectionManager {
                 for entry in &self.entries {
                     if let Some(e) = entry {
                         if e.id() == name {
-                            self.selection_state = SelectionState::Selected(e.to_selection());
+                            self.selection_state = Some(e.to_selection());
                             // Invalidate selection cache since selected item changed
                             self.invalidate_selection_cache();
                             // Scroll to ensure the selected item is visible
@@ -351,7 +342,7 @@ impl TaskSelectionManager {
                 }
             }
             _ => {
-                self.selection_state = SelectionState::NoSelection;
+                self.selection_state = None;
                 // Invalidate selection cache since selection was cleared
                 self.invalidate_selection_cache();
             }
@@ -359,7 +350,7 @@ impl TaskSelectionManager {
     }
 
     pub fn select_task(&mut self, task_id: String) {
-        self.selection_state = SelectionState::Selected(Selection::Task(task_id));
+        self.selection_state = Some(Selection::Task(task_id));
         // Invalidate selection cache since selected task changed
         self.invalidate_selection_cache();
         self.ensure_selected_visible();
@@ -367,7 +358,7 @@ impl TaskSelectionManager {
 
     /// Selects a batch group by its ID
     pub fn select_batch_group(&mut self, batch_id: String) {
-        self.selection_state = SelectionState::Selected(Selection::BatchGroup(batch_id));
+        self.selection_state = Some(Selection::BatchGroup(batch_id));
         // Invalidate selection cache since selection changed
         self.invalidate_selection_cache();
         self.ensure_selected_visible();
@@ -375,7 +366,7 @@ impl TaskSelectionManager {
 
     /// Clears the current selection (enters waiting state)
     pub fn clear_selection(&mut self) {
-        self.selection_state = SelectionState::NoSelection;
+        self.selection_state = None;
         self.invalidate_selection_cache();
     }
 
@@ -407,12 +398,12 @@ impl TaskSelectionManager {
 
     pub fn next(&mut self) {
         match &self.selection_state {
-            SelectionState::Selected(_) => {
+            Some(_) => {
                 if let Some(current_idx) = self.get_selected_index() {
                     // Find next non-empty entry
                     for idx in (current_idx + 1)..self.entries.len() {
                         if let Some(entry) = &self.entries[idx] {
-                            self.selection_state = SelectionState::Selected(entry.to_selection());
+                            self.selection_state = Some(entry.to_selection());
                             self.invalidate_selection_cache();
                             self.ensure_selected_visible();
                             return;
@@ -425,7 +416,7 @@ impl TaskSelectionManager {
                     }
                 }
             }
-            SelectionState::NoSelection => {
+            None => {
                 self.select_first_available();
                 self.ensure_selected_visible();
             }
@@ -434,7 +425,7 @@ impl TaskSelectionManager {
 
     pub fn previous(&mut self) {
         match &self.selection_state {
-            SelectionState::Selected(_) => {
+            Some(_) => {
                 if let Some(current_idx) = self.get_selected_index() {
                     // Check if we've scrolled past selection (extended scroll mode)
                     // This happens when at last selectable and user scrolled down to see trailing None entries
@@ -459,7 +450,7 @@ impl TaskSelectionManager {
                     // Normal: Find previous non-empty entry
                     for idx in (0..current_idx).rev() {
                         if let Some(entry) = &self.entries[idx] {
-                            self.selection_state = SelectionState::Selected(entry.to_selection());
+                            self.selection_state = Some(entry.to_selection());
                             self.invalidate_selection_cache();
                             self.ensure_selected_visible();
                             return;
@@ -467,7 +458,7 @@ impl TaskSelectionManager {
                     }
                 }
             }
-            SelectionState::NoSelection => {
+            None => {
                 self.select_first_available();
                 self.ensure_selected_visible();
             }
@@ -518,8 +509,7 @@ impl TaskSelectionManager {
 
     pub fn is_selected(&self, task_name: &str) -> bool {
         match &self.selection_state {
-            SelectionState::Selected(Selection::Task(selected_task))
-            | SelectionState::Selected(Selection::BatchGroup(selected_task)) => {
+            Some(Selection::Task(selected_task)) | Some(Selection::BatchGroup(selected_task)) => {
                 selected_task == task_name
             }
             _ => false,
@@ -529,7 +519,7 @@ impl TaskSelectionManager {
     /// Gets the currently selected item as a Selection enum
     pub fn get_selection(&self) -> Option<&Selection> {
         match &self.selection_state {
-            SelectionState::Selected(selection) => Some(selection),
+            Some(selection) => Some(selection),
             _ => None,
         }
     }
@@ -537,13 +527,13 @@ impl TaskSelectionManager {
     /// Gets the selected task name if a task is selected, otherwise None
     pub fn get_selected_task_name(&self) -> Option<&String> {
         match &self.selection_state {
-            SelectionState::Selected(Selection::Task(task_name)) => Some(task_name),
+            Some(Selection::Task(task_name)) => Some(task_name),
             _ => None,
         }
     }
 
     /// Gets the current selection state
-    pub fn get_selection_state(&self) -> &SelectionState {
+    pub fn get_selection_state(&self) -> &Option<Selection> {
         &self.selection_state
     }
 
@@ -555,8 +545,8 @@ impl TaskSelectionManager {
     /// Determines the type of the currently selected item
     pub fn get_selected_item_type(&self) -> SelectedItemType {
         match &self.selection_state {
-            SelectionState::Selected(Selection::Task(_)) => SelectedItemType::Task,
-            SelectionState::Selected(Selection::BatchGroup(_)) => SelectedItemType::BatchGroup,
+            Some(Selection::Task(_)) => SelectedItemType::Task,
+            Some(Selection::BatchGroup(_)) => SelectedItemType::BatchGroup,
             _ => SelectedItemType::None,
         }
     }
@@ -564,7 +554,7 @@ impl TaskSelectionManager {
     /// Gets the batch ID if a batch group is selected
     pub fn get_selected_batch_id(&self) -> Option<&String> {
         match &self.selection_state {
-            SelectionState::Selected(Selection::BatchGroup(batch_id)) => Some(batch_id),
+            Some(Selection::BatchGroup(batch_id)) => Some(batch_id),
             _ => None,
         }
     }
@@ -573,10 +563,8 @@ impl TaskSelectionManager {
     /// This is the preferred method over separate type/ID getters
     pub fn get_selected_item(&self) -> Option<(&String, SelectedItemType)> {
         match &self.selection_state {
-            SelectionState::Selected(Selection::Task(id)) => Some((id, SelectedItemType::Task)),
-            SelectionState::Selected(Selection::BatchGroup(id)) => {
-                Some((id, SelectedItemType::BatchGroup))
-            }
+            Some(Selection::Task(id)) => Some((id, SelectedItemType::Task)),
+            Some(Selection::BatchGroup(id)) => Some((id, SelectedItemType::BatchGroup)),
             _ => None,
         }
     }
@@ -630,7 +618,7 @@ impl TaskSelectionManager {
     pub fn get_selected_task_index(&mut self) -> Option<usize> {
         // Extract selected item from state, or return None if not selected
         let selection = match &self.selection_state {
-            SelectionState::Selected(sel) => sel,
+            Some(sel) => sel,
             _ => return None,
         };
 
@@ -672,8 +660,8 @@ impl TaskSelectionManager {
             .iter()
             .find_map(|e| e.as_ref().map(|entry| entry.to_selection()))
         {
-            Some(selection) => SelectionState::Selected(selection),
-            None => SelectionState::NoSelection,
+            Some(selection) => Some(selection),
+            None => None,
         };
         // Invalidate selection cache since selected item changed
         self.invalidate_selection_cache();
@@ -693,8 +681,7 @@ impl TaskSelectionManager {
 
     pub fn get_selected_index(&self) -> Option<usize> {
         match &self.selection_state {
-            SelectionState::Selected(Selection::Task(id))
-            | SelectionState::Selected(Selection::BatchGroup(id)) => self
+            Some(Selection::Task(id)) | Some(Selection::BatchGroup(id)) => self
                 .entries
                 .iter()
                 .position(|entry| entry.as_ref().map(|e| e.id()) == Some(id.as_str())),
@@ -737,7 +724,7 @@ impl TaskSelectionManager {
     /// Returns None for batch groups (they don't have sections)
     pub fn get_selected_task_section(&self) -> Option<TaskSection> {
         match &self.selection_state {
-            SelectionState::Selected(selection) => self.determine_task_section(selection),
+            Some(selection) => self.determine_task_section(selection),
             _ => None,
         }
     }
@@ -794,7 +781,7 @@ impl TaskSelectionManager {
         // Check for last task scenario
         if in_progress_items.is_empty() && !has_pending_tasks {
             // This was the last task - keep tracking by name
-            self.selection_state = SelectionState::Selected(Selection::Task(task_id));
+            self.selection_state = Some(Selection::Task(task_id));
             self.invalidate_selection_cache();
             return;
         }
@@ -802,7 +789,7 @@ impl TaskSelectionManager {
         // Check if in-progress section is empty but there are pending tasks
         if in_progress_items.is_empty() {
             // Wait for next allocation - enter "waiting state"
-            self.selection_state = SelectionState::NoSelection;
+            self.selection_state = None;
             self.invalidate_selection_cache();
             return;
         }
@@ -813,7 +800,7 @@ impl TaskSelectionManager {
         // Try to select item at old index, falling back to lower indices
         for idx in (0..=target_index).rev() {
             if let Some(item) = in_progress_items.get(idx) {
-                self.selection_state = SelectionState::Selected(item.clone());
+                self.selection_state = Some(item.clone());
                 self.invalidate_selection_cache();
                 return;
             }
@@ -821,7 +808,7 @@ impl TaskSelectionManager {
 
         // Shouldn't reach here, but fallback to first in-progress item
         if let Some(item) = in_progress_items.first() {
-            self.selection_state = SelectionState::Selected(item.clone());
+            self.selection_state = Some(item.clone());
             self.invalidate_selection_cache();
         }
     }
@@ -846,13 +833,11 @@ impl TaskSelectionManager {
     ) {
         // Only process if this is the selected task OR we're waiting for a task
         match &self.selection_state {
-            SelectionState::Selected(Selection::Task(selected_task))
-                if selected_task != &task_id =>
-            {
+            Some(Selection::Task(selected_task)) if selected_task != &task_id => {
                 return;
             }
-            SelectionState::Selected(Selection::BatchGroup(_)) => return,
-            SelectionState::NoSelection => return,
+            Some(Selection::BatchGroup(_)) => return,
+            None => return,
             _ => {} // Allow Selected(matching task) to continue
         }
 
@@ -869,8 +854,8 @@ impl TaskSelectionManager {
         // 2. Task starting: was NOT in-progress → now in-progress
         else if old_in_progress_index.is_none() && new_is_in_progress {
             // Clear waiting state if we're in NoSelection
-            if matches!(self.selection_state, SelectionState::NoSelection) {
-                self.selection_state = SelectionState::Selected(Selection::Task(task_id));
+            if matches!(self.selection_state, None) {
+                self.selection_state = Some(Selection::Task(task_id));
                 self.invalidate_selection_cache();
             }
         }
@@ -1170,17 +1155,11 @@ mod tests {
         manager.handle_task_status_change("task1".to_string(), Some(0), false, true);
 
         // Should be in NoSelection state
-        assert!(matches!(
-            manager.selection_state,
-            SelectionState::NoSelection
-        ));
+        assert!(matches!(manager.selection_state, None));
 
         // Navigation should exit waiting state
         manager.next();
-        assert!(matches!(
-            manager.selection_state,
-            SelectionState::Selected(_)
-        ));
+        assert!(matches!(manager.selection_state, Some(_)));
     }
 
     #[test]
