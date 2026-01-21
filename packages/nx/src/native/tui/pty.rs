@@ -8,6 +8,7 @@ use std::{
 };
 use tracing::debug;
 use vt100_ctt::Parser;
+use wrap_ansi::wrap_ansi;
 
 /// A wrapper that provides access to the terminal screen without cloning
 ///
@@ -42,7 +43,7 @@ pub struct PtyInstance {
 /// The vt100 `all_contents_formatted()` method returns logical lines where content that
 /// wrapped to the next row is concatenated without newlines. This function splits
 /// those logical lines into visual rows based on the terminal width while preserving
-/// ANSI escape sequences.
+/// ANSI escape sequences using the wrap-ansi crate.
 ///
 /// # Arguments
 ///
@@ -57,49 +58,27 @@ fn split_formatted_into_visual_rows(content: &str, cols: usize) -> Vec<String> {
         return content.lines().map(|s| s.to_string()).collect();
     }
 
-    let mut rows = Vec::new();
+    // Use wrap-ansi to wrap each logical line while preserving ANSI codes
+    // The crate correctly handles escape sequences, Unicode width, and hyperlinks
+    let options = wrap_ansi::WrapOptions::builder()
+        .hard_wrap(true) // Break long words/sequences at column boundary
+        .trim_whitespace(false) // Preserve spacing
+        .word_wrap(false) // Don't break at word boundaries - match terminal behavior
+        .build();
 
-    for logical_line in content.lines() {
-        let mut current_row = String::new();
-        let mut visible_count = 0;
-        let mut chars = logical_line.chars().peekable();
-
-        while let Some(c) = chars.next() {
-            if c == '\x1b' {
-                // Start of ANSI escape sequence - include it but don't count toward visible width
-                current_row.push(c);
-                // Read until we hit a letter (the end of the escape sequence)
-                while let Some(&next) = chars.peek() {
-                    current_row.push(chars.next().unwrap());
-                    if next.is_ascii_alphabetic() {
-                        break;
-                    }
-                }
+    content
+        .lines()
+        .flat_map(|line| {
+            if line.is_empty() {
+                vec![String::new()]
             } else {
-                // Regular visible character
-                if visible_count >= cols {
-                    // Start a new row
-                    rows.push(current_row);
-                    current_row = String::new();
-                    visible_count = 0;
-                }
-                current_row.push(c);
-                visible_count += 1;
+                wrap_ansi(line, cols, Some(options.clone()))
+                    .lines()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>()
             }
-        }
-
-        // Don't forget the last row from this logical line
-        if !current_row.is_empty() {
-            rows.push(current_row);
-        }
-    }
-
-    // Handle empty content
-    if rows.is_empty() {
-        rows.push(String::new());
-    }
-
-    rows
+        })
+        .collect()
 }
 
 impl PtyInstance {
