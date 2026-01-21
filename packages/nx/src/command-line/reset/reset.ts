@@ -2,6 +2,7 @@ import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { daemonClient } from '../../daemon/client/client';
+import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from '../../daemon/tmp-dir';
 import { cacheDir, workspaceDataDirectory } from '../../utils/cache-directory';
 import { output } from '../../utils/output';
 import { getNativeFileCacheLocation } from '../../native/native-file-cache-location';
@@ -35,7 +36,7 @@ export async function resetHandler(args: ResetCommandOptions) {
   const bodyLines = [];
   if (!all) {
     if (args.onlyDaemon) {
-      bodyLines.push('- Nx Daemon');
+      bodyLines.push('- Nx Daemon and its workspace data');
     }
     if (args.onlyCache) {
       bodyLines.push('- Cache directory');
@@ -54,6 +55,14 @@ export async function resetHandler(args: ResetCommandOptions) {
       await killDaemon();
     } catch (e) {
       errors.push('Failed to stop the Nx Daemon.', e.toString());
+    }
+    try {
+      await cleanupDaemonWorkspaceData();
+    } catch (e) {
+      errors.push(
+        'Failed to clean up the daemon workspace data directory.',
+        e.toString()
+      );
     }
   }
   if (all || args.onlyCache) {
@@ -103,6 +112,16 @@ async function killDaemon(): Promise<void> {
   if (daemonClient.enabled()) {
     return daemonClient.stop();
   }
+}
+
+function cleanupDaemonWorkspaceData() {
+  return incrementalBackoff(
+    INCREMENTAL_BACKOFF_FIRST_DELAY,
+    INCREMENTAL_BACKOFF_MAX_DURATION,
+    () => {
+      rmSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true, force: true });
+    }
+  );
 }
 
 async function resetCloudClient() {
