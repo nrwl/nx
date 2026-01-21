@@ -956,7 +956,7 @@ impl TasksList {
             return false;
         }
 
-        // Find first in-progress task
+        // Select the first in-progress task
         if let Some(first_in_progress) = self
             .tasks
             .iter()

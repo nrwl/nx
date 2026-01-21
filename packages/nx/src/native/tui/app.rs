@@ -246,12 +246,13 @@ impl App {
         }
 
         // Iterate over the pinned tasks and assign them to the terminal panes (up to the maximum of 2), focusing the first one as well
-        let (pinned_tasks, run_mode, task_count) = {
+        let (pinned_tasks, run_mode, task_count, initiating_tasks) = {
             let state = self.core.state().lock();
             (
                 state.pinned_tasks().clone(),
                 state.run_mode(),
                 get_task_count(state.task_graph()),
+                state.initiating_tasks().clone(),
             )
         };
 
@@ -270,6 +271,17 @@ impl App {
                 }
             }
         }
+
+        // Select the first initiating task (ensures user's requested task is selected)
+        // Only in RunOne mode - in RunMany there's no single initiating task to prioritize
+        if matches!(run_mode, RunMode::RunOne) {
+            if let Some(first_initiating) = initiating_tasks.iter().next() {
+                self.selection_manager
+                    .lock()
+                    .select_task(first_initiating.clone());
+            }
+        }
+
         Ok(())
     }
 
@@ -1521,31 +1533,8 @@ impl App {
 
             // Check if the task is already pinned to the pane
             if self.pane_tasks[pane_idx].as_deref() == Some(task_name.as_str()) {
-                // Unpin the task if it's already pinned
-                self.pane_tasks[pane_idx] = None;
-
-                // Clear the PTY reference when unpinning
-                self.clear_pane_pty_reference(pane_idx);
-
-                // Set pane arrangement based on count of pinned tasks
-                let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
-                match pinned_count {
-                    0 => {
-                        self.update_focus(Focus::TaskList);
-                        // When all panes are cleared, use position-based selection
-                        self.set_spacebar_mode(false, Some(SelectionMode::TrackByPosition));
-                        self.layout_manager
-                            .set_pane_arrangement(PaneArrangement::None);
-                    }
-                    1 => self
-                        .layout_manager
-                        .set_pane_arrangement(PaneArrangement::Single),
-                    _ => self
-                        .layout_manager
-                        .set_pane_arrangement(PaneArrangement::Double),
-                }
-
-                self.dispatch_action(Action::UnpinTask(task_name.clone(), pane_idx));
+                // Task is already pinned to this pane - just focus it
+                self.update_focus(Focus::MultipleOutput(pane_idx));
             } else {
                 // Pin the task to the specified pane
                 self.pane_tasks[pane_idx] = Some(task_name.clone());
