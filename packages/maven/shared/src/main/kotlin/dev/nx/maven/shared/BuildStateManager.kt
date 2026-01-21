@@ -1,35 +1,32 @@
-package dev.nx.maven.adapter.maven3
+package dev.nx.maven.shared
 
 import com.google.gson.Gson
-import dev.nx.maven.shared.BuildState
-import dev.nx.maven.shared.BuildStateApplier
-import dev.nx.maven.shared.BuildStateRecorder
 import org.apache.maven.project.MavenProject
 import org.apache.maven.project.MavenProjectHelper
-import org.codehaus.plexus.PlexusContainer
 import org.slf4j.LoggerFactory
 import java.io.File
 
 /**
  * Manager for applying and recording build states to/from MavenProject objects.
- * Maven 3.x version using PlexusContainer.
+ * Works with both Maven 3.x and 4.x since they share the same MavenProject API.
  */
-object BuildStateManager3 {
+object BuildStateManager {
     private const val BUILD_STATE_FILE = "nx-build-state.json"
-    private val log = LoggerFactory.getLogger(BuildStateManager3::class.java)
+    private val log = LoggerFactory.getLogger(BuildStateManager::class.java)
     private val gson = Gson()
     private var projectHelper: MavenProjectHelper? = null
 
     /**
-     * Initialize the BuildStateManager with Maven's Plexus container.
+     * Initialize the BuildStateManager with MavenProjectHelper.
+     * The caller is responsible for looking up the helper via their DI container
+     * (Lookup for Maven 4, PlexusContainer for Maven 3).
      */
-    fun initialize(container: PlexusContainer) {
-        try {
-            projectHelper = container.lookup(MavenProjectHelper::class.java)
+    fun initialize(helper: MavenProjectHelper?) {
+        projectHelper = helper
+        if (helper != null) {
             log.debug("MavenProjectHelper initialized successfully")
-        } catch (e: Exception) {
-            log.warn("Failed to lookup MavenProjectHelper: ${e.message}")
-            projectHelper = null
+        } else {
+            log.warn("MavenProjectHelper is null - artifact attachment will be disabled")
         }
     }
 

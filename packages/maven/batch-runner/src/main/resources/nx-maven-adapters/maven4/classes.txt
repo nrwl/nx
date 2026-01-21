@@ -1,6 +1,5 @@
 dev/nx/maven/adapter/maven4/BatchExecutionListener$Companion.class
 dev/nx/maven/adapter/maven4/BatchExecutionListener.class
-dev/nx/maven/adapter/maven4/BuildStateManager.class
 dev/nx/maven/adapter/maven4/CachingResidentMavenInvoker.class
 dev/nx/maven/adapter/maven4/NxMaven$getProjectMapMethod$2.class
 dev/nx/maven/adapter/maven4/NxMaven.class

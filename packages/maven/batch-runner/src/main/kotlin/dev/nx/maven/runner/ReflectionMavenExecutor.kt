@@ -124,6 +124,11 @@ class ReflectionMavenExecutor(
             val allArguments = ArrayList<String>()
             allArguments.addAll(goals)
             allArguments.addAll(arguments)
+            // Force non-interactive/batch mode to avoid SimplexTransferListener deadlock
+            // SimplexTransferListener uses blocking queues that can deadlock in embedded mode
+            if (!allArguments.contains("-B") && !allArguments.contains("--non-interactive")) {
+                allArguments.add("-B")
+            }
 
             log.debug("Executing Maven with goals: $goals, arguments: $arguments from directory: $workingDir")
 

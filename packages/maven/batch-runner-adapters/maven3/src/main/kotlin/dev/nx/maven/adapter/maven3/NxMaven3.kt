@@ -1,5 +1,6 @@
 package dev.nx.maven.adapter.maven3
 
+import dev.nx.maven.shared.BuildStateManager
 import org.apache.maven.DefaultMaven
 import org.apache.maven.Maven
 import org.apache.maven.execution.*
@@ -8,6 +9,7 @@ import org.apache.maven.lifecycle.internal.ExecutionEventCatapult
 import org.apache.maven.lifecycle.internal.LifecycleStarter
 import org.apache.maven.plugin.LegacySupport
 import org.apache.maven.project.MavenProject
+import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.session.scope.internal.SessionScope
 import org.codehaus.plexus.PlexusContainer
 import org.eclipse.aether.RepositorySystemSession
@@ -56,8 +58,14 @@ class NxMaven3(
         log.debug("NxMaven3 initializing - copying injected fields from container's DefaultMaven...")
         copyInjectedFields()
         log.debug("NxMaven3 initialized - will use cached graph for batch execution")
-        // Initialize BuildStateManager with the Plexus container
-        BuildStateManager3.initialize(container)
+        // Initialize BuildStateManager with MavenProjectHelper
+        val projectHelper = try {
+            container.lookup(MavenProjectHelper::class.java)
+        } catch (e: Exception) {
+            log.warn("Failed to lookup MavenProjectHelper: ${e.message}")
+            null
+        }
+        BuildStateManager.initialize(projectHelper)
     }
 
     /**
@@ -169,7 +177,7 @@ class NxMaven3(
             // Apply existing build states to all projects
             log.debug("   🔄 Applying existing build states to ${graph.allProjects.size} projects...")
             val applyStartTime = System.currentTimeMillis()
-            BuildStateManager3.applyBuildStates(graph.allProjects)
+            BuildStateManager.applyBuildStates(graph.allProjects)
             val applyTimeMs = System.currentTimeMillis() - applyStartTime
             log.debug("   ✅ Build state application completed in ${applyTimeMs}ms")
 
@@ -234,7 +242,7 @@ class NxMaven3(
             if (!result.hasExceptions()) {
                 session.projects?.forEach { project ->
                     try {
-                        BuildStateManager3.recordBuildState(project)
+                        BuildStateManager.recordBuildState(project)
                     } catch (e: Exception) {
                         log.warn("Failed to record build state for ${project.groupId}:${project.artifactId}: ${e.message}")
                     }
@@ -293,7 +301,7 @@ class NxMaven3(
 
         // Apply build state to selected projects before execution
         log.debug("Applying build states to ${selectedProjects.size} selected projects before execution...")
-        BuildStateManager3.applyBuildStates(selectedProjects)
+        BuildStateManager.applyBuildStates(selectedProjects)
 
         @Suppress("UNCHECKED_CAST")
         session.projectMap = getProjectMapMethod.invoke(this, selectedProjects) as Map<String, MavenProject>?
@@ -321,7 +329,7 @@ class NxMaven3(
 
             if (project != null) {
                 try {
-                    BuildStateManager3.recordBuildState(project)
+                    BuildStateManager.recordBuildState(project)
                     recordedCount++
                 } catch (e: Exception) {
                     log.warn("  Failed to record build state for $selector: ${e.message}")

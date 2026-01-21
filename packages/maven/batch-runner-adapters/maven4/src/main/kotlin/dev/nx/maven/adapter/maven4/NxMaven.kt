@@ -1,5 +1,6 @@
 package dev.nx.maven.adapter.maven4
 
+import dev.nx.maven.shared.BuildStateManager
 import org.apache.maven.DefaultMaven
 import org.apache.maven.api.Session
 import org.apache.maven.api.SessionData
@@ -16,6 +17,7 @@ import org.apache.maven.lifecycle.internal.LifecycleStarter
 import org.apache.maven.model.superpom.SuperPomProvider
 import org.apache.maven.plugin.LegacySupport
 import org.apache.maven.project.MavenProject
+import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.resolver.MavenChainedWorkspaceReader
 import org.apache.maven.resolver.RepositorySystemSessionFactory
 import org.apache.maven.session.scope.internal.SessionScope
@@ -84,8 +86,14 @@ class NxMaven(
 
   init {
     log.debug("NxMaven initialized - will use lifecycleStarter with cached graph")
-    // Initialize BuildStateManager with Maven's lookup container
-    BuildStateManager.initialize(lookup)
+    // Initialize BuildStateManager with MavenProjectHelper
+    val projectHelper = try {
+      lookup.lookup(MavenProjectHelper::class.java)
+    } catch (e: Exception) {
+      log.warn("Failed to lookup MavenProjectHelper: ${e.message}")
+      null
+    }
+    BuildStateManager.initialize(projectHelper)
   }
 
   /**
