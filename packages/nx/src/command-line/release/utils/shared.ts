@@ -35,10 +35,11 @@ export interface VersionDataEntry {
    */
   newVersion: string | null;
   /**
-   * dockerVersion will be populated if the project is a docker project and has been
-   * included within this release.
+   * dockerVersion will be null when the project is not a docker project or has not been
+   * included within this docker release. It will be populated with a version string if
+   * the project is a docker project and has been included within this release.
    */
-  dockerVersion?: string;
+  dockerVersion: string | null;
   /**
    * The list of projects which depend upon the current project.
    */
