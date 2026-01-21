@@ -12,7 +12,7 @@ const fs = require('fs');
  * - Without this resolver, Jest will fail to resolve these imports correctly
  */
 const enhancedResolver = require('enhanced-resolve').create.sync({
-  conditionNames: ['@nx/nx-source', 'require', 'node', 'default'],
+  conditionNames: ['require', 'node', 'default'],
   extensions: ['.js', '.json', '.node', '.ts', '.tsx'],
 });
 
