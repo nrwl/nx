@@ -6,7 +6,22 @@ module.exports = {
   testTimeout: 35000,
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
   transform: {
-    '^.+\\.(ts|js|html)$': 'ts-jest',
+    '^.+\\.(html)$': 'ts-jest',
+    '^.+\\.[tj]sx?$': [
+      '@swc/jest',
+      {
+        jsc: {
+          parser: { syntax: 'typescript', dynamicImport: true },
+          transform: {
+            useDefineForClassFields: false,
+          },
+          experimental: {
+            plugins: [['@swc-contrib/mut-cjs-exports', {}]],
+          },
+        },
+        module: { type: 'commonjs' },
+      },
+    ],
   },
   resolver: '../../scripts/patched-jest-resolver.js',
   moduleFileExtensions: ['ts', 'js', 'html'],
