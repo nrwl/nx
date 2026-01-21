@@ -211,7 +211,6 @@ pub struct TasksList {
     focus: Focus,
     pinned_tasks: [Option<String>; 2],
     initiating_tasks: HashSet<String>,
-    has_selected_initiating_task: bool, // Track if we've auto-selected an initiating task
     run_mode: RunMode,
     column_visibility: Option<ColumnVisibility>, // Cached column visibility result
     terminal_width: Option<u16>, // Cached terminal width for column visibility calculation
@@ -253,7 +252,6 @@ impl TasksList {
             focus: initial_focus,
             pinned_tasks: [None, None],
             initiating_tasks,
-            has_selected_initiating_task: false,
             run_mode,
             column_visibility: None,
             terminal_width: None,
@@ -946,32 +944,11 @@ impl TasksList {
         self.auto_select_first_in_progress_if_needed();
     }
 
-    /// Auto-select a task based on priority rules.
+    /// Auto-select the first in-progress task if no task is currently selected.
     ///
     /// This should be called after tasks have been sorted to ensure entries are up-to-date.
-    /// Returns true if a task was selected, false otherwise.
-    ///
-    /// Selection priority:
-    /// 1. If we haven't selected an initiating task yet and one is now in-progress,
-    ///    switch to it (even if something else is selected). This ensures the user's
-    ///    requested task gets selected when it starts, not a dependency that started first.
-    /// 2. If nothing is selected, pick the first in-progress task.
+    /// Returns true if a task was auto-selected, false otherwise.
     fn auto_select_first_in_progress_if_needed(&mut self) -> bool {
-        // First priority: switch to an initiating task if we haven't done so yet
-        // This handles the case where a dependency starts first, then the main task starts later
-        if !self.has_selected_initiating_task {
-            if let Some(initiating_in_progress) = self.tasks.iter().find(|t| {
-                self.initiating_tasks.contains(&t.name)
-                    && matches!(t.status, TaskStatus::InProgress | TaskStatus::Shared)
-            }) {
-                self.selection_manager
-                    .lock()
-                    .select_task(initiating_in_progress.name.clone());
-                self.has_selected_initiating_task = true;
-                return true;
-            }
-        }
-
         let mut selection_manager = self.selection_manager.lock();
 
         // Don't override existing selection
@@ -979,7 +956,7 @@ impl TasksList {
             return false;
         }
 
-        // Fall back to the first in-progress task
+        // Select the first in-progress task
         if let Some(first_in_progress) = self
             .tasks
             .iter()

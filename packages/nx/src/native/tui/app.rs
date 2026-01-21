@@ -246,12 +246,13 @@ impl App {
         }
 
         // Iterate over the pinned tasks and assign them to the terminal panes (up to the maximum of 2), focusing the first one as well
-        let (pinned_tasks, run_mode, task_count) = {
+        let (pinned_tasks, run_mode, task_count, initiating_tasks) = {
             let state = self.core.state().lock();
             (
                 state.pinned_tasks().clone(),
                 state.run_mode(),
                 get_task_count(state.task_graph()),
+                state.initiating_tasks().clone(),
             )
         };
 
@@ -270,6 +271,17 @@ impl App {
                 }
             }
         }
+
+        // Select the first initiating task (ensures user's requested task is selected)
+        // Only in RunOne mode - in RunMany there's no single initiating task to prioritize
+        if matches!(run_mode, RunMode::RunOne) {
+            if let Some(first_initiating) = initiating_tasks.iter().next() {
+                self.selection_manager
+                    .lock()
+                    .select_task(first_initiating.clone());
+            }
+        }
+
         Ok(())
     }
 
