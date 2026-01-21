@@ -134,6 +134,38 @@
                 </executions>
             </plugin>
 
+            <!-- Generate classes.txt manifests for adapter class discovery -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>generate-adapter-manifests</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- Generate maven3 classes.txt -->
+                                <fileset id="maven3.classes" dir="${project.build.outputDirectory}/nx-maven-adapters/maven3" includes="**/*.class"/>
+                                <pathconvert property="maven3.list" refid="maven3.classes" pathsep="${line.separator}">
+                                    <map from="${project.build.outputDirectory}/nx-maven-adapters/maven3/" to=""/>
+                                </pathconvert>
+                                <echo file="${project.build.outputDirectory}/nx-maven-adapters/maven3/classes.txt">${maven3.list}</echo>
+                                <!-- Generate maven4 classes.txt -->
+                                <fileset id="maven4.classes" dir="${project.build.outputDirectory}/nx-maven-adapters/maven4" includes="**/*.class"/>
+                                <pathconvert property="maven4.list" refid="maven4.classes" pathsep="${line.separator}">
+                                    <map from="${project.build.outputDirectory}/nx-maven-adapters/maven4/" to=""/>
+                                </pathconvert>
+                                <echo file="${project.build.outputDirectory}/nx-maven-adapters/maven4/classes.txt">${maven4.list}</echo>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Kotlin Compiler -->
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
