@@ -15,6 +15,7 @@
     "baseUrl": ".",
     "allowJs": true,
     "composite": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "esModuleInterop": true
   }
 }
