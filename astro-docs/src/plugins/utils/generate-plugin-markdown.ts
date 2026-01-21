@@ -265,7 +265,7 @@ nx generate ${fullItemName} ${positionalArgs
         const defaultValue = getPropertyDefault(property);
         const isRequired = required.includes(propName);
 
-        const optionName = `\`${propName}\``;
+        const optionName = `\`--${propName}\``;
 
         if (isRequired) {
           type += ' [**required**]';
