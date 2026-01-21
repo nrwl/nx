@@ -119,7 +119,10 @@ function cleanupDaemonWorkspaceData() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
-      rmSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true, force: true });
+      rmSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, {
+        recursive: true,
+        force: true,
+      });
     }
   );
 }
