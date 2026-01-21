@@ -279,14 +279,14 @@ nx generate ${fullItemName} ${positionalArgs
   }
 
   markdown += `
-     ## Getting Help
+## Getting Help
 
-     You can get help for any generator by adding the \`--help\` flag:
+You can get help for any generator by adding the \`--help\` flag:
 
-     \`\`\`bash
-     nx generate ${packageName}:<generator> --help
-     \`\`\`
-     `;
+\`\`\`bash
+nx generate ${packageName}:<generator> --help
+\`\`\`
+`;
 
   return markdown;
 }
