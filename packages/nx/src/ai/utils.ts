@@ -18,6 +18,7 @@ import {
   geminiMdPath,
   geminiSettingsPath,
   nxMcpTomlHeader,
+  opencodeMcpPath,
   parseGeminiSettings,
 } from './constants';
 import setupAiAgentsGenerator from './set-up-ai-agents/set-up-ai-agents';
@@ -30,6 +31,7 @@ export const supportedAgents = [
   'copilot',
   'cursor',
   'gemini',
+  'opencode',
 ] as const;
 export type Agent = (typeof supportedAgents)[number];
 export const agentDisplayMap: Record<Agent, string> = {
@@ -38,6 +40,7 @@ export const agentDisplayMap: Record<Agent, string> = {
   codex: 'OpenAI Codex',
   copilot: 'GitHub Copilot for VSCode',
   cursor: 'Cursor',
+  opencode: 'OpenCode',
 };
 
 export type AgentConfiguration = {
@@ -203,6 +206,27 @@ async function getAgentConfiguration(
         rules: agentsMdExists,
         rulesPath,
         mcpPath: codexConfigTomlPath,
+      };
+      break;
+    }
+    case 'opencode': {
+      const rulesPath = agentsMdPath(workspaceRoot);
+      const agentsMdExists = existsSync(rulesPath);
+      const mcpPath = opencodeMcpPath(workspaceRoot);
+      let mcpConfigured: boolean;
+      try {
+        const mcpContents = readJsonFile(mcpPath);
+        // OpenCode uses 'mcp' property, not 'mcpServers'
+        mcpConfigured = !!mcpContents?.['mcp']?.['nx-mcp'];
+      } catch {
+        mcpConfigured = false;
+      }
+
+      agentConfiguration = {
+        mcp: mcpConfigured,
+        rules: agentsMdExists,
+        rulesPath,
+        mcpPath,
       };
       break;
     }

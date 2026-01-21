@@ -2,6 +2,7 @@ import {
   appendFileSync,
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   writeFileSync,
 } from 'fs';
@@ -27,7 +28,13 @@ import {
 } from '../../utils/package-json';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { agentsMdPath, codexConfigTomlPath, geminiMdPath } from '../constants';
+import {
+  agentsMdPath,
+  codexConfigTomlPath,
+  geminiMdPath,
+  opencodeMcpPath,
+} from '../constants';
+import { getAiConfigRepoPath } from '../clone-ai-config-repo';
 import { Agent, supportedAgents } from '../utils';
 import {
   getAgentRulesWrapped,
@@ -143,7 +150,12 @@ export async function setupAiAgentsGeneratorImpl(
   const agentsMd = agentsMdPath(options.directory);
 
   // write AGENTS.md for most agents
-  if (hasAgent('cursor') || hasAgent('copilot') || hasAgent('codex')) {
+  if (
+    hasAgent('cursor') ||
+    hasAgent('copilot') ||
+    hasAgent('codex') ||
+    hasAgent('opencode')
+  ) {
     writeAgentRules(tree, agentsMd, options.writeNxCloudRules);
   }
 
@@ -156,6 +168,42 @@ export async function setupAiAgentsGeneratorImpl(
       writeJson(tree, mcpJsonPath, {});
     }
     updateJson(tree, mcpJsonPath, (json) => mcpConfigUpdater(json, nxVersion));
+
+    // Configure Claude plugin via marketplace
+    const claudeSettingsPath = join(
+      options.directory,
+      '.claude',
+      'settings.json'
+    );
+    if (!tree.exists(claudeSettingsPath)) {
+      writeJson(tree, claudeSettingsPath, {});
+    }
+    updateJson(tree, claudeSettingsPath, (json) => ({
+      ...json,
+      extraKnownMarketplaces: {
+        ...json.extraKnownMarketplaces,
+        nx: {
+          source: {
+            source: 'github',
+            repo: 'nrwl/nx-ai-agents-config',
+          },
+        },
+      },
+      enabledPlugins: {
+        ...json.enabledPlugins,
+        'nx@nx': true,
+      },
+    }));
+  }
+
+  if (hasAgent('opencode')) {
+    const opencodeMcpJsonPath = opencodeMcpPath(options.directory);
+    if (!tree.exists(opencodeMcpJsonPath)) {
+      writeJson(tree, opencodeMcpJsonPath, {});
+    }
+    updateJson(tree, opencodeMcpJsonPath, (json) =>
+      opencodeMcpConfigUpdater(json, nxVersion)
+    );
   }
 
   if (hasAgent('gemini')) {
@@ -191,6 +239,35 @@ export async function setupAiAgentsGeneratorImpl(
         contextFileName ?? geminiMd,
         options.writeNxCloudRules
       );
+    }
+  }
+
+  // Copy extensibility artifacts (commands, skills, subagents) for non-Claude agents
+  if (
+    hasAgent('opencode') ||
+    hasAgent('copilot') ||
+    hasAgent('cursor') ||
+    hasAgent('codex') ||
+    hasAgent('gemini')
+  ) {
+    const repoPath = getAiConfigRepoPath();
+
+    const agentDirs: { agent: Agent; src: string; dest: string }[] = [
+      { agent: 'opencode', src: 'generated/.opencode', dest: '.opencode' },
+      { agent: 'copilot', src: 'generated/.github', dest: '.github' },
+      { agent: 'cursor', src: 'generated/.cursor', dest: '.cursor' },
+      { agent: 'codex', src: 'generated/.codex', dest: '.codex' },
+      { agent: 'gemini', src: 'generated/.gemini', dest: '.gemini' },
+    ];
+
+    for (const { agent, src, dest } of agentDirs) {
+      if (hasAgent(agent)) {
+        copyDirectoryToTree(
+          tree,
+          join(repoPath, src),
+          join(options.directory, dest)
+        );
+      }
     }
   }
 
@@ -345,6 +422,58 @@ function mcpConfigUpdater(existing: any, nxVersion: string): any {
     };
   }
   return existing;
+}
+
+function opencodeMcpConfigUpdater(existing: any, nxVersion: string): any {
+  const majorVersion = major(nxVersion);
+  const mcpCommand =
+    majorVersion >= 22 ? ['npx', 'nx', 'mcp'] : ['npx', 'nx-mcp'];
+
+  if (existing.mcp) {
+    existing.mcp['nx-mcp'] = {
+      type: 'local',
+      command: mcpCommand,
+      enabled: true,
+    };
+  } else {
+    existing.mcp = {
+      'nx-mcp': {
+        type: 'local',
+        command: mcpCommand,
+        enabled: true,
+      },
+    };
+  }
+  return existing;
+}
+
+/**
+ * Recursively copy all files and directories from source to destination.
+ * If source doesn't exist, does nothing.
+ */
+function copyDirectoryToTree(
+  tree: Tree,
+  sourcePath: string,
+  destPath: string
+): void {
+  if (!existsSync(sourcePath)) {
+    return;
+  }
+
+  const entries = readdirSync(sourcePath, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const sourceEntryPath = join(sourcePath, entry.name);
+    const destEntryPath = join(destPath, entry.name);
+
+    if (entry.isDirectory()) {
+      copyDirectoryToTree(tree, sourceEntryPath, destEntryPath);
+    } else if (entry.isFile()) {
+      // Read as buffer to handle any file type (text or binary)
+      const content = readFileSync(sourceEntryPath);
+      tree.write(destEntryPath, content);
+    }
+  }
 }
 
 export default setupAiAgentsGenerator;
