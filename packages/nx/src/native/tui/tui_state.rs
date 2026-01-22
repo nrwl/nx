@@ -11,7 +11,7 @@ use crate::native::utils::time::current_timestamp_millis;
 
 // Re-export for backward compatibility with places that use TuiState timing
 
-use super::components::task_selection_manager::{PaneSelection, Selection};
+use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
 use super::lifecycle::RunMode;
@@ -86,13 +86,13 @@ pub struct TuiState {
 
     // === UI State (for mode switching persistence) ===
     /// Tasks assigned to terminal panes [pane0, pane1]
-    ui_pane_tasks: [Option<PaneSelection>; 2],
+    ui_pane_tasks: [Option<SelectionEntry>; 2],
     /// Whether spacebar (follow) mode is active
     ui_spacebar_mode: bool,
     /// Index of focused pane (None = task list, Some(0) = pane 0, Some(1) = pane 1)
     ui_focused_pane: Option<usize>,
     /// Currently selected item in the task list (task or batch group)
-    ui_selected_item: Option<Selection>,
+    ui_selected_item: Option<SelectionEntry>,
     /// max_parallel value from start_command, needed to restore TasksList parallel section
     ui_max_parallel: Option<u32>,
 
@@ -471,10 +471,10 @@ impl TuiState {
     /// Save the UI state from full-screen mode for later restoration
     pub fn save_ui_state(
         &mut self,
-        pane_tasks: [Option<PaneSelection>; 2],
+        pane_tasks: [Option<SelectionEntry>; 2],
         spacebar_mode: bool,
         focused_pane: Option<usize>,
-        selected_item: Option<Selection>,
+        selected_item: Option<SelectionEntry>,
     ) {
         self.ui_pane_tasks = pane_tasks;
         self.ui_spacebar_mode = spacebar_mode;
@@ -483,7 +483,7 @@ impl TuiState {
     }
 
     /// Get the saved pane tasks
-    pub fn get_ui_pane_tasks(&self) -> &[Option<PaneSelection>; 2] {
+    pub fn get_ui_pane_tasks(&self) -> &[Option<SelectionEntry>; 2] {
         &self.ui_pane_tasks
     }
 
@@ -498,7 +498,7 @@ impl TuiState {
     }
 
     /// Get the saved selected item from the task list (task or batch group)
-    pub fn get_ui_selected_item(&self) -> Option<&Selection> {
+    pub fn get_ui_selected_item(&self) -> Option<&SelectionEntry> {
         self.ui_selected_item.as_ref()
     }
 
@@ -508,12 +508,12 @@ impl TuiState {
         // If we have a focused pane, use that pane's item
         if let Some(pane_idx) = self.ui_focused_pane {
             if let Some(selection) = &self.ui_pane_tasks[pane_idx] {
-                return Some(selection.id.clone());
+                return Some(selection.id().to_string());
             }
         }
         // Otherwise try the first pane
         if let Some(selection) = &self.ui_pane_tasks[0] {
-            return Some(selection.id.clone());
+            return Some(selection.id().to_string());
         }
         // No pane items available
         None

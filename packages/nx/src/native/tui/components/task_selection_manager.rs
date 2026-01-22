@@ -14,7 +14,7 @@ pub struct TaskSelectionManager {
     // The list of entries (tasks and batch groups) in their current visual order, None represents empty rows
     entries: Vec<Option<SelectionEntry>>,
     // The current selection state (Some = selected, None = no selection)
-    selection_state: Option<Selection>,
+    selection_state: Option<SelectionEntry>,
     // Scroll offset for viewport management
     scroll_offset: usize,
     // Viewport height for visible area calculations
@@ -56,24 +56,6 @@ pub enum SelectionMode {
     TrackByPosition,
 }
 
-/// Represents a selection in the TUI, eliminating the need for string prefixes
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Selection {
-    /// A task is selected (pure task ID like "app:build")
-    Task(String),
-    /// A batch group is selected (pure batch ID)
-    BatchGroup(String),
-}
-
-impl Selection {
-    /// Gets the ID regardless of selection type
-    pub fn id(&self) -> &str {
-        match self {
-            Selection::Task(id) | Selection::BatchGroup(id) => id,
-        }
-    }
-}
-
 /// Represents an entry in the selection manager with type information
 /// This preserves the distinction between tasks and batch groups through the pipeline
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -91,32 +73,6 @@ impl SelectionEntry {
             SelectionEntry::Task(id) | SelectionEntry::BatchGroup(id) => id,
         }
     }
-
-    /// Converts this entry into a Selection variant
-    pub fn to_selection(&self) -> Selection {
-        match self {
-            SelectionEntry::Task(id) => Selection::Task(id.clone()),
-            SelectionEntry::BatchGroup(id) => Selection::BatchGroup(id.clone()),
-        }
-    }
-}
-
-/// Represents the type of item currently selected
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SelectedItemType {
-    /// No item is selected
-    None,
-    /// A batch group is selected
-    BatchGroup,
-    /// A task is selected (whether nested in batch or standalone)
-    Task,
-}
-
-/// Represents a selection pinned to a terminal pane (task or batch group)
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PaneSelection {
-    pub id: String,
-    pub item_type: SelectedItemType,
 }
 
 impl TaskSelectionManager {
@@ -211,52 +167,16 @@ impl TaskSelectionManager {
         }
 
         // Update selection state based on previous state
-        self.selection_state = match previous_state {
-            Some(selection) => {
-                // Extract the ID from the selection
-                let selected_id = match &selection {
-                    Selection::Task(id) | Selection::BatchGroup(id) => id,
-                };
-
-                // Check if the item still exists in the entries
-                let item_still_exists = self
-                    .entries
-                    .iter()
-                    .any(|entry| entry.as_ref().map(|e| e.id()) == Some(selected_id.as_str()));
-
-                if item_still_exists {
-                    // Item is still in the list, find it and preserve its type
-                    let mut found = None;
-                    for entry in &self.entries {
-                        if let Some(e) = entry {
-                            if e.id() == selected_id {
-                                found = Some(e.to_selection());
-                                break;
-                            }
-                        }
-                    }
-                    // Use found selection or select first available
-                    found.or_else(|| match self.entries.iter().find_map(|e| e.as_ref()) {
-                        Some(entry) => Some(entry.to_selection()),
-                        None => None,
-                    })
-                } else {
-                    // Item no longer exists - select first available
-                    // This follows master's rule: no preference between batches and tasks
-                    match self.entries.iter().find_map(|e| e.as_ref()) {
-                        Some(entry) => Some(entry.to_selection()),
-                        None => None,
-                    }
-                }
-            }
-            None => {
-                // Stay in waiting state - selection happens at render time
-                None
-            }
-        };
-
-        // Invalidate selection cache
-        self.invalidate_selection_cache();
+        // If we had a selection, try to find same item or fall back to first available
+        let new_selection = previous_state.and_then(|selection| {
+            let selected_id = selection.id();
+            self.entries
+                .iter()
+                .find_map(|e| e.as_ref().filter(|entry| entry.id() == selected_id))
+                .or_else(|| self.entries.iter().find_map(|e| e.as_ref()))
+                .cloned()
+        });
+        self.select(new_selection);
     }
 
     /// Updates entries while trying to preserve the selected position in the list
@@ -281,112 +201,42 @@ impl TaskSelectionManager {
         }
 
         // Update selection state based on position
-        self.selection_state = if let Some(idx) = selection_index {
-            // Try to maintain the position - find next non-empty entry at or after position
-            let mut found_entry = None;
-            for i in idx..self.entries.len() {
-                if let Some(Some(entry)) = self.entries.get(i) {
-                    found_entry = Some(entry.to_selection());
-                    break;
-                }
-            }
+        let new_selection = selection_index.and_then(|idx| self.find_nearest_entry(idx).cloned());
+        self.select(new_selection);
+    }
 
-            // If not found after, try before
-            if found_entry.is_none() {
-                for i in (0..idx).rev() {
-                    if let Some(Some(entry)) = self.entries.get(i) {
-                        found_entry = Some(entry.to_selection());
-                        break;
-                    }
-                }
-            }
-
-            // Use found entry or select first available
-            match found_entry.or_else(|| {
-                self.entries
-                    .iter()
-                    .find_map(|e| e.as_ref().map(|entry| entry.to_selection()))
-            }) {
-                Some(selection) => Some(selection),
-                None => None,
-            }
-        } else {
-            // No previous selection - stay in waiting state (selection happens at render time)
-            None
-        };
-
-        // Invalidate selection cache
+    /// Selects an item, clears selection if None
+    pub fn select(&mut self, selection: Option<SelectionEntry>) {
+        self.selection_state = selection;
         self.invalidate_selection_cache();
+        self.ensure_selected_visible();
     }
 
-    pub fn select(&mut self, task_name: Option<String>) {
-        match task_name {
-            Some(name)
-                if self
-                    .entries
-                    .iter()
-                    .any(|e| e.as_ref().map(|entry| entry.id()) == Some(name.as_str())) =>
-            {
-                // Find the entry and preserve its type
-                for entry in &self.entries {
-                    if let Some(e) = entry {
-                        if e.id() == name {
-                            self.selection_state = Some(e.to_selection());
-                            // Invalidate selection cache since selected item changed
-                            self.invalidate_selection_cache();
-                            // Scroll to ensure the selected item is visible
-                            self.ensure_selected_visible();
-                            return;
-                        }
-                    }
-                }
-            }
-            _ => {
-                self.selection_state = None;
-                // Invalidate selection cache since selection was cleared
-                self.invalidate_selection_cache();
-            }
-        }
-    }
-
+    /// Convenience: selects a task by ID
     pub fn select_task(&mut self, task_id: String) {
-        self.selection_state = Some(Selection::Task(task_id));
-        // Invalidate selection cache since selected task changed
-        self.invalidate_selection_cache();
-        self.ensure_selected_visible();
+        self.select(Some(SelectionEntry::Task(task_id)));
     }
 
-    /// Selects a batch group by its ID
+    /// Convenience: selects a batch group by ID
     pub fn select_batch_group(&mut self, batch_id: String) {
-        self.selection_state = Some(Selection::BatchGroup(batch_id));
-        // Invalidate selection cache since selection changed
-        self.invalidate_selection_cache();
-        self.ensure_selected_visible();
-    }
-
-    /// Clears the current selection (enters waiting state)
-    pub fn clear_selection(&mut self) {
-        self.selection_state = None;
-        self.invalidate_selection_cache();
+        self.select(Some(SelectionEntry::BatchGroup(batch_id)));
     }
 
     /// Determine which section a task belongs to based on its position in entries
     /// Returns None for batch groups (they don't belong to a section)
-    fn determine_task_section(&self, selection: &Selection) -> Option<TaskSection> {
+    fn determine_task_section(&self, selection: &SelectionEntry) -> Option<TaskSection> {
         // Batch groups don't belong to sections
-        if matches!(selection, Selection::BatchGroup(_)) {
+        if matches!(selection, SelectionEntry::BatchGroup(_)) {
             return None;
         }
 
-        let item_id = match selection {
-            Selection::Task(id) | Selection::BatchGroup(id) => id,
-        };
+        let item_id = selection.id();
 
         // Find the item's index in entries
         let item_index = self
             .entries
             .iter()
-            .position(|entry| entry.as_ref().map(|e| e.id()) == Some(item_id.as_str()))?;
+            .position(|entry| entry.as_ref().map(|e| e.id()) == Some(item_id))?;
 
         // Check if it's in the in-progress section (before the first None spacer)
         if item_index < self.in_progress_section_size {
@@ -397,70 +247,61 @@ impl TaskSelectionManager {
     }
 
     pub fn next(&mut self) {
-        match &self.selection_state {
-            Some(_) => {
-                if let Some(current_idx) = self.get_selected_index() {
-                    // Find next non-empty entry
-                    for idx in (current_idx + 1)..self.entries.len() {
-                        if let Some(entry) = &self.entries[idx] {
-                            self.selection_state = Some(entry.to_selection());
-                            self.invalidate_selection_cache();
-                            self.ensure_selected_visible();
-                            return;
-                        }
-                    }
-                    // No next selectable found - scroll to reveal trailing entries (extended scroll)
-                    // This allows viewing placeholders and separators at the end of the list
-                    if self.can_scroll_down() {
-                        self.scroll_down(1);
-                    }
+        if self.selection_state.is_none() {
+            self.select_first_available();
+            self.ensure_selected_visible();
+            return;
+        }
+
+        if let Some(current_idx) = self.get_selected_index() {
+            // Find next non-empty entry
+            for idx in (current_idx + 1)..self.entries.len() {
+                if let Some(entry) = &self.entries[idx] {
+                    self.select(Some(entry.clone()));
+                    return;
                 }
             }
-            None => {
-                self.select_first_available();
-                self.ensure_selected_visible();
+            // No next selectable found - scroll to reveal trailing entries (extended scroll)
+            if self.can_scroll_down() {
+                self.scroll_down(1);
             }
         }
     }
 
     pub fn previous(&mut self) {
-        match &self.selection_state {
-            Some(_) => {
-                if let Some(current_idx) = self.get_selected_index() {
-                    // Check if we've scrolled past selection (extended scroll mode)
-                    // This happens when at last selectable and user scrolled down to see trailing None entries
-                    let has_selectable_below = self.entries[(current_idx + 1)..]
-                        .iter()
-                        .any(|e| e.is_some());
+        if self.selection_state.is_none() {
+            self.select_first_available();
+            self.ensure_selected_visible();
+            return;
+        }
 
-                    if !has_selectable_below && self.can_scroll_up() {
-                        // Check if selection is not at bottom of viewport (we've scrolled past it)
-                        let viewport_bottom_idx = self
-                            .scroll_offset
-                            .saturating_add(self.viewport_height)
-                            .saturating_sub(1);
-                        if current_idx < viewport_bottom_idx {
-                            // Scroll back up first before moving selection
-                            self.scroll_up(1);
-                            self.invalidate_viewport_cache();
-                            return;
-                        }
-                    }
+        if let Some(current_idx) = self.get_selected_index() {
+            // Check if we've scrolled past selection (extended scroll mode)
+            // This happens when at last selectable and user scrolled down to see trailing None entries
+            let has_selectable_below = self.entries[(current_idx + 1)..]
+                .iter()
+                .any(|e| e.is_some());
 
-                    // Normal: Find previous non-empty entry
-                    for idx in (0..current_idx).rev() {
-                        if let Some(entry) = &self.entries[idx] {
-                            self.selection_state = Some(entry.to_selection());
-                            self.invalidate_selection_cache();
-                            self.ensure_selected_visible();
-                            return;
-                        }
-                    }
+            if !has_selectable_below && self.can_scroll_up() {
+                // Check if selection is not at bottom of viewport (we've scrolled past it)
+                let viewport_bottom_idx = self
+                    .scroll_offset
+                    .saturating_add(self.viewport_height)
+                    .saturating_sub(1);
+                if current_idx < viewport_bottom_idx {
+                    // Scroll back up first before moving selection
+                    self.scroll_up(1);
+                    self.invalidate_viewport_cache();
+                    return;
                 }
             }
-            None => {
-                self.select_first_available();
-                self.ensure_selected_visible();
+
+            // Normal: Find previous non-empty entry
+            for idx in (0..current_idx).rev() {
+                if let Some(entry) = &self.entries[idx] {
+                    self.select(Some(entry.clone()));
+                    return;
+                }
             }
         }
     }
@@ -507,76 +348,9 @@ impl TaskSelectionManager {
         self.entries[start..end].to_vec()
     }
 
-    pub fn is_selected(&self, task_name: &str) -> bool {
-        match &self.selection_state {
-            Some(Selection::Task(selected_task)) | Some(Selection::BatchGroup(selected_task)) => {
-                selected_task == task_name
-            }
-            _ => false,
-        }
-    }
-
-    /// Gets the currently selected item as a Selection enum
-    pub fn get_selection(&self) -> Option<&Selection> {
-        match &self.selection_state {
-            Some(selection) => Some(selection),
-            _ => None,
-        }
-    }
-
-    /// Gets the selected task name if a task is selected, otherwise None
-    pub fn get_selected_task_name(&self) -> Option<&String> {
-        match &self.selection_state {
-            Some(Selection::Task(task_name)) => Some(task_name),
-            _ => None,
-        }
-    }
-
-    /// Gets the current selection state
-    pub fn get_selection_state(&self) -> &Option<Selection> {
-        &self.selection_state
-    }
-
-    /// Gets the in-progress section size
-    pub fn get_in_progress_section_size(&self) -> usize {
-        self.in_progress_section_size
-    }
-
-    /// Determines the type of the currently selected item
-    pub fn get_selected_item_type(&self) -> SelectedItemType {
-        match &self.selection_state {
-            Some(Selection::Task(_)) => SelectedItemType::Task,
-            Some(Selection::BatchGroup(_)) => SelectedItemType::BatchGroup,
-            _ => SelectedItemType::None,
-        }
-    }
-
-    /// Gets the batch ID if a batch group is selected
-    pub fn get_selected_batch_id(&self) -> Option<&String> {
-        match &self.selection_state {
-            Some(Selection::BatchGroup(batch_id)) => Some(batch_id),
-            _ => None,
-        }
-    }
-
-    /// Gets the selected item ID and type in one call (unified getter)
-    /// This is the preferred method over separate type/ID getters
-    pub fn get_selected_item(&self) -> Option<(&String, SelectedItemType)> {
-        match &self.selection_state {
-            Some(Selection::Task(id)) => Some((id, SelectedItemType::Task)),
-            Some(Selection::BatchGroup(id)) => Some((id, SelectedItemType::BatchGroup)),
-            _ => None,
-        }
-    }
-
-    /// Gets the task name if a task is selected (deprecated method name)
-    pub fn get_selected_nested_task_name(&self) -> Option<&String> {
-        self.get_selected_task_name()
-    }
-
-    /// Gets the task name if a task is selected (deprecated method name)
-    pub fn get_selected_regular_task_name(&self) -> Option<&String> {
-        self.get_selected_task_name()
+    /// Gets the currently selected item as a SelectionEntry enum
+    pub fn get_selection(&self) -> Option<&SelectionEntry> {
+        self.selection_state.as_ref()
     }
 
     /// Get total number of entries
@@ -613,6 +387,22 @@ impl TaskSelectionManager {
         count
     }
 
+    /// Find the nearest non-empty entry to the given index, preferring entries at or after the index
+    fn find_nearest_entry(&self, idx: usize) -> Option<&SelectionEntry> {
+        let idx = idx.min(self.entries.len());
+
+        // First try at or after position
+        self.entries
+            .get(idx..)
+            .and_then(|slice| slice.iter().find_map(|e| e.as_ref()))
+            .or_else(|| {
+                // Then try before position (in reverse to find closest)
+                self.entries
+                    .get(..idx)
+                    .and_then(|slice| slice.iter().rev().find_map(|e| e.as_ref()))
+            })
+    }
+
     /// Get the index of the currently selected task among actual tasks only (excludes spacers)
     /// This represents progress through tasks only, ignoring None spacer entries (which are never selected)
     pub fn get_selected_task_index(&mut self) -> Option<usize> {
@@ -628,9 +418,7 @@ impl TaskSelectionManager {
         }
 
         // Cache miss - compute and store the result
-        let selected_id = match selection {
-            Selection::Task(id) | Selection::BatchGroup(id) => id,
-        };
+        let selected_id = selection.id();
         let mut task_index = 0;
         for entry in &self.entries {
             if let Some(e) = entry {
@@ -655,16 +443,8 @@ impl TaskSelectionManager {
     }
 
     pub fn select_first_available(&mut self) {
-        self.selection_state = match self
-            .entries
-            .iter()
-            .find_map(|e| e.as_ref().map(|entry| entry.to_selection()))
-        {
-            Some(selection) => Some(selection),
-            None => None,
-        };
-        // Invalidate selection cache since selected item changed
-        self.invalidate_selection_cache();
+        let first = self.entries.iter().find_map(|e| e.as_ref()).cloned();
+        self.select(first);
     }
 
     /// Validate and adjust scroll offset to ensure it's within bounds
@@ -680,13 +460,10 @@ impl TaskSelectionManager {
     }
 
     pub fn get_selected_index(&self) -> Option<usize> {
-        match &self.selection_state {
-            Some(Selection::Task(id)) | Some(Selection::BatchGroup(id)) => self
-                .entries
-                .iter()
-                .position(|entry| entry.as_ref().map(|e| e.id()) == Some(id.as_str())),
-            _ => None,
-        }
+        let id = self.selection_state.as_ref()?.id();
+        self.entries
+            .iter()
+            .position(|entry| entry.as_ref().map(|e| e.id()) == Some(id))
     }
 
     /// Set the viewport height (visible area size)
@@ -723,42 +500,22 @@ impl TaskSelectionManager {
     /// Get the section the currently selected task belongs to
     /// Returns None for batch groups (they don't have sections)
     pub fn get_selected_task_section(&self) -> Option<TaskSection> {
-        match &self.selection_state {
-            Some(selection) => self.determine_task_section(selection),
-            _ => None,
-        }
+        self.selection_state
+            .as_ref()
+            .and_then(|sel| self.determine_task_section(sel))
     }
 
     /// Update the in-progress section size by counting entries before the first spacer
     fn update_in_progress_section_size(&mut self) {
-        let mut count = 0;
-        for entry in &self.entries {
-            if entry.is_some() {
-                count += 1;
-            } else {
-                // Hit the spacer, stop counting
-                break;
-            }
-        }
-        self.in_progress_section_size = count;
-    }
-
-    /// Get the index of a task within the in-progress section
-    /// Works for both tasks and batch groups (returns position among all entries in section)
-    pub fn get_index_in_in_progress_section(&self, item_id: &str) -> Option<usize> {
-        let safe_size = self.in_progress_section_size.min(self.entries.len());
-        self.entries[0..safe_size]
-            .iter()
-            .filter_map(|e| e.as_ref())
-            .position(|entry| entry.id() == item_id)
+        self.in_progress_section_size = self.entries.iter().take_while(|e| e.is_some()).count();
     }
 
     /// Get all in-progress items (tasks and batch groups)
-    pub fn get_in_progress_items(&self) -> Vec<Selection> {
+    pub fn get_in_progress_items(&self) -> Vec<SelectionEntry> {
         let safe_size = self.in_progress_section_size.min(self.entries.len());
         self.entries[0..safe_size]
             .iter()
-            .filter_map(|e| e.as_ref().map(|entry| entry.to_selection()))
+            .filter_map(|e| e.clone())
             .collect()
     }
 
@@ -781,16 +538,14 @@ impl TaskSelectionManager {
         // Check for last task scenario
         if in_progress_items.is_empty() && !has_pending_tasks {
             // This was the last task - keep tracking by name
-            self.selection_state = Some(Selection::Task(task_id));
-            self.invalidate_selection_cache();
+            self.select(Some(SelectionEntry::Task(task_id)));
             return;
         }
 
         // Check if in-progress section is empty but there are pending tasks
         if in_progress_items.is_empty() {
             // Wait for next allocation - enter "waiting state"
-            self.selection_state = None;
-            self.invalidate_selection_cache();
+            self.select(None);
             return;
         }
 
@@ -800,16 +555,14 @@ impl TaskSelectionManager {
         // Try to select item at old index, falling back to lower indices
         for idx in (0..=target_index).rev() {
             if let Some(item) = in_progress_items.get(idx) {
-                self.selection_state = Some(item.clone());
-                self.invalidate_selection_cache();
+                self.select(Some(item.clone()));
                 return;
             }
         }
 
         // Shouldn't reach here, but fallback to first in-progress item
         if let Some(item) = in_progress_items.first() {
-            self.selection_state = Some(item.clone());
-            self.invalidate_selection_cache();
+            self.select(Some(item.clone()));
         }
     }
 
@@ -833,10 +586,10 @@ impl TaskSelectionManager {
     ) {
         // Only process if this is the selected task OR we're waiting for a task
         match &self.selection_state {
-            Some(Selection::Task(selected_task)) if selected_task != &task_id => {
+            Some(SelectionEntry::Task(selected_task)) if selected_task != &task_id => {
                 return;
             }
-            Some(Selection::BatchGroup(_)) => return,
+            Some(SelectionEntry::BatchGroup(_)) => return,
             None => return,
             _ => {} // Allow Selected(matching task) to continue
         }
@@ -854,9 +607,8 @@ impl TaskSelectionManager {
         // 2. Task starting: was NOT in-progress → now in-progress
         else if old_in_progress_index.is_none() && new_is_in_progress {
             // Clear waiting state if we're in NoSelection
-            if matches!(self.selection_state, None) {
-                self.selection_state = Some(Selection::Task(task_id));
-                self.invalidate_selection_cache();
+            if self.selection_state.is_none() {
+                self.select(Some(SelectionEntry::Task(task_id)));
             }
         }
     }
@@ -869,7 +621,7 @@ mod tests {
     #[test]
     fn test_new_manager() {
         let manager = TaskSelectionManager::new(5);
-        assert_eq!(manager.get_selected_task_name(), None);
+        assert_eq!(manager.get_selection(), None);
         assert_eq!(manager.get_selection_mode(), SelectionMode::TrackByName);
         assert!(!manager.can_scroll_up());
         assert!(!manager.can_scroll_down()); // No entries, can't scroll
@@ -889,8 +641,8 @@ mod tests {
         manager.update_entries(entries);
         manager.select_first_available(); // Manual selection since NoSelection doesn't auto-select
         assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"Task 1".to_string())
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("Task 1".to_string()))
         );
 
         // Update entries with same tasks but different order
@@ -903,8 +655,8 @@ mod tests {
 
         // Selection should still be Task 1 despite order change
         assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"Task 1".to_string())
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("Task 1".to_string()))
         );
     }
 
@@ -922,8 +674,8 @@ mod tests {
         manager.update_entries(entries);
         manager.select_first_available(); // Manual selection since NoSelection doesn't auto-select
         assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"Task 1".to_string())
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("Task 1".to_string()))
         );
 
         // Update entries with different tasks but same structure
@@ -936,8 +688,8 @@ mod tests {
 
         // Selection should be Task 3 (same position as Task 1 was)
         assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"Task 3".to_string())
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("Task 3".to_string()))
         );
     }
 
@@ -950,10 +702,10 @@ mod tests {
             Some(SelectionEntry::Task("Task 2".to_string())),
         ];
         manager.update_entries(entries);
-        manager.select(Some("Task 2".to_string()));
+        manager.select_task("Task 2".to_string());
         assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"Task 2".to_string())
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("Task 2".to_string()))
         );
     }
 
@@ -971,20 +723,20 @@ mod tests {
 
         // Test next
         assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"Task 1".to_string())
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("Task 1".to_string()))
         );
         manager.next();
         assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"Task 2".to_string())
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("Task 2".to_string()))
         );
 
         // Test previous
         manager.previous();
         assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"Task 1".to_string())
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("Task 1".to_string()))
         );
     }
 
@@ -1045,20 +797,6 @@ mod tests {
     }
 
     #[test]
-    fn test_is_selected() {
-        let mut manager = TaskSelectionManager::new(2);
-        let entries = vec![
-            Some(SelectionEntry::Task("Task 1".to_string())),
-            Some(SelectionEntry::Task("Task 2".to_string())),
-        ];
-        manager.update_entries(entries);
-        manager.select_first_available(); // Manual selection since NoSelection doesn't auto-select
-
-        assert!(manager.is_selected("Task 1"));
-        assert!(!manager.is_selected("Task 2"));
-    }
-
-    #[test]
     fn test_handle_position_tracking_empty_entries() {
         let mut manager = TaskSelectionManager::new(2);
         manager.set_selection_mode(SelectionMode::TrackByPosition);
@@ -1071,8 +809,8 @@ mod tests {
         manager.update_entries(entries);
         manager.select_first_available(); // Manual selection since NoSelection doesn't auto-select
         assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"Task 1".to_string())
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("Task 1".to_string()))
         );
 
         // Update with empty entries
@@ -1080,50 +818,38 @@ mod tests {
         manager.update_entries(entries);
 
         // No entries, so no selection
-        assert_eq!(manager.get_selected_task_name(), None);
+        assert_eq!(manager.get_selection(), None);
     }
 
     #[test]
     fn test_batch_selection_type_detection() {
         let mut manager = TaskSelectionManager::new(2);
 
-        // Test batch group selection (using pure batch ID)
+        // Test batch group selection
         manager.select_batch_group("my-batch-id".to_string());
         assert_eq!(
-            manager.get_selected_item_type(),
-            SelectedItemType::BatchGroup
+            manager.get_selection(),
+            Some(&SelectionEntry::BatchGroup("my-batch-id".to_string()))
         );
-        assert_eq!(
-            manager.get_selected_batch_id(),
-            Some(&"my-batch-id".to_string())
-        );
-        assert_eq!(manager.get_selected_task_name(), None);
 
-        // Test task selection (no more distinction between nested and regular)
+        // Test task selection
         manager.select_task("my-task".to_string());
-        assert_eq!(manager.get_selected_item_type(), SelectedItemType::Task);
-        assert_eq!(manager.get_selected_batch_id(), None);
         assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"my-task".to_string())
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("my-task".to_string()))
         );
 
         // Test another task selection
         manager.select_task("regular-task".to_string());
-        assert_eq!(manager.get_selected_item_type(), SelectedItemType::Task);
-        assert_eq!(manager.get_selected_batch_id(), None);
         assert_eq!(
-            manager.get_selected_task_name(),
-            Some(&"regular-task".to_string())
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("regular-task".to_string()))
         );
 
         // Test no selection
         let entries: Vec<Option<SelectionEntry>> = vec![];
         manager.update_entries(entries);
-        assert_eq!(manager.get_selected_item_type(), SelectedItemType::None);
-        assert_eq!(manager.get_selected_batch_id(), None);
-        assert_eq!(manager.get_selected_nested_task_name(), None);
-        assert_eq!(manager.get_selected_regular_task_name(), None);
+        assert_eq!(manager.get_selection(), None);
     }
 
     #[test]
@@ -1140,7 +866,10 @@ mod tests {
         manager.select_first_available(); // Manual selection since NoSelection doesn't auto-select
 
         // task1 should be selected initially
-        assert_eq!(manager.get_selected_task_name(), Some(&"task1".to_string()));
+        assert_eq!(
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("task1".to_string()))
+        );
 
         // Simulate task1 finishing (it was at index 0 in in-progress section)
         // After update_entries, task1 is no longer in in-progress section

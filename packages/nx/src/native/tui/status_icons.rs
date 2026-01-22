@@ -6,6 +6,9 @@ use ratatui::{
 use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::theme::THEME;
 
+/// Throbber animation characters for running/in-progress status
+pub const THROBBER_CHARS: [char; 10] = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+
 /// Returns a status icon span for the given task status and throbber counter.
 /// This is used consistently across the TUI for status visualization.
 pub fn get_status_icon(status: TaskStatus, throbber_counter: usize) -> Span<'static> {
@@ -32,8 +35,7 @@ pub fn get_status_icon(status: TaskStatus, throbber_counter: usize) -> Span<'sta
                 .add_modifier(Modifier::BOLD),
         ),
         TaskStatus::InProgress | TaskStatus::Shared => {
-            let throbber_chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-            let throbber_char = throbber_chars[throbber_counter % throbber_chars.len()];
+            let throbber_char = THROBBER_CHARS[throbber_counter % THROBBER_CHARS.len()];
             Span::styled(
                 format!("  {}  ", throbber_char),
                 Style::default().fg(THEME.info).add_modifier(Modifier::BOLD),
@@ -65,8 +67,7 @@ pub fn get_status_char(status: TaskStatus, throbber_counter: usize) -> char {
         TaskStatus::Failure => '✖',
         TaskStatus::Skipped => '⏭',
         TaskStatus::InProgress | TaskStatus::Shared => {
-            let throbber_chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-            throbber_chars[throbber_counter % throbber_chars.len()]
+            THROBBER_CHARS[throbber_counter % THROBBER_CHARS.len()]
         }
         TaskStatus::Stopped => '◼',
         TaskStatus::NotStarted => '·',

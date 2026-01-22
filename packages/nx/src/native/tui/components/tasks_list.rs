@@ -21,7 +21,7 @@ use super::task_selection_manager::{
 };
 use crate::native::tui::{
     scroll_momentum::{ScrollDirection, ScrollMomentum},
-    status_icons,
+    status_icons::{self, THROBBER_CHARS},
     theme::THEME,
 };
 use crate::native::{
@@ -46,9 +46,6 @@ const DURATION_NOT_YET_KNOWN: &str = "...";
 
 // This is just a fallback value, the real value will be set via start_command on the lifecycle
 const DEFAULT_MAX_PARALLEL: usize = 0;
-
-// Throbber animation characters for running batch status
-const THROBBER_CHARS: [char; 10] = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
 // Constants for layout calculation
 const COLLAPSED_HELP_WIDTH: u16 = 19; // "quit: q help: ?"
