@@ -1,11 +1,5 @@
 import { execSync } from 'node:child_process';
-import {
-  existsSync,
-  readFileSync,
-  writeFileSync,
-  statSync,
-  unlinkSync,
-} from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { isCI } from '../ci/is-ci';
@@ -22,15 +16,7 @@ function readCachedFlowVariant(): string | null {
   try {
     if (!existsSync(FLOW_VARIANT_CACHE_FILE)) return null;
     const stats = statSync(FLOW_VARIANT_CACHE_FILE);
-    if (Date.now() - stats.mtimeMs > FLOW_VARIANT_EXPIRY_MS) {
-      // Delete expired file so a new variant can be written
-      try {
-        unlinkSync(FLOW_VARIANT_CACHE_FILE);
-      } catch {
-        // Ignore delete errors
-      }
-      return null;
-    }
+    if (Date.now() - stats.mtimeMs > FLOW_VARIANT_EXPIRY_MS) return null;
     const value = readFileSync(FLOW_VARIANT_CACHE_FILE, 'utf-8').trim();
     return value === '0' || value === '1' ? value : null;
   } catch {
@@ -284,7 +270,6 @@ export interface RecordStatMetaPrecreate {
   preset: string;
   nodeVersion: string;
   packageManager: string;
-  ghAvailable?: string;
 }
 
 export type RecordStatMeta =
