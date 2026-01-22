@@ -282,6 +282,20 @@
                                         <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
                                 </filter>
+                                <!-- Exclude Maven-dependent shared classes from shaded JAR.
+                                     These are injected into ClassRealm at runtime instead,
+                                     so they can see Maven's classes. -->
+                                <filter>
+                                    <artifact>dev.nx.maven:nx-maven-shared</artifact>
+                                    <excludes>
+                                        <exclude>dev/nx/maven/shared/BuildStateManager*.class</exclude>
+                                        <exclude>dev/nx/maven/shared/BuildStateApplier*.class</exclude>
+                                        <exclude>dev/nx/maven/shared/BuildStateRecorder*.class</exclude>
+                                        <exclude>dev/nx/maven/shared/BuildState.class</exclude>
+                                        <exclude>dev/nx/maven/shared/ArtifactInfo.class</exclude>
+                                        <exclude>dev/nx/maven/shared/PathUtils*.class</exclude>
+                                    </excludes>
+                                </filter>
                             </filters>
                             <shadedArtifactAttached>false</shadedArtifactAttached>
                             <createDependencyReducedPom>true</createDependencyReducedPom>
