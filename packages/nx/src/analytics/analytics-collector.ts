@@ -49,6 +49,8 @@ export class AnalyticsCollector {
         'Google%20Chrome;111.0.5563.64|Not(A%3ABrand;8.0.0.0|Chromium;111.0.5563.64',
     };
 
+    this.requestParameters[RequestParameter.DebugView] = 1;
+
     const nodeVersion = parse(process.version);
 
     this.userParameters = {
@@ -60,15 +62,9 @@ export class AnalyticsCollector {
       [UserCustomDimension.NodeVersion]: nodeVersion
         ? `${nodeVersion.major}.${nodeVersion.minor}.${nodeVersion.patch}`
         : 'other',
-      [UserCustomDimension.NodeMajorVersion]: nodeVersion?.major,
       [UserCustomDimension.PackageManager]: packageManagerInfo.name,
       [UserCustomDimension.PackageManagerVersion]: packageManagerInfo.version,
-      [UserCustomDimension.PackageManagerMajorVersion]:
-        packageManagerInfo.version
-          ? +packageManagerInfo.version.split('.', 1)[0]
-          : undefined,
       [UserCustomDimension.NxVersion]: nxVersion,
-      [UserCustomDimension.NxMajorVersion]: nxMajorVersion,
     };
   }
 
@@ -91,12 +87,40 @@ export class AnalyticsCollector {
     }
   }
 
-  event(eventName: string, parameters?: Record<string, ParameterValue>): void {
+  event(
+    eventName: string,
+    parameters?: Record<string, ParameterValue>,
+    isPageView?: boolean
+  ): void {
+    if (isPageView) {
+      this.handlePageViewEvent(eventName, parameters);
+      return;
+    }
+
     this.eventsQueue ??= [];
     this.eventsQueue.push({
       ...this.userParameters,
       ...parameters,
       en: eventName,
+    });
+  }
+
+  /**
+   * These need to be flushed immediately because the request parameters are
+   * linked to the page view event.
+   * @private
+   */
+  private handlePageViewEvent(
+    eventName: string,
+    parameters?: Record<string, ParameterValue>
+  ) {
+    this.requestParameters[RequestParameter.PageLocation] = eventName;
+    this.requestParameters[RequestParameter.PageTitle] = eventName;
+    this.send([
+      { ...this.userParameters, ...parameters, en: 'page_view' },
+    ]).finally(() => {
+      this.requestParameters[RequestParameter.PageLocation] = undefined;
+      this.requestParameters[RequestParameter.PageTitle] = undefined;
     });
   }
 
