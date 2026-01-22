@@ -10,6 +10,7 @@ import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
 import { TaskHasher } from '../hasher/task-hasher';
 import {
+  BatchStatus,
   IS_WASM,
   parseTaskStatus,
   RunningTasksService,
@@ -392,7 +393,7 @@ export class TaskOrchestrator {
     });
     this.options.lifeCycle.setBatchStatus?.(
       batch.id,
-      hasFailures ? 'failure' : 'success'
+      hasFailures ? BatchStatus.Failure : BatchStatus.Success
     );
 
     this.forkedProcessTaskRunner.cleanUpBatchProcesses();
