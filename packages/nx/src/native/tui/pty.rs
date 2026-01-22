@@ -96,7 +96,6 @@ impl PtyInstance {
         let screen = parser.screen();
         let (screen_rows, screen_cols) = screen.size();
 
-
         // Get all content with ANSI formatting preserved for colors
         let all_formatted = screen.all_contents_formatted();
         let content_str = String::from_utf8_lossy(&all_formatted);

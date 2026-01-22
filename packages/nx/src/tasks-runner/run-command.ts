@@ -545,9 +545,7 @@ export async function runCommandForTasks(
       initiatingTasks,
     });
 
-    await renderIsDone.finally(() => {
-      restoreTerminal();
-    });
+    await renderIsDone.finally(() => restoreTerminal?.());
 
     if (printSummary) {
       printSummary();
@@ -560,9 +558,7 @@ export async function runCommandForTasks(
       completed: didCommandComplete(tasks, taskGraph, taskResults),
     };
   } catch (e) {
-    if (restoreTerminal) {
-      restoreTerminal();
-    }
+    restoreTerminal?.();
     throw e;
   }
 }
