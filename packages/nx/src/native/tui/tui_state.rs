@@ -474,11 +474,21 @@ impl TuiState {
         spacebar_mode: bool,
         focused_pane: Option<usize>,
         selected_item: Option<SelectionEntry>,
+        batch_expansion_states: HashbrownHashMap<String, bool>,
+        filter_text: String,
     ) {
         self.ui_pane_tasks = pane_tasks;
         self.ui_spacebar_mode = spacebar_mode;
         self.ui_focused_pane = focused_pane;
         self.ui_selected_item = selected_item;
+        self.ui_filter_text = filter_text;
+
+        // Update batch expansion states in metadata
+        for (batch_id, is_expanded) in batch_expansion_states {
+            if let Some(batch) = self.batch_metadata.get_mut(&batch_id) {
+                batch.is_expanded = is_expanded;
+            }
+        }
     }
 
     /// Get the saved pane tasks
@@ -578,22 +588,6 @@ impl TuiState {
     /// Get saved max_parallel value for mode switching restoration
     pub fn get_max_parallel(&self) -> Option<u32> {
         self.ui_max_parallel
-    }
-
-    /// Update batch expansion states from a map of batch_id -> is_expanded
-    pub fn update_batch_expansion_states(&mut self, states: HashbrownHashMap<String, bool>) {
-        for (batch_id, is_expanded) in states {
-            if let Some(batch) = self.batch_metadata.get_mut(&batch_id) {
-                batch.is_expanded = is_expanded;
-            }
-        }
-    }
-
-    // === Filter State Methods (for mode switching persistence) ===
-
-    /// Save filter text from TasksList for mode switching restoration
-    pub fn save_filter_text(&mut self, filter_text: String) {
-        self.ui_filter_text = filter_text;
     }
 
     /// Get saved filter text for mode switching restoration

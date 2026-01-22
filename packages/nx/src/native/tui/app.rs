@@ -2600,9 +2600,9 @@ impl TuiApp for App {
             self.spacebar_mode,
             focused_pane,
             selected_item,
+            batch_expansion_states,
+            filter_text,
         );
-        state.update_batch_expansion_states(batch_expansion_states);
-        state.save_filter_text(filter_text);
     }
 
     // === Batch Methods (hooks for UI updates) ===
