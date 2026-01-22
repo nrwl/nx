@@ -116,6 +116,7 @@ impl InlineApp {
             title_text,
             task_graph,
             HashMap::new(), // estimated_task_timings - will be set later via set_estimated_task_timings()
+            None,
         )));
 
         Ok(Self {
@@ -215,35 +216,38 @@ impl InlineApp {
     /// Called when switching to inline mode via init().
     /// This ensures PTY output fits the available space, pushing excess content
     /// into scrollback.
-    fn resize_all_ptys(&mut self) {
-        let (rows, cols) = self.calculate_pty_dimensions();
+    fn resize_selected_pty(&mut self, terminal_dimensions: (u16, u16)) {
+        let (rows, cols) = terminal_dimensions;
 
         let mut state = self.core.state().lock();
 
         // Collect task IDs to avoid holding immutable borrow during mutation
-        let task_ids: Vec<String> = state.get_pty_instances().keys().cloned().collect();
+        let task_id = self.selected_task.clone();
 
-        // Resize each PTY instance by replacing the Arc
-        for task_id in task_ids {
-            if let Some(pty_arc) = state.get_pty_instance(&task_id) {
-                let (current_rows, current_cols) = pty_arc.get_dimensions();
+        let task_id = if let Some(task_id) = task_id {
+            task_id
+        } else {
+            return;
+        };
 
-                // Only resize if dimensions actually changed
-                if current_rows != rows || current_cols != cols {
-                    tracing::trace!(
-                        "InlineApp resizing PTY for {} from {}x{} to {}x{}",
-                        task_id,
-                        current_cols,
-                        current_rows,
-                        cols,
-                        rows
-                    );
+        if let Some(pty_arc) = state.get_pty_instance(&task_id) {
+            let (current_rows, current_cols) = pty_arc.get_dimensions();
 
-                    // Clone the PTY instance, resize it, and replace the Arc
-                    let mut pty_clone = pty_arc.as_ref().clone();
-                    if let Ok(()) = pty_clone.resize(rows, cols) {
-                        state.register_pty_instance(task_id, Arc::new(pty_clone));
-                    }
+            // Only resize if dimensions actually changed
+            if current_rows != rows || current_cols != cols {
+                tracing::trace!(
+                    "InlineApp resizing PTY for {} from {}x{} to {}x{}",
+                    task_id,
+                    current_cols,
+                    current_rows,
+                    cols,
+                    rows
+                );
+
+                // Clone the PTY instance, resize it, and replace the Arc
+                let mut pty_clone = pty_arc.as_ref().clone();
+                if let Ok(()) = pty_clone.resize(rows, cols) {
+                    state.register_pty_instance(task_id, Arc::new(pty_clone));
                 }
             }
         }
@@ -529,8 +533,11 @@ impl TuiApp for InlineApp {
                 // Render scrollback content above the TUI using insert_before
                 self.render_scrollback_above_tui(tui);
 
-                // Draw the inline TUI layout
-                tui.draw(|f| {
+                // Draw the inline TUI layout using draw_without_autoresize
+                // This avoids cursor position queries that conflict with EventStream.
+                // Normal tui.draw() calls autoresize() which queries cursor position,
+                // causing hangs when EventStream is also reading from stdin.
+                tui.draw_without_autoresize(|f| {
                     let area = f.area();
                     self.render_inline_layout(f, area);
                 })
@@ -553,7 +560,12 @@ impl TuiApp for InlineApp {
                 // In inline mode, show hints in the status bar instead of a popup
                 self.show_hint(message);
             }
-            _ => {} // Ignore other actions (including Resize - ratatui doesn't handle it properly for inline viewports)
+            Action::Resize(w, h) => {
+                // Resize the PTY to match the new terminal dimensions
+                self.resize_selected_pty((h, w));
+                self.core.state().lock().set_dimensions((w, h));
+            }
+            _ => {} // Ignore other actions
         }
     }
 
@@ -565,38 +577,41 @@ impl TuiApp for InlineApp {
 
     // === Initialization ===
 
-    fn init(&mut self, _area: Size) -> Result<()> {
+    fn init(&mut self, area: Size) -> Result<()> {
         // Resize all existing PTYs to inline dimensions
         // This is critical when switching from full-screen mode
-        self.resize_all_ptys();
+        self.resize_selected_pty((area.height, area.width));
+        self.core
+            .state()
+            .lock()
+            .set_dimensions((area.width, area.height));
         Ok(())
     }
-
-    // === Task Lifecycle (hooks for trait defaults) ===
-
-    fn on_tasks_started(&mut self, tasks: &[Task]) {
-        // Auto-select the first task to display its output
-        if let Some(first_task) = tasks.first() {
-            self.selected_task = Some(first_task.id.clone());
-        }
-    }
-
-    // start_tasks uses trait default which calls on_tasks_started
 
     // === PTY Registration (hooks for trait defaults) ===
 
     fn calculate_pty_dimensions(&self) -> (u16, u16) {
-        // Get terminal size
-        if let Ok((cols, rows)) = crossterm::terminal::size() {
-            // Reserves 2 rows at the bottom - one for the inline chrome,
-            // one for space between terminal output and chrome.
-            let content_height = rows.saturating_sub(2);
-            (content_height, cols)
-        } else {
-            // Fallback to reasonable defaults
-            debug!("Failed to get terminal size, using default PTY dimensions");
-            (20, 80)
-        }
+        let (rows, cols) = self
+            .core
+            .state()
+            .lock()
+            .get_dimensions()
+            .unwrap_or_else(|| {
+                // Get terminal size
+                debug!("Getting terminal size for PTY dimensions inline_app");
+                if let Ok((cols, rows)) = crossterm::terminal::size() {
+                    (rows, cols)
+                } else {
+                    // Fallback to reasonable defaults
+                    debug!("Failed to get terminal size, using default PTY dimensions");
+                    (20, 80)
+                }
+            });
+
+        // Reserves 2 rows at the bottom - one for the inline chrome,
+        // one for space between terminal output and chrome.
+        let content_height = rows.saturating_sub(2);
+        (content_height, cols)
     }
 
     fn on_pty_registered(&mut self, task_id: &str) {
@@ -841,9 +856,6 @@ impl InlineApp {
                 )
             };
 
-        // Get cloud message from state (using trait default implementation)
-        let cloud_message = TuiApp::get_cloud_message(self);
-
         // Get status message (e.g., "Output copied")
         let status_msg = self.status_message.as_ref().map(|(msg, _)| msg.as_str());
 
@@ -865,7 +877,6 @@ impl InlineApp {
         } else {
             0
         };
-        let cloud_size = cloud_message.as_ref().map(|m| m.len() + 1).unwrap_or(0);
 
         // Calculate available width and determine what fits
         let total_width = area.width as usize;
@@ -880,7 +891,6 @@ impl InlineApp {
 
         // Determine if we have space for optional elements
         let available_for_optional = total_width.saturating_sub(required_size);
-        let show_cloud = cloud_size > 0 && available_for_optional >= cloud_size + interactive_size;
         let show_interactive = interactive_size > 0 && available_for_optional >= interactive_size;
 
         // Calculate actual right side size based on what we'll show
@@ -894,7 +904,6 @@ impl InlineApp {
                 } else {
                     0
                 }
-                + if show_cloud { cloud_size } else { 0 }
         };
 
         let chunks = Layout::default()
@@ -924,16 +933,6 @@ impl InlineApp {
                 Style::default().fg(THEME.info),
             ));
         } else {
-            // Show cloud message only if there's space
-            if show_cloud {
-                if let Some(ref message) = cloud_message {
-                    right_spans.push(Span::styled(
-                        format!("{} ", message),
-                        Style::default().fg(THEME.info),
-                    ));
-                }
-            }
-
             // ESC hint - always shown
             right_spans.push(Span::styled("exit: esc", Style::default().fg(THEME.info)));
             right_spans.push(Span::styled(" ", Style::default().fg(THEME.secondary_fg)));
@@ -990,12 +989,7 @@ impl InlineApp {
         let message = Paragraph::new(" Waiting for tasks to start... ")
             .style(Style::default().fg(THEME.secondary_fg))
             .alignment(Alignment::Center)
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(" Output ")
-                    .border_style(Style::default().fg(THEME.secondary_fg)),
-            );
+            .block(Block::default().borders(Borders::NONE));
 
         f.render_widget(message, area);
     }
@@ -1118,6 +1112,7 @@ mod tests {
             String::from("Existing"),
             existing_graph,
             HashMap::new(),
+            None,
         )));
 
         // Create app with existing state
@@ -1534,6 +1529,7 @@ mod tests {
             String::from("Test"),
             task_graph,
             HashMap::new(),
+            None,
         )));
 
         // Create app with existing state (simulating mode switch)
@@ -1696,6 +1692,7 @@ mod integration_tests {
             String::from("Shared"),
             task_graph,
             HashMap::new(),
+            None,
         )));
 
         // Create two apps with same state
