@@ -17,8 +17,7 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use super::help_text::HelpText;
 use super::task_selection_manager::{
-    ScrollMetrics, SelectedItemType, Selection, SelectionEntry, SelectionMode, TaskSection,
-    TaskSelectionManager,
+    ScrollMetrics, SelectionEntry, SelectionMode, TaskSection, TaskSelectionManager,
 };
 use crate::native::tui::{
     scroll_momentum::{ScrollDirection, ScrollMomentum},
@@ -420,52 +419,13 @@ impl TasksList {
         self.selection_manager.lock().previous();
     }
 
-    /// Gets the currently selected item identifier.
-    /// Returns None if nothing is selected, or Some(id) where id can be:
-    /// - Pure batch ID for batch groups
-    /// - Pure task name for all tasks (whether nested in batches or standalone)
-    pub fn get_selected_item(&self) -> Option<String> {
-        let manager = self.selection_manager.lock();
-        match manager.get_selected_item_type() {
-            SelectedItemType::Task => manager.get_selected_task_name().cloned(),
-            SelectedItemType::BatchGroup => manager.get_selected_batch_id().cloned(),
-            SelectedItemType::None => None,
-        }
-    }
-
-    /// Checks if the currently selected item is a batch group.
-    pub fn is_batch_group_selected(&self) -> bool {
-        self.selection_manager.lock().get_selected_item_type() == SelectedItemType::BatchGroup
-    }
-
-    /// Gets the type of the currently selected item.
-    pub fn get_selected_item_type(&self) -> SelectedItemType {
-        self.selection_manager.lock().get_selected_item_type()
-    }
-
     /// Expands the specified batch group.
-    pub fn expand_batch(&mut self, batch_id: &str) {
+    fn expand_batch(&mut self, batch_id: &str) {
         if let Some(batch_group) = self.get_batch_group_mut(batch_id) {
             if !batch_group.is_expanded {
                 batch_group.is_expanded = true;
                 self.apply_filter(); // Refresh the display
             }
-        }
-    }
-
-    /// Expands the collapsed batch group containing the specified task, if any.
-    pub fn try_expand_batch_for_task(&mut self, task_id: &str) {
-        let batch_id = self.display_items.iter().find_map(|item| {
-            if let DisplayItem::BatchGroup(batch) = item {
-                if batch.nested_tasks.contains(task_id) && !batch.is_expanded {
-                    return Some(batch.batch_id.clone());
-                }
-            }
-            None
-        });
-
-        if let Some(id) = batch_id {
-            self.expand_batch(&id);
         }
     }
 
@@ -485,10 +445,11 @@ impl TasksList {
 
     /// Collapses the specified batch group.
     /// If a nested task is currently selected, the selection moves to the batch group.
-    pub fn collapse_batch(&mut self, batch_id: &str) {
+    fn collapse_batch(&mut self, batch_id: &str) {
         // Check if a nested task within this batch is selected
-        let should_select_batch = if let Some(selected_id) = self.get_selected_item() {
-            if self.selection_manager.lock().get_selected_item_type() == SelectedItemType::Task {
+        let should_select_batch = {
+            let selection = self.selection_manager.lock().get_selection().cloned();
+            if let Some(SelectionEntry::Task(selected_id)) = selection {
                 if let Some(batch_group) = self.get_batch_group_by_id(batch_id) {
                     batch_group.nested_tasks.contains(&selected_id)
                 } else {
@@ -497,8 +458,6 @@ impl TasksList {
             } else {
                 false
             }
-        } else {
-            false
         };
 
         if let Some(batch_group) = self.get_batch_group_mut(batch_id) {
@@ -522,32 +481,37 @@ impl TasksList {
     /// - If a task inside a batch is selected, returns the containing batch ID
     /// - Otherwise returns None
     fn get_selection_batch_id(&self) -> Option<String> {
-        let selected_id = self.get_selected_item()?;
+        let selection = self.selection_manager.lock().get_selection().cloned()?;
 
-        match self.get_selected_item_type() {
-            SelectedItemType::BatchGroup => Some(selected_id),
-            SelectedItemType::Task => {
+        match selection {
+            SelectionEntry::BatchGroup(batch_id) => Some(batch_id),
+            SelectionEntry::Task(task_id) => {
                 // Find batch containing this task
                 self.filtered_display_items.iter().find_map(|item| {
                     if let DisplayItem::BatchGroup(batch) = item {
-                        if batch.nested_tasks.contains(&selected_id) {
+                        if batch.nested_tasks.contains(&task_id) {
                             return Some(batch.batch_id.clone());
                         }
                     }
                     None
                 })
             }
-            SelectedItemType::None => None,
         }
     }
 
     /// Attempts to expand the batch for the current selection.
     /// Only triggers when a batch is selected (if a nested task is selected, the batch is already expanded).
     pub fn try_expand_selected_batch(&mut self) {
-        if self.get_selected_item_type() == SelectedItemType::BatchGroup {
-            if let Some(batch_id) = self.get_selected_item() {
-                self.expand_batch(&batch_id);
+        let batch_id = {
+            let selection = self.selection_manager.lock().get_selection().cloned();
+            if let Some(SelectionEntry::BatchGroup(id)) = selection {
+                Some(id)
+            } else {
+                None
             }
+        };
+        if let Some(id) = batch_id {
+            self.expand_batch(&id);
         }
     }
 
@@ -998,19 +962,18 @@ impl TasksList {
     /// - Otherwise → TrackByPosition
     fn determine_selection_mode(&self) -> SelectionMode {
         let selection_manager = self.selection_manager.lock();
-        let selected_task_name = selection_manager.get_selected_task_name();
+        let selection = selection_manager.get_selection();
 
         // Priority 0: Batch groups always TrackByName (they don't have sections)
-        let selected_type = selection_manager.get_selected_item_type();
-        if matches!(selected_type, SelectedItemType::BatchGroup) {
+        if matches!(selection, Some(SelectionEntry::BatchGroup(_))) {
             return SelectionMode::TrackByName;
         }
 
         // EXCEPTION: Terminal pane showing selected task → always track by name
-        if let Some(selected_name) = selected_task_name {
-            if self.is_terminal_showing_task(selected_name) {
-                return SelectionMode::TrackByName;
-            }
+        if let Some(SelectionEntry::Task(name)) = selection
+            && self.is_terminal_showing_task(name)
+        {
+            return SelectionMode::TrackByName;
         }
 
         // IN-PROGRESS section: Always track by name while running
@@ -1021,26 +984,18 @@ impl TasksList {
         // NON-IN-PROGRESS section: Output visibility determines mode
         let has_pinned_tasks = self.pinned_tasks.iter().any(|p| p.is_some());
 
-        if has_pinned_tasks {
-            // Pinned tasks exist: Only pinned task outputs are in terminal panes
-            let is_selected_pinned = selected_task_name.is_some_and(|name| {
-                self.pinned_tasks
-                    .iter()
-                    .any(|pinned| pinned.as_ref() == Some(name))
-            });
-
-            if is_selected_pinned {
-                SelectionMode::TrackByName // Output visible in terminal pane
-            } else {
-                SelectionMode::TrackByPosition // Output not visible
-            }
+        // Track by name if: pinned tasks exist and selection is pinned, or no pinned tasks and spacebar mode
+        let output_visible = if has_pinned_tasks {
+            matches!(selection, Some(SelectionEntry::Task(name)) if
+                self.pinned_tasks.iter().any(|pinned| pinned.as_ref() == Some(name)))
         } else {
-            // No pinned tasks: Check if terminal pane is open
-            if self.spacebar_mode {
-                SelectionMode::TrackByName // Output visible in terminal pane
-            } else {
-                SelectionMode::TrackByPosition // No terminal pane open
-            }
+            self.spacebar_mode
+        };
+
+        if output_visible {
+            SelectionMode::TrackByName
+        } else {
+            SelectionMode::TrackByPosition
         }
     }
 
@@ -1134,22 +1089,6 @@ impl TasksList {
         } else {
             Style::default().dim().fg(THEME.secondary_fg)
         }
-    }
-
-    fn pin_task(&mut self, task_name: String, pane_idx: usize) {
-        self.pinned_tasks[pane_idx] = Some(task_name);
-    }
-
-    fn unpin_task(&mut self, _task_name: String, pane_idx: usize) {
-        self.pinned_tasks[pane_idx] = None;
-    }
-
-    fn pin_batch(&mut self, batch_id: String, pane_idx: usize) {
-        self.pinned_tasks[pane_idx] = Some(batch_id);
-    }
-
-    fn unpin_batch(&mut self, _batch_id: String, pane_idx: usize) {
-        self.pinned_tasks[pane_idx] = None;
     }
 
     fn unpin_all_tasks(&mut self) {
@@ -1417,10 +1356,14 @@ impl TasksList {
         // Get current state and check if we need to make a selection
         let (needs_selection, has_in_progress, selected_task) = {
             let selection_manager = self.selection_manager.lock();
-            let needs_selection = matches!(selection_manager.get_selection_state(), None);
+            let selection = selection_manager.get_selection();
+            let needs_selection = selection.is_none();
             let in_progress_items = selection_manager.get_in_progress_items();
             let has_in_progress = !in_progress_items.is_empty();
-            let selected_task = selection_manager.get_selected_task_name().cloned();
+            let selected_task = match selection {
+                Some(SelectionEntry::Task(name)) => Some(name.clone()),
+                _ => None,
+            };
             (needs_selection, has_in_progress, selected_task)
         };
 
@@ -1459,14 +1402,7 @@ impl TasksList {
 
         // Select the first item if available
         if let Some(first_item) = in_progress_items.first() {
-            match first_item {
-                Selection::Task(task_id) => {
-                    selection_manager.select_task(task_id.clone());
-                }
-                Selection::BatchGroup(batch_id) => {
-                    selection_manager.select_batch_group(batch_id.clone());
-                }
-            }
+            selection_manager.select(Some(first_item.clone()));
         }
     }
 
@@ -1483,7 +1419,7 @@ impl TasksList {
         if self.in_progress_tasks.is_empty() {
             if has_pending {
                 // Wait for next allocation
-                self.selection_manager.lock().clear_selection();
+                self.selection_manager.lock().select(None);
             }
             // else: last task, keep selection (already on finished task)
             return;
@@ -1589,32 +1525,22 @@ impl TasksList {
         for task_result in task_results {
             let task_id = &task_result.task.id;
 
-            // Update in task_lookup
-            if let Some(task) = self.task_lookup.get_mut(task_id) {
-                if task_result.task.start_time.is_some() && task_result.task.end_time.is_some() {
-                    task.start_time = Some(task_result.task.start_time.unwrap());
-                    task.end_time = Some(task_result.task.end_time.unwrap());
-                    task.duration = format_duration_since(
-                        task_result.task.start_time.unwrap(),
-                        task_result.task.end_time.unwrap(),
-                    );
+            if let Some((start, end)) = task_result.task.start_time.zip(task_result.task.end_time) {
+                // Update in task_lookup
+                if let Some(task) = self.task_lookup.get_mut(task_id) {
+                    task.start_time = Some(start);
+                    task.end_time = Some(end);
+                    task.duration = format_duration_since(start, end);
                 }
-            }
 
-            // Update in display_items
-            for display_item in &mut self.display_items {
-                if let DisplayItem::Task(task) = display_item {
-                    if task.name == *task_id {
-                        if task_result.task.start_time.is_some()
-                            && task_result.task.end_time.is_some()
-                        {
-                            task.start_time = Some(task_result.task.start_time.unwrap());
-                            task.end_time = Some(task_result.task.end_time.unwrap());
-                            task.duration = format_duration_since(
-                                task_result.task.start_time.unwrap(),
-                                task_result.task.end_time.unwrap(),
-                            );
-                        }
+                // Update in display_items
+                for display_item in &mut self.display_items {
+                    if let DisplayItem::Task(task) = display_item
+                        && task.name == *task_id
+                    {
+                        task.start_time = Some(start);
+                        task.end_time = Some(end);
+                        task.duration = format_duration_since(start, end);
                         break;
                     }
                 }
@@ -1624,34 +1550,40 @@ impl TasksList {
     }
 
     /// Removes a batch group and ungroups its tasks back to individual display.
-    pub fn remove_batch_group(&mut self, batch_id: &str) -> Option<BatchGroupItem> {
-        if let Some(pos) = self.display_items.iter().position(
+    fn remove_batch_group(&mut self, batch_id: &str) -> Option<BatchGroupItem> {
+        let pos = self.display_items.iter().position(
             |item| matches!(item, DisplayItem::BatchGroup(batch) if batch.batch_id == batch_id),
-        ) {
-            if let DisplayItem::BatchGroup(batch_group) = self.display_items.remove(pos) {
-                // Add tasks back as individual display items
-                for task_id in &batch_group.nested_tasks {
-                    if let Some(task) = self.task_lookup.get(task_id).cloned() {
-                        self.display_items.push(DisplayItem::Task(task));
-                    }
-                }
-                self.needs_sort = true;
-                return Some(batch_group);
+        )?;
+
+        let DisplayItem::BatchGroup(batch_group) = self.display_items.remove(pos) else {
+            return None;
+        };
+
+        // Add tasks back as individual display items
+        for task_id in &batch_group.nested_tasks {
+            if let Some(task) = self.task_lookup.get(task_id).cloned() {
+                self.display_items.push(DisplayItem::Task(task));
             }
         }
-        None
+        self.needs_sort = true;
+        Some(batch_group)
+    }
+
+    /// Finds the task with the latest end_time from a set of task IDs.
+    fn find_last_completed_task(&self, task_ids: &HashSet<String>) -> Option<String> {
+        task_ids
+            .iter()
+            .filter_map(|id| self.task_lookup.get(id)?.end_time.map(|end| (id, end)))
+            .max_by_key(|(_, end)| *end)
+            .map(|(id, _)| id.clone())
     }
 
     /// Gets a mutable reference to a batch group by its ID.
-    pub fn get_batch_group_mut(&mut self, batch_id: &str) -> Option<&mut BatchGroupItem> {
-        for display_item in &mut self.display_items {
-            if let DisplayItem::BatchGroup(batch_group) = display_item {
-                if batch_group.batch_id == batch_id {
-                    return Some(batch_group);
-                }
-            }
-        }
-        None
+    fn get_batch_group_mut(&mut self, batch_id: &str) -> Option<&mut BatchGroupItem> {
+        self.display_items.iter_mut().find_map(|item| match item {
+            DisplayItem::BatchGroup(bg) if bg.batch_id == batch_id => Some(bg),
+            _ => None,
+        })
     }
 
     /// Creates and registers a new batch group with the given tasks.
@@ -1707,8 +1639,14 @@ impl TasksList {
         let currently_selected = self
             .selection_manager
             .lock()
-            .get_selected_task_name()
-            .cloned();
+            .get_selection()
+            .and_then(|sel| {
+                if let SelectionEntry::Task(name) = sel {
+                    Some(name.clone())
+                } else {
+                    None
+                }
+            });
 
         // Count how many tasks will actually be grouped
         let tasks_to_group = self
@@ -1742,13 +1680,37 @@ impl TasksList {
     }
 
     /// Ungroups batch tasks and moves them back to individual display.
+    /// Also handles selection restoration when the batch completes.
     pub fn ungroup_batch_tasks(&mut self, batch_id: &str) {
         // Early validation
         if batch_id.is_empty() {
             return;
         }
 
-        self.remove_batch_group(batch_id);
+        // Capture current selection before removing batch
+        let currently_selected = self.selection_manager.lock().get_selection().cloned();
+
+        // Remove batch and get its info
+        let Some(batch_group) = self.remove_batch_group(batch_id) else {
+            return;
+        };
+
+        // Restore selection based on what was selected before
+        let task_to_select = currently_selected.and_then(|selection| match &selection {
+            SelectionEntry::BatchGroup(id) if id == batch_id => {
+                // Batch was selected - select the last task to complete
+                self.find_last_completed_task(&batch_group.nested_tasks)
+                    .or_else(|| batch_group.sorted_tasks.first().cloned())
+            }
+            SelectionEntry::Task(task_id) if batch_group.nested_tasks.contains(task_id) => {
+                Some(task_id.clone())
+            }
+            _ => Some(selection.id().to_string()),
+        });
+
+        if let Some(task_id) = task_to_select {
+            self.selection_manager.lock().select_task(task_id);
+        }
     }
 
     fn generate_empty_row(&'_ self, column_visibility: &ColumnVisibility) -> Row<'_> {
@@ -2006,7 +1968,12 @@ impl TasksList {
         all_rows.extend(visible_entries.iter().enumerate().map(|(row_idx, entry)| {
             if let Some(entry_ref) = entry {
                 let entry_id = entry_ref.id();
-                let is_selected = self.selection_manager.lock().is_selected(entry_id);
+                let is_selected = self
+                    .selection_manager
+                    .lock()
+                    .get_selection()
+                    .map(|s| s.id())
+                    == Some(entry_id);
 
                 // Calculate absolute position to determine if the entry is in the parallel section
                 let absolute_idx = scroll_metrics.scroll_offset + row_idx;
@@ -2026,29 +1993,20 @@ impl TasksList {
                     )
                 } else if let Some(task) = self.task_lookup.get(entry_id) {
                     // This is a task - determine if it's nested under an expanded batch
-                    let is_nested_task = self.is_task_nested_in_expanded_batch(entry_id);
-
-                    if is_nested_task {
-                        self.render_nested_task_row(
-                            task,
-                            entry_id.to_string(),
-                            is_selected,
-                            is_in_parallel_section,
-                            column_visibility,
-                            selected_style,
-                            normal_style,
-                        )
-                    } else {
-                        self.render_task_row(
-                            task,
-                            entry_id.to_string(),
-                            is_selected,
-                            is_in_parallel_section,
-                            column_visibility,
-                            selected_style,
-                            normal_style,
-                        )
-                    }
+                    let is_nested = self.is_task_nested_in_expanded_batch(entry_id);
+                    self.render_task_row(
+                        task,
+                        entry_id.to_string(),
+                        is_selected,
+                        is_nested
+                            || (matches!(task.status, TaskStatus::InProgress | TaskStatus::Shared)
+                                && is_in_parallel_section),
+                        if is_nested { "  " } else { "    " },
+                        is_nested,
+                        column_visibility,
+                        selected_style,
+                        normal_style,
+                    )
                 } else {
                     // Unknown entry type
                     Row::new(vec![Cell::from("")]).height(1)
@@ -2238,14 +2196,117 @@ impl TasksList {
 
     /// Helper method to get a batch group by its ID from display_items (not filtered)
     pub fn get_batch_group_by_id(&self, batch_id: &str) -> Option<&BatchGroupItem> {
-        for display_item in &self.display_items {
-            if let DisplayItem::BatchGroup(batch_group) = display_item {
-                if batch_group.batch_id == batch_id {
-                    return Some(batch_group);
+        self.display_items.iter().find_map(|item| match item {
+            DisplayItem::BatchGroup(bg) if bg.batch_id == batch_id => Some(bg),
+            _ => None,
+        })
+    }
+
+    /// Returns output indicators (e.g., "[1]", "[2]") for an item pinned to panes.
+    fn get_output_indicators(&self, item_id: &str) -> String {
+        if self.spacebar_mode {
+            return String::new();
+        }
+        self.pinned_tasks
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, task)| {
+                if task.as_deref() == Some(item_id) {
+                    Some(format!("[{}]", idx + 1))
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" ")
+    }
+
+    /// Renders a cache status cell with appropriate styling.
+    fn render_cache_cell(cache_status: &str, is_selected: bool) -> Cell<'static> {
+        let style = match cache_status {
+            CACHE_STATUS_NOT_YET_KNOWN | CACHE_STATUS_NOT_APPLICABLE => {
+                if is_selected {
+                    Style::default().add_modifier(Modifier::BOLD)
+                } else {
+                    Style::default().dim()
                 }
             }
+            _ => {
+                if is_selected {
+                    Style::default().add_modifier(Modifier::BOLD)
+                } else {
+                    Style::default()
+                }
+            }
+        };
+        Cell::from(Line::from(vec![Span::styled(cache_status.to_string(), style)]).right_aligned())
+    }
+
+    /// Renders a duration cell with appropriate styling.
+    fn render_duration_cell(duration: &str, is_selected: bool) -> Cell<'static> {
+        let style = match duration {
+            "" | "Continuous" | DURATION_NOT_YET_KNOWN => {
+                if is_selected {
+                    Style::default().add_modifier(Modifier::BOLD)
+                } else {
+                    Style::default().dim()
+                }
+            }
+            _ => {
+                if is_selected {
+                    Style::default().add_modifier(Modifier::BOLD)
+                } else {
+                    Style::default()
+                }
+            }
+        };
+        Cell::from(Line::from(vec![Span::styled(duration.to_string(), style)]).right_aligned())
+    }
+
+    /// Renders the status cell prefix: selection indicator and vertical line.
+    fn render_status_prefix(is_selected: bool, show_vertical_line: bool) -> Vec<Span<'static>> {
+        vec![
+            Span::raw(if is_selected { ">" } else { " " }),
+            if show_vertical_line {
+                Span::styled("│", Style::default().fg(THEME.info))
+            } else {
+                Span::raw(" ")
+            },
+        ]
+    }
+
+    /// Renders a status cell for a task with status icon.
+    fn render_task_status_cell(
+        &self,
+        task: &TaskItem,
+        is_selected: bool,
+        show_vertical_line: bool,
+        trailing_spaces: &str,
+    ) -> Cell<'static> {
+        let mut spans = Self::render_status_prefix(is_selected, show_vertical_line);
+        let status_char = status_icons::get_status_char(task.status, self.throbber_counter);
+        let status_style = status_icons::get_status_style(task.status);
+        spans.push(Span::styled(
+            format!("{}{}", status_char, trailing_spaces),
+            status_style,
+        ));
+        Cell::from(Line::from(spans))
+    }
+
+    /// Renders a name cell with optional indentation and output indicators.
+    fn render_name_cell(&self, name: String, item_id: &str, indent: bool) -> Cell<'static> {
+        let output_indicators = self.get_output_indicators(item_id);
+
+        let mut spans = Vec::new();
+        if indent {
+            spans.push(Span::raw("  "));
         }
-        None
+        spans.push(Span::raw(name));
+        if !output_indicators.is_empty() {
+            spans.push(Span::raw(" "));
+            spans.push(Span::styled(output_indicators, Style::default().dim()));
+        }
+        Cell::from(Line::from(spans))
     }
 
     /// Renders a batch group row with expand/collapse indicator
@@ -2259,21 +2320,14 @@ impl TasksList {
         normal_style: Style,
     ) -> Row {
         let status_cell = {
-            let mut spans = vec![Span::raw(if is_selected { ">" } else { " " })];
-
-            // Add vertical line for parallel section if needed
-            if is_in_parallel_section {
-                spans.push(Span::styled("│", Style::default().fg(THEME.info)));
-            } else {
-                spans.push(Span::raw(" "));
-            }
+            let mut spans = Self::render_status_prefix(is_selected, is_in_parallel_section);
 
             // Add batch status icon (always throbber - batches are only displayed while running)
             let status_char = THROBBER_CHARS[self.throbber_counter % THROBBER_CHARS.len()];
             let status_style = Style::default().fg(THEME.info).add_modifier(Modifier::BOLD);
             spans.push(Span::styled(format!("{} ", status_char), status_style));
 
-            // Add expand/collapse indicator (expand indicator second)
+            // Add expand/collapse indicator
             let expand_char = if batch_group.is_expanded {
                 "▼"
             } else {
@@ -2287,42 +2341,12 @@ impl TasksList {
             Cell::from(Line::from(spans))
         };
 
-        let name = {
-            let batch_name = format!(
-                "{} ({})",
-                batch_group.batch_id,
-                batch_group.nested_tasks.len()
-            );
-
-            // Show output indicators if the batch is pinned to a pane (but not in spacebar mode)
-            let output_indicators = if !self.spacebar_mode {
-                self.pinned_tasks
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(idx, item)| {
-                        if item.as_deref() == Some(batch_group.batch_id.as_str()) {
-                            Some(format!("[{}]", idx + 1))
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<_>>()
-                    .join(" ")
-            } else {
-                String::new()
-            };
-
-            if !output_indicators.is_empty() {
-                let line = Line::from(vec![
-                    Span::raw(batch_name),
-                    Span::raw(" "),
-                    Span::styled(output_indicators, Style::default().dim()),
-                ]);
-                Cell::from(line)
-            } else {
-                Cell::from(batch_name)
-            }
-        };
+        let batch_name = format!(
+            "{} ({})",
+            batch_group.batch_id,
+            batch_group.nested_tasks.len()
+        );
+        let name = self.render_name_cell(batch_name, &batch_group.batch_id, false);
 
         let mut row_cells = vec![status_cell, name];
 
@@ -2343,253 +2367,29 @@ impl TasksList {
         })
     }
 
-    /// Renders a nested task row with indentation
-    fn render_nested_task_row(
-        &self,
-        task: &TaskItem,
-        task_name: String,
-        is_selected: bool,
-        _is_in_parallel_section: bool,
-        column_visibility: &ColumnVisibility,
-        selected_style: Style,
-        normal_style: Style,
-    ) -> Row {
-        let status_cell = {
-            let mut spans = vec![Span::raw(if is_selected { ">" } else { " " })];
-
-            // ALWAYS add vertical line for nested tasks to show they're part of a batch
-            // This provides the visual grouping indicator
-            spans.push(Span::styled("│", Style::default().fg(THEME.info)));
-
-            // DON'T indent status indicators - they should align with batch group status
-
-            // Use centralized status icon function for consistent styling
-            let status_char = status_icons::get_status_char(task.status, self.throbber_counter);
-            let status_style = status_icons::get_status_style(task.status);
-            spans.push(Span::styled(format!("{}  ", status_char), status_style));
-
-            Cell::from(Line::from(spans))
-        };
-
-        let name = {
-            // Show output indicators if the task is pinned to a pane (but not in spacebar mode)
-            let output_indicators = if !self.spacebar_mode {
-                self.pinned_tasks
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(idx, task)| {
-                        if task.as_deref() == Some(task_name.as_str()) {
-                            Some(format!("[{}]", idx + 1))
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<_>>()
-                    .join(" ")
-            } else {
-                String::new()
-            };
-
-            if !output_indicators.is_empty() {
-                let line = Line::from(vec![
-                    Span::raw("  "), // Add 2-space indentation for nested task names
-                    Span::raw(task_name.clone()),
-                    Span::raw(" "),
-                    Span::styled(output_indicators, Style::default().dim()),
-                ]);
-                Cell::from(line)
-            } else {
-                let line = Line::from(vec![
-                    Span::raw("  "), // Add 2-space indentation for nested task names
-                    Span::raw(task_name.clone()),
-                ]);
-                Cell::from(line)
-            }
-        };
-
-        let mut row_cells = vec![status_cell, name];
-
-        // Add cache status cell if visible
-        if column_visibility.show_cache_status {
-            let cache_cell = Cell::from(
-                Line::from(match task.cache_status.as_str() {
-                    CACHE_STATUS_NOT_YET_KNOWN | CACHE_STATUS_NOT_APPLICABLE => {
-                        vec![Span::styled(
-                            task.cache_status.clone(),
-                            if is_selected {
-                                Style::default().add_modifier(Modifier::BOLD)
-                            } else {
-                                Style::default().dim()
-                            },
-                        )]
-                    }
-                    _ => vec![Span::styled(
-                        task.cache_status.clone(),
-                        if is_selected {
-                            Style::default().add_modifier(Modifier::BOLD)
-                        } else {
-                            Style::default()
-                        },
-                    )],
-                })
-                .right_aligned(),
-            );
-            row_cells.push(cache_cell);
-        }
-
-        // Add duration cell if visible
-        if column_visibility.show_duration {
-            let duration_cell = Cell::from(
-                Line::from(match task.duration.as_str() {
-                    "" | "Continuous" | DURATION_NOT_YET_KNOWN => {
-                        vec![Span::styled(
-                            task.duration.clone(),
-                            if is_selected {
-                                Style::default().add_modifier(Modifier::BOLD)
-                            } else {
-                                Style::default().dim()
-                            },
-                        )]
-                    }
-                    _ => vec![Span::styled(
-                        task.duration.clone(),
-                        if is_selected {
-                            Style::default().add_modifier(Modifier::BOLD)
-                        } else {
-                            Style::default()
-                        },
-                    )],
-                })
-                .right_aligned(),
-            );
-            row_cells.push(duration_cell);
-        }
-
-        Row::new(row_cells).height(1).style(if is_selected {
-            selected_style
-        } else {
-            normal_style
-        })
-    }
-
-    /// Renders a regular task row (unchanged from original logic)
+    /// Renders a task row with configurable styling for nested vs regular tasks.
     fn render_task_row(
         &self,
         task: &TaskItem,
         task_name: String,
         is_selected: bool,
-        is_in_parallel_section: bool,
+        show_vertical_line: bool,
+        trailing_spaces: &str,
+        indent_name: bool,
         column_visibility: &ColumnVisibility,
         selected_style: Style,
         normal_style: Style,
     ) -> Row {
-        let status_cell = {
-            let mut spans = vec![Span::raw(if is_selected { ">" } else { " " })];
-
-            // Add vertical line for parallel section if needed (InProgress/Shared tasks only)
-            if matches!(task.status, TaskStatus::InProgress | TaskStatus::Shared)
-                && is_in_parallel_section
-            {
-                spans.push(Span::styled("│", Style::default().fg(THEME.info)));
-            } else {
-                spans.push(Span::raw(" "));
-            }
-
-            // Use centralized status icon function for consistent styling
-            let status_char = status_icons::get_status_char(task.status, self.throbber_counter);
-            let status_style = status_icons::get_status_style(task.status);
-            spans.push(Span::styled(format!("{}    ", status_char), status_style));
-
-            Cell::from(Line::from(spans))
-        };
-
-        let name = {
-            // Show output indicators if the task is pinned to a pane (but not in spacebar mode)
-            let output_indicators = if !self.spacebar_mode {
-                self.pinned_tasks
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(idx, task)| {
-                        if task.as_deref() == Some(task_name.as_str()) {
-                            Some(format!("[{}]", idx + 1))
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<_>>()
-                    .join(" ")
-            } else {
-                String::new()
-            };
-
-            if !output_indicators.is_empty() {
-                let line = Line::from(vec![
-                    Span::raw(task_name.clone()),
-                    Span::raw(" "),
-                    Span::styled(output_indicators, Style::default().dim()),
-                ]);
-                Cell::from(line)
-            } else {
-                Cell::from(task_name.clone())
-            }
-        };
+        let status_cell =
+            self.render_task_status_cell(task, is_selected, show_vertical_line, trailing_spaces);
+        let name = self.render_name_cell(task_name.clone(), &task_name, indent_name);
 
         let mut row_cells = vec![status_cell, name];
-
-        // Add cache status cell if visible
         if column_visibility.show_cache_status {
-            let cache_cell = Cell::from(
-                Line::from(match task.cache_status.as_str() {
-                    CACHE_STATUS_NOT_YET_KNOWN | CACHE_STATUS_NOT_APPLICABLE => {
-                        vec![Span::styled(
-                            task.cache_status.clone(),
-                            if is_selected {
-                                Style::default().add_modifier(Modifier::BOLD)
-                            } else {
-                                Style::default().dim()
-                            },
-                        )]
-                    }
-                    _ => vec![Span::styled(
-                        task.cache_status.clone(),
-                        if is_selected {
-                            Style::default().add_modifier(Modifier::BOLD)
-                        } else {
-                            Style::default()
-                        },
-                    )],
-                })
-                .right_aligned(),
-            );
-            row_cells.push(cache_cell);
+            row_cells.push(Self::render_cache_cell(&task.cache_status, is_selected));
         }
-
-        // Add duration cell if visible
         if column_visibility.show_duration {
-            let duration_cell = Cell::from(
-                Line::from(match task.duration.as_str() {
-                    "" | "Continuous" | DURATION_NOT_YET_KNOWN => {
-                        vec![Span::styled(
-                            task.duration.clone(),
-                            if is_selected {
-                                Style::default().add_modifier(Modifier::BOLD)
-                            } else {
-                                Style::default().dim()
-                            },
-                        )]
-                    }
-                    _ => vec![Span::styled(
-                        task.duration.clone(),
-                        if is_selected {
-                            Style::default().add_modifier(Modifier::BOLD)
-                        } else {
-                            Style::default()
-                        },
-                    )],
-                })
-                .right_aligned(),
-            );
-            row_cells.push(duration_cell);
+            row_cells.push(Self::render_duration_cell(&task.duration, is_selected));
         }
 
         Row::new(row_cells).height(1).style(if is_selected {
@@ -3058,17 +2858,11 @@ impl Component for TasksList {
                     self.remove_filter_char();
                 }
             }
-            Action::PinTask(task_name, pane_idx) => {
-                self.pin_task(task_name, pane_idx);
+            Action::PinSelection(selection, pane_idx) => {
+                self.pinned_tasks[pane_idx] = Some(selection.id().to_string());
             }
-            Action::UnpinTask(task_name, pane_idx) => {
-                self.unpin_task(task_name, pane_idx);
-            }
-            Action::PinBatch(batch_id, pane_idx) => {
-                self.pin_batch(batch_id, pane_idx);
-            }
-            Action::UnpinBatch(batch_id, pane_idx) => {
-                self.unpin_batch(batch_id, pane_idx);
+            Action::UnpinSelection(pane_idx) => {
+                self.pinned_tasks[pane_idx] = None;
             }
             Action::UnpinAllTasks => {
                 self.unpin_all_tasks();
@@ -3723,7 +3517,10 @@ mod tests {
 
         // Pin a task to pane 0
         tasks_list
-            .update(Action::PinTask(test_tasks[0].id.clone(), 0))
+            .update(Action::PinSelection(
+                SelectionEntry::Task(test_tasks[0].id.clone()),
+                0,
+            ))
             .ok();
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
@@ -4298,7 +4095,7 @@ mod tests {
         let (mut tasks_list, test_tasks) = create_test_tasks_list();
         let mut terminal = create_test_terminal(40, 15);
 
-        tasks_list.pin_task(test_tasks[0].id.clone(), 0);
+        tasks_list.pinned_tasks[0] = Some(test_tasks[0].id.clone());
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
@@ -4833,7 +4630,7 @@ mod tests {
         let effective_width_without_pins = tasks_list.calculate_effective_task_name_width();
 
         // Pin a task which adds " [1]" to the effective task name width
-        tasks_list.pin_task(test_tasks[0].id.clone(), 0);
+        tasks_list.pinned_tasks[0] = Some(test_tasks[0].id.clone());
         let effective_width_with_pins = tasks_list.calculate_effective_task_name_width();
 
         // The effective width with pins should be larger than without pins
@@ -5190,6 +4987,16 @@ mod tests {
         (tasks_list, test_tasks)
     }
 
+    fn find_batch_group<'a>(
+        tasks_list: &'a TasksList,
+        batch_id: &str,
+    ) -> Option<&'a BatchGroupItem> {
+        tasks_list.display_items.iter().find_map(|item| match item {
+            DisplayItem::BatchGroup(b) if b.batch_id == batch_id => Some(b),
+            _ => None,
+        })
+    }
+
     #[test]
     fn test_task_identity_consistency_across_batch_contexts() {
         // Test 1: Task identity consistency across batch contexts
@@ -5216,11 +5023,7 @@ mod tests {
             .select_task("app:build".to_string());
 
         // Capture selection state in standalone context
-        let standalone_selection = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_task_name()
-            .map(|s| s.to_string());
+        let standalone_selection = tasks_list.selection_manager.lock().get_selection().cloned();
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!("batch_identity_standalone_context", terminal.backend());
@@ -5259,11 +5062,7 @@ mod tests {
             .unwrap();
 
         // The selection should still be valid and point to the same task
-        let batch_selection = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_task_name()
-            .map(|s| s.to_string());
+        let batch_selection = tasks_list.selection_manager.lock().get_selection().cloned();
 
         // Task identity must be consistent: both selections should refer to the same task
         assert_eq!(
@@ -5274,7 +5073,7 @@ mod tests {
         // Verify selection still points to app:build regardless of visual grouping
         assert_eq!(
             batch_selection,
-            Some("app:build".to_string()),
+            Some(SelectionEntry::Task("app:build".to_string())),
             "Selection should still point to app:build task"
         );
 
@@ -5286,14 +5085,10 @@ mod tests {
             .selection_manager
             .lock()
             .select_task("app:build".to_string());
-        let reselection = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_task_name()
-            .map(|s| s.to_string());
+        let reselection = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             reselection,
-            Some("app:build".to_string()),
+            Some(SelectionEntry::Task("app:build".to_string())),
             "Should be able to select app:build task consistently"
         );
     }
@@ -5347,11 +5142,8 @@ mod tests {
             .selection_manager
             .lock()
             .select_task("lib:build".to_string());
-        let selection_before_collapse = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_task_name()
-            .map(|s| s.to_string());
+        let selection_before_collapse =
+            tasks_list.selection_manager.lock().get_selection().cloned();
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(
@@ -5363,14 +5155,10 @@ mod tests {
         tasks_list.collapse_batch("batch1");
 
         // When batch is collapsed, selection moves to the batch group since nested task is hidden
-        let selection_after_collapse = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_batch_id()
-            .map(|s| s.to_string());
+        let selection_after_collapse = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             selection_after_collapse,
-            Some("batch1".to_string()),
+            Some(SelectionEntry::BatchGroup("batch1".to_string())),
             "Selection should move to batch group when collapsed"
         );
 
@@ -5384,14 +5172,10 @@ mod tests {
         tasks_list.expand_batch("batch1");
 
         // Selection remains on batch group after re-expansion
-        let selection_after_expand = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_batch_id()
-            .map(|s| s.to_string());
+        let selection_after_expand = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             selection_after_expand,
-            Some("batch1".to_string()),
+            Some(SelectionEntry::BatchGroup("batch1".to_string())),
             "Selection should remain on batch group after re-expansion"
         );
 
@@ -5456,36 +5240,12 @@ mod tests {
             .selection_manager
             .lock()
             .select_task("app:build".to_string());
-        let selection_manager = tasks_list.selection_manager.lock();
-
         // Verify we have a task selection
-        match selection_manager.get_selection() {
-            Some(crate::native::tui::components::task_selection_manager::Selection::Task(
-                task_name,
-            )) => {
-                assert_eq!(
-                    task_name, "app:build",
-                    "Should have selected app:build task"
-                );
-            }
-            Some(
-                crate::native::tui::components::task_selection_manager::Selection::BatchGroup(_),
-            ) => {
-                panic!("Expected task selection, got batch group selection");
-            }
-            None => {
-                panic!("Expected task selection, got none");
-            }
-        }
-
-        // Verify task is selected and not batch group
         assert_eq!(
-            selection_manager.get_selected_item_type(),
-            crate::native::tui::components::task_selection_manager::SelectedItemType::Task,
-            "Selected item type should be Task"
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(&SelectionEntry::Task("app:build".to_string())),
+            "Should have selected app:build task"
         );
-
-        drop(selection_manager);
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!("selection_enum_task_selected", terminal.backend());
@@ -5502,35 +5262,16 @@ mod tests {
         }
         tasks_list.apply_filter(); // Refresh display after state change
 
-        // Select the batch group (this should internally use BatchGroup selection)
-        let mut selection_manager = tasks_list.selection_manager.lock();
-        selection_manager.select_batch_group("batch1".to_string());
-
-        // Verify we have a batch group selection
-        match selection_manager.get_selection() {
-            Some(
-                crate::native::tui::components::task_selection_manager::Selection::BatchGroup(
-                    batch_id,
-                ),
-            ) => {
-                assert_eq!(batch_id, "batch1", "Should have selected batch1 group");
-            }
-            Some(crate::native::tui::components::task_selection_manager::Selection::Task(_)) => {
-                panic!("Expected batch group selection, got task selection");
-            }
-            None => {
-                panic!("Expected batch group selection, got none");
-            }
-        }
-
-        // Verify batch group is selected and not task
+        // Select the batch group and verify selection
+        tasks_list
+            .selection_manager
+            .lock()
+            .select_batch_group("batch1".to_string());
         assert_eq!(
-            selection_manager.get_selected_item_type(),
-            crate::native::tui::components::task_selection_manager::SelectedItemType::BatchGroup,
-            "Selected item type should be BatchGroup"
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(&SelectionEntry::BatchGroup("batch1".to_string())),
+            "Should have selected batch1 group"
         );
-
-        drop(selection_manager);
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!("selection_enum_batch_group_selected", terminal.backend());
@@ -5540,27 +5281,11 @@ mod tests {
             .selection_manager
             .lock()
             .select_task("lib:build".to_string());
-        let selection_manager = tasks_list.selection_manager.lock();
-
-        // Should now be a task selection, not a batch group selection
-        match selection_manager.get_selection() {
-            Some(crate::native::tui::components::task_selection_manager::Selection::Task(
-                task_name,
-            )) => {
-                assert_eq!(
-                    task_name, "lib:build",
-                    "Should have selected lib:build task"
-                );
-            }
-            Some(
-                crate::native::tui::components::task_selection_manager::Selection::BatchGroup(_),
-            ) => {
-                panic!("Expected task selection after selecting task, but got batch group");
-            }
-            None => {
-                panic!("Expected task selection after selecting task, got none");
-            }
-        }
+        assert_eq!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(&SelectionEntry::Task("lib:build".to_string())),
+            "Should have selected lib:build task"
+        );
     }
 
     #[test]
@@ -5582,11 +5307,7 @@ mod tests {
             .selection_manager
             .lock()
             .select_task("app:build".to_string());
-        let standalone_selected = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_task_name()
-            .map(|s| s.to_string());
+        let standalone_selected = tasks_list.selection_manager.lock().get_selection().cloned();
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!("terminal_routing_standalone_task", terminal.backend());
@@ -5627,11 +5348,7 @@ mod tests {
             .selection_manager
             .lock()
             .select_task("app:build".to_string());
-        let batch_selected = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_task_name()
-            .map(|s| s.to_string());
+        let batch_selected = tasks_list.selection_manager.lock().get_selection().cloned();
 
         // Task selection should be identical regardless of display context
         assert_eq!(
@@ -5650,15 +5367,11 @@ mod tests {
             .selection_manager
             .lock()
             .select_task("lib:build".to_string());
-        let lib_selected = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_task_name()
-            .map(|s| s.to_string());
+        let lib_selected = tasks_list.selection_manager.lock().get_selection().cloned();
 
         assert_eq!(
             lib_selected,
-            Some("lib:build".to_string()),
+            Some(SelectionEntry::Task("lib:build".to_string())),
             "Should be able to select lib:build with pure task name"
         );
 
@@ -5670,15 +5383,11 @@ mod tests {
             .selection_manager
             .lock()
             .select_task("standalone:test".to_string());
-        let standalone_test_selected = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_task_name()
-            .map(|s| s.to_string());
+        let standalone_test_selected = tasks_list.selection_manager.lock().get_selection().cloned();
 
         assert_eq!(
             standalone_test_selected,
-            Some("standalone:test".to_string()),
+            Some(SelectionEntry::Task("standalone:test".to_string())),
             "Should be able to select standalone task with pure name"
         );
 
@@ -5768,14 +5477,10 @@ mod tests {
             .selection_manager
             .lock()
             .select_task("lib:build".to_string());
-        let selected_task = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_task_name()
-            .map(|s| s.to_string());
+        let selected_task = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             selected_task,
-            Some("lib:build".to_string()),
+            Some(SelectionEntry::Task("lib:build".to_string())),
             "Should be able to select nested task"
         );
 
@@ -5786,11 +5491,10 @@ mod tests {
                 if batch.batch_id == "batch1" {
                     // Check if any nested task is selected before collapsing
                     let has_selected_nested_task = batch.nested_tasks.iter().any(|task_id| {
-                        tasks_list
-                            .selection_manager
-                            .lock()
-                            .get_selected_task_name()
-                            .map_or(false, |selected| selected == task_id)
+                        matches!(
+                            tasks_list.selection_manager.lock().get_selection(),
+                            Some(SelectionEntry::Task(selected)) if selected == task_id
+                        )
                     });
 
                     if !has_selected_nested_task {
@@ -5846,14 +5550,10 @@ mod tests {
             .selection_manager
             .lock()
             .select_task("lib:build".to_string());
-        let pre_batch_selection = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_task_name()
-            .map(|s| s.to_string());
+        let pre_batch_selection = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             pre_batch_selection,
-            Some("lib:build".to_string()),
+            Some(SelectionEntry::Task("lib:build".to_string())),
             "Should be able to pre-select lib:build task"
         );
 
@@ -5898,14 +5598,10 @@ mod tests {
         );
 
         // Test 2: After grouping, batch should be selected (since lib:build was selected and is now in batch)
-        let selected_batch = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_batch_id()
-            .map(|s| s.to_string());
+        let selected_batch = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             selected_batch,
-            Some("batch1".to_string()),
+            Some(SelectionEntry::BatchGroup("batch1".to_string())),
             "Batch should be selected when previously selected task goes into it"
         );
 
@@ -5933,16 +5629,12 @@ mod tests {
             .selection_manager
             .lock()
             .select_task("lib:build".to_string());
-        let post_expand_selection = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_task_name()
-            .map(|s| s.to_string());
+        let post_expand_selection = tasks_list.selection_manager.lock().get_selection().cloned();
 
         // Verify the selection points to lib:build and the task is now visible in the expanded batch
         assert_eq!(
             post_expand_selection,
-            Some("lib:build".to_string()),
+            Some(SelectionEntry::Task("lib:build".to_string())),
             "Should be able to select lib:build task in the expanded batch"
         );
 
@@ -6228,24 +5920,11 @@ mod tests {
             .selection_manager
             .lock()
             .select_task("shared:test".to_string());
-        let selected_task = tasks_list
-            .selection_manager
-            .lock()
-            .get_selected_task_name()
-            .map(|s| s.to_string());
+        let selected_task = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             selected_task,
-            Some("shared:test".to_string()),
+            Some(SelectionEntry::Task("shared:test".to_string())),
             "Should be able to select tasks from second batch"
-        );
-
-        // Verify that selecting a task in a collapsed batch works correctly
-        // The test-batch is expanded, so shared:test should be directly selectable
-        let selected_task_type = tasks_list.selection_manager.lock().get_selected_item_type();
-        assert_eq!(
-            selected_task_type,
-            crate::native::tui::components::task_selection_manager::SelectedItemType::Task,
-            "Selected item should be a task, not a batch group"
         );
     }
 
@@ -6567,20 +6246,7 @@ mod tests {
         insta::assert_snapshot!("batch_completion_before_ungrouping", terminal.backend());
 
         // Verify batch group exists and contains tasks
-        let batch_group_running = tasks_list
-            .display_items
-            .iter()
-            .find_map(|item| {
-                if let DisplayItem::BatchGroup(batch) = item {
-                    if batch.batch_id == "batch1" {
-                        Some(batch)
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            })
+        let batch_group_running = find_batch_group(&tasks_list, "batch1")
             .expect("Batch group should exist during running state");
 
         assert_eq!(
@@ -6631,19 +6297,8 @@ mod tests {
         // --- VERIFICATION AFTER UNGROUPING ---
 
         // Verify batch group no longer exists
-        let batch_group_after_ungrouping = tasks_list.display_items.iter().find_map(|item| {
-            if let DisplayItem::BatchGroup(batch) = item {
-                if batch.batch_id == "batch1" {
-                    Some(batch)
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        });
         assert!(
-            batch_group_after_ungrouping.is_none(),
+            find_batch_group(&tasks_list, "batch1").is_none(),
             "Batch group should be removed after ungrouping"
         );
 
@@ -6813,13 +6468,9 @@ mod tests {
         let manager = tasks_list.selection_manager.lock();
 
         // Verify final selection points to the batch group
-        assert!(
-            manager.get_selection().is_some(),
-            "Something should be selected after navigation"
-        );
         assert_eq!(
-            manager.get_selected_batch_id().unwrap(),
-            "build-batch",
+            manager.get_selection(),
+            Some(&SelectionEntry::BatchGroup("build-batch".to_string())),
             "Batch group should be selected"
         );
 

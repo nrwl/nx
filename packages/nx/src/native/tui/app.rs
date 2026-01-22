@@ -1,6 +1,5 @@
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 #[cfg(not(test))]
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
@@ -35,7 +34,7 @@ use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
 };
 use super::components::task_selection_manager::{
-    PaneSelection, SelectedItemType, Selection, SelectionMode, TaskSelectionManager,
+    SelectionEntry, SelectionMode, TaskSelectionManager,
 };
 use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
@@ -100,8 +99,8 @@ pub struct App {
     terminal_pane_data: [TerminalPaneData; 2],
     dependency_view_states: [Option<DependencyViewState>; 2],
     spacebar_mode: bool,
-    pane_tasks: [Option<PaneSelection>; 2], // Selections assigned to panes 1 and 2 (0-indexed)
-    resize_debounce_timer: Option<u128>,    // Timer for debouncing resize events
+    pane_tasks: [Option<SelectionEntry>; 2], // Selections assigned to panes 1 and 2 (0-indexed)
+    resize_debounce_timer: Option<u128>,     // Timer for debouncing resize events
     selection_manager: Arc<Mutex<TaskSelectionManager>>,
     debug_mode: bool,
     debug_state: TuiWidgetState,
@@ -228,17 +227,6 @@ impl App {
             }
         }
 
-        // Restore selection
-        match &saved_selected_item {
-            Some(Selection::Task(id)) => {
-                selection_manager.lock().select_task(id.clone());
-            }
-            Some(Selection::BatchGroup(id)) => {
-                selection_manager.lock().select_batch_group(id.clone())
-            }
-            None => {}
-        }
-
         // Restore filter text
         if !saved_filter_text.is_empty() {
             tasks_list.set_filter_text(saved_filter_text);
@@ -283,6 +271,9 @@ impl App {
             saved_spacebar_mode,
             saved_selected_item
         );
+
+        // Restore selection (after trace so we can log the value)
+        selection_manager.lock().select(saved_selected_item);
 
         Ok(Self {
             core: TuiCore::new(state),
@@ -1251,14 +1242,13 @@ impl App {
                     }
 
                     // Draw the TaskList component, if visible
-                    if let Some(task_list_area) = layout_areas.task_list {
-                        if let Some(tasks_list) = self
+                    if let Some(task_list_area) = layout_areas.task_list
+                        && let Some(tasks_list) = self
                             .components
                             .iter_mut()
                             .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-                        {
-                            let _ = tasks_list.draw(f, task_list_area);
-                        }
+                    {
+                        let _ = tasks_list.draw(f, task_list_area);
                     }
 
                     // Clone terminal pane areas upfront to avoid borrow conflicts with self
@@ -1268,13 +1258,10 @@ impl App {
 
                     // Clone pane_tasks upfront to avoid borrow conflicts when calling render methods
                     // This is a small fixed-size array (2 elements), so the clone cost is minimal
-                    let pane_tasks_snapshot: [Option<PaneSelection>; 2] = if self.spacebar_mode {
+                    let pane_tasks_snapshot: [Option<SelectionEntry>; 2] = if self.spacebar_mode {
                         // In spacebar mode, use the current selection from selection manager
                         let manager = self.selection_manager.lock();
-                        let selection = manager.get_selected_item().map(|(id, t)| PaneSelection {
-                            id: id.clone(),
-                            item_type: t,
-                        });
+                        let selection = manager.get_selection().cloned();
                         [selection, None]
                     } else {
                         self.pane_tasks.clone()
@@ -1287,78 +1274,66 @@ impl App {
                     // Physical position 0 gets the first pinned task, position 1 gets the second
                     let mut physical_idx = 0;
                     for (pane_idx, selection_opt) in pane_tasks_snapshot.iter().enumerate() {
-                        if let Some(sel) = selection_opt {
-                            let selected_identifier = &sel.id;
-                            let selection_type = sel.item_type;
-                            if physical_idx < terminal_panes.len() {
-                                let pane_area = terminal_panes[physical_idx];
+                        let Some(sel) = selection_opt else { continue };
+                        let Some(&pane_area) = terminal_panes.get(physical_idx) else {
+                            continue;
+                        };
 
-                                // Compute focus state based on pane index
-                                let is_focused = matches!(
-                                    current_focus,
-                                    Focus::MultipleOutput(focused) if focused == pane_idx
-                                );
+                        let is_focused = matches!(
+                            current_focus,
+                            Focus::MultipleOutput(focused) if focused == pane_idx
+                        );
 
-                                // Compute next-tab-target based on physical position
-                                let is_next_tab_target = !is_focused
-                                    && match current_focus {
-                                        Focus::TaskList => physical_idx == 0,
-                                        Focus::MultipleOutput(_) => {
-                                            physical_idx == 1 && num_visible_panes > 1
-                                        }
-                                        _ => false,
-                                    };
-
-                                match selection_type {
-                                    SelectedItemType::BatchGroup => {
-                                        // Show batch terminal output (identifier is pure batch ID)
-                                        self.render_batch_terminal_pane_internal(
-                                            f,
-                                            pane_idx,
-                                            pane_area,
-                                            selected_identifier.clone(),
-                                            is_focused,
-                                            is_next_tab_target,
-                                        );
-                                    }
-                                    SelectedItemType::Task => {
-                                        // Show individual task output (identifier is pure task name)
-                                        let task_name = selected_identifier;
-
-                                        let task_status = self
-                                            .get_task_status(task_name)
-                                            .unwrap_or(TaskStatus::NotStarted);
-
-                                        // If task is pending or skipped, show dependency view
-                                        if task_status == TaskStatus::NotStarted
-                                            || task_status == TaskStatus::Skipped
-                                        {
-                                            self.render_dependency_view_internal(
-                                                f,
-                                                pane_idx,
-                                                pane_area,
-                                                task_name.clone(),
-                                                is_focused,
-                                            );
-                                        } else {
-                                            self.render_terminal_pane_internal(
-                                                f,
-                                                pane_idx,
-                                                pane_area,
-                                                task_name.clone(),
-                                                is_focused,
-                                                is_next_tab_target,
-                                            );
-                                        }
-                                    }
-                                    SelectedItemType::None => {
-                                        // No selection - skip rendering (empty panes are not shown)
-                                    }
+                        let is_next_tab_target = !is_focused
+                            && match current_focus {
+                                Focus::TaskList => physical_idx == 0,
+                                Focus::MultipleOutput(_) => {
+                                    physical_idx == 1 && num_visible_panes > 1
                                 }
+                                _ => false,
+                            };
 
-                                physical_idx += 1;
+                        match sel {
+                            SelectionEntry::BatchGroup(batch_id) => {
+                                self.render_batch_terminal_pane_internal(
+                                    f,
+                                    pane_idx,
+                                    pane_area,
+                                    batch_id.clone(),
+                                    is_focused,
+                                    is_next_tab_target,
+                                );
+                            }
+                            SelectionEntry::Task(task_name) => {
+                                let task_status = self
+                                    .get_task_status(task_name)
+                                    .unwrap_or(TaskStatus::NotStarted);
+
+                                if matches!(
+                                    task_status,
+                                    TaskStatus::NotStarted | TaskStatus::Skipped
+                                ) {
+                                    self.render_dependency_view_internal(
+                                        f,
+                                        pane_idx,
+                                        pane_area,
+                                        task_name.clone(),
+                                        is_focused,
+                                    );
+                                } else {
+                                    self.render_terminal_pane_internal(
+                                        f,
+                                        pane_idx,
+                                        pane_area,
+                                        task_name.clone(),
+                                        is_focused,
+                                        is_next_tab_target,
+                                    );
+                                }
                             }
                         }
+
+                        physical_idx += 1;
                     }
 
                     // Draw the popups (help, countdown, interstitial)
@@ -1508,31 +1483,22 @@ impl App {
 
     /// Toggles the visibility of the output pane for the currently selected item (task or batch group).
     /// In spacebar mode, the output follows the selection.
-    fn toggle_output_visibility(&mut self) {
+    fn toggle_output_visibility(&mut self) -> Option<()> {
         // TODO: Not sure why we do this, this action only happens when the task list is visible
         self.layout_manager
             .set_task_list_visibility(TaskListVisibility::Visible);
 
-        // Extract selected item (task or batch group) to end the immutable borrow
-        let (item_id, item_type) = match self.selection_manager.lock().get_selected_item() {
-            Some((id, item_type)) => (id.clone(), item_type),
-            None => return,
-        };
+        let selection = self.selection_manager.lock().get_selection().cloned()?;
 
         if self.has_visible_panes() {
             self.clear_all_panes();
             self.set_spacebar_mode(false, None);
         } else {
             // Show current selection in pane 1 in spacebar mode
-            self.pane_tasks = [
-                Some(PaneSelection {
-                    id: item_id,
-                    item_type,
-                }),
-                None,
-            ];
+            self.pane_tasks = [Some(selection), None];
             self.set_spacebar_mode(true, None);
         }
+        Some(())
     }
 
     fn set_spacebar_mode(
@@ -1696,17 +1662,9 @@ impl App {
         let _ = self.handle_pty_resize();
     }
 
-    fn assign_current_task_to_pane(&mut self, pane_idx: usize) {
+    fn assign_current_task_to_pane(&mut self, pane_idx: usize) -> Option<()> {
         // Extract selected item (task or batch) to end the immutable borrow
-        let (item_id, item_type) = match self.selection_manager.lock().get_selected_item() {
-            Some((id, t)) => (id.clone(), t),
-            None => return,
-        };
-
-        // Skip if trying to pin a None type
-        if item_type == SelectedItemType::None {
-            return;
-        }
+        let selection = self.selection_manager.lock().get_selection().cloned()?;
 
         // If we're in spacebar mode, clear the spacebar placeholder before pinning
         // In spacebar mode, pane_tasks[0] is a placeholder that may hold a stale task
@@ -1719,78 +1677,71 @@ impl App {
             // Exit spacebar mode first
             self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
 
-            // Pin the item to the requested pane
-            self.pane_tasks[pane_idx] = Some(PaneSelection {
-                id: item_id.clone(),
-                item_type,
-            });
+            // Dispatch action before moving selection
+            self.dispatch_action(Action::PinSelection(selection.clone(), pane_idx));
+            self.pane_tasks[pane_idx] = Some(selection);
             self.layout_manager
                 .set_pane_arrangement(PaneArrangement::Single);
-            self.dispatch_pin_action(item_id.clone(), item_type, pane_idx);
         } else {
             // Check if the item is already pinned to the OTHER pane
             let other_pane_idx = 1 - pane_idx;
-            if self.pane_tasks[other_pane_idx]
-                .as_ref()
-                .map(|sel| sel.id.as_str())
-                == Some(item_id.as_str())
-            {
+            if self.pane_tasks[other_pane_idx].as_ref() == Some(&selection) {
                 // Clear the other pane - item is "moving" to the new pane
                 self.pane_tasks[other_pane_idx] = None;
                 self.clear_pane_pty_reference(other_pane_idx);
                 self.dependency_view_states[other_pane_idx] = None;
-                self.dispatch_action(Action::UnpinTask(item_id.clone(), other_pane_idx));
+                self.dispatch_action(Action::UnpinSelection(other_pane_idx));
 
                 // Adjust layout since we now only have one pane
                 self.layout_manager
                     .set_pane_arrangement(PaneArrangement::Single);
 
-                // Dispatch appropriate action based on type (after moving from other pane)
-                self.dispatch_pin_action(item_id.clone(), item_type, pane_idx);
+                // Dispatch action before moving selection, then assign
+                self.dispatch_action(Action::PinSelection(selection.clone(), pane_idx));
+                self.pane_tasks[pane_idx] = Some(selection);
+            } else if self.pane_tasks[pane_idx].as_ref() == Some(&selection) {
+                // Task is already pinned to this pane - just focus it
+                self.update_focus(Focus::MultipleOutput(pane_idx));
+                return None; // Early return - no need to update layout or resize
             } else {
-                // Check if the item is already pinned to the pane
-                if self.pane_tasks[pane_idx]
-                    .as_ref()
-                    .map(|sel| sel.id.as_str())
-                    == Some(item_id.as_str())
-                {
-                    // Task is already pinned to this pane - just focus it
-                    self.update_focus(Focus::MultipleOutput(pane_idx));
-                } else {
-                    // Pin the item to the specified pane
-                    // Cleanup old completed batch before replacing
-                    self.cleanup_pane_completed_batch(pane_idx);
+                // Pin the item to the specified pane
+                // Cleanup old completed batch before replacing
+                self.cleanup_pane_completed_batch(pane_idx);
 
-                    self.pane_tasks[pane_idx] = Some(PaneSelection {
-                        id: item_id.clone(),
-                        item_type,
-                    });
-                    self.update_focus(Focus::TaskList);
+                // Dispatch action before moving selection
+                self.dispatch_action(Action::PinSelection(selection.clone(), pane_idx));
+                self.pane_tasks[pane_idx] = Some(selection);
+                self.update_focus(Focus::TaskList);
 
-                    // Exit spacebar mode when pinning
-                    // When pinning an item, use name-based selection
-                    self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
+                // Exit spacebar mode when pinning
+                // When pinning an item, use name-based selection
+                self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
 
-                    // Set pane arrangement based on count of pinned tasks
-                    let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
-                    match pinned_count {
-                        0 => self
-                            .layout_manager
-                            .set_pane_arrangement(PaneArrangement::None),
-                        1 => self
-                            .layout_manager
-                            .set_pane_arrangement(PaneArrangement::Single),
-                        _ => self
-                            .layout_manager
-                            .set_pane_arrangement(PaneArrangement::Double),
-                    }
-
-                    // Dispatch appropriate action based on type
-                    self.dispatch_pin_action(item_id.clone(), item_type, pane_idx);
+                // Set pane arrangement based on count of pinned tasks
+                let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
+                match pinned_count {
+                    0 => self
+                        .layout_manager
+                        .set_pane_arrangement(PaneArrangement::None),
+                    1 => self
+                        .layout_manager
+                        .set_pane_arrangement(PaneArrangement::Single),
+                    _ => self
+                        .layout_manager
+                        .set_pane_arrangement(PaneArrangement::Double),
                 }
+
+                // Already assigned above, so just continue to layout update
+                self.finalize_pane_assignment();
+                return Some(());
             }
         }
 
+        self.finalize_pane_assignment();
+        Some(())
+    }
+
+    fn finalize_pane_assignment(&mut self) {
         // Always re-evaluate the optimal size of the terminal pane(s)
         self.recalculate_layout_areas();
         // Ensure the pty instances get resized appropriately (no debounce as this is based on an imperative user action)
@@ -1802,56 +1753,43 @@ impl App {
         if let Focus::MultipleOutput(pane_idx) = self.focus {
             // Get the task assigned to this pane to determine how to handle keys
             // In spacebar mode, use selection manager; in pinned mode, use pane_tasks
-            let (selected_identifier, selection_type) = if self.spacebar_mode {
-                self.selection_manager
-                    .lock()
-                    .get_selected_item()
-                    .map(|(id, t)| (Some(id.clone()), t))
-                    .unwrap_or((None, SelectedItemType::None))
+            let selection = if self.spacebar_mode {
+                self.selection_manager.lock().get_selection().cloned()
             } else {
-                self.pane_tasks[pane_idx]
-                    .as_ref()
-                    .map(|sel| (Some(sel.id.clone()), sel.item_type))
-                    .unwrap_or((None, SelectedItemType::None))
+                self.pane_tasks[pane_idx].clone()
             };
 
-            if let Some(selected_identifier) = selected_identifier {
-                match selection_type {
-                    SelectedItemType::BatchGroup => {
-                        // Batch groups show terminal output, handle keys in terminal pane
-                        // Batch PTY instances are typically non-interactive, but still handle scrolling
+            match selection {
+                Some(SelectionEntry::BatchGroup(_)) => {
+                    // Batch groups show terminal output, handle keys in terminal pane
+                    // Batch PTY instances are typically non-interactive, but still handle scrolling
+                    let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+                    if let Some(action) = terminal_pane_data.handle_key_event(key)? {
+                        self.dispatch_action(action);
+                    }
+                }
+                Some(SelectionEntry::Task(task_name)) => {
+                    // Handle task (identifier is pure task name)
+                    let task_status = self
+                        .get_task_status(&task_name)
+                        .unwrap_or(TaskStatus::NotStarted);
+                    if matches!(task_status, TaskStatus::NotStarted | TaskStatus::Skipped) {
+                        // Task is pending - handle keys in dependency view
+                        if let Some(dep_state) = &mut self.dependency_view_states[pane_idx]
+                            && let Some(action) = dep_state.handle_key_event(key)
+                        {
+                            self.dispatch_action(action);
+                        }
+                        return Ok(());
+                    } else {
+                        // Task is running/completed - handle keys in terminal pane
                         let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
                         if let Some(action) = terminal_pane_data.handle_key_event(key)? {
                             self.dispatch_action(action);
                         }
                     }
-                    SelectedItemType::Task => {
-                        // Handle task (identifier is pure task name)
-                        let task_name = selected_identifier;
-
-                        let task_status = self
-                            .get_task_status(&task_name)
-                            .unwrap_or(TaskStatus::NotStarted);
-                        if matches!(task_status, TaskStatus::NotStarted | TaskStatus::Skipped) {
-                            // Task is pending - handle keys in dependency view
-                            if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
-                                if let Some(action) = dep_state.handle_key_event(key) {
-                                    self.dispatch_action(action);
-                                }
-                            }
-                            return Ok(());
-                        } else {
-                            // Task is running/completed - handle keys in terminal pane
-                            let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-                            if let Some(action) = terminal_pane_data.handle_key_event(key)? {
-                                self.dispatch_action(action);
-                            }
-                        }
-                    }
-                    SelectedItemType::None => {
-                        // No selection, do nothing
-                    }
                 }
+                None => {}
             }
             Ok(())
         } else {
@@ -1879,10 +1817,8 @@ impl App {
         let now = current_timestamp_millis() as u128;
 
         // If we have a timer and it's not expired yet, just return
-        if let Some(timer) = self.resize_debounce_timer {
-            if now < timer {
-                return Ok(());
-            }
+        if self.resize_debounce_timer.is_some_and(|timer| now < timer) {
+            return Ok(());
         }
 
         // Set a new timer for 200ms from now
@@ -2046,9 +1982,7 @@ impl App {
         // Create or update dependency view state for this pane
         let should_update = self.dependency_view_states[pane_idx]
             .as_ref()
-            .map_or(false, |existing_state| {
-                existing_state.current_task == task_name
-            });
+            .is_some_and(|s| s.current_task == task_name);
 
         if should_update {
             // Same task, update the existing state (preserves scroll position, etc.)
@@ -2292,7 +2226,7 @@ impl App {
                 .pane_tasks
                 .iter()
                 .enumerate()
-                .filter(|(_, sel)| sel.as_ref().map(|s| s.id.as_str()) == Some(skipped_task_id))
+                .filter(|(_, sel)| sel.as_ref().map(|s| s.id()) == Some(skipped_task_id))
                 .map(|(idx, _)| idx)
                 .collect();
 
@@ -2300,7 +2234,8 @@ impl App {
             let will_duplicate = panes_to_update.len() > 1
                 || (panes_to_update.len() == 1 && {
                     let other_pane = 1 - panes_to_update[0];
-                    self.pane_tasks[other_pane].as_ref().map(|s| &s.id) == Some(&failed_dep)
+                    self.pane_tasks[other_pane].as_ref().map(|s| s.id())
+                        == Some(failed_dep.as_str())
                 });
 
             if will_duplicate {
@@ -2323,48 +2258,39 @@ impl App {
 
     /// Switches a pane to display a different task, updating all necessary state.
     fn switch_pane_to_task(&mut self, pane_idx: usize, task_id: String) {
-        self.switch_pane_to_selection(pane_idx, task_id);
+        self.switch_pane_to_selection(pane_idx, SelectionEntry::Task(task_id));
     }
 
     /// Switches a pane to display a different selection (task, batch, or nested task), updating all necessary state.
-    fn switch_pane_to_selection(&mut self, pane_idx: usize, selection_identifier: String) {
-        // Determine the type of the selection
-        let selection_type = if self.batch_states.contains_key(&selection_identifier) {
-            SelectedItemType::BatchGroup
-        } else {
-            SelectedItemType::Task
-        };
+    fn switch_pane_to_selection(&mut self, pane_idx: usize, selection: SelectionEntry) {
+        let selection_id = selection.id().to_string();
 
-        self.pane_tasks[pane_idx] = Some(PaneSelection {
-            id: selection_identifier.clone(),
-            item_type: selection_type,
-        });
+        self.pane_tasks[pane_idx] = Some(selection.clone());
 
         // Clear cached states so they get recreated for the new selection
         self.dependency_view_states[pane_idx] = None;
 
         // Assign the PTY for the new task to this pane if available
         let state = self.core.state().lock();
-        if let Some(pty_instance) = state.get_pty_instance(&selection_identifier) {
+        if let Some(pty_instance) = state.get_pty_instance(&selection_id) {
             self.terminal_pane_data[pane_idx].pty = Some(pty_instance.clone());
 
             // Immediately resize PTY to match the current terminal pane dimensions
-            if let Some(layout_areas) = &self.layout_areas {
-                if let Some(pane_area) = layout_areas.terminal_panes.get(pane_idx) {
-                    let (pty_height, pty_width) =
-                        TerminalPane::calculate_pty_dimensions(*pane_area);
-                    let mut pty_clone = pty_instance.as_ref().clone();
-                    pty_clone.resize(pty_height, pty_width).ok();
-                }
+            if let Some(pane_area) = self
+                .layout_areas
+                .as_ref()
+                .and_then(|la| la.terminal_panes.get(pane_idx))
+            {
+                let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(*pane_area);
+                let mut pty_clone = pty_instance.as_ref().clone();
+                pty_clone.resize(pty_height, pty_width).ok();
             }
         } else {
             self.terminal_pane_data[pane_idx].pty = None;
         }
 
         // Update the selection manager to prevent conflicts with manual selection
-        self.selection_manager
-            .lock()
-            .select_task(selection_identifier);
+        self.selection_manager.lock().select(Some(selection));
     }
 
     /// Gets the first failed dependency for a given task.
@@ -2415,7 +2341,7 @@ impl App {
             .batch_states
             .get(&batch_id)
             .map(|state| state.start_time)
-            .unwrap_or_else(|| current_timestamp_millis());
+            .unwrap_or_else(current_timestamp_millis);
 
         if let Some(tasks_list) = self
             .components
@@ -2443,10 +2369,10 @@ impl App {
 
         // Check if batch is truly pinned (not in spacebar mode)
         let is_pinned = !self.spacebar_mode
-            && self.pane_tasks.iter().any(|sel| {
-                sel.as_ref().map(|s| &s.id) == Some(&batch_id)
-                    && sel.as_ref().map(|s| s.item_type) == Some(SelectedItemType::BatchGroup)
-            });
+            && self
+                .pane_tasks
+                .iter()
+                .any(|sel| matches!(sel, Some(SelectionEntry::BatchGroup(id)) if id == &batch_id));
 
         if is_pinned {
             // Preserve state for pinned batch
@@ -2479,45 +2405,7 @@ impl App {
             .iter_mut()
             .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
         {
-            // Store currently selected item (task or batch) to preserve selection
-            let currently_selected = self
-                .selection_manager
-                .lock()
-                .get_selected_item()
-                .map(|(id, t)| (id.clone(), t));
-
-            // Get batch info before ungrouping for better selection handling
-            let batch_tasks = if let Some(batch_group) = tasks_list.get_batch_group_by_id(&batch_id)
-            {
-                batch_group.nested_tasks.clone()
-            } else {
-                HashSet::new()
-            };
-
-            // Ungroup the batch tasks
             tasks_list.ungroup_batch_tasks(&batch_id);
-
-            // Enhanced selection restoration logic
-            if let Some((selected_id, selected_type)) = currently_selected {
-                let new_selection = match selected_type {
-                    SelectedItemType::BatchGroup if selected_id == batch_id => {
-                        // This batch group was selected - select the first task from the completed batch
-                        batch_tasks.iter().next().cloned()
-                    }
-                    SelectedItemType::Task if batch_tasks.contains(&selected_id) => {
-                        // Task from this batch was selected - preserve the selection
-                        Some(selected_id)
-                    }
-                    _ => {
-                        // Other item selected - preserve as is
-                        Some(selected_id)
-                    }
-                };
-
-                if let Some(task_to_select) = new_selection {
-                    self.selection_manager.lock().select_task(task_to_select);
-                }
-            }
         }
     }
 
@@ -2532,47 +2420,22 @@ impl App {
 
     /// Cleans up completed batch from a pane if it exists
     fn cleanup_pane_completed_batch(&mut self, pane_idx: usize) {
-        if let Some(sel) = &self.pane_tasks[pane_idx] {
-            if sel.item_type == SelectedItemType::BatchGroup {
-                let batch_id = sel.id.clone();
-                if self.completed_pinned_batches.contains_key(&batch_id) {
-                    // Check if still referenced by other pane
-                    let other_pane = 1 - pane_idx;
-                    let still_referenced =
-                        self.pane_tasks[other_pane].as_ref().map(|s| s.id.as_str())
-                            == Some(batch_id.as_str());
+        if let Some(SelectionEntry::BatchGroup(batch_id)) = &self.pane_tasks[pane_idx] {
+            let batch_id = batch_id.clone();
+            if self.completed_pinned_batches.contains_key(&batch_id) {
+                // Check if still referenced by other pane
+                let other_pane = 1 - pane_idx;
+                let still_referenced =
+                    self.pane_tasks[other_pane].as_ref().map(|s| s.id()) == Some(batch_id.as_str());
 
-                    if !still_referenced {
-                        let mut state = self.core.state().lock();
-                        state.get_pty_instances_mut().remove(&batch_id);
-                        state.remove_batch_metadata(&batch_id);
-                        drop(state);
-                        self.completed_pinned_batches.remove(&batch_id);
-                    }
+                if !still_referenced {
+                    let mut state = self.core.state().lock();
+                    state.get_pty_instances_mut().remove(&batch_id);
+                    state.remove_batch_metadata(&batch_id);
+                    drop(state);
+                    self.completed_pinned_batches.remove(&batch_id);
                 }
             }
-        }
-    }
-
-    /// Dispatches the appropriate pin action based on item type
-    fn dispatch_pin_action(&self, item_id: String, item_type: SelectedItemType, pane_idx: usize) {
-        match item_type {
-            SelectedItemType::Task => self.dispatch_action(Action::PinTask(item_id, pane_idx)),
-            SelectedItemType::BatchGroup => {
-                self.dispatch_action(Action::PinBatch(item_id, pane_idx))
-            }
-            SelectedItemType::None => {}
-        }
-    }
-
-    /// Dispatches the appropriate unpin action based on item type
-    fn dispatch_unpin_action(&self, item_id: String, item_type: SelectedItemType, pane_idx: usize) {
-        match item_type {
-            SelectedItemType::Task => self.dispatch_action(Action::UnpinTask(item_id, pane_idx)),
-            SelectedItemType::BatchGroup => {
-                self.dispatch_action(Action::UnpinBatch(item_id, pane_idx))
-            }
-            SelectedItemType::None => {}
         }
     }
 }
@@ -2604,7 +2467,7 @@ impl TuiApp for App {
 
     fn handle_action(
         &mut self,
-        tui: &mut tui::Tui,
+        tui: &mut Tui,
         action: Action,
         action_tx: &UnboundedSender<Action>,
     ) {
@@ -2680,8 +2543,8 @@ impl TuiApp for App {
     fn get_selected_item_id(&self) -> Option<String> {
         self.selection_manager
             .lock()
-            .get_selected_item()
-            .map(|(id, _)| id.clone())
+            .get_selection()
+            .map(|sel| sel.id().to_string())
     }
 
     fn get_focused_pane_item_id(&self) -> Option<String> {
@@ -2693,10 +2556,12 @@ impl TuiApp for App {
                 if self.spacebar_mode {
                     self.selection_manager
                         .lock()
-                        .get_selected_item()
-                        .map(|(id, _)| id.clone())
+                        .get_selection()
+                        .map(|sel| sel.id().to_string())
                 } else {
-                    self.pane_tasks[pane_idx].as_ref().map(|sel| sel.id.clone())
+                    self.pane_tasks[pane_idx]
+                        .as_ref()
+                        .map(|sel| sel.id().to_string())
                 }
             }
             _ => {
