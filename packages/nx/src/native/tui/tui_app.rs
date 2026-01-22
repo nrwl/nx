@@ -221,6 +221,7 @@ pub trait TuiApp: Send {
     /// - Inline mode: calculates for minimal UI overhead
     ///
     /// Returns (rows, cols) for the PTY.
+    /// Dimensions should be the size of the terminal pane where the PTY will be displayed.
     fn calculate_pty_dimensions(&self) -> (u16, u16);
 
     /// Hook called after a PTY is registered
