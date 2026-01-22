@@ -19,18 +19,16 @@ use super::help_text::HelpText;
 use super::task_selection_manager::{
     ScrollMetrics, SelectionEntry, SelectionMode, TaskSection, TaskSelectionManager,
 };
-use crate::native::tui::{
-    scroll_momentum::{ScrollDirection, ScrollMomentum},
-    status_icons::{self, THROBBER_CHARS},
-    theme::THEME,
-};
 use crate::native::{
     tasks::types::{Task, TaskResult},
     tui::{
         action::Action,
         app::Focus,
         components::Component,
-        lifecycle::RunMode,
+        lifecycle::{BatchStatus, RunMode},
+        scroll_momentum::{ScrollDirection, ScrollMomentum},
+        status_icons::{get_batch_status_char, get_status_char, get_status_style},
+        theme::THEME,
         utils::{format_duration_since, format_live_duration, sort_task_items},
     },
     utils::time::current_timestamp_millis,
@@ -2281,8 +2279,8 @@ impl TasksList {
         trailing_spaces: &str,
     ) -> Cell<'static> {
         let mut spans = Self::render_status_prefix(is_selected, show_vertical_line);
-        let status_char = status_icons::get_status_char(task.status, self.throbber_counter);
-        let status_style = status_icons::get_status_style(task.status);
+        let status_char = get_status_char(task.status, self.throbber_counter);
+        let status_style = get_status_style(task.status);
         spans.push(Span::styled(
             format!("{}{}", status_char, trailing_spaces),
             status_style,
@@ -2320,7 +2318,7 @@ impl TasksList {
             let mut spans = Self::render_status_prefix(is_selected, is_in_parallel_section);
 
             // Add batch status icon (always throbber - batches are only displayed while running)
-            let status_char = THROBBER_CHARS[self.throbber_counter % THROBBER_CHARS.len()];
+            let status_char = get_batch_status_char(BatchStatus::Running, self.throbber_counter);
             let status_style = Style::default().fg(THEME.info).add_modifier(Modifier::BOLD);
             spans.push(Span::styled(format!("{} ", status_char), status_style));
 

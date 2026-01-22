@@ -4,10 +4,11 @@ use ratatui::{
 };
 
 use crate::native::tui::components::tasks_list::TaskStatus;
+use crate::native::tui::lifecycle::BatchStatus;
 use crate::native::tui::theme::THEME;
 
 /// Throbber animation characters for running/in-progress status
-pub const THROBBER_CHARS: [char; 10] = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+const THROBBER_CHARS: [char; 10] = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
 /// Returns a status icon span for the given task status and throbber counter.
 /// This is used consistently across the TUI for status visualization.
@@ -53,6 +54,16 @@ pub fn get_status_icon(status: TaskStatus, throbber_counter: usize) -> Span<'sta
                 .fg(THEME.secondary_fg)
                 .add_modifier(Modifier::BOLD),
         ),
+    }
+}
+
+/// Returns just the status character (without spacing) for the given status and throbber counter.
+/// This is useful when you need to build custom spans with different spacing.
+pub fn get_batch_status_char(status: BatchStatus, throbber_counter: usize) -> char {
+    match status {
+        BatchStatus::Running => THROBBER_CHARS[throbber_counter % THROBBER_CHARS.len()],
+        BatchStatus::Success => '✔',
+        BatchStatus::Failure => '✖',
     }
 }
 
