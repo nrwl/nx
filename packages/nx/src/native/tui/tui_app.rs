@@ -514,8 +514,7 @@ pub trait TuiApp: Send {
         {
             let mut state = self.state().lock();
             state.register_pty_instance(batch_id.clone(), Arc::new(pty));
-            // New batches always start collapsed
-            state.save_batch_metadata(batch_id.clone(), batch_info.clone(), start_time, false);
+            state.save_batch_metadata(batch_id.clone(), batch_info.clone(), start_time);
         }
 
         // Hook for mode-specific behavior

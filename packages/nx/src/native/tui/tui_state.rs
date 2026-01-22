@@ -39,7 +39,6 @@ pub struct StoredBatchState {
     pub final_status: Option<BatchStatus>,
     pub display_name: Option<String>,
     pub completion_time: Option<i64>,
-    pub is_expanded: bool,
 }
 
 /// Shared state that can be transferred between TUI modes
@@ -102,6 +101,9 @@ pub struct TuiState {
     /// Filter text from TasksList (always persisted when restored)
     ui_filter_text: String,
 
+    /// Batch expansion states for mode switching restoration
+    ui_batch_expansion_states: HashbrownHashMap<String, bool>,
+
     dimensions: Option<(u16, u16)>,
 }
 
@@ -152,6 +154,7 @@ impl TuiState {
             batch_metadata: HashMap::new(),
             ui_max_parallel: None,
             ui_filter_text: String::new(),
+            ui_batch_expansion_states: HashbrownHashMap::new(),
             dimensions,
         }
     }
@@ -482,13 +485,7 @@ impl TuiState {
         self.ui_focused_pane = focused_pane;
         self.ui_selected_item = selected_item;
         self.ui_filter_text = filter_text;
-
-        // Update batch expansion states in metadata
-        for (batch_id, is_expanded) in batch_expansion_states {
-            if let Some(batch) = self.batch_metadata.get_mut(&batch_id) {
-                batch.is_expanded = is_expanded;
-            }
-        }
+        self.ui_batch_expansion_states = batch_expansion_states;
     }
 
     /// Get the saved pane tasks
@@ -531,13 +528,7 @@ impl TuiState {
     // === Batch Metadata Methods (for mode switching persistence) ===
 
     /// Store batch metadata for mode switching
-    pub fn save_batch_metadata(
-        &mut self,
-        batch_id: String,
-        info: BatchInfo,
-        start_time: i64,
-        is_expanded: bool,
-    ) {
+    pub fn save_batch_metadata(&mut self, batch_id: String, info: BatchInfo, start_time: i64) {
         self.batch_metadata.insert(
             batch_id,
             StoredBatchState {
@@ -547,7 +538,6 @@ impl TuiState {
                 final_status: None,
                 display_name: None,
                 completion_time: None,
-                is_expanded,
             },
         );
     }
@@ -593,6 +583,11 @@ impl TuiState {
     /// Get saved filter text for mode switching restoration
     pub fn get_filter_text(&self) -> &str {
         &self.ui_filter_text
+    }
+
+    /// Get saved batch expansion states for mode switching restoration
+    pub fn get_batch_expansion_states(&self) -> &HashbrownHashMap<String, bool> {
+        &self.ui_batch_expansion_states
     }
 
     pub fn get_dimensions(&self) -> Option<(u16, u16)> {

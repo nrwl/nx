@@ -691,7 +691,7 @@ impl AppLifeCycle {
         batch_id: String,
         batch_info: BatchInfo,
     ) -> napi::Result<()> {
-        self.with_app(|app| app.register_running_batch(batch_id, batch_info.into()));
+        self.with_app(|app| app.register_running_batch(batch_id, batch_info));
         Ok(())
     }
 

@@ -155,6 +155,8 @@ impl App {
             saved_selected_item,
             // Batch metadata for restoration
             batch_metadata,
+            // Batch expansion states for restoration
+            batch_expansion_states,
             // Max parallel for restoration
             saved_max_parallel,
             // Filter text for restoration
@@ -178,6 +180,8 @@ impl App {
                 state_lock.get_ui_selected_item().cloned(),
                 // Get batch metadata for restoration
                 state_lock.get_batch_metadata().clone(),
+                // Get batch expansion states for restoration
+                state_lock.get_batch_expansion_states().clone(),
                 // Get max_parallel for restoration
                 state_lock.get_max_parallel(),
                 // Get filter text for restoration
@@ -223,15 +227,18 @@ impl App {
         }
 
         // Recreate batch groups for running batches (mode switching restoration)
-        // Restore saved expansion state for each batch
         for (batch_id, stored_batch) in &batch_metadata {
             if !stored_batch.is_completed {
+                let is_expanded = batch_expansion_states
+                    .get(batch_id)
+                    .copied()
+                    .unwrap_or(true);
                 tasks_list.start_batch(
                     batch_id.clone(),
                     stored_batch.info.executor_name.clone(),
                     stored_batch.info.task_ids.clone(),
                     stored_batch.start_time,
-                    stored_batch.is_expanded,
+                    is_expanded,
                 );
             }
         }
