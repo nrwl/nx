@@ -14,7 +14,7 @@ use crate::native::utils::time::current_timestamp_millis;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::lifecycle::RunMode;
+use super::lifecycle::{BatchStatus, RunMode};
 use super::pty::PtyInstance;
 use super::tui_app::BatchInfo;
 
@@ -37,7 +37,7 @@ pub struct StoredBatchState {
     pub info: BatchInfo,
     pub start_time: i64,
     pub is_completed: bool,
-    pub final_status: Option<TaskStatus>,
+    pub final_status: Option<BatchStatus>,
     pub display_name: Option<String>,
     pub completion_time: Option<i64>,
     pub is_expanded: bool,
@@ -547,7 +547,7 @@ impl TuiState {
     pub fn complete_batch_metadata(
         &mut self,
         batch_id: &str,
-        final_status: TaskStatus,
+        final_status: BatchStatus,
         display_name: String,
         completion_time: i64,
     ) {

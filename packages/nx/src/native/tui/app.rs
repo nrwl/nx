@@ -62,9 +62,9 @@ pub struct BatchState {
 /// Information preserved for completed batches that are pinned to panes
 #[derive(Debug, Clone)]
 pub struct CompletedBatchInfo {
-    pub display_name: String,     // Pre-computed "Batch: esbuild (5)"
-    pub completion_time: i64,     // When it finished
-    pub final_status: TaskStatus, // Success or Failure
+    pub display_name: String,      // Pre-computed "Batch: esbuild (5)"
+    pub completion_time: i64,      // When it finished
+    pub final_status: BatchStatus, // Success or Failure
 }
 
 /// Context for rendering a terminal pane (task or batch)
@@ -77,6 +77,16 @@ struct TerminalPaneContext {
     estimated_duration: Option<i64>,
     start_time: Option<i64>,
     end_time: Option<i64>,
+}
+
+impl From<BatchStatus> for TaskStatus {
+    fn from(status: BatchStatus) -> Self {
+        match status {
+            BatchStatus::Running => TaskStatus::InProgress,
+            BatchStatus::Success => TaskStatus::Success,
+            BatchStatus::Failure => TaskStatus::Failure,
+        }
+    }
 }
 
 /// Duration before status messages in terminal panes are automatically cleared
@@ -318,7 +328,7 @@ impl App {
                                 .clone()
                                 .unwrap_or_else(|| format!("Batch: {}", id)),
                             completion_time: b.completion_time.unwrap_or(0),
-                            final_status: b.final_status.unwrap_or(TaskStatus::Success),
+                            final_status: b.final_status.unwrap_or(BatchStatus::Success),
                         },
                     )
                 })
@@ -606,19 +616,13 @@ impl App {
     }
 
     pub fn set_batch_status(&mut self, batch_id: String, status: BatchStatus) {
-        // Early validation
-        if batch_id.is_empty() {
+        // Early validation - running status doesn't trigger completion
+        if batch_id.is_empty() || status == BatchStatus::Running {
             return;
         }
 
-        // Both success and failure trigger ungrouping
-        // (batches are only displayed while running, then ungrouped on completion)
-        let final_status = match status {
-            BatchStatus::Success => TaskStatus::Success,
-            BatchStatus::Failure => TaskStatus::Failure,
-            BatchStatus::Running => return, // No action needed for running status
-        };
-        self.handle_batch_complete(batch_id, final_status);
+        // Success and failure trigger ungrouping
+        self.handle_batch_complete(batch_id, status);
     }
 
     pub fn handle_event(
@@ -2177,7 +2181,7 @@ impl App {
                 // Completed but pinned batch
                 (
                     format!("{} [completed]", completed.display_name),
-                    completed.final_status,
+                    completed.final_status.into(),
                     None,
                 )
             } else {
@@ -2359,7 +2363,7 @@ impl App {
 
     /// Handles batch completion by ungrouping tasks back to individual display.
     /// This is called when a batch reaches a terminal state (success or failure).
-    fn handle_batch_complete(&mut self, batch_id: String, final_status: TaskStatus) {
+    fn handle_batch_complete(&mut self, batch_id: String, final_status: BatchStatus) {
         // Early validation
         if batch_id.is_empty() {
             return;

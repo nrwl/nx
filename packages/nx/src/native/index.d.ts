@@ -25,7 +25,7 @@ export declare class AppLifeCycle {
   setEstimatedTaskTimings(timings: Record<string, number>): void
   registerRunningBatch(batchId: string, batchInfo: BatchInfo): void
   appendBatchOutput(batchId: string, output: string): void
-  setBatchStatus(batchId: string, status: string): void
+  setBatchStatus(batchId: string, status: BatchStatus): void
 }
 
 export declare class ChildProcess {
@@ -199,6 +199,12 @@ export declare class WorkspaceContext {
 export interface BatchInfo {
   executorName: string
   taskIds: Array<string>
+}
+
+export declare const enum BatchStatus {
+  Running = 'Running',
+  Success = 'Success',
+  Failure = 'Failure'
 }
 
 export interface CachedResult {
