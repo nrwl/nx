@@ -10,10 +10,10 @@ function getSetupMessage(
       : 'Return to Nx Cloud and finish the setup.';
   }
 
-  // User hasn't pushed - include github.com/new hint
+  // Default case: FailedToPushToVcs
   const action = url ? 'go' : 'return';
   const urlSuffix = url ? `: ${url}` : '.';
-  return `Push your repo (https://github.com/new), then ${action} to Nx Cloud and finish the setup${urlSuffix}`;
+  return `Push your repo, then ${action} to Nx Cloud and finish the setup${urlSuffix}`;
 }
 
 /**

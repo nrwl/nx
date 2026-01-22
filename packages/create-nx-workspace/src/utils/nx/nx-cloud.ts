@@ -5,7 +5,7 @@ import {
   getSkippedCloudMessage,
   CompletionMessageKey,
 } from './messages';
-import { getFlowVariant } from './ab-testing';
+import { getFlowVariant, messages } from './ab-testing';
 import * as ora from 'ora';
 
 export type NxCloud =
@@ -74,7 +74,7 @@ export function readNxCloudToken(directory: string) {
 
 export async function createNxCloudOnboardingUrl(
   nxCloud: NxCloud,
-  token: string | undefined,
+  token: string,
   directory: string,
   useGitHub?: boolean
 ): Promise<string> {
@@ -95,7 +95,7 @@ export async function createNxCloudOnboardingUrl(
       ? 'create-nx-workspace-success-cache-setup'
       : 'create-nx-workspace-success-ci-setup';
 
-  const meta = `variant-${getFlowVariant()}`;
+  const meta = messages.codeOfSelectedPromptMessage('setupNxCloudV2');
 
   return createNxCloudOnboardingURL(
     source,
