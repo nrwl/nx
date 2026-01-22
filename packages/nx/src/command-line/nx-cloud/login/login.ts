@@ -1,4 +1,8 @@
-import { executeNxCloudCommand } from '../utils';
+import {
+  executeNxCloudCommand,
+  isConnectedToNxCloud,
+  warnNotConnectedToCloud,
+} from '../utils';
 
 export interface LoginArgs {
   nxCloudUrl?: string;
@@ -6,6 +10,11 @@ export interface LoginArgs {
 }
 
 export function loginHandler(args: LoginArgs): Promise<number> {
+  if (!isConnectedToNxCloud()) {
+    warnNotConnectedToCloud();
+    return Promise.resolve(0);
+  }
+
   if (args.nxCloudUrl) {
     process.env.NX_CLOUD_API = args.nxCloudUrl;
   }
