@@ -43,12 +43,9 @@ export enum UserCustomDimension {
   UserId = 'up.user_id',
   OsArchitecture = 'up.os_architecture',
   NodeVersion = 'up.node_version',
-  NodeMajorVersion = 'upn.node_major_version',
   NxVersion = 'up.nx_version',
-  NxMajorVersion = 'upn.nx_major_version',
   PackageManager = 'up.package_manager',
   PackageManagerVersion = 'up.pkg_manager_version',
-  PackageManagerMajorVersion = 'upn.pkg_manager_major_v',
 }
 
 /**
@@ -74,5 +71,5 @@ export enum EventCustomDimension {
  * @see https://support.google.com/analytics/answer/10075209?hl=en
  */
 export enum EventCustomMetric {
-  ProjectGraphCreationTime = 'epn.project_graph_creation_time',
+  Time = 'epn.time',
 }

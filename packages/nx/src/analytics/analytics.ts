@@ -34,21 +34,23 @@ export async function startAnalytics() {
 }
 
 export function reportCommandRunEvent(command: string) {
-  trackEvent('run_command', { [EventCustomDimension.Command]: command });
+  command = command === 'g' ? 'generate' : command;
+  trackEvent(command, undefined, true);
 }
 
 export function reportProjectGraphCreationEvent(time: number) {
   trackEvent('project_graph_creation', {
-    [EventCustomMetric.ProjectGraphCreationTime]: time,
+    [EventCustomMetric.Time]: time,
   });
 }
 
 function trackEvent(
   eventName: string,
-  parameters?: Record<string, ParameterValue>
+  parameters?: Record<string, ParameterValue>,
+  isPageView?: boolean
 ) {
   if (_analyticsCollector) {
-    _analyticsCollector.event(eventName, parameters);
+    _analyticsCollector.event(eventName, parameters, isPageView);
   }
 }
 
