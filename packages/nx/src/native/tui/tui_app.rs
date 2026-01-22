@@ -14,7 +14,7 @@ use crate::native::{
 
 use super::action::Action;
 use super::components::tasks_list::TaskStatus;
-use super::lifecycle::TuiMode;
+use super::lifecycle::{BatchStatus, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_core::TuiCore;
@@ -547,7 +547,7 @@ pub trait TuiApp: Send {
     /// Set batch status (completion) - default is no-op
     ///
     /// Full-screen mode overrides to handle batch completion and ungrouping.
-    fn set_batch_status(&mut self, _batch_id: String, _status: String) {
+    fn set_batch_status(&mut self, _batch_id: String, _status: BatchStatus) {
         // Default: no-op for inline mode (no batch UI)
     }
 }

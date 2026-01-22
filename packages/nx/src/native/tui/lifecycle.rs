@@ -84,6 +84,14 @@ pub struct BatchInfo {
     pub task_ids: Vec<String>,
 }
 
+#[napi(string_enum)]
+#[derive(Debug, PartialEq, Eq)]
+pub enum BatchStatus {
+    Running,
+    Success,
+    Failure,
+}
+
 impl From<BatchInfo> for RustBatchInfo {
     fn from(js: BatchInfo) -> Self {
         Self {
@@ -703,7 +711,7 @@ impl AppLifeCycle {
     }
 
     #[napi]
-    pub fn set_batch_status(&self, batch_id: String, status: String) -> napi::Result<()> {
+    pub fn set_batch_status(&self, batch_id: String, status: BatchStatus) -> napi::Result<()> {
         self.with_app(|app| app.set_batch_status(batch_id, status));
         Ok(())
     }

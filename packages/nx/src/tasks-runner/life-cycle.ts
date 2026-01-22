@@ -1,5 +1,10 @@
 import { Task } from '../config/task-graph';
-import { ExternalObject, TaskStatus as NativeTaskStatus } from '../native';
+import {
+  BatchInfo,
+  BatchStatus,
+  ExternalObject,
+  TaskStatus as NativeTaskStatus,
+} from '../native';
 import { TaskStatus } from './tasks-runner';
 
 /**
@@ -20,13 +25,6 @@ export type TaskResults = Record<string, TaskResult>;
 export interface TaskMetadata {
   groupId: number;
 }
-
-export interface BatchInfo {
-  executorName: string;
-  taskIds: string[];
-}
-
-export type BatchStatus = 'running' | 'success' | 'failure';
 
 export interface LifeCycle {
   startCommand?(parallel?: number): void | Promise<void>;

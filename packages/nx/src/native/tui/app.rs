@@ -39,7 +39,7 @@ use super::components::task_selection_manager::{
 use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::graph_utils::{get_task_count, is_task_continuous};
-use super::lifecycle::{RunMode, TuiMode};
+use super::lifecycle::{BatchStatus, RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::theme::THEME;
 use super::tui;
@@ -605,7 +605,7 @@ impl App {
         }
     }
 
-    pub fn set_batch_status(&mut self, batch_id: String, status_str: String) {
+    pub fn set_batch_status(&mut self, batch_id: String, status: BatchStatus) {
         // Early validation
         if batch_id.is_empty() {
             return;
@@ -613,14 +613,12 @@ impl App {
 
         // Both success and failure trigger ungrouping
         // (batches are only displayed while running, then ungrouped on completion)
-        if status_str == "success" || status_str == "failure" {
-            let final_status = if status_str == "success" {
-                TaskStatus::Success
-            } else {
-                TaskStatus::Failure
-            };
-            self.handle_batch_complete(batch_id, final_status);
-        }
+        let final_status = match status {
+            BatchStatus::Success => TaskStatus::Success,
+            BatchStatus::Failure => TaskStatus::Failure,
+            BatchStatus::Running => return, // No action needed for running status
+        };
+        self.handle_batch_complete(batch_id, final_status);
     }
 
     pub fn handle_event(
@@ -2623,7 +2621,7 @@ impl TuiApp for App {
         self.dispatch_action(Action::StartBatch(batch_id.to_string(), batch_info.clone()));
     }
 
-    fn set_batch_status(&mut self, batch_id: String, status: String) {
+    fn set_batch_status(&mut self, batch_id: String, status: BatchStatus) {
         App::set_batch_status(self, batch_id, status);
     }
 }
