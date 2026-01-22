@@ -14,9 +14,8 @@ use crate::native::utils::time::current_timestamp_millis;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::lifecycle::{BatchStatus, RunMode};
+use super::lifecycle::{BatchInfo, BatchStatus, RunMode};
 use super::pty::PtyInstance;
-use super::tui_app::BatchInfo;
 
 // In test mode, use a stub type instead of the real NAPI ThreadsafeFunction.
 // This is necessary because ThreadsafeFunction requires NAPI symbols that are

@@ -3,8 +3,7 @@ use crate::native::tasks::types::{Task, TaskResult};
 use super::{
     app::Focus,
     components::{task_selection_manager::SelectionEntry, tasks_list::TaskStatus},
-    lifecycle::TuiMode,
-    tui_app::BatchInfo,
+    lifecycle::{BatchInfo, TuiMode},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]

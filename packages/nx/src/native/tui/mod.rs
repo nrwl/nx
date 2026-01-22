@@ -18,6 +18,7 @@ pub mod tui_state;
 pub mod utils;
 
 pub use inline_app::InlineApp;
-pub use tui_app::{BatchInfo, TuiApp};
+pub use lifecycle::BatchInfo;
+pub use tui_app::TuiApp;
 pub use tui_core::TuiCore;
 pub use tui_state::TuiState;

@@ -50,8 +50,7 @@ use crate::native::tui::tui_core::{AutoExitDecision, QuitDecision, TuiCore};
 use crate::native::tui::tui_state::TuiState;
 use crate::native::utils::time::current_timestamp_millis;
 
-// BatchInfo is now in tui_app.rs
-use crate::native::tui::tui_app::BatchInfo;
+use crate::native::tui::lifecycle::BatchInfo;
 
 #[derive(Debug, Clone)]
 pub struct BatchState {

@@ -14,7 +14,7 @@ use crate::native::{
 
 use super::action::Action;
 use super::components::tasks_list::TaskStatus;
-use super::lifecycle::{BatchStatus, TuiMode};
+use super::lifecycle::{BatchInfo, BatchStatus, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_core::TuiCore;
@@ -23,13 +23,6 @@ use super::tui_state::TuiState;
 use super::tui_state::{DoneCallback, ForcedShutdownCallback};
 use super::utils::write_output_to_pty;
 use crate::native::utils::time::current_timestamp_millis;
-
-/// Batch task group information
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct BatchInfo {
-    pub executor_name: String,
-    pub task_ids: Vec<String>,
-}
 
 /// Common trait for both full-screen and inline TUI implementations
 ///
