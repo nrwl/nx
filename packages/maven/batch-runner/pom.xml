@@ -131,6 +131,31 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <!-- Copy shared classes that need to be injected into ClassRealm -->
+                    <execution>
+                        <id>copy-shared-classes</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/nx-maven-adapters/shared</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../shared/target/classes</directory>
+                                    <includes>
+                                        <!-- Only include classes that use Maven types -->
+                                        <include>dev/nx/maven/shared/BuildStateManager*.class</include>
+                                        <include>dev/nx/maven/shared/BuildStateApplier*.class</include>
+                                        <include>dev/nx/maven/shared/BuildStateRecorder*.class</include>
+                                        <include>dev/nx/maven/shared/BuildState*.class</include>
+                                        <include>dev/nx/maven/shared/ArtifactInfo*.class</include>
+                                        <include>dev/nx/maven/shared/PathUtils*.class</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
@@ -160,6 +185,12 @@
                                     <map from="${project.build.outputDirectory}/nx-maven-adapters/maven4/" to=""/>
                                 </pathconvert>
                                 <echo file="${project.build.outputDirectory}/nx-maven-adapters/maven4/classes.txt">${maven4.list}</echo>
+                                <!-- Generate shared classes.txt -->
+                                <fileset id="shared.classes" dir="${project.build.outputDirectory}/nx-maven-adapters/shared" includes="**/*.class"/>
+                                <pathconvert property="shared.list" refid="shared.classes" pathsep="${line.separator}">
+                                    <map from="${project.build.outputDirectory}/nx-maven-adapters/shared/" to=""/>
+                                </pathconvert>
+                                <echo file="${project.build.outputDirectory}/nx-maven-adapters/shared/classes.txt">${shared.list}</echo>
                             </target>
                         </configuration>
                     </execution>

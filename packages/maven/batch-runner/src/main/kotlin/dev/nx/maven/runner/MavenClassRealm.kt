@@ -89,11 +89,47 @@ class MavenClassRealm(private val mavenHome: File) : AutoCloseable {
     }
 
     /**
+     * Inject shared classes that use Maven types into the realm.
+     * These must be injected before adapters since adapters depend on them.
+     */
+    fun injectSharedClasses() {
+        System.err.println("[NX-REFLECTION] Injecting shared classes into ClassRealm...")
+
+        val manifestPath = "nx-maven-adapters/shared/classes.txt"
+        val manifestStream = javaClass.classLoader.getResourceAsStream(manifestPath)
+        if (manifestStream == null) {
+            System.err.println("[NX-REFLECTION] ERROR: Shared classes manifest not found: $manifestPath")
+            return
+        }
+
+        val classFiles = manifestStream.bufferedReader().useLines { lines ->
+            lines.filter { it.isNotBlank() && !it.startsWith("#") }.toList()
+        }
+
+        System.err.println("[NX-REFLECTION] Found ${classFiles.size} shared classes to inject")
+
+        var injectedCount = 0
+        for (classFile in classFiles) {
+            try {
+                injectClass("shared", classFile)
+                injectedCount++
+            } catch (e: Exception) {
+                System.err.println("[NX-REFLECTION] Failed to inject shared $classFile: ${e.message}")
+            }
+        }
+
+        System.err.println("[NX-REFLECTION] Injected $injectedCount shared classes successfully")
+    }
+
+    /**
      * Inject adapter classes from embedded resources into the realm.
      *
      * @param mavenMajorVersion The major Maven version ("3" or "4")
      */
     fun injectAdapters(mavenMajorVersion: String) {
+        // First inject shared classes that adapters depend on
+        injectSharedClasses()
+
         val adapterPath = "maven$mavenMajorVersion"
         System.err.println("[NX-REFLECTION] Injecting $adapterPath adapter classes into ClassRealm...")
 
