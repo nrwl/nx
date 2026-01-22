@@ -2149,9 +2149,6 @@ importers:
       '@nx/nx-dev-ui-company':
         specifier: workspace:*
         version: link:../ui-company
-      '@nx/nx-dev-ui-conference':
-        specifier: workspace:*
-        version: link:../ui-conference
       '@nx/nx-dev-ui-contact':
         specifier: workspace:*
         version: link:../ui-contact
@@ -2359,18 +2356,6 @@ importers:
       '@nx/nx-dev-ui-common':
         specifier: workspace:*
         version: link:../ui-common
-
-  nx-dev/ui-conference:
-    dependencies:
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-member-card':
-        specifier: workspace:*
-        version: link:../ui-member-card
-      '@nx/nx-dev-ui-sponsor-card':
-        specifier: workspace:*
-        version: link:../ui-sponsor-card
 
   nx-dev/ui-contact:
     dependencies:
