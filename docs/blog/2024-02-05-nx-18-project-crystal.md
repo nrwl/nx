@@ -27,7 +27,7 @@ Table of Contents
 **Prefer a video? We've got you covered!**
 {% youtube src="https://www.youtube.com/embed/wADNsVItnsM?si=sQ3-Dlx6KBRBUMkE" title="What if Nx Plugins Were More Like VSCode Extensions" /%}
 
-Also, make sure to check out [Launch Nx Conf](/launch-nx) on Thursday, Feb 8th, where we'll have more in-depth talks about Project Crystal as well as other exciting features around Nx and Nx Cloud.
+Also, make sure to check out [Launch Nx Conf](/blog/launch-nx-week-recap) where we had more in-depth talks about Project Crystal as well as other exciting features around Nx and Nx Cloud.
 
 ---
 
