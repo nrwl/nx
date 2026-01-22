@@ -1,10 +1,10 @@
 use super::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use super::utils::normalize_newlines;
 use crossterm::event::{KeyCode, KeyEvent};
-use parking_lot::Mutex;
+use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use std::{
     io::{self, Write},
-    sync::{Arc, RwLock},
+    sync::Arc,
 };
 use tracing::debug;
 use vt100_ctt::Parser;
@@ -18,7 +18,7 @@ use vt100_ctt::Parser;
 ///
 /// Using Deref allows callers to treat this as if it were a direct reference to Screen.
 pub struct PtyScreenRef<'a> {
-    _guard: std::sync::RwLockReadGuard<'a, Parser>,
+    _guard: RwLockReadGuard<'a, Parser>,
 }
 
 impl std::ops::Deref for PtyScreenRef<'_> {
@@ -44,29 +44,26 @@ impl PtyInstance {
         &self,
         last_rendered_lines: usize,
     ) -> Vec<String> {
-        if let Ok(parser) = self.parser.read() {
-            let screen = parser.screen();
-            let (screen_rows, _) = screen.size();
+        let parser = self.parser.read();
+        let screen = parser.screen();
+        let (screen_rows, _) = screen.size();
 
-            // Get all content with ANSI formatting preserved for colors
-            let all_formatted = screen.all_contents_formatted();
-            let content_str = String::from_utf8_lossy(&all_formatted);
-            let all_lines: Vec<&str> = content_str.lines().collect();
+        // Get all content with ANSI formatting preserved for colors
+        let all_formatted = screen.all_contents_formatted();
+        let content_str = String::from_utf8_lossy(&all_formatted);
+        let all_lines: Vec<&str> = content_str.lines().collect();
 
-            let total_lines = all_lines.len();
+        let total_lines = all_lines.len();
 
-            // Calculate current scrollback: everything above the current visible screen
-            let current_scrollback_lines = total_lines.saturating_sub(screen_rows as usize);
+        // Calculate current scrollback: everything above the current visible screen
+        let current_scrollback_lines = total_lines.saturating_sub(screen_rows as usize);
 
-            // Return buffered scrollback content since last render
-            if current_scrollback_lines > last_rendered_lines {
-                all_lines[last_rendered_lines..current_scrollback_lines]
-                    .iter()
-                    .map(|line| line.to_string())
-                    .collect()
-            } else {
-                Vec::new()
-            }
+        // Return buffered scrollback content since last render
+        if current_scrollback_lines > last_rendered_lines {
+            all_lines[last_rendered_lines..current_scrollback_lines]
+                .iter()
+                .map(|line| line.to_string())
+                .collect()
         } else {
             Vec::new()
         }
@@ -74,16 +71,13 @@ impl PtyInstance {
 
     /// Get the current number of scrollback lines for tracking
     pub fn get_scrollback_line_count(&self) -> usize {
-        if let Ok(parser) = self.parser.read() {
-            let screen = parser.screen();
-            let (screen_rows, _) = screen.size();
-            let all_formatted = screen.all_contents_formatted();
-            let content_str = String::from_utf8_lossy(&all_formatted);
-            let total_lines = content_str.lines().count();
-            total_lines.saturating_sub(screen_rows as usize)
-        } else {
-            0
-        }
+        let parser = self.parser.read();
+        let screen = parser.screen();
+        let (screen_rows, _) = screen.size();
+        let all_formatted = screen.all_contents_formatted();
+        let content_str = String::from_utf8_lossy(&all_formatted);
+        let total_lines = content_str.lines().count();
+        total_lines.saturating_sub(screen_rows as usize)
     }
 
     pub fn interactive(
@@ -91,10 +85,7 @@ impl PtyInstance {
         writer: Arc<Mutex<Box<dyn Write + Send>>>,
     ) -> Self {
         // Read the dimensions from the parser
-        let (rows, cols) = parser
-            .read()
-            .map(|guard| guard.screen().size())
-            .unwrap_or((24, 80)); // Fallback to sane defaults
+        let (rows, cols) = parser.read().screen().size();
         Self {
             parser,
             writer: Some(writer),
@@ -137,10 +128,7 @@ impl PtyInstance {
 
         // Check dimensions and get old values in a single lock scope
         let (should_resize, old_rows, old_scrollback) = {
-            let dimensions_guard = self
-                .dimensions
-                .read()
-                .map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to read dimensions"))?;
+            let dimensions_guard = self.dimensions.read();
             let current_dimensions = *dimensions_guard;
 
             // Skip resize if dimensions haven't changed
@@ -148,11 +136,7 @@ impl PtyInstance {
                 return Ok(());
             }
 
-            let old_scrollback = self
-                .parser
-                .read()
-                .map(|guard| guard.screen().scrollback())
-                .unwrap_or(0);
+            let old_scrollback = self.parser.read().screen().scrollback();
 
             (true, current_dimensions.0, old_scrollback)
         };
@@ -162,14 +146,12 @@ impl PtyInstance {
         }
 
         // Update dimensions
-        let mut dimensions_guard = self
-            .dimensions
-            .write()
-            .map_err(|_| io::Error::new(io::ErrorKind::Other, "Failed to write dimensions"))?;
+        let mut dimensions_guard = self.dimensions.write();
         *dimensions_guard = (rows, cols);
 
         // Create a new parser with the new dimensions while preserving state
-        if let Ok(mut parser_guard) = self.parser.write() {
+        {
+            let mut parser_guard = self.parser.write();
             let raw_output = parser_guard.get_raw_output().to_vec();
 
             // Create new parser with new dimensions
@@ -213,10 +195,7 @@ impl PtyInstance {
     }
 
     pub fn get_dimensions(&self) -> (u16, u16) {
-        self.dimensions
-            .read()
-            .map(|guard| *guard)
-            .unwrap_or((24, 80)) // Fallback to sane defaults
+        *self.dimensions.read()
     }
 
     pub fn handle_arrow_keys(&mut self, event: KeyEvent) {
@@ -259,132 +238,109 @@ impl PtyInstance {
         }
     }
 
+    /// Get the terminal screen for rendering.
+    /// Uses try_read() to avoid blocking - if the lock is contended,
+    /// returns None and the frame can be skipped.
     pub fn get_screen(&'_ self) -> Option<PtyScreenRef<'_>> {
         self.parser
-            .read()
-            .ok()
+            .try_read()
             .map(|guard| PtyScreenRef { _guard: guard })
     }
 
     pub fn scroll_up(&mut self, amount: u8) {
-        if let Ok(mut parser) = self.parser.write() {
-            let current = parser.screen().scrollback();
-            parser
-                .screen_mut()
-                .set_scrollback(current + amount as usize);
-        }
+        let mut parser = self.parser.write();
+        let current = parser.screen().scrollback();
+        parser
+            .screen_mut()
+            .set_scrollback(current + amount as usize);
     }
 
     pub fn scroll_down(&mut self, amount: u8) {
-        if let Ok(mut parser) = self.parser.write() {
-            let current = parser.screen().scrollback();
-            if current > 0 {
-                parser
-                    .screen_mut()
-                    .set_scrollback(current.saturating_sub(amount as usize));
-            }
+        let mut parser = self.parser.write();
+        let current = parser.screen().scrollback();
+        if current > 0 {
+            parser
+                .screen_mut()
+                .set_scrollback(current.saturating_sub(amount as usize));
         }
     }
 
     pub fn scroll_to_top(&mut self) {
-        if let Ok(mut parser) = self.parser.write() {
-            let screen = parser.screen();
-            let total_content = screen.get_total_content_rows();
-            let viewport_height = screen.size().0 as usize;
-            let max_scrollback = total_content.saturating_sub(viewport_height);
-            parser.screen_mut().set_scrollback(max_scrollback);
-        }
+        let mut parser = self.parser.write();
+        let screen = parser.screen();
+        let total_content = screen.get_total_content_rows();
+        let viewport_height = screen.size().0 as usize;
+        let max_scrollback = total_content.saturating_sub(viewport_height);
+        parser.screen_mut().set_scrollback(max_scrollback);
     }
 
     pub fn scroll_to_bottom(&mut self) {
-        if let Ok(mut parser) = self.parser.write() {
-            parser.screen_mut().set_scrollback(0);
-        }
+        self.parser.write().screen_mut().set_scrollback(0);
     }
 
     pub fn get_scroll_offset(&self) -> usize {
-        if let Ok(parser) = self.parser.read() {
-            return parser.screen().scrollback();
-        }
-        0
+        self.parser.read().screen().scrollback()
     }
 
     pub fn get_total_content_rows(&self) -> usize {
-        if let Ok(parser) = self.parser.read() {
-            let screen = parser.screen();
-            screen.get_total_content_rows()
-        } else {
-            0
-        }
+        self.parser.read().screen().get_total_content_rows()
     }
 
     /// Checks if the process is likely in interactive/raw mode
     /// Uses both alternate screen detection and cursor movement patterns
     pub fn handles_arrow_keys(&self) -> bool {
-        if let Ok(parser) = self.parser.read() {
-            let screen = parser.screen();
+        let parser = self.parser.read();
+        let screen = parser.screen();
 
-            // Strong indicator: alternate screen mode (vim, less, git log, htop)
-            if screen.alternate_screen() {
-                return true;
-            }
-
-            // Check if recent output contains cursor movement sequences
-            if self.has_cursor_movement_in_output() {
-                return true;
-            }
+        // Strong indicator: alternate screen mode (vim, less, git log, htop)
+        if screen.alternate_screen() {
+            return true;
         }
 
-        false
+        // Check if recent output contains cursor movement sequences
+        drop(parser); // Release lock before calling has_cursor_movement_in_output
+        self.has_cursor_movement_in_output()
     }
 
     /// Simple check: does the recent output contain cursor movement escape sequences?
     /// This catches enquirer-style programs that move cursor but don't use alternate screen
     fn has_cursor_movement_in_output(&self) -> bool {
-        if let Ok(parser) = self.parser.read() {
-            let raw_output = parser.get_raw_output();
-            let output_str = std::str::from_utf8(raw_output).unwrap_or("");
+        let parser = self.parser.read();
+        let raw_output = parser.get_raw_output();
+        let output_str = std::str::from_utf8(raw_output).unwrap_or("");
 
-            // Check for any cursor control sequences in one pass
-            [
-                "\x1b[?25l",
-                "\x1b[?25h",
-                "\x1b[H",
-                "\x1b[A",
-                "\x1b[B",
-                "\x1b[C",
-                "\x1b[D",
-            ]
-            .iter()
-            .any(|seq| output_str.contains(seq))
-        } else {
-            false
-        }
+        // Check for any cursor control sequences in one pass
+        [
+            "\x1b[?25l",
+            "\x1b[?25h",
+            "\x1b[H",
+            "\x1b[A",
+            "\x1b[B",
+            "\x1b[C",
+            "\x1b[D",
+        ]
+        .iter()
+        .any(|seq| output_str.contains(seq))
     }
 
     /// Process output with an existing parser
     pub fn process_output(&self, output: &[u8]) {
-        if let Ok(mut parser_guard) = self.parser.write() {
-            let normalized = normalize_newlines(output);
-            parser_guard.process(&normalized)
-        }
+        let normalized = normalize_newlines(output);
+        self.parser.write().process(&normalized);
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::{Arc, RwLock};
-    use vt100_ctt::Parser;
+    use std::sync::Arc;
 
     fn create_test_pty_instance(alternate_screen: bool) -> PtyInstance {
         let parser = Arc::new(RwLock::new(Parser::new(24, 80, 1000)));
 
         // Set alternate screen mode if requested
         if alternate_screen {
-            if let Ok(mut parser_guard) = parser.write() {
-                parser_guard.process(b"\x1b[?1049h");
-            }
+            parser.write().process(b"\x1b[?1049h");
         }
 
         PtyInstance {
