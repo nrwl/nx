@@ -57,8 +57,7 @@ pub fn get_status_icon(status: TaskStatus, throbber_counter: usize) -> Span<'sta
     }
 }
 
-/// Returns just the status character (without spacing) for the given status and throbber counter.
-/// This is useful when you need to build custom spans with different spacing.
+/// Returns the status character for a batch status.
 pub fn get_batch_status_char(status: BatchStatus, throbber_counter: usize) -> char {
     match status {
         BatchStatus::Running => THROBBER_CHARS[throbber_counter % THROBBER_CHARS.len()],
@@ -67,8 +66,7 @@ pub fn get_batch_status_char(status: BatchStatus, throbber_counter: usize) -> ch
     }
 }
 
-/// Returns just the status character (without spacing) for the given status and throbber counter.
-/// This is useful when you need to build custom spans with different spacing.
+/// Returns the status character for a task status.
 pub fn get_status_char(status: TaskStatus, throbber_counter: usize) -> char {
     match status {
         TaskStatus::Success
