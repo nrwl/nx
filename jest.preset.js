@@ -32,5 +32,6 @@ module.exports = {
   moduleNameMapper: {
     // Mock ora to avoid ESM issues - ora@9+ is ESM-only and breaks Jest
     '^ora$': '<rootDir>/../../scripts/jest-mocks/ora.js',
+    '^chalk$': '<rootDir>/../../scripts/jest-mocks/chalk.js',
   },
 };
