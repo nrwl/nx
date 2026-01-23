@@ -63,7 +63,7 @@ export class ForkedProcessTaskRunner {
     }
 
     const p = fork(workerPath, {
-      stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+      stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
       env: {
         ...env,
         NX_FORKED_TASK_EXECUTOR: 'true',
