@@ -20,16 +20,8 @@ import java.io.OutputStream
 import java.io.PrintStream
 
 /**
- * Caching Maven 3 invoker that uses NxMaven3 for build state management.
- *
- * This invoker:
- * 1. Creates a PlexusContainer with all Maven components
- * 2. Creates NxMaven3 which extends DefaultMaven and adds build state management
- * 3. Reuses the same container and NxMaven3 instance across all invocations
- * 4. Applies build state from previous phases before each execution
- *
- * This enables sequential phase execution (compile -> package -> install) to work correctly
- * by preserving artifact state across invocations.
+ * Caching Maven 3 invoker that reuses a PlexusContainer and NxMaven3 instance
+ * across invocations to preserve build state for sequential phase execution.
  */
 class CachingMaven3Invoker(
     private val classWorld: ClassWorld,
@@ -38,8 +30,7 @@ class CachingMaven3Invoker(
 
     companion object {
         init {
-            // Configure Maven's SLF4J SimpleLogger BEFORE any Maven classes load
-            // Must happen at class-load time to take effect before Maven initializes its logger
+            // Configure SLF4J SimpleLogger before Maven initializes its logger
             System.setProperty("org.slf4j.simpleLogger.showThreadName", "false")
             System.setProperty("org.slf4j.simpleLogger.showLogName", "false")
             System.setProperty("org.slf4j.simpleLogger.showShortLogName", "false")
@@ -55,9 +46,6 @@ class CachingMaven3Invoker(
     private var initialized = false
     private var graphSetup = false
 
-    /**
-     * Initialize the invoker by creating the PlexusContainer and NxMaven3.
-     */
     @Synchronized
     fun initialize() {
         if (initialized) {
@@ -73,20 +61,17 @@ class CachingMaven3Invoker(
         System.setProperty("maven.home", System.getenv("MAVEN_HOME") ?: "")
 
         try {
-            // Create PlexusContainer (similar to how MavenCli does it)
             container = createContainer()
             log.debug("  PlexusContainer created")
 
-            // Lookup required components
             val eventCatapult = container!!.lookup(ExecutionEventCatapult::class.java)
             val legacySupport = container!!.lookup(LegacySupport::class.java)
             val sessionScope = container!!.lookup(SessionScope::class.java)
             val graphBuilder = container!!.lookup(GraphBuilder::class.java)
             val lifecycleStarter = container!!.lookup(LifecycleStarter::class.java)
             requestPopulator = container!!.lookup(MavenExecutionRequestPopulator::class.java)
-            log.debug("  Maven components looked up successfully")
+            log.debug("  Maven components looked up")
 
-            // Create NxMaven3
             nxMaven = NxMaven3(
                 container!!,
                 eventCatapult,
@@ -106,20 +91,14 @@ class CachingMaven3Invoker(
         }
     }
 
-    /**
-     * Create the PlexusContainer for Maven components.
-     */
     private fun createContainer(): PlexusContainer {
-        // Get or create the plexus.core realm
         val coreRealm: ClassRealm = try {
             classWorld.getRealm("plexus.core") as ClassRealm
         } catch (e: Exception) {
             log.debug("plexus.core realm not found, checking existing realms...")
-            // Log available realms for debugging
             val existingRealms = classWorld.realms.map { it.id }
             log.debug("Available realms: $existingRealms")
 
-            // Use the first available realm or create a new one
             if (existingRealms.isNotEmpty()) {
                 val firstRealm = classWorld.realms.first()
                 log.debug("Using existing realm: ${firstRealm.id}")
@@ -141,10 +120,6 @@ class CachingMaven3Invoker(
         return DefaultPlexusContainer(containerConfiguration)
     }
 
-    /**
-     * Set up the project graph cache for batch execution.
-     * This should be called once before the first build.
-     */
     @Synchronized
     fun setupGraphCache(request: MavenExecutionRequest) {
         if (!initialized) {
@@ -160,15 +135,6 @@ class CachingMaven3Invoker(
         graphSetup = true
     }
 
-    /**
-     * Invoke Maven with the given arguments.
-     *
-     * @param args Maven CLI arguments
-     * @param workingDir Working directory for the build
-     * @param stdout Output stream for stdout
-     * @param stderr Output stream for stderr
-     * @return Exit code (0 = success)
-     */
     fun invoke(
         args: Array<String>,
         workingDir: File,
@@ -182,8 +148,7 @@ class CachingMaven3Invoker(
         log.debug("invoke() with args: ${args.joinToString(" ")} in ${workingDir.absolutePath}")
         val startTime = System.currentTimeMillis()
 
-        // Redirect System.out/err to our streams for SLF4J output capture
-        // Maven 3's slf4j-simple writes to System.out, so we redirect it to capture the output
+        // Redirect System.out/err to capture Maven's SLF4J output
         val originalOut = System.out
         val originalErr = System.err
         val printStreamOut = PrintStream(stdout, true)
@@ -192,15 +157,12 @@ class CachingMaven3Invoker(
         System.setErr(printStreamErr)
 
         return try {
-            // Parse arguments and create request
             val request = createRequest(args, workingDir)
 
-            // Set up graph cache on first invocation
             if (!graphSetup) {
                 setupGraphCache(request)
             }
 
-            // Execute via NxMaven3
             val result = nxMaven!!.execute(request)
 
             val duration = System.currentTimeMillis() - startTime
@@ -223,31 +185,25 @@ class CachingMaven3Invoker(
             e.printStackTrace(printStreamErr)
             1
         } finally {
-            // Restore original System.out/err
             System.setOut(originalOut)
             System.setErr(originalErr)
         }
     }
 
-    /**
-     * Create a MavenExecutionRequest from CLI arguments.
-     */
     private fun createRequest(args: Array<String>, workingDir: File): MavenExecutionRequest {
         val request = DefaultMavenExecutionRequest()
 
-        // Set basic properties
         request.setBaseDirectory(workingDir)
         request.pom = File(workingDir, "pom.xml")
         request.isInteractiveMode = false
         request.setShowErrors(true)
 
-        // Copy ALL system properties to the request (critical for profile activation)
+        // Copy system properties to the request (required for profile activation)
         request.systemProperties = java.util.Properties()
         System.getProperties().forEach { key, value ->
             request.systemProperties.setProperty(key.toString(), value.toString())
         }
 
-        // Parse arguments
         val goals = mutableListOf<String>()
         val selectedProjects = mutableListOf<String>()
         var i = 0
@@ -284,11 +240,9 @@ class CachingMaven3Invoker(
                     }
                 }
                 arg.startsWith("-") -> {
-                    // Skip unknown options
                     log.debug("Ignoring unknown option: $arg")
                 }
                 else -> {
-                    // Assume it's a goal
                     goals.add(arg)
                 }
             }
@@ -300,12 +254,10 @@ class CachingMaven3Invoker(
             request.selectedProjects = selectedProjects
         }
 
-        // Set local repository
         val localRepoPath = System.getProperty("maven.repo.local")
             ?: "${System.getProperty("user.home")}/.m2/repository"
         request.localRepositoryPath = File(localRepoPath)
 
-        // Populate with settings and profiles
         try {
             requestPopulator?.populateDefaults(request)
         } catch (e: Exception) {
@@ -315,20 +267,11 @@ class CachingMaven3Invoker(
         return request
     }
 
-    /**
-     * Record build states for the specified projects.
-     */
     fun recordBuildStates(projectSelectors: Set<String>) {
-        if (nxMaven != null) {
-            nxMaven!!.recordBuildStates(projectSelectors)
-        } else {
-            log.debug("Recording build states skipped - NxMaven3 not initialized")
-        }
+        nxMaven?.recordBuildStates(projectSelectors)
+            ?: log.debug("Recording build states skipped - NxMaven3 not initialized")
     }
 
-    /**
-     * Get the NxMaven3 instance.
-     */
     fun getNxMaven(): NxMaven3? = nxMaven
 
     override fun close() {

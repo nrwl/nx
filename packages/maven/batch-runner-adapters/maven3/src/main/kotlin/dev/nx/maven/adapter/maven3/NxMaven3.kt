@@ -44,9 +44,6 @@ class NxMaven3(
     @Volatile
     private var cachedRepositorySession: RepositorySystemSession? = null
 
-    @Volatile
-    private var cachedMavenSession: MavenSession? = null
-
     private val getProjectMapMethod by lazy {
         DefaultMaven::class.java.getDeclaredMethod(
             "getProjectMap",
@@ -107,15 +104,6 @@ class NxMaven3(
     }
 
     /**
-     * Creates the execution listener for batch builds.
-     * Uses BatchExecutionListener which extends ExecutionEventLogger for native SLF4J logging.
-     * The batch runner redirects System.out to capture the output.
-     */
-    private fun createExecutionListener(): org.apache.maven.execution.ExecutionListener {
-        return BatchExecutionListener()
-    }
-
-    /**
      * Set up the project dependency graph cache using the first real Maven request.
      * This should be called before any execute() calls.
      */
@@ -126,11 +114,11 @@ class NxMaven3(
             return
         }
 
-        log.debug("🏗️ Setting up project graph cache for Maven 3...")
+        log.debug("Setting up project graph cache for Maven 3...")
         val setupStartTime = System.currentTimeMillis()
 
         // Set our custom execution listener to suppress verbose output during graph building
-        request.executionListener = createExecutionListener()
+        request.executionListener = BatchExecutionListener()
 
         request.isRecursive = true
 
@@ -144,16 +132,14 @@ class NxMaven3(
                 request.systemProperties.setProperty(key.toString(), value.toString())
             }
         }
-        log.debug("   Added ${request.systemProperties.size} system properties to request")
+        log.debug("Added ${request.systemProperties.size} system properties to request")
 
-        // Create repository session using the parent's method (now properly injected)
+        // Create repository session using parent's method
         val repositorySession = newRepositorySession(request)
         cachedRepositorySession = repositorySession
 
-        // Create Maven session
         val result = DefaultMavenExecutionResult()
         val session = MavenSession(container, repositorySession, request, result)
-        cachedMavenSession = session
 
         sessionScope.enter()
         try {
@@ -163,21 +149,19 @@ class NxMaven3(
             val graphBuildStartTime = System.currentTimeMillis()
             val graphResult = graphBuilder.build(session)
             val graphBuildTimeMs = System.currentTimeMillis() - graphBuildStartTime
-            log.debug("   ✅ Graph build completed in ${graphBuildTimeMs}ms")
+            log.debug("Graph build completed in ${graphBuildTimeMs}ms")
 
             if (graphResult.hasErrors()) {
-                log.warn("   ⚠️ Graph build had errors:")
+                log.warn("Graph build had errors:")
                 graphResult.problems.forEach { problem ->
-                    log.warn("      Problem: ${problem.message}")
+                    log.warn("Problem: ${problem.message}")
                 }
             }
 
             val graph = graphResult.get()
             if (graph == null) {
-                // Graph building failed - this can happen due to strict profile validation
-                // Set a flag to use non-cached mode and return
-                log.warn("   Failed to build project graph - will fall back to non-cached execution mode")
-                log.warn("   This typically happens due to profile validation warnings in dependency POMs")
+                log.warn("Failed to build project graph - will fall back to non-cached execution mode")
+                log.warn("This typically happens due to profile validation warnings in dependency POMs")
                 return
             }
             cachedProjectGraph = graph
@@ -187,22 +171,21 @@ class NxMaven3(
             session.allProjects = graph.allProjects
             session.projectDependencyGraph = graph
 
-            log.debug("   ✅ Graph cache setup complete with ${graph.allProjects.size} projects")
+            log.debug("Graph cache setup complete with ${graph.allProjects.size} projects")
             graph.sortedProjects?.forEach { project ->
-                log.debug("      - ${project.groupId}:${project.artifactId}")
+                log.debug("  - ${project.groupId}:${project.artifactId}")
             }
 
-            // Apply existing build states to all projects
-            log.debug("   🔄 Applying existing build states to ${graph.allProjects.size} projects...")
+            log.debug("Applying existing build states to ${graph.allProjects.size} projects...")
             val applyStartTime = System.currentTimeMillis()
             BuildStateManager.applyBuildStates(graph.allProjects)
             val applyTimeMs = System.currentTimeMillis() - applyStartTime
-            log.debug("   ✅ Build state application completed in ${applyTimeMs}ms")
+            log.debug("Build state application completed in ${applyTimeMs}ms")
 
         } finally {
             sessionScope.exit()
             val totalSetupTimeMs = System.currentTimeMillis() - setupStartTime
-            log.debug("   Total graph cache setup time: ${totalSetupTimeMs}ms")
+            log.debug("Total graph cache setup time: ${totalSetupTimeMs}ms")
         }
     }
 
@@ -211,7 +194,7 @@ class NxMaven3(
         val invokeStartTime = System.currentTimeMillis()
 
         // Set our custom execution listener for batch builds (before any events fire)
-        request.executionListener = createExecutionListener()
+        request.executionListener = BatchExecutionListener()
 
         // If graph cache failed, fall back to standard DefaultMaven execution
         val result = if (cachedProjectGraph != null) {
@@ -279,7 +262,7 @@ class NxMaven3(
 
             return result
         } catch (e: Exception) {
-            log.error("   Error executing with cached session: ${e.message}", e)
+            log.error("Error executing with cached session: ${e.message}", e)
             result.addException(e)
             return result
         } finally {
@@ -352,11 +335,11 @@ class NxMaven3(
                     BuildStateManager.recordBuildState(project)
                     recordedCount++
                 } catch (e: Exception) {
-                    log.warn("  Failed to record build state for $selector: ${e.message}")
+                    log.warn("Failed to record build state for $selector: ${e.message}")
                     failedCount++
                 }
             } else {
-                log.warn("  Project not found for selector: $selector")
+                log.warn("Project not found for selector: $selector")
                 failedCount++
             }
         }

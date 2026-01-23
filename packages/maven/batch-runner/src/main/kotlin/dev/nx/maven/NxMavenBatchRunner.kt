@@ -64,8 +64,6 @@ fun main(args: Array<String>) {
         val failureCount = results.size - successCount
         val skippedCount = taskCount - results.size
 
-        // Log execution time
-
         printFailedTasks(results)
         printSummary(successCount, failureCount, skippedCount, endTime - startTime)
 
@@ -93,7 +91,6 @@ fun main(args: Array<String>) {
         Runtime.getRuntime().halt(1)
     }
 }
-
 
 private fun printFailedTasks(results: Map<String, TaskResult>) {
     val failedResults = results.filter { !it.value.success }
