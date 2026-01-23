@@ -352,6 +352,12 @@ process.on('SIGINT', async () => {
   const { directory, connectUrl } = getInterruptedWorkspaceState();
 
   if (directory) {
+    const path = require('path');
+    const workspaceName = path.basename(directory);
+    const githubUrl = `https://github.com/new?name=${encodeURIComponent(
+      workspaceName
+    )}`;
+
     console.log(''); // New line after ^C
     output.log({
       title: 'Workspace creation interrupted',
@@ -359,7 +365,7 @@ process.on('SIGINT', async () => {
         `Your workspace was created at: ${directory}`,
         '',
         'To complete the setup:',
-        '  1. Ensure your repo is pushed (e.g. https://github.com/new)',
+        `  1. Ensure your repo is pushed (e.g. ${githubUrl})`,
         connectUrl
           ? `  2. Connect to Nx Cloud: ${connectUrl}`
           : '  2. Connect to Nx Cloud: Run "nx connect"',
