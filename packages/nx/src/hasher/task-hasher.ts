@@ -14,6 +14,41 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { NxWorkspaceFilesExternals } from '../native';
 
 /**
+ * Structured inputs used for hashing
+ */
+export interface HashInputs {
+  /**
+   * File sets (project-scoped or workspace-level globs)
+   */
+  fileSets: Array<{
+    /**
+     * Project name, or undefined for workspace-level file sets
+     */
+    project?: string;
+    /**
+     * Glob patterns for the file set
+     */
+    patterns: string[];
+  }>;
+  /**
+   * Runtime commands
+   */
+  runtime: string[];
+  /**
+   * Environment variable names
+   */
+  environment: string[];
+  /**
+   * Dependent task outputs
+   */
+  depOutputs: string[];
+  /**
+   * External dependencies
+   */
+  external: string[];
+}
+
+/**
  * A data structure returned by the default hasher.
  */
 export interface PartialHash {
@@ -21,6 +56,7 @@ export interface PartialHash {
   details: {
     [name: string]: string;
   };
+  inputs: HashInputs;
 }
 
 /**
@@ -34,6 +70,7 @@ export interface Hash {
     implicitDeps?: { [fileName: string]: string };
     runtime?: { [input: string]: string };
   };
+  inputs?: HashInputs;
 }
 
 export interface TaskHasher {
@@ -181,7 +218,7 @@ export class InProcessTaskHasher implements TaskHasher {
     return this.createHashDetails(task, res);
   }
 
-  private createHashDetails(task: Task, res: PartialHash) {
+  private createHashDetails(task: Task, res: PartialHash): Hash {
     const command = this.hashCommand(task);
     return {
       value: hashArray([res.value, command]),
@@ -191,6 +228,7 @@ export class InProcessTaskHasher implements TaskHasher {
         implicitDeps: {},
         runtime: {},
       },
+      inputs: res.inputs,
     };
   }
 

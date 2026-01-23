@@ -167,6 +167,47 @@ describe('native task hasher', () => {
             "unrelated:{projectRoot}/**/*": "4127219831408253695",
             "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
           },
+          "inputs": {
+            "depOutputs": [],
+            "environment": [
+              "TESTENV",
+              "NX_CLOUD_ENCRYPTION_KEY",
+              "NONEXISTENTENV",
+            ],
+            "external": [
+              "AllExternalDependencies",
+            ],
+            "fileSets": [
+              {
+                "patterns": [
+                  "libs/tagged/**/*",
+                ],
+                "project": "tagged",
+              },
+              {
+                "patterns": [
+                  "nx.json",
+                  ".gitignore",
+                  ".nxignore",
+                ],
+              },
+              {
+                "patterns": [
+                  "libs/parent/**/*",
+                ],
+                "project": "parent",
+              },
+              {
+                "patterns": [
+                  "libs/unrelated/**/*",
+                ],
+                "project": "unrelated",
+              },
+            ],
+            "runtime": [
+              "echo runtime123",
+            ],
+          },
           "value": "15987635381237972716",
         },
       ]
@@ -232,6 +273,37 @@ describe('native task hasher', () => {
           "parent:TsConfig": "2264969541778889434",
           "parent:{projectRoot}/**/*": "17059468255294227635",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
+        },
+        "inputs": {
+          "depOutputs": [],
+          "environment": [
+            "NX_CLOUD_ENCRYPTION_KEY",
+          ],
+          "external": [
+            "AllExternalDependencies",
+          ],
+          "fileSets": [
+            {
+              "patterns": [
+                "nx.json",
+                ".gitignore",
+                ".nxignore",
+              ],
+            },
+            {
+              "patterns": [
+                "libs/parent/**/*",
+              ],
+              "project": "parent",
+            },
+            {
+              "patterns": [
+                "libs/child/**/*",
+              ],
+              "project": "child",
+            },
+          ],
+          "runtime": [],
         },
         "value": "10262178246623018030",
       }
@@ -313,6 +385,37 @@ describe('native task hasher', () => {
           "parent:TsConfig": "2264969541778889434",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9567402949680805009",
         },
+        "inputs": {
+          "depOutputs": [],
+          "environment": [
+            "NX_CLOUD_ENCRYPTION_KEY",
+          ],
+          "external": [
+            "AllExternalDependencies",
+          ],
+          "fileSets": [
+            {
+              "patterns": [
+                "nx.json",
+                ".gitignore",
+                ".nxignore",
+              ],
+            },
+            {
+              "patterns": [
+                "libs/child/**/*",
+              ],
+              "project": "child",
+            },
+            {
+              "patterns": [
+                "!libs/parent/**/*.spec.ts",
+              ],
+              "project": "parent",
+            },
+          ],
+          "runtime": [],
+        },
         "value": "14320402761058545796",
       }
     `);
@@ -380,6 +483,31 @@ describe('native task hasher', () => {
             "parent:TsConfig": "2264969541778889434",
             "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9567402949680805009",
           },
+          "inputs": {
+            "depOutputs": [],
+            "environment": [
+              "NX_CLOUD_ENCRYPTION_KEY",
+            ],
+            "external": [
+              "AllExternalDependencies",
+            ],
+            "fileSets": [
+              {
+                "patterns": [
+                  "nx.json",
+                  ".gitignore",
+                  ".nxignore",
+                ],
+              },
+              {
+                "patterns": [
+                  "!libs/parent/**/*.spec.ts",
+                ],
+                "project": "parent",
+              },
+            ],
+            "runtime": [],
+          },
           "value": "2453961902871518313",
         },
         {
@@ -390,6 +518,31 @@ describe('native task hasher', () => {
             "parent:TsConfig": "2264969541778889434",
             "parent:{projectRoot}/**/*": "17059468255294227635",
             "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9567402949680805009",
+          },
+          "inputs": {
+            "depOutputs": [],
+            "environment": [
+              "NX_CLOUD_ENCRYPTION_KEY",
+            ],
+            "external": [
+              "AllExternalDependencies",
+            ],
+            "fileSets": [
+              {
+                "patterns": [
+                  "nx.json",
+                  ".gitignore",
+                  ".nxignore",
+                ],
+              },
+              {
+                "patterns": [
+                  "libs/parent/**/*",
+                ],
+                "project": "parent",
+              },
+            ],
+            "runtime": [],
           },
           "value": "5894031627295207190",
         },
@@ -483,6 +636,48 @@ describe('native task hasher', () => {
             "workspace:[{workspaceRoot}/global2]": "6389465682922235219",
             "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "1359893257201181462",
           },
+          "inputs": {
+            "depOutputs": [],
+            "environment": [
+              "MY_TEST_HASH_ENV",
+              "NX_CLOUD_ENCRYPTION_KEY",
+            ],
+            "external": [
+              "AllExternalDependencies",
+            ],
+            "fileSets": [
+              {
+                "patterns": [
+                  "global2",
+                ],
+              },
+              {
+                "patterns": [
+                  "nx.json",
+                  ".gitignore",
+                  ".nxignore",
+                ],
+              },
+              {
+                "patterns": [
+                  "global1",
+                ],
+              },
+              {
+                "patterns": [
+                  "libs/parent/**/*",
+                ],
+                "project": "parent",
+              },
+              {
+                "patterns": [
+                  "!libs/child/**/*.spec.ts",
+                ],
+                "project": "child",
+              },
+            ],
+            "runtime": [],
+          },
           "value": "12394084267697729491",
         },
       ]
@@ -537,6 +732,31 @@ describe('native task hasher', () => {
           "parent:TsConfig": "8661678577354855152",
           "parent:{projectRoot}/**/*": "17059468255294227635",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
+        },
+        "inputs": {
+          "depOutputs": [],
+          "environment": [
+            "NX_CLOUD_ENCRYPTION_KEY",
+          ],
+          "external": [
+            "AllExternalDependencies",
+          ],
+          "fileSets": [
+            {
+              "patterns": [
+                "nx.json",
+                ".gitignore",
+                ".nxignore",
+              ],
+            },
+            {
+              "patterns": [
+                "libs/parent/**/*",
+              ],
+              "project": "parent",
+            },
+          ],
+          "runtime": [],
         },
         "value": "16657264716563422624",
       }
@@ -617,6 +837,37 @@ describe('native task hasher', () => {
           "parent:{projectRoot}/**/*": "17059468255294227635",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
         },
+        "inputs": {
+          "depOutputs": [],
+          "environment": [
+            "NX_CLOUD_ENCRYPTION_KEY",
+          ],
+          "external": [
+            "AllExternalDependencies",
+          ],
+          "fileSets": [
+            {
+              "patterns": [
+                "nx.json",
+                ".gitignore",
+                ".nxignore",
+              ],
+            },
+            {
+              "patterns": [
+                "libs/parent/**/*",
+              ],
+              "project": "parent",
+            },
+            {
+              "patterns": [
+                "libs/child/**/*",
+              ],
+              "project": "child",
+            },
+          ],
+          "runtime": [],
+        },
         "value": "1325637283470296766",
       }
     `);
@@ -639,6 +890,37 @@ describe('native task hasher', () => {
           "parent:TsConfig": "2264969541778889434",
           "parent:{projectRoot}/**/*": "17059468255294227635",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
+        },
+        "inputs": {
+          "depOutputs": [],
+          "environment": [
+            "NX_CLOUD_ENCRYPTION_KEY",
+          ],
+          "external": [
+            "AllExternalDependencies",
+          ],
+          "fileSets": [
+            {
+              "patterns": [
+                "nx.json",
+                ".gitignore",
+                ".nxignore",
+              ],
+            },
+            {
+              "patterns": [
+                "libs/parent/**/*",
+              ],
+              "project": "parent",
+            },
+            {
+              "patterns": [
+                "libs/child/**/*",
+              ],
+              "project": "child",
+            },
+          ],
+          "runtime": [],
         },
         "value": "1325637283470296766",
       }

@@ -62,6 +62,40 @@ export interface Task {
     runtime?: { [input: string]: string };
   };
   /**
+   * Structured inputs used for hashing (file patterns, env vars, etc.)
+   */
+  hashInputs?: {
+    /**
+     * File sets (project-scoped or workspace-level globs)
+     */
+    fileSets: Array<{
+      /**
+       * Project name, or undefined for workspace-level file sets
+       */
+      project?: string;
+      /**
+       * Glob patterns for the file set
+       */
+      patterns: string[];
+    }>;
+    /**
+     * Runtime commands
+     */
+    runtime: string[];
+    /**
+     * Environment variable names
+     */
+    environment: string[];
+    /**
+     * Dependent task outputs
+     */
+    depOutputs: string[];
+    /**
+     * External dependencies
+     */
+    external: string[];
+  };
+  /**
    *
    * Unix timestamp of when a Batch Task starts
    **/

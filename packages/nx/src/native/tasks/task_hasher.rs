@@ -13,8 +13,8 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        hash_all_externals, hash_external, hash_project_config, hash_project_files,
-        hash_task_output, hash_tsconfig_selectively,
+        expand_project_globs, expand_workspace_globs, hash_all_externals, hash_external,
+        hash_project_config, hash_project_files, hash_task_output, hash_tsconfig_selectively,
     },
     types::FileData,
     workspace::types::ProjectFiles,
@@ -26,10 +26,36 @@ use rayon::prelude::*;
 use tracing::{debug, trace, trace_span};
 
 #[napi(object)]
+#[derive(Debug, Clone)]
+pub struct FileSetInput {
+    /// Project name, or None for workspace-level file sets
+    pub project: Option<String>,
+    /// Glob patterns for the file set
+    pub patterns: Vec<String>,
+}
+
+#[napi(object)]
+#[derive(Debug, Default, Clone)]
+pub struct HashInputs {
+    /// File sets (project-scoped or workspace-level globs)
+    pub file_sets: Vec<FileSetInput>,
+    /// Runtime commands
+    pub runtime: Vec<String>,
+    /// Environment variable names
+    pub environment: Vec<String>,
+    /// Dependent task outputs
+    pub dep_outputs: Vec<String>,
+    /// External dependencies
+    pub external: Vec<String>,
+}
+
+#[napi(object)]
 #[derive(Debug)]
 pub struct HashDetails {
     pub value: String,
     pub details: HashMap<String, String>,
+    /// Structured inputs used for hashing (file patterns, env vars, etc.)
+    pub inputs: HashInputs,
 }
 
 #[napi(object)]
@@ -143,9 +169,53 @@ impl TaskHasher {
                     .or_insert_with(|| HashDetails {
                         value: String::new(),
                         details: HashMap::new(),
+                        inputs: HashInputs::default(),
                     });
 
                 entry.details.insert(hash_detail.0, hash_detail.1);
+
+                // Collect structured input information with expanded paths
+                match instruction {
+                    HashInstruction::WorkspaceFileSet(patterns) => {
+                        entry.inputs.file_sets.push(FileSetInput {
+                            project: None,
+                            patterns: expand_workspace_globs(patterns),
+                        });
+                    }
+                    HashInstruction::ProjectFileSet(project_name, patterns) => {
+                        let project_root = self
+                            .project_graph
+                            .nodes
+                            .get(project_name)
+                            .map(|p| p.root.as_str())
+                            .unwrap_or("");
+                        entry.inputs.file_sets.push(FileSetInput {
+                            project: Some(project_name.clone()),
+                            patterns: expand_project_globs(project_root, patterns),
+                        });
+                    }
+                    HashInstruction::Runtime(cmd) => {
+                        entry.inputs.runtime.push(cmd.clone());
+                    }
+                    HashInstruction::Environment(env_var) => {
+                        entry.inputs.environment.push(env_var.clone());
+                    }
+                    HashInstruction::TaskOutput(task_output, _) => {
+                        entry.inputs.dep_outputs.push(task_output.clone());
+                    }
+                    HashInstruction::External(external) => {
+                        entry.inputs.external.push(external.clone());
+                    }
+                    HashInstruction::AllExternalDependencies => {
+                        entry
+                            .inputs
+                            .external
+                            .push("AllExternalDependencies".to_string());
+                    }
+                    // ProjectConfiguration, TsConfiguration, Cwd don't need to be tracked as inputs
+                    _ => {}
+                }
+
                 Ok::<(), anyhow::Error>(())
             })?;
 

@@ -6,6 +6,21 @@ use tracing::{trace, trace_span};
 use crate::native::glob::build_glob_set;
 use crate::native::types::FileData;
 
+/// Expands project file set patterns by replacing `{projectRoot}` with the actual project root.
+/// For root projects (project_root == "."), strips `{projectRoot}/` instead.
+pub fn expand_project_globs(project_root: &str, file_sets: &[String]) -> Vec<String> {
+    file_sets
+        .iter()
+        .map(|f| {
+            if project_root == "." {
+                f.replace("{projectRoot}/", "")
+            } else {
+                f.replace("{projectRoot}", project_root)
+            }
+        })
+        .collect()
+}
+
 pub fn hash_project_files(
     project_name: &str,
     project_root: &str,
@@ -31,16 +46,7 @@ pub fn collect_project_files<'a>(
     file_sets: &[String],
     project_file_map: &'a HashMap<String, Vec<FileData>>,
 ) -> Result<Vec<&'a FileData>> {
-    let globs = file_sets
-        .iter()
-        .map(|f| {
-            if project_root == "." {
-                f.replace("{projectRoot}/", "")
-            } else {
-                f.replace("{projectRoot}", project_root)
-            }
-        })
-        .collect::<Vec<_>>();
+    let globs = expand_project_globs(project_root, file_sets);
     let now = std::time::Instant::now();
     let glob_set = build_glob_set(&globs)?;
     trace!("build_glob_set for {:?}", now.elapsed());

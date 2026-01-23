@@ -262,6 +262,13 @@ export interface FileMap {
 }
 
 export interface FileSetInput {
+  /** Project name, or None for workspace-level file sets */
+  project?: string
+  /** Glob patterns for the file set */
+  patterns: Array<string>
+}
+
+export interface FileSetInput {
   fileset: string
 }
 
@@ -309,6 +316,8 @@ export declare export declare function hashArray(input: Array<string | undefined
 export interface HashDetails {
   value: string
   details: Record<string, string>
+  /** Structured inputs used for hashing (file patterns, env vars, etc.) */
+  inputs: HashInputs
 }
 
 export interface HashedTask {
@@ -323,6 +332,19 @@ export interface HasherOptions {
 }
 
 export declare export declare function hashFile(file: string): string | null
+
+export interface HashInputs {
+  /** File sets (project-scoped or workspace-level globs) */
+  fileSets: Array<FileSetInput>
+  /** Runtime commands */
+  runtime: Array<string>
+  /** Environment variable names */
+  environment: Array<string>
+  /** Dependent task outputs */
+  depOutputs: Array<string>
+  /** External dependencies */
+  external: Array<string>
+}
 
 export interface InputsInput {
   input: string

@@ -56,6 +56,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   for (let i = 0; i < tasksToHash.length; i++) {
     tasksToHash[i].hash = hashes[i].value;
     tasksToHash[i].hashDetails = hashes[i].details;
+    tasksToHash[i].hashInputs = hashes[i].inputs;
   }
   if (tasksDetails?.recordTaskDetails) {
     tasksDetails.recordTaskDetails(
@@ -90,7 +91,7 @@ export async function hashTask(
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
 
-  const { value, details } = await (customHasher
+  const { value, details, inputs } = await (customHasher
     ? customHasher(task, {
         hasher,
         projectGraph,
@@ -103,6 +104,7 @@ export async function hashTask(
     : hasher.hashTask(task, taskGraph, env));
   task.hash = value;
   task.hashDetails = details;
+  task.hashInputs = inputs;
 
   if (taskDetails?.recordTaskDetails) {
     taskDetails.recordTaskDetails([
@@ -154,7 +156,7 @@ export async function hashTasks(
   // Hash tasks with custom hashers individually
   const customHasherPromises = tasksWithCustomHashers.map(async (task) => {
     const customHasher = getCustomHasher(task, projectGraph);
-    const { value, details } = await customHasher(task, {
+    const { value, details, inputs } = await customHasher(task, {
       hasher,
       projectGraph,
       taskGraph,
@@ -165,6 +167,7 @@ export async function hashTasks(
     } as any);
     task.hash = value;
     task.hashDetails = details;
+    task.hashInputs = inputs;
   });
 
   // Hash tasks without custom hashers in batch
@@ -176,6 +179,7 @@ export async function hashTasks(
         for (let i = 0; i < tasksWithoutCustomHashers.length; i++) {
           tasksWithoutCustomHashers[i].hash = hashes[i].value;
           tasksWithoutCustomHashers[i].hashDetails = hashes[i].details;
+          tasksWithoutCustomHashers[i].hashInputs = hashes[i].inputs;
         }
       });
   }
