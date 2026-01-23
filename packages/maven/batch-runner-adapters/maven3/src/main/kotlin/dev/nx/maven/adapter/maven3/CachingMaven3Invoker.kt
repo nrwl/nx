@@ -170,12 +170,18 @@ class CachingMaven3Invoker(
         log.debug("invoke() with args: ${args.joinToString(" ")} in ${workingDir.absolutePath}")
         val startTime = System.currentTimeMillis()
 
+        // Redirect System.out/err to our streams for SLF4J output capture
+        // Maven 3's slf4j-simple writes to System.out, so we redirect it to capture the output
+        val originalOut = System.out
+        val originalErr = System.err
+        val printStreamOut = PrintStream(stdout, true)
+        val printStreamErr = PrintStream(stderr, true)
+        System.setOut(printStreamOut)
+        System.setErr(printStreamErr)
+
         return try {
             // Parse arguments and create request
             val request = createRequest(args, workingDir)
-
-            // Set output stream for execution listener
-            nxMaven!!.outputStream = java.io.PrintStream(stdout, true)
 
             // Set up graph cache on first invocation
             if (!graphSetup) {
@@ -192,7 +198,7 @@ class CachingMaven3Invoker(
                 log.debug("Maven execution failed with exit code $exitCode in ${duration}ms")
                 // Write errors to stderr
                 result.exceptions.forEach { e ->
-                    PrintStream(stderr, true).println("ERROR: ${e.message}")
+                    printStreamErr.println("ERROR: ${e.message}")
                 }
             } else {
                 log.debug("Maven execution succeeded in ${duration}ms")
@@ -201,9 +207,13 @@ class CachingMaven3Invoker(
             exitCode
         } catch (e: Exception) {
             log.error("Error during Maven invocation: ${e.message}", e)
-            PrintStream(stderr).println("ERROR: ${e.message}")
-            e.printStackTrace(PrintStream(stderr))
+            printStreamErr.println("ERROR: ${e.message}")
+            e.printStackTrace(printStreamErr)
             1
+        } finally {
+            // Restore original System.out/err
+            System.setOut(originalOut)
+            System.setErr(originalErr)
         }
     }
 

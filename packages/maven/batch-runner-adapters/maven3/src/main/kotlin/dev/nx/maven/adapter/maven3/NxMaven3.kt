@@ -38,16 +38,6 @@ class NxMaven3(
     private val log = LoggerFactory.getLogger(NxMaven3::class.java)
     private val executionCount = AtomicInteger(0)
 
-    /**
-     * Output stream for execution listener logging.
-     * Set by CachingMaven3Invoker before each invocation.
-     *
-     * SLF4J loggers in the ClassRealm don't output to the batch-runner's console,
-     * so we write directly to this stream instead.
-     */
-    @Volatile
-    var outputStream: java.io.PrintStream? = null
-
     @Volatile
     private var cachedProjectGraph: ProjectDependencyGraph? = null
 
@@ -117,13 +107,12 @@ class NxMaven3(
     }
 
     /**
-     * Creates the execution listener that writes to the output stream.
+     * Creates the execution listener for batch builds.
+     * Uses BatchExecutionListener which extends ExecutionEventLogger for native SLF4J logging.
+     * The batch runner redirects System.out to capture the output.
      */
     private fun createExecutionListener(): org.apache.maven.execution.ExecutionListener {
-        // SLF4J loggers in the ClassRealm don't output to the batch-runner's console,
-        // so we use BatchExecutionListenerPlexus which writes directly to the output stream.
-        val output = outputStream ?: java.io.PrintStream(System.out)
-        return BatchExecutionListenerPlexus(output)
+        return BatchExecutionListener()
     }
 
     /**
