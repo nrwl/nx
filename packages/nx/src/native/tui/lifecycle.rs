@@ -18,7 +18,6 @@ use crate::native::tasks::types::{Task, TaskGraph, TaskResult};
 #[cfg(not(test))]
 use super::action::Action;
 use super::app::App;
-use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
 use super::inline_app::InlineApp;
@@ -222,8 +221,8 @@ fn switch_mode(
         guard.save_ui_state_for_mode_switch();
         // For inline mode, prefer the focused pane item over just the selected item
         let item = guard
-            .get_focused_pane_item_id()
-            .or_else(|| guard.get_selected_item_id());
+            .get_focused_pane_item()
+            .or_else(|| guard.get_selected_item());
         (guard.get_shared_state(), item)
     };
 
@@ -243,8 +242,7 @@ fn switch_mode(
         }
         TuiMode::Inline => {
             debug!("Creating inline app with focused item: {:?}", focused_item);
-            let selected_item = focused_item.map(SelectionEntry::Task);
-            let app_instance = InlineApp::with_state(shared_state, selected_item)
+            let app_instance = InlineApp::with_state(shared_state, focused_item)
                 .expect("Failed to create inline app");
             TuiAppInstance::Inline(Arc::new(Mutex::new(app_instance)))
         }

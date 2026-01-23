@@ -30,7 +30,7 @@ use super::components::countdown_popup::CountdownPopup;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::lifecycle::{RunMode, TuiMode};
+use super::lifecycle::{BatchStatus, RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_app::TuiApp;
@@ -648,13 +648,12 @@ impl TuiApp for InlineApp {
 
     // === Mode-specific overrides ===
 
-    fn get_selected_item_id(&self) -> Option<String> {
+    fn get_selected_item(&self) -> Option<SelectionEntry> {
         // Include fallback to first running item for inline mode
         // This ensures can_be_interactive and other trait methods work correctly
         self.selected_item
-            .as_ref()
-            .map(|s| s.id().to_string())
-            .or_else(|| self.get_current_running_item())
+            .clone()
+            .or_else(|| self.get_current_running_item().map(SelectionEntry::Task))
     }
 
     fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
@@ -686,6 +685,46 @@ impl TuiApp for InlineApp {
             // If the selected task has completed, exit interactive mode
             self.is_interactive = false;
         }
+    }
+
+    fn set_batch_status(&mut self, batch_id: String, status: BatchStatus) {
+        if batch_id.is_empty() || status == BatchStatus::Running {
+            return;
+        }
+
+        debug!(
+            "Updating batch '{}' status to {:?} in InlineApp",
+            batch_id, status
+        );
+
+        // Get display name from batch_metadata
+        let display_name = {
+            let state = self.core.state().lock();
+            state
+                .get_batch_metadata()
+                .get(&batch_id)
+                .map(|b| {
+                    format!(
+                        "Batch: {} ({})",
+                        b.info.executor_name,
+                        b.info.task_ids.len()
+                    )
+                })
+                .unwrap_or_else(|| format!("Batch: {}", batch_id))
+        };
+
+        // Update batch_metadata with completion status
+        let completion_time = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis() as i64)
+            .unwrap_or(0);
+
+        self.core.state().lock().complete_batch_metadata(
+            &batch_id,
+            status,
+            display_name,
+            completion_time,
+        );
     }
 }
 
@@ -814,22 +853,64 @@ impl InlineApp {
         use crate::native::tui::theme::THEME;
         use ratatui::style::Style;
 
-        // Get current task and its status for color coding
-        let current_task = self
-            .selected_item
-            .as_ref()
-            .map(|s| s.id().to_string())
-            .or_else(|| self.get_current_running_item());
-
         let (task_name, status, status_style, duration_text) =
-            if let Some(ref task_id) = current_task {
+            if let Some(ref selection) = self.selected_item {
+                let state = self.core.state().lock();
+
+                // Get status based on selection type
+                let (display_name, status, start_time, end_time, estimated_ms) = match selection {
+                    SelectionEntry::Task(task_id) => {
+                        let status = state
+                            .get_task_status(task_id)
+                            .unwrap_or(TaskStatus::NotStarted);
+                        let (start_time, end_time) = state.get_task_timing(task_id);
+                        let estimated_ms = state.estimated_task_timings().get(task_id).copied();
+                        (task_id.clone(), status, start_time, end_time, estimated_ms)
+                    }
+                    SelectionEntry::BatchGroup(batch_id) => {
+                        // Get batch status from batch_metadata
+                        let batch_metadata = state.get_batch_metadata();
+                        if let Some(batch_state) = batch_metadata.get(batch_id) {
+                            let status = match batch_state.final_status {
+                                Some(BatchStatus::Success) => TaskStatus::Success,
+                                Some(BatchStatus::Failure) => TaskStatus::Failure,
+                                Some(BatchStatus::Running) | None => TaskStatus::InProgress,
+                            };
+                            let display_name = batch_state
+                                .display_name
+                                .clone()
+                                .unwrap_or_else(|| batch_id.clone());
+                            (
+                                display_name,
+                                status,
+                                Some(batch_state.start_time),
+                                batch_state.completion_time,
+                                None, // No estimates for batches
+                            )
+                        } else {
+                            // Batch not found in metadata - show as not started
+                            (batch_id.clone(), TaskStatus::NotStarted, None, None, None)
+                        }
+                    }
+                };
+                drop(state);
+
+                let actual_ms = calculate_actual_duration_ms(status, start_time, end_time);
+                let duration = actual_ms
+                    .map(|actual_ms| format_duration_with_estimate(actual_ms, estimated_ms));
+
+                (
+                    display_name,
+                    status,
+                    get_task_status_style(status),
+                    duration,
+                )
+            } else if let Some(ref task_id) = self.get_current_running_item() {
+                // Fallback: no selection but there's a running item
                 let state = self.core.state().lock();
                 let status = state
                     .get_task_status(task_id)
-                    .unwrap_or(TaskStatus::NotStarted);
-
-                // Get timing information and format duration using shared utility
-                // Now both are in milliseconds since epoch
+                    .unwrap_or(TaskStatus::InProgress);
                 let (start_time, end_time) = state.get_task_timing(task_id);
                 let estimated_ms = state.estimated_task_timings().get(task_id).copied();
                 drop(state);

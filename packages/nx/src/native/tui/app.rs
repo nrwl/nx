@@ -2548,28 +2548,20 @@ impl TuiApp for App {
 
     // `should_quit` uses default implementation from trait
 
-    fn get_selected_item_id(&self) -> Option<String> {
-        self.selection_manager
-            .lock()
-            .get_selection()
-            .map(|sel| sel.id().to_string())
+    fn get_selected_item(&self) -> Option<SelectionEntry> {
+        self.selection_manager.lock().get_selection().cloned()
     }
 
-    fn get_focused_pane_item_id(&self) -> Option<String> {
+    fn get_focused_pane_item(&self) -> Option<SelectionEntry> {
         // If focus is on a terminal pane, return that pane's item
         // In spacebar mode, return the selected item (it follows selection)
         // Otherwise return the pinned item from that pane
         match self.focus {
             Focus::MultipleOutput(pane_idx) => {
                 if self.spacebar_mode {
-                    self.selection_manager
-                        .lock()
-                        .get_selection()
-                        .map(|sel| sel.id().to_string())
+                    self.selection_manager.lock().get_selection().cloned()
                 } else {
-                    self.pane_tasks[pane_idx]
-                        .as_ref()
-                        .map(|sel| sel.id().to_string())
+                    self.pane_tasks[pane_idx].clone()
                 }
             }
             _ => {

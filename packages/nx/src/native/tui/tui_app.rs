@@ -13,6 +13,7 @@ use crate::native::{
 };
 
 use super::action::Action;
+use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::lifecycle::{BatchInfo, BatchStatus, TuiMode};
 use super::pty::PtyInstance;
@@ -420,14 +421,21 @@ pub trait TuiApp: Send {
         self.state().lock().should_quit()
     }
 
-    /// Get the currently selected/focused item ID (task or batch, for mode switching)
+    /// Get the currently selected/focused item (task or batch, for mode switching)
     ///
     /// No default implementation - this is mode-specific.
     ///
-    /// Returns the ID of the item that should be displayed when switching to inline mode.
+    /// Returns the item that should be displayed when switching to inline mode.
     /// For full-screen mode, this is the selected item from the task list (task or batch).
     /// For inline mode, this is the item currently being displayed.
-    fn get_selected_item_id(&self) -> Option<String>;
+    fn get_selected_item(&self) -> Option<SelectionEntry>;
+
+    /// Get the ID of the currently selected item
+    ///
+    /// Convenience method that calls get_selected_item() and extracts the ID.
+    fn get_selected_item_id(&self) -> Option<String> {
+        self.get_selected_item().map(|sel| sel.id().to_string())
+    }
 
     /// Get the item (task or batch) currently focused in a terminal pane (for mode switching)
     ///
@@ -435,8 +443,15 @@ pub trait TuiApp: Send {
     /// Full-screen mode overrides this to return the item in the focused pane.
     ///
     /// This is used when switching to inline mode to preserve which output was being viewed.
-    fn get_focused_pane_item_id(&self) -> Option<String> {
+    fn get_focused_pane_item(&self) -> Option<SelectionEntry> {
         None
+    }
+
+    /// Get the ID of the item currently focused in a terminal pane
+    ///
+    /// Convenience method that calls get_focused_pane_item() and extracts the ID.
+    fn get_focused_pane_item_id(&self) -> Option<String> {
+        self.get_focused_pane_item().map(|sel| sel.id().to_string())
     }
 
     /// Check if the currently selected/focused item can be interactive
