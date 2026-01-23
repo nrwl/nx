@@ -111,13 +111,15 @@ export async function createNxCloudOnboardingUrl(
 export async function getNxCloudInfo(
   connectCloudUrl: string,
   pushedToVcs: VcsPushStatus,
-  completionMessageKey?: CompletionMessageKey
+  completionMessageKey?: CompletionMessageKey,
+  workspaceName?: string
 ) {
   const out = new CLIOutput(false);
   const message = getCompletionMessage(
     completionMessageKey,
     connectCloudUrl,
-    pushedToVcs
+    pushedToVcs,
+    workspaceName
   );
   out.success(message);
   return out.getOutput();

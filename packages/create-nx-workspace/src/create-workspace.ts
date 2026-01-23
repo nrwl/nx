@@ -205,7 +205,8 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     nxCloudInfo = await getNxCloudInfo(
       connectUrl,
       pushedToVcs,
-      options.completionMessageKey
+      options.completionMessageKey,
+      name
     );
   } else if (isTemplate && nxCloud === 'skip') {
     // Show nx connect message when user skips cloud in template flow
