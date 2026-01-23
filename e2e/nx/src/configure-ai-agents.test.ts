@@ -1,5 +1,6 @@
 import {
   cleanupProject,
+  listFiles,
   newProject,
   readFile,
   removeFile,
@@ -166,6 +167,19 @@ describe('configure-ai-agents', () => {
       expect(output).toContain(
         'All selected AI agents are fully configured and up to date'
       );
+    });
+  });
+
+  describe('opencode agent', () => {
+    it('should create opencode.json and .opencode/skills directory', () => {
+      runCLI(`configure-ai-agents --agents opencode --no-interactive`);
+
+      // Verify opencode.json exists and contains nx-mcp config
+      expect(readFile('opencode.json')).toContain('nx-mcp');
+
+      // Verify .opencode/skills is a directory with content
+      const skillsContents = listFiles('.opencode/skills');
+      expect(skillsContents.length).toBeGreaterThan(0);
     });
   });
 });

@@ -46,11 +46,14 @@ function cloneRepo(targetPath: string): void {
       rmSync(tempPath, { recursive: true, force: true });
     }
 
-    execSync(`git clone --depth 1 ${REPO_URL} "${tempPath}"`, {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 120000, // 2 minute timeout for clone
-    });
+    execSync(
+      `git clone --depth 1 -b generated-agents-config ${REPO_URL} "${tempPath}"`,
+      {
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+        timeout: 120000, // 2 minute timeout for clone
+      }
+    );
 
     // Remove .git directory after clone
     const gitDir = join(tempPath, '.git');
