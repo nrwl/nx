@@ -1,6 +1,12 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
+// const mockFormatFiles = jest.fn();
+// jest.mock('@nx/devkit', () => {
+//   return {
+//     ...jest.requireActual('@nx/devkit'),
+//     formatFiles: (...args) => mockFormatFiles(...args),
+// }
+// })
 
-import * as devkit from '@nx/devkit';
 import {
   getProjects,
   readJson,
@@ -593,27 +599,36 @@ describe('app', () => {
   });
 
   describe('--skipFormat', () => {
-    it('should format files by default', async () => {
-      jest.spyOn(devkit, 'formatFiles');
+    let formatFilesSpy: jest.SpyInstance;
 
+    beforeEach(() => {
+      const devkitModule = require('@nx/devkit');
+      formatFilesSpy = jest
+        .spyOn(devkitModule, 'formatFiles')
+        .mockImplementation(() => Promise.resolve());
+    });
+
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should format files by default', async () => {
       await applicationGenerator(tree, {
         directory: 'my-node-app',
         addPlugin: true,
       });
 
-      expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(formatFilesSpy).toHaveBeenCalled();
     });
 
     it('should not format files when --skipFormat=true', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
       await applicationGenerator(tree, {
         directory: 'my-node-app',
         skipFormat: true,
         addPlugin: true,
       });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+      expect(formatFilesSpy).not.toHaveBeenCalled();
     });
   });
 
