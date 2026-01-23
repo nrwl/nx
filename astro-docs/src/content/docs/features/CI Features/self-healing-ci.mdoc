@@ -122,6 +122,33 @@ steps:
 
 {% /tabitem %}
 
+{% tabitem label="Bitbucket Pipelines" %}
+
+```yaml
+# bitbucket-pipelines.yml
+image: node:22
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: CI
+          script:
+            # Your existing steps which start-ci-run, install
+            # dependencies, etc.
+            # These are just illustrative examples...
+            - npx nx-cloud start-ci-run
+            - npm ci
+            - npx nx affected -t lint test build
+          after-script:
+            # NEW: Add this section at the end of your step
+            # IMPORTANT: after-script runs regardless of step success/failure
+            # so it's like if: always() on GitHub
+            - npx nx fix-ci
+```
+
+{% /tabitem %}
+
 {% /tabs %}
 
 > NOTE: If all tasks succeed then the `fix-ci` command becomes a no-op automatically, so that is why "always" is recommended.
