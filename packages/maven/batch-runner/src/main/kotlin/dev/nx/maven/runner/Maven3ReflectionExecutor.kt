@@ -41,8 +41,7 @@ class Maven3ReflectionExecutor(
         System.setProperty("maven.home", mavenHome.absolutePath)
 
         // Create realm and load Maven + adapters
-        System.err.println("[NX-REFLECTION] Creating ClassRealm and loading Maven 3 JARs...")
-        mavenRealm = MavenClassRealm(mavenHome)
+        mavenRealm = MavenClassRealm.create(mavenHome)
         mavenRealm.injectAdapters("3")
 
         // Create invoker via reflection

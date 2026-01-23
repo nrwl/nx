@@ -51,12 +51,10 @@ class ReflectionMavenExecutor(
         System.setProperty("maven.home", mavenHome.absolutePath)
 
         // Create realm and load Maven + adapters
-        System.err.println("[NX-REFLECTION] Creating ClassRealm and loading Maven JARs...")
-        mavenRealm = MavenClassRealm(mavenHome)
+        mavenRealm = MavenClassRealm.create(mavenHome)
         mavenRealm.injectAdapters(mavenMajorVersion)
 
         // Create invoker via reflection
-        System.err.println("[NX-REFLECTION] Creating CachingResidentMavenInvoker via reflection...")
         val (createdInvoker, createdParser) = createInvokerAndParser()
         invoker = createdInvoker
         parser = createdParser
