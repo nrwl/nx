@@ -32,6 +32,9 @@ module.exports = {
   moduleNameMapper: {
     // Mock ora to avoid ESM issues - ora@9+ is ESM-only and breaks Jest
     '^ora$': '<rootDir>/../../scripts/jest-mocks/ora.js',
+    // Handle both `import * as x` and `import x from` styles for CommonJS modules
     '^chalk$': '<rootDir>/../../scripts/jest-mocks/chalk.js',
+    '^yargs-parser$': '<rootDir>/../../scripts/jest-mocks/yargs-parser.js',
+    '^prettier$': '<rootDir>/../../scripts/jest-mocks/prettier.js',
   },
 };
