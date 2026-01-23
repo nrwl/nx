@@ -18,13 +18,13 @@ function getNxCloudRecordCommand(
   ci: Schema['ci'],
   packageManagerPrefix: string
 ): Command {
-  const baseCommand = `${packageManagerPrefix} nx-cloud record -- echo Hello World`;
+  const baseCommand = `${packageManagerPrefix} nx record -- echo Hello World`;
   const prefix = getCiPrefix(ci);
   const exampleComment = `${prefix}${baseCommand}`;
 
   return {
     comments: [
-      `Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud`,
+      `Prepend any command with "nx record --" to record its logs to Nx Cloud`,
       exampleComment,
     ],
   };
@@ -129,8 +129,8 @@ function getBitbucketBranchCommands(
   }`;
 
   const nxCloudComments = [
-    `Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud`,
-    `- ${packageManagerPrefix} nx-cloud record -- echo Hello World`,
+    `Prepend any command with "nx record --" to record its logs to Nx Cloud`,
+    `- ${packageManagerPrefix} nx record -- echo Hello World`,
   ];
 
   // Build nx command comments and command
