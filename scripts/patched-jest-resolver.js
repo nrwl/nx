@@ -203,6 +203,7 @@ module.exports = function (modulePath, options) {
     const nxSrcMatch = modulePath.match(/^nx\/src\/(.+)$/);
     if (nxSrcMatch) {
       const subpath = nxSrcMatch[1];
+      // Check for direct file (e.g., nx/src/devkit-exports -> devkit-exports.ts)
       const resolvedPath = path.join(
         packagesPath,
         'nx',
@@ -211,6 +212,17 @@ module.exports = function (modulePath, options) {
       );
       if (fs.existsSync(resolvedPath) && fs.lstatSync(resolvedPath).isFile()) {
         return resolvedPath;
+      }
+      // Check for directory with index.ts (e.g., nx/src/plugins/package-json -> plugins/package-json/index.ts)
+      const indexPath = path.join(
+        packagesPath,
+        'nx',
+        'src',
+        subpath,
+        'index.ts'
+      );
+      if (fs.existsSync(indexPath) && fs.lstatSync(indexPath).isFile()) {
+        return indexPath;
       }
     }
 
@@ -223,9 +235,15 @@ module.exports = function (modulePath, options) {
     const nxOtherPatternMatch = modulePath.match(/^nx\/(.+)$/);
     if (nxOtherPatternMatch) {
       const subpath = nxOtherPatternMatch[1];
+      // Check for direct file
       const resolvedPath = path.join(packagesPath, 'nx', subpath + '.ts');
-      if (fs.existsSync(resolvedPath)) {
+      if (fs.existsSync(resolvedPath) && fs.lstatSync(resolvedPath).isFile()) {
         return resolvedPath;
+      }
+      // Check for directory with index.ts
+      const indexPath = path.join(packagesPath, 'nx', subpath, 'index.ts');
+      if (fs.existsSync(indexPath) && fs.lstatSync(indexPath).isFile()) {
+        return indexPath;
       }
     }
 

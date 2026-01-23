@@ -4,4 +4,7 @@ module.exports = {
   globals: {},
   displayName: 'workspace',
   preset: '../../jest.preset.js',
+  moduleNameMapper: {
+    '^prettier$': '<rootDir>/jest-mocks/prettier.js',
+  },
 };

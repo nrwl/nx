@@ -1,5 +1,4 @@
-import type { Tree } from '@nx/devkit';
-import * as devkit from '@nx/devkit';
+import { readJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nestJsSchematicsVersion, nxVersion } from '../../utils/versions';
 import { initGenerator } from './init';
@@ -15,7 +14,7 @@ describe('init generator', () => {
   it('should add dependencies', async () => {
     await initGenerator(tree, {});
 
-    const packageJson = devkit.readJson(tree, 'package.json');
+    const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies['@nestjs/schematics']).toBe(
       nestJsSchematicsVersion
     );
@@ -23,20 +22,29 @@ describe('init generator', () => {
   });
 
   describe('--skipFormat', () => {
-    it('should format files by default', async () => {
-      jest.spyOn(devkit, 'formatFiles');
+    let formatFilesSpy: jest.SpyInstance;
 
+    beforeEach(() => {
+      const devkitModule = require('@nx/devkit');
+      formatFilesSpy = jest
+        .spyOn(devkitModule, 'formatFiles')
+        .mockImplementation(() => Promise.resolve());
+    });
+
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should format files by default', async () => {
       await initGenerator(tree, {});
 
-      expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(formatFilesSpy).toHaveBeenCalled();
     });
 
     it('should not format files when --skipFormat=true', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
       await initGenerator(tree, { skipFormat: true });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+      expect(formatFilesSpy).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,10 +1,10 @@
-import type { Tree } from '@nx/devkit';
-import * as devkit from '@nx/devkit';
 import {
+  getProjects,
   readJson,
   readProjectConfiguration,
   updateJson,
   writeJson,
+  type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator } from './library';
@@ -99,7 +99,7 @@ describe('lib', () => {
         tags: 'one,two',
       });
 
-      const projects = Object.fromEntries(devkit.getProjects(tree));
+      const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toEqual({
         ['my-lib']: expect.objectContaining({
           tags: ['one', 'two'],
@@ -170,7 +170,7 @@ describe('lib', () => {
         tags: 'one,two',
       });
 
-      const projects = Object.fromEntries(devkit.getProjects(tree));
+      const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toEqual({
         [`my-lib`]: expect.objectContaining({
           tags: ['one', 'two'],
@@ -288,25 +288,34 @@ describe('lib', () => {
   });
 
   describe('--skipFormat', () => {
-    it('should format files by default', async () => {
-      jest.spyOn(devkit, 'formatFiles');
+    let formatFilesSpy: jest.SpyInstance;
 
+    beforeEach(() => {
+      const devkitModule = require('@nx/devkit');
+      formatFilesSpy = jest
+        .spyOn(devkitModule, 'formatFiles')
+        .mockImplementation(() => Promise.resolve());
+    });
+
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should format files by default', async () => {
       await libraryGenerator(tree, {
         directory: 'my-lib',
       });
 
-      expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(formatFilesSpy).toHaveBeenCalled();
     });
 
     it('should not format files when --skipFormat=true', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
       await libraryGenerator(tree, {
         directory: 'my-lib',
         skipFormat: true,
       });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+      expect(formatFilesSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -332,7 +341,7 @@ describe('lib', () => {
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();
-      devkit.updateJson(tree, 'package.json', (json) => {
+      updateJson(tree, 'package.json', (json) => {
         json.workspaces = ['packages/*', 'apps/*'];
         return json;
       });
@@ -638,7 +647,7 @@ describe('lib', () => {
       // Create a workspace without TS solution setup
       tree = createTreeWithEmptyWorkspace();
       // Remove workspaces to disable package manager workspaces
-      devkit.updateJson(tree, 'package.json', (json) => {
+      updateJson(tree, 'package.json', (json) => {
         delete json.workspaces;
         return json;
       });

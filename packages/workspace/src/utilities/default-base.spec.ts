@@ -1,3 +1,7 @@
+jest.mock('child_process', () => ({
+  __esModule: true,
+  ...jest.requireActual('child_process'),
+}));
 import * as cp from 'child_process';
 import { deduceDefaultBase } from './default-base';
 
