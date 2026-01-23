@@ -77,6 +77,21 @@ pub enum RunMode {
     RunMany,
 }
 
+#[napi(object)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BatchInfo {
+    pub executor_name: String,
+    pub task_ids: Vec<String>,
+}
+
+#[napi(string_enum)]
+#[derive(Debug, PartialEq, Eq)]
+pub enum BatchStatus {
+    Running,
+    Success,
+    Failure,
+}
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum TuiMode {
     FullScreen,
@@ -198,17 +213,17 @@ fn switch_mode(
     }
 
     // Save UI state before switching (for full-screen mode persistence)
-    // and get the task to display in inline mode
-    let (shared_state, focused_task) = {
+    // and get the item to display in inline mode
+    let (shared_state, focused_item) = {
         let app_instance = shared_app.lock();
         let guard = app_instance.lock();
         // Save the current UI state so it can be restored later
         guard.save_ui_state_for_mode_switch();
-        // For inline mode, prefer the focused pane task over just the selected task
-        let task = guard
-            .get_focused_pane_task()
-            .or_else(|| guard.get_selected_task_name());
-        (guard.get_shared_state(), task)
+        // For inline mode, prefer the focused pane item over just the selected item
+        let item = guard
+            .get_focused_pane_item()
+            .or_else(|| guard.get_selected_item());
+        (guard.get_shared_state(), item)
     };
 
     // Switch terminal viewport
@@ -226,8 +241,8 @@ fn switch_mode(
             TuiAppInstance::FullScreen(Arc::new(Mutex::new(app_instance)))
         }
         TuiMode::Inline => {
-            debug!("Creating inline app with focused task: {:?}", focused_task);
-            let app_instance = InlineApp::with_state(shared_state, focused_task)
+            debug!("Creating inline app with focused item: {:?}", focused_item);
+            let app_instance = InlineApp::with_state(shared_state, focused_item)
                 .expect("Failed to create inline app");
             TuiAppInstance::Inline(Arc::new(Mutex::new(app_instance)))
         }
@@ -666,6 +681,29 @@ impl AppLifeCycle {
         timings: std::collections::HashMap<String, i64>,
     ) -> napi::Result<()> {
         self.with_app(|app| app.set_estimated_task_timings(timings));
+        Ok(())
+    }
+
+    // Batch lifecycle methods
+    #[napi]
+    pub fn register_running_batch(
+        &self,
+        batch_id: String,
+        batch_info: BatchInfo,
+    ) -> napi::Result<()> {
+        self.with_app(|app| app.register_running_batch(batch_id, batch_info));
+        Ok(())
+    }
+
+    #[napi]
+    pub fn append_batch_output(&self, batch_id: String, output: String) -> napi::Result<()> {
+        self.with_app(|app| app.append_batch_output(batch_id, output));
+        Ok(())
+    }
+
+    #[napi]
+    pub fn set_batch_status(&self, batch_id: String, status: BatchStatus) -> napi::Result<()> {
+        self.with_app(|app| app.set_batch_status(batch_id, status));
         Ok(())
     }
 }

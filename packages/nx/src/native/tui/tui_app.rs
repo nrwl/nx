@@ -1,13 +1,10 @@
 use color_eyre::eyre::Result;
 use napi::bindgen_prelude::External;
-#[cfg(not(test))]
-use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use parking_lot::Mutex;
 use ratatui::layout::Size;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
-use tracing::debug;
 
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::{
@@ -16,8 +13,9 @@ use crate::native::{
 };
 
 use super::action::Action;
+use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
-use super::lifecycle::TuiMode;
+use super::lifecycle::{BatchInfo, BatchStatus, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_core::TuiCore;
@@ -25,6 +23,7 @@ use super::tui_state::TuiState;
 #[cfg(not(test))]
 use super::tui_state::{DoneCallback, ForcedShutdownCallback};
 use super::utils::write_output_to_pty;
+use crate::native::utils::time::current_timestamp_millis;
 
 /// Common trait for both full-screen and inline TUI implementations
 ///
@@ -422,42 +421,59 @@ pub trait TuiApp: Send {
         self.state().lock().should_quit()
     }
 
-    /// Get the currently selected/focused task name (for mode switching)
+    /// Get the currently selected/focused item (task or batch, for mode switching)
     ///
     /// No default implementation - this is mode-specific.
     ///
-    /// Returns the name of the task that should be displayed when switching to inline mode.
-    /// For full-screen mode, this is the selected task from the task list.
-    /// For inline mode, this is the task currently being displayed.
-    fn get_selected_task_name(&self) -> Option<String>;
+    /// Returns the item that should be displayed when switching to inline mode.
+    /// For full-screen mode, this is the selected item from the task list (task or batch).
+    /// For inline mode, this is the item currently being displayed.
+    fn get_selected_item(&self) -> Option<SelectionEntry>;
 
-    /// Get the task that is currently focused in a terminal pane (for mode switching)
+    /// Get the ID of the currently selected item
+    ///
+    /// Convenience method that calls get_selected_item() and extracts the ID.
+    fn get_selected_item_id(&self) -> Option<String> {
+        self.get_selected_item().map(|sel| sel.id().to_string())
+    }
+
+    /// Get the item (task or batch) currently focused in a terminal pane (for mode switching)
     ///
     /// Default implementation returns None (no panes in inline mode).
-    /// Full-screen mode overrides this to return the task in the focused pane.
+    /// Full-screen mode overrides this to return the item in the focused pane.
     ///
-    /// This is used when switching to inline mode to preserve which task output was being viewed.
-    fn get_focused_pane_task(&self) -> Option<String> {
+    /// This is used when switching to inline mode to preserve which output was being viewed.
+    fn get_focused_pane_item(&self) -> Option<SelectionEntry> {
         None
     }
 
-    /// Check if the currently selected/focused task can be interactive
+    /// Get the ID of the item currently focused in a terminal pane
+    ///
+    /// Convenience method that calls get_focused_pane_item() and extracts the ID.
+    fn get_focused_pane_item_id(&self) -> Option<String> {
+        self.get_focused_pane_item().map(|sel| sel.id().to_string())
+    }
+
+    /// Check if the currently selected/focused item can be interactive
     ///
     /// A task can be interactive if:
     /// 1. It exists (selected or focused)
     /// 2. It is currently in progress
     /// 3. Its PTY has a writer (was created as an interactive task)
     ///
-    /// Default implementation checks the selected task from `get_selected_task_name()`.
+    /// Note: Batch groups are never interactive - they are read-only output displays.
+    ///
+    /// Default implementation checks the selected item from `get_selected_item_id()`.
     fn can_be_interactive(&self) -> bool {
-        let task_id = self.get_selected_task_name();
+        let item_id = self.get_selected_item_id();
 
-        if let Some(task_id) = task_id {
+        if let Some(item_id) = item_id {
             let state = self.state().lock();
             // Check if task is in progress and has an interactive PTY
-            let is_in_progress = state.get_task_status(&task_id) == Some(TaskStatus::InProgress);
+            // Batch groups return None for task status, so they'll fail this check
+            let is_in_progress = state.get_task_status(&item_id) == Some(TaskStatus::InProgress);
             let has_writer = state
-                .get_pty_instance(&task_id)
+                .get_pty_instance(&item_id)
                 .map(|pty| pty.can_be_interactive())
                 .unwrap_or(false);
             is_in_progress && has_writer
@@ -481,5 +497,64 @@ pub trait TuiApp: Send {
     /// Returns a clone of the Arc<Mutex<TuiState>>, which is cheap (just increments ref count).
     fn get_shared_state(&self) -> Arc<Mutex<TuiState>> {
         self.state().clone()
+    }
+
+    // === Batch Methods ===
+    // Default implementations capture batch output via TuiState.
+    // Full-screen mode provides hooks for UI updates.
+
+    /// Register a running batch - captures PTY for output and saves metadata
+    ///
+    /// Default implementation handles core registration:
+    /// - Validates inputs
+    /// - Checks for duplicate registration
+    /// - Creates PTY and registers in TuiState
+    /// - Saves batch metadata for mode switching
+    /// - Calls on_batch_registered hook for mode-specific behavior
+    fn register_running_batch(&mut self, batch_id: String, batch_info: BatchInfo) {
+        if batch_id.is_empty() || batch_info.task_ids.is_empty() {
+            return;
+        }
+
+        // Check if batch is already registered (PTY exists in shared state)
+        if self.state().lock().get_pty_instance(&batch_id).is_some() {
+            return;
+        }
+
+        let start_time = current_timestamp_millis();
+
+        // Register PTY so output is captured regardless of mode
+        let pty = PtyInstance::non_interactive();
+
+        {
+            let mut state = self.state().lock();
+            state.register_pty_instance(batch_id.clone(), Arc::new(pty));
+            state.save_batch_metadata(batch_id.clone(), batch_info.clone(), start_time);
+        }
+
+        // Hook for mode-specific behavior
+        self.on_batch_registered(&batch_id, &batch_info, start_time);
+    }
+
+    /// Hook called after batch is registered
+    ///
+    /// Default: no-op. Override for mode-specific behavior (UI updates, etc.)
+    fn on_batch_registered(&mut self, _batch_id: &str, _batch_info: &BatchInfo, _start_time: i64) {
+        // Default: no-op for inline mode
+    }
+
+    /// Append output to a batch's PTY
+    fn append_batch_output(&mut self, batch_id: String, output: String) {
+        let state = self.state().lock();
+        if let Some(pty) = state.get_pty_instance(&batch_id) {
+            pty.process_output(output.as_bytes());
+        }
+    }
+
+    /// Set batch status (completion) - default is no-op
+    ///
+    /// Full-screen mode overrides to handle batch completion and ungrouping.
+    fn set_batch_status(&mut self, _batch_id: String, _status: BatchStatus) {
+        // Default: no-op for inline mode (no batch UI)
     }
 }
