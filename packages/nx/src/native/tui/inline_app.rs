@@ -651,9 +651,16 @@ impl TuiApp for InlineApp {
     fn get_selected_item(&self) -> Option<SelectionEntry> {
         // Include fallback to first running item for inline mode
         // This ensures can_be_interactive and other trait methods work correctly
-        self.selected_item
-            .clone()
-            .or_else(|| self.get_current_running_item().map(SelectionEntry::Task))
+        self.selected_item.clone().or_else(|| {
+            let item_id = self.get_current_running_item()?;
+            let state = self.core.state().lock();
+            // Check if item is a batch or a task
+            if state.get_batch_metadata().contains_key(&item_id) {
+                Some(SelectionEntry::BatchGroup(item_id))
+            } else {
+                Some(SelectionEntry::Task(item_id))
+            }
+        })
     }
 
     fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
