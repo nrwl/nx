@@ -35,6 +35,18 @@ class CachingMaven3Invoker(
     private val classWorld: ClassWorld,
     private val workspaceRoot: File
 ) : AutoCloseable {
+
+    companion object {
+        init {
+            // Configure Maven's SLF4J SimpleLogger BEFORE any Maven classes load
+            // Must happen at class-load time to take effect before Maven initializes its logger
+            System.setProperty("org.slf4j.simpleLogger.showThreadName", "false")
+            System.setProperty("org.slf4j.simpleLogger.showLogName", "false")
+            System.setProperty("org.slf4j.simpleLogger.showShortLogName", "false")
+            System.setProperty("org.slf4j.simpleLogger.levelInBrackets", "true")
+        }
+    }
+
     private val log = LoggerFactory.getLogger(CachingMaven3Invoker::class.java)
 
     private var container: PlexusContainer? = null
