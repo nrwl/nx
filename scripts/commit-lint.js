@@ -95,6 +95,11 @@ if (require.main === module) {
       `possible scopes: ${result.allowedScopes} (if unsure use "core")`
     );
     console.log(
+      '\nThe commit subject must be lowercase, unless beginning with "Revert" or "Release".'
+    );
+    console.log('\n');
+
+    console.log(
       '\nEXAMPLE: \n' +
         'feat(nx): add an option to generate lazy-loadable modules\n' +
         'fix(core)!: breaking change should have exclamation mark\n'
