@@ -79,10 +79,22 @@ export class ComponentCompiler
             return source;
         }
 
-        const { selector, templateUrl, styleUrl, className } = metadata;
+        const { selector, templateUrl, template, styleUrl, styles: inlineStyles, className } = metadata;
 
-        const templatePath = path.resolve(componentDir, templateUrl);
-        const templateHtml = fs.readFileSync(templatePath, 'utf-8');
+        let templateHtml = '';
+        if (templateUrl)
+        {
+            const templatePath = path.resolve(componentDir, templateUrl);
+            templateHtml = fs.readFileSync(templatePath, 'utf-8');
+        }
+        else if (template)
+        {
+            templateHtml = template;
+        }
+        else
+        {
+            return source;
+        }
 
         let styles = '';
         if (styleUrl)
@@ -92,6 +104,10 @@ export class ComponentCompiler
             {
                 styles = fs.readFileSync(stylePath, 'utf-8');
             }
+        }
+        else if (inlineStyles)
+        {
+            styles = inlineStyles;
         }
 
         const { html, bindings, controlFlows, templateRefs } = this.parser.parse(templateHtml);
@@ -145,16 +161,34 @@ export class ComponentCompiler
             return { code: source };
         }
 
-        const { selector, templateUrl, styleUrl, className } = metadata;
+        const { selector, templateUrl, template, styleUrl, styles: inlineStyles, className } = metadata;
 
-        const templatePath = path.resolve(componentDir, templateUrl);
-        let templateHtml = fs.readFileSync(templatePath, 'utf-8');
+        let templateHtml = '';
+        let templatePath: string | null = null;
+        if (templateUrl)
+        {
+            templatePath = path.resolve(componentDir, templateUrl);
+            templateHtml = fs.readFileSync(templatePath, 'utf-8');
+        }
+        else if (template)
+        {
+            templateHtml = template;
+        }
+        else
+        {
+            return { code: source };
+        }
+
         const stylePath = styleUrl ? path.resolve(componentDir, styleUrl) : null;
 
         let styles = '';
         if (stylePath && fs.existsSync(stylePath))
         {
             styles = fs.readFileSync(stylePath, 'utf-8');
+        }
+        else if (inlineStyles)
+        {
+            styles = inlineStyles;
         }
 
         if (minify)
@@ -169,8 +203,7 @@ export class ComponentCompiler
             if (styles)
             {
                 const cssResult = await esbuild.transform(styles, {
-                    loader: 'css',
-                    minify: true
+                    loader: 'css', minify: true
                 });
                 styles = cssResult.code;
             }
@@ -197,21 +230,19 @@ export class ComponentCompiler
 
         const tsResult = await this.stripTypeScriptWithSourceMap(result, filePath, sourcemap);
 
-        const watchFiles = [templatePath];
+        const watchFiles: string[] = [];
+        if (templatePath)
+        {
+            watchFiles.push(templatePath);
+        }
         if (stylePath && fs.existsSync(stylePath))
         {
             watchFiles.push(stylePath);
         }
 
-        if (sourcemap && tsResult.map)
+        if (sourcemap && tsResult.map && templatePath)
         {
-            const finalMap = await this.createComponentSourceMap(
-                tsResult.code,
-                tsResult.map,
-                filePath,
-                templatePath,
-                stylePath
-            );
+            const finalMap = await this.createComponentSourceMap(tsResult.code, tsResult.map, filePath, templatePath, stylePath);
             return { code: tsResult.code, map: finalMap, watchFiles };
         }
 
@@ -239,13 +270,7 @@ export class ComponentCompiler
         }
     }
 
-    private async createComponentSourceMap(
-        code: string,
-        esbuildMap: string,
-        componentPath: string,
-        templatePath: string,
-        stylePath: string | null
-    ): Promise<string>
+    private async createComponentSourceMap(code: string, esbuildMap: string, componentPath: string, templatePath: string, stylePath: string | null): Promise<string>
     {
         const consumer = await new SourceMapConsumer(JSON.parse(esbuildMap));
         const generator = new SourceMapGenerator({

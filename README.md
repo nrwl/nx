@@ -3,7 +3,7 @@
 _"Just the good stuff"_
 
 Fluff is a very lightweight web framework and component system with a syntax which will be familiar to those coming from
-Angular.
+[Angular](https://angular.dev/).
 
 ## Why?
 

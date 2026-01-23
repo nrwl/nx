@@ -5,8 +5,10 @@ import type { NodePath } from '@babel/traverse';
 export interface ComponentMetadata
 {
     selector: string;
-    templateUrl: string;
+    templateUrl?: string;
+    template?: string;
     styleUrl?: string;
+    styles?: string;
     className: string;
 }
 
@@ -69,8 +71,14 @@ export default function componentPlugin(): PluginObj<PluginState>
                             case 'templateUrl':
                                 metadata.templateUrl = value.value;
                                 break;
+                            case 'template':
+                                metadata.template = value.value;
+                                break;
                             case 'styleUrl':
                                 metadata.styleUrl = value.value;
+                                break;
+                            case 'styles':
+                                metadata.styles = value.value;
                                 break;
                         }
                     }
@@ -85,21 +93,29 @@ export default function componentPlugin(): PluginObj<PluginState>
                             case 'templateUrl':
                                 metadata.templateUrl = strValue;
                                 break;
+                            case 'template':
+                                metadata.template = strValue;
+                                break;
                             case 'styleUrl':
                                 metadata.styleUrl = strValue;
+                                break;
+                            case 'styles':
+                                metadata.styles = strValue;
                                 break;
                         }
                     }
                 }
 
                 const filename = state.filename ?? 'unknown';
-                if (metadata.selector && metadata.templateUrl && metadata.className)
+                if (metadata.selector && (metadata.templateUrl || metadata.template) && metadata.className)
                 {
                     componentMetadataMap.set(filename, {
                         selector: metadata.selector,
                         templateUrl: metadata.templateUrl,
+                        template: metadata.template,
                         className: metadata.className,
-                        styleUrl: metadata.styleUrl
+                        styleUrl: metadata.styleUrl,
+                        styles: metadata.styles
                     });
                 }
             }
