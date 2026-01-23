@@ -38,6 +38,16 @@ class NxMaven3(
     private val log = LoggerFactory.getLogger(NxMaven3::class.java)
     private val executionCount = AtomicInteger(0)
 
+    /**
+     * Output stream for execution listener logging.
+     * Set by CachingMaven3Invoker before each invocation.
+     *
+     * SLF4J loggers in the ClassRealm don't output to the batch-runner's console,
+     * so we write directly to this stream instead.
+     */
+    @Volatile
+    var outputStream: java.io.PrintStream? = null
+
     @Volatile
     private var cachedProjectGraph: ProjectDependencyGraph? = null
 
@@ -55,6 +65,11 @@ class NxMaven3(
     }
 
     init {
+        // Ensure SLF4J SimpleLogger outputs at INFO level (needed for ExecutionEventLogger)
+        if (System.getProperty("org.slf4j.simpleLogger.defaultLogLevel") == null) {
+            System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "info")
+        }
+
         log.debug("NxMaven3 initializing - copying injected fields from container's DefaultMaven...")
         copyInjectedFields()
         log.debug("NxMaven3 initialized - will use cached graph for batch execution")
@@ -102,6 +117,16 @@ class NxMaven3(
     }
 
     /**
+     * Creates the execution listener that writes to the output stream.
+     */
+    private fun createExecutionListener(): org.apache.maven.execution.ExecutionListener {
+        // SLF4J loggers in the ClassRealm don't output to the batch-runner's console,
+        // so we use BatchExecutionListenerPlexus which writes directly to the output stream.
+        val output = outputStream ?: java.io.PrintStream(System.out)
+        return BatchExecutionListenerPlexus(output)
+    }
+
+    /**
      * Set up the project dependency graph cache using the first real Maven request.
      * This should be called before any execute() calls.
      */
@@ -116,7 +141,7 @@ class NxMaven3(
         val setupStartTime = System.currentTimeMillis()
 
         // Set our custom execution listener to suppress verbose output during graph building
-        request.executionListener = BatchExecutionListener()
+        request.executionListener = createExecutionListener()
 
         request.isRecursive = true
 
@@ -197,7 +222,7 @@ class NxMaven3(
         val invokeStartTime = System.currentTimeMillis()
 
         // Set our custom execution listener for batch builds (before any events fire)
-        request.executionListener = BatchExecutionListener()
+        request.executionListener = createExecutionListener()
 
         // If graph cache failed, fall back to standard DefaultMaven execution
         val result = if (cachedProjectGraph != null) {

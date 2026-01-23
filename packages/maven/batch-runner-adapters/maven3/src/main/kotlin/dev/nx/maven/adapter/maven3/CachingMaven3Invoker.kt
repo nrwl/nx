@@ -174,6 +174,9 @@ class CachingMaven3Invoker(
             // Parse arguments and create request
             val request = createRequest(args, workingDir)
 
+            // Set output stream for execution listener
+            nxMaven!!.outputStream = java.io.PrintStream(stdout, true)
+
             // Set up graph cache on first invocation
             if (!graphSetup) {
                 setupGraphCache(request)
