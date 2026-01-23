@@ -1,15 +1,13 @@
-import {
-  executeNxCloudCommand,
-  isConnectedToNxCloud,
-  warnNotConnectedToCloud,
-} from '../utils';
+import { readNxJson } from '../../../config/nx-json';
+import { isNxCloudUsed } from '../../../utils/nx-cloud-utils';
+import { executeNxCloudCommand, warnNotConnectedToCloud } from '../utils';
 
 export interface FixCiArgs {
   verbose?: boolean;
 }
 
 export function fixCiHandler(args: FixCiArgs): Promise<number> {
-  if (!isConnectedToNxCloud()) {
+  if (!isNxCloudUsed(readNxJson())) {
     warnNotConnectedToCloud();
     return Promise.resolve(0);
   }

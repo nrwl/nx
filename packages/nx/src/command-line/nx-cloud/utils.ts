@@ -2,13 +2,7 @@ import { verifyOrUpdateNxCloudClient } from '../../nx-cloud/update-manager';
 import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options';
 import { handleErrors } from '../../utils/handle-errors';
 import { findAncestorNodeModules } from '../../nx-cloud/resolution-helpers';
-import { readNxJson } from '../../config/nx-json';
 import { output } from '../../utils/output';
-
-export function isConnectedToNxCloud(): boolean {
-  const nxJson = readNxJson();
-  return !!nxJson?.nxCloudId;
-}
 
 export function warnNotConnectedToCloud(): void {
   output.warn({

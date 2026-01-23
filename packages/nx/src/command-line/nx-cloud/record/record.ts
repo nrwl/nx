@@ -1,6 +1,8 @@
 import { spawnSync } from 'child_process';
-import { executeNxCloudCommand, isConnectedToNxCloud } from '../utils';
+import { readNxJson } from '../../../config/nx-json';
 import { output } from '../../../utils/output';
+import { isNxCloudUsed } from '../../../utils/nx-cloud-utils';
+import { executeNxCloudCommand } from '../utils';
 
 export interface RecordArgs {
   verbose?: boolean;
@@ -8,7 +10,7 @@ export interface RecordArgs {
 }
 
 export function recordHandler(args: RecordArgs): Promise<number> {
-  if (!isConnectedToNxCloud()) {
+  if (!isNxCloudUsed(readNxJson())) {
     let exitCode: number = 0;
     const commandArgs = args['--'];
     if (commandArgs && commandArgs.length > 0) {
