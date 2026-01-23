@@ -33,19 +33,19 @@ class Maven3ReflectionExecutor(
     private var invocationCount = 0
 
     init {
-        System.err.println("[NX-REFLECTION] Initializing Maven3ReflectionExecutor")
-        System.err.println("[NX-REFLECTION] Maven home: ${mavenHome.absolutePath}")
+        log.debug("Initializing Maven3ReflectionExecutor")
+        log.debug("Maven home: ${mavenHome.absolutePath}")
 
         // Configure Maven's logging
         System.setProperty("maven.multiModuleProjectDirectory", workspaceRoot.absolutePath)
         System.setProperty("maven.home", mavenHome.absolutePath)
 
-        // Create realm and load Maven + adapters
+        // Create realm and load Maven + adapter JAR
         mavenRealm = MavenClassRealm.create(mavenHome)
-        mavenRealm.injectAdapters("3")
+        mavenRealm.loadAdapterJar("3")
 
         // Create invoker via reflection
-        System.err.println("[NX-REFLECTION] Creating CachingMaven3Invoker via reflection...")
+        log.debug("Creating CachingMaven3Invoker via reflection...")
         invoker = createInvoker()
 
         // Cache method references
@@ -58,7 +58,7 @@ class Maven3ReflectionExecutor(
         )
 
         initialized = true
-        System.err.println("[NX-REFLECTION] Maven3ReflectionExecutor ready - NO bundled Maven dependencies!")
+        log.debug("Maven3ReflectionExecutor ready")
     }
 
     /**
@@ -118,14 +118,10 @@ class Maven3ReflectionExecutor(
             } catch (e: java.lang.reflect.InvocationTargetException) {
                 val cause = e.cause ?: e
                 log.error("EXCEPTION during invoker.invoke(): ${cause.javaClass.simpleName}: ${cause.message}", cause)
-                System.err.println("[ERROR] EXCEPTION during invoker.invoke(): ${cause.javaClass.simpleName}: ${cause.message}")
-                cause.printStackTrace(System.err)
                 cause.printStackTrace(PrintStream(outputStream, true))
                 1
             } catch (e: Throwable) {
                 log.error("EXCEPTION during invoker.invoke(): ${e.javaClass.simpleName}: ${e.message}", e)
-                System.err.println("[ERROR] EXCEPTION during invoker.invoke(): ${e.javaClass.simpleName}: ${e.message}")
-                e.printStackTrace(System.err)
                 e.printStackTrace(PrintStream(outputStream, true))
                 1
             }

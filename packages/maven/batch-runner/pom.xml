@@ -66,6 +66,21 @@
             <artifactId>kotlin-stdlib</artifactId>
         </dependency>
 
+        <!-- Adapter modules - provided scope for build ordering only -->
+        <!-- These JARs are copied as resources, not used as classpath dependencies -->
+        <dependency>
+            <groupId>dev.nx.maven</groupId>
+            <artifactId>batch-runner-adapters-maven3</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.nx.maven</groupId>
+            <artifactId>batch-runner-adapter-maven4</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -89,108 +104,25 @@
 
     <build>
         <plugins>
-            <!-- Copy adapter classes from batch-runner-adapters modules -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.1</version>
-                <executions>
-                    <execution>
-                        <id>copy-maven3-adapter-classes</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.outputDirectory}/nx-maven-adapters/maven3</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.basedir}/../batch-runner-adapters/maven3/target/classes</directory>
-                                    <includes>
-                                        <include>**/*.class</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>copy-maven4-adapter-classes</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.outputDirectory}/nx-maven-adapters/maven4</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.basedir}/../batch-runner-adapters/maven4/target/classes</directory>
-                                    <includes>
-                                        <include>**/*.class</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <!-- Copy shared classes that need to be injected into ClassRealm -->
-                    <execution>
-                        <id>copy-shared-classes</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.outputDirectory}/nx-maven-adapters/shared</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.basedir}/../shared/target/classes</directory>
-                                    <includes>
-                                        <!-- Only include classes that use Maven types -->
-                                        <include>dev/nx/maven/shared/BuildStateManager*.class</include>
-                                        <include>dev/nx/maven/shared/BuildStateApplier*.class</include>
-                                        <include>dev/nx/maven/shared/BuildStateRecorder*.class</include>
-                                        <include>dev/nx/maven/shared/BuildState*.class</include>
-                                        <include>dev/nx/maven/shared/ArtifactInfo*.class</include>
-                                        <include>dev/nx/maven/shared/PathUtils*.class</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Generate classes.txt manifests for adapter class discovery -->
+            <!-- Copy and rename adapter JARs from batch-runner-adapters modules -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>3.1.0</version>
                 <executions>
                     <execution>
-                        <id>generate-adapter-manifests</id>
+                        <id>copy-adapter-jars</id>
                         <phase>process-resources</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
                         <configuration>
                             <target>
-                                <!-- Generate maven3 classes.txt -->
-                                <fileset id="maven3.classes" dir="${project.build.outputDirectory}/nx-maven-adapters/maven3" includes="**/*.class"/>
-                                <pathconvert property="maven3.list" refid="maven3.classes" pathsep="${line.separator}">
-                                    <map from="${project.build.outputDirectory}/nx-maven-adapters/maven3/" to=""/>
-                                </pathconvert>
-                                <echo file="${project.build.outputDirectory}/nx-maven-adapters/maven3/classes.txt">${maven3.list}</echo>
-                                <!-- Generate maven4 classes.txt -->
-                                <fileset id="maven4.classes" dir="${project.build.outputDirectory}/nx-maven-adapters/maven4" includes="**/*.class"/>
-                                <pathconvert property="maven4.list" refid="maven4.classes" pathsep="${line.separator}">
-                                    <map from="${project.build.outputDirectory}/nx-maven-adapters/maven4/" to=""/>
-                                </pathconvert>
-                                <echo file="${project.build.outputDirectory}/nx-maven-adapters/maven4/classes.txt">${maven4.list}</echo>
-                                <!-- Generate shared classes.txt -->
-                                <fileset id="shared.classes" dir="${project.build.outputDirectory}/nx-maven-adapters/shared" includes="**/*.class"/>
-                                <pathconvert property="shared.list" refid="shared.classes" pathsep="${line.separator}">
-                                    <map from="${project.build.outputDirectory}/nx-maven-adapters/shared/" to=""/>
-                                </pathconvert>
-                                <echo file="${project.build.outputDirectory}/nx-maven-adapters/shared/classes.txt">${shared.list}</echo>
+                                <mkdir dir="${project.build.outputDirectory}/nx-maven-adapters"/>
+                                <copy file="${project.basedir}/../batch-runner-adapters/maven3/target/batch-runner-adapters-maven3-${project.version}.jar"
+                                      tofile="${project.build.outputDirectory}/nx-maven-adapters/maven3-adapter.jar"/>
+                                <copy file="${project.basedir}/../batch-runner-adapters/maven4/target/batch-runner-adapter-maven4-${project.version}.jar"
+                                      tofile="${project.build.outputDirectory}/nx-maven-adapters/maven4-adapter.jar"/>
                             </target>
                         </configuration>
                     </execution>
@@ -282,18 +214,13 @@
                                         <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
                                 </filter>
-                                <!-- Exclude Maven-dependent shared classes from shaded JAR.
-                                     These are injected into ClassRealm at runtime instead,
+                                <!-- Exclude ALL shared classes from batch-runner shaded JAR.
+                                     They're included in the adapter JARs and loaded into ClassRealm
                                      so they can see Maven's classes. -->
                                 <filter>
                                     <artifact>dev.nx.maven:nx-maven-shared</artifact>
                                     <excludes>
-                                        <exclude>dev/nx/maven/shared/BuildStateManager*.class</exclude>
-                                        <exclude>dev/nx/maven/shared/BuildStateApplier*.class</exclude>
-                                        <exclude>dev/nx/maven/shared/BuildStateRecorder*.class</exclude>
-                                        <exclude>dev/nx/maven/shared/BuildState.class</exclude>
-                                        <exclude>dev/nx/maven/shared/ArtifactInfo.class</exclude>
-                                        <exclude>dev/nx/maven/shared/PathUtils*.class</exclude>
+                                        <exclude>dev/nx/maven/shared/**</exclude>
                                     </excludes>
                                 </filter>
                             </filters>

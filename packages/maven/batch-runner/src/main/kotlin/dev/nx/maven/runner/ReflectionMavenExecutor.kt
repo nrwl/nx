@@ -38,8 +38,8 @@ class ReflectionMavenExecutor(
     private var invocationCount = 0
 
     init {
-        System.err.println("[NX-REFLECTION] Initializing ReflectionMavenExecutor for Maven $mavenMajorVersion")
-        System.err.println("[NX-REFLECTION] Maven home: ${mavenHome.absolutePath}")
+        log.debug("Initializing ReflectionMavenExecutor for Maven $mavenMajorVersion")
+        log.debug("Maven home: ${mavenHome.absolutePath}")
 
         // Configure Maven's logging
         System.setProperty("maven.logger.showThreadName", "false")
@@ -50,9 +50,9 @@ class ReflectionMavenExecutor(
         System.setProperty("jansi.force", "true")
         System.setProperty("maven.home", mavenHome.absolutePath)
 
-        // Create realm and load Maven + adapters
+        // Create realm and load Maven + adapter JAR
         mavenRealm = MavenClassRealm.create(mavenHome)
-        mavenRealm.injectAdapters(mavenMajorVersion)
+        mavenRealm.loadAdapterJar(mavenMajorVersion)
 
         // Create invoker via reflection
         val (createdInvoker, createdParser) = createInvokerAndParser()
@@ -64,7 +64,7 @@ class ReflectionMavenExecutor(
         parsingFailedMethod = mavenRealm.loadClass("org.apache.maven.api.cli.InvokerRequest").getMethod("parsingFailed")
 
         initialized = true
-        System.err.println("[NX-REFLECTION] ReflectionMavenExecutor ready - NO bundled Maven dependencies!")
+        log.debug("ReflectionMavenExecutor ready")
     }
 
     /**
@@ -138,7 +138,6 @@ class ReflectionMavenExecutor(
             if (parsingFailed) {
                 val errorMessage = "Maven argument parsing failed for: ${allArguments.joinToString(" ")}"
                 log.error(errorMessage)
-                System.err.println("[ERROR] $errorMessage")
                 outputStream.write("ERROR: Maven argument parsing failed\n".toByteArray())
                 outputStream.write("Arguments: ${allArguments.joinToString(" ")}\n".toByteArray())
                 return 1
@@ -157,14 +156,10 @@ class ReflectionMavenExecutor(
             } catch (e: java.lang.reflect.InvocationTargetException) {
                 val cause = e.cause ?: e
                 log.error("EXCEPTION during invoker.invoke(): ${cause.javaClass.simpleName}: ${cause.message}", cause)
-                System.err.println("[ERROR] EXCEPTION during invoker.invoke(): ${cause.javaClass.simpleName}: ${cause.message}")
-                cause.printStackTrace(System.err)
                 cause.printStackTrace(PrintStream(outputStream, true))
                 1
             } catch (e: Throwable) {
                 log.error("EXCEPTION during invoker.invoke(): ${e.javaClass.simpleName}: ${e.message}", e)
-                System.err.println("[ERROR] EXCEPTION during invoker.invoke(): ${e.javaClass.simpleName}: ${e.message}")
-                e.printStackTrace(System.err)
                 e.printStackTrace(PrintStream(outputStream, true))
                 1
             } finally {
